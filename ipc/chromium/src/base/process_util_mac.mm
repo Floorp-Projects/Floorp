@@ -13,6 +13,7 @@
 
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
+#include "mozilla/ScopeExit.h"
 
 namespace {
 
@@ -42,16 +43,15 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
   argv_copy[argv.size()] = NULL;
 
-  // Make sure we don't leak any FDs to the child process by marking all FDs
-  // as close-on-exec.
-  SetAllFDsToCloseOnExec();
-
   EnvironmentArray vars = BuildEnvironmentArray(env_vars_to_set);
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {
     return false;
   }
+  auto file_actions_guard = mozilla::MakeScopeExit([&file_actions] {
+    posix_spawn_file_actions_destroy(&file_actions);
+  });
 
   // Turn fds_to_remap array into a set of dup2 calls.
   for (file_handle_mapping_vector::const_iterator it = fds_to_remap.begin();
@@ -67,7 +67,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
       }
     } else {
       if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
-        posix_spawn_file_actions_destroy(&file_actions);
         return false;
       }
     }
@@ -95,14 +94,30 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (posix_spawnattr_init(&spawnattr) != 0) {
     return false;
   }
+  auto spawnattr_guard = mozilla::MakeScopeExit([&spawnattr] {
+    posix_spawnattr_destroy(&spawnattr);
+  });
 
   // Set spawn attributes.
   size_t attr_count = 1;
   size_t attr_ocount = 0;
   if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, cpu_types, &attr_ocount) != 0 ||
       attr_ocount != attr_count) {
-    posix_spawnattr_destroy(&spawnattr);
     return false;
+  }
+
+  // Prevent the child process from inheriting any file descriptors
+  // that aren't named in `file_actions`.  (This is an Apple-specific
+  // extension to posix_spawn.)
+  if (posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT) != 0) {
+    return false;
+  }
+
+  // Exempt std{in,out,err} from being closed by POSIX_SPAWN_CLOEXEC_DEFAULT.
+  for (int fd = 0; fd <= STDERR_FILENO; ++fd) {
+    if (posix_spawn_file_actions_addinherit_np(&file_actions, fd) != 0) {
+      return false;
+    }
   }
 
   int pid = 0;
@@ -112,10 +127,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
                                       &spawnattr,
                                       argv_copy,
                                       vars.get()) == 0);
-
-  posix_spawn_file_actions_destroy(&file_actions);
-
-  posix_spawnattr_destroy(&spawnattr);
 
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {

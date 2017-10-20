@@ -1,6 +1,10 @@
 # Always ignore node_modules.
 **/node_modules/**/*.*
 
+# Always ignore crashtests - specially crafted files that originally caused a
+# crash.
+**/crashtests/**
+
 # Exclude expected objdirs.
 obj*/**
 
@@ -10,7 +14,6 @@ obj*/**
 chrome/**
 docshell/**
 editor/**
-embedding/**
 extensions/cookie/**
 extensions/spellcheck/**
 extensions/universalchardet/**
@@ -23,12 +26,9 @@ memory/**
 modules/**
 netwerk/**
 parser/**
-python/**
 rdf/**
-servo/**
 tools/update-packaging/**
 uriloader/**
-view/**
 widget/**
 
 # We currently have no js files in these directories, so we ignore them by
@@ -36,6 +36,7 @@ widget/**
 build/**
 config/**
 db/**
+embedding/**
 gradle/**
 hal/**
 mfbt/**
@@ -45,6 +46,10 @@ other-licenses/**
 probes/**
 startupcache/**
 xpfe/**
+
+# These directories only contain crashtests, but we still skip the whole
+# directory to aid performance.
+view/**
 
 # browser/ exclusions
 browser/app/**
@@ -282,6 +287,9 @@ mobile/android/locales/
 mobile/android/chrome/content/browser.js
 mobile/android/components/Snippets.js
 
+# Only contains non-standard test files.
+python/**
+
 # security/ exclusions (pref files).
 security/manager/ssl/security-prefs.js
 
@@ -293,6 +301,9 @@ security/nss/**
 # Uses `#filter substitution`
 services/sync/modules/constants.js
 services/sync/services-sync.js
+
+# Servo is imported.
+servo/**
 
 # Remote protocol exclusions
 testing/marionette/test_*.js

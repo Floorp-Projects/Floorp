@@ -962,6 +962,9 @@ BrowserGlue.prototype = {
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
+
+    // Set the default favicon size for UI views that use the page-icon protocol.
+    PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
   },
 
   _sendMediaTelemetry() {

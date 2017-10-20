@@ -363,6 +363,7 @@
 <!ENTITY pref_qrcode_enabled_summary2 "Allow QR scanner in the URL bar">
 
 <!ENTITY pref_use_master_password "Use master password">
+<!ENTITY pref_sync_default_title "Firefox Account">
 <!ENTITY pref_sync2 "Sign in">
 <!ENTITY pref_sync_summary2 "Sync your tabs, bookmarks, logins, history">
 <!ENTITY pref_search_suggestions "Show search suggestions">

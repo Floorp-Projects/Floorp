@@ -247,8 +247,7 @@ HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
         }
       }
 
-      ShadowRoot* containingShadow = GetContainingShadow();
-      if (containingShadow) {
+      if (ShadowRoot* containingShadow = GetContainingShadow()) {
         containingShadow->DistributeAllNodes();
       }
     } else {
@@ -257,8 +256,7 @@ HTMLContentElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       mValidSelector = true;
       mSelectorList = nullptr;
 
-      ShadowRoot* containingShadow = GetContainingShadow();
-      if (containingShadow) {
+      if (ShadowRoot* containingShadow = GetContainingShadow()) {
         containingShadow->DistributeAllNodes();
       }
     }

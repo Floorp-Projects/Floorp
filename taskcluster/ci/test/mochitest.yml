@@ -442,6 +442,7 @@ mochitest-plain-headless:
     chunks:
         by-test-platform:
             linux.*: 10
+            windows.*: 5
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false

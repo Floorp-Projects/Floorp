@@ -7267,6 +7267,13 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
 
 // For inserts aChild should be valid, for appends it should be null.
 // Returns true if this operation can be lazy, false if not.
+//
+// FIXME(emilio, bug 1410020): This function assumes that the flattened tree
+// parent of all the appended children is the same, which, afaict, is not
+// necessarily true.
+//
+// But we disable lazy frame construction for shadow trees... We should fix
+// that, too.
 bool
 nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
@@ -7301,6 +7308,12 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   // We can construct lazily; just need to set suitable bits in the content
   // tree.
+  nsIContent* parent = aChild->GetFlattenedTreeParent();
+  if (!parent) {
+    // Not part of the flat tree, nothing to do.
+    return true;
+  }
+
 
   // Set NODE_NEEDS_FRAME on the new nodes.
   if (aOperation == CONTENTINSERT) {
@@ -7325,7 +7338,6 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
   // We need different handling for servo given the scoped restyle roots.
-  nsIContent* parent = aChild->GetFlattenedTreeParent();
   CheckBitsForLazyFrameConstruction(parent);
 
   if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
@@ -7644,33 +7656,26 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 #endif // MOZ_XUL
 
-  bool isNewShadowTreeContent =
-    aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-    !aContainer->IsInNativeAnonymousSubtree() &&
-    !aFirstNewContent->IsInNativeAnonymousSubtree();
-
-  if (!isNewShadowTreeContent) {
-    // See comment in ContentRangeInserted for why this is necessary.
-    if (!GetContentInsertionFrameFor(aContainer) &&
-        !aContainer->IsActiveChildrenElement()) {
-      // We're punting on frame construction because there's no container frame.
-      // The Servo-backed style system handles this case like the lazy frame
-      // construction case, except when we're already constructing frames, in
-      // which case we shouldn't need to do anything else.
-      if (aContainer->IsStyledByServo() &&
-          aInsertionKind == InsertionKind::Async) {
-        LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-      }
-      return;
+  // See comment in ContentRangeInserted for why this is necessary.
+  if (!GetContentInsertionFrameFor(aContainer) &&
+      !aContainer->IsActiveChildrenElement()) {
+    // We're punting on frame construction because there's no container frame.
+    // The Servo-backed style system handles this case like the lazy frame
+    // construction case, except when we're already constructing frames, in
+    // which case we shouldn't need to do anything else.
+    if (aContainer->IsStyledByServo() &&
+        aInsertionKind == InsertionKind::Async) {
+      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
     }
+    return;
+  }
 
-    if (aInsertionKind == InsertionKind::Async &&
-        MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
-      if (aContainer->IsStyledByServo()) {
-        LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-      }
-      return;
+  if (aInsertionKind == InsertionKind::Async &&
+      MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
+    if (aContainer->IsStyledByServo()) {
+      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
     }
+    return;
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content
@@ -7678,18 +7683,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // styles are up-to-date already).
   if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
     StyleNewChildRange(aFirstNewContent, nullptr);
-  }
-
-  if (isNewShadowTreeContent) {
-    // Recreate frames if content is appended into a ShadowRoot
-    // because children of ShadowRoot are rendered in place of children
-    // of the host.
-    //XXXsmaug This is super unefficient!
-    nsIContent* bindingParent = aContainer->GetBindingParent();
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(bindingParent, aInsertionKind);
-    LAYOUT_PHASE_TEMP_REENTER();
-    return;
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7792,8 +7785,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // otherwise.
   Maybe<TreeMatchContext> matchContext;
   if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
+    // We use GetParentElementCrossingShadowRoot to handle the case where
+    // aContainer is a ShadowRoot.
     matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aContainer->AsElement());
+    matchContext->InitAncestors(aFirstNewContent->GetParentElementCrossingShadowRoot());
   }
   nsFrameConstructorState state(mPresShell,
                                 matchContext.ptrOr(aProvidedTreeMatchContext),
@@ -8129,40 +8124,36 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
-  bool isNewShadowTreeContent =
-    aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-    !aContainer->IsInNativeAnonymousSubtree() &&
-    (!aStartChild || !aStartChild->IsInNativeAnonymousSubtree()) &&
-    (!aEndChild || !aEndChild->IsInNativeAnonymousSubtree());
-
-  if (!isNewShadowTreeContent) {
-    nsContainerFrame* parentFrame = GetContentInsertionFrameFor(aContainer);
-    // The xbl:children element won't have a frame, but default content can have the children as
-    // a parent. While its uncommon to change the structure of the default content itself, a label,
-    // for example, can be reframed by having its value attribute set or removed.
-    if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
-      // We're punting on frame construction because there's no container frame.
-      // The Servo-backed style system handles this case like the lazy frame
-      // construction case, except when we're already constructing frames, in
-      // which case we shouldn't need to do anything else.
-      if (aContainer->IsStyledByServo() &&
-          aInsertionKind == InsertionKind::Async) {
-        LazilyStyleNewChildRange(aStartChild, aEndChild);
-      }
-      return;
+  nsContainerFrame* parentFrame = GetContentInsertionFrameFor(aContainer);
+  // The xbl:children element won't have a frame, but default content can have the children as
+  // a parent. While its uncommon to change the structure of the default content itself, a label,
+  // for example, can be reframed by having its value attribute set or removed.
+  if (!parentFrame &&
+      !(aContainer->IsActiveChildrenElement() ||
+        ShadowRoot::FromNode(aContainer))) {
+    // We're punting on frame construction because there's no container frame.
+    // The Servo-backed style system handles this case like the lazy frame
+    // construction case, except when we're already constructing frames, in
+    // which case we shouldn't need to do anything else.
+    if (aContainer->IsStyledByServo() &&
+        aInsertionKind == InsertionKind::Async) {
+      LazilyStyleNewChildRange(aStartChild, aEndChild);
     }
+    return;
+  }
 
-    // Otherwise, we've got parent content. Find its frame.
-    NS_ASSERTION(!parentFrame || parentFrame->GetContent() == aContainer ||
-                 GetDisplayContentsStyleFor(aContainer), "New XBL code is possibly wrong!");
+  MOZ_ASSERT_IF(ShadowRoot::FromNode(aContainer), !parentFrame);
 
-    if (aInsertionKind == InsertionKind::Async &&
-        MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
-      if (aContainer->IsStyledByServo()) {
-        LazilyStyleNewChildRange(aStartChild, aEndChild);
-      }
-      return;
+  // Otherwise, we've got parent content. Find its frame.
+  NS_ASSERTION(!parentFrame || parentFrame->GetContent() == aContainer ||
+               GetDisplayContentsStyleFor(aContainer), "New XBL code is possibly wrong!");
+
+  if (aInsertionKind == InsertionKind::Async &&
+      MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
+    if (aContainer->IsStyledByServo()) {
+      LazilyStyleNewChildRange(aStartChild, aEndChild);
     }
+    return;
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content
@@ -8170,18 +8161,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // styles are up-to-date already).
   if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
     StyleNewChildRange(aStartChild, aEndChild);
-  }
-
-  if (isNewShadowTreeContent) {
-    // Recreate frames if content is inserted into a ShadowRoot
-    // because children of ShadowRoot are rendered in place of
-    // the children of the host.
-    //XXXsmaug This is super unefficient!
-    nsIContent* bindingParent = aContainer->GetBindingParent();
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(bindingParent, aInsertionKind);
-    LAYOUT_PHASE_TEMP_REENTER();
-    return;
   }
 
   InsertionPoint insertion;
@@ -8278,8 +8257,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
   Maybe<TreeMatchContext> matchContext;
   if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
+    // We use GetParentElementCrossingShadowRoot to handle the case where
+    // aContainer is a ShadowRoot.
     matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aContainer ? aContainer->AsElement() : nullptr);
+    matchContext->InitAncestors(aStartChild->GetParentElementCrossingShadowRoot());
   }
   nsFrameConstructorState state(mPresShell,
                                 matchContext.ptrOr(aProvidedTreeMatchContext),
@@ -8746,20 +8727,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
         NS_ASSERTION(!childFrame->GetNextSibling(), "How did that happen?");
       }
     }
-  }
-
-  if (aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-      !aContainer->IsInNativeAnonymousSubtree() &&
-      !aChild->IsInNativeAnonymousSubtree()) {
-    // Recreate frames if content is removed from a ShadowRoot because it may
-    // contain an insertion point which can change how the host is rendered.
-    //
-    // XXXsmaug This is super unefficient!
-    nsIContent* bindingParent = aContainer->GetBindingParent();
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(bindingParent, InsertionKind::Async);
-    LAYOUT_PHASE_TEMP_REENTER();
-    return true;
   }
 
   if (childFrame) {
@@ -9577,8 +9544,11 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aContainer,
       return InsertionPoint(GetContentInsertionFrameFor(aContainer), aContainer);
     }
 
-    if (nsContentUtils::HasDistributedChildren(aContainer)) {
-      // The container distributes nodes, use the frame of the flattened tree parent.
+    if (nsContentUtils::HasDistributedChildren(aContainer) ||
+        ShadowRoot::FromNode(aContainer)) {
+      // The container distributes nodes or is a shadow root, use the frame of
+      // the flattened tree parent.
+      //
       // It may be the case that the node is distributed but not matched to any
       // insertion points, so there is no flattened parent.
       nsIContent* flattenedParent = aChild->GetFlattenedTreeParent();

@@ -105,7 +105,6 @@ const startupPhases = {
     ]),
     services: new Set([
       "@mozilla.org/browser/annotation-service;1",
-      "@mozilla.org/browser/favicon-service;1",
       "@mozilla.org/browser/nav-bookmarks-service;1",
     ])
   }},
