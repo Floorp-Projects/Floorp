@@ -591,30 +591,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
-                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                              InfallibleTArray<OpDestroy>&& aToDestroy,
-                                              const uint64_t& aFwdTransactionId,
-                                              const uint64_t& aTransactionId,
-                                              const wr::LayoutSize& aContentSize,
-                                              const wr::ByteBuffer& dl,
-                                              const wr::BuiltDisplayListDescriptor& dlDesc,
-                                              const WebRenderScrollData& aScrollData,
-                                              nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                              nsTArray<ipc::Shmem>&& aSmallShmems,
-                                              nsTArray<ipc::Shmem>&& aLargeShmems,
-                                              const wr::IdNamespace& aIdNamespace,
-                                              const TimeStamp& aTxnStartTime,
-                                              const TimeStamp& aFwdTime)
-{
-  return RecvSetDisplayList(aSize, Move(aCommands), Move(aToDestroy),
-                            aFwdTransactionId, aTransactionId,
-                            aContentSize, dl, dlDesc, aScrollData,
-                            Move(aResourceUpdates), Move(aSmallShmems), Move(aLargeShmems),
-                            aIdNamespace, aTxnStartTime, aFwdTime);
-}
-
-mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                             InfallibleTArray<OpDestroy>&& aToDestroy,
