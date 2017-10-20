@@ -7,7 +7,7 @@
  */
 
 add_task(async function setup() {
-  await setupPlacesDatabase("places_v6.sqlite");
+  await setupPlacesDatabase("places_outdated.sqlite");
 });
 
 add_task(async function corrupt_database_not_exists() {
