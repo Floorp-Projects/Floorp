@@ -2580,8 +2580,6 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
         const gfxTextRange& range = fontRanges[r];
         uint32_t matchedLength = range.Length();
         gfxFont *matchedFont = range.font;
-        bool vertical =
-            range.orientation == ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
         // create the glyph run for this range
         if (matchedFont && mStyle.noFallbackVariantFeatures) {
             // common case - just do glyph layout and record the
@@ -2594,7 +2592,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                                                   aOffset + runStart,
                                                   matchedLength,
                                                   aRunScript,
-                                                  vertical)) {
+                                                  range.orientation)) {
                 // glyph layout failed! treat as missing glyphs
                 matchedFont = nullptr;
             }
@@ -2634,7 +2632,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                                                        aOffset + runStart,
                                                        matchedLength,
                                                        aRunScript,
-                                                       vertical)) {
+                                                       range.orientation)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }
@@ -2679,7 +2677,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                                                       aOffset + runStart,
                                                       matchedLength,
                                                       aRunScript,
-                                                      vertical)) {
+                                                      range.orientation)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }
