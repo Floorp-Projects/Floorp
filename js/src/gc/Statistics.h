@@ -314,7 +314,6 @@ struct Statistics
     /* GC numbers as of the beginning of the collection. */
     uint64_t startingMinorGCNumber;
     uint64_t startingMajorGCNumber;
-    uint64_t startingSliceNumber;
 
     /* Records the maximum GC pause in an API-controlled interval (in us). */
     mutable TimeDuration maxPauseInInterval;
