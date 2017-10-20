@@ -11,6 +11,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Pair.h"
+#include "mozilla/ResultExtensions.h"
 #include "VideoUtils.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
@@ -19,7 +21,7 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define MP3LOGV(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("MP3Demuxer " msg, ##__VA_ARGS__))
 
-using mp4_demuxer::ByteReader;
+using mp4_demuxer::BufferReader;
 
 namespace mozilla {
 
@@ -93,8 +95,8 @@ FrameParser::VBRInfo() const
   return mVBRHeader;
 }
 
-bool
-FrameParser::Parse(ByteReader* aReader, uint32_t* aBytesToSkip)
+Result<bool, nsresult>
+FrameParser::Parse(BufferReader* aReader, uint32_t* aBytesToSkip)
 {
   MOZ_ASSERT(aReader && aBytesToSkip);
   *aBytesToSkip = 0;
@@ -104,8 +106,9 @@ FrameParser::Parse(ByteReader* aReader, uint32_t* aBytesToSkip)
     // ID3v1 tags may only be at file end.
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
     const size_t prevReaderOffset = aReader->Offset();
-    const uint32_t tagSize = mID3Parser.Parse(aReader);
-    if (tagSize) {
+    uint32_t tagSize;
+    MOZ_TRY_VAR(tagSize, mID3Parser.Parse(aReader));
+    if (!!tagSize) {
       // ID3 tag found, skip past it.
       const uint32_t skipSize = tagSize - ID3Parser::ID3Header::SIZE;
 
@@ -128,7 +131,9 @@ FrameParser::Parse(ByteReader* aReader, uint32_t* aBytesToSkip)
     }
   }
 
-  while (aReader->CanRead8() && !mFrame.ParseNext(aReader->ReadU8())) { }
+  for (auto res = aReader->ReadU8();
+       res.isOk() && !mFrame.ParseNext(res.unwrap()); res = aReader->ReadU8())
+  {}
 
   if (mFrame.Length()) {
     // MP3 frame found.
@@ -438,8 +443,8 @@ FrameParser::VBRHeader::Offset(float aDurationFac) const
   return offset;
 }
 
-bool
-FrameParser::VBRHeader::ParseXing(ByteReader* aReader)
+Result<bool, nsresult>
+FrameParser::VBRHeader::ParseXing(BufferReader* aReader)
 {
   static const uint32_t XING_TAG = BigEndian::readUint32("Xing");
   static const uint32_t INFO_TAG = BigEndian::readUint32("Info");
@@ -456,25 +461,28 @@ FrameParser::VBRHeader::ParseXing(ByteReader* aReader)
   const size_t prevReaderOffset = aReader->Offset();
 
   // We have to search for the Xing header as its position can change.
-  while (aReader->CanRead32() &&
-         aReader->PeekU32() != XING_TAG && aReader->PeekU32() != INFO_TAG) {
+  for (auto res = aReader->PeekU32();
+       res.isOk() && res.unwrap() != XING_TAG && res.unwrap() != INFO_TAG;) {
     aReader->Read(1);
+    res = aReader->PeekU32();
   }
 
-  if (aReader->CanRead32()) {
-    // Skip across the VBR header ID tag.
-    aReader->ReadU32();
-    mType = XING;
+  // Skip across the VBR header ID tag.
+  MOZ_TRY(aReader->ReadU32());
+  mType = XING;
+
+  uint32_t flags;
+  MOZ_TRY_VAR(flags, aReader->ReadU32());
+
+  if (flags & NUM_FRAMES) {
+    uint32_t frames;
+    MOZ_TRY_VAR(frames, aReader->ReadU32());
+    mNumAudioFrames = Some(frames);
   }
-  uint32_t flags = 0;
-  if (aReader->CanRead32()) {
-    flags = aReader->ReadU32();
-  }
-  if (flags & NUM_FRAMES && aReader->CanRead32()) {
-    mNumAudioFrames = Some(aReader->ReadU32());
-  }
-  if (flags & NUM_BYTES && aReader->CanRead32()) {
-    mNumBytes = Some(aReader->ReadU32());
+  if (flags & NUM_BYTES) {
+    uint32_t bytes;
+    MOZ_TRY_VAR(bytes, aReader->ReadU32());
+    mNumBytes = Some(bytes);
   }
   if (flags & TOC && aReader->Remaining() >= vbr_header::TOC_SIZE) {
     if (!mNumBytes) {
@@ -483,21 +491,25 @@ FrameParser::VBRHeader::ParseXing(ByteReader* aReader)
     } else {
       mTOC.clear();
       mTOC.reserve(vbr_header::TOC_SIZE);
+      uint8_t data;
       for (size_t i = 0; i < vbr_header::TOC_SIZE; ++i) {
-        mTOC.push_back(1.0f / 256.0f * aReader->ReadU8() * mNumBytes.value());
+        MOZ_TRY_VAR(data, aReader->ReadU8());
+        mTOC.push_back(1.0f / 256.0f * data * mNumBytes.value());
       }
     }
   }
-  if (flags & VBR_SCALE && aReader->CanRead32()) {
-    mScale = Some(aReader->ReadU32());
+  if (flags & VBR_SCALE) {
+    uint32_t scale;
+    MOZ_TRY_VAR(scale, aReader->ReadU32());
+    mScale = Some(scale);
   }
 
   aReader->Seek(prevReaderOffset);
   return mType == XING;
 }
 
-bool
-FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader)
+Result<bool, nsresult>
+FrameParser::VBRHeader::ParseVBRI(BufferReader* aReader)
 {
   static const uint32_t TAG = BigEndian::readUint32("VBRI");
   static const uint32_t OFFSET = 32 + FrameParser::FrameHeader::SIZE;
@@ -508,15 +520,21 @@ FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader)
   // ParseVBRI assumes that the ByteReader offset points to the beginning of a
   // frame, therefore as a simple check, we look for the presence of a frame
   // sync at that position.
-  MOZ_ASSERT((aReader->PeekU16() & 0xFFE0) == 0xFFE0);
+  auto sync = aReader->PeekU16();
+  if (sync.isOk()) { // To avoid compiler complains 'set but unused'.
+    MOZ_ASSERT((sync.unwrap() & 0xFFE0) == 0xFFE0);
+  }
   const size_t prevReaderOffset = aReader->Offset();
 
   // VBRI have a fixed relative position, so let's check for it there.
   if (aReader->Remaining() > MIN_FRAME_SIZE) {
     aReader->Seek(prevReaderOffset + OFFSET);
-    if (aReader->ReadU32() == TAG) {
+    uint32_t tag, frames;
+    MOZ_TRY_VAR(tag, aReader->ReadU32());
+    if (tag == TAG) {
       aReader->Seek(prevReaderOffset + FRAME_COUNT_OFFSET);
-      mNumAudioFrames = Some(aReader->ReadU32());
+      MOZ_TRY_VAR(frames, aReader->ReadU32());
+      mNumAudioFrames = Some(frames);
       mType = VBRI;
       aReader->Seek(prevReaderOffset);
       return true;
@@ -527,9 +545,11 @@ FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader)
 }
 
 bool
-FrameParser::VBRHeader::Parse(ByteReader* aReader)
+FrameParser::VBRHeader::Parse(BufferReader* aReader)
 {
-  const bool rv = ParseVBRI(aReader) || ParseXing(aReader);
+  auto res = MakePair(ParseVBRI(aReader), ParseXing(aReader));
+  const bool rv = (res.first().isOk() && res.first().unwrap()) ||
+                  (res.second().isOk() && res.second().unwrap());
   if (rv) {
     MP3LOG("VBRHeader::Parse found valid VBR/CBR header: type=%s"
            " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%zu",
@@ -574,7 +594,7 @@ FrameParser::Frame::Header() const
 }
 
 bool
-FrameParser::ParseVBRHeader(ByteReader* aReader)
+FrameParser::ParseVBRHeader(BufferReader* aReader)
 {
   return mVBRHeader.Parse(aReader);
 }
@@ -599,12 +619,14 @@ static const uint8_t MIN_MAJOR_VER = 2;
 static const uint8_t MAX_MAJOR_VER = 4;
 } // namespace id3_header
 
-uint32_t
-ID3Parser::Parse(ByteReader* aReader)
+Result<uint32_t, nsresult>
+ID3Parser::Parse(BufferReader* aReader)
 {
   MOZ_ASSERT(aReader);
 
-  while (aReader->CanRead8() && !mHeader.ParseNext(aReader->ReadU8())) { }
+  for (auto res = aReader->ReadU8();
+       res.isOk() && !mHeader.ParseNext(res.unwrap()); res = aReader->ReadU8())
+  {}
 
   return mHeader.TotalTagSize();
 }
