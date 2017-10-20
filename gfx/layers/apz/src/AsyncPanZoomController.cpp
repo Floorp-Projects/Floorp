@@ -3929,6 +3929,11 @@ const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() const {
   return mFrameMetrics;
 }
 
+const ScrollMetadata& AsyncPanZoomController::GetScrollMetadata() const {
+  mRecursiveMutex.AssertCurrentThreadIn();
+  return mScrollMetadata;
+}
+
 APZCTreeManager* AsyncPanZoomController::GetApzcTreeManager() const {
   mRecursiveMutex.AssertNotCurrentThreadIn();
   return mTreeManager;
