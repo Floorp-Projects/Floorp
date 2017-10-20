@@ -9,24 +9,10 @@
 <title>Test for performance observer in worker</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
 <div id="log"></div>
 <script>
-SimpleTest.waitForExplicitFinish();
-
-let waitForConsole = new Promise(resolve => {
-  SimpleTest.monitorConsole(resolve, [{
-    message: /JavaScript Warning: "Ignoring unsupported entryTypes: invalid."/,
-  }]);
-});
-
-add_completion_callback(async () => {
-    SimpleTest.endMonitorConsole();
-    await waitForConsole;
-});
-
 fetch_tests_from_worker(new Worker("worker_performance_observer.js"));
 </script>
 </body>
