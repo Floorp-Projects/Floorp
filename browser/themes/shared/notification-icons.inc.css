@@ -213,11 +213,6 @@ html|*#webRTC-previewVideo {
 .popup-notification-icon[popupid="addon-install-restart"] {
   list-style-image: url(chrome://browser/skin/addons/addon-install-restart.svg);
 }
-
-.popup-notification-icon[popupid="click-to-play-plugins"] {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.svg);
-}
-
 /* OFFLINE APPS */
 
 .popup-notification-icon[popupid*="offline-app-requested"],
@@ -229,6 +224,11 @@ html|*#webRTC-previewVideo {
 
 .plugin-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/plugin.svg);
+  transition: fill 1.5s;
+}
+
+.plugin-blocked-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/plugin-blocked.svg);
   transition: fill 1.5s;
 }
 
