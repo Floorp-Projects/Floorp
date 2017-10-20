@@ -178,7 +178,7 @@ HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
 HTTP(..) == reflow-sanity-delay-1a.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1b.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1c.html reflow-sanity-1-ref.html
-skip-if(winWidget&&!isDebugBuild) HTTP(..) == reflow-sanity-delay-1-metrics.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-delay-1-metrics.html reflow-sanity-1-ref.html
 
 # font-display
 skip-if(/^Linux\x20i686/.test(http.oscpu)) HTTP(..) == font-display-1.html font-display-1-ref.html # normal font load (~500ms)

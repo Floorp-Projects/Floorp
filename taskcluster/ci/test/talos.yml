@@ -99,6 +99,7 @@ talos-g2:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
+            linux64-ccov/.*: ['try'] # Bug 1407593
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:

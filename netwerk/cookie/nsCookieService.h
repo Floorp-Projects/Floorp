@@ -231,8 +231,8 @@ class nsCookieService final : public nsICookieService
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService *aTLDService, const nsACString &aHost, nsCString &aBaseDomain);
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
-  static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie);
-  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartyUtil, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
+  static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie, mozIThirdPartyUtil* aThirdPartyUtil);
+  static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartySession, bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
   static int64_t ParseServerTime(const nsCString &aServerTime);
   void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
@@ -321,6 +321,7 @@ class nsCookieService final : public nsICookieService
     // cached prefs
     uint8_t                       mCookieBehavior; // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, LIMITFOREIGN}
     bool                          mThirdPartySession;
+    bool                          mThirdPartyNonsecureSession;
     bool                          mLeaveSecureAlone;
     uint16_t                      mMaxNumberOfCookies;
     uint16_t                      mMaxCookiesPerHost;

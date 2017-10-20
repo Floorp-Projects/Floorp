@@ -34,6 +34,8 @@ namespace net {
 static const char kPrefCookieBehavior[] = "network.cookie.cookieBehavior";
 static const char kPrefThirdPartySession[] =
   "network.cookie.thirdparty.sessionOnly";
+static const char kPrefThirdPartyNonsecureSession[] =
+  "network.cookie.thirdparty.nonsecureSessionOnly";
 static const char kPrefCookieIPCSync[] = "network.cookie.ipc.sync";
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
@@ -58,6 +60,7 @@ NS_IMPL_ISUPPORTS(CookieServiceChild,
 CookieServiceChild::CookieServiceChild()
   : mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT)
   , mThirdPartySession(false)
+  , mThirdPartyNonsecureSession(false)
   , mLeaveSecureAlone(true)
   , mIPCSync(false)
   , mIPCOpen(false)
@@ -90,6 +93,7 @@ CookieServiceChild::CookieServiceChild()
   if (prefBranch) {
     prefBranch->AddObserver(kPrefCookieBehavior, this, true);
     prefBranch->AddObserver(kPrefThirdPartySession, this, true);
+    prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
     prefBranch->AddObserver(kPrefCookieIPCSync, this, true);
     prefBranch->AddObserver(kCookieLeaveSecurityAlone, this, true);
     PrefChanged(prefBranch);
@@ -233,6 +237,10 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = !!boolval;
 
+  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartyNonsecureSession,
+                                            &boolval)))
+    mThirdPartyNonsecureSession = boolval;
+
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefCookieIPCSync, &boolval)))
     mIPCSync = !!boolval;
 
@@ -277,7 +285,8 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
   nsCOMPtr<nsICookiePermission> permissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
   CookieStatus cookieStatus =
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
-                                mThirdPartySession, aHostURI,
+                                mThirdPartySession,
+                                mThirdPartyNonsecureSession, aHostURI,
                                 aIsForeign, nullptr,
                                 CountCookiesFromHashTable(baseDomain, aOriginAttrs),
                                 aOriginAttrs);
@@ -379,7 +388,8 @@ CookieServiceChild::RequireThirdPartyCheck()
 {
   return mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
     mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
-    mThirdPartySession;
+    mThirdPartySession ||
+    mThirdPartyNonsecureSession;
 }
 
 void
@@ -525,8 +535,9 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 
   CookieStatus cookieStatus =
     nsCookieService::CheckPrefs(permissionService, mCookieBehavior,
-                                mThirdPartySession, aHostURI,
-                                !!isForeign, aCookieString,
+                                mThirdPartySession,
+                                mThirdPartyNonsecureSession, aHostURI,
+                                isForeign, aCookieString,
                                 CountCookiesFromHashTable(baseDomain, attrs),
                                 attrs);
 
@@ -544,7 +555,8 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     moreCookies = nsCookieService::CanSetCookie(aHostURI, key, cookieAttributes,
                                                 requireHostMatch, cookieStatus,
                                                 cookieString, serverTime, aFromHttp,
-                                                aChannel, mLeaveSecureAlone, canSetCookie);
+                                                aChannel, mLeaveSecureAlone,
+                                                canSetCookie, mThirdPartyUtil);
 
     if (canSetCookie) {
       SetCookieInternal(cookieAttributes, attrs, aChannel,

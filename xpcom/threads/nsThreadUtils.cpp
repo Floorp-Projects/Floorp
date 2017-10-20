@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 
 #include "nsComponentManagerUtils.h"
 

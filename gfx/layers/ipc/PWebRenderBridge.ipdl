@@ -54,11 +54,6 @@ parent:
                        WebRenderScrollData aScrollData,
                        OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
                        IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
-  sync SetDisplayListSync(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-                          LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-                          WebRenderScrollData aScrollData,
-                          OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
-                          IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async EmptyTransaction(FocusTarget focusTarget,
                          WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                          IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);

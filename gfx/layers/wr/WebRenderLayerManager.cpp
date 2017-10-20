@@ -299,7 +299,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
     mScrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
   }
 
-  bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
   TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
 
@@ -323,9 +322,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   mLastDisplayListSize = dl.dl.inner.capacity;
 
   {
-    AUTO_PROFILER_TRACING("Paint", sync ? "ForwardDPTransactionSync"
-                                        : "ForwardDPTransaction");
-    WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(), sync,
+    AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction");
+    WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(),
                                mLatestTransactionId, mScrollData, transactionStart);
   }
 
