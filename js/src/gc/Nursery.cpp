@@ -487,22 +487,20 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
         // requested. (And as a public API, this function should not crash in
         // such a case.)
         json.beginObject();
-        json.property("status", "nursery empty");
+        json.property("status", "no collection");
         json.endObject();
         return;
     }
 
     json.beginObject();
 
-    json.property("status", "complete");
-
     json.property("reason", JS::gcreason::ExplainReason(previousGC.reason));
     json.property("bytes_tenured", previousGC.tenuredBytes);
-    json.property("bytes_used", previousGC.nurseryUsedBytes);
-    json.property("cur_capacity", previousGC.nurseryCapacity);
-    json.property("new_capacity", spaceToEnd());
+    json.floatProperty("promotion_rate", calcPromotionRate(nullptr), 0);
+    json.property("nursery_bytes", previousGC.nurseryUsedBytes);
+    json.property("new_nursery_bytes", numChunks() * ChunkSize);
 
-    json.beginObjectProperty("phase_times");
+    json.beginObjectProperty("timings");
 
 #define EXTRACT_NAME(name, text) #name,
     static const char* names[] = {
