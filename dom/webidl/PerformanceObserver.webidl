@@ -18,6 +18,7 @@ callback PerformanceObserverCallback = void (PerformanceObserverEntryList entrie
  Constructor(PerformanceObserverCallback callback),
  Exposed=(Window,Worker)]
 interface PerformanceObserver {
+  [Throws]
   void observe(PerformanceObserverInit options);
   void disconnect();
 };
