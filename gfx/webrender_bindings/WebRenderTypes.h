@@ -197,6 +197,19 @@ inline ImageRendering ToImageRendering(gfx::SamplingFilter aFilter)
                                                : ImageRendering::Auto;
 }
 
+static inline FontRenderMode ToFontRenderMode(gfx::AntialiasMode aMode, bool aPermitSubpixelAA = true)
+{
+  switch (aMode) {
+    case gfx::AntialiasMode::NONE:
+      return FontRenderMode::Mono;
+    case gfx::AntialiasMode::GRAY:
+      return FontRenderMode::Alpha;
+    case gfx::AntialiasMode::SUBPIXEL:
+    default:
+      return aPermitSubpixelAA ? FontRenderMode::Subpixel : FontRenderMode::Alpha;
+  }
+}
+
 static inline MixBlendMode ToMixBlendMode(gfx::CompositionOp compositionOp)
 {
   switch (compositionOp)
