@@ -33,7 +33,7 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 
 // Creates a buffer for storing the stream into the cache. The buffer is
 // allocated with 'new []'.  After calling this function, the caller would
-// typically call nsIStartupCache::PutBuffer with the returned buffer.
+// typically call StartupCache::PutBuffer with the returned buffer.
 nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream,
                            UniquePtr<char[]>* buffer, uint32_t* len);
