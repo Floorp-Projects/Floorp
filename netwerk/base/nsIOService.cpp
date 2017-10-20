@@ -372,7 +372,6 @@ nsIOService::GetInstance() {
 
 NS_IMPL_ISUPPORTS(nsIOService,
                   nsIIOService,
-                  nsIIOService2,
                   nsINetUtil,
                   nsISpeculativeConnect,
                   nsIObserver,
@@ -943,46 +942,6 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
                                                    aProxyFlags,
                                                    loadInfo,
                                                    result);
-}
-
-/*  ***** DEPRECATED *****
- * please use NewChannelFromURIWithProxyFlags2 providing the right arguments for:
- *        * aLoadingNode
- *        * aLoadingPrincipal
- *        * aTriggeringPrincipal
- *        * aSecurityFlags
- *        * aContentPolicyType
- *
- * See nsIIoService.idl for a detailed description of those arguments
- */
-NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
-                                             nsIURI *aProxyURI,
-                                             uint32_t aProxyFlags,
-                                             nsIChannel **result)
-{
-  NS_ASSERTION(false, "Deprecated, use NewChannelFromURIWithProxyFlags2 providing loadInfo arguments!");
-
-  const char16_t* params[] = {
-    u"nsIOService::NewChannelFromURIWithProxyFlags()",
-    u"nsIOService::NewChannelFromURIWithProxyFlags2()"
-  };
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Security by Default"),
-                                  nullptr, // aDocument
-                                  nsContentUtils::eNECKO_PROPERTIES,
-                                  "APIDeprecationWarning",
-                                  params, ArrayLength(params));
-
-  return NewChannelFromURIWithProxyFlags2(aURI,
-                                          aProxyURI,
-                                          aProxyFlags,
-                                          nullptr, // aLoadingNode
-                                          nsContentUtils::GetSystemPrincipal(),
-                                          nullptr, // aTriggeringPrincipal
-                                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                          nsIContentPolicy::TYPE_OTHER,
-                                          result);
 }
 
 NS_IMETHODIMP
