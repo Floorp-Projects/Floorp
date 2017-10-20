@@ -117,7 +117,7 @@ public:
 private:
   ConditionVariable(const ConditionVariable&) = delete;
   ConditionVariable& operator=(const ConditionVariable&) = delete;
-  template <class T> friend class ExclusiveData;
+  template <class T> friend class ExclusiveWaitableData;
 
   mozilla::detail::ConditionVariableImpl impl_;
 };

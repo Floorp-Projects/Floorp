@@ -139,6 +139,9 @@ public:
 
   bool OnlySystemGroupDispatch(mozilla::EventMessage aMessage) const override;
 
+  // Returns the associated scrollframe that contains this slider if any.
+  nsIScrollableFrame* GetScrollFrame();
+
 private:
 
   bool GetScrollToClick();

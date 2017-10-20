@@ -47,10 +47,11 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
   }
 
   // Get the filename
-  const char16_t* filename = aOb.Filename();
+  nsAutoString filename;
+  aOb.Filename(filename);
 
   // Discard observations without filename
-  if (!filename) {
+  if (filename.IsEmpty()) {
     return;
   }
 
@@ -60,12 +61,11 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
   nsDefaultStringComparator comparator;
 #endif
   nsAutoString      processedName;
-  nsDependentString filenameStr(filename);
   uint32_t safeDirsLen = mSafeDirs.Length();
   for (uint32_t i = 0; i < safeDirsLen; ++i) {
-    if (StringBeginsWith(filenameStr, mSafeDirs[i].mPath, comparator)) {
+    if (StringBeginsWith(filename, mSafeDirs[i].mPath, comparator)) {
       processedName = mSafeDirs[i].mSubstName;
-      processedName += Substring(filenameStr, mSafeDirs[i].mPath.Length());
+      processedName += Substring(filename, mSafeDirs[i].mPath.Length());
       break;
     }
   }

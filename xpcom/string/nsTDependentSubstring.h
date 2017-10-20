@@ -52,9 +52,6 @@ public:
   typedef typename substring_type::DataFlags DataFlags;
   typedef typename substring_type::ClassFlags ClassFlags;
 
-  using typename substring_type::IsChar;
-  using typename substring_type::IsChar16;
-
 public:
 
   void Rebind(const substring_type&, uint32_t aStartPos,
@@ -80,13 +77,13 @@ public:
   nsTDependentSubstring(const char_type* aStart, const char_type* aEnd);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   nsTDependentSubstring(char16ptr_t aData, size_type aLength)
     : nsTDependentSubstring(static_cast<const char16_t*>(aData), aLength)
   {
   }
 
-  template <typename EnableIfChar16 = IsChar16>
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   nsTDependentSubstring(char16ptr_t aStart, char16ptr_t aEnd);
 #endif
 

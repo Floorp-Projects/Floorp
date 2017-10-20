@@ -600,18 +600,6 @@ public:
   static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame);
 
   /**
-   * Store whether aThumbFrame wants its own layer. This sets a property on
-   * the frame.
-   */
-  static void SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize);
-
-  /**
-   * Returns whether aThumbFrame wants its own layer due to having called
-   * SetScrollbarThumbLayerization.
-   */
-  static bool IsScrollbarThumbLayerized(nsIFrame* aThumbFrame);
-
-  /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
   static nsIScrollableFrame* GetScrollableFrameFor(const nsIFrame *aScrolledFrame);

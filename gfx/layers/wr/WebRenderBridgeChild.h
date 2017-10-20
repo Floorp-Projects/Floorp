@@ -132,7 +132,8 @@ public:
                   gfx::ScaledFont* aFont, const wr::ColorF& aColor,
                   const StackingContextHelper& aSc,
                   const wr::LayerRect& aBounds, const wr::LayerRect& aClip,
-                  bool aBackfaceVisible);
+                  bool aBackfaceVisible,
+                  const wr::GlyphOptions* aGlyphOptions = nullptr);
 
   wr::FontInstanceKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
 
