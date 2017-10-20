@@ -9,15 +9,14 @@
 
 class MustOverrideChecker : public BaseCheck {
 public:
-  MustOverrideChecker(StringRef CheckName,
-                      ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context), CI(nullptr) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
-  void registerPPCallbacks(CompilerInstance& CI) override;
+  MustOverrideChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context), CI(nullptr) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
+  void registerPPCallbacks(CompilerInstance &CI) override;
   void check(const MatchFinder::MatchResult &Result) override;
 
 private:
-  const CompilerInstance* CI;
+  const CompilerInstance *CI;
 };
 
 #endif

@@ -9,10 +9,9 @@
 
 class TrivialCtorDtorChecker : public BaseCheck {
 public:
-  TrivialCtorDtorChecker(StringRef CheckName,
-                         ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  TrivialCtorDtorChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 

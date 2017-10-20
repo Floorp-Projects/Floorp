@@ -5,7 +5,7 @@
 #include "NoDuplicateRefCntMemberChecker.h"
 #include "CustomMatchers.h"
 
-void NoDuplicateRefCntMemberChecker::registerMatchers(MatchFinder* AstMatcher) {
+void NoDuplicateRefCntMemberChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(cxxRecordDecl().bind("decl"), this);
 }
 
@@ -34,31 +34,28 @@ void NoDuplicateRefCntMemberChecker::check(
     if (BaseRefCntMember) {
       if (RefCntMember) {
         // We have an mRefCnt, and superclass has an mRefCnt
-        const char* Error =
-            "Refcounted record %0 has multiple mRefCnt members";
-        const char* Note1 =
-            "Superclass %0 also has an mRefCnt member";
-        const char* Note2 =
+        const char *Error = "Refcounted record %0 has multiple mRefCnt members";
+        const char *Note1 = "Superclass %0 also has an mRefCnt member";
+        const char *Note2 =
             "Consider using the _INHERITED macros for AddRef and Release here";
 
         diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
         diag(BaseRefCntMember->getLocStart(), Note1, DiagnosticIDs::Note)
-          << BaseRefCntMember->getParent();
+            << BaseRefCntMember->getParent();
         diag(RefCntMember->getLocStart(), Note2, DiagnosticIDs::Note);
       }
 
       if (FoundRefCntBase) {
-        const char* Error =
-            "Refcounted record %0 has multiple superclasses with mRefCnt members";
-        const char* Note =
-            "Superclass %0 has an mRefCnt member";
+        const char *Error = "Refcounted record %0 has multiple superclasses "
+                            "with mRefCnt members";
+        const char *Note = "Superclass %0 has an mRefCnt member";
 
         // superclass has mRefCnt, and another superclass also has an mRefCnt
         diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D;
         diag(BaseRefCntMember->getLocStart(), Note, DiagnosticIDs::Note)
-          << BaseRefCntMember->getParent();
+            << BaseRefCntMember->getParent();
         diag(FoundRefCntBase->getLocStart(), Note, DiagnosticIDs::Note)
-          << FoundRefCntBase->getParent();
+            << FoundRefCntBase->getParent();
       }
 
       // Record that we've found a base with a mRefCnt member

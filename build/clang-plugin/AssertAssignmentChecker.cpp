@@ -5,19 +5,16 @@
 #include "AssertAssignmentChecker.h"
 #include "CustomMatchers.h"
 
-void AssertAssignmentChecker::registerMatchers(MatchFinder* AstMatcher) {
+void AssertAssignmentChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      callExpr(isAssertAssignmentTestFunc()).bind("funcCall"),
-      this);
+      callExpr(isAssertAssignmentTestFunc()).bind("funcCall"), this);
 }
 
-void AssertAssignmentChecker::check(
-    const MatchFinder::MatchResult &Result) {
+void AssertAssignmentChecker::check(const MatchFinder::MatchResult &Result) {
   const CallExpr *FuncCall = Result.Nodes.getNodeAs<CallExpr>("funcCall");
 
   if (FuncCall && hasSideEffectAssignment(FuncCall)) {
-    diag(FuncCall->getLocStart(),
-         "Forbidden assignment in assert expression",
+    diag(FuncCall->getLocStart(), "Forbidden assignment in assert expression",
          DiagnosticIDs::Error);
   }
 }

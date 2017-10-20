@@ -9,10 +9,9 @@
 
 class AssertAssignmentChecker : public BaseCheck {
 public:
-  AssertAssignmentChecker(StringRef CheckName,
-                          ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  AssertAssignmentChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 
