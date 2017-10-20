@@ -97,3 +97,9 @@ load 583957-1.html
 load 617089.html
 load menulist-focused.xhtml
 load 716503.html
+
+# Bug 1379332's tests need stylo to be disabled in order for the
+# 'visiblity:collapse' to take effect (which is needed to trigger the assertion
+# that these tests are screening for, in unpatched builds):
+pref(layout.css.servo.enabled,false) load 1379332-1.xul
+pref(layout.css.servo.enabled,false) load 1379332-2.xul
