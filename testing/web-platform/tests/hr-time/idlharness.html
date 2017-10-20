@@ -15,29 +15,16 @@
 <div id="log"></div>
 
 <pre id='untested_idl' style='display:none'>
-[Exposed=Windows,Worker]
-interface WindowOrWorkerGlobalScope {
+[PrimaryGlobal]
+interface Window {
+};
+
+[Exposed=Worker]
+interface WorkerGlobalScope {
 };
 
 [Exposed=(Window,Worker)]
 interface EventTarget {
-};
-
-[Exposed=Window]
-interface PerformanceTiming {
-};
-
-[Exposed=Window]
-interface PerformanceNavigation {
-};
-
-// from nav-timing
-partial interface Performance {
-    [SameObject]
-    readonly attribute PerformanceTiming timing;
-    [SameObject]
-    readonly attribute PerformanceNavigation navigation;
-    [Default] object              toJSON();
 };
 </pre>
 
@@ -47,14 +34,19 @@ typedef double DOMHighResTimeStamp;
 [Exposed=(Window,Worker)]
 interface Performance : EventTarget {
     DOMHighResTimeStamp now();
-    readonly attribute DOMHighResTimeStamp timeOrigin;
-    [Default] object              toJSON();
+    [Default] object toJSON();
 };
 
-partial interface WindowOrWorkerGlobalScope {
+[NoInterfaceObject,
+ Exposed=(Window,Worker)]
+interface GlobalPerformance {
     [Replaceable]
     readonly attribute Performance performance;
 };
+
+Window implements GlobalPerformance;
+
+WorkerGlobalScope implements GlobalPerformance;
 </pre>
 
 <script>
@@ -65,7 +57,7 @@ partial interface WindowOrWorkerGlobalScope {
   idl_array.add_untested_idls(document.getElementById("untested_idl").textContent);
   idl_array.add_idls(document.getElementById("idl").textContent);
 
-  idl_array.add_objects({Performance: [window.performance]});
+  idl_array.add_objects({Performance: ["window.performance"]});
 
   idl_array.test();
 })();

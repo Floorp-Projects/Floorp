@@ -23,6 +23,10 @@ registerPaint('green', class {
 </script>
 
 <script>
+if (window.testRunner) {
+  testRunner.waitUntilDone();
+}
+
 var blob = new Blob([document.getElementById('code').textContent],
                     {type: 'text/javascript'});
 var frame_cnt = 0;

@@ -10,34 +10,7 @@
 setup(() => {
   window.canvas = document.getElementById('canvas');
   window.ctx = canvas.getContext('2d');
-  window.ctx.fillStyle = '#000';
 });
-
-function clearCanvas(ctx) {
-  ctx.resetTransform();
-  ctx.clearRect(0, 0, window.canvas.width, window.canvas.height);
-}
-
-function drawRectWithSetTransform(ctx, transform) {
-  clearCanvas(ctx);
-  ctx.setTransform(transform);
-  ctx.fillRect(20, 20, 30, 30);
-  return window.canvas.toDataURL();
-}
-
-function drawRectWithAddPathTransform(ctx, transform) {
-  clearCanvas(ctx);
-  var path = new Path2D();
-  path.rect(20, 20, 30, 30);
-  var transformedPath = new Path2D();
-  if (transform === undefined) {
-    transformedPath.addPath(path);
-  } else {
-    transformedPath.addPath(path, transform);
-  }
-  ctx.fill(transformedPath);
-  return window.canvas.toDataURL();
-}
 
 [
   {a: 1, m11: 2},
@@ -50,11 +23,7 @@ function drawRectWithAddPathTransform(ctx, transform) {
   test(() => {
     ctx.resetTransform();
     assert_throws(new TypeError(), () => ctx.setTransform(dict));
-  }, `setTransform(${format_dict(dict)}) (invalid)`);
-
-  test(() => {
-    assert_throws(new TypeError(), () => drawRectWithAddPathTransform(ctx, dict));
-  }, `addPath(${format_dict(dict)}) (invalid)`);
+  }, `${format_dict(dict)} (invalid)`);
 });
 
 test(() => {
@@ -62,14 +31,7 @@ test(() => {
   ctx.setTransform(1, 2, 3, 4, 5, 6);
   const matrix = ctx.getTransform();
   checkMatrix(matrix, matrix2D({m11: 1, m12: 2, m21: 3, m22: 4, m41: 5, m42: 6}));
-}, `setTransform (Sanity check without dictionary)`);
-
-test(() => {
-  var ident = matrix2D({});
-  var expectedResultURL = drawRectWithSetTransform(ctx, ident);
-  var actualResultURL = drawRectWithAddPathTransform(ctx);
-  assert_equals(actualResultURL, expectedResultURL);
-}, `addPath (Sanity check without second parameter)`);
+}, `Sanity check without dictionary`);
 
 [
   // Input dict that would throw if ignore3D was false
@@ -95,10 +57,10 @@ test(() => {
   [{c: 0, m21: -0},                matrix2D({m21: -0})],
   [{c: -0, m21: 0},                matrix2D({m21: 0})],
   [{c: -0, m21: -0},               matrix2D({m21: -0})],
-  [{d: Infinity, m22: Infinity},   matrix2D({})], // should be silently ignored
-  [{e: -Infinity, m41: -Infinity}, matrix2D({})], // should be silently ignored
-  [{f: NaN, m42: NaN},             matrix2D({})], // should be silently ignored
-  [{f: NaN, m42: NaN, is2D: true}, matrix2D({})], // should be silently ignored
+  [{d: Infinity, m22: Infinity},   matrix2D({m22: Infinity})],
+  [{e: -Infinity, m41: -Infinity}, matrix2D({m41: -Infinity})],
+  [{f: NaN, m42: NaN},             matrix2D({m42: NaN})],
+  [{f: NaN, m42: NaN, is2D: true}, matrix2D({m42: NaN})],
   [{f: 0, m42: null},              matrix2D({m42: 0})], // null is converted to 0
   [{f: -0, m42: null},             matrix2D({m42: 0})], // null is converted to 0
   [{a: 2},                         matrix2D({m11: 2})],
@@ -172,12 +134,6 @@ test(() => {
     ctx.setTransform(dict);
     const matrix = ctx.getTransform();
     checkMatrix(matrix, expected);
-  }, `setTransform(${format_dict(dict)})`);
-
-  test(() => {
-    var expectedResultURL = drawRectWithSetTransform(ctx, expected);
-    var actualResultURL = drawRectWithAddPathTransform(ctx, expected);
-    assert_equals(actualResultURL, expectedResultURL);
-  }, `addPath(${format_dict(dict)})`);
- });
+  }, `${format_dict(dict)}`);
+});
 </script>

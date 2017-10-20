@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>keyshortcuts multiple shortcuts</title>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -29,6 +28,32 @@
                   "objectAttributes",
                   "contains",
                   "keyshortcuts:Shift+Space Alt+Space"
+               ]
+            ],
+            "AXAPI" : [
+               [
+                  "property",
+                  "AXRole",
+                  "is",
+                  "AXButton"
+               ],
+               [
+                  "property",
+                  "AXSubrole",
+                  "is",
+                  "<nil>"
+               ],
+               [
+                  "property",
+                  "AXRoleDescription",
+                  "is",
+                  "button"
+               ],
+               [
+                  "result",
+                  "The element with role=\"button\" and id=\"test\", does not expose aria-keyshortcuts",
+                  "is",
+                  "true"
                ]
             ],
             "MSAA" : [
@@ -81,3 +106,4 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
+
