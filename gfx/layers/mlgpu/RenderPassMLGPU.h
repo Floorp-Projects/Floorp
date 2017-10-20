@@ -314,12 +314,13 @@ protected:
   // surfaces, on the other hand, are relative to the target offset of the
   // layer. In all cases the visible region may be partially occluded, so
   // knowing the true origin is important.
+  template <typename RegionType>
   bool AddItems(Txn& aTxn,
                 const Info& aInfo,
-                const nsIntRegion& aDrawRegion)
+                const RegionType& aDrawRegion)
   {
     for (auto iter = aDrawRegion.RectIter(); !iter.Done(); iter.Next()) {
-      gfx::Rect drawRect = gfx::Rect(iter.Get());
+      gfx::Rect drawRect = gfx::Rect(iter.Get().ToUnknownRect());
       if (!AddItem(aTxn, aInfo, drawRect)) {
         return false;
       }
