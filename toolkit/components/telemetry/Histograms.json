@@ -3917,6 +3917,15 @@
     "bug_numbers": [1409542],
     "description": "Why the predictor determined a particular resource was eligible for future prefetch (or not). See PrefetchDecisionReason in Predictor.cpp for value meanings"
   },
+  "PREDICTOR_PREFETCH_IGNORE_REASON": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 15,
+    "alert_emails": ["hurley@mozilla.com"],
+    "bug_numbers": [1409542],
+    "description": "Why the predictor determined a particular resource that was marked eligible for prefetch should not be prefetched. See PrefetchIgnoreReason in Predictor.cpp for value meanings"
+  },
   "HTTPCONNMGR_TOTAL_SPECULATIVE_CONN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

@@ -1327,33 +1327,51 @@ Predictor::CalculatePredictions(nsICacheEntry *entry, nsIURI *referrer,
       UpdateRollingLoadCount(entry, flags, key, hitCount, lastHit);
     }
     PREDICTOR_LOG(("CalculatePredictions key=%s value=%s confidence=%d", key, value, confidence));
+    PrefetchIgnoreReason reason = PREFETCH_OK;
     if (!fullUri) {
       // Not full URI - don't prefetch! No sense in it!
       PREDICTOR_LOG(("    forcing non-cacheability - not full URI"));
+      if (flags & FLAG_PREFETCHABLE) {
+        // This only applies if we had somehow otherwise marked this
+        // prefetchable.
+        reason = NOT_FULL_URI;
+      }
       flags &= ~FLAG_PREFETCHABLE;
     } else if (!referrer) {
       // No referrer means we can't prefetch, so pretend it's non-cacheable,
       // no matter what.
       PREDICTOR_LOG(("    forcing non-cacheability - no referrer"));
+      if (flags & FLAG_PREFETCHABLE) {
+        // This only applies if we had somehow otherwise marked this
+        // prefetchable.
+        reason = NO_REFERRER;
+      }
       flags &= ~FLAG_PREFETCHABLE;
     } else {
       uint32_t expectedRollingLoadCount = (1 << mPrefetchRollingLoadCount) - 1;
       expectedRollingLoadCount <<= kRollingLoadOffset;
       if ((flags & expectedRollingLoadCount) != expectedRollingLoadCount) {
         PREDICTOR_LOG(("    forcing non-cacheability - missed a load"));
+        if (flags & FLAG_PREFETCHABLE) {
+          // This only applies if we had somehow otherwise marked this
+          // prefetchable.
+          reason = MISSED_A_LOAD;
+        }
         flags &= ~FLAG_PREFETCHABLE;
       }
     }
 
     PREDICTOR_LOG(("    setting up prediction"));
-    SetupPrediction(confidence, flags, uri);
+    SetupPrediction(confidence, flags, uri, reason);
   }
 }
 
 // (Maybe) adds a predictive action to the prediction runner, based on our
 // calculated confidence for the subresource in question.
 void
-Predictor::SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &uri)
+Predictor::SetupPrediction(int32_t confidence, uint32_t flags,
+                           const nsCString &uri,
+                           PrefetchIgnoreReason earlyReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1363,8 +1381,32 @@ Predictor::SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &
                  "flags=%d confidence=%d uri=%s", mEnablePrefetch,
                  mPrefetchMinConfidence, mPreconnectMinConfidence,
                  mPreresolveMinConfidence, flags, confidence, uri.get()));
-  if (mEnablePrefetch && (flags & FLAG_PREFETCHABLE) &&
-      (mPrefetchRollingLoadCount || (confidence >= mPrefetchMinConfidence))) {
+
+  bool prefetchOk = !!(flags & FLAG_PREFETCHABLE);
+  PrefetchIgnoreReason reason = earlyReason;
+  if (prefetchOk && !mEnablePrefetch) {
+    prefetchOk = false;
+    reason = PREFETCH_DISABLED;
+  } else if (prefetchOk && !mPrefetchRollingLoadCount &&
+             confidence < mPrefetchMinConfidence) {
+    prefetchOk = false;
+    if (!mPrefetchRollingLoadCount) {
+      reason = PREFETCH_DISABLED_VIA_COUNT;
+    } else {
+      reason = CONFIDENCE_TOO_LOW;
+    }
+  }
+
+  // prefetchOk == false and reason == PREFETCH_OK indicates that the reason
+  // we aren't prefetching this item is because it was marked un-prefetchable in
+  // our metadata. We already have separate telemetry on that decision, so we
+  // aren't going to accumulate more here. Right now we only care about why
+  // something we had marked prefetchable isn't being prefetched.
+  if (!prefetchOk && reason != PREFETCH_OK) {
+    Telemetry::Accumulate(Telemetry::PREDICTOR_PREFETCH_IGNORE_REASON, reason);
+  }
+
+  if (prefetchOk) {
     nsCOMPtr<nsIURI> prefetchURI;
     rv = NS_NewURI(getter_AddRefs(prefetchURI), uri, nullptr, nullptr,
                    mIOService);
