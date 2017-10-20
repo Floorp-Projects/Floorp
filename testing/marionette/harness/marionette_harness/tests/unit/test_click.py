@@ -227,7 +227,7 @@ class TestClick(TestLegacyClick):
         with self.assertRaises(errors.InvalidArgumentException):
             self.marionette.find_element(By.TAG_NAME, "input").click()
 
-    def test_container_element(self):
+    def test_container_for_select(self):
         self.marionette.navigate(inline("""
             <select>
               <option>foo</option>
@@ -235,6 +235,15 @@ class TestClick(TestLegacyClick):
         option = self.marionette.find_element(By.TAG_NAME, "option")
         option.click()
         self.assertTrue(option.get_property("selected"))
+
+    def test_container_for_button(self):
+        self.marionette.navigate(inline("""
+          <button onclick="window.clicked = true;">
+            <span><em>foo</em></span>
+          </button>"""))
+        span = self.marionette.find_element(By.TAG_NAME, "span")
+        span.click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_container_element_outside_view(self):
         self.marionette.navigate(inline("""
