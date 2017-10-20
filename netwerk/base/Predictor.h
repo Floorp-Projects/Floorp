@@ -334,11 +334,22 @@ private:
                             uint32_t lastLoad, uint32_t loadCount,
                             int32_t globalDegradation, bool fullUri);
 
+  enum PrefetchIgnoreReason {
+    PREFETCH_OK,
+    NOT_FULL_URI,
+    NO_REFERRER,
+    MISSED_A_LOAD,
+    PREFETCH_DISABLED,
+    PREFETCH_DISABLED_VIA_COUNT,
+    CONFIDENCE_TOO_LOW
+  };
+
   // Used to prepare any necessary prediction for a resource on a page
   //   * confidence - value calculated by CalculateConfidence for this resource
   //   * flags - the flags taken from the resource
   //   * uri - the ascii spec of the URI of the resource
-  void SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &uri);
+  void SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &uri,
+                       PrefetchIgnoreReason reason);
 
   // Used to kick off a prefetch from RunPredictions if necessary
   //   * uri - the URI to prefetch
