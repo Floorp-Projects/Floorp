@@ -2375,16 +2375,6 @@ public:
   }
 
   /**
-   * Returns whether this document should perform image loads.
-   */
-  bool ShouldLoadImages() const
-  {
-    // We check IsBeingUsedAsImage() so that SVG documents loaded as
-    // images can themselves have data: URL image references.
-    return IsCurrentActiveDocument() || IsBeingUsedAsImage();
-  }
-
-  /**
    * Register/Unregister the ActivityObserver into mActivityObservers to listen
    * the document's activity changes such as OnPageHide, visibility, activity.
    * The ActivityObserver objects can be nsIObjectLoadingContent or

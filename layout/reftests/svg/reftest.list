@@ -217,7 +217,6 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 fuzzy-if(webrender,1,35) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
-== foreignObject-img.html foreignObject-img-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
