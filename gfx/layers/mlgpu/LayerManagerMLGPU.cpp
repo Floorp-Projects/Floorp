@@ -336,20 +336,6 @@ LayerManagerMLGPU::Composite()
   RecordFrame();
 
   mDevice->EndFrame();
-
-  // Free the old cloned property tree, then clone a new one. Note that we do
-  // this after compositing, since layer preparation actually mutates the layer
-  // tree (for example, ImageHost::mLastFrameID). We want the property tree to
-  // pick up these changes. Similarly, we are careful to not mutate the tree
-  // in any way that we *don't* want LayerProperties to catch, lest we cause
-  // extra invalidation.
-  //
-  // Note that the old Compositor performs occlusion culling directly on the
-  // shadow visible region, and does this *before* cloning layer tree
-  // properties. Advanced Layers keeps the occlusion region separate and
-  // performs invalidation against the clean layer tree.
-  mClonedLayerTreeProperties = nullptr;
-  mClonedLayerTreeProperties = LayerProperties::CloneFrom(mRoot);
 }
 
 void
@@ -492,6 +478,20 @@ LayerManagerMLGPU::ComputeInvalidRegion()
     mInvalidRegion = Move(mNextFrameInvalidRegion);
     mInvalidRegion.OrWith(changed);
   }
+
+  // Free the old cloned property tree, then clone a new one. Note that we do
+  // this before compositing since our CPU-based occlusion culling will update
+  // the visible region to contain non-occluded draw rects. If a layer will not
+  // be drawn, it will have no visible region. LTI might save this, and if the
+  // layer is removed next frame, LTI will invalidate the wrong area.
+  //
+  // Instead, we always invalidate based on the full shadow tree.
+  //
+  // Note that the old compositor performs CPU-based occlusion culling *before*
+  // invalidation. This maintains consistency, but we have more accurate draw
+  // regions.
+  mClonedLayerTreeProperties = nullptr;
+  mClonedLayerTreeProperties = LayerProperties::CloneFrom(mRoot);
 }
 
 void
