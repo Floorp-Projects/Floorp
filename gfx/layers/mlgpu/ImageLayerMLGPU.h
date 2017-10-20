@@ -26,7 +26,7 @@ public:
   ImageLayerMLGPU* AsImageLayerMLGPU() override { return this; }
 
   void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override;
-  void SetRegionToRender(LayerIntRegion&& aRegion) override;
+  void SetRenderRegion(LayerIntRegion&& aRegion) override;
   gfx::SamplingFilter GetSamplingFilter() override;
   void ClearCachedResources() override;
   bool IsContentOpaque() override;
