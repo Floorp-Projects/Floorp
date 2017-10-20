@@ -12,5 +12,5 @@ parallel-utf8 = ["encoding_rs/parallel-utf8"]
 
 [dependencies]
 encoding_rs = "0.7.0"
-nsstring = { path = "../../servo/support/gecko/nsstring" }
+nsstring = { path = "../../xpcom/rust/nsstring" }
 nserror = { path = "../../xpcom/rust/nserror" }
