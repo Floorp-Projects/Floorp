@@ -75,7 +75,7 @@ ImageLayerMLGPU::IsContentOpaque()
 }
 
 void
-ImageLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
+ImageLayerMLGPU::SetRegionToRender(LayerIntRegion&& aRegion)
 {
   switch (mScaleMode) {
   case ScaleMode::STRETCH:
@@ -88,7 +88,7 @@ ImageLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
     aRegion.AndWith(LayerIntRect(0, 0, mPictureRect.width, mPictureRect.height));
     break;
   }
-  LayerMLGPU::SetRenderRegion(Move(aRegion));
+  LayerMLGPU::SetRegionToRender(Move(aRegion));
 }
 
 void
