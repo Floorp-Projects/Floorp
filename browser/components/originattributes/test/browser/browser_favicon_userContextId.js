@@ -7,6 +7,10 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
+let EventUtils = {};
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+
 const TEST_SITE = "http://example.net";
 const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";
 
@@ -52,8 +56,8 @@ function clearAllPlacesFavicons() {
   });
 }
 
-function FaviconObserver(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
-  this.reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL);
+function FaviconObserver(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL, aOnlyXUL) {
+  this.reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL, aOnlyXUL);
 }
 
 FaviconObserver.prototype = {
@@ -108,13 +112,14 @@ FaviconObserver.prototype = {
     }
   },
 
-  reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
+  reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL, aOnlyXUL) {
     this._curUserContextId = aUserContextId;
     this._expectedCookie = aExpectedCookie;
     this._expectedPrincipal = Services.scriptSecurityManager
                                       .createCodebasePrincipal(aPageURI, { userContextId: aUserContextId });
     this._faviconReqXUL = false;
-    this._faviconReqPlaces = false;
+    // If aOnlyXUL is true, we only care about the favicon request from XUL.
+    this._faviconReqPlaces = aOnlyXUL === true;
     this._faviconURL = aFaviconURL;
     this._faviconLoaded = new Promise.defer();
   },
@@ -201,6 +206,87 @@ async function doTest(aTestPage, aFaviconHost, aFaviconURL) {
   await BrowserTestUtils.removeTab(tabInfo.tab);
 }
 
+async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
+  let cookies = await generateCookies(aFaviconHost);
+  let pageURI = makeURI(aTestPage);
+
+  // Set the 'overflow' attribute to make allTabs button available.
+  let tabBrowser = document.getElementById("tabbrowser-tabs");
+  let allTabsBtn = document.getElementById("alltabs-button");
+  tabBrowser.setAttribute("overflow", true);
+
+  // Create the observer object for observing request channels of the personal
+  // container.
+  let observer = new FaviconObserver(USER_CONTEXT_ID_PERSONAL, cookies[0], pageURI, aFaviconURL, true);
+
+  // Add the observer earlier in case we miss it.
+  let promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
+
+  // Open the tab with the personal container.
+  let tabInfo = await openTabInUserContext(aTestPage, USER_CONTEXT_ID_PERSONAL);
+
+  // Waiting for favicon loaded.
+  await promiseWaitOnFaviconLoaded;
+
+  // We need to clear the image cache here for making sure the network request will
+  // be made for the favicon of allTabs menuitem.
+  clearAllImageCaches();
+
+  // Add the observer for listening favicon requests.
+  Services.obs.addObserver(observer, "http-on-modify-request");
+
+  // Make the popup of allTabs showing up and trigger the loading of the favicon.
+  let allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  await observer.promise;
+  await allTabsPopupShownPromise;
+
+  // Close the popup of allTabs and wait until it's done.
+  let allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  await allTabsPopupHiddenPromise;
+
+  // Remove the observer for not receiving the favicon requests for opening a tab
+  // since we want to focus on the favicon of allTabs menu here.
+  Services.obs.removeObserver(observer, "http-on-modify-request");
+
+  // Close the tab.
+  await BrowserTestUtils.removeTab(tabInfo.tab);
+
+  // Open the tab under the work container and wait until the favicon is loaded.
+  promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
+  tabInfo = await openTabInUserContext(aTestPage, USER_CONTEXT_ID_WORK);
+  await promiseWaitOnFaviconLoaded;
+
+  // Clear the image cache again.
+  clearAllImageCaches();
+
+  // Reset the observer for observing requests for the work container.
+  observer.reset(USER_CONTEXT_ID_WORK, cookies[1], pageURI, aFaviconURL, true);
+
+  // Add the observer back for listening the favicon requests for allTabs menuitem.
+  Services.obs.addObserver(observer, "http-on-modify-request");
+
+  // Make the popup of allTabs showing up again.
+  allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  await observer.promise;
+  await allTabsPopupShownPromise;
+
+  // Close the popup of allTabs and wait until it's done.
+  allTabsPopupHiddenPromise = BrowserTestUtils.waitForEvent(allTabsBtn, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(allTabsBtn, {});
+  await allTabsPopupHiddenPromise;
+
+  Services.obs.removeObserver(observer, "http-on-modify-request");
+
+  // Close the tab.
+  await BrowserTestUtils.removeTab(tabInfo.tab);
+
+  // Reset the 'overflow' attribute to make the allTabs button hidden again.
+  tabBrowser.removeAttribute("overflow");
+}
+
 add_task(async function setup() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({"set": [
@@ -246,4 +332,30 @@ add_task(async function test_thirdPartyFavicon_userContextId() {
   await clearAllPlacesFavicons();
 
   await doTest(TEST_THIRD_PARTY_PAGE, TEST_THIRD_PARTY_SITE, THIRD_PARTY_FAVICON_URI);
+});
+
+add_task(async function test_allTabs_favicon_userContextId() {
+  // Clear all image caches before running the test.
+  clearAllImageCaches();
+
+  // Clear all network caches.
+  Services.cache2.clear();
+
+  // Clear Places favicon caches.
+  await clearAllPlacesFavicons();
+
+  await doTestForAllTabsFavicon(TEST_PAGE, TEST_SITE, FAVICON_URI);
+});
+
+add_task(async function test_allTabs_thirdPartyFavicon_userContextId() {
+  // Clear all image caches before running the test.
+  clearAllImageCaches();
+
+  // Clear all network caches.
+  Services.cache2.clear();
+
+  // Clear Places favicon caches.
+  await clearAllPlacesFavicons();
+
+  await doTestForAllTabsFavicon(TEST_THIRD_PARTY_PAGE, TEST_THIRD_PARTY_SITE, THIRD_PARTY_FAVICON_URI);
 });
