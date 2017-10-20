@@ -26,7 +26,6 @@
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
   skin/classic/mozapps/plugins/pluginGeneric.svg             (../../shared/extensions/category-plugins.svg)
-  skin/classic/mozapps/plugins/pluginBlocked.svg             (../../shared/plugins/pluginBlocked.svg)
   skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
 #ifndef ANDROID
