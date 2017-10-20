@@ -39,7 +39,7 @@ public:
   CanvasLayerMLGPU* AsCanvasLayerMLGPU() override { return this; }
   gfx::SamplingFilter GetSamplingFilter() override;
   void ClearCachedResources() override;
-  void SetRegionToRender(LayerIntRegion&& aRegion) override;
+  void SetRenderRegion(LayerIntRegion&& aRegion) override;
 
   MOZ_LAYER_DECL_NAME("CanvasLayerMLGPU", TYPE_CANVAS)
 

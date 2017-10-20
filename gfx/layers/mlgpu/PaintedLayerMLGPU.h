@@ -59,10 +59,7 @@ public:
            : SamplerMode::LinearRepeat;
   }
 
-  // This can return a different region than GetShadowVisibleRegion or
-  // GetLocalVisibleRegion, since we make sure to clamp it to the
-  // texture size and account for resampling.
-  nsIntRegion GetRenderRegion();
+  void SetRenderRegion(LayerIntRegion&& aRegion) override;
 
   MOZ_LAYER_DECL_NAME("PaintedLayerMLGPU", TYPE_PAINTED)
 
