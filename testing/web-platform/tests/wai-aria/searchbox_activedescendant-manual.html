@@ -2,7 +2,6 @@
 <html>
   <head>
     <title>searchbox activedescendant</title>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -154,6 +153,18 @@
                   "states",
                   "contains",
                   "STATE_FOCUSABLE"
+               ],
+               [
+                  "event",
+                  "type",
+                  "is",
+                  "object:state-changed:focused"
+               ],
+               [
+                  "event",
+                  "detail1",
+                  "is",
+                  "1"
                ]
             ],
             "AXAPI" : [
@@ -168,6 +179,12 @@
                   "AXUIElementIsAttributeSettable(AXFocused)",
                   "is",
                   "true"
+               ],
+               [
+                  "event",
+                  "type",
+                  "is",
+                  "AXFocusedUIElementChanged"
                ]
             ],
             "MSAA" : [
@@ -182,6 +199,12 @@
                   "states",
                   "contains",
                   "STATE_SYSTEM_FOCUSABLE"
+               ],
+               [
+                  "event",
+                  "type",
+                  "is",
+                  "EVENT_OBJECT_FOCUS"
                ]
             ],
             "UIA" : [
@@ -196,6 +219,12 @@
                   "IUIAutomationElement.UIA_HasKeyboardFocusPropertyId",
                   "is",
                   "true"
+               ],
+               [
+                  "event",
+                  "type",
+                  "is",
+                  "UIA_AutomationFocusChangedEventId"
                ]
             ]
          },
@@ -212,7 +241,7 @@
   <body>
   <p>This test examines the ARIA properties for searchbox activedescendant.</p>
      <div id='test' tabindex="0" aria-activedescendant="bob" role='searchbox'>
-     <div id='bob' role='group'>Hello world</div>
+     <div id='bob'>Hello world</div>
   </div>
  then role:searchbox, aria-activedescendant: bob
 
@@ -221,3 +250,4 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
+

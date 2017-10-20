@@ -14,5 +14,3 @@ promise_test(function() {
       idlArray.test();
     });
 }, 'Exposed interfaces in a Service Worker.');
-
-done();

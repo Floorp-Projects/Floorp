@@ -28,7 +28,7 @@ customising the test run.
 
 
 ## From Inside a Browser
-Tests that have been merged on GitHub are mirrored at [http://w3c-test.org/].
+Tests that have been merged on GitHub are mirrored at http://w3c-test.org/
 
 For running multiple tests inside a browser, there is a test runner
 located at `/tools/runner/index.html`.

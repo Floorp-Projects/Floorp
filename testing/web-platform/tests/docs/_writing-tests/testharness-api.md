@@ -261,7 +261,7 @@ tests".
 In order for a test to be interpreted as a single page test, then
 it must simply not call `test()` or `async_test()` anywhere on the page, and
 must call the `done()` function to indicate that the test is complete. All
-the `assert_*` functions are available as normal, but are called without
+the `assert_*` functions are avaliable as normal, but are called without
 the normal step function wrapper. For example:
 
 ```html
@@ -281,7 +281,7 @@ The test title for single page tests is always taken from `document.title`.
 ## Making assertions ##
 
 Functions for making assertions start `assert_`. The full list of
-asserts available is documented in the [asserts](#list-of-assertions) section
+asserts avaliable is documented in the [asserts](#list-of-assertions) section
 below. The general signature is:
 
 ```js
@@ -605,7 +605,7 @@ workers](https://slightlyoff.github.io/ServiceWorker/spec/service_worker/).
 Testing from a worker script is different from testing from an HTML document in
 several ways:
 
-* Workers have no reporting capability since they are running in the background.
+* Workers have no reporting capability since they are runing in the background.
   Hence they rely on `testharness.js` running in a companion client HTML document
   for reporting.
 
