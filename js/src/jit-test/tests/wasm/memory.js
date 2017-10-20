@@ -1,5 +1,3 @@
-// |jit-test| test-also-wasm-check-bce
-
 const RuntimeError = WebAssembly.RuntimeError;
 
 function loadModule(type, ext, offset, align) {

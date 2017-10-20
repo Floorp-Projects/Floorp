@@ -39,10 +39,7 @@ struct ObservationWithStack
     , mStack(aStack)
 #endif
   {
-    const char16_t* filename = aObs.Filename();
-    if (filename) {
-      mFilename = filename;
-    }
+    aObs.Filename(mFilename);
   }
 
   mozilla::IOInterposeObserver::Observation mObservation;

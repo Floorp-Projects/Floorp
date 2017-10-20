@@ -59,6 +59,21 @@ Decoder::fail(size_t errorOffset, const char* msg)
 }
 
 bool
+Decoder::readSectionHeader(uint8_t* id, SectionRange* range)
+{
+    if (!readFixedU8(id))
+        return false;
+
+    uint32_t size;
+    if (!readVarU32(&size))
+        return false;
+
+    range->start = cur_ - beg_;
+    range->size = size;
+    return true;
+}
+
+bool
 Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* range,
                       const char* sectionName)
 {
@@ -87,9 +102,8 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* r
         // Rewind to the beginning of the current section since this is what
         // skipCustomSection() assumes.
         cur_ = currentSectionStart;
-        if (!skipCustomSection(env)) {
+        if (!skipCustomSection(env))
             return false;
-        }
 
         // Having successfully skipped a custom section, consider the next
         // section.
@@ -1444,6 +1458,33 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
     }
 
     return d.finishSection(*range, "elem");
+}
+
+bool
+wasm::StartsCodeSection(const uint8_t* begin, const uint8_t* end, SectionRange* codeSection)
+{
+    UniqueChars unused;
+    Decoder d(begin, end, 0, &unused);
+
+    if (!DecodePreamble(d))
+        return false;
+
+    while (!d.done()) {
+        uint8_t id;
+        SectionRange range;
+        if (!d.readSectionHeader(&id, &range))
+            return false;
+
+        if (id == uint8_t(SectionId::Code)) {
+            *codeSection = range;
+            return true;
+        }
+
+        if (!d.readBytes(range.size))
+            return false;
+    }
+
+    return false;
 }
 
 bool
