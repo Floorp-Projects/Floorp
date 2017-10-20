@@ -141,10 +141,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   // make this decoder's output available in the surface cache.
   SurfaceKey surfaceKey =
     RasterSurfaceKey(aOutputSize, aSurfaceFlags, PlaybackType::eStatic);
-  NotNull<RefPtr<DecodedSurfaceProvider>> provider =
-    WrapNotNull(new DecodedSurfaceProvider(aImage,
-                                           surfaceKey,
-                                           WrapNotNull(decoder)));
+  auto provider = MakeNotNull<RefPtr<DecodedSurfaceProvider>>(
+    aImage, surfaceKey, WrapNotNull(decoder));
   if (aDecoderFlags & DecoderFlags::CANNOT_SUBSTITUTE) {
     provider->Availability().SetCannotSubstitute();
   }
@@ -194,10 +192,8 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   // and make this decoder's output available in the surface cache.
   SurfaceKey surfaceKey =
     RasterSurfaceKey(aIntrinsicSize, aSurfaceFlags, PlaybackType::eAnimated);
-  NotNull<RefPtr<AnimationSurfaceProvider>> provider =
-    WrapNotNull(new AnimationSurfaceProvider(aImage,
-                                             surfaceKey,
-                                             WrapNotNull(decoder)));
+  auto provider = MakeNotNull<RefPtr<AnimationSurfaceProvider>>(
+    aImage, surfaceKey, WrapNotNull(decoder));
 
   // Attempt to insert the surface provider into the surface cache right away so
   // we won't trigger any more decoders with the same parameters.
