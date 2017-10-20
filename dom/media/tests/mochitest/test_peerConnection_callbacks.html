@@ -53,7 +53,7 @@ pc2.onicecandidate = e => {
 var v1, v2;
 var delivered = new Promise(resolve => {
   pc2.onaddstream = e => {
-    v2.mozSrcObject = e.stream;
+    v2.srcObject = e.stream;
     resolve(e.stream);
   };
 });
@@ -66,7 +66,7 @@ runNetworkTest(function() {
 
   // not testing legacy gUM here
   navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => pc1.addStream(v1.mozSrcObject = stream))
+    .then(stream => pc1.addStream(v1.srcObject = stream))
     .then(() => pcall(pc1, pc1.createOffer))
     .then(offer => pcall(pc1, pc1.setLocalDescription, offer))
     .then(() => pcall(pc2, pc2.setRemoteDescription, pc1.localDescription))
@@ -75,7 +75,7 @@ runNetworkTest(function() {
     .then(() => pcall(pc1, pc1.setRemoteDescription, pc2.localDescription))
     .then(() => delivered)
   //    .then(() => canPlayThrough)    // why doesn't this fire?
-    .then(() => waitUntil(() => v2.currentTime > 0 && v2.mozSrcObject.currentTime > 0))
+    .then(() => waitUntil(() => v2.currentTime > 0 && v2.srcObject.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
     .then(() => ok(true, "Connected."))
     .then(() => pcall(pc1, pc1.getStats, null))
