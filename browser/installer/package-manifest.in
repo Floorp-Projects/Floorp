@@ -315,7 +315,6 @@
 @RESPATH@/components/txtsvc.xpt
 @RESPATH@/components/txmgr.xpt
 @RESPATH@/components/uconv.xpt
-@RESPATH@/components/unicharutil.xpt
 @RESPATH@/components/update.xpt
 @RESPATH@/components/uriloader.xpt
 @RESPATH@/components/urlformatter.xpt

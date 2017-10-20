@@ -5,24 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['util']
-TEST_DIRS += ['tests']
-
-XPIDL_SOURCES += [
-    'nsIUnicodeNormalizer.idl',
-]
-
-XPIDL_MODULE = 'unicharutil'
 
 EXPORTS += [
     'nsUGenCategory.h',
-    'nsUnicodeNormalizer.h',
-]
-
-UNIFIED_SOURCES += [
-    'nsUnicodeNormalizer.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-error=shadow']
