@@ -95,7 +95,6 @@ testing_config_options = [
     [["--download-symbols"],
      {"action": "store",
      "dest": "download_symbols",
-     "type": "choice",
      "choices": ['ondemand', 'true'],
      "help": "Download and extract crash reporter symbols.",
       }],

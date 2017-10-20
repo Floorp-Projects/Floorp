@@ -31,14 +31,12 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
         ["--locale"],
         {"action": "extend",
          "dest": "locales",
-         "type": "string",
          "help": "Specify the locale(s) to repack"
          }
     ], [
         ["--objdir"],
         {"action": "store",
          "dest": "objdir",
-         "type": "string",
          "default": "objdir",
          "help": "Specify the objdir"
          }
@@ -46,35 +44,30 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
         ["--l10n-base"],
         {"action": "store",
          "dest": "hg_l10n_base",
-         "type": "string",
          "help": "Specify the L10n repo base directory"
          }
     ], [
         ["--l10n-tag"],
         {"action": "store",
          "dest": "hg_l10n_tag",
-         "type": "string",
          "help": "Specify the L10n tag"
          }
     ], [
         ["--tag-override"],
         {"action": "store",
          "dest": "tag_override",
-         "type": "string",
          "help": "Override the tags set for all repos"
          }
     ], [
         ["--user-repo-override"],
         {"action": "store",
          "dest": "user_repo_override",
-         "type": "string",
          "help": "Override the user repo path for all repos"
          }
     ], [
         ["--l10n-dir"],
         {"action": "store",
          "dest": "l10n_dir",
-         "type": "string",
          "default": "l10n",
          "help": "Specify the l10n dir name"
          }

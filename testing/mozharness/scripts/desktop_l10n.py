@@ -79,81 +79,70 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         ['--balrog-config', ],
         {"action": "extend",
          "dest": "config_files",
-         "type": "string",
          "help": "Specify the balrog configuration file"}
     ], [
         ['--branch-config', ],
         {"action": "extend",
          "dest": "config_files",
-         "type": "string",
          "help": "Specify the branch configuration file"}
     ], [
         ['--environment-config', ],
         {"action": "extend",
          "dest": "config_files",
-         "type": "string",
          "help": "Specify the environment (staging, production, ...) configuration file"}
     ], [
         ['--platform-config', ],
         {"action": "extend",
          "dest": "config_files",
-         "type": "string",
          "help": "Specify the platform configuration file"}
     ], [
         ['--locale', ],
         {"action": "extend",
          "dest": "locales",
-         "type": "string",
          "help": "Specify the locale(s) to sign and update. Optionally pass"
                  " revision separated by colon, en-GB:default."}
     ], [
         ['--locales-file', ],
         {"action": "store",
          "dest": "locales_file",
-         "type": "string",
          "help": "Specify a file to determine which locales to sign and update"}
     ], [
         ['--tag-override', ],
         {"action": "store",
          "dest": "tag_override",
-         "type": "string",
          "help": "Override the tags set for all repos"}
     ], [
         ['--revision', ],
         {"action": "store",
          "dest": "revision",
-         "type": "string",
          "help": "Override the gecko revision to use (otherwise use buildbot supplied"
                  " value, or en-US revision) "}
     ], [
         ['--user-repo-override', ],
         {"action": "store",
          "dest": "user_repo_override",
-         "type": "string",
          "help": "Override the user repo path for all repos"}
     ], [
         ['--release-config-file', ],
         {"action": "store",
          "dest": "release_config_file",
-         "type": "string",
          "help": "Specify the release config file to use"}
     ], [
         ['--this-chunk', ],
         {"action": "store",
          "dest": "this_locale_chunk",
-         "type": "int",
+         "type": int,
          "help": "Specify which chunk of locales to run"}
     ], [
         ['--total-chunks', ],
         {"action": "store",
          "dest": "total_locale_chunks",
-         "type": "int",
+         "type": int,
          "help": "Specify the total number of chunks of locales"}
     ], [
         ['--en-us-installer-url', ],
         {"action": "store",
          "dest": "en_us_installer_url",
-         "type": "string",
          "help": "Specify the url of the en-us binary"}
     ], [
         ["--disable-mock"], {
