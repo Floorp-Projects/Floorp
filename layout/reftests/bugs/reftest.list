@@ -317,7 +317,7 @@ random-if(d2d) fuzzy-if(Android,8,1439) skip-if(styloVsGecko) HTTP == 289480.htm
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
 fails-if(styloVsGecko) == 299837-2.xul 299837-2-ref.xul # bug 1408235
-random-if(d2d) asserts-if(stylo,24-128) asserts-if(styloVsGecko,12-64) == 299837-3.xul 299837-3-ref.xul # bug 587631, stylo: bug 1397644
+random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
@@ -1289,7 +1289,7 @@ fuzzy-if(skiaContent,1,5) skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
 == 476856-1.html 476856-1-ref.html
-random-if(d2d) fails-if(styloVsGecko) asserts-if(stylo,16-18) == 478377-1.xul 478377-1-ref.xul # bug 1397644
+random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 == 478614-1.html 478614-1-ref.html
 == 478614-2.html 478614-1-ref.html
 == 478614-3.html 478614-3-ref.html
@@ -1688,11 +1688,11 @@ fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha b
 != 656875.html about:blank
 == 658952.html 658952-ref.html
 fuzzy-if(skiaContent,7,3500) == 660682-1.html 660682-1-ref.html
-fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) fails-if(styloVsGecko) asserts-if(stylo,16-18) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131, stylo: bug 1397644
+fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131
 == 665597-1.html 665597-1-ref.html
 == 665597-2.html 665597-2-ref.html
 == 667079-1.html 667079-1-ref.html
-fails-if(stylo||styloVsGecko) asserts-if(stylo,8-9) == 668319-1.xul about:blank # bug 1397644
+== 668319-1.xul about:blank
 fails-if(stylo||styloVsGecko) != 669015-1.xul 669015-1-notref.xul # bug 1408235
 skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
