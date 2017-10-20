@@ -10,7 +10,6 @@
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryBinding.h"
 #include "mozilla/dom/PerformanceObserverBinding.h"
-#include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "nsString.h"
@@ -145,9 +144,11 @@ static const char16_t *const sValidTypeNames[4] = {
 };
 
 void
-PerformanceObserver::Observe(const PerformanceObserverInit& aOptions)
+PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
+                             ErrorResult& aRv)
 {
   if (aOptions.mEntryTypes.IsEmpty()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
@@ -161,37 +162,8 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions)
     }
   }
 
-  nsAutoString invalidTypesJoined;
-  bool addComma = false;
-  for (const auto& type : aOptions.mEntryTypes) {
-    if (!validEntryTypes.Contains<nsString>(type)) {
-      if (addComma) {
-        invalidTypesJoined.AppendLiteral(", ");
-      }
-      addComma = true;
-      invalidTypesJoined.Append(type);
-    }
-  }
-
-  if (!invalidTypesJoined.IsEmpty()) {
-    if (!NS_IsMainThread()) {
-      nsTArray<nsString> params;
-      params.AppendElement(invalidTypesJoined);
-      WorkerPrivate::ReportErrorToConsole("UnsupportedEntryTypesIgnored",
-                                          params);
-    } else {
-      nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
-        do_QueryInterface(mOwner);
-      nsIDocument* document = ownerWindow->GetExtantDoc();
-      const char16_t* params[] = { invalidTypesJoined.get() };
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"), document,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "UnsupportedEntryTypesIgnored", params, 1);
-    }
-  }
-
   if (validEntryTypes.IsEmpty()) {
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
