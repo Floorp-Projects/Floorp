@@ -1,8 +1,34 @@
+job-defaults:
+    mozharness:
+        no-read-buildbot-config: true
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android-4.2-x86/opt:
+                    - android/androidx86.py
+                android.*:
+                    - android/androidarm_4_3.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+        requires-signed-builds:
+            by-test-platform:
+                windows10-64-asan/opt: false    # No XPCShell on ASAN yet
+                windows.*: true
+                default: false
+
 xpcshell:
     description: "xpcshell test run"
     suite:
         by-test-platform:
-            linux64-jsdcov/opt: xpcshell-coverage
+            linux64-jsdcov/opt: xpcshell/xpcshell-coverage
             default: xpcshell
     treeherder-symbol: tc-X(X)
     run-on-projects:
@@ -25,42 +51,6 @@ xpcshell:
     max-run-time: 5400
     e10s: false
     allow-software-gl-layers: false
-    mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                extra-options:
-                    - --test-suite=xpcshell
-                config:
-                    by-test-platform:
-                        android-4.2-x86/opt:
-                            - android/androidx86.py
-                        default:
-                            - android/androidarm_4_3.py
-            default:
-                script: desktop_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    by-test-platform:
-                        linux64-jsdcov/opt:
-                            - --xpcshell-suite=xpcshell-coverage
-                        default:
-                            - --xpcshell-suite=xpcshell
-                requires-signed-builds:
-                    by-test-platform:
-                        windows10-64-asan/opt: false    # No XPCShell on ASAN yet
-                        windows.*: true
-                        default: false
     tier:
         by-test-platform:
             windows10-64-asan.*: 3

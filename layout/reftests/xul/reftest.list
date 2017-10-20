@@ -7,9 +7,9 @@ random-if(Android) fails-if(winWidget||stylo||styloVsGecko) == menulist-shrinkwr
 fails-if(styloVsGecko) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658, stylo: bug 1408235
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) fails-if(styloVsGecko) == accesskey.xul accesskey-ref.xul # stylo: bug 1408811
-fails-if(cocoaWidget&&!stylo) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) asserts-if(stylo,13-26) fails-if(styloVsGecko) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832, stylo: bug 1397644
+fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
 skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
-asserts-if(stylo,13-26) fails-if(stylo||styloVsGecko) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # stylo: bug 1397644
+!= tree-row-outline-1.xul tree-row-outline-1-notref.xul
 == text-crop.xul text-crop-ref.xul
 fails-if(stylo||styloVsGecko) == text-small-caps-1.xul text-small-caps-1-ref.xul # stylo: bug 1408235
 fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
@@ -72,4 +72,4 @@ fails-if(styloVsGecko) == stack-sizing-2.xul stack-sizing-2-ref.xul # bug 140823
 skip == treecell-image-svg-1a.xul treecell-image-svg-1-ref.xul # bug 1218954
 skip == treecell-image-svg-1b.xul treecell-image-svg-1-ref.xul # bug 1218954
 
-asserts-if(stylo,16-18) fails-if(styloVsGecko) == treechildren-padding-percent-1.xul treechildren-padding-percent-1-ref.xul # bug 1397644
+== treechildren-padding-percent-1.xul treechildren-padding-percent-1-ref.xul

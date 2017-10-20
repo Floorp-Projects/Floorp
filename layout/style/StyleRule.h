@@ -347,6 +347,7 @@ public:
                                   uint32_t aSelectorIndex,
                                   const nsAString& aPseudo,
                                   bool* aMatches) override;
+  mozilla::NotNull<DeclarationBlock*> GetDeclarationBlock() const override;
 
   // WebIDL interface
   uint16_t Type() const override;

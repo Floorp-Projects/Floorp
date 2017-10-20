@@ -7,8 +7,16 @@
 const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/action.js");
-Cu.import("chrome://marionette/content/element.js");
+const {ContentWebElement} = Cu.import("chrome://marionette/content/element.js", {});
 Cu.import("chrome://marionette/content/error.js");
+
+const XHTMLNS = "http://www.w3.org/1999/xhtml";
+
+const domEl = {
+  nodeType: 1,
+  ELEMENT_NODE: 1,
+  namespaceURI: XHTMLNS,
+};
 
 action.inputStateMap = new Map();
 
@@ -96,7 +104,7 @@ add_test(function test_processPointerMoveActionOriginValidation() {
   for (let d of [-1, {a: "blah"}, []]) {
     actionItem.origin = d;
 
-    checkErrors(/Expected \'origin\' to be a string or a web element reference/,
+    checkErrors(/Expected \'origin\' to be undefined, "viewport", "pointer", or an element/,
         action.Action.fromJSON,
         [actionSequence, actionItem],
         `actionItem.origin: (${getTypeString(d)})`);
@@ -122,7 +130,7 @@ add_test(function test_processPointerMoveActionOriginStringValidation() {
 add_test(function test_processPointerMoveActionElementOrigin() {
   let actionSequence = {type: "pointer", id: "some_id"};
   let actionItem = {duration: 5000, type: "pointerMove"};
-  actionItem.origin = {[element.Key]: "something"};
+  actionItem.origin = domEl;
   let a = action.Action.fromJSON(actionSequence, actionItem);
   deepEqual(a.origin, actionItem.origin);
   run_next_test();
@@ -150,7 +158,7 @@ add_test(function test_processPointerMoveAction() {
     {
       duration: undefined,
       type: "pointerMove",
-      origin: {[element.Key]: "id", [element.LegacyKey]: "id"},
+      origin: domEl,
       x: undefined,
       y: undefined,
     },

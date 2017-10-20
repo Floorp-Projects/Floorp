@@ -529,6 +529,68 @@ CreateNotebookWidget()
 }
 
 static GtkWidget*
+CreateHeaderBar(WidgetNodeType aWidgetType)
+{
+  MOZ_ASSERT(gtk_check_version(3, 10, 0) == nullptr,
+             "GtkHeaderBar is only available on GTK 3.10+.");
+
+  static auto sGtkHeaderBarNewPtr = (GtkWidget* (*)())
+    dlsym(RTLD_DEFAULT, "gtk_header_bar_new");
+
+  GtkWidget* headerbar = sGtkHeaderBarNewPtr();
+  if (aWidgetType == MOZ_GTK_HEADER_BAR_MAXIMIZED) {
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_widget_set_name(window, "MozillaMaximizedGtkWidget");
+    GtkStyleContext* style = gtk_widget_get_style_context(window);
+    gtk_style_context_add_class(style, "maximized");
+    GtkWidget *fixed = gtk_fixed_new();
+    gtk_container_add(GTK_CONTAINER(window), fixed);
+    gtk_container_add(GTK_CONTAINER(fixed), headerbar);
+    // Save the window container so we don't leak it.
+    sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED] = window;
+  } else {
+    AddToWindowContainer(headerbar);
+  }
+
+  // Emulate what create_titlebar() at gtkwindow.c does.
+  GtkStyleContext* style = gtk_widget_get_style_context(headerbar);
+  gtk_style_context_add_class(style, "titlebar");
+  gtk_style_context_add_class(style, "default-decoration");
+
+  return headerbar;
+}
+
+// TODO - Also return style for buttons located at Maximized toolbar.
+static GtkWidget*
+CreateHeaderBarButton(WidgetNodeType aWidgetType)
+{
+  MOZ_ASSERT(gtk_check_version(3, 10, 0) == nullptr,
+             "GtkHeaderBar is only available on GTK 3.10+.");
+
+  GtkWidget* widget = gtk_button_new();
+  gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_HEADER_BAR)), widget);
+
+  GtkStyleContext* style = gtk_widget_get_style_context(widget);
+  gtk_style_context_add_class(style, "titlebutton");
+
+  switch (aWidgetType) {
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+      gtk_style_context_add_class(style, "close");
+      break;
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+      gtk_style_context_add_class(style, "minimize");
+      break;
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+      gtk_style_context_add_class(style, "maximize");
+      break;
+    default:
+      break;
+  }
+
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -610,6 +672,13 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateComboBoxEntryButtonWidget();
     case MOZ_GTK_COMBOBOX_ENTRY_ARROW:
       return CreateComboBoxEntryArrowWidget();
+    case MOZ_GTK_HEADER_BAR:
+    case MOZ_GTK_HEADER_BAR_MAXIMIZED:
+      return CreateHeaderBar(aWidgetType);
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+      return CreateHeaderBarButton(aWidgetType);
     default:
       /* Not implemented */
       return nullptr;
@@ -1214,6 +1283,8 @@ ResetWidgetCache(void)
   /* This will destroy all of our widgets */
   if (sWidgetStorage[MOZ_GTK_WINDOW])
     gtk_widget_destroy(sWidgetStorage[MOZ_GTK_WINDOW]);
+  if (sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED])
+    gtk_widget_destroy(sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED]);
 
   /* Clear already freed arrays */
   mozilla::PodArrayZero(sWidgetStorage);

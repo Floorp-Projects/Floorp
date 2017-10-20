@@ -44,7 +44,7 @@ function filtersClear() {
       type: FILTERS_CLEAR,
     });
 
-    const filterState = getAllFilters(getState());
+    const filterState = getAllFilters(getState()).toJS();
     for (let filter in filterState) {
       if (filter !== FILTERS.TEXT) {
         Services.prefs.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);
@@ -61,11 +61,13 @@ function filtersClear() {
  */
 function defaultFiltersReset() {
   return (dispatch, getState) => {
+    // Get the state before dispatching so the action does not alter prefs reset.
+    const filterState = getAllFilters(getState());
+
     dispatch({
       type: DEFAULT_FILTERS_RESET,
     });
 
-    const filterState = getAllFilters(getState());
     DEFAULT_FILTERS.forEach(filter => {
       if (filterState[filter] === false) {
         Services.prefs.clearUserPref(PREFS.FILTER[filter.toUpperCase()]);

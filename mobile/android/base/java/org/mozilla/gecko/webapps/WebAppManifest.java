@@ -68,6 +68,19 @@ public class WebAppManifest {
         }
     }
 
+    public static WebAppManifest fromString(final String url, final String input) {
+        try {
+            final Uri manifestUri = Uri.parse(url);
+            final JSONObject manifest = new JSONObject(input);
+            final JSONObject manifestField = manifest.getJSONObject("manifest");
+
+            return new WebAppManifest(manifestUri, manifest, manifestField);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Failed to read webapp manifest", e);
+            return null;
+        }
+    }
+
     private WebAppManifest(final Uri uri, final JSONObject manifest, final JSONObject manifestField) {
         mManifestUri = uri;
         readManifest(manifest, manifestField);

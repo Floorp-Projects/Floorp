@@ -30,6 +30,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebAppManifest;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -650,7 +651,11 @@ public class Tabs implements BundleEventListener {
             tab.setHasOpenSearch(message.getBoolean("visible"));
 
         } else if ("Link:Manifest".equals(event)) {
-            tab.setManifestUrl(message.getString("href"));
+            final String url = message.getString("href");
+            final String manifest = message.getString("manifest");
+
+            tab.setManifestUrl(url);
+            tab.setWebAppManifest(WebAppManifest.fromString(url, manifest));
 
         } else if ("DesktopMode:Changed".equals(event)) {
             tab.setDesktopMode(message.getBoolean("desktopMode"));

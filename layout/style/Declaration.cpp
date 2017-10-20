@@ -204,7 +204,7 @@ Declaration::RemoveProperty(const nsAString& aProperty)
     [&](const nsAString& name) { RemoveVariable(name); });
 }
 
-void
+bool
 Declaration::RemovePropertyByID(nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT);
@@ -213,18 +213,22 @@ Declaration::RemovePropertyByID(nsCSSPropertyID aProperty)
   ExpandTo(&data);
   MOZ_ASSERT(!mData && !mImportantData, "Expand didn't null things out");
 
+  bool removed = false;
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
                                          CSSEnabledState::eForAllContent) {
       data.ClearLonghandProperty(*p);
-      mOrder.RemoveElement(static_cast<uint32_t>(*p));
+      if (mOrder.RemoveElement(static_cast<uint32_t>(*p))) {
+        removed = true;
+      }
     }
   } else {
     data.ClearLonghandProperty(aProperty);
-    mOrder.RemoveElement(static_cast<uint32_t>(aProperty));
+    removed = mOrder.RemoveElement(static_cast<uint32_t>(aProperty));
   }
 
   CompressFrom(&data);
+  return removed;
 }
 
 bool
