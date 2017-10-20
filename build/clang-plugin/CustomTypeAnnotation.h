@@ -41,12 +41,10 @@ public:
   bool hasEffectiveAnnotation(QualType T) {
     return directAnnotationReason(T).valid();
   }
-  void dumpAnnotationReason(BaseCheck &Check, QualType T,
-                            SourceLocation Loc);
+  void dumpAnnotationReason(BaseCheck &Check, QualType T, SourceLocation Loc);
 
-  void reportErrorIfPresent(BaseCheck &Check, QualType T,
-                            SourceLocation Loc, const char* Error,
-                            const char* Note) {
+  void reportErrorIfPresent(BaseCheck &Check, QualType T, SourceLocation Loc,
+                            const char *Error, const char *Note) {
     if (hasEffectiveAnnotation(T)) {
       Check.diag(Loc, Error, DiagnosticIDs::Error) << T;
       Check.diag(Loc, Note, DiagnosticIDs::Note);

@@ -15,8 +15,8 @@ class OverrideBaseCallUsageChecker : public BaseCheck {
 public:
   OverrideBaseCallUsageChecker(StringRef CheckName = "override-base-call-usage",
                                ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 

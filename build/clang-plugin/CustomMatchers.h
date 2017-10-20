@@ -39,7 +39,7 @@ AST_MATCHER(CXXMethodDecl, isRValueRefQualified) {
   return Node.getRefQualifier() == RQ_RValue;
 }
 
-AST_POLYMORPHIC_MATCHER(isFirstParty,                                          \
+AST_POLYMORPHIC_MATCHER(isFirstParty,
                         AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
   return !inThirdPartyPath(&Node, &Finder->getASTContext()) &&
          !ASTIsInSystemHeader(Finder->getASTContext(), Node);
@@ -304,20 +304,20 @@ AST_MATCHER_P(Stmt, forFunction, internal::Matcher<FunctionDecl>,
 
   llvm::SmallVector<ast_type_traits::DynTypedNode, 8> Stack(Parents.begin(),
                                                             Parents.end());
-  while(!Stack.empty()) {
+  while (!Stack.empty()) {
     const auto &CurNode = Stack.back();
     Stack.pop_back();
-    if(const auto *FuncDeclNode = CurNode.get<FunctionDecl>()) {
-      if(InnerMatcher.matches(*FuncDeclNode, Finder, Builder)) {
+    if (const auto *FuncDeclNode = CurNode.get<FunctionDecl>()) {
+      if (InnerMatcher.matches(*FuncDeclNode, Finder, Builder)) {
         return true;
       }
-    } else if(const auto *LambdaExprNode = CurNode.get<LambdaExpr>()) {
-      if(InnerMatcher.matches(*LambdaExprNode->getCallOperator(),
-                              Finder, Builder)) {
+    } else if (const auto *LambdaExprNode = CurNode.get<LambdaExpr>()) {
+      if (InnerMatcher.matches(*LambdaExprNode->getCallOperator(), Finder,
+                               Builder)) {
         return true;
       }
     } else {
-      for(const auto &Parent: Finder->getASTContext().getParents(CurNode))
+      for (const auto &Parent : Finder->getASTContext().getParents(CurNode))
         Stack.push_back(Parent);
     }
   }
@@ -325,7 +325,7 @@ AST_MATCHER_P(Stmt, forFunction, internal::Matcher<FunctionDecl>,
 }
 #endif
 
-}
-}
+} // namespace ast_matchers
+} // namespace clang
 
 #endif

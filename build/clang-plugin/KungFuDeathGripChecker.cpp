@@ -5,17 +5,15 @@
 #include "KungFuDeathGripChecker.h"
 #include "CustomMatchers.h"
 
-void KungFuDeathGripChecker::registerMatchers(MatchFinder* AstMatcher) {
-  AstMatcher->addMatcher(varDecl(hasType(isRefPtr())).bind("decl"),
-                         this);
+void KungFuDeathGripChecker::registerMatchers(MatchFinder *AstMatcher) {
+  AstMatcher->addMatcher(varDecl(hasType(isRefPtr())).bind("decl"), this);
 }
 
-void KungFuDeathGripChecker::check(
-    const MatchFinder::MatchResult &Result) {
-  const char* Error =
-    "Unused \"kungFuDeathGrip\" %0 objects constructed from %1 are prohibited";
-  const char* Note =
-    "Please switch all accesses to this %0 to go through '%1', or explicitly pass '%1' to `mozilla::Unused`";
+void KungFuDeathGripChecker::check(const MatchFinder::MatchResult &Result) {
+  const char *Error = "Unused \"kungFuDeathGrip\" %0 objects constructed from "
+                      "%1 are prohibited";
+  const char *Note = "Please switch all accesses to this %0 to go through "
+                     "'%1', or explicitly pass '%1' to `mozilla::Unused`";
 
   const VarDecl *D = Result.Nodes.getNodeAs<VarDecl>("decl");
   if (D->isReferenced() || !D->hasLocalStorage() || !D->hasInit()) {
@@ -64,17 +62,18 @@ void KungFuDeathGripChecker::check(
   const TagDecl *TD = E->getType()->getAsTagDecl();
   if (TD && TD->getIdentifier()) {
     static const char *IgnoreTypes[] = {
-      "already_AddRefed",
-      "nsGetServiceByCID",
-      "nsGetServiceByCIDWithError",
-      "nsGetServiceByContractID",
-      "nsGetServiceByContractIDWithError",
-      "nsCreateInstanceByCID",
-      "nsCreateInstanceByContractID",
-      "nsCreateInstanceFromFactory",
+        "already_AddRefed",
+        "nsGetServiceByCID",
+        "nsGetServiceByCIDWithError",
+        "nsGetServiceByContractID",
+        "nsGetServiceByContractIDWithError",
+        "nsCreateInstanceByCID",
+        "nsCreateInstanceByContractID",
+        "nsCreateInstanceFromFactory",
     };
 
-    for (uint32_t i = 0; i < sizeof(IgnoreTypes) / sizeof(IgnoreTypes[0]); ++i) {
+    for (uint32_t i = 0; i < sizeof(IgnoreTypes) / sizeof(IgnoreTypes[0]);
+         ++i) {
       if (TD->getName() == IgnoreTypes[i]) {
         return;
       }
@@ -85,7 +84,7 @@ void KungFuDeathGripChecker::check(
   const char *ErrThing;
   const char *NoteThing;
   if (isa<MemberExpr>(E)) {
-    ErrThing  = "members";
+    ErrThing = "members";
     NoteThing = "member";
   } else {
     ErrThing = "temporary values";
@@ -93,6 +92,8 @@ void KungFuDeathGripChecker::check(
   }
 
   // We cannot provide the note if we don't have an initializer
-  diag(D->getLocStart(), Error, DiagnosticIDs::Error) << D->getType() << ErrThing;
-  diag(E->getLocStart(), Note, DiagnosticIDs::Note) << NoteThing << getNameChecked(D);
+  diag(D->getLocStart(), Error, DiagnosticIDs::Error)
+      << D->getType() << ErrThing;
+  diag(E->getLocStart(), Note, DiagnosticIDs::Note)
+      << NoteThing << getNameChecked(D);
 }
