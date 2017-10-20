@@ -237,7 +237,7 @@ public:
 
   bool Activated() const
   {
-    return mActivated;
+    return mStream;
   }
 
   bool Stopped() const
@@ -266,10 +266,6 @@ public:
   PrincipalHandle GetPrincipalHandle() const;
 
 private:
-  // true after this listener has been Activate()d in a WindowListener.
-  // MainThread only.
-  bool mActivated;
-
   // true after this listener has had all devices stopped. MainThread only.
   bool mStopped;
 
@@ -3545,8 +3541,7 @@ MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId)
 }
 
 SourceListener::SourceListener()
-  : mActivated(false)
-  , mStopped(false)
+  : mStopped(false)
   , mFinished(false)
   , mRemoved(false)
   , mAudioStopped(false)
@@ -3565,7 +3560,7 @@ SourceListener::Register(GetUserMediaWindowListener* aListener)
     MOZ_ASSERT(false, "Already registered");
     return;
   }
-  if (mActivated) {
+  if (Activated()) {
     MOZ_ASSERT(false, "Already activated");
     return;
   }
@@ -3586,12 +3581,16 @@ SourceListener::Activate(SourceMediaStream* aStream,
 
   LOG(("SourceListener %p activating audio=%p video=%p", this, aAudioDevice, aVideoDevice));
 
-  if (mActivated) {
+  if (mStopped) {
+    MOZ_ASSERT(false, "Cannot activate stopped source listener");
+    return;
+  }
+
+  if (Activated()) {
     MOZ_ASSERT(false, "Already activated");
     return;
   }
 
-  mActivated = true;
   mMainThreadCheck = GetCurrentVirtualThread();
   mStream = aStream;
   mAudioDevice = aAudioDevice;
@@ -3616,13 +3615,24 @@ SourceListener::Stop()
 
   mStopped = true;
 
+  if (!Activated()) {
+    MOZ_ASSERT(false, "There are no devices or any source stream to stop");
+    return;
+  }
+
   if (mAudioDevice && !mAudioStopped) {
     StopTrack(kAudioTrack);
   }
   if (mVideoDevice && !mVideoStopped) {
     StopTrack(kVideoTrack);
   }
-  RefPtr<SourceMediaStream> source = GetSourceStream();
+
+  RefPtr<SourceMediaStream> source = mStream;
+  if (!source) {
+    MOZ_ASSERT(false, "Can't end tracks. No source stream.");
+    return;
+  }
+
   MediaManager::PostTask(NewTaskFrom([source]() {
     MOZ_ASSERT(MediaManager::IsInMediaThread());
     source->EndAllTrackAndFinish();
@@ -3653,7 +3663,11 @@ SourceListener::StopTrack(TrackID aTrackID)
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   RefPtr<MediaDevice> device;
-  RefPtr<SourceMediaStream> source;
+
+  if (!Activated()) {
+    MOZ_ASSERT(false, "No device to stop");
+    return;
+  }
 
   switch (aTrackID) {
     case kAudioTrack: {
@@ -3667,7 +3681,6 @@ SourceListener::StopTrack(TrackID aTrackID)
         return;
       }
       device = mAudioDevice;
-      source = GetSourceStream();
       mAudioStopped = true;
       break;
     }
@@ -3682,7 +3695,6 @@ SourceListener::StopTrack(TrackID aTrackID)
         return;
       }
       device = mVideoDevice;
-      source = GetSourceStream();
       mVideoStopped = true;
       break;
     }
@@ -3692,6 +3704,7 @@ SourceListener::StopTrack(TrackID aTrackID)
     }
   }
 
+  RefPtr<SourceMediaStream> source = mStream;
   MediaManager::PostTask(NewTaskFrom([device, source, aTrackID]() {
     device->GetSource()->Stop(source, aTrackID);
     device->Deallocate();
@@ -3748,10 +3761,7 @@ SourceMediaStream*
 SourceListener::GetSourceStream()
 {
   NS_ASSERTION(mStream,"Getting stream from never-activated SourceListener");
-  if (!mStream) {
-    return nullptr;
-  }
-  return mStream->AsSourceStream();
+  return mStream;
 }
 
 void
@@ -3856,7 +3866,7 @@ SourceListener::NotifyRemoved()
   LOG(("SourceListener removed, mFinished = %d", (int) mFinished));
   mRemoved = true;
 
-  if (!mFinished) {
+  if (Activated() && !mFinished) {
     NotifyFinished();
   }
 
@@ -3867,7 +3877,7 @@ bool
 SourceListener::CapturingVideo() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mVideoDevice && !mVideoStopped &&
+  return Activated() && mVideoDevice && !mVideoStopped &&
          !mVideoDevice->GetSource()->IsAvailable() &&
          mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
          (!mVideoDevice->GetSource()->IsFake() ||
@@ -3878,7 +3888,7 @@ bool
 SourceListener::CapturingAudio() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mAudioDevice && !mAudioStopped &&
+  return Activated() && mAudioDevice && !mAudioStopped &&
          !mAudioDevice->GetSource()->IsAvailable() &&
          (!mAudioDevice->GetSource()->IsFake() ||
           Preferences::GetBool("media.navigator.permission.fake"));
@@ -3888,7 +3898,7 @@ bool
 SourceListener::CapturingScreen() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mVideoDevice && !mVideoStopped &&
+  return Activated() && mVideoDevice && !mVideoStopped &&
          !mVideoDevice->GetSource()->IsAvailable() &&
          mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Screen;
 }
@@ -3897,7 +3907,7 @@ bool
 SourceListener::CapturingWindow() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mVideoDevice && !mVideoStopped &&
+  return Activated() && mVideoDevice && !mVideoStopped &&
          !mVideoDevice->GetSource()->IsAvailable() &&
          mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Window;
 }
@@ -3906,7 +3916,7 @@ bool
 SourceListener::CapturingApplication() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mVideoDevice && !mVideoStopped &&
+  return Activated() && mVideoDevice && !mVideoStopped &&
          !mVideoDevice->GetSource()->IsAvailable() &&
          mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Application;
 }
@@ -3915,7 +3925,7 @@ bool
 SourceListener::CapturingBrowser() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mActivated && mVideoDevice && !mVideoStopped &&
+  return Activated() && mVideoDevice && !mVideoStopped &&
          !mVideoDevice->GetSource()->IsAvailable() &&
          mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
 }

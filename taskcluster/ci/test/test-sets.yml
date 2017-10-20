@@ -104,7 +104,7 @@ reftest-stylo:
     - reftest-stylo
 
 qr-talos:
-    # - talos-chrome # regressed, see bug 1408418
+    - talos-chrome
     - talos-dromaeojs
     - talos-g1
     # - talos-g2 # doesn't work with QR yet

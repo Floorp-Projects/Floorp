@@ -158,6 +158,8 @@ public:
 
   void UpdateResources(ResourceUpdateQueue& aUpdates);
 
+  void UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch);
+
   void SetFrameStartTime(const TimeStamp& aTime);
 
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);

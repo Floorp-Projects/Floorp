@@ -109,6 +109,4 @@ jobs:
           by-project:
               # No default branch
               mozilla-central:
-                  # Buildbot start time is 10:02am UTC, until we are able to
-                  # disable buildbot scheduling, use +12h
-                  - {hour: 22, minute: 0}
+                  - {hour: 10, minute: 0}

@@ -122,7 +122,6 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
                                      wr::BuiltDisplayList& aDL,
                                      wr::IpcResourceUpdateQueue& aResources,
                                      const gfx::IntSize& aSize,
-                                     bool aIsSync,
                                      uint64_t aTransactionId,
                                      const WebRenderScrollData& aScrollData,
                                      const mozilla::TimeStamp& aTxnStartTime)
@@ -142,19 +141,11 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  if (aIsSync) {
-    this->SendSetDisplayListSync(aSize, mParentCommands, mDestroyedActors,
-                                 GetFwdTransactionId(), aTransactionId,
-                                 aContentSize, dlData, aDL.dl_desc, aScrollData,
-                                 Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
-                                 mIdNamespace, aTxnStartTime, fwdTime);
-  } else {
-    this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
-                             GetFwdTransactionId(), aTransactionId,
-                             aContentSize, dlData, aDL.dl_desc, aScrollData,
-                             Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
-                             mIdNamespace, aTxnStartTime, fwdTime);
-  }
+  this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
+                           GetFwdTransactionId(), aTransactionId,
+                           aContentSize, dlData, aDL.dl_desc, aScrollData,
+                           Move(resourceUpdates), Move(smallShmems), Move(largeShmems),
+                           mIdNamespace, aTxnStartTime, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
