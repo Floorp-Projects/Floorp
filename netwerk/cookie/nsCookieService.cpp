@@ -123,6 +123,7 @@ static const char kPrefMaxNumberOfCookies[]   = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[]    = "network.cookie.maxPerHost";
 static const char kPrefCookiePurgeAge[]       = "network.cookie.purgeAge";
 static const char kPrefThirdPartySession[]    = "network.cookie.thirdparty.sessionOnly";
+static const char kPrefThirdPartyNonsecureSession[] = "network.cookie.thirdparty.nonsecureSessionOnly";
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
 // For telemetry COOKIE_LEAVE_SECURE_ALONE
@@ -702,6 +703,7 @@ nsCookieService::nsCookieService()
  : mDBState(nullptr)
  , mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT)
  , mThirdPartySession(false)
+ , mThirdPartyNonsecureSession(false)
  , mLeaveSecureAlone(true)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
@@ -730,6 +732,7 @@ nsCookieService::Init()
     prefBranch->AddObserver(kPrefMaxCookiesPerHost,     this, true);
     prefBranch->AddObserver(kPrefCookiePurgeAge,        this, true);
     prefBranch->AddObserver(kPrefThirdPartySession,     this, true);
+    prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
     prefBranch->AddObserver(kCookieLeaveSecurityAlone,  this, true);
     PrefChanged(prefBranch);
   }
@@ -2149,8 +2152,10 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
   aHostURI->GetHost(hostFromURI);
   CountCookiesFromHost(hostFromURI, &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(mPermissionService, mCookieBehavior,
-                                         mThirdPartySession, aHostURI, aIsForeign,
-                                         aCookieHeader.get(), priorCookieCount, aOriginAttrs);
+                                         mThirdPartySession,
+                                         mThirdPartyNonsecureSession, aHostURI,
+                                         aIsForeign, aCookieHeader.get(),
+                                         priorCookieCount, aOriginAttrs);
 
   // fire a notification if third party or if cookie was rejected
   // (but not if there was an error)
@@ -2346,6 +2351,9 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
   bool boolval;
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
     mThirdPartySession = boolval;
+
+  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartyNonsecureSession, &boolval)))
+    mThirdPartyNonsecureSession = boolval;
 
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookieLeaveSecurityAlone, &boolval)))
     mLeaveSecureAlone = boolval;
@@ -3307,8 +3315,10 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
   uint32_t priorCookieCount = 0;
   CountCookiesFromHost(hostFromURI, &priorCookieCount);
   CookieStatus cookieStatus = CheckPrefs(mPermissionService, mCookieBehavior,
-                                         mThirdPartySession, aHostURI, aIsForeign,
-                                         nullptr, priorCookieCount, aOriginAttrs);
+                                         mThirdPartySession,
+                                         mThirdPartyNonsecureSession, aHostURI,
+                                         aIsForeign, nullptr,
+                                         priorCookieCount, aOriginAttrs);
 
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
@@ -3471,7 +3481,8 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
                               bool                aFromHttp,
                               nsIChannel*         aChannel,
                               bool                aLeaveSecureAlone,
-                              bool&               aSetCookie)
+                              bool&               aSetCookie,
+                              mozIThirdPartyUtil* aThirdPartyUtil)
 {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -3501,6 +3512,26 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
     Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_SECURITY,
                           ((aCookieAttributes.isSecure)? 0x02 : 0x00) |
                           ((isHTTPS)? 0x01 : 0x00));
+
+    // Collect telemetry on how often are first- and third-party cookies set
+    // from HTTPS origins:
+    //
+    // 0 (000) = first-party and "http:"
+    // 1 (001) = first-party and "http:" with bogus Secure cookie flag?!
+    // 2 (010) = first-party and "https:"
+    // 3 (011) = first-party and "https:" with Secure cookie flag
+    // 4 (100) = third-party and "http:"
+    // 5 (101) = third-party and "http:" with bogus Secure cookie flag?!
+    // 6 (110) = third-party and "https:"
+    // 7 (111) = third-party and "https:" with Secure cookie flag
+    if (aThirdPartyUtil) {
+      bool isThirdParty = true;
+      aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
+      Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_HTTPS,
+                            (isThirdParty ? 0x04 : 0x00) |
+                            (isHTTPS ? 0x02 : 0x00) |
+                            (aCookieAttributes.isSecure ? 0x01 : 0x00));
+    }
   }
 
   int64_t currentTimeInUsec = PR_Now();
@@ -3608,7 +3639,8 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   nsCookieAttributes cookieAttributes;
   bool newCookie = CanSetCookie(aHostURI, aKey, cookieAttributes, aRequireHostMatch,
                                 aStatus, aCookieHeader, aServerTime, aFromHttp,
-                                aChannel, mLeaveSecureAlone, canSetCookie);
+                                aChannel, mLeaveSecureAlone, canSetCookie,
+                                mThirdPartyUtil);
 
   if (!canSetCookie) {
     return newCookie;
@@ -4210,6 +4242,7 @@ CookieStatus
 nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
                             uint8_t                 aCookieBehavior,
                             bool                    aThirdPartySession,
+                            bool                    aThirdPartyNonsecureSession,
                             nsIURI                 *aHostURI,
                             bool                    aIsForeign,
                             const char             *aCookieHeader,
@@ -4284,9 +4317,6 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
 
   // check if cookie is foreign
   if (aIsForeign) {
-    if (aCookieBehavior == nsICookieService::BEHAVIOR_ACCEPT && aThirdPartySession)
-      return STATUS_ACCEPT_SESSION;
-
     if (aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
       return STATUS_REJECTED;
@@ -4297,7 +4327,18 @@ nsCookieService::CheckPrefs(nsICookiePermission    *aPermissionService,
         COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
         return STATUS_REJECTED;
       }
-      if (aThirdPartySession)
+    }
+
+    MOZ_ASSERT(aCookieBehavior == nsICookieService::BEHAVIOR_ACCEPT ||
+               aCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN);
+
+    if (aThirdPartySession)
+      return STATUS_ACCEPT_SESSION;
+
+    if (aThirdPartyNonsecureSession) {
+      bool isHTTPS = false;
+      aHostURI->SchemeIs("https", &isHTTPS);
+      if (!isHTTPS)
         return STATUS_ACCEPT_SESSION;
     }
   }

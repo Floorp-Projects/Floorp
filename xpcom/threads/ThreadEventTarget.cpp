@@ -8,7 +8,9 @@
 #include "mozilla/ThreadEventQueue.h"
 
 #include "LeakRefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 #include "nsThreadManager.h"
 #include "nsThreadSyncDispatch.h"
 #include "nsThreadUtils.h"
