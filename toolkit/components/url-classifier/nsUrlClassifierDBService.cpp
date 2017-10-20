@@ -818,6 +818,20 @@ nsUrlClassifierDBServiceWorker::CloseDb()
 }
 
 nsresult
+nsUrlClassifierDBServiceWorker::PreShutdown()
+{
+  if (mClassifier) {
+    // Classifier close will release all lookup caches which may be a time-consuming job.
+    // See Bug 1408631.
+    mClassifier->Close();
+  }
+
+  // WARNING: nothing we put here should affect an ongoing update thread. When in doubt,
+  // put things in Shutdown() instead.
+  return NS_OK;
+}
+
+nsresult
 nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 {
   if (gShuttingDownThread) {
@@ -2427,11 +2441,34 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
   } else if (!strcmp(aTopic, "quit-application")) {
     // Tell the update thread to finish as soon as possible.
     gShuttingDownThread = true;
+
+    // The code in ::Shutdown() is run on a 'profile-before-change' event and
+    // ensures that objects are freed by blocking on this freeing.
+    // We can however speed up the shutdown time by using the worker thread to
+    // release, in an earlier event, any objects that cannot affect an ongoing
+    // update on the update thread.
+    PreShutdown();
   } else if (!strcmp(aTopic, "profile-before-change")) {
     gShuttingDownThread = true;
     Shutdown();
   } else {
     return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+// Post a PreShutdown task to worker thread to release objects without blocking
+// main-thread. Notice that shutdown process may still be blocked by PreShutdown task
+// when ::Shutdown() is executed and synchronously waits for worker thread to finish
+// PreShutdown event.
+nsresult
+nsUrlClassifierDBService::PreShutdown()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mWorkerProxy) {
+    mWorkerProxy->PreShutdown();
   }
 
   return NS_OK;

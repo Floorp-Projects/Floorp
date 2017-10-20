@@ -229,6 +229,7 @@ public:
 
   nsresult OpenDb();
   nsresult CloseDb();
+  nsresult PreShutdown();
 
   nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray * aEntries);
 
