@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox style="visibility: collapse; position: relative">
+    <textbox>
+      <hbox style="position: absolute; width: 10px; height: 10px">
+      </hbox>
+    </textbox>
+  </hbox>
+</window>

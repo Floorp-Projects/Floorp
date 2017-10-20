@@ -1093,6 +1093,14 @@ ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
   }
 }
 
+// Returns true if aFrame is non-null, a XUL frame, and "XUL-collapsed" (which
+// only becomes a valid question to ask if we know it's a XUL frame).
+static bool
+IsXULCollapsedXULFrame(nsIFrame* aFrame)
+{
+  return aFrame && aFrame->IsXULBoxFrame() && aFrame->IsXULCollapsed();
+}
+
 nsIFrame*
 ReflowInput::GetHypotheticalBoxContainer(nsIFrame*    aFrame,
                                                nscoord&     aCBIStartEdge,
@@ -1128,9 +1136,23 @@ ReflowInput::GetHypotheticalBoxContainer(nsIFrame*    aFrame,
     NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_IN_REFLOW),
                  "aFrame shouldn't be in reflow; we'll lie if it is");
     WritingMode wm = aFrame->GetWritingMode();
-    LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(wm);
-    aCBIStartEdge = borderPadding.IStart(wm);
-    aCBSize = aFrame->GetLogicalSize(wm) - borderPadding.Size(wm);
+    // Compute CB's offset & content-box size by subtracting borderpadding from
+    // frame size.  Exception: if the CB is 0-sized, it *might* be a child of a
+    // XUL-collapsed frame and might have nonzero borderpadding that was simply
+    // discarded during its layout. (See the child-zero-sizing in
+    // nsSprocketLayout::XULLayout()).  In that case, we ignore the
+    // borderpadding here (just like we did when laying it out), or else we'd
+    // produce a bogus negative content-box size.
+    aCBIStartEdge = 0;
+    aCBSize = aFrame->GetLogicalSize(wm);
+    if (!aCBSize.IsAllZero() ||
+        (!IsXULCollapsedXULFrame(aFrame->GetParent()))) {
+      // aFrame is not XUL-collapsed (nor is it a child of a XUL-collapsed
+      // frame), so we can go ahead and subtract out border padding.
+      LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(wm);
+      aCBIStartEdge += borderPadding.IStart(wm);
+      aCBSize -= borderPadding.Size(wm);
+    }
   }
 
   return aFrame;
