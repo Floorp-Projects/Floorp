@@ -13,6 +13,7 @@ describe("Store", () => {
       this.createChannel = sandbox.spy();
       this.destroyChannel = sandbox.spy();
       this.middleware = sandbox.spy(s => next => action => next(action));
+      this.simulateMessagesForExistingTabs = sandbox.stub();
     }
     ({Store} = injector({
       "lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel},
@@ -173,6 +174,22 @@ describe("Store", () => {
                                      ["feeds.telemetry", telemetrySpy]]);
       store.init(feedFactories);
       assert.ok(telemetrySpy.calledBefore(fooSpy));
+    });
+    it("should dispatch init/load events", () => {
+      store.init(new Map(), {type: "FOO"});
+
+      assert.calledOnce(store._messageChannel.simulateMessagesForExistingTabs);
+    });
+    it("should dispatch INIT before LOAD", () => {
+      const init = {type: "INIT"};
+      const load = {type: "TAB_LOAD"};
+      sandbox.stub(store, "dispatch");
+      store._messageChannel.simulateMessagesForExistingTabs.callsFake(() => store.dispatch(load));
+      store.init(new Map(), init);
+
+      assert.calledTwice(store.dispatch);
+      assert.equal(store.dispatch.firstCall.args[0], init);
+      assert.equal(store.dispatch.secondCall.args[0], load);
     });
   });
   describe("#uninit", () => {

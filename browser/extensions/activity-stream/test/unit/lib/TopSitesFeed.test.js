@@ -1,9 +1,8 @@
 "use strict";
 const injector = require("inject!lib/TopSitesFeed.jsm");
 const {Screenshots} = require("lib/Screenshots.jsm");
-const {UPDATE_TIME} = require("lib/TopSitesFeed.jsm");
 const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
-const {actionTypes: at} = require("common/Actions.jsm");
+const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
 const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
 
 const FAKE_FAVICON = "data987";
@@ -28,7 +27,6 @@ describe("Top Sites Feed", () => {
   let globals;
   let sandbox;
   let links;
-  let clock;
   let fakeNewTabUtils;
   let fakeScreenshot;
   let filterAdultStub;
@@ -87,11 +85,9 @@ describe("Top Sites Feed", () => {
     };
     feed.dedupe.group = (...sites) => sites;
     links = FAKE_LINKS;
-    clock = sinon.useFakeTimers();
   });
   afterEach(() => {
     globals.restore();
-    clock.restore();
   });
 
   function stubFaviconsToUseScreenshots() {
@@ -148,12 +144,12 @@ describe("Top Sites Feed", () => {
         assert.deepEqual(result, reference);
         assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
       });
-      it("should not filter out adult sites when pref is false", async() => {
+      it("should not filter out adult sites when pref is false", async () => {
         await feed.getLinksWithDefaults();
 
         assert.notCalled(filterAdultStub);
       });
-      it("should filter out non-pinned adult sites when pref is true", async() => {
+      it("should filter out non-pinned adult sites when pref is true", async () => {
         feed.store.state.Prefs.values.filterAdult = true;
         fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
 
@@ -267,7 +263,7 @@ describe("Top Sites Feed", () => {
         assert.propertyVal(result[0], "favicon", FAKE_FAVICON);
         assert.propertyVal(result[0], "faviconSize", FAKE_FAVICON_SIZE);
       });
-      it("should not expose internal link properties", async() => {
+      it("should not expose internal link properties", async () => {
         const result = await feed.getLinksWithDefaults();
 
         const internal = Object.keys(result[0]).filter(key => key.startsWith("__"));
@@ -380,27 +376,22 @@ describe("Top Sites Feed", () => {
     });
     it("should initialise _tippyTopProvider if it's not already initialised", async () => {
       feed._tippyTopProvider.initialized = false;
-      await feed.refresh();
+      await feed.refresh({broadcast: true});
       assert.ok(feed._tippyTopProvider.initialized);
     });
-    it("should broadcast with no target", async () => {
+    it("should broadcast TOP_SITES_UPDATED", async () => {
       sinon.stub(feed, "getLinksWithDefaults").returns(Promise.resolve([]));
 
-      await feed.refresh();
+      await feed.refresh({broadcast: true});
 
       assert.calledOnce(feed.store.dispatch);
-      assert.notProperty(feed.store.dispatch.firstCall.args[0].meta, "toTarget");
-    });
-    it("should respond to a specific target", async () => {
-      sinon.stub(feed, "getLinksWithDefaults").returns(Promise.resolve([]));
-
-      await feed.refresh({meta: {fromTarget: {}}});
-
-      assert.calledOnce(feed.store.dispatch);
-      assert.property(feed.store.dispatch.firstCall.args[0].meta, "toTarget");
+      assert.calledWithExactly(feed.store.dispatch, ac.BroadcastToContent({
+        type: at.TOP_SITES_UPDATED,
+        data: []
+      }));
     });
     it("should dispatch an action with the links returned", async () => {
-      await feed.refresh();
+      await feed.refresh({broadcast: true});
       const reference = links.map(site => Object.assign({}, site, {hostname: shortURLStub(site)}));
 
       assert.calledOnce(feed.store.dispatch);
@@ -410,8 +401,18 @@ describe("Top Sites Feed", () => {
     it("should handle empty slots in the resulting top sites array", async () => {
       links = [FAKE_LINKS[0]];
       fakeNewTabUtils.pinnedLinks.links = [null, null, FAKE_LINKS[1], null, null, null, null, null, FAKE_LINKS[2]];
-      await feed.refresh();
+      await feed.refresh({broadcast: true});
       assert.calledOnce(feed.store.dispatch);
+    });
+    it("should dispatch sendToMain when broadcast is false", async () => {
+      sandbox.stub(feed, "getLinksWithDefaults").returns([]);
+      await feed.refresh({broadcast: false});
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWithExactly(feed.store.dispatch, ac.SendToMain({
+        type: at.TOP_SITES_UPDATED,
+        data: []
+      }));
     });
   });
   describe("#_fetchIcon", () => {
@@ -470,26 +471,13 @@ describe("Top Sites Feed", () => {
     });
   });
   describe("#onAction", () => {
-    const newTabAction = {type: at.NEW_TAB_LOAD, meta: {fromTarget: "target"}};
-    it("should not call refresh if there are enough sites on NEW_TAB_LOAD", () => {
-      feed.lastUpdated = Date.now();
-      sinon.stub(feed, "refresh");
-      feed.onAction(newTabAction);
-      assert.notCalled(feed.refresh);
-    });
-    it("should call refresh if .lastUpdated is too old on NEW_TAB_LOAD", () => {
-      feed.lastUpdated = 0;
-      clock.tick(UPDATE_TIME);
-      sinon.stub(feed, "refresh");
-      feed.onAction(newTabAction);
-      assert.calledWith(feed.refresh, newTabAction.meta.fromTarget);
-    });
-    it("should not call refresh if .lastUpdated is less than update time on NEW_TAB_LOAD", () => {
-      feed.lastUpdated = 0;
-      clock.tick(UPDATE_TIME - 1);
-      sinon.stub(feed, "refresh");
-      feed.onAction(newTabAction);
-      assert.notCalled(feed.refresh);
+    it("should refresh on SYSTEM_TICK", async () => {
+      sandbox.stub(feed, "refresh");
+
+      feed.onAction({type: at.SYSTEM_TICK});
+
+      assert.calledOnce(feed.refresh);
+      assert.calledWithExactly(feed.refresh, {broadcast: false});
     });
     it("should call with correct parameters on TOP_SITES_PIN", () => {
       const pinAction = {
@@ -528,13 +516,15 @@ describe("Top Sites Feed", () => {
     });
     it("should call refresh without a target if we clear history with PLACES_HISTORY_CLEARED", () => {
       sandbox.stub(feed, "refresh");
+
       feed.onAction({type: at.PLACES_HISTORY_CLEARED});
+
       assert.calledOnce(feed.refresh);
-      assert.equal(feed.refresh.firstCall.args[0], null);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
     it("should still dispatch an action even if there's no target provided", async () => {
       sandbox.stub(feed, "_fetchIcon");
-      await feed.refresh();
+      await feed.refresh({broadcast: true});
       assert.calledOnce(feed.store.dispatch);
       assert.propertyVal(feed.store.dispatch.firstCall.args[0], "type", at.TOP_SITES_UPDATED);
     });
@@ -543,23 +533,25 @@ describe("Top Sites Feed", () => {
       await feed.onAction({type: at.INIT});
       assert.calledOnce(feed.refresh);
     });
-    it("should call refresh without a target on MIGRATION_COMPLETED action", async () => {
+    it("should call refresh on MIGRATION_COMPLETED action", async () => {
       sinon.stub(feed, "refresh");
+
       await feed.onAction({type: at.MIGRATION_COMPLETED});
+
       assert.calledOnce(feed.refresh);
-      assert.equal(feed.refresh.firstCall.args[0], null);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
-    it("should call refresh without a target on PLACES_LINK_BLOCKED action", async () => {
+    it("should call refresh on PLACES_LINK_BLOCKED action", async () => {
       sinon.stub(feed, "refresh");
       await feed.onAction({type: at.PLACES_LINK_BLOCKED});
       assert.calledOnce(feed.refresh);
-      assert.equal(feed.refresh.firstCall.args[0], null);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
-    it("should call refresh without a target on PLACES_LINKS_DELETED action", async () => {
+    it("should call refresh on PLACES_LINKS_DELETED action", async () => {
       sinon.stub(feed, "refresh");
       await feed.onAction({type: at.PLACES_LINKS_DELETED});
       assert.calledOnce(feed.refresh);
-      assert.equal(feed.refresh.firstCall.args[0], null);
+      assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
     it("should call pin with correct args on TOP_SITES_ADD", () => {
       const addAction = {
