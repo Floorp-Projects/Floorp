@@ -6,4 +6,4 @@ license = "MPL-2.0"
 description = "Rust bindings to xpcom nsresult and NS_ERROR_ values"
 
 [dependencies]
-nsstring = { path = "../../../servo/support/gecko/nsstring" }
+nsstring = { path = "../nsstring" }
