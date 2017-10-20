@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 //! This module provides rust bindings for the XPCOM string types.
 //!
 //! # TL;DR (what types should I use)
@@ -114,16 +118,16 @@
 #[macro_use]
 extern crate bitflags;
 
-use std::ops::{Deref, DerefMut};
-use std::marker::PhantomData;
 use std::borrow;
-use std::slice;
-use std::mem;
-use std::fmt;
 use std::cmp;
+use std::fmt;
+use std::marker::PhantomData;
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::os::raw::c_void;
+use std::slice;
 use std::str;
 use std::u32;
-use std::os::raw::c_void;
 
 ///////////////////////////////////
 // Internal Implementation Flags //
@@ -134,7 +138,7 @@ mod data_flags {
         // While this has the same layout as u16, it cannot be passed
         // over FFI safely as a u16.
         #[repr(C)]
-        pub flags DataFlags : u16 {
+        pub flags DataFlags: u16 {
             const TERMINATED = 1 << 0, // IsTerminated returns true
             const VOIDED = 1 << 1, // IsVoid returns true
             const SHARED = 1 << 2, // mData points to a heap-allocated, shared buffer
@@ -150,15 +154,15 @@ mod class_flags {
         // While this has the same layout as u16, it cannot be passed
         // over FFI safely as a u16.
         #[repr(C)]
-        pub flags ClassFlags : u16 {
+        pub flags ClassFlags: u16 {
             const INLINE = 1 << 0, // |this|'s buffer is inline
             const NULL_TERMINATED = 1 << 1, // |this| requires its buffer is null-terminated
         }
     }
 }
 
-use data_flags::DataFlags;
 use class_flags::ClassFlags;
+use data_flags::DataFlags;
 
 ////////////////////////////////////
 // Generic String Bindings Macros //
@@ -1004,12 +1008,12 @@ impl cmp::PartialEq<str> for nsAString {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(feature = "gecko_debug"))]
 #[allow(non_snake_case)]
 unsafe fn Gecko_IncrementStringAdoptCount(_: *mut c_void) {}
 
 extern "C" {
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "gecko_debug")]
     fn Gecko_IncrementStringAdoptCount(data: *mut c_void);
 
     // Gecko implementation in nsSubstring.cpp
@@ -1057,17 +1061,10 @@ pub mod test_helpers {
     //! It is public to ensure that these testing functions are avaliable to
     //! gtest code.
 
-    use super::{
-        nsCString,
-        nsString,
-        nsCStr,
-        nsStr,
-        nsCStringRepr,
-        nsStringRepr,
-        data_flags,
-        class_flags,
-    };
     use std::mem;
+    use super::{class_flags, data_flags};
+    use super::{nsCStr, nsCString, nsCStringRepr};
+    use super::{nsStr, nsString, nsStringRepr};
 
     /// Generates an #[no_mangle] extern "C" function which returns the size and
     /// alignment of the given type with the given name.

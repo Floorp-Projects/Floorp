@@ -30,8 +30,8 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:
     DIRS += ['windbgdlg']
 
 TEST_DIRS += [
+    'rust/gtest',
     'tests',
-    'rust/nsstring/gtest',
 ]
 
 #  Can't build internal xptcall tests that use symbols which are not exported.
