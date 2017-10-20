@@ -94,6 +94,14 @@ async function removeDevice(device, type = "phones") {
 }
 
 /**
+ * Remove all local devices.  Useful to clear everything when testing.
+ */
+async function removeLocalDevices() {
+  await asyncStorage.removeItem(LOCAL_DEVICES);
+  localDevices = {};
+}
+
+/**
  * Get the complete devices catalog.
  */
 async function getDevices() {
@@ -120,6 +128,7 @@ function getDeviceString(deviceType) {
 module.exports = {
   addDevice,
   removeDevice,
+  removeLocalDevices,
   getDevices,
   getDeviceString,
 };
