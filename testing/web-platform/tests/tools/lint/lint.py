@@ -17,7 +17,7 @@ from .. import localpaths
 from ..gitignore.gitignore import PathFilter
 from ..wpt import testfiles
 
-from manifest.sourcefile import SourceFile, js_meta_re, python_meta_re, space_chars
+from manifest.sourcefile import SourceFile, js_meta_re, python_meta_re
 from six import binary_type, iteritems, itervalues
 from six.moves import range
 from six.moves.urllib.parse import urlsplit, urljoin
@@ -124,13 +124,6 @@ def check_worker_collision(repo_root, path, css_mode):
                      "path ends with %s which collides with generated tests from %s files" % (path_ending, generated),
                      path,
                      None)]
-    return []
-
-
-def check_ahem_copy(repo_root, path, css_mode):
-    lpath = path.lower()
-    if "ahem" in lpath and lpath.endswith(".ttf"):
-        return [("AHEM COPY", "Don't add extra copies of Ahem, use /fonts/Ahem.ttf", path, None)]
     return []
 
 
@@ -355,12 +348,6 @@ class PrintRegexp(Regexp):
     file_extensions = [".py"]
     description = "Print function used"
 
-class LayoutTestsRegexp(Regexp):
-    pattern = b"eventSender|testRunner|window\.internals"
-    error = "LAYOUTTESTS APIS"
-    file_extensions = [".html", ".htm", ".js", ".xht", ".xhtml", ".svg"]
-    description = "eventSender/testRunner/window.internals used; these are LayoutTests-specific APIs (WebKit/Blink)"
-
 regexps = [item() for item in
            [TrailingWhitespaceRegexp,
             TabsRegexp,
@@ -370,8 +357,7 @@ regexps = [item() for item in
             Webidl2Regexp,
             ConsoleRegexp,
             GenerateTestsRegexp,
-            PrintRegexp,
-            LayoutTestsRegexp]]
+            PrintRegexp]]
 
 def check_regexp_line(repo_root, path, f, css_mode):
     errors = []
@@ -417,7 +403,7 @@ def check_parsed(repo_root, path, f, css_mode):
         return [("CONTENT-VISUAL", "Visual test whose filename doesn't end in '-visual'", path, None)]
 
     for reftest_node in source_file.reftest_nodes:
-        href = reftest_node.attrib.get("href", "").strip(space_chars)
+        href = reftest_node.attrib.get("href", "")
         parts = urlsplit(href)
         if parts.scheme or parts.netloc:
             errors.append(("ABSOLUTE-URL-REF",
@@ -815,7 +801,7 @@ def lint(repo_root, paths, output_format, css_mode):
                 logger.info(line)
     return sum(itervalues(error_count))
 
-path_lints = [check_path_length, check_worker_collision, check_ahem_copy]
+path_lints = [check_path_length, check_worker_collision]
 all_paths_lints = [check_css_globally_unique]
 file_lints = [check_regexp_line, check_parsed, check_python_ast, check_script_metadata]
 

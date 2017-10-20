@@ -64,17 +64,23 @@
 </main>
 
 <script>
-    generate_tests(assert_equals, [
+    tests = [
         [
-            "row visibility:collapse doesn't change table width, unlike display:none",
             document.getElementById('two').offsetWidth,
-            document.getElementById('one').offsetWidth
+            document.getElementById('one').offsetWidth,
+            "row visibility:collapse doesn't change table width, unlike display:none"
         ],
         [
-            "row visibility:collapse changes table height, unlike visibility:hidden",
             document.getElementById('two').offsetHeight,
-            116
-        ]
-    ]);
+            116,
+            "row visibility:collapse changes table height, unlike visibility:hidden"
+        ]];
+    for (i = 0; i< tests.length; i++) {
+        test(function()
+            {
+                assert_equals.apply(this, tests[i]);
+            },
+            tests[i][2]);
+    };
 </script>
 </html>
