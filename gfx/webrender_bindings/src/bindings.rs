@@ -815,6 +815,18 @@ pub extern "C" fn wr_api_update_resources(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_api_update_pipeline_resources(
+    dh: &mut DocumentHandle,
+    pipeline_id: WrPipelineId,
+    epoch: WrEpoch,
+    resources: &mut ResourceUpdates
+) {
+    let resource_updates = mem::replace(resources, ResourceUpdates::new());
+    dh.api.update_pipeline_resources(resource_updates, dh.document_id, pipeline_id, epoch);
+}
+
+
+#[no_mangle]
 pub extern "C" fn wr_api_set_root_pipeline(dh: &mut DocumentHandle,
                                            pipeline_id: WrPipelineId) {
     dh.api.set_root_pipeline(dh.document_id, pipeline_id);

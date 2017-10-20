@@ -272,7 +272,10 @@ AsyncImagePipelineManager::ApplyAsyncImages()
       // We don't need to update the display list, either because we can't or because
       // the previous one is still up to date.
       // We may, however, have updated some resources.
-      mApi->UpdateResources(resourceUpdates);
+      mApi->UpdatePipelineResources(resourceUpdates, pipelineId, epoch);
+      if (pipeline->mCurrentTexture) {
+        HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
+      }
       continue;
     }
 
