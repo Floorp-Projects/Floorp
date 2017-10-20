@@ -33,7 +33,7 @@
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
 #include "nsIWordBreaker.h"             // for nsWordRange, nsIWordBreaker
 #include "nsRange.h"                    // for nsRange
-#include "nsStaticAtom.h"               // for NS_STATIC_ATOM, etc
+#include "nsStaticAtom.h"               // for NS_STATIC_ATOM_SETUP, etc
 #include "nsString.h"                   // for nsString, nsAutoString
 #include "nsTextServicesDocument.h"
 #include "nscore.h"                     // for nsresult, NS_IMETHODIMP, etc
@@ -103,13 +103,13 @@ nsTextServicesDocument::~nsTextServicesDocument()
 void
 nsTextServicesDocument::RegisterAtoms()
 {
-  static const nsStaticAtom ts_atoms[] = {
-#define TS_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &name_),
+  static const nsStaticAtomSetup sTSAtomSetup[] = {
+#define TS_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &name_),
 #include "nsTSAtomList.h" // IWYU pragma: keep
 #undef TS_ATOM
   };
 
-  NS_RegisterStaticAtoms(ts_atoms);
+  NS_RegisterStaticAtoms(sTSAtomSetup);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextServicesDocument)
