@@ -458,8 +458,6 @@ TestRunner.runNextTest = function() {
             indicator.style.backgroundColor = "red";
         }
 
-        SpecialPowers.unregisterProcessCrashObservers();
-
         let e10sMode = SpecialPowers.isMainProcess() ? "non-e10s" : "e10s";
 
         TestRunner.structuredLogger.info("TEST-START | Shutdown");
@@ -469,8 +467,10 @@ TestRunner.runNextTest = function() {
         TestRunner.structuredLogger.info("Mode:    " + e10sMode);
         TestRunner.structuredLogger.info("Slowest: " + TestRunner.slowestTestTime + 'ms - ' + TestRunner.slowestTestURL);
 
-        // If we are looping, don't send this cause it closes the log file
+        // If we are looping, don't send this cause it closes the log file,
+        // also don't unregister the crash observers until we're done.
         if (TestRunner.repeat === 0) {
+          SpecialPowers.unregisterProcessCrashObservers();
           TestRunner.structuredLogger.info("SimpleTest FINISHED");
         }
 
