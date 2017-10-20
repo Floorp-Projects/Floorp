@@ -257,6 +257,9 @@ class JitTest:
                     elif name == 'test-also-no-wasm-ion':
                         if options.wasm_enabled:
                             test.test_also.append(['--no-wasm-ion'])
+                    elif name == 'test-also-wasm-tiering':
+                        if options.wasm_enabled:
+                            test.test_also.append(['--test-wasm-await-tier2'])
                     elif name == 'test-also-wasm-check-bce':
                         if options.wasm_enabled:
                             test.test_also.append(['--wasm-check-bce'])

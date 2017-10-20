@@ -159,69 +159,6 @@ inline void SetPendingException(JSContext *cx, const char16_t *aMsg)
     JS_ReportErrorUTF8(cx, "%s", msg.get());
 }
 
-// Helper class to get stuff from the ClassInfo and not waste extra time with
-// virtual method calls for things it has already gotten
-class ClassInfoData
-{
-public:
-    ClassInfoData(nsIClassInfo *aClassInfo, const char *aName)
-      : mClassInfo(aClassInfo),
-        mFlags(0),
-        mName(aName),
-        mDidGetFlags(false)
-    {
-      if (!aName) {
-        mName.SetIsVoid(true);
-      }
-    }
-
-    ~ClassInfoData() = default;
-
-    uint32_t GetFlags()
-    {
-        if (!mDidGetFlags) {
-            if (mClassInfo) {
-                nsresult rv = mClassInfo->GetFlags(&mFlags);
-                if (NS_FAILED(rv)) {
-                    mFlags = 0;
-                }
-            } else {
-                mFlags = 0;
-            }
-
-            mDidGetFlags = true;
-        }
-
-        return mFlags;
-    }
-
-    bool IsDOMClass()
-    {
-        return !!(GetFlags() & nsIClassInfo::DOM_OBJECT);
-    }
-
-    void GetName(nsACString& aName)
-    {
-        if (mName.IsVoid()) {
-            if (mClassInfo) {
-                mClassInfo->GetClassDescription(mName);
-            }
-
-            if (mName.IsVoid()) {
-                mName.AssignLiteral("UnnamedClass");
-            }
-        }
-
-        aName = mName;
-    }
-
-private:
-    nsIClassInfo *mClassInfo; // WEAK
-    uint32_t mFlags;
-    nsCString mName;
-    bool mDidGetFlags;
-};
-
 /* static */
 bool
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
@@ -1276,27 +1213,26 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
                                           nsIClassInfo *aClassInfo)
 {
 // XXX Special case for nsIXPCException ?
-    ClassInfoData objClassInfo = ClassInfoData(aClassInfo, nullptr);
-    if (objClassInfo.IsDOMClass())
-    {
+
+    uint32_t flags;
+    if (aClassInfo && NS_SUCCEEDED(aClassInfo->GetFlags(&flags)) &&
+        (flags & nsIClassInfo::DOM_OBJECT)) {
         return NS_OK;
     }
 
     // We give remote-XUL whitelisted domains a free pass here. See bug 932906.
     JS::Rooted<JS::Realm*> contextRealm(cx, JS::GetCurrentRealmOrNull(cx));
     MOZ_RELEASE_ASSERT(contextRealm);
-    if (!xpc::AllowContentXBLScope(contextRealm))
-    {
+    if (!xpc::AllowContentXBLScope(contextRealm)) {
         return NS_OK;
     }
 
-    if (nsContentUtils::IsCallerChrome())
-    {
+    if (nsContentUtils::IsCallerChrome()) {
         return NS_OK;
     }
 
-    // We want to expose nsIDOMXULCommandDispatcher and nsITreeSelection implementations
-    // in XBL scopes.
+    // We want to expose nsIDOMXULCommandDispatcher and nsITreeSelection
+    // implementations in XBL scopes.
     if (xpc::IsContentXBLScope(contextRealm)) {
       nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryInterface(aObj);
       if (dispatcher) {
@@ -1315,7 +1251,12 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     GetPrincipalDomainOrigin(subjectPrincipal, originUTF8);
     NS_ConvertUTF8toUTF16 originUTF16(originUTF8);
     nsAutoCString classInfoNameUTF8;
-    objClassInfo.GetName(classInfoNameUTF8);
+    if (aClassInfo) {
+      aClassInfo->GetClassDescription(classInfoNameUTF8);
+    }
+    if (classInfoNameUTF8.IsEmpty()) {
+      classInfoNameUTF8.AssignLiteral("UnnamedClass");
+    }
     NS_ConvertUTF8toUTF16 classInfoUTF16(classInfoNameUTF8);
     nsresult rv;
     nsAutoString errorMsg;

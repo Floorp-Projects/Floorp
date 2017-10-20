@@ -108,7 +108,6 @@ struct CompiledCode
 
 struct CompileTaskState
 {
-    ConditionVariable    failedOrFinished;
     CompileTaskPtrVector finished;
     uint32_t             numFailed;
     UniqueChars          errorMessage;
@@ -117,7 +116,7 @@ struct CompileTaskState
     ~CompileTaskState() { MOZ_ASSERT(finished.empty()); MOZ_ASSERT(!numFailed); }
 };
 
-typedef ExclusiveData<CompileTaskState> ExclusiveCompileTaskState;
+typedef ExclusiveWaitableData<CompileTaskState> ExclusiveCompileTaskState;
 
 // A CompileTask holds a batch of input functions that are to be compiled on a
 // helper thread as well as, eventually, the results of compilation.
@@ -205,8 +204,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     bool isAsmJS() const { return env_->isAsmJS(); }
-    Tier tier() const { return env_->tier(); }
-    CompileMode mode() const { return env_->mode(); }
+    Tier tier() const { return env_->tier; }
+    CompileMode mode() const { return env_->mode; }
     bool debugEnabled() const { return env_->debugEnabled(); }
 
   public:

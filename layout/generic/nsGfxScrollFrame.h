@@ -890,6 +890,9 @@ public:
   virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) override {
     return mHelper.IsScrollingActive(aBuilder);
   }
+  virtual bool IsMaybeScrollingActive() const override {
+    return mHelper.IsMaybeScrollingActive();
+  }
   virtual bool IsProcessingAsyncScroll() override {
     return mHelper.IsProcessingAsyncScroll();
   }
@@ -1323,6 +1326,9 @@ public:
   }
   virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) override {
     return mHelper.IsScrollingActive(aBuilder);
+  }
+  virtual bool IsMaybeScrollingActive() const override {
+    return mHelper.IsMaybeScrollingActive();
   }
   virtual bool IsProcessingAsyncScroll() override {
     return mHelper.IsProcessingAsyncScroll();

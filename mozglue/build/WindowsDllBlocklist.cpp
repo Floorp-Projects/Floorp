@@ -863,6 +863,13 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 #endif
   }
 
+  // If someone injects a thread early that causes user32.dll to load off the
+  // main thread this causes issues, so load it as soon as we've initialized
+  // the block-list. (See bug 1400637)
+  if (!sUser32BeforeBlocklist) {
+    ::LoadLibraryW(L"user32.dll");
+  }
+
   Kernel32Intercept.Init("kernel32.dll");
 
 #ifdef _M_AMD64

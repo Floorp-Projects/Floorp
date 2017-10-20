@@ -116,6 +116,8 @@ struct Tiering
     bool active;
 };
 
+typedef ExclusiveWaitableData<Tiering> ExclusiveTiering;
+
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
@@ -140,7 +142,7 @@ class Module : public JS::WasmModule
     const DataSegmentVector dataSegments_;
     const ElemSegmentVector elemSegments_;
     const SharedBytes       bytecode_;
-    ExclusiveData<Tiering>  tiering_;
+    ExclusiveTiering        tiering_;
 
     // `codeIsBusy_` is set to false initially and then to true when `code_` is
     // already being used for an instance and can't be shared because it may be
@@ -219,20 +221,7 @@ class Module : public JS::WasmModule
     void startTier2(const CompileArgs& args);
     void finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
                      UniqueCodeSegment code2, ModuleEnvironment* env2);
-
-    // Wait until Ion-compiled code is available, which will be true either
-    // immediately (first-level compile was Ion and is already done), not at all
-    // (first-level compile was Baseline and there's not a second level), or
-    // later (ongoing second-level compilation).  Once this returns, one can use
-    // code().hasTier() to check code availability - there is no guarantee that
-    // Ion code will be available, but if it isn't then it never will.
-
-    void blockOnIonCompileFinished() const;
-
-    // Signal all waiters that are waiting on tier-2 compilation to be done that
-    // they should wake up.  They will be waiting in blockOnIonCompileFinished.
-
-    void unblockOnTier2GeneratorFinished(CompileMode newMode) const;
+    void blockOnTier2Complete() const;
 
     // JS API and JS::WasmModule implementation:
 

@@ -74,7 +74,6 @@ struct DefaultJitOptions
     bool osr;
     bool asmJSAtomicsEnable;
     bool wasmTestMode;
-    bool wasmAlwaysCheckBounds;
     bool wasmFoldOffsets;
     bool ionInterruptWithoutSignals;
     bool simulatorAlwaysInterrupt;

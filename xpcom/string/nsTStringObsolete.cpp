@@ -408,7 +408,7 @@ nsTString<T>::SetCharAt(char16_t aChar, uint32_t aIndex)
  */
 
 template<typename T>
-template<typename EnableIfChar16>
+template<typename Q, typename EnableIfChar16>
 void
 nsTString<T>::StripChars(const incompatible_char_type* aSet)
 {
@@ -418,7 +418,7 @@ nsTString<T>::StripChars(const incompatible_char_type* aSet)
 }
 
 template<typename T>
-template<typename EnableIfChar16>
+template<typename Q, typename EnableIfChar16>
 bool
 nsTString<T>::StripChars(const incompatible_char_type* aSet, const fallible_t&)
 {
