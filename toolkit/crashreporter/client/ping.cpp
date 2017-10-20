@@ -132,6 +132,7 @@ CreateMetadataNode(StringTable& strings)
     "ContainsMemoryReport",
     "CrashTime",
     "EventLoopNestingLevel",
+    "ipc_channel_error",
     "IsGarbageCollecting",
     "MozCrashReason",
     "OOMAllocationSize",
