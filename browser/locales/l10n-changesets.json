@@ -157,7 +157,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ca9034cb5d1c"
+        "revision": "102fd81f8a20"
     }, 
     "cy": {
         "platforms": [
@@ -642,7 +642,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "72e6c39d00b4"
+        "revision": "906ea0264444"
     }, 
     "my": {
         "platforms": [
