@@ -7,10 +7,12 @@
 #include "nsTreeSanitizer.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Rule.h"
+#include "mozilla/dom/CSSRuleList.h"
 #include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
 #include "nsUnicharInputStream.h"
@@ -1065,13 +1067,9 @@ nsTreeSanitizer::MustPrune(int32_t aNamespace,
 }
 
 bool
-nsTreeSanitizer::SanitizeStyleDeclaration(mozilla::css::Declaration* aDeclaration,
-                                          nsAutoString& aRuleText)
+nsTreeSanitizer::SanitizeStyleDeclaration(DeclarationBlock* aDeclaration)
 {
-  bool didSanitize = aDeclaration->HasProperty(eCSSProperty__moz_binding);
-  aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
-  aDeclaration->ToString(aRuleText);
-  return didSanitize;
+  return aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
 }
 
 bool
@@ -1086,24 +1084,44 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  RefPtr<CSSStyleSheet> sheet =
-    new CSSStyleSheet(mozilla::css::eAuthorSheetFeatures,
-                      CORS_NONE, aDocument->GetReferrerPolicy());
+  RefPtr<StyleSheet> sheet;
+  if (aDocument->IsStyledByServo()) {
+    sheet = new ServoStyleSheet(mozilla::css::eAuthorSheetFeatures,
+                                CORS_NONE, aDocument->GetReferrerPolicy(),
+                                SRIMetadata());
+  } else {
+    sheet = new CSSStyleSheet(mozilla::css::eAuthorSheetFeatures,
+                              CORS_NONE, aDocument->GetReferrerPolicy());
+  }
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
-  // Create the CSS parser, and parse the CSS text.
-  nsCSSParser parser(nullptr, sheet);
-  rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
-                         aDocument->NodePrincipal(), 0);
+  if (aDocument->IsStyledByServo()) {
+    rv = sheet->AsServo()->ParseSheet(
+        aDocument->CSSLoader(), NS_ConvertUTF16toUTF8(aOriginal),
+        aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
+        0, aDocument->GetCompatibilityMode());
+  } else {
+    // Create the CSS parser, and parse the CSS text.
+    nsCSSParser parser(nullptr, sheet->AsGecko());
+    rv = parser.ParseSheet(aOriginal, aDocument->GetDocumentURI(), aBaseURI,
+                           aDocument->NodePrincipal(), 0);
+  }
   NS_ENSURE_SUCCESS(rv, true);
   // Mark the sheet as complete.
   MOZ_ASSERT(!sheet->IsModified(),
              "should not get marked modified during parsing");
   sheet->SetComplete();
   // Loop through all the rules found in the CSS text
-  int32_t ruleCount = sheet->StyleRuleCount();
-  for (int32_t i = 0; i < ruleCount; ++i) {
-    mozilla::css::Rule* rule = sheet->GetStyleRuleAt(i);
+  ErrorResult err;
+  RefPtr<dom::CSSRuleList> rules =
+    sheet->GetCssRules(*nsContentUtils::GetSystemPrincipal(), err);
+  err.SuppressException();
+  if (!rules) {
+    return true;
+  }
+  uint32_t ruleCount = rules->Length();
+  for (uint32_t i = 0; i < ruleCount; ++i) {
+    mozilla::css::Rule* rule = rules->Item(i);
     if (!rule)
       continue;
     switch (rule->GetType()) {
@@ -1127,15 +1145,14 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       case mozilla::css::Rule::STYLE_RULE: {
         // For style rules, we will just look for and remove the
         // -moz-binding properties.
-        RefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
-        NS_ASSERTION(styleRule, "Must be a style rule");
-        nsAutoString decl;
-        bool sanitized =
-          SanitizeStyleDeclaration(styleRule->GetDeclaration(), decl);
-        didSanitize = sanitized || didSanitize;
-        if (!sanitized) {
-          styleRule->GetCssText(decl);
+        auto styleRule = static_cast<BindingStyleRule*>(rule);
+        DeclarationBlock* styleDecl = styleRule->GetDeclarationBlock();
+        MOZ_ASSERT(styleDecl);
+        if (SanitizeStyleDeclaration(styleDecl)) {
+          didSanitize = true;
         }
+        nsAutoString decl;
+        styleRule->GetCssText(decl);
         aSanitized.Append(decl);
       }
     }
@@ -1160,19 +1177,28 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
-        nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
-        nsIDocument* document = aElement->OwnerDoc();
-        // Pass the CSS Loader object to the parser, to allow parser error
-        // reports to include the outer window ID.
-        nsCSSParser parser(document->CSSLoader());
+        RefPtr<DeclarationBlock> decl;
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
-        RefPtr<mozilla::css::Declaration> decl =
-          parser.ParseStyleAttribute(value, document->GetDocumentURI(),
-                                     baseURI, document->NodePrincipal());
+        nsIDocument* document = aElement->OwnerDoc();
+        if (document->IsStyledByServo()) {
+          decl = ServoDeclarationBlock::FromCssText(
+              value,
+              aElement->GetURLDataForStyleAttr(),
+              document->GetCompatibilityMode(),
+              document->CSSLoader());
+        } else {
+          // Pass the CSS Loader object to the parser, to allow parser error
+          // reports to include the outer window ID.
+          nsCSSParser parser(document->CSSLoader());
+          decl = parser.ParseStyleAttribute(value, document->GetDocumentURI(),
+                                            aElement->GetBaseURIForStyleAttr(),
+                                            document->NodePrincipal());
+        }
         if (decl) {
-          nsAutoString cleanValue;
-          if (SanitizeStyleDeclaration(decl, cleanValue)) {
+          if (SanitizeStyleDeclaration(decl)) {
+            nsAutoString cleanValue;
+            decl->ToString(cleanValue);
             aElement->SetAttr(kNameSpaceID_None,
                               nsGkAtoms::style,
                               cleanValue,

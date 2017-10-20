@@ -703,6 +703,24 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   case NS_THEME_GTK_INFO_BAR:
     aGtkWidgetType = MOZ_GTK_INFO_BAR;
     break;
+  case NS_THEME_WINDOW_TITLEBAR:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR;
+    break;
+  case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR_MAXIMIZED;
+    break;
+  case NS_THEME_WINDOW_BUTTON_CLOSE:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
+    break;
+  case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE;
+    break;
+  case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE;
+    break;
+  case NS_THEME_WINDOW_BUTTON_RESTORE:
+    aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE;
+    break;
   default:
     return false;
   }
@@ -1601,6 +1619,10 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   case NS_THEME_MENULIST:
   case NS_THEME_TOOLBARBUTTON:
   case NS_THEME_TREEHEADERCELL:
+  case NS_THEME_WINDOW_BUTTON_CLOSE:
+  case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+  case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+  case NS_THEME_WINDOW_BUTTON_RESTORE:
     {
       if (aWidgetType == NS_THEME_MENULIST) {
         // Include the arrow size.
@@ -1868,6 +1890,17 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_GTK_INFO_BAR:
 #endif
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+
+  case NS_THEME_WINDOW_BUTTON_CLOSE:
+  case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+  case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+  case NS_THEME_WINDOW_BUTTON_RESTORE:
+  case NS_THEME_WINDOW_TITLEBAR:
+  case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    // GtkHeaderBar is available on GTK 3.10+, which is used for styling
+    // title bars and title buttons.
+    return gtk_check_version(3, 10, 0) == nullptr &&
+           !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
 
   case NS_THEME_MENULIST_BUTTON:
     if (aFrame && aFrame->GetWritingMode().IsVertical()) {

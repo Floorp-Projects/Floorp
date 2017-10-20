@@ -269,7 +269,7 @@ public class StringHelper {
         CONTEXT_MENU_REMOVE = res.getString(R.string.contextmenu_remove);
         CONTEXT_MENU_COPY_ADDRESS = res.getString(R.string.contextmenu_copyurl);
         CONTEXT_MENU_EDIT_SITE_SETTINGS = res.getString(R.string.contextmenu_site_settings);
-        CONTEXT_MENU_ADD_TO_HOME_SCREEN = res.getString(R.string.contextmenu_add_to_launcher);
+        CONTEXT_MENU_ADD_TO_HOME_SCREEN = res.getString(R.string.contextmenu_add_page_shortcut);
         CONTEXT_MENU_PIN_SITE = res.getString(R.string.contextmenu_top_sites_pin);
         CONTEXT_MENU_UNPIN_SITE = res.getString(R.string.contextmenu_top_sites_unpin);
 

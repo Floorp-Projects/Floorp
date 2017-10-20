@@ -701,6 +701,27 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
   return computedValues.forget();
 }
 
+#ifdef MOZ_XUL
+already_AddRefed<ServoStyleContext>
+ServoStyleSet::ResolveXULTreePseudoStyle(dom::Element* aParentElement,
+                                         nsICSSAnonBoxPseudo* aPseudoTag,
+                                         ServoStyleContext* aParentContext,
+                                         const AtomArray& aInputWord)
+{
+  MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag));
+  MOZ_ASSERT(aParentContext);
+  MOZ_ASSERT(!StylistNeedsUpdate());
+
+  return Servo_ComputedValues_ResolveXULTreePseudoStyle(
+      aParentElement,
+      aPseudoTag,
+      aParentContext,
+      &aInputWord,
+      mRawSet.get()
+  ).Consume();
+}
+#endif
+
 // manage the set of style sheets in the style set
 nsresult
 ServoStyleSet::AppendStyleSheet(SheetType aType,

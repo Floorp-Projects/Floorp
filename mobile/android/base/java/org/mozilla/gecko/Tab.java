@@ -26,6 +26,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.PageActionLayout;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapps.WebAppManifest;
 import org.mozilla.gecko.widget.SiteLogins;
 
 import android.content.ContentResolver;
@@ -60,6 +61,7 @@ public class Tab {
 
     private boolean mHasFeeds;
     private String mManifestUrl;
+    private WebAppManifest mWebAppManifest;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
     private SiteLogins mSiteLogins;
@@ -111,6 +113,14 @@ public class Tab {
     public static final int LOAD_PROGRESS_LOCATION_CHANGE = 60;
     public static final int LOAD_PROGRESS_LOADED = 80;
     public static final int LOAD_PROGRESS_STOP = 100;
+
+    public WebAppManifest getWebAppManifest() {
+        return mWebAppManifest;
+    }
+
+    public void setWebAppManifest(WebAppManifest mWebAppManifest) {
+        this.mWebAppManifest = mWebAppManifest;
+    }
 
     public enum ErrorType {
         CERT_ERROR,  // Pages with certificate problems

@@ -6444,6 +6444,22 @@ nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent,
         return false;
     }
 
+    if (mIsX11Display) {
+      // Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=789054
+      // To avoid crashes disable double-click on WM without _NET_WM_MOVERESIZE.
+      // See _should_perform_ewmh_drag() at gdkwindow-x11.c
+      GdkScreen* screen = gdk_window_get_screen(gdk_window);
+      GdkAtom atom = gdk_atom_intern("_NET_WM_MOVERESIZE", FALSE);
+      if (!gdk_x11_screen_supports_net_wm_hint(screen, atom)) {
+          static unsigned int lastTimeStamp = 0;
+          if (lastTimeStamp != aMouseEvent->mTime) {
+              lastTimeStamp = aMouseEvent->mTime;
+          } else {
+              return false;
+          }
+      }
+    }
+
     // FIXME: It would be nice to have the widget position at the time
     // of the event, but it's relatively unlikely that the widget has
     // moved since the mousedown.  (On the other hand, it's quite likely

@@ -384,7 +384,7 @@
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_remove">&contextmenu_remove;</string>
-  <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
+  <string name="contextmenu_add_page_shortcut">&contextmenu_add_page_shortcut;</string>
   <string name="contextmenu_set_as_homepage">&contextmenu_set_as_homepage;</string>
   <string name="contextmenu_share">&contextmenu_share;</string>
   <string name="contextmenu_pasteandgo">&contextmenu_pasteandgo;</string>
@@ -614,7 +614,7 @@
   <string name="whatsnew_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/new-android</string>
   <string name="aurora_transition_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/aurora-transition</string>
 
-  <string name="promotion_add_to_homescreen">&promotion_add_to_homescreen;</string>
+  <string name="promotion_add_page_shortcut">&promotion_add_page_shortcut;</string>
 
   <string name="helper_first_offline_bookmark_title">&helper_first_offline_bookmark_title;</string>
   <string name="helper_first_offline_bookmark_message">&helper_first_offline_bookmark_message;</string>

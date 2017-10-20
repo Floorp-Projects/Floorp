@@ -152,6 +152,18 @@ StyleSetHandle::Ptr::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
   FORWARD(ResolveNonInheritingAnonymousBoxStyle, (aPseudoTag));
 }
 
+#ifdef MOZ_XUL
+already_AddRefed<nsStyleContext>
+StyleSetHandle::Ptr::ResolveXULTreePseudoStyle(dom::Element* aParentElement,
+                                               nsICSSAnonBoxPseudo* aPseudoTag,
+                                               nsStyleContext* aParentContext,
+                                               const AtomArray& aInputWord)
+{
+  FORWARD_WITH_PARENT(ResolveXULTreePseudoStyle, aParentContext,
+                      (aParentElement, aPseudoTag, parent, aInputWord));
+}
+#endif
+
 // manage the set of style sheets in the style set
 nsresult
 StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, StyleSheet* aSheet)

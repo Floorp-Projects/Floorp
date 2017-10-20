@@ -105,7 +105,7 @@ DeclarationBlock::RemoveProperty(const nsAString& aProperty)
   MOZ_STYLO_FORWARD(RemoveProperty, (aProperty))
 }
 
-void
+bool
 DeclarationBlock::RemovePropertyByID(nsCSSPropertyID aProperty)
 {
   MOZ_STYLO_FORWARD(RemovePropertyByID, (aProperty))

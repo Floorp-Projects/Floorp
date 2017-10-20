@@ -115,16 +115,18 @@ menuitem.menuitem-iconic > .menu-iconic-left {
 
 /* ::::: menu/menuitems in menubar ::::: */
 
-menubar > menu {
-  border: 2px solid transparent;
-}
-
 menubar > menu[_moz-menuactive="true"]:not([disabled="true"]) {
   color: -moz-menubarhovertext;
 }
 
-menubar > menu[_moz-menuactive="true"][open="true"] {
-  border-width: 3px 1px 1px 3px;
+@media (-moz-windows-classic) {
+  menubar > menu {
+    border: 2px solid transparent;
+  }
+
+  menubar > menu[_moz-menuactive="true"][open="true"] {
+    border-width: 3px 1px 1px 3px;
+  }
 }
 
 menubar > menu:-moz-lwtheme {

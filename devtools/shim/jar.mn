@@ -14,6 +14,7 @@ devtools-shim.jar:
     # See https://bugzilla.mozilla.org/show_bug.cgi?id=1408369
     content/aboutdevtools/tmp-locale/aboutdevtools.dtd (aboutdevtools/tmp-locale/aboutdevtools.dtd)
 
+    content/aboutdevtools/images/external-link.svg (aboutdevtools/images/external-link.svg)
     content/aboutdevtools/images/feature-inspector.svg (aboutdevtools/images/feature-inspector.svg)
     content/aboutdevtools/images/feature-console.svg (aboutdevtools/images/feature-console.svg)
     content/aboutdevtools/images/feature-debugger.svg (aboutdevtools/images/feature-debugger.svg)
@@ -23,8 +24,5 @@ devtools-shim.jar:
     content/aboutdevtools/images/feature-responsive-mode.svg (aboutdevtools/images/feature-responsive-mode.svg)
     content/aboutdevtools/images/feature-storage.svg (aboutdevtools/images/feature-storage.svg)
     content/aboutdevtools/images/feature-performance.svg (aboutdevtools/images/feature-performance.svg)
-    content/aboutdevtools/images/feature-style-editor.svg (aboutdevtools/images/feature-style-editor.svg)
-    content/aboutdevtools/images/feature-web-audio.svg (aboutdevtools/images/feature-web-audio.svg)
-    content/aboutdevtools/images/feature-scratchpad.svg (aboutdevtools/images/feature-scratchpad.svg)
 
     content/DevToolsShim.jsm  (DevToolsShim.jsm)

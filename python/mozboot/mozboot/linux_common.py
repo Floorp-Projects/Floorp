@@ -14,5 +14,5 @@ class StyloInstall(object):
         pass
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        import stylo
+        from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.LINUX)

@@ -11,42 +11,20 @@
 "use strict";
 
 const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-mixedcontent-securityerrors.html";
+                 "new-console-output/test/mochitest/test-mixedcontent-securityerrors.html";
 
-add_task(function* () {
-  yield actuallyTest();
-});
-
-add_task(function* () {
-  Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-  yield actuallyTest();
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-});
-
-var actuallyTest = Task.async(function*() {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole(null);
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
   info("console opened");
 
-  let [result] = yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "Blocked loading mixed active content",
-      category: CATEGORY_SECURITY,
-      severity: SEVERITY_ERROR,
-    }],
-  });
-
-  let msg = [...result.matched][0];
+  let msg = await waitFor(() => findMessage(hud, "Blocked loading mixed active content"));
   ok(msg, "error message");
   let locationNode = msg.querySelector(".message-location .frame-link-filename");
   ok(locationNode, "location node");
 
-  let onTabOpen = waitForTab();
+  let onTabOpen = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  EventUtils.sendMouseEvent({ type: "click" }, locationNode);
-
-  let tab = yield onTabOpen;
+  locationNode.click();
+  let tab = await onTabOpen;
   ok(true, "the view source tab was opened in response to clicking the location node");
-  gBrowser.removeTab(tab);
 });

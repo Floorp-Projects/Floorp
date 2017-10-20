@@ -7,6 +7,7 @@
 #ifndef mozilla_StyleSetHandle_h
 #define mozilla_StyleSetHandle_h
 
+#include "mozilla/AtomArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoTypes.h"
@@ -29,6 +30,7 @@ class nsBindingManager;
 class nsCSSCounterStyleRule;
 struct nsFontFaceRuleContainer;
 class nsAtom;
+class nsICSSAnonBoxPseudo;
 class nsIContent;
 class nsIDocument;
 class nsStyleContext;
@@ -144,6 +146,13 @@ public:
                                        nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
     ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag);
+#ifdef MOZ_XUL
+    inline already_AddRefed<nsStyleContext>
+    ResolveXULTreePseudoStyle(dom::Element* aParentElement,
+                              nsICSSAnonBoxPseudo* aPseudoTag,
+                              nsStyleContext* aParentContext,
+                              const AtomArray& aInputWord);
+#endif
     inline nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);
     inline nsresult PrependStyleSheet(SheetType aType, StyleSheet* aSheet);
     inline nsresult RemoveStyleSheet(SheetType aType, StyleSheet* aSheet);

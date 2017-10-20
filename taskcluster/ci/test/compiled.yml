@@ -1,5 +1,22 @@
 job-defaults:
     e10s: false
+    mozharness:
+        no-read-buildbot-config: true
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android.*:
+                    - android/androidarm_4_3.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
 
 cppunit:
     description: "CPP Unit Tests"
@@ -10,29 +27,6 @@ cppunit:
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
-    mozharness:
-        by-test-platform:
-            android.*:
-                script: android_emulator_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    - android/androidarm_4_3.py
-                extra-options:
-                    - --test-suite=cppunittest
-            default:
-                script: desktop_unittest.py
-                no-read-buildbot-config: true
-                config:
-                    by-test-platform:
-                        windows.*:
-                            - unittests/win_taskcluster_unittest.py
-                        macosx.*:
-                            - unittests/mac_unittest.py
-                        linux.*:
-                            - unittests/linux_unittest.py
-                            - remove_executables.py
-                extra-options:
-                    - --cppunittest-suite=cppunittest
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
@@ -50,20 +44,6 @@ gtest:
             windows.*-nightly/.*: [] # permafails on nightly too
             .*-devedition/.*: [] # don't run on devedition
             default: built-projects
-    mozharness:
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --gtest-suite=gtest
     tier:
         by-test-platform:
             windows7-32-pgo.*: 3
@@ -90,19 +70,6 @@ jittest:
             windows.*: false
             macosx.*: false
             default: true
-        script: desktop_unittest.py
-        no-read-buildbot-config: true
-        config:
-            by-test-platform:
-                windows.*:
-                    - unittests/win_taskcluster_unittest.py
-                macosx.*:
-                    - unittests/mac_unittest.py
-                linux.*:
-                    - unittests/linux_unittest.py
-                    - remove_executables.py
-        extra-options:
-            - --jittest-suite=jittest-chunked
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
