@@ -28,7 +28,7 @@ function test()
 
   function f()
   {
-    (new Function("gczeal(1); for each (let y in [/x/,'',new Boolean(false),new Boolean(false),new Boolean(false),'',/x/,new Boolean(false),new Boolean(false)]){}"))();
+    (new Function("gczeal(1); for (let y of [/x/,'',new Boolean(false),new Boolean(false),new Boolean(false),'',/x/,new Boolean(false),new Boolean(false)]){}"))();
   }
   __proto__.__iterator__ = this.__defineGetter__("", function(){})
     f();

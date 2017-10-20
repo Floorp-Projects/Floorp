@@ -18,7 +18,7 @@ Object.defineProperty(__proto__, "x",
   enumerable: true, configurable: true,
   get: function () { return ([]) }
 });
-for each (let x in []) { for each (let x in ['', '']) { } }
+for (let x of []) { for (let x of ['', '']) { } }
 
 
 reportCompare(expect, actual, summary);

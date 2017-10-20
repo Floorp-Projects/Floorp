@@ -18,7 +18,7 @@ Object.defineProperty(__proto__, "functional",
   enumerable: true, configurable: true,
   get: new Function("gc()")
 });
-for each (let x in [new Boolean(true), new Boolean(true), -0, new
+for (let x of [new Boolean(true), new Boolean(true), -0, new
                     Boolean(true), -0]) { undefined; }
 
 

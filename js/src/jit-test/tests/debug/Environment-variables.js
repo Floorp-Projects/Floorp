@@ -1,5 +1,3 @@
-// |jit-test| need-for-each
-
 // Comprehensive test of get/setVariable on many kinds of environments and
 // bindings.
 
@@ -17,7 +15,6 @@ var cases = [
     "try { throw VAL; } catch (x) { @@ }",
     "try { throw VAL; } catch (x) { @@ }",
     "for (let x of [VAL]) { @@ }",
-    "for each (let x in [VAL]) { @@ }",
     "switch (0) { default: let x = VAL; @@ }",
 
     // arguments

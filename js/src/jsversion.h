@@ -14,7 +14,6 @@
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_CATCH_GUARD      1       /* has exception handling catch guard */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
-#define JS_HAS_FOR_EACH_IN      1       /* has for each (lhs in iterable) */
 
 #ifndef NIGHTLY_BUILD
 #define JS_HAS_EXPR_CLOSURES    1       /* has function (formals) listexpr */

@@ -45,9 +45,9 @@ function test()
   else
   {
 // Show contfrac in action on some interesting numbers.
-    for each (num in [Math.PI, Math.sqrt(2), 1 / (Math.sqrt(Math.E) - 1)]) {
+    for (num of [Math.PI, Math.sqrt(2), 1 / (Math.sqrt(Math.E) - 1)]) {
       print('Continued fractions for', num);
-      for each (eps in [1e-2, 1e-3, 1e-5, 1e-7, 1e-10]) {
+      for (eps of [1e-2, 1e-3, 1e-5, 1e-7, 1e-10]) {
         let frac = contfrac(num, eps);
         let est = frac[0] / frac[1];
         let err = num - est;

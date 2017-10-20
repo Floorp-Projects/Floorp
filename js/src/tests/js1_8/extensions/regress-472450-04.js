@@ -24,7 +24,7 @@ function test()
   cyclic[0] = cyclic;
   ({__proto__: cyclic});
   function f(){ 
-    eval("for (var y = 0; y < 1; ++y) { for each (let z in [null, function(){}, null, '', null, '', null]) { let x = 1, c = []; } }"); 
+    eval("for (var y = 0; y < 1; ++y) { for (let z of [null, function(){}, null, '', null, '', null]) { let x = 1, c = []; } }"); 
   }
   f();
 

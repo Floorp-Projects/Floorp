@@ -81,10 +81,7 @@ function forOfStmt(lhs, rhs, body) {
     return Pattern({ type: "ForOfStatement", left: lhs, right: rhs, body: body });
 }
 function forInStmt(lhs, rhs, body) {
-    return Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: false });
-}
-function forEachInStmt(lhs, rhs, body) {
-    return Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body, each: true });
+    return Pattern({ type: "ForInStatement", left: lhs, right: rhs, body: body });
 }
 function breakStmt(lab) {
     return Pattern({ type: "BreakStatement", label: lab });
@@ -276,13 +273,10 @@ function idxExpr(idx) {
 }
 
 function compBlock(left, right) {
-    return Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: false });
-}
-function compEachBlock(left, right) {
-    return Pattern({ type: "ComprehensionBlock", left: left, right: right, each: true, of: false });
+    return Pattern({ type: "ComprehensionBlock", left: left, right: right, of: false });
 }
 function compOfBlock(left, right) {
-    return Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: true });
+    return Pattern({ type: "ComprehensionBlock", left: left, right: right, of: true });
 }
 function compIf(test) {
     return Pattern({ type: "ComprehensionIf", test: test });
