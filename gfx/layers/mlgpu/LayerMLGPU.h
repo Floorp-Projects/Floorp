@@ -74,19 +74,13 @@ public:
   // blend modes or opacity), false otherwise.
   virtual bool IsContentOpaque();
 
-  // This is used by RenderPasses for deciding which rects to draw. This
-  // region factors in occulsion culling and any layer-specific adjustments,
-  // whereas the local/shadow visible region does not.
-  const LayerIntRegion& GetRenderRegion() const {
-    return mRenderRegion;
-  }
-
-  // Some layers have visible regions that extend beyond what is actually drawn.
-  // When performing CPU-based occlusion culling we must clamp the visible region
-  // to the actual area. Note that if a layer is opaque, it must not expand its
-  // visible region such that it might include non-opaque pixels, as may be the
-  // case for PaintedLayers with a restricted visible region.
-  virtual void SetRenderRegion(LayerIntRegion&& aRegion);
+  // This is a wrapper around SetShadowVisibleRegion. Some layers have visible
+  // regions that extend beyond what is actually drawn. When performing CPU-
+  // based occlusion culling we must clamp the visible region to the actual
+  // area. Note that if a layer is opaque, it must not expand its visible
+  // region such that it might include non-opaque pixels, as may be the case
+  // for PaintedLayers with a restricted visible region.
+  virtual void SetRegionToRender(LayerIntRegion&& aRegion);
 
   virtual void AssignToView(FrameBuilder* aBuilder,
                             RenderViewMLGPU* aView,
@@ -130,7 +124,6 @@ protected:
   uint64_t mFrameKey;
   float mComputedOpacity;
   bool mPrepared;
-  LayerIntRegion mRenderRegion;
 };
 
 class RefLayerMLGPU final : public RefLayer
