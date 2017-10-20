@@ -130,6 +130,8 @@ public:
                                        nsDisplayListBuilder* aDisplayListBuilder) override
   {
     HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(mFrame->GetContent());
+    element->HandlePrintCallback(mFrame->PresContext()->Type());
+
     switch(element->GetCurrentContextType()) {
       case CanvasContextType::Canvas2D:
       case CanvasContextType::WebGL1:
