@@ -586,6 +586,13 @@ SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoStyleContextStrong,
                    bool is_probe,
                    ServoStyleContextBorrowedOrNull inherited_style,
                    RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_ComputedValues_ResolveXULTreePseudoStyle,
+                   ServoStyleContextStrong,
+                   RawGeckoElementBorrowed element,
+                   nsAtom* pseudo_tag,
+                   ServoStyleContextBorrowed inherited_style,
+                   const mozilla::AtomArray* input_word,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_SetExplicitStyle, void,
                    RawGeckoElementBorrowed element,
                    ServoStyleContextBorrowed primary_style)
