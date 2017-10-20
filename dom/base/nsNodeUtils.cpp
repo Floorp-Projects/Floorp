@@ -442,7 +442,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       return nullptr;
     }
 
-    if (CustomElementRegistry::IsCustomElementEnabled() &&
+    if (CustomElementRegistry::IsCustomElementEnabled(nodeInfo->GetDocument()) &&
         (clone->IsHTMLElement() || clone->IsXULElement())) {
       // The cloned node may be a custom element that may require
       // enqueing upgrade reaction.
@@ -512,7 +512,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     nsIDocument* newDoc = aNode->OwnerDoc();
     if (newDoc) {
-      if (CustomElementRegistry::IsCustomElementEnabled()) {
+      if (CustomElementRegistry::IsCustomElementEnabled(newDoc)) {
         // Adopted callback must be enqueued whenever a node’s
         // shadow-including inclusive descendants that is custom.
         Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
