@@ -24,8 +24,8 @@ public:
 };
 
 // Register the MozillaTidyModule using this statically initialized variable.
-static ClangTidyModuleRegistry::Add<MozillaModule> X("mozilla-module",
-                                                     "Adds Mozilla lint checks.");
+static ClangTidyModuleRegistry::Add<MozillaModule>
+    X("mozilla-module", "Adds Mozilla lint checks.");
 
 } // namespace tidy
 } // namespace clang

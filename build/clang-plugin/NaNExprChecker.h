@@ -9,10 +9,9 @@
 
 class NaNExprChecker : public BaseCheck {
 public:
-  NaNExprChecker(StringRef CheckName,
-                 ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  NaNExprChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 

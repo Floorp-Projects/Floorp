@@ -5,15 +5,13 @@
 #include "TrivialCtorDtorChecker.h"
 #include "CustomMatchers.h"
 
-void TrivialCtorDtorChecker::registerMatchers(MatchFinder* AstMatcher) {
+void TrivialCtorDtorChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(cxxRecordDecl(hasTrivialCtorDtor()).bind("node"),
                          this);
 }
 
-void TrivialCtorDtorChecker::check(
-    const MatchFinder::MatchResult &Result) {
-  const char* Error =
-      "class %0 must have trivial constructors and destructors";
+void TrivialCtorDtorChecker::check(const MatchFinder::MatchResult &Result) {
+  const char *Error = "class %0 must have trivial constructors and destructors";
   const CXXRecordDecl *Node = Result.Nodes.getNodeAs<CXXRecordDecl>("node");
 
   if (!Node->hasDefinition()) {

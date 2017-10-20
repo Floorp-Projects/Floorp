@@ -38,7 +38,8 @@ inline SmallVector<const Stmt *, 1> getParentStmts(const Stmt *S,
   return Result;
 }
 
-// This class is a modified version of the class from clang-tidy's ExprSequence.cpp
+// This class is a modified version of the class from clang-tidy's
+// ExprSequence.cpp
 //
 // Maps `Stmt`s to the `CFGBlock` that contains them. Some `Stmt`s may be
 // contained in more than one `CFGBlock`; in this case, they are mapped to the
@@ -48,7 +49,8 @@ inline SmallVector<const Stmt *, 1> getParentStmts(const Stmt *S,
 class StmtToBlockMap {
 public:
   // Initializes the map for the given `CFG`.
-  StmtToBlockMap(const CFG *TheCFG, ASTContext *TheContext) : Context(TheContext) {
+  StmtToBlockMap(const CFG *TheCFG, ASTContext *TheContext)
+      : Context(TheContext) {
     for (const auto *B : *TheCFG) {
       for (size_t I = 0; I < B->size(); ++I) {
         if (Optional<CFGStmt> S = (*B)[I].getAs<CFGStmt>()) {
@@ -64,7 +66,8 @@ public:
   //
   // The optional outparameter `Index` is set to the index into the block where
   // the `Stmt` was found.
-  const CFGBlock *blockContainingStmt(const Stmt *S, size_t *Index = nullptr) const {
+  const CFGBlock *blockContainingStmt(const Stmt *S,
+                                      size_t *Index = nullptr) const {
     while (!Map.count(S)) {
       SmallVector<const Stmt *, 1> Parents = getParentStmts(S, Context);
       if (Parents.empty())
@@ -73,7 +76,8 @@ public:
     }
 
     const auto &E = Map.lookup(S);
-    if (Index) *Index = E.second;
+    if (Index)
+      *Index = E.second;
     return E.first;
   }
 

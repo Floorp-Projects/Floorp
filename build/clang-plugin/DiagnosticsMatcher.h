@@ -9,12 +9,12 @@
 
 class DiagnosticsMatcher {
 public:
-  DiagnosticsMatcher(CompilerInstance& CI);
+  DiagnosticsMatcher(CompilerInstance &CI);
 
   ASTConsumerPtr makeASTConsumer() { return AstMatcher.newASTConsumer(); }
 
 private:
-#define CHECK(cls, name) cls cls ## _;
+#define CHECK(cls, name) cls cls##_;
 #include "Checks.inc"
 #undef CHECK
   MatchFinder AstMatcher;
