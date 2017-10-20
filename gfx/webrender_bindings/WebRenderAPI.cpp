@@ -430,6 +430,12 @@ WebRenderAPI::UpdateResources(ResourceUpdateQueue& aUpdates)
   wr_api_update_resources(mDocHandle, aUpdates.Raw());
 }
 
+void
+WebRenderAPI::UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch)
+{
+  wr_api_update_pipeline_resources(mDocHandle, aPipeline, aEpoch, aUpdates.Raw());
+}
+
 ResourceUpdateQueue::ResourceUpdateQueue()
 {
   mUpdates = wr_resource_updates_new();

@@ -50,6 +50,7 @@ RenderDXGITextureHostOGL::RenderDXGITextureHostOGL(WindowsHandle aHandle,
   MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHostOGL, RenderTextureHostOGL);
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::NV12 ||
              (mSize.width % 2 == 0 && mSize.height % 2 == 0));
+  MOZ_ASSERT(aHandle);
 }
 
 RenderDXGITextureHostOGL::~RenderDXGITextureHostOGL()
@@ -82,6 +83,9 @@ RenderDXGITextureHostOGL::EnsureLockable()
     // The non-nv12 format.
     // Use eglCreatePbufferFromClientBuffer get the gl handle from the d3d
     // shared handle.
+    if (!egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_d3d_share_handle_client_buffer)) {
+      return false;
+    }
 
     // Get gl texture handle from shared handle.
     EGLint pbufferAttributes[] = {
@@ -116,9 +120,8 @@ RenderDXGITextureHostOGL::EnsureLockable()
     // use EGLStream to get the converted gl handle from d3d nv12 texture.
 
     if (!egl->IsExtensionSupported(gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
-        !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture_nv12))
-    {
-        return false;
+        !egl->IsExtensionSupported(gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture_nv12)) {
+      return false;
     }
 
     // Fetch the D3D11 device.
@@ -277,6 +280,7 @@ RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHa
     // The size should be even.
     MOZ_ASSERT(mSize.width % 2 == 0);
     MOZ_ASSERT(mSize.height % 2 == 0);
+    MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
 }
 
 RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL()

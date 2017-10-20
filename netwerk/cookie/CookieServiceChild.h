@@ -121,6 +121,7 @@ protected:
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   uint8_t mCookieBehavior;
   bool mThirdPartySession;
+  bool mThirdPartyNonsecureSession;
   bool mLeaveSecureAlone;
   bool mIPCSync;
   bool mIPCOpen;

@@ -1625,6 +1625,15 @@
                   const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                                  .getService(Components.interfaces.nsITextToSubURI);
                   title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
+                  // If it's a long data: URI that uses base64 encoding, truncate to
+                  // a reasonable length rather than trying to display the entire thing.
+                  // We can't shorten arbitrary URIs like this, as bidi etc might mean
+                  // we need the trailing characters for display. But a base64-encoded
+                  // data-URI is plain ASCII, so this is OK for tab-title display.
+                  // (See bug 1408854.)
+                  if (title.length > 500 && title.match(/^data:[^,]+;base64,/)) {
+                    title = title.substring(0, 500) + "\u2026";
+                  }
                 } catch (ex) { /* Do nothing. */ }
               } else {
                 // Still no title? Fall back to our untitled string.
