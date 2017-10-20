@@ -42,13 +42,15 @@ struct CompileArgs : ShareableBase<CompileArgs>
     bool baselineEnabled;
     bool debugEnabled;
     bool ionEnabled;
+    bool testTiering;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),
         scriptedCaller(Move(scriptedCaller)),
         baselineEnabled(false),
         debugEnabled(false),
-        ionEnabled(false)
+        ionEnabled(false),
+        testTiering(false)
     {}
 
     // If CompileArgs is constructed without arguments, initFromContext() must

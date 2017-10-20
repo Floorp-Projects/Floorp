@@ -1557,15 +1557,18 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
       colIdx.AppendElement(col->GetColIndex());
     }
 
-    nsTableFrame* table = colGroup->GetTableFrame();
-    RowGroupArray rowGroups;
-    table->OrderRowGroups(rowGroups);
-    for (nsTableRowGroupFrame* rowGroup : rowGroups) {
-      auto offset = rowGroup->GetNormalPosition() - colGroup->GetNormalPosition();
-      if (!aBuilder->GetDirtyRect().Intersects(nsRect(offset, rowGroup->GetSize()))) {
-        continue;
+    if (!colIdx.IsEmpty()) {
+      // We have some actual cells that live inside this rowgroup.
+      nsTableFrame* table = colGroup->GetTableFrame();
+      RowGroupArray rowGroups;
+      table->OrderRowGroups(rowGroups);
+      for (nsTableRowGroupFrame* rowGroup : rowGroups) {
+        auto offset = rowGroup->GetNormalPosition() - colGroup->GetNormalPosition();
+        if (!aBuilder->GetDirtyRect().Intersects(nsRect(offset, rowGroup->GetSize()))) {
+          continue;
+        }
+        PaintRowGroupBackgroundByColIdx(rowGroup, aFrame, aBuilder, aLists, colIdx, offset);
       }
-      PaintRowGroupBackgroundByColIdx(rowGroup, aFrame, aBuilder, aLists, colIdx, offset);
     }
   } else if (aFrame->IsTableColFrame()) {
     // Compute background rect by iterating all cell frame.
