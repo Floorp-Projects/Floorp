@@ -243,8 +243,8 @@ mozilla::LazyLogModule RDFContentSinkImpl::gLog("nsRDFContentSink");
 #include "nsRDFContentSinkAtomList.h"
 #undef RDF_ATOM
 
-static const nsStaticAtom rdf_atoms[] = {
-#define RDF_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &RDFContentSinkImpl::name_),
+static const nsStaticAtomSetup sRDFContentSinkAtomSetup[] = {
+#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &RDFContentSinkImpl::name_),
 #include "nsRDFContentSinkAtomList.h"
 #undef RDF_ATOM
 };
@@ -253,7 +253,7 @@ static const nsStaticAtom rdf_atoms[] = {
 void
 nsRDFAtoms::RegisterAtoms()
 {
-    NS_RegisterStaticAtoms(rdf_atoms);
+    NS_RegisterStaticAtoms(sRDFContentSinkAtomSetup);
 }
 
 RDFContentSinkImpl::RDFContentSinkImpl()

@@ -24,14 +24,14 @@ using namespace mozilla;
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
-static const nsStaticAtom GkAtoms_info[] = {
-#define GK_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &nsGkAtoms::name_),
+static const nsStaticAtomSetup sGkAtomSetup[] = {
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &nsGkAtoms::name_),
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 };
 
 void nsGkAtoms::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(GkAtoms_info);
+  NS_RegisterStaticAtoms(sGkAtomSetup);
 }
 

@@ -24,17 +24,17 @@ using namespace mozilla;
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 
-static const nsStaticAtom CSSAnonBoxes_info[] = {
+static const nsStaticAtomSetup sCSSAnonBoxAtomSetup[] = {
   // Put the non-inheriting anon boxes first, so we can index into them easily.
 #define CSS_ANON_BOX(name_, value_) /* nothing */
 #define CSS_NON_INHERITING_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
+  NS_STATIC_ATOM_SETUP(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX
 
 #define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
+  NS_STATIC_ATOM_SETUP(name_##_buffer, (nsAtom**)&nsCSSAnonBoxes::name_),
 #define CSS_NON_INHERITING_ANON_BOX(name_, value_) /* nothing */
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
@@ -43,13 +43,13 @@ static const nsStaticAtom CSSAnonBoxes_info[] = {
 
 void nsCSSAnonBoxes::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(CSSAnonBoxes_info);
+  NS_RegisterStaticAtoms(sCSSAnonBoxAtomSetup);
 }
 
 bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
 {
-  return nsAtomListUtils::IsMember(aAtom, CSSAnonBoxes_info,
-                                   ArrayLength(CSSAnonBoxes_info));
+  return nsAtomListUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup,
+                                   ArrayLength(sCSSAnonBoxAtomSetup));
 }
 
 #ifdef MOZ_XUL
@@ -66,10 +66,8 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo)
 nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
-  for (NonInheritingBase i = 0;
-       i < ArrayLength(CSSAnonBoxes_info);
-       ++i) {
-    if (*CSSAnonBoxes_info[i].mAtom == aPseudo) {
+  for (NonInheritingBase i = 0; i < ArrayLength(sCSSAnonBoxAtomSetup); ++i) {
+    if (*sCSSAnonBoxAtomSetup[i].mAtom == aPseudo) {
       return static_cast<NonInheriting>(i);
     }
   }
@@ -81,5 +79,5 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
 {
   MOZ_ASSERT(aBoxType < NonInheriting::_Count);
-  return *CSSAnonBoxes_info[static_cast<NonInheritingBase>(aBoxType)].mAtom;
+  return *sCSSAnonBoxAtomSetup[static_cast<NonInheritingBase>(aBoxType)].mAtom;
 }

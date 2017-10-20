@@ -57,8 +57,8 @@ enum class GCKind {
 class nsAtomFriend
 {
 public:
-  static void RegisterStaticAtoms(const nsStaticAtom* aAtoms,
-                                  uint32_t aAtomCount);
+  static void RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
+                                  uint32_t aCount);
 
   static void AtomTableClearEntry(PLDHashTable* aTable,
                                   PLDHashEntryHdr* aEntry);
@@ -498,10 +498,10 @@ NS_InitAtomTable()
   // string atom will always be static.
   NS_STATIC_ATOM_BUFFER(empty, "");
   static nsAtom* empty_atom = nullptr;
-  static const nsStaticAtom default_atoms[] = {
-    NS_STATIC_ATOM(empty, &empty_atom)
+  static const nsStaticAtomSetup sDefaultAtomSetup[] = {
+    NS_STATIC_ATOM_SETUP(empty, &empty_atom)
   };
-  NS_RegisterStaticAtoms(default_atoms);
+  NS_RegisterStaticAtoms(sDefaultAtomSetup);
 }
 
 void
@@ -562,8 +562,8 @@ GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
 }
 
 void
-nsAtomFriend::RegisterStaticAtoms(const nsStaticAtom* aAtoms,
-                                  uint32_t aAtomCount)
+nsAtomFriend::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
+                                  uint32_t aCount)
 {
   MutexAutoLock lock(*gAtomTableLock);
 
@@ -574,9 +574,9 @@ nsAtomFriend::RegisterStaticAtoms(const nsStaticAtom* aAtoms,
     gStaticAtomTable = new StaticAtomTable();
   }
 
-  for (uint32_t i = 0; i < aAtomCount; ++i) {
-    const char16_t* string = aAtoms[i].mString;
-    nsAtom** atomp = aAtoms[i].mAtom;
+  for (uint32_t i = 0; i < aCount; ++i) {
+    const char16_t* string = aSetup[i].mString;
+    nsAtom** atomp = aSetup[i].mAtom;
 
     MOZ_ASSERT(nsCRT::IsAscii(string));
 
@@ -613,9 +613,9 @@ nsAtomFriend::RegisterStaticAtoms(const nsStaticAtom* aAtoms,
 }
 
 void
-RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
+RegisterStaticAtoms(const nsStaticAtomSetup* aSetup, uint32_t aCount)
 {
-  nsAtomFriend::RegisterStaticAtoms(aAtoms, aAtomCount);
+  nsAtomFriend::RegisterStaticAtoms(aSetup, aCount);
 }
 
 already_AddRefed<nsAtom>
