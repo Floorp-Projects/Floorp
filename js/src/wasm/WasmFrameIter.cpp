@@ -592,7 +592,7 @@ AssertMatchesCallSite(const JitActivation& activation, void* callerPC, Frame* ca
     const CodeRange* callerCodeRange = code->lookupRange(callerPC);
     MOZ_ASSERT(callerCodeRange);
 
-    if (callerCodeRange->kind() == CodeRange::Entry) {
+    if (callerCodeRange->kind() == CodeRange::InterpEntry) {
         MOZ_ASSERT(callerFP == nullptr);
         return;
     }
@@ -624,7 +624,7 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
     //    of an exit reason and inject a fake "builtin" frame; and
     //  - for async interrupts, we just accept that we'll lose the innermost frame.
     switch (codeRange_->kind()) {
-      case CodeRange::Entry:
+      case CodeRange::InterpEntry:
         callerPC_ = nullptr;
         callerFP_ = nullptr;
         break;
@@ -816,7 +816,7 @@ js::wasm::StartUnwinding(const JitActivation& activation, const RegisterState& r
         *unwoundCaller = false;
         AssertMatchesCallSite(activation, fp->returnAddress, fp->callerFP);
         break;
-      case CodeRange::Entry:
+      case CodeRange::InterpEntry:
         // The entry trampoline is the final frame in an wasm JitActivation. The
         // entry trampoline also doesn't GeneratePrologue/Epilogue so we can't
         // use the general unwinding logic above.
@@ -899,7 +899,7 @@ ProfilingFrameIterator::operator++()
 
     if (!callerFP_) {
         codeRange_ = code_->lookupRange(callerPC_);
-        MOZ_ASSERT(codeRange_->kind() == CodeRange::Entry);
+        MOZ_ASSERT(codeRange_->kind() == CodeRange::InterpEntry);
         callerPC_ = nullptr;
         MOZ_ASSERT(!done());
         return;
@@ -926,7 +926,7 @@ ProfilingFrameIterator::operator++()
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_->callerFP);
         callerFP_ = callerFP_->callerFP;
         break;
-      case CodeRange::Entry:
+      case CodeRange::InterpEntry:
         MOZ_CRASH("should have had null caller fp");
       case CodeRange::Interrupt:
       case CodeRange::Throw:
@@ -1052,9 +1052,6 @@ ProfilingFrameIterator::label() const
 
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
-    //
-    // NB: these labels are parsed for location by
-    //     devtools/client/performance/modules/logic/frame-utils.js
     static const char* importJitDescription = "fast FFI trampoline (in wasm)";
     static const char* importInterpDescription = "slow FFI trampoline (in wasm)";
     static const char* builtinNativeDescription = "fast FFI trampoline to native (in wasm)";
@@ -1081,7 +1078,7 @@ ProfilingFrameIterator::label() const
 
     switch (codeRange_->kind()) {
       case CodeRange::Function:          return code_->profilingLabel(codeRange_->funcIndex());
-      case CodeRange::Entry:             return "entry trampoline (in wasm)";
+      case CodeRange::InterpEntry:       return "slow entry trampoline (in wasm)";
       case CodeRange::ImportJitExit:     return importJitDescription;
       case CodeRange::BuiltinThunk:      return builtinNativeDescription;
       case CodeRange::ImportInterpExit:  return importInterpDescription;

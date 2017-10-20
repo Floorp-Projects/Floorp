@@ -494,8 +494,8 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         MOZ_ASSERT(funcToCodeRange_[codeRange.funcIndex()] == BAD_CODE_RANGE);
         funcToCodeRange_[codeRange.funcIndex()] = codeRangeIndex;
         break;
-      case CodeRange::Entry:
-        metadataTier_->lookupFuncExport(codeRange.funcIndex()).initEntryOffset(codeRange.begin());
+      case CodeRange::InterpEntry:
+        metadataTier_->lookupFuncExport(codeRange.funcIndex()).initInterpEntryOffset(codeRange.begin());
         break;
       case CodeRange::ImportJitExit:
         metadataTier_->funcImports[codeRange.funcIndex()].initJitExitOffset(codeRange.begin());
