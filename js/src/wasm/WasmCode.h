@@ -167,7 +167,7 @@ class FuncExport
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
         uint32_t funcIndex_;
         uint32_t codeRangeIndex_;
-        uint32_t entryOffset_;      // Machine code offset
+        uint32_t interpEntryOffset_; // Machine code offset
     } pod;
 
   public:
@@ -177,11 +177,11 @@ class FuncExport
     {
         pod.funcIndex_ = funcIndex;
         pod.codeRangeIndex_ = UINT32_MAX;
-        pod.entryOffset_ = UINT32_MAX;
+        pod.interpEntryOffset_ = UINT32_MAX;
     }
-    void initEntryOffset(uint32_t entryOffset) {
-        MOZ_ASSERT(pod.entryOffset_ == UINT32_MAX);
-        pod.entryOffset_ = entryOffset;
+    void initInterpEntryOffset(uint32_t entryOffset) {
+        MOZ_ASSERT(pod.interpEntryOffset_ == UINT32_MAX);
+        pod.interpEntryOffset_ = entryOffset;
     }
     void initCodeRangeIndex(uint32_t codeRangeIndex) {
         MOZ_ASSERT(pod.codeRangeIndex_ == UINT32_MAX);
@@ -198,9 +198,9 @@ class FuncExport
         MOZ_ASSERT(pod.codeRangeIndex_ != UINT32_MAX);
         return pod.codeRangeIndex_;
     }
-    uint32_t entryOffset() const {
-        MOZ_ASSERT(pod.entryOffset_ != UINT32_MAX);
-        return pod.entryOffset_;
+    uint32_t interpEntryOffset() const {
+        MOZ_ASSERT(pod.interpEntryOffset_ != UINT32_MAX);
+        return pod.interpEntryOffset_;
     }
 
     WASM_DECLARE_SERIALIZABLE(FuncExport)
