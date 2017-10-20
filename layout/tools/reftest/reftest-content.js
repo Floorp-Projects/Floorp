@@ -24,7 +24,6 @@ const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2
 CU.import("resource://gre/modules/Timer.jsm");
 CU.import("chrome://reftest/content/AsyncSpellCheckTestHelper.jsm");
 CU.import("resource://gre/modules/Services.jsm");
-CU.import('resource://gre/modules/XPCOMUtils.jsm');
 
 var gBrowserIsRemote;
 var gIsWebRenderEnabled;
