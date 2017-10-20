@@ -357,12 +357,12 @@ class OSXBootstrapper(BaseBootstrapper):
             raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
 
         # 2. Android pieces.
-        import android
+        from mozboot import android
         android.ensure_android('macosx', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
 
     def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
-        import android
+        from mozboot import android
         android.suggest_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def _ensure_macports_packages(self, packages):
@@ -421,12 +421,12 @@ class OSXBootstrapper(BaseBootstrapper):
             raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
 
         # 2. Android pieces.
-        import android
+        from mozboot import android
         android.ensure_android('macosx', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
 
     def suggest_macports_mobile_android_mozconfig(self, artifact_mode=False):
-        import android
+        from mozboot import android
         android.suggest_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def ensure_package_manager(self):
