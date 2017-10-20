@@ -392,14 +392,15 @@ TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t notUsed;
-  int32_t written = PR_Write(mFD, "", 0);
-  if ((written < 0) && (PR_GetError() != PR_WOULD_BLOCK_ERROR)) {
+  nsCOMPtr<nsISSLSocketControl> ssl(do_QueryInterface(mSecInfo));
+  nsresult rv = ssl ? ssl->DriveHandshake() : NS_ERROR_FAILURE;
+  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
     // fatal handshake failure
     LOG(("TLSFilterTransaction %p Fatal Handshake Failure: %d\n", this, PR_GetError()));
     return NS_ERROR_FAILURE;
   }
 
+  uint32_t notUsed;
   Unused << OnReadSegment("", 0, &notUsed);
 
   // The SSL Layer does some unusual things with PR_Poll that makes it a bad
