@@ -74,6 +74,8 @@ NewConsoleOutputWrapper.prototype = {
       this.jsterm.focus();
     });
 
+    let { hud } = this.jsterm;
+
     const serviceContainer = {
       attachRefToHud,
       emitNewMessage: (node, messageId, timeStamp) => {
@@ -83,12 +85,15 @@ NewConsoleOutputWrapper.prototype = {
           timeStamp,
         }]));
       },
-      hudProxy: this.jsterm.hud.proxy,
+      hudProxy: hud.proxy,
       openLink: url => {
-        this.jsterm.hud.owner.openLink(url);
+        hud.owner.openLink(url);
       },
       createElement: nodename => {
         return this.document.createElement(nodename);
+      },
+      getLongString: (grip) => {
+        return hud.proxy.webConsoleClient.getString(grip);
       },
     };
 
@@ -233,8 +238,15 @@ NewConsoleOutputWrapper.prototype = {
     // network-message-updated will emit when all the update message arrives.
     // Since we can't ensure the order of the network update, we check
     // that networkInfo.updates has all we need.
+    // Note that 'requestPostData' is sent only for POST requests, so we need
+    // to count with that.
     const NUMBER_OF_NETWORK_UPDATE = 8;
-    if (res.networkInfo.updates.length === NUMBER_OF_NETWORK_UPDATE) {
+    let expectedLength = NUMBER_OF_NETWORK_UPDATE;
+    if (res.networkInfo.updates.indexOf("requestPostData") != -1) {
+      expectedLength++;
+    }
+
+    if (res.networkInfo.updates.length === expectedLength) {
       this.batchedMessageUpdates({ res, message });
     }
   },

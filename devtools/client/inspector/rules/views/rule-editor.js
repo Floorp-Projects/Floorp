@@ -309,17 +309,20 @@ RuleEditor.prototype = {
       column
     };
 
-    let title = CssLogic.shortSource({href: displayURL});
+    let sourceTextContent = CssLogic.shortSource({href: displayURL});
+    let title = displayURL ? displayURL : sourceTextContent;
     if (line > 0) {
+      sourceTextContent += ":" + line;
       title += ":" + line;
     }
     if (this.rule.mediaText) {
+      sourceTextContent += " @" + this.rule.mediaText;
       title += " @" + this.rule.mediaText;
     }
 
     let sourceLabel = this.element.querySelector(".ruleview-rule-source-label");
     sourceLabel.setAttribute("title", title);
-    sourceLabel.textContent = title;
+    sourceLabel.textContent = sourceTextContent;
   },
 
   updateSourceLink: function () {

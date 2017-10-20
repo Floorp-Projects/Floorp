@@ -78,6 +78,6 @@ function verifyLinkText(text, view) {
   let label = getRuleViewLinkByIndex(view, 1)
     .querySelector(".ruleview-rule-source-label");
   return waitForSuccess(function* () {
-    return label.textContent == text;
+    return label.textContent == text && label.getAttribute("title") === URL_ROOT + text;
   }, "Link text changed to display correct location: " + text);
 }

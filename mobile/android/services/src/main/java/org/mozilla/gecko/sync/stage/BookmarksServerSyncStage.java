@@ -82,7 +82,8 @@ public class BookmarksServerSyncStage extends VersionedServerSyncStage {
             getAllowedMultipleBatches(),
             getAllowedToUseHighWaterMark(),
             getRepositoryStateProvider(),
-            false
+            false,
+            true
     );
   }
 

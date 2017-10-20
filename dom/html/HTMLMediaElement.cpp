@@ -1399,6 +1399,9 @@ public:
         mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
         mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
         mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+        if (mOwner->mDecoder) {
+          mOwner->ShutdownDecoder();
+        }
       } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
         mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
       } else {

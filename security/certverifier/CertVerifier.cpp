@@ -843,25 +843,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       break;
     }
 
-    case certificateUsageObjectSigner: {
-      NSSCertDBTrustDomain trustDomain(trustObjectSigning, defaultOCSPFetching,
-                                       mOCSPCache, pinArg, ocspGETConfig,
-                                       mOCSPTimeoutSoft, mOCSPTimeoutHard,
-                                       mCertShortLifetimeInDays,
-                                       pinningDisabled, MIN_RSA_BITS_WEAK,
-                                       ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed,
-                                       NetscapeStepUpPolicy::NeverMatch,
-                                       originAttributes, builtChain, nullptr,
-                                       nullptr);
-      rv = BuildCertChain(trustDomain, certDER, time,
-                          EndEntityOrCA::MustBeEndEntity,
-                          KeyUsage::digitalSignature,
-                          KeyPurposeId::id_kp_codeSigning,
-                          CertPolicyId::anyPolicy, stapledOCSPResponse);
-      break;
-    }
-
     default:
       rv = Result::FATAL_ERROR_INVALID_ARGS;
   }
