@@ -856,7 +856,7 @@ RFind_ComputeSearchRange( uint32_t bigLen, uint32_t littleLen, int32_t& offset, 
 // specialized methods:
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 int32_t
 nsTString<T>::Find(const self_type& aString, int32_t aOffset, int32_t aCount) const
 {
@@ -872,7 +872,7 @@ nsTString<T>::Find(const self_type& aString, int32_t aOffset, int32_t aCount) co
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 int32_t
 nsTString<T>::Find(const char_type* aString, int32_t aOffset, int32_t aCount) const
 {
@@ -880,7 +880,7 @@ nsTString<T>::Find(const char_type* aString, int32_t aOffset, int32_t aCount) co
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 int32_t
 nsTString<T>::RFind(const self_type& aString, int32_t aOffset, int32_t aCount) const
 {
@@ -896,7 +896,7 @@ nsTString<T>::RFind(const self_type& aString, int32_t aOffset, int32_t aCount) c
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 int32_t
 nsTString<T>::RFind(const char_type* aString, int32_t aOffset, int32_t aCount) const
 {
@@ -904,7 +904,7 @@ nsTString<T>::RFind(const char_type* aString, int32_t aOffset, int32_t aCount) c
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 int32_t
 nsTString<T>::FindCharInSet(const char* aSet, int32_t aOffset) const
 {
@@ -920,7 +920,7 @@ nsTString<T>::FindCharInSet(const char* aSet, int32_t aOffset) const
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 void
 nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar)
 {
@@ -948,7 +948,7 @@ nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar)
  */
 
 template <typename T>
-template <typename EnableIfChar>
+template <typename Q, typename EnableIfChar>
 int32_t
 nsTString<T>::Compare(const char_type* aString, bool aIgnoreCase, int32_t aCount) const
 {
@@ -979,7 +979,7 @@ nsTString<T>::Compare(const char_type* aString, bool aIgnoreCase, int32_t aCount
 }
 
 template <typename T>
-template <typename EnableIfChar16>
+template <typename Q, typename EnableIfChar16>
 bool
 nsTString<T>::EqualsIgnoreCase(const incompatible_char_type* aString, int32_t aCount) const
 {

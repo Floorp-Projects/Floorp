@@ -16,14 +16,12 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
 
   UniqueProfilerBacktrace stack = profiler_get_backtrace();
 
-  nsCString filename;
-  if (aObservation.Filename()) {
-    filename = NS_ConvertUTF16toUTF8(aObservation.Filename());
-  }
-
+  nsString filename;
+  aObservation.Filename(filename);
   profiler_add_marker(
     aObservation.ObservedOperationString(),
-    MakeUnique<IOMarkerPayload>(aObservation.Reference(), filename.get(),
+    MakeUnique<IOMarkerPayload>(aObservation.Reference(),
+                                NS_ConvertUTF16toUTF8(filename).get(),
                                 aObservation.Start(), aObservation.End(),
                                 Move(stack)));
 }
