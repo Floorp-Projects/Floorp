@@ -140,11 +140,22 @@ tabbrowser {
   margin-top: 1px;
 }
 
+.tab-throbber,
+.tab-icon-image,
+.tab-sharing-icon-overlay {
+  height: 16px;
+  width: 16px;
+}
+
+.tab-throbber:not([pinned]),
+.tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-image:not([pinned]) {
+  margin-inline-end: 6px;
+}
+
 :root[sessionrestored] .tab-throbber[busy] {
   position: relative;
   overflow: hidden;
-  width: 16px;
-  height: 16px;
 }
 
 :root[sessionrestored] .tab-throbber[busy]::before {
@@ -187,18 +198,6 @@ tabbrowser {
 
 #TabsToolbar[brighttext] .tabbrowser-tab:not([visuallyselected=true]) {
   --tab-loading-fill: #fff;
-}
-
-.tab-sharing-icon-overlay,
-.tab-icon-image {
-  height: 16px;
-  width: 16px;
-}
-
-.tab-throbber:not([pinned]),
-.tab-sharing-icon-overlay:not([pinned]),
-.tab-icon-image:not([pinned]) {
-  margin-inline-end: 6px;
 }
 
 .tab-icon-image {
