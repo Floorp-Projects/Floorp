@@ -2682,6 +2682,12 @@ HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
 already_AddRefed<Promise>
 HTMLMediaElement::SeekToNextFrame(ErrorResult& aRv)
 {
+  if (mSeekDOMPromise) {
+    // We can't perform NextFrameSeek while seek is already in action.
+    // Just return the pending seek promise.
+    return do_AddRef(mSeekDOMPromise);
+  }
+
   /* This will cause JIT code to be kept around longer, to help performance
    * when using SeekToNextFrame to iterate through every frame of a video.
    */
