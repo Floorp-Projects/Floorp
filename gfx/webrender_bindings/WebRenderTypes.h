@@ -12,7 +12,6 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Tools.h"
-#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/Variant.h"
@@ -672,36 +671,29 @@ struct BuiltDisplayList {
   wr::BuiltDisplayListDescriptor dl_desc;
 };
 
-static inline wr::WrFilterOpType ToWrFilterOpType(const layers::CSSFilterType type) {
+static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
   switch (type) {
-    case layers::CSSFilterType::BLUR:
+    case NS_STYLE_FILTER_BLUR:
       return wr::WrFilterOpType::Blur;
-    case layers::CSSFilterType::BRIGHTNESS:
+    case NS_STYLE_FILTER_BRIGHTNESS:
       return wr::WrFilterOpType::Brightness;
-    case layers::CSSFilterType::CONTRAST:
+    case NS_STYLE_FILTER_CONTRAST:
       return wr::WrFilterOpType::Contrast;
-    case layers::CSSFilterType::GRAYSCALE:
+    case NS_STYLE_FILTER_GRAYSCALE:
       return wr::WrFilterOpType::Grayscale;
-    case layers::CSSFilterType::HUE_ROTATE:
+    case NS_STYLE_FILTER_HUE_ROTATE:
       return wr::WrFilterOpType::HueRotate;
-    case layers::CSSFilterType::INVERT:
+    case NS_STYLE_FILTER_INVERT:
       return wr::WrFilterOpType::Invert;
-    case layers::CSSFilterType::OPACITY:
+    case NS_STYLE_FILTER_OPACITY:
       return wr::WrFilterOpType::Opacity;
-    case layers::CSSFilterType::SATURATE:
+    case NS_STYLE_FILTER_SATURATE:
       return wr::WrFilterOpType::Saturate;
-    case layers::CSSFilterType::SEPIA:
+    case NS_STYLE_FILTER_SEPIA:
       return wr::WrFilterOpType::Sepia;
   }
   MOZ_ASSERT_UNREACHABLE("Tried to convert unknown filter type.");
   return wr::WrFilterOpType::Grayscale;
-}
-
-static inline wr::WrFilterOp ToWrFilterOp(const layers::CSSFilter& filter) {
-  return {
-    ToWrFilterOpType(filter.type),
-    filter.argument,
-  };
 }
 
 // Corresponds to an "internal" webrender clip id. That is, a

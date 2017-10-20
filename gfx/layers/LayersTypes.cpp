@@ -5,51 +5,8 @@
 
 #include "LayersTypes.h"
 
-#include "nsStyleStruct.h"              // for nsStyleFilter
-
 namespace mozilla {
 namespace layers {
-
-CSSFilter ToCSSFilter(const nsStyleFilter& filter)
-{
-  switch (filter.GetType()) {
-    case NS_STYLE_FILTER_BRIGHTNESS: {
-      return {
-          CSSFilterType::BRIGHTNESS,
-          filter.GetFilterParameter().GetFactorOrPercentValue(),
-      };
-    }
-    case NS_STYLE_FILTER_CONTRAST: {
-      return {
-          CSSFilterType::CONTRAST,
-          filter.GetFilterParameter().GetFactorOrPercentValue(),
-      };
-    }
-    case NS_STYLE_FILTER_GRAYSCALE: {
-      return {
-          CSSFilterType::GRAYSCALE,
-          filter.GetFilterParameter().GetFactorOrPercentValue(),
-      };
-    }
-    case NS_STYLE_FILTER_INVERT: {
-      return {
-          CSSFilterType::INVERT,
-          filter.GetFilterParameter().GetFactorOrPercentValue(),
-      };
-    }
-    case NS_STYLE_FILTER_SEPIA: {
-      return {
-          CSSFilterType::SEPIA,
-          filter.GetFilterParameter().GetFactorOrPercentValue(),
-      };
-    }
-    // All other filter types should be prevented by the code which converts
-    // display items into layers.
-    default:
-      MOZ_ASSERT_UNREACHABLE("Tried to convert an unsupported filter");
-      return { CSSFilterType::CONTRAST, 0 };
-  }
-}
 
 EventRegions::EventRegions(const nsIntRegion& aHitRegion,
                            const nsIntRegion& aMaybeHitRegion,
