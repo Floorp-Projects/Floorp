@@ -287,7 +287,7 @@ config = {
     },
     # 'holly': {},
     'jamun': {
-        'update_channel': 'beta-dev',
+        'update_channel': 'beta',
         'enable_release_promotion': 1,
         'platform_overrides': {
             'linux': {
@@ -339,19 +339,19 @@ config = {
                 'update_channel': 'default',
             },
             'linux-devedition': {
-                "update_channel": "aurora-dev",
+                "update_channel": "aurora",
             },
             'linux64-devedition': {
-                "update_channel": "aurora-dev",
+                "update_channel": "aurora",
             },
             'macosx64-devedition': {
-                "update_channel": "aurora-dev",
+                "update_channel": "aurora",
             },
             'win32-devedition': {
-                "update_channel": "aurora-dev",
+                "update_channel": "aurora",
             },
             'win64-devedition': {
-                "update_channel": "aurora-dev",
+                "update_channel": "aurora",
             },
         },
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
