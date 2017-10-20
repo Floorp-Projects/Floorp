@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include "CacheMap.h"
 #include "GLDefs.h"
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
@@ -44,7 +45,8 @@ public:
     GLenum Usage() const { return mUsage; }
     size_t ByteLength() const { return mByteLength; }
 
-    bool ValidateIndexedFetch(GLenum type, uint32_t max_allowed, size_t first, size_t count) const;
+    Maybe<uint32_t> GetIndexedFetchMaxVert(GLenum type, uint64_t byteOffset,
+                                           uint32_t indexCount) const;
     bool ValidateRange(const char* funcName, size_t byteOffset, size_t byteLen) const;
 
     WebGLContext* GetParentObject() const {
@@ -67,6 +69,7 @@ public:
         if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER) {
             MOZ_ASSERT_IF(addVal < 0, buffer->mTFBindCount >= size_t(-addVal));
             buffer->mTFBindCount += addVal;
+            buffer->mFetchInvalidator.InvalidateCaches();
         } else {
             MOZ_ASSERT_IF(addVal < 0, buffer->mNonTFBindCount >= size_t(-addVal));
             buffer->mNonTFBindCount += addVal;
@@ -95,7 +98,7 @@ public:
 protected:
     ~WebGLBuffer();
 
-    void InvalidateCacheRange(size_t offset, size_t length) const;
+    void InvalidateCacheRange(uint64_t byteOffset, uint64_t byteLength) const;
 
     Kind mContent;
     GLenum mUsage;
@@ -105,22 +108,25 @@ protected:
 
     struct IndexRange final {
         GLenum type;
-        size_t first;
-        size_t count;
+        uint64_t byteOffset;
+        uint32_t indexCount;
 
         bool operator<(const IndexRange& x) const {
             if (type != x.type)
                 return type < x.type;
 
-            if (first != x.first)
-                return first < x.first;
+            if (byteOffset != x.byteOffset)
+                return byteOffset < x.byteOffset;
 
-            return count < x.count;
+            return indexCount < x.indexCount;
         }
     };
 
     UniqueBuffer mIndexCache;
-    mutable std::map<IndexRange, size_t> mIndexRanges;
+    mutable std::map<IndexRange, Maybe<uint32_t>> mIndexRanges;
+
+public:
+    CacheMapInvalidator mFetchInvalidator;
 };
 
 } // namespace mozilla
