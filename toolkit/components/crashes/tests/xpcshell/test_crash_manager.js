@@ -487,6 +487,7 @@ add_task(async function test_child_process_crash_ping() {
       RemoteType: remoteType,
       StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
+      ipc_channel_error: "ShutDownKill",
       ThisShouldNot: "end-up-in-the-ping"
     });
     await m._pingPromise;
@@ -508,6 +509,8 @@ add_task(async function test_child_process_crash_ping() {
                  "Non-whitelisted fields should be filtered out");
     Assert.equal(found.payload.metadata.RemoteType, remoteType,
                  "RemoteType should be whitelisted for content crashes");
+    Assert.equal(found.payload.metadata.ipc_channel_error, "ShutDownKill",
+                 "ipc_channel_error should be whitelisted for content crashes");
   }
 
   // Check that we don't generate a crash ping for invalid/unexpected process
