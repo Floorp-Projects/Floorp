@@ -23,15 +23,15 @@ config = {
     "balrog_url": "http://54.90.211.22:9090",
     "balrog_username": "balrog-stage-ffxbld",
     "update_channels": {
-        "beta": {
+        "beta-dev": {
             "version_regex": r"^(\d+\.\d+(b\d+)?)$",
             "requires_mirrors": True,
-            # TODO - when we use a real repo, rename this file # s/MozJamun/Mozbeta/
+            # TODO - when we use a real repo, rename this file # s/MozJamun/MozBeta-dev/
             "patcher_config": "mozJamun-branch-patcher2.cfg",
-            "update_verify_channel": "beta-localtest",
+            "update_verify_channel": "beta-dev-localtest",
             "mar_channel_ids": [],
-            "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
-            "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
+            "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
+            "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
             "publish_rules": [32],
             "bz2_blob_suffix": "-bz2",
             "bz2_rules_to_update": ["firefox-beta-cdntest-bz2", "firefox-beta-localtest-bz2"],
