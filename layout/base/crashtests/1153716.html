@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var td = document.createElement("td");
+    document.body.appendChild(td);
+    var audio = document.createElement("audio");
+    audio.controls = true;
+    td.appendChild(audio);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
