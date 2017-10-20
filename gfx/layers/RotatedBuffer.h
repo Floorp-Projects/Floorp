@@ -361,15 +361,15 @@ public:
   virtual bool Lock(OpenMode aMode) override { return false; }
   virtual void Unlock() override {}
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const;
+  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual bool HaveBuffer() const { return !!mSource; }
-  virtual bool HaveBufferOnWhite() const { return !!mSourceOnWhite; }
+  virtual bool HaveBuffer() const override { return !!mSource; }
+  virtual bool HaveBufferOnWhite() const override { return !!mSourceOnWhite; }
 
-  virtual gfx::DrawTarget* GetDTBuffer() const { return nullptr; }
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const { return nullptr; }
+  virtual gfx::DrawTarget* GetDTBuffer() const override { return nullptr; }
+  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override { return nullptr; }
 
 private:
   RefPtr<gfx::SourceSurface> mSource;
