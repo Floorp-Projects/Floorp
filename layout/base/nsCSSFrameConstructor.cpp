@@ -7111,24 +7111,27 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(InsertionPoint* aInsertion,
 nsContainerFrame*
 nsCSSFrameConstructor::GetContentInsertionFrameFor(nsIContent* aContent)
 {
-  nsIContent* content = aContent;
-  nsIFrame* frame;
-  while (!(frame = content->GetPrimaryFrame())) {
-    if (!GetDisplayContentsStyleFor(content)) {
+  // Get the primary frame associated with the content
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+
+  if (!frame) {
+    if (GetDisplayContentsStyleFor(aContent)) {
+      nsIContent* parent = aContent->GetParent();
+      if (parent && parent == aContent->GetContainingShadow()) {
+        parent = parent->GetBindingParent();
+      }
+      frame = parent ? GetContentInsertionFrameFor(parent) : nullptr;
+    }
+    if (!frame) {
       return nullptr;
     }
-
-    content = content->GetFlattenedTreeParent();
-    if (!content) {
+  } else {
+    // If the content of the frame is not the desired content then this is not
+    // really a frame for the desired content.
+    // XXX This check is needed due to bug 135040. Remove it once that's fixed.
+    if (frame->GetContent() != aContent) {
       return nullptr;
     }
-  }
-
-  // If the content of the frame is not the desired content then this is not
-  // really a frame for the desired content.
-  // XXX This check is needed due to bug 135040. Remove it once that's fixed.
-  if (frame->GetContent() != aContent) {
-    return nullptr;
   }
 
   nsContainerFrame* insertionFrame = frame->GetContentInsertionFrame();
