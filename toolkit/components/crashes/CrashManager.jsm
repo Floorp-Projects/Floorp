@@ -227,6 +227,7 @@ this.CrashManager.prototype = Object.freeze({
   ANNOTATION_WHITELIST: [
     "AsyncShutdownTimeout",
     "BuildID",
+    "ipc_channel_error",
     "ProductID",
     "ProductName",
     "ReleaseChannel",
