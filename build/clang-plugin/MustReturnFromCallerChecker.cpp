@@ -5,20 +5,22 @@
 #include "MustReturnFromCallerChecker.h"
 #include "CustomMatchers.h"
 
-void MustReturnFromCallerChecker::registerMatchers(MatchFinder* AstMatcher) {
+void MustReturnFromCallerChecker::registerMatchers(MatchFinder *AstMatcher) {
   // Look for a call to a MOZ_MUST_RETURN_FROM_CALLER function
-  AstMatcher->addMatcher(callExpr(callee(functionDecl(isMozMustReturnFromCaller())),
-                                  anyOf(hasAncestor(lambdaExpr().bind("containing-lambda")),
-                                        hasAncestor(functionDecl().bind("containing-func")))).bind("call"),
-                         this);
+  AstMatcher->addMatcher(
+      callExpr(callee(functionDecl(isMozMustReturnFromCaller())),
+               anyOf(hasAncestor(lambdaExpr().bind("containing-lambda")),
+                     hasAncestor(functionDecl().bind("containing-func"))))
+          .bind("call"),
+      this);
 }
 
 void MustReturnFromCallerChecker::check(
-    const MatchFinder::MatchResult& Result) {
+    const MatchFinder::MatchResult &Result) {
   const auto *ContainingLambda =
-    Result.Nodes.getNodeAs<LambdaExpr>("containing-lambda");
+      Result.Nodes.getNodeAs<LambdaExpr>("containing-lambda");
   const auto *ContainingFunc =
-    Result.Nodes.getNodeAs<FunctionDecl>("containing-func");
+      Result.Nodes.getNodeAs<FunctionDecl>("containing-func");
   const auto *Call = Result.Nodes.getNodeAs<CallExpr>("call");
 
   Stmt *Body = nullptr;
@@ -34,7 +36,7 @@ void MustReturnFromCallerChecker::check(
   // Generate the CFG for the enclosing function or decl.
   CFG::BuildOptions Options;
   std::unique_ptr<CFG> TheCFG =
-    CFG::buildCFG(nullptr, Body, Result.Context, Options);
+      CFG::buildCFG(nullptr, Body, Result.Context, Options);
   if (!TheCFG) {
     return;
   }
@@ -52,10 +54,9 @@ void MustReturnFromCallerChecker::check(
   }
 }
 
-bool
-MustReturnFromCallerChecker::immediatelyReturns(RecurseGuard<const CFGBlock *> Block,
-                                                ASTContext *TheContext,
-                                                size_t FromIdx) {
+bool MustReturnFromCallerChecker::immediatelyReturns(
+    RecurseGuard<const CFGBlock *> Block, ASTContext *TheContext,
+    size_t FromIdx) {
   if (Block.isRepeat()) {
     return false;
   }
@@ -73,8 +74,7 @@ MustReturnFromCallerChecker::immediatelyReturns(RecurseGuard<const CFGBlock *> B
     // It is also, of course, OK to look at a ReturnStmt.
     if (isa<ReturnStmt>(AfterTrivials) ||
         isa<CXXConstructExpr>(AfterTrivials) ||
-        isa<DeclRefExpr>(AfterTrivials) ||
-        isa<MemberExpr>(AfterTrivials)) {
+        isa<DeclRefExpr>(AfterTrivials) || isa<MemberExpr>(AfterTrivials)) {
       continue;
     }
 
@@ -83,7 +83,8 @@ MustReturnFromCallerChecker::immediatelyReturns(RecurseGuard<const CFGBlock *> B
     // to be MOZ_MAY_CALL_AFTER_MUST_RETURN (like operator T*()).
     if (auto CE = dyn_cast<CallExpr>(AfterTrivials)) {
       auto Callee = CE->getDirectCallee();
-      if (Callee && hasCustomAnnotation(Callee, "moz_may_call_after_must_return")) {
+      if (Callee &&
+          hasCustomAnnotation(Callee, "moz_may_call_after_must_return")) {
         continue;
       }
 

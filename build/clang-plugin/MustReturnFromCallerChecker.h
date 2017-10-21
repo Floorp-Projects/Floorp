@@ -5,22 +5,22 @@
 #ifndef MustReturnFromCallerChecker_h__
 #define MustReturnFromCallerChecker_h__
 
-#include "plugin.h"
-#include "Utils.h"
 #include "RecurseGuard.h"
 #include "StmtToBlockMap.h"
+#include "Utils.h"
+#include "plugin.h"
 
 class MustReturnFromCallerChecker : public BaseCheck {
 public:
   MustReturnFromCallerChecker(StringRef CheckName,
                               ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
+
 private:
   bool immediatelyReturns(RecurseGuard<const CFGBlock *> Block,
-                          ASTContext *TheContext,
-                          size_t FromIdx);
+                          ASTContext *TheContext, size_t FromIdx);
 };
 
 #endif

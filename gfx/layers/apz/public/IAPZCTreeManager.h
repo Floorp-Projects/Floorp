@@ -176,7 +176,7 @@ public:
       const ScrollableLayerGuid& aGuid,
       const AsyncDragMetrics& aDragMetrics) = 0;
 
-  virtual void StartAutoscroll(
+  virtual bool StartAutoscroll(
       const ScrollableLayerGuid& aGuid,
       const ScreenPoint& aAnchorLocation) = 0;
 

@@ -9,10 +9,9 @@
 
 class NeedsNoVTableTypeChecker : public BaseCheck {
 public:
-  NeedsNoVTableTypeChecker(StringRef CheckName,
-                           ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  NeedsNoVTableTypeChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 

@@ -5,7 +5,7 @@
 #include "NeedsNoVTableTypeChecker.h"
 #include "CustomMatchers.h"
 
-void NeedsNoVTableTypeChecker::registerMatchers(MatchFinder* AstMatcher) {
+void NeedsNoVTableTypeChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       classTemplateSpecializationDecl(
           allOf(hasAnyTemplateArgument(refersToType(hasVTable())),
@@ -14,8 +14,7 @@ void NeedsNoVTableTypeChecker::registerMatchers(MatchFinder* AstMatcher) {
       this);
 }
 
-void NeedsNoVTableTypeChecker::check(
-    const MatchFinder::MatchResult &Result) {
+void NeedsNoVTableTypeChecker::check(const MatchFinder::MatchResult &Result) {
   const ClassTemplateSpecializationDecl *Specialization =
       Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("node");
 
@@ -32,9 +31,9 @@ void NeedsNoVTableTypeChecker::check(
 
   diag(Specialization->getLocStart(),
        "%0 cannot be instantiated because %1 has a VTable",
-       DiagnosticIDs::Error) << Specialization
-                             << Offender;
+       DiagnosticIDs::Error)
+      << Specialization << Offender;
   diag(Specialization->getPointOfInstantiation(),
-       "bad instantiation of %0 requested here",
-       DiagnosticIDs::Note)  << Specialization;
+       "bad instantiation of %0 requested here", DiagnosticIDs::Note)
+      << Specialization;
 }

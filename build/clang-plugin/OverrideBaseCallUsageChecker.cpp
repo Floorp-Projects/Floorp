@@ -5,7 +5,7 @@
 #include "OverrideBaseCallUsageChecker.h"
 #include "CustomMatchers.h"
 
-void OverrideBaseCallUsageChecker::registerMatchers(MatchFinder* AstMatcher) {
+void OverrideBaseCallUsageChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       cxxMethodDecl(isNonVirtual(), isRequiredBaseMethod()).bind("method"),
       this);
@@ -13,7 +13,7 @@ void OverrideBaseCallUsageChecker::registerMatchers(MatchFinder* AstMatcher) {
 
 void OverrideBaseCallUsageChecker::check(
     const MatchFinder::MatchResult &Result) {
-  const char* Error =
+  const char *Error =
       "MOZ_REQUIRED_BASE_METHOD can be used only on virtual methods";
   const CXXMethodDecl *Method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
 

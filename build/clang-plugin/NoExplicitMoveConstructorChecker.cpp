@@ -5,10 +5,10 @@
 #include "NoExplicitMoveConstructorChecker.h"
 #include "CustomMatchers.h"
 
-void NoExplicitMoveConstructorChecker::registerMatchers(MatchFinder* AstMatcher) {
+void NoExplicitMoveConstructorChecker::registerMatchers(
+    MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      cxxConstructorDecl(isExplicitMoveConstructor()).bind("node"),
-      this);
+      cxxConstructorDecl(isExplicitMoveConstructor()).bind("node"), this);
 }
 
 void NoExplicitMoveConstructorChecker::check(

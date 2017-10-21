@@ -76,21 +76,3 @@ add_task(async function test_opening_blocked_popups() {
   // Ensure the menu closes.
   menu.hidePopup();
 });
-
-add_task(async function check_icon_hides() {
-  // Enable the popup blocker.
-  await SpecialPowers.pushPrefEnv({set: [["dom.disable_open_during_load", true]]});
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, baseURL + "popup_blocker.html");
-
-  let button = document.getElementById("page-report-button");
-  await BrowserTestUtils.waitForCondition(() =>
-    gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked"));
-  ok(!button.hidden, "Button should be visible");
-
-  let otherPageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  openLinkIn(baseURL, "current", {});
-  await otherPageLoaded;
-  ok(button.hidden, "Button should have hidden again after another page loaded.");
-  await BrowserTestUtils.removeTab(tab);
-});
