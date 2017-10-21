@@ -19,6 +19,18 @@ addEventListener("message", function rcv(event) {
     postMessage({msg: "assertTrue", condition, description}, "*");
   }
 
+  function assertThrows(func, expectedError, msg) {
+    try {
+      func();
+    } catch (e) {
+      assertTrue(expectedError.test(e), msg + ": threw " + e);
+      return;
+    }
+
+    assertTrue(false, "Function did not throw, " +
+                      "expected error should have matched " + expectedError);
+  }
+
   function passListener() {
     assertTrue(true, "Content XHR has no elevated privileges");
     postMessage({"msg": "finish"}, "*");
@@ -29,19 +41,13 @@ addEventListener("message", function rcv(event) {
     postMessage({"msg": "finish"}, "*");
   }
 
-  try {
-    new privilegedXHR();
-    assertTrue(false, "Content should not have access to privileged XHR constructor");
-  } catch (e) {
-    assertTrue(/Permission denied to access object/.test(e), "Content should not have access to privileged XHR constructor");
-  }
+  assertThrows(function() { new privilegedXHR(); },
+               /Permission denied to access object/,
+               "Content should not be allowed to construct a privileged XHR constructor");
 
-  try {
-    new privilegedFetch();
-    assertTrue(false, "Content should not have access to privileged fetch() constructor");
-  } catch (e) {
-    assertTrue(/Permission denied to access object/.test(e), "Content should not have access to privileged fetch() constructor");
-  }
+  assertThrows(function() { new privilegedFetch(); },
+               / is not a constructor/,
+               "Content should not be allowed to construct a privileged fetch() constructor");
 
   let req = new XMLHttpRequest();
   req.addEventListener("load", failListener);
