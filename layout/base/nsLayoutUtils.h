@@ -2548,6 +2548,12 @@ public:
 
 #ifdef MOZ_STYLO
   /**
+   * Return whether stylo should be used for a given document URI and
+   * principal.
+   */
+  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal);
+
+  /**
    * Principal-based blocklist for stylo.
    * Check if aPrincipal is blocked by stylo's blocklist and should fallback to
    * use Gecko's style backend. Note that using a document's principal rather
@@ -2569,6 +2575,10 @@ public:
    * So, NEVER use this in any other cases.
    */
   static void RemoveFromStyloBlocklist(const nsACString& aBlockedDomain);
+#else
+  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal) {
+    return false;
+  }
 #endif
 
   /**
