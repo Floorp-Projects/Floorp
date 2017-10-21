@@ -744,19 +744,11 @@ nsHTTPIndex::isWellknownContainerURI(nsIRDFResource *r)
 
 
 NS_IMETHODIMP
-nsHTTPIndex::GetURI(char * *uri)
+nsHTTPIndex::GetURI(nsACString& aURI)
 {
-	NS_PRECONDITION(uri != nullptr, "null ptr");
-	if (! uri)
-		return(NS_ERROR_NULL_POINTER);
-
-	if ((*uri = strdup("rdf:httpindex")) == nullptr)
-		return(NS_ERROR_OUT_OF_MEMORY);
-
-	return(NS_OK);
+  aURI.AssignLiteral("rdf:httpindex");
+  return NS_OK;
 }
-
-
 
 NS_IMETHODIMP
 nsHTTPIndex::GetSource(nsIRDFResource *aProperty, nsIRDFNode *aTarget, bool aTruthValue,
