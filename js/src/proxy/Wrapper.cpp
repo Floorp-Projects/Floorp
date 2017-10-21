@@ -295,17 +295,15 @@ ForwardingProxyHandler::boxedValue_unbox(JSContext* cx, HandleObject proxy,
 bool
 ForwardingProxyHandler::isCallable(JSObject* obj) const
 {
-    JSObject * target = obj->as<ProxyObject>().target();
+    JSObject* target = obj->as<ProxyObject>().target();
     return target->isCallable();
 }
 
 bool
 ForwardingProxyHandler::isConstructor(JSObject* obj) const
 {
-    // For now, all wrappers are constructable if they are callable. We will want to eventually
-    // decouple this behavior, but none of the Wrapper infrastructure is currently prepared for
-    // that.
-    return isCallable(obj);
+    JSObject* target = obj->as<ProxyObject>().target();
+    return target->isConstructor();
 }
 
 JSObject*
