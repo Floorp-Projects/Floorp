@@ -810,6 +810,8 @@
                          tooltiptext="&urlbar.screenBlocked.tooltip;"/>
                   <image data-permission-id="persistent-storage" class="blocked-permission-icon persistent-storage-icon" role="button"
                          tooltiptext="&urlbar.persistentStorageBlocked.tooltip;"/>
+                  <image data-permission-id="popup" class="blocked-permission-icon popup-icon" role="button"
+                         tooltiptext="&urlbar.popupBlocked.tooltip;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
@@ -870,12 +872,6 @@
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>
                 </hbox>
-                <image id="page-report-button"
-                       class="urlbar-icon urlbar-page-action"
-                       role="button"
-                       hidden="true"
-                       tooltiptext="&pageReportIcon.tooltip;"
-                       onmousedown="gPopupBlockerObserver.onReportButtonMousedown(event);"/>
                 <image id="reader-mode-button"
                        class="urlbar-icon urlbar-page-action"
                        role="button"

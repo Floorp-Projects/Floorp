@@ -5,10 +5,9 @@
 #include "NonParamInsideFunctionDeclChecker.h"
 #include "CustomMatchers.h"
 
-class NonParamAnnotation : public CustomTypeAnnotation
-{
+class NonParamAnnotation : public CustomTypeAnnotation {
 public:
-  NonParamAnnotation() : CustomTypeAnnotation("moz_non_param", "non-param") {};
+  NonParamAnnotation() : CustomTypeAnnotation("moz_non_param", "non-param"){};
 
 protected:
   // Adding alignas(_) on a struct implicitly marks it as MOZ_NON_PARAM, due to
@@ -28,7 +27,9 @@ protected:
       for (auto F : RD->fields()) {
         for (auto A : F->attrs()) {
           if (isa<AlignedAttr>(A)) {
-            return ("member '" + F->getName() + "' has an alignas(_) annotation").str();
+            return ("member '" + F->getName() +
+                    "' has an alignas(_) annotation")
+                .str();
           }
         }
       }
@@ -41,22 +42,22 @@ protected:
 };
 NonParamAnnotation NonParam;
 
-void NonParamInsideFunctionDeclChecker::registerMatchers(MatchFinder* AstMatcher) {
+void NonParamInsideFunctionDeclChecker::registerMatchers(
+    MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      functionDecl(anyOf(allOf(isDefinition(),
-                               hasAncestor(classTemplateSpecializationDecl()
-                                               .bind("spec"))),
-                         isDefinition()))
+      functionDecl(
+          anyOf(allOf(isDefinition(),
+                      hasAncestor(
+                          classTemplateSpecializationDecl().bind("spec"))),
+                isDefinition()))
           .bind("func"),
       this);
-  AstMatcher->addMatcher(
-      lambdaExpr().bind("lambda"),
-      this);
+  AstMatcher->addMatcher(lambdaExpr().bind("lambda"), this);
 }
 
 void NonParamInsideFunctionDeclChecker::check(
     const MatchFinder::MatchResult &Result) {
-  static DenseSet<const FunctionDecl*> CheckedFunctionDecls;
+  static DenseSet<const FunctionDecl *> CheckedFunctionDecls;
 
   const FunctionDecl *func = Result.Nodes.getNodeAs<FunctionDecl>("func");
   if (!func) {
@@ -98,15 +99,16 @@ void NonParamInsideFunctionDeclChecker::check(
     QualType T = p->getType().withoutLocalFastQualifiers();
     if (NonParam.hasEffectiveAnnotation(T)) {
       diag(p->getLocation(), "Type %0 must not be used as parameter",
-           DiagnosticIDs::Error) << T;
-      diag(p->getLocation(), "Please consider passing a const reference instead",
+           DiagnosticIDs::Error)
+          << T;
+      diag(p->getLocation(),
+           "Please consider passing a const reference instead",
            DiagnosticIDs::Note);
 
       if (Spec) {
         diag(Spec->getPointOfInstantiation(),
-             "The bad argument was passed to %0 here",
-             DiagnosticIDs::Note)
-          << Spec->getSpecializedTemplate();
+             "The bad argument was passed to %0 here", DiagnosticIDs::Note)
+            << Spec->getSpecializedTemplate();
       }
 
       NonParam.dumpAnnotationReason(*this, T, p->getLocation());

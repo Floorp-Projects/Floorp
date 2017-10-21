@@ -1,28 +1,26 @@
 #include "VariableUsageHelpers.h"
 #include "Utils.h"
 
-std::vector<const Stmt*>
-getUsageAsRvalue(const ValueDecl* ValueDeclaration,
-                 const FunctionDecl* FuncDecl) {
-  std::vector<const Stmt*> UsageStatements;
+std::vector<const Stmt *> getUsageAsRvalue(const ValueDecl *ValueDeclaration,
+                                           const FunctionDecl *FuncDecl) {
+  std::vector<const Stmt *> UsageStatements;
 
   // We check the function declaration has a body.
   auto Body = FuncDecl->getBody();
   if (!Body) {
-    return std::vector<const Stmt*>();
+    return std::vector<const Stmt *>();
   }
 
   // We build a Control Flow Graph (CFG) fron the body of the function
   // declaration.
-  std::unique_ptr<CFG> StatementCFG
-      = CFG::buildCFG(FuncDecl, Body, &FuncDecl->getASTContext(),
-                      CFG::BuildOptions());
+  std::unique_ptr<CFG> StatementCFG = CFG::buildCFG(
+      FuncDecl, Body, &FuncDecl->getASTContext(), CFG::BuildOptions());
 
   // We iterate through all the CFGBlocks, which basically means that we go over
   // all the possible branches of the code and therefore cover all statements.
-  for (auto& Block : *StatementCFG) {
+  for (auto &Block : *StatementCFG) {
     // We iterate through all the statements of the block.
-    for (auto& BlockItem : *Block) {
+    for (auto &BlockItem : *Block) {
       Optional<CFGStmt> CFGStatement = BlockItem.getAs<CFGStmt>();
       if (!CFGStatement) {
         continue;
@@ -50,7 +48,7 @@ getUsageAsRvalue(const ValueDecl* ValueDeclaration,
         // We want our declaration to be used as the expression of the return
         // statement.
         auto DeclRef = dyn_cast_or_null<DeclRefExpr>(
-                            IgnoreTrivials(Return->getRetValue()));
+            IgnoreTrivials(Return->getRetValue()));
         if (!DeclRef) {
           continue;
         }
@@ -71,63 +69,56 @@ getUsageAsRvalue(const ValueDecl* ValueDeclaration,
 }
 
 // We declare our EscapesFunctionError enum to be an error code enum.
-namespace std
-{
-  template <>
-    struct is_error_code_enum<EscapesFunctionError> : true_type {};
-}
+namespace std {
+template <> struct is_error_code_enum<EscapesFunctionError> : true_type {};
+} // namespace std
 
 // We define the EscapesFunctionErrorCategory which contains the error messages
 // corresponding to each enum variant.
 namespace {
-  struct EscapesFunctionErrorCategory : std::error_category
-  {
-    const char* name() const noexcept override;
-    std::string message(int ev) const override;
-  };
+struct EscapesFunctionErrorCategory : std::error_category {
+  const char *name() const noexcept override;
+  std::string message(int ev) const override;
+};
 
-  const char* EscapesFunctionErrorCategory::name() const noexcept
-  {
-    return "escapes function";
-  }
-
-  std::string EscapesFunctionErrorCategory::message(int ev) const
-  {
-    switch (static_cast<EscapesFunctionError>(ev))
-    {
-    case EscapesFunctionError::ConstructorDeclNotFound:
-      return "constructor declaration not found";
-
-    case EscapesFunctionError::FunctionDeclNotFound:
-      return "function declaration not found";
-
-    case EscapesFunctionError::FunctionIsBuiltin:
-      return "function is builtin";
-
-    case EscapesFunctionError::FunctionIsVariadic:
-      return "function is variadic";
-
-    case EscapesFunctionError::ExprNotInCall:
-      return "expression is not in call";
-
-    case EscapesFunctionError::NoParamForArg:
-      return "no parameter for argument";
-
-    case EscapesFunctionError::ArgAndParamNotPointers:
-      return "argument and parameter are not pointers";
-    }
-  }
-
-  const EscapesFunctionErrorCategory TheEscapesFunctionErrorCategory {};
+const char *EscapesFunctionErrorCategory::name() const noexcept {
+  return "escapes function";
 }
 
-std::error_code make_error_code(EscapesFunctionError e)
-{
+std::string EscapesFunctionErrorCategory::message(int ev) const {
+  switch (static_cast<EscapesFunctionError>(ev)) {
+  case EscapesFunctionError::ConstructorDeclNotFound:
+    return "constructor declaration not found";
+
+  case EscapesFunctionError::FunctionDeclNotFound:
+    return "function declaration not found";
+
+  case EscapesFunctionError::FunctionIsBuiltin:
+    return "function is builtin";
+
+  case EscapesFunctionError::FunctionIsVariadic:
+    return "function is variadic";
+
+  case EscapesFunctionError::ExprNotInCall:
+    return "expression is not in call";
+
+  case EscapesFunctionError::NoParamForArg:
+    return "no parameter for argument";
+
+  case EscapesFunctionError::ArgAndParamNotPointers:
+    return "argument and parameter are not pointers";
+  }
+}
+
+const EscapesFunctionErrorCategory TheEscapesFunctionErrorCategory{};
+} // namespace
+
+std::error_code make_error_code(EscapesFunctionError e) {
   return {static_cast<int>(e), TheEscapesFunctionErrorCategory};
 }
 
-ErrorOr<std::tuple<const Stmt*, const Decl*>>
-escapesFunction(const Expr* Arg, const CXXConstructExpr* Construct) {
+ErrorOr<std::tuple<const Stmt *, const Decl *>>
+escapesFunction(const Expr *Arg, const CXXConstructExpr *Construct) {
   // We get the function declaration corresponding to the call.
   auto CtorDecl = Construct->getConstructor();
   if (!CtorDecl) {
@@ -138,8 +129,8 @@ escapesFunction(const Expr* Arg, const CXXConstructExpr* Construct) {
                          Construct->getNumArgs());
 }
 
-ErrorOr<std::tuple<const Stmt*, const Decl*>>
-escapesFunction(const Expr* Arg, const CallExpr* Call) {
+ErrorOr<std::tuple<const Stmt *, const Decl *>>
+escapesFunction(const Expr *Arg, const CallExpr *Call) {
   // We get the function declaration corresponding to the call.
   auto FuncDecl = Call->getDirectCallee();
   if (!FuncDecl) {
@@ -149,8 +140,8 @@ escapesFunction(const Expr* Arg, const CallExpr* Call) {
   return escapesFunction(Arg, FuncDecl, Call->getArgs(), Call->getNumArgs());
 }
 
-ErrorOr<std::tuple<const Stmt*, const Decl*>>
-escapesFunction(const Expr* Arg, const CXXOperatorCallExpr* OpCall) {
+ErrorOr<std::tuple<const Stmt *, const Decl *>>
+escapesFunction(const Expr *Arg, const CXXOperatorCallExpr *OpCall) {
   // We get the function declaration corresponding to the operator call.
   auto FuncDecl = OpCall->getDirectCallee();
   if (!FuncDecl) {
@@ -170,11 +161,11 @@ escapesFunction(const Expr* Arg, const CXXOperatorCallExpr* OpCall) {
   return escapesFunction(Arg, FuncDecl, Args, NumArgs);
 }
 
-ErrorOr<std::tuple<const Stmt*, const Decl*>>
-escapesFunction(const Expr* Arg, const FunctionDecl *FuncDecl,
-                const Expr* const* Arguments, unsigned NumArgs) {
+ErrorOr<std::tuple<const Stmt *, const Decl *>>
+escapesFunction(const Expr *Arg, const FunctionDecl *FuncDecl,
+                const Expr *const *Arguments, unsigned NumArgs) {
   if (!NumArgs) {
-    return std::make_tuple((const Stmt*)nullptr, (const Decl*)nullptr);
+    return std::make_tuple((const Stmt *)nullptr, (const Decl *)nullptr);
   }
 
   if (FuncDecl->getBuiltinID() != 0 ||
@@ -247,7 +238,7 @@ escapesFunction(const Expr* Arg, const FunctionDecl *FuncDecl,
           continue;
         }
 
-        return std::make_tuple(Usage, (const Decl*)ParamDeclaration);
+        return std::make_tuple(Usage, (const Decl *)ParamDeclaration);
       } else if (auto VarDeclaration = dyn_cast<VarDecl>(DeclRef->getDecl())) {
         // This is the case where the parameter escapes through a global/static
         // variable.
@@ -255,25 +246,26 @@ escapesFunction(const Expr* Arg, const FunctionDecl *FuncDecl,
           continue;
         }
 
-        return std::make_tuple(Usage, (const Decl*)VarDeclaration);
-      } else if (auto FieldDeclaration = dyn_cast<FieldDecl>(DeclRef->getDecl())) {
+        return std::make_tuple(Usage, (const Decl *)VarDeclaration);
+      } else if (auto FieldDeclaration =
+                     dyn_cast<FieldDecl>(DeclRef->getDecl())) {
         // This is the case where the parameter escapes through a field.
 
-        return std::make_tuple(Usage, (const Decl*)FieldDeclaration);
+        return std::make_tuple(Usage, (const Decl *)FieldDeclaration);
       }
     } else if (isa<ReturnStmt>(Usage)) {
       // This is the case where the parameter escapes through the return value
       // of the function.
-      if (!FuncDecl->getReturnType()->isPointerType()
-          && !FuncDecl->getReturnType()->isReferenceType()) {
+      if (!FuncDecl->getReturnType()->isPointerType() &&
+          !FuncDecl->getReturnType()->isReferenceType()) {
         continue;
       }
 
-      return std::make_tuple(Usage, (const Decl*)FuncDecl);
+      return std::make_tuple(Usage, (const Decl *)FuncDecl);
     }
   }
 
   // No early-return, this means that we haven't found any case of funciton
   // escaping and that therefore the parameter remains in the function scope.
-  return std::make_tuple((const Stmt*)nullptr, (const Decl*)nullptr);
+  return std::make_tuple((const Stmt *)nullptr, (const Decl *)nullptr);
 }

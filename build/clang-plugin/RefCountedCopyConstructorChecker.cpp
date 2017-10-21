@@ -5,7 +5,8 @@
 #include "RefCountedCopyConstructorChecker.h"
 #include "CustomMatchers.h"
 
-void RefCountedCopyConstructorChecker::registerMatchers(MatchFinder* AstMatcher) {
+void RefCountedCopyConstructorChecker::registerMatchers(
+    MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       cxxConstructExpr(
           hasDeclaration(cxxConstructorDecl(isCompilerProvidedCopyConstructor(),
@@ -16,14 +17,13 @@ void RefCountedCopyConstructorChecker::registerMatchers(MatchFinder* AstMatcher)
 
 void RefCountedCopyConstructorChecker::check(
     const MatchFinder::MatchResult &Result) {
-  const char* Error =
+  const char *Error =
       "Invalid use of compiler-provided copy constructor on refcounted type";
-  const char* Note =
-      "The default copy constructor also copies the "
-      "default mRefCnt property, leading to reference "
-      "count imbalance issues. Please provide your own "
-      "copy constructor which only copies the fields which "
-      "need to be copied";
+  const char *Note = "The default copy constructor also copies the "
+                     "default mRefCnt property, leading to reference "
+                     "count imbalance issues. Please provide your own "
+                     "copy constructor which only copies the fields which "
+                     "need to be copied";
 
   // Everything we needed to know was checked in the matcher - we just report
   // the error here

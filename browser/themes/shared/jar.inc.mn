@@ -79,6 +79,7 @@
   skin/classic/browser/notification-icons/plugin-blocked.svg                (../shared/notification-icons/plugin-blocked.svg)
   skin/classic/browser/notification-icons/plugin.svg                        (../shared/notification-icons/plugin.svg)
   skin/classic/browser/notification-icons/popup.svg                         (../shared/notification-icons/popup.svg)
+  skin/classic/browser/notification-icons/popup-subitem.svg                 (../shared/notification-icons/popup-subitem.svg)
   skin/classic/browser/notification-icons/screen-blocked.svg                (../shared/notification-icons/screen-blocked.svg)
   skin/classic/browser/notification-icons/screen.svg                        (../shared/notification-icons/screen.svg)
   skin/classic/browser/notification-icons/update.svg                        (../shared/notification-icons/update.svg)

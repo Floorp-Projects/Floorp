@@ -3468,12 +3468,15 @@ TabParent::StartPersistence(uint64_t aOuterWindowID,
 
 NS_IMETHODIMP
 TabParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
-                              nsViewID aScrollId, uint32_t aPresShellId)
+                              nsViewID aScrollId, uint32_t aPresShellId,
+                              bool* aOutRetval)
 {
   if (!AsyncPanZoomEnabled()) {
+    *aOutRetval = false;
     return NS_OK;
   }
 
+  bool success = false;
   if (RenderFrameParent* renderFrame = GetRenderFrame()) {
     uint64_t layersId = renderFrame->GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
@@ -3486,11 +3489,12 @@ TabParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
       LayoutDeviceIntPoint anchor = RoundedToInt(anchorCss * widget->GetDefaultScale());
       anchor -= widget->WidgetToScreenOffset();
 
-      widget->StartAsyncAutoscroll(
+      success = widget->StartAsyncAutoscroll(
           ViewAs<ScreenPixel>(anchor, PixelCastJustification::LayoutDeviceIsScreenForBounds),
           guid);
     }
   }
+  *aOutRetval = success;
   return NS_OK;
 }
 

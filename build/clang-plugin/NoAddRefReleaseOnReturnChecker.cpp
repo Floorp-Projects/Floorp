@@ -5,10 +5,11 @@
 #include "NoAddRefReleaseOnReturnChecker.h"
 #include "CustomMatchers.h"
 
-void NoAddRefReleaseOnReturnChecker::registerMatchers(MatchFinder* AstMatcher) {
+void NoAddRefReleaseOnReturnChecker::registerMatchers(MatchFinder *AstMatcher) {
   // Look for all of the calls to AddRef() or Release()
-  AstMatcher->addMatcher(memberExpr(isAddRefOrRelease(), hasParent(callExpr())).bind("member"),
-                         this);
+  AstMatcher->addMatcher(
+      memberExpr(isAddRefOrRelease(), hasParent(callExpr())).bind("member"),
+      this);
 }
 
 void NoAddRefReleaseOnReturnChecker::check(
@@ -24,8 +25,7 @@ void NoAddRefReleaseOnReturnChecker::check(
         diag(Call->getLocStart(),
              "%1 cannot be called on the return value of %0",
              DiagnosticIDs::Error)
-          << Callee
-          << dyn_cast<CXXMethodDecl>(Member->getMemberDecl());
+            << Callee << dyn_cast<CXXMethodDecl>(Member->getMemberDecl());
       }
     }
   }

@@ -93,9 +93,9 @@ ContentProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::V
 }
 
 void
-ContentProcessController::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId)
+ContentProcessController::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
 {
-  APZCCallbackHelper::NotifyAutoscrollHandledByAPZ(aScrollId);
+  APZCCallbackHelper::NotifyAsyncAutoscrollRejected(aScrollId);
 }
 
 void
