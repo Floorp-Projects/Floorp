@@ -14,10 +14,8 @@ EXTRA_COMPONENTS += [
     'paymentUIService.js',
 ]
 
+EXTRA_JS_MODULES += []
+
 JAR_MANIFESTS += ['jar.mn']
 
 SPHINX_TREES['docs'] = 'docs'
-
-TESTING_JS_MODULES += [
-    'test/PaymentTestUtils.jsm',
-]
