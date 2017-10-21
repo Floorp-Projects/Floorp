@@ -3440,10 +3440,10 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
                          "Expected ${nativeType}::CreateNamedPropertiesObject to return a named properties object");
               MOZ_ASSERT(clasp->mNativeHooks,
                          "The named properties object for ${nativeType} should have NativePropertyHooks.");
-              MOZ_ASSERT(clasp->mNativeHooks->mResolveOwnProperty,
-                         "Don't know how to resolve the properties of the named properties object for ${nativeType}.");
-              MOZ_ASSERT(clasp->mNativeHooks->mEnumerateOwnProperties,
-                         "Don't know how to enumerate the properties of the named properties object for ${nativeType}.");
+              MOZ_ASSERT(!clasp->mNativeHooks->mResolveOwnProperty,
+                         "Shouldn't resolve the properties of the named properties object for ${nativeType} for Xrays.");
+              MOZ_ASSERT(!clasp->mNativeHooks->mEnumerateOwnProperties,
+                         "Shouldn't enumerate the properties of the named properties object for ${nativeType} for Xrays.");
             }
             return namedPropertiesObject.get();
             """,

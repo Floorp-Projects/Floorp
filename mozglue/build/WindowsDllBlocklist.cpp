@@ -254,6 +254,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Bug 1268470 - crashes with Kaspersky Lab on Windows 8
   { "klsihk64.dll", MAKE_VERSION(14, 0, 456, 0xffff), DllBlockInfo::BLOCK_WIN8_ONLY },
 
+  // Bug 1407337, crashes with OpenSC < 0.16.0
+  { "onepin-opensc-pkcs11.dll", MAKE_VERSION(0, 15, 0xffff, 0xffff) },
+
   { nullptr, 0 }
 };
 
