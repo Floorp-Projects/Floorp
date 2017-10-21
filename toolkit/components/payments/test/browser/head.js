@@ -8,24 +8,12 @@
   }],
 */
 
-
-const BLANK_PAGE_PATH = "/browser/toolkit/components/payments/test/browser/blank_page.html";
-const BLANK_PAGE_URL = "https://example.com" + BLANK_PAGE_PATH;
-
-const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
-                     .getService(Ci.nsIPaymentRequestService);
+const BLANK_PAGE_URL = "https://example.com/browser/toolkit/components/" +
+                       "payments/test/browser/blank_page.html";
+const PREF_PAYMENT_ENABLED = "dom.payments.request.enabled";
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService().wrappedJSObject;
-const {PaymentTestUtils: PTU} = Cu.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-function getPaymentRequests() {
-  let requestsEnum = paymentSrv.enumerate();
-  let requests = [];
-  while (requestsEnum.hasMoreElements()) {
-    requests.push(requestsEnum.getNext().QueryInterface(Ci.nsIPaymentRequest));
-  }
-  return requests;
-}
 
 /**
  * Return the container (e.g. dialog or overlay) that the payment request contents are shown in.
@@ -48,7 +36,7 @@ async function getPaymentFrame(widget) {
   return widget.document.getElementById("paymentRequestFrame");
 }
 
-function waitForMessageFromWidget(messageType, widget = null) {
+async function waitForMessageFromWidget(messageType, widget = null) {
   info("waitForMessageFromWidget: " + messageType);
   return new Promise(resolve => {
     Services.mm.addMessageListener("paymentContentToChrome", function onMessage({data, target}) {
@@ -73,62 +61,30 @@ function spawnPaymentDialogTask(paymentDialogFrame, taskFn, args = null) {
   return ContentTask.spawn(paymentDialogFrame.frameLoader, args, taskFn);
 }
 
-async function withMerchantTab({browser = gBrowser, url = BLANK_PAGE_URL} = {
-  browser: gBrowser,
-  url: BLANK_PAGE_URL,
-}, taskFn) {
-  await BrowserTestUtils.withNewTab({
-    gBrowser: browser,
-    url,
-  }, taskFn);
+/**
+ * Common content tasks functions to be used with ContentTask.spawn.
+ */
+let ContentTasks = {
+  createAndShowRequest: async ({methodData, details, options}) => {
+    let rq = new content.PaymentRequest(methodData, details, options);
+    content.rq = rq; // assign it so we can retrieve it later
+    rq.show();
+  },
 
-  paymentSrv.cleanup(); // Temporary measure until bug 1408234 is fixed.
+  /**
+   * Click the cancel button
+   *
+   * Don't await on this task since the cancel can close the dialog before
+   * ContentTask can resolve the promise.
+   *
+   * @returns {undefined}
+   */
+  manuallyClickCancel: () => {
+    content.document.getElementById("cancel").click();
+  },
+};
 
-  await new Promise(resolve => {
-    SpecialPowers.exactGC(resolve);
-  });
-}
-
-function withNewDialogFrame(requestId, taskFn) {
-  async function dialogTabTask(dialogBrowser) {
-    let paymentRequestFrame = dialogBrowser.contentDocument.getElementById("paymentRequestFrame");
-    await taskFn(paymentRequestFrame);
-  }
-
-  let args = {
-    gBrowser,
-    url: `chrome://payments/content/paymentDialog.xhtml?requestId=${requestId}`,
-  };
-  return BrowserTestUtils.withNewTab(args, dialogTabTask);
-}
-
-function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
-  return withNewDialogFrame(requestId, async function spawnTaskInNewDialog_tabTask(reqFrame) {
-    await spawnPaymentDialogTask(reqFrame, contentTaskFn, args);
-  });
-}
-
-async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskArgs, {
-  origin = "https://example.com",
-} = {
-  origin: "https://example.com",
-}) {
-  await withMerchantTab({
-    url: origin + BLANK_PAGE_PATH,
-  }, async merchBrowser => {
-    await ContentTask.spawn(merchBrowser, taskArgs, PTU.ContentTasks.createRequest);
-
-    const requests = getPaymentRequests();
-    is(requests.length, 1, "Should have one payment request");
-    let request = requests[0];
-    ok(!!request.requestId, "Got a payment request with an ID");
-
-    await spawnTaskInNewDialog(request.requestId, dialogTaskFn, taskArgs);
-  });
-}
 
 add_task(async function setup_head() {
-  SimpleTest.registerCleanupFunction(function cleanup() {
-    paymentSrv.cleanup();
-  });
+  await SpecialPowers.pushPrefEnv({set: [[PREF_PAYMENT_ENABLED, true]]});
 });
