@@ -3558,6 +3558,15 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         building(aBuilder, mOuter, visibleRect, dirtyRect, aBuilder->IsAtRootOfPseudoStackingContext());
 
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, scrolledContent);
+
+      if (dirtyRectHasBeenOverriden && gfxPrefs::LayoutDisplayListShowArea()) {
+        nsDisplaySolidColor* color =
+          new (aBuilder) nsDisplaySolidColor(aBuilder, mOuter,
+                                             dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
+                                             NS_RGBA(0, 0, 255, 64), false);
+        color->SetOverrideZIndex(INT32_MAX);
+        scrolledContent.PositionedDescendants()->AppendNewToTop(color);
+      }
     }
 
     if (extraContentBoxClipForNonCaretContent) {
