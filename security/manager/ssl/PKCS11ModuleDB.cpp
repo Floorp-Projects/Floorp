@@ -200,7 +200,7 @@ PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
   for (SECMODModuleList* list = SECMOD_GetDefaultModuleList(); list;
        list = list->next) {
     nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(list->module);
-    nsresult rv = array->AppendElement(module, false);
+    nsresult rv = array->AppendElement(module);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -210,7 +210,7 @@ PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
   for (SECMODModuleList* list = SECMOD_GetDeadModuleList(); list;
        list = list->next) {
     nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(list->module);
-    nsresult rv = array->AppendElement(module, false);
+    nsresult rv = array->AppendElement(module);
     if (NS_FAILED(rv)) {
       return rv;
     }

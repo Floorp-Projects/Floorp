@@ -2518,7 +2518,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       nsCOMPtr<nsIMutableArray> devicesCopy = nsArray::Create(); // before we give up devices below
       if (!askPermission) {
         for (auto& device : **devices) {
-          nsresult rv = devicesCopy->AppendElement(device, /*weak =*/ false);
+          nsresult rv = devicesCopy->AppendElement(device);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return;
           }
@@ -3317,7 +3317,7 @@ MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray)
     if (winListener->CapturingVideo() || winListener->CapturingAudio() ||
         winListener->CapturingScreen() || winListener->CapturingWindow() ||
         winListener->CapturingApplication()) {
-      array->AppendElement(window, /*weak =*/ false);
+      array->AppendElement(window);
     }
   }
 

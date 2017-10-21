@@ -47,7 +47,7 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return IPC_FAIL_NO_REASON(this);
         }
-        rv = methodData->AppendElement(method, false);
+        rv = methodData->AppendElement(method);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return IPC_FAIL_NO_REASON(this);
         }

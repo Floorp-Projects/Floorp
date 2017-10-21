@@ -66,7 +66,7 @@ nsUrlClassifierCacheEntry::GetMatches(nsIArray** aMatches)
   nsCOMPtr<nsIMutableArray> array(do_CreateInstance(NS_ARRAY_CONTRACTID));
 
   for (uint32_t i = 0;i < matches.Length(); i++) {
-    array->AppendElement(matches[i], false);
+    array->AppendElement(matches[i]);
   }
 
   NS_ADDREF(*aMatches = array);
@@ -98,7 +98,7 @@ nsUrlClassifierCacheInfo::GetEntries(nsIArray** aEntries)
   nsCOMPtr<nsIMutableArray> array(do_CreateInstance(NS_ARRAY_CONTRACTID));
 
   for (uint32_t i = 0;i < entries.Length(); i++) {
-    array->AppendElement(entries[i], false);
+    array->AppendElement(entries[i]);
   }
 
   NS_ADDREF(*aEntries = array);

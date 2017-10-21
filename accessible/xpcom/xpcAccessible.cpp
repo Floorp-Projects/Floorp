@@ -152,7 +152,7 @@ xpcAccessible::GetChildren(nsIArray** aChildren)
   uint32_t childCount = IntlGeneric().ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
     AccessibleOrProxy child = IntlGeneric().ChildAt(childIdx);
-    children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)), false);
+    children->AppendElement(static_cast<nsIAccessible*>(ToXPC(child)));
   }
 
   children.forget(aChildren);
@@ -555,7 +555,7 @@ xpcAccessible::GetRelations(nsIArray** aRelations)
       uint32_t targets = 0;
       relation->GetTargetsCount(&targets);
       if (targets)
-        relations->AppendElement(relation, false);
+        relations->AppendElement(relation);
     }
   }
 

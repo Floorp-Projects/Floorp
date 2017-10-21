@@ -111,7 +111,7 @@ static inline void CopyHanderInfoTonsIHandlerInfo(HandlerInfo info, nsIHandlerIn
   aHandlerInfo->SetPreferredApplicationHandler(preferredApp);
   nsCOMPtr<nsIMutableArray> possibleHandlers;
   aHandlerInfo->GetPossibleApplicationHandlers(getter_AddRefs(possibleHandlers));
-  possibleHandlers->AppendElement(preferredApp, false);
+  possibleHandlers->AppendElement(preferredApp);
 }
 ContentHandlerService::~ContentHandlerService()
 {
