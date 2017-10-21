@@ -2680,7 +2680,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         set.BorderBackground()->AppendToBottom(eventRegions);
       } else {
         aBuilder->SetLayerEventRegions(nullptr);
-        eventRegions->~nsDisplayLayerEventRegions();
+        eventRegions->Destroy(aBuilder);
         eventRegions = nullptr;
       }
     }
