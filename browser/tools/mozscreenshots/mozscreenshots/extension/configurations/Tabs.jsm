@@ -145,7 +145,7 @@ function closeAllButOneTab(url = "about:blank") {
   gBrowser.selectedBrowser.loadURI(url);
   if (gBrowser.selectedTab.pinned)
     gBrowser.unpinTab(gBrowser.selectedTab);
-  let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.gBrowser.tabContainer, "class", "tabs-newtab-button");
+  let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.gBrowser.tabContainer, "class", "tabs-newtab-button toolbarbutton-1");
   hoverTab(newTabButton, false);
 }
 

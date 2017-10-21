@@ -17,19 +17,18 @@
 // The RecurseGuard object will unregister its object when it is destroyed, and
 // has a method `isRepeat()` which will return `true` if the item was already
 // seen.
-template<typename T>
-class RecurseGuard {
+template <typename T> class RecurseGuard {
 public:
   RecurseGuard(T Thing) : Thing(Thing), Set(new DenseSet<T>()), Repeat(false) {
     Set->insert(Thing);
   }
-  RecurseGuard(T Thing, std::shared_ptr<DenseSet<T>>& Set)
-    : Thing(Thing), Set(Set), Repeat(false) {
+  RecurseGuard(T Thing, std::shared_ptr<DenseSet<T>> &Set)
+      : Thing(Thing), Set(Set), Repeat(false) {
     Repeat = !Set->insert(Thing).second;
   }
   RecurseGuard(const RecurseGuard &) = delete;
-  RecurseGuard(RecurseGuard && Other)
-    : Thing(Other.Thing), Set(Other.Set), Repeat(Other.Repeat) {
+  RecurseGuard(RecurseGuard &&Other)
+      : Thing(Other.Thing), Set(Other.Set), Repeat(Other.Repeat) {
     Other.Repeat = true;
   }
   ~RecurseGuard() {
@@ -42,17 +41,11 @@ public:
 
   T get() { return Thing; }
 
-  operator T() {
-    return Thing;
-  }
+  operator T() { return Thing; }
 
-  T operator ->() {
-    return Thing;
-  }
+  T operator->() { return Thing; }
 
-  RecurseGuard recurse(T NewThing) {
-    return RecurseGuard(NewThing, Set);
-  }
+  RecurseGuard recurse(T NewThing) { return RecurseGuard(NewThing, Set); }
 
 private:
   T Thing;

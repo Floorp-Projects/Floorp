@@ -240,6 +240,9 @@ void
 nsDisplayTextOverflowMarker::Paint(nsDisplayListBuilder* aBuilder,
                                    gfxContext*           aCtx)
 {
+  DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
+                                                    mDisableSubpixelAA);
+
   nscolor foregroundColor = nsLayoutUtils::
     GetColor(mFrame, &nsStyleText::mWebkitTextFillColor);
 

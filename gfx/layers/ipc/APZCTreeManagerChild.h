@@ -67,7 +67,7 @@ public:
           const ScrollableLayerGuid& aGuid,
           const AsyncDragMetrics& aDragMetrics) override;
 
-  void
+  bool
   StartAutoscroll(
           const ScrollableLayerGuid& aGuid,
           const ScreenPoint& aAnchorLocation) override;

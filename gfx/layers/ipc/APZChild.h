@@ -42,7 +42,7 @@ public:
 
   mozilla::ipc::IPCResult RecvNotifyAsyncScrollbarDragRejected(const ViewID& aScrollId) override;
 
-  mozilla::ipc::IPCResult RecvNotifyAutoscrollHandledByAPZ(const ViewID& aScrollId) override;
+  mozilla::ipc::IPCResult RecvNotifyAsyncAutoscrollRejected(const ViewID& aScrollId) override;
 
   mozilla::ipc::IPCResult RecvDestroy() override;
 

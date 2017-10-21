@@ -5,13 +5,12 @@
 #include "ScopeChecker.h"
 #include "CustomMatchers.h"
 
-void ScopeChecker::registerMatchers(MatchFinder* AstMatcher) {
+void ScopeChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(varDecl().bind("node"), this);
   AstMatcher->addMatcher(cxxNewExpr().bind("node"), this);
   AstMatcher->addMatcher(materializeTemporaryExpr().bind("node"), this);
   AstMatcher->addMatcher(
-      callExpr(callee(functionDecl(heapAllocator()))).bind("node"),
-      this);
+      callExpr(callee(functionDecl(heapAllocator()))).bind("node"), this);
   AstMatcher->addMatcher(parmVarDecl().bind("parm_vardecl"), this);
 }
 
@@ -31,8 +30,7 @@ typedef DenseMap<const MaterializeTemporaryExpr *, const Decl *>
     AutomaticTemporaryMap;
 AutomaticTemporaryMap AutomaticTemporaries;
 
-void ScopeChecker::check(
-    const MatchFinder::MatchResult &Result) {
+void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   // There are a variety of different reasons why something could be allocated
   AllocationVariety Variety = AV_None;
   SourceLocation Loc;
@@ -120,25 +118,17 @@ void ScopeChecker::check(
   }
 
   // Error messages for incorrect allocations.
-  const char* Stack =
-      "variable of type %0 only valid on the stack";
-  const char* Global =
-      "variable of type %0 only valid as global";
-  const char* Heap =
-      "variable of type %0 only valid on the heap";
-  const char* NonHeap =
-      "variable of type %0 is not valid on the heap";
-  const char* NonTemporary =
-      "variable of type %0 is not valid in a temporary";
+  const char *Stack = "variable of type %0 only valid on the stack";
+  const char *Global = "variable of type %0 only valid as global";
+  const char *Heap = "variable of type %0 only valid on the heap";
+  const char *NonHeap = "variable of type %0 is not valid on the heap";
+  const char *NonTemporary = "variable of type %0 is not valid in a temporary";
 
-  const char* StackNote =
+  const char *StackNote =
       "value incorrectly allocated in an automatic variable";
-  const char* GlobalNote =
-      "value incorrectly allocated in a global variable";
-  const char* HeapNote =
-      "value incorrectly allocated on the heap";
-  const char* TemporaryNote =
-      "value incorrectly allocated in a temporary";
+  const char *GlobalNote = "value incorrectly allocated in a global variable";
+  const char *HeapNote = "value incorrectly allocated on the heap";
+  const char *TemporaryNote = "value incorrectly allocated in a temporary";
 
   // Report errors depending on the annotations on the input types.
   switch (Variety) {

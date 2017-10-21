@@ -42,36 +42,35 @@ void DanglingOnTemporaryChecker::registerMatchers(MatchFinder *AstMatcher) {
   // Main checker //
   //////////////////
 
-  auto hasParentCall =
-      hasParent(expr(anyOf(
-          cxxOperatorCallExpr(
-              // If we're in a lamda, we may have an operator call expression
-              // ancestor in the AST, but the temporary we're matching
-              // against is not going to have the same lifetime as the
-              // constructor call.
-              unless(has(expr(ignoreTrivials(lambdaExpr())))),
-              expr().bind("parentOperatorCallExpr")),
-          callExpr(
-              // If we're in a lamda, we may have a call expression
-              // ancestor in the AST, but the temporary we're matching
-              // against is not going to have the same lifetime as the
-              // function call.
-              unless(has(expr(ignoreTrivials(lambdaExpr())))),
-              expr().bind("parentCallExpr")),
-          objcMessageExpr(
-              // If we're in a lamda, we may have an objc message expression
-              // ancestor in the AST, but the temporary we're matching
-              // against is not going to have the same lifetime as the
-              // function call.
-              unless(has(expr(ignoreTrivials(lambdaExpr())))),
-              expr().bind("parentObjCMessageExpr")),
-          cxxConstructExpr(
-              // If we're in a lamda, we may have a construct expression
-              // ancestor in the AST, but the temporary we're matching
-              // against is not going to have the same lifetime as the
-              // constructor call.
-              unless(has(expr(ignoreTrivials(lambdaExpr())))),
-              expr().bind("parentConstructExpr")))));
+  auto hasParentCall = hasParent(expr(
+      anyOf(cxxOperatorCallExpr(
+                // If we're in a lamda, we may have an operator call expression
+                // ancestor in the AST, but the temporary we're matching
+                // against is not going to have the same lifetime as the
+                // constructor call.
+                unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                expr().bind("parentOperatorCallExpr")),
+            callExpr(
+                // If we're in a lamda, we may have a call expression
+                // ancestor in the AST, but the temporary we're matching
+                // against is not going to have the same lifetime as the
+                // function call.
+                unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                expr().bind("parentCallExpr")),
+            objcMessageExpr(
+                // If we're in a lamda, we may have an objc message expression
+                // ancestor in the AST, but the temporary we're matching
+                // against is not going to have the same lifetime as the
+                // function call.
+                unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                expr().bind("parentObjCMessageExpr")),
+            cxxConstructExpr(
+                // If we're in a lamda, we may have a construct expression
+                // ancestor in the AST, but the temporary we're matching
+                // against is not going to have the same lifetime as the
+                // constructor call.
+                unless(has(expr(ignoreTrivials(lambdaExpr())))),
+                expr().bind("parentConstructExpr")))));
 
   AstMatcher->addMatcher(
       // This is a matcher on a method call,
@@ -80,11 +79,9 @@ void DanglingOnTemporaryChecker::registerMatchers(MatchFinder *AstMatcher) {
           isFirstParty(),
 
           // and which is performed on a temporary,
-          on(allOf(
-              unless(hasType(pointerType())),
-              isTemporary(),
-              // but which is not `this`.
-              unless(cxxThisExpr()))),
+          on(allOf(unless(hasType(pointerType())), isTemporary(),
+                   // but which is not `this`.
+                   unless(cxxThisExpr()))),
 
           // and which is marked as no dangling on temporaries.
           callee(cxxMethodDecl(noDanglingOnTemporaries())),
@@ -101,9 +98,7 @@ void DanglingOnTemporaryChecker::registerMatchers(MatchFinder *AstMatcher) {
 
               // This is the case where the call is not the direct parent, so we
               // get its child to know in which argument tree we are.
-              hasAncestor(expr(
-                  hasParentCall,
-                  expr().bind("parentCallArg"))),
+              hasAncestor(expr(hasParentCall, expr().bind("parentCallArg"))),
               // To make it optional.
               anything())),
       this);
@@ -163,8 +158,7 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
       Result.Nodes.getNodeAs<CXXConstructExpr>("parentConstructExpr");
   const CXXOperatorCallExpr *ParentOperatorCallExpr =
       Result.Nodes.getNodeAs<CXXOperatorCallExpr>("parentOperatorCallExpr");
-  const Expr *ParentCallArg =
-      Result.Nodes.getNodeAs<Expr>("parentCallArg");
+  const Expr *ParentCallArg = Result.Nodes.getNodeAs<Expr>("parentCallArg");
 
   // Just in case.
   if (!MemberCall) {
@@ -180,12 +174,12 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
     }
 
     // No default constructor so we can't construct it using if/else.
-    auto FunctionEscapeData
-        = ParentOperatorCallExpr
+    auto FunctionEscapeData =
+        ParentOperatorCallExpr
             ? escapesFunction(ParentCallArg, ParentOperatorCallExpr)
-          : ParentCallExpr
-              ? escapesFunction(ParentCallArg, ParentCallExpr)
-          : escapesFunction(ParentCallArg, ParentConstructExpr);
+            : ParentCallExpr
+                  ? escapesFunction(ParentCallArg, ParentCallExpr)
+                  : escapesFunction(ParentCallArg, ParentConstructExpr);
 
     // If there was an error in the escapesFunction call.
     if (std::error_code ec = FunctionEscapeData.getError()) {
@@ -193,11 +187,11 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
       // argument doesn't escape the function. Same for the case where we can't
       // find the function declaration or if the function is builtin.
       if (static_cast<EscapesFunctionError>(ec.value()) ==
-          EscapesFunctionError::FunctionIsVariadic ||
+              EscapesFunctionError::FunctionIsVariadic ||
           static_cast<EscapesFunctionError>(ec.value()) ==
-          EscapesFunctionError::FunctionDeclNotFound ||
+              EscapesFunctionError::FunctionDeclNotFound ||
           static_cast<EscapesFunctionError>(ec.value()) ==
-          EscapesFunctionError::FunctionIsBuiltin) {
+              EscapesFunctionError::FunctionIsBuiltin) {
         return;
       }
 
@@ -258,5 +252,5 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
     diag(MemberCall->getExprLoc(), Error, DiagnosticIDs::Error)
         << MemberCall->getMethodDecl()->getName()
         << MemberCall->getSourceRange();
-    }
+  }
 }

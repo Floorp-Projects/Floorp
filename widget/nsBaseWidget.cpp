@@ -1930,13 +1930,13 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
       aDragMetrics));
 }
 
-void
+bool
 nsBaseWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
                                    const ScrollableLayerGuid& aGuid)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
-  mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
+  return mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
 }
 
 void

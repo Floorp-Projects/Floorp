@@ -310,18 +310,18 @@ ChromeProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::Vi
 }
 
 void
-ChromeProcessController::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId)
+ChromeProcessController::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mUILoop) {
     mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
-      "layers::ChromeProcessController::NotifyAutoscrollHandledByAPZ",
+      "layers::ChromeProcessController::NotifyAsyncAutoscrollRejected",
       this,
-      &ChromeProcessController::NotifyAutoscrollHandledByAPZ,
+      &ChromeProcessController::NotifyAsyncAutoscrollRejected,
       aScrollId));
     return;
   }
 
-  APZCCallbackHelper::NotifyAutoscrollHandledByAPZ(aScrollId);
+  APZCCallbackHelper::NotifyAsyncAutoscrollRejected(aScrollId);
 }
 
 void

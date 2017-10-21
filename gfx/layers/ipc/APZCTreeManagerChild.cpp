@@ -201,12 +201,12 @@ APZCTreeManagerChild::StartScrollbarDrag(
   SendStartScrollbarDrag(aGuid, aDragMetrics);
 }
 
-void
+bool
 APZCTreeManagerChild::StartAutoscroll(
     const ScrollableLayerGuid& aGuid,
     const ScreenPoint& aAnchorLocation)
 {
-  SendStartAutoscroll(aGuid, aAnchorLocation);
+  return SendStartAutoscroll(aGuid, aAnchorLocation);
 }
 
 void
