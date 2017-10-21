@@ -382,7 +382,7 @@ add_task(async function onItemMoved_bookmark() {
           { name: "parentGuid", check: v => typeof(v) == "string" && GUID_RE.test(v) },
         ] },
   ])]);
-  PlacesTestUtils.addVisits({ uri, transition: TRANSITION_TYPED });
+  await PlacesTestUtils.addVisits({ uri, transition: TRANSITION_TYPED });
   await promise;
 });
 
