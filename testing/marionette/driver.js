@@ -1730,7 +1730,16 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let {id, element, focus} = cmd.parameters;
+  let {id, focus} = cmd.parameters;
+
+  // TODO(ato): element can be either string (deprecated) or a web
+  // element JSON Object.  Can be removed with Firefox 60.
+  let byFrame;
+  if (typeof cmd.parameters.element == "string") {
+    byFrame = WebElement.fromUUID(cmd.parameters.element, Context.Chrome);
+  } else if (cmd.parameters.element) {
+    byFrame = WebElement.fromJSON(cmd.parameters.element);
+  }
 
   const otherErrorsExpr = /about:.+(error)|(blocked)\?/;
   const checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -1758,7 +1767,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     let foundFrame = null;
 
     // just focus
-    if (typeof id == "undefined" && typeof element == "undefined") {
+    if (typeof id == "undefined" && !byFrame) {
       this.curFrame = null;
       if (focus) {
         this.mainFrame.focus();
@@ -1769,9 +1778,8 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     }
 
     // by element (HTMLIFrameElement)
-    if (typeof element != "undefined") {
-      let webEl = WebElement.fromUUID(element, Context.Chrome);
-      let wantedFrame = this.curBrowser.seenEls.get(webEl);
+    if (byFrame) {
+      let wantedFrame = this.curBrowser.seenEls.get(byFrame);
 
       // Deal with an embedded xul:browser case
       if (wantedFrame.tagName == "xul:browser" ||
@@ -1874,7 +1882,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     }
 
   } else if (this.context == Context.Content) {
-    if (!id && !element &&
+    if (!id && !byFrame &&
         this.curBrowser.frameManager.currentRemoteFrame !== null) {
       // We're currently using a ChromeMessageSender for a remote frame,
       // so this request indicates we need to switch back to the top-level
