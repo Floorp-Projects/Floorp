@@ -1808,6 +1808,46 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </setter>
       </property>
 
+      <!-- This is set either to undefined or to a new object containing
+           { start, end } margin values in pixels. These are used to align the
+           results to the input field. -->
+      <property name="margins"
+                onget="return this._margins;">
+        <setter>
+          <![CDATA[
+          if (val == this._margins) {
+            return val;
+          }
+
+          if (val && this._margins && val.start == this._margins.start &&
+                                      val.end == this._margins.end) {
+            return val;
+          }
+
+          this._margins = val;
+
+          if (val) {
+            let paddingInCSS =
+                3   // .autocomplete-richlistbox padding-left/right
+              + 6   // .ac-site-icon margin-inline-start
+              + 16  // .ac-site-icon width
+              + 6;  // .ac-site-icon margin-inline-end
+            let actualVal = Math.round(val.start) - paddingInCSS;
+            let actualValEnd = Math.round(val.end);
+            this.style.setProperty("--item-padding-start", actualVal + "px");
+            this.style.setProperty("--item-padding-end", actualValEnd + "px");
+          } else {
+            this.style.removeProperty("--item-padding-start");
+            this.style.removeProperty("--item-padding-end");
+          }
+          for (let item of this.richlistbox.childNodes) {
+            item.handleOverUnderflow();
+          }
+          return val;
+          ]]>
+        </setter>
+      </property>
+
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
@@ -1862,28 +1902,40 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // icon if it's not too far from the edge of the window.  We define
           // "too far" as "more than 30% of the window's width AND more than
           // 250px".  Do this *before* adding any items because when the new
-          // value of siteIconStart is different from the previous value, over-
+          // value of the margins are different from the previous value, over-
           // and underflow must be handled for each item already in the popup.
           let boundToCheck = popupDirection == "rtl" ? "right" : "left";
           let inputRect = this.DOMWindowUtils.getBoundsWithoutFlushing(aInput);
           let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
           let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
           if (alignSiteIcons) {
+            // Calculate the end margin if we have a start margin.
+            let boundToCheckEnd = popupDirection == "rtl" ? "left" : "right";
+            let endOffset = Math.abs(inputRect[boundToCheckEnd] -
+                                     documentRect[boundToCheckEnd]);
+            if (endOffset > startOffset * 2) {
+              // Provide more space when aligning would result in an unbalanced
+              // margin. This allows the location bar to be moved to the start
+              // of the navigation toolbar to reclaim space for results.
+              endOffset = startOffset;
+            }
             let identityIcon = document.getElementById("identity-icon");
             let identityRect =
               this.DOMWindowUtils.getBoundsWithoutFlushing(identityIcon);
             if (popupDirection == "rtl") {
-              this.siteIconStart = documentRect.right - identityRect.right;
+              this.margins = { start: documentRect.right - identityRect.right,
+                               end: endOffset };
             } else {
-              this.siteIconStart = identityRect.left;
+              this.margins = { start: identityRect.left,
+                               end: endOffset };
             }
           } else {
             // Reset the alignment so that the site icons are positioned
             // according to whatever's in the CSS.
-            this.siteIconStart = undefined;
+            this.margins = undefined;
           }
 
-          // Now that siteIconStart has been set, start adding items (via
+          // Now that the margins have been set, start adding items (via
           // _invalidate).
           this.mInput = aInput;
           aInput.controller.setInitiallySelectedIndex(this._isFirstResultHeuristic ? 0 : -1);
@@ -1927,9 +1979,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body>
           <![CDATA[
           if (whichNotification == "opt-out") {
-            if (this.siteIconStart) {
+            if (this.margins) {
               this.searchSuggestionsNotification.style.paddingInlineStart =
-                this.siteIconStart + "px";
+                this.margins.start + "px";
             } else {
               this.searchSuggestionsNotification.style.removeProperty("padding-inline-start");
             }

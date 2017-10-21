@@ -1382,35 +1382,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
-      <!-- The x-coordinate relative to the leading edge of the window of the
-           items' site icons (favicons). -->
-      <property name="siteIconStart"
-                onget="return this._siteIconStart;">
-        <setter>
-          <![CDATA[
-          if (val != this._siteIconStart) {
-            this._siteIconStart = val;
-            let varName = "--item-padding-start";
-            if (typeof(val) == "number") {
-              let paddingInCSS =
-                  3   // .autocomplete-richlistbox padding-left/right
-                + 6   // .ac-site-icon margin-inline-start
-                + 16  // .ac-site-icon width
-                + 6;  // .ac-site-icon margin-inline-end
-              let actualVal = Math.round(val) - paddingInCSS;
-              this.style.setProperty(varName, actualVal + "px");
-            } else {
-              this.style.removeProperty(varName);
-            }
-            for (let item of this.richlistbox.childNodes) {
-              item.handleOverUnderflow();
-            }
-          }
-          return val;
-          ]]>
-        </setter>
-      </property>
-
       <property name="overflowPadding"
                 onget="return Number(this.getAttribute('overflowpadding'))"
                 readonly="true" />
@@ -2341,7 +2312,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                                         : titleRect.left - itemRect.left;
 
           let popup = this.parentNode.parentNode;
-          let itemWidth = itemRect.width - titleStart - popup.overflowPadding;
+          let itemWidth = itemRect.width - titleStart - popup.overflowPadding -
+                          (popup.margins ? popup.margins.end : 0);
 
           if (this._tags.hasAttribute("empty")) {
             // The tags box is not displayed in this case.
