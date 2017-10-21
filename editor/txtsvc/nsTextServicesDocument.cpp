@@ -76,10 +76,6 @@ public:
   bool    mIsValid;
 };
 
-#define TS_ATOM(name_, value_) nsAtom* nsTextServicesDocument::name_ = 0;
-#include "nsTSAtomList.h" // IWYU pragma: keep
-#undef TS_ATOM
-
 nsTextServicesDocument::nsTextServicesDocument()
 {
   mSelStartIndex  = -1;
@@ -95,20 +91,31 @@ nsTextServicesDocument::~nsTextServicesDocument()
   ClearOffsetTable(&mOffsetTable);
 }
 
-#define TS_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+class TSAtoms
+{
+public:
+  #define TS_ATOM(name_, value_) NS_STATIC_ATOM_DECL(name_)
+  #include "nsTSAtomList.h" // IWYU pragma: keep
+  #undef TS_ATOM
+};
+
+#define TS_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(TSAtoms, name_)
 #include "nsTSAtomList.h" // IWYU pragma: keep
 #undef TS_ATOM
 
-/* static */
-void
+#define TS_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
+#include "nsTSAtomList.h" // IWYU pragma: keep
+#undef TS_ATOM
+
+static const nsStaticAtomSetup sTSAtomSetup[] = {
+  #define TS_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(TSAtoms, name_)
+  #include "nsTSAtomList.h" // IWYU pragma: keep
+  #undef TS_ATOM
+};
+
+/* static */ void
 nsTextServicesDocument::RegisterAtoms()
 {
-  static const nsStaticAtomSetup sTSAtomSetup[] = {
-#define TS_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &name_),
-#include "nsTSAtomList.h" // IWYU pragma: keep
-#undef TS_ATOM
-  };
-
   NS_RegisterStaticAtoms(sTSAtomSetup);
 }
 
@@ -2040,32 +2047,32 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 
   nsAtom *atom = aContent->NodeInfo()->NameAtom();
 
-  return (sAAtom       != atom &&
-          sAddressAtom != atom &&
-          sBigAtom     != atom &&
-          sBAtom       != atom &&
-          sCiteAtom    != atom &&
-          sCodeAtom    != atom &&
-          sDfnAtom     != atom &&
-          sEmAtom      != atom &&
-          sFontAtom    != atom &&
-          sIAtom       != atom &&
-          sKbdAtom     != atom &&
-          sKeygenAtom  != atom &&
-          sNobrAtom    != atom &&
-          sSAtom       != atom &&
-          sSampAtom    != atom &&
-          sSmallAtom   != atom &&
-          sSpacerAtom  != atom &&
-          sSpanAtom    != atom &&
-          sStrikeAtom  != atom &&
-          sStrongAtom  != atom &&
-          sSubAtom     != atom &&
-          sSupAtom     != atom &&
-          sTtAtom      != atom &&
-          sUAtom       != atom &&
-          sVarAtom     != atom &&
-          sWbrAtom     != atom);
+  return (TSAtoms::sAAtom       != atom &&
+          TSAtoms::sAddressAtom != atom &&
+          TSAtoms::sBigAtom     != atom &&
+          TSAtoms::sBAtom       != atom &&
+          TSAtoms::sCiteAtom    != atom &&
+          TSAtoms::sCodeAtom    != atom &&
+          TSAtoms::sDfnAtom     != atom &&
+          TSAtoms::sEmAtom      != atom &&
+          TSAtoms::sFontAtom    != atom &&
+          TSAtoms::sIAtom       != atom &&
+          TSAtoms::sKbdAtom     != atom &&
+          TSAtoms::sKeygenAtom  != atom &&
+          TSAtoms::sNobrAtom    != atom &&
+          TSAtoms::sSAtom       != atom &&
+          TSAtoms::sSampAtom    != atom &&
+          TSAtoms::sSmallAtom   != atom &&
+          TSAtoms::sSpacerAtom  != atom &&
+          TSAtoms::sSpanAtom    != atom &&
+          TSAtoms::sStrikeAtom  != atom &&
+          TSAtoms::sStrongAtom  != atom &&
+          TSAtoms::sSubAtom     != atom &&
+          TSAtoms::sSupAtom     != atom &&
+          TSAtoms::sTtAtom      != atom &&
+          TSAtoms::sUAtom       != atom &&
+          TSAtoms::sVarAtom     != atom &&
+          TSAtoms::sWbrAtom     != atom);
 }
 
 bool

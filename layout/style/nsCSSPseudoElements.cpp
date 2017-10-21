@@ -16,23 +16,22 @@
 
 using namespace mozilla;
 
-// define storage for all atoms
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  nsICSSPseudoElement* nsCSSPseudoElements::name_;
+  NS_STATIC_ATOM_BUFFER(name_, value_)
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
 #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  NS_STATIC_ATOM_BUFFER(name_##_pseudo_element_buffer, value_)
+  NS_STATIC_ATOM_SUBCLASS_DEFN(nsICSSPseudoElement, nsCSSPseudoElements, name_)
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
 // Array of nsStaticAtomSetup for each of the pseudo-elements.
 static const nsStaticAtomSetup sCSSPseudoElementAtomSetup[] = {
-#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
-  NS_STATIC_ATOM_SETUP(name_##_pseudo_element_buffer, (nsAtom**)&nsCSSPseudoElements::name_),
-#include "nsCSSPseudoElementList.h"
-#undef CSS_PSEUDO_ELEMENT
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_SUBCLASS_SETUP(nsCSSPseudoElements, name_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
 };
 
 // Flags data for each of the pseudo-elements, which must be separate

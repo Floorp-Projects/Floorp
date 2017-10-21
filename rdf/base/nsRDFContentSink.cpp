@@ -126,9 +126,9 @@ public:
     static nsIRDFResource* kRDF_Seq;
     static nsIRDFResource* kRDF_nextVal;
 
-#define RDF_ATOM(name_, value_) static nsAtom* name_;
-#include "nsRDFContentSinkAtomList.h"
-#undef RDF_ATOM
+    #define RDF_ATOM(name_, value_) NS_STATIC_ATOM_DECL(name_)
+    #include "nsRDFContentSinkAtomList.h"
+    #undef RDF_ATOM
 
     typedef struct ContainerInfo {
         nsIRDFResource**  mType;
@@ -235,18 +235,19 @@ mozilla::LazyLogModule RDFContentSinkImpl::gLog("nsRDFContentSink");
 
 ////////////////////////////////////////////////////////////////////////
 
-#define RDF_ATOM(name_, value_) nsAtom* RDFContentSinkImpl::name_;
+#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(RDFContentSinkImpl, name_)
 #include "nsRDFContentSinkAtomList.h"
 #undef RDF_ATOM
 
-#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
 #include "nsRDFContentSinkAtomList.h"
 #undef RDF_ATOM
 
 static const nsStaticAtomSetup sRDFContentSinkAtomSetup[] = {
-#define RDF_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &RDFContentSinkImpl::name_),
-#include "nsRDFContentSinkAtomList.h"
-#undef RDF_ATOM
+  #define RDF_ATOM(name_, value_) \
+    NS_STATIC_ATOM_SETUP(RDFContentSinkImpl, name_)
+  #include "nsRDFContentSinkAtomList.h"
+  #undef RDF_ATOM
 };
 
 // static
