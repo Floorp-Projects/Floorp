@@ -68,8 +68,12 @@ public:
     MutexAutoLock lock(mMutex);
     return !!mThread;
   }
-  void LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid, IUnknown* aInterface);
-  void LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface);
+  void LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
+             IUnknown* aInterface, const TimeDuration* aOverheadDuration,
+             const TimeDuration* aGeckoDuration);
+  void LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
+                const TimeDuration& aOverheadDuration,
+                const TimeDuration& aGeckoDuration);
   nsresult Shutdown();
 
 private:
@@ -264,15 +268,33 @@ Logger::GetElapsedTime()
 }
 
 void
-Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid, IUnknown* aInterface)
+Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
+              IUnknown* aInterface, const TimeDuration* aOverheadDuration,
+              const TimeDuration* aGeckoDuration)
 {
   if (FAILED(aResult)) {
     return;
   }
+
   double elapsed = GetElapsedTime();
 
-  nsPrintfCString line("%fus\t0x%0p\tIUnknown::QueryInterface\t([in] ", elapsed,
-                       aTarget);
+  nsAutoCString strOverheadDuration;
+  if (aOverheadDuration) {
+    strOverheadDuration.AppendPrintf("%.3f", aOverheadDuration->ToMicroseconds());
+  } else {
+    strOverheadDuration.AppendLiteral("(none)");
+  }
+
+  nsAutoCString strGeckoDuration;
+  if (aGeckoDuration) {
+    strGeckoDuration.AppendPrintf("%.3f", aGeckoDuration->ToMicroseconds());
+  } else {
+    strGeckoDuration.AppendLiteral("(none)");
+  }
+
+  nsPrintfCString line("%.3f\t%s\t%s\t0x%0p\tIUnknown::QueryInterface\t([in] ",
+                       elapsed, strOverheadDuration.get(),
+                       strGeckoDuration.get(), aTarget);
 
   WCHAR buf[39] = {0};
   if (StringFromGUID2(aIid, buf, mozilla::ArrayLength(buf))) {
@@ -315,7 +337,9 @@ Logger::TryParamAsGuid(REFIID aIid, ICallFrame* aCallFrame,
 }
 
 void
-Logger::LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface)
+Logger::LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
+                 const TimeDuration& aOverheadDuration,
+                 const TimeDuration& aGeckoDuration)
 {
   // (1) Gather info about the call
   double elapsed = GetElapsedTime();
@@ -334,7 +358,9 @@ Logger::LogEvent(ICallFrame* aCallFrame, IUnknown* aTargetInterface)
   }
 
   // (2) Serialize the call
-  nsPrintfCString line("%fus\t0x%p\t%S::%S\t(", elapsed,
+  nsPrintfCString line("%.3f\t%.3f\t%.3f\t0x%p\t%S::%S\t(", elapsed,
+                       aOverheadDuration.ToMicroseconds(),
+                       aGeckoDuration.ToMicroseconds(),
                        aTargetInterface, interfaceName, methodName);
 
   CoTaskMemFree(interfaceName);
@@ -476,21 +502,27 @@ InterceptorLog::Init()
 }
 
 /* static */ void
-InterceptorLog::QI(HRESULT aResult, IUnknown* aTarget, REFIID aIid, IUnknown* aInterface)
+InterceptorLog::QI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
+                   IUnknown* aInterface, const TimeDuration* aOverheadDuration,
+                   const TimeDuration* aGeckoDuration)
 {
   if (!sLogger) {
     return;
   }
-  sLogger->LogQI(aResult, aTarget, aIid, aInterface);
+  sLogger->LogQI(aResult, aTarget, aIid, aInterface, aOverheadDuration,
+                 aGeckoDuration);
 }
 
 /* static */ void
-InterceptorLog::Event(ICallFrame* aCallFrame, IUnknown* aTargetInterface)
+InterceptorLog::Event(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
+                      const TimeDuration& aOverheadDuration,
+                      const TimeDuration& aGeckoDuration)
 {
   if (!sLogger) {
     return;
   }
-  sLogger->LogEvent(aCallFrame, aTargetInterface);
+  sLogger->LogEvent(aCallFrame, aTargetInterface, aOverheadDuration,
+                    aGeckoDuration);
 }
 
 } // namespace mscom

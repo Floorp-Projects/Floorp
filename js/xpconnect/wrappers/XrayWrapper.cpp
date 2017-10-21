@@ -2071,6 +2071,10 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
                                                  JS::MutableHandle<PropertyDescriptor> desc)
                                                  const
 {
+    // We can't assert !Traits::HasPrototypes here, because
+    // CrossOriginXrayWrapper::getOwnPropertyDescriptor calls us, but it uses
+    // DOMXrayTraits, which have HasPrototype.
+
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
     RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
@@ -2119,7 +2123,9 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
     // Scope Polluter and thus the resulting properties are non-|own|. However,
     // we're set up (above) to cache (on the holder) anything that comes out of
     // resolveNativeProperty, which we don't want for something dynamic like
-    // named access. So we just handle it separately here.
+    // named access. So we just handle it separately here.  Note that this is
+    // only relevant for CrossOriginXrayWrapper, which calls
+    // getPropertyDescriptor from getOwnPropertyDescriptor.
     nsGlobalWindow* win = nullptr;
     if (!desc.object() &&
         JSID_IS_STRING(id) &&
@@ -2428,6 +2434,7 @@ template <typename Base, typename Traits>
 JSObject*
 XrayWrapper<Base, Traits>::enumerate(JSContext* cx, HandleObject wrapper) const
 {
+    MOZ_ASSERT(!Traits::HasPrototype, "Why did we get called?");
     // Skip our Base if it isn't already ProxyHandler.
     return js::BaseProxyHandler::enumerate(cx, wrapper);
 }
