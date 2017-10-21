@@ -252,7 +252,7 @@ getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
             CreateAndroidHandlerApp(name, className, packageName,
                                     className, aMimeType, aAction);
 
-        aHandlersArray->AppendElement(app, false);
+        aHandlersArray->AppendElement(app);
         if (aDefaultApp && isDefault.Length() > 0)
             *aDefaultApp = app;
     }

@@ -296,7 +296,7 @@ BackgroundFileSaver::GetSignatureInfo(nsIArray** aSignatureInfo)
   }
   nsCOMPtr<nsIMutableArray> sigArray = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (int i = 0; i < mSignatureInfo.Count(); ++i) {
-    sigArray->AppendElement(mSignatureInfo[i], false);
+    sigArray->AppendElement(mSignatureInfo[i]);
   }
   *aSignatureInfo = sigArray;
   NS_IF_ADDREF(*aSignatureInfo);

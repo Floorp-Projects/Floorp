@@ -95,7 +95,7 @@ function acceptDialog() {
 
     return false;
   }
-  gDialogParams.objects.insertElementAt(profileLock.nsIProfileLock, 0, false);
+  gDialogParams.objects.insertElementAt(profileLock.nsIProfileLock, 0);
 
   gProfileService.selectedProfile = selectedProfile.profile;
   gProfileService.defaultProfile = selectedProfile.profile;

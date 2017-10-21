@@ -192,7 +192,7 @@ PaymentDetailsModifier::Create(const IPCPaymentDetailsModifier& aIPCModifier,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = items->AppendElement(additionalItem, false);
+      rv = items->AppendElement(additionalItem);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -361,7 +361,7 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = items->AppendElement(item, false);
+      rv = items->AppendElement(item);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -379,7 +379,7 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = options->AppendElement(option, false);
+      rv = options->AppendElement(option);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -397,7 +397,7 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = detailsModifiers->AppendElement(detailsModifier, false);
+      rv = detailsModifiers->AppendElement(detailsModifier);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

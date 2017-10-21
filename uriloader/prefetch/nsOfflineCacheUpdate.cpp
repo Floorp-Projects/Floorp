@@ -794,7 +794,7 @@ nsOfflineManifestItem::AddNamespace(uint32_t namespaceType,
     rv = ns->Init(namespaceType, namespaceSpec, data);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mNamespaces->AppendElement(ns, false);
+    rv = mNamespaces->AppendElement(ns);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

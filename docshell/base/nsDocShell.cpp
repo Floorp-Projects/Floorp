@@ -6848,7 +6848,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
   if (busyFlags & BUSY_FLAGS_BUSY || (!mIsActive && mDisableMetaRefreshWhenInactive)) {
     // We don't  want to create the timer right now. Instead queue up the request
     // and trigger the timer in EndPageLoad() or whenever we become active.
-    mRefreshURIList->AppendElement(refreshTimer, /*weak =*/ false);
+    mRefreshURIList->AppendElement(refreshTimer);
   } else {
     // There is no page loading going on right now.  Create the
     // timer and fire it right away.
@@ -6860,7 +6860,7 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
                 NS_NewTimerWithCallback(refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT,
                                         win->TabGroup()->EventTargetFor(TaskCategory::Network)));
 
-    mRefreshURIList->AppendElement(timer, /*weak =*/ false);  // owning timer ref
+    mRefreshURIList->AppendElement(timer);  // owning timer ref
   }
   return NS_OK;
 }
@@ -7287,7 +7287,7 @@ nsDocShell::SuspendRefreshURIs()
       NS_ASSERTION(rt,
                    "RefreshURIList timer callbacks should only be RefreshTimer objects");
 
-      mRefreshURIList->ReplaceElementAt(rt, i, /*weak =*/ false);
+      mRefreshURIList->ReplaceElementAt(rt, i);
     }
   }
 
@@ -7352,7 +7352,7 @@ nsDocShell::RefreshURIFromQueue()
           // its corresponding timer object, so that in case another
           // load comes through before the timer can go off, the timer will
           // get cancelled in CancelRefreshURITimer()
-          mRefreshURIList->ReplaceElementAt(timer, n, /*weak =*/ false);
+          mRefreshURIList->ReplaceElementAt(timer, n);
         }
       }
     }

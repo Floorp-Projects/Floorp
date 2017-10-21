@@ -545,7 +545,7 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
       }
 
       if (curFile)
-        fileArray->AppendElement(curFile, false);
+        fileArray->AppendElement(curFile);
     }
   }
 

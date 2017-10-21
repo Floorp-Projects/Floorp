@@ -2523,7 +2523,7 @@ nsDOMWindowUtils::AudioDevices(uint16_t aSide, nsIArray** aDevices)
                                     ? CubebUtils::Side::Input
                                     : CubebUtils::Side::Output);
   for (auto device: collection) {
-    devices->AppendElement(device, false);
+    devices->AppendElement(device);
   }
 
   devices.forget(aDevices);
