@@ -24,14 +24,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let PaymentFrameScript = {
   init() {
-    XPCOMUtils.defineLazyGetter(this, "log", () => {
-      let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
-      return new ConsoleAPI({
-        maxLogLevelPref: "dom.payments.loglevel",
-        prefix: "paymentDialogFrameScript",
-      });
-    });
-
+    this.defineLazyLogGetter(this, "frameScript");
     addEventListener("paymentContentToChrome", this, false, true);
 
     addMessageListener("paymentChromeToContent", this);
@@ -46,22 +39,35 @@ let PaymentFrameScript = {
   },
 
   sendToChrome({detail}) {
-    let {messageType} = detail;
-    this.log.debug("sendToChrome:", messageType, detail);
-    this.sendMessageToChrome(messageType, detail);
+    let {messageType, requestId} = detail;
+    this.log.debug(`received message from content: ${messageType} ... ${requestId}`);
+    this.sendMessageToChrome(messageType, {
+      requestId,
+    });
+  },
+
+  defineLazyLogGetter(scope, logPrefix) {
+    XPCOMUtils.defineLazyGetter(scope, "log", () => {
+      let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
+      return new ConsoleAPI({
+        maxLogLevelPref: "dom.payments.loglevel",
+        prefix: logPrefix,
+      });
+    });
   },
 
   sendToContent(messageType, detail = {}) {
-    this.log.debug("sendToContent", messageType, detail);
+    this.log.debug(`sendToContent (${messageType})`);
     let response = Object.assign({messageType}, detail);
-    let event = new content.CustomEvent("paymentChromeToContent", {
-      detail: Cu.cloneInto(response, content),
+    let event = new content.document.defaultView.CustomEvent("paymentChromeToContent", {
+      bubbles: true,
+      detail: Cu.cloneInto(response, content.document.defaultView),
     });
-    content.dispatchEvent(event);
+    content.document.dispatchEvent(event);
   },
 
-  sendMessageToChrome(messageType, data = {}) {
-    sendAsyncMessage("paymentContentToChrome", Object.assign(data, {messageType}));
+  sendMessageToChrome(messageType, detail = {}) {
+    sendAsyncMessage("paymentContentToChrome", Object.assign(detail, {messageType}));
   },
 };
 

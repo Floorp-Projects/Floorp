@@ -25,15 +25,19 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/dom/payments/payment-request-service;1",
                                    "nsIPaymentRequestService");
 
-function PaymentUIService() {
-  this.wrappedJSObject = this;
-  XPCOMUtils.defineLazyGetter(this, "log", () => {
+function defineLazyLogGetter(scope, logPrefix) {
+  XPCOMUtils.defineLazyGetter(scope, "log", () => {
     let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
     return new ConsoleAPI({
       maxLogLevelPref: "dom.payments.loglevel",
-      prefix: "Payment UI Service",
+      prefix: logPrefix,
     });
   });
+}
+
+function PaymentUIService() {
+  this.wrappedJSObject = this;
+  defineLazyLogGetter(this, "Payment UI Service");
   this.log.debug("constructor");
 }
 
@@ -46,15 +50,16 @@ PaymentUIService.prototype = {
   // nsIPaymentUIService implementation:
 
   showPayment(requestId) {
-    this.log.debug("showPayment:", requestId);
+    this.log.debug(`showPayment: ${requestId}`);
     let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    chromeWindow.openDialog(`${this.DIALOG_URL}?requestId=${requestId}`,
+    chromeWindow.openDialog(this.DIALOG_URL,
                             `${this.REQUEST_ID_PREFIX}${requestId}`,
-                            "modal,dialog,centerscreen,resizable=no");
+                            "modal,dialog,centerscreen",
+                            {requestId});
   },
 
   abortPayment(requestId) {
-    this.log.debug("abortPayment:", requestId);
+    this.log.debug(`abortPayment: ${requestId}`);
     let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"]
                           .createInstance(Ci.nsIPaymentAbortActionResponse);
 
@@ -79,7 +84,7 @@ PaymentUIService.prototype = {
   },
 
   completePayment(requestId) {
-    this.log.debug("completePayment:", requestId);
+    this.log.debug(`completePayment: ${requestId}`);
     let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"]
                              .createInstance(Ci.nsIPaymentCompleteActionResponse);
     completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLTETE_SUCCEEDED);
@@ -87,7 +92,7 @@ PaymentUIService.prototype = {
   },
 
   updatePayment(requestId) {
-    this.log.debug("updatePayment:", requestId);
+    this.log.debug(`updatePayment: ${requestId}`);
   },
 
   // other helper methods
