@@ -2837,6 +2837,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     set.Outlines()->DeleteAll(aBuilder);
   }
 
+  if (hasOverrideDirtyRect && gfxPrefs::LayoutDisplayListShowArea()) {
+    nsDisplaySolidColor* color =
+     new (aBuilder) nsDisplaySolidColor(aBuilder, this,
+                                        dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),
+                                        NS_RGBA(255, 0, 0, 64), false);
+    color->SetOverrideZIndex(INT32_MAX);
+    set.PositionedDescendants()->AppendNewToTop(color);
+  }
+
   // Sort PositionedDescendants() in CSS 'z-order' order.  The list is already
   // in content document order and SortByZOrder is a stable sort which
   // guarantees that boxes produced by the same element are placed together
