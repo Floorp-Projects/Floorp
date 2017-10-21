@@ -452,6 +452,31 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     needsOwnLayer = true;
   }
 
+  if (aBuilder->IsRetainingDisplayList()) {
+    // The value of needsOwnLayer can change between builds without
+    // an invalidation recorded for this frame (like if the root
+    // scrollframe becomes active). If this happens,
+    // then we need to notify the builder so that merging can
+    // happen correctly.
+    if (!mPreviouslyNeededLayer ||
+        mPreviouslyNeededLayer.value() != needsOwnLayer) {
+      dirty = visible;
+      aBuilder->MarkFrameModifiedDuringBuilding(this);
+    }
+    mPreviouslyNeededLayer = Some(needsOwnLayer);
+
+    // Caret frame changed, rebuild the entire subdoc.
+    // We could just invalidate the old and new frame
+    // areas and save some work here. RetainedDisplayListBuilder
+    // does this, so we could teach it to find and check all
+    // subdocs in advance.
+    if (mPreviousCaret != aBuilder->GetCaretFrame()) {
+      dirty = visible;
+      aBuilder->MarkFrameModifiedDuringBuilding(this);
+    }
+    mPreviousCaret = aBuilder->GetCaretFrame();
+  }
+
   nsDisplayList childItems(aBuilder);
 
   {
