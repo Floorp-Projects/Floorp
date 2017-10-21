@@ -4,30 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * This class wraps up the creation (and destruction) of the standard
- * set of atoms used by gklayout; the atoms are created when gklayout
- * is loaded and they are destroyed when gklayout is unloaded.
- */
-
 #include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
 
 using namespace mozilla;
 
-// define storage for all atoms
-#define GK_ATOM(name_, value_) nsAtom* nsGkAtoms::name_;
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(nsGkAtoms, name_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
-#define GK_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#define GK_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
 #include "nsGkAtomList.h"
 #undef GK_ATOM
 
 static const nsStaticAtomSetup sGkAtomSetup[] = {
-#define GK_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(name_##_buffer, &nsGkAtoms::name_),
-#include "nsGkAtomList.h"
-#undef GK_ATOM
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(nsGkAtoms, name_)
+  #include "nsGkAtomList.h"
+  #undef GK_ATOM
 };
 
 void nsGkAtoms::AddRefAtoms()

@@ -11,6 +11,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsIFile.h"
 #include "nsAtom.h"
+#include "nsStaticAtom.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
@@ -54,13 +55,9 @@ private:
   nsTArray<nsCOMPtr<nsIDirectoryServiceProvider>> mProviders;
 
 public:
-
-#define DIR_ATOM(name_, value_) static nsAtom* name_;
-#include "nsDirectoryServiceAtomList.h"
-#undef DIR_ATOM
-
+  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL(name_)
+  #include "nsDirectoryServiceAtomList.h"
+  #undef DIR_ATOM
 };
 
-
 #endif
-
