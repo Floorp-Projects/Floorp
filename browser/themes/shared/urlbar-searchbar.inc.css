@@ -343,12 +343,6 @@
   fill-opacity: 1;
 }
 
-/* Blocked popup icon */
-
-#page-report-button {
-  list-style-image: url(chrome://browser/skin/notification-icons/popup.svg);
-}
-
 /* Zoom button */
 
 #urlbar-zoom-button {
