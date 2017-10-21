@@ -9,7 +9,11 @@ geckoview:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - android/androidarm_4_3.py
+            by-test-platform:
+                android-4.2-x86/opt:
+                    - android/androidx86.py
+                android.*:
+                    - android/androidarm_4_3.py
         extra-options:
             - --test-suite=geckoview
 
