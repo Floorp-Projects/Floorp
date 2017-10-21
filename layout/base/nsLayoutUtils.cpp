@@ -3815,6 +3815,18 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
       }
 
+      if (merged && gfxPrefs::LayoutDisplayListBuildTwice()) {
+        merged = false;
+        if (gfxPrefs::LayersDrawFPS()) {
+          if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {
+            if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(lm)) {
+              pt->dl2Ms() = (TimeStamp::Now() - dlStart).ToMilliseconds();
+            }
+          }
+        }
+        dlStart = TimeStamp::Now();
+      }
+
       if (!merged) {
         list.DeleteAll(&builder);
         builder.EnterPresShell(aFrame);
