@@ -435,14 +435,21 @@ FetchIconPerSpec(const RefPtr<Database>& aDB,
   // Return the biggest icon close to the preferred width. It may be bigger
   // or smaller if the preferred width isn't found.
   bool hasResult;
+  int32_t lastWidth = 0;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
     int32_t width;
     rv = stmt->GetInt32(0, &width);
+    if (lastWidth == width) {
+      // We already found an icon for this width. We always prefer the first
+      // icon found, because it's a non-root icon, per the root ASC ordering.
+      continue;
+    }
     if (!aIconData.spec.IsEmpty() && width < aPreferredWidth) {
       // We found the best match, or we already found a match so we don't need
       // to fallback to the root domain icon.
       break;
     }
+    lastWidth = width;
     rv = stmt->GetUTF8String(1, aIconData.spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
