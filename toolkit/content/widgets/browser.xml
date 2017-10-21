@@ -1101,9 +1101,10 @@
             }
             case "Autoscroll:Start": {
               if (!this.autoscrollEnabled) {
-                return false;
+                return {autoscrollEnabled: false, usingApz: false};
               }
               this.startScroll(data.scrolldir, data.screenX, data.screenY);
+              let usingApz = false;
               if (this.isRemoteBrowser && data.scrollId != null &&
                   this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)) {
                 let { tabParent } = this.frameLoader;
@@ -1115,14 +1116,15 @@
                                      .getService(Components.interfaces.nsIObserverService);
                   os.addObserver(this, "apz:cancel-autoscroll", true);
 
-                  tabParent.startApzAutoscroll(data.screenX, data.screenY,
-                                               data.scrollId, data.presShellId);
+                  usingApz = tabParent.startApzAutoscroll(
+                      data.screenX, data.screenY,
+                      data.scrollId, data.presShellId);
                 }
                 // Save the IDs for later
                 this._autoScrollScrollId = data.scrollId;
                 this._autoScrollPresShellId = data.presShellId;
               }
-              return true;
+              return {autoscrollEnabled: true, usingApz};
             }
             case "Autoscroll:Cancel":
               this._autoScrollPopup.hidePopup();

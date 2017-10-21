@@ -11,24 +11,19 @@ CustomTypeAnnotation GlobalClass =
     CustomTypeAnnotation("moz_global_class", "global");
 CustomTypeAnnotation NonHeapClass =
     CustomTypeAnnotation("moz_nonheap_class", "non-heap");
-CustomTypeAnnotation HeapClass =
-    CustomTypeAnnotation("moz_heap_class", "heap");
+CustomTypeAnnotation HeapClass = CustomTypeAnnotation("moz_heap_class", "heap");
 CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
 
-void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
-                                                QualType T,
+void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check, QualType T,
                                                 SourceLocation Loc) {
-  const char* Inherits =
+  const char *Inherits =
       "%1 is a %0 type because it inherits from a %0 type %2";
-  const char* Member =
-      "%1 is a %0 type because member %2 is a %0 type %3";
-  const char* Array =
-      "%1 is a %0 type because it is an array of %0 type %2";
-  const char* Templ =
+  const char *Member = "%1 is a %0 type because member %2 is a %0 type %3";
+  const char *Array = "%1 is a %0 type because it is an array of %0 type %2";
+  const char *Templ =
       "%1 is a %0 type because it has a template argument %0 type %2";
-  const char* Implicit =
-      "%1 is a %0 type because %2";
+  const char *Implicit = "%1 is a %0 type because %2";
 
   AnnotationReason Reason = directAnnotationReason(T);
   for (;;) {
@@ -41,7 +36,7 @@ void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
       assert(Declaration && "This type should be a C++ class");
 
       Check.diag(Declaration->getLocation(), Inherits, DiagnosticIDs::Note)
-        << Pretty << T << Reason.Type;
+          << Pretty << T << Reason.Type;
       break;
     }
     case RK_Field:
@@ -53,7 +48,7 @@ void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
       assert(Declaration && "This type should be a C++ class");
 
       Check.diag(Declaration->getLocation(), Templ, DiagnosticIDs::Note)
-        << Pretty << T << Reason.Type;
+          << Pretty << T << Reason.Type;
       break;
     }
     case RK_Implicit: {
@@ -61,7 +56,7 @@ void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check,
       assert(Declaration && "This type should be a TagDecl");
 
       Check.diag(Declaration->getLocation(), Implicit, DiagnosticIDs::Note)
-        << Pretty << T << Reason.ImplicitReason;
+          << Pretty << T << Reason.ImplicitReason;
       return;
     }
     default:

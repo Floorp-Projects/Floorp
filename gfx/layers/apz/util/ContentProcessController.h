@@ -64,7 +64,7 @@ public:
 
   void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
 
-  void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) override;
+  void NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId) override;
 
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 

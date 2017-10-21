@@ -45,6 +45,7 @@ typedef struct nr_interface_ {
 #define NR_INTERFACE_TYPE_WIFI    0x2
 #define NR_INTERFACE_TYPE_MOBILE  0x4
 #define NR_INTERFACE_TYPE_VPN     0x8
+#define NR_INTERFACE_TYPE_TEREDO  0x16
   int estimated_speed; /* Speed in kbps */
 } nr_interface;
 

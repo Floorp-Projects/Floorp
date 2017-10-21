@@ -13,8 +13,11 @@ function failure(e) {
   ok(false, "This event listener should not have triggered: " + e.type);
 }
 
-function success(e) {
-  success.triggered = true;
+function listener(callback) {
+  return function(e) {
+    ok(e.type == 'touchstart', "The touchstart event handler was triggered after snapshotting completed");
+    setTimeout(callback, 0);
+  };
 }
 
 // This helper function provides a way for the child process to synchronously
@@ -220,7 +223,7 @@ function* test(testDriver) {
   ok(numDifferentSnapshotPairs > 0,
      "The number of different snapshot pairs was " + numDifferentSnapshotPairs);
 
-  // Wait for the touchend as well, just for good form
+  // Wait for the touchend as well, to clear all pending testDriver resumes
   yield;
   ok(waitFor('touchend', 1), "Touchend processed in chrome process");
 
@@ -231,10 +234,11 @@ function* test(testDriver) {
   // so that all the DOM events that were queued up can be processed. We
   // register a touchstart listener to make sure this happens.
   document.body.removeEventListener('touchstart', failure);
-  document.body.addEventListener('touchstart', success, { passive: true });
-  yield flushApzRepaints(testDriver);
-  ok(success.triggered, "The touchstart event handler was triggered after snapshotting completed");
-  document.body.removeEventListener('touchstart', success);
+  var listenerFunc = listener(testDriver);
+  document.body.addEventListener('touchstart', listenerFunc, { passive: true });
+  dump('done registering listener, going to yield\n');
+  yield;
+  document.body.removeEventListener('touchstart', listenerFunc);
 }
 
 if (SpecialPowers.isMainProcess()) {
