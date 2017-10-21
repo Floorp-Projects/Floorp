@@ -74,19 +74,20 @@ function test()
   checkWindowXrayProperty(win, "expando", undefined);
   ok(!("expando" in win), "Xrays should filter expandos");
 
-  checkWindowXrayProperty(win, "shadowedIframe", undefined, undefined, doc.getElementById("shadowedIframe").contentWindow);
-  ok("shadowedIframe" in win, "Named properties should be exposed through Xrays");
+  checkWindowXrayProperty(win, "shadowedIframe", undefined);
+  ok(!("shadowedIframe" in win), "Named properties should not be exposed through Xrays");
 
-  // Named properties live on the named properties object for global objects.
-  checkWindowXrayProperty(win, "iframe", undefined, undefined, doc.getElementById("iframe").contentWindow);
-  ok("iframe" in win, "Named properties should be exposed through Xrays");
+  // Named properties live on the named properties object for global objects,
+  // but are not exposed via Xrays.
+  checkWindowXrayProperty(win, "iframe", undefined, undefined, undefined, undefined);
+  ok(!("iframe" in win), "Named properties should not be exposed through Xrays");
 
   // Window properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "document", doc, undefined, doc.getElementById("document").contentWindow);
+  checkWindowXrayProperty(win, "document", doc, undefined, undefined, undefined);
   ok("document" in win, "WebIDL properties should be exposed through Xrays");
 
   // Unforgeable properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "self", win, undefined, doc.getElementById("self").contentWindow);
+  checkWindowXrayProperty(win, "self", win, undefined, undefined, undefined);
   ok("self" in win, "WebIDL properties should be exposed through Xrays");
 
   // Object.prototype is at the end of the prototype chain.
