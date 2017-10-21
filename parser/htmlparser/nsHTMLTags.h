@@ -6,10 +6,9 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
+#include "nsStaticAtom.h"
 #include "nsString.h"
 #include "plhash.h"
-
-class nsAtom;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -76,6 +75,7 @@ public:
 #endif
 
 private:
+  // This would use NS_STATIC_ATOM_DECL if it wasn't an array.
   static nsAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
   static const char16_t* const sTagUnicodeTable[];
 
