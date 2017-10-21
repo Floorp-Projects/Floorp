@@ -178,7 +178,7 @@ interface FrameLoader {
   [Throws]
   void print(unsigned long long aOuterWindowID,
              nsIPrintSettings aPrintSettings,
-             nsIWebProgressListener aProgressListener);
+             optional nsIWebProgressListener? aProgressListener = null);
 
   /**
    * Ensure that the current nsIFrameLoader has a GroupedSHistory.
