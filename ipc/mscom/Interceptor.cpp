@@ -31,18 +31,18 @@
 #include "nsPrintfCString.h"
 
 #define ENSURE_HR_SUCCEEDED(hr) \
-  if (FAILED(hr)) { \
+  if (FAILED((HRESULT)hr)) { \
     nsPrintfCString location("ENSURE_HR_SUCCEEDED \"%s\": %u", __FILE__, __LINE__); \
-    nsPrintfCString hrAsStr("0x%08X", hr); \
+    nsPrintfCString hrAsStr("0x%08X", (HRESULT)hr); \
     CrashReporter::AnnotateCrashReport(location, hrAsStr); \
-    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr)); \
+    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED((HRESULT)hr)); \
     return hr; \
   }
 
 #else
 
 #define ENSURE_HR_SUCCEEDED(hr) \
-  if (FAILED(hr)) { \
+  if (FAILED((HRESULT)hr)) { \
     return hr; \
   }
 
@@ -487,6 +487,67 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
   return hr;
 }
 
+class MOZ_RAII LoggedQIResult final
+{
+public:
+  explicit LoggedQIResult(REFIID aIid)
+    : mIid(aIid)
+    , mHr(E_UNEXPECTED)
+    , mTarget(nullptr)
+    , mInterceptor(nullptr)
+    , mBegin(TimeStamp::Now())
+  {
+  }
+
+  ~LoggedQIResult()
+  {
+    if (!mTarget) {
+      return;
+    }
+
+    TimeStamp end(TimeStamp::Now());
+    TimeDuration total(end - mBegin);
+    TimeDuration overhead(total - mNonOverheadDuration);
+
+    InterceptorLog::QI(mHr, mTarget, mIid, mInterceptor, &overhead,
+                       &mNonOverheadDuration);
+  }
+
+  void Log(IUnknown* aTarget, IUnknown* aInterceptor)
+  {
+    mTarget = aTarget;
+    mInterceptor = aInterceptor;
+  }
+
+  void operator=(HRESULT aHr)
+  {
+    mHr = aHr;
+  }
+
+  operator HRESULT()
+  {
+    return mHr;
+  }
+
+  operator TimeDuration*()
+  {
+    return &mNonOverheadDuration;
+  }
+
+  LoggedQIResult(const LoggedQIResult&) = delete;
+  LoggedQIResult(LoggedQIResult&&) = delete;
+  LoggedQIResult& operator=(const LoggedQIResult&) = delete;
+  LoggedQIResult& operator=(LoggedQIResult&&) = delete;
+
+private:
+  REFIID        mIid;
+  HRESULT       mHr;
+  IUnknown*     mTarget;
+  IUnknown*     mInterceptor;
+  TimeDuration  mNonOverheadDuration;
+  TimeStamp     mBegin;
+};
+
 /**
  * This method contains the core guts of the handling of QueryInterface calls
  * that are delegated to us from the ICallInterceptor.
@@ -498,6 +559,8 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
 HRESULT
 Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 {
+  LoggedQIResult result(aIid);
+
   if (!aOutInterceptor) {
     return E_INVALIDARG;
   }
@@ -532,11 +595,10 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
     // Technically we didn't actually execute a QI on the target interface, but
     // for logging purposes we would like to record the fact that this interface
     // was requested.
-    InterceptorLog::QI(S_OK, mTarget.get(), aIid, interfaceForQILog);
-
-    HRESULT hr = unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
-    ENSURE_HR_SUCCEEDED(hr);
-    return hr;
+    result.Log(mTarget.get(), interfaceForQILog);
+    result = unkInterceptor->QueryInterface(interceptorIid, aOutInterceptor);
+    ENSURE_HR_SUCCEEDED(result);
+    return result;
   }
 
   // (2) Obtain a new target interface.
@@ -549,9 +611,10 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 
   STAUniquePtr<IUnknown> targetInterface;
   IUnknown* rawTargetInterface = nullptr;
-  hr = QueryInterfaceTarget(interceptorIid, (void**)&rawTargetInterface);
+  hr = QueryInterfaceTarget(interceptorIid, (void**)&rawTargetInterface, result);
   targetInterface.reset(rawTargetInterface);
-  InterceptorLog::QI(hr, mTarget.get(), aIid, targetInterface.get());
+  result = hr;
+  result.Log(mTarget.get(), targetInterface.get());
   MOZ_ASSERT(SUCCEEDED(hr) || hr == E_NOINTERFACE);
   if (hr == E_NOINTERFACE) {
     return hr;
@@ -608,7 +671,8 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 }
 
 HRESULT
-Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput)
+Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput,
+                                  TimeDuration* aOutDuration)
 {
   // NB: This QI needs to run on the main thread because the target object
   // is probably Gecko code that is not thread-safe. Note that this main
@@ -621,6 +685,9 @@ Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput)
   };
   if (!invoker.Invoke(NS_NewRunnableFunction("Interceptor::QueryInterface", runOnMainThread))) {
     return E_FAIL;
+  }
+  if (aOutDuration) {
+    *aOutDuration = invoker.GetDuration();
   }
   return hr;
 }

@@ -1368,13 +1368,6 @@ pref("dom.webapps.useCurrentProfile", false);
 
 pref("dom.cycle_collector.incremental", true);
 
-// Whether Xrays expose properties from the named properties object (aka global
-// scope polluter).  Values are:
-//   0 = properties exposed on Xrays
-//   1 = properties exposed on Xrays, except in web extension content scripts.
-//   2 = properties not exposed on xrays
-pref("dom.allow_named_properties_object_for_xrays", 1);
-
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);

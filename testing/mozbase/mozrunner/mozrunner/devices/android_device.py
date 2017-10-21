@@ -604,7 +604,6 @@ def _find_sdk_exe(substs, exe, tools):
     else:
         subdirs = ['platform-tools']
 
-    print(">>> %s" % exe)
     found = False
     if not found and substs:
         # It's best to use the tool specified by the build, rather
@@ -612,7 +611,6 @@ def _find_sdk_exe(substs, exe, tools):
         try:
             exe_path = substs[exe.upper()]
             if os.path.exists(exe_path):
-                print(">>> found in substs %s" % exe_path)
                 found = True
             else:
                 _log_debug(

@@ -40,11 +40,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         is(typeof doc.form1.appendChild, "function",
            "Input element shadows native property with its name through xray");
 
-        is(win.frame1.name, "frame1",
-           "IFrames cannot be found by name on the window through xray");
+        is(win.frame1, undefined,
+           "IFrames should not be found by name on the window through xray");
 
         is(win[0].name, "frame1",
-           "IFrames cannot be found by index on the window through xray");
+           "IFrames should be found by index on the window through xray");
 
         win["1000"] = "foopy";
         ok(!("1000" in win), "Shouldn't be able to add indexed expandos to xray");

@@ -7,7 +7,6 @@
 #include "WindowNamedPropertiesHandler.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMWindowList.h"
@@ -238,96 +237,6 @@ WindowNamedPropertiesHandler::delete_(JSContext* aCx,
   return aResult.failCantDeleteWindowNamedProperty();
 }
 
-static bool
-IsWebExtensionContentScript(JSContext* aCx)
-{
-  auto* priv = xpc::CompartmentPrivate::Get(JS::CurrentGlobalOrNull(aCx));
-  return priv->isWebExtensionContentScript;
-}
-
-static const int32_t kAlwaysAllowNamedPropertiesObject = 0;
-static const int32_t kDisallowNamedPropertiesObjectForContentScripts = 1;
-static const int32_t kDisallowNamedPropertiesObjectForXrays = 2;
-
-static bool
-AllowNamedPropertiesObject(JSContext* aCx)
-{
-  static int32_t sAllowed;
-  static bool sAllowedCached = false;
-  if (!sAllowedCached) {
-    Preferences::AddIntVarCache(&sAllowed,
-                                "dom.allow_named_properties_object_for_xrays",
-                                kDisallowNamedPropertiesObjectForContentScripts);
-    sAllowedCached = true;
-  }
-
-  if (sAllowed == kDisallowNamedPropertiesObjectForXrays) {
-    return false;
-  }
-
-  if (sAllowed == kAlwaysAllowNamedPropertiesObject) {
-    return true;
-  }
-
-  if (sAllowed == kDisallowNamedPropertiesObjectForContentScripts) {
-    return !IsWebExtensionContentScript(aCx);
-  }
-
-  NS_WARNING("Unknown value for dom.allow_named_properties_object_for_xrays");
-  // Fail open for now.
-  return true;
-}
-
-
-static bool
-ResolveWindowNamedProperty(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
-                           JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-                           JS::MutableHandle<JS::PropertyDescriptor> aDesc)
-{
-  if (!AllowNamedPropertiesObject(aCx)) {
-    return true;
-  }
-
-  {
-    JSAutoCompartment ac(aCx, aObj);
-    if (!js::GetProxyHandler(aObj)->getOwnPropertyDescriptor(aCx, aObj, aId,
-                                                             aDesc)) {
-      return false;
-    }
-  }
-
-  if (aDesc.object()) {
-    aDesc.object().set(aWrapper);
-
-    return JS_WrapPropertyDescriptor(aCx, aDesc);
-  }
-
-  return true;
-}
-
-static bool
-EnumerateWindowNamedProperties(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
-                               JS::Handle<JSObject*> aObj,
-                               JS::AutoIdVector& aProps)
-{
-  if (!AllowNamedPropertiesObject(aCx)) {
-    return true;
-  }
-
-  JSAutoCompartment ac(aCx, aObj);
-  return js::GetProxyHandler(aObj)->ownPropertyKeys(aCx, aObj, aProps);
-}
-
-const NativePropertyHooks sWindowNamedPropertiesNativePropertyHooks[] = { {
-  ResolveWindowNamedProperty,
-  EnumerateWindowNamedProperties,
-  nullptr,
-  { nullptr, nullptr },
-  prototypes::id::_ID_Count,
-  constructors::id::_ID_Count,
-  nullptr
-} };
-
 // Note that this class doesn't need any reserved slots, but SpiderMonkey
 // asserts all proxy classes have at least one reserved slot.
 static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
@@ -338,7 +247,7 @@ static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
   false,
   prototypes::id::_ID_Count,
   0,
-  sWindowNamedPropertiesNativePropertyHooks,
+  &sEmptyNativePropertyHooks,
   "[object WindowProperties]",
   EventTargetBinding::GetProtoObject
 };
