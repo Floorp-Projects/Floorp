@@ -530,9 +530,9 @@ NS_INTERFACE_MAP_END
 //
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::GetURI(char* *uri)
+CompositeDataSourceImpl::GetURI(nsACString& aURI)
 {
-    *uri = nullptr;
+    aURI.SetIsVoid(true);
     return NS_OK;
 }
 
