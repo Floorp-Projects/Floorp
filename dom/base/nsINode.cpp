@@ -2929,15 +2929,26 @@ struct ElementHolder {
 Element*
 nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
 {
-  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
-  if (!selectorList) {
-    // Either we failed (and aResult already has the exception), or this
-    // is a pseudo-element-only selector that matches nothing.
-    return nullptr;
-  }
-  ElementHolder holder;
-  FindMatchingElements<true, ElementHolder>(this, selectorList, holder, aResult);
-  return holder.mElement;
+  return WithSelectorList<Element*>(
+    aSelector,
+    aResult,
+    [&](const RawServoSelectorList* aList) -> Element* {
+      if (!aList) {
+        return nullptr;
+      }
+      return const_cast<Element*>(Servo_SelectorList_QueryFirst(this, aList));
+    },
+    [&](nsCSSSelectorList* aList) -> Element* {
+      if (!aList) {
+        // Either we failed (and aResult already has the exception), or this
+        // is a pseudo-element-only selector that matches nothing.
+        return nullptr;
+      }
+      ElementHolder holder;
+      FindMatchingElements<true, ElementHolder>(this, aList, holder, aResult);
+      return holder.mElement;
+    }
+  );
 }
 
 already_AddRefed<nsINodeList>
