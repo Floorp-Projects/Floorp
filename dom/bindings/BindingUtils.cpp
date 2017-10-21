@@ -1655,8 +1655,9 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     nativePropertyHooks->mResolveOwnProperty;
 
   if (type == eNamedPropertiesObject) {
-    // None of these should be cached on the holder, since they're dynamic.
-    return resolveOwnProperty(cx, wrapper, obj, id, desc);
+    MOZ_ASSERT(!resolveOwnProperty,
+               "Shouldn't have any Xray-visible properties");
+    return true;
   }
 
   const NativePropertiesHolder& nativePropertiesHolder =
@@ -1966,7 +1967,9 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
     nativePropertyHooks->mEnumerateOwnProperties;
 
   if (type == eNamedPropertiesObject) {
-    return enumerateOwnProperties(cx, wrapper, obj, props);
+    MOZ_ASSERT(!enumerateOwnProperties,
+               "Shouldn't have any Xray-visible properties");
+    return true;
   }
 
   if (IsInstance(type)) {
