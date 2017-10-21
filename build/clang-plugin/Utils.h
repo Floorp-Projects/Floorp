@@ -428,7 +428,7 @@ inline bool inThirdPartyPath(const Decl *D, ASTContext *context) {
   return inThirdPartyPath(Loc, SM);
 }
 
-inline CXXRecordDecl* getNonTemplateSpecializedCXXRecordDecl(QualType Q) {
+inline CXXRecordDecl *getNonTemplateSpecializedCXXRecordDecl(QualType Q) {
   auto *D = Q->getAsCXXRecordDecl();
 
   if (!D) {
@@ -463,22 +463,22 @@ inline bool inThirdPartyPath(const Stmt *S, ASTContext *context) {
 }
 
 /// Polyfill for CXXOperatorCallExpr::isInfixBinaryOp()
-inline bool isInfixBinaryOp(const CXXOperatorCallExpr* OpCall) {
+inline bool isInfixBinaryOp(const CXXOperatorCallExpr *OpCall) {
 #if CLANG_VERSION_FULL >= 400
   return OpCall->isInfixBinaryOp();
 #else
   // Taken from clang source.
   if (OpCall->getNumArgs() != 2)
-     return false;
+    return false;
 
   switch (OpCall->getOperator()) {
-   case OO_Call: case OO_Subscript:
-     return false;
-   default:
-     return true;
+  case OO_Call:
+  case OO_Subscript:
+    return false;
+  default:
+    return true;
   }
 #endif
 }
-
 
 #endif

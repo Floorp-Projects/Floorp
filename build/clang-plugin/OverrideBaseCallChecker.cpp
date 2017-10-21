@@ -5,9 +5,8 @@
 #include "OverrideBaseCallChecker.h"
 #include "CustomMatchers.h"
 
-void OverrideBaseCallChecker::registerMatchers(MatchFinder* AstMatcher) {
-  AstMatcher->addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"),
-      this);
+void OverrideBaseCallChecker::registerMatchers(MatchFinder *AstMatcher) {
+  AstMatcher->addMatcher(cxxRecordDecl(hasBaseClasses()).bind("class"), this);
 }
 
 bool OverrideBaseCallChecker::isRequiredBaseMethod(
@@ -16,15 +15,15 @@ bool OverrideBaseCallChecker::isRequiredBaseMethod(
 }
 
 void OverrideBaseCallChecker::evaluateExpression(
-    const Stmt *StmtExpr, std::list<const CXXMethodDecl*> &MethodList) {
+    const Stmt *StmtExpr, std::list<const CXXMethodDecl *> &MethodList) {
   // Continue while we have methods in our list
   if (!MethodList.size()) {
     return;
   }
 
   if (auto MemberFuncCall = dyn_cast<CXXMemberCallExpr>(StmtExpr)) {
-    if (auto Method = dyn_cast<CXXMethodDecl>(
-        MemberFuncCall->getDirectCallee())) {
+    if (auto Method =
+            dyn_cast<CXXMethodDecl>(MemberFuncCall->getDirectCallee())) {
       findBaseMethodCall(Method, MethodList);
     }
   }
@@ -38,34 +37,33 @@ void OverrideBaseCallChecker::evaluateExpression(
 
 void OverrideBaseCallChecker::getRequiredBaseMethod(
     const CXXMethodDecl *Method,
-    std::list<const CXXMethodDecl*>& MethodsList) {
+    std::list<const CXXMethodDecl *> &MethodsList) {
 
   if (isRequiredBaseMethod(Method)) {
     MethodsList.push_back(Method);
   } else {
     // Loop through all it's base methods.
     for (auto BaseMethod = Method->begin_overridden_methods();
-        BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+         BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
       getRequiredBaseMethod(*BaseMethod, MethodsList);
     }
   }
 }
 
 void OverrideBaseCallChecker::findBaseMethodCall(
-    const CXXMethodDecl* Method,
-    std::list<const CXXMethodDecl*>& MethodsList) {
+    const CXXMethodDecl *Method,
+    std::list<const CXXMethodDecl *> &MethodsList) {
 
   MethodsList.remove(Method);
   // Loop also through all it's base methods;
   for (auto BaseMethod = Method->begin_overridden_methods();
-      BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+       BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
     findBaseMethodCall(*BaseMethod, MethodsList);
   }
 }
 
-void OverrideBaseCallChecker::check(
-    const MatchFinder::MatchResult &Result) {
-  const char* Error =
+void OverrideBaseCallChecker::check(const MatchFinder::MatchResult &Result) {
+  const char *Error =
       "Method %0 must be called in all overrides, but is not called in "
       "this override defined for class %1";
   const CXXRecordDecl *Decl = Result.Nodes.getNodeAs<CXXRecordDecl>("class");
@@ -80,11 +78,11 @@ void OverrideBaseCallChecker::check(
 
     // Preferred the usage of list instead of vector in order to avoid
     // calling erase-remove when deleting items
-    std::list<const CXXMethodDecl*> MethodsList;
+    std::list<const CXXMethodDecl *> MethodsList;
     // For each overridden method push it to a list if it meets our
     // criteria
     for (auto BaseMethod = Method->begin_overridden_methods();
-        BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
+         BaseMethod != Method->end_overridden_methods(); BaseMethod++) {
       getRequiredBaseMethod(*BaseMethod, MethodsList);
     }
 
@@ -105,8 +103,7 @@ void OverrideBaseCallChecker::check(
       BaseMethod->printQualifiedName(OS);
 
       diag(Method->getLocation(), Error, DiagnosticIDs::Error)
-          << OS.str()
-          << Decl->getName();
+          << OS.str() << Decl->getName();
     }
   }
 }

@@ -11,8 +11,8 @@ class RefCountedInsideLambdaChecker : public BaseCheck {
 public:
   RefCountedInsideLambdaChecker(StringRef CheckName,
                                 ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 
   void emitDiagnostics(SourceLocation Loc, StringRef Name, QualType Type);
@@ -20,12 +20,13 @@ public:
 private:
   class ThisVisitor : public RecursiveASTVisitor<ThisVisitor> {
   public:
-    explicit ThisVisitor(RefCountedInsideLambdaChecker& Checker)
-      : Checker(Checker) {}
+    explicit ThisVisitor(RefCountedInsideLambdaChecker &Checker)
+        : Checker(Checker) {}
 
     bool VisitCXXThisExpr(CXXThisExpr *This);
+
   private:
-    RefCountedInsideLambdaChecker& Checker;
+    RefCountedInsideLambdaChecker &Checker;
   };
 };
 

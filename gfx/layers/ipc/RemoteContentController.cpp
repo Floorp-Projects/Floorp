@@ -273,20 +273,20 @@ RemoteContentController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::Vi
 }
 
 void
-RemoteContentController::NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId)
+RemoteContentController::NotifyAsyncAutoscrollRejected(const FrameMetrics::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mCompositorThread) {
     // We have to send messages from the compositor thread
     mCompositorThread->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
-      "layers::RemoteContentController::NotifyAutoscrollHandledByAPZ",
+      "layers::RemoteContentController::NotifyAsyncAutoscrollRejected",
       this,
-      &RemoteContentController::NotifyAutoscrollHandledByAPZ,
+      &RemoteContentController::NotifyAsyncAutoscrollRejected,
       aScrollId));
     return;
   }
 
   if (mCanSend) {
-    Unused << SendNotifyAutoscrollHandledByAPZ(aScrollId);
+    Unused << SendNotifyAsyncAutoscrollRejected(aScrollId);
   }
 }
 

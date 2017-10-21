@@ -440,6 +440,49 @@ int nr_transport_addr_is_link_local(nr_transport_addr *addr)
     return(0);
   }
 
+int nr_transport_addr_is_mac_based(nr_transport_addr *addr)
+  {
+    switch(addr->ip_version){
+      case NR_IPV4:
+        // IPv4 has no MAC based self assigned IP addresses
+        return(0);
+      case NR_IPV6:
+        {
+          // RFC 2373, Appendix A: lower 64bit 0x020000FFFE000000
+          // indicates a MAC based IPv6 address
+          UINT4* macCom = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr + 8);
+          UINT4* macExt = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr + 12);
+          if ((*macCom & htonl(0x020000FF)) == htonl(0x020000FF) &&
+              (*macExt & htonl(0xFF000000)) == htonl(0xFE000000)) {
+            return(1);
+          }
+        }
+        break;
+      default:
+        UNIMPLEMENTED;
+    }
+    return(0);
+  }
+
+int nr_transport_addr_is_teredo(nr_transport_addr *addr)
+  {
+    switch(addr->ip_version){
+      case NR_IPV4:
+        return(0);
+      case NR_IPV6:
+        {
+          UINT4* addrTop = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr);
+          if ((*addrTop & htonl(0xFFFF0000)) == htonl(0x20010000))
+            return(1);
+        }
+        break;
+      default:
+        UNIMPLEMENTED;
+    }
+
+    return(0);
+  }
+
 int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport_addr *addr2)
   {
     // first make sure we're comparing the same ip versions and protocols

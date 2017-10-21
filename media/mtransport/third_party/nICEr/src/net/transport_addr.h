@@ -93,6 +93,8 @@ int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
 int nr_transport_addr_is_loopback(nr_transport_addr *addr);
 int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr);
 int nr_transport_addr_is_link_local(nr_transport_addr *addr);
+int nr_transport_addr_is_mac_based(nr_transport_addr *addr);
+int nr_transport_addr_is_teredo(nr_transport_addr *addr);
 int nr_transport_addr_check_compatibility(nr_transport_addr *addr1, nr_transport_addr *addr2);
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
 int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from);

@@ -10,9 +10,9 @@ typedef MozContext ContextType;
 
 class BaseCheck : public MatchFinder::MatchCallback {
 public:
-  BaseCheck(StringRef CheckName, ContextType* Context) {}
+  BaseCheck(StringRef CheckName, ContextType *Context) {}
   virtual void registerMatchers(MatchFinder *Finder) {}
-  virtual void registerPPCallbacks(CompilerInstance& CI) {}
+  virtual void registerPPCallbacks(CompilerInstance &CI) {}
   virtual void check(const MatchFinder::MatchResult &Result) {}
   DiagnosticBuilder diag(SourceLocation Loc, StringRef Description,
                          DiagnosticIDs::Level Level = DiagnosticIDs::Warning) {
@@ -28,7 +28,7 @@ private:
   }
 
 private:
-  ASTContext* Context;
+  ASTContext *Context;
 };
 
 #endif
