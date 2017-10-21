@@ -9,10 +9,9 @@
 
 class MustUseChecker : public BaseCheck {
 public:
-  MustUseChecker(StringRef CheckName,
-                 ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  MustUseChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 
 private:

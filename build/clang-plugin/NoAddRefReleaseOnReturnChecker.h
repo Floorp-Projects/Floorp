@@ -11,8 +11,8 @@ class NoAddRefReleaseOnReturnChecker : public BaseCheck {
 public:
   NoAddRefReleaseOnReturnChecker(StringRef CheckName,
                                  ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
 };
 

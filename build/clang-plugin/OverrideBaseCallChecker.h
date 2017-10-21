@@ -9,18 +9,18 @@
 
 class OverrideBaseCallChecker : public BaseCheck {
 public:
-  OverrideBaseCallChecker(StringRef CheckName,
-                          ContextType *Context = nullptr)
-    : BaseCheck(CheckName, Context) {}
-  void registerMatchers(MatchFinder* AstMatcher) override;
+  OverrideBaseCallChecker(StringRef CheckName, ContextType *Context = nullptr)
+      : BaseCheck(CheckName, Context) {}
+  void registerMatchers(MatchFinder *AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
+
 private:
   void evaluateExpression(const Stmt *StmtExpr,
-      std::list<const CXXMethodDecl*> &MethodList);
-  void getRequiredBaseMethod(const CXXMethodDecl* Method,
-      std::list<const CXXMethodDecl*>& MethodsList);
-  void findBaseMethodCall(const CXXMethodDecl* Method,
-      std::list<const CXXMethodDecl*>& MethodsList);
+                          std::list<const CXXMethodDecl *> &MethodList);
+  void getRequiredBaseMethod(const CXXMethodDecl *Method,
+                             std::list<const CXXMethodDecl *> &MethodsList);
+  void findBaseMethodCall(const CXXMethodDecl *Method,
+                          std::list<const CXXMethodDecl *> &MethodsList);
   bool isRequiredBaseMethod(const CXXMethodDecl *Method);
 };
 

@@ -589,40 +589,14 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 }
 
 var gPopupBlockerObserver = {
-  _reportButton: null,
-
-  onReportButtonMousedown(aEvent) {
-    // The button is part of the textbox that is considered the popup's anchor,
-    // thus consumeoutsideclicks="false" is ignored. Moreover On OS X the popup
-    // is hidden well before mousedown gets dispatched.
-    // Thus, if the popup is open and the user clicks on the button, it gets
-    // hidden before mousedown, and may then be unexpectedly reopened by click.
-    // To avoid this, we check if mousedown is in the same tick as popupHidden,
-    // and, in such a case, we don't handle the click event.
-    // Note we can't just openPopup in mousedown, cause this popup is shared by
-    // multiple anchors, and we could end up opening it just before the other
-    // anchor tries to hide it.
-    if (aEvent.button != 0 || aEvent.target != this._reportButton || this.isPopupHidingTick)
-      return;
-
-    this._reportButton.addEventListener("click", event => {
-      document.getElementById("blockedPopupOptions")
-              .openPopup(event.target, "after_end", 0, 2, false, false, event);
-    }, { once: true });
-  },
-
   handleEvent(aEvent) {
     if (aEvent.originalTarget != gBrowser.selectedBrowser)
       return;
 
-    if (!this._reportButton)
-      this._reportButton = document.getElementById("page-report-button");
+    gIdentityHandler.refreshIdentityBlock();
 
     if (!gBrowser.selectedBrowser.blockedPopups ||
         !gBrowser.selectedBrowser.blockedPopups.length) {
-      // Hide the icon in the location bar (if the location bar exists)
-      this._reportButton.hidden = true;
-
       // Hide the notification box (if it's visible).
       let notificationBox = gBrowser.getNotificationBox();
       let notification = notificationBox.getNotificationWithValue("popup-blocked");
@@ -631,8 +605,6 @@ var gPopupBlockerObserver = {
       }
       return;
     }
-
-    this._reportButton.hidden = false;
 
     // Only show the notification again if we've not already shown it. Since
     // notifications are per-browser, we don't need to worry about re-adding
@@ -733,12 +705,7 @@ var gPopupBlockerObserver = {
     let blockedPopupDontShowMessage = document.getElementById("blockedPopupDontShowMessage");
     let showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
     blockedPopupDontShowMessage.setAttribute("checked", !showMessage);
-    if (aEvent.target.anchorNode.id == "page-report-button") {
-      aEvent.target.anchorNode.setAttribute("open", "true");
-      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromLocationbar"));
-    } else {
-      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromMessage"));
-    }
+    blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromMessage"));
 
     let blockedPopupsSeparator =
         document.getElementById("blockedPopupsSeparator");
@@ -793,13 +760,6 @@ var gPopupBlockerObserver = {
   },
 
   onPopupHiding(aEvent) {
-    if (aEvent.target.anchorNode.id == "page-report-button") {
-      aEvent.target.anchorNode.removeAttribute("open");
-
-      this.isPopupHidingTick = true;
-      setTimeout(() => this.isPopupHidingTick = false, 0);
-    }
-
     let item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
       let next = item.previousSibling;
@@ -7663,6 +7623,14 @@ var gIdentityHandler = {
       this._identityBox.classList.add("grantedPermissions");
     }
 
+    // Show blocked popup icon in the identity-box if popups are blocked
+    // irrespective of popup permission capability value.
+    if (gBrowser.selectedBrowser.blockedPopups &&
+        gBrowser.selectedBrowser.blockedPopups.length) {
+      let icon = permissionAnchors.popup;
+      icon.setAttribute("showing", "true");
+    }
+
     // Push the appropriate strings out to the UI
     this._connectionIcon.setAttribute("tooltiptext", tooltip);
 
@@ -8013,9 +7981,31 @@ var gIdentityHandler = {
         }
       }
     }
+
+    let hasBlockedPopupIndicator = false;
     for (let permission of permissions) {
       let item = this._createPermissionItem(permission);
       this._permissionList.appendChild(item);
+
+      if (permission.id == "popup" &&
+          gBrowser.selectedBrowser.blockedPopups &&
+          gBrowser.selectedBrowser.blockedPopups.length) {
+        this._createBlockedPopupIndicator();
+        hasBlockedPopupIndicator = true;
+      }
+    }
+
+    if (gBrowser.selectedBrowser.blockedPopups &&
+        gBrowser.selectedBrowser.blockedPopups.length &&
+        !hasBlockedPopupIndicator) {
+      let permission = {
+        id: "popup",
+        state: SitePermissions.UNKNOWN,
+        scope: SitePermissions.SCOPE_PERSISTENT,
+      };
+      let item = this._createPermissionItem(permission);
+      this._permissionList.appendChild(item);
+      this._createBlockedPopupIndicator();
     }
 
     // Show a placeholder text if there's no permission and no reload hint.
@@ -8044,6 +8034,41 @@ var gIdentityHandler = {
     nameLabel.setAttribute("flex", "1");
     nameLabel.setAttribute("class", "identity-popup-permission-label");
     nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
+
+    if (aPermission.id == "popup") {
+      let menulist = document.createElement("menulist");
+      let menupopup = document.createElement("menupopup");
+      let block = document.createElement("vbox");
+      block.setAttribute("id", "identity-popup-popup-container");
+      menulist.setAttribute("class", "identity-popup-popup-menulist");
+      menulist.setAttribute("id", "identity-popup-popup-menulist");
+
+      for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
+        let menuitem = document.createElement("menuitem");
+        if (state == SitePermissions.getDefault(aPermission.id)) {
+          menuitem.setAttribute("value", 0);
+        } else {
+          menuitem.setAttribute("value", state);
+        }
+        menuitem.setAttribute("label", SitePermissions.getMultichoiceStateLabel(state));
+        menupopup.appendChild(menuitem);
+      }
+
+      menulist.appendChild(menupopup);
+      menulist.setAttribute("value", aPermission.state);
+
+      // Avoiding listening to the "select" event on purpose. See Bug 1404262.
+      menulist.addEventListener("command", () => {
+        SitePermissions.set(gBrowser.currentURI, "popup", menulist.selectedItem.value);
+      });
+
+      container.appendChild(img);
+      container.appendChild(nameLabel);
+      container.appendChild(menulist);
+      block.appendChild(container);
+
+      return block;
+    }
 
     let stateLabel = document.createElement("label");
     stateLabel.setAttribute("flex", "1");
@@ -8126,7 +8151,36 @@ var gIdentityHandler = {
     container.appendChild(button);
 
     return container;
-  }
+  },
+
+  _createBlockedPopupIndicator() {
+    let indicator = document.createElement("hbox");
+    indicator.setAttribute("class", "identity-popup-permission-item");
+    indicator.setAttribute("align", "center");
+    indicator.setAttribute("id", "blocked-popup-indicator-item");
+
+    let icon = document.createElement("image");
+    icon.setAttribute("class", "popup-subitem identity-popup-permission-icon");
+
+    let text = document.createElement("label");
+    text.setAttribute("flex", "1");
+    text.setAttribute("class", "identity-popup-permission-label text-link");
+
+    let popupCount = gBrowser.selectedBrowser.blockedPopups.length;
+    let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");
+    let message = PluralForm.get(popupCount, messageBase)
+                                 .replace("#1", popupCount);
+    text.setAttribute("value", message);
+
+    text.addEventListener("click", () => {
+      gPopupBlockerObserver.showAllBlockedPopups(gBrowser.selectedBrowser);
+    });
+
+    indicator.appendChild(icon);
+    indicator.appendChild(text);
+
+    document.getElementById("identity-popup-popup-container").appendChild(indicator);
+  },
 };
 
 /**

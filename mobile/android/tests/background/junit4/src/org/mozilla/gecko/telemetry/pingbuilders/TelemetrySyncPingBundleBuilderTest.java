@@ -112,7 +112,7 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(outgoingPing.getPayload().containsKey("payload"));
         assertTrue(outgoingPing.getPayload().containsKey("id"));
         assertEquals("sync", outgoingPing.getPayload().getString("type"));
-        assertEquals(Integer.valueOf(5), outgoingPing.getPayload().getIntegerSafely("version"));
+        assertEquals(Integer.valueOf(4), outgoingPing.getPayload().getIntegerSafely("version"));
 
         // Test application key.
         ExtendedJSONObject application = outgoingPing.getPayload().getObject("application");
@@ -126,8 +126,18 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(application.containsKey("buildId"));
         assertTrue(application.containsKey("xpcomAbi"));
 
+
+        // Test general shape of payload. Expecting {"syncs":[],"why":"schedule", "version": 1,
+        // "os": {"name": "Android", "version": "<version>", "locale": "<locale>"}}.
+        // NB that even though we set an empty sync event store, it's not in the json string.
+        // That's because sync events are not yet instrumented.
+        ExtendedJSONObject payload = outgoingPing.getPayload().getObject("payload");
+        assertEquals(4, payload.keySet().size());
+        assertEquals("schedule", payload.getString("why"));
+        assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
+        assertEquals(0, payload.getArray("syncs").size());
         // Test os key.
-        ExtendedJSONObject os = outgoingPing.getPayload().getObject("os");
+        ExtendedJSONObject os = payload.getObject("os");
         assertEquals(3, os.keySet().size());
         assertEquals("Android", os.getString("name"));
         // Going to be different depending on the test environment.
@@ -135,15 +145,6 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(os.getIntegerSafely("version") != null);
         // Likely "en-US" in tests, but let's test for presence and type to avoid random failures.
         assertTrue(os.getString("locale") != null);
-
-        // Test general shape of payload. Expecting {"syncs":[],"why":"schedule", "version": 1}.
-        // NB that even though we set an empty sync event store, it's not in the json string.
-        // That's because sync events are not yet instrumented.
-        ExtendedJSONObject payload = outgoingPing.getPayload().getObject("payload");
-        assertEquals(3, payload.keySet().size());
-        assertEquals("schedule", payload.getString("why"));
-        assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
-        assertEquals(0, payload.getArray("syncs").size());
     }
 
     @Test
