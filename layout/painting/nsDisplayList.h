@@ -4079,16 +4079,29 @@ public:
  */
 class nsDisplayLayerEventRegions final : public nsDisplayItem {
 public:
-  nsDisplayLayerEventRegions(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  nsDisplayLayerEventRegions(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, uint32_t aIndex = 0)
     : nsDisplayItem(aBuilder, aFrame)
+    , mIndex(aIndex)
   {
     MOZ_COUNT_CTOR(nsDisplayLayerEventRegions);
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayLayerEventRegions() {
-    MOZ_COUNT_DTOR(nsDisplayLayerEventRegions);
+
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) override
+  {
+    if (!aBuilder->IsRetainingDisplayList()) {
+      nsDisplayItem::Destroy(aBuilder);
+      return;
+    }
+
+    RemoveItemFromFrames(mHitRegion);
+    RemoveItemFromFrames(mMaybeHitRegion);
+    RemoveItemFromFrames(mDispatchToContentHitRegion);
+    RemoveItemFromFrames(mNoActionRegion);
+    RemoveItemFromFrames(mHorizontalPanRegion);
+    RemoveItemFromFrames(mVerticalPanRegion);
+    nsDisplayItem::Destroy(aBuilder);
   }
-#endif
+
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override
   {
@@ -4098,7 +4111,9 @@ public:
   nsRect GetHitRegionBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   {
     *aSnap = false;
-    return mHitRegion.GetBounds().Union(mMaybeHitRegion.GetBounds());
+    // TODO: This constructs the two regions, but we're also doing the same
+    // work in AccumulateEventRegions. We should avoid doing it twice.
+    return HitRegion().GetBounds().Union(MaybeHitRegion().GetBounds());
   }
 
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
@@ -4121,47 +4136,144 @@ public:
   // Indicate that an inactive scrollframe's scrollport should be added to the
   // dispatch-to-content region, to ensure that APZ lets content create a
   // displayport.
-  void AddInactiveScrollPort(const nsRect& aRect);
+  void AddInactiveScrollPort(nsIFrame* aFrame, const nsRect& aRect);
 
   bool IsEmpty() const;
 
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
-  const nsRegion& HitRegion() { return mHitRegion; }
-  const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
-  const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }
-  const nsRegion& NoActionRegion() { return mNoActionRegion; }
-  const nsRegion& HorizontalPanRegion() { return mHorizontalPanRegion; }
-  const nsRegion& VerticalPanRegion() { return mVerticalPanRegion; }
+  virtual uint32_t GetPerFrameKey() const override
+  {
+    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
+  }
+
+  const nsRegion HitRegion()
+  {
+    return nsRegion(mozilla::gfx::ArrayView<pixman_box32_t>(mHitRegion.mBoxes));
+  }
+  const nsRegion MaybeHitRegion()
+  {
+    nsRegion result(mozilla::gfx::ArrayView<pixman_box32_t>(mMaybeHitRegion.mBoxes));
+
+    // Avoid quadratic performance as a result of the region growing to include
+    // an arbitrarily large number of rects, which can happen on some pages.
+    // TODO: It would be nice if we could ask the initial construction above
+    // to include simplification.
+    result.SimplifyOutward(8);
+    return result;
+  }
+  const nsRegion DispatchToContentHitRegion()
+  {
+    nsRegion result(mozilla::gfx::ArrayView<pixman_box32_t>(mDispatchToContentHitRegion.mBoxes));
+
+    // If this frame has touch-action areas, and there were already
+    // touch-action areas from some other element on this same event regions,
+    // then all we know is that there are multiple elements with touch-action
+    // properties. In particular, we don't know what the relationship is
+    // between those elements in terms of DOM ancestry, and so we don't know
+    // how to combine the regions properly. Instead, we just add all the areas
+    // to the dispatch-to-content region, so that the APZ knows to check with
+    // the main thread. XXX we need to come up with a better way to do this,
+    // see bug 1287829.
+    uint32_t touchActionCount =
+      mNoActionRegion.mBoxes.Length() +
+      mHorizontalPanRegion.mBoxes.Length() +
+      mVerticalPanRegion.mBoxes.Length();
+    if (touchActionCount > 1) {
+      result.OrWith(NoActionRegion());
+      result.OrWith(HorizontalPanRegion());
+      result.OrWith(VerticalPanRegion());
+    }
+
+    result.SimplifyOutward(8);
+    return result;
+  }
+  const nsRegion NoActionRegion()
+  {
+    return nsRegion(mozilla::gfx::ArrayView<pixman_box32_t>(mNoActionRegion.mBoxes));
+  }
+  const nsRegion HorizontalPanRegion()
+  {
+    return nsRegion(mozilla::gfx::ArrayView<pixman_box32_t>(mHorizontalPanRegion.mBoxes));
+  }
+  const nsRegion VerticalPanRegion()
+  {
+    return nsRegion(mozilla::gfx::ArrayView<pixman_box32_t>(mVerticalPanRegion.mBoxes));
+  }
   nsRegion CombinedTouchActionRegion();
 
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
+  // TODO: nsTArray (vector) might not be a great data structure
+  // choice since we need to remove elements from the middle.
+  // Should profile and try figure out the best approach
+  // here.
+  struct FrameRects {
+    void Add(nsIFrame* aFrame, const nsRect& aRect) {
+      mBoxes.AppendElement(nsRegion::RectToBox(aRect));
+      mFrames.AppendElement(aFrame);
+    }
+    void Add(nsIFrame* aFrame, const pixman_box32& aBox) {
+      mBoxes.AppendElement(aBox);
+      mFrames.AppendElement(aFrame);
+    }
+    void Add(const FrameRects& aOther) {
+      mBoxes.AppendElements(aOther.mBoxes);
+      mFrames.AppendElements(aOther.mFrames);
+    }
+
+    bool IsEmpty() const {
+      return mBoxes.IsEmpty();
+    }
+
+    nsTArray<pixman_box32_t> mBoxes;
+    nsTArray<nsIFrame*> mFrames;
+  };
+
+  virtual void RemoveFrame(nsIFrame* aFrame) override;
+
 private:
+  virtual ~nsDisplayLayerEventRegions()
+  {
+    MOZ_COUNT_DTOR(nsDisplayLayerEventRegions);
+  }
+
+  void RemoveItemFromFrames(FrameRects& aFrameRects)
+  {
+    for (nsIFrame* f : aFrameRects.mFrames) {
+      if (f != mFrame) {
+        f->RemoveDisplayItem(this);
+      }
+    }
+  }
+
+  friend void MergeLayerEventRegions(nsDisplayItem*, nsDisplayItem*, bool);
+
   // Relative to aFrame's reference frame.
   // These are the points that are definitely in the hit region.
-  nsRegion mHitRegion;
+  FrameRects mHitRegion;
   // These are points that may or may not be in the hit region. Only main-thread
   // event handling can tell for sure (e.g. because complex shapes are present).
-  nsRegion mMaybeHitRegion;
+  FrameRects mMaybeHitRegion;
   // These are points that need to be dispatched to the content thread for
   // resolution. Always contained in the union of mHitRegion and mMaybeHitRegion.
-  nsRegion mDispatchToContentHitRegion;
+  FrameRects mDispatchToContentHitRegion;
   // These are points where panning is disabled, as determined by the touch-action
   // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
-  nsRegion mNoActionRegion;
+  FrameRects mNoActionRegion;
   // These are points where panning is horizontal, as determined by the touch-action
   // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
-  nsRegion mHorizontalPanRegion;
+  FrameRects mHorizontalPanRegion;
   // These are points where panning is vertical, as determined by the touch-action
   // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
-  nsRegion mVerticalPanRegion;
+  FrameRects mVerticalPanRegion;
   // If these event regions are for an inactive scroll frame, the z-index of
   // this display item is overridden to be the largest z-index of the content
   // in the scroll frame. This ensures that the event regions item remains on
   // top of the content after sorting items by z-index.
   mozilla::Maybe<int32_t> mOverrideZIndex;
+  uint32_t mIndex;
 };
 
 /**

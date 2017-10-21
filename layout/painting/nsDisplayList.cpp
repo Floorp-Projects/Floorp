@@ -4617,12 +4617,21 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
       return;
     }
   }
+
+  if (aFrame != mFrame &&
+      aBuilder->IsRetainingDisplayList()) {
+    aFrame->AddDisplayItem(this);
+  }
+
+
   // XXX handle other pointerEvents values for SVG
 
   // XXX Do something clever here for the common case where the border box
   // is obviously entirely inside mHitRegion.
   nsRect borderBox;
-  if (nsLayoutUtils::GetScrollableFrameFor(aFrame)) {
+
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(aFrame);
+  if (scrollFrame) {
     // If the frame is content of a scrollframe, then we need to pick up the
     // area corresponding to the overflow rect as well. Otherwise the parts of
     // the overflow that are not occupied by descendants get skipped and the
@@ -4655,13 +4664,9 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 
   if (borderBoxHasRoundedCorners ||
       (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
-    mMaybeHitRegion.Or(mMaybeHitRegion, borderBox);
-
-    // Avoid quadratic performance as a result of the region growing to include
-    // an arbitrarily large number of rects, which can happen on some pages.
-    mMaybeHitRegion.SimplifyOutward(8);
+    mMaybeHitRegion.Add(aFrame, borderBox);
   } else {
-    mHitRegion.Or(mHitRegion, borderBox);
+    mHitRegion.Add(aFrame, borderBox);
   }
 
   if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
@@ -4672,62 +4677,73 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     // instead of the intended scrollframe. To address this, we force a d-t-c
     // region on scrollbar frames that won't be placed in their own layer. See
     // bug 1213324 for details.
-    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
-    mDispatchToContentHitRegion.SimplifyOutward(8);
+    mDispatchToContentHitRegion.Add(aFrame, borderBox);
   } else if (aFrame->IsObjectFrame()) {
     // If the frame is a plugin frame and wants to handle wheel events as
     // default action, we should add the frame to dispatch-to-content region.
     nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);
     if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
-      mDispatchToContentHitRegion.SimplifyOutward(8);
+      mDispatchToContentHitRegion.Add(aFrame, borderBox);
     }
   }
 
   // Touch action region
 
   nsIFrame* touchActionFrame = aFrame;
-  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(aFrame);
   if (scrollFrame) {
     touchActionFrame = do_QueryFrame(scrollFrame);
   }
   uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
   if (touchAction != NS_STYLE_TOUCH_ACTION_AUTO) {
-    // If this frame has touch-action areas, and there were already
-    // touch-action areas from some other element on this same event regions,
-    // then all we know is that there are multiple elements with touch-action
-    // properties. In particular, we don't know what the relationship is
-    // between those elements in terms of DOM ancestry, and so we don't know
-    // how to combine the regions properly. Instead, we just add all the areas
-    // to the dispatch-to-content region, so that the APZ knows to check with
-    // the main thread. XXX we need to come up with a better way to do this,
-    // see bug 1287829.
-    bool alreadyHadRegions = !mNoActionRegion.IsEmpty() ||
-        !mHorizontalPanRegion.IsEmpty() ||
-        !mVerticalPanRegion.IsEmpty();
     if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
-      mNoActionRegion.OrWith(borderBox);
+      mNoActionRegion.Add(aFrame, borderBox);
     } else {
       if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
-        mHorizontalPanRegion.OrWith(borderBox);
+        mHorizontalPanRegion.Add(aFrame, borderBox);
       }
       if ((touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
-        mVerticalPanRegion.OrWith(borderBox);
+        mVerticalPanRegion.Add(aFrame, borderBox);
       }
-    }
-    if (alreadyHadRegions) {
-      mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
-      mDispatchToContentHitRegion.SimplifyOutward(8);
     }
   }
 }
 
-void
-nsDisplayLayerEventRegions::AddInactiveScrollPort(const nsRect& aRect)
+static void
+RemoveFrameFromFrameRects(nsDisplayLayerEventRegions::FrameRects& aFrameRects, nsIFrame* aFrame)
 {
-  mHitRegion.Or(mHitRegion, aRect);
-  mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aRect);
-  mDispatchToContentHitRegion.SimplifyOutward(8);
+  uint32_t i = 0;
+  uint32_t length = aFrameRects.mFrames.Length();
+  while (i < length) {
+    if (aFrameRects.mFrames[i] == aFrame) {
+      aFrameRects.mFrames[i] = aFrameRects.mFrames[length - 1];
+      aFrameRects.mBoxes[i] = aFrameRects.mBoxes[length - 1];
+      length--;
+    } else {
+      i++;
+    }
+  }
+  aFrameRects.mFrames.SetLength(length);
+  aFrameRects.mBoxes.SetLength(length);
+}
+
+void
+nsDisplayLayerEventRegions::RemoveFrame(nsIFrame* aFrame)
+{
+  RemoveFrameFromFrameRects(mHitRegion, aFrame);
+  RemoveFrameFromFrameRects(mMaybeHitRegion, aFrame);
+  RemoveFrameFromFrameRects(mDispatchToContentHitRegion, aFrame);
+  RemoveFrameFromFrameRects(mNoActionRegion, aFrame);
+  RemoveFrameFromFrameRects(mHorizontalPanRegion, aFrame);
+  RemoveFrameFromFrameRects(mVerticalPanRegion, aFrame);
+
+  nsDisplayItem::RemoveFrame(aFrame);
+}
+
+void
+nsDisplayLayerEventRegions::AddInactiveScrollPort(nsIFrame* aFrame, const nsRect& aRect)
+{
+  mHitRegion.Add(aFrame, aRect);
+  mDispatchToContentHitRegion.Add(aFrame, aRect);
 }
 
 bool
@@ -4749,8 +4765,8 @@ nsRegion
 nsDisplayLayerEventRegions::CombinedTouchActionRegion()
 {
   nsRegion result;
-  result.Or(mHorizontalPanRegion, mVerticalPanRegion);
-  result.OrWith(mNoActionRegion);
+  result.Or(HorizontalPanRegion(), VerticalPanRegion());
+  result.OrWith(NoActionRegion());
   return result;
 }
 
@@ -4770,22 +4786,22 @@ void
 nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
 {
   if (!mHitRegion.IsEmpty()) {
-    AppendToString(aStream, mHitRegion, " (hitRegion ", ")");
+    AppendToString(aStream, HitRegion(), " (hitRegion ", ")");
   }
   if (!mMaybeHitRegion.IsEmpty()) {
-    AppendToString(aStream, mMaybeHitRegion, " (maybeHitRegion ", ")");
+    AppendToString(aStream, MaybeHitRegion(), " (maybeHitRegion ", ")");
   }
   if (!mDispatchToContentHitRegion.IsEmpty()) {
-    AppendToString(aStream, mDispatchToContentHitRegion, " (dispatchToContentRegion ", ")");
+    AppendToString(aStream, DispatchToContentHitRegion(), " (dispatchToContentRegion ", ")");
   }
   if (!mNoActionRegion.IsEmpty()) {
-    AppendToString(aStream, mNoActionRegion, " (noActionRegion ", ")");
+    AppendToString(aStream, NoActionRegion(), " (noActionRegion ", ")");
   }
   if (!mHorizontalPanRegion.IsEmpty()) {
-    AppendToString(aStream, mHorizontalPanRegion, " (horizPanRegion ", ")");
+    AppendToString(aStream, HorizontalPanRegion(), " (horizPanRegion ", ")");
   }
   if (!mVerticalPanRegion.IsEmpty()) {
-    AppendToString(aStream, mVerticalPanRegion, " (vertPanRegion ", ")");
+    AppendToString(aStream, VerticalPanRegion(), " (vertPanRegion ", ")");
   }
 }
 
