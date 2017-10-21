@@ -667,7 +667,11 @@ void
 WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTransaction.isSome());
+
+  // Check for a valid transaction.
+  if (mTransaction.isNothing()) {
+    return;
+  }
 
   CryptoBuffer regData;
   if (NS_WARN_IF(!regData.Assign(aRegBuffer.Elements(), aRegBuffer.Length()))) {
@@ -791,7 +795,11 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
                                     nsTArray<uint8_t>& aSigBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTransaction.isSome());
+
+  // Check for a valid transaction.
+  if (mTransaction.isNothing()) {
+    return;
+  }
 
   CryptoBuffer tokenSignatureData;
   if (NS_WARN_IF(!tokenSignatureData.Assign(aSigBuffer.Elements(),
@@ -872,7 +880,9 @@ WebAuthnManager::RequestAborted(const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RejectTransaction(aError);
+  if (mTransaction.isSome()) {
+    RejectTransaction(aError);
+  }
 }
 
 NS_IMETHODIMP

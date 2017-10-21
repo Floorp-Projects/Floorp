@@ -28,12 +28,6 @@ class WebAuthnTransactionParent;
 class U2FTokenManager final
 {
 public:
-  enum TransactionType
-  {
-    RegisterTransaction = 0,
-    SignTransaction,
-    NumTransactionTypes
-  };
   NS_INLINE_DECL_REFCOUNTING(U2FTokenManager)
   static U2FTokenManager* Get();
   void Register(PWebAuthnTransactionParent* aTransactionParent,

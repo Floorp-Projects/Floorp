@@ -341,7 +341,11 @@ void
 U2FManager::FinishRegister(nsTArray<uint8_t>& aRegBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTransaction.isSome());
+
+  // Check for a valid transaction.
+  if (mTransaction.isNothing()) {
+    return;
+  }
 
   CryptoBuffer clientDataBuf;
   if (NS_WARN_IF(!clientDataBuf.Assign(mTransaction.ref().mClientData))) {
@@ -388,7 +392,11 @@ U2FManager::FinishSign(nsTArray<uint8_t>& aCredentialId,
                        nsTArray<uint8_t>& aSigBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTransaction.isSome());
+
+  // Check for a valid transaction.
+  if (mTransaction.isNothing()) {
+    return;
+  }
 
   CryptoBuffer clientDataBuf;
   if (NS_WARN_IF(!clientDataBuf.Assign(mTransaction.ref().mClientData))) {
@@ -443,7 +451,9 @@ U2FManager::RequestAborted(const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RejectTransaction(aError);
+  if (mTransaction.isSome()) {
+    RejectTransaction(aError);
+  }
 }
 
 NS_IMETHODIMP
