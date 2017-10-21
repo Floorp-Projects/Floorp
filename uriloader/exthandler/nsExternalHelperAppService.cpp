@@ -2028,7 +2028,7 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
         LOG(("nsExternalAppHandler: Got %zu redirects\n",
              loadInfo->RedirectChain().Length()));
         for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
-          redirectChain->AppendElement(entry, false);
+          redirectChain->AppendElement(entry);
         }
         mRedirects = redirectChain;
       }

@@ -82,7 +82,7 @@ ConvertURLArrayHelper(const nsTArray<nsString>& aUrls, nsIArray** aResult)
       return rv;
     }
 
-    rv = urls->AppendElement(isupportsString, false);
+    rv = urls->AppendElement(isupportsString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

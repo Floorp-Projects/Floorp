@@ -256,7 +256,7 @@ ContentPermissionType::GetOptions(nsIArray** aOptions)
     rv = isupportsString->SetData(mOptions[i]);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = options->AppendElement(isupportsString, false);
+    rv = options->AppendElement(isupportsString);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -276,7 +276,7 @@ nsContentPermissionUtils::ConvertPermissionRequestToArray(nsTArray<PermissionReq
       new ContentPermissionType(aSrcArray[i].type(),
                                 aSrcArray[i].access(),
                                 aSrcArray[i].options());
-    aDesArray->AppendElement(cpt, false);
+    aDesArray->AppendElement(cpt);
   }
   return len;
 }
@@ -341,7 +341,7 @@ nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
   RefPtr<ContentPermissionType> permType = new ContentPermissionType(aType,
                                                                        aAccess,
                                                                        aOptions);
-  types->AppendElement(permType, false);
+  types->AppendElement(permType);
   types.forget(aTypesArray);
 
   return NS_OK;

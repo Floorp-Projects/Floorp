@@ -377,7 +377,7 @@ nsMIMEInfoAndroid::nsMIMEInfoAndroid(const nsACString& aMIMEType) :
   mPrefApp = new nsMIMEInfoAndroid::SystemChooser(this);
   nsresult rv;
   mHandlerApps = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  mHandlerApps->AppendElement(mPrefApp, false);
+  mHandlerApps->AppendElement(mPrefApp);
 }
 
 #define SYSTEMCHOOSER_NAME u"Android chooser"
