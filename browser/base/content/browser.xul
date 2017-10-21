@@ -158,7 +158,7 @@
            hidden="true"
            flip="none"
            level="parent"
-           overflowpadding="30" />
+           overflowpadding="15" />
 
    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
         clicks on the anchored input box are never consumed. -->

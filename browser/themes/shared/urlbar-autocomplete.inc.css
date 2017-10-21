@@ -17,6 +17,11 @@
   font: message-box;
   border-radius: 2px;
   padding-inline-start: var(--item-padding-start);
+  /* For the space after the autocomplete text we have to use a transparent
+     border instead of padding, because the latter would considered part of the
+     scrollable area when generating the overflow events that we use to
+     constrain the autocomplete result item size. */
+  border-inline-end: var(--item-padding-end) solid transparent;
 }
 
 :root[uidensity=touch] .autocomplete-richlistitem {
