@@ -241,7 +241,7 @@ function matchesOSABI(blocklistElement) {
  * exists in nsHttpHandler.cpp when building the UA string.
  */
 function getLocale() {
-  return Services.locale.getRequestedLocales();
+  return Services.locale.getRequestedLocale();
 }
 
 /* Get the distribution pref values, from defaults only */
