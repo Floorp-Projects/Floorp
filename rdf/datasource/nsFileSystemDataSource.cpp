@@ -212,15 +212,9 @@ FileSystemDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void **aRes
 NS_IMPL_ISUPPORTS(FileSystemDataSource, nsIRDFDataSource)
 
 NS_IMETHODIMP
-FileSystemDataSource::GetURI(char **uri)
+FileSystemDataSource::GetURI(nsACString& aURI)
 {
-    NS_PRECONDITION(uri != nullptr, "null ptr");
-    if (! uri)
-        return NS_ERROR_NULL_POINTER;
-
-    if ((*uri = NS_strdup("rdf:files")) == nullptr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    aURI.AssignLiteral("rdf:files");
     return NS_OK;
 }
 
