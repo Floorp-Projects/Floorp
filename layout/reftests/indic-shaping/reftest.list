@@ -1,27 +1,27 @@
-HTTP(..) == devanagari-1a.html devanagari-1-ref.html
-HTTP(..) != devanagari-1b.html devanagari-1-ref.html
-HTTP(..) == devanagari-2.html devanagari-2-ref.html
-HTTP(..) != devanagari-3a.html devanagari-3-ref.html
-HTTP(..) == devanagari-3b.html devanagari-3-ref.html
-HTTP(..) != devanagari-4.html devanagari-4-notref.html
+== devanagari-1a.html devanagari-1-ref.html
+!= devanagari-1b.html devanagari-1-ref.html
+== devanagari-2.html devanagari-2-ref.html
+!= devanagari-3a.html devanagari-3-ref.html
+== devanagari-3b.html devanagari-3-ref.html
+!= devanagari-4.html devanagari-4-notref.html
 
-HTTP(..) == gujarati-1a.html gujarati-1-ref.html
-HTTP(..) != gujarati-1b.html gujarati-1-ref.html
-HTTP(..) == gujarati-2.html gujarati-2-ref.html
-HTTP(..) != gujarati-3a.html gujarati-3-ref.html
-HTTP(..) == gujarati-3b.html gujarati-3-ref.html
-HTTP(..) != gujarati-4.html gujarati-4-notref.html
+== gujarati-1a.html gujarati-1-ref.html
+!= gujarati-1b.html gujarati-1-ref.html
+== gujarati-2.html gujarati-2-ref.html
+!= gujarati-3a.html gujarati-3-ref.html
+== gujarati-3b.html gujarati-3-ref.html
+!= gujarati-4.html gujarati-4-notref.html
 
-HTTP(..) == bengali-1a.html bengali-1-ref.html
-HTTP(..) != bengali-1b.html bengali-1-ref.html
-HTTP(..) != bengali-2a.html bengali-2-ref.html
-HTTP(..) != bengali-2b.html bengali-2-ref.html
-HTTP(..) == bengali-3a.html bengali-3-ref.html
-HTTP(..) != bengali-3b.html bengali-3-ref.html
-HTTP(..) != bengali-3c.html bengali-3-ref.html
-HTTP(..) != bengali-3c.html bengali-3b.html
+== bengali-1a.html bengali-1-ref.html
+!= bengali-1b.html bengali-1-ref.html
+!= bengali-2a.html bengali-2-ref.html
+!= bengali-2b.html bengali-2-ref.html
+== bengali-3a.html bengali-3-ref.html
+!= bengali-3b.html bengali-3-ref.html
+!= bengali-3c.html bengali-3-ref.html
+!= bengali-3c.html bengali-3b.html
 
 != 686225-1-bangla-aat.html 686225-1-bangla-aat-notref.html
 != 686225-2-kannada-aat.html 686225-2-kannada-aat-notref.html
 
-HTTP(..) == balinese-1.html balinese-1-ref.html
+== balinese-1.html balinese-1-ref.html

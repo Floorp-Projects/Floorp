@@ -39,7 +39,7 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 fails-if(Android) == 329069-2.html 329069-2-ref.html # Bug 999139
 == 329069-3.html 329069-3-ref.html
 == 329069-4.html 329069-4-ref.html
-HTTP(..) == 329069-5.html 329069-5-ref.html
+== 329069-5.html 329069-5-ref.html
 == 342120-1.xhtml 342120-1-ref.xhtml
 == 379799-1.html 379799-1-ref.html
 == 399941-1.html 399941-1-ref.html
@@ -67,7 +67,7 @@ fails-if(winWidget||cocoaWidget) == 617869-1.html 617869-1-ref.html
 == font-text-styles.html font-text-styles-ref.html
 random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater-ref.html # bug 992846
 == inline-height-empty.html inline-height-empty-ref.html
-HTTP(..) == indic-clusters-1.html indic-clusters-1-ref.html
+== indic-clusters-1.html indic-clusters-1-ref.html
 == overflow-float-nooverflow.html overflow-float-nooverflow-ref.html
 == overflow-float-overflow.html overflow-float-overflow-notref.html
 == overflow-inline-nooverflow.html overflow-inline-nooverflow-ref.html
