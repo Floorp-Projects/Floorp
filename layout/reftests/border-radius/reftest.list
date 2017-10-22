@@ -76,7 +76,7 @@ fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-fuzzy(255,20) random-if(winWidget) fuzzy-if(skiaContent,255,610) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
+fuzzy(255,20) random-if(winWidget) fuzzy-if(skiaContent,255,610) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(d2d,64,157) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,59,145) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
