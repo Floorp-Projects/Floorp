@@ -114,3 +114,8 @@ addMessageListener("Test:JsonView:WaitForFilter", function (msg) {
 
   observer.observe(firstRow, { attributes: true });
 });
+
+addMessageListener("Test:JsonView:Eval", function (msg) {
+  let result = content.eval(msg.data.code);
+  sendAsyncMessage(msg.name, {result});
+});
