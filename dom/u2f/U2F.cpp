@@ -427,7 +427,7 @@ U2F::Cancel()
 
   RefPtr<U2FManager> mgr = U2FManager::Get();
   if (mgr) {
-    mgr->Cancel(NS_ERROR_DOM_OPERATION_ERR);
+    mgr->MaybeCancelTransaction(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   mPromiseHolder.DisconnectIfExists();

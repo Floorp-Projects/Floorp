@@ -236,7 +236,7 @@ public class WebAppActivity extends AppCompatActivity
         final GeckoScreenOrientation.ScreenOrientation orientation =
             GeckoScreenOrientation.screenOrientationFromString(orientString);
         final int activityOrientation =
-            GeckoScreenOrientation.screenOrientationToAndroidOrientation(orientation);
+            GeckoScreenOrientation.screenOrientationToActivityInfoOrientation(orientation);
 
         setRequestedOrientation(activityOrientation);
     }
