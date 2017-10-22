@@ -73,7 +73,11 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     int64_t contentLength = -1;
     chan->GetContentLength(&contentLength);
     if (contentLength >= 0) {
-      if (uint64_t(contentLength) > std::numeric_limits<size_t>::max()) {
+      // On 64bit platforms size of uint64_t coincides with the size of size_t,
+      // so we want to compare with the minimum from size_t and int64_t.
+      if (static_cast<uint64_t>(contentLength) >
+          std::min(std::numeric_limits<size_t>::max(),
+                   static_cast<size_t>(std::numeric_limits<int64_t>::max()))) {
         // Too big to fit into size_t, so let's bail.
         return NS_ERROR_OUT_OF_MEMORY;
       }

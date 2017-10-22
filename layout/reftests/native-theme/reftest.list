@@ -30,11 +30,11 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 != 427122-1.html 427122-1-ref.html
 
 # 403458 is a Windows-only bug
-fails-if(stylo) skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul # stylo: bug 1408235
+skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 
-fails-if(stylo||styloVsGecko) == 470711-1.xul 470711-1-ref.xul # bug 1408235
+fails-if(styloVsGecko) == 470711-1.xul 470711-1-ref.xul # bug 1408824
 
-fails-if(styloVsGecko) == 482955-1.xul 482955-1-ref.xul # bug 1408235
+== 482955-1.xul 482955-1-ref.xul
 
 == 492155-1.html about:blank
 == 492155-2.html about:blank
@@ -48,22 +48,22 @@ fails-if(Android&&!asyncPan) fuzzy-if(styloVsGecko,0-1,0-1) != 492155-4.html abo
 
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
-skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
-skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
+fails-if(stylo) skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul # bug 1408811
+fails-if(stylo) skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul # bug 1408811
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
 != resizer-bottomend.xul blank-window.xul
 random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086 
-fails-if(stylo) != resizer-bottomend.xul resizer-bottomend-rtl.xul # bug 1408235
+!= resizer-bottomend.xul resizer-bottomend-rtl.xul
 skip-if(gtkWidget) != resizer-bottomend-rtl.xul blank-window.xul
 skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul # bug 581086
 
 != resizer-bottomstart.xul blank-window.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-bottomleft.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-left.xul
-fails-if(stylo) != resizer-bottomstart.xul resizer-bottomstart-rtl.xul # bug 1408235
+!= resizer-bottomstart.xul resizer-bottomstart-rtl.xul
 skip-if(gtkWidget) != resizer-bottomstart-rtl.xul blank-window.xul
-fails-if(stylo) skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul # bug 1408235
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html

@@ -8,12 +8,11 @@
  *  Test enabled commands in the left pane folder of the Library.
  */
 
-registerCleanupFunction(async function() {
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesTestUtils.clearHistory();
-});
+var bookmarks;
+var testFolder;
+var library;
 
-add_task(async function test_moveBookmarks() {
+add_task(async function setup() {
   let children = [{
     title: "TestFolder",
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -26,29 +25,45 @@ add_task(async function test_moveBookmarks() {
     });
   }
 
-  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+  bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children
   });
 
-  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
+  testFolder = bookmarks.shift();
+
+  library = await promiseLibrary("UnfiledBookmarks");
+
+  registerCleanupFunction(async function() {
+    library.close();
+
+    await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesTestUtils.clearHistory();
+  });
+});
+
+async function move_bookmarks_to(sourceFolders, folderGuid) {
+  for (let i = 0; i < sourceFolders.length; i++) {
+    sourceFolders[i] = await PlacesUtils.promiseItemId(sourceFolders[i]);
+  }
+
+  library.PlacesOrganizer.selectLeftPaneContainerByHierarchy(sourceFolders);
+
+  let folderId = await PlacesUtils.promiseItemId(folderGuid);
 
   let itemIds = [];
   let promiseMoveNotifications = [];
-  for (let i = 0; i < 10; i++) {
-    // + 1 due to the folder being inserted first.
-    let guid = bookmarks[i + 1].guid;
+  for (let bm of bookmarks) {
+    let guid = bm.guid;
 
     itemIds.push(await PlacesUtils.promiseItemId(guid));
     promiseMoveNotifications.push(PlacesTestUtils.waitForNotification(
       "onItemMoved",
       (itemId, parentId, oldIndex, newParentId, newIndex, itemType, itemGuid,
        oldParentGuid, newParentGuid) =>
-        itemGuid == guid && newParentGuid == bookmarks[0].guid
+        itemGuid == guid && newParentGuid == folderGuid
     ));
   }
-
-  let library = await promiseLibrary("UnfiledBookmarks");
 
   library.ContentTree.view.selectItems(itemIds);
 
@@ -74,6 +89,13 @@ add_task(async function test_moveBookmarks() {
     "chrome://browser/content/places/moveBookmarks.xul",
     true
   );
+}
 
-  library.close();
+add_task(async function test_moveBookmarks_to_subfolder() {
+  await move_bookmarks_to([PlacesUtils.bookmarks.unfiledGuid], testFolder.guid);
+});
+
+add_task(async function test_moveBookmarks_to_other_top_level() {
+  await move_bookmarks_to([PlacesUtils.bookmarks.unfiledGuid, testFolder.guid],
+    PlacesUtils.bookmarks.toolbarGuid);
 });

@@ -56,21 +56,7 @@ var userTreeView;
  */
 var orphanTreeView;
 
-var smartCardObserver = {
-  observe() {
-    onSmartCardChange();
-  }
-};
-
-function DeregisterSmartCardObservers() {
-  Services.obs.removeObserver(smartCardObserver, "smartcard-insert");
-  Services.obs.removeObserver(smartCardObserver, "smartcard-remove");
-}
-
 function LoadCerts() {
-  Services.obs.addObserver(smartCardObserver, "smartcard-insert");
-  Services.obs.addObserver(smartCardObserver, "smartcard-remove");
-
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var certcache = certdb.getCerts();
 
@@ -478,22 +464,6 @@ function addCACerts() {
       caTreeView.selection.clearSelection();
     }
   });
-}
-
-function onSmartCardChange() {
-  var certcache = certdb.getCerts();
-  // We've change the state of the smart cards inserted or removed
-  // that means the available certs may have changed. Update the display
-  userTreeView.loadCertsFromCache(certcache, nsIX509Cert.USER_CERT);
-  userTreeView.selection.clearSelection();
-  caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
-  caTreeView.selection.clearSelection();
-  serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
-  serverTreeView.selection.clearSelection();
-  emailTreeView.loadCertsFromCache(certcache, nsIX509Cert.EMAIL_CERT);
-  emailTreeView.selection.clearSelection();
-  orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
-  orphanTreeView.selection.clearSelection();
 }
 
 function addEmailCert() {
