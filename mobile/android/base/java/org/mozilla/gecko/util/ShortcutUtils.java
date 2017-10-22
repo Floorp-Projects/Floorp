@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants.Versions;
@@ -25,6 +26,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.gfx.BitmapUtils;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 
 public class ShortcutUtils {
