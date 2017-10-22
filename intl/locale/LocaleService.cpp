@@ -292,6 +292,16 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal)
 {
   if (mRequestedLocales.IsEmpty()) {
     ReadRequestedLocales(mRequestedLocales);
+
+    // en-US is a LastResort locale. LastResort locale is a fallback locale
+    // for the requested locale chain. In the future we'll want to make the
+    // fallback chain differ per-locale. For now, it'll always fallback on en-US.
+    //
+    // Notice: This is not the same as DefaultLocale,
+    // which follows the default locale the build is in.
+    if (!mRequestedLocales.Contains("en-US")) {
+      mRequestedLocales.AppendElement("en-US");
+    }
   }
 
   aRetVal = mRequestedLocales;
@@ -971,7 +981,9 @@ NS_IMETHODIMP
 LocaleService::SetRequestedLocales(const char** aRequested,
                                    uint32_t aRequestedCount)
 {
-  MOZ_ASSERT(aRequestedCount < 2, "We can only handle one requested locale");
+  MOZ_ASSERT(aRequestedCount < 2 ||
+             (aRequestedCount == 2 && strcmp(aRequested[1], "en-US") == 0),
+      "We can only handle one requested locale (optionally with en-US last fallback)");
 
   if (aRequestedCount == 0) {
     Preferences::ClearUser(SELECTED_LOCALE_PREF);
