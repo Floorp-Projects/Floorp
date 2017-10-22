@@ -5,10 +5,10 @@
 
 // This is a testing PKCS #11 module that simulates a token being inserted and
 // removed from a slot every 50ms. This is achieved mainly in
-// Test_C_WaitForSlotEvent. The smartcard monitoring code essentially calls
-// this function in a tight loop. Each time, this module waits for 50ms and
-// returns, having changed its internal state to report that the token has
-// either been inserted or removed, as appropriate.
+// Test_C_WaitForSlotEvent. If the application that loaded this module calls
+// C_WaitForSlotEvent, this module waits for 50ms and returns, having changed
+// its internal state to report that the token has either been inserted or
+// removed, as appropriate.
 // This module also provides an alternate token that is always present for tests
 // that don't want the cyclic behavior described above.
 

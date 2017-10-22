@@ -337,6 +337,10 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  nsresult rv = CheckForSmartCardChanges();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
   if (!array) {
@@ -351,7 +355,7 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
   for (int i = 0; i < mModule->slotCount; i++) {
     if (mModule->slots[i]) {
       nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(mModule->slots[i]);
-      nsresult rv = array->AppendElement(slot, false);
+      rv = array->AppendElement(slot, false);
       if (NS_FAILED(rv)) {
         return rv;
       }

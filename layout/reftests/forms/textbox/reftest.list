@@ -8,4 +8,4 @@ skip-if(cocoaWidget||Android) fails-if(styloVsGecko) != accesskey-3.xul accesske
 skip-if(cocoaWidget||Android) fails-if(webrender) fails-if(stylo||styloVsGecko) == accesskey-4.xul accesskey-4-ref.xul # stylo: bug 1408811
 skip-if(cocoaWidget||Android) fails-if(styloVsGecko) != accesskey-4.xul accesskey-4-notref.xul # stylo: bug 1408811
 skip-if(Android) fails-if(styloVsGecko) == align-baseline-1.xul align-baseline-1-ref.xul # test for bug 494901, stylo: bug 1408811
-skip-if(Android) fails-if(stylo||styloVsGecko) == setsize.xul setsize-ref.xul # bug 1408235 for stylo
+skip-if(Android) == setsize.xul setsize-ref.xul
