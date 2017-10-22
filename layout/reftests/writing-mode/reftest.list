@@ -1,11 +1,11 @@
 # This directory contains tests for vertical text and logical layout coordinates.
 
-HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
+== 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-columns-ref.html
 == 1082844.html 1082844-ref.html
-HTTP(..) == 1083748.html 1083748-ref.html
-HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
-HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
-fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) HTTP(..) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
+== 1083748.html 1083748-ref.html
+== 1083848-1-inline-border.html 1083848-1-inline-border-ref.html
+== 1083848-2-inline-background.html 1083848-2-inline-background-ref.html
+fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat-ref.html
 == 1083892-1.html 1083892-1-ref.html
 == 1086883-1a.html 1086883-1-ref.html
 == 1086883-1b.html 1086883-1-ref.html
@@ -32,7 +32,7 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
 == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
-fuzzy(116,94) fuzzy-if(winWidget,135,124) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
+fuzzy(116,94) fuzzy-if(winWidget,135,124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
@@ -73,36 +73,36 @@ skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref
 skip-if(Android) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
-HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-left-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-right-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-default-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-start-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-end-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-left-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-right-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-default-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
-HTTP(..) == 1127488-align-start-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
-HTTP(..) == 1127488-align-end-vertical-rl-rtl.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-left-vertical-rl-rtl.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-right-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
-HTTP(..) == 1127488-align-default-vertical-rl-ltr.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-start-vertical-rl-ltr.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-end-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
-HTTP(..) == 1127488-align-left-vertical-rl-ltr.html 1127488-align-top-right-ref.html
-HTTP(..) == 1127488-align-right-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
-HTTP(..) == 1127488-align-default-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
-HTTP(..) == 1127488-align-start-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
-HTTP(..) == 1127488-align-end-vertical-lr-rtl.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-left-vertical-lr-rtl.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-right-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
-HTTP(..) == 1127488-align-default-vertical-lr-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-start-vertical-lr-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
-HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
-HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+== 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-end-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-left-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-right-horizontal-tb-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-default-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-start-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-end-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-left-horizontal-tb-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-right-horizontal-tb-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-default-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-start-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-end-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-left-vertical-rl-rtl.html 1127488-align-top-right-ref.html
+== 1127488-align-right-vertical-rl-rtl.html 1127488-align-bottom-right-ref.html
+== 1127488-align-default-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-start-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-end-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+== 1127488-align-left-vertical-rl-ltr.html 1127488-align-top-right-ref.html
+== 1127488-align-right-vertical-rl-ltr.html 1127488-align-bottom-right-ref.html
+== 1127488-align-default-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-start-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-end-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-left-vertical-lr-rtl.html 1127488-align-top-left-ref.html
+== 1127488-align-right-vertical-lr-rtl.html 1127488-align-bottom-left-ref.html
+== 1127488-align-default-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-start-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-end-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
+== 1127488-align-left-vertical-lr-ltr.html 1127488-align-top-left-ref.html
+== 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-ref.html
 == 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1-ref.html
 == 1130907-intrinsic-sizing-2.html 1130907-intrinsic-sizing-2-ref.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi-ref.html
@@ -160,7 +160,7 @@ fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) fails-if(webrender) == 119
 
 == 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
 
-skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
+skip-if(Android) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
 
 == 1302734-bidi-plaintext-1a.html 1302734-bidi-plaintext-1-ref.html
 == 1302734-bidi-plaintext-1b.html 1302734-bidi-plaintext-1-ref.html

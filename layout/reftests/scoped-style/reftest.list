@@ -51,7 +51,7 @@ fails-if(styloVsGecko||stylo) == scoped-style-media.html scoped-style-media-ref.
 fails-if(styloVsGecko||stylo) == scoped-style-namespace.html scoped-style-namespace-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-charset.html scoped-style-charset-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-document.html scoped-style-document-ref.html
-fails-if(styloVsGecko||stylo) HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-font-face.html scoped-style-font-face-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-keyframes.html scoped-style-keyframes-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-supports.html scoped-style-supports-ref.html
 pref(layout.css.scope-pseudo.enabled,true) fails-if(styloVsGecko||stylo) == scoped-style-pseudo-001.html scoped-style-pseudo-001-ref.html
