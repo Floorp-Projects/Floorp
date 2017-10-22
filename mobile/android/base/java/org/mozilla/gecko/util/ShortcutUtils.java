@@ -139,7 +139,7 @@ public class ShortcutUtils {
         } else {
             // Otherwise, use the dominant color from the icon +
             // a layer of transparent white to lighten it somewhat.
-            final int color = BitmapUtils.getDominantColorCustomImplementation(aSource);
+            final int color = BitmapUtils.getDominantColor(aSource);
             paint.setColor(color);
             canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset),
                                            kRadius, kRadius, paint);
