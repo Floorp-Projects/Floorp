@@ -7,6 +7,8 @@
  <!-- use an empty g to force filters.svg to load before onload -->
  <use xlink:href="../filters.svg#empty" />
 
+ <!-- filters.svg#NonWhiteToBlack is used here to mask antialiasing
+      issues where glyphs touch -->
  <g filter="url(../filters.svg#NonWhiteToBlack)">
   <rect x="0" y="0" height="100%" width="100%" fill="#FFFFFF"/>
   <text style="font-size:12px;" transform="translate(40,100)">

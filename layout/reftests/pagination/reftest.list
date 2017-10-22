@@ -111,6 +111,6 @@ fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.html
 == 960822.html 960822-ref.html
 == 966419-1.html 966419-1-ref.html
 == 966419-2.html 966419-2-ref.html
-# asserts(3) HTTP(..) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556
+# asserts(3) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556
 == 1166147.html 1166147-ref.html
 == 1321803-1a.html 1321803-1-ref.html
