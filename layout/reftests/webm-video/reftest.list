@@ -1,24 +1,24 @@
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
-fails-if(Android) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
-fails-if(Android) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
-fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
-fails-if(Android) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
-HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
+fails-if(Android) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+fails-if(Android) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+== aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
+== aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
 fails-if(Android) random-if(layersGPUAccelerated) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
-fails-if(Android) HTTP(..) == basic-1.xhtml basic-1-ref.html
-skip-if(Android) HTTP(..) == canvas-1a.xhtml basic-1-ref.html
-fails-if(Android) HTTP(..) == canvas-1b.xhtml basic-1-ref.html
+fails-if(Android) == basic-1.xhtml basic-1-ref.html
+skip-if(Android) == canvas-1a.xhtml basic-1-ref.html
+fails-if(Android) == canvas-1b.xhtml basic-1-ref.html
 == clipping-1a.html clipping-1-ref.html
 == empty-1a.html empty-1-ref.html
 == empty-1b.html empty-1-ref.html
 #these is skipped because we hang on the htmlparser tests when this is ran
-random skip-if(Android) HTTP(..) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
-skip-if(Android) HTTP(..) == offset-1.xhtml offset-1-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
-random skip-if(Android) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+random skip-if(Android) == object-aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
+random skip-if(Android) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
+skip-if(Android) == offset-1.xhtml offset-1-ref.html
+random skip-if(Android) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
+random skip-if(Android) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
+skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 == poster-1.html poster-ref-blue250x200.html
 fails-if(Android) skip-if(Android&&AndroidVersion=='18') == poster-2.html poster-ref-black140x100.html
 random-if(Android) == poster-3.html poster-ref-black140x100.html
