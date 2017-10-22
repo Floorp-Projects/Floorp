@@ -60,7 +60,6 @@ gyp_vars.update({
     'arm_neon': 0,
     'arm_neon_optional': 1,
 
-    'moz_webrtc_omx': 0,
     'moz_webrtc_mediacodec': 0,
 
     # Turn off multi monitor screen share
@@ -124,4 +123,4 @@ if not CONFIG['MOZ_SYSTEM_LIBVPX']:
     gyp_vars['libvpx_dir'] =  '/media/libvpx/libvpx'
 
 if not CONFIG['MOZ_SYSTEM_LIBEVENT']:
-    gyp_vars['libevent_dir'] = '/ipc/chromium/src/third_party/libevent' 
+    gyp_vars['libevent_dir'] = '/ipc/chromium/src/third_party/libevent'
