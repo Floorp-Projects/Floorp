@@ -19,12 +19,8 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.annotation.ColorInt;
-import android.support.v7.graphics.Palette;
 import android.util.Base64;
 import android.util.Log;
-
-import org.mozilla.gecko.util.HardwareUtils;
 
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
@@ -139,39 +135,13 @@ public final class BitmapUtils {
         }
     }
 
-    public static @ColorInt int getDominantColor(Bitmap source, @ColorInt int defaultColor) {
-        if (HardwareUtils.isX86System()) {
-            // (Bug 1318667) We are running into crashes when using the palette library with
-            // specific icons on x86 devices. They take down the whole VM and are not recoverable.
-            // Unfortunately our release icon is triggering this crash. Until we can switch to a
-            // newer version of the support library where this does not happen, we are using our
-            // own slower implementation.
-            return getDominantColorCustomImplementation(source, true, defaultColor);
-        } else {
-            try {
-                final Palette palette = Palette.from(source).generate();
-                return palette.getVibrantColor(defaultColor);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                // We saw the palette library fail with an ArrayIndexOutOfBoundsException intermittently
-                // in automation. In this case lets just swallow the exception and move on without a
-                // color. This is a valid condition and callers should handle this gracefully (Bug 1318560).
-                Log.e(LOGTAG, "Palette generation failed with ArrayIndexOutOfBoundsException", e);
-
-                return defaultColor;
-            }
-        }
+    public static int getDominantColor(Bitmap source) {
+        return getDominantColor(source, true);
     }
 
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source) {
-        return getDominantColorCustomImplementation(source, true, Color.WHITE);
-    }
-
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source,
-                                                                     boolean applyThreshold,
-                                                                     @ColorInt int defaultColor) {
-      if (source == null) {
-          return defaultColor;
-      }
+    public static int getDominantColor(Bitmap source, boolean applyThreshold) {
+      if (source == null)
+        return Color.argb(255, 255, 255, 255);
 
       // Keep track of how many times a hue in a given bin appears in the image.
       // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
@@ -223,9 +193,8 @@ public final class BitmapUtils {
       }
 
       // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
-      if (maxBin < 0) {
-          return defaultColor;
-      }
+      if (maxBin < 0)
+        return Color.argb(255, 255, 255, 255);
 
       // Return a color with the average hue/saturation/value of the bin with the most colors.
       hsv[0] = sumHue[maxBin] / colorBins[maxBin];

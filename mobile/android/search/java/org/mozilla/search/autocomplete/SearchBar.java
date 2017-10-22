@@ -139,11 +139,11 @@ public class SearchBar extends FrameLayout {
         engineIcon.setContentDescription(engine.getName());
 
         // Update the focused background color.
-        int color = BitmapUtils.getDominantColorCustomImplementation(bitmap);
+        int color = BitmapUtils.getDominantColor(bitmap);
 
-        // BitmapUtils#getDominantColorCustomImplementation ignores black and white pixels,
-        // but it will return white if no dominant color was found. We don't want to create
-        // a white underline for the search bar, so we default to black instead.
+        // BitmapUtils#getDominantColor ignores black and white pixels, but it will
+        // return white if no dominant color was found. We don't want to create a
+        // white underline for the search bar, so we default to black instead.
         if (color == Color.WHITE) {
             color = Color.BLACK;
         }
