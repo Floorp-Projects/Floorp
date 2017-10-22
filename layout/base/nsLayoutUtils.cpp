@@ -8010,6 +8010,38 @@ nsLayoutUtils::Shutdown()
 #ifdef MOZ_STYLO
 /* static */
 bool
+nsLayoutUtils::ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal)
+{
+  // Disable stylo for system principal because XUL hasn't been fully
+  // supported. Other principal aren't able to use XUL by default, and
+  // the back door to enable XUL is mostly just for testing, which means
+  // they don't matter, and we shouldn't respect them at the same time.
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return false;
+  }
+  // Check any internal page which we need to explicitly blacklist.
+  if (aDocumentURI) {
+    bool isAbout = false;
+    if (NS_SUCCEEDED(aDocumentURI->SchemeIs("about", &isAbout)) && isAbout) {
+      nsAutoCString path;
+      aDocumentURI->GetFilePath(path);
+      // about:reader requires support of scoped style, so we have to
+      // use Gecko backend for now. See bug 1402094.
+      // This should be fixed by bug 1204818.
+      if (path.EqualsLiteral("reader")) {
+        return false;
+      }
+    }
+  }
+  // Check the stylo block list.
+  if (IsInStyloBlocklist(aPrincipal)) {
+    return false;
+  }
+  return true;
+}
+
+/* static */
+bool
 nsLayoutUtils::IsInStyloBlocklist(nsIPrincipal* aPrincipal)
 {
   if (!sStyloBlocklist) {

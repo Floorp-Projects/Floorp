@@ -13615,29 +13615,6 @@ nsIDocument::ReportHasScrollLinkedEffect()
                                   "ScrollLinkedEffectFound2");
 }
 
-#ifdef MOZ_STYLO
-// URL-based blacklist for stylo.
-static bool
-ShouldUseGeckoBackend(nsIURI* aDocumentURI)
-{
-  if (!aDocumentURI) {
-    return false;
-  }
-  bool isScheme = false;
-  if (NS_SUCCEEDED(aDocumentURI->SchemeIs("about", &isScheme))) {
-    nsAutoCString path;
-    aDocumentURI->GetFilePath(path);
-    // about:reader requires support of :scope pseudo-class so we have
-    // to use Gecko backend for now. See bug 1402094.
-    // This should be fixed by bug 1204818.
-    if (path.EqualsLiteral("reader")) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif // MOZ_STYLO
-
 void
 nsIDocument::UpdateStyleBackendType()
 {
@@ -13648,16 +13625,9 @@ nsIDocument::UpdateStyleBackendType()
   mStyleBackendType = StyleBackendType::Gecko;
 
 #ifdef MOZ_STYLO
-  if (nsLayoutUtils::StyloEnabled()) {
-    // Disable stylo only for system principal. Other principals aren't
-    // able to use XUL by default, and the back door to enable XUL is
-    // mostly just for testing, which means they don't matter, and we
-    // shouldn't respect them at the same time.
-    if (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-        !ShouldUseGeckoBackend(mDocumentURI) &&
-        !nsLayoutUtils::IsInStyloBlocklist(NodePrincipal())) {
-      mStyleBackendType = StyleBackendType::Servo;
-    }
+  if (nsLayoutUtils::StyloEnabled() &&
+      nsLayoutUtils::ShouldUseStylo(mDocumentURI, NodePrincipal())) {
+    mStyleBackendType = StyleBackendType::Servo;
   }
 #endif
 }

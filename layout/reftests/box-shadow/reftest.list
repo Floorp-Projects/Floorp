@@ -18,7 +18,7 @@ fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,25-25,50-50) == boxshadow-inner-b
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
-fuzzy-if(skiaContent,1,50) fails-if(stylo) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul # bug 1408235
+fuzzy-if(skiaContent,1,50) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 random-if(d2d) fails-if(webrender) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) fails-if(webrender) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) fails-if(webrender) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
