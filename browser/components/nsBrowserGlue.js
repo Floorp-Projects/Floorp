@@ -669,11 +669,15 @@ BrowserGlue.prototype = {
 
 
     // Initialize the default l10n resource sources for L10nRegistry.
-    const locales = [AppConstants.INSTALL_LOCALE];
-    const toolkitSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
-    L10nRegistry.registerSource(toolkitSource);
-    const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
-    L10nRegistry.registerSource(appSource);
+    const multilocalePath = "resource://gre/res/multilocale.json";
+    L10nRegistry.bootstrap = fetch(multilocalePath).then(d => d.json()).then(({ locales }) => {
+      const toolkitSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
+      L10nRegistry.registerSource(toolkitSource);
+      const appSource = new FileSource("app", locales, "resource://app/localization/{locale}/");
+      L10nRegistry.registerSource(appSource);
+    }).catch(e => {
+      Services.console.logStringMessage(`Could not load multilocale.json. Error: ${e}`);
+    });
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
