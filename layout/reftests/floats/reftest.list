@@ -93,8 +93,8 @@ fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
 == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html
 fuzzy-if(OSX==1010,28,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,28,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
 
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1-ref.html
 pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2-ref.html

@@ -1,7 +1,7 @@
 fails-if(Android) == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
-HTTP(..) == font-selection-fallback-1.html font-selection-fallback-1-ref.html
-HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html
+== font-selection-fallback-1.html font-selection-fallback-1-ref.html
+== font-selection-generic-1.html font-selection-generic-1-ref.html
 fails-if(Android) != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;
 # both Windows and Linux give results that vary depending on the font size/zoom factor used,
@@ -18,15 +18,15 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 != justification-2d.html justification-2-ref.html
 == justification-cjk-extension.html justification-cjk-extension-ref.html
 == justification-space-diacritic.html justification-space-diacritic-ref.html
-HTTP(..) load ligature-with-space-1.html
+load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1-ref.html
 == line-editing-1b.html line-editing-1-ref.html
 == line-editing-1c.html line-editing-1-ref.html
 == line-editing-1d.html line-editing-1-ref.html
 == line-editing-1e.html line-editing-1-ref.html
-fails-if(cocoaWidget||(winWidget&&dwrite)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
-HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
-HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
+fails-if(cocoaWidget||(winWidget&&dwrite)) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+== lineheight-metrics-2a.html lineheight-metrics-2-ref.html
+== lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
 == long-1.html long-ref.html
 fuzzy-if(Android,255,325) == pre-line-1.html pre-line-1-ref.html
@@ -55,13 +55,13 @@ fails-if(Android) skip-if(d2d||cocoaWidget||skiaContent) == subpixel-glyphs-x-1a
 # subpixel.
 # D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
-HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
+== subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
 fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
 fuzzy-if(Android,231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
-HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
-HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
+!= synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
+== synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 # Tests for text-align-last
 == text-align-last-start.html text-align-last-start-ref.html
 == text-align-last-end.html text-align-last-end-ref.html
@@ -107,7 +107,7 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
 == text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
-HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
+== variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
@@ -118,14 +118,14 @@ skip-if(Android) == wordbreak-4a.html wordbreak-4a-ref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
 fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
-HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
-fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
+== wordbreak-7a.html wordbreak-7a-ref.html
+fails == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == wordbreak-9.html wordbreak-9-ref.html
 == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
-fuzzy-if(Android,1,1) HTTP(..) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
-fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
+fuzzy-if(Android,1,1) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
+fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
 == wordwrap-04.html wordwrap-04-ref.html
 == overflowwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
@@ -145,38 +145,38 @@ fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) HTTP(..) == wordwrap-03.htm
 == word-spacing-01.html word-spacing-01-ref.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
-random-if(cocoaWidget) random-if(gtkWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml # gtkWidget:bug 1309113
-HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
+random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml # gtkWidget:bug 1309113
+== zwnj-02.xhtml zwnj-02-ref.xhtml
 != zwnj-01.html zwnj-01-notref.html
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
 fails-if(cocoaWidget&&styloVsGecko) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
+fuzzy-if(skiaContent,1,600) == 475092-sub.html 475092-ref.html
+fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
 # Test for bug 575695, 'kern' table support
-HTTP(..) != kerning-01.html kerning-01-notref.html
+!= kerning-01.html kerning-01-notref.html
 # Test for bug 577380, support for AAT layout (on OS X only)
 random-if(!cocoaWidget) == 577380.html 577380-ref.html
 # Test for OpenType Arabic shaping support
-HTTP(..) == arabic-shaping-1.html arabic-shaping-1-ref.html
+== arabic-shaping-1.html arabic-shaping-1-ref.html
 # check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
 random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.html
 # Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
 # These tests are not valid with Mac or FT2 font backends because our masking of complex-script ranges
 # in the 'cmap' will prevent the test font (without GSUB) being used.
-fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
-fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
-fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
-fails-if(!cocoaWidget&&!Android) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
+fails-if(cocoaWidget||Android) == arabic-fallback-1.html arabic-fallback-1-ref.html
+fails-if(cocoaWidget||Android) == arabic-fallback-2.html arabic-fallback-2-ref.html
+fails-if(cocoaWidget||Android) == arabic-fallback-3.html arabic-fallback-3-ref.html
+fails-if(!cocoaWidget&&!Android) != arabic-fallback-4.html arabic-fallback-4-notref.html
 == arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
-HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
+!= fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 
 == 726392-1.html 726392-1-ref.html
 == 726392-2.html 726392-2-ref.html
@@ -184,9 +184,9 @@ HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
 == 820255.html 820255-ref.html
-HTTP(..) != 1170688.html 1170688-ref.html
+!= 1170688.html 1170688-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
-HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
+== 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
@@ -204,44 +204,44 @@ fails-if(Android) == emoji-04.html emoji-04-ref.html
 != emoji-05.html emoji-05-notref.html
 
 # check that Graphite shaping (bug 631479) is working
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html graphite-01-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-01.html graphite-01-ref.html
 # Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
-fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html graphite-03-notref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
-pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
-pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-02.html graphite-02-ref.html
+fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) == graphite-02.html graphite-02-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-01.html graphite-01-ref.html
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-02.html graphite-02-ref.html
 # test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well
-pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-03a.html graphite-03-notref.html
-pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) == graphite-03b.html graphite-03-notref.html
 
 # tests for graphite rendering with valid and invalid lang tags
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-fa.html graphite-04-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-snd.html graphite-04-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-ur.html graphite-04-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html graphite-04-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ur.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-fa.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-sd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-snd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-ur.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == graphite-04-urd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) != graphite-04-sd.html graphite-04-ur.html
 
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
-HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
-HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
-HTTP(..) == graphite-05-simple.html graphite-05-ref.html
-HTTP(..) == graphite-05-multipass.html graphite-05-ref.html
-HTTP(..) == graphite-05-lang.html graphite-05-ref.html
-HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
-HTTP(..) == graphite-05-feat.html graphite-05-ref.html
+== graphite-05-ot-only.html graphite-05-ref.html
+!= graphite-05-ot-only.html graphite-05-fail.html
+== graphite-05-simple.html graphite-05-ref.html
+== graphite-05-multipass.html graphite-05-ref.html
+== graphite-05-lang.html graphite-05-ref.html
+== graphite-05-badlang.html graphite-05-ref.html
+== graphite-05-feat.html graphite-05-ref.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping
-pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == glyph-decomposition-opentype.html glyph-decomposition-opentype-ref.html
-pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-graphite.html glyph-decomposition-graphite-ref.html
+pref(gfx.font_rendering.graphite.enabled,false) == glyph-decomposition-opentype.html glyph-decomposition-opentype-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.html glyph-decomposition-graphite-ref.html
 
 # test for bidi bug in graphite 1.3.2, fixed in 1.3.3 (bug 1207061)
-HTTP(..) == graphite-bidi-1.html graphite-bidi-1-ref.html
+== graphite-bidi-1.html graphite-bidi-1-ref.html
 
-HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.html
+== graphite-surrogate-selection.html graphite-surrogate-selection-ref.html
 
 # Tests for hyphenation with hyphens property
 == auto-hyphenation-1.html auto-hyphenation-1-ref.html
@@ -342,7 +342,7 @@ pref(layout.css.control-characters.visible,true) != control-chars-04c.html contr
 pref(layout.css.control-characters.visible,true) != control-chars-04d.html control-chars-04-notref.html
 
 # font fallback for <space> when not supported in the primary font family - bug 970891
-HTTP(..) == space-font-1.html space-font-1-ref.html
+== space-font-1.html space-font-1-ref.html
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
@@ -353,6 +353,6 @@ HTTP(..) == space-font-1.html space-font-1-ref.html
 == color-opacity-rtl-2.html color-opacity-rtl-2-ref.html
 
 == letter-spacing-nolig-1.html letter-spacing-nolig-1-ref.html
-HTTP(..) == letter-spacing-nolig-2.html letter-spacing-nolig-2.html
+== letter-spacing-nolig-2.html letter-spacing-nolig-2.html
 
 == ethiopic-wordspace.html ethiopic-wordspace-ref.html

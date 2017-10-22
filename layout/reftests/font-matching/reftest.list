@@ -62,26 +62,26 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 fails-if(gtkWidget) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
 
 # weight mapping tests
-HTTP(..) == normalmedium.html normalmedium-ref.html
-HTTP(..) != normalmedium.html normalmedium-notref.html
+== normalmedium.html normalmedium-ref.html
+!= normalmedium.html normalmedium-notref.html
 
 # Linux fails due to bug 604815
-fuzzy-if(OSX==1010&&browserIsRemote,1,23) HTTP(..) == weightmapping-12.html weightmapping-12-ref.html
-HTTP(..) == weightmapping-25.html weightmapping-25-ref.html
-HTTP(..) == weightmapping-45.html weightmapping-45-ref.html
-HTTP(..) == weightmapping-458.html weightmapping-458-ref.html
-HTTP(..) == weightmapping-478.html weightmapping-478-ref.html
-HTTP(..) == weightmapping-7.html weightmapping-7-ref.html
-fuzzy-if(OSX==1010,1,30) HTTP(..) == weightmapping-12579.html weightmapping-12579-ref.html
+fuzzy-if(OSX==1010&&browserIsRemote,1,23) == weightmapping-12.html weightmapping-12-ref.html
+== weightmapping-25.html weightmapping-25-ref.html
+== weightmapping-45.html weightmapping-45-ref.html
+== weightmapping-458.html weightmapping-458-ref.html
+== weightmapping-478.html weightmapping-478-ref.html
+== weightmapping-7.html weightmapping-7-ref.html
+fuzzy-if(OSX==1010,1,30) == weightmapping-12579.html weightmapping-12579-ref.html
 
-HTTP(..) == stretchmapping-all.html stretchmapping-all-ref.html
-HTTP(..) == stretchmapping-reverse.html stretchmapping-reverse-ref.html
-fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) HTTP(..) == stretchmapping-35.html stretchmapping-35-ref.html
-fuzzy-if(OSX==1010,3,5) HTTP(..) == stretchmapping-137.html stretchmapping-137-ref.html
+== stretchmapping-all.html stretchmapping-all-ref.html
+== stretchmapping-reverse.html stretchmapping-reverse-ref.html
+fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) == stretchmapping-35.html stretchmapping-35-ref.html
+fuzzy-if(OSX==1010,3,5) == stretchmapping-137.html stretchmapping-137-ref.html
 
 # test for font-stretch using @font-face
-HTTP(..) == font-stretch-1.html font-stretch-1-ref.html
-HTTP(..) == font-shorthand-stretch-1.html font-stretch-1-ref.html
+== font-stretch-1.html font-stretch-1-ref.html
+== font-shorthand-stretch-1.html font-stretch-1-ref.html
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face
@@ -101,12 +101,12 @@ random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
 
 != syntheticbold-rotated.html syntheticbold-rotated-ref.html
 
-HTTP(..) == font-synthesis-1.html font-synthesis-1-ref.html
-HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html
+== font-synthesis-1.html font-synthesis-1-ref.html
+== font-synthesis-2.html font-synthesis-2-ref.html
 
 # Bug 1060791 - support for format 10 cmap in Apple Symbols;
 # relevant fonts not present on other platforms.
-skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.html
+skip-if(!cocoaWidget) != apple-symbols-1.html apple-symbols-1-notref.html
 
 # distinguish between italic and oblique
 == simple-oblique.html simple-oblique-ref.html

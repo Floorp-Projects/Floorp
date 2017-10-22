@@ -17,9 +17,9 @@
 == 9458-zorder-4.html 9458-zorder-ref-inline-block.html
 == 9458-zorder-5.html 9458-zorder-ref-inline-block.html
 == 10036-1.html 10036-1-ref.html
-HTTP(..) == 10209-1.html 10209-ref.html
-HTTP(..) == 10209-2.html 10209-ref.html
-HTTP(..) == 10209-3.html 10209-3-ref.html
+== 10209-1.html 10209-ref.html
+== 10209-2.html 10209-ref.html
+== 10209-3.html 10209-3-ref.html
 == 18217-basic-1.html 18217-basic-1-ref.html
 == 18217-basic-2a.html 18217-basic-2-ref.html
 == 18217-basic-2b.html 18217-basic-2-ref.html
@@ -728,8 +728,8 @@ fuzzy-if(skiaContent,2,5) == 381507-1.html 381507-1-ref.html
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
 == 385533-1.html about:blank # assertion test
-HTTP(..) == 385569-1a.html 385569-1-ref.html
-HTTP(..) == 385569-1b.html 385569-1-ref.html
+== 385569-1a.html 385569-1-ref.html
+== 385569-1b.html 385569-1-ref.html
 == 385607-1.html 385607-1-ref.html
 == 385823-1.html 385823-1-ref.html
 fuzzy-if(webrender,0-1,0-600) == 385823-2a.html 385823-2-ref.html
@@ -893,7 +893,7 @@ fuzzy-if(skiaContent,2,4) == 404123-1.html 404123-1-ref.html
 == 404123-2.html 404123-2-ref.html
 != 404123-3.html 404123-3-ref.html
 # may fail "randomly" on OS X, doesn't seem to be rendering usefully anyhow - bug 602469
-random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
+random-if(cocoaWidget) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 404180-1.html 404180-1-ref.html
 == 404301-1.html 404301-1-ref.html
 == 404309-1a.html 404309-1-ref.html
@@ -1425,10 +1425,10 @@ fuzzy-if(Android,5,1656) fuzzy-if(skiaContent,1,1200) == 512410.html 512410-ref.
 == 513318-1.xul 513318-1-ref.xul
 fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul
 == 514917-1.html 514917-1-ref.html
-HTTP(..) == 518172-1a.html 518172-a-ref.html
-fuzzy-if(winWidget,73,133) fuzzy-if(cocoaWidget,103,133) HTTP(..) == 518172-1b.html 518172-b-ref.html
-HTTP(..) == 518172-2a.html 518172-a-ref.html
-fuzzy-if(winWidget,73,133) fuzzy-if(cocoaWidget,103,133) HTTP(..) == 518172-2b.html 518172-b-ref.html
+== 518172-1a.html 518172-a-ref.html
+fuzzy-if(winWidget,73,133) fuzzy-if(cocoaWidget,103,133) == 518172-1b.html 518172-b-ref.html
+== 518172-2a.html 518172-a-ref.html
+fuzzy-if(winWidget,73,133) fuzzy-if(cocoaWidget,103,133) == 518172-2b.html 518172-b-ref.html
 == 520421-1.html 520421-1-ref.html
 == 520563-1.xhtml 520563-1-ref.xhtml
 fuzzy-if(skiaContent,1,3) == 521525-1.html 521525-1-ref.html
@@ -1573,7 +1573,7 @@ fails-if(webrender) == 579323-1.html 579323-1-ref.html
 skip-if(!haveTestPlugin) fails-if(Android) HTTP == 579808-1.html 579808-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,10000) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway
 skip-if(Android) == 580160-1.html 580160-1-ref.html # bug 920927 for Android; issues without the test-plugin
-fuzzy-if(asyncPan&&!layersGPUAccelerated,255,141) HTTP(..) == 580863-1.html 580863-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,255,141) == 580863-1.html 580863-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,6436) == 581317-1.html 581317-1-ref.html
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
@@ -1633,18 +1633,18 @@ needs-focus == 613433-3.html 613433-1-ref.html
 needs-focus == 613433-3.html 613433-2-ref.html
 needs-focus == 613433-3.html 613433-3-ref.html
 == 614272-1.svg  614272-1-ref.svg
-HTTP(..) == 615121-1.html 615121-1-ref.html
-HTTP(..) != 615121-2.html 615121-2-notref.html
+== 615121-1.html 615121-1-ref.html
+!= 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
-HTTP(..) == 619511-1.html 619511-1-ref.html
-skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
+== 619511-1.html 619511-1-ref.html
+skip-if(Android) == 621253-1-externalFilter.html 621253-1-ref.html
 skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
-HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
+== 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
 random-if(winWidget) fails-if(webrender) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
-random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above, and HTTP(..) for filters.svg, used to mask antialiasing issues where glyphs touch
+random-if(winWidget) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above
 fuzzy-if(d2d,5,1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy-if(Android,8,300) fuzzy-if(skiaContent,1,40000) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
@@ -1659,8 +1659,8 @@ fuzzy-if(skiaContent,3,120000) == 635302-1.html 635302-1-ref.html
 fuzzy(1,68) fuzzy-if(gtkWidget,1,70) fails-if(Android) fuzzy-if(skiaContent&&!Android,1,300) == 635373-1.html 635373-1-ref.html
 random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,20,118) fuzzy-if(skiaContent&&!Android,2,550) == 635373-2.html 635373-2-ref.html
 random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,20,116) fuzzy-if(skiaContent&&!Android,2,650) == 635373-3.html 635373-3-ref.html
-HTTP(..) == 635639-1.html 635639-1-ref.html
-HTTP(..) == 635639-2.html 635639-2-ref.html
+== 635639-1.html 635639-1-ref.html
+== 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android,8,500) fuzzy-if(webrender,0-1,0-19) == 637852-1.html 637852-1-ref.html
 fuzzy-if(Android,8,500) fuzzy-if(skiaContent,3,1) fuzzy-if(webrender,3,19) == 637852-2.html 637852-2-ref.html
@@ -1681,7 +1681,7 @@ HTTP == 652991-2.html 652991-2-ref.html
 HTTP == 652991-3.html 652991-3-ref.html
 HTTP == 652991-4.html 652991-4-ref.html
 fuzzy-if(skiaContent,1,5) == 653930-1.html 653930-1-ref.html
-HTTP(..) == 654057-1.html 654057-1-ref.html
+== 654057-1.html 654057-1-ref.html
 fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 655549-1.html 655549-1-ref.html
 == 655836-1.html 655836-1-ref.html
@@ -1820,8 +1820,8 @@ fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
 == 983084-2.html 983084-2-ref.html
 == 983084-3.html 983084-1-ref.html
 == 983691-1.html 983691-ref.html
-HTTP(..) == 983985-1.html 983985-1-ref.html
-HTTP(..) == 983985-2.html 983985-2-ref.html
+== 983985-1.html 983985-1-ref.html
+== 983985-2.html 983985-2-ref.html
 == 985303-1a.html 985303-1-ref.html
 == 985303-1b.html 985303-1-ref.html
 == 987680-1.html 987680-1-ref.html
@@ -1865,7 +1865,7 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
-fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
+fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
 == 1111753-1.html about:blank
 == 1114526-1.html 1114526-1-ref.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1-ref.html

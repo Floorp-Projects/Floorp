@@ -10,7 +10,7 @@ fails-if(azureSkia) fails-if(cocoaWidget) skip-if(styloVsGecko) == canvas-outsid
 == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
-HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
+== element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
 random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-background-size-01.html element-paint-background-size-01-ref.html
