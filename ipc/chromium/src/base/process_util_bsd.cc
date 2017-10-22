@@ -34,8 +34,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
-               bool wait, ProcessHandle* process_handle,
-               ProcessArchitecture arch) {
+               bool wait, ProcessHandle* process_handle) {
   bool retval = true;
 
   char* argv_copy[argv.size() + 1];

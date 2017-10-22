@@ -370,6 +370,7 @@ Database::Database()
   , mDBPageSize(0)
   , mDatabaseStatus(nsINavHistoryService::DATABASE_STATUS_OK)
   , mClosed(false)
+  , mShouldConvertIconPayloads(false)
   , mClientsShutdown(new ClientsShutdownBlocker())
   , mConnectionShutdown(new ConnectionShutdownBlocker(this))
   , mMaxUrlLength(0)
@@ -588,13 +589,31 @@ Database::EnsureConnection()
     bool databaseMigrated = false;
     rv = SetupDatabaseConnection(storage);
     if (NS_SUCCEEDED(rv)) {
-      // Failing to initialize the schema always indicates a corruption.
-      if (NS_FAILED(InitSchema(&databaseMigrated))) {
-        rv = NS_ERROR_FILE_CORRUPTED;
+      // Failing to initialize the schema may indicate a corruption.
+      rv = InitSchema(&databaseMigrated);
+      if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_STORAGE_BUSY ||
+            rv == NS_ERROR_FILE_IS_LOCKED ||
+            rv == NS_ERROR_FILE_NO_DEVICE_SPACE ||
+            rv == NS_ERROR_OUT_OF_MEMORY) {
+          // The database is not corrupt, though some migration step failed.
+          // This may be caused by concurrent use of sync and async Storage APIs
+          // or by a system issue.
+          // The best we can do is trying again. If it should still fail, Places
+          // won't work properly and will be handled as LOCKED.
+          rv = InitSchema(&databaseMigrated);
+          if (NS_FAILED(rv)) {
+            rv = NS_ERROR_FILE_IS_LOCKED;
+          }
+        } else {
+          rv = NS_ERROR_FILE_CORRUPTED;
+        }
       }
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CORRUPT;
+      if (rv != NS_ERROR_FILE_IS_LOCKED) {
+        mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CORRUPT;
+      }
       // Some errors may not indicate a database corruption, for those cases we
       // just bail out without throwing away a possibly valid places.sqlite.
       if (rv == NS_ERROR_FILE_CORRUPTED) {
@@ -961,6 +980,14 @@ Database::InitSchema(bool* aDatabaseMigrated)
         return NS_ERROR_FILE_CORRUPTED;
       }
 
+      auto guard = MakeScopeExit([&]() {
+        // This runs at the end of the migration, regardless of its success.
+        if (mShouldConvertIconPayloads) {
+          mShouldConvertIconPayloads = false;
+          nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
+        }
+      });
+
       // Firefox 4 uses schema version 11.
 
       // Firefox 8 uses schema version 12.
@@ -1129,6 +1156,11 @@ Database::InitSchema(bool* aDatabaseMigrated)
       // Firefox 58 uses schema version 40.
 
       // Schema Upgrades must add migration code here.
+      // >>> IMPORTANT! <<<
+      // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
+      // CONNECTION AND CAUSE FURTHER STEPS TO FAIL.
+      // In case, set a bool and do the async work in the ScopeExit guard just
+      // before the migration steps.
 
       rv = UpdateBookmarkRootTitles();
       // We don't want a broken localization to cause us to think
@@ -2313,8 +2345,9 @@ Database::MigrateV37Up() {
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Start the async conversion
-  nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
+  // The async favicons conversion will happen at the end of the normal schema
+  // migration.
+  mShouldConvertIconPayloads = true;
 
   return NS_OK;
 }

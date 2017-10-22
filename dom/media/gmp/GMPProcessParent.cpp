@@ -23,7 +23,6 @@ using std::string;
 
 using mozilla::gmp::GMPProcessParent;
 using mozilla::ipc::GeckoChildProcessHost;
-using base::ProcessArchitecture;
 
 namespace mozilla {
 namespace gmp {
@@ -78,7 +77,7 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
   args.push_back(mGMPPath);
 #endif
 
-  return SyncLaunch(args, aTimeoutMs, base::GetCurrentProcessArchitecture());
+  return SyncLaunch(args, aTimeoutMs);
 }
 
 void
