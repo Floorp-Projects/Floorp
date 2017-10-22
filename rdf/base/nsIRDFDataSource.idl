@@ -15,7 +15,7 @@ interface nsIRDFDataSource : nsISupports
     /** The "URI" of the data source. This used by the RDF service's
      * |GetDataSource()| method to cache datasources.
      */
-    readonly attribute string URI;
+    readonly attribute ACString URI;
 
     /** Find an RDF resource that points to a given node over the
      * specified arc & truth value

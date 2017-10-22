@@ -118,7 +118,7 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
         return NS_ERROR_NULL_POINTER;
 
     mDataSource = aDataSource;
-    mDataSource->GetURI(getter_Copies(mBaseURLSpec));
+    mDataSource->GetURI(mBaseURLSpec);
 
     // Add the ``RDF'' prefix, by default.
     RefPtr<nsAtom> prefix;

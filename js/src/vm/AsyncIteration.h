@@ -51,6 +51,8 @@ AsyncGeneratorYieldReturnAwaitedRejected(JSContext* cx,
                                          Handle<AsyncGeneratorObject*> asyncGenObj,
                                          HandleValue reason);
 
+class AsyncGeneratorObject;
+
 class AsyncGeneratorRequest : public NativeObject
 {
   private:
@@ -61,23 +63,26 @@ class AsyncGeneratorRequest : public NativeObject
         Slots,
     };
 
-    void setCompletionKind(CompletionKind completionKind_) {
+    void init(CompletionKind completionKind, HandleValue completionValue,
+              HandleObject promise) {
         setFixedSlot(Slot_CompletionKind,
-                     Int32Value(static_cast<int32_t>(completionKind_)));
+                     Int32Value(static_cast<int32_t>(completionKind)));
+        setFixedSlot(Slot_CompletionValue, completionValue);
+        setFixedSlot(Slot_Promise, ObjectValue(*promise));
     }
-    void setCompletionValue(HandleValue completionValue_) {
-        setFixedSlot(Slot_CompletionValue, completionValue_);
+
+    void clearData() {
+        setFixedSlot(Slot_CompletionValue, NullValue());
+        setFixedSlot(Slot_Promise, NullValue());
     }
-    void setPromise(HandleObject promise_) {
-        setFixedSlot(Slot_Promise, ObjectValue(*promise_));
-    }
+
+    friend AsyncGeneratorObject;
 
   public:
     static const Class class_;
 
-    static AsyncGeneratorRequest*
-    create(JSContext* cx, CompletionKind completionKind, HandleValue completionValue,
-           HandleObject promise);
+    static AsyncGeneratorRequest* create(JSContext* cx, CompletionKind completionKind,
+                                         HandleValue completionValue, HandleObject promise);
 
     CompletionKind completionKind() const {
         return static_cast<CompletionKind>(getFixedSlot(Slot_CompletionKind).toInt32());
@@ -97,6 +102,7 @@ class AsyncGeneratorObject : public NativeObject
         Slot_State = 0,
         Slot_Generator,
         Slot_QueueOrRequest,
+        Slot_CachedRequest,
         Slots
     };
 
@@ -140,7 +146,7 @@ class AsyncGeneratorObject : public NativeObject
         setFixedSlot(Slot_QueueOrRequest, ObjectValue(*request));
     }
     void clearSingleQueueRequest() {
-        setFixedSlot(Slot_QueueOrRequest, NullHandleValue);
+        setFixedSlot(Slot_QueueOrRequest, NullValue());
     }
     AsyncGeneratorRequest* singleQueueRequest() const {
         return &getFixedSlot(Slot_QueueOrRequest).toObject().as<AsyncGeneratorRequest>();
@@ -218,6 +224,41 @@ class AsyncGeneratorObject : public NativeObject
         if (isSingleQueue())
             return isSingleQueueEmpty();
         return queue()->getDenseInitializedLength() == 0;
+    }
+
+    // This function does either of the following:
+    //   * return a cached request object with the slots updated
+    //   * create a new request object with the slots set
+    static AsyncGeneratorRequest* createRequest(JSContext* cx,
+                                                Handle<AsyncGeneratorObject*> asyncGenObj,
+                                                CompletionKind completionKind,
+                                                HandleValue completionValue,
+                                                HandleObject promise);
+
+    // Stores the given request to the generator's cache after clearing its data
+    // slots.  The cached request will be reused in the subsequent createRequest
+    // call.
+    void cacheRequest(AsyncGeneratorRequest* request) {
+        if (hasCachedRequest())
+            return;
+
+        request->clearData();
+        setFixedSlot(Slot_CachedRequest, ObjectValue(*request));
+    }
+
+  private:
+    bool hasCachedRequest() const {
+        return getFixedSlot(Slot_CachedRequest).isObject();
+    }
+
+    AsyncGeneratorRequest* takeCachedRequest() {
+        auto request = &getFixedSlot(Slot_CachedRequest).toObject().as<AsyncGeneratorRequest>();
+        clearCachedRequest();
+        return request;
+    }
+
+    void clearCachedRequest() {
+        setFixedSlot(Slot_CachedRequest, NullValue());
     }
 };
 

@@ -826,13 +826,9 @@ InMemoryDataSource::LogOperation(const char* aOperation,
 
 
 NS_IMETHODIMP
-InMemoryDataSource::GetURI(char* *uri)
+InMemoryDataSource::GetURI(nsACString& aURI)
 {
-    NS_PRECONDITION(uri != nullptr, "null ptr");
-    if (! uri)
-        return NS_ERROR_NULL_POINTER;
-
-    *uri = nullptr;
+    aURI.SetIsVoid(true);
     return NS_OK;
 }
 
