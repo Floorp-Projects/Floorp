@@ -2945,16 +2945,23 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 {
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
 
-  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
-  if (selectorList) {
-    FindMatchingElements<false, AutoTArray<Element*, 128>>(this,
-                                                             selectorList,
-                                                             *contentList,
-                                                             aResult);
-  } else {
-    // Either we failed (and aResult already has the exception), or this
-    // is a pseudo-element-only selector that matches nothing.
-  }
+  WithSelectorList<void>(
+    aSelector,
+    aResult,
+    [&](const RawServoSelectorList* aList) {
+      if (!aList) {
+        return;
+      }
+      Servo_SelectorList_QueryAll(this, aList, contentList.get());
+    },
+    [&](nsCSSSelectorList* aList) {
+      if (!aList) {
+        return;
+      }
+      FindMatchingElements<false, AutoTArray<Element*, 128>>(
+        this, aList, *contentList, aResult);
+    }
+  );
 
   return contentList.forget();
 }
