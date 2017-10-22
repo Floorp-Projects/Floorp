@@ -5,7 +5,7 @@ fails-if(stylo||styloVsGecko) random-if(Android) == basic-negcoord.xul basic-neg
 fails-if(stylo||styloVsGecko) != blur.xul blur-notref.xul # bug 1408235
 fails-if(stylo||styloVsGecko) == color-inherit.xul color-inherit-ref.xul # bug 1408235
 fails-if(stylo||styloVsGecko) == multiple-noblur.xul multiple-noblur-ref.xul # bug 1408235
-HTTP(..) == blur-opacity.html blur-opacity-ref.html
+== blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
 == basic-negcoord.html basic-negcoord-ref.html
