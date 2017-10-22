@@ -308,15 +308,9 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
 // GetTarget() - need to handle kNC_KeyIndex
 
 
-NS_IMETHODIMP nsWindowDataSource::GetURI(char * *aURI)
+NS_IMETHODIMP nsWindowDataSource::GetURI(nsACString& aURI)
 {
-    NS_ENSURE_ARG_POINTER(aURI);
-
-    *aURI = ToNewCString(NS_LITERAL_CSTRING("rdf:window-mediator"));
-
-    if (!*aURI)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    aURI.AssignLiteral("rdf:window-mediator");
     return NS_OK;
 }
 

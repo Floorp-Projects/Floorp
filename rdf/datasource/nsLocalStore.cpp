@@ -67,7 +67,7 @@ public:
 
     // nsIRDFDataSource interface. Most of these are just delegated to
     // the inner, in-memory datasource.
-    NS_IMETHOD GetURI(char* *aURI) override;
+    NS_IMETHOD GetURI(nsACString& aURI) override;
 
     NS_IMETHOD GetSource(nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget,
@@ -419,16 +419,9 @@ LocalStoreImpl::LoadData()
 
 
 NS_IMETHODIMP
-LocalStoreImpl::GetURI(char* *aURI)
+LocalStoreImpl::GetURI(nsACString& aURI)
 {
-    NS_PRECONDITION(aURI != nullptr, "null ptr");
-    if (! aURI)
-        return NS_ERROR_NULL_POINTER;
-
-    *aURI = NS_strdup("rdf:local-store");
-    if (! *aURI)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    aURI.AssignLiteral("rd:local-store");
     return NS_OK;
 }
 

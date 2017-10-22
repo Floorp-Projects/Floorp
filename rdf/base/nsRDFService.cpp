@@ -1176,8 +1176,8 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
 
     nsresult rv;
 
-    nsCString uri;
-    rv = aDataSource->GetURI(getter_Copies(uri));
+    nsAutoCString uri;
+    rv = aDataSource->GetURI(uri);
     if (NS_FAILED(rv)) return rv;
 
     PLHashEntry** hep =
@@ -1225,8 +1225,8 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 
     nsresult rv;
 
-    nsCString uri;
-    rv = aDataSource->GetURI(getter_Copies(uri));
+    nsAutoCString uri;
+    rv = aDataSource->GetURI(uri);
     if (NS_FAILED(rv)) return rv;
 
     //NS_ASSERTION(uri != nullptr, "datasource has no URI");
