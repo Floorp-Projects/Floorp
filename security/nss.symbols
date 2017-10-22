@@ -570,6 +570,7 @@ SECMOD_ReferenceModule
 SECMOD_ReleaseReadLock
 SECMOD_UnloadUserModule
 SECMOD_UpdateModule
+SECMOD_UpdateSlotList
 SECMOD_WaitForAnyTokenEvent
 SEC_NullTemplate_Util @DATA@
 SEC_ObjectIDTemplate_Util @DATA@

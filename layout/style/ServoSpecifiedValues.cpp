@@ -121,6 +121,10 @@ ServoSpecifiedValues::SetTextDecorationColorOverride()
 void
 ServoSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
 {
+  if (aValue.Type() != nsAttrValue::eURL &&
+      aValue.Type() != nsAttrValue::eImage) {
+    return;
+  }
   nsAutoString str;
   aValue.ToString(str);
   Servo_DeclarationBlock_SetBackgroundImage(

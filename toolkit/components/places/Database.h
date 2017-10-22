@@ -334,6 +334,9 @@ private:
   int32_t mDBPageSize;
   uint16_t mDatabaseStatus;
   bool mClosed;
+  // Used to track whether icon payloads should be converted at the end of
+  // schema migration.
+  bool mShouldConvertIconPayloads;
 
   /**
    * Phases for shutting down the Database.
