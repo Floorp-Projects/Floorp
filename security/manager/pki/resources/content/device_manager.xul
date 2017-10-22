@@ -19,7 +19,6 @@
         style="&devmgr.style2;"
         persist="screenX screenY width height"
         onload="LoadModules();"
-        onunload="DeregisterSmartCardObservers();"
         buttons="accept">
 
 <stringbundleset id="stringbundleset">

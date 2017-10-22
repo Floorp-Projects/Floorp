@@ -96,6 +96,7 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsICSSDeclaration.h"
+#include "nsLayoutUtils.h"
 
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/BoxObject.h"
@@ -2331,18 +2332,26 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         mHasStyleAttribute = true;
         // Parse the element's 'style' attribute
 
-        nsCSSParser parser;
-
+        // This is basically duplicating what nsINode::NodePrincipal() does
+        nsIPrincipal* principal =
+          mNodeInfo->NodeInfoManager()->DocumentPrincipal();
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
         // TODO: If we implement Content Security Policy for chrome documents
         // as has been discussed, the CSP should be checked here to see if
         // inline styles are allowed to be applied.
-        RefPtr<css::Declaration> declaration =
-          parser.ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
-                                     // This is basically duplicating what
-                                     // nsINode::NodePrincipal() does
-                                     mNodeInfo->NodeInfoManager()->
-                                       DocumentPrincipal());
+
+        RefPtr<DeclarationBlock> declaration;
+        if (nsLayoutUtils::StyloEnabled() &&
+            nsLayoutUtils::ShouldUseStylo(aDocumentURI, principal)) {
+          RefPtr<URLExtraData> data =
+            new URLExtraData(aDocumentURI, aDocumentURI, principal);
+          declaration = ServoDeclarationBlock::FromCssText(
+              aValue, data, eCompatibility_FullStandards, nullptr);
+        } else {
+          nsCSSParser parser;
+          declaration = parser.ParseStyleAttribute(aValue, aDocumentURI,
+                                                   aDocumentURI, principal);
+        }
         if (declaration) {
             mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);
 
