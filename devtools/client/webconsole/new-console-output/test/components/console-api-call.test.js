@@ -220,9 +220,9 @@ describe("ConsoleAPICall component:", () => {
     it("renders group with custom style", () => {
       const message = stubPreparedMessages.get("console.group(%cfoo%cbar)");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      expect(wrapper.find(".message-body").text()).toBe("foobar");
 
       const elements = wrapper.find(".objectBox-string");
-      expect(elements.text()).toBe("foobar");
       expect(elements.length).toBe(2);
 
       const firstElementStyle = elements.eq(0).prop("style");
