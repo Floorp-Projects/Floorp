@@ -9,6 +9,7 @@
 
 #include "prsystem.h"
 
+#include "nsError.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpChannel.h"
@@ -58,6 +59,7 @@
 #include "nsIXULRuntime.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsRFPService.h"
+#include "rust-helper/src/helper.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -1908,51 +1910,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 #undef MULTI_PREF_CHANGED
 }
 
-
-/**
- * Currently, only regularizes the case of subtags.
- */
-static void
-CanonicalizeLanguageTag(char *languageTag)
-{
-    char *s = languageTag;
-    while (*s != '\0') {
-        *s = nsCRT::ToLower(*s);
-        s++;
-    }
-
-    s = languageTag;
-    bool isFirst = true;
-    bool seenSingleton = false;
-    while (*s != '\0') {
-        char *subTagEnd = strchr(s, '-');
-        if (subTagEnd == nullptr) {
-            subTagEnd = strchr(s, '\0');
-        }
-
-        if (isFirst) {
-            isFirst = false;
-        } else if (seenSingleton) {
-            // Do nothing
-        } else {
-            size_t subTagLength = subTagEnd - s;
-            if (subTagLength == 1) {
-                seenSingleton = true;
-            } else if (subTagLength == 2) {
-                *s = nsCRT::ToUpper(*s);
-                *(s + 1) = nsCRT::ToUpper(*(s + 1));
-            } else if (subTagLength == 4) {
-                *s = nsCRT::ToUpper(*s);
-            }
-        }
-
-        s = subTagEnd;
-        if (*s != '\0') {
-            s++;
-        }
-    }
-}
-
 /**
  *  Allocates a C string into that contains a ISO 639 language list
  *  notated with HTTP "q" values for output with a HTTP Accept-Language
@@ -1972,78 +1929,9 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
     if (!i_AcceptLanguages)
         return NS_OK;
 
-    uint32_t n, count_n, size, wrote;
-    double q, dec;
-    char *p, *p2, *token, *q_Accept, *o_Accept;
-    const char *comma;
-    int32_t available;
-
-    o_Accept = strdup(i_AcceptLanguages);
-    if (!o_Accept)
-        return NS_ERROR_OUT_OF_MEMORY;
-    for (p = o_Accept, n = size = 0; '\0' != *p; p++) {
-        if (*p == ',') n++;
-            size++;
-    }
-
-    available = size + ++n * 11 + 1;
-    q_Accept = new char[available];
-    if (!q_Accept) {
-        free(o_Accept);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    *q_Accept = '\0';
-    q = 1.0;
-    dec = q / (double) n;
-    count_n = 0;
-    p2 = q_Accept;
-    for (token = nsCRT::strtok(o_Accept, ",", &p);
-         token != nullptr;
-         token = nsCRT::strtok(p, ",", &p))
-    {
-        token = net_FindCharNotInSet(token, HTTP_LWS);
-        char* trim;
-        trim = net_FindCharInSet(token, ";" HTTP_LWS);
-        if (trim != nullptr)  // remove "; q=..." if present
-            *trim = '\0';
-
-        if (*token != '\0') {
-            CanonicalizeLanguageTag(token);
-
-            comma = count_n++ != 0 ? "," : ""; // delimiter if not first item
-            uint32_t u = QVAL_TO_UINT(q);
-
-            // Only display q-value if less than 1.00.
-            if (u < 100) {
-                const char *qval_str;
-
-                // With a small number of languages, one decimal place is enough to prevent duplicate q-values.
-                // Also, trailing zeroes do not add any information, so they can be removed.
-                if ((n < 10) || ((u % 10) == 0)) {
-                    u = (u + 5) / 10;
-                    qval_str = "%s%s;q=0.%u";
-                } else {
-                    // Values below 10 require zero padding.
-                    qval_str = "%s%s;q=0.%02u";
-                }
-
-                wrote = snprintf(p2, available, qval_str, comma, token, u);
-            } else {
-                wrote = snprintf(p2, available, "%s%s", comma, token);
-            }
-
-            q -= dec;
-            p2 += wrote;
-            available -= wrote;
-            MOZ_ASSERT(available > 0, "allocated string not long enough");
-        }
-    }
-    free(o_Accept);
-
-    o_AcceptLanguages.Assign((const char *) q_Accept);
-    delete [] q_Accept;
-
-    return NS_OK;
+    const nsAutoCString ns_accept_languages(i_AcceptLanguages);
+    return rust_prepare_accept_languages(&ns_accept_languages,
+                                         &o_AcceptLanguages);
 }
 
 nsresult
