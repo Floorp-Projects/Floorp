@@ -104,6 +104,7 @@ android {
 
 dependencies {
     compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
 task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {

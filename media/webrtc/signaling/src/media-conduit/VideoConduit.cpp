@@ -47,10 +47,6 @@
 #endif
 
 #include "GmpVideoCodec.h"
-#ifdef MOZ_WEBRTC_OMX
-#include "OMXCodecWrapper.h"
-#include "OMXVideoCodec.h"
-#endif
 
 #ifdef MOZ_WEBRTC_MEDIACODEC
 #include "MediaCodecVideoCodec.h"
@@ -1477,11 +1473,7 @@ WebrtcVideoConduit::CreateDecoder(webrtc::VideoCodecType aType)
   switch (aType) {
     case webrtc::VideoCodecType::kVideoCodecH264:
       // get an external decoder
-#ifdef MOZ_WEBRTC_OMX
-      decoder = OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#else
       decoder = GmpVideoCodec::CreateDecoder();
-#endif
       if (decoder) {
         mRecvCodecPlugin = static_cast<WebrtcVideoDecoder*>(decoder);
       }
@@ -1542,11 +1534,7 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoCodecType aType,
   switch (aType) {
     case webrtc::VideoCodecType::kVideoCodecH264:
       // get an external encoder
-#ifdef MOZ_WEBRTC_OMX
-      encoder = OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
-#else
       encoder = GmpVideoCodec::CreateEncoder();
-#endif
       if (encoder) {
         mSendCodecPlugin = static_cast<WebrtcVideoEncoder*>(encoder);
       }

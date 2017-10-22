@@ -122,11 +122,6 @@
 #endif
 #include "mozilla/dom/PeerConnectionObserverEnumsBinding.h"
 
-#ifdef MOZ_WEBRTC_OMX
-#include "OMXVideoCodec.h"
-#include "OMXCodecWrapper.h"
-#endif
-
 #define ICE_PARSING "In RTCConfiguration passed to RTCPeerConnection constructor"
 
 using namespace mozilla;
@@ -850,34 +845,6 @@ class ConfigureCodec {
       mRedUlpfecEnabled(false),
       mDtmfEnabled(false)
     {
-#ifdef MOZ_WEBRTC_OMX
-      // Check to see if what HW codecs are available (not in use) at this moment.
-      // Note that streaming video decode can reserve a decoder
-
-      // XXX See bug 1018791 Implement W3 codec reservation policy
-      // Note that currently, OMXCodecReservation needs to be held by an sp<> because it puts
-      // 'this' into an sp<EventListener> to talk to the resource reservation code
-
-      // This pref is a misnomer; it is solely for h264 _hardware_ support.
-      branch->GetBoolPref("media.peerconnection.video.h264_enabled",
-          &mHardwareH264Enabled);
-
-      if (mHardwareH264Enabled) {
-        // Ok, it is preffed on. Can we actually do it?
-        android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
-        android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
-
-        // Currently we just check if they're available right now, which will fail if we're
-        // trying to call ourself, for example.  It will work for most real-world cases, like
-        // if we try to add a person to a 2-way call to make a 3-way mesh call
-        if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
-          CSFLogDebug( LOGTAG, "%s: H264 hardware codec available", __FUNCTION__);
-          mHardwareH264Supported = true;
-        }
-      }
-
-#endif // MOZ_WEBRTC_OMX
-
       mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
 
       mH264Enabled = mHardwareH264Supported || mSoftwareH264Enabled;
@@ -886,11 +853,6 @@ class ConfigureCodec {
       mH264Level &= 0xFF;
 
       branch->GetIntPref("media.navigator.video.h264.max_br", &mH264MaxBr);
-
-#ifdef MOZ_WEBRTC_OMX
-      // Level 1.2; but let's allow CIF@30 or QVGA@30+ by default
-      mH264MaxMbps = 11880;
-#endif
 
       branch->GetIntPref("media.navigator.video.h264.max_mbps", &mH264MaxMbps);
 
