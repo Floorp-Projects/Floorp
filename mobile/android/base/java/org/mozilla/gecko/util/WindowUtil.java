@@ -6,13 +6,17 @@
 package org.mozilla.gecko.util;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Build;
+import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.Window;
 
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.lwt.LightweightTheme;
 
 public class WindowUtil {
 
@@ -20,7 +24,7 @@ public class WindowUtil {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return;
         }
-        setStatusBarColor(activity, R.color.status_bar_bg_color_tabs_tray, true);
+        setStatusBarColorRes(activity, R.color.status_bar_bg_color_tabs_tray, true);
     }
 
     public static void setStatusBarColor(final Activity activity, final boolean isPrivate) {
@@ -28,27 +32,42 @@ public class WindowUtil {
             return;
         }
 
-        final int colorResId;
+        final @ColorInt int color;
         final boolean isDarkTheme;
 
         if (HardwareUtils.isTablet()) {
-            colorResId = R.color.status_bar_bg_color_tablet;
+            color = ContextCompat.getColor(activity, R.color.status_bar_bg_color_tablet);
             isDarkTheme = true;
         } else {
-            colorResId = isPrivate ? R.color.status_bar_bg_color_private : R.color.status_bar_bg_color;
-            isDarkTheme = isPrivate;
+            LightweightTheme theme = ((GeckoApplication) activity.getApplication()).getLightweightTheme();
+            @ColorInt int themeColor = theme.getColor();
+            if (isPrivate) {
+                color = ContextCompat.getColor(activity, R.color.status_bar_bg_color_private);
+                isDarkTheme = true;
+            } else if (theme.isEnabled() && themeColor != Color.TRANSPARENT) {
+                color = themeColor;
+                isDarkTheme = !theme.isLightTheme();
+            } else {
+                color = ContextCompat.getColor(activity, R.color.status_bar_bg_color);
+                isDarkTheme = false;
+            }
         }
-        setStatusBarColor(activity, colorResId, isDarkTheme);
+        setStatusBarColor(activity, color, isDarkTheme);
     }
 
-    public static void setStatusBarColor(final Activity activity, @ColorRes final int colorResId,
+    public static void setStatusBarColorRes(final Activity activity, final @ColorRes int colorResId,
+                                            final boolean isDarkTheme) {
+        final int backgroundColor = ContextCompat.getColor(activity, colorResId);
+        setStatusBarColor(activity, backgroundColor, isDarkTheme);
+    }
+
+    public static void setStatusBarColor(final Activity activity, final @ColorInt int backgroundColor,
                                          final boolean isDarkTheme) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return;
         }
 
         final Window window = activity.getWindow();
-        final int backgroundColor = ContextCompat.getColor(activity, colorResId);
         window.setStatusBarColor(backgroundColor);
 
         final View view = window.getDecorView();
