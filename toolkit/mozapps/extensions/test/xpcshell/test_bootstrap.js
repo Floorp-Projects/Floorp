@@ -956,11 +956,10 @@ function check_test_19() {
     do_check_true(b1.isActive);
     do_check_false(b1.isSystem);
 
-    // TODO these reasons really should be ADDON_DOWNGRADE (bug 607818)
-    do_check_eq(getShutdownReason(), ADDON_UNINSTALL);
-    do_check_eq(getUninstallReason(), ADDON_UNINSTALL);
-    do_check_eq(getInstallReason(), ADDON_INSTALL);
-    do_check_eq(getStartupReason(), ADDON_INSTALL);
+    do_check_eq(getShutdownReason(), ADDON_DOWNGRADE);
+    do_check_eq(getUninstallReason(), ADDON_DOWNGRADE);
+    do_check_eq(getInstallReason(), ADDON_DOWNGRADE);
+    do_check_eq(getStartupReason(), ADDON_DOWNGRADE);
 
     do_check_eq(getShutdownNewVersion(), undefined);
     do_check_eq(getUninstallNewVersion(), undefined);
