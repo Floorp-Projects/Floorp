@@ -33,7 +33,6 @@ import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -51,7 +50,7 @@ public class LightweightTheme implements BundleEventListener {
     private final Application mApplication;
 
     private Bitmap mBitmap;
-    private @ColorInt int mColor;
+    private int mColor;
     private boolean mIsLight;
 
     public static interface OnChangeListener {
@@ -236,8 +235,8 @@ public class LightweightTheme implements BundleEventListener {
             mColor = Color.parseColor(color);
         } catch (Exception e) {
             // Malformed or missing color.
-            // We attempt calculating an accent colour ourselves, falling back to TRANSPARENT.
-            mColor = BitmapUtils.getDominantColor(bitmap, Color.TRANSPARENT);
+            // Default to TRANSPARENT.
+            mColor = Color.TRANSPARENT;
         }
 
         // Calculate the luminance to determine if it's a light or a dark theme.
@@ -315,13 +314,6 @@ public class LightweightTheme implements BundleEventListener {
      */
     public boolean isLightTheme() {
         return mIsLight;
-    }
-
-    /**
-     * @return The accent color of the theme.
-     */
-    public @ColorInt int getColor() {
-        return mColor;
     }
 
     /**
