@@ -471,6 +471,12 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
   SwapBuffers(updatedRegion);
 }
 
+void
+ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
+{
+  mFrontAndBackBufferDiffer = true;
+}
+
 bool
 ContentClientRemoteBuffer::LockBuffers()
 {
@@ -582,7 +588,7 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   mBufferRect = newBackBufferRect;
   mBufferRotation = newBackBufferRotation;
 
-  mFrontAndBackBufferDiffer = true;
+  ContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
 }
 
 void
