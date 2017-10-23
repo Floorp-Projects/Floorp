@@ -130,3 +130,21 @@ VRSystemManager::NewHandChangeEvent(uint32_t aIndex,
   vm->NotifyGamepadChange<dom::GamepadHandInformation>(aIndex, a);
 }
 
+void
+VRHMDSensorState::CalcViewMatrices(const gfx::Matrix4x4* aHeadToEyeTransforms)
+{
+
+  gfx::Matrix4x4 matHead;
+  if (flags & VRDisplayCapabilityFlags::Cap_Orientation) {
+    matHead.SetRotationFromQuaternion(gfx::Quaternion(orientation[0], orientation[1],
+                                                      orientation[2], orientation[3]));
+  }
+  matHead.PreTranslate(-position[0], -position[1], -position[2]);
+
+  gfx::Matrix4x4 matView = matHead * aHeadToEyeTransforms[VRDisplayInfo::Eye_Left];
+  matView.Normalize();
+  memcpy(leftViewMatrix, matView.components, sizeof(matView.components));
+  matView = matHead * aHeadToEyeTransforms[VRDisplayInfo::Eye_Right];
+  matView.Normalize();
+  memcpy(rightViewMatrix, matView.components, sizeof(matView.components));
+}
