@@ -294,14 +294,14 @@ GMPContentChild::RecvPChromiumCDMConstructor(PChromiumCDMChild* aActor)
     // Try to create older version 8 CDM.
     cdm::Host_8* host8 = child;
     err = mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT, host8, &cdm);
-    cdm =
-      new ChromiumCDM8BackwardsCompat(
-        host9,
-        static_cast<cdm::ContentDecryptionModule_8*>(cdm));
     if (err != GMPNoErr) {
       NS_WARNING("GMPGetAPI call failed trying to get CDM.");
       return IPC_FAIL_NO_REASON(this);
     }
+    cdm =
+      new ChromiumCDM8BackwardsCompat(
+        host9,
+        static_cast<cdm::ContentDecryptionModule_8*>(cdm));
   }
 
   child->Init(static_cast<cdm::ContentDecryptionModule_9*>(cdm));
