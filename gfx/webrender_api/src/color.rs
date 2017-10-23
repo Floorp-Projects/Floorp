@@ -16,7 +16,6 @@ pub struct ColorF {
     pub b: f32,
     pub a: f32,
 }
-known_heap_size!(0, ColorF);
 
 impl ColorF {
     /// Constructs a new `ColorF` from its components.

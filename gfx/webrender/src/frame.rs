@@ -9,7 +9,7 @@ use api::{HitTestResult, ImageDisplayItem, ItemRange, LayerPoint, LayerPrimitive
 use api::{LayerSize, LayerToScrollTransform, LayerVector2D, LayoutSize, LayoutTransform};
 use api::{LocalClip, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
 use api::{ScrollLocation, ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext};
-use api::{TileOffset, TransformStyle, WorldPoint};
+use api::{ClipMode, TileOffset, TransformStyle, WorldPoint};
 use clip::ClipRegion;
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
@@ -1151,7 +1151,12 @@ fn try_to_add_rectangle_splitting_on_clip(
 
     let inner_unclipped_rect = match &info.local_clip {
         &LocalClip::Rect(_) => return false,
-        &LocalClip::RoundedRect(_, ref region) => region.get_inner_rect_full(),
+        &LocalClip::RoundedRect(_, ref region) => {
+            if region.mode == ClipMode::ClipOut {
+                return false;
+            }
+            region.get_inner_rect_full()
+        }
     };
     let inner_unclipped_rect = match inner_unclipped_rect {
         Some(rect) => rect,

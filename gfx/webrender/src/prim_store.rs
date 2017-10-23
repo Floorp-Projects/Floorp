@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize};
+use api::{BorderRadius, BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect};
 use api::{DevicePoint, ExtendMode, FontInstance, FontRenderMode, GlyphInstance, GlyphKey};
 use api::{GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, LayerPoint, LayerRect};
-use api::{LayerSize, LayerVector2D, LineOrientation, LineStyle};
-use api::{TileOffset, YuvColorSpace, YuvFormat, device_length};
+use api::{ClipMode, LayerSize, LayerVector2D, LineOrientation, LineStyle};
+use api::{TileOffset, YuvColorSpace, YuvFormat};
 use border::BorderCornerInstance;
-use clip::{ClipMode, ClipSourcesHandle, ClipStore, Geometry};
+use clip::{ClipSourcesHandle, ClipStore, Geometry};
 use frame_builder::PrimitiveContext;
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
@@ -167,16 +167,28 @@ impl ToGpuBlocks for RectanglePrimitive {
 #[derive(Debug)]
 pub struct BrushPrimitive {
     pub clip_mode: ClipMode,
-    pub radius: f32,
+    pub radius: BorderRadius,
 }
 
 impl ToGpuBlocks for BrushPrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
         request.push([
             self.clip_mode as u32 as f32,
-            self.radius,
+            0.0,
             0.0,
             0.0
+        ]);
+        request.push([
+            self.radius.top_left.width,
+            self.radius.top_left.height,
+            self.radius.top_right.width,
+            self.radius.top_right.height,
+        ]);
+        request.push([
+            self.radius.bottom_right.width,
+            self.radius.bottom_right.height,
+            self.radius.bottom_left.width,
+            self.radius.bottom_left.height,
         ]);
     }
 }
@@ -1037,46 +1049,20 @@ impl PrimitiveStore {
         prim_context: &PrimitiveContext,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        // For some primitives, we need to mark dependencies as needed for rendering
-        // without spawning new tasks, since there will be another call to
-        // `prepare_prim_for_render_inner` specifically for this primitive later on.
-        render_tasks: Option<&mut RenderTaskTree>,
+        render_tasks: &mut RenderTaskTree,
         text_run_mode: TextRunMode,
     ) {
         let metadata = &mut self.cpu_metadata[prim_index.0];
         match metadata.prim_kind {
             PrimitiveKind::Rectangle | PrimitiveKind::Border | PrimitiveKind::Line => {}
             PrimitiveKind::Picture => {
-                let picture = &mut self.cpu_pictures[metadata.cpu_prim_index.0];
-
-                // This is a shadow element. Create a render task that will
-                // render the text run to a target, and then apply a gaussian
-                // blur to that text run in order to build the actual primitive
-                // which will be blitted to the framebuffer.
-                let cache_width =
-                    (metadata.local_rect.size.width * prim_context.device_pixel_ratio).ceil() as i32;
-                let cache_height =
-                    (metadata.local_rect.size.height * prim_context.device_pixel_ratio).ceil() as i32;
-                let cache_size = DeviceIntSize::new(cache_width, cache_height);
-                let blur_radius = picture.as_shadow().blur_radius;
-                let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
-
-                // ignore new tasks if we are in a dependency context
-                picture.render_task_id = render_tasks.map(|rt| {
-                    let picture_task = RenderTask::new_picture(
-                        cache_size,
+                self.cpu_pictures[metadata.cpu_prim_index.0]
+                    .prepare_for_render(
                         prim_index,
-                        picture.kind,
+                        metadata,
+                        prim_context,
+                        render_tasks
                     );
-                    let picture_task_id = rt.add(picture_task);
-                    let render_task = RenderTask::new_blur(
-                        blur_radius,
-                        picture_task_id,
-                        rt,
-                        picture.kind
-                    );
-                    rt.add(render_task)
-                });
             }
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
@@ -1173,15 +1159,8 @@ impl PrimitiveStore {
                     text.write_gpu_blocks(&mut request);
                 }
                 PrimitiveKind::Picture => {
-                    let picture = &self.cpu_pictures[metadata.cpu_prim_index.0];
-                    let shadow = picture.as_shadow();
-                    request.push(shadow.color);
-                    request.push([
-                        shadow.offset.x,
-                        shadow.offset.y,
-                        shadow.blur_radius,
-                        0.0,
-                    ]);
+                    self.cpu_pictures[metadata.cpu_prim_index.0]
+                        .write_gpu_blocks(request);
                 }
                 PrimitiveKind::Brush => {
                     let brush = &self.cpu_brushes[metadata.cpu_prim_index.0];
@@ -1342,7 +1321,7 @@ impl PrimitiveStore {
                     prim_context,
                     resource_cache,
                     gpu_cache,
-                    None,
+                    render_tasks,
                     TextRunMode::Shadow,
                 );
             }
@@ -1365,7 +1344,7 @@ impl PrimitiveStore {
             prim_context,
             resource_cache,
             gpu_cache,
-            Some(render_tasks),
+            render_tasks,
             TextRunMode::Normal,
         );
 

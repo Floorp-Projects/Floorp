@@ -22,12 +22,18 @@ impl Notifier {
 }
 
 impl RenderNotifier for Notifier {
-    fn new_frame_ready(&mut self) {
+    fn clone(&self) -> Box<RenderNotifier> {
+        Box::new(Notifier {
+            window_proxy: self.window_proxy.clone(),
+        })
+    }
+
+    fn new_frame_ready(&self) {
         #[cfg(not(target_os = "android"))]
         self.window_proxy.wakeup_event_loop();
     }
 
-    fn new_scroll_frame_ready(&mut self, _composite_needed: bool) {
+    fn new_scroll_frame_ready(&self, _composite_needed: bool) {
         #[cfg(not(target_os = "android"))]
         self.window_proxy.wakeup_event_loop();
     }
@@ -125,12 +131,10 @@ pub fn main_wrapper(example: &mut Example, options: Option<webrender::RendererOp
     };
 
     let size = DeviceUintSize::new(width, height);
-    let (mut renderer, sender) = webrender::Renderer::new(gl.clone(), opts).unwrap();
+    let notifier = Box::new(Notifier::new(window.create_window_proxy()));
+    let (mut renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(size);
-
-    let notifier = Box::new(Notifier::new(window.create_window_proxy()));
-    renderer.set_render_notifier(notifier);
 
     if let Some(external_image_handler) = example.get_external_image_handler() {
         renderer.set_external_image_handler(external_image_handler);
