@@ -5,6 +5,7 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.support.annotation.NonNull;
+import android.view.View;
 import org.mozilla.gecko.activitystream.homepanel.stream.WebpageItemRow;
 
 /**
@@ -14,5 +15,5 @@ import org.mozilla.gecko.activitystream.homepanel.stream.WebpageItemRow;
  * (I don't understand why) so it's here instead.
  */
 public interface StreamHighlightItemRowContextMenuListener {
-    void openContextMenu(WebpageItemRow highlightItem, int position, @NonNull final String interactionExtra);
+    void openContextMenu(WebpageItemRow highlightItem, int position, View snackbarAnchor, @NonNull final String interactionExtra);
 }

@@ -22,6 +22,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
+import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsEmptyStateRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.LearnMoreRow;
@@ -130,17 +131,21 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     @Override
-    public StreamViewHolder onCreateViewHolder(ViewGroup parent, final int type) {
+    public StreamViewHolder onCreateViewHolder(final ViewGroup parent, final int type) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
-        } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
-            return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
-        } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
-            return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
+        } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType() ||
+                type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
+            return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), new WebpageItemRow.OnMenuButtonClickListener() {
+                @Override
+                public void onMenuButtonClicked(final WebpageItemRow row, final int position) {
+                    openContextMenu(row, position, parent, ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
+                }
+            });
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights);
         } else if (type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
@@ -286,7 +291,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         }
 
         final WebpageItemRow highlightItem = (WebpageItemRow) recyclerView.getChildViewHolder(v);
-        openContextMenu(highlightItem, position, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
+        openContextMenu(highlightItem, position, recyclerView, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
         return true;
     }
 
@@ -316,8 +321,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         return true;
     }
 
+    /**
+     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(Context, View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
+     *                       for additional details.
+     */
     @Override
-    public void openContextMenu(final WebpageItemRow webpageItemRow, final int position, @NonNull final String interactionExtra) {
+    public void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
+            @NonNull final String interactionExtra) {
         final WebpageRowModel model = (WebpageRowModel) recyclerViewModel.get(position);
 
         final String sourceType;
@@ -341,7 +351,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
               .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra);
 
         ActivityStreamContextMenu.show(webpageItemRow.itemView.getContext(),
-                webpageItemRow.getContextMenuAnchor(),
+                snackbarAnchor,
                 extras,
                 menuMode,
                 model,

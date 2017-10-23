@@ -341,6 +341,8 @@ public abstract class ActivityStreamContextMenu
     }
 
     /**
+     * @param anchor A view to anchor the Snackbar on. Don't use items in the recyclerView because these views can be
+     *               removed from the view hierarchy when the recyclerView scrolls.
      * @param shouldOverrideIconWithImageProvider true if the favicon should be replaced with an image provider,
      *                                            if applicable, false otherwise.
      */
