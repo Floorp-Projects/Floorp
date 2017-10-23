@@ -86,8 +86,6 @@
 #include "nsMenuBarListener.h"
 #endif
 
-#include "nsTextServicesDocument.h"
-
 #ifdef MOZ_WEBSPEECH
 #include "nsSynthVoiceRegistry.h"
 #endif
@@ -154,7 +152,6 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
-  nsTextServicesDocument::RegisterAtoms();
   nsHTMLTags::RegisterAtoms();
   nsRDFAtoms::RegisterAtoms();
 
