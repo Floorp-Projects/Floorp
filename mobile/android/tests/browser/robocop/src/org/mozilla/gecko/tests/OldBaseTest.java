@@ -51,7 +51,7 @@ import com.robotium.solo.Timeout;
  */
 @SuppressWarnings("unchecked")
 @Deprecated
-abstract class BaseTest extends BaseRobocopTest {
+abstract class OldBaseTest extends BaseRobocopTest {
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 15000;
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
@@ -744,7 +744,7 @@ abstract class BaseTest extends BaseRobocopTest {
         }
 
         // DEPRECATED!
-        // Use BaseTest.toggleBookmark() in new code.
+        // Use OldBaseTest.toggleBookmark() in new code.
         public void bookmark() {
             mActions.sendSpecialKey(Actions.SpecialKey.MENU);
             waitForText("^New Tab$");
@@ -830,7 +830,7 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     /**
-     * Abstract class for running small test cases within a BaseTest.
+     * Abstract class for running small test cases within a OldBaseTest.
      */
     abstract class TestCase implements Runnable {
         /**

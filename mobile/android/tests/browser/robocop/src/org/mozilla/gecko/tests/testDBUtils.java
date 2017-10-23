@@ -13,7 +13,7 @@ import org.mozilla.gecko.db.DBUtils;
 import java.io.File;
 import java.io.IOException;
 
-public class testDBUtils extends BaseTest {
+public class testDBUtils extends OldBaseTest {
     public void testDBUtils() throws IOException {
         final File cacheDir = getInstrumentation().getContext().getCacheDir();
         final File dbFile = File.createTempFile("testDBUtils", ".db", cacheDir);

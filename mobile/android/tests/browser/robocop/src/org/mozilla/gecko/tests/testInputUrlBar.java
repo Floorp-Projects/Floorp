@@ -15,7 +15,7 @@ import android.widget.EditText;
  * - Enter some text, move the cursor around, and modifying some text.
  * - Check that all edit entry text is selected after switching about:home tabs.
  */
-public final class testInputUrlBar extends BaseTest {
+public final class testInputUrlBar extends OldBaseTest {
     private Element mUrlBarEditElement;
     private EditText mUrlBarEditView;
 

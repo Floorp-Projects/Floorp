@@ -15,7 +15,7 @@ import android.content.Context;
  * A basic jar reader test. Tests reading a png from fennec's apk, as well
  * as loading some invalid jar urls.
  */
-public class testJarReader extends BaseTest {
+public class testJarReader extends OldBaseTest {
     public void testJarReader() {
         // Invalid characters are escaped.
         final String s = GeckoJarReader.computeJarURI("some[1].apk", "something/else");

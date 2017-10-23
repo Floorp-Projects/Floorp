@@ -15,7 +15,7 @@ import com.robotium.solo.Condition;
  * Sends queries from url bar input and verifies that browser search
  * visibility is correct.
  */
-public class testBrowserSearchVisibility extends BaseTest {
+public class testBrowserSearchVisibility extends OldBaseTest {
     public void testSearchSuggestions() {
         blockForGeckoReady();
 
