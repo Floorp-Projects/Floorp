@@ -41,7 +41,7 @@ public:
   void AppendInsertedChild(nsIContent* aChild)
   {
     mInsertedChildren.AppendElement(aChild);
-    aChild->SetXBLInsertionParent(GetParent());
+    aChild->SetXBLInsertionPoint(this);
 
     // Appending an inserted child causes the inserted
     // children to be projected instead of default content.
@@ -51,7 +51,7 @@ public:
   void InsertInsertedChildAt(nsIContent* aChild, uint32_t aIndex)
   {
     mInsertedChildren.InsertElementAt(aIndex, aChild);
-    aChild->SetXBLInsertionParent(GetParent());
+    aChild->SetXBLInsertionPoint(this);
 
     // Inserting an inserted child causes the inserted
     // children to be projected instead of default content.
@@ -73,8 +73,8 @@ public:
 
   void ClearInsertedChildren()
   {
-    for (uint32_t c = 0; c < mInsertedChildren.Length(); ++c) {
-      mInsertedChildren[c]->SetXBLInsertionParent(nullptr);
+    for (auto* child : mInsertedChildren) {
+      child->SetXBLInsertionPoint(nullptr);
     }
     mInsertedChildren.Clear();
 
@@ -89,7 +89,7 @@ public:
       for (nsIContent* child = static_cast<nsINode*>(this)->GetFirstChild();
            child;
            child = child->GetNextSibling()) {
-        child->SetXBLInsertionParent(GetParent());
+        child->SetXBLInsertionPoint(this);
       }
     }
   }
@@ -100,7 +100,7 @@ public:
       for (nsIContent* child = static_cast<nsINode*>(this)->GetFirstChild();
            child;
            child = child->GetNextSibling()) {
-        child->SetXBLInsertionParent(nullptr);
+        child->SetXBLInsertionPoint(nullptr);
       }
     }
   }
