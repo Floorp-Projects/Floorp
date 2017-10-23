@@ -225,10 +225,6 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 
     if (mBuffer) {
       newBuffer->UpdateDestinationFrom(*mBuffer, newBuffer->BufferRect());
-
-      // We are done with the old back buffer now and it is about to be
-      // destroyed, so unlock it.
-      mBuffer->Unlock();
     }
 
     // Ensure our reference to the front buffer is released
