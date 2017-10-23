@@ -442,6 +442,8 @@ public:
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 
+  bool OverscrollBehaviorAllowsSwipe() const;
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AsyncPanZoomController();
