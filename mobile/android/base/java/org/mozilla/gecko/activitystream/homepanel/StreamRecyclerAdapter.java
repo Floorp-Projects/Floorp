@@ -48,7 +48,7 @@ import java.util.List;
  * Every item is in a single adapter: Top Sites, Welcome panel, Highlights.
  */
 public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder> implements RecyclerViewClickSupport.OnItemClickListener,
-        RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemRowContextMenuListener {
+        RecyclerViewClickSupport.OnItemLongClickListener {
 
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + StreamRecyclerAdapter.class.getSimpleName(), 0, 23);
 
@@ -325,8 +325,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
      * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(Context, View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
      *                       for additional details.
      */
-    @Override
-    public void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
+    private void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
             @NonNull final String interactionExtra) {
         final WebpageRowModel model = (WebpageRowModel) recyclerViewModel.get(position);
 
