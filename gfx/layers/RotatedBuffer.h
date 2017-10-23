@@ -471,19 +471,6 @@ protected:
   }
 
 protected:
-  struct BufferDecision {
-    nsIntRegion mNeededRegion;
-    nsIntRegion mValidRegion;
-    gfx::IntRect mBufferRect;
-    SurfaceMode mBufferMode;
-    ContentType mBufferContentType;
-    bool mCanReuseBuffer;
-    bool mCanKeepBufferContents;
-  };
-
-  BufferDecision CalculateBufferForPaint(PaintedLayer* aLayer,
-                                         uint32_t aFlags);
-
   /**
    * Return the buffer's content type.  Requires a valid buffer or
    * buffer provider.
