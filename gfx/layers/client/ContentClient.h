@@ -190,6 +190,7 @@ public:
     : ContentClient(aForwarder)
     , RotatedContentBuffer(ContainsVisibleBounds)
     , mIsNewBuffer(false)
+    , mFrontAndBackBufferDiffer(false)
     , mSurfaceFormat(gfx::SurfaceFormat::B8G8R8A8)
   {}
 
@@ -241,6 +242,8 @@ public:
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,
                        bool aDidSelfCopy);
+
+  virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
   // Expose these protected methods from the superclass.
   virtual const gfx::IntRect& BufferRect() const
@@ -299,6 +302,7 @@ protected:
   nsTArray<RefPtr<TextureClient> > mOldTextures;
 
   bool mIsNewBuffer;
+  bool mFrontAndBackBufferDiffer;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mSurfaceFormat;
 };
@@ -319,7 +323,6 @@ class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
 public:
   explicit ContentClientDoubleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
-    , mFrontAndBackBufferDiffer(false)
   {}
 
   virtual ~ContentClientDoubleBuffered() {}
@@ -366,7 +369,6 @@ private:
 
   Maybe<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
-  bool mFrontAndBackBufferDiffer;
 };
 
 /**
