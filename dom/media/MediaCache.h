@@ -214,13 +214,6 @@ public:
   nsIEventTarget* OwnerThread() const;
 
   // These are called on the main thread.
-  // Tell us whether the stream is seekable or not. Non-seekable streams
-  // will always pass 0 for aOffset to CacheClientSeek. This should only
-  // be called while the stream is at channel offset 0. Seekability can
-  // change during the lifetime of the MediaCacheStream --- every time
-  // we do an HTTP load the seekability may be different (and sometimes
-  // is, in practice, due to the effects of caching proxies).
-  void SetTransportSeekable(bool aIsTransportSeekable);
   // This must be called (and return) before the ChannelMediaResource
   // used to create this MediaCacheStream is deleted.
   void Close();
@@ -259,7 +252,13 @@ public:
   // offset that the cache requested in
   // ChannelMediaResource::CacheClientSeek. This can be called at any
   // time by the client, not just after a CacheClientSeek.
-  void NotifyDataStarted(uint32_t aLoadID, int64_t aOffset);
+  // aSeekable tells us whether the stream is seekable or not. Non-seekable
+  // streams will always pass 0 for aOffset to CacheClientSeek. This should only
+  // be called while the stream is at channel offset 0. Seekability can
+  // change during the lifetime of the MediaCacheStream --- every time
+  // we do an HTTP load the seekability may be different (and sometimes
+  // is, in practice, due to the effects of caching proxies).
+  void NotifyDataStarted(uint32_t aLoadID, int64_t aOffset, bool aSeekable);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
   // the starting offset is known via NotifyDataStarted or because
