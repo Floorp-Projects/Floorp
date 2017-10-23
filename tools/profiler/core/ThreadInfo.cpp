@@ -19,13 +19,15 @@
 #include <unistd.h> // for getpid()
 #endif
 
-ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
+ThreadInfo::ThreadInfo(const char* aName,
+                       int aThreadId,
+                       bool aIsMainThread,
                        void* aStackTop)
   : mName(strdup(aName))
   , mRegisterTime(TimeStamp::Now())
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
-  , mRacyInfo(mozilla::WrapNotNull(new RacyThreadInfo()))
+  , mRacyInfo(mozilla::MakeNotNull<RacyThreadInfo*>())
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
   , mIsBeingProfiled(false)

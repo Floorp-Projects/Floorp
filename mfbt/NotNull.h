@@ -63,6 +63,7 @@
 // for the last one, where the handle type is |void|. See below.
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Move.h"
 #include <stddef.h>
 
 namespace mozilla {
@@ -85,8 +86,8 @@ namespace mozilla {
 // - It does not auto-convert from a base pointer. Implicit conversion from a
 //   less-constrained type (e.g. T*) to a more-constrained type (e.g.
 //   NotNull<T*>) is dangerous. Creation and assignment from a base pointer can
-//   only be done with WrapNotNull(), which makes them impossible to overlook,
-//   both when writing and reading code.
+//   only be done with WrapNotNull() or MakeNotNull<>(), which makes them
+//   impossible to overlook, both when writing and reading code.
 //
 // - When initialized (or assigned) it is checked, and if it is null we abort.
 //   This guarantees that it cannot be null.
@@ -102,10 +103,12 @@ template <typename T>
 class NotNull
 {
   template <typename U> friend NotNull<U> WrapNotNull(U aBasePtr);
+  template<typename U, typename... Args>
+  friend NotNull<U> MakeNotNull(Args&&... aArgs);
 
   T mBasePtr;
 
-  // This constructor is only used by WrapNotNull().
+  // This constructor is only used by WrapNotNull() and MakeNotNull<U>().
   template <typename U>
   explicit NotNull(U aBasePtr) : mBasePtr(aBasePtr) {}
 
@@ -150,6 +153,22 @@ WrapNotNull(const T aBasePtr)
   NotNull<T> notNull(aBasePtr);
   MOZ_RELEASE_ASSERT(aBasePtr);
   return notNull;
+}
+
+// Allocate an object with infallible new, and wrap its pointer in NotNull.
+// |MakeNotNull<Ptr<Ob>>(args...)| will run |new Ob(args...)|
+// and return NotNull<Ptr<Ob>>.
+template<typename T, typename... Args>
+NotNull<T>
+MakeNotNull(Args&&... aArgs)
+{
+  // Extract the pointee type from what T's dereferencing operator returns
+  // (which could be a reference to a const type).
+  using Pointee = typename mozilla::RemoveConst<
+    typename mozilla::RemoveReference<decltype(*DeclVal<T>())>::Type>::Type;
+  static_assert(!IsArray<Pointee>::value,
+                "MakeNotNull cannot construct an array");
+  return NotNull<T>(new Pointee(Forward<Args>(aArgs)...));
 }
 
 // Compare two NotNulls.

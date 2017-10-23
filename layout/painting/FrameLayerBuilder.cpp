@@ -2132,16 +2132,16 @@ FrameLayerBuilder::ClearCachedGeometry(nsDisplayItem* aItem)
   }
 }
 
-/* static */ Layer*
-FrameLayerBuilder::GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey)
+/* static */ DisplayItemData*
+FrameLayerBuilder::GetOldDataFor(nsDisplayItem* aItem)
 {
-  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+  const SmallPointerArray<DisplayItemData>& array = aItem->Frame()->DisplayItemData();
 
   for (uint32_t i = 0; i < array.Length(); i++) {
     DisplayItemData *data = DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
 
-    if (data->mDisplayItemKey == aDisplayItemKey) {
-      return data->mLayer;
+    if (data->mDisplayItemKey == aItem->GetPerFrameKey()) {
+      return data;
     }
   }
   return nullptr;
@@ -4535,7 +4535,15 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     return;
   }
 
+  // If we're a reused display item, then we can't be invalid, so no need to
+  // do an in-depth comparison. If we haven't previously stored geometry
+  // for this item (if it was an active layer), then we can't skip this
+  // yet.
   nsAutoPtr<nsDisplayItemGeometry> geometry;
+  if (item->IsReused() && aData->mGeometry) {
+    aData->EndUpdate(geometry);
+    return;
+  }
 
   PaintedDisplayItemLayerUserData* layerData =
     static_cast<PaintedDisplayItemLayerUserData*>(aData->mLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
@@ -4909,7 +4917,7 @@ FrameLayerBuilder::CheckInLayerTreeCompressionMode()
 
   // If we wanted to be in layer tree compression mode, but weren't, then scheduled
   // a delayed repaint where we will be.
-  mRootPresContext->PresShell()->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DELAYED_COMPRESS);
+  mRootPresContext->PresShell()->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DELAYED_COMPRESS, false);
 
   return false;
 }

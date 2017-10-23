@@ -140,6 +140,9 @@ private:
                      nsIUrlClassifierCallback* c,
                      bool forceCheck, bool *didCheck);
 
+  // Post an event to worker thread to release objects when receive 'quit-application'
+  nsresult PreShutdown();
+
   // Close db connection and join the background thread if it exists.
   nsresult Shutdown();
 
@@ -219,6 +222,8 @@ public:
 
   // Provide a way to forcibly close the db connection.
   nsresult GCC_MANGLING_WORKAROUND CloseDb();
+
+  nsresult GCC_MANGLING_WORKAROUND PreShutdown();
 
   nsresult CacheCompletions(CacheResultArray * aEntries);
 

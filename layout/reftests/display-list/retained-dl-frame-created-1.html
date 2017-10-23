@@ -1,0 +1,25 @@
+<html class="reftest-wait">
+<head>
+<style>
+  div {
+    width:10px;
+    height:10px;
+    background-color:green;
+    display: inline-block;
+  }
+</style>
+</head>
+<body id="body">
+  <div id="first" class="reftest-no-display-list"></div>
+</body>
+<script>
+function doTest() {
+  var div = document.createElement("div");
+  var prev = document.getElementById("first");
+  prev.parentNode.insertBefore(div, prev.nextSibling);
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

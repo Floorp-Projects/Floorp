@@ -128,6 +128,8 @@ for (let [key, val] of Object.entries({
     crashDumpDir: undefined,
     pendingCrashDumpDir: undefined,
     failedNoPaint: false,
+    failedNoDisplayList: false,
+    failedDisplayList: false,
     failedOpaqueLayer: false,
     failedOpaqueLayerMessages: [],
     failedAssignedLayer: false,

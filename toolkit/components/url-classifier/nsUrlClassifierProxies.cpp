@@ -215,6 +215,16 @@ UrlClassifierDBServiceWorkerProxy::CloseDb()
 }
 
 nsresult
+UrlClassifierDBServiceWorkerProxy::PreShutdown()
+{
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod("nsUrlClassifierDBServiceWorker::PreShutdown",
+                      mTarget,
+                      &nsUrlClassifierDBServiceWorker::PreShutdown);
+  return DispatchToWorkerThread(r);
+}
+
+nsresult
 UrlClassifierDBServiceWorkerProxy::CacheCompletions(CacheResultArray * aEntries)
 {
   nsCOMPtr<nsIRunnable> r = new CacheCompletionsRunnable(mTarget, aEntries);
