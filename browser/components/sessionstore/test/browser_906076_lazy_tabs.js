@@ -4,16 +4,16 @@
 const TEST_STATE = {
   windows: [{
     tabs: [
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
-      { entries: [{ url: "http://example.com" }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }] },
     ]
   }]
 };
@@ -21,7 +21,7 @@ const TEST_STATE = {
 const TEST_STATE_2 = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:robots" }]
+      { entries: [{ url: "about:robots", triggeringPrincipal_base64 }]
       },
       { entries: [],
         userTypedValue: "http://example.com",
