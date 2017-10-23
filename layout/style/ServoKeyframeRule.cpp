@@ -31,7 +31,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final
   {
-    *aParent = mRule;
+    NS_IF_ADDREF(*aParent = mRule);
     return NS_OK;
   }
 
