@@ -115,6 +115,12 @@ struct ParamTraits<mozilla::gfx::VRHMDSensorState>
     WriteParam(aMsg, aParam.linearAcceleration[0]);
     WriteParam(aMsg, aParam.linearAcceleration[1]);
     WriteParam(aMsg, aParam.linearAcceleration[2]);
+    for (int i=0; i < 16; i++) {
+      WriteParam(aMsg, aParam.leftViewMatrix[i]);
+    }
+    for (int i=0; i < 16; i++) {
+      WriteParam(aMsg, aParam.rightViewMatrix[i]);
+    }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -142,6 +148,16 @@ struct ParamTraits<mozilla::gfx::VRHMDSensorState>
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[1])) ||
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2]))) {
       return false;
+    }
+    for (int i=0; i < 16; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->leftViewMatrix[i]))) {
+        return false;
+      }
+    }
+    for (int i=0; i < 16; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->rightViewMatrix[i]))) {
+        return false;
+      }
     }
     return true;
   }

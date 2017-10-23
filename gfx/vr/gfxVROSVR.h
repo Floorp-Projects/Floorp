@@ -64,6 +64,8 @@ protected:
   OSVR_ClientContext* m_ctx;
   OSVR_ClientInterface* m_iface;
   OSVR_DisplayConfig* m_display;
+
+  gfx::Matrix4x4 mHeadToEye[2];
 };
 
 } // namespace impl

@@ -87,14 +87,8 @@ VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
     float l, r, t, b;
     mVRSystem->GetProjectionRaw(static_cast<::vr::Hmd_Eye>(eye), &l, &r, &t, &b);
     mDisplayInfo.mEyeFOV[eye].SetFromTanRadians(-t, r, b, -l);
-
-    ::vr::HmdMatrix34_t eyeToHead = mVRSystem->GetEyeToHeadTransform(static_cast<::vr::Hmd_Eye>(eye));
-
-    mDisplayInfo.mEyeTranslation[eye].x = eyeToHead.m[0][3];
-    mDisplayInfo.mEyeTranslation[eye].y = eyeToHead.m[1][3];
-    mDisplayInfo.mEyeTranslation[eye].z = eyeToHead.m[2][3];
   }
-
+  UpdateEyeParameters();
   UpdateStageParameters();
 }
 
@@ -109,6 +103,31 @@ VRDisplayOpenVR::Destroy()
 {
   StopPresentation();
   ::vr::VR_Shutdown();
+}
+
+void
+VRDisplayOpenVR::UpdateEyeParameters(gfx::Matrix4x4* aHeadToEyeTransforms /* = nullptr */)
+{
+  // Note this must be called every frame, as the IPD adjustment can be changed
+  // by the user during a VR session.
+  for (uint32_t eye = 0; eye < VRDisplayInfo::NumEyes; eye++) {
+    ::vr::HmdMatrix34_t eyeToHead = mVRSystem->GetEyeToHeadTransform(static_cast<::vr::Hmd_Eye>(eye));
+
+    mDisplayInfo.mEyeTranslation[eye].x = eyeToHead.m[0][3];
+    mDisplayInfo.mEyeTranslation[eye].y = eyeToHead.m[1][3];
+    mDisplayInfo.mEyeTranslation[eye].z = eyeToHead.m[2][3];
+
+    if (aHeadToEyeTransforms) {
+      Matrix4x4 pose;
+      // NOTE! eyeToHead.m is a 3x4 matrix, not 4x4.  But
+      // because of its arrangement, we can copy the 12 elements in and
+      // then transpose them to the right place.
+      memcpy(&pose._11, &eyeToHead.m, sizeof(eyeToHead.m));
+      pose.Transpose();
+      pose.Invert();
+      aHeadToEyeTransforms[eye] = pose;
+    }
+  }
 }
 
 void
@@ -231,6 +250,8 @@ VRDisplayOpenVR::GetSensorState()
   ::vr::TrackedDevicePose_t poses[posesSize];
   // Note: We *must* call WaitGetPoses in order for any rendering to happen at all.
   mVRCompositor->WaitGetPoses(nullptr, 0, poses, posesSize);
+  gfx::Matrix4x4 headToEyeTransforms[2];
+  UpdateEyeParameters(headToEyeTransforms);
 
   VRHMDSensorState result;
 
@@ -254,7 +275,7 @@ VRDisplayOpenVR::GetSensorState()
     // because of its arrangement, we can copy the 12 elements in and
     // then transpose them to the right place.  We do this so we can
     // pull out a Quaternion.
-    memcpy(&m._11, &pose.mDeviceToAbsoluteTracking, sizeof(float) * 12);
+    memcpy(&m._11, &pose.mDeviceToAbsoluteTracking, sizeof(pose.mDeviceToAbsoluteTracking));
     m.Transpose();
 
     gfx::Quaternion rot;
@@ -277,8 +298,12 @@ VRDisplayOpenVR::GetSensorState()
     result.linearVelocity[0] = pose.vVelocity.v[0];
     result.linearVelocity[1] = pose.vVelocity.v[1];
     result.linearVelocity[2] = pose.vVelocity.v[2];
+  } else {
+    // default to an identity quaternion
+    result.orientation[3] = 1.0f;
   }
 
+  result.CalcViewMatrices(headToEyeTransforms);
   result.inputFrameID = mDisplayInfo.mFrameId;
   return result;
 }
@@ -816,7 +841,7 @@ VRSystemManagerOpenVR::HandleInput()
         // because of its arrangement, we can copy the 12 elements in and
         // then transpose them to the right place.  We do this so we can
         // pull out a Quaternion.
-        memcpy(&m.components, &pose.mDeviceToAbsoluteTracking, sizeof(float) * 12);
+        memcpy(&m.components, &pose.mDeviceToAbsoluteTracking, sizeof(pose.mDeviceToAbsoluteTracking));
         m.Transpose();
 
         gfx::Quaternion rot;

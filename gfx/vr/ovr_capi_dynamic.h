@@ -127,6 +127,12 @@ typedef enum
 } ovrTrackingCaps;
 
 typedef enum {
+  ovrExtension_TextureLayout_Octilinear = 0,
+  ovrExtension_Count,
+  ovrExtension_EnumSize = 0x7fffffff
+} ovrExtensions;
+
+typedef enum {
   ovrEye_Left  = 0,
   ovrEye_Right = 1,
   ovrEye_Count = 2,
@@ -211,7 +217,7 @@ typedef struct OVR_ALIGNAS(4) {
   ovrFovPort  Fov;
   ovrRecti    DistortedViewport;
   ovrVector2f PixelsPerTanAngleAtCenter;
-  ovrVector3f HmdToEyeOffset;
+  ovrPosef    HmdToEyePose;
 } ovrEyeRenderDesc;
 
 typedef struct OVR_ALIGNAS(4) {
@@ -221,7 +227,7 @@ typedef struct OVR_ALIGNAS(4) {
 } ovrTimewarpProjectionDesc;
 
 typedef struct OVR_ALIGNAS(4) {
-  ovrVector3f HmdToEyeOffset[ovrEye_Count];
+  ovrPosef HmdToEyePose[ovrEye_Count];
   float HmdSpaceToWorldScaleInMeters;
 } ovrViewScaleDesc;
 
@@ -277,6 +283,7 @@ typedef enum {
   ovrTextureMisc_DX_Typeless = 0x0001,
   ovrTextureMisc_AllowGenerateMips = 0x0002,
   ovrTextureMisc_ProtectedContent = 0x0004,
+  ovrTextureMisc_AutoGenerateMips = 0x0008,
   ovrTextureMisc_EnumSize = 0x7fffffff
 } ovrTextureFlags;
 
@@ -377,6 +384,8 @@ typedef enum {
 typedef enum {
   ovrHapticsBufferSubmit_Enqueue
 } ovrHapticsBufferSubmitMode;
+
+#define OVR_HAPTICS_BUFFER_SAMPLES_MAX 256
 
 typedef struct {
   const void* Samples;
@@ -483,6 +492,7 @@ typedef enum {
   ovrInit_RequestVersion = 0x00000004,
   ovrInit_Invisible      = 0x00000010,
   ovrInit_MixedRendering = 0x00000020,
+  ovrInit_FocusAware     = 0x00000040,
   ovrinit_WritableBits   = 0x00ffffff,
   ovrInit_EnumSize       = 0x7fffffff
 } ovrInitFlags;
@@ -530,9 +540,15 @@ typedef struct {
   ovrBool DisplayLost;
   ovrBool ShouldQuit;
   ovrBool ShouldRecenter;
+  ovrBool HasInputFocus;
+  ovrBool OverlayPresent;
 } ovrSessionStatus;
 
 typedef ovrResult (OVR_PFN* pfn_ovr_GetSessionStatus)(ovrSession session, ovrSessionStatus* sessionStatus);
+typedef ovrResult (OVR_PFN* pfn_ovr_IsExtensionSupported)(ovrSession session,
+                                                          ovrExtensions extension,
+                                                          ovrBool* outExtensionSupported);
+typedef ovrResult (OVR_PFN* pfn_ovr_EnableExtension)(ovrSession session, ovrExtensions extension);
 typedef ovrResult (OVR_PFN* pfn_ovr_SetTrackingOriginType)(ovrSession session, ovrTrackingOrigin origin);
 typedef ovrTrackingOrigin (OVR_PFN* pfn_ovr_GetTrackingOriginType)(ovrSession session);
 typedef ovrResult (OVR_PFN* pfn_ovr_RecenterTrackingOrigin)(ovrSession session);
@@ -584,6 +600,8 @@ typedef enum {
   ovrLayerType_EyeFov         = 1,
   ovrLayerType_Quad           = 3,
   ovrLayerType_EyeMatrix      = 5,
+  ovrLayerType_EyeFovMultires = 7,
+  ovrLayerType_Cube = 10,
   ovrLayerType_EnumSize       = 0x7fffffff
 } ovrLayerType;
 
@@ -607,6 +625,39 @@ typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
   double SensorSampleTime;
 } ovrLayerEyeFov;
 
+typedef enum {
+  ovrTextureLayout_Rectilinear = 0,
+  ovrTextureLayout_Octilinear = 1,
+  ovrTextureLayout_EnumSize = 0x7fffffff
+} ovrTextureLayout;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  float WarpLeft;
+  float WarpRight;
+  float WarpUp;
+  float WarpDown;
+  float SizeLeft;
+  float SizeRight;
+  float SizeUp;
+  float SizeDown;
+
+} ovrTextureLayoutOctilinear;
+
+typedef union OVR_ALIGNAS(OVR_PTR_SIZE) {
+  ovrTextureLayoutOctilinear Octilinear[ovrEye_Count];
+} ovrTextureLayoutDesc_Union;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  ovrLayerHeader Header;
+  ovrTextureSwapChain ColorTexture[ovrEye_Count];
+  ovrRecti Viewport[ovrEye_Count];
+  ovrFovPort Fov[ovrEye_Count];
+  ovrPosef RenderPose[ovrEye_Count];
+  double SensorSampleTime;
+  ovrTextureLayout TextureLayout;
+  ovrTextureLayoutDesc_Union TextureLayoutDesc;
+} ovrLayerEyeFovMultires;
+
 typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
   ovrLayerHeader Header;
   ovrTextureSwapChain ColorTexture[ovrEye_Count];
@@ -624,10 +675,18 @@ typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
   ovrVector2f QuadSize;
 } ovrLayerQuad;
 
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  ovrLayerHeader Header;
+  ovrQuatf Orientation;
+  ovrTextureSwapChain CubeMapTexture;
+} ovrLayerCube;
+
 typedef union {
   ovrLayerHeader Header;
   ovrLayerEyeFov EyeFov;
   ovrLayerQuad Quad;
+  ovrLayerEyeFovMultires Multires;
+  ovrLayerCube Cube;
 } ovrLayer_Union;
 
 
@@ -638,7 +697,14 @@ typedef ovrResult (OVR_PFN* pfn_ovr_CommitTextureSwapChain)(ovrSession session, 
 typedef void (OVR_PFN* pfn_ovr_DestroyTextureSwapChain)(ovrSession session, ovrTextureSwapChain chain);
 typedef void (OVR_PFN* pfn_ovr_DestroyMirrorTexture)(ovrSession session, ovrMirrorTexture mirrorTexture);
 typedef ovrSizei(OVR_PFN* pfn_ovr_GetFovTextureSize)(ovrSession session, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
-typedef ovrEyeRenderDesc(OVR_PFN* pfn_ovr_GetRenderDesc)(ovrSession session, ovrEyeType eyeType, ovrFovPort fov);
+typedef ovrEyeRenderDesc(OVR_PFN* pfn_ovr_GetRenderDesc2)(ovrSession session, ovrEyeType eyeType, ovrFovPort fov);
+typedef ovrResult (OVR_PFN* pfn_ovr_WaitToBeginFrame)(ovrSession session, long long frameIndex);
+typedef ovrResult (OVR_PFN* pfn_ovr_BeginFrame)(ovrSession session, long long frameIndex);
+typedef ovrResult (OVR_PFN* pfn_ovr_EndFrame)(ovrSession session,
+                                              long long frameIndex,
+                                              const ovrViewScaleDesc* viewScaleDesc,
+                                              ovrLayerHeader const* const* layerPtrList,
+                                              unsigned int layerCount);
 typedef ovrResult(OVR_PFN* pfn_ovr_SubmitFrame)(ovrSession session, long long frameIndex,
 	const ovrViewScaleDesc* viewScaleDesc,
 	ovrLayerHeader const * const * layerPtrList, unsigned int layerCount);
@@ -753,6 +819,7 @@ typedef enum {
   ovrError_InvalidOperation = -1015,
   ovrError_InsufficientArraySize = -1016,
   ovrError_NoExternalCameraInfo = -1017,
+  ovrError_LostTracking = -1018,
   ovrError_AudioDeviceNotFound = -2001,
   ovrError_AudioComError = -2002,
   ovrError_Initialize = -3000,
