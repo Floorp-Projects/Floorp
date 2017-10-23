@@ -138,9 +138,12 @@ public:
     int64_t tilesInFullRow = ((int64_t)mTileBounds.x2 - (int64_t)mTileBounds.x1) / kTileSize;
     int64_t total = tilesInFirstRow + (tilesInFullRow * numberOfFullRows) + tilesInLastRow;
     MOZ_ASSERT(total > 0);
-    // The total may be larger than what fits in a size_t, so clamp it to
-    // SIZE_MAX in that case.
-    return ((uint64_t)total > (uint64_t)SIZE_MAX) ? SIZE_MAX : (size_t)total;
+    // On 32bit systems the total may be larger than what fits in a size_t (4 bytes),
+    // so clamp it to size_t's max value in that case.
+    return static_cast<uint64_t>(total) >=
+               static_cast<uint64_t>(std::numeric_limits<size_t>::max())
+             ? std::numeric_limits<size_t>::max()
+             : static_cast<size_t>(total);
   }
 
   // If aTileOrigin does not describe a tile inside our tile bounds, move it
