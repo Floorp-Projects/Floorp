@@ -82,9 +82,9 @@ protected:
                 FromParser aFromParser);
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
-                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                                         mozilla::dom::FromParser aFromParser));
+  friend nsresult ::NS_NewSVGSVGElement(nsIContent **aResult,
+                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                                        mozilla::dom::FromParser aFromParser);
 
   ~SVGSVGElement();
 
