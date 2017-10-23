@@ -12,7 +12,6 @@
 #include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"             // for DrawTarget, etc
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix
-#include "mozilla/layers/TextureClient.h" // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -27,6 +26,7 @@ class CapturedPaintState;
 
 typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
 
+class TextureClient;
 class PaintedLayer;
 
 // Mixin class for classes which need logic for loaning out a draw target.
@@ -198,37 +198,6 @@ protected:
   // When this is true it means that all pixels have moved inside the buffer.
   // It's not possible to sync with another buffer without a full copy.
   bool                  mDidSelfCopy;
-};
-
-class RemoteRotatedBuffer : public RotatedBuffer
-{
-public:
-  RemoteRotatedBuffer(TextureClient* aClient, TextureClient* aClientOnWhite,
-                      const gfx::IntRect& aBufferRect,
-                      const gfx::IntPoint& aBufferRotation)
-    : RotatedBuffer(aBufferRect, aBufferRotation)
-    , mClient(aClient)
-    , mClientOnWhite(aClientOnWhite)
-  { }
-
-  bool Lock(OpenMode aMode);
-  void Unlock();
-
-  virtual bool HaveBuffer() const override { return !!mClient; }
-  virtual bool HaveBufferOnWhite() const override { return !!mClientOnWhite; }
-
-  virtual already_AddRefed<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const override;
-
-protected:
-  virtual gfx::DrawTarget* GetDTBuffer() const override;
-  virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
-
-private:
-  RefPtr<TextureClient> mClient;
-  RefPtr<TextureClient> mClientOnWhite;
-
-  RefPtr<gfx::DrawTarget> mTarget;
-  RefPtr<gfx::DrawTarget> mTargetOnWhite;
 };
 
 class SourceRotatedBuffer : public RotatedBuffer
