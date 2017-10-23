@@ -78,7 +78,8 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 ],
                 'stage_product': 'firefox',
                 'platform_supports_post_upload_to_latest': True,
-                'build_resources_path': '%(abs_src_dir)s/obj-firefox/.mozbuild/build_resources.json',
+                'build_resources_path': \
+                '%(abs_src_dir)s/obj-firefox/.mozbuild/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
                 # try will overwrite these
@@ -205,7 +206,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         self.actions = tuple(rw_config.actions)
         self.all_actions = tuple(rw_config.all_actions)
 
-
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
@@ -256,6 +256,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             # Suppress Windows modal dialogs to avoid hangs
             import ctypes
             ctypes.windll.kernel32.SetErrorMode(0x8001)
+
 
 if __name__ == '__main__':
     fx_desktop_build = FxDesktopBuild()
