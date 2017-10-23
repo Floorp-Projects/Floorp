@@ -389,6 +389,12 @@ RotatedBuffer::AdjustTo(const gfx::IntRect& aDestBufferRect,
   return true;
 }
 
+RotatedBuffer::ContentType
+RotatedBuffer::GetContentType() const
+{
+  return ContentForFormat(GetFormat());
+}
+
 DrawTarget*
 RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
                                                  ContextSource aSource,
