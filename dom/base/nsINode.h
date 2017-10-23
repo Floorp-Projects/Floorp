@@ -1978,6 +1978,12 @@ protected:
     return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
   }
 
+  /**
+   * Invalidate cached child array inside mChildNodes
+   * of type nsParentNodeChildContentList.
+   */
+  void InvalidateChildNodes();
+
   bool IsEditableInternal() const;
   virtual bool IsEditableExternal() const
   {
