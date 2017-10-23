@@ -415,10 +415,11 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
 
 nsIntRegion
 ContentClientRemoteBuffer::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
-                                            const nsIntRegion& aVisibleRegion)
+                                            const nsIntRegion& aVisibleRegion,
+                                            bool aDidSelfCopy)
 {
   nsIntRegion updatedRegion;
-  if (mIsNewBuffer || mDidSelfCopy) {
+  if (mIsNewBuffer || aDidSelfCopy) {
     // A buffer reallocation clears both buffers. The front buffer has all the
     // content by now, but the back buffer is still clear. Here, in effect, we
     // are saying to copy all of the pixels of the front buffer to the back.
@@ -441,10 +442,12 @@ ContentClientRemoteBuffer::GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
 
 void
 ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
-                                   const nsIntRegion& aVisibleRegion)
+                                   const nsIntRegion& aVisibleRegion,
+                                   bool aDidSelfCopy)
 {
   nsIntRegion updatedRegion = GetUpdatedRegion(aRegionToDraw,
-                                               aVisibleRegion);
+                                               aVisibleRegion,
+                                               aDidSelfCopy);
 
   MOZ_ASSERT(mTextureClient);
   if (mTextureClientOnWhite) {
@@ -544,6 +547,14 @@ ContentClientDoubleBuffered::DestroyFrontBuffer()
 
     mFrontBuffer = Nothing();
   }
+}
+
+void
+ContentClientDoubleBuffered::Updated(const nsIntRegion& aRegionToDraw,
+                                     const nsIntRegion& aVisibleRegion,
+                                     bool aDidSelfCopy)
+{
+  ContentClientRemoteBuffer::Updated(aRegionToDraw, aVisibleRegion, aDidSelfCopy);
 }
 
 void

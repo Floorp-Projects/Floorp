@@ -90,7 +90,8 @@ ClientPaintedLayer::UpdateContentClient(PaintState& aState)
   // so deleting this Hold for whatever reason will break things.
   ClientManager()->Hold(this);
   contentClientRemote->Updated(aState.mRegionToDraw,
-                               mVisibleRegion.ToUnknownRegion());
+                               mVisibleRegion.ToUnknownRegion(),
+                               aState.mDidSelfCopy);
 }
 
 bool
