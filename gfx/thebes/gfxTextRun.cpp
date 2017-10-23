@@ -3389,7 +3389,9 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
         for (j = 0; j < numPrefs; j++) {
             // look up the appropriate face
             gfxFontFamily *family = (*families)[j];
-            if (!family) continue;
+            if (!family) {
+                continue;
+            }
 
             // if a pref font is used, it's likely to be used again in the same text run.
             // the style doesn't change so the face lookup can be cached rather than calling
@@ -3401,8 +3403,12 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
 
             bool needsBold;
             gfxFontEntry *fe = family->FindFontForStyle(mStyle, needsBold);
+            if (!fe) {
+                continue;
+            }
+
             // if ch in cmap, create and return a gfxFont
-            if (fe && fe->HasCharacter(aCh)) {
+            if (fe->HasCharacter(aCh)) {
                 gfxFont* prefFont = fe->FindOrMakeFont(&mStyle, needsBold);
                 if (!prefFont) {
                     continue;
@@ -3414,6 +3420,21 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
                 return prefFont;
             }
 
+            // If we requested a styled font (bold and/or italic), and the char
+            // was not available, check the regular face as well.
+            if (!fe->IsNormalStyle()) {
+                // If style/weight/stretch was not Normal, see if we can
+                // fall back to a next-best face (e.g. Arial Black -> Bold,
+                // or Arial Narrow -> Regular).
+                gfxFont* prefFont = FindFallbackFaceForChar(family, aCh);
+                if (prefFont) {
+                    mLastPrefFamily = family;
+                    mLastPrefFont = prefFont;
+                    mLastPrefLang = charLang;
+                    mLastPrefFirstFont = (i == 0 && j == 0);
+                    return prefFont;
+                }
+            }
         }
     }
 
