@@ -12,6 +12,9 @@ MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 MOZ_PKG_MANIFEST = $(srcdir)/package-manifest.in
 MOZ_PKG_DUPEFLAGS = -f $(srcdir)/allowed-dupes.mn
 
+DEFINES += -DPKG_LOCALE_MANIFEST=$(topobjdir)/browser/installer/locale-manifest.in
+MOZ_CHROME_LOCALE_ENTRIES=@RESPATH@/browser/chrome/ @RESPATH@/chrome/
+
 # Some files have been already bundled with xulrunner
 ifndef MOZ_MULET
 MOZ_PKG_FATAL_WARNINGS = 1

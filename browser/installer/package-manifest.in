@@ -45,10 +45,6 @@
 #endif
 
 [@AB_CD@]
-@RESPATH@/browser/chrome/@AB_CD@@JAREXT@
-@RESPATH@/browser/chrome/@AB_CD@.manifest
-@RESPATH@/chrome/@AB_CD@@JAREXT@
-@RESPATH@/chrome/@AB_CD@.manifest
 @RESPATH@/dictionaries/*
 #if defined(XP_WIN) || defined(XP_LINUX)
 @RESPATH@/fonts/*
@@ -849,4 +845,8 @@ bin/libfreebl_32int64_3.so
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN)
 @RESPATH@/components/BHRTelemetryService.js
 @RESPATH@/components/BHRTelemetryService.manifest
+#endif
+
+#ifdef PKG_LOCALE_MANIFEST
+#include @PKG_LOCALE_MANIFEST@
 #endif
