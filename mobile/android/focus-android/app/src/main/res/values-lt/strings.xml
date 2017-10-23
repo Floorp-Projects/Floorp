@@ -40,6 +40,7 @@
   <string name="preference_performance_block_webfonts">Blokuoti saityno šriftus</string>
   <string name="preference_performance_block_webfonts_summary">Galite nematyti kai kurių piktogramų arba paveikslų</string>
   <string name="preference_performance_block_images">Blokuoti paveikslus</string>
+  <string name="preference_default_browser2">Padaryti „%1$s“ numatytąja naršykle</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Siųsti naudojimo duomenis</string>
   <string name="preference_mozilla_telemetry_summary">Sužinoti daugiau</string>

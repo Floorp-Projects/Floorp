@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">۔%1$s کے ساتھ کھولِں</string>
   <string name="menu_open_with_a_browser">کے ساتھ کھولیں…</string>
   <string name="menu_add_to_home_screen">ابتدائی اسکرین پر اظافہ کریں</string>
+  <string name="menu_whats_new">نیا کیا ہے</string>
   <string name="menu_settings">سیٹنگیں</string>
   <string name="menu_about">کے بارے میں</string>
   <string name="menu_help">مدد</string>
@@ -44,6 +45,12 @@
   <string name="preference_mozilla_telemetry_summary">مزید سیکھیں</string>
   <string name="preference_privacy_notice">رازداری کا نوٹس</string>
   <string name="preference_about">کے بارے میں%1$s</string>
+  <string name="preference_search_remove">ہٹائیں</string>
+  <string name="action_option_add_search_engine">تلاش انجن اضافہ کریں</string>
+  <string name="tutorial_search_finish">GET STARTED</string>
+  <string name="search_add_manually_save">محفوظ کریں</string>
+  <string name="accessibility_announcement_search">تلاش انجن اضافہ کریں</string>
+  <string name="search_add_confirmation">نیا تلاش انجن شامل کر دیا گیا۔</string>
   <string name="content_description_clear_input">ان پٹ صاف کریں</string>
   <string name="content_description_dismiss_input">برخاست کریں</string>
   <string name="content_description_erase">برائوزنگ سابقات مٹائیں</string>

@@ -47,6 +47,10 @@
   <string name="preference_mozilla_telemetry_summary2">Η Mozilla αγωνίζεται για να συλλέγει μόνο ό,τι χρειάζεται για να παρέχει και να βελτιώνει το %1$s για όλους.</string>
   <string name="preference_privacy_notice">Σημείωση απορρήτου</string>
   <string name="preference_about">Σχετικά με το %1$s</string>
+  <string name="tutorial_search_step2">2. Πατήστε το πεδίο αναζήτησης της μηχανής αναζήτησης.</string>
+  <string name="tutorial_search_step3_alternative">3. Πατήστε %1$s</string>
+  <string name="tutorial_search_finish">ΕΝΑΡΞΗ</string>
+  <string name="search_add_manually_name">Όνομα προς προβολή</string>
   <string name="content_description_clear_input">Εκκαθάριση εισόδου</string>
   <string name="content_description_dismiss_input">Απόρριψη</string>
   <string name="content_description_erase">Διαγραφή ιστορικού περιήγησης</string>

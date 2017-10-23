@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">%1$s తో తెరవండి</string>
   <string name="menu_open_with_a_browser">దీనితో తెరువు…</string>
   <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
+  <string name="menu_whats_new">కొత్తది ఏమిటి</string>
   <string name="menu_settings">అమరికలు</string>
   <string name="menu_about">గురించి</string>
   <string name="menu_help">సహాయం</string>
@@ -44,6 +45,10 @@
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
   <string name="preference_privacy_notice">గోప్యతా విధానం</string>
   <string name="preference_about">%1$s గురించి</string>
+  <string name="preference_search_remove">తీసివేయి</string>
+  <string name="tutorial_search_title">శోధన యంత్రాన్ని చేర్చు</string>
+  <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
+  <string name="search_add_manually_save">భద్రపరచు</string>
   <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
   <string name="content_description_dismiss_input">విస్మరించు</string>
   <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>

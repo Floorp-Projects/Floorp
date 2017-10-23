@@ -71,7 +71,7 @@
   <string name="external_app_prompt">Може да напуснете %1$s, за да отворите препратката в %2$s.</string>
   <string name="external_app_prompt_no_app_title">Търсене на приложение за отваряне на препратката</string>
   <string name="external_app_prompt_no_app">Никое от приложенията на устройството ви са способни да отворят тази препратка. Може да напуснете %1$s, за да потърсите в %2$s подходящо приложение.</string>
-  <string name="external_multiple_apps_matched_exit">Излизане от поверително сърфиране?</string>
+  <string name="external_multiple_apps_matched_exit">Излизане от поверително разглеждане?</string>
   <string name="download_snackbar_finished">%1$s е изтеглен</string>
   <string name="download_snackbar_open">Отваряне</string>
   <string name="download_dialog_warning"><![CDATA["Изтеглените файлове "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1103;&#1084;&#1072; &#1076;&#1072; &#1073;&#1098;&#1076;&#1072;&#1090; &#1080;&#1079;&#1090;&#1088;&#1080;&#1090;&#1080;</b>" при изтриване на историята на %1$s."]]></string>

@@ -23,7 +23,7 @@
   <string name="shortcut_erase_short_label">Löschen</string>
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
   <string name="text_selection_search_action">Privat Suchen</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie es als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie ihn als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_language">Sprache</string>
@@ -48,6 +48,32 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla ist bestrebt, nur die Informationen zu sammeln, mit denen wir %1$s anbieten und für alle Nutzer verbessern können.</string>
   <string name="preference_privacy_notice">Datenschutzhinweis</string>
   <string name="preference_about">Über %1$s</string>
+  <string name="preference_search_installed_search_engines">Installierte Suchmaschinen</string>
+  <string name="preference_search_restore">Standard-Suchmaschinen wiederherstellen</string>
+  <string name="preference_search_add">Weitere Suchmaschine hinzufügen</string>
+  <string name="preference_search_remove_title">Suchmaschinen entfernen</string>
+  <string name="preference_search_remove">Entfernen</string>
+  <string name="tutorial_search_manually_add">Manuell hinzufügen</string>
+  <string name="tutorial_search_title">Suchmaschine hinzufügen</string>
+  <string name="tutorial_search_step1">1. Öffnen Sie die Startseite der Suchmaschine.</string>
+  <string name="tutorial_search_step2">2. Tippen Sie in das Suchfeld der Suchmaschine.</string>
+  <string name="tutorial_search_step2_alternative">2. Drücken Sie lange auf das Suchfeld der Suchmaschine.</string>
+  <string name="tutorial_search_step3">3. Tippen Sie auf das Lupensymbol über der Tastatur, um die Suchmaschine hinzuzufügen.</string>
+  <string name="action_option_add_search_engine">Suchmaschine hinzufügen</string>
+  <string name="tutorial_search_step3_alternative">3. Tippen Sie auf %1$s</string>
+  <string name="tutorial_search_step4">4. Wenn die Lupe nicht angezeigt wird, versuchen Sie, die Suchmaschine manuell hinzuzufügen.</string>
+  <string name="tutorial_search_step4_alternative">4. Wenn %1$s nicht angezeigt wird, versuchen Sie, die Suchmaschine manuell hinzuzufügen.</string>
+  <string name="tutorial_search_finish">ERSTE SCHRITTE</string>
+  <string name="search_add_hint">Tippen Sie auf das Lupensymbol über der Tastatur, um diese Suchmaschine hinzuzufügen.</string>
+  <string name="search_add_manually_name">Anzeigename</string>
+  <string name="search_add_manually_name_hint">Name der Suchmaschine</string>
+  <string name="search_add_manually_string">Zu verwendender Such-String</string>
+  <string name="search_add_manually_save">Speichern</string>
+  <string name="search_add_manually_string_hint">Such-String einfügen oder eingeben. Wenn nötig, ersetzen Sie den Suchbegriff mit: %s.</string>
+  <string name="search_add_manually_example">Beispiel: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Suchmaschine hinzufügen</string>
+  <string name="search_add_confirmation">Neue Suchmaschine hinzugefügt.</string>
+  <string name="search_add_error">Überprüfen Sie den Such-String und versuchen Sie es erneut</string>
   <string name="content_description_clear_input">Eingabefeld leeren</string>
   <string name="content_description_dismiss_input">Schließen</string>
   <string name="content_description_erase">Browser-Chronik löschen</string>

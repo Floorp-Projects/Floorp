@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
   <string name="menu_open_with_a_browser">এটির সাহায্যে খুলুন…</string>
   <string name="menu_add_to_home_screen">হোমস্ক্রিনে যোগ</string>
+  <string name="menu_whats_new">নতুন কি আছে</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
   <string name="menu_help">সহায়তা</string>
@@ -41,6 +42,7 @@
   <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
+  <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
   <string name="preference_about">%1$s সম্পর্কে</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
   <string name="content_description_dismiss_input">খারিজ</string>
@@ -102,5 +104,6 @@
   <string name="dialog_addtohomescreen_action_add">যোগ</string>
   <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
   <string name="dialog_opentab_action_open">খুলুন</string>
+  <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
   <string name="download_firefox">Firefox ডাউনলোড করুন</string>
 </resources>

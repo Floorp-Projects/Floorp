@@ -48,6 +48,26 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>
   <string name="preference_privacy_notice">Kebijakan Privasi</string>
   <string name="preference_about">Tentang %1$s</string>
+  <string name="preference_search_installed_search_engines">Mesin pencari terpasang</string>
+  <string name="preference_search_restore">Pulihkan mesin pencari baku</string>
+  <string name="preference_search_add">Tambahkan mesin pencari lainnya</string>
+  <string name="preference_search_remove_title">Hapus mesin pencari</string>
+  <string name="preference_search_remove">Hapus</string>
+  <string name="tutorial_search_manually_add">Tambahkan secara manual</string>
+  <string name="tutorial_search_title">Tambah mesin pencari</string>
+  <string name="tutorial_search_step1">1. Buka laman beranda mesin pencari.</string>
+  <string name="tutorial_search_step2">2. Ketuk kolom pencarian mesin pencari.</string>
+  <string name="action_option_add_search_engine">Tambah mesin pencari</string>
+  <string name="tutorial_search_step3_alternative">3. Ketuk %1$s</string>
+  <string name="tutorial_search_step4">4. Jika Anda tidak melihat kaca pembesar, coba tambahkan mesin pencari secara manual.</string>
+  <string name="tutorial_search_step4_alternative">4. Jika Anda tidak menemukan %1$s, coba menambahkan mesin pencari secara manual.</string>
+  <string name="tutorial_search_finish">MULAI</string>
+  <string name="search_add_manually_name">Nama untuk ditampilkan</string>
+  <string name="search_add_manually_name_hint">Nama mesin pencari</string>
+  <string name="search_add_manually_save">Simpan</string>
+  <string name="search_add_manually_example">Contoh: contoh.id/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Tambah mesin pencari</string>
+  <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>
   <string name="content_description_dismiss_input">Tutup</string>
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>

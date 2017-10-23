@@ -10,10 +10,12 @@
   <string name="menu_open_with_default_browser">Åbn med %1$s</string>
   <string name="menu_open_with_a_browser">Åbn med…</string>
   <string name="menu_add_to_home_screen">Føj til startskærmen</string>
+  <string name="menu_whats_new">Nyheder</string>
   <string name="menu_settings">Indstillinger</string>
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjælp</string>
   <string name="menu_rights">Dine rettigheder</string>
+  <string name="menu_trackers_blocked_title">Forsøg på sporing blokeret</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slet browser-historik</string>
   <string name="notification_action_open">Åbn</string>
@@ -28,22 +30,67 @@
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standard-søgetjeneste</string>
   <string name="preference_category_privacy">Privatliv</string>
+  <string name="preference_privacy_block_ads">Bloker sporing via reklamer</string>
+  <string name="preference_privacy_block_analytics">Bloker analytisk sporing</string>
+  <string name="preference_privacy_block_social">Bloker sporing via sociale medier</string>
+  <string name="preference_privacy_block_content">Bloker andre former for indholdssporing</string>
+  <string name="preference_privacy_block_content_summary">Kan forhindre visning af visse videoer og websider</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
+  <string name="preference_privacy_stealth_summary">Skjul indhold på listen over senest brugte apps</string>
   <string name="preference_category_performance">Ydelse</string>
   <string name="preference_performance_block_webfonts">Bloker webskrifttyper</string>
+  <string name="preference_performance_block_webfonts_summary">Kan medføre at ikoner eller billeder mangler</string>
   <string name="preference_performance_block_images">Bloker billeder</string>
+  <string name="preference_default_browser2">Angiv %1$s som standard-browser</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Send data for anvendelse</string>
   <string name="preference_mozilla_telemetry_summary">Læs mere</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla tilstræber kun at indsamle, hvad vi skal bruge for at kunne udbyde og forbedre %1$s for alle.</string>
   <string name="preference_privacy_notice">Privatlivspolitik</string>
   <string name="preference_about">Om %1$s</string>
+  <string name="preference_search_installed_search_engines">Installerede søgetjenester</string>
+  <string name="preference_search_restore">Gendan standard-søgetjenester</string>
+  <string name="preference_search_add">Tilføj en ny søgetjeneste</string>
+  <string name="preference_search_remove_title">Fjern søgetjenester</string>
+  <string name="preference_search_remove">Fjern</string>
+  <string name="tutorial_search_manually_add">Tilføj manuelt</string>
+  <string name="tutorial_search_title">Tilføj søgetjeneste</string>
+  <string name="tutorial_search_step1">1. Gå til søgetjenestens websted.</string>
+  <string name="tutorial_search_step2">2. Tryk på søgetjenestens søgefelt.</string>
+  <string name="tutorial_search_step2_alternative">2. Tryk og hold på søgetjenestens søgefelt.</string>
+  <string name="tutorial_search_step3">3. Tryk på forstørrelsesglasset over tastaturet for at tilføje søgetjenesten.</string>
+  <string name="action_option_add_search_engine">Tilføj søgetjeneste</string>
+  <string name="tutorial_search_step3_alternative">3. Tryk på %1$s</string>
+  <string name="tutorial_search_step4">4. Hvis du ikke kan se forstørrelsesglasset, så prøv at tilføje en søgetjeneste manuelt.</string>
+  <string name="tutorial_search_step4_alternative">4. Hvis du ikke kan se %1$s, så prøv at tilføje en søgetjeneste manuelt.</string>
+  <string name="tutorial_search_finish">KOM I GANG</string>
+  <string name="search_add_hint">Tryk på forstørrelsesglasset over tastaturet for at tilføje denne søgetjeneste.</string>
+  <string name="search_add_manually_name">Navn der skal vises</string>
+  <string name="search_add_manually_name_hint">Søgetjenestens navn</string>
+  <string name="search_add_manually_string">Søgestreng der skal anvendes</string>
+  <string name="search_add_manually_save">Gem</string>
+  <string name="search_add_manually_string_hint">Indsæt eller indtast søgestreng. Om nødvendigt, erstat søgetermen med: %s.</string>
+  <string name="search_add_manually_example">Eksempel: eksempel.dk/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Tilføj søgetjeneste</string>
+  <string name="search_add_confirmation">Ny søgetjeneste tilføjet.</string>
+  <string name="search_add_error">Kontroller søgestrengen og prøv igen</string>
   <string name="content_description_clear_input">Ryd adressefeltet</string>
+  <string name="content_description_dismiss_input">Afvis</string>
   <string name="content_description_erase">Slet browser-historik</string>
   <string name="content_description_fab_expand">Udvid</string>
   <string name="content_description_tab_counter">Åbne faneblade: %1$s</string>
   <string name="content_description_open_tab">Åbn nyt faneblad</string>
   <string name="content_description_close_tab">Luk faneblad</string>
   <string name="content_description_lock">Sikker forbindelse</string>
+  <string name="accessibility_announcement_loading">Siden indlæses</string>
+  <string name="accessibility_announcement_loading_finished">Siden er indlæst</string>
+  <string name="content_description_menu">Flere indstillinger</string>
+  <string name="content_description_forward">Gå frem</string>
+  <string name="content_description_reload">Genindlæs siden</string>
+  <string name="content_description_back">Gå tilbage</string>
+  <string name="content_description_stop">Afbryd indlæsning af siden</string>
   <string name="content_description_customtab_exit">Tilbage til forrige app</string>
+  <string name="content_description_blocking_switch">Bloker sporing</string>
   <string name="context_menu_paste_go">Indsæt og gå</string>
   <string name="your_rights">Dine rettigheder</string>
   <string name="external_app_prompt_title">Åbn link i en anden app</string>
@@ -51,6 +98,7 @@
   <string name="external_app_prompt_no_app_title">Find en app der kan åbne linket</string>
   <string name="external_app_prompt_no_app">Ingen app på din enhed kan åbne dette link. Du kan forlade %1$s og søge på %2$s efter en app der kan.</string>
   <string name="external_multiple_apps_matched_exit">Afslut privat browsing?</string>
+  <string name="download_snackbar_finished">%1$s hentet</string>
   <string name="download_snackbar_open">Åbn</string>
   <string name="download_dialog_warning"><![CDATA["Hentede filer "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">bliver ikke slettet,</b>" når du sletter historikken i %1$s."]]></string>
   <string name="download_dialog_title">Hent fil</string>
@@ -71,6 +119,8 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du er m&#229;ske n&#248;dt til at installere andet software for at &#229;bne denne adresse.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Sikker forbindelse mislykkedes</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette kan v&#230;re et problem med serverens konfiguration,\neller det kan betyde, at nogen fors&#248;ger at give sig ud for at v&#230;re serveren.</li>"\n  "<li>Hvis du har kunnet tilg&#229; serveren tidligere kan dette problem v&#230;re midlertidigt\nog du anbefales at pr&#248;ve igen senere.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Siden kan af uvisse årsager ikke indlæses.</string>
   <string name="contextmenu_link_share">Del link</string>
   <string name="contextmenu_link_copy">Kopier linkadresse</string>
   <string name="contextmenu_image_share">Del billede</string>
@@ -78,7 +128,14 @@
   <string name="contextmenu_image_save">Gem billede</string>
   <string name="contextmenu_open_in_new_tab">Åbn link i nyt faneblad</string>
   <string name="contextmenu_image_warning"><![CDATA["Gemte og delte billeder "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke blive slettet,</b>" når du sletter historikken i %1$s."]]></string>
+  <string name="firstrun_defaultbrowser_title">Styrk dit privatliv</string>
+  <string name="firstrun_defaultbrowser_text2">Tag privat browsing til næste niveau. Bloker reklamer og andet indhold, der kan spore din færden på nettet og gøre det langsommere at hente sider.</string>
+  <string name="firstrun_search_title">Søgning på dine præmisser</string>
+  <string name="firstrun_search_text">Leder du efter noget andet? Vælg en ny standard-søgemaskine i Indstillinger.</string>
   <string name="firstrun_shortcut_title">Tilføj genveje til din startskærm</string>
+  <string name="firstrun_shortcut_text">Gå hurtigt tilbage til dine yndlingssider i %1$s. Vælg blot \"Føj til startskærm\" fra menuen i %1$s.</string>
+  <string name="firstrun_privacy_title">Gør beskyttelse af dit privatliv til en vane</string>
+  <string name="firstrun_privacy_text">Angiv %1$s som din standard-browser og få fordelene ved privat browsing, når du åbner websider fra andre apps.</string>
   <string name="firstrun_close_button">OK, forstået!</string>
   <string name="firstrun_skip_button">Spring over</string>
   <string name="firstrun_next_button">Næste</string>
@@ -86,7 +143,16 @@
   <string name="dialog_addtohomescreen_title">Føj til startskærm</string>
   <string name="dialog_addtohomescreen_action_add">Tilføj</string>
   <string name="dialog_addtohomescreen_action_cancel">Annuller</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Genvej vil åbne med sporingsbeskyttelse deaktiveret</string>
   <string name="dialog_opentab_title">Åbn link i valgte faneblad</string>
   <string name="dialog_opentab_action_open">Åbn</string>
+  <string name="notification_browsing_session_channel_name">Privat browsing-session</string>
+  <string name="notification_browsing_session_channel_description">Med beskeder kan du slette din %1$s-session med et enkelt tryk. Du behøver hverken åbne appen eller se, hvad der kører i din browser.</string>
   <string name="tabs_tray_action_erase">Slet browser-historik</string>
+  <string name="download_firefox">Hent Firefox</string>
+  <string name="your_rights_content1">%1$s er frit og åbent software, udviklet af Mozilla og andre bidragydere.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s er tilgængelig under de vilkår der er fastsat i "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" og andre licenser til åben kildekode."]]></string>
+  <string name="your_rights_content3"><![CDATA["Du bliver ikke givet nogen ret eller licens til varemærker tilhørende Mozilla Foundation eller tredjepart, herunder navn og logo for Mozilla, Firefox og %1$s. Få flere oplysninger "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">her</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Yderligere gratis og åben kildekode til %1$s er tilgængelig under diverse "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licenser</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s benytter sig også af blokeringslister fra Disconnect, Inc. som adskilte og uafhængige værker under "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>". Listerne er tilgængelige "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">her</a>.]]></string>
 </resources>
