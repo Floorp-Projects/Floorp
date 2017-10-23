@@ -1335,7 +1335,8 @@ PlacesController.prototype = {
             doCopy = true;
           }
 
-          transactionData.push([item, type, parent, insertionIndex, doCopy]);
+          transactionData.push(PlacesUIUtils.getTransactionForData(
+            item, type, parent, insertionIndex, doCopy));
 
           // Adjust index to make sure items are pasted in the correct
           // position.  If index is DEFAULT_INDEX, items are just appended.
@@ -1345,9 +1346,8 @@ PlacesController.prototype = {
 
         await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactionData.length, async () => {
           await PlacesTransactions.batch(async () => {
-            for (let item of transactionData) {
-              let guid = await PlacesUIUtils.getTransactionForData(
-                ...item).transact();
+            for (let transaction of transactionData) {
+              let guid = await transaction.transact();
               itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
             }
           });
@@ -1676,34 +1676,69 @@ var PlacesControllerDragHelper = {
       } else
         throw new Error("bogus data was passed as a tab");
 
-      for (let unwrapped of nodes) {
-        let index = await insertionPoint.getIndex();
+      if (PlacesUIUtils.useAsyncTransactions) {
+        // If dragging over a tag container we should tag the item.
+        if (insertionPoint.isTag) {
+          let urls = nodes.filter(item => "uri" in item).map(item => item.uri);
+          transactions.push(PlacesTransactions.Tag({ urls, tag: tagName }));
+        } else {
+          for (let unwrapped of nodes) {
+            let index = await insertionPoint.getIndex();
 
-        if (index != -1 && unwrapped.itemGuid) {
-          // Note: we use the parent from the existing bookmark as the sidebar
-          // gives us an unwrapped.parent that is actually a query and not the real
-          // parent.
-          let existingBookmark = await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid);
+            if (index != -1 && unwrapped.itemGuid) {
+              // Note: we use the parent from the existing bookmark as the sidebar
+              // gives us an unwrapped.parent that is actually a query and not the real
+              // parent.
+              let existingBookmark = await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid);
 
-          // If we're dropping on the same folder, then we may need to adjust
-          // the index to insert at the correct place.
-          if (existingBookmark && parentGuid == existingBookmark.parentGuid) {
-            if (PlacesUIUtils.useAsyncTransactions) {
-              if (index < existingBookmark.index) {
-                // When you drag multiple elts upward: need to increment index or
-                // each successive elt will be inserted at the same index, each
-                // above the previous.
-                index += movedCount++;
-              } else if (index > existingBookmark.index) {
-                // If we're dragging down, we need to go one lower to insert at
-                // the real point as moving the element changes the index of
-                // everything below by 1.
-                index--;
-              } else {
-                // This isn't moving so we skip it.
-                continue;
+              // If we're dropping on the same folder, then we may need to adjust
+              // the index to insert at the correct place.
+              if (existingBookmark && parentGuid == existingBookmark.parentGuid) {
+                if (index < existingBookmark.index) {
+                  // When you drag multiple elts upward: need to increment index or
+                  // each successive elt will be inserted at the same index, each
+                  // above the previous.
+                  index += movedCount++;
+                } else if (index > existingBookmark.index) {
+                  // If we're dragging down, we need to go one lower to insert at
+                  // the real point as moving the element changes the index of
+                  // everything below by 1.
+                  index--;
+                } else {
+                  // This isn't moving so we skip it.
+                  continue;
+                }
               }
-            } else {
+            }
+
+            // If this is not a copy, check for safety that we can move the
+            // source, otherwise report an error and fallback to a copy.
+            if (!doCopy && !PlacesControllerDragHelper.canMoveUnwrappedNode(unwrapped)) {
+              Components.utils.reportError("Tried to move an unmovable Places " +
+                                           "node, reverting to a copy operation.");
+              doCopy = true;
+            }
+            transactions.push(
+              PlacesUIUtils.getTransactionForData(unwrapped,
+                                                  flavor,
+                                                  parentGuid,
+                                                  index,
+                                                  doCopy));
+          }
+        }
+      } else {
+        for (let unwrapped of nodes) {
+          let index = await insertionPoint.getIndex();
+
+          if (index != -1 && unwrapped.itemGuid) {
+            // Note: we use the parent from the existing bookmark as the sidebar
+            // gives us an unwrapped.parent that is actually a query and not the real
+            // parent.
+            let existingBookmark = await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid);
+
+            // If we're dropping on the same folder, then we may need to adjust
+            // the index to insert at the correct place.
+            if (existingBookmark && parentGuid == existingBookmark.parentGuid) {
               // Sync Transactions. Adjust insertion index to prevent reversal
               // of dragged items. When you drag multiple elts upward: need to
               // increment index or each successive elt will be inserted at the
@@ -1713,32 +1748,21 @@ var PlacesControllerDragHelper = {
               }
             }
           }
-        }
 
-        // If dragging over a tag container we should tag the item.
-        if (insertionPoint.isTag) {
-          let uri = NetUtil.newURI(unwrapped.uri);
-          let tagItemId = insertionPoint.itemId;
-          if (PlacesUIUtils.useAsyncTransactions)
-            transactions.push(PlacesTransactions.Tag({ uri, tag: tagName }));
-          else
+          // If dragging over a tag container we should tag the item.
+          // eslint-disable-next-line no-lonely-if
+          if (insertionPoint.isTag) {
+            let uri = NetUtil.newURI(unwrapped.uri);
+            let tagItemId = insertionPoint.itemId;
             transactions.push(new PlacesTagURITransaction(uri, [tagItemId]));
-        } else {
-          // If this is not a copy, check for safety that we can move the
-          // source, otherwise report an error and fallback to a copy.
-          if (!doCopy && !PlacesControllerDragHelper.canMoveUnwrappedNode(unwrapped)) {
-            Components.utils.reportError("Tried to move an unmovable Places " +
-                                         "node, reverting to a copy operation.");
-            doCopy = true;
-          }
-          if (PlacesUIUtils.useAsyncTransactions) {
-            transactions.push(
-              PlacesUIUtils.getTransactionForData(unwrapped,
-                                                  flavor,
-                                                  parentGuid,
-                                                  index,
-                                                  doCopy));
           } else {
+            // If this is not a copy, check for safety that we can move the
+            // source, otherwise report an error and fallback to a copy.
+            if (!doCopy && !PlacesControllerDragHelper.canMoveUnwrappedNode(unwrapped)) {
+              Components.utils.reportError("Tried to move an unmovable Places " +
+                                           "node, reverting to a copy operation.");
+              doCopy = true;
+            }
             transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
                                 flavor, insertionPoint.itemId,
                                 index, doCopy));
