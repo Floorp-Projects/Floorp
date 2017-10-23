@@ -218,9 +218,9 @@ class FormatProvider(MachCommandBase):
         import hashlib
         bin_sha = {
             "Windows": "5b6a236425abde1a04ff09e74d8fd0fee1d49e5a35e228b24d77366cab03e1141b8073eec1b36c43e265a80bee707baaa7f96856b4820cbb02069775e58a3f9d",  # noqa: E501
-            "Linux": "64444efd9b6895447359a9f70d6781251e74d7881f993b5d81a19f8e6a8503f798d42506061fb9eb48729b7327c42a9d273c80dde18816a350fdbc020ebfa783", # noqa: E501
+            "Linux": "64444efd9b6895447359a9f70d6781251e74d7881f993b5d81a19f8e6a8503f798d42506061fb9eb48729b7327c42a9d273c80dde18816a350fdbc020ebfa783",  # noqa: E501
             "Darwin": "d9b08e21c233426628e39dd49bbb9b4e43cccb9aeb78d043dec2bdf6b1eacafddd13488558d38dfa0a0d39946b03b72c58933f1f79d638c045353cf3f4ae0fa4",  # noqa: E501
-            "python_script": "051b8c8932085616a775ef8b7b1384687db8f37660938f94e9389bf6dba6f6e244d2dc63d23e1d2bf8ab96c9bd5244faefc5218a1f90d5ec692698f0094a3238", # noqa: E501
+            "python_script": "051b8c8932085616a775ef8b7b1384687db8f37660938f94e9389bf6dba6f6e244d2dc63d23e1d2bf8ab96c9bd5244faefc5218a1f90d5ec692698f0094a3238",  # noqa: E501
         }
 
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))
@@ -323,7 +323,8 @@ class FormatProvider(MachCommandBase):
                     subs.sort()
                     for filename in sorted(files):
                         f_in_dir = os.path.join(folder, filename)
-                        if f_in_dir.endswith(extensions) and not re.match(ignored_dir_re, f_in_dir):
+                        if (f_in_dir.endswith(extensions)
+                            and not re.match(ignored_dir_re, f_in_dir)):
                             # Supported extension and accepted path
                             path_list.append(f_in_dir)
             else:
