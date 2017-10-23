@@ -348,6 +348,21 @@ private:
   mozilla::UniquePtr<PluginFrameDidCompositeObserver> mDidCompositeObserver;
 };
 
+class nsDisplayPluginGeometry : public nsDisplayItemGenericGeometry
+{
+public:
+  nsDisplayPluginGeometry(nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder)
+  {}
+
+  // Plugins MozPaintWait event depends on sync decode, so we always want
+  // to rebuild the display list when sync decoding.
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return true;
+  }
+};
+
 class nsDisplayPlugin : public nsDisplayItem {
 public:
   nsDisplayPlugin(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -389,6 +404,11 @@ public:
   {
     return static_cast<nsPluginFrame*>(mFrame)->GetLayerState(aBuilder,
                                                               aManager);
+  }
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayPluginGeometry(this, aBuilder);
   }
 
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,

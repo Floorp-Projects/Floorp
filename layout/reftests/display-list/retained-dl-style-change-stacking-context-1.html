@@ -1,0 +1,33 @@
+<html class="reftest-wait">
+<head>
+<style>
+  body {
+    margin: 0px;
+  }
+  div {
+    width:100px;
+    height:100px;
+    display: inline-block;
+    position:absolute;
+  }
+</style>
+</head>
+<body>
+  <div id="first" style="background-color:green; width:200px; height:200px" class="reftest-no-display-list"></div>
+  <div style="transform:translateZ(1px)">
+    <div id="second" style="background-color:red"></div>
+  </div>
+  <div style="position:fixed; left:100px">
+    <div id="third" style="background-color:red"></div>
+  </div>
+</body>
+<script>
+function doTest() {
+  document.getElementById("second").style.backgroundColor = "green";
+  document.getElementById("third").style.backgroundColor = "green";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

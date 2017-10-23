@@ -555,6 +555,7 @@ struct PaintTiming {
   float serializeMs;
   float sendMs;
   float dlMs;
+  float dl2Ms;
   float flbMs;
   float rasterMs;
 };

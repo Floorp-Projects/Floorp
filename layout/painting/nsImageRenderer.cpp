@@ -23,6 +23,7 @@
 #include "nsSVGDisplayableFrame.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

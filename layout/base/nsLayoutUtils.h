@@ -253,6 +253,15 @@ public:
   };
 
   /**
+   * Invalidate for displayport change.
+   */
+  static void InvalidateForDisplayPortChange(nsIContent* aContent,
+                                             bool aHadDisplayPort,
+                                             const nsRect& aOldDisplayPort,
+                                             const nsRect& aNewDisplayPort,
+                                             RepaintMode aRepaintMode = RepaintMode::Repaint);
+
+  /**
    * Set the display port margins for a content element to be used with a
    * display port base (see SetDisplayPortBase()).
    * See also nsIDOMWindowUtils.setDisplayPortMargins.
@@ -2024,6 +2033,11 @@ public:
    * popup frame or the root prescontext's root frame.
    */
   static nsIFrame* GetDisplayRootFrame(nsIFrame* aFrame);
+
+  /**
+   * Find the nearest viewport frame that is an ancestor of the given frame.
+   */
+  static nsIFrame* GetViewportFrame(nsIFrame* aFrame);
 
   /**
    * Get the reference frame that would be used when constructing a

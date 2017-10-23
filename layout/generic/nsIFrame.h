@@ -76,6 +76,7 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
+class nsDisplayItem;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
@@ -603,7 +604,7 @@ public:
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
-  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemArray;
+  typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemDataArray;
   typedef nsQueryFrame::ClassID ClassID;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
@@ -623,6 +624,12 @@ public:
     , mParentIsWrapperAnonBox(false)
     , mIsWrapperBoxNeedingRestyle(false)
     , mReflowRequestedForCharDataChange(false)
+    , mForceDescendIntoIfVisible(false)
+    , mBuiltDisplayList(false)
+    , mFrameIsModified(false)
+    , mHasOverrideDirtyRegion(false)
+    , mMayHaveWillChangeBudget(false)
+    , mBuiltBlendContainer(false)
     , mIsPrimaryFrame(false)
   {
     mozilla::PodZero(&mOverflow);
@@ -1003,6 +1010,9 @@ public:
    * we don't bother as the cost of the allocation has already been paid.)
    */
   void SetRect(const nsRect& aRect) {
+    if (aRect == mRect) {
+      return;
+    }
     if (mOverflow.mType != NS_FRAME_OVERFLOW_LARGE &&
         mOverflow.mType != NS_FRAME_OVERFLOW_NONE) {
       nsOverflowAreas overflow = GetOverflowAreas();
@@ -1011,6 +1021,7 @@ public:
     } else {
       mRect = aRect;
     }
+    MarkNeedsDisplayItemRebuild();
   }
   /**
    * Set this frame's rect from a logical rect in its own writing direction
@@ -1063,15 +1074,21 @@ public:
     SetRect(nsRect(mRect.TopLeft(), aSize));
   }
 
-  void SetPosition(const nsPoint& aPt) { mRect.MoveTo(aPt); }
+  void SetPosition(const nsPoint& aPt) {
+    if (mRect.TopLeft() == aPt) {
+      return;
+    }
+    mRect.MoveTo(aPt);
+    MarkNeedsDisplayItemRebuild();
+  }
   void SetPosition(mozilla::WritingMode aWritingMode,
                    const mozilla::LogicalPoint& aPt,
                    const nsSize& aContainerSize) {
     // We subtract mRect.Size() from the container size to account for
     // the fact that logical origins in RTL coordinate systems are at
     // the top right of the frame instead of the top left.
-    mRect.MoveTo(aPt.GetPhysicalPoint(aWritingMode,
-                                      aContainerSize - mRect.Size()));
+    SetPosition(aPt.GetPhysicalPoint(aWritingMode,
+                                    aContainerSize - mRect.Size()));
   }
 
   /**
@@ -1132,6 +1149,8 @@ public:
 
   typedef AutoTArray<nsIContent*, 2> ContentArray;
   static void DestroyContentArray(ContentArray* aArray);
+
+  typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
 
   typedef mozilla::layers::WebRenderUserData WebRenderUserData;
   typedef nsRefPtrHashtable<nsUint32HashKey, WebRenderUserData> WebRenderUserDataTable;
@@ -1229,6 +1248,9 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(GenConProperty, ContentArray,
                                       DestroyContentArray)
+
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(ModifiedFrameList, std::vector<WeakFrame>)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(DisplayItems, DisplayItemArray)
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
 
@@ -3030,7 +3052,7 @@ public:
     PAINT_COMPOSITE_ONLY,
     PAINT_DELAYED_COMPRESS
   };
-  void SchedulePaint(PaintType aType = PAINT_DEFAULT);
+  void SchedulePaint(PaintType aType = PAINT_DEFAULT, bool aFrameChanged = true);
 
   // Similar to SchedulePaint() but without calling
   // InvalidateRenderingObservers() for SVG.
@@ -3061,6 +3083,8 @@ public:
                          const nsIntRect* aDamageRect = nullptr,
                          const nsRect* aFrameDamageRect = nullptr,
                          uint32_t aFlags = 0);
+
+  void MarkNeedsDisplayItemRebuild();
 
   /**
    * Returns a rect that encompasses everything that might be painted by
@@ -3832,6 +3856,10 @@ public:
   // clears this bit if so.
   bool CheckAndClearPaintedState();
 
+  // Checks if we (or any of our descendents) have mBuiltDisplayList set, and
+  // clears this bit if so.
+  bool CheckAndClearDisplayListState();
+
   // CSS visibility just doesn't cut it because it doesn't inherit through
   // documents. Also if this frame is in a hidden card of a deck then it isn't
   // visible either and that isn't expressed using CSS visibility. Also if it
@@ -4072,9 +4100,33 @@ public:
                             const nsStyleCoord& aCoord,
                             ComputeSizeFlags    aFlags = eDefault);
 
-  DisplayItemArray& DisplayItemData() { return mDisplayItemData; }
+  DisplayItemDataArray& DisplayItemData() { return mDisplayItemData; }
+
+  void AddDisplayItem(nsDisplayItem* aItem);
+  bool RemoveDisplayItem(nsDisplayItem* aItem);
+  void RemoveDisplayItemDataForDeletion();
+  bool HasDisplayItems();
+  bool HasDisplayItem(nsDisplayItem* aItem);
 
   void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
+
+  bool ForceDescendIntoIfVisible() { return mForceDescendIntoIfVisible; }
+  void SetForceDescendIntoIfVisible(bool aForce) { mForceDescendIntoIfVisible = aForce; }
+
+  bool BuiltDisplayList() { return mBuiltDisplayList; }
+  void SetBuiltDisplayList(bool aBuilt) { mBuiltDisplayList = aBuilt; }
+
+  bool IsFrameModified() { return mFrameIsModified; }
+  void SetFrameIsModified(bool aFrameIsModified) { mFrameIsModified = aFrameIsModified; }
+
+  bool HasOverrideDirtyRegion() { return mHasOverrideDirtyRegion; }
+  void SetHasOverrideDirtyRegion(bool aHasDirtyRegion) { mHasOverrideDirtyRegion = aHasDirtyRegion; }
+
+  bool MayHaveWillChangeBudget() { return mMayHaveWillChangeBudget; }
+  void SetMayHaveWillChangeBudget(bool aHasBudget) { mMayHaveWillChangeBudget = aHasBudget; }
+
+  bool BuiltBlendContainer() { return mBuiltBlendContainer; }
+  void SetBuiltBlendContainer(bool aBuilt) { mBuiltBlendContainer = aBuilt; }
 
 protected:
 
@@ -4100,7 +4152,8 @@ private:
   nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
-  DisplayItemArray mDisplayItemData;
+
+  DisplayItemDataArray mDisplayItemData;
 
   void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder);
 
@@ -4236,6 +4289,37 @@ protected:
    */
   bool mReflowRequestedForCharDataChange : 1;
 
+  /**
+   * This bit is used during BuildDisplayList to mark frames that need to
+   * have display items rebuilt. We will descend into them if they are
+   * currently visible, even if they don't intersect the dirty area.
+   */
+  bool mForceDescendIntoIfVisible : 1;
+
+  /**
+   * True if we have built display items for this frame since
+   * the last call to CheckAndClearDisplayListState, false
+   * otherwise. Used for the reftest harness to verify minimal
+   * display list building.
+   */
+  bool mBuiltDisplayList : 1;
+
+  bool mFrameIsModified : 1;
+
+  bool mHasOverrideDirtyRegion : 1;
+
+  /**
+   * True if frame has will-change, and currently has display
+   * items consuming some of the will-change budget.
+   */
+  bool mMayHaveWillChangeBudget : 1;
+
+  /**
+   * True if we built an nsDisplayBlendContainer last time
+   * we did retained display list building for this frame.
+   */
+  bool mBuiltBlendContainer : 1;
+
 private:
   /**
    * True if this is the primary frame for mContent.
@@ -4244,7 +4328,7 @@ private:
 
 protected:
 
-  // There is a 9-bit gap left here.
+  // There is a 3-bit gap left here.
 
   // Helpers
   /**

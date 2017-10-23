@@ -188,6 +188,11 @@ public:
     mOrdinal = f->GetOrdinal();
   }
 
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
+
   int32_t mOrdinal;
 };
 

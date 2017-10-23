@@ -101,6 +101,7 @@ private:
   FPSCounter mCompositeFps;
   FPSCounter mTransactionFps;
   TimedMetric mDlbMs;
+  TimedMetric mDlb2Ms;
   TimedMetric mFlbMs;
   TimedMetric mRasterMs;
   TimedMetric mSerializeMs;

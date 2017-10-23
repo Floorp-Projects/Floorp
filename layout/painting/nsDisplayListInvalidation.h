@@ -61,6 +61,11 @@ public:
     mBounds.MoveBy(aOffset);
   }
 
+  virtual bool InvalidateForSyncDecodeImages() const
+  {
+    return false;
+  }
+
   /**
    * Bounds of the display item
    */
@@ -170,6 +175,11 @@ public:
     : nsDisplayItemGenericGeometry(aItem, aBuilder)
     , nsImageGeometryMixin(aItem, aBuilder)
   { }
+
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
 };
 
 class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry
@@ -189,6 +199,11 @@ public:
 
   virtual void MoveBy(const nsPoint& aOffset) override;
 
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
+
   nsRect mContentRect;
 };
 
@@ -200,6 +215,11 @@ public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);
 
   virtual void MoveBy(const nsPoint& aOffset) override;
+
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
 
   nsRect mPositioningArea;
   nsRect mDestRect;
@@ -286,6 +306,11 @@ class nsDisplayMaskGeometry : public nsDisplaySVGEffectGeometry
 public:
   nsDisplayMaskGeometry(nsDisplayMask* aItem, nsDisplayListBuilder* aBuilder);
 
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
+
   nsTArray<nsRect> mDestRects;
 };
 
@@ -295,6 +320,11 @@ class nsDisplayFilterGeometry : public nsDisplaySVGEffectGeometry
 public:
   nsDisplayFilterGeometry(nsDisplayFilter* aItem,
                           nsDisplayListBuilder* aBuilder);
+
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
 };
 
 class nsCharClipGeometry : public nsDisplayItemGenericGeometry
@@ -315,6 +345,11 @@ public:
   nsDisplayTableItemGeometry(nsDisplayTableItem* aItem,
                              nsDisplayListBuilder* aBuilder,
                              const nsPoint& aFrameOffsetToViewport);
+
+  virtual bool InvalidateForSyncDecodeImages() const override
+  {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
 
   nsPoint mFrameOffsetToViewport;
 };
