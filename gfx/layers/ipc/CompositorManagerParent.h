@@ -18,7 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositorBridgeParent;
-class CompositorThreadHolderDebug;
+class CompositorThreadHolder;
 
 #ifndef DEBUG
 #define COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
@@ -63,7 +63,7 @@ private:
 
   void DeferredDestroy();
 
-  RefPtr<CompositorThreadHolderDebug> mCompositorThreadHolder;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 
   AutoTArray<RefPtr<CompositorBridgeParent>, 1> mPendingCompositorBridges;
 };
