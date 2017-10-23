@@ -24,7 +24,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.Browser;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
@@ -235,6 +237,17 @@ public final class IntentHelper implements BundleEventListener {
         intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
         intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
         return intent;
+    }
+
+    public static Intent getImageCaptureIntent(final File destinationFile) {
+        final Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT,
+                Uri.fromFile(destinationFile));
+        return intent;
+    }
+
+    public static Intent getVideoCaptureIntent() {
+        return new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
     }
 
     /**
