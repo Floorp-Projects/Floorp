@@ -7491,17 +7491,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
     return insertionPoint; // Don't build the frames.
   }
 
-  bool hasInsertion = false;
-  if (!insertionPoint.mMultiple) {
-    // XXXbz XBL2/sXBL issue
-    nsIDocument* document = aStartChild->GetComposedDoc();
-    // XXXbz how would |document| be null here?
-    if (document && aStartChild->GetXBLInsertionParent()) {
-      hasInsertion = true;
-    }
-  }
-
-  if (insertionPoint.mMultiple || hasInsertion) {
+  if (insertionPoint.mMultiple || aStartChild->GetXBLInsertionPoint()) {
     // We have an insertion point.  There are some additional tests we need to do
     // in order to ensure that an append is a safe operation.
     uint32_t childCount = 0;
