@@ -897,9 +897,6 @@ pref("gfx.webrender.debug.render-targets", false);
 pref("gfx.webrender.debug.alpha-primitives", false);
 pref("gfx.webrender.debug.profiler", false);
 
-// Whether webrender should be used as much as possible.
-pref("gfx.webrendest.enabled", false);
-
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
