@@ -127,17 +127,17 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
     MOZ_ASSERT(dest.mValidRegion.IsEmpty());
 
     result.mRegionToInvalidate = aLayer->GetValidRegion();
-    Clear();
 
 #if defined(MOZ_DUMP_PAINTING)
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      if (result.mContentType != BufferContentType()) {
+      if (result.mContentType != mBuffer->GetContentType()) {
         printf_stderr("Invalidating entire rotated buffer (layer %p): content type changed\n", aLayer);
       } else if ((dest.mBufferMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != mBuffer->HaveBufferOnWhite()) {
         printf_stderr("Invalidating entire rotated buffer (layer %p): component alpha changed\n", aLayer);
       }
     }
 #endif
+    Clear();
   }
 
   result.mRegionToDraw.Sub(dest.mNeededRegion,
@@ -380,7 +380,9 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
   while (true) {
     mode = aLayer->GetSurfaceMode();
     neededRegion = aLayer->GetVisibleRegion().ToUnknownRegion();
-    canReuseBuffer = canReuseBuffer && BufferSizeOkFor(neededRegion.GetBounds().Size());
+    canReuseBuffer = canReuseBuffer && ValidBufferSize(mBufferSizePolicy,
+                                                       mBuffer->BufferRect().Size(),
+                                                       neededRegion.GetBounds().Size());
     contentType = layerContentType;
 
     if (canReuseBuffer) {
@@ -433,7 +435,7 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
     // have transitioned into/out of component alpha, then we need to recreate it.
     if (canKeepBufferContents &&
         mBuffer &&
-        (contentType != BufferContentType() ||
+        (contentType != mBuffer->GetContentType() ||
         (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != mBuffer->HaveBufferOnWhite()))
     {
       // Restart the decision process; we won't re-enter since we guard on
@@ -461,22 +463,14 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
   return dest;
 }
 
-gfxContentType
-ContentClient::BufferContentType()
-{
-  if (mBuffer) {
-    return ContentForFormat(mBuffer->GetFormat());
-  }
-  return gfxContentType::SENTINEL;
-}
-
 bool
-ContentClient::BufferSizeOkFor(const IntSize& aSize)
+ContentClient::ValidBufferSize(BufferSizePolicy aPolicy,
+                               const gfx::IntSize& aBufferSize,
+                               const gfx::IntSize& aVisibleBoundsSize)
 {
-  MOZ_ASSERT(mBuffer);
-  return (aSize == mBuffer->BufferRect().Size() ||
-          (SizedToVisibleBounds != mBufferSizePolicy &&
-           aSize < mBuffer->BufferRect().Size()));
+  return (aVisibleBoundsSize == aBufferSize ||
+          (SizedToVisibleBounds != aPolicy &&
+           aVisibleBoundsSize < aBufferSize));
 }
 
 void
