@@ -10,16 +10,14 @@
 
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  let hud = yield openConsole();
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
 
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
 
   info("Type 'd' to open the autocomplete popup");
-  yield autocomplete(jsterm, "d");
+  await autocomplete(jsterm, "d");
 
   // Add listeners for focus and blur events.
   let wasBlurred = false;
@@ -30,7 +28,7 @@ add_task(function* () {
   });
 
   let wasFocused = false;
-  input.addEventListener("blur", () => {
+  input.addEventListener("focus", () => {
     ok(wasBlurred, "jsterm input received a blur event before received back the focus");
     wasFocused = true;
   }, {
@@ -42,15 +40,15 @@ add_task(function* () {
   EventUtils.synthesizeKey("VK_TAB", {});
 
   info("Wait for the autocomplete popup to be closed");
-  yield onPopupClosed;
+  await onPopupClosed;
 
   ok(wasFocused, "jsterm input received a focus event");
 });
 
-function* autocomplete(jsterm, value) {
+async function autocomplete(jsterm, value) {
   let popup = jsterm.autocompletePopup;
 
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     jsterm.setInputValue(value);
     jsterm.complete(jsterm.COMPLETE_HINT_ONLY, resolve);
   });
