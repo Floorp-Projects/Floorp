@@ -526,10 +526,14 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTransactionId,
+CompositorBridgeChild::RecvDidComposite(const uint64_t& aId,
+                                        const uint64_t& aTransactionId,
                                         const TimeStamp& aCompositeStart,
                                         const TimeStamp& aCompositeEnd)
 {
+  // Hold a reference to keep texture pools alive.  See bug 1387799
+  AutoTArray<RefPtr<TextureClientPool>,2> texturePools = mTexturePools;
+
   if (mLayerManager) {
     MOZ_ASSERT(aId == 0);
     MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
@@ -544,12 +548,13 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTr
     }
   }
 
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->ReturnDeferredClients();
+  for (size_t i = 0; i < texturePools.Length(); i++) {
+    texturePools[i]->ReturnDeferredClients();
   }
 
   return IPC_OK();
 }
+
 
 void
 CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
