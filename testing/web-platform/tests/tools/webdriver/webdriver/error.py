@@ -5,6 +5,20 @@ class WebDriverException(Exception):
     http_status = None
     status_code = None
 
+    def __init__(self, message, stacktrace=None):
+        super(WebDriverException, self)
+        self.stacktrace = stacktrace
+
+    def __repr__(self):
+        return "<%s http_status=%d>" % (self.__class__.__name__, self.http_status)
+
+    def __str__(self):
+        return ("%s (%d)\n"
+            "\n"
+            "Remote-end stacktrace:\n"
+            "\n"
+            "%s" % (self.status_code, self.http_status, self.stacktrace))
+
 
 class ElementNotSelectableException(WebDriverException):
     http_status = 400
