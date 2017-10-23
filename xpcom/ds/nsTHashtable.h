@@ -414,7 +414,7 @@ template<class EntryType>
 PLDHashNumber
 nsTHashtable<EntryType>::s_HashKey(const void* aKey)
 {
-  return EntryType::HashKey(static_cast<const KeyTypePointer>(aKey));
+  return EntryType::HashKey(static_cast<KeyTypePointer>(aKey));
 }
 
 template<class EntryType>
@@ -423,7 +423,7 @@ nsTHashtable<EntryType>::s_MatchEntry(const PLDHashEntryHdr* aEntry,
                                       const void* aKey)
 {
   return ((const EntryType*)aEntry)->KeyEquals(
-    static_cast<const KeyTypePointer>(aKey));
+    static_cast<KeyTypePointer>(aKey));
 }
 
 template<class EntryType>

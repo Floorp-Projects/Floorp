@@ -18,7 +18,7 @@ inline bool IsASCII(char16_t aChar) {
 inline const char16_t* aligned(const char16_t* aPtr, const uintptr_t aMask)
 {
   return reinterpret_cast<const char16_t*>(
-      reinterpret_cast<const uintptr_t>(aPtr) & ~aMask);
+      reinterpret_cast<uintptr_t>(aPtr) & ~aMask);
 }
 
 /**
