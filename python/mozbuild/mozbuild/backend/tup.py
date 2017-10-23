@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import sys
 
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
@@ -445,9 +446,53 @@ class TupOnly(CommonBackend, PartialBackend):
 
     def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
                              unified_ipdl_cppsrcs_mapping):
-        # TODO: This isn't implemented yet in the tup backend, but it is called
-        # by the CommonBackend.
-        pass
+        # Preferably we wouldn't have to import ipdl, but we need to parse the
+        # ast in order to determine the namespaces since they are used in the
+        # header output paths.
+        sys.path.append(mozpath.join(self.environment.topsrcdir, 'ipc', 'ipdl'))
+        import ipdl
+
+        backend_file = self._get_backend_file('ipc/ipdl')
+        outheaderdir = '_ipdlheaders'
+        cmd = [
+            '$(PYTHON_PATH)',
+            '$(PLY_INCLUDE)',
+            '%s/ipdl.py' % backend_file.srcdir,
+            '--sync-msg-list=%s/sync-messages.ini' % backend_file.srcdir,
+            '--msg-metadata=%s/message-metadata.ini' % backend_file.srcdir,
+            '--outheaders-dir=%s' % outheaderdir,
+            '--outcpp-dir=.',
+        ]
+        ipdldirs = sorted(set(mozpath.dirname(p) for p in sorted_ipdl_sources))
+        cmd.extend(['-I%s' % d for d in ipdldirs])
+        cmd.extend(sorted_ipdl_sources)
+
+	outputs = ['IPCMessageTypeName.cpp', mozpath.join(outheaderdir, 'IPCMessageStart.h'), 'ipdl_lextab.py', 'ipdl_yacctab.py']
+
+	for filename in sorted_ipdl_sources:
+	    filepath, ext = os.path.splitext(filename)
+	    dirname, basename = os.path.split(filepath)
+            dirname = mozpath.relpath(dirname, self.environment.topsrcdir)
+
+	    extensions = ['']
+	    if ext == '.ipdl':
+		extensions.extend(['Child', 'Parent'])
+
+            with open(filename) as f:
+                ast = ipdl.parse(f.read(), filename, includedirs=ipdldirs)
+                self.backend_input_files.add(filename)
+            headerdir = os.path.join(outheaderdir, *([ns.name for ns in ast.namespaces]))
+
+	    for extension in extensions:
+		outputs.append("%s%s.cpp" % (basename, extension))
+		outputs.append(mozpath.join(headerdir, '%s%s.h' % (basename, extension)))
+
+        backend_file.rule(
+            display='IPDL code generation',
+            cmd=cmd,
+            outputs=outputs,
+            check_unchanged=True,
+        )
 
     def _handle_webidl_build(self, bindings_dir, unified_source_mapping,
                              webidls, expected_build_output_files,
