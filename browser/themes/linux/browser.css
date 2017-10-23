@@ -65,9 +65,11 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
-  /* This is needed for some toolbar button animations. Gross :( */
+  border-top: 1px solid var(--tabs-border) !important;
+  background-clip: padding-box;
+  /* Position the toolbar above the bottom of background tabs */
   position: relative;
+  z-index: 1;
 }
 
 #nav-bar {
@@ -538,6 +540,7 @@ html|span.ac-emphasize-text-url {
 #TabsToolbar {
   min-height: 0;
   padding: 0;
+  margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap));
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {

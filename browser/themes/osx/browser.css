@@ -111,7 +111,7 @@
  * tabstrip can overlap it.
  */
 #main-window[tabsintitlebar] > #titlebar {
-  min-height: calc(var(--tab-min-height) + var(--space-above-tabbar));
+  min-height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tab-toolbar-navbar-overlap));
 }
 
 /** End titlebar **/
@@ -131,7 +131,8 @@
 #main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
 #main-window:not([tabsintitlebar]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
 #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
-  box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
+  border-top: 1px solid var(--tabs-border);
+  background-clip: padding-box;
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -810,6 +811,8 @@ html|span.ac-emphasize-text-url {
 
 #TabsToolbar {
   -moz-appearance: none;
+  /* overlap the nav-bar's top border */
+  margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap));
   padding-top: var(--space-above-tabbar);
 }
 
