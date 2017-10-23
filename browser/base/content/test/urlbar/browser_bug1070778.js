@@ -29,6 +29,7 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   await promiseAutocompleteResultPopup("keyword a");
+  await waitForAutocompleteResultAt(1);
 
   // First item should already be selected
   is_selected(0);
@@ -43,8 +44,7 @@ add_task(async function() {
   await promiseSearchComplete();
 
   is(gURLBar.textValue, "keyword ab", "urlbar should have expected input");
-
-  let result = gURLBar.popup.richlistbox.firstChild;
+  let result = await waitForAutocompleteResultAt(0);
   isnot(result, null, "Should have first item");
   let uri = NetUtil.newURI(result.getAttribute("url"));
   is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}), "Expect correct url");

@@ -660,7 +660,7 @@ UniqueCERTCertListToMutableArray(/*in*/ UniqueCERTCertList& nssChain,
        !CERT_LIST_END(node, nssChain.get());
        node = CERT_LIST_NEXT(node)) {
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
-    nsresult rv = array->AppendElement(cert, false);
+    nsresult rv = array->AppendElement(cert);
     if (NS_FAILED(rv)) {
       return rv;
     }

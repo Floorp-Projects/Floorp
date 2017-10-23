@@ -587,7 +587,7 @@ nsresult JumpListBuilder::TransferIObjectArrayToIMutableArray(IObjectArray *objA
       pItem->Release();
 
     if (NS_SUCCEEDED(rv)) {
-      removedItems->AppendElement(item, false);
+      removedItems->AppendElement(item);
     }
   }
   return NS_OK;

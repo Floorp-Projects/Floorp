@@ -43,7 +43,7 @@ function test_insert_at_beginning() {
   do_check_eq(5, arr.length);
   var str = new SupportsString();
   str.data = "hello";
-  arr.insertElementAt(str, 0, false);
+  arr.insertElementAt(str, 0);
   do_check_eq(6, arr.length);
   var obj = arr.queryElementAt(0, Ci.nsISupportsString);
   do_check_eq(str, obj);
@@ -61,17 +61,17 @@ function test_replace_element() {
   var str = new SupportsString();
   str.data = "hello";
   // replace first element
-  arr.replaceElementAt(str, 0, false);
+  arr.replaceElementAt(str, 0);
   do_check_eq(5, arr.length);
   var obj = arr.queryElementAt(0, Ci.nsISupportsString);
   do_check_eq(str, obj);
   // replace last element
-  arr.replaceElementAt(str, arr.length - 1, false);
+  arr.replaceElementAt(str, arr.length - 1);
   do_check_eq(5, arr.length);
   obj = arr.queryElementAt(arr.length - 1, Ci.nsISupportsString);
   do_check_eq(str, obj);
   // replace after last element, should insert empty elements
-  arr.replaceElementAt(str, 9, false);
+  arr.replaceElementAt(str, 9);
   do_check_eq(10, arr.length);
   obj = arr.queryElementAt(9, Ci.nsISupportsString);
   do_check_eq(str, obj);

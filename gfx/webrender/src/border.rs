@@ -15,6 +15,7 @@ use util::{lerp, pack_as_float};
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum BorderCornerInstance {
+    None,
     Single, // Single instance needed - corner styles are same or similar.
     Double, // Different corner styles. Draw two instances, one per style.
 }
@@ -128,8 +129,8 @@ impl NormalBorderHelpers for NormalBorder {
         corner: BorderCorner,
         border_rect: &LayerRect,
     ) -> BorderCornerKind {
-        // If either width is zero, a corner isn't formed.
-        if width0 == 0.0 || width1 == 0.0 {
+        // If both widths are zero, a corner isn't formed.
+        if width0 == 0.0 && width1 == 0.0 {
             return BorderCornerKind::None;
         }
 
@@ -139,9 +140,13 @@ impl NormalBorderHelpers for NormalBorder {
         }
 
         match (edge0.style, edge1.style) {
-            // If either edge is none or hidden, no corner is needed.
-            (BorderStyle::None, _) | (_, BorderStyle::None) => BorderCornerKind::None,
-            (BorderStyle::Hidden, _) | (_, BorderStyle::Hidden) => BorderCornerKind::None,
+            // If both edges are none or hidden, no corner is needed.
+            (BorderStyle::None, BorderStyle::None) |
+            (BorderStyle::None, BorderStyle::Hidden) |
+            (BorderStyle::Hidden, BorderStyle::None) |
+            (BorderStyle::Hidden, BorderStyle::Hidden) => {
+                BorderCornerKind::None
+            }
 
             // If both borders are solid, we can draw them with a simple rectangle if
             // both the colors match and there is no radius.
@@ -429,16 +434,19 @@ impl FrameBuilder {
             let mut corner_instances = [BorderCornerInstance::Single; 4];
 
             for (i, corner) in corners.iter().enumerate() {
-                match corner {
-                    &BorderCornerKind::Mask(corner_data, corner_radius, widths, kind) => {
+                match *corner {
+                    BorderCornerKind::Mask(corner_data, corner_radius, widths, kind) => {
                         let clip_source =
                             BorderCornerClipSource::new(corner_data, corner_radius, widths, kind);
                         extra_clips.push(ClipSource::BorderCorner(clip_source));
                     }
-                    &BorderCornerKind::Clip(instance_kind) => {
+                    BorderCornerKind::Clip(instance_kind) => {
                         corner_instances[i] = instance_kind;
                     }
-                    _ => {}
+                    BorderCornerKind::Solid => {}
+                    BorderCornerKind::None => {
+                        corner_instances[i] = BorderCornerInstance::None;
+                    }
                 }
             }
 

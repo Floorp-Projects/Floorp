@@ -214,17 +214,17 @@ nsPrintingPromptService::DoDialog(mozIDOMWindowProxy *aParent,
 
     nsCOMPtr<nsISupports> psSupports(do_QueryInterface(aPS));
     NS_ASSERTION(psSupports, "PrintSettings must be a supports");
-    array->AppendElement(psSupports, /*weak =*/ false);
+    array->AppendElement(psSupports);
 
     if (aWebBrowserPrint) {
       nsCOMPtr<nsISupports> wbpSupports(do_QueryInterface(aWebBrowserPrint));
       NS_ASSERTION(wbpSupports, "nsIWebBrowserPrint must be a supports");
-      array->AppendElement(wbpSupports, /*weak =*/ false);
+      array->AppendElement(wbpSupports);
     }
 
     nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(aParamBlock));
     NS_ASSERTION(blkSupps, "IOBlk must be a supports");
-    array->AppendElement(blkSupps, /*weak =*/ false);
+    array->AppendElement(blkSupps);
 
     nsCOMPtr<mozIDOMWindowProxy> dialog;
     nsresult rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",

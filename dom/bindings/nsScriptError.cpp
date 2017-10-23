@@ -432,7 +432,7 @@ nsScriptErrorBase::GetNotes(nsIArray** aNotes)
 
     uint32_t len = mNotes.Length();
     for (uint32_t i = 0; i < len; i++)
-        array->AppendElement(mNotes[i], false);
+        array->AppendElement(mNotes[i]);
     array.forget(aNotes);
 
     return NS_OK;

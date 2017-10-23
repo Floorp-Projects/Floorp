@@ -1917,8 +1917,7 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
       // Add all unhandled invalid controls to aInvalidElements if the caller
       // requested them.
       if (defaultAction && aInvalidElements) {
-        aInvalidElements->AppendElement(ToSupports(sortedControls[i]),
-                                        false);
+        aInvalidElements->AppendElement(ToSupports(sortedControls[i]));
       }
     }
   }

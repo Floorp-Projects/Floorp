@@ -124,7 +124,7 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
       nsContentHandlerApp* app =
         new nsContentHandlerApp(nsString((char16_t*)actions[i].name().data()), 
                                 mSchemeOrType, actions[i]);
-      mPossibleApplications->AppendElement(app, false);
+      mPossibleApplications->AppendElement(app);
     }
   }
 

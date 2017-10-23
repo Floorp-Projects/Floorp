@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering, LayerPoint};
-use api::{LayerRect, LayerSize, LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
+use api::{ClipMode, LayerRect, LayerSize};
+use api::{LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
 use border::BorderCornerClipSource;
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use prim_store::{ClipData, ImageMaskData};
 use resource_cache::ResourceCache;
-use std::ops::Not;
 use util::{extract_inner_rect_safe, TransformedRect};
 
 const MAX_CLIP: f32 = 1000000.0;
@@ -61,24 +61,6 @@ impl ClipRegion {
     }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum ClipMode {
-    Clip,    // Pixels inside the region are visible.
-    ClipOut, // Pixels outside the region are visible.
-}
-
-impl Not for ClipMode {
-    type Output = ClipMode;
-
-    fn not(self) -> ClipMode {
-        match self {
-            ClipMode::Clip => ClipMode::ClipOut,
-            ClipMode::ClipOut => ClipMode::Clip,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum ClipSource {
     Rectangle(LayerRect),
@@ -105,7 +87,7 @@ impl From<ClipRegion> for ClipSources {
             clips.push(ClipSource::RoundedRectangle(
                 complex.rect,
                 complex.radii,
-                ClipMode::Clip,
+                complex.mode,
             ));
         }
 

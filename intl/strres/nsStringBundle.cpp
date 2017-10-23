@@ -232,7 +232,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
 
     rv = overrideEnumerator->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv))
-      resultArray->AppendElement(supports, false);
+      resultArray->AppendElement(supports);
 
     rv = overrideEnumerator->HasMoreElements(&hasMore);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -261,7 +261,7 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
 
       // if it isn't there, then it is safe to append
       if (NS_FAILED(rv))
-        resultArray->AppendElement(propElement, false);
+        resultArray->AppendElement(propElement);
     }
 
     rv = propEnumerator->HasMoreElements(&hasMore);

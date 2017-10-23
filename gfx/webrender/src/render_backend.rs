@@ -22,7 +22,8 @@ use resource_cache::ResourceCache;
 use scene::Scene;
 #[cfg(feature = "debugger")]
 use serde_json;
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::u32;
 use texture_cache::TextureCache;
@@ -124,6 +125,9 @@ enum DocumentOp {
     Rendered(RendererFrame),
 }
 
+/// The unique id for WR resource identification.
+static NEXT_NAMESPACE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
 /// The render backend is responsible for transforming high level display lists into
 /// GPU-friendly work which is then submitted to the renderer in the form of a frame::Frame.
 ///
@@ -133,7 +137,6 @@ pub struct RenderBackend {
     payload_rx: PayloadReceiver,
     payload_tx: PayloadSender,
     result_tx: Sender<ResultMsg>,
-    next_namespace_id: IdNamespace,
     default_device_pixel_ratio: f32,
 
     gpu_cache: GpuCache,
@@ -142,7 +145,7 @@ pub struct RenderBackend {
     frame_config: FrameBuilderConfig,
     documents: FastHashMap<DocumentId, Document>,
 
-    notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
+    notifier: Box<RenderNotifier>,
     recorder: Option<Box<ApiRecordingReceiver>>,
 
     enable_render_on_scroll: bool,
@@ -157,12 +160,15 @@ impl RenderBackend {
         default_device_pixel_ratio: f32,
         texture_cache: TextureCache,
         workers: Arc<ThreadPool>,
-        notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
+        notifier: Box<RenderNotifier>,
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
         blob_image_renderer: Option<Box<BlobImageRenderer>>,
         enable_render_on_scroll: bool,
     ) -> RenderBackend {
+        // The namespace_id should start from 1.
+        NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
+
         let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
 
         register_thread_with_profiler("Backend".to_string());
@@ -177,7 +183,6 @@ impl RenderBackend {
             gpu_cache: GpuCache::new(),
             frame_config,
             documents: FastHashMap::default(),
-            next_namespace_id: IdNamespace(1),
             notifier,
             recorder,
 
@@ -421,6 +426,10 @@ impl RenderBackend {
         }
     }
 
+    fn next_namespace_id(&self) -> IdNamespace {
+        IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
+    }
+
     pub fn run(&mut self, mut profile_counters: BackendProfileCounters) {
         let mut frame_counter: u32 = 0;
 
@@ -435,8 +444,7 @@ impl RenderBackend {
                     msg
                 }
                 Err(..) => {
-                    let notifier = self.notifier.lock();
-                    notifier.unwrap().as_mut().unwrap().shut_down();
+                    self.notifier.shut_down();
                     break;
                 }
             };
@@ -463,9 +471,7 @@ impl RenderBackend {
                     tx.send(glyph_indices).unwrap();
                 }
                 ApiMsg::CloneApi(sender) => {
-                    let namespace = self.next_namespace_id;
-                    self.next_namespace_id = IdNamespace(namespace.0 + 1);
-                    sender.send(namespace).unwrap();
+                    sender.send(self.next_namespace_id()).unwrap();
                 }
                 ApiMsg::AddDocument(document_id, initial_size) => {
                     let document = Document::new(
@@ -504,8 +510,7 @@ impl RenderBackend {
                     self.documents.remove(&document_id);
                 }
                 ApiMsg::ExternalEvent(evt) => {
-                    let notifier = self.notifier.lock();
-                    notifier.unwrap().as_mut().unwrap().external_event(evt);
+                    self.notifier.external_event(evt);
                 }
                 ApiMsg::ClearNamespace(namespace_id) => {
                     self.resource_cache.clear_namespace(namespace_id);
@@ -530,12 +535,7 @@ impl RenderBackend {
                     // We use new_frame_ready to wake up the renderer and get the
                     // resource updates processed, but the UpdateResources message
                     // will cancel rendering the frame.
-                    self.notifier
-                        .lock()
-                        .unwrap()
-                        .as_mut()
-                        .unwrap()
-                        .new_frame_ready();
+                    self.notifier.new_frame_ready();
                 }
                 ApiMsg::DebugCommand(option) => {
                     let msg = match option {
@@ -550,12 +550,10 @@ impl RenderBackend {
                         _ => ResultMsg::DebugCommand(option),
                     };
                     self.result_tx.send(msg).unwrap();
-                    let notifier = self.notifier.lock();
-                    notifier.unwrap().as_mut().unwrap().new_frame_ready();
+                    self.notifier.new_frame_ready();
                 }
                 ApiMsg::ShutDown => {
-                    let notifier = self.notifier.lock();
-                    notifier.unwrap().as_mut().unwrap().shut_down();
+                    self.notifier.shut_down();
                     break;
                 }
             }
@@ -582,31 +580,11 @@ impl RenderBackend {
     ) {
         self.publish_frame(document_id, frame, profile_counters);
 
-        // TODO(gw): This is kindof bogus to have to lock the notifier
-        //           each time it's used. This is due to some nastiness
-        //           in initialization order for Servo. Perhaps find a
-        //           cleaner way to do this, or use the OnceMutex on crates.io?
-        let mut notifier = self.notifier.lock();
-        notifier
-            .as_mut()
-            .unwrap()
-            .as_mut()
-            .unwrap()
-            .new_frame_ready();
+        self.notifier.new_frame_ready();
     }
 
-    fn notify_compositor_of_new_scroll_frame(&mut self, composite_needed: bool) {
-        // TODO(gw): This is kindof bogus to have to lock the notifier
-        //           each time it's used. This is due to some nastiness
-        //           in initialization order for Servo. Perhaps find a
-        //           cleaner way to do this, or use the OnceMutex on crates.io?
-        let mut notifier = self.notifier.lock();
-        notifier
-            .as_mut()
-            .unwrap()
-            .as_mut()
-            .unwrap()
-            .new_scroll_frame_ready(composite_needed);
+    fn notify_compositor_of_new_scroll_frame(&self, composite_needed: bool) {
+        self.notifier.new_scroll_frame_ready(composite_needed);
     }
 
 

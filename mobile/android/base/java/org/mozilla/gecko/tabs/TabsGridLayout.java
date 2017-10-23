@@ -6,6 +6,7 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 
 import android.content.Context;
 import android.support.v7.widget.GridLayoutManager;
@@ -36,10 +37,13 @@ abstract class TabsGridLayout extends TabsLayout {
     }
 
     @Override
-    public void closeAll() {
+    public void onCloseAll() {
         autoHidePanel();
-
-        closeAllTabs();
+        if (isNormal()) {
+            Tabs.getInstance().closeAllTabs();
+        } else {
+            Tabs.getInstance().closeAllPrivateTabs();
+        }
     }
 
     @Override

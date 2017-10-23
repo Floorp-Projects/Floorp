@@ -1627,13 +1627,13 @@ ProcessSECAlgorithmID(SECAlgorithmID* algID, nsIASN1Sequence** retSequence)
     printableItem->SetDisplayValue(text);
     nsCOMPtr<nsIMutableArray> asn1Objects;
     sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-    asn1Objects->AppendElement(printableItem, false);
+    asn1Objects->AppendElement(printableItem);
     GetPIPNSSBundleString("CertDumpAlgID", text);
     printableItem->SetDisplayName(text);
 
     printableItem = new nsNSSASN1PrintableItem();
 
-    asn1Objects->AppendElement(printableItem, false);
+    asn1Objects->AppendElement(printableItem);
     GetPIPNSSBundleString("CertDumpParams", text);
     printableItem->SetDisplayName(text);
     if ((algOIDTag == SEC_OID_ANSIX962_EC_PUBLIC_KEY) &&
@@ -1683,7 +1683,7 @@ ProcessTime(PRTime dispTime,
   printableItem->SetDisplayName(nsDependentString(displayName));
   nsCOMPtr<nsIMutableArray> asn1Objects;
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
   return NS_OK;
 }
 
@@ -1706,7 +1706,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
   sequenceItem->SetDisplayName(text);
   nsCOMPtr<nsIMutableArray> asn1Objects;
   spkiSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(sequenceItem, false);
+  asn1Objects->AppendElement(sequenceItem);
 
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
 
@@ -1769,10 +1769,10 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
   printableItem->SetDisplayValue(text);
   GetPIPNSSBundleString("CertDumpSubjPubKey", text);
   printableItem->SetDisplayName(text);
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
 
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(spkiSequence, false);
+  asn1Objects->AppendElement(spkiSequence);
   return NS_OK;
 }
 
@@ -1796,10 +1796,10 @@ ProcessExtensions(CERTCertExtension** extensions,
     if (NS_FAILED(rv))
       return rv;
 
-    asn1Objects->AppendElement(newExtension, false);
+    asn1Objects->AppendElement(newExtension);
   }
   parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  asn1Objects->AppendElement(extensionSequence, false);
+  asn1Objects->AppendElement(extensionSequence);
   return NS_OK;
 }
 
@@ -1869,12 +1869,12 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
   if (NS_FAILED(rv))
     return rv;
 
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
 
   rv = ProcessSerialNumberDER(mCert->serialNumber, printableItem);
   if (NS_FAILED(rv))
     return rv;
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
 
   nsCOMPtr<nsIASN1Sequence> algID;
   rv = ProcessSECAlgorithmID(&mCert->signature, getter_AddRefs(algID));
@@ -1883,7 +1883,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
 
   GetPIPNSSBundleString("CertDumpSigAlg", text);
   algID->SetDisplayName(text);
-  asn1Objects->AppendElement(algID, false);
+  asn1Objects->AppendElement(algID);
 
   nsString value;
   ProcessName(&mCert->issuer, getter_Copies(value));
@@ -1893,12 +1893,12 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
   printableItem->SetDisplayValue(value);
   GetPIPNSSBundleString("CertDumpIssuer", text);
   printableItem->SetDisplayName(text);
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
 
   nsCOMPtr<nsIASN1Sequence> validitySequence = new nsNSSASN1Sequence();
   GetPIPNSSBundleString("CertDumpValidity", text);
   validitySequence->SetDisplayName(text);
-  asn1Objects->AppendElement(validitySequence, false);
+  asn1Objects->AppendElement(validitySequence);
   GetPIPNSSBundleString("CertDumpNotBefore", text);
   nsCOMPtr<nsIX509CertValidity> validityData;
   GetValidity(getter_AddRefs(validityData));
@@ -1923,7 +1923,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
   printableItem->SetDisplayName(text);
   ProcessName(&mCert->subject, getter_Copies(value));
   printableItem->SetDisplayValue(value);
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
 
   rv = ProcessSubjectPublicKeyInfo(&mCert->subjectPublicKeyInfo, sequence);
   if (NS_FAILED(rv))
@@ -1945,7 +1945,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
     printableItem->SetDisplayValue(text);
     GetPIPNSSBundleString("CertDumpIssuerUniqueID", text);
     printableItem->SetDisplayName(text);
-    asn1Objects->AppendElement(printableItem, false);
+    asn1Objects->AppendElement(printableItem);
   }
 
   if (mCert->subjectID.data) {
@@ -1962,7 +1962,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
     printableItem->SetDisplayValue(text);
     GetPIPNSSBundleString("CertDumpSubjectUniqueID", text);
     printableItem->SetDisplayName(text);
-    asn1Objects->AppendElement(printableItem, false);
+    asn1Objects->AppendElement(printableItem);
   }
   if (mCert->extensions) {
     rv = ProcessExtensions(mCert->extensions, sequence);
@@ -2003,7 +2003,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   if (NS_FAILED(rv))
     return rv;
 
-  asn1Objects->AppendElement(sequence, false);
+  asn1Objects->AppendElement(sequence);
   nsCOMPtr<nsIASN1Sequence> algID;
 
   rv = ProcessSECAlgorithmID(&mCert->signatureWrap.signatureAlgorithm,
@@ -2013,7 +2013,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   nsString text;
   GetPIPNSSBundleString("CertDumpSigAlg", text);
   algID->SetDisplayName(text);
-  asn1Objects->AppendElement(algID, false);
+  asn1Objects->AppendElement(algID);
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   GetPIPNSSBundleString("CertDumpCertSig", text);
   printableItem->SetDisplayName(text);
@@ -2027,7 +2027,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   text.Truncate();
   ProcessRawBytes(&temp, text);
   printableItem->SetDisplayValue(text);
-  asn1Objects->AppendElement(printableItem, false);
+  asn1Objects->AppendElement(printableItem);
   return NS_OK;
 }
 

@@ -31,7 +31,7 @@ html|*.textbox-textarea {
   font: inherit;
 }
 
-@media (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   textbox html|*.textbox-input::placeholder {
     font-style: italic;
   }

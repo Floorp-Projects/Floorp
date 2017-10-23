@@ -245,6 +245,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "toolkit.telemetry.minSubsessionLength",
   "toolkit.telemetry.scheduler.idleTickInterval",
   "toolkit.telemetry.scheduler.tickInterval",
+  "toolkit.telemetry.testing.overridePreRelease",
   "toolkit.telemetry.unified",
   "ui.key.menuAccessKeyFocuses",
   "ui.popup.disable_autohide",
