@@ -303,9 +303,14 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream, const uint64_t aStartPos,
     return false;
   }
 
-  // Back up to just before the zeros we just wrote
-  seekTo.QuadPart = -static_cast<int64_t>(sizeof(CLSID));
-  return SUCCEEDED(aStream->Seek(seekTo, STREAM_SEEK_CUR, nullptr));
+  // Back up to the end of the tweaked OBJREF.
+  // There are now sizeof(CLSID) less bytes.
+  // Bug 1403180: Using -sizeof(CLSID) with a relative seek sometimes
+  // doesn't work on Windows 7.
+  // It succeeds, but doesn't seek the stream for some unknown reason.
+  // Use an absolute seek instead.
+  seekTo.QuadPart = aEndPos - sizeof(CLSID);
+  return SUCCEEDED(aStream->Seek(seekTo, STREAM_SEEK_SET, nullptr));
 }
 
 uint32_t
