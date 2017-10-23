@@ -421,7 +421,7 @@ LocalStoreImpl::LoadData()
 NS_IMETHODIMP
 LocalStoreImpl::GetURI(nsACString& aURI)
 {
-    aURI.AssignLiteral("rd:local-store");
+    aURI.AssignLiteral("rdf:local-store");
     return NS_OK;
 }
 
