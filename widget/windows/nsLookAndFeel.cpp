@@ -14,7 +14,6 @@
 #include "mozilla/WindowsVersion.h"
 #include "gfxFontConstants.h"
 
-
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -67,12 +66,6 @@ nsLookAndFeel::nsLookAndFeel()
   , mUseDefaultTheme(0)
   , mNativeThemeId(eWindowsTheme_Generic)
   , mCaretBlinkTime(-1)
-  , mHasColorAccent(false)
-  , mHasColorAccentText(false)
-  , mHasColorMenuHoverText(false)
-  , mHasColorMediaText(false)
-  , mHasColorCommunicationsText(false)
-  , mInitialized(false)
 {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
@@ -82,31 +75,9 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-void
-nsLookAndFeel::NativeInit()
-{
-  EnsureInit();
-}
-
-/* virtual */ void
-nsLookAndFeel::RefreshImpl()
-{
-  nsXPLookAndFeel::RefreshImpl();
-
-  for (auto e = mSystemFontCache.begin(), end = mSystemFontCache.end();
-       e != end; ++e) {
-    e->mCacheValid = false;
-  }
-  mCaretBlinkTime = -1;
-
-  mInitialized = false;
-}
-
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
-  EnsureInit();
-
   nsresult res = NS_OK;
 
   int idx;
@@ -218,11 +189,13 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       }
       // Fall through
     case eColorID__moz_menuhovertext:
-      if (mHasColorMenuHoverText) {
-        aColor = mColorMenuHoverText;
-        return NS_OK;
+      if (IsAppThemed()) {
+        res = ::GetColorFromTheme(eUXMenu,
+                                  MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
+        // fall through to highlight case
       }
-      // Fall through
     case eColorID_highlighttext:
     case eColorID__moz_html_cellhighlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
@@ -291,32 +264,36 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_3DFACE;
       break;
     case eColorID__moz_win_accentcolor:
-      if (mHasColorAccent) {
-        aColor = mColorAccent;
-      } else {
-        // Seems to be the default color (hardcoded because of bug 1065998)
-        aColor = NS_RGB(158, 158, 158);
+      res = GetAccentColor(aColor);
+      if (NS_SUCCEEDED(res)) {
+        return res;
       }
+      // Seems to be the default color (hardcoded because of bug 1065998)
+      aColor = NS_RGB(158, 158, 158);
       return NS_OK;
     case eColorID__moz_win_accentcolortext:
-      if (mHasColorAccentText) {
-        aColor = mColorAccentText;
-      } else {
-        aColor = NS_RGB(0, 0, 0);
+      res = GetAccentColorText(aColor);
+      if (NS_SUCCEEDED(res)) {
+        return res;
       }
+      aColor = NS_RGB(0, 0, 0);
       return NS_OK;
     case eColorID__moz_win_mediatext:
-      if (mHasColorMediaText) {
-        aColor = mColorMediaText;
-        return NS_OK;
+      if (IsAppThemed()) {
+        res = ::GetColorFromTheme(eUXMediaToolbar,
+                                  TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
       }
       // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
       break;
     case eColorID__moz_win_communicationstext:
-      if (mHasColorCommunicationsText) {
-        aColor = mColorCommunicationsText;
-        return NS_OK;
+      if (IsAppThemed()) {
+        res = ::GetColorFromTheme(eUXCommunicationsToolbar,
+                                  TP_BUTTON, TS_NORMAL, TMT_TEXTCOLOR, aColor);
+        if (NS_SUCCEEDED(res))
+          return res;
       }
       // if we've gotten here just return -moz-dialogtext instead
       idx = COLOR_WINDOWTEXT;
@@ -341,7 +318,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       break;
     }
 
-  aColor = GetColorForSysColorIndex(idx);
+  DWORD color = ::GetSysColor(idx);
+  aColor = COLOREF_2_NSRGB(color);
 
   return res;
 }
@@ -755,6 +733,18 @@ nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
   return status;
 }
 
+/* virtual */ void
+nsLookAndFeel::RefreshImpl()
+{
+  nsXPLookAndFeel::RefreshImpl();
+
+  for (auto e = mSystemFontCache.begin(), end = mSystemFontCache.end();
+       e != end; ++e) {
+    e->mCacheValid = false;
+  }
+  mCaretBlinkTime = -1;
+}
+
 /* virtual */
 char16_t
 nsLookAndFeel::GetPasswordCharacterImpl()
@@ -863,48 +853,4 @@ nsLookAndFeel::GetAccentColorText(nscolor& aColor)
   aColor = (luminance <= 128) ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0);
 
   return NS_OK;
-}
-
-nscolor
-nsLookAndFeel::GetColorForSysColorIndex(int index)
-{
-  MOZ_ASSERT(index >= SYS_COLOR_MIN && index <= SYS_COLOR_MAX);
-  return mSysColorTable[index - SYS_COLOR_MIN];
-}
-
-void
-nsLookAndFeel::EnsureInit()
-{
-  if (mInitialized) {
-    return;
-  }
-  mInitialized = true;
-
-  nsresult res;
-
-  res = GetAccentColor(mColorAccent);
-  mHasColorAccent = NS_SUCCEEDED(res);
-
-  res = GetAccentColorText(mColorAccentText);
-  mHasColorAccentText = NS_SUCCEEDED(res);
-
-  if (IsAppThemed()) {
-    res = ::GetColorFromTheme(eUXMenu, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR,
-                              mColorMenuHoverText);
-    mHasColorMenuHoverText = NS_SUCCEEDED(res);
-
-    res = ::GetColorFromTheme(eUXMediaToolbar, TP_BUTTON, TS_NORMAL,
-                              TMT_TEXTCOLOR, mColorMediaText);
-    mHasColorMediaText = NS_SUCCEEDED(res);
-
-    res = ::GetColorFromTheme(eUXCommunicationsToolbar, TP_BUTTON, TS_NORMAL,
-                              TMT_TEXTCOLOR, mColorCommunicationsText);
-    mHasColorCommunicationsText = NS_SUCCEEDED(res);
-  }
-
-  // Fill out the sys color table.
-  for (int i = SYS_COLOR_MIN; i <= SYS_COLOR_MAX; ++i) {
-    DWORD color = ::GetSysColor(i);
-    mSysColorTable[i - SYS_COLOR_MIN] = COLOREF_2_NSRGB(color);
-  }
 }
