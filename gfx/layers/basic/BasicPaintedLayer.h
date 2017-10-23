@@ -27,8 +27,8 @@ class ReadbackProcessor;
 
 class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
 public:
-  typedef ContentClient::PaintState PaintState;
-  typedef ContentClient::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit BasicPaintedLayer(BasicLayerManager* aLayerManager, gfx::BackendType aBackend) :
     PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
