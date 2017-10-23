@@ -7,7 +7,7 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
+const gAppRep = Cc["@mozilla.org/reputationservice/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
 var gHttpServ = null;
 var gTables = {};
