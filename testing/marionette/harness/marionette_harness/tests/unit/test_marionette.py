@@ -5,6 +5,7 @@
 import time
 
 from marionette_driver import errors
+from marionette_driver.marionette import Marionette
 from marionette_harness import MarionetteTestCase, run_if_manage_instance, skip_if_mobile
 
 
@@ -29,6 +30,26 @@ class TestMarionette(MarionetteTestCase):
         start_time = time.time()
         self.assertFalse(self.marionette.wait_for_port(timeout=5))
         self.assertLess(time.time() - start_time, 5)
+
+    def test_disable_enable_new_connections(self):
+        # Do not re-create socket if it already exists
+        self.marionette._send_message("acceptConnections", {"value": True})
+
+        try:
+            # Disabling new connections does not affect existing ones...
+            self.marionette._send_message("acceptConnections", {"value": False})
+            self.assertEqual(1, self.marionette.execute_script("return 1"))
+
+            # but only new connection attempts
+            marionette = Marionette(host=self.marionette.host, port=self.marionette.port)
+            self.assertFalse(marionette.wait_for_port(timeout=1.0),
+                             "Unexpected connection with acceptConnections=false")
+
+            self.marionette._send_message("acceptConnections", {"value": True})
+            marionette.wait_for_port(timeout=1.0)
+
+        finally:
+            self.marionette._send_message("acceptConnections", {"value": True})
 
 
 class TestContext(MarionetteTestCase):
