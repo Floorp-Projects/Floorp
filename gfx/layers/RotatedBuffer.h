@@ -262,13 +262,6 @@ protected:
   bool          mDidSelfCopy;
 };
 
-/**
- * RemoteRotatedBuffer is a rotated buffer that is backed by texture
- * clients. Before you use this class you must successfully lock it with
- * an appropriate open mode, and then also unlock it when you're finished.
- * RemoteRotatedBuffer is used by ContentClientSingleBuffered and
- * ContentClientDoubleBuffered for the OMTC code path.
- */
 class RemoteRotatedBuffer : public RotatedBuffer
 {
 public:
@@ -308,10 +301,6 @@ private:
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
 };
 
-/**
- * DrawTargetRotatedBuffer is a rotated buffer that is backed by draw targets,
- * and is used by ContentClientBasic for the on-mtc code path.
- */
 class DrawTargetRotatedBuffer : public RotatedBuffer
 {
 public:
@@ -342,10 +331,6 @@ private:
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
 };
 
-/**
- * SourceRotatedBuffer is a rotated buffer that is backed by source surfaces,
- * and may only be used to draw into other buffers or be read directly.
- */
 class SourceRotatedBuffer : public RotatedBuffer
 {
 public:
