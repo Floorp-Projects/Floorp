@@ -328,10 +328,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         return true;
     }
 
-    /**
-     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
-     *                       for additional details.
-     */
     private void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
             @NonNull final String interactionExtra) {
         final WebpageRowModel model = (WebpageRowModel) recyclerViewModel.get(position);
@@ -356,36 +352,35 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
               .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
               .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra);
 
-        ActivityStreamContextMenu.show(snackbarAnchor,
-                extras,
-                menuMode,
-                model,
+        openContextMenuInner(snackbarAnchor, extras, menuMode, model,
                 /* shouldOverrideWithImageProvider */ true, // we use image providers in HighlightItem.pageIconLayout.
-                onUrlOpenListener, onUrlOpenInBackgroundListener,
                 webpageItemRow.getTileWidth(), webpageItemRow.getTileHeight());
-
-        Telemetry.sendUIEvent(
-                TelemetryContract.Event.SHOW,
-                TelemetryContract.Method.CONTEXT_MENU,
-                extras.build()
-        );
     }
 
-    /**
-     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
-     *                       for additional details.
-     */
     private void openContextMenu(final TopSite topSite, final int absolutePosition, final View snackbarAnchor,
             final int faviconWidth, final int faviconHeight) {
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .forTopSite(topSite)
                 .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
 
+        openContextMenuInner(snackbarAnchor, extras, ActivityStreamContextMenu.MenuMode.TOPSITE, topSite,
+                /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
+                faviconWidth, faviconHeight);
+    }
+
+    /**
+     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
+     *                       for additional details.
+     */
+    private void openContextMenuInner(final View snackbarAnchor, final ActivityStreamTelemetry.Extras.Builder extras,
+            final ActivityStreamContextMenu.MenuMode menuMode, final WebpageModel webpageModel,
+            final boolean shouldOverrideWithImageProvider,
+            final int faviconWidth, final int faviconHeight) {
         ActivityStreamContextMenu.show(snackbarAnchor,
                 extras,
-                ActivityStreamContextMenu.MenuMode.TOPSITE,
-                topSite,
-                /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
+                menuMode,
+                webpageModel,
+                shouldOverrideWithImageProvider,
                 onUrlOpenListener, onUrlOpenInBackgroundListener,
                 faviconWidth, faviconHeight);
 
@@ -394,6 +389,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
                 TelemetryContract.Method.CONTEXT_MENU,
                 extras.build()
         );
+
     }
 
     @Override
