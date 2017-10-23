@@ -138,7 +138,7 @@ nsHtml5Tokenizer::setStateAndEndTagExpectation(int32_t specialTokenizerState, ns
     return;
   }
   autoJArray<char16_t,int32_t> asArray = nsHtml5Portability::newCharArrayFromLocal(endTagExpectation);
-  this->endTagExpectation = nsHtml5ElementName::elementNameByBuffer(asArray, 0, asArray.length, interner);
+  this->endTagExpectation = nsHtml5ElementName::elementNameByBuffer(asArray, asArray.length, interner);
   MOZ_ASSERT(!!this->endTagExpectation);
   endTagExpectationToArray();
 }
@@ -245,7 +245,7 @@ nsHtml5Tokenizer::strBufToString()
 void 
 nsHtml5Tokenizer::strBufToDoctypeName()
 {
-  doctypeName = nsHtml5Portability::newLocalNameFromBuffer(strBuf, 0, strBufLen, interner);
+  doctypeName = nsHtml5Portability::newLocalNameFromBuffer(strBuf, strBufLen, interner);
   clearStrBufAfterUse();
 }
 
@@ -295,23 +295,21 @@ nsHtml5Tokenizer::strBufToElementNameString()
   if (containsHyphen) {
     nsAtom* annotationName = nsHtml5ElementName::ELT_ANNOTATION_XML->getName();
     if (nsHtml5Portability::localEqualsBuffer(
-          annotationName, strBuf, 0, strBufLen)) {
+          annotationName, strBuf, strBufLen)) {
       tagName = nsHtml5ElementName::ELT_ANNOTATION_XML;
     } else {
       nonInternedTagName->setNameForNonInterned(
         nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, 0, strBufLen, interner),
-        true);
+          strBuf, strBufLen, interner), true);
       tagName = nonInternedTagName;
     }
   } else {
     tagName =
-      nsHtml5ElementName::elementNameByBuffer(strBuf, 0, strBufLen, interner);
+      nsHtml5ElementName::elementNameByBuffer(strBuf, strBufLen, interner);
     if (!tagName) {
       nonInternedTagName->setNameForNonInterned(
         nsHtml5Portability::newLocalNameFromBuffer(
-          strBuf, 0, strBufLen, interner),
-        false);
+          strBuf, strBufLen, interner), false);
       tagName = nonInternedTagName;
     }
   }
@@ -356,11 +354,10 @@ nsHtml5Tokenizer::emitCurrentTagToken(bool selfClosing, int32_t pos)
 void 
 nsHtml5Tokenizer::attributeNameComplete()
 {
-  attributeName = nsHtml5AttributeName::nameByBuffer(strBuf, 0, strBufLen, interner);
+  attributeName = nsHtml5AttributeName::nameByBuffer(strBuf, strBufLen, interner);
   if (!attributeName) {
     nonInternedAttributeName->setNameForNonInterned(
-      nsHtml5Portability::newLocalNameFromBuffer(
-        strBuf, 0, strBufLen, interner));
+      nsHtml5Portability::newLocalNameFromBuffer(strBuf, strBufLen, interner));
     attributeName = nonInternedAttributeName;
   }
   clearStrBufAfterUse();

@@ -9,9 +9,8 @@
 #include "nsHtml5TreeBuilder.h"
 
 nsAtom*
-nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
+nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner)
 {
-  NS_ASSERTION(!offset, "The offset should always be zero here.");
   NS_ASSERTION(interner, "Didn't get an atom service.");
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
@@ -97,9 +96,9 @@ nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
 }
 
 bool
-nsHtml5Portability::localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t offset, int32_t length)
+nsHtml5Portability::localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length)
 {
-  return local->Equals(buf + offset, length);
+  return local->Equals(buf, length);
 }
 
 bool
