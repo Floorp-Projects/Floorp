@@ -13,7 +13,6 @@
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel()
-    , mInitialized(false)
 {
 }
 
@@ -40,25 +39,9 @@ static nscolor GetColorFromUIColor(UIColor* aColor)
     return 0;
 }
 
-void
-nsLookAndFeel::NativeInit()
-{
-  EnsureInit();
-}
-
-void
-nsLookAndFeel::RefreshImpl()
-{
-  nsXPLookAndFeel::RefreshImpl();
-
-  mInitialized = false;
-}
-
 nsresult
 nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
 {
-  EnsureInit();
-
   nsresult res = NS_OK;
 
   switch (aID) {
@@ -102,7 +85,11 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
     case eColorID_TextSelectForeground:
     case eColorID_highlighttext:  // CSS2 color
     case eColorID__moz_menuhovertext:
-      aResult = mColorTextSelectForeground;
+      GetColor(eColorID_TextSelectBackground, aResult);
+      if (aResult == 0x000000)
+        aResult = NS_RGB(0xff,0xff,0xff);
+      else
+        aResult = NS_DONT_CHANGE_COLOR;
       break;
     case eColorID_IMESelectedRawTextBackground:
     case eColorID_IMESelectedConvertedTextBackground:
@@ -138,7 +125,7 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
     case eColorID_infotext:
     case eColorID__moz_menubartext:
     case eColorID_windowtext:
-      aResult = mColorDarkText;
+      aResult = GetColorFromUIColor([UIColor darkTextColor]);
       break;
     case eColorID_activecaption:
       aResult = NS_RGB(0xff,0xff,0xff);
@@ -208,7 +195,7 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
       break;
     case eColorID__moz_fieldtext:
     case eColorID__moz_comboboxtext:
-      aResult = mColorDarkText;
+      aResult = GetColorFromUIColor([UIColor darkTextColor]);
       break;
     case eColorID__moz_dialog:
       aResult = NS_RGB(0xaa,0xaa,0xaa);
@@ -216,7 +203,7 @@ nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult)
     case eColorID__moz_dialogtext:
     case eColorID__moz_cellhighlighttext:
     case eColorID__moz_html_cellhighlighttext:
-      aResult = mColorDarkText;
+      aResult = GetColorFromUIColor([UIColor darkTextColor]);
       break;
     case eColorID__moz_dragtargetzone:
     case eColorID__moz_mac_chrome_active:
@@ -411,23 +398,4 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
 
     //TODO: implement more here?
     return false;
-}
-
-void
-nsLookAndFeel::EnsureInit()
-{
-  if (mInitialized) {
-    return;
-  }
-  mInitialized = true;
-
-  nscolor color;
-  GetColor(eColorID_TextSelectBackground, color);
-  if (color == 0x000000) {
-    mColorTextSelectForeground = NS_RGB(0xff,0xff,0xff);
-  } else {
-    mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
-  }
-
-  mColorDarkText = GetColorFromUIColor([UIColor darkTextColor]);
 }
