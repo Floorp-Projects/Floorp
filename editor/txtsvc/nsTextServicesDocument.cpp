@@ -91,34 +91,6 @@ nsTextServicesDocument::~nsTextServicesDocument()
   ClearOffsetTable(&mOffsetTable);
 }
 
-class TSAtoms
-{
-public:
-  #define TS_ATOM(name_, value_) NS_STATIC_ATOM_DECL(name_)
-  #include "nsTSAtomList.h" // IWYU pragma: keep
-  #undef TS_ATOM
-};
-
-#define TS_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(TSAtoms, name_)
-#include "nsTSAtomList.h" // IWYU pragma: keep
-#undef TS_ATOM
-
-#define TS_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
-#include "nsTSAtomList.h" // IWYU pragma: keep
-#undef TS_ATOM
-
-static const nsStaticAtomSetup sTSAtomSetup[] = {
-  #define TS_ATOM(name_, value_) NS_STATIC_ATOM_SETUP(TSAtoms, name_)
-  #include "nsTSAtomList.h" // IWYU pragma: keep
-  #undef TS_ATOM
-};
-
-/* static */ void
-nsTextServicesDocument::RegisterAtoms()
-{
-  NS_RegisterStaticAtoms(sTSAtomSetup);
-}
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextServicesDocument)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextServicesDocument)
 
@@ -2047,32 +2019,32 @@ nsTextServicesDocument::IsBlockNode(nsIContent *aContent)
 
   nsAtom *atom = aContent->NodeInfo()->NameAtom();
 
-  return (TSAtoms::sAAtom       != atom &&
-          TSAtoms::sAddressAtom != atom &&
-          TSAtoms::sBigAtom     != atom &&
-          TSAtoms::sBAtom       != atom &&
-          TSAtoms::sCiteAtom    != atom &&
-          TSAtoms::sCodeAtom    != atom &&
-          TSAtoms::sDfnAtom     != atom &&
-          TSAtoms::sEmAtom      != atom &&
-          TSAtoms::sFontAtom    != atom &&
-          TSAtoms::sIAtom       != atom &&
-          TSAtoms::sKbdAtom     != atom &&
-          TSAtoms::sKeygenAtom  != atom &&
-          TSAtoms::sNobrAtom    != atom &&
-          TSAtoms::sSAtom       != atom &&
-          TSAtoms::sSampAtom    != atom &&
-          TSAtoms::sSmallAtom   != atom &&
-          TSAtoms::sSpacerAtom  != atom &&
-          TSAtoms::sSpanAtom    != atom &&
-          TSAtoms::sStrikeAtom  != atom &&
-          TSAtoms::sStrongAtom  != atom &&
-          TSAtoms::sSubAtom     != atom &&
-          TSAtoms::sSupAtom     != atom &&
-          TSAtoms::sTtAtom      != atom &&
-          TSAtoms::sUAtom       != atom &&
-          TSAtoms::sVarAtom     != atom &&
-          TSAtoms::sWbrAtom     != atom);
+  return (nsGkAtoms::a       != atom &&
+          nsGkAtoms::address != atom &&
+          nsGkAtoms::big     != atom &&
+          nsGkAtoms::b       != atom &&
+          nsGkAtoms::cite    != atom &&
+          nsGkAtoms::code    != atom &&
+          nsGkAtoms::dfn     != atom &&
+          nsGkAtoms::em      != atom &&
+          nsGkAtoms::font    != atom &&
+          nsGkAtoms::i       != atom &&
+          nsGkAtoms::kbd     != atom &&
+          nsGkAtoms::keygen  != atom &&
+          nsGkAtoms::nobr    != atom &&
+          nsGkAtoms::s       != atom &&
+          nsGkAtoms::samp    != atom &&
+          nsGkAtoms::small   != atom &&
+          nsGkAtoms::spacer  != atom &&
+          nsGkAtoms::span    != atom &&
+          nsGkAtoms::strike  != atom &&
+          nsGkAtoms::strong  != atom &&
+          nsGkAtoms::sub     != atom &&
+          nsGkAtoms::sup     != atom &&
+          nsGkAtoms::tt      != atom &&
+          nsGkAtoms::u       != atom &&
+          nsGkAtoms::var     != atom &&
+          nsGkAtoms::wbr     != atom);
 }
 
 bool
