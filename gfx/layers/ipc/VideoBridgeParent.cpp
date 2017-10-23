@@ -21,7 +21,7 @@ VideoBridgeParent::VideoBridgeParent()
 {
   mSelfRef = this;
   sVideoBridgeSingleton = this;
-  mCompositorThreadRef = CompositorThreadHolder::GetSingleton();
+  mCompositorThreadRef = new CompositorThreadHolderDebug("VideoBridge");
 }
 
 VideoBridgeParent::~VideoBridgeParent()
