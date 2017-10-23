@@ -204,6 +204,7 @@
 @BINPATH@/components/profiler.xpt
 #endif
 @BINPATH@/components/rdf.xpt
+@BINPATH@/components/reputationservice.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/services-crypto-component.xpt
