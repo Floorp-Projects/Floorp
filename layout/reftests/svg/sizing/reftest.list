@@ -259,14 +259,14 @@ fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg       pass-pct-pct.xhtml
 # We could certainly expand on these tests, but they provide reasonable base
 # coverage.
 
-HTTP(../..) == inline--display-block--01.xhtml inline--display-block--01-ref.xhtml
-fuzzy-if(OSX,1,10) HTTP(../..) == inline--display-inline--01.xhtml inline--display-inline--01-ref.xhtml
-HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01-ref.xhtml
+== inline--display-block--01.xhtml inline--display-block--01-ref.xhtml
+fuzzy-if(OSX,1,10) == inline--display-inline--01.xhtml inline--display-inline--01-ref.xhtml
+== inline--display-inline-block--01.xhtml inline--display-inline-block--01-ref.xhtml
 == inline--float-left--01.xhtml            inline--float-left--01-ref.xhtml
 == inline--float-right--01.xhtml           inline--float-right--01-ref.xhtml
 == inline--position-absolute--01.xhtml     inline--position-absolute--01-ref.xhtml
 == inline--position-absolute--02.xhtml     pass.svg
-HTTP(../..) == inline--position-relative--01.xhtml    inline--position-relative--01-ref.xhtml
+== inline--position-relative--01.xhtml    inline--position-relative--01-ref.xhtml
 
 
 # Embedded by reference tests
