@@ -769,9 +769,13 @@ public:
    */
   bool HasDragEventMessage() const;
   /**
-   * Returns true if the event mMessage is one of key events.
+   * Returns true if aMessage or mMessage is one of key events.
    */
-  bool HasKeyEventMessage() const;
+  static bool IsKeyEventMessage(EventMessage aMessage);
+  bool HasKeyEventMessage() const
+  {
+    return IsKeyEventMessage(mMessage);
+  }
   /**
    * Returns true if the event mMessage is one of composition events or text
    * event.
