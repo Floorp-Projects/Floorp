@@ -5,7 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
+import json
 import os
+import sys
 
 from mach.decorators import (
     CommandArgument,
@@ -96,9 +98,11 @@ class MozbuildFileCommands(MachCommandBase):
                 'Show Bugzilla component info for files listed.')
     @CommandArgument('-r', '--rev',
                      help='Version control revision to look up info from')
+    @CommandArgument('--format', choices={'json', 'plain'}, default='plain',
+                     help='Output format', dest='fmt')
     @CommandArgument('paths', nargs='+',
                      help='Paths whose data to query')
-    def file_info_bugzilla(self, paths, rev=None):
+    def file_info_bugzilla(self, paths, rev=None, fmt=None):
         """Show Bugzilla component for a set of files.
 
         Given a requested set of files (which can be specified using
@@ -112,24 +116,61 @@ class MozbuildFileCommands(MachCommandBase):
             print(e.message)
             return 1
 
-        for component, files in sorted(components.items(), key=lambda x: (x is None, x)):
-            print('%s :: %s' % (component.product, component.component) if component else 'UNKNOWN')
-            for f in sorted(files):
-                print('  %s' % f)
+        if fmt == 'json':
+            data = {}
+            for component, files in components.items():
+                if not component:
+                    continue
+                for f in files:
+                    data[f] = [component.product, component.component]
+
+            json.dump(data, sys.stdout, sort_keys=True, indent=2)
+            return
+        elif fmt == 'plain':
+            data = sorted(components.items(),
+                          key=lambda x: (x is None, x))
+            for component, files in data:
+                if component:
+                    s = '%s :: %s' % (component.product, component.component)
+                else:
+                    s = 'UNKNOWN'
+
+                print(s)
+                for f in sorted(files):
+                    print('  %s' % f)
+        else:
+            print('unhandled output format: %s' % fmt)
+            return 1
 
     @SubCommand('file-info', 'missing-bugzilla',
                 'Show files missing Bugzilla component info')
     @CommandArgument('-r', '--rev',
                      help='Version control revision to look up info from')
+    @CommandArgument('--format', choices={'json', 'plain'}, dest='fmt',
+                     default='plain',
+                     help='Output format')
     @CommandArgument('paths', nargs='+',
                      help='Paths whose data to query')
-    def file_info_missing_bugzilla(self, paths, rev=None):
+    def file_info_missing_bugzilla(self, paths, rev=None, fmt=None):
+        missing = set()
+
         try:
-            for p, m in sorted(self._get_files_info(paths, rev=rev).items()):
+            for p, m in self._get_files_info(paths, rev=rev).items():
                 if 'BUG_COMPONENT' not in m:
-                    print(p)
+                    missing.add(p)
         except InvalidPathException as e:
             print(e.message)
+            return 1
+
+        if fmt == 'json':
+            json.dump({'missing': sorted(missing)}, sys.stdout,
+                      indent=2)
+            return
+        elif fmt == 'plain':
+            for f in sorted(missing):
+                print(f)
+        else:
+            print('unhandled output format: %s' % fmt)
             return 1
 
     @SubCommand('file-info', 'dep-tests',
