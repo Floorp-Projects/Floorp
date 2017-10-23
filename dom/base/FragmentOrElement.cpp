@@ -1441,6 +1441,9 @@ public:
     FragmentOrElement* container = static_cast<FragmentOrElement*>(aNode);
     uint32_t childCount = container->mAttrsAndChildren.ChildCount();
     if (childCount) {
+      // Invalidate cached array of child nodes
+      container->InvalidateChildNodes();
+
       while (childCount-- > 0) {
         // Hold a strong ref to the node when we remove it, because we may be
         // the last reference to it.  We need to call TakeChildAt() and
