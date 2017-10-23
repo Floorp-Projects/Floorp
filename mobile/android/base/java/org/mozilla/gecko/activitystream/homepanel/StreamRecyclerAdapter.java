@@ -22,6 +22,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
+import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsEmptyStateRow;
@@ -135,7 +136,13 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (type == RowItemType.TOP_PANEL.getViewType()) {
-            return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+            return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, new TopPanelRow.OnCardLongClickListener() {
+                @Override
+                public boolean onClick(final TopSite topSite, final int absolutePosition, final int faviconWidth, final int faviconHeight) {
+                    openContextMenu(topSite, absolutePosition, parent, faviconWidth, faviconHeight);
+                    return true;
+                }
+            });
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, R.string.activity_stream_link_more, LINK_MORE_POCKET, onUrlOpenListener);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType() ||
@@ -357,6 +364,32 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
                 /* shouldOverrideWithImageProvider */ true, // we use image providers in HighlightItem.pageIconLayout.
                 onUrlOpenListener, onUrlOpenInBackgroundListener,
                 webpageItemRow.getTileWidth(), webpageItemRow.getTileHeight());
+
+        Telemetry.sendUIEvent(
+                TelemetryContract.Event.SHOW,
+                TelemetryContract.Method.CONTEXT_MENU,
+                extras.build()
+        );
+    }
+
+    /**
+     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(Context, View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
+     *                       for additional details.
+     */
+    private void openContextMenu(final TopSite topSite, final int absolutePosition, final View snackbarAnchor,
+            final int faviconWidth, final int faviconHeight) {
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                .forTopSite(topSite)
+                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
+
+        ActivityStreamContextMenu.show(snackbarAnchor.getContext(),
+                snackbarAnchor,
+                extras,
+                ActivityStreamContextMenu.MenuMode.TOPSITE,
+                topSite,
+                /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
+                onUrlOpenListener, onUrlOpenInBackgroundListener,
+                faviconWidth, faviconHeight);
 
         Telemetry.sendUIEvent(
                 TelemetryContract.Event.SHOW,
