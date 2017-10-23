@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-multiple-definitions.template
 /*---
 description: Static literal property names (multiple fields definitions)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

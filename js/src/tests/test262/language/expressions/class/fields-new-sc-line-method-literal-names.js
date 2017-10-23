@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-new-sc-line-method.template
 /*---
 description: Literal property names (field definitions followed by a method in a new line with a semicolon)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]
