@@ -17,7 +17,6 @@
 #include "nscore.h"
 
 class OffsetEntry;
-class nsAtom;
 class nsIContent;
 class nsIContentIterator;
 class nsIDOMCharacterData;
@@ -36,33 +35,6 @@ class nsTextServicesDocument final : public nsITextServicesDocument,
                                      public nsIEditActionListener
 {
 private:
-  static nsAtom *sAAtom;
-  static nsAtom *sAddressAtom;
-  static nsAtom *sBigAtom;
-  static nsAtom *sBAtom;
-  static nsAtom *sCiteAtom;
-  static nsAtom *sCodeAtom;
-  static nsAtom *sDfnAtom;
-  static nsAtom *sEmAtom;
-  static nsAtom *sFontAtom;
-  static nsAtom *sIAtom;
-  static nsAtom *sKbdAtom;
-  static nsAtom *sKeygenAtom;
-  static nsAtom *sNobrAtom;
-  static nsAtom *sSAtom;
-  static nsAtom *sSampAtom;
-  static nsAtom *sSmallAtom;
-  static nsAtom *sSpacerAtom;
-  static nsAtom *sSpanAtom;
-  static nsAtom *sStrikeAtom;
-  static nsAtom *sStrongAtom;
-  static nsAtom *sSubAtom;
-  static nsAtom *sSupAtom;
-  static nsAtom *sTtAtom;
-  static nsAtom *sUAtom;
-  static nsAtom *sVarAtom;
-  static nsAtom *sWbrAtom;
-
   typedef enum { eIsDone=0,        // No iterator (I), or iterator doesn't point to anything valid.
                  eValid,           // I points to first text node (TN) in current block (CB).
                  ePrev,            // No TN in CB, I points to first TN in prev block.
@@ -97,10 +69,6 @@ public:
   /** The default constructor.
    */
   nsTextServicesDocument();
-
-  /** To be called at module init
-   */
-  static void RegisterAtoms();
 
   /* Macro for AddRef(), Release(), and QueryInterface() */
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

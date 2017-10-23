@@ -218,7 +218,6 @@ UNIFIED_SOURCES += [
     'nsCSSParser.cpp',
     'nsCSSProps.cpp',
     'nsCSSPseudoClasses.cpp',
-    'nsCSSPseudoElements.cpp',
     'nsCSSRuleProcessor.cpp',
     'nsCSSRules.cpp',
     'nsCSSScanner.cpp',
@@ -277,9 +276,12 @@ UNIFIED_SOURCES += [
     'URLExtraData.cpp',
 ]
 
-# - nsLayoutStylesheetCache.cpp needs to be built separately because it uses
-# nsExceptionHandler.h, which includes windows.h.
 SOURCES += [
+    # Both nsCSSPseudoElements.cpp and nsCSSPseudoClasses.cpp defined a
+    # 'mozPlaceholder' static atom.
+    'nsCSSPseudoElements.cpp',
+    # nsLayoutStylesheetCache.cpp uses nsExceptionHandler.h, which includes
+    # windows.h.
     'nsLayoutStylesheetCache.cpp',
 ]
 
