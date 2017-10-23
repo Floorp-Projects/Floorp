@@ -152,7 +152,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
   while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
     if (!target || !target->IsValid()) {
       if (target) {
-        mContentClient->ReturnDrawTarget(target);
+        mContentClient->ReturnDrawTargetToBuffer(target);
       }
       continue;
     }
@@ -171,7 +171,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
                                               ClientManager()->GetPaintedLayerCallbackData());
 
     ctx = nullptr;
-    mContentClient->ReturnDrawTarget(target);
+    mContentClient->ReturnDrawTargetToBuffer(target);
     didUpdate = true;
   }
 
@@ -227,7 +227,7 @@ ClientPaintedLayer::PaintOffMainThread()
     DrawTarget* target = captureState->mTargetDual;
     if (!target || !target->IsValid()) {
       if (target) {
-        mContentClient->ReturnDrawTarget(target);
+        mContentClient->ReturnDrawTargetToBuffer(target);
       }
       continue;
     }
@@ -257,7 +257,7 @@ ClientPaintedLayer::PaintOffMainThread()
     PaintThread::Get()->PaintContents(captureState,
                                       ContentClient::PrepareDrawTargetForPainting);
 
-    mContentClient->ReturnDrawTarget(target);
+    mContentClient->ReturnDrawTargetToBuffer(target);
 
     didUpdate = true;
   }
