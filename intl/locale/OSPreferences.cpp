@@ -170,7 +170,9 @@ OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
 
   nsAutoCString locale;
   if (aLocale.IsEmpty()) {
-    LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
+    AutoTArray<nsCString, 10> regionalPrefsLocales;
+    LocaleService::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales);
+    locale.Assign(regionalPrefsLocales[0]);
   } else {
     locale.Assign(aLocale);
   }

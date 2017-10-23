@@ -44,7 +44,6 @@ ac_add_options --disable-optimize
 ac_add_options --disable-warnings-as-errors
 
 # Temporary config settings until we get these working on mingw
-ac_add_options --disable-tests
 ac_add_options --disable-accessibility # https://sourceforge.net/p/mingw-w64/bugs/648/
 
 # Long story

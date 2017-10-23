@@ -359,16 +359,30 @@ public:
    */
   virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) = 0;
 
+  enum class ResizeReflowOptions : uint32_t {
+    // the resulting BSize should be exactly as given
+    eBSizeExact,
+    // the resulting BSize can be less than the given one, producing
+    // shrink-to-fit sizing in the block dimension
+    eBSizeLimit
+  };
   /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0, nscoord aOldHeight = 0) = 0;
+  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight,
+                                nscoord aOldWidth = 0, nscoord aOldHeight = 0,
+                                ResizeReflowOptions aOptions =
+                                  ResizeReflowOptions::eBSizeExact) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
    */
-  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight) = 0;
+  virtual nsresult ResizeReflowIgnoreOverride(
+                     nscoord aWidth, nscoord aHeight,
+                     nscoord aOldWidth, nscoord aOldHeight,
+                     ResizeReflowOptions aOptions =
+                       ResizeReflowOptions::eBSizeExact) = 0;
 
   /**
    * Returns true if ResizeReflowOverride has been called.

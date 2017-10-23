@@ -22,14 +22,25 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.webapps.WebAppManifest;
 
 public class PwaConfirm extends RelativeLayout {
 
-    boolean isAnimating = false;
+    private static final String TELEMETRY_EXTRA_SHOW = "pwa_confirm_show";
+    private static final String TELEMETRY_EXTRA_CANCEL = "pwa_confirm_cancel";
+    private static final String TELEMETRY_EXTRA_BACK = "pwa_confirm_back";
+    private static final String TELEMETRY_EXTRA_ACCEPT = "pwa_confirm_accept";
+    public static final String TELEMETRY_EXTRA_ADDED = "pwa_confirm_added";
 
+
+    private boolean isAnimating = false;
 
     public static PwaConfirm show(Context context) {
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, TELEMETRY_EXTRA_SHOW);
+
         if (context instanceof Activity) {
             final ViewGroup contetView = (ViewGroup) ((Activity) context).findViewById(R.id.gecko_layout);
             final View oldPwaConfirm = contetView.findViewById(R.id.pwa_confirm_root);
@@ -99,6 +110,7 @@ public class PwaConfirm extends RelativeLayout {
         final OnClickListener dismiss = new OnClickListener() {
             @Override
             public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PAGEACTION, TELEMETRY_EXTRA_CANCEL);
                 disappear();
             }
         };
@@ -106,6 +118,9 @@ public class PwaConfirm extends RelativeLayout {
 
             @Override
             public void onClick(View v) {
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PAGEACTION, TELEMETRY_EXTRA_ACCEPT);
+
                 GeckoApplication.createShortcut();
                 disappear();
             }
@@ -135,6 +150,7 @@ public class PwaConfirm extends RelativeLayout {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PAGEACTION, TELEMETRY_EXTRA_BACK);
                     dismiss();
                 }
                 return true;

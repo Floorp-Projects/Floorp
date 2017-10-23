@@ -17,8 +17,8 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use webrender::api::{self, DisplayListBuilder, DocumentId, LayoutSize, PipelineId, RenderApi,
-                     ResourceUpdates};
+use webrender::api::{self, DeviceUintRect, DisplayListBuilder, DocumentId, LayoutSize, PipelineId,
+                     RenderApi, ResourceUpdates};
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.
@@ -145,7 +145,7 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn update(&mut self, key: api::ImageKey, cmds: api::BlobImageData) {
+    fn update(&mut self, key: api::ImageKey, cmds: api::BlobImageData, _dirty_rect: Option<DeviceUintRect>) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds

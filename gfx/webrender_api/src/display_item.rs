@@ -6,6 +6,7 @@ use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, La
      LayoutSize, LayoutTransform};
 use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
 use euclid::{SideOffsets2D, TypedRect, TypedSideOffsets2D};
+use std::ops::Not;
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
@@ -297,7 +298,7 @@ pub struct BoxShadowDisplayItem {
     pub color: ColorF,
     pub blur_radius: f32,
     pub spread_radius: f32,
-    pub border_radius: f32,
+    pub border_radius: BorderRadius,
     pub clip_mode: BoxShadowClipMode,
 }
 
@@ -336,7 +337,6 @@ pub struct GradientStop {
     pub offset: f32,
     pub color: ColorF,
 }
-known_heap_size!(0, GradientStop);
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct RadialGradient {
@@ -375,8 +375,6 @@ pub enum ScrollPolicy {
     Scrollable = 0,
     Fixed = 1,
 }
-
-known_heap_size!(0, ScrollPolicy);
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -547,8 +545,27 @@ impl LocalClip {
                 ComplexClipRegion {
                     rect: complex.rect.translate(offset),
                     radii: complex.radii,
+                    mode: complex.mode,
                 },
             ),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum ClipMode {
+    Clip,    // Pixels inside the region are visible.
+    ClipOut, // Pixels outside the region are visible.
+}
+
+impl Not for ClipMode {
+    type Output = ClipMode;
+
+    fn not(self) -> ClipMode {
+        match self {
+            ClipMode::Clip => ClipMode::ClipOut,
+            ClipMode::ClipOut => ClipMode::Clip,
         }
     }
 }
@@ -560,6 +577,9 @@ pub struct ComplexClipRegion {
     pub rect: LayoutRect,
     /// Border radii of this rectangle.
     pub radii: BorderRadius,
+    /// Whether we are clipping inside or outside
+    /// the region.
+    pub mode: ClipMode,
 }
 
 impl BorderRadius {
@@ -619,8 +639,12 @@ impl BorderRadius {
 
 impl ComplexClipRegion {
     /// Create a new complex clip region.
-    pub fn new(rect: LayoutRect, radii: BorderRadius) -> ComplexClipRegion {
-        ComplexClipRegion { rect, radii }
+    pub fn new(
+        rect: LayoutRect,
+        radii: BorderRadius,
+        mode: ClipMode,
+    ) -> ComplexClipRegion {
+        ComplexClipRegion { rect, radii, mode }
     }
 }
 
@@ -672,21 +696,3 @@ impl ClipId {
         }
     }
 }
-
-macro_rules! define_empty_heap_size_of {
-    ($name:ident) => {
-        impl ::heapsize::HeapSizeOf for $name {
-            fn heap_size_of_children(&self) -> usize { 0 }
-        }
-    }
-}
-
-define_empty_heap_size_of!(ClipAndScrollInfo);
-define_empty_heap_size_of!(ClipId);
-define_empty_heap_size_of!(ImageKey);
-define_empty_heap_size_of!(LocalClip);
-define_empty_heap_size_of!(MixBlendMode);
-define_empty_heap_size_of!(RepeatMode);
-define_empty_heap_size_of!(ScrollSensitivity);
-define_empty_heap_size_of!(StickySideConstraint);
-define_empty_heap_size_of!(TransformStyle);

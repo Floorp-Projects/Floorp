@@ -20,9 +20,6 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// Force the Telemetry enabled preference so that TelemetrySession.testReset() doesn't exit early.
-Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
-
 // Set up our dummy AppInfo object so we can control the appBuildID.
 Cu.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo();

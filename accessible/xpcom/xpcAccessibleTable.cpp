@@ -279,7 +279,7 @@ xpcAccessibleTable::GetSelectedCells(nsIArray** aSelectedCells)
   uint32_t totalCount = cellsArray.Length();
   for (uint32_t idx = 0; idx < totalCount; idx++) {
     Accessible* cell = cellsArray.ElementAt(idx);
-    selCells->AppendElement(static_cast<nsIAccessible*>(ToXPC(cell)), false);
+    selCells->AppendElement(static_cast<nsIAccessible*>(ToXPC(cell)));
   }
 
   NS_ADDREF(*aSelectedCells = selCells);

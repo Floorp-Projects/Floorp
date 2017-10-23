@@ -418,20 +418,26 @@ extern "C" {
 }
 
 impl webrender_api::RenderNotifier for CppNotifier {
-    fn new_frame_ready(&mut self) {
+    fn clone(&self) -> Box<webrender_api::RenderNotifier> {
+        Box::new(CppNotifier {
+            window_id: self.window_id,
+        })
+    }
+
+    fn new_frame_ready(&self) {
         unsafe {
             wr_notifier_new_frame_ready(self.window_id);
         }
     }
 
-    fn new_scroll_frame_ready(&mut self,
+    fn new_scroll_frame_ready(&self,
                               composite_needed: bool) {
         unsafe {
             wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
         }
     }
 
-    fn external_event(&mut self,
+    fn external_event(&self,
                       event: ExternalEvent) {
         unsafe {
             wr_notifier_external_event(self.window_id, event.unwrap());
@@ -643,7 +649,10 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         ..Default::default()
     };
 
-    let (renderer, sender) = match Renderer::new(gl, opts) {
+    let notifier = Box::new(CppNotifier {
+        window_id: window_id,
+    });
+    let (renderer, sender) = match Renderer::new(gl, notifier, opts) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -655,9 +664,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         },
     };
 
-    renderer.set_render_notifier(Box::new(CppNotifier {
-                                              window_id: window_id,
-                                          }));
     unsafe {
         *out_max_texture_size = renderer.get_max_texture_size();
     }
@@ -1726,7 +1732,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                           color,
                           blur_radius,
                           spread_radius,
-                          border_radius,
+                          BorderRadius::uniform(border_radius),
                           clip_mode);
 }
 

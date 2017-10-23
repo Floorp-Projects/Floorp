@@ -32,6 +32,8 @@ public:
     virtual char16_t GetPasswordCharacterImpl();
     virtual bool GetEchoPasswordImpl();
 
+    bool IsCSDAvailable() const { return sCSDAvailable; }
+
 protected:
 
     // Cached fonts
@@ -82,6 +84,10 @@ protected:
     char16_t sInvisibleCharacter;
     float   sCaretRatio;
     bool    sMenuSupportsDrag;
+    bool    sCSDAvailable;
+    bool    sCSDMaximizeButton;
+    bool    sCSDMinimizeButton;
+    bool    sCSDCloseButton;
     bool    mInitialized;
 
     void EnsureInit();

@@ -70,9 +70,9 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
     ifptr->SetData(static_cast<nsIPrintProgress*>(this));
     ifptr->SetDataIID(&NS_GET_IID(nsIPrintProgress));
 
-    array->AppendElement(ifptr, /*weak =*/ false);
+    array->AppendElement(ifptr);
 
-    array->AppendElement(parameters, /*weak =*/ false);
+    array->AppendElement(parameters);
 
     // We will set the opener of the dialog to be the nsIDOMWindow for the
     // browser XUL window itself, as opposed to the content. That way, the

@@ -170,7 +170,7 @@ nsIConstraintValidation::ReportValidity()
 
   nsCOMPtr<nsIMutableArray> invalidElements =
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  invalidElements->AppendElement(content, false);
+  invalidElements->AppendElement(content);
 
   NS_ENSURE_SUCCESS(rv, true);
   nsCOMPtr<nsISupports> inst;

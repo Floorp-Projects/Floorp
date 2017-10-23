@@ -10,7 +10,7 @@ add_task(async function() {
   await PlacesTestUtils.addVisits(pageURI);
   let faviconURI = NetUtil.newURI("http://www.places.test/favicon.ico");
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    faviconURI, SMALLPNG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
+    faviconURI, SMALLPNG_DATA_URI.spec, 0, systemPrincipal);
   await setFaviconForPage(pageURI, faviconURI);
 
   // Sanity checks.
@@ -51,10 +51,10 @@ add_task(async function test_removePagesByTimeframe() {
   let faviconURI = NetUtil.newURI("http://www.places.test/page/favicon.ico");
   let rootIconURI = NetUtil.newURI("http://www.places.test/favicon.ico");
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    faviconURI, SMALLSVG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
+    faviconURI, SMALLSVG_DATA_URI.spec, 0, systemPrincipal);
   await setFaviconForPage(pageURI, faviconURI);
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    rootIconURI, SMALLPNG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
+    rootIconURI, SMALLPNG_DATA_URI.spec, 0, systemPrincipal);
   await setFaviconForPage(pageURI, rootIconURI);
 
   // Sanity checks.
@@ -97,9 +97,27 @@ add_task(async function test_different_host() {
   await PlacesTestUtils.addVisits(pageURI);
   let faviconURI = NetUtil.newURI("http://mozilla.test/favicon.ico");
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-    faviconURI, SMALLPNG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
+    faviconURI, SMALLPNG_DATA_URI.spec, 0, systemPrincipal);
   await setFaviconForPage(pageURI, faviconURI);
 
   Assert.equal(await getFaviconUrlForPage(pageURI),
                faviconURI.spec, "Should get the png icon");
+});
+
+add_task(async function test_same_size() {
+  // Add two icons with the same size, one is a root icon. Check that the
+  // non-root icon is preferred when a smaller size is requested.
+  let data = readFileData(do_get_file("favicon-normal32.png"));
+  let pageURI = NetUtil.newURI("http://new_places.test/page/");
+  await PlacesTestUtils.addVisits(pageURI);
+
+  let faviconURI = NetUtil.newURI("http://new_places.test/favicon.ico");
+  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, data.length, "image/png");
+  await setFaviconForPage(pageURI, faviconURI);
+  faviconURI = NetUtil.newURI("http://new_places.test/another_icon.ico");
+  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, data.length, "image/png");
+  await setFaviconForPage(pageURI, faviconURI);
+
+  Assert.equal(await getFaviconUrlForPage(pageURI, 20),
+               faviconURI.spec, "Should get the non-root icon");
 });

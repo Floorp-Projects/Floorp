@@ -2,6 +2,7 @@
 
 const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 const { TelemetryController } = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
+const { TelemetryUtils } = Cu.import("resource://gre/modules/TelemetryUtils.jsm", {});
 
 const CONTENT_CREATED = "ipc:content-created";
 
@@ -17,9 +18,11 @@ async function waitForProcessesScalars(aProcesses, aKeyed,
 }
 
 add_task(async function test_setup() {
+  // Make sure the newly spawned content processes will have extended Telemetry enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["toolkit.telemetry.enabled", true]]
+    set: [[TelemetryUtils.Preferences.OverridePreRelease, true]]
   });
+  // And take care of the already initialized one as well.
   let canRecordExtended = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);

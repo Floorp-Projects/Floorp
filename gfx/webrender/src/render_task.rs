@@ -4,7 +4,7 @@
 
 use api::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{FilterOp, MixBlendMode};
-use api::PipelineId;
+use api::{LayerRect, PipelineId};
 use clip::{ClipSource, ClipSourcesWeakHandle, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
 use gpu_cache::GpuCacheHandle;
@@ -264,6 +264,7 @@ pub struct PictureTask {
 pub struct BlurTask {
     pub blur_radius: DeviceIntLength,
     pub target_kind: RenderTargetKind,
+    pub regions: Vec<LayerRect>,
 }
 
 #[derive(Debug)]
@@ -282,12 +283,23 @@ pub enum RenderTaskKind {
     Alias(RenderTaskId),
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum ClearMode {
+    // Applicable to color and alpha targets.
+    Zero,
+    One,
+
+    // Applicable to color targets only.
+    Transparent,
+}
+
 #[derive(Debug)]
 pub struct RenderTask {
     pub cache_key: Option<RenderTaskKey>,
     pub location: RenderTaskLocation,
     pub children: Vec<RenderTaskId>,
     pub kind: RenderTaskKind,
+    pub clear_mode: ClearMode,
 }
 
 impl RenderTask {
@@ -305,6 +317,7 @@ impl RenderTask {
                 items: Vec::new(),
                 frame_output_pipeline_id,
             }),
+            clear_mode: ClearMode::Transparent,
         }
     }
 
@@ -321,6 +334,11 @@ impl RenderTask {
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
     ) -> RenderTask {
+        let clear_mode = match target_kind {
+            RenderTargetKind::Color => ClearMode::Transparent,
+            RenderTargetKind::Alpha => ClearMode::One,
+        };
+
         RenderTask {
             cache_key: None,
             children: Vec::new(),
@@ -329,6 +347,7 @@ impl RenderTask {
                 prim_index,
                 target_kind,
             }),
+            clear_mode,
         }
     }
 
@@ -338,6 +357,7 @@ impl RenderTask {
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, screen_rect.size),
             kind: RenderTaskKind::Readback(screen_rect),
+            clear_mode: ClearMode::Transparent,
         }
     }
 
@@ -420,6 +440,7 @@ impl RenderTask {
                 geometry_kind,
                 coordinate_system_id: prim_coordinate_system_id,
             }),
+            clear_mode: ClearMode::One,
         })
     }
 
@@ -443,6 +464,8 @@ impl RenderTask {
         src_task_id: RenderTaskId,
         render_tasks: &mut RenderTaskTree,
         target_kind: RenderTargetKind,
+        regions: &[LayerRect],
+        clear_mode: ClearMode,
     ) -> RenderTask {
         let blur_target_size = render_tasks.get(src_task_id).get_dynamic_size();
 
@@ -453,7 +476,9 @@ impl RenderTask {
             kind: RenderTaskKind::VerticalBlur(BlurTask {
                 blur_radius,
                 target_kind,
+                regions: regions.to_vec(),
             }),
+            clear_mode,
         };
 
         let blur_task_v_id = render_tasks.add(blur_task_v);
@@ -465,7 +490,9 @@ impl RenderTask {
             kind: RenderTaskKind::HorizontalBlur(BlurTask {
                 blur_radius,
                 target_kind,
+                regions: regions.to_vec(),
             }),
+            clear_mode,
         };
 
         blur_task_h
