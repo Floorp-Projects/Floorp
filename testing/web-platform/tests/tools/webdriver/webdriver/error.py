@@ -145,11 +145,12 @@ class UnsupportedOperationException(WebDriverException):
     status_code = "unsupported operation"
 
 
-def get(status_code):
-    """Gets exception from `status_code`, falling back to
+def get(error_code):
+    """
+    Gets exception from `error_code`, falling back to
     ``WebDriverException`` if it is not found.
     """
-    return _errors.get(status_code, WebDriverException)
+    return _errors.get(error_code, WebDriverException)
 
 
 _errors = collections.defaultdict()
