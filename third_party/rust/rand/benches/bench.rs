@@ -10,7 +10,7 @@ mod distributions;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng};
-use rand::{OsRng, weak_rng};
+use rand::{OsRng, sample, weak_rng};
 
 #[bench]
 fn rand_xorshift(b: &mut Bencher) {
@@ -84,5 +84,14 @@ fn rand_shuffle_100(b: &mut Bencher) {
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
         rng.shuffle(x);
+    })
+}
+
+#[bench]
+fn rand_sample_10_of_100(b: &mut Bencher) {
+    let mut rng = weak_rng();
+    let x : &[usize] = &[1; 100];
+    b.iter(|| {
+        sample(&mut rng, x, 10);
     })
 }

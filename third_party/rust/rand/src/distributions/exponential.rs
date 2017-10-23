@@ -34,7 +34,7 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 /// let Exp1(x) = rand::random();
 /// println!("{}", x);
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Exp1(pub f64);
 
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
@@ -71,7 +71,7 @@ impl Rand for Exp1 {
 /// let v = exp.ind_sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Exp {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
     lambda_inverse: f64
