@@ -224,7 +224,7 @@ ClientPaintedLayer::PaintOffMainThread()
   while (RefPtr<CapturedPaintState> captureState =
           mContentClient->BorrowDrawTargetForRecording(state, &iter))
   {
-    DrawTarget* target = captureState->mTargetDual;
+    DrawTarget* target = captureState->mTarget;
     if (!target || !target->IsValid()) {
       if (target) {
         mContentClient->ReturnDrawTargetToBuffer(target);
