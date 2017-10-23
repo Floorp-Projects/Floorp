@@ -39,23 +39,17 @@ function test() {
   // Lots of callbacks going on here
   waitForExplicitFinish();
 
-  // Begin the test. First, we disable tab warming because it's
-  // possible for the mouse to be over one of the tabs during
-  // this test, warm it up, and cause this test to fail intermittently
-  // in automation.
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.remote.warmup.enabled", false]],
-  }).then(step1);
+  // Begin the test
+  step1();
 }
 
-function step1() {
-
+async function step1() {
   // Get a handle on the initial tab
   ctx.tab0 = gBrowser.selectedTab;
   ctx.tab0Browser = gBrowser.getBrowserForTab(ctx.tab0);
 
-  // Our current tab should be active
-  ok(ctx.tab0Browser.docShellIsActive, "Tab 0 should be active at test start");
+  await BrowserTestUtils.waitForCondition(() => ctx.tab0Browser.docShellIsActive,
+    "Timed out waiting for initial tab to be active.");
 
   // Open a New Tab
   ctx.tab1 = BrowserTestUtils.addTab(gBrowser, testPath + "bug343515_pg1.html");
