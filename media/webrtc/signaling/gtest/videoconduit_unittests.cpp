@@ -9,6 +9,8 @@
 
 #include "webrtc/media/base/videoadapter.h"
 
+#include "MockCall.h"
+
 using namespace mozilla;
 
 namespace test {
@@ -56,8 +58,9 @@ class VideoConduitTest : public ::testing::Test {
 TEST_F(VideoConduitTest, TestOnSinkWantsChanged)
 {
   RefPtr<mozilla::WebrtcVideoConduit> videoConduit;
-  MockVideoAdapter* adapter = new MockVideoAdapter;
-  videoConduit = new WebrtcVideoConduit(WebRtcCallWrapper::Create(),
+  MockCall* call = new MockCall();
+  MockVideoAdapter* adapter = new MockVideoAdapter();
+  videoConduit = new WebrtcVideoConduit(WebRtcCallWrapper::Create(UniquePtr<MockCall>(call)),
                                         UniquePtr<cricket::VideoAdapter>(adapter));
 
   rtc::VideoSinkWants wants;
