@@ -162,7 +162,7 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     flags |= ContentClient::PAINT_NO_ROTATION;
   }
   PaintState state =
-    mContentClient->BeginPaint(this, flags);
+    mContentClient->BeginPaintBuffer(this, flags);
   SubtractFromValidRegion(state.mRegionToInvalidate);
 
   DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state);
