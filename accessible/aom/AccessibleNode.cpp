@@ -37,6 +37,20 @@ AccessibleNode::AccessibleNode(nsINode* aNode) : mDOMNode(aNode)
   }
 }
 
+bool
+AccessibleNode::IsAOMEnabled(JSContext* aCx, JSObject* /*unused*/)
+{
+  static bool sPrefCached = false;
+  static bool sPrefCacheValue = false;
+
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddBoolVarCache(&sPrefCacheValue, "accessibility.AOM.enabled");
+  }
+
+  return nsContentUtils::IsSystemCaller(aCx) || sPrefCacheValue;
+}
+
 AccessibleNode::~AccessibleNode()
 {
 }
