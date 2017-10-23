@@ -32,6 +32,7 @@ class AddonsPanel extends Component {
   static get propTypes() {
     return {
       client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      connect: PropTypes.object,
       id: PropTypes.string.isRequired
     };
   }
@@ -90,13 +91,15 @@ class AddonsPanel extends Component {
       .then(({addons}) => {
         let extensions = addons.filter(addon => addon.debuggable).map(addon => {
           return {
-            name: addon.name,
-            icon: addon.iconURL || ExtensionIcon,
-            addonID: addon.id,
             addonActor: addon.actor,
+            addonID: addon.id,
+            // Forward the whole addon actor form for potential remote debugging.
+            form: addon,
+            icon: addon.iconURL || ExtensionIcon,
+            manifestURL: addon.manifestURL,
+            name: addon.name,
             temporarilyInstalled: addon.temporarilyInstalled,
             url: addon.url,
-            manifestURL: addon.manifestURL,
             warnings: addon.warnings,
           };
         });
@@ -136,7 +139,7 @@ class AddonsPanel extends Component {
   }
 
   render() {
-    let { client, id } = this.props;
+    let { client, connect, id } = this.props;
     let { debugDisabled, extensions: targets } = this.state;
     let installedName = Strings.GetStringFromName("extensions");
     let temporaryName = Strings.GetStringFromName("temporaryExtensions");
@@ -162,6 +165,7 @@ class AddonsPanel extends Component {
         name: temporaryName,
         targets: temporaryTargets,
         client,
+        connect,
         debugDisabled,
         targetClass,
         sort: true
@@ -181,6 +185,7 @@ class AddonsPanel extends Component {
         name: installedName,
         targets: installedTargets,
         client,
+        connect,
         debugDisabled,
         targetClass,
         sort: true
