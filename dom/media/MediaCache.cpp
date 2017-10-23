@@ -290,18 +290,6 @@ protected:
     NS_ASSERTION(NS_IsMainThread(), "Only construct MediaCache on main thread");
     MOZ_COUNT_CTOR(MediaCache);
     MediaCacheFlusher::RegisterMediaCache(this);
-
-    if (!sThreadInit) {
-      sThreadInit = true;
-      nsCOMPtr<nsIThread> thread;
-      nsresult rv = NS_NewNamedThread("MediaCache", getter_AddRefs(thread));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to create a thread for MediaCache.");
-        return;
-      }
-      sThread = thread.forget();
-      ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
-    }
   }
 
   ~MediaCache()
@@ -462,8 +450,7 @@ protected:
   // A list of resource IDs to notify about the change in suspended status.
   nsTArray<int64_t> mSuspendedStatusToNotify;
   // The thread on which we will run data callbacks from the channels.
-  // Could be null if failing to create the thread. Note this thread is shared
-  // among all MediaCache instances.
+  // Note this thread is shared among all MediaCache instances.
   static StaticRefPtr<nsIThread> sThread;
   // True if we've tried to init sThread. Note we try once only so it is safe
   // to access sThread on all threads.
@@ -729,6 +716,26 @@ MediaCache::CloseStreamsForPrivateBrowsing()
 MediaCache::GetMediaCache(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (!sThreadInit) {
+    sThreadInit = true;
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewNamedThread("MediaCache", getter_AddRefs(thread));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to create a thread for MediaCache.");
+      return nullptr;
+    }
+    sThread = thread.forget();
+    // Note it is safe to pass an invalid pointer for operator=(std::nullptr_t)
+    // is non-virtual and it will not access |this|.
+    ClearOnShutdown(reinterpret_cast<MediaCache*>(0x1),
+                    ShutdownPhase::ShutdownThreads);
+  }
+
+  if (!sThread) {
+    return nullptr;
+  }
+
   if (aContentLength > 0 &&
       aContentLength <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Small-enough resource, use a new memory-backed MediaCache.
