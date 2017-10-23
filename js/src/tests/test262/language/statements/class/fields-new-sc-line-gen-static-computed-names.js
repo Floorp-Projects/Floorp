@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-new-sc-line-generator.template
 /*---
 description: Static Computed property names (field definitions followed by a method in a new line with a semicolon)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields, generators]
 flags: [generated]
 includes: [propertyHelper.js]

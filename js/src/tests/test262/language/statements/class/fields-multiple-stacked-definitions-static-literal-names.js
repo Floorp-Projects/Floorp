@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-multiple-stacked-definitions.template
 /*---
 description: Static literal property names (multiple stacked fields definitions through ASI)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

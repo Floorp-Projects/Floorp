@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip error:SyntaxError -- optional-catch-binding is not supported
 // Copyright (C) 2017 Lucas Azzola. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
