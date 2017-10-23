@@ -3220,15 +3220,15 @@ nsDisplaySolidColorRegion::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
 }
 
 static void
-RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsITheme::ThemeGeometryType aType)
+RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
+                      nsIFrame* aFrame, nsITheme::ThemeGeometryType aType)
 {
   if (aBuilder->IsInChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
     nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
     nsPoint offset = aBuilder->IsInSubdocument() ? aBuilder->ToReferenceFrame(aFrame)
                                                  : aFrame->GetOffsetTo(displayRoot);
     nsRect borderBox = nsRect(offset, aFrame->GetSize());
-    aBuilder->RegisterThemeGeometry(aType, aFrame,
+    aBuilder->RegisterThemeGeometry(aType, aItem,
       LayoutDeviceIntRect::FromUnknownRect(
         borderBox.ToNearestPixels(
           aFrame->PresContext()->AppUnitsPerDevPixel())));
@@ -4184,7 +4184,7 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   nsITheme::ThemeGeometryType type =
     theme->ThemeGeometryTypeForWidget(mFrame, disp->mAppearance);
   if (type != nsITheme::eThemeGeometryTypeUnknown) {
-    RegisterThemeGeometry(aBuilder, aFrame, type);
+    RegisterThemeGeometry(aBuilder, this, aFrame, type);
   }
 
   if (disp->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
