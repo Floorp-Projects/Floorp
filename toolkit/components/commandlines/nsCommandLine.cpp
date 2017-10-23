@@ -455,9 +455,8 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
     }
 #endif
 #ifdef XP_UNIX
-    if (*curarg == '-' &&
-        *(curarg+1) == '-') {
-      ++curarg;
+    if (*curarg == '-') {
+      if (*(curarg+1) == '-') ++curarg;
 
       char* dup = PL_strdup(curarg);
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;
