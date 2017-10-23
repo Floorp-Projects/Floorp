@@ -9,6 +9,7 @@
 #define nsCSSAnonBoxes_h___
 
 #include "nsAtom.h"
+#include "nsStaticAtom.h"
 
 // Empty class derived from nsAtom so that function signatures can
 // require an atom from this atom list.
@@ -29,7 +30,8 @@ public:
            aPseudo == firstLetterContinuation;
   }
 
-#define CSS_ANON_BOX(_name, _value) static nsICSSAnonBoxPseudo* _name;
+#define CSS_ANON_BOX(name_, value_) \
+  NS_STATIC_ATOM_SUBCLASS_DECL(nsICSSAnonBoxPseudo, name_)
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 

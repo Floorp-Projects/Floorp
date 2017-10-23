@@ -9,6 +9,7 @@
 #define nsCSSPseudoElements_h___
 
 #include "nsAtom.h"
+#include "nsStaticAtom.h"
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
 
@@ -54,7 +55,7 @@ typedef uint8_t CSSPseudoElementTypeBase;
 enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
   // If the actual pseudo-elements stop being first here, change
   // GetPseudoType.
-#define CSS_PSEUDO_ELEMENT(_name, _value_, _flags) \
+#define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
   _name,
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
@@ -96,7 +97,7 @@ public:
   }
 
 #define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
-  static nsICSSPseudoElement* _name;
+  NS_STATIC_ATOM_SUBCLASS_DECL(nsICSSPseudoElement, _name)
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
