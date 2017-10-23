@@ -6,6 +6,7 @@ apply plugin: 'jacoco-android'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
@@ -156,7 +157,7 @@ dependencies {
 
     compile "android.arch.lifecycle:runtime:$architecture_components_version"
     compile "android.arch.lifecycle:extensions:$architecture_components_version"
-    annotationProcessor "android.arch.lifecycle:compiler:$architecture_components_version"
+    kapt "android.arch.lifecycle:compiler:$architecture_components_version"
 
     compile ("com.google.code.findbugs:annotations:3.0.1") {
         // We really only need the SuppressFBWarnings annotation, everything else can be ignored.
