@@ -6303,7 +6303,8 @@ nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOpacity::CanApplyOpacity() const
 {
-  return true;
+  return !EffectCompositor::HasAnimationsForCompositor(mFrame,
+                                                       eCSSProperty_opacity);
 }
 
 /**
