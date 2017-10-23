@@ -111,7 +111,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         {"dest": "disable_mock",
          "action": "store_true",
          "help": "do not run under mock despite what gecko-config says",
-         }
+        }
     ], [
         ['--revision', ],
         {"action": "store",
@@ -183,8 +183,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             rc = self.query_release_config()
             repack_env['EN_US_BINARY_URL'] = c['base_en_us_binary_url'] % replace_dict
         if 'MOZ_SIGNING_SERVERS' in os.environ:
-            repack_env['MOZ_SIGN_CMD'] = \
-                subprocess.list2cmdline(self.query_moz_sign_cmd(formats=['jar']))
+            repack_env['MOZ_SIGN_CMD'] = subprocess.list2cmdline(self.query_moz_sign_cmd(formats=['jar']))
         self.repack_env = repack_env
         return self.repack_env
 
@@ -272,7 +271,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         elif 'revision' in self.buildbot_properties:
             revision = self.buildbot_properties['revision']
         elif (self.buildbot_config and
-                self.buildbot_config.get('sourcestamp', {}).get('revision')):
+                  self.buildbot_config.get('sourcestamp', {}).get('revision')):
             revision = self.buildbot_config['sourcestamp']['revision']
         elif self.buildbot_config and self.buildbot_config.get('revision'):
             revision = self.buildbot_config['revision']
@@ -348,18 +347,20 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.error("Can't determine the upload url for %s!" % locale)
 
     def query_abs_dirs(self):
-        if self.abs_dirs:
-            return self.abs_dirs
-        abs_dirs = super(MobileSingleLocale, self).query_abs_dirs()
+         if self.abs_dirs:
+             return self.abs_dirs
+         abs_dirs = super(MobileSingleLocale, self).query_abs_dirs()
 
-        dirs = {
-             'abs_tools_dir': os.path.join(abs_dirs['base_work_dir'], 'tools'),
-             'build_dir': os.path.join(abs_dirs['base_work_dir'], 'build'),
-        }
+         dirs = {
+             'abs_tools_dir':
+                 os.path.join(abs_dirs['base_work_dir'], 'tools'),
+             'build_dir':
+                 os.path.join(abs_dirs['base_work_dir'], 'build'),
+         }
 
-        abs_dirs.update(dirs)
-        self.abs_dirs = abs_dirs
-        return self.abs_dirs
+         abs_dirs.update(dirs)
+         self.abs_dirs = abs_dirs
+         return self.abs_dirs
 
     def add_failure(self, locale, message, **kwargs):
         self.locales_property[locale] = "Failed"
@@ -378,8 +379,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         locales = self.query_locales()
         for locale in locales:
             self.locales_property.setdefault(locale, "Success")
-        self.set_buildbot_property("locales", json.dumps(self.locales_property),
-                                   write_to_file=True)
+        self.set_buildbot_property("locales", json.dumps(self.locales_property), write_to_file=True)
 
     # Actions {{{2
     def clobber(self):
@@ -410,8 +410,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                     # pass through non-interpolables, like booleans
                     current_repo[key] = value
                 except KeyError:
-                    self.error('not all the values in "{0}" can be replaced. Check '
-                               'your configuration'.format(value))
+                    self.error('not all the values in "{0}" can be replaced. Check your configuration'.format(value))
                     raise
             repos.append(current_repo)
         self.info("repositories: %s" % repos)
@@ -424,6 +423,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
     # list_locales() is defined in LocalesMixin.
 
     def _setup_configure(self, buildid=None):
+        c = self.config
         dirs = self.query_abs_dirs()
         env = self.query_repack_env()
         make = self.query_exe("make")
@@ -510,8 +510,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                                   env=repack_env,
                                   error_list=MakefileErrorList,
                                   halt_on_failure=False):
-                self.add_failure(locale, message="%s failed in make installers-%s!" %
-                                 (locale, locale))
+                self.add_failure(locale, message="%s failed in make installers-%s!" % (locale, locale))
                 continue
             success_count += 1
         self.summarize_success_count(success_count, total_count,
@@ -545,8 +544,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 continue
             success_count += 1
         self.summarize_success_count(success_count, total_count,
-                                     message="Validated signatures on %d of %d "
-                                             "binaries successfully.")
+                                     message="Validated signatures on %d of %d binaries successfully.")
 
     def taskcluster_upload(self):
         auth = os.path.join(os.getcwd(), self.config['taskcluster_credentials_file'])
@@ -604,7 +602,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
 
             self.info('Using routes: %s' % routes)
             tc = Taskcluster(branch,
-                             pushinfo.pushdate,  # Use pushdate as the rank
+                             pushinfo.pushdate, # Use pushdate as the rank
                              client_id,
                              access_token,
                              self.log_obj,
@@ -635,9 +633,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 continue
             total_count += 1
             if c.get('base_post_upload_cmd'):
-                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % \
-                    {'version': version, 'locale': locale, 'buildnum': str(buildnum),
-                        'post_upload_extra': ' '.join(c.get('post_upload_extra', []))}
+                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % {'version': version, 'locale': locale, 'buildnum': str(buildnum), 'post_upload_extra': ' '.join(c.get('post_upload_extra', []))}
             output = self.get_output_from_command_m(
                 # Ugly hack to avoid |make upload| stderr from showing up
                 # as get_output_from_command errors
@@ -691,19 +687,18 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         rev = self.vcs_checkout(**repos[0])
         self.set_buildbot_property("tools_revision", rev, write_to_file=True)
 
-    def query_apkfile_path(self, locale):
+    def query_apkfile_path(self,locale):
 
         dirs = self.query_abs_dirs()
         apkdir = os.path.join(dirs['abs_objdir'], 'dist')
-        r = r"(\.)" + re.escape(locale) + r"(\.*)"
+        r  = r"(\.)" + re.escape(locale) + r"(\.*)"
 
         apks = []
         for f in os.listdir(apkdir):
             if f.endswith(".apk") and re.search(r, f):
                 apks.append(f)
         if len(apks) == 0:
-            self.fatal("Found no apks files in %s, don't know what to do:\n%s" %
-                       (apkdir, apks), exit_code=1)
+            self.fatal("Found no apks files in %s, don't know what to do:\n%s" % (apkdir, apks), exit_code=1)
 
         return os.path.join(apkdir, apks[0])
 
@@ -726,13 +721,11 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             for locale in locales:
                 apk_url = self.query_upload_url(locale)
                 if not apk_url:
-                    self.add_failure(locale, message="Failed to detect %s url in make upload!" %
-                                     (locale))
+                    self.add_failure(locale, message="Failed to detect %s url in make upload!" % (locale))
                     balrogReady = False
                     continue
             if not balrogReady:
-                return self.fatal(message="Not all repacks successful, abort without "
-                                          "submitting to balrog.")
+                return self.fatal(message="Not all repacks successful, abort without submitting to balrog")
 
         env = self.query_upload_env()
         for locale in locales:
@@ -747,15 +740,15 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 self.set_buildbot_property("completeMarUrl", apk_url)
 
                 # The Balrog submitter translates this platform into a build target
-                # via https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23  # noqa
+                # via https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23
                 self.set_buildbot_property(
                     "platform",
                     self.buildbot_config["properties"]["platform"])
-                # TODO: Is there a better way to get this?
+                #TODO: Is there a better way to get this?
 
             # Set other necessary properties for Balrog submission. None need to
             # be passed back to buildbot, so we won't write them to the properties
-            # files.
+            #files.
             self.set_buildbot_property("locale", locale)
 
             self.set_buildbot_property("appVersion", self.query_version())
@@ -784,7 +777,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
 
                 if not self.query_is_nightly():
                     self.submit_balrog_release_pusher(dirs)
-
 
 # main {{{1
 if __name__ == '__main__':

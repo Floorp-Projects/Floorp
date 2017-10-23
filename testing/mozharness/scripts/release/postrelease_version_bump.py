@@ -185,7 +185,6 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                     revision=self.config["revision"], message=message,
                     user=self.config["hg_user"], force=True)
 
-
 # __main__ {{{1
 if __name__ == '__main__':
     PostReleaseVersionBump().run_and_exit()
