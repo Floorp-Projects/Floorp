@@ -114,6 +114,10 @@ ContentClient::PaintState
 ContentClient::BeginPaint(PaintedLayer* aLayer,
                           uint32_t aFlags)
 {
+  if (aFlags & PAINT_ASYNC) {
+    mInAsyncPaint = true;
+  }
+
   PaintState result;
 
   BufferDecision dest = CalculateBufferForPaint(aLayer, aFlags);
@@ -145,11 +149,8 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
   if (result.mRegionToDraw.IsEmpty())
     return result;
 
-  OpenMode lockMode = aFlags & PAINT_ASYNC ? OpenMode::OPEN_READ_ASYNC_WRITE
-                                           : OpenMode::OPEN_READ_WRITE;
-
   if (mBuffer) {
-    if (mBuffer->Lock(lockMode)) {
+    if (mBuffer->Lock(LockMode())) {
       // Do not modify result.mRegionToDraw or result.mContentType after this call.
       // Do not modify the back buffer's bufferRect, bufferRotation, or didSelfCopy.
       FinalizeFrame(result.mRegionToDraw);
@@ -217,12 +218,6 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 
   // If needed, copy the old buffer over to the new one
   if (newBuffer) {
-    if (!newBuffer->Lock(lockMode)) {
-      gfxCriticalNote << "Failed to lock new back buffer.";
-      Clear();
-      return result;
-    }
-
     if (mBuffer) {
       newBuffer->UpdateDestinationFrom(*mBuffer, newBuffer->BufferRect());
     }
@@ -478,6 +473,19 @@ ContentClient::BufferSizeOkFor(const IntSize& aSize)
            aSize < mBuffer->BufferRect().Size()));
 }
 
+OpenMode
+ContentClient::LockMode() const
+{
+  return mInAsyncPaint ? OpenMode::OPEN_READ_ASYNC_WRITE
+                       : OpenMode::OPEN_READ_WRITE;
+}
+
+void
+ContentClient::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
+{
+  mInAsyncPaint = false;
+}
+
 void
 ContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
@@ -671,6 +679,9 @@ ContentClientRemoteBuffer::CreateBuffer(gfxContentType aType,
   if (!buffer) {
     return nullptr;
   }
+
+  DebugOnly<bool> locked = buffer->Lock(LockMode());
+  MOZ_ASSERT(locked, "Could not lock the RemoteRotatedBuffer");
 
   mIsNewBuffer = true;
   mTextureFlags = textureFlags;
