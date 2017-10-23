@@ -3,11 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * This file tests signature extraction using Windows Authenticode APIs of
- * downloaded files.
- */
-
 // Globals
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -15,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
+const gAppRep = Cc["@mozilla.org/reputationservice/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
 var gStillRunning = true;
 var gTables = {};
