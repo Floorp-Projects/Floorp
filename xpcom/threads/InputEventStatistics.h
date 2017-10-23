@@ -79,15 +79,7 @@ public:
   {
   }
 
-  static InputEventStatistics& Get()
-  {
-    static UniquePtr<InputEventStatistics> sInstance;
-    if (!sInstance) {
-      sInstance = MakeUnique<InputEventStatistics>(ConstructorCookie());
-      ClearOnShutdown(&sInstance);
-    }
-    return *sInstance;
-  }
+  static InputEventStatistics& Get();
 
   void UpdateInputDuration(TimeDuration aDuration)
   {
