@@ -118,7 +118,7 @@ public:
    * of a source rotated buffer.
    */
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
-                             const gfx::IntRect& aUpdateRect);
+                             const nsIntRegion& aUpdateRegion);
 
   /**
    * A draw iterator is used to keep track of which quadrant of a rotated
