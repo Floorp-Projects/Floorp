@@ -294,6 +294,7 @@
 @RESPATH@/components/profiler.xpt
 #endif
 @RESPATH@/components/rdf.xpt
+@RESPATH@/components/reputationservice.xpt
 @RESPATH@/components/satchel.xpt
 @RESPATH@/components/saxparser.xpt
 @RESPATH@/browser/components/sessionstore.xpt

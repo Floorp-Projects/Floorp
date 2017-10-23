@@ -71,7 +71,7 @@ XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "gApplicationReputationService",
-           "@mozilla.org/downloads/application-reputation-service;1",
+           "@mozilla.org/reputationservice/application-reputation-service;1",
            Ci.nsIApplicationReputationService);
 
 XPCOMUtils.defineLazyServiceGetter(this, "volumeService",

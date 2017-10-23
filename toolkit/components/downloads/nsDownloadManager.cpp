@@ -9,6 +9,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDownloadManager.h"
 
+#include "mozilla/Services.h"
+
 using namespace mozilla;
 
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
