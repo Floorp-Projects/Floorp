@@ -112,7 +112,7 @@ interface Node : EventTarget {
   DOMString generateXPath();
 
 #ifdef ACCESSIBILITY
-  [Func="AccessibleNode::IsAOMEnabled"]
+  [Pref="accessibility.AOM.enabled"]
   readonly attribute AccessibleNode? accessibleNode;
 #endif
 };
