@@ -63,16 +63,16 @@ fuzzy-if(skiaContent,1,90) == fixed-table-layout-023-vrl.html fixed-table-layout
 == fixed-table-layout-030-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-031-vrl.html fixed-table-layout-025-ref.html
 
-HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002-ref.xht
-HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-002-ref.xht
-HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-002-ref.xht
-HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-002.xht multicol-count-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-003.xht multicol-count-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-004.xht multicol-count-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-005.xht multicol-count-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-006.xht multicol-count-002-ref.xht
-fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-progression-007.xht multicol-count-002-ref.xht
+== s72-border-spacing-002.xht s72-border-spacing-002-ref.xht
+== s72-border-spacing-003.xht s72-border-spacing-002-ref.xht
+== s72-border-spacing-004.xht s72-border-spacing-002-ref.xht
+== s72-border-spacing-005.xht s72-border-spacing-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-002.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-003.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-004.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-005.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-006.xht multicol-count-002-ref.xht
+fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) == wm-row-progression-007.xht multicol-count-002-ref.xht
 
 fuzzy-if(Android,255,38) == table-caption-top-1.html table-caption-top-1-ref.html
 fuzzy-if(Android,255,38) == table-caption-bottom-1.html table-caption-bottom-1-ref.html
