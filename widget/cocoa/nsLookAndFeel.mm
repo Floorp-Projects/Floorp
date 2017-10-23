@@ -37,8 +37,6 @@ nsLookAndFeel::nsLookAndFeel()
  , mUseOverlayScrollbarsCached(false)
  , mAllowOverlayScrollbarsOverlap(-1)
  , mAllowOverlayScrollbarsOverlapCached(false)
- , mHasColorButtonText(false)
- , mInitialized(false)
 {
 }
 
@@ -63,48 +61,25 @@ static nscolor GetColorFromNSColorWithAlpha(NSColor* aColor, float alpha)
                  (unsigned int)(alpha * 255.0));
 }
 
-void
-nsLookAndFeel::NativeInit()
-{
-  EnsureInit();
-}
-
-void
-nsLookAndFeel::RefreshImpl()
-{
-  nsXPLookAndFeel::RefreshImpl();
-
-  // We should only clear the cache if we're in the main browser process.
-  // Otherwise, we should wait for the parent to inform us of new values
-  // to cache via LookAndFeel::SetIntCache.
-  if (XRE_IsParentProcess()) {
-    mUseOverlayScrollbarsCached = false;
-    mAllowOverlayScrollbarsOverlapCached = false;
-  }
-
-  // Fetch colors next time they are requested.
-  mInitialized = false;
-}
-
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
-  EnsureInit();
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsresult res = NS_OK;
-
+  
   switch (aID) {
     case eColorID_WindowBackground:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
     case eColorID_WindowForeground:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00,0x00,0x00);        
       break;
     case eColorID_WidgetBackground:
       aColor = NS_RGB(0xdd,0xdd,0xdd);
       break;
     case eColorID_WidgetForeground:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00,0x00,0x00);        
       break;
     case eColorID_WidgetSelectBackground:
       aColor = NS_RGB(0x80,0x80,0x80);
@@ -125,25 +100,29 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x00,0x00,0x00);
       break;
     case eColorID_TextSelectBackground:
-      aColor = mColorTextSelectBackground;
+      aColor = GetColorFromNSColor([NSColor selectedTextBackgroundColor]);
       break;
     // This is used to gray out the selection when it's not focused. Used with
     // nsISelectionController::SELECTION_DISABLED.
     case eColorID_TextSelectBackgroundDisabled:
-      aColor = mColorTextSelectBackgroundDisabled;
+      aColor = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
       break;
     case eColorID_highlight: // CSS2 color
-      aColor = mColorHighlight;
+      aColor = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
       break;
     case eColorID__moz_menuhover:
-      aColor = mColorMenuHover;
-      break;
+      aColor = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
+      break;      
     case eColorID_TextSelectForeground:
-      aColor = mColorTextSelectForeground;
+      GetColor(eColorID_TextSelectBackground, aColor);
+      if (aColor == 0x000000)
+        aColor = NS_RGB(0xff,0xff,0xff);
+      else
+        aColor = NS_DONT_CHANGE_COLOR;
       break;
     case eColorID_highlighttext:  // CSS2 color
     case eColorID__moz_menuhovertext:
-      aColor = mColorMenuHoverText;
+      aColor = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
       break;
     case eColorID_IMESelectedRawTextBackground:
     case eColorID_IMESelectedConvertedTextBackground:
@@ -173,39 +152,39 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
       //
       // It's really hard to effectively map these to the Appearance Manager properly,
-      // since they are modeled word for word after the win32 system colors and don't have any
-      // real counterparts in the Mac world. I'm sure we'll be tweaking these for
-      // years to come.
+      // since they are modeled word for word after the win32 system colors and don't have any 
+      // real counterparts in the Mac world. I'm sure we'll be tweaking these for 
+      // years to come. 
       //
       // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values that form the defaults
       //  if querying the Appearance Manager fails ;)
       //
     case eColorID__moz_mac_buttonactivetext:
     case eColorID__moz_mac_defaultbuttontext:
-      if (mHasColorButtonText) {
-        aColor = mColorButtonText;
+      if (nsCocoaFeatures::OnYosemiteOrLater()) {
+        aColor = NS_RGB(0xFF,0xFF,0xFF);
         break;
       }
       // Otherwise fall through and return the regular button text:
-      MOZ_FALLTHROUGH;
+      
     case eColorID_buttontext:
     case eColorID__moz_buttonhovertext:
-      aColor = mColorButtonHoverText;
+      aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColorID_captiontext:
     case eColorID_menutext:
     case eColorID_infotext:
     case eColorID__moz_menubartext:
-      aColor = mColorText;
+      aColor = GetColorFromNSColor([NSColor textColor]);
       break;
     case eColorID_windowtext:
-      aColor = mColorWindowText;
+      aColor = GetColorFromNSColor([NSColor windowFrameTextColor]);
       break;
     case eColorID_activecaption:
-      aColor = mColorActiveCaption;
+      aColor = GetColorFromNSColor([NSColor gridColor]);
       break;
     case eColorID_activeborder:
-      aColor = mColorActiveBorder;
+      aColor = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
       break;
      case eColorID_appworkspace:
       aColor = NS_RGB(0xFF,0xFF,0xFF);
@@ -224,19 +203,19 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xDC,0xDC,0xDC);
       break;
     case eColorID_graytext:
-      aColor = mColorGrayText;
+      aColor = GetColorFromNSColor([NSColor disabledControlTextColor]);
       break;
     case eColorID_inactiveborder:
-      aColor = mColorInactiveBorder;
+      aColor = GetColorFromNSColor([NSColor controlBackgroundColor]);
       break;
     case eColorID_inactivecaption:
-      aColor = mColorInactiveCaption;
+      aColor = GetColorFromNSColor([NSColor controlBackgroundColor]);
       break;
     case eColorID_inactivecaptiontext:
       aColor = NS_RGB(0x45,0x45,0x45);
       break;
     case eColorID_scrollbar:
-      aColor = mColorScrollbar;
+      aColor = GetColorFromNSColor([NSColor scrollBarColor]);
       break;
     case eColorID_threeddarkshadow:
       aColor = NS_RGB(0xDC,0xDC,0xDC);
@@ -248,19 +227,19 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = NS_RGB(0xF0,0xF0,0xF0);
       break;
     case eColorID_threedhighlight:
-      aColor = mColorThreeDHighlight;
+      aColor = GetColorFromNSColor([NSColor highlightColor]);
       break;
     case eColorID_threedlightshadow:
       aColor = NS_RGB(0xDA,0xDA,0xDA);
       break;
     case eColorID_menu:
-      aColor = mColorMenu;
+      aColor = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
       break;
     case eColorID_infobackground:
       aColor = NS_RGB(0xFF,0xFF,0xC7);
       break;
     case eColorID_windowframe:
-      aColor = mColorWindowFrame;
+      aColor = GetColorFromNSColor([NSColor gridColor]);
       break;
     case eColorID_window:
     case eColorID__moz_field:
@@ -269,42 +248,42 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       break;
     case eColorID__moz_fieldtext:
     case eColorID__moz_comboboxtext:
-      aColor = mColorFieldText;
+      aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColorID__moz_dialog:
-      aColor = mColorDialog;
+      aColor = GetColorFromNSColor([NSColor controlHighlightColor]);
       break;
     case eColorID__moz_dialogtext:
     case eColorID__moz_cellhighlighttext:
     case eColorID__moz_html_cellhighlighttext:
-      aColor = mColorDialogText;
+      aColor = GetColorFromNSColor([NSColor controlTextColor]);
       break;
     case eColorID__moz_dragtargetzone:
-      aColor = mColorDragTargetZone;
+      aColor = GetColorFromNSColor([NSColor selectedControlColor]);
       break;
     case eColorID__moz_mac_chrome_active:
-      aColor = mColorChromeActive;
-      break;
-    case eColorID__moz_mac_chrome_inactive:
-      aColor = mColorChromeInactive;
+    case eColorID__moz_mac_chrome_inactive: {
+      int grey = NativeGreyColorAsInt(toolbarFillGrey, (aID == eColorID__moz_mac_chrome_active));
+      aColor = NS_RGB(grey, grey, grey);
+    }
       break;
     case eColorID__moz_mac_focusring:
-      aColor = mColorFocusRing;
+      aColor = GetColorFromNSColorWithAlpha([NSColor keyboardFocusIndicatorColor], 0.48);
       break;
     case eColorID__moz_mac_menushadow:
       aColor = NS_RGB(0xA3,0xA3,0xA3);
-      break;
+      break;          
     case eColorID__moz_mac_menutextdisable:
       aColor = NS_RGB(0x98,0x98,0x98);
-      break;
+      break;      
     case eColorID__moz_mac_menutextselect:
-      aColor = mColorTextSelect;
-      break;
+      aColor = GetColorFromNSColor([NSColor selectedMenuItemTextColor]);
+      break;      
     case eColorID__moz_mac_disabledtoolbartext:
-      aColor = mColorDisabledToolbarText;
+      aColor = GetColorFromNSColor([NSColor disabledControlTextColor]);
       break;
     case eColorID__moz_mac_menuselect:
-      aColor = mColorMenuSelect;
+      aColor = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
       break;
     case eColorID__moz_buttondefault:
       aColor = NS_RGB(0xDC,0xDC,0xDC);
@@ -313,15 +292,15 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     case eColorID__moz_html_cellhighlight:
     case eColorID__moz_mac_secondaryhighlight:
       // For inactive list selection
-      aColor = mColorCellHighlight;
+      aColor = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
       break;
     case eColorID__moz_eventreerow:
       // Background color of even list rows.
-      aColor = mColorEvenTreeRow;
+      aColor = GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors] objectAtIndex:0]);
       break;
     case eColorID__moz_oddtreerow:
       // Background color of odd list rows.
-      aColor = mColorOddTreeRow;
+      aColor = GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors] objectAtIndex:1]);
       break;
     case eColorID__moz_nativehyperlinktext:
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
@@ -352,7 +331,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       break;
     case eColorID__moz_mac_active_menuitem:
     case eColorID__moz_mac_active_source_list_selection:
-      aColor = mColorActiveSourceListSelection;
+      aColor = [NSColor currentControlTint] == NSGraphiteControlTint
+        ? NS_RGB(0xa0,0xa0,0xa0) : NS_RGB(0x0a,0x64,0xdc);
       break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
@@ -362,6 +342,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     }
 
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsresult
@@ -373,7 +355,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
   if (NS_SUCCEEDED(res))
     return res;
   res = NS_OK;
-
+  
   switch (aID) {
     case eIntID_CaretBlinkTime:
       aResult = 567;
@@ -521,7 +503,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   if (NS_SUCCEEDED(res))
     return res;
   res = NS_OK;
-
+  
   switch (aID) {
     case eFloatID_IMEUnderlineRelativeSize:
       aResult = 2.0f;
@@ -617,78 +599,13 @@ nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCa
 }
 
 void
-nsLookAndFeel::EnsureInit()
+nsLookAndFeel::RefreshImpl()
 {
-  if (mInitialized) {
-    return;
+  // We should only clear the cache if we're in the main browser process.
+  // Otherwise, we should wait for the parent to inform us of new values
+  // to cache via LookAndFeel::SetIntCache.
+  if (XRE_IsParentProcess()) {
+    mUseOverlayScrollbarsCached = false;
+    mAllowOverlayScrollbarsOverlapCached = false;
   }
-  mInitialized = true;
-
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
-
-  nscolor color;
-
-  mColorTextSelectBackground = GetColorFromNSColor(
-    [NSColor selectedTextBackgroundColor]);
-  mColorTextSelectBackgroundDisabled = GetColorFromNSColor(
-    [NSColor secondarySelectedControlColor]);
-
-  mColorHighlight = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-  mColorMenuHover = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-
-  GetColor(eColorID_TextSelectBackground, color);
-  if (color == 0x000000) {
-    mColorTextSelectForeground = NS_RGB(0xff,0xff,0xff);
-  } else {
-    mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
-  }
-
-  mColorMenuHoverText = GetColorFromNSColor(
-    [NSColor alternateSelectedControlTextColor]);
-
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
-    mColorButtonText = NS_RGB(0xFF,0xFF,0xFF);
-    mHasColorButtonText = true;
-  }
-
-  mColorButtonHoverText = GetColorFromNSColor([NSColor controlTextColor]);
-  mColorText = GetColorFromNSColor([NSColor textColor]);
-  mColorWindowText = GetColorFromNSColor([NSColor windowFrameTextColor]);
-  mColorActiveCaption = GetColorFromNSColor([NSColor gridColor]);
-  mColorActiveBorder = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
-  mColorGrayText = GetColorFromNSColor([NSColor disabledControlTextColor]);
-  mColorInactiveBorder = GetColorFromNSColor([NSColor controlBackgroundColor]);
-  mColorInactiveCaption = GetColorFromNSColor([NSColor controlBackgroundColor]);
-  mColorScrollbar = GetColorFromNSColor([NSColor scrollBarColor]);
-  mColorThreeDHighlight = GetColorFromNSColor([NSColor highlightColor]);
-  mColorMenu = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
-  mColorWindowFrame = GetColorFromNSColor([NSColor gridColor]);
-  mColorFieldText = GetColorFromNSColor([NSColor controlTextColor]);
-  mColorDialog = GetColorFromNSColor([NSColor controlHighlightColor]);
-  mColorDialogText = GetColorFromNSColor([NSColor controlTextColor]);
-  mColorDragTargetZone = GetColorFromNSColor([NSColor selectedControlColor]);
-
-  int grey = NativeGreyColorAsInt(toolbarFillGrey, true);
-  mColorChromeActive = NS_RGB(grey, grey, grey);
-  grey = NativeGreyColorAsInt(toolbarFillGrey, false);
-  mColorChromeInactive = NS_RGB(grey, grey, grey);
-
-  mColorFocusRing = GetColorFromNSColorWithAlpha([NSColor keyboardFocusIndicatorColor],
-                                                 0.48);
-
-  mColorTextSelect = GetColorFromNSColor([NSColor selectedMenuItemTextColor]);
-  mColorDisabledToolbarText = GetColorFromNSColor([NSColor disabledControlTextColor]);
-  mColorMenuSelect = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-  mColorCellHighlight = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
-  mColorEvenTreeRow = GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors]
-                                           objectAtIndex:0]);
-  mColorOddTreeRow = GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors]
-                                          objectAtIndex:1]);
-
-  color = [NSColor currentControlTint];
-  mColorActiveSourceListSelection = (color == NSGraphiteControlTint) ?
-                                    NS_RGB(0xa0,0xa0,0xa0) :
-                                    NS_RGB(0x0a,0x64,0xdc);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK
 }
