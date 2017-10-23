@@ -45,7 +45,9 @@ nsILabelableRunnable::SchedulerGroupSet::Put(mozilla::SchedulerGroup* aGroup)
   if (mSingle) {
     MOZ_ASSERT(mMulti.isNothing());
     mMulti.emplace();
-    mMulti.ref().PutEntry(mSingle);
+    auto& multi = mMulti.ref();
+    multi.PutEntry(mSingle);
+    multi.PutEntry(aGroup);
     mSingle = nullptr;
     return;
   }
