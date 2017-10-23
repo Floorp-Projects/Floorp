@@ -204,6 +204,11 @@ public:
    */
   void ClearDidSelfCopy() { mDidSelfCopy = false; }
 
+  /**
+   * Gets the content type for this buffer.
+   */
+  ContentType GetContentType() const;
+
   virtual bool IsLocked() = 0;
   virtual bool Lock(OpenMode aMode) = 0;
   virtual void Unlock() = 0;
