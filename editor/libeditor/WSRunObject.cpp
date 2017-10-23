@@ -264,6 +264,7 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
     AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
                               aInOutOffset);
 
+    bool maybeModified = false;
     // Handle any changes needed to ws run after inserted text
     if (!afterRun || afterRun->mType & WSType::trailingWS) {
       // Don't need to do anything.  Just insert text.  ws won't change.
@@ -274,11 +275,13 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
         DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode,
                     afterRun->mEndOffset);
       NS_ENSURE_SUCCESS(rv, rv);
+      maybeModified = true;
     } else if (afterRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
       nsresult rv = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(rv, rv);
+      maybeModified = true;
     }
 
     // Handle any changes needed to ws run before inserted text
@@ -291,11 +294,27 @@ WSRunObject::InsertText(const nsAString& aStringToInsert,
         DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset,
                     *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(rv, rv);
+      maybeModified = true;
     } else if (beforeRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
       nsresult rv = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
       NS_ENSURE_SUCCESS(rv, rv);
+      maybeModified = true;
+    }
+
+    // The child node may be changed.  So, even though getting child at offset
+    // is expensive, we need to do it here.
+    if (maybeModified) {
+      if ((*aInOutParent)->HasChildren()) {
+        if (*aInOutOffset == 0) {
+          *aInOutChildAtOffset = (*aInOutParent)->GetFirstChild();
+        } else {
+          *aInOutChildAtOffset = (*aInOutParent)->GetChildAt(*aInOutOffset);
+        }
+      } else {
+        *aInOutChildAtOffset = nullptr;
+      }
     }
   }
 
