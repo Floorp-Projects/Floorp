@@ -100,8 +100,6 @@ load 716503.html
 
 # Bug 1379332's tests need stylo to be disabled in order for the
 # 'visiblity:collapse' to take effect (which is needed to trigger the assertion
-# that these tests are screening for, in unpatched builds). (Also, we skip
-# these tests on Android, because otherwise we trigger bug 1350948 when trying
-# to force the servo pref to false on that platform.)
-skip-if(Android) pref(layout.css.servo.enabled,false) load 1379332-1.xul
-skip-if(Android) pref(layout.css.servo.enabled,false) load 1379332-2.xul
+# that these tests are screening for, in unpatched builds):
+pref(layout.css.servo.enabled,false) load 1379332-1.xul
+pref(layout.css.servo.enabled,false) load 1379332-2.xul
