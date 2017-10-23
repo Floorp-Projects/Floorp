@@ -49,6 +49,8 @@ public:
 
   a11y::Accessible* Internal() const { return mIntl; }
 
+  static bool IsAOMEnabled(JSContext*, JSObject*);
+
 protected:
   AccessibleNode(const AccessibleNode& aCopy) = delete;
   AccessibleNode& operator=(const AccessibleNode& aCopy) = delete;

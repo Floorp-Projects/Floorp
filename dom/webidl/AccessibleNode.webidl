@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="accessibility.AOM.enabled"]
+[Func="AccessibleNode::IsAOMEnabled"]
 interface AccessibleNode {
   readonly attribute DOMString role;
   [Frozen, Cached, Pure]
