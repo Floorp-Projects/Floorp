@@ -1510,8 +1510,8 @@ Function SetAsDefaultAppUserHKCU
     StrCpy $R9 "${AppRegName}-$AppUserModelID"
   ${EndIf}
 
-  ; Only set as the user's StartMenuInternet browser if the StartMenuInternet
-  ; registry keys are for this install.
+  ; Set ourselves as the user's selected StartMenuInternet browser, but only
+  ; if we have StartMenuInternet registry keys that are for this install.
   ClearErrors
   ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${If} ${Errors}
@@ -1520,29 +1520,30 @@ Function SetAsDefaultAppUserHKCU
     ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${EndIf}
   ${Unless} ${Errors}
-    WriteRegStr HKCU "Software\Clients\StartMenuInternet" "" "$R9"
-  ${Else}
-    ClearErrors
-    ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
-    ${If} ${Errors}
-    ${OrIf} ${AtMostWin2008R2}
-      ClearErrors
-      ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
-    ${EndIf}
-    ${Unless} ${Errors}
-      ${GetPathFromString} "$0" $0
-      ${GetParent} "$0" $0
-      ${If} ${FileExists} "$0"
-        ${GetLongPath} "$0" $0
-        ${If} "$0" == "$INSTDIR"
+    ${GetPathFromString} "$0" $0
+    ${GetParent} "$0" $0
+    ${If} ${FileExists} "$0"
+      ${GetLongPath} "$0" $0
+      ${If} "$0" == "$INSTDIR"
+        ; On Windows >= 8, this function cannot do anything to actually set
+        ; the default browser, it can only set up the registry entries to
+        ; allow the user to do so. Getting here means that those entries already
+        ; exist for this installation, we just found them, so there is nothing
+        ; more to be done.
+        ${If} ${AtLeastWin8}
+          Return
+        ${Else}
           WriteRegStr HKCU "Software\Clients\StartMenuInternet" "" "$R9"
         ${EndIf}
       ${EndIf}
-    ${EndUnless}
+    ${EndIf}
   ${EndUnless}
 
   SetShellVarContext current  ; Set SHCTX to the current user (e.g. HKCU)
 
+  ; It's unlikely that we didn't find a StartMenuInternet key above, but it is
+  ; possible; it likely would mean this copy of the application was extracted
+  ; directly from a ZIP file and the installer was never run.
   ${If} ${AtLeastWin8}
     ${SetStartMenuInternet} "HKCU"
     ${FixShellIconHandler} "HKCU"
