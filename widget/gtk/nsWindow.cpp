@@ -3757,6 +3757,15 @@ nsWindow::Create(nsIWidget* aParent,
             GtkWindowGroup *group = gtk_window_group_new();
             gtk_window_group_add_window(group, GTK_WINDOW(mShell));
             g_object_unref(group);
+
+            if (GetCSDSupportLevel() != CSD_SUPPORT_NONE) {
+                int32_t isCSDAvailable = false;
+                nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
+                                                &isCSDAvailable);
+                if (NS_SUCCEEDED(rv)) {
+                   mIsCSDAvailable = isCSDAvailable;
+                }
+            }
         }
 
         // Create a container to hold child windows and child GtkWidgets.
