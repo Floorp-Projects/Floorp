@@ -1,8 +1,8 @@
-fails-if(styloVsGecko) == row-sizing-1.xul row-sizing-1-ref.xul #  bug 1408811
-fails-if(styloVsGecko) == column-sizing-1.xul column-sizing-1-ref.xul #  bug 1408811
-fails-if(styloVsGecko) == row-or-column-sizing-1.xul row-or-column-sizing-2.xul # bug 1408811
-fails-if(styloVsGecko) == row-or-column-sizing-1.xul row-or-column-sizing-3.xul # bug 1408811
-fails-if(styloVsGecko) == row-or-column-sizing-1.xul row-or-column-sizing-4.xul # bug 1408811
+== row-sizing-1.xul row-sizing-1-ref.xul
+== column-sizing-1.xul column-sizing-1-ref.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-2.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-3.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-4.xul
 fuzzy-if(skiaContent,1,60000) == z-order-1.xul z-order-1-ref.xul
 fuzzy-if(skiaContent,1,60000) == z-order-2.xul z-order-2-ref.xul
 fuzzy-if(skiaContent,1,60000) == not-full-basic.xul not-full-basic-ref.xhtml
