@@ -490,6 +490,7 @@ PanGestureInput::PanGestureInput()
   , mHandledByAPZ(false)
   , mFollowedByMomentum(false)
   , mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
+  , mOverscrollBehaviorAllowsSwipe(false)
 {
 }
 
@@ -509,6 +510,7 @@ PanGestureInput::PanGestureInput(PanGestureType aType, uint32_t aTime,
   , mHandledByAPZ(false)
   , mFollowedByMomentum(false)
   , mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
+  , mOverscrollBehaviorAllowsSwipe(false)
 {
 }
 
