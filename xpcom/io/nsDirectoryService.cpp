@@ -105,18 +105,19 @@ nsDirectoryService::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return gService->QueryInterface(aIID, aResult);
 }
 
-#define DIR_ATOM(name_, value_) nsAtom* nsDirectoryService::name_ = nullptr;
+#define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(nsDirectoryService, name_)
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
 
-#define DIR_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+#define DIR_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
 
-static const nsStaticAtom directory_atoms[] = {
-#define DIR_ATOM(name_, value_) NS_STATIC_ATOM(name_##_buffer, &nsDirectoryService::name_),
-#include "nsDirectoryServiceAtomList.h"
-#undef DIR_ATOM
+static const nsStaticAtomSetup sDirectoryServiceAtomSetup[] = {
+  #define DIR_ATOM(name_, value_) \
+    NS_STATIC_ATOM_SETUP(nsDirectoryService, name_)
+  #include "nsDirectoryServiceAtomList.h"
+  #undef DIR_ATOM
 };
 
 NS_IMETHODIMP
@@ -134,7 +135,7 @@ nsDirectoryService::RealInit()
 
   gService = new nsDirectoryService();
 
-  NS_RegisterStaticAtoms(directory_atoms);
+  NS_RegisterStaticAtoms(sDirectoryServiceAtomSetup);
 
   // Let the list hold the only reference to the provider.
   nsAppFileLocationProvider* defaultProvider = new nsAppFileLocationProvider;

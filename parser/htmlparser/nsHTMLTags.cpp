@@ -23,13 +23,9 @@ const char16_t* const nsHTMLTags::sTagUnicodeTable[] = {
 #undef HTML_TAG
 #undef HTML_OTHER
 
-// static array of tag atoms
-nsAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
-
 int32_t nsHTMLTags::gTableRefCount;
 PLHashTable* nsHTMLTags::gTagTable;
 PLHashTable* nsHTMLTags::gTagAtomTable;
-
 
 // char16_t* -> id hash
 static PLHashNumber
@@ -56,35 +52,37 @@ HTMLTagsHashCodeAtom(const void *key)
 
 #define NS_HTMLTAG_NAME_MAX_LENGTH 10
 
-// static
-void
+// This would use NS_STATIC_ATOM_DEFN if it wasn't an array.
+nsAtom* nsHTMLTags::sTagAtomTable[eHTMLTag_userdefined - 1];
+
+#define HTML_TAG(_tag, _classname, _interfacename) \
+  NS_STATIC_ATOM_BUFFER(_tag, #_tag)
+#define HTML_OTHER(_tag)
+#include "nsHTMLTagList.h"
+#undef HTML_TAG
+#undef HTML_OTHER
+
+/* static */ void
 nsHTMLTags::RegisterAtoms(void)
 {
-#define HTML_TAG(_tag, _classname, _interfacename) NS_STATIC_ATOM_BUFFER(Atombuffer_##_tag, #_tag)
-#define HTML_OTHER(_tag)
-#include "nsHTMLTagList.h"
-#undef HTML_TAG
-#undef HTML_OTHER
-
-// static array of tag StaticAtom structs
-#define HTML_TAG(_tag, _classname, _interfacename) NS_STATIC_ATOM(Atombuffer_##_tag, &nsHTMLTags::sTagAtomTable[eHTMLTag_##_tag - 1]),
-#define HTML_OTHER(_tag)
-  static const nsStaticAtom sTagAtoms_info[] = {
-#include "nsHTMLTagList.h"
+  // This would use NS_STATIC_ATOM_SETUP if it wasn't an array.
+  static const nsStaticAtomSetup sTagAtomSetup[] = {
+    #define HTML_TAG(_tag, _classname, _interfacename) \
+      { _tag##_buffer, &nsHTMLTags::sTagAtomTable[eHTMLTag_##_tag - 1] },
+    #define HTML_OTHER(_tag)
+    #include "nsHTMLTagList.h"
+    #undef HTML_TAG
+    #undef HTML_OTHER
   };
-#undef HTML_TAG
-#undef HTML_OTHER
 
-  // Fill in our static atom pointers
-  NS_RegisterStaticAtoms(sTagAtoms_info);
-
+  NS_RegisterStaticAtoms(sTagAtomSetup);
 
 #if defined(DEBUG)
   {
     // let's verify that all names in the the table are lowercase...
     for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
-      nsAutoString temp1((char16_t*)sTagAtoms_info[i].mString);
-      nsAutoString temp2((char16_t*)sTagAtoms_info[i].mString);
+      nsAutoString temp1((char16_t*)sTagAtomSetup[i].mString);
+      nsAutoString temp2((char16_t*)sTagAtomSetup[i].mString);
       ToLowerCase(temp1);
       NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
     }
@@ -93,7 +91,7 @@ nsHTMLTags::RegisterAtoms(void)
     // correct.
     for (int32_t i = 0; i < NS_HTML_TAG_MAX; ++i) {
       nsAutoString temp1(sTagUnicodeTable[i]);
-      nsAutoString temp2((char16_t*)sTagAtoms_info[i].mString);
+      nsAutoString temp2((char16_t*)sTagAtomSetup[i].mString);
       NS_ASSERTION(temp1.Equals(temp2), "Bad unicode tag name!");
     }
 
