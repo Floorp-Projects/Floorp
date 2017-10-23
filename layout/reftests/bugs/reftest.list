@@ -1937,7 +1937,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.
 == 1151306-1.html 1151306-1-ref.html
 == 1153845-1.html 1153845-1-ref.html
 == 1155828-1.html 1155828-1-ref.html
-fuzzy-if(skiaContent,7,84) fails-if(webrender) == 1156129-1.html 1156129-1-ref.html
+fuzzy-if(skiaContent,7,84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,6,6) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fails-if(Android||gtkWidget) == 1174332-1.html 1174332-1-ref.html # bug 1312658
