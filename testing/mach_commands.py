@@ -256,20 +256,14 @@ class Test(MachCommandBase):
         if not what:
             from tryselect.selectors.syntax import AutoTry
             at = AutoTry(self.topsrcdir, resolver, self._mach_context)
-            res = at.find_paths_and_tags(False, detect_paths=True)
-            if res['paths']:
+            res = at.find_paths_and_metadata(False, detect_paths=True)
+            paths = res['paths']
+            tags = res['tags']
+            flavors = res['flavors']
+
+            if paths:
                 print("Tests will be run based on modifications to the "
-                      "following files:\n\t%s" % "\n\t".join(res['paths']))
-
-            # TODO this code is redundant with what `find_paths_and_tags` does.
-            reader = self.mozbuild_reader(config_mode='empty')
-            files_info = reader.files_info(res['paths'])
-
-            paths, tags, flavors = set(), set(), set()
-            for info in files_info.values():
-                paths |= info.test_files
-                tags |= info.test_tags
-                flavors |= info.test_flavors
+                      "following files:\n\t%s" % "\n\t".join(paths))
 
             # This requires multiple calls to resolve_tests, because the test
             # resolver returns tests that match every condition, while we want
