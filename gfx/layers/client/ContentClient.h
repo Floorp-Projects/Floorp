@@ -363,6 +363,8 @@ protected:
   virtual void DestroyFrontBuffer() override;
 
 private:
+  void UpdateDestinationFrom(const RotatedBuffer& aSource,
+                             const nsIntRegion& aUpdateRegion);
 
   virtual void AbortTextureClientCreation() override
   {
