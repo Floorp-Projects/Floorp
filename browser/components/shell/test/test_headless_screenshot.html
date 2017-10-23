@@ -9,7 +9,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  Components.utils.import("resource://gre/modules/AppConstants.jsm");
   Components.utils.import("resource://gre/modules/Services.jsm");
   Components.utils.import("resource://gre/modules/Subprocess.jsm");
   Components.utils.import("resource://gre/modules/osfile.jsm");
@@ -109,20 +108,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
     // Test all four basic variations of the "screenshot" argument
     // when a file path is specified.
     await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", screenshotPath], screenshotPath);
-    if (AppConstants.platform != "win") {
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `-screenshot=${screenshotPath}`], screenshotPath);
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "--screenshot", screenshotPath], screenshotPath);
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `--screenshot=${screenshotPath}`], screenshotPath);
-    }
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `-screenshot=${screenshotPath}`], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "--screenshot", screenshotPath], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `--screenshot=${screenshotPath}`], screenshotPath);
 
     // Test variations of the "screenshot" argument when a file path
     // isn't specified.
     await testFileCreationPositive(["-screenshot", "http://mochi.test:8888/headless.html"], "screenshot.png");
     await testFileCreationPositive(["http://mochi.test:8888/headless.html", "-screenshot"], "screenshot.png");
-    if (AppConstants.platform != "win") {
-      await testFileCreationPositive(["--screenshot", "http://mochi.test:8888/headless.html"], "screenshot.png");
-      await testFileCreationPositive(["http://mochi.test:8888/headless.html", "--screenshot"], "screenshot.png");
-    }
+    await testFileCreationPositive(["--screenshot", "http://mochi.test:8888/headless.html"], "screenshot.png");
+    await testFileCreationPositive(["http://mochi.test:8888/headless.html", "--screenshot"], "screenshot.png");
 
     // Test invalid URL arguments (either no argument or too many arguments).
     await testFileCreationNegative(["-screenshot"], "screenshot.png");
@@ -130,11 +125,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
 
     // Test all four basic variations of the "window-size" argument.
     await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size", "800"], "screenshot.png");
-    if (AppConstants.platform != "win") {
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size=800"], "screenshot.png");
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size", "800"], "screenshot.png");
-      await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size=800"], "screenshot.png");
-    }
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size=800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size", "800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size=800"], "screenshot.png");
 
     // Test other variations of the "window-size" argument.
     await testWindowSizePositive(800, 600);
