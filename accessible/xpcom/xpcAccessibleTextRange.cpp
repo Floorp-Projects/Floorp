@@ -87,7 +87,7 @@ xpcAccessibleTextRange::GetEmbeddedChildren(nsIArray** aList)
 
   uint32_t len = objects.Length();
   for (uint32_t idx = 0; idx < len; idx++)
-    xpcList->AppendElement(static_cast<nsIAccessible*>(ToXPC(objects[idx])), false);
+    xpcList->AppendElement(static_cast<nsIAccessible*>(ToXPC(objects[idx])));
 
   xpcList.forget(aList);
 

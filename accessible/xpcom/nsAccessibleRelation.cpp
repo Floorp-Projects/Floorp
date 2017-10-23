@@ -21,7 +21,7 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
   Accessible* targetAcc = nullptr;
   while ((targetAcc = aRel->Next()))
-    mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)), false);
+    mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)));
 }
 
 nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
@@ -31,8 +31,7 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (uint32_t idx = 0; idx < aTargets->Length(); ++idx) {
     mTargets->AppendElement(
-      static_cast<nsIAccessible*>(ToXPC(aTargets->ElementAt(idx))),
-      false);
+      static_cast<nsIAccessible*>(ToXPC(aTargets->ElementAt(idx))));
   }
 }
 

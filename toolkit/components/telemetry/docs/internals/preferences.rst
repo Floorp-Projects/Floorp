@@ -150,6 +150,10 @@ The following prefs are for testing purpose only.
 
   If true, allows sending pings on unofficial builds. Requires a restart.
 
+``toolkit.telemetry.testing.overridePreRelease``
+
+  If true, allows recording opt-in Telemetry on the Release channel. Requires a restart.
+
 ``toolkit.telemetry.healthping.enabled``
 
   If false, sending health pings is disabled. Defaults to true.

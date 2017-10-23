@@ -5,8 +5,8 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- pressed state -->
-    <item android:drawable="@drawable/pwa_confirm_button_pressed" android:state_pressed="true" />
+    <item android:drawable="@color/pwa_confirm_btn_pressed" android:state_pressed="true"/>
     <!-- normal mode -->
-    <item android:drawable="@drawable/pwa_confirm_button_normal" />
+    <item android:drawable="@color/pwa_confirm_btn_normal"/>
 
 </selector>

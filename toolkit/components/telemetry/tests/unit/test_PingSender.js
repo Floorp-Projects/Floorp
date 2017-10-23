@@ -40,7 +40,7 @@ add_task(async function setup() {
   // Init the profile.
   do_get_profile(true);
 
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   // Start the ping server and let Telemetry know about it.

@@ -271,6 +271,9 @@
     <!-- PWA -->
     <color name="pwa_cancel_btn_press">#ededf0</color>
     <color name="pwa_cancel_btn">@android:color/transparent</color>
+    <color name="pwa_confirm_btn_pressed">#1B73CC</color>
+    <color name="pwa_confirm_btn_normal">#E60A84FF</color>
+
 
 
 </resources>

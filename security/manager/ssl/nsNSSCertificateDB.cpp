@@ -473,7 +473,7 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
     if (!cert) {
       return NS_ERROR_FAILURE;
     }
-    nsresult rv = array->AppendElement(cert, false);
+    nsresult rv = array->AppendElement(cert);
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -174,7 +174,7 @@ buildASN1ObjectFromDER(unsigned char *data,
       printableItem->SetData((char*)data, len);
     }
     data += len;
-    parentObjects->AppendElement(asn1Obj, false);
+    parentObjects->AppendElement(asn1Obj);
   }
 
   return NS_OK;

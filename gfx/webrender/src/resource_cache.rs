@@ -430,7 +430,7 @@ impl ResourceCache {
                 self.blob_image_renderer
                     .as_mut()
                     .unwrap()
-                    .update(image_key, mem::replace(blob, BlobImageData::new()));
+                    .update(image_key, mem::replace(blob, BlobImageData::new()), dirty_rect);
             }
 
             ImageResource {

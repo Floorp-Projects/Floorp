@@ -1402,7 +1402,7 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
                                    getter_AddRefs(dsnode));
 
             if (dsnode)
-                uriList->AppendElement(dsnode, false);
+                uriList->AppendElement(dsnode);
             continue;
         }
 
@@ -1420,7 +1420,7 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
         if (!isTrusted && NS_FAILED(docPrincipal->CheckMayLoad(uri, true, false)))
           continue;
 
-        uriList->AppendElement(uri, false);
+        uriList->AppendElement(uri);
     }
 
     nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(mRoot);

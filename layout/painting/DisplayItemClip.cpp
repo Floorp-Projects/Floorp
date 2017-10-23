@@ -490,6 +490,7 @@ DisplayItemClip::ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
         LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerTopRightX], radii[eCornerTopRightY]), aAppUnitsPerDevPixel),
         LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]), aAppUnitsPerDevPixel),
         LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]), aAppUnitsPerDevPixel));
+    region->mode = wr::ClipMode::Clip;
   }
 }
 

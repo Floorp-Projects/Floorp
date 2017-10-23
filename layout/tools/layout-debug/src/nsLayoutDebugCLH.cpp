@@ -58,7 +58,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
         NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
 
         scriptableURL->SetData(url);
-        argsArray->AppendElement(scriptableURL, /*weak =*/ false);
+        argsArray->AppendElement(scriptableURL);
     }
 
     nsCOMPtr<nsIWindowWatcher> wwatch =

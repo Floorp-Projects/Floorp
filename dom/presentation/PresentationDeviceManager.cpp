@@ -184,7 +184,7 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray* aPresentationUrls, nsIA
   nsCOMPtr<nsIMutableArray> devices = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (uint32_t i = 0; i < mDevices.Length(); ++i) {
     if (presentationUrls.IsEmpty()) {
-      devices->AppendElement(mDevices[i], false);
+      devices->AppendElement(mDevices[i]);
       continue;
     }
 
@@ -193,7 +193,7 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray* aPresentationUrls, nsIA
       if (NS_SUCCEEDED(mDevices[i]->IsRequestedUrlSupported(presentationUrls[j],
                                                             &isSupported)) &&
           isSupported) {
-        devices->AppendElement(mDevices[i], false);
+        devices->AppendElement(mDevices[i]);
         break;
       }
     }

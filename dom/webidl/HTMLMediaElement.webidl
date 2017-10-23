@@ -111,8 +111,6 @@ partial interface HTMLMediaElement {
   void mozDumpDebugInfo();
 
   attribute MediaStream? srcObject;
-  // TODO: remove prefixed version soon (1183495).
-  attribute MediaStream? mozSrcObject;
 
   attribute boolean mozPreservesPitch;
   readonly attribute boolean mozAutoplayEnabled;
