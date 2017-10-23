@@ -713,17 +713,6 @@
 }
 
 /******************************************************************************
- * netwerk/protocol/device classes
- */
-#define NS_DEVICEPROTOCOLHANDLER_CID                 \
-{ /* 6b0ffe9e-d114-486b-aeb7-da62e7273ed5 */         \
-    0x60ffe9e,                                       \
-    0xd114,                                          \
-    0x486b,                                          \
-    {0xae, 0xb7, 0xda, 0x62, 0xe7, 0x27, 0x3e, 0xd5} \
-}
-
-/******************************************************************************
  * netwerk/protocol/viewsource/ classes
  */
 
