@@ -28,20 +28,19 @@ import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 
     private final View anchor;
 
-    public PopupContextMenu(final Context context,
-                            View anchor,
+    public PopupContextMenu(final View anchor,
                             final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                             final MenuMode mode,
                             final WebpageModel item,
                             HomePager.OnUrlOpenListener onUrlOpenListener,
                             HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
-        super(context,
-                anchor,
+        super(anchor,
                 telemetryExtraBuilder,
                 mode,
                 item,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
+        final Context context = anchor.getContext();
 
         this.anchor = anchor;
 
