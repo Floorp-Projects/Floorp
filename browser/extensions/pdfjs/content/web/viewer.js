@@ -740,24 +740,24 @@ class PDFRenderingQueue {
     }
   }
   getHighestPriority(visible, views, scrolledDown) {
-    var visibleViews = visible.views;
-    var numVisible = visibleViews.length;
+    let visibleViews = visible.views;
+    let numVisible = visibleViews.length;
     if (numVisible === 0) {
       return false;
     }
-    for (var i = 0; i < numVisible; ++i) {
-      var view = visibleViews[i].view;
+    for (let i = 0; i < numVisible; ++i) {
+      let view = visibleViews[i].view;
       if (!this.isViewFinished(view)) {
         return view;
       }
     }
     if (scrolledDown) {
-      var nextPageIndex = visible.last.id;
+      let nextPageIndex = visible.last.id;
       if (views[nextPageIndex] && !this.isViewFinished(views[nextPageIndex])) {
         return views[nextPageIndex];
       }
     } else {
-      var previousPageIndex = visible.first.id - 2;
+      let previousPageIndex = visible.first.id - 2;
       if (views[previousPageIndex] && !this.isViewFinished(views[previousPageIndex])) {
         return views[previousPageIndex];
       }
@@ -780,7 +780,7 @@ class PDFRenderingQueue {
         break;
       case RenderingStates.INITIAL:
         this.highestPriorityPage = view.renderingId;
-        var continueRendering = () => {
+        let continueRendering = () => {
           this.renderHighestPriority();
         };
         view.draw().then(continueRendering, continueRendering);
@@ -4723,7 +4723,7 @@ function isDestArraysEqual(firstDest, secondDest) {
       if (Object.keys(first).length !== Object.keys(second).length) {
         return false;
       }
-      for (var key in first) {
+      for (let key in first) {
         if (!isEntryEqual(first[key], second[key])) {
           return false;
         }
@@ -8038,7 +8038,7 @@ exports.BasePreferences = undefined;
 
 var _ui_utils = __webpack_require__(0);
 
-var defaultPreferences = null;
+let defaultPreferences = null;
 function getDefaultPreferences() {
   if (!defaultPreferences) {
     defaultPreferences = Promise.resolve({
@@ -8115,8 +8115,8 @@ class BasePreferences {
       } else if (value === undefined) {
         throw new Error('Set preference: no value is specified.');
       }
-      var valueType = typeof value;
-      var defaultType = typeof this.defaults[name];
+      let valueType = typeof value;
+      let defaultType = typeof this.defaults[name];
       if (valueType !== defaultType) {
         if (valueType === 'number' && defaultType === 'string') {
           value = value.toString();
@@ -8134,11 +8134,11 @@ class BasePreferences {
   }
   get(name) {
     return this._initializedPromise.then(() => {
-      var defaultValue = this.defaults[name];
+      let defaultValue = this.defaults[name];
       if (defaultValue === undefined) {
         throw new Error(`Get preference: "${name}" is undefined.`);
       } else {
-        var prefValue = this.prefs[name];
+        let prefValue = this.prefs[name];
         if (prefValue !== undefined) {
           return prefValue;
         }
@@ -8168,24 +8168,24 @@ var _app = __webpack_require__(4);
 var _pdfjsLib = __webpack_require__(1);
 
 function composePage(pdfDocument, pageNumber, size, printContainer) {
-  var canvas = document.createElement('canvas');
-  var PRINT_RESOLUTION = 150;
-  var PRINT_UNITS = PRINT_RESOLUTION / 72.0;
+  let canvas = document.createElement('canvas');
+  const PRINT_RESOLUTION = 150;
+  const PRINT_UNITS = PRINT_RESOLUTION / 72.0;
   canvas.width = Math.floor(size.width * PRINT_UNITS);
   canvas.height = Math.floor(size.height * PRINT_UNITS);
   canvas.style.width = Math.floor(size.width * _ui_utils.CSS_UNITS) + 'px';
   canvas.style.height = Math.floor(size.height * _ui_utils.CSS_UNITS) + 'px';
-  var canvasWrapper = document.createElement('div');
+  let canvasWrapper = document.createElement('div');
   canvasWrapper.appendChild(canvas);
   printContainer.appendChild(canvasWrapper);
   canvas.mozPrintCallback = function (obj) {
-    var ctx = obj.context;
+    let ctx = obj.context;
     ctx.save();
     ctx.fillStyle = 'rgb(255, 255, 255)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
     pdfDocument.getPage(pageNumber).then(function (pdfPage) {
-      var renderContext = {
+      let renderContext = {
         canvasContext: ctx,
         transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
         viewport: pdfPage.getViewport(1, size.rotation),
@@ -8211,11 +8211,11 @@ function FirefoxPrintService(pdfDocument, pagesOverview, printContainer) {
 }
 FirefoxPrintService.prototype = {
   layout() {
-    var pdfDocument = this.pdfDocument;
-    var printContainer = this.printContainer;
-    var body = document.querySelector('body');
+    let pdfDocument = this.pdfDocument;
+    let printContainer = this.printContainer;
+    let body = document.querySelector('body');
     body.setAttribute('data-pdfjsprinting', true);
-    for (var i = 0, ii = this.pagesOverview.length; i < ii; ++i) {
+    for (let i = 0, ii = this.pagesOverview.length; i < ii; ++i) {
       composePage(pdfDocument, i + 1, this.pagesOverview[i], printContainer);
     }
   },
@@ -8225,8 +8225,8 @@ FirefoxPrintService.prototype = {
 };
 _app.PDFPrintServiceFactory.instance = {
   get supportsPrinting() {
-    var canvas = document.createElement('canvas');
-    var value = 'mozPrintCallback' in canvas;
+    let canvas = document.createElement('canvas');
+    let value = 'mozPrintCallback' in canvas;
     return (0, _pdfjsLib.shadow)(this, 'supportsPrinting', value);
   },
   createPrintService(pdfDocument, pagesOverview, printContainer) {
