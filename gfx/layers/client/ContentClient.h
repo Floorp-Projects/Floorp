@@ -119,8 +119,7 @@ public:
   enum {
     PAINT_WILL_RESAMPLE = 0x01,
     PAINT_NO_ROTATION = 0x02,
-    PAINT_CAN_DRAW_ROTATED = 0x04,
-    PAINT_ASYNC = 0x08,
+    PAINT_CAN_DRAW_ROTATED = 0x04
   };
 
   /**
@@ -143,8 +142,7 @@ public:
    * will need to call BorrowDrawTargetForPainting multiple times to achieve
    * this.
    */
-  virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags);
-  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
+  PaintState BeginPaintBuffer(PaintedLayer* aLayer, uint32_t aFlags);
 
   /**
    * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
@@ -176,6 +174,11 @@ public:
     bool aSetTransform = false);
 
   void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
+
+  // Call before and after painting into this content client
+  virtual void BeginPaint() {}
+  virtual void BeginAsyncPaint();
+  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
 
   static bool PrepareDrawTargetForPainting(CapturedPaintState*);
 
@@ -368,7 +371,8 @@ public:
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
-  virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags) override;
+  virtual void BeginPaint() override;
+  virtual void BeginAsyncPaint() override;
 
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
