@@ -495,9 +495,9 @@ TEST(GeckoProfiler, Markers)
   okstr1[kMax - 1] = '\0';
   okstr2[kMax - 1] = '\0';
   longstr[kMax] = '\0';
-  AUTO_PROFILER_LABEL_DYNAMIC("", CSS, okstr1.get());
-  AUTO_PROFILER_LABEL_DYNAMIC("okstr2", CSS, okstr2.get());
-  AUTO_PROFILER_LABEL_DYNAMIC("", CSS, longstr.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", CSS, okstr1.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("okstr2", CSS, okstr2.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", CSS, longstr.get());
 
   // Sleep briefly to ensure a sample is taken and the pending markers are
   // processed.
@@ -698,7 +698,11 @@ TEST(GeckoProfiler, PseudoStack)
 
   UniqueFreePtr<char> dynamic(strdup("dynamic"));
   {
-    AUTO_PROFILER_LABEL_DYNAMIC("A::C", JS, dynamic.get());
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR("A::C", JS, dynamic.get());
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+      "A::C2", JS, nsDependentCString(dynamic.get()));
+    AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+      "A::C3", JS, NS_ConvertUTF8toUTF16(dynamic.get()));
 
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, filters, MOZ_ARRAY_LENGTH(filters));

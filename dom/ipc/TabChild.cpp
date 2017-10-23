@@ -2409,9 +2409,8 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            const ClonedMessageData& aData)
 {
-  NS_LossyConvertUTF16toASCII messageNameCStr(aMessage);
-  AUTO_PROFILER_LABEL_DYNAMIC("TabChild::RecvAsyncMessage", EVENTS,
-                              messageNameCStr.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+    "TabChild::RecvAsyncMessage", EVENTS, aMessage);
 
   CrossProcessCpowHolder cpows(Manager(), aCpows);
   if (!mTabChildGlobal) {
