@@ -124,7 +124,6 @@ skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer-
 skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer.js
-skip script test262/harness/detachArrayBuffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-greater-than-last-index.js
@@ -262,6 +261,7 @@ skip script test262/built-ins/Array/proto-from-ctor-realm.js
 skip script test262/built-ins/ArrayBuffer/proto-from-ctor-realm.js
 skip script test262/built-ins/Boolean/proto-from-ctor-realm.js
 skip script test262/built-ins/DataView/proto-from-ctor-realm.js
+skip script test262/built-ins/DataView/proto-from-ctor-realm-sab.js
 skip script test262/built-ins/Date/proto-from-ctor-realm-one.js
 skip script test262/built-ins/Date/proto-from-ctor-realm-two.js
 skip script test262/built-ins/Date/proto-from-ctor-realm-zero.js
@@ -275,8 +275,10 @@ skip script test262/built-ins/Object/proto-from-ctor.js
 skip script test262/built-ins/Promise/proto-from-ctor-realm.js
 skip script test262/built-ins/RegExp/proto-from-ctor-realm.js
 skip script test262/built-ins/Set/proto-from-ctor-realm.js
+skip script test262/built-ins/SharedArrayBuffer/proto-from-ctor-realm.js
 skip script test262/built-ins/String/proto-from-ctor-realm.js
 skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm-sab.js
 skip script test262/built-ins/TypedArrays/length-arg-proto-from-ctor-realm.js
 skip script test262/built-ins/TypedArrays/no-args-proto-from-ctor-realm.js
 skip script test262/built-ins/TypedArrays/object-arg-proto-from-ctor-realm.js
@@ -430,12 +432,6 @@ skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-in-order.j
 skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-one.js
 skip-if(!xulRuntime.shell) script test262/built-ins/Atomics/wake/wake-all-on-loc.js
 
-# SharedArrayBuffer API pedantry
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1346071
-skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm-sab.js
-skip script test262/built-ins/SharedArrayBuffer/proto-from-ctor-realm.js
-skip script test262/built-ins/DataView/proto-from-ctor-realm-sab.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346081
 skip script test262/intl402/NumberFormat/prototype/format/11.3.2_TRP.js
 skip script test262/intl402/NumberFormat/prototype/format/11.3.2_TRF.js
@@ -444,29 +440,9 @@ skip script test262/intl402/NumberFormat/prototype/format/11.3.2_TRF.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular-as.js
 
-# RegExp s (dotAll) flag
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1361856
-skip script test262/annexB/built-ins/RegExp/prototype/flags/order-after-compile.js
-skip include test262/built-ins/RegExp/dotall/jstests.list
-skip include test262/built-ins/RegExp/prototype/dotAll/jstests.list
-skip script test262/built-ins/RegExp/prototype/flags/order.js
-skip script test262/built-ins/RegExp/prototype/flags/s.js
-
 # Hoisted block-level function named "arguments" not initialized with undefined per B.3.3.1
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1339123
 skip script test262/annexB/language/function-code/block-decl-func-skip-arguments.js
-
-# RegExp Unicode Property Escapes
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1361876
-skip include test262/built-ins/RegExp/property-escapes/jstests.list
-
-# RegExp lookBehind
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1225665
-skip include test262/built-ins/RegExp/lookBehind/jstests.list
-
-# RegExp named groups
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
-skip include test262/built-ins/RegExp/named-groups/jstests.list
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1386146
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle.js
@@ -485,29 +461,15 @@ skip script test262/language/expressions/class/async-gen-method-static-yield-sta
 skip script test262/language/statements/async-generator/yield-star-async-next.js
 skip script test262/language/statements/class/async-gen-method-yield-star-async-next.js
 skip script test262/language/statements/class/async-gen-method-static-yield-star-async-next.js
+skip script test262/language/statements/async-generator/yield-star-sync-next.js
+skip script test262/language/statements/class/async-gen-method-yield-star-sync-next.js
+skip script test262/language/statements/class/async-gen-method-static-yield-star-sync-next.js
+skip script test262/language/expressions/async-generator/named-yield-star-sync-next.js
+skip script test262/language/expressions/async-generator/yield-star-sync-next.js
+skip script test262/language/expressions/object/method-definition/async-gen-yield-star-sync-next.js
+skip script test262/language/expressions/class/async-gen-method-yield-star-sync-next.js
+skip script test262/language/expressions/class/async-gen-method-static-yield-star-sync-next.js
 
-# Optional Catch Binding
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1380881
-skip script test262/language/statements/try/optional-catch-binding-lexical.js
-skip script test262/language/statements/try/optional-catch-binding-throws.js
-skip script test262/language/statements/try/optional-catch-binding-finally.js
-skip script test262/language/statements/try/optional-catch-binding.js
-
-# Promise.prototype.finally
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1019116
-skip script test262/built-ins/Promise/prototype/finally/invokes-then-with-function.js
-skip script test262/built-ins/Promise/prototype/finally/invokes-then-with-non-function.js
-skip script test262/built-ins/Promise/prototype/finally/is-a-function.js
-skip script test262/built-ins/Promise/prototype/finally/length.js
-skip script test262/built-ins/Promise/prototype/finally/name.js
-skip script test262/built-ins/Promise/prototype/finally/prop-desc.js
-skip script test262/built-ins/Promise/prototype/finally/rejected-observable-then-calls.js
-skip script test262/built-ins/Promise/prototype/finally/rejection-reason-no-fulfill.js
-skip script test262/built-ins/Promise/prototype/finally/rejection-reason-override-with-throw.js
-skip script test262/built-ins/Promise/prototype/finally/resolution-value-no-override.js
-skip script test262/built-ins/Promise/prototype/finally/resolved-observable-then-calls.js
-skip script test262/built-ins/Promise/prototype/finally/this-value-then-poisoned.js
-skip script test262/built-ins/Promise/prototype/finally/this-value-then-throws.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -523,3 +485,6 @@ skip script test262/harness/detachArrayBuffer.js
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
+
+# https://github.com/tc39/test262/issues/1312
+skip script test262/built-ins/BigInt/prototype/toString/string-is-code-units-of-decimal-digits-only.js
