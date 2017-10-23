@@ -467,8 +467,8 @@ nsXBLBinding::ClearInsertionPoints()
     mDefaultInsertionPoint->ClearInsertedChildren();
   }
 
-  for (uint32_t i = 0; i < mInsertionPoints.Length(); ++i) {
-    mInsertionPoints[i]->ClearInsertedChildren();
+  for (const auto& insertionPoint : mInsertionPoints) {
+    insertionPoint->ClearInsertedChildren();
   }
 }
 
@@ -708,34 +708,6 @@ nsXBLBinding::UnhookEventHandlers()
   }
 }
 
-static void
-UpdateInsertionParent(XBLChildrenElement* aPoint,
-                      nsIContent* aOldBoundElement)
-{
-  if (aPoint->IsDefaultInsertion()) {
-    return;
-  }
-
-  for (size_t i = 0; i < aPoint->InsertedChildrenLength(); ++i) {
-    nsIContent* child = aPoint->InsertedChild(i);
-
-    MOZ_ASSERT(child->GetParentNode());
-
-    // Here, we're iterating children that we inserted. There are two cases:
-    // either |child| is an explicit child of |aOldBoundElement| and is no
-    // longer inserted anywhere or it's a child of a <children> element
-    // parented to |aOldBoundElement|. In the former case, the child is no
-    // longer inserted anywhere, so we set its insertion parent to null. In the
-    // latter case, the child is now inserted into |aOldBoundElement| from some
-    // binding above us, so we set its insertion parent to aOldBoundElement.
-    if (child->GetParentNode() == aOldBoundElement) {
-      child->SetXBLInsertionParent(nullptr);
-    } else {
-      child->SetXBLInsertionParent(aOldBoundElement);
-    }
-  }
-}
-
 void
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
@@ -829,19 +801,6 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       nsXBLBinding::UnbindAnonymousContent(aOldDocument, mContent);
     }
 
-    // Now that we've unbound our anonymous content from the tree and updated
-    // its binding parent, update the insertion parent for content inserted
-    // into our <children> elements.
-    if (mDefaultInsertionPoint) {
-      UpdateInsertionParent(mDefaultInsertionPoint, mBoundElement);
-    }
-
-    for (size_t i = 0; i < mInsertionPoints.Length(); ++i) {
-      UpdateInsertionParent(mInsertionPoints[i], mBoundElement);
-    }
-
-    // Now that our inserted children no longer think they're inserted
-    // anywhere, make sure our internal state reflects that as well.
     ClearInsertionPoints();
   }
 }
