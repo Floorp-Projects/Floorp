@@ -20,12 +20,14 @@ import os
 import pprint
 import subprocess
 import sys
+from getpass import getpass
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.errors import HgErrorList
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
+from mozharness.mozilla.selfserve import SelfServeMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
@@ -102,16 +104,13 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             """
         message = ""
         if self.config['migration_behavior'] not in VALID_MIGRATION_BEHAVIORS:
-            message += "%s must be one of %s!\n" % (self.config['migration_behavior'],
-                                                    VALID_MIGRATION_BEHAVIORS)
+            message += "%s must be one of %s!\n" % (self.config['migration_behavior'], VALID_MIGRATION_BEHAVIORS)
         if self.config['migration_behavior'] == 'beta_to_release':
-            if self.config.get("require_remove_locales") \
-                    and not self.config.get("remove_locales") and 'migrate' in self.actions:
+            if self.config.get("require_remove_locales") and not self.config.get("remove_locales") and 'migrate' in self.actions:
                 message += "You must specify --remove-locale!\n"
         else:
             if self.config.get("require_remove_locales") or self.config.get("remove_locales"):
-                self.warning("--remove-locale isn't valid unless you're using beta_to_release "
-                             "migration_behavior!\n")
+                self.warning("--remove-locale isn't valid unless you're using beta_to_release migration_behavior!\n")
         if message:
             self.fatal(message)
 
@@ -222,8 +221,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             dirs = self.query_abs_dirs()
             patch_file = os.path.join(dirs['abs_work_dir'], 'patch_file')
             self.run_command(
-                subprocess.list2cmdline(hg + ['diff', '-r', old_head, '.hgtags',
-                                        '-U9', '>', patch_file]),
+                subprocess.list2cmdline(hg + ['diff', '-r', old_head, '.hgtags', '-U9', '>', patch_file]),
                 cwd=cwd,
             )
             self.run_command(
@@ -326,8 +324,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             """
         dirs = self.query_abs_dirs()
         next_mb_version = self.get_version(dirs['abs_to_dir'])[0]
-        self.bump_version(dirs['abs_to_dir'], next_mb_version, next_mb_version, "a1", "",
-                          use_config_suffix=True)
+        self.bump_version(dirs['abs_to_dir'], next_mb_version, next_mb_version, "a1", "", use_config_suffix=True)
         self.apply_replacements()
         # bump m-c version
         curr_mc_version = self.get_version(dirs['abs_from_dir'])[0]
@@ -340,6 +337,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         # touch clobber files
         self.touch_clobber_file(dirs['abs_from_dir'])
         self.touch_clobber_file(dirs['abs_to_dir'])
+
 
     def beta_to_release(self, *args, **kwargs):
         """ mozilla-beta -> mozilla-release behavior.
@@ -494,11 +492,9 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             )
         # Call beta_to_release etc.
         if not hasattr(self, self.config['migration_behavior']):
-            self.fatal("Don't know how to proceed with migration_behavior %s !" %
-                       self.config['migration_behavior'])
+            self.fatal("Don't know how to proceed with migration_behavior %s !" % self.config['migration_behavior'])
         getattr(self, self.config['migration_behavior'])(end_tag=end_tag)
-        self.info("Verify the diff, and apply any manual changes, such as disabling features, "
-                  "and --commit-changes")
+        self.info("Verify the diff, and apply any manual changes, such as disabling features, and --commit-changes")
 
 
 # __main__ {{{1

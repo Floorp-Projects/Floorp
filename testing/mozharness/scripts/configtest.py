@@ -24,15 +24,14 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.script import BaseScript
 
-
 # ConfigTest {{{1
 class ConfigTest(BaseScript):
     config_options = [[
-     ["--test-file", ],
+     ["--test-file",],
      {"action": "extend",
       "dest": "test_files",
       "help": "Specify which config files to test"
-      }
+     }
     ]]
 
     def __init__(self, require_config_file=False):
@@ -46,7 +45,7 @@ class ConfigTest(BaseScript):
                             default_actions=['test-json-configs',
                                              'test-python-configs',
                                              'summary',
-                                             ],
+                                            ],
                             require_config_file=require_config_file)
 
     def query_config_files(self):
@@ -129,15 +128,13 @@ class ConfigTest(BaseScript):
                         self.info("Good.")
                         filecount[1] += 1
                     else:
-                        self.add_summary("%s is valid python, "
-                                         "but doesn't create a config dictionary." %
+                        self.add_summary("%s is valid python, but doesn't create a config dictionary." %
                                          config_file, level="error")
         if filecount[0]:
             self.add_summary("%d of %d python config files were good." %
                              (filecount[1], filecount[0]))
         else:
             self.add_summary("No python config files to test.")
-
 
 # __main__ {{{1
 if __name__ == '__main__':

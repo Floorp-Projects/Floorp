@@ -98,6 +98,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             **buildscript_kwargs
         )
 
+
     def _pre_config_lock(self, rw_config):
         self.read_buildbot_config()
         if not self.buildbot_config:
@@ -105,11 +106,9 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
         else:
             if self.config.get('require_buildprops', False) is True:
                 if not self.buildbot_config:
-                    self.fatal("Unable to load properties from file: %s" %
-                               self.config.get('buildbot_json_path'))
+                    self.fatal("Unable to load properties from file: %s" % self.config.get('buildbot_json_path'))
             props = self.buildbot_config["properties"]
-            for prop in ['version', 'build_number', 'revision', 'repo_file',
-                         'repack_manifests_url', 'partner']:
+            for prop in ['version', 'build_number', 'revision', 'repo_file', 'repack_manifests_url', 'partner']:
                 if props.get(prop):
                     self.info("Overriding %s with %s" % (prop, props[prop]))
                     self.config[prop] = props.get(prop)
@@ -191,7 +190,6 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
 
         return self.run_command(repack_cmd,
                                 cwd=self.query_abs_dirs()['abs_scripts_dir'])
-
 
 # main {{{
 if __name__ == '__main__':
