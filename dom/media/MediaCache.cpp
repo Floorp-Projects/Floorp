@@ -1929,7 +1929,9 @@ MediaCacheStream::NotifyDataLength(int64_t aLength)
 }
 
 void
-MediaCacheStream::NotifyDataStarted(uint32_t aLoadID, int64_t aOffset)
+MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
+                                    int64_t aOffset,
+                                    bool aSeekable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(aLoadID > 0);
@@ -1946,6 +1948,13 @@ MediaCacheStream::NotifyDataStarted(uint32_t aLoadID, int64_t aOffset)
     mStreamLength = std::max(mStreamLength, mChannelOffset);
   }
   mLoadID = aLoadID;
+
+  MOZ_ASSERT(aOffset == 0 || aSeekable,
+             "channel offset must be zero when we become non-seekable");
+  mIsTransportSeekable = aSeekable;
+  // Queue an Update since we may change our strategy for dealing
+  // with this stream
+  mMediaCache->QueueUpdate();
 }
 
 void
@@ -2147,18 +2156,6 @@ MediaCacheStream::~MediaCacheStream()
       lengthKb);
   Telemetry::Accumulate(Telemetry::HistogramID::MEDIACACHESTREAM_LENGTH_KB,
                         lengthKb);
-}
-
-void
-MediaCacheStream::SetTransportSeekable(bool aIsTransportSeekable)
-{
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  NS_ASSERTION(mIsTransportSeekable || aIsTransportSeekable ||
-               mChannelOffset == 0, "channel offset must be zero when we become non-seekable");
-  mIsTransportSeekable = aIsTransportSeekable;
-  // Queue an Update since we may change our strategy for dealing
-  // with this stream
-  mMediaCache->QueueUpdate();
 }
 
 bool
