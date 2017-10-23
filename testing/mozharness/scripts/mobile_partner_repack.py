@@ -173,8 +173,7 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
                 total_count += 1
                 if not self.download_file(url, file_path):
                     self.add_failure(platform, locale,
-                                     message="Unable to "
-                                             "download %(platform)s:%(locale)s installer!")
+                                     message="Unable to download %(platform)s:%(locale)s installer!")
                 else:
                     success_count += 1
         self.summarize_success_count(success_count, total_count,
@@ -238,23 +237,19 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
         success_count = total_count = 0
         for platform in c['platforms']:
             for locale in locales:
-                installer_name = c['installer_base_names'][platform] % \
-                    {'version': rc['version'], 'locale': locale}
+                installer_name = c['installer_base_names'][platform] % {'version': rc['version'], 'locale': locale}
                 if self.query_failure(platform, locale):
                     self.warning("%s:%s had previous issues; skipping!" % (platform, locale))
                     continue
-                original_path = '%s/original/%s/%s/%s' % \
-                    (dirs['abs_work_dir'], platform, locale, installer_name)
+                original_path = '%s/original/%s/%s/%s' % (dirs['abs_work_dir'], platform, locale, installer_name)
                 for partner in c['partner_config'].keys():
-                    repack_path = '%s/unsigned/partner-repacks/%s/%s/%s/%s' % \
-                        (dirs['abs_work_dir'], partner, platform, locale, installer_name)
+                    repack_path = '%s/unsigned/partner-repacks/%s/%s/%s/%s' % (dirs['abs_work_dir'], partner, platform, locale, installer_name)
                     total_count += 1
                     if self._repack_apk(partner, original_path, repack_path):
                         success_count += 1
                     else:
                         self.add_failure(platform, locale,
-                                         message="Unable to repack %(platform)s:%(locale)s "
-                                                 "installer!")
+                                         message="Unable to repack %(platform)s:%(locale)s installer!")
         self.summarize_success_count(success_count, total_count,
                                      message="Repacked %d of %d installers successfully.")
 
@@ -292,16 +287,13 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
         success_count = total_count = 0
         for platform in c['platforms']:
             for locale in locales:
-                installer_name = c['installer_base_names'][platform] % \
-                    {'version': rc['version'], 'locale': locale}
+                installer_name = c['installer_base_names'][platform] % {'version': rc['version'], 'locale': locale}
                 if self.query_failure(platform, locale):
                     self.warning("%s:%s had previous issues; skipping!" % (platform, locale))
                     continue
                 for partner in c['partner_config'].keys():
-                    unsigned_path = '%s/unsigned/partner-repacks/%s/%s/%s/%s' % \
-                        (dirs['abs_work_dir'], partner, platform, locale, installer_name)
-                    signed_dir = '%s/partner-repacks/%s/%s/%s' % \
-                        (dirs['abs_work_dir'], partner, platform, locale)
+                    unsigned_path = '%s/unsigned/partner-repacks/%s/%s/%s/%s' % (dirs['abs_work_dir'], partner, platform, locale, installer_name)
+                    signed_dir = '%s/partner-repacks/%s/%s/%s' % (dirs['abs_work_dir'], partner, platform, locale)
                     signed_path = "%s/%s" % (signed_dir, installer_name)
                     total_count += 1
                     self.info("Signing %s %s." % (platform, locale))
@@ -311,8 +303,7 @@ class MobilePartnerRepack(LocalesMixin, ReleaseMixin, MobileSigningMixin,
                     if self.sign_apk(unsigned_path, c['keystore'],
                                      self.store_passphrase, self.key_passphrase,
                                      c['key_alias']) != 0:
-                        self.add_summary("Unable to sign %s:%s apk!" % (platform, locale),
-                                         level=FATAL)
+                        self.add_summary("Unable to sign %s:%s apk!" % (platform, locale), level=FATAL)
                     else:
                         self.mkdir_p(signed_dir)
                         if self.align_apk(unsigned_path, signed_path):

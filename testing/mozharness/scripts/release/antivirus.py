@@ -75,34 +75,34 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
 
     def __init__(self):
         BaseScript.__init__(self,
-                            config_options=self.config_options,
-                            require_config_file=False,
-                            config={
-                                "virtualenv_modules": [
-                                    "pip==1.5.5",
-                                    "boto",
-                                    "redo",
-                                    "mar",
-                                ],
-                                "virtualenv_path": "venv",
-                            },
-                            all_actions=[
-                                "create-virtualenv",
-                                "activate-virtualenv",
-                                "get-extract-script",
-                                "get-files",
-                                "scan-files",
-                                "cleanup-cache",
-                            ],
-                            default_actions=[
-                                "create-virtualenv",
-                                "activate-virtualenv",
-                                "get-extract-script",
-                                "get-files",
-                                "scan-files",
-                                "cleanup-cache",
-                            ],
-                            )
+            config_options=self.config_options,
+            require_config_file=False,
+            config={
+                "virtualenv_modules": [
+                    "pip==1.5.5",
+                    "boto",
+                    "redo",
+                    "mar",
+                ],
+                "virtualenv_path": "venv",
+            },
+            all_actions=[
+                "create-virtualenv",
+                "activate-virtualenv",
+                "get-extract-script",
+                "get-files",
+                "scan-files",
+                "cleanup-cache",
+            ],
+            default_actions=[
+                "create-virtualenv",
+                "activate-virtualenv",
+                "get-extract-script",
+                "get-files",
+                "scan-files",
+                "cleanup-cache",
+            ],
+        )
         self.excludes = self.config.get('excludes', self.DEFAULT_EXCLUDES)
         self.dest_dir = self.CACHE_DIR
 
@@ -122,8 +122,8 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
     def get_extract_script(self):
         """Gets a copy of extract_and_run_command.py from tools, and the supporting mar.py,
         so that we can unpack various files for clam to scan them."""
-        remote_file = "{}/raw-file/{}/stage/extract_and_run_command.py"\
-                      .format(self.config["tools_repo"], self.config["tools_revision"])
+        remote_file = "{}/raw-file/{}/stage/extract_and_run_command.py".format(self.config["tools_repo"],
+                                                                               self.config["tools_revision"])
         self.download_file(remote_file, file_name="extract_and_run_command.py")
 
     def get_files(self):
@@ -166,8 +166,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
                 if self._matches_exclude(keyname):
                     self.debug("Excluding {}".format(keyname))
                 else:
-                    destination = os.path.join(self.dest_dir,
-                                               keyname.replace(candidates_prefix, ''))
+                    destination = os.path.join(self.dest_dir, keyname.replace(candidates_prefix, ''))
                     dest_dir = os.path.dirname(destination)
                     if not os.path.isdir(dest_dir):
                         os.makedirs(dest_dir)
