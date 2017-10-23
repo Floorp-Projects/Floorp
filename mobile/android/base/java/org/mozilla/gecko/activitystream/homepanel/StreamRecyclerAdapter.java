@@ -329,7 +329,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     /**
-     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(Context, View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
+     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
      *                       for additional details.
      */
     private void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
@@ -356,8 +356,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
               .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actionPosition)
               .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra);
 
-        ActivityStreamContextMenu.show(webpageItemRow.itemView.getContext(),
-                snackbarAnchor,
+        ActivityStreamContextMenu.show(snackbarAnchor,
                 extras,
                 menuMode,
                 model,
@@ -373,7 +372,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     /**
-     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(Context, View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
+     * @param snackbarAnchor See {@link ActivityStreamContextMenu#show(View, ActivityStreamTelemetry.Extras.Builder, ActivityStreamContextMenu.MenuMode, WebpageModel, boolean, HomePager.OnUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener, int, int)}
      *                       for additional details.
      */
     private void openContextMenu(final TopSite topSite, final int absolutePosition, final View snackbarAnchor,
@@ -382,8 +381,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
                 .forTopSite(topSite)
                 .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
 
-        ActivityStreamContextMenu.show(snackbarAnchor.getContext(),
-                snackbarAnchor,
+        ActivityStreamContextMenu.show(snackbarAnchor,
                 extras,
                 ActivityStreamContextMenu.MenuMode.TOPSITE,
                 topSite,
