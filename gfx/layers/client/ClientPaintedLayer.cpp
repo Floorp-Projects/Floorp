@@ -81,8 +81,8 @@ ClientPaintedLayer::UpdateContentClient(PaintState& aState)
 
   AddToValidRegion(aState.mRegionToDraw);
 
-  ContentClientRemoteBuffer *contentClientRemote =
-      static_cast<ContentClientRemoteBuffer *>(mContentClient.get());
+  ContentClientRemote *contentClientRemote =
+      static_cast<ContentClientRemote *>(mContentClient.get());
   MOZ_ASSERT(contentClientRemote->GetIPCHandle());
 
   // Hold(this) ensures this layer is kept alive through the current transaction
