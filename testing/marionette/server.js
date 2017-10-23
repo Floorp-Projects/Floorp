@@ -309,6 +309,7 @@ server.TCPListener = class {
     this.conns = new Set();
     this.nextConnID = 0;
     this.alive = false;
+    this._acceptConnections = false;
     this.alteredPrefs = new Set();
   }
 
@@ -326,22 +327,13 @@ server.TCPListener = class {
   }
 
   set acceptConnections(value) {
-    if (value) {
-      if (!this.socket) {
-        const flags = KeepWhenOffline | LoopbackOnly;
-        const backlog = 1;
-        this.socket = new ServerSocket(this.port, flags, backlog);
-        this.port = this.socket.port;
-
-        this.socket.asyncListen(this);
-        logger.debug("New connections are accepted");
-      }
-
-    } else if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-      logger.debug("New connections will no longer be accepted");
+    if (!value) {
+      logger.info("New connections will no longer be accepted");
+    } else {
+      logger.info("New connections are accepted again");
     }
+
+    this._acceptConnections = value;
   }
 
   /**
@@ -369,19 +361,27 @@ server.TCPListener = class {
       }
     }
 
-    // Start socket server and listening for connection attempts
-    this.acceptConnections = true;
-
+    const flags = KeepWhenOffline | LoopbackOnly;
+    const backlog = 1;
+    this.socket = new ServerSocket(this.port, flags, backlog);
+    this.socket.asyncListen(this);
+    this.port = this.socket.port;
     Preferences.set(PREF_PORT, this.port);
-    env.set(ENV_ENABLED, "1");
 
     this.alive = true;
+    this._acceptConnections = true;
+    env.set(ENV_ENABLED, "1");
   }
 
   stop() {
     if (!this.alive) {
       return;
     }
+
+    this._acceptConnections = false;
+
+    this.socket.close();
+    this.socket = null;
 
     for (let k of this.alteredPrefs) {
       logger.debug(`Resetting recommended pref ${k}`);
@@ -391,13 +391,15 @@ server.TCPListener = class {
 
     Services.obs.notifyObservers(this, NOTIFY_RUNNING);
 
-    // Shutdown server socket, and no longer listen for new connections
-    this.acceptConnections = false;
-
     this.alive = false;
   }
 
   onSocketAccepted(serverSocket, clientSocket) {
+    if (!this._acceptConnections) {
+      logger.warn("New connections are currently not accepted");
+      return;
+    }
+
     let input = clientSocket.openInputStream(0, 0, 0);
     let output = clientSocket.openOutputStream(0, 0, 0);
     let transport = new DebuggerTransport(input, output);
