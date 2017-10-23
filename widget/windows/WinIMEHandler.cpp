@@ -803,7 +803,7 @@ IMEHandler::NeedOnScreenKeyboard()
   // avoids cases where the keyboard would pop up "just" because e.g. a
   // web page chooses to focus a search field on the page, even when that
   // really isn't what the user is trying to do at that moment.
-  if (!InputContextAction::IsUserAction(sLastContextActionCause)) {
+  if (!InputContextAction::IsHandlingUserInput(sLastContextActionCause)) {
     return false;
   }
 

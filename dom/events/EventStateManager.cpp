@@ -265,6 +265,7 @@ static uint32_t sESMInstanceCount = 0;
 
 uint64_t EventStateManager::sUserInputCounter = 0;
 int32_t EventStateManager::sUserInputEventDepth = 0;
+int32_t EventStateManager::sUserKeyboardEventDepth = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
 EventStateManager* EventStateManager::sActiveESM = nullptr;
 nsIDocument* EventStateManager::sMouseOverDocument = nullptr;
@@ -3941,6 +3942,37 @@ EventStateManager::IsHandlingUserInput()
   return sUserInputEventDepth > 0;
 }
 
+/*static*/ bool
+EventStateManager::IsHandlingKeyboardInput()
+{
+  return sUserKeyboardEventDepth > 0;
+}
+
+/*static*/ void
+EventStateManager::StartHandlingUserInput(EventMessage aMessage)
+{
+  ++sUserInputEventDepth;
+  ++sUserInputCounter;
+  if (sUserInputEventDepth == 1) {
+    sLatestUserInputStart = sHandlingInputStart = TimeStamp::Now();
+  }
+  if (WidgetEvent::IsKeyEventMessage(aMessage)) {
+    ++sUserKeyboardEventDepth;
+  }
+}
+
+/*static*/ void
+EventStateManager::StopHandlingUserInput(EventMessage aMessage)
+{
+  --sUserInputEventDepth;
+  if (sUserInputEventDepth == 0) {
+    sHandlingInputStart = TimeStamp();
+  }
+  if (WidgetEvent::IsKeyEventMessage(aMessage)) {
+    --sUserKeyboardEventDepth;
+  }
+}
+
 static void
 CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
                                 EventMessage aMessage,
@@ -6035,25 +6067,22 @@ EventStateManager::Prefs::Shutdown()
 AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
                                     bool aIsHandlingUserInput,
                                     WidgetEvent* aEvent,
-                                    nsIDocument* aDocument) :
-  mIsHandlingUserInput(aIsHandlingUserInput),
-  mIsMouseDown(aEvent && aEvent->mMessage == eMouseDown),
-  mResetFMMouseButtonHandlingState(false)
+                                    nsIDocument* aDocument)
+  : mMessage(aEvent ? aEvent->mMessage : eVoidEvent)
+  , mIsHandlingUserInput(aIsHandlingUserInput)
 {
   if (!aIsHandlingUserInput) {
     return;
   }
-  EventStateManager::StartHandlingUserInput();
-  if (mIsMouseDown) {
+  EventStateManager::StartHandlingUserInput(mMessage);
+  if (mMessage == eMouseDown) {
     nsIPresShell::SetCapturingContent(nullptr, 0);
     nsIPresShell::AllowMouseCapture(true);
   }
   if (!aDocument || !aEvent || !aEvent->IsTrusted()) {
     return;
   }
-  mResetFMMouseButtonHandlingState =
-    (aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp);
-  if (mResetFMMouseButtonHandlingState) {
+  if (NeedsToResetFocusManagerMouseButtonHandlingState()) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ENSURE_TRUE_VOID(fm);
     // If it's in modal state, mouse button event handling may be nested.
@@ -6070,11 +6099,11 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher()
   if (!mIsHandlingUserInput) {
     return;
   }
-  EventStateManager::StopHandlingUserInput();
-  if (mIsMouseDown) {
+  EventStateManager::StopHandlingUserInput(mMessage);
+  if (mMessage == eMouseDown) {
     nsIPresShell::AllowMouseCapture(false);
   }
-  if (mResetFMMouseButtonHandlingState) {
+  if (NeedsToResetFocusManagerMouseButtonHandlingState()) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ENSURE_TRUE_VOID(fm);
     nsCOMPtr<nsIDocument> handlingDocument =
