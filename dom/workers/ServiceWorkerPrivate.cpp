@@ -46,8 +46,8 @@ NS_IMPL_CYCLE_COLLECTION(ServiceWorkerPrivate, mSupportsArray)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ServiceWorkerPrivate, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ServiceWorkerPrivate, Release)
 
-// Tracks the "dom.disable_open_click_delay" preference.  Modified on main
-// thread, read on worker threads.
+// Tracks the "dom.serviceWorkers.disable_open_click_delay" preference.  Modified
+// on main thread, read on worker threads.
 // It is updated every time a "notificationclick" event is dispatched. While
 // this is done without synchronization, at the worst, the thread will just get
 // an older value within which a popup is allowed to be displayed, which will
@@ -1282,7 +1282,8 @@ ServiceWorkerPrivate::SendNotificationEvent(const nsAString& aEventName,
   WakeUpReason why;
   if (aEventName.EqualsLiteral(NOTIFICATION_CLICK_EVENT_NAME)) {
     why = NotificationClickEvent;
-    gDOMDisableOpenClickDelay = Preferences::GetInt("dom.disable_open_click_delay");
+    gDOMDisableOpenClickDelay =
+      Preferences::GetInt("dom.serviceWorkers.disable_open_click_delay");
   } else if (aEventName.EqualsLiteral(NOTIFICATION_CLOSE_EVENT_NAME)) {
     why = NotificationCloseEvent;
   } else {
