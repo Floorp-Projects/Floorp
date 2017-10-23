@@ -60,22 +60,6 @@ private:
   friend class CompositorBridgeParent;
 };
 
-class CompositorThreadHolderDebug final
-{
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorThreadHolderDebug)
-
-public:
-  CompositorThreadHolderDebug(const char* aName);
-
-private:
-  ~CompositorThreadHolderDebug();
-
-  RefPtr<CompositorThreadHolder> mHolder;
-#ifdef MOZ_CRASHREPORTER
-  nsAutoCString mId;
-#endif
-};
-
 base::Thread* CompositorThread();
 
 } // namespace layers
