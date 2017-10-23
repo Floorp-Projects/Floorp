@@ -532,26 +532,20 @@ ContentClientDoubleBuffered::Dump(std::stringstream& aStream,
   if (!aDumpHtml) {
     aStream << "\n" << aPrefix << "Surface: ";
   }
-  if (mFrontBuffer) {
-    CompositableClient::DumpTextureClient(aStream, mFrontBuffer->GetClient(), aCompress);
-  }
+  CompositableClient::DumpTextureClient(aStream, mFrontClient, aCompress);
 }
 
 void
 ContentClientDoubleBuffered::DestroyFrontBuffer()
 {
-  if (mFrontBuffer) {
-    RefPtr<TextureClient> client = mFrontBuffer->GetClient();
-    RefPtr<TextureClient> clientOnWhite = mFrontBuffer->GetClientOnWhite();
+  if (mFrontClient) {
+    mOldTextures.AppendElement(mFrontClient);
+    mFrontClient = nullptr;
+  }
 
-    if (client) {
-      mOldTextures.AppendElement(client);
-    }
-    if (clientOnWhite) {
-      mOldTextures.AppendElement(clientOnWhite);
-    }
-
-    mFrontBuffer = Nothing();
+  if (mFrontClientOnWhite) {
+    mOldTextures.AppendElement(mFrontClientOnWhite);
+    mFrontClientOnWhite = nullptr;
   }
 }
 
@@ -568,25 +562,23 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
   mFrontUpdatedRegion = aFrontUpdatedRegion;
 
-  RefPtr<TextureClient> newBack;
-  RefPtr<TextureClient> newBackOnWhite;
-  IntRect newBackBufferRect;
-  nsIntPoint newBackBufferRotation;
+  RefPtr<TextureClient> oldBack = mTextureClient;
+  mTextureClient = mFrontClient;
+  mFrontClient = oldBack;
 
-  if (mFrontBuffer) {
-    newBack = mFrontBuffer->GetClient();
-    newBackOnWhite = mFrontBuffer->GetClientOnWhite();
-    newBackBufferRect = mFrontBuffer->BufferRect();
-    newBackBufferRotation = mFrontBuffer->BufferRotation();
-  }
+  oldBack = mTextureClientOnWhite;
+  mTextureClientOnWhite = mFrontClientOnWhite;
+  mFrontClientOnWhite = oldBack;
 
-  mFrontBuffer = Some(RemoteRotatedBuffer(mTextureClient, mTextureClientOnWhite,
-                                          mBufferRect, mBufferRotation));
+  IntRect oldBufferRect = mBufferRect;
+  mBufferRect = mFrontBufferRect;
+  mFrontBufferRect = oldBufferRect;
 
-  mTextureClient = newBack;
-  mTextureClientOnWhite = newBackOnWhite;
-  mBufferRect = newBackBufferRect;
-  mBufferRotation = newBackBufferRotation;
+  nsIntPoint oldBufferRotation = mBufferRotation;
+  mBufferRotation = mFrontBufferRotation;
+  mFrontBufferRotation = oldBufferRotation;
+
+  MOZ_ASSERT(mFrontClient);
 
   ContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
 }
@@ -602,22 +594,17 @@ ContentClientDoubleBuffered::BeginPaint()
     return;
   }
 
-  if (!mFrontBuffer) {
-    mFrontAndBackBufferDiffer = false;
-    return;
-  }
-
   if (mDidSelfCopy) {
     // We can't easily draw our front buffer into us, since we're going to be
     // copying stuff around anyway it's easiest if we just move our situation
     // to non-rotated while we're at it. If this situation occurs we'll have
     // hit a self-copy path in PaintThebes before as well anyway.
-    mBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
+    mBufferRect.MoveTo(mFrontBufferRect.TopLeft());
     mBufferRotation = nsIntPoint();
     return;
   }
-  mBufferRect = mFrontBuffer->BufferRect();
-  mBufferRotation = mFrontBuffer->BufferRotation();
+  mBufferRect = mFrontBufferRect;
+  mBufferRotation = mFrontBufferRotation;
 }
 
 void
@@ -638,8 +625,8 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     MOZ_ASSERT(!mDidSelfCopy, "If we have to copy the world, then our buffers are different, right?");
     return;
   }
-  MOZ_ASSERT(mFrontBuffer);
-  if (!mFrontBuffer) {
+  MOZ_ASSERT(mFrontClient);
+  if (!mFrontClient) {
     return;
   }
 
@@ -670,20 +657,48 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     return;
   }
 
-  if (mFrontBuffer->Lock(OpenMode::OPEN_READ_ONLY)) {
-    UpdateDestinationFrom(*mFrontBuffer, updateRegion);
-    mFrontBuffer->Unlock();
+  // We need to ensure that we lock these two buffers in the same
+  // order as the compositor to prevent deadlocks.
+  TextureClientAutoLock frontLock(mFrontClient, OpenMode::OPEN_READ_ONLY);
+  if (!frontLock.Succeeded()) {
+    return;
+  }
+  Maybe<TextureClientAutoLock> frontOnWhiteLock;
+  if (mFrontClientOnWhite) {
+    frontOnWhiteLock.emplace(mFrontClientOnWhite, OpenMode::OPEN_READ_ONLY);
+    if (!frontOnWhiteLock->Succeeded()) {
+      return;
+    }
+  }
+
+  // Restrict the DrawTargets and frontBuffer to a scope to make
+  // sure there is no more external references to the DrawTargets
+  // when we Unlock the TextureClients.
+  gfx::DrawTarget* dt = mFrontClient->BorrowDrawTarget();
+  gfx::DrawTarget* dtw = mFrontClientOnWhite ? mFrontClientOnWhite->BorrowDrawTarget() : nullptr;
+  if (dt && dt->IsValid()) {
+    RefPtr<SourceSurface> surf = dt->Snapshot();
+    RefPtr<SourceSurface> surfOnWhite = dtw ? dtw->Snapshot() : nullptr;
+    SourceRotatedBuffer frontBuffer(surf,
+                                    surfOnWhite,
+                                    mFrontBufferRect,
+                                    mFrontBufferRotation);
+    UpdateDestinationFrom(frontBuffer, updateRegion);
+  } else {
+    // We know this can happen, but we want to track it somewhat, in case it leads
+    // to other problems.
+    gfxCriticalNote << "Invalid draw target(s) " << hexa(dt) << " and " << hexa(dtw);
   }
 }
 
 void
 ContentClientDoubleBuffered::EnsureBackBufferIfFrontBuffer()
 {
-  if (!mTextureClient && mFrontBuffer) {
-    CreateBackBuffer(mFrontBuffer->BufferRect());
+  if (!mTextureClient && mFrontClient) {
+    CreateBackBuffer(mFrontBufferRect);
 
-    mBufferRect = mFrontBuffer->BufferRect();
-    mBufferRotation = mFrontBuffer->BufferRotation();
+    mBufferRect = mFrontBufferRect;
+    mBufferRotation = mFrontBufferRotation;
   }
 }
 
