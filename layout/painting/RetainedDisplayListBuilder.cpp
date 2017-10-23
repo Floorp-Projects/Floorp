@@ -456,7 +456,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
 }
 
 static void
-TakeAndAddModifiedFramesFromRootFrame(std::vector<WeakFrame>& aFrames,
+TakeAndAddModifiedFramesFromRootFrame(nsTArray<nsIFrame*>& aFrames,
                                       nsIFrame* aRootFrame)
 {
   MOZ_ASSERT(aRootFrame);
@@ -464,13 +464,19 @@ TakeAndAddModifiedFramesFromRootFrame(std::vector<WeakFrame>& aFrames,
   std::vector<WeakFrame>* frames =
     aRootFrame->GetProperty(nsIFrame::ModifiedFrameList());
 
-  if (frames) {
-    for (WeakFrame& frame : *frames) {
-      aFrames.push_back(Move(frame));
-    }
-
-    frames->clear();
+  if (!frames) {
+    return;
   }
+
+  for (WeakFrame& frame : *frames) {
+    nsIFrame* f = frame.GetFrame();
+
+    if (f) {
+      aFrames.AppendElement(f);
+    }
+  }
+
+  frames->clear();
 }
 
 static bool
@@ -479,8 +485,8 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
   MOZ_ASSERT(aDocument);
   MOZ_ASSERT(aData);
 
-  std::vector<WeakFrame>* modifiedFrames =
-    static_cast<std::vector<WeakFrame>*>(aData);
+  nsTArray<nsIFrame*>* modifiedFrames =
+    static_cast<nsTArray<nsIFrame*>*>(aData);
 
   nsIPresShell* presShell = aDocument->GetShell();
   nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
@@ -493,15 +499,15 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
   return true;
 }
 
-static std::vector<WeakFrame>
+static nsTArray<nsIFrame*>
 GetModifiedFrames(nsIFrame* aDisplayRootFrame)
 {
   MOZ_ASSERT(aDisplayRootFrame);
 
-  std::vector<WeakFrame> modifiedFrames;
+  nsTArray<nsIFrame*> modifiedFrames;
   TakeAndAddModifiedFramesFromRootFrame(modifiedFrames, aDisplayRootFrame);
 
-  nsIDocument *rootdoc = aDisplayRootFrame->PresContext()->Document();
+  nsIDocument* rootdoc = aDisplayRootFrame->PresContext()->Document();
 
   if (rootdoc) {
     rootdoc->EnumerateSubDocuments(SubDocEnumCb, &modifiedFrames);
@@ -545,16 +551,14 @@ GetModifiedFrames(nsIFrame* aDisplayRootFrame)
  * build is required.
  */
 bool
-RetainedDisplayListBuilder::ComputeRebuildRegion(std::vector<WeakFrame>& aModifiedFrames,
+RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
                                                  nsRect* aOutDirty,
                                                  AnimatedGeometryRoot** aOutModifiedAGR,
                                                  nsTArray<nsIFrame*>* aOutFramesWithProps)
 {
   CRR_LOG("Computing rebuild regions for %d frames:\n", aModifiedFrames.size());
   for (nsIFrame* f : aModifiedFrames) {
-    if (!f) {
-      continue;
-    }
+    MOZ_ASSERT(f);
 
     if (f->HasOverrideDirtyRegion()) {
       aOutFramesWithProps->AppendElement(f);
@@ -685,7 +689,8 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
-  std::vector<WeakFrame> modifiedFrames = GetModifiedFrames(mBuilder.RootReferenceFrame());
+  nsTArray<nsIFrame*> modifiedFrames =
+    GetModifiedFrames(mBuilder.RootReferenceFrame());
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {
@@ -753,7 +758,6 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
       f->SetFrameIsModified(false);
     }
   }
-  modifiedFrames.clear();
 
   // Override dirty regions should only exist during this function. We set them up during
   // ComputeRebuildRegion, and clear them here.
