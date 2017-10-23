@@ -59,6 +59,8 @@ enum SourceMediaStream::TrackCommands : uint32_t {
 
 /**
  * A hash table containing the graph instances, one per document.
+ *
+ * The key is a hash of nsPIDOMWindowInner, see `WindowToHash`.
  */
 static nsDataHashtable<nsUint32HashKey, MediaStreamGraphImpl*> gGraphs;
 
@@ -3522,20 +3524,27 @@ uint32_t WindowToHash(nsPIDOMWindowInner* aWindow)
 }
 
 MediaStreamGraph*
+MediaStreamGraph::GetInstanceIfExists(nsPIDOMWindowInner* aWindow)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Main thread only");
+
+  uint32_t hashkey = WindowToHash(aWindow);
+
+  MediaStreamGraphImpl* graph = nullptr;
+  gGraphs.Get(hashkey, &graph);
+  return graph;
+}
+
+MediaStreamGraph*
 MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequested,
                               nsPIDOMWindowInner* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
-  MediaStreamGraphImpl* graph = nullptr;
+  MediaStreamGraphImpl* graph =
+    static_cast<MediaStreamGraphImpl*>(GetInstanceIfExists(aWindow));
 
-  // We hash the nsPIDOMWindowInner to form a key to the gloabl
-  // MediaStreamGraph hashtable. Effectively, this means there is a graph per
-  // document.
-
-  uint32_t hashkey = WindowToHash(aWindow);
-
-  if (!gGraphs.Get(hashkey, &graph)) {
+  if (!graph) {
     if (!gMediaStreamGraphShutdownBlocker) {
 
       class Blocker : public media::ShutdownBlocker
@@ -3583,6 +3592,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
                                      CubebUtils::PreferredSampleRate(),
                                      mainThread);
 
+    uint32_t hashkey = WindowToHash(aWindow);
     gGraphs.Put(hashkey, graph);
 
     LOG(LogLevel::Debug,
