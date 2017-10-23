@@ -7,7 +7,7 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.PaintedSurface;
 
-abstract class PixelTest extends BaseTest {
+abstract class PixelTest extends OldBaseTest {
     private static final long PAINT_CLEAR_DELAY = 10000; // milliseconds
 
     protected final PaintedSurface loadAndGetPainted(String url) {

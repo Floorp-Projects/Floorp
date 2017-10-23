@@ -6,7 +6,6 @@ package org.mozilla.gecko.tests;
 
 import java.io.File;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.NSSBridge;
 import org.mozilla.gecko.db.BrowserContract;
 
@@ -16,7 +15,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class testPasswordEncrypt extends BaseTest {
+public class testPasswordEncrypt extends OldBaseTest {
     public void testPasswordEncrypt() {
         Context context = (Context)getActivity();
         ContentResolver cr = context.getContentResolver();
