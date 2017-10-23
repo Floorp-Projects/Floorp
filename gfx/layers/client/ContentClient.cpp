@@ -253,7 +253,7 @@ ContentClient::BorrowDrawTargetForPainting(ContentClient::PaintState& aPaintStat
     return nullptr;
   }
 
-  return capturedState->mTargetDual;
+  return capturedState->mTarget;
 }
 
 RefPtr<CapturedPaintState>
@@ -282,7 +282,6 @@ ContentClient::BorrowDrawTargetForRecording(ContentClient::PaintState& aPaintSta
   RefPtr<CapturedPaintState> state =
     new CapturedPaintState(regionToDraw,
                            result,
-                           mBuffer->GetDTBuffer(),
                            mBuffer->GetDTBufferOnWhite(),
                            transform,
                            aPaintState.mMode,

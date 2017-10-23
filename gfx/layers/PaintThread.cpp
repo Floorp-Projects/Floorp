@@ -30,7 +30,7 @@ struct MOZ_STACK_CLASS AutoCapturedPaintSetup
 {
   AutoCapturedPaintSetup(CapturedPaintState* aState, CompositorBridgeChild* aBridge)
   : mState(aState)
-  , mTarget(aState->mTargetDual)
+  , mTarget(aState->mTarget)
   , mRestorePermitsSubpixelAA(mTarget->GetPermitSubpixelAA())
   , mOldTransform(mTarget->GetTransform())
   , mBridge(aBridge)
@@ -186,7 +186,7 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
   MOZ_ASSERT(IsOnPaintThread());
   MOZ_ASSERT(aState);
 
-  DrawTarget* target = aState->mTargetDual;
+  DrawTarget* target = aState->mTarget;
   DrawTargetCapture* capture = aState->mCapture;
 
   AutoCapturedPaintSetup setup(aState, aBridge);
