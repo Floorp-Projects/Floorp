@@ -5,10 +5,7 @@
 package org.mozilla.gecko.activitystream.homepanel.topsites;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.UiThread;
-import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
@@ -16,17 +13,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
-import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
+import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
-import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
@@ -49,42 +41,20 @@ import java.util.concurrent.Future;
     private TopSite topSite;
     private int absolutePosition;
 
-    private final HomePager.OnUrlOpenListener onUrlOpenListener;
-    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
-
-    /* package-local */ TopSitesCard(final FrameLayout card, final HomePager.OnUrlOpenListener onUrlOpenListener, final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    /* package-local */ TopSitesCard(final FrameLayout card, final TopPanelRow.OnCardLongClickListener onCardLongClickListener) {
         super(card);
 
         faviconView = (FaviconView) card.findViewById(R.id.favicon);
         title = (TextView) card.findViewById(R.id.title);
         pinIconView = (ImageView) card.findViewById(R.id.pin_icon);
 
-        this.onUrlOpenListener = onUrlOpenListener;
-        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
-
         card.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                        .forTopSite(topSite)
-                        .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
-
-                ActivityStreamContextMenu.show(itemView.getContext(),
-                        card,
-                        extras,
-                        ActivityStreamContextMenu.MenuMode.TOPSITE,
-                        topSite,
-                        /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
-                        onUrlOpenListener, onUrlOpenInBackgroundListener,
-                        faviconView.getWidth(), faviconView.getHeight());
-
-                Telemetry.sendUIEvent(
-                        TelemetryContract.Event.SHOW,
-                        TelemetryContract.Method.CONTEXT_MENU,
-                        extras.build()
-                );
-
-                return true;
+                if (onCardLongClickListener != null) {
+                    return onCardLongClickListener.onClick(topSite, absolutePosition, faviconView.getWidth(), faviconView.getHeight());
+                }
+                return false;
             }
         });
 

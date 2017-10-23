@@ -18,6 +18,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
+import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
@@ -32,17 +33,17 @@ import java.util.List;
     private int tilesSize;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
-    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
+    private final TopPanelRow.OnCardLongClickListener onCardLongClickListener;
 
-    /* package-local */ TopSitesPageAdapter(Context context, int pageNumber,
-                               HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    /* package-local */ TopSitesPageAdapter(final int pageNumber, final HomePager.OnUrlOpenListener onUrlOpenListener,
+            final TopPanelRow.OnCardLongClickListener onCardLongClickListener) {
         setHasStableIds(true);
 
         this.topSites = new ArrayList<>();
         this.pageNumber = pageNumber;
 
         this.onUrlOpenListener = onUrlOpenListener;
-        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
+        this.onCardLongClickListener = onCardLongClickListener;
     }
 
     /**
@@ -100,7 +101,7 @@ import java.util.List;
     public TopSitesCard onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         final FrameLayout card = (FrameLayout) inflater.inflate(R.layout.activity_stream_topsites_card, parent, false);
-        return new TopSitesCard(card, onUrlOpenListener, onUrlOpenInBackgroundListener);
+        return new TopSitesCard(card, onCardLongClickListener);
     }
 
     @Override

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -33,18 +34,18 @@ public class TopSitesPagerAdapter extends PagerAdapter {
 
     private final Context context;
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
-    private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
+    private final TopPanelRow.OnCardLongClickListener onCardLongClickListener;
 
     private int count = 0;
 
-    public TopSitesPagerAdapter(Context context,
-                                HomePager.OnUrlOpenListener onUrlOpenListener,
-                                HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    public TopSitesPagerAdapter(final Context context,
+                                final HomePager.OnUrlOpenListener onUrlOpenListener,
+                                final TopPanelRow.OnCardLongClickListener onCardLongClickListener) {
         pages = new ArrayList<>(PAGES);
 
         this.context = context;
         this.onUrlOpenListener = onUrlOpenListener;
-        this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
+        this.onCardLongClickListener = onCardLongClickListener;
     }
 
     @Override
@@ -104,8 +105,7 @@ public class TopSitesPagerAdapter extends PagerAdapter {
             for (int i = 0; i < pageDelta; i++) {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
-                final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
-                        context, i, onUrlOpenListener, onUrlOpenInBackgroundListener);
+                final TopSitesPageAdapter adapter = new TopSitesPageAdapter(i, onUrlOpenListener, onCardLongClickListener);
                 page.setAdapter(adapter);
                 RecyclerViewClickSupport.addTo(page).setOnItemClickListener(adapter);
                 pages.add(page);
