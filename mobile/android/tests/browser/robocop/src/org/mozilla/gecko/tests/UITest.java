@@ -21,7 +21,7 @@ import com.robotium.solo.Solo;
 
 /**
  * A base test class for Robocop (UI-centric) tests. This and the related classes attempt to
- * provide a framework to improve upon the issues discovered with the previous BaseTest
+ * provide a framework to improve upon the issues discovered with the previous OldBaseTest
  * implementation by providing simple test authorship and framework extension, consistency,
  * and reliability.
  *

@@ -12,7 +12,7 @@ import org.mozilla.gecko.Actions;
  * - Drag page downwards by 100 pixels into overscroll, verify it snaps back.
  * - Drag page rightwards by 100 pixels into overscroll, verify it snaps back.
  */
-public class testPrefsObserver extends BaseTest {
+public class testPrefsObserver extends OldBaseTest {
     private static final String PREF_TEST_PREF = "robocop.tests.dummy";
 
     private Actions.PrefWaiter prefWaiter;
