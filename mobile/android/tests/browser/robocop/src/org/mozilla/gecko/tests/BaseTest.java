@@ -46,8 +46,11 @@ import com.robotium.solo.Timeout;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
+ *
+ *  This class is <strong>deprecated</strong>: please use {@link UITest} instead.
  */
 @SuppressWarnings("unchecked")
+@Deprecated
 abstract class BaseTest extends BaseRobocopTest {
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 15000;
