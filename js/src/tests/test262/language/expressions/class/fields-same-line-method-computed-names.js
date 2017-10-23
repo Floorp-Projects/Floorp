@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-same-line-method.template
 /*---
 description: Computed property names (field definitions followed by a method in the same line)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

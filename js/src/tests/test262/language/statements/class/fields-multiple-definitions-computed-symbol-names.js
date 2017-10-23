@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-multiple-definitions.template
 /*---
 description: Computed property symbol names (multiple fields definitions)
+esid: prod-FieldDefinition
 features: [Symbol, computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-after-same-line-static-method.template
 /*---
 description: Static Computed property names (field definitions after a static method in the same line)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

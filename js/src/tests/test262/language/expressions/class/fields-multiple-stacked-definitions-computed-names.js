@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-multiple-stacked-definitions.template
 /*---
 description: Computed property names (multiple stacked fields definitions through ASI)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

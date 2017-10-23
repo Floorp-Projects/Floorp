@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-after-same-line-method.template
 /*---
 description: Static literal property names (field definitions after a method in the same line)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

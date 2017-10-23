@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-same-line-method.template
 /*---
 description: Literal property names (field definitions followed by a method in the same line)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

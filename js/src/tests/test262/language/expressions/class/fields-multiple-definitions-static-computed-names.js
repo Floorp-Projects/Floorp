@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-multiple-definitions.template
 /*---
 description: Static Computed property names (multiple fields definitions)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]
