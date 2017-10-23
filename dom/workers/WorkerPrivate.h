@@ -1229,6 +1229,9 @@ public:
   static void
   ReportErrorToConsole(const char* aMessage);
 
+  static void
+  ReportErrorToConsole(const char* aMessage, const nsTArray<nsString>& aParams);
+
   int32_t
   SetTimeout(JSContext* aCx, nsIScriptTimeoutHandler* aHandler,
              int32_t aTimeout, bool aIsInterval,
