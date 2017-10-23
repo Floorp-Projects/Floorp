@@ -2,44 +2,21 @@ NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
+. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/nightly"
+
 # L10n
 ac_add_options --with-l10n-base=../../l10n-central
+
+# Don't autoclobber l10n, as this can lead to missing binaries and broken builds
+# Bug 1283438
+mk_add_options AUTOCLOBBER=
 
 . "$topsrcdir/build/mozconfig.no-compile"
 
 # Global options
 ac_add_options --disable-tests
 
-# Android
-# Warning: Before increasing the with-android-min-sdk value, please note several places in and out
-# of tree have to be changed. Otherwise, places like Treeherder or archive.mozilla.org will
-# advertise a bad API level. This may confuse people. As an example, please look at bug 1384482.
-# If you think you can't handle the whole set of changes, please reach out to the Release
-# Engineering team.
-ac_add_options --with-android-min-sdk=16
-ac_add_options --target=arm-linux-androideabi
-
 ac_add_options --enable-updater
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-
-export MOZILLA_OFFICIAL=1
-
-ac_add_options --with-branding=mobile/android/branding/nightly
-
-ac_add_options --disable-stdcxx-compat
-
-# Don't autoclobber l10n, as this can lead to missing binaries and broken builds
-# Bug 1283438
-mk_add_options AUTOCLOBBER=
-
-# Disable Keyfile Loading (and checks) since l10n doesn't need these keys
-# This overrides the settings in the common android mozconfig
-ac_add_options --without-mozilla-api-keyfile
-ac_add_options --without-google-api-keyfile
-ac_add_options --without-adjust-sdk-keyfile
-ac_add_options --without-leanplum-sdk-keyfile
-ac_add_options --without-pocket-api-keyfile
-# Similarly explicitly disable install tracking for l10n, we'll inherit from en-US
-export MOZ_INSTALL_TRACKING=
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
