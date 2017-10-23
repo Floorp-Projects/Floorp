@@ -541,6 +541,8 @@
                        command="Browser:RestoreLastSession"/>
         <toolbarseparator/>
         <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
+          <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
+          <spacer/>
           <label value="&fullZoom.label;"/>
           <toolbarbutton id="appMenu-zoomReduce-button"
                          class="subviewbutton subviewbutton-iconic"
@@ -565,6 +567,8 @@
         </toolbaritem>
         <toolbarseparator/>
         <toolbaritem id="appMenu-edit-controls" class="toolbaritem-combined-buttons" closemenu="none">
+          <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
+          <spacer/>
           <label value="&editMenu.label;"/>
           <toolbarbutton id="appMenu-cut-button"
                          class="subviewbutton subviewbutton-iconic"
