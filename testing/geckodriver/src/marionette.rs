@@ -663,9 +663,7 @@ impl MarionetteSession {
         }
 
         if let Some(error) = resp.error {
-            let status = self.error_from_string(&error.status);
-
-            return Err(WebDriverError::new(status, error.message));
+            return Err(error.into());
         }
 
         try!(self.update(msg, &resp));
@@ -967,38 +965,6 @@ impl MarionetteSession {
             Ok(new_cookie)
         }).collect::<Result<Vec<_>, _>>()
     }
-
-    pub fn error_from_string(&self, error_code: &str) -> ErrorStatus {
-        match error_code {
-            "element click intercepted" => ErrorStatus::ElementClickIntercepted,
-            "element not interactable" | "element not visible" => ErrorStatus::ElementNotInteractable,
-            "element not selectable" => ErrorStatus::ElementNotSelectable,
-            "insecure certificate" => ErrorStatus::InsecureCertificate,
-            "invalid argument" => ErrorStatus::InvalidArgument,
-            "invalid cookie domain" => ErrorStatus::InvalidCookieDomain,
-            "invalid coordinates" | "invalid element coordinates" => ErrorStatus::InvalidCoordinates,
-            "invalid element state" => ErrorStatus::InvalidElementState,
-            "invalid selector" => ErrorStatus::InvalidSelector,
-            "invalid session id" => ErrorStatus::InvalidSessionId,
-            "javascript error" => ErrorStatus::JavascriptError,
-            "move target out of bounds" => ErrorStatus::MoveTargetOutOfBounds,
-            "no such alert" => ErrorStatus::NoSuchAlert,
-            "no such element" => ErrorStatus::NoSuchElement,
-            "no such frame" => ErrorStatus::NoSuchFrame,
-            "no such window" => ErrorStatus::NoSuchWindow,
-            "script timeout" => ErrorStatus::ScriptTimeout,
-            "session not created" => ErrorStatus::SessionNotCreated,
-            "stale element reference" => ErrorStatus::StaleElementReference,
-            "timeout" => ErrorStatus::Timeout,
-            "unable to capture screen" => ErrorStatus::UnableToCaptureScreen,
-            "unable to set cookie" => ErrorStatus::UnableToSetCookie,
-            "unexpected alert open" => ErrorStatus::UnexpectedAlertOpen,
-            "unknown command" => ErrorStatus::UnknownCommand,
-            "unknown error" => ErrorStatus::UnknownError,
-            "unsupported operation" => ErrorStatus::UnsupportedOperation,
-            _ => ErrorStatus::UnknownError,
-        }
-    }
 }
 
 pub struct MarionetteCommand {
@@ -1296,6 +1262,19 @@ impl ToJson for MarionetteError {
         data.insert("message".into(), self.message.to_json());
         data.insert("stacktrace".into(), self.stacktrace.to_json());
         Json::Object(data)
+    }
+}
+
+impl Into<WebDriverError> for MarionetteError {
+    fn into(self) -> WebDriverError {
+        let status = ErrorStatus::from(self.code);
+        let message = self.message;
+
+        if let Some(stack) = self.stacktrace {
+            WebDriverError::new_with_stack(status, message, stack)
+        } else {
+            WebDriverError::new(status, message)
+        }
     }
 }
 
