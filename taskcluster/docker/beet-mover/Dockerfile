@@ -7,6 +7,7 @@ RUN apt-get -q update \
     python-pip \
     python-virtualenv \
     libffi-dev \
+    liblzma-dev \
     libssl-dev \
     libyaml-dev \
     libmysqlclient-dev \
