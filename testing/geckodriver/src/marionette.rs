@@ -1254,53 +1254,45 @@ impl ToJson for MarionetteResponse {
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct MarionetteError {
-    pub status: String,
+    pub code: String,
     pub message: String,
     pub stacktrace: Option<String>
 }
 
 impl MarionetteError {
-    fn new(status: String, message: String, stacktrace: Option<String>) -> MarionetteError {
-        MarionetteError {
-            status: status,
-            message: message,
-            stacktrace: stacktrace
-        }
-    }
-
     fn from_json(data: &Json) -> WebDriverResult<MarionetteError> {
         if !data.is_object() {
             return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                            "Expected an error object"));
         }
-        let status = try_opt!(
+
+        let code = try_opt!(
             try_opt!(data.find("error"),
                      ErrorStatus::UnknownError,
-                     "Error value has no status").as_string(),
+                     "Error value has no error code").as_string(),
             ErrorStatus::UnknownError,
             "Error status was not a string").into();
-
         let message = try_opt!(
             try_opt!(data.find("message"),
                      ErrorStatus::UnknownError,
                      "Error value has no message").as_string(),
             ErrorStatus::UnknownError,
             "Error message was not a string").into();
-
         let stacktrace = match data.find("stacktrace") {
             None | Some(&Json::Null) => None,
             Some(x) => Some(try_opt!(x.as_string(),
                                      ErrorStatus::UnknownError,
                                      "Error message was not a string").into()),
         };
-        Ok(MarionetteError::new(status, message, stacktrace))
+
+        Ok(MarionetteError { code, message, stacktrace })
     }
 }
 
 impl ToJson for MarionetteError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("status".into(), self.status.to_json());
+        data.insert("error".into(), self.code.to_json());
         data.insert("message".into(), self.message.to_json());
         data.insert("stacktrace".into(), self.stacktrace.to_json());
         Json::Object(data)
