@@ -41,6 +41,13 @@ enum class BoxShadowClipMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class ClipMode {
+  Clip = 0,
+  ClipOut = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class ExtendMode : uint32_t {
   Clamp = 0,
   Repeat = 1,
@@ -450,10 +457,14 @@ struct ComplexClipRegion {
   LayoutRect rect;
   // Border radii of this rectangle.
   BorderRadius radii;
+  // Whether we are clipping inside or outside
+  // the region.
+  ClipMode mode;
 
   bool operator==(const ComplexClipRegion& aOther) const {
     return rect == aOther.rect &&
-           radii == aOther.radii;
+           radii == aOther.radii &&
+           mode == aOther.mode;
   }
 };
 
