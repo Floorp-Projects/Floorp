@@ -4,12 +4,10 @@
 "use strict";
 
 const TEST_URL = "http://example.com/";
-const TEST_URL1 = "https://example.com/otherbrowser";
+const TEST_URL1 = "https://example.com/otherbrowser/";
 
 var PlacesOrganizer;
 var ContentTree;
-var bookmark;
-var bookmarkId;
 
 add_task(async function setup() {
   await PlacesUtils.bookmarks.eraseEverything();
@@ -22,26 +20,26 @@ add_task(async function setup() {
 
   PlacesOrganizer = organizer.PlacesOrganizer;
   ContentTree = organizer.ContentTree;
+});
 
+add_task(async function paste() {
   info("Selecting BookmarksToolbar in the left pane");
   PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
 
-  bookmark = await PlacesUtils.bookmarks.insert({
+  let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: TEST_URL,
     title: "0"
   });
-  bookmarkId = await PlacesUtils.promiseItemId(bookmark.guid);
+  let bookmarkId = await PlacesUtils.promiseItemId(bookmark.guid);
 
   ContentTree.view.selectItems([bookmarkId]);
 
   await promiseClipboard(() => {
-    info("Copying selection");
+    info("Cutting selection");
     ContentTree.view.controller.cut();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
-});
 
-add_task(async function paste() {
   info("Selecting UnfiledBookmarks in the left pane");
   PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
 
@@ -58,6 +56,164 @@ add_task(async function paste() {
                "Should have the correct URL");
 
   await PlacesUtils.bookmarks.remove(tree.children[0].guid);
+});
+
+
+add_task(async function paste_check_indexes() {
+  info("Selecting BookmarksToolbar in the left pane");
+  PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+
+  let copyChildren = [];
+  let targetChildren = [];
+  for (let i = 0; i < 10; i++) {
+    copyChildren.push({
+      url: `${TEST_URL}${i}`,
+      title: `Copy ${i}`
+    });
+    targetChildren.push({
+      url: `${TEST_URL1}${i}`,
+      title: `Target ${i}`
+    });
+  }
+
+  let copyBookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: copyChildren
+  });
+
+  let targetBookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: targetChildren
+  });
+
+  let bookmarkIds = await PlacesUtils.promiseManyItemIds([
+    copyBookmarks[0].guid,
+    copyBookmarks[3].guid,
+    copyBookmarks[6].guid,
+    copyBookmarks[9].guid
+  ]);
+
+  ContentTree.view.selectItems([
+    bookmarkIds.get(copyBookmarks[0].guid),
+    bookmarkIds.get(copyBookmarks[3].guid),
+    bookmarkIds.get(copyBookmarks[6].guid),
+    bookmarkIds.get(copyBookmarks[9].guid),
+  ]);
+
+  await promiseClipboard(() => {
+    info("Cutting multiple selection");
+    ContentTree.view.controller.cut();
+  }, PlacesUtils.TYPE_X_MOZ_PLACE);
+
+  info("Selecting UnfiledBookmarks in the left pane");
+  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+
+  let insertionBookmarkId = await PlacesUtils.promiseItemId(targetBookmarks[4].guid);
+
+  ContentTree.view.selectItems([insertionBookmarkId]);
+
+  info("Pasting clipboard");
+  await ContentTree.view.controller.paste();
+
+  let tree = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.unfiledGuid);
+
+  const expectedBookmarkOrder = [
+    targetBookmarks[0].guid,
+    targetBookmarks[1].guid,
+    targetBookmarks[2].guid,
+    targetBookmarks[3].guid,
+    copyBookmarks[0].guid,
+    copyBookmarks[3].guid,
+    copyBookmarks[6].guid,
+    copyBookmarks[9].guid,
+    targetBookmarks[4].guid,
+    targetBookmarks[5].guid,
+    targetBookmarks[6].guid,
+    targetBookmarks[7].guid,
+    targetBookmarks[8].guid,
+    targetBookmarks[9].guid,
+  ];
+
+  Assert.equal(tree.children.length, expectedBookmarkOrder.length,
+               "Should be the expected amount of bookmarks in the unfiled folder.");
+
+  for (let i = 0; i < expectedBookmarkOrder.length; ++i) {
+    Assert.equal(tree.children[i].guid, expectedBookmarkOrder[i],
+                 `Should be the expected item at index ${i}`);
+  }
+
+  await PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(async function paste_check_indexes_same_folder() {
+  info("Selecting BookmarksToolbar in the left pane");
+  PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+
+  let copyChildren = [];
+  for (let i = 0; i < 10; i++) {
+    copyChildren.push({
+      url: `${TEST_URL}${i}`,
+      title: `Copy ${i}`
+    });
+  }
+
+  let copyBookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: copyChildren
+  });
+
+  let bookmarkIds = await PlacesUtils.promiseManyItemIds([
+    copyBookmarks[0].guid,
+    copyBookmarks[3].guid,
+    copyBookmarks[6].guid,
+    copyBookmarks[9].guid
+  ]);
+
+  ContentTree.view.selectItems([
+    bookmarkIds.get(copyBookmarks[0].guid),
+    bookmarkIds.get(copyBookmarks[3].guid),
+    bookmarkIds.get(copyBookmarks[6].guid),
+    bookmarkIds.get(copyBookmarks[9].guid),
+  ]);
+
+  await promiseClipboard(() => {
+    info("Cutting multiple selection");
+    ContentTree.view.controller.cut();
+  }, PlacesUtils.TYPE_X_MOZ_PLACE);
+
+  let insertionBookmarkId = await PlacesUtils.promiseItemId(copyBookmarks[4].guid);
+
+  ContentTree.view.selectItems([insertionBookmarkId]);
+
+  info("Pasting clipboard");
+  await ContentTree.view.controller.paste();
+
+  let tree = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.toolbarGuid);
+
+  // Although we've inserted at index 4, we've taken out two items below it, so
+  // we effectively insert after the third item.
+  const expectedBookmarkOrder = [
+    copyBookmarks[1].guid,
+    copyBookmarks[2].guid,
+    copyBookmarks[0].guid,
+    copyBookmarks[3].guid,
+    copyBookmarks[6].guid,
+    copyBookmarks[9].guid,
+    copyBookmarks[4].guid,
+    copyBookmarks[5].guid,
+    copyBookmarks[7].guid,
+    copyBookmarks[8].guid,
+  ];
+
+  Assert.equal(tree.children.length, expectedBookmarkOrder.length,
+               "Should be the expected amount of bookmarks in the unfiled folder.");
+
+  for (let i = 0; i < expectedBookmarkOrder.length; ++i) {
+    Assert.equal(tree.children[i].guid, expectedBookmarkOrder[i],
+                 `Should be the expected item at index ${i}`);
+  }
+
+  await PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(async function paste_from_different_instance() {
@@ -86,8 +242,10 @@ add_task(async function paste_from_different_instance() {
 
   Services.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
 
-  info("Pasting clipboard");
+  info("Selecting UnfiledBookmarks in the left pane");
+  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
 
+  info("Pasting clipboard");
   await ContentTree.view.controller.paste();
 
   let tree = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.unfiledGuid);
