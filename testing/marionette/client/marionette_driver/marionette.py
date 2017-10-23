@@ -695,16 +695,15 @@ class Marionette(object):
             sock = None
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(0.5)
                 sock.connect((self.host, self.port))
-                return True
+                data = sock.recv(16)
+                if ":" in data:
+                    return True
             except socket.error:
                 pass
             finally:
                 if sock is not None:
-                    try:
-                        sock.shutdown(socket.SHUT_RDWR)
-                    except:
-                        pass
                     sock.close()
 
             time.sleep(poll_interval)
