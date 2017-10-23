@@ -28,6 +28,7 @@ flake8:
         - testing/xpcshell
         - tools/git
         - tools/lint
+        - tools/mach_commands.py
         - tools/mercurial
         - tools/tryselect
         - toolkit/components/telemetry
