@@ -207,8 +207,16 @@ mozJSComponentLoader::mozJSComponentLoader()
       mLoaderGlobal(dom::RootingCx())
 {
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
+}
 
-    sSelf = this;
+// static
+already_AddRefed<mozJSComponentLoader>
+mozJSComponentLoader::GetOrCreate()
+{
+    if (!sSelf) {
+        sSelf = new mozJSComponentLoader();
+    }
+    return do_AddRef(sSelf);
 }
 
 #define ENSURE_DEP(name) { nsresult rv = Ensure##name(); NS_ENSURE_SUCCESS(rv, rv); }
