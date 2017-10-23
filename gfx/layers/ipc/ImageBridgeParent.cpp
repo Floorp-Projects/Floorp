@@ -66,9 +66,12 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   : mMessageLoop(aLoop)
   , mSetChildThreadPriority(false)
   , mClosed(false)
-  , mCompositorThreadHolder(CompositorThreadHolder::GetSingleton())
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  mCompositorThreadHolder =
+    new CompositorThreadHolderDebug(IsSameProcess() ? "ImageBridgeSame"
+                                                    : "ImageBridge");
 
   // creates the map only if it has not been created already, so it is safe
   // with several bridges
