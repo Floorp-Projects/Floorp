@@ -16,8 +16,8 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.focus.ext.AssetManagerKt;
 import org.mozilla.focus.locale.Locales;
-import org.mozilla.focus.utils.IOUtils;
 import org.mozilla.focus.utils.Settings;
 
 import java.io.IOException;
@@ -118,7 +118,8 @@ public class SearchEngineManager extends BroadcastReceiver {
     private JSONArray loadSearchEngineListForLocale(Context context) throws IOException {
         try {
             final Locale locale = Locale.getDefault();
-            final JSONObject configuration = IOUtils.readAsset(context, "search/search_configuration.json");
+
+            final JSONObject configuration = AssetManagerKt.readJSONObject(context.getAssets(), "search/search_configuration.json");
 
             // Try to find a configuration for the language tag first (de-DE)
             final String languageTag = Locales.getLanguageTag(locale);
