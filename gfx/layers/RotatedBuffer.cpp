@@ -427,29 +427,6 @@ RemoteRotatedBuffer::GetDTBufferOnWhite() const
   return mTargetOnWhite;
 }
 
-already_AddRefed<gfx::SourceSurface>
-DrawTargetRotatedBuffer::GetSourceSurface(ContextSource aSource) const
-{
-  if (aSource == ContextSource::BUFFER_BLACK) {
-    return mTarget->Snapshot();
-  } else {
-    MOZ_ASSERT(aSource == ContextSource::BUFFER_WHITE);
-    return mTargetOnWhite->Snapshot();
-  }
-}
-
-gfx::DrawTarget*
-DrawTargetRotatedBuffer::GetDTBuffer() const
-{
-  return mTarget;
-}
-
-gfx::DrawTarget*
-DrawTargetRotatedBuffer::GetDTBufferOnWhite() const
-{
-  return mTargetOnWhite;
-}
-
 already_AddRefed<SourceSurface>
 SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 {
