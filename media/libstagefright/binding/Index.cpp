@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mp4_demuxer/ByteReader.h"
+#include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -154,7 +154,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
                                  &bytesRead) || bytesRead != cenc.Length()) {
       return nullptr;
     }
-    ByteReader reader(cenc);
+    BufferReader reader(cenc);
     writer->mCrypto.mValid = true;
     writer->mCrypto.mIVSize = ivSize;
 
@@ -167,16 +167,22 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
       return nullptr;
     }
 
-    if (reader.CanRead16()) {
-      uint16_t count = reader.ReadU16();
+    auto res = reader.ReadU16();
+    if (res.isOk()) {
+      uint16_t count = res.unwrap();
 
       if (reader.Remaining() < count * 6) {
         return nullptr;
       }
 
       for (size_t i = 0; i < count; i++) {
-        writer->mCrypto.mPlainSizes.AppendElement(reader.ReadU16());
-        writer->mCrypto.mEncryptedSizes.AppendElement(reader.ReadU32());
+        auto res_16 = reader.ReadU16();
+        auto res_32 = reader.ReadU32();
+        if (res_16.isErr() || res_32.isErr()) {
+          return nullptr;
+        }
+        writer->mCrypto.mPlainSizes.AppendElement(res_16.unwrap());
+        writer->mCrypto.mEncryptedSizes.AppendElement(res_32.unwrap());
       }
     } else {
       // No subsample information means the entire sample is encrypted.
