@@ -422,22 +422,23 @@ class Session(object):
         :param body: Optional body of the HTTP request.
 
         :return: `None` if the HTTP response body was empty, otherwise
-            the result of parsing the body as JSON.
+            the `value` field returned after parsing the response
+            body as JSON.
 
         :raises error.WebDriverException: If the remote end returns
             an error.
         """
         response = self.transport.send(method, url, body)
 
+        if response.status != 200:
+            raise error.from_response(response)
+
         if "value" in response.body:
             value = response.body["value"]
         else:
-            raise error.UnknownErrorException("No 'value' key in response body:\n%s" %
-                                              json.dumps(response.body))
-
-        if response.status != 200:
-            cls = error.get(value.get("error"))
-            raise cls(value.get("message"))
+            raise error.UnknownErrorException(
+                "Expected 'value' key in response body:\n"
+                "%s" % json.dumps(response.body))
 
         return value
 

@@ -1,4 +1,5 @@
 import collections
+import json
 
 
 class WebDriverException(Exception):
@@ -143,6 +144,34 @@ class UnknownMethodException(WebDriverException):
 class UnsupportedOperationException(WebDriverException):
     http_status = 500
     status_code = "unsupported operation"
+
+
+def from_response(response):
+    """
+    Unmarshals an error from a ``Response``'s `body`, failing
+    if not all three required `error`, `message`, and `stacktrace`
+    fields are given.  Defaults to ``WebDriverException`` if `error`
+    is unknown.
+    """
+    if response.status == 200:
+        raise UnknownErrorException(
+            "Response is not an error:\n"
+            "%s" % json.dumps(response.body))
+
+    if "value" in response.body:
+        value = response.body["value"]
+    else:
+        raise UnknownErrorException(
+            "Expected 'value' key in response body:\n"
+            "%s" % json.dumps(response.body))
+
+    # all fields must exist, but stacktrace can be an empty string
+    code = value["error"]
+    message = value["message"]
+    stack = value["stacktrace"] or None
+
+    cls = get(code)
+    return cls(message, stacktrace=stack)
 
 
 def get(error_code):
