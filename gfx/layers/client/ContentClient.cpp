@@ -298,7 +298,7 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
     mTextureClientOnWhite->SyncWithObject(mForwarder->GetSyncObject());
   }
 
-  ContentClient::EndPaint(aReadbackUpdates);
+  ContentClientRemote::EndPaint(aReadbackUpdates);
 }
 
 void

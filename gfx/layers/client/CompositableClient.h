@@ -26,7 +26,7 @@ class ImageContainer;
 class CompositableForwarder;
 class CompositableChild;
 class TextureClientRecycleAllocator;
-class ContentClientRemoteBuffer;
+class ContentClientRemote;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
@@ -164,6 +164,8 @@ public:
    * See AutoRemoveTexture to automatically invoke this at the end of a scope.
    */
   virtual void RemoveTexture(TextureClient* aTexture);
+
+  virtual ContentClientRemote* AsContentClientRemote() { return nullptr; }
 
   void InitIPDL(const CompositableHandle& aHandle);
 
