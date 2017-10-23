@@ -96,7 +96,7 @@ async function checkBookmarkedPageTitle(url, default_title, overridden_title) {
 
   // Here we test that if we provide a url and a title to bookmark, it will use the
   // title provided rather than the one provided by the current page
-  PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, undefined, false, url, overridden_title);
+  PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser, false, url, overridden_title);
   await promiseBookmark;
 
   let bookmark = await PlacesUtils.bookmarks.fetch({url});
@@ -119,7 +119,7 @@ async function checkBookmark(url, expected_title) {
 
   let promiseBookmark = PlacesTestUtils.waitForNotification("onItemAdded",
     (id, parentId, index, type, itemUrl) => itemUrl.equals(gBrowser.selectedBrowser.currentURI));
-  PlacesCommandHook.bookmarkCurrentPage(false);
+  PlacesCommandHook.bookmarkPage(gBrowser.selectedBrowser);
   await promiseBookmark;
 
   let bookmark = await PlacesUtils.bookmarks.fetch({url});

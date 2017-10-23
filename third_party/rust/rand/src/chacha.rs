@@ -26,7 +26,7 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 ///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of
 /// Salsa20*](http://cr.yp.to/chacha.html)
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct ChaChaRng {
     buffer:  [w32; STATE_WORDS], // Internal buffer of output
     state:   [w32; STATE_WORDS], // Initial state

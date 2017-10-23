@@ -25,6 +25,7 @@ import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -102,9 +103,21 @@ public class Tabs implements BundleEventListener {
     private PersistTabsRunnable mPersistTabsRunnable;
     private int mPrivateClearColor;
 
-    public void closeAll() {
+    // Close all tabs including normal and private tabs.
+    @RobocopTarget
+    public void closeAllTabs() {
         for (final Tab tab : mOrder) {
-            Tabs.getInstance().closeTab(tab, false);
+            this.closeTab(tab, false);
+        }
+    }
+
+    // In the normal panel we want to close all tabs (both private and normal),
+    // but in the private panel we only want to close private tabs.
+    public void closeAllPrivateTabs() {
+        for (final Tab tab : mOrder) {
+            if (tab.isPrivate()) {
+                this.closeTab(tab, false);
+            }
         }
     }
 

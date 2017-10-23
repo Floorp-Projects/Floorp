@@ -96,7 +96,7 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
 
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   await new Promise(resolve =>
@@ -422,7 +422,8 @@ add_task(async function test_changePingAfterSubmission() {
                "The payload must not be changed after being submitted.");
 });
 
-add_task(async function test_telemetryEnabledUnexpectedValue() {
+add_task({ skip_if: () => Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)},
+         async function test_telemetryEnabledUnexpectedValue() {
   // Remove the default value for toolkit.telemetry.enabled from the default prefs.
   // Otherwise, we wouldn't be able to set the pref to a string.
   let defaultPrefBranch = Services.prefs.getDefaultBranch(null);

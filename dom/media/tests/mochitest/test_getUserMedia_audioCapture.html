@@ -69,7 +69,7 @@ scriptsReady
     oscThroughMediaElement.connect(msDest);
     oscThroughAudioDestinationNode.connect(ac.destination);
 
-    acTone.mozSrcObject = msDest.stream;
+    acTone.srcObject = msDest.stream;
 
     getSineWaveFile(10000, 10, function(blob) {
       wavtone.src = URL.createObjectURL(blob);

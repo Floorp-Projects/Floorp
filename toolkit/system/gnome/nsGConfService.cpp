@@ -190,7 +190,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     obj->SetData(NS_ConvertUTF8toUTF16((const char*)l->data));
-    items->AppendElement(obj, false);
+    items->AppendElement(obj);
     g_free(l->data);
   }
 

@@ -2428,7 +2428,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
           goto loser;
         }
 
-        rv = certArray->AppendElement(tempCert, false);
+        rv = certArray->AppendElement(tempCert);
         if (NS_FAILED(rv)) {
           goto loser;
         }

@@ -968,7 +968,7 @@ DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
   for (uint32_t i = 0; i < count; i++) {
     nsCOMPtr<nsITransferable> transferable = GetTransferable(i, aLoadContext);
     if (transferable) {
-      transArray->AppendElement(transferable, /*weak =*/ false);
+      transArray->AppendElement(transferable);
     }
   }
 

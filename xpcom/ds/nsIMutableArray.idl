@@ -29,14 +29,8 @@ interface nsIMutableArray : nsIArrayExtensions
      * Append an element at the end of the array.
      *
      * @param element The element to append.
-     * @param weak    Whether or not to store the element using a weak
-     *                reference.
-     * @throws NS_ERROR_FAILURE when a weak reference is requested,
-     *                          but the element does not support
-     *                          nsIWeakReference.
      */
-    void appendElement(in nsISupports element,
-                       [optional] in boolean weak);
+    void appendElement(in nsISupports element);
 
     /**
      * removeElementAt()
@@ -67,13 +61,8 @@ interface nsIMutableArray : nsIArrayExtensions
      *                of the array, the new element is appended.
      *                An index lower than 0 or higher than the current
      *                length of the array is invalid and will be ignored.
-     *
-     * @throws NS_ERROR_FAILURE when a weak reference is requested,
-     *                          but the element does not support
-     *                          nsIWeakReference.
      */
-    void insertElementAt(in nsISupports element, in unsigned long index,
-                         in boolean weak);
+    void insertElementAt(in nsISupports element, in unsigned long index);
 
     /**
      * replaceElementAt()
@@ -90,16 +79,8 @@ interface nsIMutableArray : nsIArrayExtensions
      *                of the array, empty elements are appended followed
      *                by the new element at the specified position.
      *                An index lower than 0 is invalid and will be ignored.
-     *
-     * @param weak    Whether or not to store the new element using a weak
-     *                reference.
-     *
-     * @throws NS_ERROR_FAILURE when a weak reference is requested,
-     *                          but the element does not support
-     *                          nsIWeakReference.
      */
-    void replaceElementAt(in nsISupports element, in unsigned long index,
-                          in boolean weak);
+    void replaceElementAt(in nsISupports element, in unsigned long index);
     
     
     /**

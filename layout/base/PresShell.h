@@ -111,8 +111,14 @@ public:
   virtual void BeginObservingDocument() override;
   virtual void EndObservingDocument() override;
   virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) override;
-  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0, nscoord aOldHeight = 0) override;
-  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight) override;
+  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight,
+                                nscoord aOldWidth = 0, nscoord aOldHeight = 0,
+                                ResizeReflowOptions aOptions =
+                                ResizeReflowOptions::eBSizeExact) override;
+  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
+                                              nscoord aOldWidth, nscoord aOldHeight,
+                                              ResizeReflowOptions aOptions =
+                                              ResizeReflowOptions::eBSizeExact) override;
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   virtual nsCanvasFrame* GetCanvasFrame() const override;
 

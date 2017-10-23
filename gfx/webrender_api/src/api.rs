@@ -873,10 +873,11 @@ pub struct DynamicProperties {
 }
 
 pub trait RenderNotifier: Send {
-    fn new_frame_ready(&mut self);
-    fn new_scroll_frame_ready(&mut self, composite_needed: bool);
-    fn external_event(&mut self, _evt: ExternalEvent) {
+    fn clone(&self) -> Box<RenderNotifier>;
+    fn new_frame_ready(&self);
+    fn new_scroll_frame_ready(&self, composite_needed: bool);
+    fn external_event(&self, _evt: ExternalEvent) {
         unimplemented!()
     }
-    fn shut_down(&mut self) {}
+    fn shut_down(&self) {}
 }

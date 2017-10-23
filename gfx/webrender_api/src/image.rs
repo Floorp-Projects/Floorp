@@ -151,7 +151,7 @@ pub trait BlobImageResources {
 pub trait BlobImageRenderer: Send {
     fn add(&mut self, key: ImageKey, data: BlobImageData, tiling: Option<TileSize>);
 
-    fn update(&mut self, key: ImageKey, data: BlobImageData);
+    fn update(&mut self, key: ImageKey, data: BlobImageData, dirty_rect: Option<DeviceUintRect>);
 
     fn delete(&mut self, key: ImageKey);
 

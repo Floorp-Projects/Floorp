@@ -80,7 +80,7 @@ class PrivateTabsPanel extends RelativeLayout implements CloseAllPanelView {
     }
 
     @Override
-    public void closeAll() {
-        tabsLayout.closeAll();
+    public void onCloseAll() {
+        tabsLayout.onCloseAll();
     }
 }

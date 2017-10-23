@@ -13,8 +13,6 @@ extern crate byteorder;
 #[cfg(feature = "nightly")]
 extern crate core;
 extern crate euclid;
-#[macro_use]
-extern crate heapsize;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
 #[macro_use]

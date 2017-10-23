@@ -330,7 +330,7 @@ ConvertArgsToArray(nsISupports* aArguments)
     do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_TRUE(singletonArray, nullptr);
 
-  nsresult rv = singletonArray->AppendElement(aArguments, /* aWeak = */ false);
+  nsresult rv = singletonArray->AppendElement(aArguments);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return singletonArray.forget();

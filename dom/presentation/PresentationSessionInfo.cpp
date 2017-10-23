@@ -174,7 +174,7 @@ TCPPresentationChannelDescription::GetTcpAddress(nsIArray** aRetVal)
   }
   address->SetData(mAddress);
 
-  array->AppendElement(address, false);
+  array->AppendElement(address);
   array.forget(aRetVal);
 
   return NS_OK;
