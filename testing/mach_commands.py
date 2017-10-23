@@ -256,15 +256,14 @@ class Test(MachCommandBase):
         if not what:
             from tryselect.selectors.syntax import AutoTry
             at = AutoTry(self.topsrcdir, resolver, self._mach_context)
-            changed_files, changed_tags = at.find_paths_and_tags(
-                False, detect_paths=True)
-            if changed_files:
+            res = at.find_paths_and_tags(False, detect_paths=True)
+            if res['paths']:
                 print("Tests will be run based on modifications to the "
-                      "following files:\n\t%s" % "\n\t".join(changed_files))
+                      "following files:\n\t%s" % "\n\t".join(res['paths']))
 
             # TODO this code is redundant with what `find_paths_and_tags` does.
             reader = self.mozbuild_reader(config_mode='empty')
-            files_info = reader.files_info(changed_files)
+            files_info = reader.files_info(res['paths'])
 
             paths, tags, flavors = set(), set(), set()
             for info in files_info.values():

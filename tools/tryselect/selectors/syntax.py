@@ -487,7 +487,11 @@ class AutoTry(object):
                 if tags:
                     print("Pushing tests based on the following tags:\n\t%s" %
                           "\n\t".join(tags))
-        return paths, tags
+
+        return {
+            'paths': paths,
+            'tags': tags,
+        }
 
     def normalise_list(self, items, allow_subitems=False):
         rv = defaultdict(list)
@@ -585,8 +589,10 @@ class AutoTry(object):
                     kwargs[key] = defaults[key]
 
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
-            kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"],
-                                                                       kwargs["detect_paths"])
+            res = self.find_paths_and_tags(kwargs['verbose'],
+                                           kwargs['detect_paths'])
+            kwargs['paths'] = res['paths']
+            kwargs['tags'] = res['tags']
 
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 
