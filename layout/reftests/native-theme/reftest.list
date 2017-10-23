@@ -32,7 +32,7 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 # 403458 is a Windows-only bug
 skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 
-fails-if(styloVsGecko) == 470711-1.xul 470711-1-ref.xul # bug 1408824
+== 470711-1.xul 470711-1-ref.xul
 
 == 482955-1.xul 482955-1-ref.xul
 
@@ -48,8 +48,8 @@ fails-if(Android&&!asyncPan) fuzzy-if(styloVsGecko,0-1,0-1) != 492155-4.html abo
 
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
-fails-if(stylo) skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul # bug 1408811
-fails-if(stylo) skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul # bug 1408811
+skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
+skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
 != resizer-bottomend.xul blank-window.xul
@@ -81,4 +81,4 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
 fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
 
-fails-if(styloVsGecko) == 676387-1.xul 676387-1-ref.xul # bug 1408824
+== 676387-1.xul 676387-1-ref.xul
