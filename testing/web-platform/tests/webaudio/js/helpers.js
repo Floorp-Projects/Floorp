@@ -55,8 +55,8 @@ function compareChannels(buf1, buf2,
 
   assert_equals(difference, 0, "maxDifference: " + maxDifference +
      ", first bad index: " + firstBadIndex + " with test-data offset " +
-     sourceOffset + " and expected-data offset " + destOffset + "; corresponding
-     values " + buf1[firstBadIndex + sourceOffset] + " and " +
+     sourceOffset + " and expected-data offset " + destOffset +
+     "; corresponding values " + buf1[firstBadIndex + sourceOffset] + " and " +
      buf2[firstBadIndex + destOffset] + " --- differences");
 }
 
