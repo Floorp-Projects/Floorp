@@ -57,7 +57,7 @@ class nsHtml5StateSnapshot;
 class nsHtml5Portability
 {
   public:
-    static nsAtom* newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
+    static nsAtom* newLocalNameFromBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner);
     static nsHtml5String newStringFromBuffer(char16_t* buf,
                                              int32_t offset,
                                              int32_t length,
@@ -70,7 +70,7 @@ class nsHtml5Portability
     static jArray<char16_t, int32_t> newCharArrayFromString(
       nsHtml5String string);
     static nsAtom* newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner);
-    static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t offset, int32_t length);
+    static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length);
     static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
       const char* lowerCaseLiteral,
       nsHtml5String string);
