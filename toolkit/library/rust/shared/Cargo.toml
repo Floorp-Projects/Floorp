@@ -8,7 +8,7 @@ description = "Shared Rust code for libxul"
 [dependencies]
 geckoservo = { path = "../../../../servo/ports/geckolib", optional = true }
 mp4parse_capi = { path = "../../../../media/libstagefright/binding/mp4parse_capi" }
-nsstring = { path = "../../../../xpcom/rust/nsstring" }
+nsstring = { path = "../../../../servo/support/gecko/nsstring" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
@@ -33,7 +33,7 @@ servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
 cubeb-remoting = ["cubeb-core", "cubeb", "cubeb-backend", "audioipc-client", "audioipc-server"]
 cubeb_pulse_rust = ["cubeb-pulse"]
-gecko_debug = ["geckoservo/gecko_debug"]
+gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 no-static-ideograph-encoder-tables = ["encoding_c/no-static-ideograph-encoder-tables", "encoding_glue/no-static-ideograph-encoder-tables"]
 
