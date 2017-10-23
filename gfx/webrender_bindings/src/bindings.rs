@@ -1726,7 +1726,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                           color,
                           blur_radius,
                           spread_radius,
-                          border_radius,
+                          BorderRadius::uniform(border_radius),
                           clip_mode);
 }
 
