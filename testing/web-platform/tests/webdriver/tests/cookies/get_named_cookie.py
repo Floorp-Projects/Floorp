@@ -1,7 +1,7 @@
 from tests.support.inline import inline
 from tests.support.fixtures import clear_all_cookies
 
-def test_get_named_cookie(session, url):
+def test_get_named_session_cookie(session, url):
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
     session.execute_script("document.cookie = 'foo=bar'")
@@ -26,7 +26,7 @@ def test_get_named_cookie(session, url):
     assert "httpOnly" in cookie
     assert isinstance(cookie["httpOnly"], bool)
     assert "expiry" in cookie
-    assert isinstance(cookie["expiry"], (int, long))
+    assert cookie.get("expiry") is None
 
     assert cookie["name"] == "foo"
     assert cookie["value"] == "bar"
