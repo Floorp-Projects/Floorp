@@ -158,7 +158,7 @@ public final class ElementName
     }
 
     @Inline static ElementName elementNameByBuffer(@NoLength char[] buf,
-            int offset, int length, Interner interner) {
+            int length, Interner interner) {
         @Unsigned int hash = ElementName.bufToHash(buf, length);
         int[] hashes;
         hashes = ElementName.ELEMENT_HASHES;
@@ -168,7 +168,7 @@ public final class ElementName
         } else {
             ElementName elementName = ElementName.ELEMENT_NAMES[index];
             @Local String name = elementName.name;
-            if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
+            if (!Portability.localEqualsBuffer(name, buf, length)) {
                 return null;
             }
             return elementName;

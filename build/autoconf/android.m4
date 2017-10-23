@@ -263,9 +263,16 @@ case "$target" in
         AC_MSG_ERROR([You must install the Android tools.  Try |mach bootstrap|.  (Looked for $android_tools)])
     fi
 
-    MOZ_PATH_PROG(EMULATOR, emulator, :, [$android_tools])
+    dnl Android Tools 26 changes emulator path.
+    dnl Although android_sdk_root/tools still has emulator command,
+    dnl it doesn't work correctly
+    MOZ_PATH_PROG(EMULATOR, emulator, :, [$android_sdk_root/emulator])
     if test -z "$EMULATOR" -o "$EMULATOR" = ":"; then
-      AC_MSG_ERROR([The program emulator was not found.  Try |mach bootstrap|.])
+        dnl old emulator path until Android Tools 25.x
+        MOZ_PATH_PROG(EMULATOR, emulator, :, [$android_tools])
+        if test -z "$EMULATOR" -o "$EMULATOR" = ":"; then
+            AC_MSG_ERROR([The program emulator was not found.  Try |mach bootstrap|.])
+        fi
     fi
 
     # `compileSdkVersion ANDROID_COMPILE_SDK_VERSION` is Gradle-only,

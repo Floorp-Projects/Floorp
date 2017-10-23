@@ -93,7 +93,6 @@ class nsHtml5AttributeName
     }
 
     inline static nsHtml5AttributeName* nameByBuffer(char16_t* buf,
-                                                     int32_t offset,
                                                      int32_t length,
                                                      nsHtml5AtomTable* interner)
     {
@@ -107,7 +106,7 @@ class nsHtml5AttributeName
       nsHtml5AttributeName* attributeName =
         nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
       nsAtom* name = attributeName->getLocal(0);
-      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+      if (!nsHtml5Portability::localEqualsBuffer(name, buf, length)) {
         return nullptr;
       }
       return attributeName;
