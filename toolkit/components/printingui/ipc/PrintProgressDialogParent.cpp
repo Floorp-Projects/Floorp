@@ -63,7 +63,7 @@ mozilla::ipc::IPCResult
 PrintProgressDialogParent::RecvDocTitleChange(const nsString& newTitle)
 {
   if (mPrintProgressParams) {
-    mPrintProgressParams->SetDocTitle(newTitle.get());
+    mPrintProgressParams->SetDocTitle(newTitle);
   }
   return IPC_OK();
 }
@@ -72,7 +72,7 @@ mozilla::ipc::IPCResult
 PrintProgressDialogParent::RecvDocURLChange(const nsString& newURL)
 {
   if (mPrintProgressParams) {
-    mPrintProgressParams->SetDocURL(newURL.get());
+    mPrintProgressParams->SetDocURL(newURL);
   }
   return IPC_OK();
 }
