@@ -68,6 +68,7 @@ def assert_error(response, error_code):
     assert isinstance(response.body["value"]["message"], basestring)
     assert isinstance(response.body["value"]["stacktrace"], basestring)
 
+
 def assert_success(response, value=None):
     """Verify that the provided wdclient.Response instance described a valid
     error response as defined by `dfn-send-an-error` and the provided error
@@ -77,10 +78,12 @@ def assert_success(response, value=None):
     :param value: Expected value of the response body, if any.
 
     """
-    assert response.status == 200
+    assert response.status == 200, str(response.error)
+
     if value is not None:
         assert response.body["value"] == value
     return response.body.get("value")
+
 
 def assert_dialog_handled(session, expected_text):
     result = session.transport.send("GET",
@@ -96,6 +99,7 @@ def assert_dialog_handled(session, expected_text):
         assert (result.status == 200 and
                 result.body["value"] != expected_text), (
                "Dialog with text '%s' was not handled." % expected_text)
+
 
 def assert_same_element(session, a, b):
     """Verify that two element references describe the same element."""
