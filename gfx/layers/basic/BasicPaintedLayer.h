@@ -7,7 +7,7 @@
 #define GFX_BASICPAINTEDLAYER_H
 
 #include "Layers.h"                     // for PaintedLayer, LayerManager, etc
-#include "RotatedBuffer.h"              // for RotatedBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfxPoint.h"                   // for gfxPoint
