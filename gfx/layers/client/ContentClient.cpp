@@ -163,7 +163,6 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
 
     if (mBuffer->Lock(lockMode)) {
       // Do not modify result.mRegionToDraw or result.mContentType after this call.
-      // Do not modify the back buffer's bufferRect, bufferRotation, or didSelfCopy.
       FinalizeFrame(result.mRegionToDraw);
 
       if (!mBuffer->AdjustTo(dest.mBufferRect,
@@ -834,26 +833,8 @@ ContentClientDoubleBuffered::BeginPaint(PaintedLayer* aLayer,
                                         uint32_t aFlags)
 {
   mIsNewBuffer = false;
-
   if (!mFrontBuffer || !mBuffer) {
     mFrontAndBackBufferDiffer = false;
-  }
-
-  if (mFrontAndBackBufferDiffer) {
-    if (mFrontBuffer->DidSelfCopy()) {
-      // We can't easily draw our front buffer into us, since we're going to be
-      // copying stuff around anyway it's easiest if we just move our situation
-      // to non-rotated while we're at it. If this situation occurs we'll have
-      // hit a self-copy path in PaintThebes before as well anyway.
-      gfx::IntRect backBufferRect = mBuffer->BufferRect();
-      backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
-
-      mBuffer->SetBufferRect(backBufferRect);
-      mBuffer->SetBufferRotation(IntPoint(0,0));
-    } else {
-      mBuffer->SetBufferRect(mFrontBuffer->BufferRect());
-      mBuffer->SetBufferRotation(mFrontBuffer->BufferRotation());
-    }
   }
 
   return ContentClient::BeginPaint(aLayer, aFlags);
@@ -873,11 +854,13 @@ void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
   if (!mFrontAndBackBufferDiffer) {
-    MOZ_ASSERT(!mFrontBuffer->DidSelfCopy(), "If we have to copy the world, then our buffers are different, right?");
+    MOZ_ASSERT(!mFrontBuffer || !mFrontBuffer->DidSelfCopy(),
+               "If the front buffer did a self copy then our front and back buffer must be different.");
     return;
   }
-  MOZ_ASSERT(mFrontBuffer);
-  if (!mFrontBuffer) {
+
+  MOZ_ASSERT(mFrontBuffer && mBuffer);
+  if (!mFrontBuffer || !mBuffer) {
     return;
   }
 
@@ -890,8 +873,20 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 
   mFrontAndBackBufferDiffer = false;
 
+  // Move the back buffer rect and rotation to the front buffer rect and rotation
+  // so that we can update the pixels that changed between frames
+  gfx::IntRect backBufferRect = mBuffer->BufferRect();
+  backBufferRect.MoveTo(mFrontBuffer->BufferRect().TopLeft());
+  mBuffer->SetBufferRect(backBufferRect);
+  mBuffer->SetBufferRotation(mBuffer->BufferRotation());
+
+  // Calculate the region to update
   nsIntRegion updateRegion = mFrontUpdatedRegion;
   if (mFrontBuffer->DidSelfCopy()) {
+    // If we did an unrotate operation on the front buffer we might as well
+    // unrotate as well because we will be reading back the whole front buffer
+    mBuffer->SetBufferRotation(IntPoint(0,0));
+
     mFrontBuffer->ClearDidSelfCopy();
     updateRegion = mBuffer->BufferRect();
   }
@@ -900,10 +895,6 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
   // nothing to sync at all, there is nothing to do and we can go home early.
   updateRegion.Sub(updateRegion, aRegionToDraw);
   if (updateRegion.IsEmpty()) {
-    return;
-  }
-
-  if (!mBuffer) {
     return;
   }
 
