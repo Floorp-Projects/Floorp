@@ -454,7 +454,6 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       continue;
     }
 #endif
-#ifdef XP_UNIX
     if (*curarg == '-') {
       if (*(curarg+1) == '-') ++curarg;
 
@@ -472,7 +471,6 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
       PL_strfree(dup);
       continue;
     }
-#endif
 
     appendArg(curarg);
   }
