@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1409520
+-->
+<html>
+<head>
+  <title>Test for Bug 1409520</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1409520">Mozilla Bug 1409520</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<li contenteditable id="editor">
+  <select><option>option1</option></select>
+</li>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var selection = window.getSelection();
+  var editor = document.getElementById("editor");
+  editor.focus();
+  selection.collapse(editor, 0);
+  document.execCommand('insertText', false, 'A');
+  is(editor.firstChild.textContent, "A",
+     "'A' should be inserted at start of the editor");
+  is(editor.firstChild.nextSibling.tagName, "SELECT",
+     "<select> element shouldn't be removed by inserting 'A'");
+  is(selection.getRangeAt(0).startContainer, editor.firstChild,
+     "Caret should be moved after 'A'");
+  is(selection.getRangeAt(0).startOffset, 1,
+     "Caret should be moved after 'A'");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
