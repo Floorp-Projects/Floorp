@@ -311,8 +311,3 @@ bool gfxPrefs::OverrideBase_WebRender()
 {
   return gfx::gfxVars::UseWebRender();
 }
-
-bool gfxPrefs::OverrideBase_WebRendest()
-{
-  return gfx::gfxVars::UseWebRender() && gfxPrefs::WebRendestEnabled();
-}
