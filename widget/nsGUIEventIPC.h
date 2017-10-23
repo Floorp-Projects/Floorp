@@ -1225,6 +1225,7 @@ struct ParamTraits<mozilla::PanGestureInput>
     WriteParam(aMsg, aParam.mHandledByAPZ);
     WriteParam(aMsg, aParam.mFollowedByMomentum);
     WriteParam(aMsg, aParam.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
+    WriteParam(aMsg, aParam.mOverscrollBehaviorAllowsSwipe);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -1241,7 +1242,8 @@ struct ParamTraits<mozilla::PanGestureInput>
            ReadParam(aMsg, aIter, &aResult->mUserDeltaMultiplierY) &&
            ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
            ReadParam(aMsg, aIter, &aResult->mFollowedByMomentum) &&
-           ReadParam(aMsg, aIter, &aResult->mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection);
+           ReadParam(aMsg, aIter, &aResult->mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection) &&
+           ReadParam(aMsg, aIter, &aResult->mOverscrollBehaviorAllowsSwipe);
   }
 };
 
