@@ -550,6 +550,11 @@ nsSHEntry::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
 NS_IMETHODIMP
 nsSHEntry::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
 {
+  MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
+  if (!aTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
+
   mShared->mTriggeringPrincipal = aTriggeringPrincipal;
   return NS_OK;
 }
