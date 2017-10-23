@@ -127,7 +127,6 @@ public:
 
   inline static nsHtml5ElementName* elementNameByBuffer(
     char16_t* buf,
-    int32_t offset,
     int32_t length,
     nsHtml5AtomTable* interner)
   {
@@ -141,7 +140,7 @@ public:
       nsHtml5ElementName* elementName =
         nsHtml5ElementName::ELEMENT_NAMES[index];
       nsAtom* name = elementName->name;
-      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+      if (!nsHtml5Portability::localEqualsBuffer(name, buf, length)) {
         return nullptr;
       }
       return elementName;

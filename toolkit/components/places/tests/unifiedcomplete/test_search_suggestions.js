@@ -24,6 +24,9 @@ async function cleanUpSuggestions() {
 }
 
 add_task(async function setup() {
+  Services.prefs.setCharPref("browser.urlbar.matchBuckets", "general:5,suggestion:Infinity");
+  Services.prefs.setBoolPref("browser.urlbar.geoSpecificDefaults", false);
+
   // Set up a server that provides some suggestions by appending strings onto
   // the search query.
   let server = makeTestServer(SERVER_PORT);
@@ -559,13 +562,14 @@ add_task(async function mixup_frecency() {
     ],
   });
 
-  Services.prefs.clearUserPref("browser.urlbar.matchBuckets");
+  Services.prefs.setCharPref("browser.urlbar.matchBuckets", "general:5,suggestion:Infinity");
   Services.prefs.clearUserPref("browser.urlbar.matchBucketsSearch");
   await cleanUpSuggestions();
 });
 
 add_task(async function prohibit_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
 
   await check_autocomplete({
     search: "localhost",
@@ -598,7 +602,7 @@ add_task(async function prohibit_suggestions() {
   });
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", true);
   do_register_cleanup(() => {
-    Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
+    Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
   });
   await check_autocomplete({
     search: "localhost",
@@ -642,7 +646,7 @@ add_task(async function prohibit_suggestions() {
 
   // Clear the whitelist for localhost, and try preferring DNS for any single
   // word instead:
-  Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
   Services.prefs.setBoolPref("browser.fixup.dns_first_for_single_words", true);
   do_register_cleanup(() => {
     Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");

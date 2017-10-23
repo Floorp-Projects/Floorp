@@ -641,10 +641,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         return NS_OK;
     }
 
-    const nsCString& asciiUrl = NS_LossyConvertUTF16toASCII(url);
-    AUTO_PROFILER_LABEL_DYNAMIC(
-        "mozJSSubScriptLoader::DoLoadSubScriptWithOptions", OTHER,
-        asciiUrl.get());
+    NS_LossyConvertUTF16toASCII asciiUrl(url);
+    AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+        "mozJSSubScriptLoader::DoLoadSubScriptWithOptions", OTHER, asciiUrl);
 
     // Make sure to explicitly create the URI, since we'll need the
     // canonicalized spec.
