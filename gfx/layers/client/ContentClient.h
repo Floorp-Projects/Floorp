@@ -193,6 +193,7 @@ protected:
     gfxContentType mBufferContentType;
     bool mCanReuseBuffer;
     bool mCanKeepBufferContents;
+    bool mMustRemoveFrontBuffer;
   };
 
   /**
@@ -206,6 +207,8 @@ protected:
   static bool ValidBufferSize(BufferSizePolicy aPolicy,
                               const gfx::IntSize& aBufferSize,
                               const gfx::IntSize& aVisibleBoundsSize);
+
+  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const;
 
   /**
    * Any actions that should be performed at the last moment before we begin
@@ -357,6 +360,8 @@ public:
 
   virtual PaintState BeginPaint(PaintedLayer* aLayer, uint32_t aFlags) override;
 
+  virtual RefPtr<RotatedBuffer> GetFrontBuffer() const override;
+
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
   virtual TextureInfo GetTextureInfo() const override
@@ -365,8 +370,6 @@ public:
   }
 
 private:
-  void EnsureBackBufferIfFrontBuffer();
-
   RefPtr<RemoteRotatedBuffer> mFrontBuffer;
   nsIntRegion mFrontUpdatedRegion;
   bool mFrontAndBackBufferDiffer;
