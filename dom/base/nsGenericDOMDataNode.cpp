@@ -767,12 +767,12 @@ nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
 }
 
 nsIContent *
-nsGenericDOMDataNode::GetXBLInsertionParent() const
+nsGenericDOMDataNode::GetXBLInsertionPoint() const
 {
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     nsDataSlots *slots = GetExistingDataSlots();
     if (slots) {
-      return slots->mXBLInsertionParent;
+      return slots->mXBLInsertionPoint;
     }
   }
 
@@ -780,16 +780,16 @@ nsGenericDOMDataNode::GetXBLInsertionParent() const
 }
 
 void
-nsGenericDOMDataNode::SetXBLInsertionParent(nsIContent* aContent)
+nsGenericDOMDataNode::SetXBLInsertionPoint(nsIContent* aContent)
 {
   if (aContent) {
     nsDataSlots *slots = DataSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    slots->mXBLInsertionParent = aContent;
+    slots->mXBLInsertionPoint = aContent;
   } else {
     nsDataSlots *slots = GetExistingDataSlots();
     if (slots) {
-      slots->mXBLInsertionParent = nullptr;
+      slots->mXBLInsertionPoint = nullptr;
     }
   }
 }
@@ -839,8 +839,8 @@ nsGenericDOMDataNode::nsDataSlots::nsDataSlots()
 void
 nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
-  cb.NoteXPCOMChild(mXBLInsertionParent.get());
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionPoint");
+  cb.NoteXPCOMChild(mXBLInsertionPoint.get());
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mContainingShadow");
   cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
@@ -852,7 +852,7 @@ nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &
 void
 nsGenericDOMDataNode::nsDataSlots::Unlink()
 {
-  mXBLInsertionParent = nullptr;
+  mXBLInsertionPoint = nullptr;
   mContainingShadow = nullptr;
   mAssignedSlot = nullptr;
 }

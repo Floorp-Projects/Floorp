@@ -758,20 +758,26 @@ public:
    */
   virtual void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot) = 0;
 
+  nsIContent* GetXBLInsertionParent() const
+  {
+    nsIContent* ip = GetXBLInsertionPoint();
+    return ip ? ip->GetParent() : nullptr;
+  }
+
   /**
    * Gets the insertion parent element of the XBL binding.
    * The insertion parent is our one true parent in the transformed DOM.
    *
    * @return the insertion parent element.
    */
-  virtual nsIContent *GetXBLInsertionParent() const = 0;
+  virtual nsIContent* GetXBLInsertionPoint() const = 0;
 
   /**
    * Sets the insertion parent element of the XBL binding.
    *
    * @param aContent The insertion parent element.
    */
-  virtual void SetXBLInsertionParent(nsIContent* aContent) = 0;
+  virtual void SetXBLInsertionPoint(nsIContent* aContent) = 0;
 
   /**
    * Same as GetFlattenedTreeParentNode, but returns null if the parent is
