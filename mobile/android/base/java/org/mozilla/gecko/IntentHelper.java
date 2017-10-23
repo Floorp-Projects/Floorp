@@ -239,6 +239,10 @@ public final class IntentHelper implements BundleEventListener {
         return intent;
     }
 
+    public static Intent getAudioCaptureIntent() {
+        return new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+    }
+
     public static Intent getImageCaptureIntent(final File destinationFile) {
         final Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT,

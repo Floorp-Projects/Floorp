@@ -113,13 +113,13 @@ public class FilePicker implements BundleEventListener {
 
     private static String[] getPermissionsForMimeType(final String mimeType) {
         if (mimeType.startsWith("audio/")) {
-            return new String[] { Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_EXTERNAL_STORAGE };
+            return new String[] { Manifest.permission.READ_EXTERNAL_STORAGE };
         } else if (mimeType.startsWith("image/")) {
             return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
         } else if (mimeType.startsWith("video/")) {
             return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
         }
-        return new String[] { Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_EXTERNAL_STORAGE };
+        return new String[] { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
     }
 
     private static boolean hasPermissionsForMimeType(final String mimeType, final String[] availPermissions) {
@@ -160,9 +160,15 @@ public class FilePicker implements BundleEventListener {
         HashMap<String, Intent> intents = new HashMap<String, Intent> ();
 
         if (mimeType.startsWith("audio/")) {
-            // For audio the only intent is the mimetype
             baseIntent = getIntent(mimeType);
             addActivities(baseIntent, baseIntents, null);
+
+            if (mimeType.equals("audio/*") &&
+                    hasPermissionsForMimeType(mimeType, availPermissions)) {
+                // We also add a capture intent
+                Intent intent = IntentHelper.getAudioCaptureIntent();
+                addActivities(intent, intents, baseIntents);
+            }
         } else if (mimeType.startsWith("image/")) {
             baseIntent = getIntent(mimeType);
             addActivities(baseIntent, baseIntents, null);
@@ -190,6 +196,10 @@ public class FilePicker implements BundleEventListener {
             addActivities(baseIntent, baseIntents, null);
 
             Intent intent;
+            if (hasPermissionsForMimeType("audio/*", availPermissions)) {
+                intent = IntentHelper.getAudioCaptureIntent();
+                addActivities(intent, intents, baseIntents);
+            }
             if (hasPermissionsForMimeType("image/*", availPermissions)) {
                 intent = IntentHelper.getImageCaptureIntent(
                         new File(Environment.getExternalStorageDirectory(),
