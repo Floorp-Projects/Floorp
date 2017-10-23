@@ -172,68 +172,64 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
                          !(aFlags & (PAINT_WILL_RESAMPLE | PAINT_NO_ROTATION)) &&
                          !(aLayer->Manager()->AsWebRenderLayerManager());
   bool canDrawRotated = aFlags & PAINT_CAN_DRAW_ROTATED;
-
   IntRect drawBounds = result.mRegionToDraw.GetBounds();
-  RefPtr<RotatedBuffer> newBuffer;
-  uint32_t bufferFlags = 0;
-  if (dest.mBufferMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
-    bufferFlags |= BUFFER_COMPONENT_ALPHA;
-  }
-  if (dest.mCanReuseBuffer && mBuffer) {
+
+  if (dest.mCanReuseBuffer) {
+    MOZ_ASSERT(mBuffer);
+
     if (!mBuffer->AdjustTo(dest.mBufferRect,
                            drawBounds,
                            canHaveRotation,
                            canDrawRotated)) {
       dest.mBufferRect = ComputeBufferRect(dest.mNeededRegion.GetBounds());
-      newBuffer = CreateBuffer(result.mContentType, dest.mBufferRect, bufferFlags);
-
-      if (!newBuffer) {
-        if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
-          gfxCriticalNote << "Failed 1 buffer for "
-                          << dest.mBufferRect.x << ", "
-                          << dest.mBufferRect.y << ", "
-                          << dest.mBufferRect.Width() << ", "
-                          << dest.mBufferRect.Height();
-        }
-        return result;
-      }
-    }
-  } else {
-    // The buffer's not big enough, so allocate a new one
-    newBuffer = CreateBuffer(result.mContentType, dest.mBufferRect, bufferFlags);
-    if (!newBuffer) {
-      if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
-        gfxCriticalNote << "Failed 2 buffer for "
-                        << dest.mBufferRect.x << ", "
-                        << dest.mBufferRect.y << ", "
-                        << dest.mBufferRect.Width() << ", "
-                        << dest.mBufferRect.Height();
-      }
-      return result;
+      dest.mCanReuseBuffer = false;
     }
   }
 
   NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || dest.mBufferRect == dest.mNeededRegion.GetBounds(),
                "If we're resampling, we need to validate the entire buffer");
 
-  // If needed, copy the old buffer over to the new one
-  if (newBuffer) {
+  // The buffer's not big enough, changed content, or we failed to unrotate it,
+  // so we need to allocate a new one and prepare it for drawing
+  if (!dest.mCanReuseBuffer) {
+    uint32_t bufferFlags = 0;
+    if (dest.mBufferMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+      bufferFlags |= BUFFER_COMPONENT_ALPHA;
+    }
+
+    RefPtr<RotatedBuffer> newBuffer = CreateBuffer(result.mContentType,
+                                                   dest.mBufferRect,
+                                                   bufferFlags);
+
+    if (!newBuffer) {
+      if (Factory::ReasonableSurfaceSize(IntSize(dest.mBufferRect.Width(), dest.mBufferRect.Height()))) {
+        gfxCriticalNote << "Failed buffer for "
+                        << dest.mBufferRect.x << ", "
+                        << dest.mBufferRect.y << ", "
+                        << dest.mBufferRect.Width() << ", "
+                        << dest.mBufferRect.Height();
+      }
+      Clear();
+      return result;
+    }
+
     if (!newBuffer->Lock(lockMode)) {
       gfxCriticalNote << "Failed to lock new back buffer.";
       Clear();
       return result;
     }
 
+    // If we have an existing back buffer, copy it into the new back buffer
     if (mBuffer) {
       newBuffer->UpdateDestinationFrom(*mBuffer, newBuffer->BufferRect());
 
       // We are done with the old back buffer now and it is about to be
-      // destroyed, so unlock it.
+      // destroyed, so unlock it
       mBuffer->Unlock();
     }
 
     // Ensure our reference to the front buffer is released
-    // as well as the old back buffer.
+    // as well as the old back buffer
     Clear();
 
     mBuffer = newBuffer;
