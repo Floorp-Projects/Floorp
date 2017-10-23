@@ -187,7 +187,11 @@ class MozbuildFileCommands(MachCommandBase):
             if rev:
                 raise InvalidPathException('cannot use wildcard in version control mode')
 
-            for path, f in reader.finder.find(p):
+            # finder is rooted at / for now.
+            # TODO bug 1171069 tracks changing to relative.
+            search = mozpath.join(self.topsrcdir, p)[1:]
+            for path, f in reader.finder.find(search):
+                path = path[len(self.topsrcdir):]
                 if path not in all_paths_set:
                     all_paths_set.add(path)
                     allpaths.append(path)
