@@ -824,7 +824,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 bool
 nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
 {
-    if (mHostFiltersArray.Length() == 0)
+    if (mHostFiltersArray.Length() == 0 && !mFilterLocalHosts)
         return true;
 
     int32_t port;

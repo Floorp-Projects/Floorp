@@ -32,6 +32,7 @@ this.TelemetryUtils = {
     FirstShutdownPingEnabled: "toolkit.telemetry.firstShutdownPing.enabled",
     HealthPingEnabled: "toolkit.telemetry.healthping.enabled",
     OverrideOfficialCheck: "toolkit.telemetry.send.overrideOfficialCheck",
+    OverridePreRelease: "toolkit.telemetry.testing.overridePreRelease",
     Server: "toolkit.telemetry.server",
     ShutdownPingSender: "toolkit.telemetry.shutdownPingSender.enabled",
     ShutdownPingSenderFirstSession: "toolkit.telemetry.shutdownPingSender.enabledFirstSession",

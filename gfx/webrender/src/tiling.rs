@@ -21,7 +21,7 @@ use prim_store::{DeferredResolve, TextRunMode};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, ClipWorkItem, MaskGeometryKind, MaskSegment};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKey, RenderTaskKind};
-use render_task::{RenderTaskLocation, RenderTaskTree};
+use render_task::{BlurTask, ClearMode, RenderTaskLocation, RenderTaskTree};
 use renderer::BlendMode;
 use renderer::ImageBufferKind;
 use resource_cache::{GlyphFetchResult, ResourceCache};
@@ -427,6 +427,7 @@ impl AlphaRenderItem {
                             {
                                 let sub_index = i as i32;
                                 match *instance_kind {
+                                    BorderCornerInstance::None => {}
                                     BorderCornerInstance::Single => {
                                         batch.push(base_instance.build(
                                             sub_index,
@@ -580,7 +581,7 @@ impl AlphaRenderItem {
                         let textures = BatchTextures::render_target_cache();
                         let kind = BatchKind::Transformable(
                             transform_kind,
-                            TransformBatchKind::CacheImage(picture.kind),
+                            TransformBatchKind::CacheImage(picture.target_kind()),
                         );
                         let key = BatchKey::new(kind, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(key, item_bounding_rect);
@@ -1137,23 +1138,23 @@ impl RenderTarget for ColorRenderTarget {
                     });
                 }
             }
-            RenderTaskKind::VerticalBlur(..) => {
-                // Find the child render task that we are applying
-                // a vertical blur on.
-                self.vertical_blurs.push(BlurInstance {
-                    task_address: render_tasks.get_task_address(task_id),
-                    src_task_address: render_tasks.get_task_address(task.children[0]),
-                    blur_direction: BlurDirection::Vertical,
-                });
+            RenderTaskKind::VerticalBlur(ref info) => {
+                info.add_instances(
+                    &mut self.vertical_blurs,
+                    task_id,
+                    task.children[0],
+                    BlurDirection::Vertical,
+                    render_tasks,
+                );
             }
-            RenderTaskKind::HorizontalBlur(..) => {
-                // Find the child render task that we are applying
-                // a horizontal blur on.
-                self.horizontal_blurs.push(BlurInstance {
-                    task_address: render_tasks.get_task_address(task_id),
-                    src_task_address: render_tasks.get_task_address(task.children[0]),
-                    blur_direction: BlurDirection::Horizontal,
-                });
+            RenderTaskKind::HorizontalBlur(ref info) => {
+                info.add_instances(
+                    &mut self.horizontal_blurs,
+                    task_id,
+                    task.children[0],
+                    BlurDirection::Horizontal,
+                    render_tasks,
+                );
             }
             RenderTaskKind::Picture(ref task_info) => {
                 let prim_metadata = ctx.prim_store.get_metadata(task_info.prim_index);
@@ -1244,6 +1245,7 @@ pub struct AlphaRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
+    pub zero_clears: Vec<RenderTaskId>,
     allocator: TextureAllocator,
 }
 
@@ -1258,6 +1260,7 @@ impl RenderTarget for AlphaRenderTarget {
             rect_cache_prims: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
+            zero_clears: Vec::new(),
             allocator: TextureAllocator::new(size.expect("bug: alpha targets need size")),
         }
     }
@@ -1275,6 +1278,17 @@ impl RenderTarget for AlphaRenderTarget {
         clip_store: &ClipStore,
     ) {
         let task = render_tasks.get(task_id);
+
+        match task.clear_mode {
+            ClearMode::Zero => {
+                self.zero_clears.push(task_id);
+            }
+            ClearMode::One => {}
+            ClearMode::Transparent => {
+                panic!("bug: invalid clear mode for alpha task");
+            }
+        }
+
         match task.kind {
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: add_task() called on invalidated task");
@@ -1283,23 +1297,23 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Readback(..) => {
                 panic!("Should not be added to alpha target!");
             }
-            RenderTaskKind::VerticalBlur(..) => {
-                // Find the child render task that we are applying
-                // a vertical blur on.
-                self.vertical_blurs.push(BlurInstance {
-                    task_address: render_tasks.get_task_address(task_id),
-                    src_task_address: render_tasks.get_task_address(task.children[0]),
-                    blur_direction: BlurDirection::Vertical,
-                });
+            RenderTaskKind::VerticalBlur(ref info) => {
+                info.add_instances(
+                    &mut self.vertical_blurs,
+                    task_id,
+                    task.children[0],
+                    BlurDirection::Vertical,
+                    render_tasks,
+                );
             }
-            RenderTaskKind::HorizontalBlur(..) => {
-                // Find the child render task that we are applying
-                // a horizontal blur on.
-                self.horizontal_blurs.push(BlurInstance {
-                    task_address: render_tasks.get_task_address(task_id),
-                    src_task_address: render_tasks.get_task_address(task.children[0]),
-                    blur_direction: BlurDirection::Horizontal,
-                });
+            RenderTaskKind::HorizontalBlur(ref info) => {
+                info.add_instances(
+                    &mut self.horizontal_blurs,
+                    task_id,
+                    task.children[0],
+                    BlurDirection::Horizontal,
+                    render_tasks,
+                );
             }
             RenderTaskKind::Picture(ref task_info) => {
                 let prim_metadata = ctx.prim_store.get_metadata(task_info.prim_index);
@@ -1871,5 +1885,34 @@ fn resolve_image(
             }
         }
         None => (SourceTexture::Invalid, GpuCacheHandle::new()),
+    }
+}
+
+impl BlurTask {
+    fn add_instances(
+        &self,
+        instances: &mut Vec<BlurInstance>,
+        task_id: RenderTaskId,
+        source_task_id: RenderTaskId,
+        blur_direction: BlurDirection,
+        render_tasks: &RenderTaskTree,
+    ) {
+        let instance = BlurInstance {
+            task_address: render_tasks.get_task_address(task_id),
+            src_task_address: render_tasks.get_task_address(source_task_id),
+            blur_direction,
+            region: LayerRect::zero(),
+        };
+
+        if self.regions.is_empty() {
+            instances.push(instance);
+        } else {
+            for region in &self.regions {
+                instances.push(BlurInstance {
+                    region: *region,
+                    ..instance
+                });
+            }
+        }
     }
 }

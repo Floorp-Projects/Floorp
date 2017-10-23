@@ -844,7 +844,7 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, bool
 		    if (NS_FAILED(idx_rv))
 		    {
     		    // add aSource into list of connections to make
-	    	    mConnectionList->AppendElement(aSource, /*weak =*/ false);
+	    	    mConnectionList->AppendElement(aSource);
 
                 // if we don't have a timer about to fire, create one
                 // which should fire as soon as possible (out-of-band)
@@ -878,9 +878,9 @@ nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode
     }
 
     // order required: parent, prop, then child
-    mNodeList->AppendElement(parent, /*weak =*/ false);
-    mNodeList->AppendElement(prop, /*weak =*/ false);
-    mNodeList->AppendElement(child, /*weak = */ false);
+    mNodeList->AppendElement(parent);
+    mNodeList->AppendElement(prop);
+    mNodeList->AppendElement(child);
 
 	if (!mTimer)
 	{

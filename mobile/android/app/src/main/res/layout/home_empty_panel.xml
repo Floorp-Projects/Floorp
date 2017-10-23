@@ -35,7 +35,7 @@
               android:visibility="gone"
               android:gravity="top|center"
               android:textAppearance="@style/TextAppearance.EmptyHint"
-              android:textColorLink="#FFA62F" />
+              android:textColorLink="#0a84ff" />
     <!-- Empty spacer view -->
     <View android:layout_width="match_parent"
           android:layout_height="0dip"

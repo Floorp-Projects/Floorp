@@ -2300,7 +2300,7 @@ nsCookieService::CreatePurgeList(nsICookie2* aCookie)
 {
   nsCOMPtr<nsIMutableArray> removedList =
     do_CreateInstance(NS_ARRAY_CONTRACTID);
-  removedList->AppendElement(aCookie, false);
+  removedList->AppendElement(aCookie);
   return removedList.forget();
 }
 
@@ -4651,7 +4651,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 
       // check if the cookie has expired
       if (cookie->Expiry() <= currentTime) {
-        removedList->AppendElement(cookie, false);
+        removedList->AppendElement(cookie);
         COOKIE_LOGEVICTED(cookie, "Cookie expired");
 
         // remove from list; do not increment our iterator
@@ -4694,7 +4694,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   purgeList.Sort(CompareCookiesByIndex());
   for (PurgeList::index_type i = purgeList.Length(); i--; ) {
     nsCookie *cookie = purgeList[i].Cookie();
-    removedList->AppendElement(cookie, false);
+    removedList->AppendElement(cookie);
     COOKIE_LOGEVICTED(cookie, "Cookie too old");
 
     RemoveCookieFromList(purgeList[i], paramsArray);

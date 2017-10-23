@@ -6,8 +6,6 @@
 
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsIWeakReference.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 
 // used by IndexOf()
@@ -112,23 +110,9 @@ nsArrayBase::Enumerate(nsISimpleEnumerator** aResult)
 // nsIMutableArray implementation
 
 NS_IMETHODIMP
-nsArrayBase::AppendElement(nsISupports* aElement, bool aWeak)
+nsArrayBase::AppendElement(nsISupports* aElement)
 {
-  bool result;
-  if (aWeak) {
-    nsCOMPtr<nsIWeakReference> elementRef = do_GetWeakReference(aElement);
-    NS_ASSERTION(elementRef,
-                 "AppendElement: Trying to use weak references on an object that doesn't support it");
-    if (!elementRef) {
-      return NS_ERROR_FAILURE;
-    }
-    result = mArray.AppendObject(elementRef);
-  }
-
-  else {
-    // add the object directly
-    result = mArray.AppendObject(aElement);
-  }
+  bool result = mArray.AppendObject(aElement);
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -140,38 +124,16 @@ nsArrayBase::RemoveElementAt(uint32_t aIndex)
 }
 
 NS_IMETHODIMP
-nsArrayBase::InsertElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
+nsArrayBase::InsertElementAt(nsISupports* aElement, uint32_t aIndex)
 {
-  nsCOMPtr<nsISupports> elementRef;
-  if (aWeak) {
-    elementRef = do_GetWeakReference(aElement);
-    NS_ASSERTION(elementRef,
-                 "InsertElementAt: Trying to use weak references on an object that doesn't support it");
-    if (!elementRef) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    elementRef = aElement;
-  }
-  bool result = mArray.InsertObjectAt(elementRef, aIndex);
+  bool result = mArray.InsertObjectAt(aElement, aIndex);
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsArrayBase::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex, bool aWeak)
+nsArrayBase::ReplaceElementAt(nsISupports* aElement, uint32_t aIndex)
 {
-  nsCOMPtr<nsISupports> elementRef;
-  if (aWeak) {
-    elementRef = do_GetWeakReference(aElement);
-    NS_ASSERTION(elementRef,
-                 "ReplaceElementAt: Trying to use weak references on an object that doesn't support it");
-    if (!elementRef) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    elementRef = aElement;
-  }
-  mArray.ReplaceObjectAt(elementRef, aIndex);
+  mArray.ReplaceObjectAt(aElement, aIndex);
   return NS_OK;
 }
 

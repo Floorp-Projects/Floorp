@@ -615,7 +615,7 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     public void closeAllTabs() {
-        Tabs.getInstance().closeAll();
+        Tabs.getInstance().closeAllTabs();
     }
 
     public final void runOnUiThreadSync(Runnable runnable) {

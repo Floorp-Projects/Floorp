@@ -1442,7 +1442,10 @@ photonpanelmultiview .toolbaritem-combined-buttons > label {
   -moz-box-flex: 1;
   font: menu;
   margin: 0;
-  padding-inline-start: 36px; /* 12px toolbarbutton padding + 16px icon + 8px label padding start */
+}
+
+photonpanelmultiview .toolbaritem-combined-buttons > spacer {
+  width: 36px; /* 12px toolbarbutton padding + 16px icon + 8px label padding start */
 }
 
 photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {

@@ -397,7 +397,7 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
     mPendingListenerChangesSet.LookupForAdd(aTarget).OrInsert(
       [this, aTarget] () {
         EventListenerChange* c = new EventListenerChange(aTarget);
-        mPendingListenerChanges->AppendElement(c, false);
+        mPendingListenerChanges->AppendElement(c);
         return c;
       });
   changes->AddChangedListenerName(aName);

@@ -225,17 +225,6 @@ public abstract class TabsLayout extends RecyclerView
         }
     }
 
-    protected void closeAllTabs() {
-        final Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
-        for (final Tab tab : tabs) {
-            // In the normal panel we want to close all tabs (both private and normal),
-            // but in the private panel we only want to close private tabs.
-            if (!isPrivate || tab.isPrivate()) {
-                Tabs.getInstance().closeTab(tab, false);
-            }
-        }
-    }
-
     @Override
     public void onChildAttachedToWindow(View child) {
         // Make sure we reset any attributes that may have been animated in this child's previous
@@ -258,5 +247,9 @@ public abstract class TabsLayout extends RecyclerView
     }
 
     @Override
-    abstract public void closeAll();
+    abstract public void onCloseAll();
+
+    protected boolean isNormal() {
+        return !isPrivate;
+    }
 }

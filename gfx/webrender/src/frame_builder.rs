@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode, BuiltDisplayList};
-use api::{ComplexClipRegion, ClipAndScrollInfo, ClipId, ColorF};
+use api::{ClipMode, ComplexClipRegion, ClipAndScrollInfo, ClipId, ColorF, LayoutSize};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExtendMode, FilterOp, FontInstance, FontRenderMode};
 use api::{GlyphInstance, GlyphOptions, GradientStop, HitTestFlags, HitTestItem, HitTestResult};
@@ -14,7 +14,7 @@ use api::{ScrollSensitivity, Shadow, TileOffset, TransformStyle};
 use api::{WorldPixel, WorldPoint, YuvColorSpace, YuvData, device_length};
 use app_units::Au;
 use border::ImageBorderSegment;
-use clip::{ClipMode, ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
+use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
 use clip_scroll_node::{ClipInfo, ClipScrollNode, NodeType};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId};
 use euclid::{SideOffsets2D, TypedTransform3D, vec2, vec3};
@@ -29,7 +29,7 @@ use prim_store::{PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_task::{AlphaRenderItem, ClipChain, RenderTask, RenderTaskId, RenderTaskLocation};
+use render_task::{AlphaRenderItem, ClearMode, ClipChain, RenderTask, RenderTaskId, RenderTaskLocation};
 use render_task::RenderTaskTree;
 use resource_cache::ResourceCache;
 use scene::ScenePipeline;
@@ -39,6 +39,9 @@ use tiling::{ContextIsolation, RenderTargetKind, StackingContextIndex};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
 use tiling::{RenderTargetContext, ScrollbarPrimitive, StackingContext};
 use util::{self, pack_as_float, RectHelpers, recycle_vec};
+
+// The blur shader samples BLUR_SAMPLE_SCALE * blur_radius surrounding texels.
+const BLUR_SAMPLE_SCALE: f32 = 3.0;
 
 /// Construct a polygon from stacking context boundaries.
 /// `anchor` here is an index that's going to be preserved in all the
@@ -242,7 +245,7 @@ impl FrameBuilder {
             clip_sources.push(ClipSource::RoundedRectangle(
                 region.rect,
                 region.radii,
-                ClipMode::Clip,
+                region.mode,
             ));
         }
 
@@ -557,7 +560,7 @@ impl FrameBuilder {
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
     ) {
-        let prim = PicturePrimitive::new_shadow(shadow, RenderTargetKind::Color);
+        let prim = PicturePrimitive::new_text_shadow(shadow);
 
         // Create an empty shadow primitive. Insert it into
         // the draw lists immediately so that it will be drawn
@@ -587,7 +590,7 @@ impl FrameBuilder {
                 // is then used when blitting the shadow to the final location.
                 let metadata = &mut self.prim_store.cpu_metadata[prim_index.0];
                 let prim = &self.prim_store.cpu_pictures[metadata.cpu_prim_index.0];
-                let shadow = prim.as_shadow();
+                let shadow = prim.as_text_shadow();
 
                 metadata.local_rect = metadata.local_rect.translate(&shadow.offset);
             }
@@ -676,7 +679,7 @@ impl FrameBuilder {
         for (idx, &(shadow_prim_index, _)) in self.shadow_prim_stack.iter().enumerate() {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
             let picture = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let shadow = picture.as_shadow();
+            let shadow = picture.as_text_shadow();
             if shadow.blur_radius == 0.0 {
                 fast_shadow_prims.push((idx, shadow.clone()));
             }
@@ -719,7 +722,7 @@ impl FrameBuilder {
             debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::Picture);
             let picture =
                 &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let blur_radius = picture.as_shadow().blur_radius;
+            let blur_radius = picture.as_text_shadow().blur_radius;
 
             // Only run real blurs here (fast path zero blurs are handled above).
             if blur_radius > 0.0 {
@@ -1183,7 +1186,7 @@ impl FrameBuilder {
         for (idx, &(shadow_prim_index, _)) in self.shadow_prim_stack.iter().enumerate() {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
             let picture_prim = &self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
-            let shadow = picture_prim.as_shadow();
+            let shadow = picture_prim.as_text_shadow();
             if shadow.blur_radius == 0.0 {
                 let mut text_prim = prim.clone();
                 text_prim.font.color = shadow.color.into();
@@ -1238,7 +1241,7 @@ impl FrameBuilder {
                 &mut self.prim_store.cpu_pictures[shadow_metadata.cpu_prim_index.0];
 
             // Only run real blurs here (fast path zero blurs are handled above).
-            let blur_radius = picture_prim.as_shadow().blur_radius;
+            let blur_radius = picture_prim.as_text_shadow().blur_radius;
             if blur_radius > 0.0 {
                 let shadow_rect = rect.inflate(
                     blur_radius,
@@ -1258,7 +1261,7 @@ impl FrameBuilder {
         color: &ColorF,
         blur_radius: f32,
         spread_radius: f32,
-        border_radius: f32,
+        border_radius: BorderRadius,
         clip_mode: BoxShadowClipMode,
     ) {
         if color.a == 0.0 {
@@ -1274,15 +1277,11 @@ impl FrameBuilder {
             }
         };
 
-        // Adjust the shadow box radius as per:
-        // https://drafts.csswg.org/css-backgrounds-3/#shadow-shape
-        let sharpness_scale = if border_radius < spread_radius {
-            let r = border_radius / spread_amount;
-            1.0 + (r - 1.0) * (r - 1.0) * (r - 1.0)
-        } else {
-            1.0
-        };
-        let shadow_radius = (border_radius + spread_amount * sharpness_scale).max(0.0);
+        let shadow_radius = adjust_border_radius_for_box_shadow(
+            border_radius,
+            spread_amount,
+            spread_radius
+        );
         let shadow_rect = prim_info.rect
                                    .translate(box_offset)
                                    .inflate(spread_amount, spread_amount);
@@ -1295,7 +1294,7 @@ impl FrameBuilder {
                     // TODO(gw): Add a fast path for ClipOut + zero border radius!
                     clips.push(ClipSource::RoundedRectangle(
                         prim_info.rect,
-                        BorderRadius::uniform(border_radius),
+                        border_radius,
                         ClipMode::ClipOut
                     ));
 
@@ -1303,14 +1302,18 @@ impl FrameBuilder {
                         shadow_rect,
                         LocalClip::RoundedRect(
                             shadow_rect,
-                            ComplexClipRegion::new(shadow_rect, BorderRadius::uniform(shadow_radius)),
+                            ComplexClipRegion::new(
+                                shadow_rect,
+                                shadow_radius,
+                                ClipMode::Clip,
+                            ),
                         ),
                     )
                 }
                 BoxShadowClipMode::Inset => {
                     clips.push(ClipSource::RoundedRectangle(
                         shadow_rect,
-                        BorderRadius::uniform(shadow_radius),
+                        shadow_radius,
                         ClipMode::ClipOut
                     ));
 
@@ -1318,7 +1321,11 @@ impl FrameBuilder {
                         prim_info.rect,
                         LocalClip::RoundedRect(
                             prim_info.rect,
-                            ComplexClipRegion::new(prim_info.rect, BorderRadius::uniform(border_radius)),
+                            ComplexClipRegion::new(
+                                prim_info.rect,
+                                border_radius,
+                                ClipMode::Clip
+                            ),
                         ),
                     )
                 }
@@ -1333,17 +1340,11 @@ impl FrameBuilder {
                 }),
             );
         } else {
-            let shadow = Shadow {
-                blur_radius,
-                color: *color,
-                offset: LayerVector2D::zero(),
-            };
-
             let blur_offset = 2.0 * blur_radius;
             let mut extra_clips = vec![];
-            let mut pic_prim = PicturePrimitive::new_shadow(shadow, RenderTargetKind::Alpha);
+            let mut blur_regions = vec![];
 
-            let pic_info = match clip_mode {
+            match clip_mode {
                 BoxShadowClipMode::Outset => {
                     let brush_prim = BrushPrimitive {
                         clip_mode: ClipMode::Clip,
@@ -1362,16 +1363,72 @@ impl FrameBuilder {
                         PrimitiveContainer::Brush(brush_prim),
                     );
 
+                    let pic_rect = shadow_rect.inflate(blur_offset, blur_offset);
+                    let blur_range = BLUR_SAMPLE_SCALE * blur_radius;
+
+                    let size = pic_rect.size;
+
+                    let tl = LayerSize::new(
+                        blur_radius.max(border_radius.top_left.width),
+                        blur_radius.max(border_radius.top_left.height)
+                    ) * BLUR_SAMPLE_SCALE;
+                    let tr = LayerSize::new(
+                        blur_radius.max(border_radius.top_right.width),
+                        blur_radius.max(border_radius.top_right.height)
+                    ) * BLUR_SAMPLE_SCALE;
+                    let br = LayerSize::new(
+                        blur_radius.max(border_radius.bottom_right.width),
+                        blur_radius.max(border_radius.bottom_right.height)
+                    ) * BLUR_SAMPLE_SCALE;
+                    let bl = LayerSize::new(
+                        blur_radius.max(border_radius.bottom_left.width),
+                        blur_radius.max(border_radius.bottom_left.height)
+                    ) * BLUR_SAMPLE_SCALE;
+
+                    let max_width = tl.width.max(tr.width.max(bl.width.max(br.width)));
+                    let max_height = tl.height.max(tr.height.max(bl.height.max(br.height)));
+
+                    // Apply a conservative test that if any of the blur regions below
+                    // will overlap, we won't bother applying the region optimization
+                    // and will just blur the entire thing. This should only happen
+                    // in rare cases, where either the blur radius or border radius
+                    // is very large, in which case there's no real point in trying
+                    // to only blur a small region anyway.
+                    if max_width < 0.5 * size.width && max_height < 0.5 * size.height {
+                        blur_regions.push(LayerRect::from_floats(0.0, 0.0, tl.width, tl.height));
+                        blur_regions.push(LayerRect::from_floats(size.width - tr.width, 0.0, size.width, tr.height));
+                        blur_regions.push(LayerRect::from_floats(size.width - br.width, size.height - br.height, size.width, size.height));
+                        blur_regions.push(LayerRect::from_floats(0.0, size.height - bl.height, bl.width, size.height));
+
+                        blur_regions.push(LayerRect::from_floats(0.0, tl.height, blur_range, size.height - bl.height));
+                        blur_regions.push(LayerRect::from_floats(size.width - blur_range, tr.height, size.width, size.height - br.height));
+                        blur_regions.push(LayerRect::from_floats(tl.width, 0.0, size.width - tr.width, blur_range));
+                        blur_regions.push(LayerRect::from_floats(bl.width, size.height - blur_range, size.width - br.width, size.height));
+                    }
+
+                    let mut pic_prim = PicturePrimitive::new_box_shadow(
+                        blur_radius,
+                        *color,
+                        blur_regions,
+                        BoxShadowClipMode::Outset,
+                    );
+
                     pic_prim.add_primitive(brush_prim_index, clip_and_scroll);
 
                     extra_clips.push(ClipSource::RoundedRectangle(
                         prim_info.rect,
-                        BorderRadius::uniform(border_radius),
+                        border_radius,
                         ClipMode::ClipOut,
                     ));
 
-                    let pic_rect = shadow_rect.inflate(blur_offset, blur_offset);
-                    LayerPrimitiveInfo::new(pic_rect)
+                    let pic_info = LayerPrimitiveInfo::new(pic_rect);
+
+                    self.add_primitive(
+                        clip_and_scroll,
+                        &pic_info,
+                        extra_clips,
+                        PrimitiveContainer::Picture(pic_prim),
+                    );
                 }
                 BoxShadowClipMode::Inset => {
                     let brush_prim = BrushPrimitive {
@@ -1392,25 +1449,35 @@ impl FrameBuilder {
                         PrimitiveContainer::Brush(brush_prim),
                     );
 
+                    let pic_rect = prim_info.rect.inflate(blur_offset, blur_offset);
+
+                    // TODO(gw): Apply minimal blur regions for inset box shadows.
+
+                    let mut pic_prim = PicturePrimitive::new_box_shadow(
+                        blur_radius,
+                        *color,
+                        blur_regions,
+                        BoxShadowClipMode::Inset,
+                    );
+
                     pic_prim.add_primitive(brush_prim_index, clip_and_scroll);
 
                     extra_clips.push(ClipSource::RoundedRectangle(
                         prim_info.rect,
-                        BorderRadius::uniform(border_radius),
+                        border_radius,
                         ClipMode::Clip,
                     ));
 
-                    let pic_rect = prim_info.rect.inflate(blur_offset, blur_offset);
-                    LayerPrimitiveInfo::with_clip_rect(pic_rect, prim_info.rect)
-                }
-            };
+                    let pic_info = LayerPrimitiveInfo::with_clip_rect(pic_rect, prim_info.rect);
 
-            self.add_primitive(
-                clip_and_scroll,
-                &pic_info,
-                extra_clips,
-                PrimitiveContainer::Picture(pic_prim),
-            );
+                    self.add_primitive(
+                        clip_and_scroll,
+                        &pic_info,
+                        extra_clips,
+                        PrimitiveContainer::Picture(pic_prim),
+                    );
+                }
+            }
         }
     }
 
@@ -1770,8 +1837,9 @@ impl FrameBuilder {
 
             let transform = scroll_node.world_content_transform;
             if !packed_layer.set_transform(transform) {
+                group.screen_bounding_rect = None;
                 debug!("\t\tUnable to set transform {:?}", transform);
-                return;
+                continue;
             }
 
             // Here we move the viewport rectangle into the coordinate system
@@ -2045,6 +2113,8 @@ impl FrameBuilder {
                                     current_task_id,
                                     render_tasks,
                                     RenderTargetKind::Color,
+                                    &[],
+                                    ClearMode::Transparent,
                                 );
                                 let blur_render_task_id = render_tasks.add(blur_render_task);
                                 let item = AlphaRenderItem::HardwareComposite(
@@ -2325,4 +2395,68 @@ impl FrameBuilder {
             gpu_cache_updates: Some(gpu_cache_updates),
         }
     }
+}
+
+fn adjust_border_radius_for_box_shadow(
+    radius: BorderRadius,
+    spread_amount: f32,
+    spread_radius: f32,
+) -> BorderRadius {
+    BorderRadius {
+        top_left: adjust_corner_for_box_shadow(
+            radius.top_left,
+            spread_radius,
+            spread_amount,
+        ),
+        top_right: adjust_corner_for_box_shadow(
+            radius.top_right,
+            spread_radius,
+            spread_amount,
+        ),
+        bottom_right: adjust_corner_for_box_shadow(
+            radius.bottom_right,
+            spread_radius,
+            spread_amount,
+        ),
+        bottom_left: adjust_corner_for_box_shadow(
+            radius.bottom_left,
+            spread_radius,
+            spread_amount,
+        ),
+    }
+}
+
+fn adjust_corner_for_box_shadow(
+    corner: LayoutSize,
+    spread_amount: f32,
+    spread_radius: f32,
+) -> LayoutSize {
+    LayoutSize::new(
+        adjust_radius_for_box_shadow(
+            corner.width,
+            spread_radius,
+            spread_amount
+        ),
+        adjust_radius_for_box_shadow(
+            corner.height,
+            spread_radius,
+            spread_amount
+        ),
+    )
+}
+
+fn adjust_radius_for_box_shadow(
+    border_radius: f32,
+    spread_amount: f32,
+    spread_radius: f32,
+) -> f32 {
+    // Adjust the shadow box radius as per:
+    // https://drafts.csswg.org/css-backgrounds-3/#shadow-shape
+    let sharpness_scale = if border_radius < spread_radius {
+        let r = border_radius / spread_amount;
+        1.0 + (r - 1.0) * (r - 1.0) * (r - 1.0)
+    } else {
+        1.0
+    };
+    (border_radius + spread_amount * sharpness_scale).max(0.0)
 }

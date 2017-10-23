@@ -3508,37 +3508,16 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
     prefWidth = aMaxWidth;
   }
 
-  nsAutoPtr<nsPresState> frameState;
-  nsIScrollableFrame *scrollFrame = presShell->GetRootScrollFrameAsScrollable();
-  nsIStatefulFrame *statefulFrame = do_QueryFrame(scrollFrame);
-  if (statefulFrame) {
-    statefulFrame->SaveState(getter_Transfers(frameState));
-  }
-
-  nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
+  nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight, 0, 0,
+                                        nsIPresShell::ResizeReflowOptions::eBSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsPresContext> presContext;
   GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  // so how big is it?
-  nsRect shellArea = presContext->GetVisibleArea();
-  if (shellArea.height > aMaxHeight) {
-    // Reflow to max height if we would up too tall.
-    rv = presShell->ResizeReflow(prefWidth, aMaxHeight);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    shellArea = presContext->GetVisibleArea();
-
-    // the first reflow reset our scroll, now set it back
-    if (frameState && presShell->GetRootScrollFrameAsScrollable() == scrollFrame) {
-      statefulFrame->RestoreState(frameState);
-      scrollFrame->ScrollToRestoredPosition();
-    }
-  }
-
   // Protect against bogus returns here
+  nsRect shellArea = presContext->GetVisibleArea();
   NS_ENSURE_TRUE(shellArea.width != NS_UNCONSTRAINEDSIZE &&
                  shellArea.height != NS_UNCONSTRAINEDSIZE,
                  NS_ERROR_FAILURE);

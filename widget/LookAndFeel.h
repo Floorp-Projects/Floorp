@@ -405,7 +405,31 @@ public:
       * on open.
       */
      eIntID_ContextMenuOffsetVertical,
-     eIntID_ContextMenuOffsetHorizontal
+     eIntID_ContextMenuOffsetHorizontal,
+
+     /*
+      * A boolean value indicating whether client-side decorations are
+      * supported by the user's GTK version.
+      */
+     eIntID_GTKCSDAvailable,
+
+     /*
+      * A boolean value indicating whether client-side decorations should
+      * contain a minimize button.
+      */
+     eIntID_GTKCSDMinimizeButton,
+
+     /*
+      * A boolean value indicating whether client-side decorations should
+      * contain a maximize button.
+      */
+     eIntID_GTKCSDMaximizeButton,
+
+     /*
+      * A boolean value indicating whether client-side decorations should
+      * contain a close button.
+      */
+     eIntID_GTKCSDCloseButton
   };
 
   /**

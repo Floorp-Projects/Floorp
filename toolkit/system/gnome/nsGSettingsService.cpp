@@ -283,7 +283,7 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
     nsCOMPtr<nsISupportsCString> obj(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
     if (obj) {
       obj->SetData(nsDependentCString(*p_gs_strings));
-      items->AppendElement(obj, false);
+      items->AppendElement(obj);
     }
     p_gs_strings++;
   }

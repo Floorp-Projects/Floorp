@@ -4,6 +4,7 @@
 let { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = Cu.import("resource://gre/modules/TelemetryUtils.jsm", {});
 
 function ensureProfilerInitialized() {
   // Starting and stopping the profiler with the "stackwalk" flag will cause the
@@ -73,6 +74,7 @@ add_task(async function test_BHRObserver() {
     while ((Date.now() - startTime) < 1000);
   });
 
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   let childDone = run_test_in_child("child_cause_hang.js");
 
   // Now we wait for the hangs to have their bhr-thread-hang message fired for
