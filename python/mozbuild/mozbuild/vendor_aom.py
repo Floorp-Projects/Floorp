@@ -192,7 +192,7 @@ Please check manually and update the vendor script.
         self.log(logging.INFO, 'rm_confg_dir', {}, 'rm -rf %s' % config_dir)
         mozfile.remove(config_dir)
         self.run_process(args=['./generate_sources_mozbuild.sh'],
-                         cwd=target)
+                         cwd=target, log_name='generate_sources')
 
     def check_modified_files(self):
         '''
