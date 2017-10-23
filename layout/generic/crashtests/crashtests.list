@@ -575,7 +575,7 @@ load 1003441.xul
 pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-asserts(543) load 1015844.html # bug 574889, bug 1374479
+asserts(543) asserts-if(stylo&&Android,274) load 1015844.html # bug 574889, bug 1374479
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html
@@ -639,8 +639,8 @@ load text-overflow-iframe.html
 asserts(1-4) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
 load 1271765.html
-asserts(2) load 1272983-1.html # bug 586628
-asserts(2) load 1272983-2.html # bug 586628
+asserts(2) asserts-if(stylo&&Android,1) load 1272983-1.html # bug 586628
+asserts(2) asserts-if(stylo&&Android,1) load 1272983-2.html # bug 586628
 load 1275059.html
 load 1278007.html
 load 1278080.html

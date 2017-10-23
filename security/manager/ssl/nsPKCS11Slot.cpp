@@ -355,7 +355,7 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
   for (int i = 0; i < mModule->slotCount; i++) {
     if (mModule->slots[i]) {
       nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(mModule->slots[i]);
-      rv = array->AppendElement(slot, false);
+      rv = array->AppendElement(slot);
       if (NS_FAILED(rv)) {
         return rv;
       }

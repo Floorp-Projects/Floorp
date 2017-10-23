@@ -1952,7 +1952,7 @@ nsComponentManagerImpl::GetManifestLocations(nsIArray** aLocations)
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), uriString);
     if (NS_SUCCEEDED(rv)) {
-      locations->AppendElement(uri, false);
+      locations->AppendElement(uri);
     }
   }
 

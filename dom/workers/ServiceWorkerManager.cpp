@@ -3734,7 +3734,7 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
         continue;
       }
 
-      array->AppendElement(reg, false);
+      array->AppendElement(reg);
     }
   }
 

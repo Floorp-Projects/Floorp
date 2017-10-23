@@ -6,7 +6,7 @@ A Rust library for random number generators and other randomness functionality.
 [![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
 [![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
 
-[Documentation](https://doc.rust-lang.org/rand)
+[Documentation](https://docs.rs/rand)
 
 ## Usage
 
@@ -50,3 +50,38 @@ let mut rng = rand::ChaChaRng::new_unseeded();
 println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
 ```
 
+# `derive(Rand)`
+
+You can derive the `Rand` trait for your custom type via the `#[derive(Rand)]`
+directive. To use this first add this to your Cargo.toml:
+
+```toml
+rand = "0.3"
+rand_derive = "0.3"
+```
+
+Next in your crate:
+
+```rust
+extern crate rand;
+#[macro_use]
+extern crate rand_derive;
+
+#[derive(Rand, Debug)]
+struct MyStruct {
+    a: i32,
+    b: u32,
+}
+
+fn main() {
+    println!("{:?}", rand::random::<MyStruct>());
+}
+```
+
+
+# License
+
+`rand` is primarily distributed under the terms of both the MIT
+license and the Apache License (Version 2.0).
+
+See LICENSE-APACHE, and LICENSE-MIT for details.

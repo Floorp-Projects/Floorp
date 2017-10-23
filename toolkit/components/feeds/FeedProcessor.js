@@ -1583,7 +1583,7 @@ FeedProcessor.prototype = {
 
     // If it's an array, re-set the last element
     if (isArray)
-      container.replaceElementAt(element, container.length - 1, false);
+      container.replaceElementAt(element, container.length - 1);
   },
 
   _prefixForNS: function FP_prefixForNS(uri) {

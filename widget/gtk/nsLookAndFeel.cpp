@@ -639,6 +639,22 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ContextMenuOffsetHorizontal:
         aResult = 2;
         break;
+    case eIntID_GTKCSDAvailable:
+        EnsureInit();
+        aResult = sCSDAvailable;
+        break;
+    case eIntID_GTKCSDMaximizeButton:
+        EnsureInit();
+        aResult = sCSDMaximizeButton;
+        break;
+    case eIntID_GTKCSDMinimizeButton:
+        EnsureInit();
+        aResult = sCSDMinimizeButton;
+        break;
+    case eIntID_GTKCSDCloseButton:
+        EnsureInit();
+        aResult = sCSDCloseButton;
+        break;
     default:
         aResult = 0;
         res     = NS_ERROR_FAILURE;
@@ -1045,6 +1061,34 @@ nsLookAndFeel::EnsureInit()
 
     gtk_widget_destroy(window);
     g_object_unref(labelWidget);
+
+    // Require GTK 3.20 for client-side decoration support.
+    sCSDAvailable = gtk_check_version(3, 20, 0) == nullptr;
+    if (sCSDAvailable) {
+        sCSDAvailable =
+            mozilla::Preferences::GetBool("widget.allow-client-side-decoration",
+                                          false);
+    }
+
+    if (sCSDAvailable) {
+        static auto sGtkHeaderBarGetDecorationLayoutPtr =
+          (const gchar* (*)(GtkWidget*))
+          dlsym(RTLD_DEFAULT, "gtk_header_bar_get_decoration_layout");
+
+        GtkWidget* headerBar = GetWidget(MOZ_GTK_HEADER_BAR);
+        const gchar* decorationLayout =
+            sGtkHeaderBarGetDecorationLayoutPtr(headerBar);
+        if (!decorationLayout) {
+            g_object_get(settings, "gtk-decoration-layout", &decorationLayout,
+                         nullptr);
+        }
+
+        if (decorationLayout) {
+            sCSDCloseButton = (strstr(decorationLayout, "close") != nullptr);
+            sCSDMaximizeButton = (strstr(decorationLayout, "maximize") != nullptr);
+            sCSDMinimizeButton = (strstr(decorationLayout, "minimize") != nullptr);
+        }
+    }
 }
 
 // virtual

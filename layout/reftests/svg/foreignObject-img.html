@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+img { position: absolute; top: 0; left: 0; }
+</style>
+<img src="foreignObject-img-helper.svg">
+<script>
+
+// The load of the data: URL inside foreignObject-img-helper.svg does not block
+// the load event of the <img> in this document, so we loop, painting the image
+// to a canvas, to tell when it's ready. (So if this test fails, it will fail
+// by timing out.)
+
+var img = document.querySelector("img");
+var canvas = document.createElement("canvas");
+var ctx = canvas.getContext("2d");
+
+function paint() {
+  ctx.drawImage(img, 0, 0);
+  if (ctx.getImageData(0, 0, 1, 1).data[1] == 255) {
+    document.documentElement.className = "";
+  } else {
+    requestAnimationFrame(paint);
+  }
+}
+
+paint();
+
+</script>

@@ -1121,7 +1121,7 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
     nsCOMPtr<nsISupportsString> text(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     text->SetData(_retval);
-    mCellText->ReplaceElementAt(text, arrayIndex, false);
+    mCellText->ReplaceElementAt(text, arrayIndex);
   }
   return rv;
 }

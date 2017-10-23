@@ -31,7 +31,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         self.blob_commands.insert(key, (Arc::new(data), tiling));
     }
 
-    fn update(&mut self, key: ImageKey, data: BlobImageData) {
+    fn update(&mut self, key: ImageKey, data: BlobImageData, _dirty_rect: Option<DeviceUintRect>) {
         let entry = self.blob_commands.get_mut(&key).unwrap();
         entry.0 = Arc::new(data);
     }

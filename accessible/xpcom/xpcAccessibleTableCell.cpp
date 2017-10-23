@@ -115,8 +115,7 @@ xpcAccessibleTableCell::GetColumnHeaderCells(nsIArray** aHeaderCells)
   NS_ENSURE_TRUE(cells, NS_ERROR_FAILURE);
 
   for (uint32_t idx = 0; idx < headerCells.Length(); idx++) {
-    cells->AppendElement(static_cast<nsIAccessible*>(ToXPC(headerCells[idx])),
-                         false);
+    cells->AppendElement(static_cast<nsIAccessible*>(ToXPC(headerCells[idx])));
   }
 
   NS_ADDREF(*aHeaderCells = cells);
@@ -139,8 +138,7 @@ xpcAccessibleTableCell::GetRowHeaderCells(nsIArray** aHeaderCells)
   NS_ENSURE_TRUE(cells, NS_ERROR_FAILURE);
 
   for (uint32_t idx = 0; idx < headerCells.Length(); idx++) {
-    cells->AppendElement(static_cast<nsIAccessible*>(ToXPC(headerCells[idx])),
-                         false);
+    cells->AppendElement(static_cast<nsIAccessible*>(ToXPC(headerCells[idx])));
   }
 
   NS_ADDREF(*aHeaderCells = cells);

@@ -274,7 +274,7 @@ nsTransferable::GetTransferDataFlavors()
     if ( flavorWrapper ) {
       flavorWrapper->SetData ( data.GetFlavor() );
       nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
-      array->AppendElement( genericWrapper, /*weak =*/ false );
+      array->AppendElement( genericWrapper );
     }
   }
 
@@ -557,7 +557,7 @@ nsTransferable::FlavorsTransferableCanImport(nsIArray **_retval)
 
         if (GetDataForFlavor (mDataArray, flavorStr.get())
             == mDataArray.NoIndex) // Don't append if already in intrinsic list
-          array->AppendElement (flavorWrapper, /*weak =*/ false);
+          array->AppendElement (flavorWrapper);
       } // foreach flavor that can be converted to
     }
   } // if a converter exists
@@ -602,7 +602,7 @@ nsTransferable::FlavorsTransferableCanExport(nsIArray **_retval)
 
         if (GetDataForFlavor (mDataArray, flavorStr.get())
             == mDataArray.NoIndex) // Don't append if already in intrinsic list
-          array->AppendElement (flavorWrapper, /*weak =*/ false);
+          array->AppendElement (flavorWrapper);
       } // foreach flavor that can be converted to
     }
   } // if a converter exists

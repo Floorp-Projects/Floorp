@@ -49,9 +49,7 @@ var doTest = srcObject => new Promise(resolve => {
   b.play();
 });
 
-// TODO: remove prefixed version soon (1183495).
-
-var doTests = () => doTest("srcObject").then(() => doTest("mozSrcObject"))
+var doTests = () => doTest("srcObject")
   .catch(e => ok(false, "Unexpected error: " + e))
   .then(() => SimpleTest.finish())
   .catch(e => ok(false, "Coding error: " + e));
