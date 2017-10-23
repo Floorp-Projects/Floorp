@@ -343,18 +343,25 @@ class FormatProvider(MachCommandBase):
         if path_list == []:
             return
 
-        args += path_list
+        print("Processing %d file(s)..." % len(path_list))
 
-        # Run clang-format
-        cf_process = Popen(args)
+        batchsize = 200
+
+        for i in range(0, len(path_list), batchsize):
+            l = path_list[i: (i + batchsize)]
+            # Run clang-format on the list
+            cf_process = Popen(args + l)
+            # Wait until the process is over
+            cf_process.communicate()[0]
+
         if show:
             # show the diff
             if self.repository.name == 'hg':
-                cf_process = Popen(["hg", "diff"] + path_list)
+                cf_process = Popen(["hg", "diff"] + paths)
             else:
                 assert self.repository.name == 'git'
-                cf_process = Popen(["git", "diff"] + path_list)
-        return cf_process.communicate()[0]
+                cf_process = Popen(["git", "diff"] + paths)
+            cf_process.communicate()[0]
 
 
 def mozregression_import():
