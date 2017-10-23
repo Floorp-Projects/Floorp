@@ -119,7 +119,12 @@
 
 #pageAction-panel-sendToDevice,
 #pageAction-urlbar-sendToDevice {
-  list-style-image: url("chrome://browser/skin/device-mobile.svg");
+  list-style-image: url("chrome://browser/skin/send-to-device.svg");
+}
+
+#pageAction-panel-sendToDevice:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#pageAction-urlbar-sendToDevice:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 .pageAction-sendToDevice-device[clientType=mobile] {
