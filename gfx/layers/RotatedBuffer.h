@@ -214,11 +214,6 @@ public:
   bool Lock(OpenMode aMode);
   void Unlock();
 
-  void Clear();
-
-  TextureClient* GetClient() const { return mClient; }
-  TextureClient* GetClientOnWhite() const { return mClientOnWhite; }
-
   virtual bool HaveBuffer() const override { return !!mClient; }
   virtual bool HaveBufferOnWhite() const override { return !!mClientOnWhite; }
 
