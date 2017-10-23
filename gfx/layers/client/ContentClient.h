@@ -203,15 +203,9 @@ protected:
   BufferDecision CalculateBufferForPaint(PaintedLayer* aLayer,
                                          uint32_t aFlags);
 
-  /**
-   * Return the buffer's content type.  Requires a valid buffer.
-   */
-  gfxContentType BufferContentType();
-  /**
-   * Returns whether the specified size is adequate for the current
-   * buffer and buffer size policy.
-   */
-  bool BufferSizeOkFor(const gfx::IntSize& aSize);
+  static bool ValidBufferSize(BufferSizePolicy aPolicy,
+                              const gfx::IntSize& aBufferSize,
+                              const gfx::IntSize& aVisibleBoundsSize);
 
   /**
    * Any actions that should be performed at the last moment before we begin
