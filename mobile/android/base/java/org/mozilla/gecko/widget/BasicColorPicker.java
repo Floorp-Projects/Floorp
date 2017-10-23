@@ -40,7 +40,8 @@ public class BasicColorPicker extends ListView {
                                                                       Color.rgb(16, 36, 87),
                                                                       Color.rgb(91, 32, 103),
                                                                       Color.rgb(212, 221, 228),
-                                                                      Color.BLACK);
+                                                                      Color.BLACK,
+                                                                      Color.WHITE);
 
     private static Drawable mCheckDrawable;
     int mSelected;
@@ -88,7 +89,7 @@ public class BasicColorPicker extends ListView {
         mAdapter.notifyDataSetChanged();
     }
 
-    Drawable getCheckDrawable() {
+    private Drawable getCheckDrawable() {
         if (mCheckDrawable == null) {
             Resources res = getContext().getResources();
 
@@ -130,6 +131,11 @@ public class BasicColorPicker extends ListView {
             CheckedTextView checked = ((CheckedTextView) v);
             if (mSelected == position) {
                 check = getCheckDrawable();
+                if (getItem(position) == Color.WHITE) {
+                    check.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
+                } else {
+                    check.clearColorFilter();
+                }
             }
 
             TextViewCompat.setCompoundDrawablesRelative(checked, check, null, null, null);
