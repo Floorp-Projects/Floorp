@@ -5893,7 +5893,10 @@ HTMLEditRules::GetNodesForOperation(
     // Then unregister the ranges
     for (auto& item : rangeItemArray) {
       htmlEditor->mRangeUpdater.DropRangeItem(item);
-      aArrayOfRanges.AppendElement(item->GetRange());
+      RefPtr<nsRange> range = item->GetRange();
+      if (range) {
+        aArrayOfRanges.AppendElement(range);
+      }
     }
     NS_ENSURE_SUCCESS(rv, rv);
   }
