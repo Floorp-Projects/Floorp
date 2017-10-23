@@ -23,6 +23,7 @@ generate:
         files-changed:
             - '**/*.py'
             - '**/*.rst'
+            - '**/*.md'
             - 'tools/docs/**'
 
 upload:
