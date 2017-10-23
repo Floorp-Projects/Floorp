@@ -15,6 +15,7 @@ def assert_is_active_element(session, response):
 
     """
     assert response.status == 200
+    assert "value" in response.body
 
     from_js = session.execute_script("return document.activeElement")
 
