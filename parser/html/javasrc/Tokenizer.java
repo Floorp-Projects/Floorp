@@ -712,7 +712,7 @@ public class Tokenizer implements Locator {
             return;
         }
         @Auto char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
-        this.endTagExpectation = ElementName.elementNameByBuffer(asArray, 0,
+        this.endTagExpectation = ElementName.elementNameByBuffer(asArray,
                 asArray.length, interner);
         assert this.endTagExpectation != null;
         endTagExpectationToArray();
@@ -910,8 +910,7 @@ public class Tokenizer implements Locator {
      * @return the buffer as local name
      */
     private void strBufToDoctypeName() {
-        doctypeName = Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
-                interner);
+        doctypeName = Portability.newLocalNameFromBuffer(strBuf, strBufLen, interner);
         clearStrBufAfterUse();
     }
 
@@ -1116,20 +1115,19 @@ public class Tokenizer implements Locator {
         if (containsHyphen) {
             // We've got a custom element or annotation-xml.
             @Local String annotationName = ElementName.ANNOTATION_XML.getName();
-            if (Portability.localEqualsBuffer(annotationName, strBuf, 0, strBufLen)) {
+            if (Portability.localEqualsBuffer(annotationName, strBuf, strBufLen)) {
                 tagName = ElementName.ANNOTATION_XML;
             } else {
-                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, strBufLen,
                         interner)
                         // CPPONLY: , true
                         );
                 tagName = nonInternedTagName;
             }
         } else {
-            tagName = ElementName.elementNameByBuffer(strBuf, 0, strBufLen,
-                    interner);
+            tagName = ElementName.elementNameByBuffer(strBuf, strBufLen, interner);
             if (tagName == null) {
-                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, strBufLen,
                     interner)
                         // CPPONLY: , false
                         );
@@ -1183,11 +1181,11 @@ public class Tokenizer implements Locator {
     }
 
     private void attributeNameComplete() throws SAXException {
-        attributeName = AttributeName.nameByBuffer(strBuf, 0, strBufLen, interner);
+        attributeName = AttributeName.nameByBuffer(strBuf, strBufLen, interner);
         if (attributeName == null) {
             // [NOCPP[
             attributeName = AttributeName.createAttributeName(
-                    Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                    Portability.newLocalNameFromBuffer(strBuf, strBufLen,
                             interner),
                     namePolicy != XmlViolationPolicy.ALLOW);
             // ]NOCPP]
