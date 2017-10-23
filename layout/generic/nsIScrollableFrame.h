@@ -315,6 +315,13 @@ public:
    * expectation that scrolling is going to happen.
    */
   virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) = 0;
+
+  /**
+   * Returns true if this scroll frame might be scrolled
+   * asynchronously by the compositor.
+   */
+  virtual bool MayBeAsynchronouslyScrolled() = 0;
+
   /**
    * Same as the above except doesn't take into account will-change budget,
    * which means that it can be called during display list building.
@@ -445,13 +452,16 @@ public:
   /**
    * Determine if we should build a scrollable layer for this scroll frame and
    * return the result. It will also record this result on the scroll frame.
+   * Pass the visible rect in aVisibleRect. On return it will be set to the
+   * displayport if there is one.
    * Pass the dirty rect in aDirtyRect. On return it will be set to the
-   * displayport if there is one (ie the dirty rect that should be used).
+   * dirty rect inside the displayport (ie the dirty rect that should be used).
    * This function will set the display port base rect if aSetBase is true.
    * aSetBase is only allowed to be false if there has been a call with it
    * set to true before on the same paint.
    */
   virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aVisibleRect,
                                      nsRect* aDirtyRect,
                                      bool aSetBase) = 0;
 

@@ -13,6 +13,7 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/ArenaRefPtr.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/MemoryChecking.h" // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
@@ -53,6 +54,15 @@ public:
   void FreeByObjectID(mozilla::ArenaObjectID aID, void* aPtr)
   {
     Free(aID, aPtr);
+  }
+
+  void* AllocateByCustomID(uint32_t aID, size_t aSize)
+  {
+    return Allocate(aID, aSize);
+  }
+  void FreeByCustomID(uint32_t aID, void* ptr)
+  {
+    Free(aID, ptr);
   }
 
   /**
@@ -99,6 +109,12 @@ public:
    * arena.
    */
   void AddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool DebugContains(void* aPtr) {
+    return mPool.DebugContains(aPtr);
+  }
+#endif
 
 private:
   void* Allocate(uint32_t aCode, size_t aSize);

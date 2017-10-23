@@ -1561,6 +1561,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
            frame->IsFrameOfType(nsIFrame::eSVG) &&
            !(frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))) {
         SVGObserverUtils::InvalidateRenderingObservers(frame);
+        frame->SchedulePaint();
       }
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);

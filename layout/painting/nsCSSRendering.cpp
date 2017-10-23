@@ -1408,15 +1408,12 @@ nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame)
 }
 
 inline bool
-FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
-                      nsStyleContext** aBackgroundSC)
+FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
 {
   if (aForFrame == aRootElementFrame) {
     // We must have propagated our background to the viewport or canvas. Abort.
     return false;
   }
-
-  *aBackgroundSC = aForFrame->StyleContext();
 
   // Return true unless the frame is for a BODY element whose background
   // was propagated to the viewport.
@@ -1448,17 +1445,30 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
 }
 
 bool
-nsCSSRendering::FindBackground(nsIFrame* aForFrame,
-                               nsStyleContext** aBackgroundSC)
+nsCSSRendering::FindBackgroundFrame(nsIFrame* aForFrame,
+                                    nsIFrame** aBackgroundFrame)
 {
   nsIFrame* rootElementFrame =
     aForFrame->PresContext()->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
   if (IsCanvasFrame(aForFrame)) {
-    *aBackgroundSC = FindCanvasBackground(aForFrame, rootElementFrame);
+    *aBackgroundFrame = FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
     return true;
   } else {
-    return FindElementBackground(aForFrame, rootElementFrame, aBackgroundSC);
+    *aBackgroundFrame = aForFrame;
+    return FindElementBackground(aForFrame, rootElementFrame);
   }
+}
+
+bool
+nsCSSRendering::FindBackground(nsIFrame* aForFrame,
+                               nsStyleContext** aBackgroundSC)
+{
+  nsIFrame *backgroundFrame = nullptr;
+  if (FindBackgroundFrame(aForFrame, &backgroundFrame)) {
+    *aBackgroundSC = backgroundFrame->StyleContext();
+    return true;
+  }
+  return false;
 }
 
 void

@@ -38,8 +38,6 @@ namespace android {
 class MOZ_EXPORT GraphicBuffer;
 } // namespace android
 
-struct nsStyleFilter;
-
 namespace mozilla {
 namespace layers {
 
@@ -351,25 +349,6 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
   VERTICAL,
   HORIZONTAL
 ));
-
-enum class CSSFilterType : int8_t {
-  BLUR,
-  BRIGHTNESS,
-  CONTRAST,
-  GRAYSCALE,
-  HUE_ROTATE,
-  INVERT,
-  OPACITY,
-  SATURATE,
-  SEPIA,
-};
-
-struct CSSFilter {
-  CSSFilterType type;
-  float argument;
-};
-
-CSSFilter ToCSSFilter(const nsStyleFilter& filter);
 
 } // namespace layers
 } // namespace mozilla

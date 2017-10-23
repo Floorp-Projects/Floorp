@@ -54,8 +54,10 @@ class AndroidUiThread : public nsThread
 public:
   NS_DECL_ISUPPORTS_INHERITED
   AndroidUiThread()
-    : nsThread(WrapNotNull(new ThreadEventQueue<mozilla::EventQueue>(MakeUnique<mozilla::EventQueue>())),
-               nsThread::NOT_MAIN_THREAD, 0)
+    : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
+                 MakeUnique<mozilla::EventQueue>()),
+               nsThread::NOT_MAIN_THREAD,
+               0)
   {}
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) override;

@@ -261,26 +261,26 @@ public:
     }
 
     explicit FontFamilyList(FontFamilyType aGenericType)
-        : mFontlist(WrapNotNull(new SharedFontList(aGenericType)))
+        : mFontlist(MakeNotNull<SharedFontList*>(aGenericType))
         , mDefaultFontType(eFamily_none)
     {
     }
 
     FontFamilyList(const nsAString& aFamilyName,
                    QuotedName aQuoted)
-        : mFontlist(WrapNotNull(new SharedFontList(aFamilyName, aQuoted)))
+        : mFontlist(MakeNotNull<SharedFontList*>(aFamilyName, aQuoted))
         , mDefaultFontType(eFamily_none)
     {
     }
 
     explicit FontFamilyList(const FontFamilyName& aName)
-        : mFontlist(WrapNotNull(new SharedFontList(aName)))
+        : mFontlist(MakeNotNull<SharedFontList*>(aName))
         , mDefaultFontType(eFamily_none)
     {
     }
 
     explicit FontFamilyList(nsTArray<FontFamilyName>&& aNames)
-        : mFontlist(WrapNotNull(new SharedFontList(Move(aNames))))
+        : mFontlist(MakeNotNull<SharedFontList*>(Move(aNames)))
     {
     }
 
@@ -298,7 +298,7 @@ public:
 
     void SetFontlist(nsTArray<FontFamilyName>&& aNames)
     {
-        mFontlist = WrapNotNull(new SharedFontList(Move(aNames)));
+        mFontlist = MakeNotNull<SharedFontList*>(Move(aNames));
     }
 
     void SetFontlist(NotNull<SharedFontList*> aFontlist)

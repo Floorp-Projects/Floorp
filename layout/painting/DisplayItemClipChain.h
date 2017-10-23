@@ -48,9 +48,26 @@ struct DisplayItemClipChain {
 
   bool HasRoundedCorners() const;
 
+  void AddRef() {
+    mRefCount++;
+  }
+  void Release() {
+    MOZ_ASSERT(mRefCount > 0);
+    mRefCount--;
+  }
+
+  DisplayItemClipChain(const DisplayItemClip& aClip, const ActiveScrolledRoot* aASR, const DisplayItemClipChain* aParent)
+    : mClip(aClip)
+    , mASR(aASR)
+    , mParent(aParent)
+  {}
+
+  DisplayItemClipChain() {}
+
   DisplayItemClip mClip;
   const ActiveScrolledRoot* mASR;
-  const DisplayItemClipChain* mParent;
+  RefPtr<const DisplayItemClipChain> mParent;
+  mutable uint32_t mRefCount = 0;
 };
 
 } // namespace mozilla

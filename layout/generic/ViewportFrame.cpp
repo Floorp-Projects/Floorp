@@ -102,12 +102,14 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame,
                                  nsDisplayList* aList)
 {
+  nsRect visible;
   nsRect dirty;
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
+    visible = savedOutOfFlowData->mVisibleRect;
     dirty = savedOutOfFlowData->mDirtyRect;
     // This function is called after we've finished building display items for
     // the root scroll frame. That means that the content clip from the root
@@ -124,7 +126,7 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
       savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
   nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingForChild(aBuilder, aFrame, dirty,
+    buildingForChild(aBuilder, aFrame, visible, dirty,
                      aBuilder->IsAtRootOfPseudoStackingContext());
 
   nsDisplayList list(aBuilder);
