@@ -152,25 +152,32 @@ ext.configureVariantWithJNIWrappers = { variant, module ->
     // suggest that it is.  It certainly doesn't hurt.
     def prepareDependenciesTask = tasks.getByName("prepare${variant.name.capitalize()}Dependencies")
 
-    def wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
-        classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
-
-        // Configure the classpath at evaluation-time, not at
-        // configuration-time: see above comment.
-        doFirst {
-            classpath variant.javaCompile.classpath
-            // Include android.jar.
-            classpath variant.javaCompile.options.bootClasspath
+    def wrapperTask
+    if (System.env.IS_LANGUAGE_REPACK == '1') {
+        // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and don't
+        // really have a build environment.
+        wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}")
+    } else {
+        wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
+            classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
+    
+            // Configure the classpath at evaluation-time, not at
+            // configuration-time: see above comment.
+            doFirst {
+                classpath variant.javaCompile.classpath
+                // Include android.jar.
+                classpath variant.javaCompile.options.bootClasspath
+            }
+    
+            main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
+            args module
+            args jarTask.outputs.files.iterator().next()
+    
+            workingDir "${topobjdir}/mobile/android/base"
+    
+            dependsOn jarTask
+            dependsOn prepareDependenciesTask
         }
-
-        main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
-        args module
-        args jarTask.outputs.files.iterator().next()
-
-        workingDir "${topobjdir}/mobile/android/base"
-
-        dependsOn jarTask
-        dependsOn prepareDependenciesTask
     }
 
     if (module == 'Generated') {
