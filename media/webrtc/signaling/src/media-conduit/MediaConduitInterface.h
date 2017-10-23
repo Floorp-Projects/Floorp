@@ -44,6 +44,11 @@ public:
     return new WebRtcCallWrapper();
   }
 
+  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call>&& aCall)
+  {
+    return new WebRtcCallWrapper(std::move(aCall));
+  }
+
   webrtc::Call* Call() const
   {
     return mCall.get();
@@ -70,6 +75,13 @@ private:
     webrtc::Call::Config config(&mEventLog);
     mCall.reset(webrtc::Call::Create(config));
   }
+
+  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call>&& aCall)
+  {
+    MOZ_ASSERT(aCall);
+    mCall = std::move(aCall);
+  }
+
   DISALLOW_COPY_AND_ASSIGN(WebRtcCallWrapper);
   UniquePtr<webrtc::Call> mCall;
   webrtc::RtcEventLogNullImpl mEventLog;
