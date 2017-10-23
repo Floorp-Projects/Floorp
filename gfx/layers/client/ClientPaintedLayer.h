@@ -32,8 +32,8 @@ class SpecificLayerAttributes;
 class ClientPaintedLayer : public PaintedLayer,
                            public ClientLayer {
 public:
-  typedef ContentClient::PaintState PaintState;
-  typedef ContentClient::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit ClientPaintedLayer(ClientLayerManager* aLayerManager,
                              LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE) :
