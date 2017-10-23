@@ -240,11 +240,11 @@ RotatedBuffer::DrawTo(PaintedLayer* aLayer,
 
 void
 RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
-                                     const gfx::IntRect& aUpdateRect)
+                                     const nsIntRegion& aUpdateRegion)
 {
   DrawIterator iter;
   while (DrawTarget* destDT =
-    BorrowDrawTargetForQuadrantUpdate(aUpdateRect, BUFFER_BLACK, &iter)) {
+    BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK, &iter)) {
     bool isClippingCheap = IsClippingCheap(destDT, iter.mDrawRegion);
     if (isClippingCheap) {
       gfxUtils::ClipToRegion(destDT, iter.mDrawRegion);
@@ -262,7 +262,7 @@ RotatedBuffer::UpdateDestinationFrom(const RotatedBuffer& aSource,
   if (aSource.HaveBufferOnWhite() && HaveBufferOnWhite()) {
     DrawIterator whiteIter;
     while (DrawTarget* destDT =
-      BorrowDrawTargetForQuadrantUpdate(aUpdateRect, BUFFER_WHITE, &whiteIter)) {
+      BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE, &whiteIter)) {
       bool isClippingCheap = IsClippingCheap(destDT, whiteIter.mDrawRegion);
       if (isClippingCheap) {
         gfxUtils::ClipToRegion(destDT, whiteIter.mDrawRegion);
