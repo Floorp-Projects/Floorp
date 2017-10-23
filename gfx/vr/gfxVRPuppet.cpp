@@ -150,6 +150,13 @@ VRHMDSensorState
 VRDisplayPuppet::GetSensorState()
 {
   mSensorState.inputFrameID = mDisplayInfo.mFrameId;
+
+  Matrix4x4 matHeadToEye[2];
+  for (uint32_t eye = 0; eye < 2; ++eye) {
+    matHeadToEye[eye].PreTranslate(mDisplayInfo.mEyeTranslation[eye]);
+  }
+  mSensorState.CalcViewMatrices(matHeadToEye);
+
   return mSensorState;
 }
 
