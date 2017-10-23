@@ -28,7 +28,7 @@ const StringInputStream = Components.Constructor(
 
 const TEST_FILE_NAME_1 = "test-backgroundfilesaver-1.txt";
 
-const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
+const gAppRep = Cc["@mozilla.org/reputationservice/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
 var gStillRunning = true;
 var gTables = {};

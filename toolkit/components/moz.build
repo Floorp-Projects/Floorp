@@ -53,6 +53,7 @@ DIRS += [
     'reader',
     'remotebrowserutils',
     'reflect',
+    'reputationservice',
     'resistfingerprinting',
     'securityreporter',
     'startup',
