@@ -234,7 +234,7 @@ async function clickDoorhangerButton(button, index) {
   } else if (button == MENU_BUTTON) {
     // Click the dropmarker arrow and wait for the menu to show up.
     await BrowserTestUtils.waitForCondition(() => getNotification().menubutton);
-    await sleep(); // menubutton needs extra time for binding
+    await sleep(2000); // menubutton needs extra time for binding
     let notification = getNotification();
     ok(notification.menubutton, "notification menupopup displayed");
     let dropdownPromise =
