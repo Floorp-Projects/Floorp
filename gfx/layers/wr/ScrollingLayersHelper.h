@@ -38,26 +38,28 @@ private:
                   const ActiveScrolledRoot* aAsr,
                   const DisplayItemClipChain* aChain,
                   int32_t aAppUnitsPerDevPixel,
-                  const StackingContextHelper& aStackingContext);
+                  const StackingContextHelper& aStackingContext,
+                  WebRenderCommandBuilder::ClipIdMap& aCache);
 
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
   RecurseAndDefineClip(nsDisplayItem* aItem,
                        const ActiveScrolledRoot* aAsr,
                        const DisplayItemClipChain* aChain,
                        int32_t aAppUnitsPerDevPixel,
-                       const StackingContextHelper& aSc);
+                       const StackingContextHelper& aSc,
+                       WebRenderCommandBuilder::ClipIdMap& aCache);
 
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
   RecurseAndDefineAsr(nsDisplayItem* aItem,
                       const ActiveScrolledRoot* aAsr,
                       const DisplayItemClipChain* aChain,
                       int32_t aAppUnitsPerDevPixel,
-                      const StackingContextHelper& aSc);
+                      const StackingContextHelper& aSc,
+                      WebRenderCommandBuilder::ClipIdMap& aCache);
 
   wr::DisplayListBuilder* mBuilder;
   bool mPushedClipAndScroll;
   std::vector<wr::ScrollOrClipId> mPushedClips;
-  WebRenderCommandBuilder::ClipIdMap& mCache;
 };
 
 } // namespace layers
