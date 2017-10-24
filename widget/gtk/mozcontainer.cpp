@@ -306,6 +306,9 @@ moz_container_map (GtkWidget *widget)
 
     if (gtk_widget_get_has_window (widget)) {
         gdk_window_show (gtk_widget_get_window(widget));
+#if defined(MOZ_WAYLAND)
+        moz_container_map_surface(MOZ_CONTAINER(widget));
+#endif
     }
 }
 
@@ -318,6 +321,9 @@ moz_container_unmap (GtkWidget *widget)
 
     if (gtk_widget_get_has_window (widget)) {
         gdk_window_hide (gtk_widget_get_window(widget));
+#if defined(MOZ_WAYLAND)
+        moz_container_unmap_surface(MOZ_CONTAINER(widget));
+#endif
     }
 }
 
