@@ -28,5 +28,5 @@ assertEq(foo(false), true);
 assertEq(foo(false), true);
 assertEq(foo(-0.0), true);
 assertEq(foo(-0.0), true);
-assertEq(foo(objectEmulatingUndefined()), true);
-assertEq(foo(objectEmulatingUndefined()), true);
+assertEq(foo(createIsHTMLDDA()), true);
+assertEq(foo(createIsHTMLDDA()), true);

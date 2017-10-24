@@ -10,6 +10,17 @@
 
 namespace mozilla {
 
+/*static*/ InputEventStatistics&
+InputEventStatistics::Get()
+{
+  static UniquePtr<InputEventStatistics> sInstance;
+  if (!sInstance) {
+    sInstance = MakeUnique<InputEventStatistics>(ConstructorCookie());
+    ClearOnShutdown(&sInstance);
+  }
+  return *sInstance;
+}
+
 TimeDuration
 InputEventStatistics::TimeDurationCircularBuffer::GetMean()
 {

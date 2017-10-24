@@ -9,5 +9,5 @@ function g() {
 function h(y) {
         return (y === 0);
 }
-f(g, [objectEmulatingUndefined()]);
+f(g, [createIsHTMLDDA()]);
 f(h, [false]);

@@ -29,7 +29,7 @@ function testFirstPartyDomain(pageInfo) {
 
         // For <img>, we will query imgIRequest.imagePrincipal later, so we wait
         // for loadend event. For <audio> and <video>, so far we only can get
-        // the loadingprincipal attribute on the node, so we simply wait for
+        // the triggeringprincipal attribute on the node, so we simply wait for
         // loadstart.
         if (i == 0) {
           await waitForEvent(preview, "loadend");
@@ -48,10 +48,10 @@ function testFirstPartyDomain(pageInfo) {
                        "imagePrincipal should have firstPartyDomain set to " + EXPECTED_DOMAIN);
         }
 
-        // Check the node has the attribute 'loadingprincipal'.
+        // Check the node has the attribute 'triggeringprincipal'.
         let serial = Components.classes["@mozilla.org/network/serialization-helper;1"]
                                .getService(Components.interfaces.nsISerializationHelper);
-        let loadingPrincipalStr = preview.getAttribute("loadingprincipal");
+        let loadingPrincipalStr = preview.getAttribute("triggeringprincipal");
         let loadingPrincipal = serial.deserializeObject(loadingPrincipalStr);
         Assert.equal(loadingPrincipal.originAttributes.firstPartyDomain, EXPECTED_DOMAIN,
                      "loadingPrincipal should have firstPartyDomain set to " + EXPECTED_DOMAIN);

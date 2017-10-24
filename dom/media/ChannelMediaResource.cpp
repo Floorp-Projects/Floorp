@@ -763,21 +763,21 @@ ChannelMediaResource::RecreateChannel()
   nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
     nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
-  // If element has 'loadingprincipal' attribute, we will use the value as
-  // loadingPrincipal for the channel, otherwise it will default to use
+  // If element has 'triggeringprincipal' attribute, we will use the value as
+  // triggeringPrincipal for the channel, otherwise it will default to use
   // aElement->NodePrincipal().
-  // This function returns true when element has 'loadingprincipal', so if
+  // This function returns true when element has 'triggeringprincipal', so if
   // setAttrs is true we will override the origin attributes on the channel
   // later.
-  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   bool setAttrs =
-    nsContentUtils::GetLoadingPrincipalForXULNode(element,
-                                                  getter_AddRefs(loadingPrincipal));
+    nsContentUtils::QueryTriggeringPrincipal(element,
+                                             getter_AddRefs(triggeringPrincipal));
 
   nsresult rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(mChannel),
                                                      mURI,
                                                      element,
-                                                     loadingPrincipal,
+                                                     triggeringPrincipal,
                                                      securityFlags,
                                                      contentPolicyType,
                                                      loadGroup,
@@ -789,7 +789,7 @@ ChannelMediaResource::RecreateChannel()
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     if (loadInfo) {
       // The function simply returns NS_OK, so we ignore the return value.
-      Unused << loadInfo->SetOriginAttributes(loadingPrincipal->OriginAttributesRef());
+      Unused << loadInfo->SetOriginAttributes(triggeringPrincipal->OriginAttributesRef());
    }
   }
 

@@ -399,10 +399,10 @@ function rnot_number(i) {
 
 var uceFault_not_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_not_object'));
 function rnot_object(i) {
-    var o = objectEmulatingUndefined();
+    var o = createIsHTMLDDA();
     var x = !o;
     if(uceFault_not_object(i) || uceFault_not_object(i))
-        assertEq(x, true /* = !undefined = !document.all = !objectEmulatingUndefined() */);
+        assertEq(x, true /* = !undefined = !document.all = !createIsHTMLDDA() */);
     assertRecoveredOnBailout(x, true);
     return i;
 }

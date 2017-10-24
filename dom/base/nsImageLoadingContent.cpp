@@ -1044,10 +1044,10 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   bool result =
-    nsContentUtils::GetLoadingPrincipalForXULNode(content, aTriggeringPrincipal,
-                                                  getter_AddRefs(triggeringPrincipal));
+    nsContentUtils::QueryTriggeringPrincipal(content, aTriggeringPrincipal,
+                                             getter_AddRefs(triggeringPrincipal));
 
-  // If result is true, which means this node has specified 'loadingprincipal'
+  // If result is true, which means this node has specified 'triggeringprincipal'
   // attribute on it, so we use favicon as the policy type.
   nsContentPolicyType policyType = result ?
                                      nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON:
