@@ -14,7 +14,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 
 using mozilla::net::gNeckoChild;
 
@@ -69,69 +68,6 @@ UDPSocketChild::~UDPSocketChild()
 {
 }
 
-class UDPSocketBackgroundChildCallback final :
-  public nsIIPCBackgroundChildCreateCallback
-{
-  bool* mDone;
-
-public:
-  explicit UDPSocketBackgroundChildCallback(bool* aDone)
-  : mDone(aDone)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(mDone);
-    MOZ_ASSERT(!*mDone);
-  }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  ~UDPSocketBackgroundChildCallback()
-  { }
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    *mDone = true;
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    *mDone = true;
-  }
-};
-
-NS_IMPL_ISUPPORTS(UDPSocketBackgroundChildCallback, nsIIPCBackgroundChildCreateCallback)
-
-nsresult
-UDPSocketChild::CreatePBackgroundSpinUntilDone()
-{
-  using mozilla::ipc::BackgroundChild;
-
-  // Spinning the event loop in MainThread would be dangerous
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!BackgroundChild::GetForCurrentThread());
-
-  bool done = false;
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback =
-    new UDPSocketBackgroundChildCallback(&done);
-
-  if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(callback))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!SpinEventLoopUntil([&done]() { return done; })) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_WARN_IF(!BackgroundChild::GetForCurrentThread())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 // nsIUDPSocketChild Methods
 
 NS_IMETHODIMP
@@ -139,20 +75,12 @@ UDPSocketChild::SetBackgroundSpinsEvents()
 {
   using mozilla::ipc::BackgroundChild;
 
-  PBackgroundChild* existingBackgroundChild =
-    BackgroundChild::GetForCurrentThread();
-  // If it's not spun up yet, block until it is, and retry
-  if (!existingBackgroundChild) {
-    nsresult rv = CreatePBackgroundSpinUntilDone();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    existingBackgroundChild =
-      BackgroundChild::GetForCurrentThread();
-    MOZ_ASSERT(existingBackgroundChild);
+  mBackgroundManager =
+    BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!mBackgroundManager)) {
+    return NS_ERROR_FAILURE;
   }
-  // By now PBackground is guaranteed to be/have-been up
-  mBackgroundManager = existingBackgroundChild;
+
   return NS_OK;
 }
 
