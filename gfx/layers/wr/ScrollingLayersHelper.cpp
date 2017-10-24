@@ -34,34 +34,55 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
   // There are two ASR chains here that we need to be fully defined. One is the
   // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the
   // ASR chain pointed to by aItem->GetClipChain()->mASR. We pick the leafmost
-  // of these two chains because that one will include the other. And then we
-  // call DefineAndPushScrollLayers with it, which will recursively push all
-  // the necessary clips and scroll layer items for that ASR chain.
+  // of these two chains because that one will include the other.
+  // The leafmost clip is trivially going to be aItem->GetClipChain().
+  // So we call DefineClipChain with these two leafmost things, and it will
+  // recursively define all the clips and scroll layers with the appropriate
+  // parents, but will not actually push anything onto the WR stack.
   const ActiveScrolledRoot* leafmostASR = aItem->GetActiveScrolledRoot();
   if (aItem->GetClipChain()) {
     leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR,
         aItem->GetClipChain()->mASR);
   }
-  DefineAndPushScrollLayers(aItem, leafmostASR,
-      aItem->GetClipChain(), aBuilder, auPerDevPixel, aStackingContext, aCache);
+  auto ids = DefineClipChain(aItem, leafmostASR, aItem->GetClipChain(),
+      auPerDevPixel, aStackingContext, aCache);
 
-  // Next, we push the leaf part of the clip chain that is scrolled by the
-  // leafmost ASR. All the clips outside the leafmost ASR were already pushed
-  // in the above call. This call may be a no-op if the item's ASR got picked
-  // as the leaftmostASR previously, because that means these clips were pushed
-  // already as being "outside" leafmostASR.
-  DefineAndPushChain(aItem->GetClipChain(), aBuilder, aStackingContext,
-      auPerDevPixel, aCache);
+  // Now that stuff is defined, we need to ensure the right items are on the
+  // stack. We need this primarily for the WR display items that will be
+  // generated while processing aItem. However those display items only care
+  // about the topmost clip on the stack. If that were all we cared about we
+  // would only need to push one thing here and we would be done. However, we
+  // also care about the ScrollingLayersHelper instance that might be created
+  // for nested display items, in the case where aItem is a wrapper item. The
+  // nested ScrollingLayersHelper may rely on things like TopmostScrollId and
+  // TopmostClipId, so now we need to push at most two things onto the stack.
 
-  // Finally, if clip chain's ASR was the leafmost ASR, then the top of the
-  // scroll id stack right now will point to that, rather than the item's ASR
-  // which is what we want. So we override that by doing a PushClipAndScrollInfo
-  // call. This should generally only happen for fixed-pos type items, but we
-  // use code generic enough to handle other cases.
+  FrameMetrics::ViewID leafmostId = ids.first.valueOr(FrameMetrics::NULL_SCROLL_ID);
   FrameMetrics::ViewID scrollId = aItem->GetActiveScrolledRoot()
       ? nsLayoutUtils::ViewIDForASR(aItem->GetActiveScrolledRoot())
       : FrameMetrics::NULL_SCROLL_ID;
-  if (aBuilder.TopmostScrollId() != scrollId) {
+  // If the leafmost ASR is not the same as the item's ASR then we are dealing
+  // with a case where the item's clip chain is scrolled by something other than
+  // the item's ASR. So for those cases we need to use the ClipAndScroll API.
+  bool needClipAndScroll = (leafmostId != scrollId);
+
+  // If we don't need a ClipAndScroll, ensure the item's ASR is at the top of
+  // the scroll stack
+  if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
+    MOZ_ASSERT(leafmostId == scrollId); // because !needClipAndScroll
+    mBuilder->PushScrollLayer(scrollId);
+    mPushedClips.push_back(wr::ScrollOrClipId(scrollId));
+  }
+  // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
+  // stack.
+  if (ids.second && aItem->GetClipChain()->mASR == leafmostASR) {
+    mBuilder->PushClip(ids.second.ref());
+    mPushedClips.push_back(wr::ScrollOrClipId(ids.second.ref()));
+  }
+  // If we need the ClipAndScroll, we want to replace the topmost scroll layer
+  // with the item's ASR but preseve the topmost clip (which is scrolled by
+  // some other ASR).
+  if (needClipAndScroll) {
     Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
     mBuilder->PushClipAndScrollInfo(scrollId, clipId.ptrOr(nullptr));
     mPushedClipAndScroll = true;
