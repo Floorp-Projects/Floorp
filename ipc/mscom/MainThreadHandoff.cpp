@@ -517,21 +517,23 @@ MainThreadHandoff::GetHandler(NotNull<CLSID*> aHandlerClsid)
 }
 
 HRESULT
-MainThreadHandoff::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
+MainThreadHandoff::GetHandlerPayloadSize(NotNull<IInterceptor*> aInterceptor,
+                                         NotNull<DWORD*> aOutPayloadSize)
 {
   if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
-  return mHandlerProvider->GetHandlerPayloadSize(aOutPayloadSize);
+  return mHandlerProvider->GetHandlerPayloadSize(aInterceptor, aOutPayloadSize);
 }
 
 HRESULT
-MainThreadHandoff::WriteHandlerPayload(NotNull<IStream*> aStream)
+MainThreadHandoff::WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor,
+                                       NotNull<IStream*> aStream)
 {
   if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
-  return mHandlerProvider->WriteHandlerPayload(aStream);
+  return mHandlerProvider->WriteHandlerPayload(aInterceptor, aStream);
 }
 
 REFIID
