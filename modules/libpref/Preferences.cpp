@@ -98,7 +98,8 @@ using namespace mozilla;
     if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
       nsPrintfCString msg(                                                     \
         "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
-        func, pref);                                                           \
+        func,                                                                  \
+        pref);                                                                 \
       NS_ERROR(msg.get());                                                     \
       return NS_ERROR_NOT_AVAILABLE;                                           \
     }                                                                          \
@@ -109,7 +110,8 @@ using namespace mozilla;
     if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
       nsPrintfCString msg(                                                     \
         "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
-        func, pref);                                                           \
+        func,                                                                  \
+        pref);                                                                 \
       NS_WARNING(msg.get());                                                   \
       return NS_ERROR_NOT_AVAILABLE;                                           \
     }                                                                          \
@@ -2258,8 +2260,7 @@ private:
   nsClassHashtable<PrefCallback, PrefCallback> mObservers;
 };
 
-class nsPrefLocalizedString final
-  : public nsIPrefLocalizedString
+class nsPrefLocalizedString final : public nsIPrefLocalizedString
 {
 public:
   nsPrefLocalizedString();
