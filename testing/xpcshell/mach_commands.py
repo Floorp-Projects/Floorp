@@ -149,9 +149,11 @@ class AndroidXPCShellRunner(MozbuildObject):
         import mozdevice
         dm = None
         if ip:
-            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root, adbPath=adb_path)
+            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root,
+                                    adbPath=adb_path)
         else:
-            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root, adbPath=adb_path)
+            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root,
+                                    adbPath=adb_path)
         return dm
 
     """Run Android xpcshell tests."""
