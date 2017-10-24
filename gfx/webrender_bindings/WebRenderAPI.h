@@ -228,7 +228,9 @@ public:
                            bool aIsBackfaceVisible);
   void PopStackingContext();
 
-  wr::WrClipId DefineClip(const wr::LayoutRect& aClipRect,
+  wr::WrClipId DefineClip(const Maybe<layers::FrameMetrics::ViewID>& aAncestorScrollId,
+                          const Maybe<wr::WrClipId>& aAncestorClipId,
+                          const wr::LayoutRect& aClipRect,
                           const nsTArray<wr::ComplexClipRegion>* aComplex = nullptr,
                           const wr::WrImageMask* aMask = nullptr);
   void PushClip(const wr::WrClipId& aClipId, bool aExtra = false);
@@ -244,6 +246,8 @@ public:
 
   bool IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const;
   void DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                         const Maybe<layers::FrameMetrics::ViewID>& aAncestorScrollId,
+                         const Maybe<wr::WrClipId>& aAncestorClipId,
                          const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
                          const wr::LayoutRect& aClipRect);
   void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId);

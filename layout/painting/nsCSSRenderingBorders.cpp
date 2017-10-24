@@ -3621,7 +3621,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
   if (mLocalClip) {
     LayoutDeviceRect clip = LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
     wr::LayoutRect clipRect = aSc.ToRelativeLayoutRect(clip);
-    wr::WrClipId clipId = aBuilder.DefineClip(clipRect);
+    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(), clipRect);
     aBuilder.PushClip(clipId, true);
   }
 
