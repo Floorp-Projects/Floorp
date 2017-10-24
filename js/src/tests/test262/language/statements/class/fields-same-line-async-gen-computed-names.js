@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-after-same-line-async-gen.template
 /*---
 description: Computed property names (field definitions after an async generator in the same line)
+esid: prod-FieldDefinition
 features: [computed-property-names, class-fields, async-iteration]
 flags: [generated, async]
 includes: [propertyHelper.js]

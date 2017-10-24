@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-same-line-generator.template
 /*---
 description: Static computed property symbol names (field definitions followed by a generator method in the same line)
+esid: prod-FieldDefinition
 features: [Symbol, computed-property-names, class-fields, generators]
 flags: [generated]
 includes: [propertyHelper.js]

@@ -1,7 +1,7 @@
-commit 1afb7c74fd8752072397259a3ddf6ab85afdf785
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Fri Oct 6 12:37:36 2017 -0400
+commit a456b0a390bb0f70b4cb8d38cb5ab0ecb557a851
+Author: Rick Waldron <waldron.rick@gmail.com>
+Date:   Mon Oct 23 11:02:44 2017 -0400
 
-    Merge pull request #986 from dilijev/intl-gcl
+    Merge pull request #1310 from bocoup/contributing
     
-    Add version of intl402/6.2.3.js which tests via Intl.getCanonicalLocales
+    CONTRIBUTING.md Fix mistake in test generation section

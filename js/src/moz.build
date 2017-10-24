@@ -291,7 +291,6 @@ UNIFIED_SOURCES += [
     'jsprf.cpp',
     'jsscript.cpp',
     'jsstr.cpp',
-    'jswatchpoint.cpp',
     'jsweakmap.cpp',
     'perf/jsperf.cpp',
     'proxy/BaseProxyHandler.cpp',

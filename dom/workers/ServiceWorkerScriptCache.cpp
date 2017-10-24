@@ -100,12 +100,13 @@ public:
                  bool aIsMainScript)
     : mManager(aManager)
     , mRegistration(aRegistration)
-    , mIsMainScript(aIsMainScript)
     , mInternalHeaders(new InternalHeaders())
     , mLoadFlags(nsIChannel::LOAD_BYPASS_SERVICE_WORKER)
     , mState(WaitingForInitialization)
     , mNetworkResult(NS_OK)
     , mCacheResult(NS_OK)
+    , mIsMainScript(aIsMainScript)
+    , mIsFromCache(false)
   {
     MOZ_ASSERT(aManager);
     AssertIsOnMainThread();
@@ -180,8 +181,6 @@ private:
   RefPtr<CompareCache> mCC;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
 
-  bool mIsMainScript;
-
   nsCOMPtr<nsIChannel> mChannel;
   nsString mBuffer;
   nsString mURL;
@@ -202,6 +201,9 @@ private:
 
   nsresult mNetworkResult;
   nsresult mCacheResult;
+
+  const bool mIsMainScript;
+  bool mIsFromCache;
 };
 
 NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver,
@@ -863,6 +865,12 @@ CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
 
   mInternalHeaders->FillResponseHeaders(mChannel);
+
+  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
+  if (cacheChannel) {
+    cacheChannel->IsFromCache(&mIsFromCache);
+  }
+
   return NS_OK;
 }
 
@@ -959,15 +967,9 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       NS_LITERAL_CSTRING("Service-Worker-Allowed"),
       mMaxScope);
 
-  bool isFromCache = false;
-  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
-  if (cacheChannel) {
-    cacheChannel->IsFromCache(&isFromCache);
-  }
-
   // [9.2 Update]4.13, If response's cache state is not "local",
   // set registration's last update check time to the current time
-  if (!isFromCache) {
+  if (!mIsFromCache) {
     mRegistration->RefreshLastUpdateCheckTime();
   }
 

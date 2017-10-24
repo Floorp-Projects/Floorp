@@ -118,8 +118,6 @@ class JSObject : public js::gc::Cell
     js::GetOwnPropertyOp getOpsGetOwnPropertyDescriptor()
                                                 const { return getClass()->getOpsGetOwnPropertyDescriptor(); }
     js::DeletePropertyOp getOpsDeleteProperty() const { return getClass()->getOpsDeleteProperty(); }
-    js::WatchOp          getOpsWatch()          const { return getClass()->getOpsWatch(); }
-    js::UnwatchOp        getOpsUnwatch()        const { return getClass()->getOpsUnwatch(); }
     js::GetElementsOp    getOpsGetElements()    const { return getClass()->getOpsGetElements(); }
     JSFunToStringOp      getOpsFunToString()    const { return getClass()->getOpsFunToString(); }
 
@@ -186,11 +184,6 @@ class JSObject : public js::gc::Cell
 
     inline bool isBoundFunction() const;
     inline bool hasSpecialEquality() const;
-
-    inline bool watched() const;
-    static bool setWatched(JSContext* cx, JS::HandleObject obj) {
-        return setFlags(cx, obj, js::BaseShape::WATCHED, GENERATE_SHAPE);
-    }
 
     // A "qualified" varobj is the object on which "qualified" variable
     // declarations (i.e., those defined with "var") are kept.
@@ -992,21 +985,6 @@ enum DefineAsIntrinsic {
 extern bool
 DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
                 DefineAsIntrinsic intrinsic);
-
-/*
- * Set a watchpoint: a synchronous callback when the given property of the
- * given object is set.
- *
- * Watchpoints are nonstandard and do not fit in well with the way ES6
- * specifies [[Set]]. They are also insufficient for implementing
- * Object.observe.
- */
-extern bool
-WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
-
-/* Clear a watchpoint. */
-extern bool
-UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id);
 
 /* ES6 draft rev 36 (2015 March 17) 7.1.1 ToPrimitive(vp[, preferredType]) */
 extern bool

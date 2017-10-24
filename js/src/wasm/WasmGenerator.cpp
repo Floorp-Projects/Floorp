@@ -64,7 +64,7 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env,
-                                 Atomic<bool>* cancelled, UniqueChars* error)
+                                 const Atomic<bool>* cancelled, UniqueChars* error)
   : compileArgs_(&args),
     error_(error),
     cancelled_(cancelled),

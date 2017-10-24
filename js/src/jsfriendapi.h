@@ -2262,36 +2262,11 @@ JS_FRIEND_API(void*)
 JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&);
 
 namespace js {
-
-/**
- * Add a watchpoint -- in the Object.prototype.watch sense -- to |obj| for the
- * property |id|, using the callable object |callable| as the function to be
- * called for notifications.
- *
- * This is an internal function exposed -- temporarily -- only so that DOM
- * proxies can be watchable.  Don't use it!  We'll soon kill off the
- * Object.prototype.{,un}watch functions, at which point this will go too.
- */
-extern JS_FRIEND_API(bool)
-WatchGuts(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
-
-/**
- * Remove a watchpoint -- in the Object.prototype.watch sense -- from |obj| for
- * the property |id|.
- *
- * This is an internal function exposed -- temporarily -- only so that DOM
- * proxies can be watchable.  Don't use it!  We'll soon kill off the
- * Object.prototype.{,un}watch functions, at which point this will go too.
- */
-extern JS_FRIEND_API(bool)
-UnwatchGuts(JSContext* cx, JS::HandleObject obj, JS::HandleId id);
-
 namespace jit {
 
 enum class InlinableNative : uint16_t;
 
 } // namespace jit
-
 } // namespace js
 
 /**

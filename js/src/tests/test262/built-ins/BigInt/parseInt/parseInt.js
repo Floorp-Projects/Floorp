@@ -1,5 +1,5 @@
 // |reftest| skip -- BigInt is not supported
-// Copyright (C) 2017 Robin Templeton. All rights reserved.
+// Copyright (C) 2017 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---

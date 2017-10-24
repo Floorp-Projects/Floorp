@@ -16,7 +16,7 @@ using namespace js::jit;
 // JIT backend, and also includes implementations for assorted random things
 // which can't be implemented in headers.
 
-JitCode* JitRuntime::generateEnterJIT(JSContext*, EnterJitType) { MOZ_CRASH(); }
+JitCode* JitRuntime::generateEnterJIT(JSContext*) { MOZ_CRASH(); }
 JitCode* JitRuntime::generateInvalidator(JSContext*) { MOZ_CRASH(); }
 JitCode* JitRuntime::generateArgumentsRectifier(JSContext*, void**) { MOZ_CRASH(); }
 JitCode* JitRuntime::generateBailoutTable(JSContext*, uint32_t) { MOZ_CRASH(); }

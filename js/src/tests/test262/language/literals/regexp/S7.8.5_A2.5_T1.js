@@ -3,9 +3,22 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-info: "RegularExpressionChar :: BackslashSequence :: \\LineTerminator is incorrect"
-es5id: 7.8.5_A2.5_T1
-description: Line Feed, without eval
+esid: prod-RegularExpressionBackslashSequence
+info: |
+  RegularExpressionBackslashSequence ::
+    \ RegularExpressionNonTerminator
+
+  RegularExpressionNonTerminator ::
+    SourceCharacter but not LineTerminator
+
+  LineTerminator ::
+    <LF>
+    <CR>
+    <LS>
+    <PS>
+
+description: >
+  A regular expression may not contain a <LF> as a SourceCharacter
 negative:
   phase: early
   type: SyntaxError
@@ -13,6 +26,5 @@ negative:
 
 throw "Test262: This statement should not be evaluated.";
 
-//CHECK#1
 /a\
 /

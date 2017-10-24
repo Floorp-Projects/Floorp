@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-regular-definitions.template
 /*---
 description: Computed property symbol names (regular fields defintion)
+esid: prod-FieldDefinition
 features: [Symbol, computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

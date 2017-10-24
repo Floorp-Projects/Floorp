@@ -344,12 +344,6 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool isCallable(JSObject* obj) const;
     virtual bool isConstructor(JSObject* obj) const;
 
-    // These two hooks must be overridden, or not overridden, in tandem -- no
-    // overriding just one!
-    virtual bool watch(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
-                       JS::HandleObject callable) const;
-    virtual bool unwatch(JSContext* cx, JS::HandleObject proxy, JS::HandleId id) const;
-
     virtual bool getElements(JSContext* cx, HandleObject proxy, uint32_t begin, uint32_t end,
                              ElementAdder* adder) const;
 

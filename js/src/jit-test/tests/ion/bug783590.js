@@ -7,7 +7,6 @@ Object.defineProperty(arr, 0, {
     glob.__proto__;
   })
 });
-this.watch("s", function() {});
 try {
   arr.pop();
 } catch (e) {}

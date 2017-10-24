@@ -21,11 +21,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-// crash [@ js_Interpret]
-  (eval("(function(){ this.watch(\"x\", function () { new function () { return y; } } ); const y = undefined });"))();
-  x = NaN;
-  reportCompare(expect, actual, summary + ': 2');
-
 // Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:5916
   ({ set z(v){},  set y(v) { return --x; }, set w(v) { return --w; } });
   reportCompare(expect, actual, summary + ': 3');

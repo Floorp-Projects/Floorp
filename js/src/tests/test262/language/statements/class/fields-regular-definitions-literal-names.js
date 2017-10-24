@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-regular-definitions.template
 /*---
 description: Literal property names (regular fields defintion)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

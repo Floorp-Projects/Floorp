@@ -68,7 +68,7 @@ Decoder::readSectionHeader(uint8_t* id, SectionRange* range)
     if (!readVarU32(&size))
         return false;
 
-    range->start = cur_ - beg_;
+    range->start = currentOffset();
     range->size = size;
     return true;
 }
@@ -112,14 +112,17 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, MaybeSectionRange* r
             goto rewind;
     }
 
-    // Found it, now start the section.
+    // Don't check the size since the range of bytes being decoded might not
+    // contain the section body. (This is currently the case when streaming: the
+    // code section header is decoded with the module environment bytes, the
+    // body of the code section is streamed in separately.)
 
     uint32_t size;
-    if (!readVarU32(&size) || bytesRemain() < size)
+    if (!readVarU32(&size))
         goto fail;
 
     range->emplace();
-    (*range)->start = cur_ - beg_;
+    (*range)->start = currentOffset();
     (*range)->size = size;
     return true;
 
@@ -137,7 +140,7 @@ Decoder::finishSection(const SectionRange& range, const char* sectionName)
 {
     if (resilientMode_)
         return true;
-    if (range.size != (cur_ - beg_) - range.start)
+    if (range.size != currentOffset() - range.start)
         return failf("byte size mismatch in %s section", sectionName);
     return true;
 }
@@ -160,6 +163,9 @@ Decoder::startCustomSection(const char* expected, size_t expectedLength, ModuleE
             return false;
         if (!*range)
             goto rewind;
+
+        if (bytesRemain() < (*range)->size)
+            goto fail;
 
         NameInBytecode name;
         if (!readVarU32(&name.length) || name.length > bytesRemain())
@@ -204,7 +210,7 @@ Decoder::finishCustomSection(const SectionRange& range)
 {
     MOZ_ASSERT(cur_ >= beg_);
     MOZ_ASSERT(cur_ <= end_);
-    cur_ = (beg_ + range.start) + range.size;
+    cur_ = (beg_ + (range.start - offsetInModule_)) + range.size;
     MOZ_ASSERT(cur_ <= end_);
     clearError();
 }
@@ -242,14 +248,14 @@ Decoder::startNameSubsection(NameType nameType, Maybe<uint32_t>* endOffset)
     if (!readVarU32(&payloadLength) || payloadLength > bytesRemain())
         return false;
 
-    *endOffset = Some((cur_ - beg_) + payloadLength);
+    *endOffset = Some(currentOffset() + payloadLength);
     return true;
 }
 
 bool
 Decoder::finishNameSubsection(uint32_t endOffset)
 {
-    return endOffset == uint32_t(cur_ - beg_);
+    return endOffset == uint32_t(currentOffset());
 }
 
 // Misc helpers.
@@ -1748,7 +1754,7 @@ wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
 bool
 wasm::Validate(const ShareableBytes& bytecode, UniqueChars* error)
 {
-    Decoder d(bytecode.bytes, error);
+    Decoder d(bytecode.bytes, 0, error);
 
     ModuleEnvironment env;
     if (!DecodeModuleEnvironment(d, &env))

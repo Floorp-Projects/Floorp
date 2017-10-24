@@ -6,7 +6,6 @@
 include('/media/webrtc/webrtc.mozbuild')
 
 EXPORTS += [
-    'nsIIPCBackgroundChildCreateCallback.h',
     'nsIIPCSerializableInputStream.h',
     'nsIIPCSerializableURI.h',
 ]

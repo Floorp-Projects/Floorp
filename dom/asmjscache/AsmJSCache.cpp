@@ -30,7 +30,6 @@
 #include "nsAutoPtr.h"
 #include "nsAtom.h"
 #include "nsIFile.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsISimpleEnumerator.h"
@@ -1062,7 +1061,6 @@ namespace {
 class ChildRunnable final
   : public FileDescriptorHolder
   , public PAsmJSCacheEntryChild
-  , public nsIIPCBackgroundChildCreateCallback
 {
   typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
 
@@ -1105,9 +1103,7 @@ public:
     }
   };
 
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
 
   ChildRunnable(nsIPrincipal* aPrincipal,
                 OpenMode aOpenMode,
@@ -1321,18 +1317,25 @@ ChildRunnable::Run()
 
       mPrincipalInfo = Move(principalInfo);
 
-      PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
-      if (actor) {
-        ActorCreated(actor);
-        return NS_OK;
-      }
-
-      if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(this))) {
+      PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
+      if (NS_WARN_IF(!actor)) {
         Fail(JS::AsmJSCache_InternalError);
         return NS_OK;
       }
 
-      mState = eBackgroundChildPending;
+      if (!actor->SendPAsmJSCacheEntryConstructor(this, mOpenMode, mWriteParams,
+                                                   *mPrincipalInfo)) {
+        // Unblock the parsing thread with a failure.
+
+        Fail(JS::AsmJSCache_InternalError);
+        return NS_OK;
+      }
+
+      // AddRef to keep this runnable alive until IPDL deallocates the
+      // subprotocol (DeallocEntryChild).
+      AddRef();
+
+      mState = eOpening;
       return NS_OK;
     }
 
@@ -1371,40 +1374,6 @@ ChildRunnable::Run()
   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Corrupt state");
   return NS_OK;
 }
-
-void
-ChildRunnable::ActorCreated(PBackgroundChild* aActor)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!aActor->SendPAsmJSCacheEntryConstructor(this, mOpenMode, mWriteParams,
-                                               *mPrincipalInfo)) {
-    // Unblock the parsing thread with a failure.
-
-    Fail(JS::AsmJSCache_InternalError);
-
-    return;
-  }
-
-  // AddRef to keep this runnable alive until IPDL deallocates the
-  // subprotocol (DeallocEntryChild).
-  AddRef();
-
-  mState = eOpening;
-}
-
-void
-ChildRunnable::ActorFailed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == eBackgroundChildPending);
-
-  Fail(JS::AsmJSCache_InternalError);
-}
-
-NS_IMPL_ISUPPORTS_INHERITED(ChildRunnable,
-                            FileDescriptorHolder,
-                            nsIIPCBackgroundChildCreateCallback)
 
 } // unnamed namespace
 

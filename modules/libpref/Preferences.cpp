@@ -3473,7 +3473,7 @@ public:
     }
 
     rv = NS_NewBufferedOutputStream(
-      getter_AddRefs(outStream), outStreamSink, 4096);
+      getter_AddRefs(outStream), outStreamSink.forget(), 4096);
     if (NS_FAILED(rv)) {
       return rv;
     }

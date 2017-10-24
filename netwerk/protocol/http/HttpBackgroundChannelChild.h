@@ -40,9 +40,6 @@ public:
   // Enqueued messages in background channel will be flushed.
   void OnStartRequestReceived();
 
-  // Callback while failed to create PBackground IPC channel.
-  void OnBackgroundChannelCreationFailed();
-
 protected:
   IPCResult RecvOnTransportAndData(const nsresult& aChannelStatus,
                                    const nsresult& aTransportStatus,

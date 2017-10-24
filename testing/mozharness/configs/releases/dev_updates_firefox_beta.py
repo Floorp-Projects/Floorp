@@ -33,11 +33,6 @@ config = {
             "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
             "publish_rules": [32],
-            "bz2_blob_suffix": "-bz2",
-            "bz2_rules_to_update": ["firefox-beta-cdntest-bz2", "firefox-beta-localtest-bz2"],
-            "bz2_publish_rules": [652],
-            "complete_mar_filename_pattern": '%s-%s.bz2.complete.mar',
-            "complete_mar_bouncer_product_pattern": '%s-%s-complete-bz2',
         }
     },
     "balrog_use_dummy_suffix": False,

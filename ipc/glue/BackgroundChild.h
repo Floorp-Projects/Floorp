@@ -12,7 +12,6 @@
 #include "mozilla/ipc/Transport.h"
 
 class nsIDOMBlob;
-class nsIIPCBackgroundChildCreateCallback;
 
 namespace mozilla {
 namespace dom {
@@ -37,8 +36,6 @@ class PBackgroundChild;
 // Creation of PBackground is synchronous. GetOrCreateForCurrentThread will
 // create the actor if it doesn't exist yet. Thereafter (assuming success)
 // GetForCurrentThread() will return the same actor every time.
-// GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback)
-// emulates former asynchronous behavior and might be removed in future.
 //
 // CloseForCurrentThread() will close the current PBackground actor.  Subsequent
 // calls to GetForCurrentThread will return null.  CloseForCurrentThread() may
@@ -59,10 +56,6 @@ public:
   // See above.
   static PBackgroundChild*
   GetForCurrentThread();
-
-  // See above.
-  static bool
-  GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
 
   // See above.
   static PBackgroundChild*

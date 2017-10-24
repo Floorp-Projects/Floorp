@@ -1,3 +1,5 @@
-# Disabled because they cause assertions/crashes in later crashtests, see bug 918246
-skip load 448064.xhtml
-skip load 471493.xul
+load 448064.xhtml # This test instantiates a11y, so be careful about adding tests before it
+load 471493.xul
+# last_test_to_unload_testsuite.xul MUST be the last test in the list because it
+# is responsible for shutting down accessibility service affecting later tests.
+load last_test_to_unload_testsuite.xul
