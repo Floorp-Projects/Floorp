@@ -9,10 +9,6 @@
   background-color: transparent;
 }
 
-#sidebar-search-container {
-  padding: 8px;
-}
-
 .sidebar-placesTree {
   -moz-appearance: none;
   background-color: transparent;
@@ -75,7 +71,7 @@
 }
 
 #sidebar-search-container {
-  padding: 4px;
+  padding: 8px;
 }
 
 #search-box {
