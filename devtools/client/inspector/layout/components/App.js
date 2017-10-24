@@ -5,10 +5,13 @@
 "use strict";
 
 const Services = require("Services");
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const BoxModel = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModel"));
@@ -28,28 +31,25 @@ const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 const GRID_OPENED_PREF = "devtools.layout.grid.opened";
 
-const App = createClass({
-
-  displayName: "App",
-
-  propTypes: {
-    boxModel: PropTypes.shape(BoxModelTypes.boxModel).isRequired,
-    getSwatchColorPickerTooltip: PropTypes.func.isRequired,
-    grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
-    highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings).isRequired,
-    setSelectedNode: PropTypes.func.isRequired,
-    showBoxModelProperties: PropTypes.bool.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onSetGridOverlayColor: PropTypes.func.isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
-    onShowBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-    onToggleGridHighlighter: PropTypes.func.isRequired,
-    onToggleShowGridLineNumbers: PropTypes.func.isRequired,
-    onToggleShowInfiniteLines: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class App extends PureComponent {
+  static get propTypes() {
+    return {
+      boxModel: PropTypes.shape(BoxModelTypes.boxModel).isRequired,
+      getSwatchColorPickerTooltip: PropTypes.func.isRequired,
+      grids: PropTypes.arrayOf(PropTypes.shape(GridTypes.grid)).isRequired,
+      highlighterSettings: PropTypes.shape(GridTypes.highlighterSettings).isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelProperties: PropTypes.bool.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onSetGridOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelEditor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onToggleGridHighlighter: PropTypes.func.isRequired,
+      onToggleShowGridLineNumbers: PropTypes.func.isRequired,
+      onToggleShowInfiniteLines: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     return dom.div(
@@ -59,9 +59,9 @@ const App = createClass({
       Accordion({
         items: [
           {
-            header: LAYOUT_L10N.getStr("layout.header"),
             component: Grid,
             componentProps: this.props,
+            header: LAYOUT_L10N.getStr("layout.header"),
             opened: Services.prefs.getBoolPref(GRID_OPENED_PREF),
             onToggled: () => {
               let opened = Services.prefs.getBoolPref(GRID_OPENED_PREF);
@@ -69,9 +69,9 @@ const App = createClass({
             }
           },
           {
-            header: BOXMODEL_L10N.getStr("boxmodel.title"),
             component: BoxModel,
             componentProps: this.props,
+            header: BOXMODEL_L10N.getStr("boxmodel.title"),
             opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
             onToggled: () => {
               let opened = Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF);
@@ -81,8 +81,7 @@ const App = createClass({
         ]
       })
     );
-  },
-
-});
+  }
+}
 
 module.exports = connect(state => state)(App);

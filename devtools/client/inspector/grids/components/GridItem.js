@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
 // Reps
@@ -14,25 +18,29 @@ const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
-module.exports = createClass({
+class GridItem extends PureComponent {
+  static get propTypes() {
+    return {
+      getSwatchColorPickerTooltip: PropTypes.func.isRequired,
+      grid: PropTypes.shape(Types.grid).isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onSetGridOverlayColor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onToggleGridHighlighter: PropTypes.func.isRequired,
+    };
+  }
 
-  displayName: "GridItem",
-
-  propTypes: {
-    getSwatchColorPickerTooltip: PropTypes.func.isRequired,
-    grid: PropTypes.shape(Types.grid).isRequired,
-    setSelectedNode: PropTypes.func.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onSetGridOverlayColor: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-    onToggleGridHighlighter: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.setGridColor = this.setGridColor.bind(this);
+    this.translateNodeFrontToGrip = this.translateNodeFrontToGrip.bind(this);
+    this.onGridCheckboxClick = this.onGridCheckboxClick.bind(this);
+  }
 
   componentDidMount() {
-    let tooltip = this.props.getSwatchColorPickerTooltip();
     let swatchEl = findDOMNode(this).querySelector(".grid-color-swatch");
+    let tooltip = this.props.getSwatchColorPickerTooltip();
 
     let previousColor;
     tooltip.addSwatch(swatchEl, {
@@ -45,18 +53,18 @@ module.exports = createClass({
         previousColor = this.props.grid.color;
       },
     });
-  },
+  }
 
   componentWillUnmount() {
-    let tooltip = this.props.getSwatchColorPickerTooltip();
     let swatchEl = findDOMNode(this).querySelector(".grid-color-swatch");
+    let tooltip = this.props.getSwatchColorPickerTooltip();
     tooltip.removeSwatch(swatchEl);
-  },
+  }
 
   setGridColor() {
     let color = findDOMNode(this).querySelector(".grid-color-value").textContent;
     this.props.onSetGridOverlayColor(this.props.grid.nodeFront, color);
-  },
+  }
 
   /**
    * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
@@ -88,7 +96,7 @@ module.exports = createClass({
         nodeType: nodeFront.nodeType,
       }
     };
-  },
+  }
 
   onGridCheckboxClick(e) {
     // If the click was on the svg icon to select the node in the inspector, bail out.
@@ -106,14 +114,14 @@ module.exports = createClass({
     } = this.props;
 
     onToggleGridHighlighter(grid.nodeFront);
-  },
+  }
 
   render() {
     let {
       grid,
+      setSelectedNode,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
-      setSelectedNode,
     } = this.props;
     let { nodeFront } = grid;
 
@@ -123,9 +131,9 @@ module.exports = createClass({
         {},
         dom.input(
           {
+            checked: grid.highlighted,
             type: "checkbox",
             value: grid.id,
-            checked: grid.highlighted,
             onChange: this.onGridCheckboxClick,
           }
         ),
@@ -160,6 +168,7 @@ module.exports = createClass({
         grid.color
       )
     );
-  },
+  }
+}
 
-});
+module.exports = GridItem;
