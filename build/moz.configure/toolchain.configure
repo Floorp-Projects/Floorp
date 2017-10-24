@@ -1301,8 +1301,17 @@ set_config('DEVELOPER_OPTIONS', developer_options)
 # Rust compiler flags
 # ==============================================================
 
-@depends(moz_optimize, debug_rust, '--enable-debug-symbols')
-def rust_compiler_flags(moz_optimize, debug_rust, debug_symbols):
+js_option(env='RUSTC_OPT_LEVEL',
+          nargs=1,
+          help='Rust compiler optimization level (-C opt-level=%s)')
+
+# --enable-release kicks in full optimizations.
+imply_option('RUSTC_OPT_LEVEL', '2', when='--enable-release')
+
+@depends('RUSTC_OPT_LEVEL', debug_rust, '--enable-debug-symbols',
+         moz_optimize)
+def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
+                        moz_optimize):
     optimize = moz_optimize.optimize
 
     # Cargo currently supports only two interesting profiles for building:
@@ -1321,8 +1330,10 @@ def rust_compiler_flags(moz_optimize, debug_rust, debug_symbols):
     debug_assertions = None
     debug_info = None
 
-    if not optimize:
-        opt_level = '0'
+    if opt_level_option.origin != 'default':
+        opt_level = opt_level_option[0]
+    else:
+        opt_level = '1' if optimize else '0'
 
     # opt-level=0 implies -C debug-assertions, which may not be desired
     # unless Rust debugging is enabled.
