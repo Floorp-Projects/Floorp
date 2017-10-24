@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test form autofill - preview and highlight</title>
+  <title>Test form autofill - clear form button</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="formautofill_common.js"></script>
@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Form autofill test: preview and highlight
+Form autofill test: clear form button
 
 <script>
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
@@ -31,18 +31,6 @@ const MOCK_STORAGE = [{
   tel: "+12223334444",
 }];
 
-function checkFormFieldsStyle(profile, isPreviewing = true) {
-  const elems = document.querySelectorAll("input, select");
-
-  for (const elem of elems) {
-    const fillableValue = profile && profile[elem.id];
-    const previewValue = isPreviewing && fillableValue || "";
-
-    checkFieldHighlighted(elem, !!fillableValue);
-    checkFieldPreview(elem, previewValue);
-  }
-}
-
 initPopupListener();
 
 add_task(async function setup_storage() {
@@ -51,38 +39,36 @@ add_task(async function setup_storage() {
   await addAddress(MOCK_STORAGE[2]);
 });
 
-add_task(async function check_preview() {
-  const focusedInput = await setInput("#organization", "");
+function checkIsFormCleared(patch = {}) {
+  const form = document.getElementById("form1");
 
-  doKey("down");
-  await expectPopup();
-  checkFormFieldsStyle(null);
-
-  for (let i = 0; i < MOCK_STORAGE.length; i++) {
-    doKey("down");
-    await notifySelectedIndex(i);
-    checkFormFieldsStyle(MOCK_STORAGE[i]);
+  for (const elem of form.elements) {
+    const expectedValue = patch[elem.id] || "";
+    is(elem.value, expectedValue, "checking value");
+    checkFieldHighlighted(elem, false);
+    checkFieldPreview(elem, "");
   }
+}
 
-  // Navigate to the footer
-  doKey("down");
-  await notifySelectedIndex(MOCK_STORAGE.length);
-  checkFormFieldsStyle(null);
-
-  doKey("down");
-  await notifySelectedIndex(-1);
-  checkFormFieldsStyle(null);
-
-  focusedInput.blur();
-});
-
-add_task(async function check_filled_highlight() {
+add_task(async function simple_clear() {
   await triggerPopupAndHoverItem("#organization", 0);
-  // filled 1st address
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
-  checkFormFieldsStyle(MOCK_STORAGE[0], false);
+
+  await triggerPopupAndHoverItem("#tel", 0);
+  doKey("return");
+  checkIsFormCleared();
 });
 
+add_task(async function clear_modified_form() {
+  await triggerPopupAndHoverItem("#organization", 0);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+
+  await setInput("#tel", "+1111111111", true);
+
+  await triggerPopupAndHoverItem("#street-address", 0);
+  doKey("return");
+  checkIsFormCleared({tel: "+1111111111"});
+});
 </script>
 
 <p id="display"></p>
