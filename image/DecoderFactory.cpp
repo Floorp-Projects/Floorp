@@ -10,7 +10,9 @@
 
 #include "AnimationSurfaceProvider.h"
 #include "Decoder.h"
+#include "DecodedSurfaceProvider.h"
 #include "IDecodingTask.h"
+#include "ImageOps.h"
 #include "nsPNGDecoder.h"
 #include "nsGIFDecoder2.h"
 #include "nsJPEGDecoder.h"

@@ -393,6 +393,7 @@ ImageTestCase CorruptICOWithBadBppTestCase();
 ImageTestCase TransparentPNGTestCase();
 ImageTestCase TransparentGIFTestCase();
 ImageTestCase FirstFramePaddingGIFTestCase();
+ImageTestCase TransparentIfWithinICOBMPTestCase(TestCaseFlags aFlags);
 ImageTestCase NoFrameDelayGIFTestCase();
 ImageTestCase ExtraImageSubBlocksAnimatedGIFTestCase();
 
