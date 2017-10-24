@@ -24,14 +24,14 @@ XCODE_LEGACY = ('https://developer.apple.com/downloads/download.action?path=Deve
                 'xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg')
 
 MACPORTS_URL = {
-    '11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.11-ElCapitan.pkg',
-    '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.10-Yosemite.pkg',
-    '9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.9-Mavericks.pkg',
-    '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.8-MountainLion.pkg',
-    '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.7-Lion.pkg',
-    '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.6-SnowLeopard.pkg', }
-
-MACPORTS_CLANG_PACKAGE = 'clang-3.3'
+    '13': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.13-HighSierra.pkg',
+    '12': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.12-Sierra.pkg',
+    '11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.11-ElCapitan.pkg',
+    '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.10-Yosemite.pkg',
+    '9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.9-Mavericks.pkg',
+    '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.8-MountainLion.pkg',
+    '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.7-Lion.pkg',
+    '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.4.2-10.6-SnowLeopard.pkg', }
 
 RE_CLANG_VERSION = re.compile('Apple (?:clang|LLVM) version (\d+\.\d+)')
 
@@ -145,7 +145,11 @@ shell's init script (e.g. ~/.bash_profile) to export a PATH
 environment variable containing the location of your package
 manager binary. e.g.
 
+Homebrew:
     export PATH=/usr/local/bin:$PATH
+
+MacPorts:
+    export PATH=/opt/local/bin:$PATH
 '''
 
 BAD_PATH_ORDER = '''

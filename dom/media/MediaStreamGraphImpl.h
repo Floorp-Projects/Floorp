@@ -476,7 +476,6 @@ public:
   {
 #ifdef DEBUG
     mMonitor.AssertCurrentThreadOwns();
-    AssertOnGraphThreadOrNotRunning();
 #endif
     mDriver = aDriver;
   }

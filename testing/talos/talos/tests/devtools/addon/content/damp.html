@@ -31,6 +31,7 @@ var defaultConfig = {
     "console.bulklog": true,
     "console.streamlog": true,
     "console.objectexpand": true,
+    "inspector.mutations": true,
   }
 };
 
@@ -56,6 +57,7 @@ var testsInfo = {
   "console.bulklog": "Measure time for a bunch of sync console.log statements to appear",
   "console.streamlog": "Measure rAF on page during a stream of console.log statements",
   "console.objectexpand": "Measure time to expand a large object and close the console",
+  "inspector.mutations": "Measure the time to perform childList mutations when inspector is enabled",
 };
 
 function updateConfig() {

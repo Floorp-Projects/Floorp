@@ -33,3 +33,5 @@ BROWSER_CHROME_MANIFESTS += [
 TEST_DIRS += [
     'mozscreenshots/extension',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']

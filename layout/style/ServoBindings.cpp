@@ -2842,7 +2842,8 @@ Gecko_AddBufferToCrashReport(const void* addr, size_t len)
 #endif
 }
 
-void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str)
+void
+Gecko_AnnotateCrashReport(const char* key_str, const char* value_str)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsDependentCString key(key_str);
@@ -2852,4 +2853,20 @@ void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str)
   NS_ENSURE_TRUE_VOID(cr);
   cr->AnnotateCrashReport(key, value);
 #endif
+}
+
+void
+Gecko_ContentList_AppendAll(
+  nsSimpleContentList* aList,
+  const Element** aElements,
+  size_t aLength)
+{
+  MOZ_ASSERT(aElements);
+  MOZ_ASSERT(aLength);
+  MOZ_ASSERT(aList);
+
+  aList->SetCapacity(aLength);
+  for (size_t i = 0; i < aLength; ++i) {
+    aList->AppendElement(const_cast<Element*>(aElements[i]));
+  }
 }

@@ -1656,15 +1656,22 @@ this.XPIStates = {
 
   /**
    * Find the highest priority location of an add-on by ID and return the
-   * location and the XPIState.
-   * @param aId   The add-on ID
-   * @param aLocations If specified, the locations to search
+   * XPIState.
+   * @param {string} aId
+   *        The add-on IDa
+   * @param {function} aFilter
+   *        An optional filter to apply to install locations.  If provided,
+   *        addons in locations that do not match the filter are not considered.
+   *
    * @return {XPIState?}
    */
-  findAddon(aId, aLocations = this.db.values()) {
+  findAddon(aId, aFilter = location => true) {
     // Fortunately the Map iterator returns in order of insertion, which is
     // also our highest -> lowest priority order.
-    for (let location of aLocations) {
+    for (let location of this.db.values()) {
+      if (!aFilter(location)) {
+        continue;
+      }
       if (location.has(aId)) {
         return location.get(aId);
       }
@@ -2253,9 +2260,8 @@ this.XPIProvider = {
               reason = BOOTSTRAP_REASONS.ADDON_DISABLE;
             } else if (addon.location.name == KEY_APP_TEMPORARY) {
               reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
-              let locations = Array.from(XPIStates.db.values())
-                                   .filter(loc => loc.name != TemporaryInstallLocation.name);
-              let existing = XPIStates.findAddon(addon.id, locations);
+              let existing = XPIStates.findAddon(addon.id, loc =>
+                loc.name != TemporaryInstallLocation.name);
               if (existing) {
                 reason = newVersionReason(addon.version, existing.version);
               }
@@ -2349,9 +2355,7 @@ this.XPIProvider = {
 
         let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
 
-        let locations = Array.from(XPIStates.db.values())
-                             .filter(loc => loc != tempLocation);
-        let existing = XPIStates.findAddon(id, locations);
+        let existing = XPIStates.findAddon(id, loc => loc != tempLocation);
         if (existing) {
           reason = newVersionReason(addon.version, existing.version);
         }
@@ -4642,50 +4646,22 @@ this.XPIProvider = {
                                              makePending);
     }
 
-    // Reveal the highest priority add-on with the same ID
-    function revealAddon(aAddon) {
-      XPIDatabase.makeAddonVisible(aAddon);
-
-      let wrappedAddon = aAddon.wrapper;
-      AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
-
-      if (!aAddon.disabled && !XPIProvider.enableRequiresRestart(aAddon)) {
-        XPIDatabase.updateAddonActive(aAddon, true);
-      }
-
-      if (aAddon.bootstrap) {
-        XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle,
-                                        "install", BOOTSTRAP_REASONS.ADDON_INSTALL);
-
-        if (aAddon.active) {
-          XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle,
-                                          "startup", BOOTSTRAP_REASONS.ADDON_INSTALL);
-        } else {
-          XPIProvider.unloadBootstrapScope(aAddon.id);
-        }
-      }
-
-      // We always send onInstalled even if a restart is required to enable
-      // the revealed add-on
-      AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
-    }
-
-    function findAddonAndReveal(aId) {
-      let state = XPIStates.findAddon(aId);
-      if (state) {
-        XPIDatabase.getAddonInLocation(aId, state.location.name, revealAddon);
-      }
+    let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+    let existingAddon = XPIStates.findAddon(aAddon.id, loc =>
+      loc.name != aAddon._installLocation.name);
+    if (existingAddon) {
+      reason = newVersionReason(aAddon.version, existingAddon.version);
     }
 
     if (!makePending) {
       if (aAddon.bootstrap) {
         if (aAddon.active) {
           this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
-                                   BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+                                   reason);
         }
 
         this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
-                                 BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+                                 reason);
         XPIStates.disableAddon(aAddon.id);
         this.unloadBootstrapScope(aAddon.id);
         flushChromeCaches();
@@ -4695,10 +4671,36 @@ this.XPIProvider = {
       XPIStates.removeAddon(aAddon.location, aAddon.id);
       AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
 
-      findAddonAndReveal(aAddon.id);
+      if (existingAddon) {
+        XPIDatabase.getAddonInLocation(aAddon.id, existingAddon.location.name, existing => {
+          XPIDatabase.makeAddonVisible(existing);
+
+          let wrappedAddon = existing.wrapper;
+          AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
+
+          if (!existing.disabled && !XPIProvider.enableRequiresRestart(existing)) {
+            XPIDatabase.updateAddonActive(existing, true);
+          }
+
+          if (aAddon.bootstrap) {
+            XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
+                                            "install", reason);
+
+            if (existing.active) {
+              XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
+                                              "startup", reason);
+            } else {
+              XPIProvider.unloadBootstrapScope(existing.id);
+            }
+          }
+
+          // We always send onInstalled even if a restart is required to enable
+          // the revealed add-on
+          AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
+        });
+      }
     } else if (aAddon.bootstrap && aAddon.active && !this.disableRequiresRestart(aAddon)) {
-      this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
-                               BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+      this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown", reason);
       XPIStates.disableAddon(aAddon.id);
       this.unloadBootstrapScope(aAddon.id);
       XPIDatabase.updateAddonActive(aAddon, false);

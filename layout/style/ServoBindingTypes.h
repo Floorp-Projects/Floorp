@@ -51,6 +51,7 @@ struct nsFontFaceRuleContainer;
 class nsIDocument;
 class nsINode;
 class nsPresContext;
+class nsSimpleContentList;
 struct nsTimingFunction;
 class nsXBLBinding;
 

@@ -39,18 +39,18 @@ class VendorRust(MozbuildObject):
 
     def check_cargo_vendor_version(self, cargo):
         '''
-        Ensure that cargo-vendor is new enough. cargo-vendor 0.1.11 and newer
-        strips out .orig and .rej files which we want.
+        Ensure that cargo-vendor is new enough. cargo-vendor 0.1.12 and newer
+        strips out .cargo-ok, .orig and .rej files which we want.
         '''
         for l in subprocess.check_output([cargo, 'install', '--list']).splitlines():
             # The line looks like one of the following:
-            #  cargo-vendor v0.1.11:
-            #  cargo-vendor v0.1.11 (file:///path/to/local/build/cargo-vendor):
+            #  cargo-vendor v0.1.12:
+            #  cargo-vendor v0.1.12 (file:///path/to/local/build/cargo-vendor):
             # and we want to extract the version part of it
             m = re.match('cargo-vendor v((\d+\.)*\d+)', l)
             if m:
                 version = m.group(1)
-                return LooseVersion(version) >= b'0.1.11'
+                return LooseVersion(version) >= b'0.1.12'
         return False
 
     def check_modified_files(self):
@@ -117,7 +117,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self.run_process(args=[cargo, 'install', 'cargo-vendor'],
                              append_env=env)
         elif not self.check_cargo_vendor_version(cargo):
-            self.log(logging.INFO, 'cargo_vendor', {}, 'cargo-vendor >= 0.1.11 required; force-reinstalling (this may take a few minutes)...')
+            self.log(logging.INFO, 'cargo_vendor', {}, 'cargo-vendor >= 0.1.12 required; force-reinstalling (this may take a few minutes)...')
             env = self.check_openssl()
             self.run_process(args=[cargo, 'install', '--force', 'cargo-vendor'],
                              append_env=env)

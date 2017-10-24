@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
  * A file (disk) based persistent cache of a JSON serializable object.
  */
 this.PersistentCache = class PersistentCache {
-
   /**
    * Create a cache object based on a name.
    *

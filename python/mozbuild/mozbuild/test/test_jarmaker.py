@@ -363,5 +363,73 @@ relativesrcdir dom/locales:
         self.assertEquals(jm.localedirs, [os.path.join('/L10N_BASE', 'dom')])
 
 
+class Test_fluent(unittest.TestCase):
+    """
+    Unit tests for JarMaker interaction with Fluent
+    """
+    debug = False  # set to True to debug failing tests on disk
+
+    def setUp(self):
+        self.tmpdir = mkdtemp()
+        self.srcdir = os.path.join(self.tmpdir, 'src')
+        os.mkdir(self.srcdir)
+        self.builddir = os.path.join(self.tmpdir, 'build')
+        os.mkdir(self.builddir)
+        self.l10nbase = os.path.join(self.tmpdir, 'l10n-base')
+        os.mkdir(self.l10nbase)
+        self.l10nmerge = os.path.join(self.tmpdir, 'l10n-merge')
+        os.mkdir(self.l10nmerge)
+
+    def tearDown(self):
+        if self.debug:
+            print(self.tmpdir)
+        elif sys.platform != "win32":
+            # can't clean up on windows
+            rmtree(self.tmpdir)
+
+    def _create_fluent_setup(self):
+        # create src content
+        jarf = open(os.path.join(self.srcdir, 'jar.mn'), 'w')
+        jarf.write('''[localization] test.jar:
+ app    (%app/**/*.ftl)
+''')
+        jarf.close()
+        appdir = os.path.join(self.srcdir, 'app', 'locales', 'en-US', 'app')
+        os.makedirs(appdir)
+        open(os.path.join(appdir, 'test.ftl'), 'w').write('id = Value')
+        open(os.path.join(appdir, 'test2.ftl'), 'w').write('id2 = Value 2')
+
+        l10ndir = os.path.join(self.l10nbase, 'app', 'app')
+        os.makedirs(l10ndir)
+        open(os.path.join(l10ndir, 'test.ftl'), 'w').write('id =  L10n Value')
+
+    def test_l10n_not_merge_ftl(self):
+        '''Test that JarMaker doesn't merge source .ftl files'''
+        self._create_fluent_setup()
+        jm = JarMaker(outputFormat='symlink')
+        jm.sourcedirs = [self.srcdir]
+        jm.topsourcedir = self.srcdir
+        jm.l10nbase = self.l10nbase
+        jm.l10nmerge = self.l10nmerge
+        jm.relativesrcdir = 'app/locales'
+        jm.makeJar(os.path.join(self.srcdir, 'jar.mn'), self.builddir)
+
+        # test.ftl should be taken from the l10ndir, since it is present there
+        destpath = os.path.join(
+            self.builddir, 'localization', 'test', 'app', 'test.ftl')
+        srcpath = os.path.join(self.l10nbase, 'app', 'app', 'test.ftl')
+        self.assertTrue(is_symlink_to(destpath, srcpath),
+                        '{0} should be a symlink to {1}'.format(destpath,
+                                                                srcpath))
+
+        # test2.ftl on the other hand, is only present in en-US dir, and should
+        # not be linked from the build dir
+        destpath = os.path.join(
+            self.builddir, 'localization', 'test', 'app', 'test2.ftl')
+        self.assertFalse(
+            os.path.isfile(destpath),
+            'test2.ftl should not be taken from en-US')
+
+
 if __name__ == '__main__':
     mozunit.main()

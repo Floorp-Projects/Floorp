@@ -24,7 +24,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,
                                          nsXPConnect::GetSingleton)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(mozJSComponentLoader,
+                                         mozJSComponentLoader::GetOrCreate);
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 
 NS_DEFINE_NAMED_CID(NS_JS_ID_CID);

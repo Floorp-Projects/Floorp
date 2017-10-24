@@ -23,14 +23,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
 
 const HIGHLIGHTS_MAX_LENGTH = 9;
-const HIGHLIGHTS_UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
 const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_SHOWMORE_LENGTH;
 const SECTION_ID = "highlights";
 
 this.HighlightsFeed = class HighlightsFeed {
   constructor() {
-    this.highlightsLastUpdated = 0;
-    this.highlightsLength = 0;
     this.dedupe = new Dedupe(this._dedupeKey);
     this.linksCache = new LinksCache(NewTabUtils.activityStreamLinks,
       "getHighlights", ["image"]);
@@ -47,29 +44,26 @@ this.HighlightsFeed = class HighlightsFeed {
 
   postInit() {
     SectionsManager.enableSection(SECTION_ID);
-    this.fetchHighlights(true);
+    this.fetchHighlights({broadcast: true});
   }
 
   uninit() {
     SectionsManager.disableSection(SECTION_ID);
   }
 
-  async fetchHighlights(broadcast = false) {
-    // We broadcast when we want to force an update, so get fresh links
-    if (broadcast) {
-      this.linksCache.expire();
+  /**
+   * Refresh the highlights data for content.
+   * @param {bool} options.broadcast Should the update be broadcasted.
+   */
+  async fetchHighlights(options = {}) {
+    // We need TopSites for deduping, so wait for TOP_SITES_UPDATED.
+    if (!this.store.getState().TopSites.initialized) {
+      return;
     }
 
-    // We need TopSites to have been initialised for deduping
-    if (!this.store.getState().TopSites.initialized) {
-      await new Promise(resolve => {
-        const unsubscribe = this.store.subscribe(() => {
-          if (this.store.getState().TopSites.initialized) {
-            unsubscribe();
-            resolve();
-          }
-        });
-      });
+    // We broadcast when we want to force an update, so get fresh links
+    if (options.broadcast) {
+      this.linksCache.expire();
     }
 
     // Request more than the expected length to allow for items being removed by
@@ -119,9 +113,12 @@ this.HighlightsFeed = class HighlightsFeed {
       }
     }
 
-    SectionsManager.updateSection(SECTION_ID, {rows: highlights}, broadcast);
-    this.highlightsLastUpdated = Date.now();
-    this.highlightsLength = highlights.length;
+    const sectionIndex = SectionsManager.sections.get(SECTION_ID).order;
+    const {initialized} = this.store.getState().Sections[sectionIndex];
+    // Broadcast when required or if it is the first update.
+    const shouldBroadcast = options.broadcast || !initialized;
+
+    SectionsManager.updateSection(SECTION_ID, {rows: highlights}, shouldBroadcast);
   }
 
   /**
@@ -141,28 +138,22 @@ this.HighlightsFeed = class HighlightsFeed {
       case at.INIT:
         this.init();
         break;
-      case at.NEW_TAB_LOAD:
-        if (this.highlightsLength < HIGHLIGHTS_MAX_LENGTH) {
-          // If we haven't filled the highlights grid yet, fetch again.
-          this.fetchHighlights(true);
-        } else if (Date.now() - this.highlightsLastUpdated >= HIGHLIGHTS_UPDATE_TIME) {
-          // If the last time we refreshed the data is greater than 15 minutes, fetch again.
-          this.fetchHighlights(false);
-        }
+      case at.SYSTEM_TICK:
+        this.fetchHighlights({broadcast: false});
         break;
       case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINKS_DELETED:
       case at.PLACES_LINK_BLOCKED:
-        this.fetchHighlights(true);
+        this.fetchHighlights({broadcast: true});
         break;
       case at.PLACES_BOOKMARK_ADDED:
       case at.PLACES_BOOKMARK_REMOVED:
         this.linksCache.expire();
-        this.fetchHighlights(false);
+        this.fetchHighlights({broadcast: false});
         break;
       case at.TOP_SITES_UPDATED:
-        this.fetchHighlights(false);
+        this.fetchHighlights({broadcast: false});
         break;
       case at.UNINIT:
         this.uninit();
@@ -171,5 +162,4 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 };
 
-this.HIGHLIGHTS_UPDATE_TIME = HIGHLIGHTS_UPDATE_TIME;
-this.EXPORTED_SYMBOLS = ["HighlightsFeed", "HIGHLIGHTS_UPDATE_TIME", "SECTION_ID"];
+this.EXPORTED_SYMBOLS = ["HighlightsFeed", "SECTION_ID"];

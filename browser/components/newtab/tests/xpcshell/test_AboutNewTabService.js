@@ -8,9 +8,12 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
+
+const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
 const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/data/content/activity-stream-prerendered.html";
 const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/data/content/activity-stream-prerendered-debug.html";
@@ -37,7 +40,8 @@ add_task(async function test_as_and_prerender_initialized() {
     ".activityStreamEnabled should be set to the correct initial value");
   Assert.equal(aboutNewTabService.activityStreamPrerender, Services.prefs.getBoolPref(ACTIVITY_STREAM_PRERENDER_PREF),
     ".activityStreamPrerender should be set to the correct initial value");
-  Assert.equal(aboutNewTabService.activityStreamDebug, Services.prefs.getBoolPref(ACTIVITY_STREAM_DEBUG_PREF),
+  // This pref isn't defined on release or beta, so we fall back to false
+  Assert.equal(aboutNewTabService.activityStreamDebug, Services.prefs.getBoolPref(ACTIVITY_STREAM_DEBUG_PREF, false),
     ".activityStreamDebug should be set to the correct initial value");
 });
 
@@ -105,20 +109,28 @@ add_task(async function test_default_url() {
   Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_URL,
     "Newtab defaultURL initially set to prerendered AS url");
 
-  await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_DEBUG_PREF, true,
-    "A notification occurs after changing the debug pref to true");
+  // Only debug variants aren't available on release/beta
+  if (!IS_RELEASE_OR_BETA) {
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_DEBUG_PREF, true,
+      "A notification occurs after changing the debug pref to true");
+    Assert.equal(aboutNewTabService.activityStreamDebug, true,
+      "the .activityStreamDebug property is set to true");
+    Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_DEBUG_URL,
+      "Newtab defaultURL set to debug prerendered AS url after the pref has been changed");
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_PRERENDER_PREF, false,
+      "A notification occurs after changing the prerender pref to false");
+    Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_DEBUG_URL,
+      "Newtab defaultURL set to un-prerendered AS with debug if prerender is false and debug is true");
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_DEBUG_PREF, false,
+      "A notification occurs after changing the debug pref to false");
+  } else {
+    Services.prefs.setBoolPref(ACTIVITY_STREAM_DEBUG_PREF, true);
 
-  Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_PRERENDER_DEBUG_URL,
-    "Newtab defaultURL set to debug prerendered AS url after the pref has been changed");
-
-  await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_PRERENDER_PREF, false,
-    "A notification occurs after changing the prerender pref to false");
-
-  Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_DEBUG_URL,
-    "Newtab defaultURL set to un-prerendered AS with debug if prerender is false and debug is true");
-
-  await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_DEBUG_PREF, false,
-    "A notification occurs after changing the debug pref to false");
+    Assert.equal(aboutNewTabService.activityStreamDebug, false,
+      "the .activityStreamDebug property is remains false");
+    await setBoolPrefAndWaitForChange(ACTIVITY_STREAM_PRERENDER_PREF, false,
+      "A notification occurs after changing the prerender pref to false");
+  }
 
   Assert.equal(aboutNewTabService.defaultURL, ACTIVITY_STREAM_URL,
     "Newtab defaultURL set to un-prerendered AS if prerender is false and debug is false");

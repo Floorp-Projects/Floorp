@@ -94,6 +94,9 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/peerconnection',
 ]
 
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+
 UNIFIED_SOURCES += [
     'BindingUtils.cpp',
     'CallbackInterface.cpp',
@@ -158,6 +161,10 @@ PYTHON_UNITTEST_MANIFESTS += [
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+    # Suppress warnings in third-party code.
+    CXXFLAGS += [
+        '-Wno-maybe-uninitialized',
+    ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += ['CSS2Properties.webidl']

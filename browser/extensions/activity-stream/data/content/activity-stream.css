@@ -223,12 +223,14 @@ main {
 
 
 .body-wrapper .section-title,
-.body-wrapper .sections-list .section:last-of-type {
+.body-wrapper .sections-list .section:last-of-type,
+.body-wrapper .topic {
   opacity: 0; }
 
 
 .body-wrapper.on .section-title,
-.body-wrapper.on .sections-list .section:last-of-type {
+.body-wrapper.on .sections-list .section:last-of-type,
+.body-wrapper.on .topic {
   opacity: 1; }
 
 .top-sites-list {
@@ -630,15 +632,14 @@ section.top-sites:hover .edit-topsites-button {
         .topic .topic-read-more:dir(rtl) {
           float: left; } }
     .topic .topic-read-more::after {
-      background-image: url("assets/topic-show-more-12.svg");
-      background-repeat: no-repeat;
+      background: url("assets/topic-show-more-12.svg") no-repeat center center;
       content: '';
       -moz-context-properties: fill;
       display: inline-block;
       fill: #008EA4;
       height: 16px;
       margin-inline-start: 5px;
-      vertical-align: middle;
+      vertical-align: top;
       width: 12px; }
     .topic .topic-read-more:dir(rtl)::after {
       transform: scaleX(-1); }
@@ -1102,8 +1103,7 @@ section.top-sites:hover .edit-topsites-button {
 .collapsible-section .section-title .icon-arrowhead-down,
 .collapsible-section .section-title .icon-arrowhead-forward {
   margin-top: -1px;
-  margin-inline-start: 8px;
-  transition: transform 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
+  margin-inline-start: 8px; }
 
 .collapsible-section .section-top-bar {
   position: relative; }
@@ -1211,10 +1211,15 @@ section.top-sites:hover .edit-topsites-button {
   max-height: 900px;
   margin: 0 -7px;
   padding: 0 7px; }
-  .collapsible-section .section-body.animation-enabled {
-    transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
   .collapsible-section .section-body.animating {
     overflow: hidden; }
+
+.collapsible-section.animation-enabled .section-title .icon-arrowhead-down,
+.collapsible-section.animation-enabled .section-title .icon-arrowhead-forward {
+  transition: transform 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
+
+.collapsible-section.animation-enabled .section-body {
+  transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
 
 .collapsible-section.collapsed .section-body {
   max-height: 0;

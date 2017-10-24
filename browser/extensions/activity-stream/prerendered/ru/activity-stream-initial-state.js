@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "ru",
+    "strings": {
+      "newtab_page_title": "Новая вкладка",
+      "default_label_loading": "Загрузка…",
+      "header_top_sites": "Топ сайтов",
+      "header_stories": "Топ статей",
+      "header_highlights": "Избранное",
+      "header_visit_again": "Посетить снова",
+      "header_bookmarks": "Недавние закладки",
+      "header_recommended_by": "Рекомендовано {provider}",
+      "header_bookmarks_placeholder": "У вас ещё нет каких-либо закладок.",
+      "header_stories_from": "от",
+      "type_label_visited": "Посещено",
+      "type_label_bookmarked": "В закладках",
+      "type_label_synced": "Синхронизировано с другого устройства",
+      "type_label_recommended": "Популярные",
+      "type_label_open": "Открыта",
+      "type_label_topic": "Тема",
+      "type_label_now": "Сейчас",
+      "menu_action_bookmark": "Добавить в закладки",
+      "menu_action_remove_bookmark": "Удалить закладку",
+      "menu_action_copy_address": "Скопировать ссылку",
+      "menu_action_email_link": "Отправить ссылку…",
+      "menu_action_open_new_window": "Открыть в новом окне",
+      "menu_action_open_private_window": "Открыть в новом приватном окне",
+      "menu_action_dismiss": "Скрыть",
+      "menu_action_delete": "Удалить из истории",
+      "menu_action_pin": "Прикрепить",
+      "menu_action_unpin": "Открепить",
+      "confirm_history_delete_p1": "Вы действительно хотите удалить все записи об этой странице из вашей истории?",
+      "confirm_history_delete_notice_p2": "Это действие не может быть отменено.",
+      "menu_action_save_to_pocket": "Сохранить в Pocket",
+      "search_for_something_with": "Искать {search_term} в:",
+      "search_button": "Искать",
+      "search_header": "Искать в {search_engine_name}",
+      "search_web_placeholder": "Искать в Интернете",
+      "search_settings": "Изменить настройки поиска",
+      "section_info_option": "Информация",
+      "section_info_send_feedback": "Отправить отзыв",
+      "section_info_privacy_notice": "Уведомление о приватности",
+      "welcome_title": "Добро пожаловать на новую вкладку",
+      "welcome_body": "Firefox будет использовать это место, чтобы отображать самые актуальные закладки, статьи, видео и страницы, которые вы недавно посетили, чтобы вы смогли легко попасть на них снова.",
+      "welcome_label": "Определение вашего избранного",
+      "time_label_less_than_minute": "<1 мин.",
+      "time_label_minute": "{number} мин.",
+      "time_label_hour": "{number} ч.",
+      "time_label_day": "{number} д.",
+      "settings_pane_button_label": "Настроить свою страницу новой вкладки",
+      "settings_pane_header": "Настройки новой вкладки",
+      "settings_pane_body2": "Выберите, что вы увидите на этой странице.",
+      "settings_pane_search_header": "Поиск",
+      "settings_pane_search_body": "Поиск в Интернете с вашей новой вкладки.",
+      "settings_pane_topsites_header": "Топ сайтов",
+      "settings_pane_topsites_body": "Получите доступ к сайтам, которые вы посещаете чаще всего.",
+      "settings_pane_topsites_options_showmore": "Показать в два ряда",
+      "settings_pane_bookmarks_header": "Недавние закладки",
+      "settings_pane_bookmarks_body": "Ваши новые закладки в одном удобном расположении.",
+      "settings_pane_visit_again_header": "Посетить снова",
+      "settings_pane_visit_again_body": "Firefox покажет вам элементы вашей истории просмотра, которые вы, возможно, захотите вспомнить или посетить снова.",
+      "settings_pane_highlights_header": "Избранное",
+      "settings_pane_highlights_body2": "Найдите способ вернуться к интересным страницам, которые вы недавно посетили или добавили в закладки.",
+      "settings_pane_highlights_options_bookmarks": "Закладки",
+      "settings_pane_highlights_options_visited": "Посещённые сайты",
+      "settings_pane_snippets_header": "Заметки",
+      "settings_pane_snippets_body": "Читайте короткие и радостные новости от Mozilla о Firefox, интернет-культуру и случайные мемы.",
+      "settings_pane_done_button": "Готово",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Изменить",
+      "edit_topsites_button_label": "Настроить свой топ сайтов",
+      "edit_topsites_showmore_button": "Показать больше",
+      "edit_topsites_showless_button": "Показать меньше",
+      "edit_topsites_done_button": "Готово",
+      "edit_topsites_pin_button": "Закрепить этот сайт",
+      "edit_topsites_unpin_button": "Открепить этот сайт",
+      "edit_topsites_edit_button": "Изменить этот сайт",
+      "edit_topsites_dismiss_button": "Скрыть этот сайт",
+      "edit_topsites_add_button": "Добавить",
+      "topsites_form_add_header": "Новый сайт в топе",
+      "topsites_form_edit_header": "Изменить сайт из топа",
+      "topsites_form_title_placeholder": "Введите название",
+      "topsites_form_url_placeholder": "Введите или вставьте URL",
+      "topsites_form_add_button": "Добавить",
+      "topsites_form_save_button": "Сохранить",
+      "topsites_form_cancel_button": "Отмена",
+      "topsites_form_url_validation": "Введите корректный URL",
+      "pocket_read_more": "Популярные темы:",
+      "pocket_read_even_more": "Больше статей",
+      "pocket_feedback_header": "Лучшее из Интернета, отобранное более чем 25 миллионами людей.",
+      "pocket_description": "Откройте для себя высококачественный контент, который вы могли бы пропустить, с помощью Pocket, теперь ставшего частью Mozilla.",
+      "highlights_empty_state": "Начните веб-сёрфинг, и мы покажем вам здесь некоторые из замечательных статей, видеороликов и других страниц, которые вы недавно посетили или добавили в закладки.",
+      "topstories_empty_state": "Вы всё прочитали. Зайдите попозже, чтобы увидеть больше лучших статей от {provider}. Не можете ждать? Выберите популярную тему, чтобы найти больше интересных статей со всего Интернета.",
+      "manual_migration_explanation2": "Попробуйте Firefox с закладками, историей и паролями из другого браузера.",
+      "manual_migration_cancel_button": "Нет, спасибо",
+      "manual_migration_import_button": "Импортировать сейчас"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

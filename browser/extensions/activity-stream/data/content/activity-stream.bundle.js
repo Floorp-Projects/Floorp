@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -298,12 +298,6 @@ module.exports = ReactIntl;
 /* 3 */
 /***/ (function(module, exports) {
 
-module.exports = ReactRedux;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
 var g;
 
 // This works in non-strict mode
@@ -326,6 +320,12 @@ try {
 
 module.exports = g;
 
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = ReactRedux;
 
 /***/ }),
 /* 5 */
@@ -985,11 +985,14 @@ module.exports._unconnected = LinkMenu;
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+/* WEBPACK VAR INJECTION */(function(global) {var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 const React = __webpack_require__(1);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 const { injectIntl, FormattedMessage } = __webpack_require__(2);
+
+const VISIBLE = "visible";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 
 function getFormattedMessage(message) {
   return typeof message === "string" ? React.createElement(
@@ -1092,12 +1095,21 @@ class CollapsibleSection extends React.PureComponent {
     this.onInfoLeave = this.onInfoLeave.bind(this);
     this.onHeaderClick = this.onHeaderClick.bind(this);
     this.onTransitionEnd = this.onTransitionEnd.bind(this);
-    this.state = { enableAnimation: false, isAnimating: false, infoActive: false };
+    this.enableOrDisableAnimation = this.enableOrDisableAnimation.bind(this);
+    this.state = { enableAnimation: true, isAnimating: false, infoActive: false };
   }
-  componentDidUpdate(prevProps, prevState) {
-    // Enable animations once we get prefs loaded in to avoid animations running during loading.
-    if (prevProps.Prefs.values[this.props.prefName] === undefined && this.props.Prefs.values[this.props.prefName] !== undefined) {
-      setTimeout(() => this.setState({ enableAnimation: true }), 0);
+
+  componentWillMount() {
+    this.props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
+  }
+  componentWillUnmount() {
+    this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
+  }
+  enableOrDisableAnimation() {
+    // Only animate the collapse/expand for visible tabs.
+    const visible = this.props.document.visibilityState === VISIBLE;
+    if (this.state.enableAnimation !== visible) {
+      this.setState({ enableAnimation: visible });
     }
   }
   _setInfoState(nextActive) {
@@ -1138,7 +1150,7 @@ class CollapsibleSection extends React.PureComponent {
 
     return React.createElement(
       "section",
-      { className: `collapsible-section ${this.props.className}${isCollapsed ? " collapsed" : ""}` },
+      { className: `collapsible-section ${this.props.className}${enableAnimation ? " animation-enabled" : ""}${isCollapsed ? " collapsed" : ""}` },
       React.createElement(
         "div",
         { className: "section-top-bar" },
@@ -1157,19 +1169,27 @@ class CollapsibleSection extends React.PureComponent {
       ),
       React.createElement(
         "div",
-        { className: `section-body${enableAnimation ? " animation-enabled" : ""}${isAnimating ? " animating" : ""}`, onTransitionEnd: this.onTransitionEnd },
+        { className: `section-body${isAnimating ? " animating" : ""}`, onTransitionEnd: this.onTransitionEnd },
         this.props.children
       )
     );
   }
 }
 
-CollapsibleSection.defaultProps = { Prefs: { values: {} } };
+CollapsibleSection.defaultProps = {
+  document: global.document || {
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    visibilityState: "hidden"
+  },
+  Prefs: { values: {} }
+};
 
 module.exports = injectIntl(CollapsibleSection);
 module.exports._unconnected = CollapsibleSection;
 module.exports.Info = Info;
 module.exports.InfoIntl = InfoIntl;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 10 */
@@ -1238,7 +1258,6 @@ class ComponentPerfTimer extends React.Component {
 
   _maybeSendBadStateEvent() {
     // Follow up bugs:
-    // https://github.com/mozilla/activity-stream/issues/3688
     // https://github.com/mozilla/activity-stream/issues/3691
     if (!this.props.initialized) {
       // Remember to report back when data is available.
@@ -1295,13 +1314,9 @@ class ComponentPerfTimer extends React.Component {
       // value has to be Int32.
       const value = parseInt(this.perfSvc.getMostRecentAbsMarkStartByName(dataReadyKey) - this.perfSvc.getMostRecentAbsMarkStartByName(firstRenderKey), 10);
       this.props.dispatch(ac.SendToMain({
-        type: at.TELEMETRY_UNDESIRED_EVENT,
-        data: {
-          source: this.props.id.toUpperCase(),
-          // highlights_data_late_by_ms, topsites_data_late_by_ms.
-          event: `${this.props.id}_data_late_by_ms`,
-          value
-        }
+        type: at.SAVE_SESSION_PERF_DATA,
+        // highlights_data_late_by_ms, topsites_data_late_by_ms.
+        data: { [`${this.props.id}_data_late_by_ms`]: value }
       }));
     } catch (ex) {
       // If this failed, it's likely because the `privacy.resistFingerprinting`
@@ -1488,7 +1503,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(global) {const React = __webpack_require__(1);
 const ReactDOM = __webpack_require__(13);
 const Base = __webpack_require__(14);
-const { Provider } = __webpack_require__(3);
+const { Provider } = __webpack_require__(4);
 const initStore = __webpack_require__(31);
 const { reducers } = __webpack_require__(6);
 const DetectUserSessionStart = __webpack_require__(33);
@@ -1513,7 +1528,7 @@ ReactDOM.render(React.createElement(
 ), document.getElementById("root"));
 
 addSnippetsSubscriber(store);
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 13 */
@@ -1525,8 +1540,8 @@ module.exports = ReactDOM;
 /* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+/* WEBPACK VAR INJECTION */(function(global) {const React = __webpack_require__(1);
+const { connect } = __webpack_require__(4);
 const { addLocaleData, IntlProvider } = __webpack_require__(2);
 const TopSites = __webpack_require__(15);
 const Search = __webpack_require__(21);
@@ -1542,13 +1557,19 @@ const { PrerenderData } = __webpack_require__(30);
 // more features are needed.
 function addLocaleDataForReactIntl({ locale, textDirection }) {
   addLocaleData([{ locale, parentLocale: "en" }]);
-  document.documentElement.lang = locale;
-  document.documentElement.dir = textDirection;
+  if (global.document) {
+    global.document.documentElement.lang = locale;
+    global.document.documentElement.dir = textDirection;
+  }
 }
 
 class Base extends React.PureComponent {
   componentWillMount() {
-    this.sendNewTabRehydrated(this.props.App);
+    const { App } = this.props;
+    this.sendNewTabRehydrated(App);
+    if (App.locale) {
+      addLocaleDataForReactIntl(App);
+    }
   }
 
   componentDidMount() {
@@ -1557,6 +1578,7 @@ class Base extends React.PureComponent {
     // dispatched right after the store is ready.
     if (this.props.isPrerendered) {
       this.props.dispatch(ac.SendToMain({ type: at.NEW_TAB_STATE_REQUEST }));
+      this.props.dispatch(ac.SendToMain({ type: at.PAGE_PRERENDERED }));
     }
 
     // Also wait for the preloaded page to show, so the tab's title and favicon updates
@@ -1635,13 +1657,14 @@ class Base extends React.PureComponent {
 
 module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
 module.exports._unconnected = Base;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { FormattedMessage } = __webpack_require__(2);
 
 const TopSitesEdit = __webpack_require__(16);
@@ -2310,7 +2333,7 @@ module.exports = {
 
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { FormattedMessage, injectIntl } = __webpack_require__(2);
 const { actionCreators: ac } = __webpack_require__(0);
 const { IS_NEWTAB } = __webpack_require__(22);
@@ -2420,14 +2443,14 @@ module.exports._unconnected = Search;
   // constant to know if the page is about:newtab or about:home
   IS_NEWTAB: global.document && global.document.documentURI === "about:newtab"
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { FormattedMessage } = __webpack_require__(2);
 const { actionTypes, actionCreators: ac } = __webpack_require__(0);
 
@@ -2450,24 +2473,21 @@ const { actionTypes, actionCreators: ac } = __webpack_require__(0);
  *   confirm_button_string_id: "menu_action_delete"
  * },
  */
-const ConfirmDialog = React.createClass({
-  displayName: "ConfirmDialog",
-
-  getDefaultProps() {
-    return {
-      visible: false,
-      data: {}
-    };
-  },
+class ConfirmDialog extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this._handleCancelBtn = this._handleCancelBtn.bind(this);
+    this._handleConfirmBtn = this._handleConfirmBtn.bind(this);
+  }
 
   _handleCancelBtn() {
     this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
     this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
-  },
+  }
 
   _handleConfirmBtn() {
     this.props.data.onConfirm.forEach(this.props.dispatch);
-  },
+  }
 
   _renderModalMessage() {
     const message_body = this.props.data.body_string_id;
@@ -2485,7 +2505,7 @@ const ConfirmDialog = React.createClass({
         React.createElement(FormattedMessage, { id: msg })
       ))
     );
-  },
+  }
 
   render() {
     if (!this.props.visible) {
@@ -2521,7 +2541,7 @@ const ConfirmDialog = React.createClass({
       )
     );
   }
-});
+}
 
 module.exports = connect(state => state.Dialog)(ConfirmDialog);
 module.exports._unconnected = ConfirmDialog;
@@ -2532,7 +2552,7 @@ module.exports.Dialog = ConfirmDialog;
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { FormattedMessage } = __webpack_require__(2);
 const { actionTypes: at, actionCreators: ac } = __webpack_require__(0);
 
@@ -2596,7 +2616,7 @@ module.exports._unconnected = ManualMigration;
 /***/ (function(module, exports, __webpack_require__) {
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { injectIntl, FormattedMessage } = __webpack_require__(2);
 const { actionCreators: ac, actionTypes: at } = __webpack_require__(0);
 const { TOP_SITES_DEFAULT_LENGTH, TOP_SITES_SHOWMORE_LENGTH } = __webpack_require__(6);
@@ -2795,7 +2815,7 @@ module.exports.PreferencesInput = PreferencesInput;
 /* WEBPACK VAR INJECTION */(function(global) {var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 const React = __webpack_require__(1);
-const { connect } = __webpack_require__(3);
+const { connect } = __webpack_require__(4);
 const { injectIntl, FormattedMessage } = __webpack_require__(2);
 const Card = __webpack_require__(27);
 const { PlaceholderCard } = Card;
@@ -2995,7 +3015,7 @@ module.exports = connect(state => ({ Sections: state.Sections, Prefs: state.Pref
 module.exports._unconnected = Sections;
 module.exports.SectionIntl = SectionIntl;
 module.exports._unconnectedSection = Section;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 27 */
@@ -3331,6 +3351,9 @@ var PrerenderData = new _PrerenderData({
     "showTopSites": true,
     "showSearch": true,
     "topSitesCount": 6,
+    "collapseTopSites": false,
+    "section.highlights.collapsed": false,
+    "section.topstories.collapsed": false,
     "feeds.section.topstories": true,
     "feeds.section.highlights": true
   },
@@ -3340,7 +3363,7 @@ var PrerenderData = new _PrerenderData({
   // too different for the prerendered version to be used. Unfortunately, this
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
-  validation: ["showTopSites", "showSearch",
+  validation: ["showTopSites", "showSearch", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed",
   // This means if either of these are set to their default values,
   // prerendering can be used.
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
@@ -3476,7 +3499,7 @@ module.exports.rehydrationMiddleware = rehydrationMiddleware;
 module.exports.MERGE_STORE_ACTION = MERGE_STORE_ACTION;
 module.exports.OUTGOING_MESSAGE_NAME = OUTGOING_MESSAGE_NAME;
 module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 32 */
@@ -3552,7 +3575,7 @@ module.exports = class DetectUserSessionStart {
     }
   }
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 34 */
@@ -3909,7 +3932,7 @@ module.exports = {
   SnippetsProvider,
   SNIPPETS_UPDATE_INTERVAL_MS
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ })
 /******/ ]);

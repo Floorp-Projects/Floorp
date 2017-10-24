@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "sk",
+    "strings": {
+      "newtab_page_title": "Nová karta",
+      "default_label_loading": "Načítava sa…",
+      "header_top_sites": "Top stránky",
+      "header_stories": "Top príbehy",
+      "header_highlights": "Vybrané stránky",
+      "header_visit_again": "Navštívte znova",
+      "header_bookmarks": "Nedávno pridané záložky",
+      "header_recommended_by": "Odporúča {provider}",
+      "header_bookmarks_placeholder": "Zatiaľ nemáte žiadne záložky.",
+      "header_stories_from": "zo služby",
+      "type_label_visited": "Navštívené",
+      "type_label_bookmarked": "V záložkách",
+      "type_label_synced": "Synchronizované z ďalšieho zariadenia",
+      "type_label_recommended": "Trendy",
+      "type_label_open": "Otvorené",
+      "type_label_topic": "Téma",
+      "type_label_now": "Teraz",
+      "menu_action_bookmark": "Pridať medzi záložky",
+      "menu_action_remove_bookmark": "Odstrániť záložku",
+      "menu_action_copy_address": "Kopírovať adresu",
+      "menu_action_email_link": "Odoslať odkaz e-mailom…",
+      "menu_action_open_new_window": "Otvoriť v novom okne",
+      "menu_action_open_private_window": "Otvoriť v novom okne režimu Súkromné prehliadanie",
+      "menu_action_dismiss": "Skryť",
+      "menu_action_delete": "Odstrániť z histórie",
+      "menu_action_pin": "Pripnúť",
+      "menu_action_unpin": "Odopnúť",
+      "confirm_history_delete_p1": "Ste si istí, že chcete odstrániť všetky výskyty tejto stránky zo svojej histórie prehliadania?",
+      "confirm_history_delete_notice_p2": "Túto akciu nie je možné vrátiť späť.",
+      "menu_action_save_to_pocket": "Uložiť do služby Pocket",
+      "search_for_something_with": "Hľadať {search_term} pomocou:",
+      "search_button": "Hľadať",
+      "search_header": "Vyhľadávanie pomocou {search_engine_name}",
+      "search_web_placeholder": "Vyhľadávanie na webe",
+      "search_settings": "Zmeniť nastavenia vyhľadávania",
+      "section_info_option": "Informácie",
+      "section_info_send_feedback": "Odoslať spätnú väzbu",
+      "section_info_privacy_notice": "Zásady ochrany súkromia",
+      "welcome_title": "Vitajte na stránke novej karty",
+      "welcome_body": "Firefox bude na tomto mieste zobrazovať často zobrazované záložky, články, videá a stránky, ktoré ste nedávno navštívili. Váš prístup k nim je tak omnoho ľahší.",
+      "welcome_label": "Identifikácia vybraných stránok",
+      "time_label_less_than_minute": "< 1 min",
+      "time_label_minute": "{number} min",
+      "time_label_hour": "{number} hod",
+      "time_label_day": "{number} d",
+      "settings_pane_button_label": "Prispôsobte si svoju stránku Nová karta",
+      "settings_pane_header": "Nastavenia Novej karty",
+      "settings_pane_body2": "Vyberte si, čo chcete na tejto stránke vidieť.",
+      "settings_pane_search_header": "Vyhľadávanie",
+      "settings_pane_search_body": "Vyhľadávanie zo stránky novej karty.",
+      "settings_pane_topsites_header": "Top stránky",
+      "settings_pane_topsites_body": "Prístup k webovým stránkam, ktoré navštevujete najčastejšie.",
+      "settings_pane_topsites_options_showmore": "Zobraziť dva riadky",
+      "settings_pane_bookmarks_header": "Nedávno pridané záložky",
+      "settings_pane_bookmarks_body": "Vaše nedávno pridané záložky na jednom mieste.",
+      "settings_pane_visit_again_header": "Navštívte znova",
+      "settings_pane_visit_again_body": "Firefox vám ukáže niektoré časti vašej histórie prehliadania, ktoré by ste si mohli chcieť pripomenúť alebo sa k nim vrátiť.",
+      "settings_pane_highlights_header": "Vybrané stránky",
+      "settings_pane_highlights_body2": "Pozrite sa na zaujímavé stránky, ktoré ste nedávno navštívili alebo pridali do záložiek.",
+      "settings_pane_highlights_options_bookmarks": "Záložky",
+      "settings_pane_highlights_options_visited": "Navštívené stránky",
+      "settings_pane_snippets_header": "Snippety",
+      "settings_pane_snippets_body": "Prečítajte si krátke správy od Mozilly o Firefoxe či internetovej kultúre. Občas uvidíte aj náhodné meme.",
+      "settings_pane_done_button": "Hotovo",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Upraviť",
+      "edit_topsites_button_label": "Upravte sekciu Top stránky",
+      "edit_topsites_showmore_button": "Zobraziť viac",
+      "edit_topsites_showless_button": "Zobraziť menej",
+      "edit_topsites_done_button": "Hotovo",
+      "edit_topsites_pin_button": "Pripnúť túto stránku",
+      "edit_topsites_unpin_button": "Zrušiť pripnutie tejto stránky",
+      "edit_topsites_edit_button": "Upraviť túto stránku",
+      "edit_topsites_dismiss_button": "Odstrániť túto stránku",
+      "edit_topsites_add_button": "Pridať",
+      "topsites_form_add_header": "Nová top stránka",
+      "topsites_form_edit_header": "Upraviť top stránku",
+      "topsites_form_title_placeholder": "Zadajte názov",
+      "topsites_form_url_placeholder": "Zadajte alebo prilepte URL",
+      "topsites_form_add_button": "Pridať",
+      "topsites_form_save_button": "Uložiť",
+      "topsites_form_cancel_button": "Zrušiť",
+      "topsites_form_url_validation": "Vyžaduje sa platná URL",
+      "pocket_read_more": "Populárne témy:",
+      "pocket_read_even_more": "Zobraziť ďalšie príbehy",
+      "pocket_feedback_header": "To najlepšie z webu - podľa názoru 25 miliónov ľudí.",
+      "pocket_description": "Objavte vysokokvalitný obsah, ktorý by ste inak prepásli. Pomôže vám s tým Pocket, súčasť Mozilly.",
+      "highlights_empty_state": "Začnite s prehliadaním a my vám na tomto mieste ukážeme skvelé články, videá a ostatné stránky, ktoré ste nedávno navštívili alebo pridali medzi záložky.",
+      "topstories_empty_state": "Už ste prečítali všetko. Ďalšie príbehy zo služby {provider} tu nájdete opäť neskôr. Nemôžete sa dočkať? Vyberte si populárnu tému a pozrite sa na ďalšie skvelé príbehy z celého webu.",
+      "manual_migration_explanation2": "Vyskúšajte Firefox so záložkami, históriou prehliadania a heslami s iných prehliadačov.",
+      "manual_migration_cancel_button": "Nie, ďakujem",
+      "manual_migration_import_button": "Importovať teraz"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};
