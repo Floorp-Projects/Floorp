@@ -245,8 +245,9 @@ public:
                                    const wr::StickySideConstraint* aRight,
                                    const wr::StickySideConstraint* aBottom,
                                    const wr::StickySideConstraint* aLeft);
-  void PushStickyFrame(const wr::WrStickyId& aStickyId);
-  void PopStickyFrame();
+  void PushStickyFrame(const wr::WrStickyId& aStickyId,
+                       const DisplayItemClipChain* aParent);
+  void PopStickyFrame(const DisplayItemClipChain* aParent);
 
   bool IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const;
   void DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,

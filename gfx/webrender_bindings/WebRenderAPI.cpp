@@ -779,16 +779,33 @@ DisplayListBuilder::DefineStickyFrame(const wr::LayoutRect& aContentRect,
 }
 
 void
-DisplayListBuilder::PushStickyFrame(const wr::WrStickyId& aStickyId)
+DisplayListBuilder::PushStickyFrame(const wr::WrStickyId& aStickyId,
+                                    const DisplayItemClipChain* aParent)
 {
   wr_dp_push_clip(mWrState, aStickyId.id);
   WRDL_LOG("PushSticky id=%" PRIu64 "\n", mWrState, aStickyId.id);
+  // inside WR, a sticky id is just a regular clip id. so we can do some
+  // handwaving here and turn the WrStickyId into a WrclipId and treat it
+  // like any other out-of-band clip.
+  wr::WrClipId stickyIdAsClipId;
+  stickyIdAsClipId.id = aStickyId.id;
+  auto it = mCacheOverride.insert({ aParent, std::vector<wr::WrClipId>() });
+  it.first->second.push_back(stickyIdAsClipId);
+  WRDL_LOG("Pushing override %p -> %" PRIu64 "\n", mWrState, aParent, aStickyId.id);
 }
 
 void
-DisplayListBuilder::PopStickyFrame()
+DisplayListBuilder::PopStickyFrame(const DisplayItemClipChain* aParent)
 {
   WRDL_LOG("PopSticky\n", mWrState);
+  auto it = mCacheOverride.find(aParent);
+  MOZ_ASSERT(it != mCacheOverride.end());
+  MOZ_ASSERT(!(it->second.empty()));
+  WRDL_LOG("Popping override %p -> %" PRIu64 "\n", mWrState, aParent, it->second.back().id);
+  it->second.pop_back();
+  if (it->second.empty()) {
+    mCacheOverride.erase(it);
+  }
   wr_dp_pop_clip(mWrState);
 }
 
