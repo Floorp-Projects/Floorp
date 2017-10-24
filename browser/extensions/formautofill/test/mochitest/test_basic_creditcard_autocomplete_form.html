@@ -36,44 +36,6 @@ const reducedMockRecord = {
   "cc-number": "1234123456785678",
 };
 
-function checkElementFilled(element, expectedvalue) {
-  const focusedElem = document.activeElement;
-  const promises = [];
-
-  promises.push(new Promise(resolve => {
-    element.addEventListener("input", function onInput() {
-      ok(true, "Checking " + element.name + " field fires input event");
-      resolve();
-    }, {once: true});
-  }));
-
-  // Don't expect that focused input will receive "change" event since focus never move away.
-  if (element !== focusedElem) {
-    promises.push(new Promise(resolve => {
-      element.addEventListener("change", function onChange() {
-        ok(true, "Checking " + element.name + " field fires change event");
-        is(element.value, expectedvalue, "Checking " + element.name + " field");
-        resolve();
-      }, {once: true});
-    }));
-  }
-
-  return promises;
-}
-
-function checkFormFilled(creditCard) {
-  info("expecting form filled");
-  let promises = [];
-  for (let prop in creditCard) {
-    let element = document.getElementById(prop);
-    let converted = String(creditCard[prop]); // Convert potential number to string
-
-    promises.push(...checkElementFilled(element, converted));
-  }
-  doKey("return");
-  return Promise.all(promises);
-}
-
 async function setupCreditCardStorage() {
   await addCreditCard(MOCK_STORAGE[0]);
   await addCreditCard(MOCK_STORAGE[1]);
@@ -199,12 +161,12 @@ add_task(async function check_fields_after_form_autofill() {
   })));
 
   doKey("down");
-  await checkFormFilled(MOCK_STORAGE[1]);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
 });
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
-  await setInput("#cc-name", "");
+  await setInput("#cc-name", "", true);
   doKey("down");
   await expectPopup();
   checkMenuEntries(["John Smith"], false);
