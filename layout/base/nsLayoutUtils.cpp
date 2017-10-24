@@ -3314,7 +3314,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
     builder.SetDescendIntoSubdocuments(false);
   }
 
-  builder.SetHitTestShouldStopAtFirstOpaque(aFlags & ONLY_VISIBLE);
+  builder.SetHitTestIsForVisibility(aFlags & ONLY_VISIBLE);
 
   builder.EnterPresShell(aFrame);
 
