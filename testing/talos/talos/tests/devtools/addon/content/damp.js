@@ -317,6 +317,26 @@ Damp.prototype = {
     yield this.testTeardown();
   }),
 
+async _consoleOpenWithCachedMessagesTest() {
+  let TOTAL_MESSAGES = 100;
+  let tab = await this.testSetup(SIMPLE_URL);
+
+  // Load a frame script using a data URI so we can do logs
+  // from the page.  So this is running in content.
+  tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(`
+    function () {
+      for (var i = 0; i < ${TOTAL_MESSAGES}; i++) {
+        content.console.log('damp', i+1, content);
+      }
+    }`
+  ) + ")()", true);
+
+  await this.openToolboxAndLog("console.openwithcache", "webconsole");
+
+  await this.closeToolbox(null);
+  await this.testTeardown();
+},
+
   /**
    * Measure the time necesssary to perform successive childList mutations in the content
    * page and update the markup-view accordingly.
@@ -731,6 +751,7 @@ Damp.prototype = {
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
     tests["console.streamlog"] = this._consoleStreamLoggingTest;
     tests["console.objectexpand"] = this._consoleObjectExpansionTest;
+    tests["console.openwithcache"] = this._consoleOpenWithCachedMessagesTest;
     tests["inspector.mutations"] = this._inspectorMutationsTest;
 
     // Filter tests via `./mach --subtests filter` command line argument
