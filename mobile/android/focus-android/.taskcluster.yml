@@ -102,6 +102,8 @@ tasks:
       github:
         events:
           - release
+    scopes:
+      - "secrets:get:project/focus/tokens"
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
