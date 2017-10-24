@@ -49,8 +49,6 @@ class QuotaManagerService final
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
-  nsTArray<nsAutoPtr<PendingRequestInfo>> mPendingRequests;
-
   QuotaChild* mBackgroundActor;
 
   bool mBackgroundActorFailed;
