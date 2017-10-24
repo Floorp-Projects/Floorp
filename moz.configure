@@ -101,8 +101,14 @@ js_option('--enable-debug',
           help='Enable building with developer debug info '
                '(using the given compiler flags).')
 
-add_old_configure_assignment('MOZ_DEBUG',
-                             depends('--enable-debug')(lambda v: bool(v)))
+@depends('--enable-debug')
+def moz_debug(debug):
+    if debug:
+        return bool(debug)
+
+set_config('MOZ_DEBUG', moz_debug)
+set_define('MOZ_DEBUG', moz_debug)
+add_old_configure_assignment('MOZ_DEBUG', moz_debug)
 
 js_option('--enable-rust-debug',
           help='Build Rust code with debug assertions turned on.')
