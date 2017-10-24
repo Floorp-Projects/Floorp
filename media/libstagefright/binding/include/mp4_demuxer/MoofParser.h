@@ -33,8 +33,12 @@ public:
   }
   explicit Mvhd(Box& aBox);
 
-  Microseconds ToMicroseconds(int64_t aTimescaleUnits)
+  Result<Microseconds, nsresult> ToMicroseconds(int64_t aTimescaleUnits)
   {
+    if (!mTimescale) {
+      NS_WARNING("invalid mTimescale");
+      return Err(NS_ERROR_FAILURE);
+    }
     int64_t major = aTimescaleUnits / mTimescale;
     int64_t remainder = aTimescaleUnits % mTimescale;
     return major * 1000000ll + remainder * 1000000ll / mTimescale;
