@@ -1053,7 +1053,7 @@ void wr_dp_push_box_shadow(WrState *aState,
                            ColorF aColor,
                            float aBlurRadius,
                            float aSpreadRadius,
-                           float aBorderRadius,
+                           BorderRadius aBorderRadius,
                            BoxShadowClipMode aClipMode)
 WR_FUNC;
 

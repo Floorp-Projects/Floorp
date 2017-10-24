@@ -1104,7 +1104,7 @@ DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
                                   const wr::ColorF& aColor,
                                   const float& aBlurRadius,
                                   const float& aSpreadRadius,
-                                  const float& aBorderRadius,
+                                  const wr::BorderRadius& aBorderRadius,
                                   const wr::BoxShadowClipMode& aClipMode)
 {
   wr_dp_push_box_shadow(mWrState, aRect, aClip, aIsBackfaceVisible,

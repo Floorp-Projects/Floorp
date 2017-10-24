@@ -1718,7 +1718,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         color: ColorF,
                                         blur_radius: f32,
                                         spread_radius: f32,
-                                        border_radius: f32,
+                                        border_radius: BorderRadius,
                                         clip_mode: BoxShadowClipMode) {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -1732,7 +1732,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                           color,
                           blur_radius,
                           spread_radius,
-                          BorderRadius::uniform(border_radius),
+                          border_radius,
                           clip_mode);
 }
 
