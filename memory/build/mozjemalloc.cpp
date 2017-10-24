@@ -1100,8 +1100,6 @@ static Mutex huge_mtx;
 static RedBlackTree<extent_node_t, ExtentTreeTrait> huge;
 
 /* Huge allocation statistics. */
-static uint64_t		huge_nmalloc;
-static uint64_t		huge_ndalloc;
 static size_t		huge_allocated;
 static size_t		huge_mapped;
 
@@ -4045,7 +4043,6 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
   {
     MutexAutoLock lock(huge_mtx);
     huge.Insert(node);
-    huge_nmalloc++;
 
     /* Although we allocated space for csize bytes, we indicate that we've
      * allocated only psize bytes.
@@ -4190,7 +4187,6 @@ huge_dalloc(void* aPtr)
     MOZ_ASSERT(node->addr == aPtr);
     huge.Remove(node);
 
-    huge_ndalloc++;
     huge_allocated -= node->size;
     huge_mapped -= CHUNK_CEILING(node->size);
   }
@@ -4376,8 +4372,6 @@ MALLOC_OUT:
   /* Initialize huge allocation data. */
   huge_mtx.Init();
   huge.Init();
-  huge_nmalloc = 0;
-  huge_ndalloc = 0;
   huge_allocated = 0;
   huge_mapped = 0;
 
