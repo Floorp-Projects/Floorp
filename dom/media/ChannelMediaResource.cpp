@@ -389,7 +389,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     // not at the end of stream. We don't restart the stream if we're at the
     // end because not all web servers handle this case consistently; see:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
-    nsresult rv = CacheClientSeek(GetOffset(), false);
+    nsresult rv = Seek(GetOffset(), false);
     if (NS_SUCCEEDED(rv)) {
       return rv;
     }
@@ -853,12 +853,10 @@ ChannelMediaResource::CacheClientNotifySuspendedStatusChanged()
 }
 
 nsresult
-ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
+ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-
-  LOG("CacheClientSeek requested for aOffset [%" PRId64 "] for decoder [%p]",
-      aOffset, mCallback.get());
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG("Seek requested for aOffset [%" PRId64 "]", aOffset);
 
   CloseChannel();
 
@@ -876,6 +874,23 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return OpenChannel(aOffset);
+}
+
+void
+ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
+{
+  RefPtr<ChannelMediaResource> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaResource::Seek", [self, aOffset, aResume]() {
+      nsresult rv = self->Seek(aOffset, aResume);
+      if (NS_FAILED(rv)) {
+        // Close the streams that failed due to error. This will cause all
+        // client Read and Seek operations on those streams to fail. Blocked
+        // Reads will also be woken up.
+        self->Close();
+      }
+    });
+  mCallback->AbstractMainThread()->Dispatch(r.forget());
 }
 
 nsresult
