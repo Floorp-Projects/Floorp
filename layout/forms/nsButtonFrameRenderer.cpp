@@ -383,7 +383,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                                  visible,
                                                                  mFrame,
                                                                  buttonRect);
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
+  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
 
   return true;
 }
@@ -551,7 +551,7 @@ nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
     return false;
   }
 
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
+  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   return true;
 }
 

@@ -3602,7 +3602,8 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 }
 
 void
-nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+nsCSSBorderRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
+                                             wr::DisplayListBuilder& aBuilder,
                                              wr::IpcResourceUpdateQueue& aResources,
                                              const layers::StackingContextHelper& aSc)
 {
@@ -3622,7 +3623,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
     LayoutDeviceRect clip = LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
     wr::LayoutRect clipRect = aSc.ToRelativeLayoutRect(clip);
     wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(), clipRect);
-    aBuilder.PushClip(clipId, true);
+    aBuilder.PushClip(clipId, aItem->GetClipChain());
   }
 
   Range<const wr::BorderSide> wrsides(side, 4);
@@ -3634,7 +3635,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                       borderRadius);
 
   if (mLocalClip) {
-    aBuilder.PopClip(true);
+    aBuilder.PopClip(aItem->GetClipChain());
   }
 }
 
