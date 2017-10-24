@@ -228,6 +228,19 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
         ids.second = mBuilder->GetCacheOverride(aChain);
       } else {
         auto it = aCache.find(aChain);
+        if (it == aCache.end()) {
+          // Degenerate case, where there are two clip chain items that are
+          // fundamentally the same but are different objects and so we can't
+          // find it in the cache via hashing. Linear search for it instead.
+          // XXX This shouldn't happen very often but it might still turn out
+          // to be a performance cliff, so we should figure out a better way to
+          // deal with this.
+          for (it = aCache.begin(); it != aCache.end(); it++) {
+            if (DisplayItemClipChain::Equal(aChain, it->first)) {
+              break;
+            }
+          }
+        }
         MOZ_ASSERT(it != aCache.end());
         ids.second = Some(it->second);
       }
