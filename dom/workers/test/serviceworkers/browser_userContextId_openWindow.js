@@ -54,7 +54,7 @@ add_task(async function setup() {
     ["dom.webnotifications.workers.enabled", true],
     ["dom.webnotifications.serviceworker.enabled", true],
     ["notification.prompt.testing", true],
-    ["dom.disable_open_click_delay", 1000],
+    ["dom.serviceWorkers.disable_open_click_delay", 1000],
     ["dom.serviceWorkers.idle_timeout", 299999],
     ["dom.serviceWorkers.idle_extended_timeout", 299999],
     ["browser.link.open_newwindow", 3],

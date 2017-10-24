@@ -214,7 +214,7 @@
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
                 xbl:inherits="selected,_moz-menuactive,disabled,checked">
-        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,loadingprincipal=iconloadingprincipal,validate,src"/>
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,triggeringprincipal=iconloadingprincipal,validate,src"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
       <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right"/>
