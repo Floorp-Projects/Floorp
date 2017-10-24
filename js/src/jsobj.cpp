@@ -3037,9 +3037,6 @@ js::UnwatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id)
 bool
 js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable)
 {
-    if (WatchOp op = obj->getOpsWatch())
-        return op(cx, obj, id, callable);
-
     if (!obj->isNative() || obj->is<TypedArrayObject>()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                                   obj->getClass()->name);
@@ -3052,9 +3049,6 @@ js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject cal
 bool
 js::UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id)
 {
-    if (UnwatchOp op = obj->getOpsUnwatch())
-        return op(cx, obj, id);
-
     return UnwatchGuts(cx, obj, id);
 }
 

@@ -409,20 +409,6 @@ BaseProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool*
 }
 
 bool
-BaseProxyHandler::watch(JSContext* cx, HandleObject proxy, HandleId id, HandleObject callable) const
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                              proxy->getClass()->name);
-    return false;
-}
-
-bool
-BaseProxyHandler::unwatch(JSContext* cx, HandleObject proxy, HandleId id) const
-{
-    return true;
-}
-
-bool
 BaseProxyHandler::getElements(JSContext* cx, HandleObject proxy, uint32_t begin, uint32_t end,
                               ElementAdder* adder) const
 {

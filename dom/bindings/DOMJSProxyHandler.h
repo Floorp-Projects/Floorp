@@ -66,11 +66,6 @@ public:
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
                                             JS::AutoIdVector &props) const override;
 
-  bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-             JS::Handle<JSObject*> callable) const override;
-  bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
-               JS::Handle<jsid> id) const override;
-
 protected:
   // Hook for subclasses to implement shared ownPropertyKeys()/keys()
   // functionality.  The "flags" argument is either JSITER_OWNONLY (for keys())
