@@ -298,15 +298,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-#ifdef MOZ_DEBUG
-   /* Disable inlining to make debugging easier. */
-#ifdef inline
-#undef inline
-#endif
-
-#  define inline
-#endif
-
 /* Size of stack-allocated buffer passed to strerror_r(). */
 #define	STRERROR_BUF		64
 
