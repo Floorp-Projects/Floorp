@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/layers/SyncObject.h"
@@ -401,10 +402,6 @@ public:
   Maybe<wr::WrClipId> TopmostClipId();
   // Same as TopmostClipId() but for scroll layers.
   layers::FrameMetrics::ViewID TopmostScrollId();
-  // Returns the scroll id that was pushed just before the given scroll id. This
-  // function returns Nothing() if the given scrollid has not been encountered,
-  // or if it is the rootmost scroll id (and therefore has no ancestor).
-  Maybe<layers::FrameMetrics::ViewID> ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId);
 
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
@@ -422,10 +419,10 @@ protected:
   std::vector<wr::WrClipId> mClipIdStack;
   std::vector<layers::FrameMetrics::ViewID> mScrollIdStack;
 
-  // Track the parent scroll id of each scroll id that we encountered. A
-  // Nothing() value indicates a root scroll id. We also use this structure to
-  // ensure that we don't define a particular scroll layer multiple times.
-  std::unordered_map<layers::FrameMetrics::ViewID, Maybe<layers::FrameMetrics::ViewID>> mScrollParents;
+  // Track each scroll id that we encountered. We use this structure to
+  // ensure that we don't define a particular scroll layer multiple times,
+  // as that results in undefined behaviour in WR.
+  std::unordered_set<layers::FrameMetrics::ViewID> mScrollIdsDefined;
 
   // The number of extra clips that are in the stack.
   uint32_t mExtraClipCount;
