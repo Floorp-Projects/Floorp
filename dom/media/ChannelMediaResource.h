@@ -101,8 +101,7 @@ public:
   // Start a new load at the given aOffset. The old load is cancelled
   // and no more data from the old load will be notified via
   // MediaCacheStream::NotifyDataReceived/Ended.
-  // This can fail.
-  nsresult CacheClientSeek(int64_t aOffset, bool aResume);
+  void CacheClientSeek(int64_t aOffset, bool aResume);
   // Suspend the current load since data is currently not wanted
   nsresult CacheClientSuspend();
   // Resume the current load since data is wanted again
@@ -196,6 +195,8 @@ public:
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
 protected:
+  nsresult Seek(int64_t aOffset, bool aResume);
+
   bool IsSuspendedByCache();
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest, int64_t aRequestOffset);

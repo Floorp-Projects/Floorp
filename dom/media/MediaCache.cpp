@@ -1497,15 +1497,15 @@ MediaCache::Update()
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaCacheStream* stream = mStreams[i];
-    nsresult rv;
+    nsresult rv = NS_OK;
     switch (actions[i].mTag) {
       case StreamAction::SEEK:
         LOG("Stream %p CacheSeek to %" PRId64 " (resume=%d)",
             stream,
             actions[i].mSeekTarget,
             actions[i].mResume);
-        rv = stream->mClient->CacheClientSeek(actions[i].mSeekTarget,
-                                              actions[i].mResume);
+        stream->mClient->CacheClientSeek(actions[i].mSeekTarget,
+                                         actions[i].mResume);
         break;
       case StreamAction::RESUME:
         LOG("Stream %p Resumed", stream);
