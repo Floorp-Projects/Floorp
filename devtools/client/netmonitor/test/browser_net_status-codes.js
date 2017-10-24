@@ -163,7 +163,8 @@ add_task(function* () {
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
     let { method, uri, details: { status, statusText } } = data;
 
-    is(summaryValues[0].value, uri, "The url summary value is incorrect.");
+    is(summaryValues[0].value, new URL(uri).origin,
+      "The url summary value is incorrect.");
     is(summaryValues[1].value, method, "The method summary value is incorrect.");
     is(panel.querySelector(".requests-list-status-icon").dataset.code, status,
       "The status summary code is incorrect.");
