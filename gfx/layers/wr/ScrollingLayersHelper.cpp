@@ -157,7 +157,7 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
         aChain->mClip.GetClipRect(), aAppUnitsPerDevPixel);
     nsTArray<wr::ComplexClipRegion> wrRoundedRects;
     aChain->mClip.ToComplexClipRegions(aAppUnitsPerDevPixel, aStackingContext, wrRoundedRects);
-    clipId = Some(aBuilder.DefineClip(aStackingContext.ToRelativeLayoutRect(clip), &wrRoundedRects));
+    clipId = Some(aBuilder.DefineClip(Nothing(), Nothing(), aStackingContext.ToRelativeLayoutRect(clip), &wrRoundedRects));
     if (!aBuilder.HasExtraClip()) {
       aCache[aChain] = clipId.value();
     }
@@ -190,7 +190,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
   // WebRender at all. Instead, we take the position from the composition
   // bounds.
   contentRect.MoveTo(clipBounds.TopLeft());
-  mBuilder->DefineScrollLayer(aMetrics.GetScrollId(),
+  mBuilder->DefineScrollLayer(aMetrics.GetScrollId(), Nothing(), Nothing(),
       aStackingContext.ToRelativeLayoutRect(contentRect),
       aStackingContext.ToRelativeLayoutRect(clipBounds));
   mBuilder->PushScrollLayer(aMetrics.GetScrollId());
