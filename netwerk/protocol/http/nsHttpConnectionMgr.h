@@ -95,6 +95,9 @@ public:
     // given time.
     void PruneDeadConnectionsAfter(uint32_t time);
 
+    // this cancels all outstanding transactions but does not shut down the mgr
+    void AbortAndCloseAllConnections(int32_t, ARefBase *);
+
     // Stops timer scheduled for next pruning of dead connections if
     // there are no more idle connections or active spdy ones
     void ConditionallyStopPruneDeadConnectionsTimer();
