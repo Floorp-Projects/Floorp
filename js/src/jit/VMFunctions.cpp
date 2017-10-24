@@ -1709,8 +1709,7 @@ SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* v
     Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
     if (!shape ||
         !shape->isDataProperty() ||
-        !shape->writable() ||
-        nobj->watched())
+        !shape->writable())
     {
         return false;
     }
