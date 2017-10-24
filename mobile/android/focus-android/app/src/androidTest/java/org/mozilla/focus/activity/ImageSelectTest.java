@@ -181,7 +181,7 @@ public class ImageSelectTest {
         assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
-        assertTrue("Website title loaded", titleMsg.exists());
+        assertTrue(titleMsg.waitForExists(waitingTime));
 
         // Find image and long tap it
         Assert.assertTrue(rabbitImage.exists());
@@ -225,7 +225,7 @@ public class ImageSelectTest {
 
         TestHelper.mDevice.openNotification();
         TestHelper.savedNotification.waitForExists(waitingTime);
-        TestHelper.savedNotification.swipeRight(600);
+        TestHelper.savedNotification.swipeRight(50);
         TestHelper.pressBackKey();
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);

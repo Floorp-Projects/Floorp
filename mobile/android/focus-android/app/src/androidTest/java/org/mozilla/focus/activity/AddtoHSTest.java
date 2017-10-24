@@ -243,8 +243,11 @@ public class AddtoHSTest {
         TestHelper.inlineAutocompleteEditText.setText("helloworld");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
-        Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
+        assertTrue(TestHelper.webView.waitForExists(waitingTime));
+        // In certain cases, where progressBar disappears immediately, below will return false
+        // since it busy waits, it will unblock when the bar isn't visible, regardless of the
+        // return value
+        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
 
         openAddtoHSDialog();
 
