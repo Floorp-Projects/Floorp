@@ -149,6 +149,9 @@ def add_remote_arguments(parser):
     parser.add_argument("--apk", action="store", type=str, dest="localAPK",
                         help="local path to Fennec APK")
 
+    parser.add_argument("--adbPath", action="store", type=str, dest="adbPath",
+                        help="Path to adb")
+
     parser.add_argument("--noSetup", action="store_false", dest="setup", default=True,
                         help="do not copy any files to device (to be used only if "
                              "device is already setup)")

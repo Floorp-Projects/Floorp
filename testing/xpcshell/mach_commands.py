@@ -145,13 +145,13 @@ class XPCShellRunner(MozbuildObject):
 
 class AndroidXPCShellRunner(MozbuildObject):
     """Get specified DeviceManager"""
-    def get_devicemanager(self, ip, port, remote_test_root):
+    def get_devicemanager(self, ip, port, remote_test_root, adb_path):
         import mozdevice
         dm = None
         if ip:
-            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root)
+            dm = mozdevice.DroidADB(ip, port, packageName=None, deviceRoot=remote_test_root, adbPath=adb_path)
         else:
-            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root)
+            dm = mozdevice.DroidADB(packageName=None, deviceRoot=remote_test_root, adbPath=adb_path)
         return dm
 
     """Run Android xpcshell tests."""
@@ -164,7 +164,7 @@ class AndroidXPCShellRunner(MozbuildObject):
         import remotexpcshelltests
 
         dm = self.get_devicemanager(kwargs["deviceIP"], kwargs["devicePort"],
-                                    kwargs["remoteTestRoot"])
+                                    kwargs["remoteTestRoot"], kwargs["adbPath"])
 
         log = kwargs.pop("log")
         self.log_manager.enable_unstructured()
@@ -255,8 +255,10 @@ class MachCommands(MachCommandBase):
             params['threadCount'] = int((cpu_count() * 3) / 2)
 
         if conditions.is_android(self):
-            from mozrunner.devices.android_device import verify_android_device
+            from mozrunner.devices.android_device import verify_android_device, get_adb_path
             verify_android_device(self)
+            if not params['adbPath']:
+                params['adbPath'] = get_adb_path(self)
             xpcshell = self._spawn(AndroidXPCShellRunner)
         else:
             xpcshell = self._spawn(XPCShellRunner)
