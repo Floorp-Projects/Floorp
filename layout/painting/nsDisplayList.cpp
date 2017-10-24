@@ -4731,7 +4731,7 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
     return false;
   }
 
-  mBorderRenderer->CreateWebRenderCommands(aBuilder, aResources, aSc);
+  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   return true;
 }
 
@@ -9413,13 +9413,13 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     // Don't record this clip push in aBuilder's internal clip stack, because
     // otherwise any nested ScrollingLayersHelper instances that are created
     // will get confused about which clips are pushed.
-    aBuilder.PushClip(clipId, /*aMask*/ true);
+    aBuilder.PushClip(clipId, GetClipChain());
   }
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
 
   if (mask) {
-    aBuilder.PopClip(/*aMask*/ true);
+    aBuilder.PopClip(GetClipChain());
   }
 
   return true;
