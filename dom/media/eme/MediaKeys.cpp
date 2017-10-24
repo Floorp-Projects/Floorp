@@ -624,9 +624,23 @@ MediaKeys::GetStatusForPolicy(const MediaKeysPolicy& aPolicy,
   }
 
   EME_LOG("GetStatusForPolicy minHdcpVersion = %s.", NS_ConvertUTF16toUTF8(aPolicy.mMinHdcpVersion).get());
-  // TODO: Ask CDM to get the real policy.
-  promise->MaybeResolve(MediaKeyStatus::Usable);
+  mProxy->GetStatusForPolicy(StorePromise(promise), aPolicy.mMinHdcpVersion);
   return promise.forget();
+}
+
+void
+MediaKeys::ResolvePromiseWithKeyStatus(PromiseId aId, MediaKeyStatus aMediaKeyStatus)
+{
+  RefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  if (!promise) {
+    return;
+  }
+  RefPtr<MediaKeys> keys(this);
+  EME_LOG("MediaKeys[%p]::ResolvePromiseWithKeyStatus() resolve promise id=%d, keystatus=%" PRIu8,
+          this,
+          aId,
+          static_cast<uint8_t>(aMediaKeyStatus));
+  promise->MaybeResolve(aMediaKeyStatus);
 }
 
 } // namespace dom

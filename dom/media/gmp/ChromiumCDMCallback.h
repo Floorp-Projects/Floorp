@@ -22,6 +22,9 @@ public:
   virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
                                          bool aSuccessful) = 0;
 
+  virtual void ResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                           uint32_t aKeyStatus) = 0;
+
   virtual void ResolvePromise(uint32_t aPromiseId) = 0;
 
   virtual void RejectPromise(uint32_t aPromiseId,
