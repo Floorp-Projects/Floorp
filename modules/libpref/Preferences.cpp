@@ -137,7 +137,7 @@ using namespace mozilla;
 
 struct PrefHashEntry;
 
-typedef nsTArray<mozilla::UniqueFreePtr<char>> PrefSaveData;
+typedef nsTArray<nsCString> PrefSaveData;
 
 static PrefHashEntry*
 pref_HashTableLookup(const char* aKey);
@@ -394,10 +394,15 @@ PREF_Cleanup()
   PREF_CleanupPrefs();
 }
 
-// Note that this appends to aResult, and does not assign!
+// Assign to aResult a quoted, escaped copy of aOriginal.
 static void
 StrEscape(const char* aOriginal, nsCString& aResult)
 {
+  if (aOriginal == nullptr) {
+    aResult.AssignLiteral("\"\"");
+    return;
+  }
+
   // JavaScript does not allow quotes, slashes, or line terminators inside
   // strings so we must escape them. ECMAScript defines four line terminators,
   // but we're only worrying about \r and \n here.  We currently feed our pref
@@ -410,9 +415,7 @@ StrEscape(const char* aOriginal, nsCString& aResult)
   // \u2029.
   const char* p;
 
-  if (aOriginal == nullptr) {
-    return;
-  }
+  aResult.Assign("'");
 
   // Paranoid worst case all slashes will free quickly.
   for (p = aOriginal; *p; ++p) {
@@ -438,6 +441,8 @@ StrEscape(const char* aOriginal, nsCString& aResult)
         break;
     }
   }
+
+  aResult.Append('"');
 }
 
 //
@@ -556,10 +561,6 @@ pref_savePrefs()
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
-    nsAutoCString prefValue;
-    nsAutoCString prefPrefix;
-    prefPrefix.AssignLiteral("user_pref(\"");
-
     // where we're getting our pref from
     PrefValue* sourcePref;
 
@@ -575,25 +576,22 @@ pref_savePrefs()
       continue;
     }
 
-    // strings are in quotes!
+    nsAutoCString prefName;
+    StrEscape(pref->mKey, prefName);
+
+    nsAutoCString prefValue;
     if (pref->mPrefFlags.IsTypeString()) {
-      prefValue = '\"';
       StrEscape(sourcePref->mStringVal, prefValue);
-      prefValue += '\"';
 
     } else if (pref->mPrefFlags.IsTypeInt()) {
       prefValue.AppendInt(sourcePref->mIntVal);
 
     } else if (pref->mPrefFlags.IsTypeBool()) {
-      prefValue = (sourcePref->mBoolVal) ? "true" : "false";
+      prefValue = sourcePref->mBoolVal ? "true" : "false";
     }
 
-    nsAutoCString prefName;
-    StrEscape(pref->mKey, prefName);
-
-    savedPrefs.AppendElement()->reset(
-      ToNewCString(prefPrefix + prefName + NS_LITERAL_CSTRING("\", ") +
-                   prefValue + NS_LITERAL_CSTRING(");")));
+    nsPrintfCString str("user_pref(%s, %s);", prefName.get(), prefValue.get());
+    savedPrefs.AppendElement(str);
   }
 
   return savedPrefs;
@@ -3413,16 +3411,14 @@ public:
 
     struct CharComparator
     {
-      bool LessThan(const mozilla::UniqueFreePtr<char>& a,
-                    const mozilla::UniqueFreePtr<char>& b) const
+      bool LessThan(const nsCString& aA, const nsCString& aB) const
       {
-        return strcmp(a.get(), b.get()) < 0;
+        return aA < aB;
       }
 
-      bool Equals(const mozilla::UniqueFreePtr<char>& a,
-                  const mozilla::UniqueFreePtr<char>& b) const
+      bool Equals(const nsCString& aA, const nsCString& aB) const
       {
-        return strcmp(a.get(), b.get()) == 0;
+        return aA == aB;
       }
     };
 
@@ -3433,10 +3429,8 @@ public:
     outStream->Write(
       kPrefFileHeader, sizeof(kPrefFileHeader) - 1, &writeAmount);
 
-    for (auto& prefptr : aPrefs) {
-      char* pref = prefptr.get();
-      MOZ_ASSERT(pref);
-      outStream->Write(pref, strlen(pref), &writeAmount);
+    for (nsCString& pref : aPrefs) {
+      outStream->Write(pref.get(), pref.Length(), &writeAmount);
       outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
     }
 
