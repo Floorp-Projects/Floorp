@@ -25,7 +25,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIAboutModule.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsILoadContext.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -55,31 +54,6 @@ namespace {
 const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
 } // namespace
-
-class IDBFactory::BackgroundCreateCallback final
-  : public nsIIPCBackgroundChildCreateCallback
-{
-  RefPtr<IDBFactory> mFactory;
-  LoggingInfo mLoggingInfo;
-
-public:
-  explicit
-  BackgroundCreateCallback(IDBFactory* aFactory,
-                           const LoggingInfo& aLoggingInfo)
-    : mFactory(aFactory)
-    , mLoggingInfo(aLoggingInfo)
-  {
-    MOZ_ASSERT(aFactory);
-  }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  ~BackgroundCreateCallback()
-  { }
-
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
-};
 
 struct IDBFactory::PendingRequestInfo
 {
@@ -706,7 +680,7 @@ IDBFactory::OpenInternal(JSContext* aCx,
     params = OpenDatabaseRequestParams(commonParams);
   }
 
-  if (!mBackgroundActor && mPendingRequests.IsEmpty()) {
+  if (!mBackgroundActor) {
     BackgroundChildImpl::ThreadLocal* threadLocal =
       BackgroundChildImpl::GetThreadLocalForCurrentThread();
 
@@ -726,14 +700,28 @@ IDBFactory::OpenInternal(JSContext* aCx,
       newIDBThreadLocal = idbThreadLocal = new ThreadLocal(id);
     }
 
-    if (PBackgroundChild* actor = BackgroundChild::GetForCurrentThread()) {
-      BackgroundActorCreated(actor, idbThreadLocal->GetLoggingInfo());
-    } else {
-      // We need to start the sequence to create a background actor for this
-      // thread.
-      RefPtr<BackgroundCreateCallback> cb =
-        new BackgroundCreateCallback(this, idbThreadLocal->GetLoggingInfo());
-      if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(cb))) {
+    PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundActor)) {
+      IDB_REPORT_INTERNAL_ERR();
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return nullptr;
+    }
+
+    {
+      BackgroundFactoryChild* actor = new BackgroundFactoryChild(this);
+
+      // Set EventTarget for the top-level actor.
+      // All child actors created later inherit the same event target.
+      backgroundActor->SetEventTargetForActor(actor, EventTarget());
+      MOZ_ASSERT(actor->GetActorEventTarget());
+      mBackgroundActor =
+        static_cast<BackgroundFactoryChild*>(
+          backgroundActor->SendPBackgroundIDBFactoryConstructor(actor,
+                                                                idbThreadLocal->GetLoggingInfo()));
+
+      if (NS_WARN_IF(!mBackgroundActor)) {
+        mBackgroundActorFailed = true;
         IDB_REPORT_INTERNAL_ERR();
         aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         return nullptr;
@@ -789,86 +777,14 @@ IDBFactory::OpenInternal(JSContext* aCx,
                  IDB_LOG_STRINGIFY(aVersion));
   }
 
-  // If we already have a background actor then we can start this request now.
-  if (mBackgroundActor) {
-    nsresult rv = InitiateRequest(request, params);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      IDB_REPORT_INTERNAL_ERR();
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      return nullptr;
-    }
-  } else {
-    mPendingRequests.AppendElement(new PendingRequestInfo(request, params));
+  nsresult rv = InitiateRequest(request, params);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
   }
 
   return request.forget();
-}
-
-nsresult
-IDBFactory::BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
-                                   const LoggingInfo& aLoggingInfo)
-{
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(!mBackgroundActor);
-  MOZ_ASSERT(!mBackgroundActorFailed);
-
-  {
-    BackgroundFactoryChild* actor = new BackgroundFactoryChild(this);
-
-    // Set EventTarget for the top-level actor.
-    // All child actors created later inherit the same event target.
-    aBackgroundActor->SetEventTargetForActor(actor, EventTarget());
-    MOZ_ASSERT(actor->GetActorEventTarget());
-    mBackgroundActor =
-      static_cast<BackgroundFactoryChild*>(
-        aBackgroundActor->SendPBackgroundIDBFactoryConstructor(actor,
-                                                               aLoggingInfo));
-  }
-
-  if (NS_WARN_IF(!mBackgroundActor)) {
-    BackgroundActorFailed();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  nsresult rv = NS_OK;
-
-  for (uint32_t index = 0, count = mPendingRequests.Length();
-       index < count;
-       index++) {
-    nsAutoPtr<PendingRequestInfo> info(mPendingRequests[index].forget());
-
-    nsresult rv2 = InitiateRequest(info->mRequest, info->mParams);
-
-    // Warn for every failure, but just return the first failure if there are
-    // multiple failures.
-    if (NS_WARN_IF(NS_FAILED(rv2)) && NS_SUCCEEDED(rv)) {
-      rv = rv2;
-    }
-  }
-
-  mPendingRequests.Clear();
-
-  return rv;
-}
-
-void
-IDBFactory::BackgroundActorFailed()
-{
-  MOZ_ASSERT(!mPendingRequests.IsEmpty());
-  MOZ_ASSERT(!mBackgroundActor);
-  MOZ_ASSERT(!mBackgroundActorFailed);
-
-  mBackgroundActorFailed = true;
-
-  for (uint32_t index = 0, count = mPendingRequests.Length();
-       index < count;
-       index++) {
-    nsAutoPtr<PendingRequestInfo> info(mPendingRequests[index].forget());
-    info->mRequest->
-      DispatchNonTransactionError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-
-  mPendingRequests.Clear();
 }
 
 nsresult
@@ -950,32 +866,6 @@ JSObject*
 IDBFactory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return IDBFactoryBinding::Wrap(aCx, this, aGivenProto);
-}
-
-NS_IMPL_ISUPPORTS(IDBFactory::BackgroundCreateCallback,
-                  nsIIPCBackgroundChildCreateCallback)
-
-void
-IDBFactory::BackgroundCreateCallback::ActorCreated(PBackgroundChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(mFactory);
-
-  RefPtr<IDBFactory> factory;
-  mFactory.swap(factory);
-
-  factory->BackgroundActorCreated(aActor, mLoggingInfo);
-}
-
-void
-IDBFactory::BackgroundCreateCallback::ActorFailed()
-{
-  MOZ_ASSERT(mFactory);
-
-  RefPtr<IDBFactory> factory;
-  mFactory.swap(factory);
-
-  factory->BackgroundActorFailed();
 }
 
 } // namespace dom
