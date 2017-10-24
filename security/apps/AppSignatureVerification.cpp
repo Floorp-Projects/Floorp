@@ -704,23 +704,16 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
   return NS_OK;
 }
 
-struct VerifyCertificateContext {
-  AppTrustedRoot trustedRoot;
-  UniqueCERTCertList& builtChain;
-};
-
 nsresult
-VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
+VerifyCertificate(CERTCertificate* signerCert, AppTrustedRoot trustedRoot,
+                  /*out*/ UniqueCERTCertList& builtChain)
 {
-  // TODO: null pinArg is tolerated.
-  if (NS_WARN_IF(!signerCert) || NS_WARN_IF(!voidContext)) {
+  if (NS_WARN_IF(!signerCert)) {
     return NS_ERROR_INVALID_ARG;
   }
-  const VerifyCertificateContext& context =
-    *static_cast<const VerifyCertificateContext*>(voidContext);
-
-  AppTrustDomain trustDomain(context.builtChain, pinArg);
-  nsresult rv = trustDomain.SetTrustedRoot(context.trustedRoot);
+  // TODO: pinArg is null.
+  AppTrustDomain trustDomain(builtChain, nullptr);
+  nsresult rv = trustDomain.SetTrustedRoot(trustedRoot);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -766,18 +759,15 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
 }
 
 nsresult
-VerifyCMSDetachedSignatureIncludingCertificate(
-  const SECItem& buffer, const SECItem& detachedDigest,
-  nsresult (*verifyCertificate)(CERTCertificate* cert, void* context,
-                                void* pinArg),
-  void* verifyCertificateContext, void* pinArg,
-  const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
+                const SECItem& detachedDigest,
+                /*out*/ UniqueCERTCertList& builtChain)
 {
-  // XXX: missing pinArg is tolerated.
+  // Currently, this function is only called within the CalculateResult() method
+  // of CryptoTasks. As such, NSS should not be shut down at this point and the
+  // CryptoTask implementation should already hold a nsNSSShutDownPreventionLock.
   if (NS_WARN_IF(!buffer.data && buffer.len > 0) ||
-      NS_WARN_IF(!detachedDigest.data && detachedDigest.len > 0) ||
-      (!verifyCertificate) ||
-      NS_WARN_IF(!verifyCertificateContext)) {
+      NS_WARN_IF(!detachedDigest.data && detachedDigest.len > 0)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -858,7 +848,7 @@ VerifyCMSDetachedSignatureIncludingCertificate(
     return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
   }
 
-  nsresult rv = verifyCertificate(signerCert, verifyCertificateContext, pinArg);
+  nsresult rv = VerifyCertificate(signerCert, trustedRoot, builtChain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -873,25 +863,6 @@ VerifyCMSDetachedSignatureIncludingCertificate(
   return MapSECStatus(NSS_CMSSignerInfo_Verify(signer,
                          const_cast<SECItem*>(&detachedDigest),
                          &contentTypeOidData->oid));
-}
-
-nsresult
-VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
-                const SECItem& detachedDigest,
-                /*out*/ UniqueCERTCertList& builtChain)
-{
-  // Currently, this function is only called within the CalculateResult() method
-  // of CryptoTasks. As such, NSS should not be shut down at this point and the
-  // CryptoTask implementation should already hold a nsNSSShutDownPreventionLock.
-  // We acquire a nsNSSShutDownPreventionLock here solely to prove we did to
-  // VerifyCMSDetachedSignatureIncludingCertificate().
-  nsNSSShutDownPreventionLock locker;
-  VerifyCertificateContext context = { trustedRoot, builtChain };
-  // XXX: missing pinArg
-  return VerifyCMSDetachedSignatureIncludingCertificate(buffer, detachedDigest,
-                                                        VerifyCertificate,
-                                                        &context, nullptr,
-                                                        locker);
 }
 
 nsresult
