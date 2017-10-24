@@ -34,6 +34,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
 import static android.support.test.espresso.action.ViewActions.click;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
@@ -52,7 +53,8 @@ public class WebViewDataTest {
             "shared_prefs",
             "app_dxmaker_cache",
             "telemetry",
-            "databases"
+            "databases",
+            "app_webview"
     );
 
     // We expect those folders to exist but they should be empty.
@@ -187,7 +189,9 @@ public class WebViewDataTest {
         assertTrue("App data directory should exist", dataDir.exists());
 
         final File webViewDirectory = new File(dataDir, "app_webview");
-        assertFalse("WebView directory should not exist", webViewDirectory.exists());
+        assertTrue("WebView directory should exist", webViewDirectory.exists());
+        assertEquals("WebView directory contains one subdirectory", 1, webViewDirectory.list().length);
+        assertEquals("WebView subdirectory is local storage directory", "Local Storage", webViewDirectory.list()[0]);
 
         assertIsEmpty(appContext.getCacheDir());
 

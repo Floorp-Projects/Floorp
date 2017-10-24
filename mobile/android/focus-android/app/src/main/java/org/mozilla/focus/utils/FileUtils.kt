@@ -10,6 +10,7 @@ import android.content.Context
 import java.io.File
 
 private const val WEBVIEW_DIRECTORY = "app_webview"
+private const val LOCAL_STORAGE_DIR = "Local Storage"
 
 class FileUtils {
     companion object {
@@ -22,9 +23,14 @@ class FileUtils {
         @JvmStatic
         fun deleteWebViewDirectory(context: Context): Boolean {
             val webviewDirectory = File(context.applicationInfo.dataDir, WEBVIEW_DIRECTORY)
-            return webviewDirectory.deleteRecursively()
+            return deleteContent(webviewDirectory, doNotEraseWhitelist = setOf(
+                    LOCAL_STORAGE_DIR // If the folder or its contents is deleted, WebStorage.deleteAllData does not clear Local Storage in memory.
+            ))
         }
 
-        private fun deleteContent(directory: File) = directory.listFiles()?.all { it.deleteRecursively() } ?: false
+        private fun deleteContent(directory: File, doNotEraseWhitelist: Set<String> = emptySet()): Boolean {
+            val filesToDelete = directory.listFiles()?.filter { !doNotEraseWhitelist.contains(it.name) } ?: return false
+            return filesToDelete.all { it.deleteRecursively() }
+        }
     }
 }
