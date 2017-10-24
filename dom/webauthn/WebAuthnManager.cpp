@@ -46,8 +46,7 @@ static mozilla::LazyLogModule gWebAuthnManagerLog("webauthnmanager");
 
 NS_NAMED_LITERAL_STRING(kVisibilityChange, "visibilitychange");
 
-NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback,
-                  nsIDOMEventListener);
+NS_IMPL_ISUPPORTS(WebAuthnManager, nsIDOMEventListener);
 
 /***********************************************************************
  * Utility Functions
@@ -237,25 +236,31 @@ WebAuthnManager::~WebAuthnManager()
   }
 }
 
-RefPtr<WebAuthnManager::BackgroundActorPromise>
+void
 WebAuthnManager::GetOrCreateBackgroundActor()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
-  RefPtr<WebAuthnManager::BackgroundActorPromise> promise =
-    mPBackgroundCreationPromise.Ensure(__func__);
-
-  if (actor) {
-    ActorCreated(actor);
-  } else {
-    bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-    if (NS_WARN_IF(!ok)) {
-      ActorFailed();
-    }
+  if (mChild) {
+    return;
   }
 
-  return promise;
+  PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actor)) {
+    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+  }
+
+  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild());
+  PWebAuthnTransactionChild* constructedMgr =
+    actor->SendPWebAuthnTransactionConstructor(mgr);
+
+  if (NS_WARN_IF(!constructedMgr)) {
+    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    return;
+  }
+
+  MOZ_ASSERT(constructedMgr == mgr);
+  mChild = mgr.forget();
 }
 
 //static
@@ -461,18 +466,6 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
                                adjustedTimeout,
                                excludeList,
                                extensions);
-  RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();
-  p->Then(GetMainThreadSerialEventTarget(), __func__,
-          []() {
-            WebAuthnManager* mgr = WebAuthnManager::Get();
-            if (mgr && mgr->mChild && mgr->mTransaction.isSome()) {
-              mgr->mChild->SendRequestRegister(mgr->mTransaction.ref().mInfo);
-            }
-          },
-          []() {
-            // This case can't actually happen, we'll have crashed if the child
-            // failed to create.
-          });
 
   ListenForVisibilityEvents(aParent, this);
 
@@ -481,6 +474,11 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
                                           promise,
                                           Move(info),
                                           Move(clientDataJSON)));
+
+  GetOrCreateBackgroundActor();
+  if (mChild) {
+    mChild->SendRequestRegister(mTransaction.ref().mInfo);
+  }
 
   return promise.forget();
 }
@@ -616,18 +614,6 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
                                adjustedTimeout,
                                allowList,
                                extensions);
-  RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();
-  p->Then(GetMainThreadSerialEventTarget(), __func__,
-          []() {
-            WebAuthnManager* mgr = WebAuthnManager::Get();
-            if (mgr && mgr->mChild && mgr->mTransaction.isSome()) {
-              mgr->mChild->SendRequestSign(mgr->mTransaction.ref().mInfo);
-            }
-          },
-          []() {
-            // This case can't actually happen, we'll have crashed if the child
-            // failed to create.
-          });
 
   ListenForVisibilityEvents(aParent, this);
 
@@ -636,6 +622,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
                                           promise,
                                           Move(info),
                                           Move(clientDataJSON)));
+
+  GetOrCreateBackgroundActor();
+  if (mChild) {
+    mChild->SendRequestSign(mTransaction.ref().mInfo);
+  }
 
   return promise.forget();
 }
@@ -912,40 +903,10 @@ WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 void
-WebAuthnManager::ActorCreated(PBackgroundChild* aActor)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aActor);
-
-  if (mChild) {
-    return;
-  }
-
-  RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild());
-  PWebAuthnTransactionChild* constructedMgr =
-    aActor->SendPWebAuthnTransactionConstructor(mgr);
-
-  if (NS_WARN_IF(!constructedMgr)) {
-    ActorFailed();
-    return;
-  }
-  MOZ_ASSERT(constructedMgr == mgr);
-  mChild = mgr.forget();
-  mPBackgroundCreationPromise.Resolve(NS_OK, __func__);
-}
-
-void
 WebAuthnManager::ActorDestroyed()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mChild = nullptr;
-}
-
-void
-WebAuthnManager::ActorFailed()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_CRASH("We shouldn't be here!");
 }
 
 }
