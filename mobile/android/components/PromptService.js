@@ -22,13 +22,13 @@ PromptService.prototype = {
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+      Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
   /* ----------  nsIPromptFactory  ---------- */
   // XXX Copied from nsPrompter.js.
   getPrompt: function getPrompt(domWin, iid) {
     // This is still kind of dumb; the C++ code delegated to login manager
-    // here, which in turn calls back into us via nsIPromptService2.
+    // here, which in turn calls back into us via nsIPromptService.
     if (iid.equals(Ci.nsIAuthPrompt2) || iid.equals(Ci.nsIAuthPrompt)) {
       try {
         let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].getService(Ci.nsIPromptFactory);
@@ -45,7 +45,7 @@ PromptService.prototype = {
 
   /* ----------  private memebers  ---------- */
 
-  // nsIPromptService and nsIPromptService2 methods proxy to our Prompt class
+  // nsIPromptService methods proxy to our Prompt class
   callProxy: function(aMethod, aArguments) {
     let prompt;
     let domWin = aArguments[0];
@@ -83,7 +83,6 @@ PromptService.prototype = {
     return this.callProxy("select", arguments);
   },
 
-  /* ----------  nsIPromptService2  ---------- */
   promptAuth: function() {
     return this.callProxy("promptAuth", arguments);
   },

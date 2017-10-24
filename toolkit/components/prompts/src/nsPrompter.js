@@ -19,7 +19,7 @@ function Prompter() {
 
 Prompter.prototype = {
     classID: Components.ID("{1c978d25-b37f-43a8-a2d6-0c7a239ead87}"),
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
 
     /* ----------  private members  ---------- */
@@ -34,7 +34,7 @@ Prompter.prototype = {
 
     getPrompt(domWin, iid) {
         // This is still kind of dumb; the C++ code delegated to login manager
-        // here, which in turn calls back into us via nsIPromptService2.
+        // here, which in turn calls back into us via nsIPromptService.
         if (iid.equals(Ci.nsIAuthPrompt2) || iid.equals(Ci.nsIAuthPrompt)) {
             try {
                 let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
@@ -98,9 +98,6 @@ Prompter.prototype = {
         let p = this.pickPrompter(domWin);
         return p.select(title, text, count, list, selected);
     },
-
-
-    /* ----------  nsIPromptService2  ---------- */
 
 
     promptAuth(domWin, channel, level, authInfo, checkLabel, checkValue) {

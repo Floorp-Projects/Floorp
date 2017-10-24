@@ -23,7 +23,7 @@ PromptFactory.prototype = {
   classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+    Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
@@ -290,7 +290,7 @@ PromptFactory.prototype = {
 
   /* ----------  nsIPromptFactory  ---------- */
   getPrompt: function(aDOMWin, aIID) {
-    // Delegated to login manager here, which in turn calls back into us via nsIPromptService2.
+    // Delegated to login manager here, which in turn calls back into us via nsIPromptService.
     if (aIID.equals(Ci.nsIAuthPrompt2) || aIID.equals(Ci.nsIAuthPrompt)) {
       try {
         let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].getService(Ci.nsIPromptFactory);
@@ -307,7 +307,7 @@ PromptFactory.prototype = {
 
   /* ----------  private memebers  ---------- */
 
-  // nsIPromptService and nsIPromptService2 methods proxy to our Prompt class
+  // nsIPromptService methods proxy to our Prompt class
   callProxy: function(aMethod, aArguments) {
     let prompt = new PromptDelegate(aArguments[0]);
     return prompt[aMethod].apply(prompt, Array.prototype.slice.call(aArguments, 1));
@@ -343,7 +343,6 @@ PromptFactory.prototype = {
     return this.callProxy("select", arguments);
   },
 
-  /* ----------  nsIPromptService2  ---------- */
   promptAuth: function() {
     return this.callProxy("promptAuth", arguments);
   },
