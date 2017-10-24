@@ -958,7 +958,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mForceLayerForScrollParent(false),
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
       mBuildingInvisibleItems(false),
-      mHitTestShouldStopAtFirstOpaque(false),
+      mHitTestIsForVisibility(false),
       mIsBuilding(false),
       mInInvalidSubtree(false)
 {
@@ -2762,13 +2762,17 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 
       for (uint32_t j = 0; j < outFrames.Length(); j++) {
         nsIFrame *f = outFrames.ElementAt(j);
-        // Handle the XUL 'mousethrough' feature and 'pointer-events'.
-        if (!GetMouseThrough(f) && IsFrameReceivingPointerEvents(f)) {
+        // Filter out some frames depending on the type of hittest
+        // we are doing. For visibility tests, pass through all frames.
+        // For pointer tests, only pass through frames that are styled
+        // to receive pointer events.
+        if (aBuilder->HitTestIsForVisibility() ||
+            (!GetMouseThrough(f) && IsFrameReceivingPointerEvents(f))) {
           writeFrames->AppendElement(f);
         }
       }
 
-      if (aBuilder->HitTestShouldStopAtFirstOpaque() &&
+      if (aBuilder->HitTestIsForVisibility() &&
           item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
         // We're exiting early, so pop the remaining items off the buffer.
         aState->mItemBuffer.SetLength(itemBufferStart);
@@ -6045,7 +6049,7 @@ nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   if (mListPtr->IsOpaque()) {
     // Everything within GetBounds that's visible is opaque.
     result = GetBounds(aBuilder, aSnap);
-  } else if (aBuilder->HitTestShouldStopAtFirstOpaque()) {
+  } else if (aBuilder->HitTestIsForVisibility()) {
     // If we care about an accurate opaque region, iterate the display list
     // and build up a region of opaque bounds.
     nsDisplayItem* item = mList.GetBottom();
