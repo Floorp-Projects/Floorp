@@ -27,7 +27,6 @@ function check_event(event, id, data) {
 
 add_task(async function() {
   do_get_profile();
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   await TelemetryController.testSetup();
 
   TelemetryLog.log(TEST_PREFIX + "1", ["val", 123, undefined]);
