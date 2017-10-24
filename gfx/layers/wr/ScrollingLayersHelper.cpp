@@ -68,6 +68,213 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
   }
 }
 
+std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+ScrollingLayersHelper::DefineClipChain(nsDisplayItem* aItem,
+                                       const ActiveScrolledRoot* aAsr,
+                                       const DisplayItemClipChain* aChain,
+                                       int32_t aAppUnitsPerDevPixel,
+                                       const StackingContextHelper& aStackingContext,
+                                       WebRenderCommandBuilder::ClipIdMap& aCache)
+{
+  // This is the main entry point for defining the clip chain for a display
+  // item. This function recursively walks up the ASR chain and the display
+  // item's clip chain to define all the ASRs and clips necessary. Each level
+  // of the recursion defines one item, if it hasn't been defined already.
+  // The |aAsr| and |aChain| parameters are the important ones to track during
+  // the recursion; the rest of the parameters don't change (although |aCache|
+  // might be updated with new things).
+  // At each level of the recursion, the return value is the pair of identifiers
+  // that correspond to aAsr and aChain, respectively.
+
+  // These are the possible cases when recursing:
+  //
+  // aAsr is null, aChain is null     => base case; return
+  // aAsr is non-null, aChain is null => recurse(aAsr->mParent, null),
+  //                                     then define aAsr
+  // aAsr is null, aChain is non-null => assert(aChain->mASR == null),
+  //                                     recurse(null, aChain->mParent),
+  //                                     then define aChain
+  // aChain->mASR == aAsr             => recurse(aAsr, aChain->mParent),
+  //                                     then define aChain
+  // aChain->mASR != aAsr             => recurse(aAsr->mParent, aChain),
+  //                                     then define aAsr
+  //
+  // These can basically be collapsed down into two codepaths; one that recurses
+  // on the ASR chain and one that recurses on the clip chain; that's what the
+  // code below does.
+
+  // in all of these cases, this invariant should hold:
+  //   PickDescendant(aChain->mASR, aAsr) == aAsr
+  MOZ_ASSERT(!aChain || ActiveScrolledRoot::PickDescendant(aChain->mASR, aAsr) == aAsr);
+
+  if (aChain && aChain->mASR == aAsr) {
+    return RecurseAndDefineClip(aItem, aAsr, aChain, aAppUnitsPerDevPixel, aStackingContext, aCache);
+  }
+  if (aAsr) {
+    return RecurseAndDefineAsr(aItem, aAsr, aChain, aAppUnitsPerDevPixel, aStackingContext, aCache);
+  }
+
+  MOZ_ASSERT(!aChain && !aAsr);
+
+  return std::make_pair(Nothing(), Nothing());
+}
+
+std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
+                                            const ActiveScrolledRoot* aAsr,
+                                            const DisplayItemClipChain* aChain,
+                                            int32_t aAppUnitsPerDevPixel,
+                                            const StackingContextHelper& aSc,
+                                            WebRenderCommandBuilder::ClipIdMap& aCache)
+{
+  MOZ_ASSERT(aChain);
+
+  // This will hold our return value
+  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
+
+  auto it = aCache.find(aChain);
+  if (it != aCache.end()) {
+    // If we've already defined this clip before, we can early-exit
+    if (aAsr) {
+      FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
+      MOZ_ASSERT(mBuilder->IsScrollLayerDefined(scrollId));
+      ids.first = Some(scrollId);
+    }
+    ids.second = Some(it->second);
+    return ids;
+  }
+
+  // If not, recurse to ensure all the ancestors are defined
+  auto ancestorIds = DefineClipChain(
+      aItem, aAsr, aChain->mParent, aAppUnitsPerDevPixel, aSc, aCache);
+  ids = ancestorIds;
+
+  if (!aChain->mClip.HasClip()) {
+    // This item in the chain is a no-op, skip over it
+    return ids;
+  }
+
+  // Now we need to figure out whether the new clip we're defining should be
+  // a child of aChain->mParent, or of aAsr.
+  if (aChain->mParent) {
+    if (aChain->mParent->mASR == aAsr) {
+      // If the parent clip item shares the ASR, then this clip needs to be
+      // a child of the aChain->mParent, which will already be a descendant of
+      // the ASR.
+      ancestorIds.first = Nothing();
+    } else {
+      // But if the ASRs are different, this is the outermost clip that's
+      // still inside aAsr, and we need to make it a child of aAsr rather
+      // than aChain->mParent.
+      ancestorIds.second = Nothing();
+    }
+  }
+  // At most one of the ancestor pair should be defined here, and the one that
+  // is defined will be the parent clip for the new clip that we're defining.
+  MOZ_ASSERT(!(ancestorIds.first && ancestorIds.second));
+
+  LayoutDeviceRect clip = LayoutDeviceRect::FromAppUnits(
+      aChain->mClip.GetClipRect(), aAppUnitsPerDevPixel);
+  nsTArray<wr::ComplexClipRegion> wrRoundedRects;
+  aChain->mClip.ToComplexClipRegions(aAppUnitsPerDevPixel, aSc, wrRoundedRects);
+
+  // Define the clip
+  wr::WrClipId clipId = mBuilder->DefineClip(
+      ancestorIds.first, ancestorIds.second,
+      aSc.ToRelativeLayoutRect(clip), &wrRoundedRects);
+  aCache[aChain] = clipId;
+
+  ids.second = Some(clipId);
+  return ids;
+}
+
+std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
+                                           const ActiveScrolledRoot* aAsr,
+                                           const DisplayItemClipChain* aChain,
+                                           int32_t aAppUnitsPerDevPixel,
+                                           const StackingContextHelper& aSc,
+                                           WebRenderCommandBuilder::ClipIdMap& aCache)
+{
+  MOZ_ASSERT(aAsr);
+
+  // This will hold our return value
+  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
+
+  FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
+  if (mBuilder->IsScrollLayerDefined(scrollId)) {
+    // If we've already defined this scroll layer before, we can early-exit
+    ids.first = Some(scrollId);
+    if (aChain) {
+      auto it = aCache.find(aChain);
+      MOZ_ASSERT(it != aCache.end());
+      ids.second = Some(it->second);
+    }
+    return ids;
+  }
+
+  // If not, recurse to ensure all the ancestors are defined
+  auto ancestorIds = DefineClipChain(
+      aItem, aAsr->mParent, aChain, aAppUnitsPerDevPixel, aSc,
+      aCache);
+  ids = ancestorIds;
+
+  Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
+      nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+  MOZ_ASSERT(metadata);
+  FrameMetrics& metrics = metadata->GetMetrics();
+
+  if (!metrics.IsScrollable()) {
+    // This item in the chain is a no-op, skip over it
+    return ids;
+  }
+
+  // Now we need to figure out whether the new clip we're defining should be
+  // a child of aChain, or of aAsr->mParent, if we have both as a possibility.
+  if (ancestorIds.first && ancestorIds.second) {
+    MOZ_ASSERT(aAsr->mParent); // because ancestorIds.first
+    MOZ_ASSERT(aChain); // because ancestorIds.second
+    if (aChain->mASR && aChain->mASR == aAsr->mParent) {
+      // aChain is scrolled by aAsr's parent, so we should use aChain as the
+      // ancestor when defining the aAsr scroll layer.
+      ancestorIds.first = Nothing();
+    } else {
+      // This scenario never seems to occur in practice, but if it did it would
+      // mean that aChain is scrolled by one of aAsr's ancestors beyond the
+      // parent, in which case we should use aAsr->mParent as the ancestor
+      // when defining the aAsr scroll layer.
+      ancestorIds.second = Nothing();
+    }
+  }
+  // At most one of the ancestor pair should be defined here, and the one that
+  // is defined will be the parent clip for the new scrollframe that we're
+  // defining.
+  MOZ_ASSERT(!(ancestorIds.first && ancestorIds.second));
+
+  LayoutDeviceRect contentRect =
+      metrics.GetExpandedScrollableRect() * metrics.GetDevPixelsPerCSSPixel();
+  // TODO: check coordinate systems are sane here
+  LayoutDeviceRect clipBounds =
+      LayoutDeviceRect::FromUnknownRect(metrics.GetCompositionBounds().ToUnknownRect());
+  // The content rect that we hand to PushScrollLayer should be relative to
+  // the same origin as the clipBounds that we hand to PushScrollLayer - that
+  // is, both of them should be relative to the stacking context `aSc`.
+  // However, when we get the scrollable rect from the FrameMetrics, the origin
+  // has nothing to do with the position of the frame but instead represents
+  // the minimum allowed scroll offset of the scrollable content. While APZ
+  // uses this to clamp the scroll position, we don't need to send this to
+  // WebRender at all. Instead, we take the position from the composition
+  // bounds.
+  contentRect.MoveTo(clipBounds.TopLeft());
+
+  mBuilder->DefineScrollLayer(scrollId, ancestorIds.first, ancestorIds.second,
+      aSc.ToRelativeLayoutRect(contentRect),
+      aSc.ToRelativeLayoutRect(clipBounds));
+
+  ids.first = Some(scrollId);
+  return ids;
+}
+
 void
 ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
                                                  const ActiveScrolledRoot* aAsr,
