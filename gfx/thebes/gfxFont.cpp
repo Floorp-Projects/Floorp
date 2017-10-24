@@ -1827,194 +1827,193 @@ gfxFont::CalcXScale(DrawTarget* aDrawTarget)
     return 1.0 / m;
 }
 
-// Draw an individual glyph at a specific location.
-// *aPt is the glyph position in appUnits; it is converted to device
-// coordinates (devPt) here.
-void
-gfxFont::DrawOneGlyph(uint32_t aGlyphID, float aAdvance, gfx::Point *aPt,
-                      GlyphBufferAzure& aBuffer, bool *aEmittedGlyphs) const
-{
-    const TextRunDrawParams& runParams(aBuffer.mRunParams);
-    const FontDrawParams& fontParams(aBuffer.mFontParams);
-
-    float glyphX, glyphY;
-    if (fontParams.isVerticalFont) {
-        glyphX = aPt->x;
-        if (runParams.isRTL) {
-            aPt->y -= aAdvance;
-            glyphY = aPt->y;
-        } else {
-            glyphY = aPt->y;
-            aPt->y += aAdvance;
-        }
-    } else {
-        glyphY = aPt->y;
-        if (runParams.isRTL) {
-            aPt->x -= aAdvance;
-            glyphX = aPt->x;
-        } else {
-            glyphX = aPt->x;
-            aPt->x += aAdvance;
-        }
-    }
-    Point devPt(ToDeviceUnits(glyphX, runParams.devPerApp),
-                ToDeviceUnits(glyphY, runParams.devPerApp));
-
-    if (fontParams.haveSVGGlyphs) {
-        if (!runParams.paintSVGGlyphs) {
-            return;
-        }
-        NS_WARNING_ASSERTION(
-          runParams.drawMode != DrawMode::GLYPH_PATH,
-          "Rendering SVG glyph despite request for glyph path");
-        if (RenderSVGGlyph(runParams.context, devPt,
-                           aGlyphID, fontParams.contextPaint,
-                           runParams.callbacks, *aEmittedGlyphs)) {
-            return;
-        }
-    }
-
-    if (fontParams.haveColorGlyphs &&
-        RenderColorGlyph(runParams.dt, runParams.context,
-                         fontParams.scaledFont, fontParams.renderingOptions,
-                         fontParams.drawOptions,
-                         fontParams.matInv.TransformPoint(devPt),
-                         aGlyphID)) {
-        return;
-    }
-
-    aBuffer.OutputGlyph(aGlyphID, devPt);
-
-    // Synthetic bolding (if required) by multi-striking.
-    for (int32_t i = 0; i < fontParams.extraStrikes; ++i) {
-        if (fontParams.isVerticalFont) {
-            devPt.y += fontParams.synBoldOnePixelOffset;
-        } else {
-            devPt.x += fontParams.synBoldOnePixelOffset;
-        }
-        aBuffer.OutputGlyph(aGlyphID, devPt);
-    }
-
-    *aEmittedGlyphs = true;
-}
-
 // Draw a run of CharacterGlyph records from the given offset in aShapedText.
 // Returns true if glyph paths were actually emitted.
+template<gfxFont::FontComplexityT FC, gfxFont::SpacingT S>
 bool
 gfxFont::DrawGlyphs(const gfxShapedText*     aShapedText,
                     uint32_t                 aOffset, // offset in the textrun
                     uint32_t                 aCount, // length of run to draw
                     gfx::Point*              aPt,
-                    const TextRunDrawParams& aRunParams,
-                    const FontDrawParams&    aFontParams)
+                    GlyphBufferAzure&        aBuffer)
 {
-    bool emittedGlyphs = false;
-    GlyphBufferAzure buffer(aRunParams, aFontParams);
-
-    float& inlineCoord = aFontParams.isVerticalFont ? aPt->y : aPt->x;
-
-    if (aRunParams.spacing) {
-        inlineCoord += aRunParams.isRTL ? -aRunParams.spacing[0].mBefore
-                                        : aRunParams.spacing[0].mBefore;
-    }
+    float& inlineCoord = aBuffer.mFontParams.isVerticalFont ? aPt->y : aPt->x;
 
     const gfxShapedText::CompressedGlyph *glyphData =
         &aShapedText->GetCharacterGlyphs()[aOffset];
 
+    if (S == SpacingT::HasSpacing) {
+        float space = aBuffer.mRunParams.spacing[0].mBefore;
+        inlineCoord += aBuffer.mRunParams.isRTL ? - space : space;
+    }
+
+    bool emittedGlyphs = false;
+
     for (uint32_t i = 0; i < aCount; ++i, ++glyphData) {
         if (glyphData->IsSimpleGlyph()) {
-            DrawOneGlyph(glyphData->GetSimpleGlyph(),
-                         glyphData->GetSimpleAdvance(),
-                         aPt, buffer, &emittedGlyphs);
+            float advance = glyphData->GetSimpleAdvance();
+            if (aBuffer.mRunParams.isRTL) {
+                inlineCoord -= advance;
+            }
+            DrawOneGlyph<FC>(glyphData->GetSimpleGlyph(), *aPt, aBuffer,
+                             &emittedGlyphs);
+            if (!aBuffer.mRunParams.isRTL) {
+                inlineCoord += advance;
+            }
         } else {
             uint32_t glyphCount = glyphData->GetGlyphCount();
             if (glyphCount > 0) {
                 const gfxShapedText::DetailedGlyph *details =
                     aShapedText->GetDetailedGlyphs(aOffset + i);
-                NS_ASSERTION(details, "detailedGlyph should not be missing!");
+                MOZ_ASSERT(details, "missing DetailedGlyph!");
                 for (uint32_t j = 0; j < glyphCount; ++j, ++details) {
                     float advance = details->mAdvance;
-
+                    if (aBuffer.mRunParams.isRTL) {
+                        inlineCoord -= advance;
+                    }
                     if (glyphData->IsMissing()) {
-                        // Default-ignorable chars will have zero advance width;
-                        // we don't have to draw the hexbox for them.
-                        if (aRunParams.drawMode != DrawMode::GLYPH_PATH &&
-                            advance > 0) {
-
-                            if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
-                                textDrawer->FoundUnsupportedFeature();
-                                return false;
-                            }
-
-                            float glyphX = aPt->x;
-                            float glyphY = aPt->y;
-                            if (aRunParams.isRTL) {
-                                if (aFontParams.isVerticalFont) {
-                                    glyphY -= advance;
-                                } else {
-                                    glyphX -= advance;
-                                }
-                            }
-                            Point pt(Float(ToDeviceUnits(glyphX, aRunParams.devPerApp)),
-                                     Float(ToDeviceUnits(glyphY, aRunParams.devPerApp)));
-                            Float advanceDevUnits =
-                                Float(ToDeviceUnits(advance, aRunParams.devPerApp));
-                            Float height = GetMetrics(eHorizontal).maxAscent;
-                            Rect glyphRect = aFontParams.isVerticalFont ?
-                                Rect(pt.x - height / 2, pt.y,
-                                     height, advanceDevUnits) :
-                                Rect(pt.x, pt.y - height,
-                                     advanceDevUnits, height);
-
-                            // If there's a fake-italic skew in effect as part
-                            // of the drawTarget's transform, we need to remove
-                            // this before drawing the hexbox. (Bug 983985)
-                            Matrix oldMat;
-                            if (aFontParams.passedInvMatrix) {
-                                oldMat = aRunParams.dt->GetTransform();
-                                aRunParams.dt->SetTransform(
-                                    *aFontParams.passedInvMatrix * oldMat);
-                            }
-
-                            gfxFontMissingGlyphs::DrawMissingGlyph(
-                                details->mGlyphID, glyphRect, *aRunParams.dt,
-                                PatternFromState(aRunParams.context),
-                                aShapedText->GetAppUnitsPerDevUnit());
-
-                            // Restore the matrix, if we modified it before
-                            // drawing the hexbox.
-                            if (aFontParams.passedInvMatrix) {
-                                aRunParams.dt->SetTransform(oldMat);
-                            }
+                        if (!DrawMissingGlyph(aBuffer.mRunParams,
+                                              aBuffer.mFontParams,
+                                              details, *aPt)) {
+                            return false;
                         }
                     } else {
-                        Point glyphXY(*aPt);
-                        if (aFontParams.isVerticalFont) {
-                            glyphXY.x += details->mYOffset;
-                            glyphXY.y += details->mXOffset;
+                        gfx::Point glyphPt(*aPt);
+                        if (aBuffer.mFontParams.isVerticalFont) {
+                            glyphPt.x += details->mYOffset;
+                            glyphPt.y += details->mXOffset;
                         } else {
-                            glyphXY.x += details->mXOffset;
-                            glyphXY.y += details->mYOffset;
+                            glyphPt.x += details->mXOffset;
+                            glyphPt.y += details->mYOffset;
                         }
-                        DrawOneGlyph(details->mGlyphID, advance, &glyphXY,
-                                     buffer, &emittedGlyphs);
+                        DrawOneGlyph<FC>(details->mGlyphID, glyphPt, aBuffer,
+                                         &emittedGlyphs);
                     }
-
-                    inlineCoord += aRunParams.isRTL ? -advance : advance;
+                    if (!aBuffer.mRunParams.isRTL) {
+                        inlineCoord += advance;
+                    }
                 }
             }
         }
 
-        if (aRunParams.spacing) {
-            float space = aRunParams.spacing[i].mAfter;
+        if (S == SpacingT::HasSpacing) {
+            float space = aBuffer.mRunParams.spacing[i].mAfter;
             if (i + 1 < aCount) {
-                space += aRunParams.spacing[i + 1].mBefore;
+                space += aBuffer.mRunParams.spacing[i + 1].mBefore;
             }
-            inlineCoord += aRunParams.isRTL ? -space : space;
+            inlineCoord += aBuffer.mRunParams.isRTL ? -space : space;
         }
     }
 
     return emittedGlyphs;
+}
+
+// Draw an individual glyph at a specific location.
+// *aPt is the glyph position in appUnits; it is converted to device
+// coordinates (devPt) here.
+template<gfxFont::FontComplexityT FC>
+void
+gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
+                      GlyphBufferAzure& aBuffer, bool *aEmittedGlyphs) const
+{
+    const TextRunDrawParams& runParams(aBuffer.mRunParams);
+
+    gfx::Point devPt(ToDeviceUnits(aPt.x, runParams.devPerApp),
+                     ToDeviceUnits(aPt.y, runParams.devPerApp));
+
+    if (FC == FontComplexityT::ComplexFont) {
+        const FontDrawParams& fontParams(aBuffer.mFontParams);
+        if (fontParams.haveSVGGlyphs) {
+            if (!runParams.paintSVGGlyphs) {
+                return;
+            }
+            NS_WARNING_ASSERTION(
+              runParams.drawMode != DrawMode::GLYPH_PATH,
+              "Rendering SVG glyph despite request for glyph path");
+            if (RenderSVGGlyph(runParams.context, devPt,
+                               aGlyphID, fontParams.contextPaint,
+                               runParams.callbacks, *aEmittedGlyphs)) {
+                return;
+            }
+        }
+
+        if (fontParams.haveColorGlyphs &&
+            RenderColorGlyph(runParams.dt, runParams.context,
+                             fontParams.scaledFont,
+                             fontParams.renderingOptions,
+                             fontParams.drawOptions,
+                             fontParams.matInv.TransformPoint(devPt),
+                             aGlyphID)) {
+            return;
+        }
+    }
+
+    aBuffer.OutputGlyph(aGlyphID, devPt);
+
+    if (FC == FontComplexityT::ComplexFont) {
+        const FontDrawParams& fontParams(aBuffer.mFontParams);
+        // Synthetic bolding (if required) by multi-striking.
+        for (int32_t i = 0; i < fontParams.extraStrikes; ++i) {
+            if (fontParams.isVerticalFont) {
+                devPt.y += fontParams.synBoldOnePixelOffset;
+            } else {
+                devPt.x += fontParams.synBoldOnePixelOffset;
+            }
+            aBuffer.OutputGlyph(aGlyphID, devPt);
+        }
+    }
+
+    *aEmittedGlyphs = true;
+}
+
+bool
+gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
+                          const FontDrawParams&               aFontParams,
+                          const gfxShapedText::DetailedGlyph* aDetails,
+                          const gfx::Point&                   aPt)
+{
+    // Default-ignorable chars will have zero advance width;
+    // we don't have to draw the hexbox for them.
+    float advance = aDetails->mAdvance;
+    if (aRunParams.drawMode != DrawMode::GLYPH_PATH && advance > 0) {
+        if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
+            textDrawer->FoundUnsupportedFeature();
+            return false;
+        }
+
+        Point pt(Float(ToDeviceUnits(aPt.x, aRunParams.devPerApp)),
+                 Float(ToDeviceUnits(aPt.y, aRunParams.devPerApp)));
+        Float advanceDevUnits =
+            Float(ToDeviceUnits(advance, aRunParams.devPerApp));
+        Float height = GetMetrics(eHorizontal).maxAscent;
+        Rect glyphRect = aFontParams.isVerticalFont ?
+            Rect(pt.x - height / 2, pt.y,
+                 height, advanceDevUnits) :
+            Rect(pt.x, pt.y - height,
+                 advanceDevUnits, height);
+
+        // If there's a fake-italic skew in effect as part
+        // of the drawTarget's transform, we need to remove
+        // this before drawing the hexbox. (Bug 983985)
+        Matrix oldMat;
+        if (aFontParams.passedInvMatrix) {
+            oldMat = aRunParams.dt->GetTransform();
+            aRunParams.dt->SetTransform(
+                *aFontParams.passedInvMatrix * oldMat);
+        }
+
+        gfxFontMissingGlyphs::DrawMissingGlyph(
+            aDetails->mGlyphID, glyphRect, *aRunParams.dt,
+            PatternFromState(aRunParams.context),
+            1.0 / aRunParams.devPerApp);
+
+        // Restore the matrix, if we modified it before
+        // drawing the hexbox.
+        if (aFontParams.passedInvMatrix) {
+            aRunParams.dt->SetTransform(oldMat);
+        }
+    }
+    return true;
 }
 
 // This method is mostly parallel to DrawGlyphs.
@@ -2226,9 +2225,44 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
             mStyle.baselineOffset * aTextRun->GetAppUnitsPerDevUnit();
     }
 
-    bool emittedGlyphs =
-        DrawGlyphs(aTextRun, aStart, aEnd - aStart, aPt,
-                   aRunParams, fontParams);
+    bool emittedGlyphs;
+    {
+        // Select appropriate version of the templated DrawGlyphs method
+        // to output glyphs to the buffer, depending on complexity needed
+        // for the type of font, and whether added inter-glyph spacing
+        // is specified.
+        GlyphBufferAzure buffer(aRunParams, fontParams);
+        if (fontParams.haveSVGGlyphs || fontParams.haveColorGlyphs ||
+            fontParams.extraStrikes) {
+            if (aRunParams.spacing) {
+                emittedGlyphs =
+                    DrawGlyphs<FontComplexityT::ComplexFont,
+                               SpacingT::HasSpacing>(aTextRun, aStart,
+                                                     aEnd - aStart, aPt,
+                                                     buffer);
+            } else {
+                emittedGlyphs =
+                    DrawGlyphs<FontComplexityT::ComplexFont,
+                               SpacingT::NoSpacing>(aTextRun, aStart,
+                                                    aEnd - aStart, aPt,
+                                                    buffer);
+            }
+        } else {
+            if (aRunParams.spacing) {
+                emittedGlyphs =
+                    DrawGlyphs<FontComplexityT::SimpleFont,
+                               SpacingT::HasSpacing>(aTextRun, aStart,
+                                                     aEnd - aStart, aPt,
+                                                     buffer);
+            } else {
+                emittedGlyphs =
+                    DrawGlyphs<FontComplexityT::SimpleFont,
+                               SpacingT::NoSpacing>(aTextRun, aStart,
+                                                    aEnd - aStart, aPt,
+                                                    buffer);
+            }
+        }
+    }
 
     baseline = origBaseline;
 
