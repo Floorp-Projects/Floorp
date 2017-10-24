@@ -75,6 +75,10 @@ nsUnknownDecoder::ConvertedStreamListener::
 {
   uint32_t read;
   nsAutoCString decodedData;
+  {
+    MutexAutoLock lock(mDecoder->mMutex);
+    decodedData = mDecoder->mDecodedData;
+  }
   nsresult rv = stream->ReadSegments(AppendDataToString, &decodedData, count,
                                      &read);
   if (NS_FAILED(rv)) {
