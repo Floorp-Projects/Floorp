@@ -1,3 +1,5 @@
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
@@ -274,3 +276,66 @@ add_task(async function testExtensionControlledNewTab() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+add_task(async function testExtensionControlledHomepageUninstalledAddon() {
+  async function checkHomepageEnabled() {
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+    let doc = gBrowser.contentDocument;
+    is(gBrowser.currentURI.spec, "about:preferences#general",
+      "#general should be in the URI for about:preferences");
+    let controlledContent = doc.getElementById("browserHomePageExtensionContent");
+
+    // The homepage is enabled.
+    let homepageInut = doc.getElementById("browserHomePage");
+    is(homepageInut.disabled, false, "The homepage input is enabled");
+    is(homepageInut.value, "", "The homepage input is empty");
+    is(controlledContent.hidden, true, "The extension controlled row is hidden");
+
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+
+  await ExtensionSettingsStore.initialize();
+
+  // Verify the setting isn't reported as controlled and the inputs are enabled.
+  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override"), null,
+     "The homepage_override is not set");
+  await checkHomepageEnabled();
+
+  // Write out a bad store file.
+  let storeData = {
+    prefs: {
+      homepage_override: {
+        initialValue: "",
+        precedenceList: [{
+          id: "bad@mochi.test",
+          installDate: 1508802672,
+          value: "https://developer.mozilla.org",
+          enabled: true,
+        }],
+      },
+    },
+  };
+  let jsonFileName = "extension-settings.json";
+  let storePath = OS.Path.join(OS.Constants.Path.profileDir, jsonFileName);
+  await OS.File.writeAtomic(storePath, JSON.stringify(storeData));
+
+  // Reload the ExtensionSettingsStore so it will read the file on disk. Don't
+  // finalize the current store since it will overwrite our file.
+  await ExtensionSettingsStore._reloadFile(false);
+
+  // Verify that the setting is reported as set, but the homepage is still enabled
+  // since there is no matching installed extension.
+  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override").value,
+      "https://developer.mozilla.org",
+      "The homepage_override appears to be set");
+  await checkHomepageEnabled();
+
+  // Remove the bad store file that we used.
+  await OS.File.remove(storePath)
+
+  // Reload the ExtensionSettingsStore again so it clears the data we added.
+  // Don't finalize the current store since it will write out the bad data.
+  await ExtensionSettingsStore._reloadFile(false);
+
+  is(ExtensionSettingsStore.getSetting("prefs", "homepage_override"), null,
+     "The ExtensionSettingsStore is left empty.");
+});

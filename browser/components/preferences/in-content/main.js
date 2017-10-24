@@ -2617,20 +2617,26 @@ function getControllingExtensionEl(settingName) {
 
 async function handleControllingExtension(type, settingName) {
   let controllingExtensionId = await getControllingExtensionId(type, settingName);
+  let addon = controllingExtensionId
+    && await AddonManager.getAddonByID(controllingExtensionId);
 
-  if (controllingExtensionId) {
-    showControllingExtension(settingName, controllingExtensionId);
+  // Sometimes the ExtensionSettingsStore gets in a bad state where it thinks
+  // an extension is controlling a setting but the extension has been uninstalled
+  // outside of the regular lifecycle. If the extension isn't currently installed
+  // then we should treat the setting as not being controlled.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1411046 for an example.
+  if (addon) {
+    showControllingExtension(settingName, addon);
   } else {
     hideControllingExtension(settingName);
   }
 
-  return !!controllingExtensionId;
+  return !!addon;
 }
 
-async function showControllingExtension(settingName, extensionId) {
-  let extensionControlledContent = getControllingExtensionEl(settingName);
+async function showControllingExtension(settingName, addon) {
   // Tell the user what extension is controlling the setting.
-  let addon = await AddonManager.getAddonByID(extensionId);
+  let extensionControlledContent = getControllingExtensionEl(settingName);
   const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
   let stringParts = document
     .getElementById("bundlePreferences")
