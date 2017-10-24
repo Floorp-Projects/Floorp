@@ -875,24 +875,7 @@ cargo_rustc_flags += -C lto
 endif
 endif
 
-# Cargo currently supports only two interesting profiles for building:
-# development and release.  Those map (roughly) to --enable-debug and
-# --disable-debug in Gecko, respectively, but there's another axis that we'd
-# like to support: --{disable,enable}-optimize.  Since that would be four
-# choices, and Cargo only supports two, we choose to enable various
-# optimization levels in our Cargo.toml files all the time, and override the
-# optimization level here, if necessary.  (The Cargo.toml files already
-# specify debug-assertions appropriately for --{disable,enable}-debug.)
-default_rustflags =
-ifndef MOZ_OPTIMIZE
-default_rustflags = -C opt-level=0
-# Unfortunately, -C opt-level=0 implies -C debug-assertions, so we need
-# to explicitly disable them when MOZ_DEBUG_RUST is not set.
-ifndef MOZ_DEBUG_RUST
-default_rustflags += -C debug-assertions=no
-endif
-endif
-rustflags_override = RUSTFLAGS='$(default_rustflags) $(RUSTFLAGS)'
+rustflags_override = RUSTFLAGS='$(MOZ_RUST_DEFAULT_FLAGS) $(RUSTFLAGS)'
 
 ifdef MOZ_MSVCBITS
 # If we are building a MozillaBuild shell, we want to clear out the
@@ -917,10 +900,6 @@ endif
 
 ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
-endif
-
-ifdef MOZ_DEBUG_SYMBOLS
-default_rustflags += -C debuginfo=2
 endif
 
 # We use the + prefix to pass down the jobserver fds to cargo, but we

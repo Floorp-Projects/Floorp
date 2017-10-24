@@ -1298,6 +1298,54 @@ def developer_options(value):
 add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
 set_config('DEVELOPER_OPTIONS', developer_options)
 
+# Rust compiler flags
+# ==============================================================
+
+@depends(moz_optimize, debug_rust, '--enable-debug-symbols')
+def rust_compiler_flags(moz_optimize, debug_rust, debug_symbols):
+    optimize = moz_optimize.optimize
+
+    # Cargo currently supports only two interesting profiles for building:
+    # development and release. Those map (roughly) to --enable-debug and
+    # --disable-debug in Gecko, respectively.
+    #
+    # But we'd also like to support an additional axis of control for
+    # optimization level. Since Cargo only supports 2 profiles, we're in
+    # a bit of a bind.
+    #
+    # Code here derives various compiler options given other configure options.
+    # The options defined here effectively override defaults specified in
+    # Cargo.toml files.
+
+    opt_level = None
+    debug_assertions = None
+    debug_info = None
+
+    if not optimize:
+        opt_level = '0'
+
+    # opt-level=0 implies -C debug-assertions, which may not be desired
+    # unless Rust debugging is enabled.
+    if opt_level == '0' and not debug_rust:
+        debug_assertions = False
+
+    if debug_symbols:
+        debug_info = '2'
+
+    flags = []
+
+    if opt_level is not None:
+        flags.append('-Copt-level=%s' % opt_level)
+    if debug_assertions is not None:
+        flags.append('-Cdebug-assertions=%s' %
+                     ('yes' if debug_assertions else 'no'))
+    if debug_info is not None:
+        flags.append('-Cdebuginfo=%s' % debug_info)
+
+    return flags
+
+set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
+
 # Linker detection
 # ==============================================================
 
