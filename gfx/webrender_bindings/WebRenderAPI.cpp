@@ -693,16 +693,27 @@ DisplayListBuilder::PopStackingContext()
 }
 
 wr::WrClipId
-DisplayListBuilder::DefineClip(const wr::LayoutRect& aClipRect,
+DisplayListBuilder::DefineClip(const Maybe<layers::FrameMetrics::ViewID>& aAncestorScrollId,
+                               const Maybe<wr::WrClipId>& aAncestorClipId,
+                               const wr::LayoutRect& aClipRect,
                                const nsTArray<wr::ComplexClipRegion>* aComplex,
                                const wr::WrImageMask* aMask)
 {
-  uint64_t clip_id = wr_dp_define_clip(mWrState, aClipRect,
+  const uint64_t* ancestorClipId = nullptr;
+  if (aAncestorClipId) {
+    ancestorClipId = &(aAncestorClipId.ref().id);
+  }
+  uint64_t clip_id = wr_dp_define_clip(mWrState,
+      aAncestorScrollId.ptrOr(nullptr), ancestorClipId,
+      aClipRect,
       aComplex ? aComplex->Elements() : nullptr,
       aComplex ? aComplex->Length() : 0,
       aMask);
-  WRDL_LOG("DefineClip id=%" PRIu64 " r=%s m=%p b=%s complex=%zu\n", mWrState,
-      clip_id, Stringify(aClipRect).c_str(), aMask,
+  WRDL_LOG("DefineClip id=%" PRIu64 " as=%s ac=%s r=%s m=%p b=%s complex=%zu\n", mWrState,
+      clip_id,
+      aAncestorScrollId ? Stringify(aAncestorScrollId.ref()).c_str() : "(nil)",
+      aAncestorClipId ? Stringify(aAncestorClipId.ref().id).c_str() : "(nil)",
+      Stringify(aClipRect).c_str(), aMask,
       aMask ? Stringify(aMask->rect).c_str() : "none",
       aComplex ? aComplex->Length() : 0);
   return wr::WrClipId { clip_id };
@@ -772,11 +783,16 @@ DisplayListBuilder::IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId)
 
 void
 DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                                      const Maybe<layers::FrameMetrics::ViewID>& aAncestorScrollId,
+                                      const Maybe<wr::WrClipId>& aAncestorClipId,
                                       const wr::LayoutRect& aContentRect,
                                       const wr::LayoutRect& aClipRect)
 {
-  WRDL_LOG("DefineScrollLayer id=%" PRIu64 " co=%s cl=%s\n", mWrState,
-      aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
+  WRDL_LOG("DefineScrollLayer id=%" PRIu64 " as=%s ac=%s co=%s cl=%s\n", mWrState,
+      aScrollId,
+      aAncestorScrollId ? Stringify(aAncestorScrollId.ref()).c_str() : "(nil)",
+      aAncestorClipId ? Stringify(aAncestorClipId.ref().id).c_str() : "(nil)",
+      Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
 
   Maybe<layers::FrameMetrics::ViewID> parent =
       mScrollIdStack.empty() ? Nothing() : Some(mScrollIdStack.back());
@@ -784,7 +800,12 @@ DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrol
   if (it.second) {
     // An insertion took place, which means we haven't defined aScrollId before.
     // So let's define it now.
-    wr_dp_define_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
+    const uint64_t* ancestorClipId = nullptr;
+    if (aAncestorClipId) {
+      ancestorClipId = &(aAncestorClipId.ref().id);
+    }
+    wr_dp_define_scroll_layer(mWrState, aScrollId, aAncestorScrollId.ptrOr(nullptr),
+        ancestorClipId, aContentRect, aClipRect);
   } else {
     // aScrollId was already a key in mScrollParents so check that the parent
     // value is the same.
