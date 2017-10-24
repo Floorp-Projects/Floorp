@@ -1,5 +1,5 @@
 x = [
-    objectEmulatingUndefined(),
+    createIsHTMLDDA(),
     function() {}
 ];
 x.forEach(function() {});
