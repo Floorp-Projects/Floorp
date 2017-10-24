@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for console.group styling with %c</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <script>
+"use strict";
+
+window.onload = async function () {
+  SimpleTest.waitForExplicitFinish();
+  let state;
+  try {
+    state = await new Promise(resolve =>
+      attachConsole(["ConsoleAPI"], resolve)
+    );
+    const {dbgClient} = state;
+
+    const consoleAPICall = consoleCall => {
+      const onConsoleAPICall = new Promise((resolve, reject) => {
+        dbgClient.addOneTimeListener(
+          "consoleAPICall",
+          (type, packet) => resolve({type, packet})
+        );
+      });
+      consoleCall();
+      return onConsoleAPICall;
+    };
+
+    await testFalseAssert(consoleAPICall);
+    await testFalsyAssert(consoleAPICall);
+    await testUndefinedAssert(consoleAPICall);
+    await testNullAssert(consoleAPICall);
+    await testTrueAssert(consoleAPICall);
+
+  } catch (e) {
+    ok(false, `Error thrown: ${e.message}`);
+  }
+
+  closeDebugger(state, () => SimpleTest.finish());
+};
+
+async function testFalseAssert(consoleAPICall) {
+  info(`Testing console.assert(false)`);
+  let {packet} = await consoleAPICall(() =>
+    top.console.assert(false, "assertion is false"));
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["assertion is false"]
+  });
+}
+
+async function testFalsyAssert(consoleAPICall) {
+  info(`Testing console.assert(0")`);
+  let {packet} = await consoleAPICall(() =>
+    top.console.assert(0, "assertion is false"));
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["assertion is false"]
+  });
+}
+
+async function testUndefinedAssert(consoleAPICall) {
+  info(`Testing console.assert(undefined)`);
+  let {packet} = await consoleAPICall(() =>
+    top.console.assert(undefined, "assertion is false"));
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["assertion is false"]
+  });
+}
+
+async function testNullAssert(consoleAPICall) {
+  info(`Testing console.assert(null)`);
+  let {packet} = await consoleAPICall(() =>
+    top.console.assert(null, "assertion is false"));
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["assertion is false"]
+  });
+}
+
+async function testTrueAssert(consoleAPICall) {
+  info(`Testing console.assert(true)`);
+  const onConsoleApiCall = consoleAPICall(() =>
+    top.console.assert(true, "assertion is false"));
+
+  const TIMEOUT = Symbol();
+  const onTimeout = new Promise(resolve => setTimeout(() => resolve(TIMEOUT), 1000));
+
+  const res = await Promise.race([onConsoleApiCall, onTimeout]);
+  is(res, TIMEOUT,
+    "There was no consoleAPICall event in response to a truthy console.assert");
+}
+
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+</body>
+</html>
