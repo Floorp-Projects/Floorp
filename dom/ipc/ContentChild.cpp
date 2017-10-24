@@ -107,7 +107,6 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIIdlePeriod.h"
 #include "nsIDragService.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMemoryInfoDumper.h"
@@ -468,31 +467,6 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
   return NS_OK;
 }
 
-class BackgroundChildPrimer final :
-  public nsIIPCBackgroundChildCreateCallback
-{
-public:
-  BackgroundChildPrimer()
-  { }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  ~BackgroundChildPrimer() = default;
-
-  void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    MOZ_ASSERT(aActor, "Failed to create a PBackgroundChild actor!");
-  }
-
-  void
-  ActorFailed() override
-  {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-  }
-};
-
 #ifdef NIGHTLY_BUILD
 /**
  * The singleton of this class is registered with the HangMonitor as an
@@ -515,8 +489,6 @@ public:
 };
 PendingInputEventHangAnnotator PendingInputEventHangAnnotator::sSingleton;
 #endif
-
-NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 class ContentChild::ShutdownCanary final
 { };
@@ -1167,9 +1139,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   // background thread since we'll likely need database information very soon.
   BackgroundChild::Startup();
 
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback =
-    new BackgroundChildPrimer();
-  if (!BackgroundChild::GetOrCreateForCurrentThread(callback)) {
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actorChild)) {
     MOZ_CRASH("Failed to create PBackgroundChild!");
   }
 
