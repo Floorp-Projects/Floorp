@@ -893,18 +893,21 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 }
 
-nsresult
+void
 ChannelMediaResource::CacheClientSuspend()
 {
-  Suspend(false);
-  return NS_OK;
+  mCallback->AbstractMainThread()->Dispatch(
+    NewRunnableMethod<bool>("ChannelMediaResource::Suspend",
+                            this,
+                            &ChannelMediaResource::Suspend,
+                            false));
 }
 
-nsresult
+void
 ChannelMediaResource::CacheClientResume()
 {
-  Resume();
-  return NS_OK;
+  mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod(
+    "ChannelMediaResource::Resume", this, &ChannelMediaResource::Resume));
 }
 
 int64_t
