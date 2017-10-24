@@ -118,7 +118,6 @@ for(var o2 in f5) {
     f2(o5);
     f2(o5);
     f0(o3);
-    o9.watch('p3', function() {});
     o8[o8] = o8;
     f0(o5);
     f1(o6);
