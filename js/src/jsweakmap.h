@@ -14,7 +14,6 @@
 #include "jsfriendapi.h"
 #include "jsobj.h"
 
-#include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 

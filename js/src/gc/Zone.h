@@ -30,6 +30,9 @@ class JitZone;
 
 namespace gc {
 
+class GCSchedulingState;
+class GCSchedulingTunables;
+
 // This class encapsulates the data that determines when we need to do a zone GC.
 class ZoneHeapThreshold
 {

@@ -12,15 +12,17 @@
 
 #include "jsalloc.h"
 
-#include "gc/Barrier.h"
-#include "gc/Marking.h"
 #include "gc/Rooting.h"
-#include "js/GCAPI.h"
 #include "js/GCHashTable.h"
 #include "vm/CommonPropertyNames.h"
 
 class JSAtom;
 class JSAutoByteString;
+
+namespace JS {
+class Value;
+struct Zone;
+} // namespace JS
 
 namespace js {
 
@@ -196,7 +198,7 @@ AtomizeString(JSContext* cx, JSString* str, js::PinningBehavior pin = js::DoNotP
 
 template <AllowGC allowGC>
 extern JSAtom*
-ToAtom(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v);
+ToAtom(JSContext* cx, typename MaybeRooted<JS::Value, allowGC>::HandleType v);
 
 enum XDRMode {
     XDR_ENCODE,
@@ -212,9 +214,9 @@ XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 #ifdef DEBUG
 
-bool AtomIsMarked(Zone* zone, JSAtom* atom);
-bool AtomIsMarked(Zone* zone, jsid id);
-bool AtomIsMarked(Zone* zone, const Value& value);
+bool AtomIsMarked(JS::Zone* zone, JSAtom* atom);
+bool AtomIsMarked(JS::Zone* zone, jsid id);
+bool AtomIsMarked(JS::Zone* zone, const JS::Value& value);
 
 #endif // DEBUG
 
