@@ -32,6 +32,7 @@ def directories(pathmodule, cwd, fixup=lambda s: s):
 DIR = directories(os.path, os.getcwd())
 PDIR = directories(posixpath, os.environ["PWD"],
                    fixup=lambda s: re.sub(r'^(\w):', r'/\1', s))
+env['AUTOSPIDER_DIR'] = DIR.js_src
 
 parser = argparse.ArgumentParser(
     description='Run a spidermonkey shell build job')
@@ -387,7 +388,6 @@ def run_test_command(command, **kwargs):
     return status
 
 test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
-
 
 def normalize_tests(tests):
     if 'all' in tests:
