@@ -19,6 +19,8 @@ import android.text.TextUtils;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.utils.UrlUtils;
 
+import java.util.UUID;
+
 public class HomeScreen {
     public static final String ADD_TO_HOMESCREEN_TAG = "add_to_homescreen";
     public static final String BLOCKING_ENABLED = "blocking_enabled";
@@ -50,7 +52,7 @@ public class HomeScreen {
      */
     private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
-            final ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context, url)
+            final ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context, UUID.randomUUID().toString())
                     .setShortLabel(title)
                     .setLongLabel(title)
                     .setIcon(IconCompat.createWithBitmap(bitmap))
