@@ -106,11 +106,6 @@ ServiceWorkerJob::Start(Callback* aFinalCallback)
     // browser shutdown
     return;
   }
-  if (!swm->HasBackgroundActor()) {
-    // waiting to initialize
-    swm->AppendPendingOperation(runnable);
-    return;
-  }
 
   // Otherwise start asynchronously.  We should never run a job synchronously.
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
