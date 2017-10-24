@@ -1157,34 +1157,6 @@ class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC
     }
 };
 
-// A singly linked list of zones.
-class ZoneList
-{
-    static Zone * const End;
-
-    Zone* head;
-    Zone* tail;
-
-  public:
-    ZoneList();
-    ~ZoneList();
-
-    bool isEmpty() const;
-    Zone* front() const;
-
-    void append(Zone* zone);
-    void transferFrom(ZoneList& other);
-    void removeFront();
-    void clear();
-
-  private:
-    explicit ZoneList(Zone* singleZone);
-    void check() const;
-
-    ZoneList(const ZoneList& other) = delete;
-    ZoneList& operator=(const ZoneList& other) = delete;
-};
-
 JSObject*
 NewMemoryStatisticsObject(JSContext* cx);
 
