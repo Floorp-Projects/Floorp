@@ -218,6 +218,69 @@ moz_container_init (MozContainer *container)
 #endif
 }
 
+#if defined(MOZ_WAYLAND)
+/* We want to draw to GdkWindow owned by mContainer from Compositor thread but
+ * Gtk+ can be used in main thread only. So we create wayland wl_surface
+ * and attach it as an overlay to GdkWindow.
+ *
+ * see gtk_clutter_embed_ensure_subsurface() at gtk-clutter-embed.c
+*  for reference.
+ */
+static gboolean
+moz_container_map_surface(MozContainer *container)
+{
+    GdkDisplay *display = gtk_widget_get_display(GTK_WIDGET(container));
+    if (GDK_IS_X11_DISPLAY(display))
+        return false;
+
+    if (container->subsurface && container->surface)
+        return true;
+
+    if (!container->surface) {
+        struct wl_compositor *compositor;
+        compositor = gdk_wayland_display_get_wl_compositor(display);
+        container->surface = wl_compositor_create_surface(compositor);
+    }
+
+    if (!container->subsurface) {
+        GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+        wl_surface* gtk_surface = gdk_wayland_window_get_wl_surface(window);
+        if (!gtk_surface) {
+          // We requested the underlying wl_surface too early when container
+          // is not realized yet. We'll try again before first rendering
+          // to mContainer.
+          return false;
+        }
+
+        container->subsurface =
+          wl_subcompositor_get_subsurface (container->subcompositor,
+                                           container->surface,
+                                           gtk_surface);
+        gint x, y;
+        gdk_window_get_position(window, &x, &y);
+        wl_subsurface_set_position(container->subsurface, x, y);
+        wl_subsurface_set_desync(container->subsurface);
+
+        // Route input to parent wl_surface owned by Gtk+ so we get input
+        // events from Gtk+.
+        GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET (container));
+        wl_compositor* compositor = gdk_wayland_display_get_wl_compositor(display);
+        wl_region* region = wl_compositor_create_region(compositor);
+        wl_surface_set_input_region(container->surface, region);
+        wl_region_destroy(region);
+    }
+    return true;
+}
+
+static void
+moz_container_unmap_surface(MozContainer *container)
+{
+    g_clear_pointer(&container->subsurface, wl_subsurface_destroy);
+    g_clear_pointer(&container->surface, wl_surface_destroy);
+}
+
+#endif
+
 void
 moz_container_map (GtkWidget *widget)
 {
