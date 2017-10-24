@@ -848,8 +848,11 @@ ChannelMediaResource::UpdatePrincipal()
 void
 ChannelMediaResource::CacheClientNotifySuspendedStatusChanged()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-  mCallback->NotifySuspendedStatusChanged(IsSuspendedByCache());
+  mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<bool>(
+    "MediaResourceCallback::NotifySuspendedStatusChanged",
+    mCallback.get(),
+    &MediaResourceCallback::NotifySuspendedStatusChanged,
+    IsSuspendedByCache()));
 }
 
 nsresult
