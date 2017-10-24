@@ -17,8 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 
-// MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision.
-const MAX_EXPIRY = Math.pow(2, 62);
+const MAX_EXPIRY = Number.MAX_SAFE_INTEGER;
 
 /**
  * The external API implemented by the SessionCookies module.
