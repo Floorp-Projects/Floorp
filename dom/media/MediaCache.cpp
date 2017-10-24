@@ -1430,7 +1430,7 @@ MediaCache::Update()
       for (uint32_t j = 0; j < i; ++j) {
         MediaCacheStream* other = mStreams[j];
         if (other->mResourceID == stream->mResourceID && !other->mClosed &&
-            !other->mClient->IsSuspended() &&
+            !other->mClientSuspended &&
             OffsetToBlockIndexUnchecked(other->mSeekTarget != -1
                                           ? other->mSeekTarget
                                           : other->mChannelOffset) ==
@@ -2132,6 +2132,24 @@ MediaCacheStream::NotifyChannelRecreated()
   mDidNotifyDataEnded = false;
 }
 
+void
+MediaCacheStream::NotifyClientSuspended(bool aSuspended)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<ChannelMediaResource> client = mClient;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyClientSuspended", [client, this, aSuspended]() {
+      if (mClientSuspended != aSuspended) {
+        mClientSuspended = aSuspended;
+        // mClientSuspended changes the decision of reading streams.
+        ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+        mMediaCache->QueueUpdate();
+      }
+    });
+  OwnerThread()->Dispatch(r.forget());
+}
+
 MediaCacheStream::~MediaCacheStream()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -2658,6 +2676,9 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   MOZ_ASSERT(aOriginal->IsAvailableForSharing());
   MOZ_ASSERT(!mMediaCache, "Has been initialized.");
   MOZ_ASSERT(aOriginal->mMediaCache, "Don't clone an uninitialized stream.");
+
+  // This needs to be done before OpenStream() to avoid data race.
+  mClientSuspended = true;
 
   // Use the same MediaCache as our clone.
   mMediaCache = aOriginal->mMediaCache;

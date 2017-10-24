@@ -31,7 +31,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mReopenOnError(false)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mChannel)
+  , mSuspendAgent(mChannel, mCacheStream)
 {
 }
 
@@ -44,7 +44,7 @@ ChannelMediaResource::ChannelMediaResource(
   , mReopenOnError(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
-  , mSuspendAgent(mChannel)
+  , mSuspendAgent(mChannel, mCacheStream)
 {
 }
 
@@ -604,8 +604,10 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   // which will recreate the channel. This way, if all of the media data
   // is already in the cache we don't create an unnecessary HTTP channel
   // and perform a useless HTTP transaction.
-  resource->mSuspendAgent.Suspend();
   resource->mCacheStream.InitAsClone(&mCacheStream);
+  // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
+  // until InitAsClone() is done.
+  resource->mSuspendAgent.Suspend();
   resource->mChannelStatistics.Stop();
 
   return resource.forget();
@@ -1020,7 +1022,11 @@ ChannelSuspendAgent::Suspend()
 {
   MOZ_ASSERT(NS_IsMainThread());
   SuspendInternal();
-  return (++mSuspendCount == 1);
+  if (++mSuspendCount == 1) {
+    mCacheStream.NotifyClientSuspended(true);
+    return true;
+  }
+  return false;
 }
 
 void
@@ -1042,13 +1048,13 @@ ChannelSuspendAgent::Resume()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsSuspended(), "Resume without suspend!");
-  --mSuspendCount;
 
-  if (mSuspendCount == 0) {
+  if (--mSuspendCount == 0) {
     if (mChannel && mIsChannelSuspended) {
       mChannel->Resume();
       mIsChannelSuspended = false;
     }
+    mCacheStream.NotifyClientSuspended(false);
     return true;
   }
   return false;
