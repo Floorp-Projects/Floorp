@@ -38,6 +38,7 @@ SOURCES += [
     'log2_tab.c',
     'mathematics.c',
     'mem.c',
+    'opt.c',
     'parseutils.c',
     'pixdesc.c',
     'pixelutils.c',
