@@ -128,7 +128,7 @@
       </panel>
     </button>
 
-    <button id="ready-player-one"
+    <button id="whimsy-button"
             type="checkbox"
             class="customizationmode-button"
             oncommand="gCustomizeMode.togglePong(this.checked);"
