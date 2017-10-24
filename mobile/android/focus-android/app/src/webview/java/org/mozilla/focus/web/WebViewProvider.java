@@ -9,11 +9,13 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.StrictMode;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 
 import org.mozilla.focus.R;
@@ -36,6 +38,24 @@ public class WebViewProvider {
 
     public static void performCleanup(final Context context) {
         SystemWebView.deleteContentFromKnownLocations(context);
+    }
+
+    /**
+     * A cleanup that should occur when a new browser session starts. This might be able to be merged with
+     * {@link #performCleanup(Context)}, but I didn't want to do it now to avoid unforeseen side effects. We can do this
+     * when we rethink our erase strategy: #1472.
+     *
+     * This function must be called before WebView.loadUrl to avoid erasing current session data.
+     */
+    public static void performNewBrowserSessionCleanup() {
+        // We run this on the main thread to guarantee it occurs before loadUrl so we don't erase current session data.
+        final StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
+
+        // When left open on erase, some pages, like the google search results, will asynchronously write LocalStorage
+        // files to disk after we erase them. To work-around this, we delete this data again when starting a new browser session.
+        WebStorage.getInstance().deleteAllData();
+
+        StrictMode.setThreadPolicy(oldPolicy);
     }
 
     public static View create(Context context, AttributeSet attrs) {

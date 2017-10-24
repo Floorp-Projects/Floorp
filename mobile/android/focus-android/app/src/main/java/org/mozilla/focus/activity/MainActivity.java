@@ -65,13 +65,22 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         sessionManager.handleIntent(this, intent, savedInstanceState);
 
         sessionManager.getSessions().observe(this,  new NonNullObserver<List<Session>>() {
+            private boolean wasSessionsEmpty = false;
+
             @Override
             public void onValueChanged(@NonNull List<Session> sessions) {
                 if (sessions.isEmpty()) {
                     // There's no active session. Show the URL input screen so that the user can
                     // start a new session.
                     showUrlInputScreen();
+                    wasSessionsEmpty = true;
                 } else {
+                    // This happens when we move from 0 to 1 sessions: either on startup or after an erase.
+                    if (wasSessionsEmpty) {
+                        WebViewProvider.performNewBrowserSessionCleanup();
+                        wasSessionsEmpty = false;
+                    }
+
                     // We have at least one session. Show a fragment for the current session.
                     showBrowserScreenForCurrentSession();
                 }
