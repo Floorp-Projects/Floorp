@@ -15,6 +15,10 @@ struct JSRuntime;
 namespace js {
 class AutoLockHelperThreadState;
 
+namespace gc {
+class ArenaLists;
+} /* namespace gc */
+
 /*
  * Helper state for use when JS helper threads sweep and allocate GC thing kinds
  * that can be swept and allocated off thread.
