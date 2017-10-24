@@ -999,8 +999,6 @@ pref_SetValue(PrefValue* aExistingValue,
 
 static pref_initPhase gPhase = START;
 
-static bool gWatchingPref = false;
-
 static void
 pref_SetInitPhase(pref_initPhase aPhase)
 {
@@ -1011,12 +1009,6 @@ static pref_initPhase
 pref_GetInitPhase()
 {
   return gPhase;
-}
-
-static void
-pref_SetWatchingPref(bool aWatching)
-{
-  gWatchingPref = aWatching;
 }
 
 struct StringComparator
@@ -1038,11 +1030,13 @@ InInitArray(const char* aKey)
   return BinarySearchIf(list, 0, prefsLen, StringComparator(aKey), &found);
 }
 
+static bool gWatchingPref = false;
+
 class WatchingPrefRAII
 {
 public:
-  WatchingPrefRAII() { pref_SetWatchingPref(true); }
-  ~WatchingPrefRAII() { pref_SetWatchingPref(false); }
+  WatchingPrefRAII() { gWatchingPref = true; }
+  ~WatchingPrefRAII() { gWatchingPref = false; }
 };
 
 #define WATCHING_PREF_RAII() WatchingPrefRAII watchingPrefRAII
