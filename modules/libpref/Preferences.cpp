@@ -2175,8 +2175,6 @@ public:
 
   int32_t GetRootLength() const { return mPrefRoot.Length(); }
 
-  nsresult RemoveObserverFromMap(const char* aDomain, nsISupports* aObserver);
-
   static void NotifyObserver(const char* aNewpref, void* aData);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
