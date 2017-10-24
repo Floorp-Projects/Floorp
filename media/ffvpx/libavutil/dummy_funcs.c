@@ -19,3 +19,8 @@ void ff_float_dsp_init_ppc(AVFloatDSPContext *fdsp, int strict) {}
 void ff_float_dsp_init_mips(AVFloatDSPContext *fdsp) {}
 
 int av_hwframe_get_buffer(struct AVBufferRef* hwframe_ref, struct AVFrame* frame, int flags) { return 0; }
+
+// cpu.c
+size_t ff_get_cpu_max_align_aarch64() { return 0; }
+size_t ff_get_cpu_max_align_arm() { return 0; }
+size_t ff_get_cpu_max_align_ppc() { return 0; }
