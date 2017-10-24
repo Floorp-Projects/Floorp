@@ -4078,8 +4078,6 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
        * directions in the above description.
        */
 
-      // TODO(gankro)
-
       Float& rectICoord = aParams.vertical ? rect.y : rect.x;
       Float& rectISize = aParams.vertical ? rect.height : rect.width;
       const Float rectBSize = aParams.vertical ? rect.width : rect.height;
@@ -4093,9 +4091,20 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       rect = ExpandPaintingRectForDecorationLine(aFrame, aParams.style, rect,
                                                  aParams.icoordInFrame,
                                                  cycleLength, aParams.vertical);
+
+      if (textDrawer) {
+        // Undo attempted centering
+        Float& rectBCoord = aParams.vertical ? rect.x : rect.y;
+        rectBCoord -= lineThickness / 2;
+
+        textDrawer->AppendWavyDecoration(rect, lineThickness,
+                                         aParams.vertical, color);
+        return;
+      }
+
       // figure out if we can trim whole cycles from the left and right edges
       // of the line, to try and avoid creating an unnecessarily long and
-      // complex path
+      // complex path (but don't do this for webrender, )
       const Float dirtyRectICoord = aParams.vertical ? aParams.dirtyRect.y
                                                      : aParams.dirtyRect.x;
       int32_t skipCycles = floor((dirtyRectICoord - rectICoord) / cycleLength);
@@ -4105,16 +4114,6 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       }
 
       rectICoord += lineThickness / 2.0;
-
-      if (textDrawer) {
-        Point p1 = rect.TopLeft();
-        Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
-
-        textDrawer->AppendDecoration(
-          p1, p2, adv, aParams.vertical, color,
-          NS_STYLE_TEXT_DECORATION_STYLE_WAVY);
-        return;
-      }
 
       Point pt(rect.TopLeft());
       Float& ptICoord = aParams.vertical ? pt.y : pt.x;
