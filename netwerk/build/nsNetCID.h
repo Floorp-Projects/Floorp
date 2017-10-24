@@ -11,7 +11,7 @@
  * netwerk/base/ classes
  */
 
-// service implementing nsIIOService
+// service implementing nsIIOService and nsIIOService2.
 #define NS_IOSERVICE_CONTRACTID \
     "@mozilla.org/network/io-service;1"
 #define NS_IOSERVICE_CID                             \

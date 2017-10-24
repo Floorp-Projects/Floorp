@@ -31,6 +31,7 @@ var servicesASTParser = {
     "nsIFrameScriptLoader": "mm",
     "nsIProcessScriptLoader": "ppmm",
     "nsIIOService": "io",
+    "nsIIOService2": "io",
     "nsISpeculativeConnect": "io",
     // Bug 1407720 - Services lists nsICookieManager2, but that inherits directly
     // from nsICookieManager, so we have to list it separately.
