@@ -460,7 +460,6 @@ var gSyncPane = {
 
   unlinkFirefoxAccount(confirm) {
     if (confirm) {
-      // We use a string bundle shared with aboutAccounts.
       let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
       let disconnectLabel = sb.GetStringFromName("disconnect.label");
       let title = sb.GetStringFromName("disconnect.verify.title");

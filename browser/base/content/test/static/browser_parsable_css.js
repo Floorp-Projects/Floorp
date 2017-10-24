@@ -27,9 +27,6 @@ let whitelist = [
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown property.*appearance/i,
    isFromDevTools: false},
-  // Tracked in bug 1004428.
-  {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
-   isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
