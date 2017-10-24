@@ -70,6 +70,7 @@ const PREFS_WHITELIST = [
   "layers.",
   "layout.css.dpi",
   "layout.css.servo.enabled",
+  "layout.display-list.",
   "media.",
   "mousewheel.",
   "network.",
