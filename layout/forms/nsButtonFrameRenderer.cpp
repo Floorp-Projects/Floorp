@@ -160,14 +160,6 @@ nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems()
     hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
   }
 
-  if (hasBorderRadius) {
-    nsCSSRendering::RectCornerRadii borderRadii;
-    nsCSSRendering::GetBorderRadii(frameRect, borderRect, mFrame, borderRadii);
-    if (!borderRadii.AreRadiiSame()) {
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -219,14 +211,21 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   bool hasBorderRadius;
   Unused << nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
 
-  float borderRadius = 0.0;
+  LayoutDeviceSize zeroSize;
+  wr::BorderRadius borderRadius = wr::ToBorderRadius(zeroSize, zeroSize,
+                                                     zeroSize, zeroSize);
   if (hasBorderRadius) {
     mozilla::gfx::RectCornerRadii borderRadii;
     hasBorderRadius = nsCSSRendering::GetBorderRadii(
       shadowRect, shadowRect, mFrame, borderRadii);
-    // TODO: support non-uniform border radius.
-    MOZ_ASSERT(borderRadii.AreRadiiSame());
-    borderRadius = hasBorderRadius ? borderRadii.TopLeft().width : 0.0;
+    if (hasBorderRadius) {
+      borderRadius = wr::ToBorderRadius(
+        LayoutDeviceSize::FromUnknownSize(borderRadii.TopLeft()),
+        LayoutDeviceSize::FromUnknownSize(borderRadii.TopRight()),
+        LayoutDeviceSize::FromUnknownSize(borderRadii.BottomLeft()),
+        LayoutDeviceSize::FromUnknownSize(borderRadii.BottomRight()));
+    }
+
   }
 
   nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
