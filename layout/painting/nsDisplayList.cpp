@@ -7355,7 +7355,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     wr::WrStickyId id = aBuilder.DefineStickyFrame(aSc.ToRelativeLayoutRect(bounds),
         top.ptrOr(nullptr), right.ptrOr(nullptr), bottom.ptrOr(nullptr), left.ptrOr(nullptr));
 
-    aBuilder.PushStickyFrame(id);
+    aBuilder.PushStickyFrame(id, GetClipChain());
   }
 
   // All the things inside this position:sticky item also have the main-thread
@@ -7367,16 +7367,11 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
   StackingContextHelper sc(aSc, aBuilder);
   sc.AdjustOrigin(scTranslation);
 
-  // TODO: if, inside this nested command builder, we try to turn a gecko clip
-  // chain into a WR clip chain, we might end up repushing the clip stack
-  // without `id` which effectively throws out the sticky behaviour. The
-  // repushing can happen because of the need to define a new clip while
-  // particular things are on the stack
   nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, sc,
       aManager, aDisplayListBuilder);
 
   if (stickyScrollContainer) {
-    aBuilder.PopStickyFrame();
+    aBuilder.PopStickyFrame(GetClipChain());
   }
 
   return true;
