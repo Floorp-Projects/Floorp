@@ -1952,25 +1952,43 @@ protected:
 
     mozilla::UniquePtr<const Metrics> CreateVerticalMetrics();
 
-    // Output a single glyph at *aPt, which is updated by the glyph's advance.
-    // Normal glyphs are simply accumulated in aBuffer until it is full and
-    // gets flushed, but SVG or color-font glyphs will instead be rendered
-    // directly to the destination (found from the buffer's parameters).
-    void DrawOneGlyph(uint32_t             aGlyphID,
-                      float                aAdvance,
-                      mozilla::gfx::Point* aPt,
-                      GlyphBufferAzure&    aBuffer,
-                      bool*                aEmittedGlyphs) const;
+    // Template parameters for DrawGlyphs/DrawOneGlyph, used to select
+    // simplified versions of the methods in the most common cases.
+    enum class FontComplexityT {
+        SimpleFont,
+        ComplexFont
+    };
+    enum class SpacingT {
+        NoSpacing,
+        HasSpacing
+    };
 
     // Output a run of glyphs at *aPt, which is updated to follow the last glyph
     // in the run. This method also takes account of any letter-spacing provided
     // in aRunParams.
+    template<FontComplexityT FC, SpacingT S>
     bool DrawGlyphs(const gfxShapedText*     aShapedText,
                     uint32_t                 aOffset, // offset in the textrun
                     uint32_t                 aCount, // length of run to draw
                     mozilla::gfx::Point*     aPt,
-                    const TextRunDrawParams& aRunParams,
-                    const FontDrawParams&    aFontParams);
+                    GlyphBufferAzure&        aBuffer);
+
+    // Output a single glyph at *aPt.
+    // Normal glyphs are simply accumulated in aBuffer until it is full and
+    // gets flushed, but SVG or color-font glyphs will instead be rendered
+    // directly to the destination (found from the buffer's parameters).
+    template<FontComplexityT FC>
+    void DrawOneGlyph(uint32_t                   aGlyphID,
+                      const mozilla::gfx::Point& aPt,
+                      GlyphBufferAzure&          aBuffer,
+                      bool*                      aEmittedGlyphs) const;
+
+    // Helper for DrawOneGlyph to handle missing glyphs, rendering either
+    // nothing (for default-ignorables) or a missing-glyph hexbox.
+    bool DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
+                          const FontDrawParams&               aFontParams,
+                          const gfxShapedText::DetailedGlyph* aDetails,
+                          const mozilla::gfx::Point&          aPt);
 
     // set the font size and offset used for
     // synthetic subscript/superscript glyphs
