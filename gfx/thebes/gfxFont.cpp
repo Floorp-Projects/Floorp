@@ -1601,13 +1601,11 @@ public:
         Flush(true); // flush any remaining buffered glyphs
     }
 
-    void OutputGlyph(uint32_t aGlyphID, const gfxPoint& aPt)
+    void OutputGlyph(uint32_t aGlyphID, const gfx::Point& aPt)
     {
         Glyph *glyph = AppendGlyph();
         glyph->mIndex = aGlyphID;
-        glyph->mPosition.x = aPt.x;
-        glyph->mPosition.y = aPt.y;
-        glyph->mPosition = mFontParams.matInv.TransformPoint(glyph->mPosition);
+        glyph->mPosition = mFontParams.matInv.TransformPoint(aPt);
         Flush(false); // this will flush only if the buffer is full
     }
 
@@ -1833,13 +1831,13 @@ gfxFont::CalcXScale(DrawTarget* aDrawTarget)
 // *aPt is the glyph position in appUnits; it is converted to device
 // coordinates (devPt) here.
 void
-gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
+gfxFont::DrawOneGlyph(uint32_t aGlyphID, float aAdvance, gfx::Point *aPt,
                       GlyphBufferAzure& aBuffer, bool *aEmittedGlyphs) const
 {
     const TextRunDrawParams& runParams(aBuffer.mRunParams);
     const FontDrawParams& fontParams(aBuffer.mFontParams);
 
-    double glyphX, glyphY;
+    float glyphX, glyphY;
     if (fontParams.isVerticalFont) {
         glyphX = aPt->x;
         if (runParams.isRTL) {
@@ -1859,8 +1857,8 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
             aPt->x += aAdvance;
         }
     }
-    gfxPoint devPt(ToDeviceUnits(glyphX, runParams.devPerApp),
-                   ToDeviceUnits(glyphY, runParams.devPerApp));
+    Point devPt(ToDeviceUnits(glyphX, runParams.devPerApp),
+                ToDeviceUnits(glyphY, runParams.devPerApp));
 
     if (fontParams.haveSVGGlyphs) {
         if (!runParams.paintSVGGlyphs) {
@@ -1880,7 +1878,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
         RenderColorGlyph(runParams.dt, runParams.context,
                          fontParams.scaledFont, fontParams.renderingOptions,
                          fontParams.drawOptions,
-                         fontParams.matInv.TransformPoint(gfx::Point(devPt.x, devPt.y)),
+                         fontParams.matInv.TransformPoint(devPt),
                          aGlyphID)) {
         return;
     }
@@ -1903,17 +1901,17 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
 // Draw a run of CharacterGlyph records from the given offset in aShapedText.
 // Returns true if glyph paths were actually emitted.
 bool
-gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
-                    uint32_t                  aOffset, // offset in the textrun
-                    uint32_t                  aCount, // length of run to draw
-                    gfxPoint                 *aPt,
-                    const TextRunDrawParams&  aRunParams,
-                    const FontDrawParams&     aFontParams)
+gfxFont::DrawGlyphs(const gfxShapedText*     aShapedText,
+                    uint32_t                 aOffset, // offset in the textrun
+                    uint32_t                 aCount, // length of run to draw
+                    gfx::Point*              aPt,
+                    const TextRunDrawParams& aRunParams,
+                    const FontDrawParams&    aFontParams)
 {
     bool emittedGlyphs = false;
     GlyphBufferAzure buffer(aRunParams, aFontParams);
 
-    gfxFloat& inlineCoord = aFontParams.isVerticalFont ? aPt->y : aPt->x;
+    float& inlineCoord = aFontParams.isVerticalFont ? aPt->y : aPt->x;
 
     if (aRunParams.spacing) {
         inlineCoord += aRunParams.isRTL ? -aRunParams.spacing[0].mBefore
@@ -1935,7 +1933,7 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                     aShapedText->GetDetailedGlyphs(aOffset + i);
                 NS_ASSERTION(details, "detailedGlyph should not be missing!");
                 for (uint32_t j = 0; j < glyphCount; ++j, ++details) {
-                    double advance = details->mAdvance;
+                    float advance = details->mAdvance;
 
                     if (glyphData->IsMissing()) {
                         // Default-ignorable chars will have zero advance width;
@@ -1948,8 +1946,8 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                                 return false;
                             }
 
-                            double glyphX = aPt->x;
-                            double glyphY = aPt->y;
+                            float glyphX = aPt->x;
+                            float glyphY = aPt->y;
                             if (aRunParams.isRTL) {
                                 if (aFontParams.isVerticalFont) {
                                     glyphY -= advance;
@@ -1990,7 +1988,7 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                             }
                         }
                     } else {
-                        gfxPoint glyphXY(*aPt);
+                        Point glyphXY(*aPt);
                         if (aFontParams.isVerticalFont) {
                             glyphXY.x += details->mYOffset;
                             glyphXY.y += details->mXOffset;
@@ -2008,7 +2006,7 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
         }
 
         if (aRunParams.spacing) {
-            double space = aRunParams.spacing[i].mAfter;
+            float space = aRunParams.spacing[i].mAfter;
             if (i + 1 < aCount) {
                 space += aRunParams.spacing[i + 1].mBefore;
             }
@@ -2021,22 +2019,22 @@ gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
 
 // This method is mostly parallel to DrawGlyphs.
 void
-gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
+gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfx::Point* aPt,
                            uint32_t aOffset, uint32_t aCount,
                            const EmphasisMarkDrawParams& aParams)
 {
-    gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
+    float& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
     gfxTextRun::Range markRange(aParams.mark);
     gfxTextRun::DrawParams params(aParams.context);
 
-    gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
+    float clusterStart = -std::numeric_limits<float>::infinity();
     bool shouldDrawEmphasisMark = false;
     for (uint32_t i = 0, idx = aOffset; i < aCount; ++i, ++idx) {
         if (aParams.spacing) {
             inlineCoord += aParams.direction * aParams.spacing[i].mBefore;
         }
         if (aShapedText->IsClusterStart(idx) ||
-            clusterStart == -std::numeric_limits<gfxFloat>::infinity()) {
+            clusterStart == -std::numeric_limits<float>::infinity()) {
             clusterStart = inlineCoord;
         }
         if (aShapedText->CharMayHaveEmphasisMark(idx)) {
@@ -2045,9 +2043,9 @@ gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
         inlineCoord += aParams.direction * aShapedText->GetAdvanceForGlyph(idx);
         if (shouldDrawEmphasisMark &&
             (i + 1 == aCount || aShapedText->IsClusterStart(idx + 1))) {
-            gfxFloat clusterAdvance = inlineCoord - clusterStart;
+            float clusterAdvance = inlineCoord - clusterStart;
             // Move the coord backward to get the needed start point.
-            gfxFloat delta = (clusterAdvance + aParams.advance) / 2;
+            float delta = (clusterAdvance + aParams.advance) / 2;
             inlineCoord -= delta;
             aParams.mark->Draw(markRange, *aPt, params);
             inlineCoord += delta;
@@ -2061,7 +2059,7 @@ gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
 
 void
 gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxPoint *aPt, const TextRunDrawParams& aRunParams,
+              gfx::Point* aPt, const TextRunDrawParams& aRunParams,
               gfx::ShapedTextFlags aOrientation)
 {
     NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
@@ -2099,7 +2097,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     bool sideways = false;
     gfxContextMatrixAutoSaveRestore matrixRestore;
 
-    gfxPoint origPt = *aPt;
+    gfx::Point origPt = *aPt;
     if (aRunParams.isVerticalRun && !fontParams.isVerticalFont) {
 
         if (textDrawer) {
@@ -2221,8 +2219,8 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         }
     }
 
-    gfxFloat& baseline = fontParams.isVerticalFont ? aPt->x : aPt->y;
-    gfxFloat origBaseline = baseline;
+    float& baseline = fontParams.isVerticalFont ? aPt->x : aPt->y;
+    float origBaseline = baseline;
     if (mStyle.baselineOffset != 0.0) {
         baseline +=
             mStyle.baselineOffset * aTextRun->GetAppUnitsPerDevUnit();
@@ -2243,18 +2241,18 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     if (sideways) {
         // adjust updated aPt to account for the transform we were using
-        gfxFloat advance = aPt->x - origPt.x;
+        float advance = aPt->x - origPt.x;
         if (aOrientation ==
             gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT) {
-            *aPt = gfxPoint(origPt.x, origPt.y - advance);
+            *aPt = gfx::Point(origPt.x, origPt.y - advance);
         } else {
-            *aPt = gfxPoint(origPt.x, origPt.y + advance);
+            *aPt = gfx::Point(origPt.x, origPt.y + advance);
         }
     }
 }
 
 bool
-gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
+gfxFont::RenderSVGGlyph(gfxContext *aContext, gfx::Point aPoint,
                         uint32_t aGlyphId, SVGContextPaint* aContextPaint) const
 {
     if (!GetFontEntry()->HasSVGGlyph(aGlyphId)) {
@@ -2277,7 +2275,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
 }
 
 bool
-gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
+gfxFont::RenderSVGGlyph(gfxContext *aContext, gfx::Point aPoint,
                         uint32_t aGlyphId, SVGContextPaint* aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs) const
