@@ -57,21 +57,6 @@ private:
                       const StackingContextHelper& aSc,
                       WebRenderCommandBuilder::ClipIdMap& aCache);
 
-  void DefineAndPushScrollLayers(nsDisplayItem* aItem,
-                                 const ActiveScrolledRoot* aAsr,
-                                 const DisplayItemClipChain* aChain,
-                                 wr::DisplayListBuilder& aBuilder,
-                                 int32_t aAppUnitsPerDevPixel,
-                                 const StackingContextHelper& aStackingContext,
-                                 WebRenderCommandBuilder::ClipIdMap& aCache);
-  void DefineAndPushChain(const DisplayItemClipChain* aChain,
-                          wr::DisplayListBuilder& aBuilder,
-                          const StackingContextHelper& aStackingContext,
-                          int32_t aAppUnitsPerDevPixel,
-                          WebRenderCommandBuilder::ClipIdMap& aCache);
-  bool DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
-                                const StackingContextHelper& aStackingContext);
-
   wr::DisplayListBuilder* mBuilder;
   bool mPushedClipAndScroll;
   std::vector<wr::ScrollOrClipId> mPushedClips;
