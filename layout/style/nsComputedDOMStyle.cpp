@@ -881,6 +881,9 @@ nsComputedDOMStyle::GetFlushTarget(nsIDocument* aDocument) const
   // will use the caller document's style), but it can be complicated and should
   // be an edge case, so we just don't bother to do the optimization in this
   // case.
+  //
+  // FIXME(emilio): This is likely to want GetComposedDoc() instead of
+  // OwnerDoc().
   if (aDocument != mContent->OwnerDoc()) {
     return FlushTarget::Normal;
   }
@@ -925,6 +928,11 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   if (!mPresShell || !mPresShell->GetPresContext()) {
     ClearStyleContext();
     return;
+  }
+
+  nsCOMPtr<nsIPresShell> presShellForContent = GetPresShellForContent(mContent);
+  if (presShellForContent && presShellForContent != mPresShell) {
+    presShellForContent->FlushPendingNotifications(FlushType::Style);
   }
 
   // We need to use GetUndisplayedRestyleGeneration instead of
@@ -1017,10 +1025,11 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 #endif
     // Need to resolve a style context
     RefPtr<nsStyleContext> resolvedStyleContext =
-      nsComputedDOMStyle::GetStyleContext(mContent->AsElement(),
-                                          mPseudo,
-                                          mPresShell,
-                                          mStyleType);
+      nsComputedDOMStyle::GetStyleContextNoFlush(
+          mContent->AsElement(),
+          mPseudo,
+          presShellForContent ? presShellForContent.get() : mPresShell,
+          mStyleType);
     if (!resolvedStyleContext) {
       ClearStyleContext();
       return;
