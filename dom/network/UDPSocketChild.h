@@ -42,8 +42,6 @@ public:
   UDPSocketChild();
   virtual ~UDPSocketChild();
 
-  nsresult CreatePBackgroundSpinUntilDone();
-
   virtual mozilla::ipc::IPCResult RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) override;
   virtual mozilla::ipc::IPCResult RecvCallbackConnected(const UDPAddressInfo& aAddressInfo) override;
   virtual mozilla::ipc::IPCResult RecvCallbackClosed() override;
