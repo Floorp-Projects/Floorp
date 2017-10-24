@@ -778,7 +778,7 @@ DisplayListBuilder::PopStickyFrame()
 bool
 DisplayListBuilder::IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const
 {
-  return mScrollParents.find(aScrollId) != mScrollParents.end();
+  return mScrollIdsDefined.find(aScrollId) != mScrollIdsDefined.end();
 }
 
 void
@@ -794,9 +794,7 @@ DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrol
       aAncestorClipId ? Stringify(aAncestorClipId.ref().id).c_str() : "(nil)",
       Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
 
-  Maybe<layers::FrameMetrics::ViewID> parent =
-      mScrollIdStack.empty() ? Nothing() : Some(mScrollIdStack.back());
-  auto it = mScrollParents.insert({aScrollId, parent});
+  auto it = mScrollIdsDefined.insert(aScrollId);
   if (it.second) {
     // An insertion took place, which means we haven't defined aScrollId before.
     // So let's define it now.
@@ -806,10 +804,6 @@ DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrol
     }
     wr_dp_define_scroll_layer(mWrState, aScrollId, aAncestorScrollId.ptrOr(nullptr),
         ancestorClipId, aContentRect, aClipRect);
-  } else {
-    // aScrollId was already a key in mScrollParents so check that the parent
-    // value is the same.
-    MOZ_ASSERT(it.first->second == parent);
   }
 }
 
@@ -1150,13 +1144,6 @@ DisplayListBuilder::TopmostScrollId()
     return layers::FrameMetrics::NULL_SCROLL_ID;
   }
   return mScrollIdStack.back();
-}
-
-Maybe<layers::FrameMetrics::ViewID>
-DisplayListBuilder::ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId)
-{
-  auto it = mScrollParents.find(aScrollId);
-  return (it == mScrollParents.end() ? Nothing() : it->second);
 }
 
 } // namespace wr
