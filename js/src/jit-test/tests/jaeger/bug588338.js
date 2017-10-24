@@ -9,7 +9,6 @@ function f() {
     }
   }
 })(/x/)))
-for (z = 0; z < 100; x.unwatch(), z++)
 for (e in [0]) {
   gczeal(2)
 } ( [1,2,3])("")
