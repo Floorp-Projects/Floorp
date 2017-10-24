@@ -559,12 +559,12 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   padding: 0;
 }
 
-#ready-player-one {
+#whimsy-button {
   /* Don't need HiDPI versions since the size used will be scaled down to 20x20. */
   list-style-image: url("chrome://browser/skin/customizableui/whimsy.png");
 }
 
-#ready-player-one > .button-box > .button-icon {
+#whimsy-button > .button-box > .button-icon {
   width: 16px;
   height: 16px;
 }
@@ -643,4 +643,24 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 
 #lives[lives="1"] {
   height: 20px;
+}
+
+#customization-pong-arena[lives="0"] > #ball {
+  animation: game-over 4s forwards ease;
+}
+
+@keyframes game-over {
+  15% {
+    transform: scale(2) translateY(-10px) rotateZ(-90deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2) translateY(300px) rotateZ(-2.5turn);
+    opacity: 0;
+  }
 }
