@@ -8041,6 +8041,7 @@ var gIdentityHandler = {
       let menupopup = document.createElement("menupopup");
       let block = document.createElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
+      menulist.setAttribute("sizetopopup", "none");
       menulist.setAttribute("class", "identity-popup-popup-menulist");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
