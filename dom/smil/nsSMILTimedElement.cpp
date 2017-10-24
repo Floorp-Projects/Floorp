@@ -702,12 +702,10 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
           }
           FilterHistory();
           stateChanged = true;
-        } else {
+        } else if (mCurrentInterval->Begin()->Time() <= sampleTime) {
           MOZ_ASSERT(!didApplyEarlyEnd,
                      "We got an early end, but didn't end");
           nsSMILTime beginTime = mCurrentInterval->Begin()->Time().GetMillis();
-          NS_ASSERTION(aContainerTime >= beginTime,
-                       "Sample time should not precede current interval");
           nsSMILTime activeTime = aContainerTime - beginTime;
 
           // The 'min' attribute can cause the active interval to be longer than
@@ -737,6 +735,11 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
             }
           }
         }
+        // Otherwise |sampleTime| is *before* the current interval. That
+        // normally doesn't happen but can happen if we get a stray milestone
+        // sample (e.g. if we registered a milestone with a time container that
+        // later got re-attached as a child of a more advanced time container).
+        // In that case we should just ignore the sample.
       }
       break;
 
