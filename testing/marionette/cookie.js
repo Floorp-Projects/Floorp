@@ -206,20 +206,15 @@ cookie.iter = function* (host, currentPath = "/") {
     do {
       if ((cookie.host == "." + hostname || cookie.host == hostname) &&
           isForCurrentPath(cookie.path)) {
-        let data = {
+        yield {
           "name": cookie.name,
           "value": cookie.value,
           "path": cookie.path,
           "domain": cookie.host,
           "secure": cookie.isSecure,
           "httpOnly": cookie.isHttpOnly,
+          "expiry": cookie.expiry,
         };
-
-        if (!cookie.isSession) {
-          data["expiry"] = cookie.expiry;
-        }
-
-        yield data;
       }
       hostname = hostname.replace(/^.*?\./, "");
     } while (hostname.indexOf(".") != -1);
