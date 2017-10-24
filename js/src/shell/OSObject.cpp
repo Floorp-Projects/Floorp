@@ -37,7 +37,9 @@
 #include "jsobjinlines.h"
 
 #ifdef XP_WIN
-# define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
+# ifndef PATH_MAX
+#  define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
+# endif
 # define getcwd _getcwd
 #else
 # include <libgen.h>
