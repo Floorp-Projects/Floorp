@@ -4360,12 +4360,12 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
   virtual void DrawText(nscoord aXOffset, nscoord aWidth)
   {
-    gfxPoint point = mPt;
+    gfx::Point point = mPt;
     bool rtl = mTextRun->IsRightToLeft();
     bool verticalRun = mTextRun->IsVertical();
     RefPtr<gfxPattern> pattern;
 
-    gfxFloat& inlineCoord = verticalRun ? point.y : point.x;
+    float& inlineCoord = verticalRun ? point.y : point.x;
     inlineCoord += aXOffset;
 
     // offset is given in terms of left side of string
@@ -4475,7 +4475,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
   CanvasRenderingContext2D* mCtx;
 
   // position of the left side of the string, alphabetic baseline
-  gfxPoint mPt;
+  gfx::Point mPt;
 
   // current font
   gfxFontGroup* mFontgrp;
@@ -4590,7 +4590,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     : gfx::ShapedTextFlags();
 
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
-  processor.mPt = gfxPoint(aX, aY);
+  processor.mPt = gfx::Point(aX, aY);
   processor.mDrawTarget =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 
@@ -4697,7 +4697,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
   // correct bounding box to get it to be the correct size/position
   processor.mBoundingBox.width = totalWidth;
-  processor.mBoundingBox.MoveBy(processor.mPt);
+  processor.mBoundingBox.MoveBy(gfxPoint(processor.mPt.x, processor.mPt.y));
 
   processor.mPt.x *= processor.mAppUnitsPerDevPixel;
   processor.mPt.y *= processor.mAppUnitsPerDevPixel;
