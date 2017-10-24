@@ -123,7 +123,7 @@ mochitest-browser-chrome:
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
-            default: legacy
+            default: default
     allow-software-gl-layers: false
     tier:
         by-test-platform:
