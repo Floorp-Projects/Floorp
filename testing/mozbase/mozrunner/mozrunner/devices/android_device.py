@@ -246,6 +246,10 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False, v
     return device_verified
 
 
+def get_adb_path(build_obj):
+    return _find_sdk_exe(build_obj.substs, 'adb', False)
+
+
 def run_firefox_for_android(build_obj, params):
     """
        Launch Firefox for Android on the connected device.
