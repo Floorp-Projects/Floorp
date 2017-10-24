@@ -6,3 +6,5 @@ RUST_PROGRAMS += ["geckodriver"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
+
+SPHINX_TREES["geckodriver"] = "doc"

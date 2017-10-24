@@ -21,7 +21,7 @@ send commands to remotely control a user agent.
 
 
 How does it work?
-=================
+-----------------
 
 Marionette consists of two parts: a server which takes requests and
 executes them in Gecko, and a client.  The client sends commands to
@@ -29,7 +29,7 @@ the server and the server executes the command inside the browser.
 
 
 When would I use it?
-====================
+--------------------
 
 If you want to perform UI tests with browser chrome or content,
 Marionette is the tool you're looking for!  You can use it to
@@ -44,7 +44,7 @@ the action was performed correctly.
 
 
 Using Marionette
-================
+----------------
 
 Marionette combines a gecko component (the Marionette server) with an
 outside component (the Marionette client), which drives the tests.
@@ -74,7 +74,7 @@ need to download a Marionette client or use the in-tree client.
 
 
 Bugs
-====
+----
 
 Please file any bugs you may find in the `Testing :: Marionette`
 component in Bugzilla.  You can view a [list of current bugs]
