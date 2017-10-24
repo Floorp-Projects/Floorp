@@ -46,6 +46,9 @@
   _(WasmCodeProfilingLabels,     500) \
   _(WasmModuleTieringLock,       500) \
   _(WasmCompileTaskState,        500) \
+  _(WasmCodeStreamEnd,           500) \
+  _(WasmTailBytesPtr,            500) \
+  _(WasmStreamStatus,            500) \
                                       \
   _(ThreadId,                    600) \
   _(WasmCodeSegmentMap,          600) \

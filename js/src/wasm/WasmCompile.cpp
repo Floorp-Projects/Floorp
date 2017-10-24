@@ -34,8 +34,9 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+template <class DecoderT>
 static bool
-DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
+DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
@@ -51,12 +52,13 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
 }
 
+template <class DecoderT>
 static bool
-DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
+DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
 {
-    if (!env->codeSection) {
-        if (env->numFuncDefs() != 0)
-            return d.fail("expected function bodies");
+    if (!env.codeSection) {
+        if (env.numFuncDefs() != 0)
+            return d.fail("expected code section");
 
         return mg.finishFuncDefs();
     }
@@ -65,15 +67,15 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
     if (!d.readVarU32(&numFuncDefs))
         return d.fail("expected function body count");
 
-    if (numFuncDefs != env->numFuncDefs())
+    if (numFuncDefs != env.numFuncDefs())
         return d.fail("function body count does not match function signature count");
 
     for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, env->numFuncImports() + funcDefIndex))
+        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
             return false;
     }
 
-    if (!d.finishSection(*env->codeSection, "code"))
+    if (!d.finishSection(*env.codeSection, "code"))
         return false;
 
     return mg.finishFuncDefs();
@@ -406,11 +408,11 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
 }
 
 SharedModule
-wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
+wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    Decoder d(bytecode.bytes, error);
+    Decoder d(bytecode.bytes, 0, error);
 
     CompileMode mode;
     Tier tier;
@@ -425,7 +427,7 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
     if (!mg.init())
         return nullptr;
 
-    if (!DecodeCodeSection(d, mg, &env))
+    if (!DecodeCodeSection(env, d, mg))
         return nullptr;
 
     if (!DecodeModuleTail(d, &env))
@@ -435,12 +437,12 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
 }
 
 bool
-wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancelled)
+wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancelled)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
     UniqueChars error;
-    Decoder d(module.bytecode().bytes, &error);
+    Decoder d(module.bytecode().bytes, 0, &error);
 
     ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False);
     if (!DecodeModuleEnvironment(d, &env))
@@ -450,11 +452,163 @@ wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancel
     if (!mg.init())
         return false;
 
-    if (!DecodeCodeSection(d, mg, &env))
+    if (!DecodeCodeSection(env, d, mg))
         return false;
 
     if (!DecodeModuleTail(d, &env))
         return false;
 
     return mg.finishTier2(module);
+}
+
+class StreamingDecoder
+{
+    Decoder d_;
+    const ExclusiveStreamEnd& streamEnd_;
+    const Atomic<bool>& cancelled_;
+
+  public:
+    StreamingDecoder(const ModuleEnvironment& env, const Bytes& begin,
+                     const ExclusiveStreamEnd& streamEnd, const Atomic<bool>& cancelled,
+                     UniqueChars* error)
+      : d_(begin, env.codeSection->start, error),
+        streamEnd_(streamEnd),
+        cancelled_(cancelled)
+    {}
+
+    bool fail(const char* msg) {
+        return d_.fail(msg);
+    }
+
+    bool done() const {
+        return d_.done();
+    }
+
+    size_t currentOffset() const {
+        return d_.currentOffset();
+    }
+
+    bool waitForBytes(size_t numBytes) {
+        numBytes = Min(numBytes, d_.bytesRemain());
+        const uint8_t* requiredEnd = d_.currentPosition() + numBytes;
+        auto streamEnd = streamEnd_.lock();
+        while (streamEnd < requiredEnd) {
+            if (cancelled_)
+                return false;
+            streamEnd.wait();
+        }
+        return true;
+    }
+
+    bool readVarU32(uint32_t* u32) {
+        return waitForBytes(MaxVarU32DecodedBytes) &&
+               d_.readVarU32(u32);
+    }
+
+    bool readBytes(size_t size, const uint8_t** begin) {
+        return waitForBytes(size) &&
+               d_.readBytes(size, begin);
+    }
+
+    bool finishSection(const SectionRange& range, const char* name) {
+        return d_.finishSection(range, name);
+    }
+};
+
+static SharedBytes
+CreateBytecode(const Bytes& env, const Bytes& code, const Bytes& tail, UniqueChars* error)
+{
+    size_t size = env.length() + code.length() + tail.length();
+    if (size > MaxModuleBytes) {
+        *error = DuplicateString("module too big");
+        return nullptr;
+    }
+
+    MutableBytes bytecode = js_new<ShareableBytes>();
+    if (!bytecode || !bytecode->bytes.resize(size))
+        return nullptr;
+
+    uint8_t* p = bytecode->bytes.begin();
+
+    memcpy(p, env.begin(), env.length());
+    p += env.length();
+
+    memcpy(p, code.begin(), code.length());
+    p += code.length();
+
+    memcpy(p, tail.begin(), tail.length());
+    p += tail.length();
+
+    MOZ_ASSERT(p == bytecode->end());
+
+    return bytecode;
+}
+
+SharedModule
+wasm::CompileStreaming(const CompileArgs& args,
+                       const Bytes& envBytes,
+                       const Bytes& codeBytes,
+                       const ExclusiveStreamEnd& codeStreamEnd,
+                       const ExclusiveTailBytesPtr& tailBytesPtr,
+                       const Atomic<bool>& cancelled,
+                       UniqueChars* error)
+{
+    MOZ_ASSERT(wasm::HaveSignalHandlers());
+
+    Maybe<ModuleEnvironment> env;
+
+    {
+        Decoder d(envBytes, 0, error);
+
+        CompileMode mode;
+        Tier tier;
+        DebugEnabled debug;
+        InitialCompileFlags(args, d, &mode, &tier, &debug);
+
+        env.emplace(mode, tier, debug);
+        if (!DecodeModuleEnvironment(d, env.ptr()))
+            return nullptr;
+
+        MOZ_ASSERT(d.done());
+    }
+
+    ModuleGenerator mg(args, env.ptr(), &cancelled, error);
+    if (!mg.init())
+        return nullptr;
+
+    {
+        MOZ_ASSERT(env->codeSection->size == codeBytes.length());
+        StreamingDecoder d(*env, codeBytes, codeStreamEnd, cancelled, error);
+
+        if (!DecodeCodeSection(*env, d, mg))
+            return nullptr;
+
+        MOZ_ASSERT(d.done());
+    }
+
+    {
+        auto tailBytesPtrGuard = tailBytesPtr.lock();
+        while (!tailBytesPtrGuard) {
+            if (cancelled)
+                return nullptr;
+            tailBytesPtrGuard.wait();
+        }
+    }
+
+    const Bytes& tailBytes = *tailBytesPtr.lock();
+
+    {
+        Decoder d(tailBytes, env->codeSection->end(), error);
+
+        if (!DecodeModuleTail(d, env.ptr()))
+            return nullptr;
+
+        MOZ_ASSERT(d.done());
+    }
+
+    SharedBytes bytecode = CreateBytecode(envBytes, codeBytes, tailBytes, error);
+    if (!bytecode)
+        return nullptr;
+
+    return mg.finishModule(*bytecode);
 }
