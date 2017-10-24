@@ -30,7 +30,7 @@ class ShowTaskGraphSubCommand(SubCommand):
     def __call__(self, func):
         after = SubCommand.__call__(self, func)
         args = [
-            CommandArgument('--root', '-r', default='taskcluster/ci',
+            CommandArgument('--root', '-r',
                             help="root of the taskgraph definition relative to topsrcdir"),
             CommandArgument('--quiet', '-q', action="store_true",
                             help="suppress all logging output"),
@@ -104,7 +104,6 @@ class MachCommands(MachCommandBase):
     @SubCommand('taskgraph', 'decision',
                 description="Run the decision task")
     @CommandArgument('--root', '-r',
-                     default='taskcluster/ci',
                      help="root of the taskgraph definition relative to topsrcdir")
     @CommandArgument('--base-repository',
                      required=True,
@@ -322,7 +321,7 @@ class MachCommands(MachCommandBase):
             parameters.check()
 
             tgg = taskgraph.generator.TaskGraphGenerator(
-                root_dir=options['root'],
+                root_dir=options.get('root'),
                 parameters=parameters)
 
             tg = getattr(tgg, graph_attr)
