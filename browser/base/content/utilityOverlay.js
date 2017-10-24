@@ -288,12 +288,6 @@ function openLinkIn(url, where, params) {
   aTriggeringPrincipal = useOAForPrincipal(aTriggeringPrincipal);
 
   if (!w || where == "window") {
-    // To prevent regular browsing data from leaking to private browsing sites,
-    // strip the referrer when opening a new private window. (See Bug: 1409226)
-    if (aIsPrivate) {
-      aNoReferrer = true;
-    }
-
     // This propagates to window.arguments.
     var sa = Cc["@mozilla.org/array;1"].
              createInstance(Ci.nsIMutableArray);
