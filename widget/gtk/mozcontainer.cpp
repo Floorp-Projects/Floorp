@@ -7,6 +7,10 @@
 
 #include "mozcontainer.h"
 #include <gtk/gtk.h>
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkx.h>
+#include <gdk/gdkwayland.h>
+#endif
 #include <stdio.h>
 
 #ifdef ACCESSIBILITY
@@ -162,12 +166,56 @@ moz_container_class_init (MozContainerClass *klass)
     container_class->add = moz_container_add;
 }
 
+#if defined(MOZ_WAYLAND)
+static void
+registry_handle_global (void *data,
+                        struct wl_registry *registry,
+                        uint32_t name,
+                        const char *interface,
+                        uint32_t version)
+{
+    MozContainer *container = MOZ_CONTAINER(data);
+    if(strcmp(interface, "wl_subcompositor") == 0) {
+        container->subcompositor =
+            static_cast<wl_subcompositor*>(wl_registry_bind(registry,
+                                           name,
+                                           &wl_subcompositor_interface,
+                                           1));
+    }
+}
+
+static void
+registry_handle_global_remove (void *data,
+                               struct wl_registry *registry,
+                               uint32_t name)
+{
+}
+
+static const struct wl_registry_listener registry_listener = {
+    registry_handle_global,
+    registry_handle_global_remove
+};
+#endif
+
 void
 moz_container_init (MozContainer *container)
 {
     gtk_widget_set_can_focus(GTK_WIDGET(container), TRUE);
     gtk_container_set_resize_mode(GTK_CONTAINER(container), GTK_RESIZE_IMMEDIATE);
     gtk_widget_set_redraw_on_allocate(GTK_WIDGET(container), FALSE);
+
+#if defined(MOZ_WAYLAND)
+    {
+      GdkDisplay *gdk_display = gtk_widget_get_display(GTK_WIDGET(container));
+      if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
+          wl_display* display = gdk_wayland_display_get_wl_display(gdk_display);
+          wl_registry* registry = wl_display_get_registry(display);
+          wl_registry_add_listener(registry, &registry_listener, container);
+          wl_display_dispatch(display);
+          wl_display_roundtrip(display);
+        }
+    }
+#endif
 }
 
 void
