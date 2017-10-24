@@ -53,6 +53,7 @@ XPIDL_SOURCES += [
     'nsIInputStreamChannel.idl',
     'nsIInputStreamPump.idl',
     'nsIIOService.idl',
+    'nsIIOService2.idl',
     'nsILoadContextInfo.idl',
     'nsILoadGroup.idl',
     'nsILoadGroupChild.idl',

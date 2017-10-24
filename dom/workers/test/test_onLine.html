@@ -45,7 +45,7 @@ addLoadEvent(function() {
 
   function doTest() {
     var iosvc = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                             .getService(SpecialPowers.Ci.nsIIOService);
+                             .getService(SpecialPowers.Ci.nsIIOService2);
     iosvc.manageOfflineStatus = false;
 
     info("setting iosvc.offline = true");

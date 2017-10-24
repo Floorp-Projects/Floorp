@@ -22,7 +22,7 @@ function getTestDataFile(aFilename) {
 }
 
 function loadHelperScript(aScriptFile) {
-  let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService2);
   let scriptSpec = io.newFileURI(aScriptFile).spec;
   let scriptloader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
