@@ -22,7 +22,6 @@ SOURCES += [
     'cpu.c',
     'crc.c',
     'dict.c',
-    'display.c',
     'dummy_funcs.c',
     'error.c',
     'eval.c',

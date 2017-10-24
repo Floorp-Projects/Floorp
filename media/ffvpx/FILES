@@ -102,7 +102,6 @@
 ./libavcodec/blockdsp.h
 ./libavcodec/bytestream.h
 ./libavcodec/codec_desc.c
-./libavcodec/dct.h
 ./libavcodec/dummy_funcs.c
 ./libavcodec/error_resilience.h
 ./libavcodec/flac.c
@@ -193,11 +192,8 @@
 ./libavutil/lls.c
 ./libavutil/lls.h
 ./libavutil/log2_tab.c
-./libavutil/lzo.c
-./libavutil/lzo.h
 ./libavutil/macros.h
 ./libavutil/mem_internal.h
-./libavutil/motion_vector.h
 ./libavutil/parseutils.h
 ./libavutil/pixelutils.c
 ./libavutil/pixelutils.h
@@ -207,7 +203,6 @@
 ./libavutil/reverse.c
 ./libavutil/threadmessage.h
 ./libavutil/time_internal.h
-./libavutil/wchar_filename.h
 ./libavutil/x86/bswap.h
 ./libavutil/x86/cpuid.asm
 ./libavutil/x86/fixed_dsp.asm
@@ -263,7 +258,6 @@
 ./libavutil/cpu.c
 ./libavutil/cpu.h
 ./libavutil/cpu_internal.h
-./libavutil/display.h
 ./libavutil/eval.c
 ./libavutil/float_dsp.c
 ./libavutil/float_dsp.h
