@@ -307,7 +307,6 @@ mochitest-plain-headless:
     suite: mochitest/plain-chunked
     treeherder-symbol: tc-M(h)
     loopback-video: true
-    instance-size: legacy # Bug 1281241: migrating to m3.large instances
     chunks:
         by-test-platform:
             linux.*: 10
