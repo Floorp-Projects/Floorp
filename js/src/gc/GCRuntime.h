@@ -15,7 +15,7 @@
 #include "jsgc.h"
 
 #include "gc/AtomMarking.h"
-#include "gc/Heap.h"
+#include "gc/GCMarker.h"
 #include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
