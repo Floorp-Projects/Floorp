@@ -42,12 +42,10 @@ class RendererEvent;
 // This isn't part of WR's API, but we define it here to simplify layout's
 // logic and data plumbing.
 struct Line {
-  float baseline;
-  float start;
-  float end;
-  float width;
-  wr::ColorF color;
+  wr::LayoutRect bounds;
+  float wavyLineThickness;
   wr::LineOrientation orientation;
+  wr::ColorF color;
   wr::LineStyle style;
 };
 
