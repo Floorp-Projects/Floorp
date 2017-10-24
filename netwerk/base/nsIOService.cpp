@@ -1489,11 +1489,6 @@ nsIOService::Observe(nsISupports *subject,
             nsCOMPtr<nsIPrefBranch> prefBranch;
             GetPrefBranch(getter_AddRefs(prefBranch));
             PrefsChanged(prefBranch, MANAGE_OFFLINE_STATUS_PREF);
-
-            // Bug 870460 - Read cookie database at an early-as-possible time
-            // off main thread. Hence, we have more chance to finish db query
-            // before something calls into the cookie service.
-            nsCOMPtr<nsISupports> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID);
         }
     } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         // Remember we passed XPCOM shutdown notification to prevent any
