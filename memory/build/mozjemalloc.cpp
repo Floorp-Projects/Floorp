@@ -1185,7 +1185,7 @@ static size_t	opt_dirty_max = DIRTY_MAX_DEFAULT;
 
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed=nullptr);
 static void	chunk_dealloc(void *chunk, size_t size, ChunkType chunk_type);
-static void	chunk_ensure_zero(void* ptr, size_t size, bool zeroed);
+static void chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
 static arena_t	*arenas_extend();
 static void	*huge_malloc(size_t size, bool zero);
 static void* huge_palloc(size_t aSize, size_t aAlignment, bool aZero);
@@ -2090,18 +2090,20 @@ RETURN:
 }
 
 static void
-chunk_ensure_zero(void* ptr, size_t size, bool zeroed)
+chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed)
 {
-	if (zeroed == false)
-		memset(ptr, 0, size);
+  if (aZeroed == false) {
+    memset(aPtr, 0, aSize);
+  }
 #ifdef MOZ_DEBUG
-	else {
-		size_t i;
-		size_t *p = (size_t *)(uintptr_t)ret;
+  else {
+    size_t i;
+    size_t* p = (size_t*)(uintptr_t)aPtr;
 
-		for (i = 0; i < size / sizeof(size_t); i++)
-			MOZ_ASSERT(p[i] == 0);
-	}
+    for (i = 0; i < aSize / sizeof(size_t); i++) {
+      MOZ_ASSERT(p[i] == 0);
+    }
+  }
 #endif
 }
 
