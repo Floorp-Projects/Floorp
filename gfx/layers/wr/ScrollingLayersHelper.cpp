@@ -241,8 +241,19 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
             }
           }
         }
-        MOZ_ASSERT(it != aCache.end());
-        ids.second = Some(it->second);
+        // If |it == aCache.end()| here then we have run into a case where the
+        // scroll layer was previously defined a specific parent clip, and
+        // now here it has a different parent clip. Gecko can create display
+        // lists like this because it treats the ASR chain and clipping chain
+        // more independently, but we can't yet represent this in WR. This is
+        // tracked by bug 1409442. For now we'll just leave ids.second as
+        // Nothing() which will effectively ignore the clip |aChain|. Once WR
+        // supports multiple ancestors on a scroll layer we can deal with this
+        // better. The layout/reftests/text/wordwrap-08.html has a Text display
+        // item that exercises this case.
+        if (it != aCache.end()) {
+          ids.second = Some(it->second);
+        }
       }
     }
     return ids;
