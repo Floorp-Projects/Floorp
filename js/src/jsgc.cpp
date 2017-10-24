@@ -4345,7 +4345,7 @@ GCRuntime::updateMallocCountersOnGC()
     // Update the malloc counters for any zones we are collecting.
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting())
-            zone->updateGCMallocBytesOnGC(lock);
+            zone->updateAllMallocBytesOnGC(lock);
     }
 
     // Update the runtime malloc counter only if we are doing a full GC.
