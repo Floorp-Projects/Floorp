@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-after-same-line-static-gen.template
 /*---
 description: String literal names (field definitions after a static generator in the same line)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

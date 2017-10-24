@@ -54,7 +54,6 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsISupportsImpl.h"
 #include "nsLayoutStatics.h"
 #include "nsNetUtil.h"
@@ -1307,40 +1306,6 @@ PlatformOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
   }
 }
 
-class BackgroundChildCallback final
-  : public nsIIPCBackgroundChildCreateCallback
-{
-public:
-  BackgroundChildCallback()
-  {
-    AssertIsOnMainThread();
-  }
-
-  NS_DECL_ISUPPORTS
-
-private:
-  ~BackgroundChildCallback()
-  {
-    AssertIsOnMainThread();
-  }
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aActor);
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    AssertIsOnMainThread();
-    MOZ_CRASH("Unable to connect PBackground actor for the main thread!");
-  }
-};
-
-NS_IMPL_ISUPPORTS(BackgroundChildCallback, nsIIPCBackgroundChildCreateCallback)
-
 } /* anonymous namespace */
 
 BEGIN_WORKERS_NAMESPACE
@@ -1952,15 +1917,6 @@ RuntimeService::Init()
   AssertIsOnMainThread();
 
   nsLayoutStatics::AddRef();
-
-  // Make sure PBackground actors are connected as soon as possible for the main
-  // thread in case workers clone remote blobs here.
-  if (!BackgroundChild::GetForCurrentThread()) {
-    RefPtr<BackgroundChildCallback> callback = new BackgroundChildCallback();
-    if (!BackgroundChild::GetOrCreateForCurrentThread(callback)) {
-      MOZ_CRASH("Unable to connect PBackground actor for the main thread!");
-    }
-  }
 
   // Initialize JSSettings.
   if (sDefaultJSSettings.gcSettings[0].key.isNothing()) {

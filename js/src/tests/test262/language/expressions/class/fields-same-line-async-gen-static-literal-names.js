@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-after-same-line-async-gen.template
 /*---
 description: Static literal property names (field definitions after an async generator in the same line)
+esid: prod-FieldDefinition
 features: [class-fields, async-iteration]
 flags: [generated, async]
 includes: [propertyHelper.js]

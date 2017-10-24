@@ -13556,9 +13556,9 @@ class CGDictionary(CGThing):
         # continues to match the list in test_Object.prototype_props.html
         if (member.identifier.name in
             ["constructor", "toSource", "toString", "toLocaleString", "valueOf",
-             "watch", "unwatch", "hasOwnProperty", "isPrototypeOf",
-             "propertyIsEnumerable", "__defineGetter__", "__defineSetter__",
-             "__lookupGetter__", "__lookupSetter__", "__proto__"]):
+             "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
+             "__defineGetter__", "__defineSetter__", "__lookupGetter__",
+             "__lookupSetter__", "__proto__"]):
             raise TypeError("'%s' member of %s dictionary shadows "
                             "a property of Object.prototype, and Xrays to "
                             "Object can't handle that.\n"

@@ -10,7 +10,7 @@ info: |
         ^$\.*+?()[]{}|
 
     PatternCharacter ::
-        SourceCharacterbut not SyntaxCharacter
+        SourceCharacter but not SyntaxCharacter
 
     Although Annex B extends the definition of Term to include
     ExtendedPatternCharacter, it also introduces the InvalidBracedQuantifier

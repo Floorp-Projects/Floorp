@@ -231,7 +231,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 
     void execute() override {
         MOZ_ASSERT(!finished_);
-        finished_ = CompileTier2(*module_, *compileArgs_, &cancelled_);
+        finished_ = CompileTier2(*compileArgs_, *module_, &cancelled_);
     }
 };
 
@@ -591,7 +591,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
         return nullptr;
 
     UniqueChars error;
-    return CompileInitialTier(*bytecode, *args, &error);
+    return CompileBuffer(*args, *bytecode, &error);
 }
 
 /* virtual */ void

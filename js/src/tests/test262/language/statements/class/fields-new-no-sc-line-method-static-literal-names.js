@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-new-no-sc-line-method.template
 /*---
 description: Static literal property names (field definitions followed by a method in a new line without a semicolon)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

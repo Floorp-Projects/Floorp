@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-new-sc-line-method.template
 /*---
 description: Computed property symbol names (field definitions followed by a method in a new line with a semicolon)
+esid: prod-FieldDefinition
 features: [Symbol, computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

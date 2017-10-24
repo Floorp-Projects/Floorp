@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsAutoPtr.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsTArray.h"
 
 #ifdef XP_WIN
@@ -33,13 +32,11 @@ class WorkerHolder;
 } // namespace workers
 
 class MessagePort final : public DOMEventTargetHelper
-                        , public nsIIPCBackgroundChildCreateCallback
                         , public nsIObserver
 {
   friend class PostMessageRunnable;
 
 public:
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,

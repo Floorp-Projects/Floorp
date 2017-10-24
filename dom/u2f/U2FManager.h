@@ -12,7 +12,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "nsIDOMEventListener.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 
 /*
  * Content process manager for the U2F protocol. Created on calls to the
@@ -78,13 +77,11 @@ public:
   nsCString mClientData;
 };
 
-class U2FManager final : public nsIIPCBackgroundChildCreateCallback
-                       , public nsIDOMEventListener
+class U2FManager final : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
 
   static U2FManager* GetOrCreate();
   static U2FManager* Get();
@@ -134,16 +131,13 @@ private:
 
   typedef MozPromise<nsresult, nsresult, false> BackgroundActorPromise;
 
-  RefPtr<BackgroundActorPromise> GetOrCreateBackgroundActor();
+  void GetOrCreateBackgroundActor();
 
   // IPC Channel for the current transaction.
   RefPtr<U2FTransactionChild> mChild;
 
   // The current transaction, if any.
   Maybe<U2FTransaction> mTransaction;
-
-  // Promise for dealing with PBackground Actor creation.
-  MozPromiseHolder<BackgroundActorPromise> mPBackgroundCreationPromise;
 };
 
 } // namespace dom

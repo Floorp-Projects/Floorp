@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title> Verify devtools can utilize nsIChannel::LOAD_BYPASS_SERVICE_WORKER to bypass the service worker </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+<div id="content" style="display: none"></div>
+<script type="text/javascript">
+"use strict";
+
+async function testBypassSW () {
+  // Bypass SW imitates the "Disable Cache" option in dev-tools.
+  // Note: if we put the setter/getter into dev-tools, we should take care of
+  // the implementation of enabling/disabling cache since it just overwrite the
+  // defaultLoadFlags of docShell.
+  function setBypassServiceWorker(aDocShell, aBypass) {
+    if (aBypass) {
+      aDocShell.defaultLoadFlags |= Ci.nsIChannel.LOAD_BYPASS_SERVICE_WORKER;
+      return;
+    }
+
+    aDocShell.defaultLoadFlags &= ~Ci.nsIChannel.LOAD_BYPASS_SERVICE_WORKER;
+  }
+
+  function getBypassServiceWorker(aDocShell) {
+    return !!(aDocShell.defaultLoadFlags &
+              Ci.nsIChannel.LOAD_BYPASS_SERVICE_WORKER);
+  }
+
+  async function fetchFakeDocAndCheckIfIntercepted(aWindow) {
+    const fakeDoc = "fake.html";
+
+    // Note: The fetching document doesn't exist, so the expected status of the
+    //       repsonse is 404 unless the request is hijacked.
+    let response = await aWindow.fetch(fakeDoc);
+    if (response.status === 404) {
+      return false;
+    } else if (!response.ok) {
+      throw(response.statusText);
+    }
+
+    let text = await response.text();
+    if (text.includes("Hello")) {
+      // Intercepted
+      return true;
+    }
+
+    throw("Unexpected error");
+    return;
+  }
+
+  let Ci = SpecialPowers.Ci;
+  let docShell = SpecialPowers.wrap(window)
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsIDocShell);
+
+  info("Test 1: Enable bypass service worker for the docShell");
+
+  setBypassServiceWorker(docShell, true);
+  ok(getBypassServiceWorker(docShell),
+     "The loadFlags in docShell does bypass the serviceWorker by default");
+
+  let intercepted = await fetchFakeDocAndCheckIfIntercepted(window);
+  ok(!intercepted,
+     "The fetched document wasn't intercepted by the serviceWorker");
+
+  info("Test 2: Disable the bypass service worker for the docShell");
+
+  setBypassServiceWorker(docShell, false);
+  ok(!getBypassServiceWorker(docShell),
+     "The loadFlags in docShell doesn't bypass the serviceWorker by default");
+
+  intercepted = await fetchFakeDocAndCheckIfIntercepted(window);
+  ok(intercepted,
+     "The fetched document was intercepted by the serviceWorker");
+}
+
+// (This doesn't really need to be its own task, but it allows the actual test
+// case to be self-contained.)
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+add_task(async function test_bypassServiceWorker() {
+  const swURL = "fetch.js";
+  let registration = await navigator.serviceWorker.register(swURL);
+
+  // Wait for the service worker to control the document
+  let waitForControlled = new Promise(resolve => {
+    navigator.serviceWorker.oncontrollerchange = resolve;
+  });
+
+  let sw =
+    registration.active || registration.waiting || registration.installing;
+  sw.postMessage("claim");
+  await waitForControlled;
+
+  try {
+    await testBypassSW();
+  } catch (e) {
+    ok(false, "Reason:" + e);
+  }
+
+  await registration.unregister();
+});
+
+</script>
+</body>
+</html>

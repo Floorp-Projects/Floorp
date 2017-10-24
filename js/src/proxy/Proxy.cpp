@@ -625,22 +625,6 @@ Proxy::boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp
 JSObject * const TaggedProto::LazyProto = reinterpret_cast<JSObject*>(0x1);
 
 /* static */ bool
-Proxy::watch(JSContext* cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleObject callable)
-{
-    if (!CheckRecursionLimit(cx))
-        return false;
-    return proxy->as<ProxyObject>().handler()->watch(cx, proxy, id, callable);
-}
-
-/* static */ bool
-Proxy::unwatch(JSContext* cx, JS::HandleObject proxy, JS::HandleId id)
-{
-    if (!CheckRecursionLimit(cx))
-        return false;
-    return proxy->as<ProxyObject>().handler()->unwatch(cx, proxy, id);
-}
-
-/* static */ bool
 Proxy::getElements(JSContext* cx, HandleObject proxy, uint32_t begin, uint32_t end,
                    ElementAdder* adder)
 {
@@ -823,7 +807,6 @@ const ObjectOps js::ProxyObjectOps = {
     Proxy::set,
     Proxy::getOwnPropertyDescriptor,
     proxy_DeleteProperty,
-    Proxy::watch, Proxy::unwatch,
     Proxy::getElements,
     Proxy::fun_toString
 };

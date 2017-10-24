@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-wrapped-in-sc.template
 /*---
 description: Literal property names (fields definition wrapped in semicolons)
+esid: prod-FieldDefinition
 features: [class-fields]
 flags: [generated]
 includes: [propertyHelper.js]
