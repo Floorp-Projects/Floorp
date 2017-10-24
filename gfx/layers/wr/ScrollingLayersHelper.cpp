@@ -38,9 +38,34 @@ ScrollingLayersHelper::EndBuild()
 }
 
 void
+ScrollingLayersHelper::BeginList()
+{
+  mItemClipStack.emplace_back(nullptr, nullptr);
+}
+
+void
+ScrollingLayersHelper::EndList()
+{
+  MOZ_ASSERT(!mItemClipStack.empty());
+  mItemClipStack.back().Unapply(mBuilder);
+  mItemClipStack.pop_back();
+}
+
+void
 ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
                                  const StackingContextHelper& aStackingContext)
 {
+  ItemClips clips(aItem->GetActiveScrolledRoot(), aItem->GetClipChain());
+  MOZ_ASSERT(!mItemClipStack.empty());
+  if (clips.HasSameInputs(mItemClipStack.back())) {
+    // Early-exit because if the clips are the same then we don't need to do
+    // do the work of popping the old stuff and then pushing it right back on
+    // for the new item.
+    return;
+  }
+  mItemClipStack.back().Unapply(mBuilder);
+  mItemClipStack.pop_back();
+
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
 
   // There are two ASR chains here that we need to be fully defined. One is the
@@ -78,7 +103,6 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // the item's ASR. So for those cases we need to use the ClipAndScroll API.
   bool needClipAndScroll = (leafmostId != scrollId);
 
-  ItemClips clips;
   // If we don't need a ClipAndScroll, ensure the item's ASR is at the top of
   // the scroll stack
   if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
@@ -376,20 +400,18 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   return ids;
 }
 
-void
-ScrollingLayersHelper::EndItem(nsDisplayItem* aItem)
-{
-  MOZ_ASSERT(!mItemClipStack.empty());
-  ItemClips& clips = mItemClipStack.back();
-  clips.Unapply(mBuilder);
-  mItemClipStack.pop_back();
-}
-
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
   MOZ_ASSERT(!mBuilder);
   MOZ_ASSERT(mCache.empty());
   MOZ_ASSERT(mItemClipStack.empty());
+}
+
+ScrollingLayersHelper::ItemClips::ItemClips(const ActiveScrolledRoot* aAsr,
+                                            const DisplayItemClipChain* aChain)
+  : mAsr(aAsr)
+  , mChain(aChain)
+{
 }
 
 void
@@ -419,6 +441,13 @@ ScrollingLayersHelper::ItemClips::Unapply(wr::DisplayListBuilder* aBuilder)
   if (mScrollId) {
     aBuilder->PopScrollLayer();
   }
+}
+
+bool
+ScrollingLayersHelper::ItemClips::HasSameInputs(const ItemClips& aOther)
+{
+  return mAsr == aOther.mAsr &&
+         mChain == aOther.mChain;
 }
 
 } // namespace layers
