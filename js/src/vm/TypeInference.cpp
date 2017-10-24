@@ -2724,14 +2724,6 @@ ObjectGroup::updateNewPropertyTypes(JSContext* cx, JSObject* objArg, jsid id, He
         if (shape)
             UpdatePropertyType(cx, types, obj, shape, false);
     }
-
-    if (obj->watched()) {
-        /*
-         * Mark the property as non-data, to inhibit optimizations on it
-         * and avoid bypassing the watchpoint handler.
-         */
-        types->setNonDataProperty(cx);
-    }
 }
 
 void

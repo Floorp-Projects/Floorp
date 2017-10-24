@@ -866,109 +866,6 @@ obj_assign(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if JS_HAS_OBJ_WATCHPOINT
-
-bool
-js::WatchHandler(JSContext* cx, JSObject* obj_, jsid id_, const JS::Value& old,
-                 JS::Value* nvp, void* closure)
-{
-    RootedObject obj(cx, obj_);
-    RootedId id(cx, id_);
-
-    /* Avoid recursion on (obj, id) already being watched on cx. */
-    AutoResolving resolving(cx, obj, id, AutoResolving::WATCH);
-    if (resolving.alreadyStarted())
-        return true;
-
-    FixedInvokeArgs<3> args(cx);
-
-    args[0].set(IdToValue(id));
-    args[1].set(old);
-    args[2].set(*nvp);
-
-    RootedValue callable(cx, ObjectValue(*static_cast<JSObject*>(closure)));
-    RootedValue thisv(cx, ObjectValue(*obj));
-    RootedValue rv(cx);
-    if (!Call(cx, callable, thisv, args, &rv))
-        return false;
-
-    *nvp = rv;
-    return true;
-}
-
-static bool
-obj_watch(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    if (!cx->compartment()->warnedAboutObjectWatch) {
-        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_OBJECT_WATCH_DEPRECATED))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutObjectWatch = true;
-    }
-
-    if (args.length() <= 1) {
-        ReportMissingArg(cx, args.calleev(), 1);
-        return false;
-    }
-
-    RootedObject callable(cx, ValueToCallable(cx, args[1], args.length() - 2));
-    if (!callable)
-        return false;
-
-    RootedId propid(cx);
-    if (!ValueToId<CanGC>(cx, args[0], &propid))
-        return false;
-
-    if (!WatchProperty(cx, obj, propid, callable))
-        return false;
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-obj_unwatch(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    if (!cx->compartment()->warnedAboutObjectWatch) {
-        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                               JSMSG_OBJECT_WATCH_DEPRECATED))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutObjectWatch = true;
-    }
-
-    RootedId id(cx);
-    if (args.length() != 0) {
-        if (!ValueToId<CanGC>(cx, args[0], &id))
-            return false;
-    } else {
-        id = JSID_VOID;
-    }
-
-    if (!UnwatchProperty(cx, obj, id))
-        return false;
-
-    args.rval().setUndefined();
-    return true;
-}
-
-#endif /* JS_HAS_OBJ_WATCHPOINT */
-
 /* ES5 15.2.4.6. */
 static bool
 obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
@@ -1627,10 +1524,6 @@ static const JSFunctionSpec object_methods[] = {
     JS_INLINABLE_FN(js_toString_str,   obj_toString,                0,0, ObjectToString),
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Object_toLocaleString", 0, 0),
     JS_SELF_HOSTED_FN(js_valueOf_str,  "Object_valueOf",            0,0),
-#if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                   2,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
-#endif
     JS_SELF_HOSTED_FN(js_hasOwnProperty_str, "Object_hasOwnProperty", 1,0),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
     JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
