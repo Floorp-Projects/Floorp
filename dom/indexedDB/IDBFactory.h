@@ -69,8 +69,6 @@ class IDBFactory final
   // process.
   RefPtr<TabChild> mTabChild;
 
-  nsTArray<nsAutoPtr<PendingRequestInfo>> mPendingRequests;
-
   indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
   // A DocGroup-specific EventTarget if created by CreateForWindow().
@@ -265,13 +263,6 @@ private:
                bool aDeleting,
                CallerType aCallerType,
                ErrorResult& aRv);
-
-  nsresult
-  BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
-                         const indexedDB::LoggingInfo& aLoggingInfo);
-
-  void
-  BackgroundActorFailed();
 
   nsresult
   InitiateRequest(IDBOpenDBRequest* aRequest,
