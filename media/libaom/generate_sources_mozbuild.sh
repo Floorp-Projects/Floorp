@@ -192,6 +192,7 @@ all_platforms="--enable-external-build --disable-examples --disable-docs --disab
 all_platforms="${all_platforms} --size-limit=8192x4608 --enable-pic"
 x86_platforms="--enable-postproc --as=yasm"
 arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
+
 gen_config_files linux/x64 "--target=x86_64-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files linux/ia32 "--target=x86-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files mac/x64 "--target=x86_64-darwin9-gcc ${all_platforms} ${x86_platforms}"
@@ -202,6 +203,11 @@ gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_plat
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 
 gen_config_files generic "--target=generic-gnu ${all_platforms}"
+
+# AOM doesn't know if mingw32 has winpthreads or not, and doesn't try to detect it.
+sed -i 's/HAVE_PTHREAD_H equ 0/HAVE_PTHREAD_H equ 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw32/aom_config.asm
+sed -i 's/HAVE_PTHREAD_H 0/HAVE_PTHREAD_H 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw32/aom_config.h
+
 
 echo "Remove temporary directory."
 cd $BASE_DIR
