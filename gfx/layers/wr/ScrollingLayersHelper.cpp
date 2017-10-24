@@ -132,15 +132,25 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   // This will hold our return value
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
 
-  auto it = aCache.find(aChain);
-  if (it != aCache.end()) {
-    // If we've already defined this clip before, we can early-exit
+  if (mBuilder->HasExtraClip()) {
+    // We can't use aCache directly. However if there's an out-of-band clip that
+    // was pushed on top of aChain, we should return the id for that OOB clip,
+    // so that anything we want to define as a descendant of aChain we actually
+    // end up defining as a descendant of the OOB clip.
+    ids.second = mBuilder->GetCacheOverride(aChain);
+  } else {
+    auto it = aCache.find(aChain);
+    if (it != aCache.end()) {
+      ids.second = Some(it->second);
+    }
+  }
+  if (ids.second) {
+    // If we've already got an id for this clip, we can early-exit
     if (aAsr) {
       FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
       MOZ_ASSERT(mBuilder->IsScrollLayerDefined(scrollId));
       ids.first = Some(scrollId);
     }
-    ids.second = Some(it->second);
     return ids;
   }
 
@@ -157,7 +167,13 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   // Now we need to figure out whether the new clip we're defining should be
   // a child of aChain->mParent, or of aAsr.
   if (aChain->mParent) {
-    if (aChain->mParent->mASR == aAsr) {
+    if (mBuilder->GetCacheOverride(aChain->mParent)) {
+      // If the parent clip had an override (i.e. the parent display item pushed
+      // an out-of-band clip), then we definitely want to use that as the parent
+      // because everything defined inside that clip should have it as an
+      // ancestor.
+      ancestorIds.first = Nothing();
+    } else if (aChain->mParent->mASR == aAsr) {
       // If the parent clip item shares the ASR, then this clip needs to be
       // a child of the aChain->mParent, which will already be a descendant of
       // the ASR.
@@ -182,7 +198,9 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   wr::WrClipId clipId = mBuilder->DefineClip(
       ancestorIds.first, ancestorIds.second,
       aSc.ToRelativeLayoutRect(clip), &wrRoundedRects);
-  aCache[aChain] = clipId;
+  if (!mBuilder->HasExtraClip()) {
+    aCache[aChain] = clipId;
+  }
 
   ids.second = Some(clipId);
   return ids;
@@ -206,9 +224,13 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
     // If we've already defined this scroll layer before, we can early-exit
     ids.first = Some(scrollId);
     if (aChain) {
-      auto it = aCache.find(aChain);
-      MOZ_ASSERT(it != aCache.end());
-      ids.second = Some(it->second);
+      if (mBuilder->HasExtraClip()) {
+        ids.second = mBuilder->GetCacheOverride(aChain);
+      } else {
+        auto it = aCache.find(aChain);
+        MOZ_ASSERT(it != aCache.end());
+        ids.second = Some(it->second);
+      }
     }
     return ids;
   }
