@@ -28,8 +28,6 @@
  "{profile}\\containers.json": {"mincount": 0, "maxcount": 4, "minbytes": 0, "maxbytes": 512},
  "{profile}\\extensions.json": {"mincount": 0, "maxcount": 4, "minbytes": 0, "maxbytes": 512},
  "{profile}\\times.json": {"mincount": 0, "maxcount": 4, "minbytes": 0, "maxbytes": 512},
- "{profile}\\cookies.sqlite-shm": {"mincount": 1, "maxcount": 6, "minbytes": 0, "maxbytes": 200000},
- "{profile}\\cookies.sqlite": {"mincount": 1, "maxcount": 6, "minbytes": 0, "maxbytes": 200000},
  "{profile}\\sessionstore-backups\\recovery.js": {"mincount": 0, "maxcount": 2, "minbytes": 0, "maxbytes": 5602},
  "{profile}\\sessioncheckpoints.json.tmp": {"mincount": 0, "maxcount": 2, "minbytes": 0, "maxbytes": 512},
  "{profile}\\sessioncheckpoints.json": {"mincount": 0, "maxcount": 2, "minbytes": 0, "maxbytes": 512},
