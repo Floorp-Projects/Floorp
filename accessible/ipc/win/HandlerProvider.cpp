@@ -128,7 +128,8 @@ HandlerProvider::GetAndSerializePayload(const MutexAutoLock&)
 }
 
 HRESULT
-HandlerProvider::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
+HandlerProvider::GetHandlerPayloadSize(NotNull<mscom::IInterceptor*> aInterceptor,
+                                       NotNull<DWORD*> aOutPayloadSize)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
@@ -297,7 +298,8 @@ HandlerProvider::IsTargetInterfaceCacheable()
 }
 
 HRESULT
-HandlerProvider::WriteHandlerPayload(NotNull<IStream*> aStream)
+HandlerProvider::WriteHandlerPayload(NotNull<mscom::IInterceptor*> aInterceptor,
+                                     NotNull<IStream*> aStream)
 {
   MutexAutoLock lock(mMutex);
 
