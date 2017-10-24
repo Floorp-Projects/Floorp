@@ -90,7 +90,10 @@ public:
   {
     mStyleSheet = nullptr;
     mParentRule = nullptr;
-    DropAllRules();
+    for (css::Rule* rule : mRules) {
+      rule->SetStyleSheet(nullptr);
+      rule->SetParentRule(nullptr);
+    }
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
@@ -103,15 +106,16 @@ public:
   }
 
 private:
-  virtual ~ServoKeyframeList() {}
+  virtual ~ServoKeyframeList() {
+    MOZ_ASSERT(!mParentRule, "Backpointer should have been cleared");
+    MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
+    DropAllRules();
+  }
 
   void DropAllRules()
   {
-    for (css::Rule* rule : mRules) {
-      if (rule) {
-        rule->SetStyleSheet(nullptr);
-        rule->SetParentRule(nullptr);
-      }
+    if (mParentRule || mStyleSheet) {
+      DropReference();
     }
     mRules.Clear();
     mRawRule = nullptr;
@@ -163,6 +167,9 @@ ServoKeyframesRule::ServoKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
 
 ServoKeyframesRule::~ServoKeyframesRule()
 {
+  if (mKeyframeList) {
+    mKeyframeList->DropReference();
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(ServoKeyframesRule, dom::CSSKeyframesRule)
