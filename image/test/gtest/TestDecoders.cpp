@@ -9,6 +9,7 @@
 #include "DecoderFactory.h"
 #include "decoders/nsBMPDecoder.h"
 #include "IDecodingTask.h"
+#include "ImageOps.h"
 #include "imgIContainer.h"
 #include "imgITools.h"
 #include "ImageFactory.h"
