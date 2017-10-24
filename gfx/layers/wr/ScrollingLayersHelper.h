@@ -7,10 +7,12 @@
 #define GFX_SCROLLINGLAYERSHELPER_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/layers/WebRenderCommandBuilder.h"
+
+class nsDisplayItem;
 
 namespace mozilla {
 
+struct ActiveScrolledRoot;
 struct DisplayItemClipChain;
 
 namespace wr {
@@ -22,14 +24,17 @@ namespace layers {
 struct FrameMetrics;
 class StackingContextHelper;
 
-class MOZ_RAII ScrollingLayersHelper
+class ScrollingLayersHelper
 {
 public:
-  ScrollingLayersHelper(nsDisplayItem* aItem,
-                        wr::DisplayListBuilder& aBuilder,
-                        const StackingContextHelper& aStackingContext,
-                        WebRenderCommandBuilder::ClipIdMap& aCache,
-                        bool aApzEnabled);
+  ScrollingLayersHelper();
+
+  void BeginBuild(wr::DisplayListBuilder& aBuilder);
+  void EndBuild();
+
+  void BeginItem(nsDisplayItem* aItem,
+                 const StackingContextHelper& aStackingContext);
+  void EndItem(nsDisplayItem* aItem);
   ~ScrollingLayersHelper();
 
 private:
@@ -54,8 +59,20 @@ private:
                       int32_t aAppUnitsPerDevPixel,
                       const StackingContextHelper& aSc);
 
+  // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
+  // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
+  // (A != B). In this hopefully-rare case, they will get separate entries
+  // in this map when in fact we could collapse them. However, to collapse
+  // them involves writing a custom hash function for the pointer type such that
+  // A and B hash to the same things whenever DisplayItemClipChain::Equal(A, B)
+  // is true, and that will incur a performance penalty for all the hashmap
+  // operations, so is probably not worth it. With the current code we might
+  // end up creating multiple clips in WR that are effectively identical but
+  // have separate clip ids. Hopefully this won't happen very often.
+  typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
+
   wr::DisplayListBuilder* mBuilder;
-  WebRenderCommandBuilder::ClipIdMap& mCache;
+  ClipIdMap mCache;
 
   struct ItemClips {
     Maybe<FrameMetrics::ViewID> mScrollId;
@@ -66,7 +83,7 @@ private:
     void Unapply(wr::DisplayListBuilder* aBuilder);
   };
 
-  ItemClips mItemClips;
+  std::vector<ItemClips> mItemClipStack;
 };
 
 } // namespace layers
