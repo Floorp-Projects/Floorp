@@ -64,7 +64,6 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     MOZ_ASSERT(mLayerScrollData.empty());
     mLastCanvasDatas.Clear();
     mLastAsr = nullptr;
-    mScrollingHelper.BeginBuild(aBuilder);
 
     {
       StackingContextHelper pageRootSc(sc, aBuilder);
@@ -95,7 +94,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
       aScrollData.AddLayerData(*i);
     }
     mLayerScrollData.clear();
-    mScrollingHelper.EndBuild();
+    mClipIdCache.clear();
 
     // Remove the user data those are not displayed on the screen and
     // also reset the data to unused for next transaction.
@@ -214,14 +213,16 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    mScrollingHelper.BeginItem(item, aSc);
-    // Note: this call to CreateWebRenderCommands can recurse back into
-    // this function if the |item| is a wrapper for a sublist.
-    if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
-                                       aDisplayListBuilder)) {
-      PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
+    { // ensure the scope of ScrollingLayersHelper is maintained
+      ScrollingLayersHelper clip(item, aBuilder, aSc, mClipIdCache, apzEnabled);
+
+      // Note: this call to CreateWebRenderCommands can recurse back into
+      // this function if the |item| is a wrapper for a sublist.
+      if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
+                                         aDisplayListBuilder)) {
+        PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
+      }
     }
-    mScrollingHelper.EndItem(item);
 
     if (apzEnabled) {
       if (forceNewLayerData) {
