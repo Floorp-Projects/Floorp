@@ -269,8 +269,6 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
                                    const nsAString& aChannel)
   : DOMEventTargetHelper(aWindow)
   , mWorkerHolder(nullptr)
-  , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
-  , mOrigin(aOrigin)
   , mChannel(aChannel)
   , mInnerID(0)
   , mState(StateActive)
@@ -346,12 +344,19 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     new BroadcastChannel(window, principalInfo, origin, aChannel);
 
   // Register this component to PBackground.
-  PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
-  if (actor) {
-    bc->ActorCreated(actor);
-  } else {
-    BackgroundChild::GetOrCreateForCurrentThread(bc);
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actorChild)) {
+    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
+
+  PBroadcastChannelChild* actor =
+    actorChild->SendPBroadcastChannelConstructor(principalInfo, origin,
+                                                 nsString(aChannel));
+
+  bc->mActor = static_cast<BroadcastChannelChild*>(actor);
+  MOZ_ASSERT(bc->mActor);
+
+  bc->mActor->SetParent(bc);
 
   if (!workerPrivate) {
     MOZ_ASSERT(window);
@@ -407,18 +412,12 @@ BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
 {
   RemoveDocFromBFCache();
 
-  if (mActor) {
-    RefPtr<BCPostMessageRunnable> runnable =
-      new BCPostMessageRunnable(mActor, aData);
+  RefPtr<BCPostMessageRunnable> runnable =
+    new BCPostMessageRunnable(mActor, aData);
 
-    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-      NS_WARNING("Failed to dispatch to the current thread!");
-    }
-
-    return;
+  if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
+    NS_WARNING("Failed to dispatch to the current thread!");
   }
-
-  mPendingMessages.AppendElement(aData);
 }
 
 void
@@ -428,55 +427,15 @@ BroadcastChannel::Close()
     return;
   }
 
-  if (mPendingMessages.IsEmpty()) {
-    // We cannot call Shutdown() immediatelly because we could have some
-    // postMessage runnable already dispatched. Instead, we change the state to
-    // StateClosed and we shutdown the actor asynchrounsly.
+  // We cannot call Shutdown() immediatelly because we could have some
+  // postMessage runnable already dispatched. Instead, we change the state to
+  // StateClosed and we shutdown the actor asynchrounsly.
 
-    mState = StateClosed;
-    RefPtr<CloseRunnable> runnable = new CloseRunnable(this);
+  mState = StateClosed;
+  RefPtr<CloseRunnable> runnable = new CloseRunnable(this);
 
-    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-      NS_WARNING("Failed to dispatch to the current thread!");
-    }
-  } else {
-    MOZ_ASSERT(!mActor);
-    mState = StateClosing;
-  }
-}
-
-void
-BroadcastChannel::ActorFailed()
-{
-  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-}
-
-void
-BroadcastChannel::ActorCreated(PBackgroundChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-
-  if (mState == StateClosed) {
-    return;
-  }
-
-  PBroadcastChannelChild* actor =
-    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel);
-
-  mActor = static_cast<BroadcastChannelChild*>(actor);
-  MOZ_ASSERT(mActor);
-
-  mActor->SetParent(this);
-
-  // Flush pending messages.
-  for (uint32_t i = 0; i < mPendingMessages.Length(); ++i) {
-    PostMessageData(mPendingMessages[i]);
-  }
-
-  mPendingMessages.Clear();
-
-  if (mState == StateClosing) {
-    Shutdown();
+  if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
+    NS_WARNING("Failed to dispatch to the current thread!");
   }
 }
 
@@ -565,7 +524,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BroadcastChannel,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BroadcastChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
