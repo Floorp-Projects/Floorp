@@ -30,6 +30,9 @@
 #    define NDEBUG
 #endif
 
+// This can be enabled to allow detection of additional integer overflows with ubsan
+//#define CHECKED
+
 #include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -258,6 +261,16 @@ void avpriv_request_sample(void *avc,
 #   define ff_dlog(ctx, ...) do { if (0) av_log(ctx, AV_LOG_DEBUG, __VA_ARGS__); } while (0)
 #endif
 
+// For debuging we use signed operations so overflows can be detected (by ubsan)
+// For production we use unsigned so there are no undefined operations
+#ifdef CHECKED
+#define SUINT   int
+#define SUINT32 int32_t
+#else
+#define SUINT   unsigned
+#define SUINT32 uint32_t
+#endif
+
 /**
  * Clip and convert a double value into the long long amin-amax range.
  * This function is needed because conversion of floating point to integers when
@@ -339,7 +352,5 @@ void ff_check_pixfmt_descriptors(void);
  * @return <0 on error
  */
 int avpriv_dict_set_timestamp(AVDictionary **dict, const char *key, int64_t timestamp);
-
-extern const uint8_t ff_reverse[256];
 
 #endif /* AVUTIL_INTERNAL_H */
