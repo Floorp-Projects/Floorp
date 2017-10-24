@@ -3581,6 +3581,18 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   *aInfo = { tag, addr, size};
 }
 
+namespace Debug
+{
+  // Helper for debuggers. We don't want it to be inlined and optimized out.
+  MOZ_NEVER_INLINE jemalloc_ptr_info_t*
+  jemalloc_ptr_info(const void* aPtr)
+  {
+    static jemalloc_ptr_info_t info;
+    MozJemalloc::jemalloc_ptr_info(aPtr, &info);
+    return &info;
+  }
+}
+
 void
 arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapElm)
 {
@@ -4406,6 +4418,9 @@ MALLOC_OUT:
   }
 
   malloc_initialized = true;
+
+  // Dummy call so that the function is not removed by dead-code elimination
+  Debug::jemalloc_ptr_info(nullptr);
 
 #if !defined(XP_WIN) && !defined(XP_DARWIN)
   /* Prevent potential deadlock on malloc locks after fork. */
