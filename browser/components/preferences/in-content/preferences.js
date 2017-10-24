@@ -23,11 +23,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
-                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-
 var gLastHash = "";
 
 var gCategoryInits = new Map();
@@ -326,84 +321,4 @@ function appendSearchKeywords(aId, keywords) {
     keywords.push(searchKeywords);
   }
   element.setAttribute("searchkeywords", keywords.join(" "));
-}
-
-let extensionControlledContentIds = {
-  "privacy.containers": "browserContainersExtensionContent",
-  "homepage_override": "browserHomePageExtensionContent",
-  "newTabURL": "browserNewTabExtensionContent",
-  "defaultSearch": "browserDefaultSearchExtensionContent",
-};
-
-/**
-  * Check if a pref is being managed by an extension.
-  */
-async function getControllingExtensionInfo(type, settingName) {
-  await ExtensionSettingsStore.initialize();
-  return ExtensionSettingsStore.getSetting(type, settingName);
-}
-
-function getControllingExtensionEl(settingName) {
-  return document.getElementById(extensionControlledContentIds[settingName]);
-}
-
-async function handleControllingExtension(type, settingName) {
-  let info = await getControllingExtensionInfo(type, settingName);
-  let isControlled = info && !!info.id;
-
-  if (isControlled) {
-    showControllingExtension(settingName, info.id);
-  } else {
-    hideControllingExtension(settingName);
-  }
-
-  return isControlled;
-}
-
-async function showControllingExtension(settingName, extensionId) {
-  let extensionControlledContent = getControllingExtensionEl(settingName);
-  extensionControlledContent.classList.remove("extension-controlled-disabled");
-  // Tell the user what extension is controlling the setting.
-  let addon = await AddonManager.getAddonByID(extensionId);
-  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-  let stringParts = document
-    .getElementById("bundlePreferences")
-    .getString(`extensionControlled.${settingName}`)
-    .split("%S");
-  let description = extensionControlledContent.querySelector("description");
-
-  // Remove the old content from the description.
-  while (description.firstChild) {
-    description.firstChild.remove();
-  }
-
-  // Populate the description.
-  description.appendChild(document.createTextNode(stringParts[0]));
-  let image = document.createElement("image");
-  image.setAttribute("src", addon.iconURL || defaultIcon);
-  image.classList.add("extension-controlled-icon");
-  description.appendChild(image);
-  description.appendChild(document.createTextNode(` ${addon.name}`));
-  description.appendChild(document.createTextNode(stringParts[1]));
-
-  let disableButton = extensionControlledContent.querySelector("button");
-  if (disableButton) {
-    disableButton.hidden = false;
-  }
-
-  // Show the controlling extension row and hide the old label.
-  extensionControlledContent.hidden = false;
-}
-
-function hideControllingExtension(settingName) {
-  getControllingExtensionEl(settingName).hidden = true;
-}
-
-
-function makeDisableControllingExtension(type, settingName) {
-  return async function disableExtension() {
-    let {id} = await getControllingExtensionInfo(type, settingName);
-    let addon = await AddonManager.getAddonByID(id);
-    addon.userDisabled = true;
-  };
 }
