@@ -644,6 +644,9 @@ nsCookieService::Init()
   mStorageService = do_GetService("@mozilla.org/storage/service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = NS_NewNamedThread("Cookie", getter_AddRefs(mThread));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Init our default, and possibly private DBStates.
   InitDBStates();
 
@@ -671,7 +674,6 @@ nsCookieService::InitDBStates()
   NS_ASSERTION(!mDefaultDBState, "already have a default DBState");
   NS_ASSERTION(!mPrivateDBState, "already have a private DBState");
   NS_ASSERTION(!mInitializedDBStates, "already initialized");
-  NS_ASSERTION(!mThread, "already have a cookie thread");
 
   // Create a new default DBState and set our current one.
   mDefaultDBState = new DBState();
@@ -692,8 +694,6 @@ nsCookieService::InitDBStates()
     return;
   }
   mDefaultDBState->cookieFile->AppendNative(NS_LITERAL_CSTRING(COOKIES_FILE));
-
-  NS_ENSURE_SUCCESS_VOID(NS_NewNamedThread("Cookie", getter_AddRefs(mThread)));
 
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction("InitDBStates.TryInitDB", [] {
     NS_ENSURE_TRUE_VOID(gCookieService &&
@@ -1723,11 +1723,6 @@ nsCookieService::CloseDBStates()
 
   CleanupDefaultDBConnection();
 
-  if (mThread) {
-    mThread->Shutdown();
-    mThread = nullptr;
-  }
-
   mDefaultDBState = nullptr;
   mInitializedDBStates = false;
 }
@@ -1967,6 +1962,9 @@ nsCookieService::~nsCookieService()
   UnregisterWeakMemoryReporter(this);
 
   gCookieService = nullptr;
+  if (mThread) {
+    mThread->Shutdown();
+  }
 }
 
 NS_IMETHODIMP
