@@ -957,8 +957,12 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
 
   DisplayItemArray* items = RemoveProperty(DisplayItems());
   if (items) {
-    for (nsDisplayItem* item : *items) {
-      item->RemoveFrame(this);
+    for (nsDisplayItem* i : *items) {
+      if (i->GetDependentFrame() == this &&
+          !i->HasDeletedFrame()) {
+        i->Frame()->MarkNeedsDisplayItemRebuild();
+      }
+      i->RemoveFrame(this);
     }
     delete items;
   }
