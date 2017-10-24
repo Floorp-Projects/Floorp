@@ -731,9 +731,6 @@ class NativeObject : public ShapedObject
         MOZ_ASSERT(flags);
         return shape_->hasAllObjectFlags(flags);
     }
-    bool watched() const {
-        return hasAllFlags(js::BaseShape::WATCHED);
-    }
     bool nonProxyIsExtensible() const {
         return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
     }

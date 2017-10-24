@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_GamepadManager_h_
 #define mozilla_dom_GamepadManager_h_
 
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIObserver.h"
 // Needed for GamepadMappingType
 #include "mozilla/dom/GamepadBinding.h"
@@ -26,13 +25,11 @@ class Gamepad;
 class GamepadChangeEvent;
 class GamepadEventChannelChild;
 
-class GamepadManager final : public nsIObserver,
-                             public nsIIPCBackgroundChildCreateCallback
+class GamepadManager final : public nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
 
   // Returns true if we actually have a service up and running
   static bool IsServiceRunning();

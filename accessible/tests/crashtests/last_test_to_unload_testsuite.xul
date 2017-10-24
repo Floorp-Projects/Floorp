@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="bug 471493 'crash [@ nsPropertyTable::GetPropertyInternal]'"
+        onload="shutdown();" class="reftest-wait">
+
+  <script type="application/javascript">
+  <![CDATA[
+    function shutdown() {
+      !SpecialPowers.Services.appinfo.accessibilityEnabled &&
+        dump("### Error : Accessibility is expected to be enabled.\n");
+
+      // Force garbage collection. We try really hard to garbage collect
+      // everythin here to ensure that all a11y xpcom bits are shut down and
+      // avoid intermittent timeouts.
+      SpecialPowers.gc();
+      SpecialPowers.forceShrinkingGC();
+      SpecialPowers.forceCC();
+      SpecialPowers.gc();
+      SpecialPowers.forceShrinkingGC();
+      SpecialPowers.forceCC();
+
+      if (SpecialPowers.Services.appinfo.accessibilityEnabled) {
+        let observe = (subject, topic, data) => {
+          SpecialPowers.Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
+          data === "0" && document.documentElement.removeAttribute("class");
+        };
+        SpecialPowers.Services.obs.addObserver(observe, "a11y-init-or-shutdown");
+      } else {
+        document.documentElement.removeAttribute("class");
+      }
+    }
+  ]]>
+  </script>
+</window>

@@ -3,10 +3,27 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="bug 471493 'crash [@ nsPropertyTable::GetPropertyInternal]'"
-        onload="doTest();">
+        onload="doTest();" class="reftest-wait">
 
   <script type="application/javascript">
   <![CDATA[
+    function addA11yLoadEvent(accService, func) {
+      function waitForDocLoad() {
+        setTimeout(() => {
+            let accDoc = accService.getAccessibleFor(document);
+            let state = {};
+            accDoc.getState(state, {});
+
+            if (state.value & SpecialPowers.Ci.nsIAccessibleStates.STATE_BUSY) {
+              return waitForDocLoad();
+            }
+            setTimeout(func, 0);
+          }, 0);
+      }
+
+      waitForDocLoad();
+    }
+
     function doTest()
     {
       var accService = SpecialPowers.Cc["@mozilla.org/accessibilityService;1"].
@@ -17,8 +34,11 @@
       var y = treecol.boxObject.screenY;
 
       var tree = document.getElementById("tree");
-      var treeAcc = accService.getAccessibleFor(tree);
-      treeAcc.getChildAtPoint(x + 1, y + 1);
+      addA11yLoadEvent(accService, () => {
+        var treeAcc = accService.getAccessibleFor(tree);
+        treeAcc.getChildAtPoint(x + 1, y + 1);
+        document.documentElement.removeAttribute("class");
+      });
     }
   ]]>
   </script>

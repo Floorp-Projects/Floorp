@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-expr-after-same-line-async-method.template
 /*---
 description: String literal names (field definitions after an async method in the same line)
+esid: prod-FieldDefinition
 features: [class-fields, async-functions]
 flags: [generated, async]
 includes: [propertyHelper.js]

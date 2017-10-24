@@ -151,7 +151,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Constant parameters
     SharedCompileArgs const         compileArgs_;
     UniqueChars* const              error_;
-    Atomic<bool>* const             cancelled_;
+    const Atomic<bool>* const       cancelled_;
     ModuleEnvironment* const        env_;
 
     // Data that is moved into the result of finish()
@@ -210,7 +210,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
   public:
     ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env,
-                    Atomic<bool>* cancelled, UniqueChars* error);
+                    const Atomic<bool>* cancelled, UniqueChars* error);
     ~ModuleGenerator();
     MOZ_MUST_USE bool init(Metadata* maybeAsmJSMetadata = nullptr);
 

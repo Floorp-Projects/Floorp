@@ -15,7 +15,6 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsiter.h"
-#include "jswatchpoint.h"
 #include "jswrapper.h"
 
 #include "gc/Marking.h"
@@ -60,7 +59,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     warnedAboutExprClosure(false),
     warnedAboutForEach(false),
     warnedAboutLegacyGenerator(false),
-    warnedAboutObjectWatch(false),
     warnedAboutStringGenericsMethods(0),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
@@ -87,7 +85,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     debugModeBits(0),
     validAccessPtr(nullptr),
     randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
-    watchpointMap(nullptr),
     scriptCountsMap(nullptr),
     scriptNameMap(nullptr),
     debugScriptMap(nullptr),
@@ -118,7 +115,6 @@ JSCompartment::~JSCompartment()
         rt->lcovOutput().writeLCovResult(lcovOutput);
 
     js_delete(jitCompartment_);
-    js_delete(watchpointMap);
     js_delete(scriptCountsMap);
     js_delete(scriptNameMap);
     js_delete(debugScriptMap);
@@ -777,12 +773,6 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     if (traceOrMark == js::gc::GCRuntime::MarkRuntime && !zone()->isCollectingFromAnyThread())
         return;
 
-    // During a GC, these are treated as weak pointers.
-    if (traceOrMark == js::gc::GCRuntime::TraceRuntime) {
-        if (watchpointMap)
-            watchpointMap->trace(trc);
-    }
-
     /* Mark debug scopes, if present */
     if (debugEnvs)
         debugEnvs->trace(trc);
@@ -825,9 +815,6 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 void
 JSCompartment::finishRoots()
 {
-    if (watchpointMap)
-        watchpointMap->clear();
-
     if (debugEnvs)
         debugEnvs->finish();
 
@@ -942,13 +929,6 @@ void
 JSCompartment::sweepVarNames()
 {
     varNames_.sweep();
-}
-
-void
-JSCompartment::sweepWatchpoints()
-{
-    if (watchpointMap)
-        watchpointMap->sweep();
 }
 
 void

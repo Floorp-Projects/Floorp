@@ -4,6 +4,7 @@
 // - src/class-fields/default/cls-decl-wrapped-in-sc.template
 /*---
 description: Static computed property symbol names (fields definition wrapped in semicolons)
+esid: prod-FieldDefinition
 features: [Symbol, computed-property-names, class-fields]
 flags: [generated]
 includes: [propertyHelper.js]

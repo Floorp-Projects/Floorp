@@ -28,7 +28,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIMutable.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -399,10 +398,6 @@ private:
   GetForCurrentThread();
 
   // Forwarded from BackgroundChild.
-  static bool
-  GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
-
-  // Forwarded from BackgroundChild.
   static PBackgroundChild*
   GetOrCreateForCurrentThread();
 
@@ -627,35 +622,6 @@ private:
   }
 };
 
-// Must be cancelable in order to dispatch on active worker threads
-class ChildImpl::ActorCreatedRunnable final :
-  public CancelableRunnable
-{
-  nsCOMPtr<nsIIPCBackgroundChildCreateCallback> mCallback;
-  RefPtr<ChildImpl> mActor;
-
-public:
-  ActorCreatedRunnable(nsIIPCBackgroundChildCreateCallback* aCallback,
-                       ChildImpl* aActor)
-    : CancelableRunnable("Background::ChildImpl::ActorCreatedRunnable")
-    , mCallback(aCallback)
-    , mActor(aActor)
-  {
-    // May be created on any thread!
-    MOZ_ASSERT(aCallback);
-    MOZ_ASSERT(aActor);
-  }
-
-protected:
-  virtual ~ActorCreatedRunnable()
-  { }
-
-  NS_DECL_NSIRUNNABLE
-
-  nsresult
-  Cancel() override;
-};
-
 } // namespace
 
 namespace mozilla {
@@ -746,14 +712,6 @@ PBackgroundChild*
 BackgroundChild::GetForCurrentThread()
 {
   return ChildImpl::GetForCurrentThread();
-}
-
-// static
-bool
-BackgroundChild::GetOrCreateForCurrentThread(
-                                 nsIIPCBackgroundChildCreateCallback* aCallback)
-{
-  return ChildImpl::GetOrCreateForCurrentThread(aCallback);
 }
 
 // static
@@ -1488,25 +1446,6 @@ ChildImpl::GetForCurrentThread()
   return threadLocalInfo->mActor;
 }
 
-// static
-bool
-ChildImpl::GetOrCreateForCurrentThread(
-                                 nsIIPCBackgroundChildCreateCallback* aCallback)
-{
-  MOZ_ASSERT(aCallback);
-
-  RefPtr<ChildImpl> actor =
-    static_cast<ChildImpl*>(GetOrCreateForCurrentThread());
-  if (NS_WARN_IF(!actor)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIRunnable> runnable = new ActorCreatedRunnable(aCallback, actor);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
-
-  return true;
-}
-
 /* static */
 PBackgroundChild*
 ChildImpl::GetOrCreateForCurrentThread()
@@ -1647,27 +1586,6 @@ ChildImpl::GetThreadLocalForCurrentThread()
   }
 
   return threadLocalInfo->mConsumerThreadLocal;
-}
-
-NS_IMETHODIMP
-ChildImpl::ActorCreatedRunnable::Run()
-{
-  // May run on any thread!
-
-  MOZ_ASSERT(mCallback);
-  MOZ_ASSERT(mActor);
-
-  mCallback->ActorCreated(mActor);
-
-  return NS_OK;
-}
-
-nsresult
-ChildImpl::ActorCreatedRunnable::Cancel()
-{
-  // These are IPC infrastructure objects and need to run unconditionally.
-  Run();
-  return NS_OK;
 }
 
 void
