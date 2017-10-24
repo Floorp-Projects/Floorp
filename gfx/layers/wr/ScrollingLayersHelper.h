@@ -34,9 +34,11 @@ public:
   void BeginBuild(wr::DisplayListBuilder& aBuilder);
   void EndBuild();
 
+  void BeginList();
+  void EndList();
+
   void BeginItem(nsDisplayItem* aItem,
                  const StackingContextHelper& aStackingContext);
-  void EndItem(nsDisplayItem* aItem);
   ~ScrollingLayersHelper();
 
 private:
@@ -77,12 +79,19 @@ private:
   ClipIdMap mCache;
 
   struct ItemClips {
+    ItemClips(const ActiveScrolledRoot* aAsr,
+              const DisplayItemClipChain* aChain);
+
+    const ActiveScrolledRoot* mAsr;
+    const DisplayItemClipChain* mChain;
+
     Maybe<FrameMetrics::ViewID> mScrollId;
     Maybe<wr::WrClipId> mClipId;
     Maybe<std::pair<FrameMetrics::ViewID, Maybe<wr::WrClipId>>> mClipAndScroll;
 
     void Apply(wr::DisplayListBuilder* aBuilder);
     void Unapply(wr::DisplayListBuilder* aBuilder);
+    bool HasSameInputs(const ItemClips& aOther);
   };
 
   std::vector<ItemClips> mItemClipStack;
