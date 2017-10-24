@@ -275,6 +275,10 @@ public:
   // reset variables such as |mDidNotifyDataEnded|.
   void NotifyChannelRecreated();
 
+  // Notifies the stream that the suspend status of the client has changed.
+  // Main thread only.
+  void NotifyClientSuspended(bool aSuspended);
+
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.
@@ -518,6 +522,9 @@ private:
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
+
+  // True if the client is suspended. Accessed on the owner thread only.
+  bool mClientSuspended = false;
 };
 
 } // namespace mozilla
