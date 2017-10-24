@@ -710,7 +710,7 @@
           for (let element of this.controlListeners) {
             try {
               element.item.removeEventListener(element.event, element.func,
-                { mozSystemGroup: element.mozSystemGroup, capture: element.capture });
+                { mozSystemGroup: true, capture: element.capture });
             } catch (ex) {}
           }
 
@@ -1818,16 +1818,10 @@
         // Due to this helper function, "Utils" is made available to the event
         // listener functions. Hence declare it as a global for ESLint.
         /* global Utils */
-        function addListener(elem, eventName, func, {capture = false, mozSystemGroup = true} = {}) {
+        function addListener(elem, eventName, func, capture = false) {
           let boundFunc = func.bind(self);
-          self.controlListeners.push({
-            item: elem,
-            event: eventName,
-            func: boundFunc,
-            capture,
-            mozSystemGroup,
-          });
-          elem.addEventListener(eventName, boundFunc, {mozSystemGroup, capture});
+          self.controlListeners.push({ item: elem, event: eventName, func: boundFunc, capture });
+          elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true, capture });
         }
 
         addListener(this.muteButton, "click", this.toggleMute);
@@ -1843,11 +1837,8 @@
         addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
         addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
         addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
-        addListener(this.video, "keypress", this.keyHandler, {capture: true});
-        // Prevent any click event within controlBar from dispatching through to video.
-        addListener(this.controlBar, "click", function(event) {
-          event.stopPropagation();
-        }, {mozSystemGroup: false});
+        addListener(this.video, "keypress", this.keyHandler, true);
+
         addListener(this.videocontrols, "dragstart", function(event) {
           event.preventDefault(); // prevent dragging of controls image (bug 517114)
         });
