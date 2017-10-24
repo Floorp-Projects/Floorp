@@ -12,6 +12,7 @@ const {
   element,
   WebElement,
 } = Cu.import("chrome://marionette/content/element.js", {});
+const {InvalidArgumentError} = Cu.import("chrome://marionette/content/error.js", {});
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
@@ -245,7 +246,7 @@ add_test(function test_WebElement_from() {
   ok(WebElement.from(domFrame) instanceof ContentWebFrame);
   ok(WebElement.from(xulEl) instanceof ChromeWebElement);
 
-  Assert.throws(() => WebElement.from({}), /Expected DOM window\/element/);
+  Assert.throws(() => WebElement.from({}), InvalidArgumentError);
 
   run_next_test();
 });
@@ -318,8 +319,8 @@ add_test(function test_WebElement_fromJSON_ChromeWebElement() {
 });
 
 add_test(function test_WebElement_fromJSON_malformed() {
-  Assert.throws(() => WebElement.fromJSON({}), /Expected web element reference/);
-  Assert.throws(() => WebElement.fromJSON(null), /Expected JSON Object/);
+  Assert.throws(() => WebElement.fromJSON({}), InvalidArgumentError);
+  Assert.throws(() => WebElement.fromJSON(null), InvalidArgumentError);
   run_next_test();
 });
 
@@ -332,7 +333,7 @@ add_test(function test_WebElement_fromUUID() {
   ok(domWebEl instanceof ContentWebElement);
   equal(domWebEl.uuid, "bar");
 
-  Assert.throws(() => WebElement.fromUUID("baz", "bah"), /Unknown context/);
+  Assert.throws(() => WebElement.fromUUID("baz", "bah"), InvalidArgumentError);
 
   run_next_test();
 });
@@ -389,7 +390,7 @@ add_test(function test_ContentWebElement_fromJSON() {
   ok(bothEl instanceof ContentWebElement);
   equal(bothEl.uuid, "identifier-uuid");
 
-  Assert.throws(() => ContentWebElement.fromJSON({}), /Expected web element reference/);
+  Assert.throws(() => ContentWebElement.fromJSON({}), InvalidArgumentError);
 
   run_next_test();
 });
