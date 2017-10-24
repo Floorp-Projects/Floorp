@@ -8,8 +8,7 @@
 
 define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
-  const TreeView = createFactory(TreeViewClass);
+  const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
   const { createFactories } = require("devtools/client/shared/react-utils");
@@ -19,8 +18,6 @@ define(function (require, exports, module) {
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   const { div } = dom;
-  const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
-  const AUTO_EXPAND_MAX_LEVEL = 7;
 
   function isObject(value) {
     return Object(value) === value;
@@ -42,7 +39,7 @@ define(function (require, exports, module) {
         PropTypes.bool,
         PropTypes.number
       ]),
-      jsonTextLength: PropTypes.number,
+      expandedNodes: PropTypes.instanceOf(Set),
       searchFilter: PropTypes.string,
       actions: PropTypes.object,
     },
@@ -96,15 +93,6 @@ define(function (require, exports, module) {
         width: "100%"
       }];
 
-      // Expand the document by default if its size isn't bigger than 100KB.
-      let expandedNodes = new Set();
-      if (this.props.jsonTextLength <= AUTO_EXPAND_MAX_SIZE) {
-        expandedNodes = TreeViewClass.getExpandedNodes(
-          this.props.data,
-          {maxLevel: AUTO_EXPAND_MAX_LEVEL}
-        );
-      }
-
       // Render tree component.
       return TreeView({
         object: this.props.data,
@@ -112,7 +100,7 @@ define(function (require, exports, module) {
         onFilter: this.onFilter,
         columns: columns,
         renderValue: this.renderValue,
-        expandedNodes: expandedNodes,
+        expandedNodes: this.props.expandedNodes,
       });
     },
 
