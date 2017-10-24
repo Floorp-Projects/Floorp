@@ -40,6 +40,9 @@
       <preference id="pref.browser.language.disable_button.remove"
                   name="pref.browser.language.disable_button.remove"
                   type="bool"/>
+      <preference id="privacy.spoof_english"
+                  name="privacy.spoof_english"
+                  type="int"/>
     </preferences>
 
     <script type="application/javascript" src="chrome://browser/content/preferences/languages.js"/>
@@ -52,6 +55,11 @@
     </stringbundleset>
 
     <description>&languages.customize2.description;</description>
+    <checkbox id="spoofEnglish"
+              label="&languages.customize.spoofEnglish;"
+              preference="privacy.spoof_english"
+              onsyncfrompreference="return gLanguagesDialog.readSpoofEnglish();"
+              onsynctopreference="return gLanguagesDialog.writeSpoofEnglish();"/>
     <grid flex="1">
       <columns>
         <column flex="1"/>
