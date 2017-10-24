@@ -26,17 +26,3 @@ add_task(async function test_skip_onboarding_tours() {
 
   await BrowserTestUtils.removeTab(tab);
 });
-
-add_task(async function test_hide_skip_button_via_perf() {
-  resetOnboardingDefaultState();
-  Preferences.set("browser.onboarding.skip-tour-button.hide", true);
-
-  let tab = await openTab(ABOUT_NEWTAB_URL);
-  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
-  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
-
-  ok(!content.document.querySelector("#onboarding-skip-tour-button"), "should not render the skip button");
-
-  await BrowserTestUtils.removeTab(tab);
-});

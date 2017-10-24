@@ -22,10 +22,9 @@ const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
 const ONBOARDING_MIN_WIDTH_PX = 960;
 const SPEECH_BUBBLE_MIN_WIDTH_PX = 1130;
-const SPEECH_BUBBLE_NEWTOUR_STRING_ID = "onboarding.overlay-icon-tooltip2";
-const SPEECH_BUBBLE_UPDATETOUR_STRING_ID = "onboarding.overlay-icon-tooltip-updated2";
 const ICON_STATE_WATERMARK = "watermark";
 const ICON_STATE_DEFAULT = "default";
+
 /**
  * Add any number of tours, key is the tourId, value should follow the format below
  * "tourId": { // The short tour id which could be saved in pref
@@ -1131,11 +1130,6 @@ class Onboarding {
   _renderOverlay() {
     let div = this._window.document.createElement("div");
     div.id = "onboarding-overlay";
-    let skipButtonMarkup = "";
-    if (!Services.prefs.getBoolPref("browser.onboarding.skip-tour-button.hide", false)) {
-      let label = this._bundle.GetStringFromName("onboarding.skip-tour-button-label");
-      skipButtonMarkup = `<button id="onboarding-skip-tour-button" class="onboarding-action-button">${label}</button>`;
-    }
     // We use `innerHTML` for more friendly reading.
     // The security should be fine because this is not from an external input.
     div.innerHTML = `
@@ -1145,7 +1139,7 @@ class Onboarding {
           <ul id="onboarding-tour-list" role="tablist"></ul>
         </nav>
         <footer id="onboarding-footer">
-          ${skipButtonMarkup}
+          <button id="onboarding-skip-tour-button" class="onboarding-action-button"></button>
         </footer>
         <button id="onboarding-overlay-close-btn" class="onboarding-close-btn"></button>
       </div>
@@ -1153,6 +1147,9 @@ class Onboarding {
 
     this._dialog = div.querySelector(`[role="dialog"]`);
     this._dialog.id = ONBOARDING_DIALOG_ID;
+
+    div.querySelector("#onboarding-skip-tour-button").textContent =
+      this._bundle.GetStringFromName("onboarding.skip-tour-button-label");
     div.querySelector("#onboarding-header").textContent =
       this._bundle.GetStringFromName("onboarding.overlay-title2");
     let closeBtn = div.querySelector("#onboarding-overlay-close-btn");
@@ -1163,25 +1160,9 @@ class Onboarding {
 
   _renderOverlayButton() {
     let button = this._window.document.createElement("button");
-    // support customize speech bubble string via pref
-    let tooltipStringPrefId = "";
-    let defaultTourStringId = "";
-    if (this._tourType === "new") {
-      tooltipStringPrefId = "browser.onboarding.newtour.tooltip";
-      defaultTourStringId = SPEECH_BUBBLE_NEWTOUR_STRING_ID;
-    } else {
-      tooltipStringPrefId = "browser.onboarding.updatetour.tooltip";
-      defaultTourStringId = SPEECH_BUBBLE_UPDATETOUR_STRING_ID;
-    }
-    let tooltip = "";
-    try {
-      let tooltipStringId = Services.prefs.getStringPref(tooltipStringPrefId, defaultTourStringId);
-      tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
-    } catch (e) {
-      Cu.reportError(`the provided ${tooltipStringPrefId} string is in wrong format `, e);
-      // fallback to defaultTourStringId to proceed
-      tooltip = this._bundle.formatStringFromName(defaultTourStringId, [BRAND_SHORT_NAME], 1);
-    }
+    let tooltipStringId = this._tourType === "new" ?
+      "onboarding.overlay-icon-tooltip2" : "onboarding.overlay-icon-tooltip-updated2";
+    let tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";
     button.setAttribute("aria-haspopup", true);
@@ -1189,14 +1170,12 @@ class Onboarding {
     let defaultImg = this._window.document.createElement("img");
     defaultImg.id = "onboarding-overlay-button-icon";
     defaultImg.setAttribute("role", "presentation");
-    defaultImg.src = Services.prefs.getStringPref("browser.onboarding.default-icon-src",
-      "chrome://branding/content/icon64.png");
+    defaultImg.src = "chrome://branding/content/icon64.png";
     button.appendChild(defaultImg);
     let watermarkImg = this._window.document.createElement("img");
     watermarkImg.id = "onboarding-overlay-button-watermark-icon";
     watermarkImg.setAttribute("role", "presentation");
-    watermarkImg.src = Services.prefs.getStringPref("browser.onboarding.watermark-icon-src",
-      "resource://onboarding/img/watermark.svg");
+    watermarkImg.src = "resource://onboarding/img/watermark.svg";
     button.appendChild(watermarkImg);
     return button;
   }
