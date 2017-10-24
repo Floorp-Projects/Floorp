@@ -11,8 +11,8 @@ f(null, false);
 f(null, false);
 f(undefined, false);
 f(undefined, false);
-f(objectEmulatingUndefined(), false);
-f(objectEmulatingUndefined(), false);
+f(createIsHTMLDDA(), false);
+f(createIsHTMLDDA(), false);
 f(Object.prototype, true);
 f(Object.prototype, true);
 
@@ -33,5 +33,5 @@ function h(v, value)
            "failed: " + v + " " + value);
 }
 
-h(objectEmulatingUndefined(), false);
-h(objectEmulatingUndefined(), false);
+h(createIsHTMLDDA(), false);
+h(createIsHTMLDDA(), false);

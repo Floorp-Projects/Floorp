@@ -123,8 +123,8 @@ assertEq(Reflect.defineProperty(obj, "prop", {set: s}), true);  // no-op
 
 // Proxy defineProperty handler method that returns false
 var falseValues = [false, 0, -0, "", NaN, null, undefined];
-if (typeof objectEmulatingUndefined === "function")
-    falseValues.push(objectEmulatingUndefined());
+if (typeof createIsHTMLDDA === "function")
+    falseValues.push(createIsHTMLDDA());
 var value;
 proxy = new Proxy({}, {
     defineProperty(t, id, desc) {

@@ -862,6 +862,10 @@ pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
 pref("dom.serviceWorkers.openWindow.enabled", true);
 
+// Allow service workers to open windows for a longer period after a notification
+// click on mobile.  This is to account for some devices being quite slow.
+pref("dom.serviceWorkers.disable_open_click_delay", 5000);
+
 pref("dom.push.debug", false);
 // The upstream autopush endpoint must have the Google API key corresponding to
 // the App's sender ID; we bake this assumption directly into the URL.
