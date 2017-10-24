@@ -190,10 +190,9 @@ public:
   bool IsTypeBool() const { return IsPrefType(PrefType::Bool); }
   bool IsPrefType(PrefType type) const { return GetPrefType() == type; }
 
-  PrefTypeFlags& SetPrefType(PrefType aType)
+  void SetPrefType(PrefType aType)
   {
     mValue = mValue - AsInt(GetPrefType()) + AsInt(aType);
-    return *this;
   }
 
   PrefType GetPrefType() const
@@ -204,39 +203,35 @@ public:
 
   bool HasDefault() const { return mValue & PREF_FLAG_HAS_DEFAULT; }
 
-  PrefTypeFlags& SetHasDefault(bool aSetOrUnset)
+  void SetHasDefault(bool aSetOrUnset)
   {
-    return SetFlag(PREF_FLAG_HAS_DEFAULT, aSetOrUnset);
+    SetFlag(PREF_FLAG_HAS_DEFAULT, aSetOrUnset);
   }
 
   bool HasStickyDefault() const { return mValue & PREF_FLAG_STICKY_DEFAULT; }
 
-  PrefTypeFlags& SetHasStickyDefault(bool aSetOrUnset)
+  void SetHasStickyDefault(bool aSetOrUnset)
   {
-    return SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset);
+    SetFlag(PREF_FLAG_STICKY_DEFAULT, aSetOrUnset);
   }
 
   bool IsLocked() const { return mValue & PREF_FLAG_LOCKED; }
 
-  PrefTypeFlags& SetLocked(bool aSetOrUnset)
-  {
-    return SetFlag(PREF_FLAG_LOCKED, aSetOrUnset);
-  }
+  void SetLocked(bool aSetOrUnset) { SetFlag(PREF_FLAG_LOCKED, aSetOrUnset); }
 
   bool HasUserValue() const { return mValue & PREF_FLAG_USERSET; }
 
-  PrefTypeFlags& SetHasUserValue(bool aSetOrUnset)
+  void SetHasUserValue(bool aSetOrUnset)
   {
-    return SetFlag(PREF_FLAG_USERSET, aSetOrUnset);
+    SetFlag(PREF_FLAG_USERSET, aSetOrUnset);
   }
 
 private:
   static uint16_t AsInt(PrefType aType) { return (uint16_t)aType; }
 
-  PrefTypeFlags& SetFlag(uint16_t aFlag, bool aSetOrUnset)
+  void SetFlag(uint16_t aFlag, bool aSetOrUnset)
   {
     mValue = aSetOrUnset ? mValue | aFlag : mValue & ~aFlag;
-    return *this;
   }
 
   // We pack both the value of type (PrefType) and flags into the same int. The
@@ -950,26 +945,23 @@ pref_ValueChanged(PrefValue aOldValue, PrefValue aNewValue, PrefType aType)
 // Overwrite the type and value of an existing preference. Caller must ensure
 // that they are not changing the type of a preference that has a default
 // value.
-static PrefTypeFlags
+static void
 pref_SetValue(PrefValue* aExistingValue,
-              PrefTypeFlags aFlags,
+              PrefType aExistingType,
               PrefValue aNewValue,
               PrefType aNewType)
 {
-  if (aFlags.IsTypeString() && aExistingValue->mStringVal) {
+  if (aExistingType == PrefType::String) {
     free(aExistingValue->mStringVal);
   }
 
-  aFlags.SetPrefType(aNewType);
-  if (aFlags.IsTypeString()) {
+  if (aNewType == PrefType::String) {
     MOZ_ASSERT(aNewValue.mStringVal);
     aExistingValue->mStringVal =
       aNewValue.mStringVal ? moz_xstrdup(aNewValue.mStringVal) : nullptr;
   } else {
     *aExistingValue = aNewValue;
   }
-
-  return aFlags;
 }
 
 #ifdef DEBUG
@@ -1075,9 +1067,10 @@ pref_HashPref(const char* aKey,
       // ?? change of semantics?
       if (pref_ValueChanged(pref->mDefaultPref, aValue, aType) ||
           !pref->mPrefFlags.HasDefault()) {
-        pref->mPrefFlags =
-          pref_SetValue(&pref->mDefaultPref, pref->mPrefFlags, aValue, aType)
-            .SetHasDefault(true);
+        pref_SetValue(
+          &pref->mDefaultPref, pref->mPrefFlags.GetPrefType(), aValue, aType);
+        pref->mPrefFlags.SetPrefType(aType);
+        pref->mPrefFlags.SetHasDefault(true);
         if (aFlags & kPrefStickyDefault) {
           pref->mPrefFlags.SetHasStickyDefault(true);
         }
@@ -1107,9 +1100,10 @@ pref_HashPref(const char* aKey,
     } else if (!pref->mPrefFlags.HasUserValue() ||
                !pref->mPrefFlags.IsPrefType(aType) ||
                pref_ValueChanged(pref->mUserPref, aValue, aType)) {
-      pref->mPrefFlags =
-        pref_SetValue(&pref->mUserPref, pref->mPrefFlags, aValue, aType)
-          .SetHasUserValue(true);
+      pref_SetValue(
+        &pref->mUserPref, pref->mPrefFlags.GetPrefType(), aValue, aType);
+      pref->mPrefFlags.SetPrefType(aType);
+      pref->mPrefFlags.SetHasUserValue(true);
       if (!pref->mPrefFlags.IsLocked()) {
         Preferences::HandleDirty();
         valueChanged = true;
