@@ -33,14 +33,15 @@ def walkDirectory(directory):
     return paths
 
 def signZip(appDirectory, outputFile, issuerName, manifestHashes,
-            signatureHashes, doSign):
+            signatureHashes, pkcs7Hashes, doSign):
     """Given a directory containing the files to package up,
     an output filename to write to, the name of the issuer of
     the signing certificate, a list of hash algorithms to use in
     the manifest file, a similar list for the signature file,
-    and whether or not to actually sign the resulting package,
-    packages up the files in the directory and creates the
-    output as appropriate."""
+    a similar list for the pkcs#7 signature, and whether or not
+    to actually sign the resulting package, packages up the
+    files in the directory and creates the output as
+    appropriate."""
     mfEntries = []
 
     with zipfile.ZipFile(outputFile, 'w') as outZip:
@@ -66,7 +67,12 @@ def signZip(appDirectory, outputFile, issuerName, manifestHashes,
             base64hash = b64encode(hashFunc(mfContents).digest())
             sfContents += '%s-Digest-Manifest: %s\n' % (name, base64hash)
 
-        cmsSpecification = 'hash:%s\nsigner:\n' % sha1(sfContents).hexdigest() + \
+        cmsSpecification = ''
+        for name in pkcs7Hashes:
+            hashFunc, _ = hashNameToFunctionAndIdentifier(name)
+            cmsSpecification += '%s:%s\n' % (name,
+                                             hashFunc(sfContents).hexdigest())
+        cmsSpecification += 'signer:\n' + \
             'issuer:%s\n' % issuerName + \
             'subject:xpcshell signed app test signer\n' + \
             'extension:keyUsage:digitalSignature'
@@ -118,12 +124,20 @@ def main(outputFile, appPath, *args):
     parser.add_argument('-s', '--signature-hash', action='append',
                         help='Hash algorithms to use in signature file',
                         default=[])
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-p', '--pkcs7-hash', action='append',
+                       help='Hash algorithms to use in PKCS#7 signature',
+                       default=[])
+    group.add_argument('-e', '--empty-signerInfos', action='store_true',
+                       help='Emit pkcs#7 SignedData with empty signerInfos')
     parsed = parser.parse_args(args)
     if len(parsed.manifest_hash) == 0:
         parsed.manifest_hash.append('sha256')
     if len(parsed.signature_hash) == 0:
         parsed.signature_hash.append('sha256')
+    if len(parsed.pkcs7_hash) == 0 and not parsed.empty_signerInfos:
+        parsed.pkcs7_hash.append('sha256')
     signZip(appPath, outputFile, parsed.issuer,
             map(hashNameToFunctionAndIdentifier, parsed.manifest_hash),
             map(hashNameToFunctionAndIdentifier, parsed.signature_hash),
-            not parsed.no_sign)
+            parsed.pkcs7_hash, not parsed.no_sign)

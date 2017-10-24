@@ -143,14 +143,15 @@ add_test(function () {
 add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("signed_app_sha256"),
-    check_open_result("valid with sha256 hashes in manifest", Cr.NS_OK));
+    check_open_result("valid with sha256 everywhere", Cr.NS_OK));
 });
 
 add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("signed_app_sha1_and_sha256"),
-    check_open_result("valid with sha1 and sha256 hashes in manifest", Cr.NS_OK));
+    check_open_result("valid with sha1 and sha256 hashes everywhere",
+                      Cr.NS_OK));
 });
 
 add_test(function () {
@@ -182,7 +183,7 @@ add_test(function () {
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("sha1_and_sha256_manifest_sha256_signature_file"),
     check_open_result("sha1 and sha256 hashes in the manifest, but only sha256 hash in the signature file",
-                      Cr.NS_OK));
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
 });
 
 add_test(function () {
@@ -190,7 +191,7 @@ add_test(function () {
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("sha1_manifest_sha1_and_sha256_signature_file"),
     check_open_result("only sha1 in the manifest, sha1 and sha256 hashes in the signature file",
-                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+                      Cr.NS_OK));
 });
 
 add_test(function () {
@@ -198,7 +199,15 @@ add_test(function () {
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("sha256_manifest_sha1_and_sha256_signature_file"),
     check_open_result("only sha256 in the manifest, sha1 and sha256 hashes in the signature file",
-                      Cr.NS_OK));
+                      Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID));
+});
+
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("empty_signerInfos"),
+    check_open_result("the signerInfos in the PKCS#7 signature is empty",
+                      Cr.NS_ERROR_CMS_VERIFY_NOT_SIGNED));
 });
 
 add_test(function () {
