@@ -810,6 +810,10 @@ interface TestExampleInterface {
   [NonEnumerable]
   void nonEnumerableMethod();
 
+  // [NeedsWindowsUndef] test generation
+  [NeedsWindowsUndef]
+  const unsigned long NO_ERROR = 0xffffffff;
+
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
 
