@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -56,58 +56,65 @@ const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label")
  * Toolbar contains a set of useful tools to control network requests
  * as well as set of filters for filtering the content.
  */
-const Toolbar = createClass({
-  displayName: "Toolbar",
+class Toolbar extends Component {
+  static get propTypes() {
+    return {
+      toggleRecording: PropTypes.func.isRequired,
+      recording: PropTypes.bool.isRequired,
+      clearRequests: PropTypes.func.isRequired,
+      requestFilterTypes: PropTypes.array.isRequired,
+      setRequestFilterText: PropTypes.func.isRequired,
+      networkDetailsToggleDisabled: PropTypes.bool.isRequired,
+      networkDetailsOpen: PropTypes.bool.isRequired,
+      toggleNetworkDetails: PropTypes.func.isRequired,
+      enablePersistentLogs: PropTypes.func.isRequired,
+      togglePersistentLogs: PropTypes.func.isRequired,
+      persistentLogsEnabled: PropTypes.bool.isRequired,
+      disableBrowserCache: PropTypes.func.isRequired,
+      toggleBrowserCache: PropTypes.func.isRequired,
+      browserCacheDisabled: PropTypes.bool.isRequired,
+      toggleRequestFilterType: PropTypes.func.isRequired,
+      filteredRequests: PropTypes.object.isRequired,
+    };
+  }
 
-  propTypes: {
-    toggleRecording: PropTypes.func.isRequired,
-    recording: PropTypes.bool.isRequired,
-    clearRequests: PropTypes.func.isRequired,
-    requestFilterTypes: PropTypes.array.isRequired,
-    setRequestFilterText: PropTypes.func.isRequired,
-    networkDetailsToggleDisabled: PropTypes.bool.isRequired,
-    networkDetailsOpen: PropTypes.bool.isRequired,
-    toggleNetworkDetails: PropTypes.func.isRequired,
-    enablePersistentLogs: PropTypes.func.isRequired,
-    togglePersistentLogs: PropTypes.func.isRequired,
-    persistentLogsEnabled: PropTypes.bool.isRequired,
-    disableBrowserCache: PropTypes.func.isRequired,
-    toggleBrowserCache: PropTypes.func.isRequired,
-    browserCacheDisabled: PropTypes.bool.isRequired,
-    toggleRequestFilterType: PropTypes.func.isRequired,
-    filteredRequests: PropTypes.object.isRequired,
-  },
+  constructor(props) {
+    super(props);
+    this.toggleRequestFilterType = this.toggleRequestFilterType.bind(this);
+    this.updatePersistentLogsEnabled = this.updatePersistentLogsEnabled.bind(this);
+    this.updateBrowserCacheDisabled = this.updateBrowserCacheDisabled.bind(this);
+  }
 
   componentDidMount() {
     Services.prefs.addObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
                                this.updatePersistentLogsEnabled);
     Services.prefs.addObserver(DEVTOOLS_DISABLE_CACHE_PREF,
                                this.updateBrowserCacheDisabled);
-  },
+  }
 
   componentWillUnmount() {
     Services.prefs.removeObserver(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF,
                                   this.updatePersistentLogsEnabled);
     Services.prefs.removeObserver(DEVTOOLS_DISABLE_CACHE_PREF,
                                   this.updateBrowserCacheDisabled);
-  },
+  }
 
   toggleRequestFilterType(evt) {
     if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
       return;
     }
     this.props.toggleRequestFilterType(evt.target.dataset.key);
-  },
+  }
 
   updatePersistentLogsEnabled() {
     this.props.enablePersistentLogs(
       Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF));
-  },
+  }
 
   updateBrowserCacheDisabled() {
     this.props.disableBrowserCache(
       Services.prefs.getBoolPref(DEVTOOLS_DISABLE_CACHE_PREF));
-  },
+  }
 
   render() {
     let {
@@ -226,8 +233,8 @@ const Toolbar = createClass({
         )
       )
     );
-  },
-});
+  }
+}
 
 module.exports = connect(
   (state) => ({

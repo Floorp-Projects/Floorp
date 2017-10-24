@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -18,17 +18,17 @@ const UPDATED_FILE_PROPS = [
   "urlDetails",
 ];
 
-const RequestListColumnFile = createClass({
-  displayName: "RequestListColumnFile",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-    onThumbnailMouseDown: PropTypes.func.isRequired,
-  },
+class RequestListColumnFile extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+      onThumbnailMouseDown: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_FILE_PROPS, this.props.item, nextProps.item);
-  },
+  }
 
   render() {
     let {
@@ -50,6 +50,6 @@ const RequestListColumnFile = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnFile;

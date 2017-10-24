@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   PropTypes,
   DOM,
 } = require("devtools/client/shared/vendor/react");
@@ -27,19 +27,26 @@ const { div, button } = DOM;
  * Displays tick marks in the waterfall column header.
  * Also draws the waterfall background canvas and updates it when needed.
  */
-const RequestListHeader = createClass({
-  displayName: "RequestListHeader",
+class RequestListHeader extends Component {
+  static get propTypes() {
+    return {
+      columns: PropTypes.object.isRequired,
+      resetColumns: PropTypes.func.isRequired,
+      resizeWaterfall: PropTypes.func.isRequired,
+      scale: PropTypes.number,
+      sort: PropTypes.object,
+      sortBy: PropTypes.func.isRequired,
+      toggleColumn: PropTypes.func.isRequired,
+      waterfallWidth: PropTypes.number,
+    };
+  }
 
-  propTypes: {
-    columns: PropTypes.object.isRequired,
-    resetColumns: PropTypes.func.isRequired,
-    resizeWaterfall: PropTypes.func.isRequired,
-    scale: PropTypes.number,
-    sort: PropTypes.object,
-    sortBy: PropTypes.func.isRequired,
-    toggleColumn: PropTypes.func.isRequired,
-    waterfallWidth: PropTypes.number,
-  },
+  constructor(props) {
+    super(props);
+    this.onContextMenu = this.onContextMenu.bind(this);
+    this.drawBackground = this.drawBackground.bind(this);
+    this.resizeWaterfall = this.resizeWaterfall.bind(this);
+  }
 
   componentWillMount() {
     const { resetColumns, toggleColumn } = this.props;
@@ -47,7 +54,7 @@ const RequestListHeader = createClass({
       resetColumns,
       toggleColumn,
     });
-  },
+  }
 
   componentDidMount() {
     // Create the object that takes care of drawing the waterfall canvas background
@@ -56,23 +63,23 @@ const RequestListHeader = createClass({
     this.resizeWaterfall();
     window.addEventListener("resize", this.resizeWaterfall);
     addThemeObserver(this.drawBackground);
-  },
+  }
 
   componentDidUpdate() {
     this.drawBackground();
-  },
+  }
 
   componentWillUnmount() {
     this.background.destroy();
     this.background = null;
     window.removeEventListener("resize", this.resizeWaterfall);
     removeThemeObserver(this.drawBackground);
-  },
+  }
 
   onContextMenu(evt) {
     evt.preventDefault();
     this.contextMenu.open(evt);
-  },
+  }
 
   drawBackground() {
     // The background component is theme dependent, so add the current theme to the props.
@@ -80,7 +87,7 @@ const RequestListHeader = createClass({
       theme: getTheme()
     });
     this.background.draw(props);
-  },
+  }
 
   resizeWaterfall() {
     let waterfallHeader = this.refs.waterfallHeader;
@@ -91,7 +98,7 @@ const RequestListHeader = createClass({
       this._resizeTimerId = window.requestIdleCallback(() =>
         this.props.resizeWaterfall(waterfallHeader.getBoundingClientRect().width));
     }
-  },
+  }
 
   render() {
     let { columns, scale, sort, sortBy, waterfallWidth } = this.props;
@@ -141,7 +148,7 @@ const RequestListHeader = createClass({
       )
     );
   }
-});
+}
 
 /**
  * Build the waterfall header - timing tick marks with the right spacing

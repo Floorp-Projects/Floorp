@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -29,33 +29,37 @@ const MediaQueryList = window.matchMedia("(min-width: 700px)");
  * Monitor panel component
  * The main panel for displaying various network request information
  */
-const MonitorPanel = createClass({
-  displayName: "MonitorPanel",
-
-  propTypes: {
-    connector: PropTypes.object.isRequired,
-    isEmpty: PropTypes.bool.isRequired,
-    networkDetailsOpen: PropTypes.bool.isRequired,
-    openNetworkDetails: PropTypes.func.isRequired,
-    request: PropTypes.object,
-    sourceMapService: PropTypes.object,
-    openLink: PropTypes.func,
-    updateRequest: PropTypes.func.isRequired,
-  },
-
-  getInitialState() {
+class MonitorPanel extends Component {
+  static get propTypes() {
     return {
+      connector: PropTypes.object.isRequired,
+      isEmpty: PropTypes.bool.isRequired,
+      networkDetailsOpen: PropTypes.bool.isRequired,
+      openNetworkDetails: PropTypes.func.isRequired,
+      request: PropTypes.object,
+      sourceMapService: PropTypes.object,
+      openLink: PropTypes.func,
+      updateRequest: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       isVerticalSpliter: MediaQueryList.matches,
     };
-  },
+
+    this.onLayoutChange = this.onLayoutChange.bind(this);
+  }
 
   componentDidMount() {
     MediaQueryList.addListener(this.onLayoutChange);
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     updateFormDataSections(nextProps);
-  },
+  }
 
   componentWillUnmount() {
     MediaQueryList.removeListener(this.onLayoutChange);
@@ -70,13 +74,13 @@ const MonitorPanel = createClass({
       Services.prefs.setIntPref(
         "devtools.netmonitor.panes-network-details-height", clientHeight);
     }
-  },
+  }
 
   onLayoutChange() {
     this.setState({
       isVerticalSpliter: MediaQueryList.matches,
     });
-  },
+  }
 
   render() {
     let {
@@ -116,7 +120,7 @@ const MonitorPanel = createClass({
       )
     );
   }
-});
+}
 
 module.exports = connect(
   (state) => ({

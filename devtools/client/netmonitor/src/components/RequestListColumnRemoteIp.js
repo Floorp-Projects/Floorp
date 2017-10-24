@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,16 +13,16 @@ const { getFormattedIPAndPort } = require("../utils/format-utils");
 
 const { div } = DOM;
 
-const RequestListColumnRemoteIP = createClass({
-  displayName: "RequestListColumnRemoteIP",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnRemoteIP extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.remoteAddress !== nextProps.item.remoteAddress;
-  },
+  }
 
   render() {
     let { remoteAddress, remotePort } = this.props.item;
@@ -35,6 +35,6 @@ const RequestListColumnRemoteIP = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnRemoteIP;

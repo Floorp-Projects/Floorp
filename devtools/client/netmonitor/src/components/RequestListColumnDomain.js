@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -21,17 +21,17 @@ const UPDATED_DOMAIN_PROPS = [
   "urlDetails",
 ];
 
-const RequestListColumnDomain = createClass({
-  displayName: "RequestListColumnDomain",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-    onSecurityIconMouseDown: PropTypes.func.isRequired,
-  },
+class RequestListColumnDomain extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+      onSecurityIconMouseDown: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_DOMAIN_PROPS, this.props.item, nextProps.item);
-  },
+  }
 
   render() {
     let { item, onSecurityIconMouseDown } = this.props;
@@ -61,6 +61,6 @@ const RequestListColumnDomain = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnDomain;

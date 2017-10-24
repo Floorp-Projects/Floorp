@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,16 +13,16 @@ const { getFormattedSize } = require("../utils/format-utils");
 
 const { div } = DOM;
 
-const RequestListColumnContentSize = createClass({
-  displayName: "RequestListColumnContentSize",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnContentSize extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.contentSize !== nextProps.item.contentSize;
-  },
+  }
 
   render() {
     let { contentSize } = this.props.item;
@@ -31,6 +31,6 @@ const RequestListColumnContentSize = createClass({
       div({ className: "requests-list-column requests-list-size", title: size }, size)
     );
   }
-});
+}
 
 module.exports = RequestListColumnContentSize;

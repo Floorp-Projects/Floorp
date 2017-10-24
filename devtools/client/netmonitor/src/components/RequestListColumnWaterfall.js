@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -23,19 +23,19 @@ const UPDATED_WATERFALL_PROPS = [
 // List of properties of the timing info we want to create boxes for
 const TIMING_KEYS = ["blocked", "dns", "connect", "ssl", "send", "wait", "receive"];
 
-const RequestListColumnWaterfall = createClass({
-  displayName: "RequestListColumnWaterfall",
-
-  propTypes: {
-    firstRequestStartedMillis: PropTypes.number.isRequired,
-    item: PropTypes.object.isRequired,
-    onWaterfallMouseDown: PropTypes.func.isRequired,
-  },
+class RequestListColumnWaterfall extends Component {
+  static get propTypes() {
+    return {
+      firstRequestStartedMillis: PropTypes.number.isRequired,
+      item: PropTypes.object.isRequired,
+      onWaterfallMouseDown: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item) ||
       this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis;
-  },
+  }
 
   render() {
     let { firstRequestStartedMillis, item, onWaterfallMouseDown } = this.props;
@@ -62,7 +62,7 @@ const RequestListColumnWaterfall = createClass({
       )
     );
   }
-});
+}
 
 function timingTooltip(item) {
   let { eventTimings, fromCache, fromServiceWorker, totalTime } = item;
