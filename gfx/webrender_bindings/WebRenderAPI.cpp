@@ -1169,5 +1169,14 @@ DisplayListBuilder::TopmostScrollId()
   return layers::FrameMetrics::NULL_SCROLL_ID;
 }
 
+bool
+DisplayListBuilder::TopmostIsClip()
+{
+  if (mClipStack.empty()) {
+    return false;
+  }
+  return mClipStack.back().is<wr::WrClipId>();
+}
+
 } // namespace wr
 } // namespace mozilla
