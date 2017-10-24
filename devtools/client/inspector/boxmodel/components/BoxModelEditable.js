@@ -4,27 +4,27 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
-module.exports = createClass({
-
-  displayName: "BoxModelEditable",
-
-  propTypes: {
-    box: PropTypes.string.isRequired,
-    direction: PropTypes.string,
-    focusable: PropTypes.bool.isRequired,
-    level: PropTypes.string,
-    property: PropTypes.string.isRequired,
-    textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class BoxModelEditable extends PureComponent {
+  static get propTypes() {
+    return {
+      box: PropTypes.string.isRequired,
+      direction: PropTypes.string,
+      focusable: PropTypes.bool.isRequired,
+      level: PropTypes.string,
+      property: PropTypes.string.isRequired,
+      textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      onShowBoxModelEditor: PropTypes.func.isRequired,
+    };
+  }
 
   componentDidMount() {
     let { property, onShowBoxModelEditor } = this.props;
@@ -34,7 +34,7 @@ module.exports = createClass({
     }, (element, event) => {
       onShowBoxModelEditor(element, event, property);
     });
-  },
+  }
 
   render() {
     let {
@@ -70,6 +70,7 @@ module.exports = createClass({
         textContent
       )
     );
-  },
+  }
+}
 
-});
+module.exports = BoxModelEditable;

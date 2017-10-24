@@ -5,10 +5,12 @@
 "use strict";
 
 const Services = require("Services");
-const { addons, createClass, createFactory, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const Accordion =
@@ -22,22 +24,19 @@ const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 
 const BOXMODEL_OPENED_PREF = "devtools.computed.boxmodel.opened";
 
-const BoxModelApp = createClass({
-
-  displayName: "BoxModelApp",
-
-  propTypes: {
-    boxModel: PropTypes.shape(Types.boxModel).isRequired,
-    setSelectedNode: PropTypes.func.isRequired,
-    showBoxModelProperties: PropTypes.bool.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
-    onShowBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-    onToggleGeometryEditor: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class BoxModelApp extends PureComponent {
+  static get propTypes() {
+    return {
+      boxModel: PropTypes.shape(Types.boxModel).isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelProperties: PropTypes.bool.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelEditor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onToggleGeometryEditor: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     return Accordion({
@@ -54,8 +53,7 @@ const BoxModelApp = createClass({
         }
       ]
     });
-  },
-
-});
+  }
+}
 
 module.exports = connect(state => state)(BoxModelApp);
