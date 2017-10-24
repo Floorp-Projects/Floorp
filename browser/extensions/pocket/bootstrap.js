@@ -165,6 +165,10 @@ var PocketPageAction = {
           PocketPageAction.pocketedBrowserInnerWindowID = browser.innerWindowID;
         },
         onIframeHidden(iframe, panel) {
+          if (iframe.getAttribute("itemAdded") == "true") {
+            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
+          }
+
           if (!PocketPageAction.urlbarNode) {
             return;
           }
@@ -173,7 +177,6 @@ var PocketPageAction = {
           delete PocketPageAction.urlbarNode;
 
           if (iframe.getAttribute("itemAdded") == "true") {
-            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
             PocketPageAction.innerWindowIDsByBrowser.set(
               PocketPageAction.pocketedBrowser,
               PocketPageAction.pocketedBrowserInnerWindowID
