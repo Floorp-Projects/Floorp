@@ -66,6 +66,7 @@
   skin/classic/browser/notification-icons/desktop-notification-blocked.svg  (../shared/notification-icons/desktop-notification-blocked.svg)
   skin/classic/browser/notification-icons/desktop-notification.svg          (../shared/notification-icons/desktop-notification.svg)
   skin/classic/browser/notification-icons/focus-tab-by-prompt.svg           (../shared/notification-icons/focus-tab-by-prompt.svg)
+  skin/classic/browser/notification-icons/indexedDB-blocked.svg             (../shared/notification-icons/indexedDB-blocked.svg)
   skin/classic/browser/notification-icons/indexedDB.svg                     (../shared/notification-icons/indexedDB.svg)
   skin/classic/browser/notification-icons/login-detailed.svg                (../shared/notification-icons/login-detailed.svg)
   skin/classic/browser/notification-icons/login.svg                         (../shared/notification-icons/login.svg)
