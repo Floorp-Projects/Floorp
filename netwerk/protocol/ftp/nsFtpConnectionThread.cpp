@@ -785,7 +785,7 @@ nsFtpState::S_pass() {
             // XXX Is UTF-8 the best choice?
             AppendUTF16toUTF8(mPassword, passwordStr);
         } else {
-            nsCString anonPassword;
+            nsAutoCString anonPassword;
             bool useRealEmail = false;
             nsCOMPtr<nsIPrefBranch> prefs =
                     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -793,7 +793,7 @@ nsFtpState::S_pass() {
                 rv = prefs->GetBoolPref("advanced.mailftp", &useRealEmail);
                 if (NS_SUCCEEDED(rv) && useRealEmail) {
                     prefs->GetCharPref("network.ftp.anonymous_password",
-                                       getter_Copies(anonPassword));
+                                       anonPassword);
                 }
             }
             if (!anonPassword.IsEmpty()) {
