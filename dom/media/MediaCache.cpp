@@ -1176,6 +1176,8 @@ MediaCache::Update()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   struct StreamAction
   {
     enum
@@ -1196,283 +1198,272 @@ MediaCache::Update()
   // stream, decoder and element code.
   AutoTArray<StreamAction,10> actions;
 
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mUpdateQueued = false;
+  mUpdateQueued = false;
 #ifdef DEBUG
-    mInUpdate = true;
+  mInUpdate = true;
 #endif
 
-    int32_t maxBlocks = mBlockCache->GetMaxBlocks();
-    TimeStamp now = TimeStamp::Now();
+  int32_t maxBlocks = mBlockCache->GetMaxBlocks();
+  TimeStamp now = TimeStamp::Now();
 
-    int32_t freeBlockCount = mFreeBlocks.GetCount();
-    TimeDuration latestPredictedUseForOverflow = 0;
-    if (mIndex.Length() > uint32_t(maxBlocks)) {
-      // Try to trim back the cache to its desired maximum size. The cache may
-      // have overflowed simply due to data being received when we have
-      // no blocks in the main part of the cache that are free or lower
-      // priority than the new data. The cache can also be overflowing because
-      // the media.cache_size preference was reduced.
-      // First, figure out what the least valuable block in the cache overflow
-      // is. We don't want to replace any blocks in the main part of the
-      // cache whose expected time of next use is earlier or equal to that.
-      // If we allow that, we can effectively end up discarding overflowing
-      // blocks (by moving an overflowing block to the main part of the cache,
-      // and then overwriting it with another overflowing block), and we try
-      // to avoid that since it requires HTTP seeks.
-      // We also use this loop to eliminate overflowing blocks from
-      // freeBlockCount.
-      for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
-           --blockIndex) {
-        if (IsBlockFree(blockIndex)) {
-          // Don't count overflowing free blocks in our free block count
-          --freeBlockCount;
-          continue;
-        }
-        TimeDuration predictedUse = PredictNextUse(now, blockIndex);
-        latestPredictedUseForOverflow = std::max(latestPredictedUseForOverflow, predictedUse);
-      }
-    } else {
-      freeBlockCount += maxBlocks - mIndex.Length();
-    }
-
-    // Now try to move overflowing blocks to the main part of the cache.
+  int32_t freeBlockCount = mFreeBlocks.GetCount();
+  TimeDuration latestPredictedUseForOverflow = 0;
+  if (mIndex.Length() > uint32_t(maxBlocks)) {
+    // Try to trim back the cache to its desired maximum size. The cache may
+    // have overflowed simply due to data being received when we have
+    // no blocks in the main part of the cache that are free or lower
+    // priority than the new data. The cache can also be overflowing because
+    // the media.cache_size preference was reduced.
+    // First, figure out what the least valuable block in the cache overflow
+    // is. We don't want to replace any blocks in the main part of the
+    // cache whose expected time of next use is earlier or equal to that.
+    // If we allow that, we can effectively end up discarding overflowing
+    // blocks (by moving an overflowing block to the main part of the cache,
+    // and then overwriting it with another overflowing block), and we try
+    // to avoid that since it requires HTTP seeks.
+    // We also use this loop to eliminate overflowing blocks from
+    // freeBlockCount.
     for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
          --blockIndex) {
-      if (IsBlockFree(blockIndex))
-        continue;
-
-      Block* block = &mIndex[blockIndex];
-      // Try to relocate the block close to other blocks for the first stream.
-      // There is no point in trying to make it close to other blocks in
-      // *all* the streams it might belong to.
-      int32_t destinationBlockIndex =
-        FindReusableBlock(now, block->mOwners[0].mStream,
-                          block->mOwners[0].mStreamBlock, maxBlocks);
-      if (destinationBlockIndex < 0) {
-        // Nowhere to place this overflow block. We won't be able to
-        // place any more overflow blocks.
-        break;
-      }
-
-      if (IsBlockFree(destinationBlockIndex) ||
-          PredictNextUse(now, destinationBlockIndex) > latestPredictedUseForOverflow) {
-        // Reuse blocks in the main part of the cache that are less useful than
-        // the least useful overflow blocks
-
-        nsresult rv = mBlockCache->MoveBlock(blockIndex, destinationBlockIndex);
-
-        if (NS_SUCCEEDED(rv)) {
-          // We successfully copied the file data.
-          LOG("Swapping blocks %d and %d (trimming cache)",
-              blockIndex, destinationBlockIndex);
-          // Swapping the block metadata here lets us maintain the
-          // correct positions in the linked lists
-          SwapBlocks(blockIndex, destinationBlockIndex);
-          //Free the overflowing block even if the copy failed.
-          LOG("Released block %d (trimming cache)", blockIndex);
-          FreeBlock(blockIndex);
-        }
-      } else {
-        LOG("Could not trim cache block %d (destination %d, "
-            "predicted next use %f, latest predicted use for overflow %f",
-            blockIndex, destinationBlockIndex,
-            PredictNextUse(now, destinationBlockIndex).ToSeconds(),
-            latestPredictedUseForOverflow.ToSeconds());
-      }
-    }
-    // Try chopping back the array of cache entries and the cache file.
-    Truncate();
-
-    // Count the blocks allocated for readahead of non-seekable streams
-    // (these blocks can't be freed but we don't want them to monopolize the
-    // cache)
-    int32_t nonSeekableReadaheadBlockCount = 0;
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      MediaCacheStream* stream = mStreams[i];
-      if (!stream->mIsTransportSeekable) {
-        nonSeekableReadaheadBlockCount += stream->mReadaheadBlocks.GetCount();
-      }
-    }
-
-    // If freeBlockCount is zero, then compute the latest of
-    // the predicted next-uses for all blocks
-    TimeDuration latestNextUse;
-    if (freeBlockCount == 0) {
-      int32_t reusableBlock = FindReusableBlock(now, nullptr, 0, maxBlocks);
-      if (reusableBlock >= 0) {
-        latestNextUse = PredictNextUse(now, reusableBlock);
-      }
-    }
-
-    int32_t resumeThreshold = Preferences::GetInt("media.cache_resume_threshold", 10);
-    int32_t readaheadLimit = Preferences::GetInt("media.cache_readahead_limit", 30);
-
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      actions.AppendElement(StreamAction{});
-
-      MediaCacheStream* stream = mStreams[i];
-      if (stream->mClosed) {
-        LOG("Stream %p closed", stream);
+      if (IsBlockFree(blockIndex)) {
+        // Don't count overflowing free blocks in our free block count
+        --freeBlockCount;
         continue;
       }
-
-      // Figure out where we should be reading from. It's the first
-      // uncached byte after the current mStreamOffset.
-      int64_t dataOffset = stream->GetCachedDataEndInternal(stream->mStreamOffset);
-      MOZ_ASSERT(dataOffset >= 0);
-
-      // Compute where we'd actually seek to to read at readOffset
-      int64_t desiredOffset = dataOffset;
-      if (stream->mIsTransportSeekable) {
-        if (desiredOffset > stream->mChannelOffset &&
-            desiredOffset <= stream->mChannelOffset + SEEK_VS_READ_THRESHOLD) {
-          // Assume it's more efficient to just keep reading up to the
-          // desired position instead of trying to seek
-          desiredOffset = stream->mChannelOffset;
-        }
-      } else {
-        // We can't seek directly to the desired offset...
-        if (stream->mChannelOffset > desiredOffset) {
-          // Reading forward won't get us anywhere, we need to go backwards.
-          // Seek back to 0 (the client will reopen the stream) and then
-          // read forward.
-          NS_WARNING("Can't seek backwards, so seeking to 0");
-          desiredOffset = 0;
-          // Flush cached blocks out, since if this is a live stream
-          // the cached data may be completely different next time we
-          // read it. We have to assume that live streams don't
-          // advertise themselves as being seekable...
-          ReleaseStreamBlocks(stream);
-        } else {
-          // otherwise reading forward is looking good, so just stay where we
-          // are and don't trigger a channel seek!
-          desiredOffset = stream->mChannelOffset;
-        }
-      }
-
-      // Figure out if we should be reading data now or not. It's amazing
-      // how complex this is, but each decision is simple enough.
-      bool enableReading;
-      if (stream->mStreamLength >= 0 && dataOffset >= stream->mStreamLength) {
-        // We want data at the end of the stream, where there's nothing to
-        // read. We don't want to try to read if we're suspended, because that
-        // might create a new channel and seek unnecessarily (and incorrectly,
-        // since HTTP doesn't allow seeking to the actual EOF), and we don't want
-        // to suspend if we're not suspended and already reading at the end of
-        // the stream, since there just might be more data than the server
-        // advertised with Content-Length, and we may as well keep reading.
-        // But we don't want to seek to the end of the stream if we're not
-        // already there.
-        LOG("Stream %p at end of stream", stream);
-        enableReading = !stream->mCacheSuspended &&
-          stream->mStreamLength == stream->mChannelOffset;
-      } else if (desiredOffset < stream->mStreamOffset) {
-        // We're reading to try to catch up to where the current stream
-        // reader wants to be. Better not stop.
-        LOG("Stream %p catching up", stream);
-        enableReading = true;
-      } else if (desiredOffset < stream->mStreamOffset + BLOCK_SIZE) {
-        // The stream reader is waiting for us, or nearly so. Better feed it.
-        LOG("Stream %p feeding reader", stream);
-        enableReading = true;
-      } else if (!stream->mIsTransportSeekable &&
-                 nonSeekableReadaheadBlockCount >= maxBlocks*NONSEEKABLE_READAHEAD_MAX) {
-        // This stream is not seekable and there are already too many blocks
-        // being cached for readahead for nonseekable streams (which we can't
-        // free). So stop reading ahead now.
-        LOG("Stream %p throttling non-seekable readahead", stream);
-        enableReading = false;
-      } else if (mIndex.Length() > uint32_t(maxBlocks)) {
-        // We're in the process of bringing the cache size back to the
-        // desired limit, so don't bring in more data yet
-        LOG("Stream %p throttling to reduce cache size", stream);
-        enableReading = false;
-      } else {
-        TimeDuration predictedNewDataUse = PredictNextUseForIncomingData(stream);
-
-        if (stream->mThrottleReadahead &&
-            stream->mCacheSuspended &&
-            predictedNewDataUse.ToSeconds() > resumeThreshold) {
-          // Don't need data for a while, so don't bother waking up the stream
-          LOG("Stream %p avoiding wakeup since more data is not needed", stream);
-          enableReading = false;
-        } else if (stream->mThrottleReadahead &&
-                   predictedNewDataUse.ToSeconds() > readaheadLimit) {
-          // Don't read ahead more than this much
-          LOG("Stream %p throttling to avoid reading ahead too far", stream);
-          enableReading = false;
-        } else if (freeBlockCount > 0) {
-          // Free blocks in the cache, so keep reading
-          LOG("Stream %p reading since there are free blocks", stream);
-          enableReading = true;
-        } else if (latestNextUse <= TimeDuration(0)) {
-          // No reusable blocks, so can't read anything
-          LOG("Stream %p throttling due to no reusable blocks", stream);
-          enableReading = false;
-        } else {
-          // Read ahead if the data we expect to read is more valuable than
-          // the least valuable block in the main part of the cache
-          LOG("Stream %p predict next data in %f, current worst block is %f",
-              stream, predictedNewDataUse.ToSeconds(), latestNextUse.ToSeconds());
-          enableReading = predictedNewDataUse < latestNextUse;
-        }
-      }
-
-      if (enableReading) {
-        for (uint32_t j = 0; j < i; ++j) {
-          MediaCacheStream* other = mStreams[j];
-          if (other->mResourceID == stream->mResourceID && !other->mClosed &&
-              !other->mClient->IsSuspended() &&
-              OffsetToBlockIndexUnchecked(other->mChannelOffset) ==
-                OffsetToBlockIndexUnchecked(desiredOffset)) {
-            // This block is already going to be read by the other stream.
-            // So don't try to read it from this stream as well.
-            enableReading = false;
-            LOG("Stream %p waiting on same block (%" PRId32 ") from stream %p",
-                stream,
-                OffsetToBlockIndexUnchecked(desiredOffset),
-                other);
-            break;
-          }
-        }
-      }
-
-      if (stream->mChannelOffset != desiredOffset && enableReading) {
-        // We need to seek now.
-        NS_ASSERTION(stream->mIsTransportSeekable || desiredOffset == 0,
-                     "Trying to seek in a non-seekable stream!");
-        // Round seek offset down to the start of the block. This is essential
-        // because we don't want to think we have part of a block already
-        // in mPartialBlockBuffer.
-        stream->mChannelOffset =
-          OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
-        actions[i].mTag = StreamAction::SEEK;
-        actions[i].mResume = stream->mCacheSuspended;
-        actions[i].mSeekTarget = stream->mChannelOffset;
-        // mChannelOffset is updated to a new position. We don't want data from
-        // the old channel to be written to the wrong position. 0 is a sentinel
-        // value which will not match any ID passed to NotifyDataReceived().
-        stream->mLoadID = 0;
-      } else if (enableReading && stream->mCacheSuspended) {
-        actions[i].mTag = StreamAction::RESUME;
-      } else if (!enableReading && !stream->mCacheSuspended) {
-        actions[i].mTag = StreamAction::SUSPEND;
-      }
+      TimeDuration predictedUse = PredictNextUse(now, blockIndex);
+      latestPredictedUseForOverflow = std::max(latestPredictedUseForOverflow, predictedUse);
     }
-#ifdef DEBUG
-    mInUpdate = false;
-#endif
+  } else {
+    freeBlockCount += maxBlocks - mIndex.Length();
   }
 
-  // Update the channel state without holding our cache lock. While we're
-  // doing this, decoder threads may be running and seeking, reading or changing
-  // other cache state. That's OK, they'll trigger new Update events and we'll
-  // get back here and revise our decisions. The important thing here is that
-  // performing these actions only depends on mChannelOffset and
-  // the action, which can only be written by the main thread (i.e., this
-  // thread), so we don't have races here.
+  // Now try to move overflowing blocks to the main part of the cache.
+  for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
+       --blockIndex) {
+    if (IsBlockFree(blockIndex))
+      continue;
+
+    Block* block = &mIndex[blockIndex];
+    // Try to relocate the block close to other blocks for the first stream.
+    // There is no point in trying to make it close to other blocks in
+    // *all* the streams it might belong to.
+    int32_t destinationBlockIndex =
+      FindReusableBlock(now, block->mOwners[0].mStream,
+                        block->mOwners[0].mStreamBlock, maxBlocks);
+    if (destinationBlockIndex < 0) {
+      // Nowhere to place this overflow block. We won't be able to
+      // place any more overflow blocks.
+      break;
+    }
+
+    if (IsBlockFree(destinationBlockIndex) ||
+        PredictNextUse(now, destinationBlockIndex) > latestPredictedUseForOverflow) {
+      // Reuse blocks in the main part of the cache that are less useful than
+      // the least useful overflow blocks
+
+      nsresult rv = mBlockCache->MoveBlock(blockIndex, destinationBlockIndex);
+
+      if (NS_SUCCEEDED(rv)) {
+        // We successfully copied the file data.
+        LOG("Swapping blocks %d and %d (trimming cache)",
+            blockIndex, destinationBlockIndex);
+        // Swapping the block metadata here lets us maintain the
+        // correct positions in the linked lists
+        SwapBlocks(blockIndex, destinationBlockIndex);
+        //Free the overflowing block even if the copy failed.
+        LOG("Released block %d (trimming cache)", blockIndex);
+        FreeBlock(blockIndex);
+      }
+    } else {
+      LOG("Could not trim cache block %d (destination %d, "
+          "predicted next use %f, latest predicted use for overflow %f",
+          blockIndex, destinationBlockIndex,
+          PredictNextUse(now, destinationBlockIndex).ToSeconds(),
+          latestPredictedUseForOverflow.ToSeconds());
+    }
+  }
+  // Try chopping back the array of cache entries and the cache file.
+  Truncate();
+
+  // Count the blocks allocated for readahead of non-seekable streams
+  // (these blocks can't be freed but we don't want them to monopolize the
+  // cache)
+  int32_t nonSeekableReadaheadBlockCount = 0;
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+    MediaCacheStream* stream = mStreams[i];
+    if (!stream->mIsTransportSeekable) {
+      nonSeekableReadaheadBlockCount += stream->mReadaheadBlocks.GetCount();
+    }
+  }
+
+  // If freeBlockCount is zero, then compute the latest of
+  // the predicted next-uses for all blocks
+  TimeDuration latestNextUse;
+  if (freeBlockCount == 0) {
+    int32_t reusableBlock = FindReusableBlock(now, nullptr, 0, maxBlocks);
+    if (reusableBlock >= 0) {
+      latestNextUse = PredictNextUse(now, reusableBlock);
+    }
+  }
+
+  int32_t resumeThreshold = Preferences::GetInt("media.cache_resume_threshold", 10);
+  int32_t readaheadLimit = Preferences::GetInt("media.cache_readahead_limit", 30);
+
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+    actions.AppendElement(StreamAction{});
+
+    MediaCacheStream* stream = mStreams[i];
+    if (stream->mClosed) {
+      LOG("Stream %p closed", stream);
+      continue;
+    }
+
+    // Figure out where we should be reading from. It's the first
+    // uncached byte after the current mStreamOffset.
+    int64_t dataOffset = stream->GetCachedDataEndInternal(stream->mStreamOffset);
+    MOZ_ASSERT(dataOffset >= 0);
+
+    // Compute where we'd actually seek to to read at readOffset
+    int64_t desiredOffset = dataOffset;
+    if (stream->mIsTransportSeekable) {
+      if (desiredOffset > stream->mChannelOffset &&
+          desiredOffset <= stream->mChannelOffset + SEEK_VS_READ_THRESHOLD) {
+        // Assume it's more efficient to just keep reading up to the
+        // desired position instead of trying to seek
+        desiredOffset = stream->mChannelOffset;
+      }
+    } else {
+      // We can't seek directly to the desired offset...
+      if (stream->mChannelOffset > desiredOffset) {
+        // Reading forward won't get us anywhere, we need to go backwards.
+        // Seek back to 0 (the client will reopen the stream) and then
+        // read forward.
+        NS_WARNING("Can't seek backwards, so seeking to 0");
+        desiredOffset = 0;
+        // Flush cached blocks out, since if this is a live stream
+        // the cached data may be completely different next time we
+        // read it. We have to assume that live streams don't
+        // advertise themselves as being seekable...
+        ReleaseStreamBlocks(stream);
+      } else {
+        // otherwise reading forward is looking good, so just stay where we
+        // are and don't trigger a channel seek!
+        desiredOffset = stream->mChannelOffset;
+      }
+    }
+
+    // Figure out if we should be reading data now or not. It's amazing
+    // how complex this is, but each decision is simple enough.
+    bool enableReading;
+    if (stream->mStreamLength >= 0 && dataOffset >= stream->mStreamLength) {
+      // We want data at the end of the stream, where there's nothing to
+      // read. We don't want to try to read if we're suspended, because that
+      // might create a new channel and seek unnecessarily (and incorrectly,
+      // since HTTP doesn't allow seeking to the actual EOF), and we don't want
+      // to suspend if we're not suspended and already reading at the end of
+      // the stream, since there just might be more data than the server
+      // advertised with Content-Length, and we may as well keep reading.
+      // But we don't want to seek to the end of the stream if we're not
+      // already there.
+      LOG("Stream %p at end of stream", stream);
+      enableReading = !stream->mCacheSuspended &&
+        stream->mStreamLength == stream->mChannelOffset;
+    } else if (desiredOffset < stream->mStreamOffset) {
+      // We're reading to try to catch up to where the current stream
+      // reader wants to be. Better not stop.
+      LOG("Stream %p catching up", stream);
+      enableReading = true;
+    } else if (desiredOffset < stream->mStreamOffset + BLOCK_SIZE) {
+      // The stream reader is waiting for us, or nearly so. Better feed it.
+      LOG("Stream %p feeding reader", stream);
+      enableReading = true;
+    } else if (!stream->mIsTransportSeekable &&
+               nonSeekableReadaheadBlockCount >= maxBlocks*NONSEEKABLE_READAHEAD_MAX) {
+      // This stream is not seekable and there are already too many blocks
+      // being cached for readahead for nonseekable streams (which we can't
+      // free). So stop reading ahead now.
+      LOG("Stream %p throttling non-seekable readahead", stream);
+      enableReading = false;
+    } else if (mIndex.Length() > uint32_t(maxBlocks)) {
+      // We're in the process of bringing the cache size back to the
+      // desired limit, so don't bring in more data yet
+      LOG("Stream %p throttling to reduce cache size", stream);
+      enableReading = false;
+    } else {
+      TimeDuration predictedNewDataUse = PredictNextUseForIncomingData(stream);
+
+      if (stream->mThrottleReadahead &&
+          stream->mCacheSuspended &&
+          predictedNewDataUse.ToSeconds() > resumeThreshold) {
+        // Don't need data for a while, so don't bother waking up the stream
+        LOG("Stream %p avoiding wakeup since more data is not needed", stream);
+        enableReading = false;
+      } else if (stream->mThrottleReadahead &&
+                 predictedNewDataUse.ToSeconds() > readaheadLimit) {
+        // Don't read ahead more than this much
+        LOG("Stream %p throttling to avoid reading ahead too far", stream);
+        enableReading = false;
+      } else if (freeBlockCount > 0) {
+        // Free blocks in the cache, so keep reading
+        LOG("Stream %p reading since there are free blocks", stream);
+        enableReading = true;
+      } else if (latestNextUse <= TimeDuration(0)) {
+        // No reusable blocks, so can't read anything
+        LOG("Stream %p throttling due to no reusable blocks", stream);
+        enableReading = false;
+      } else {
+        // Read ahead if the data we expect to read is more valuable than
+        // the least valuable block in the main part of the cache
+        LOG("Stream %p predict next data in %f, current worst block is %f",
+            stream, predictedNewDataUse.ToSeconds(), latestNextUse.ToSeconds());
+        enableReading = predictedNewDataUse < latestNextUse;
+      }
+    }
+
+    if (enableReading) {
+      for (uint32_t j = 0; j < i; ++j) {
+        MediaCacheStream* other = mStreams[j];
+        if (other->mResourceID == stream->mResourceID && !other->mClosed &&
+            !other->mClient->IsSuspended() &&
+            OffsetToBlockIndexUnchecked(other->mChannelOffset) ==
+              OffsetToBlockIndexUnchecked(desiredOffset)) {
+          // This block is already going to be read by the other stream.
+          // So don't try to read it from this stream as well.
+          enableReading = false;
+          LOG("Stream %p waiting on same block (%" PRId32 ") from stream %p",
+              stream,
+              OffsetToBlockIndexUnchecked(desiredOffset),
+              other);
+          break;
+        }
+      }
+    }
+
+    if (stream->mChannelOffset != desiredOffset && enableReading) {
+      // We need to seek now.
+      NS_ASSERTION(stream->mIsTransportSeekable || desiredOffset == 0,
+                   "Trying to seek in a non-seekable stream!");
+      // Round seek offset down to the start of the block. This is essential
+      // because we don't want to think we have part of a block already
+      // in mPartialBlockBuffer.
+      stream->mChannelOffset =
+        OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
+      actions[i].mTag = StreamAction::SEEK;
+      actions[i].mResume = stream->mCacheSuspended;
+      actions[i].mSeekTarget = stream->mChannelOffset;
+      // mChannelOffset is updated to a new position. We don't want data from
+      // the old channel to be written to the wrong position. 0 is a sentinel
+      // value which will not match any ID passed to NotifyDataReceived().
+      stream->mLoadID = 0;
+    } else if (enableReading && stream->mCacheSuspended) {
+      actions[i].mTag = StreamAction::RESUME;
+    } else if (!enableReading && !stream->mCacheSuspended) {
+      actions[i].mTag = StreamAction::SUSPEND;
+    }
+  }
+#ifdef DEBUG
+  mInUpdate = false;
+#endif
 
   // First, update the mCacheSuspended/mCacheEnded flags so that they're all correct
   // when we fire our CacheClient commands below. Those commands can rely on these flags
