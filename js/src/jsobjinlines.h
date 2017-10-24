@@ -449,12 +449,6 @@ JSObject::isBoundFunction() const
 }
 
 inline bool
-JSObject::watched() const
-{
-    return hasAllFlags(js::BaseShape::WATCHED);
-}
-
-inline bool
 JSObject::isDelegate() const
 {
     return hasAllFlags(js::BaseShape::DELEGATE);

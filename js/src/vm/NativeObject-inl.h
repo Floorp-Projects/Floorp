@@ -322,11 +322,11 @@ NativeObject::extendDenseElements(JSContext* cx,
     MOZ_ASSERT(!denseElementsAreFrozen());
 
     /*
-     * Don't grow elements for non-extensible objects or watched objects. Dense
-     * elements can be added/written with no extensible or watchpoint checks as
-     * long as there is capacity for them.
+     * Don't grow elements for non-extensible objects. Dense elements can be
+     * added/written with no extensible checks as long as there is capacity
+     * for them.
      */
-    if (!nonProxyIsExtensible() || watched()) {
+    if (!nonProxyIsExtensible()) {
         MOZ_ASSERT(getDenseCapacity() == 0);
         return DenseElementResult::Incomplete;
     }

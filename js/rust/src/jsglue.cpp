@@ -90,8 +90,6 @@ struct ProxyTraps {
     bool (*isCallable)(JSObject *obj);
     bool (*isConstructor)(JSObject *obj);
 
-    // watch
-    // unwatch
     // getElements
 
     // weakmapKeyDelegate

@@ -33,7 +33,6 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jswatchpoint.h"
 #include "jswin.h"
 #include "jswrapper.h"
 
@@ -1083,13 +1082,7 @@ js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTa
 JSObject::nonNativeSetProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
                                HandleValue receiver, ObjectOpResult& result)
 {
-    RootedValue value(cx, v);
-    if (MOZ_UNLIKELY(obj->watched())) {
-        WatchpointMap* wpmap = cx->compartment()->watchpointMap;
-        if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, &value))
-            return false;
-    }
-    return obj->getOpsSetProperty()(cx, obj, id, value, receiver, result);
+    return obj->getOpsSetProperty()(cx, obj, id, v, receiver, result);
 }
 
 /* static */ bool
@@ -2996,62 +2989,6 @@ js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     return true;
 }
 
-bool
-js::WatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
-{
-    RootedObject obj(cx, ToWindowIfWindowProxy(origObj));
-    if (obj->isNative()) {
-        // Use sparse indexes for watched objects, as dense elements can be
-        // written to without checking the watchpoint map.
-        if (!NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
-            return false;
-
-        MarkTypePropertyNonData(cx, obj, id);
-    }
-
-    WatchpointMap* wpmap = cx->compartment()->watchpointMap;
-    if (!wpmap) {
-        wpmap = cx->zone()->new_<WatchpointMap>();
-        if (!wpmap || !wpmap->init()) {
-            ReportOutOfMemory(cx);
-            js_delete(wpmap);
-            return false;
-        }
-        cx->compartment()->watchpointMap = wpmap;
-    }
-
-    return wpmap->watch(cx, obj, id, js::WatchHandler, callable);
-}
-
-bool
-js::UnwatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id)
-{
-    // Looking in the map for an unsupported object will never hit, so we don't
-    // need to check for nativeness or watchable-ness here.
-    RootedObject obj(cx, ToWindowIfWindowProxy(origObj));
-    if (WatchpointMap* wpmap = cx->compartment()->watchpointMap)
-        wpmap->unwatch(obj, id);
-    return true;
-}
-
-bool
-js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable)
-{
-    if (!obj->isNative() || obj->is<TypedArrayObject>()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                                  obj->getClass()->name);
-        return false;
-    }
-
-    return WatchGuts(cx, obj, id, callable);
-}
-
-bool
-js::UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id)
-{
-    return UnwatchGuts(cx, obj, id);
-}
-
 /* * */
 
 extern bool
@@ -3622,7 +3559,6 @@ JSObject::dump(js::GenericPrinter& out) const
     if (obj->isBoundFunction()) out.put(" bound_function");
     if (obj->isQualifiedVarObj()) out.put(" varobj");
     if (obj->isUnqualifiedVarObj()) out.put(" unqualified_varobj");
-    if (obj->watched()) out.put(" watched");
     if (obj->isIteratedSingleton()) out.put(" iterated_singleton");
     if (obj->isNewGroupUnknown()) out.put(" new_type_unknown");
     if (obj->hasUncacheableProto()) out.put(" has_uncacheable_proto");
