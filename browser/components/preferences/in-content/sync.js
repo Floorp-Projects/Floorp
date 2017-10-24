@@ -153,6 +153,10 @@ var gSyncPane = {
       document.getElementById("verifiedManage").setAttribute("href", accountsManageURI);
     });
 
+    fxAccounts.promiseAccountsSignUpURI(this._getEntryPoint()).then(signUpURI => {
+      document.getElementById("noFxaSignUp").setAttribute("href", signUpURI);
+    });
+
     this.updateWeavePrefs();
 
     // Notify observers that the UI is now ready
@@ -355,17 +359,6 @@ var gSyncPane = {
     return params.get("entrypoint") || "preferences";
   },
 
-  _openAboutAccounts(action) {
-    let entryPoint = this._getEntryPoint();
-    let params = new URLSearchParams();
-    if (action) {
-      params.set("action", action);
-    }
-    params.set("entrypoint", entryPoint);
-
-    this.replaceTabWithUrl("about:accounts?" + params);
-  },
-
   openContentInBrowser(url, options) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
@@ -386,16 +379,14 @@ var gSyncPane = {
     browser.loadURI(url);
   },
 
-  signUp() {
-    this._openAboutAccounts("signup");
+  async signIn() {
+    const url = await fxAccounts.promiseAccountsSignInURI(this._getEntryPoint());
+    this.replaceTabWithUrl(url);
   },
 
-  signIn() {
-    this._openAboutAccounts("signin");
-  },
-
-  reSignIn() {
-    this._openAboutAccounts("reauth");
+  async reSignIn() {
+    const url = await fxAccounts.promiseAccountsForceSigninURI(this._getEntryPoint());
+    this.replaceTabWithUrl(url);
   },
 
 
