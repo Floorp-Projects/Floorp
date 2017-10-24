@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -21,16 +21,16 @@ const UPDATED_TRANSFERRED_PROPS = [
   "fromServiceWorker",
 ];
 
-const RequestListColumnTransferredSize = createClass({
-  displayName: "RequestListColumnTransferredSize",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnTransferredSize extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_TRANSFERRED_PROPS, this.props.item, nextProps.item);
-  },
+  }
 
   render() {
     let { fromCache, fromServiceWorker, status, transferredSize } = this.props.item;
@@ -52,6 +52,6 @@ const RequestListColumnTransferredSize = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnTransferredSize;

@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,18 +13,18 @@ const { getFormattedTime } = require("../utils/format-utils");
 
 const { div } = DOM;
 
-const RequestListColumnLatency = createClass({
-  displayName: "RequestListColumnLatency",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnLatency extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     let { eventTimings: currEventTimings = { timings: {} } } = this.props.item;
     let { eventTimings: nextEventTimings = { timings: {} } } = nextProps.item;
     return currEventTimings.timings.wait !== nextEventTimings.timings.wait;
-  },
+  }
 
   render() {
     let { eventTimings = { timings: {} } } = this.props.item;
@@ -39,6 +39,6 @@ const RequestListColumnLatency = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnLatency;

@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -39,23 +39,23 @@ const SECTION_NAMES = [
  * Params panel component
  * Displays the GET parameters and POST data of a request
  */
-const ParamsPanel = createClass({
-  displayName: "ParamsPanel",
-
-  propTypes: {
-    connector: PropTypes.object.isRequired,
-    openLink: PropTypes.func,
-    request: PropTypes.object.isRequired,
-    updateRequest: PropTypes.func.isRequired,
-  },
+class ParamsPanel extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      openLink: PropTypes.func,
+      request: PropTypes.object.isRequired,
+      updateRequest: PropTypes.func.isRequired,
+    };
+  }
 
   componentDidMount() {
     updateFormDataSections(this.props);
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     updateFormDataSections(nextProps);
-  },
+  }
 
   render() {
     let {
@@ -124,7 +124,7 @@ const ParamsPanel = createClass({
       )
     );
   }
-});
+}
 
 /**
  * Mapping array to dict for TreeView usage.

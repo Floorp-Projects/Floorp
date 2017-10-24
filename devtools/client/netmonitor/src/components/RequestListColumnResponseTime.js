@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -14,17 +14,17 @@ const { getResponseTime } = require("../utils/request-utils");
 
 const { div } = DOM;
 
-const RequestListColumnResponseTime = createClass({
-  displayName: "RequestListColumnResponseTime",
-
-  propTypes: {
-    firstRequestStartedMillis: PropTypes.number.isRequired,
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnResponseTime extends Component {
+  static get propTypes() {
+    return {
+      firstRequestStartedMillis: PropTypes.number.isRequired,
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return getResponseTime(this.props.item) !== getResponseTime(nextProps.item);
-  },
+  }
 
   render() {
     let { firstRequestStartedMillis, item } = this.props;
@@ -40,6 +40,6 @@ const RequestListColumnResponseTime = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnResponseTime;

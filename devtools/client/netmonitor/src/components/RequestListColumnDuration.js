@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,16 +13,16 @@ const { getFormattedTime } = require("../utils/format-utils");
 
 const { div } = DOM;
 
-const RequestListColumnDuration = createClass({
-  displayName: "RequestListColumnDuration",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnDuration extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.totalTime !== nextProps.item.totalTime;
-  },
+  }
 
   render() {
     let { totalTime } = this.props.item;
@@ -36,6 +36,6 @@ const RequestListColumnDuration = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnDuration;

@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -17,15 +17,15 @@ const { div } = DOM;
 /**
  * CodeMirror editor as a React component
  */
-const SourceEditor = createClass({
-  displayName: "SourceEditor",
-
-  propTypes: {
-    // Source editor syntax hightligh mode, which is a mime type defined in CodeMirror
-    mode: PropTypes.string,
-    // Source editor content
-    text: PropTypes.string,
-  },
+class SourceEditor extends Component {
+  static get propTypes() {
+    return {
+      // Source editor syntax hightligh mode, which is a mime type defined in CodeMirror
+      mode: PropTypes.string,
+      // Source editor content
+      text: PropTypes.string,
+    };
+  }
 
   componentDidMount() {
     const { mode, text } = this.props;
@@ -43,7 +43,7 @@ const SourceEditor = createClass({
     this.editorTimeout = setTimeout(() => {
       this.editor.appendToLocalElement(this.refs.editorElement);
     });
-  },
+  }
 
   componentDidUpdate(prevProps) {
     const { mode, text } = this.props;
@@ -56,12 +56,12 @@ const SourceEditor = createClass({
     if (prevProps.text !== text) {
       this.editor.setText(text);
     }
-  },
+  }
 
   componentWillUnmount() {
     clearTimeout(this.editorTimeout);
     this.editor.destroy();
-  },
+  }
 
   render() {
     return (
@@ -71,6 +71,6 @@ const SourceEditor = createClass({
       })
     );
   }
-});
+}
 
 module.exports = SourceEditor;

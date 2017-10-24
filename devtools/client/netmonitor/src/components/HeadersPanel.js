@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -49,21 +49,28 @@ const SUMMARY_VERSION = L10N.getStr("netmonitor.summary.version");
  * Headers panel component
  * Lists basic information about the request
  */
-const HeadersPanel = createClass({
-  displayName: "HeadersPanel",
-
-  propTypes: {
-    cloneSelectedRequest: PropTypes.func.isRequired,
-    request: PropTypes.object.isRequired,
-    renderValue: PropTypes.func,
-    openLink: PropTypes.func,
-  },
-
-  getInitialState() {
+class HeadersPanel extends Component {
+  static get propTypes() {
     return {
+      cloneSelectedRequest: PropTypes.func.isRequired,
+      request: PropTypes.object.isRequired,
+      renderValue: PropTypes.func,
+      openLink: PropTypes.func,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       rawHeadersOpened: false,
     };
-  },
+
+    this.getProperties = this.getProperties.bind(this);
+    this.toggleRawHeaders = this.toggleRawHeaders.bind(this);
+    this.renderSummary = this.renderSummary.bind(this);
+    this.renderValue = this.renderValue.bind(this);
+  }
 
   getProperties(headers, title) {
     if (headers && headers.headers.length) {
@@ -80,13 +87,13 @@ const HeadersPanel = createClass({
     }
 
     return null;
-  },
+  }
 
   toggleRawHeaders() {
     this.setState({
       rawHeadersOpened: !this.state.rawHeadersOpened,
     });
-  },
+  }
 
   renderSummary(label, value) {
     return (
@@ -101,7 +108,7 @@ const HeadersPanel = createClass({
         }),
       )
     );
-  },
+  }
 
   renderValue(props) {
     const member = props.member;
@@ -127,7 +134,7 @@ const HeadersPanel = createClass({
         }) : null
       )
     );
-  },
+  }
 
   render() {
     const {
@@ -273,6 +280,6 @@ const HeadersPanel = createClass({
       )
     );
   }
-});
+}
 
 module.exports = HeadersPanel;

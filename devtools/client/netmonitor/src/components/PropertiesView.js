@@ -7,7 +7,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -40,20 +40,20 @@ const EDITOR_CONFIG_ID = "EDITOR_CONFIG";
  * Source editor - Enable by specifying object level 1 property name to EDITOR_CONFIG_ID.
  * Rep - Default enabled.
  */
-const PropertiesView = createClass({
-  displayName: "PropertiesView",
+class PropertiesView extends Component {
+  static get propTypes() {
+    return {
+      object: PropTypes.object,
+      enableInput: PropTypes.bool,
+      expandableStrings: PropTypes.bool,
+      filterPlaceHolder: PropTypes.string,
+      sectionNames: PropTypes.array,
+      openLink: PropTypes.func,
+      cropLimit: PropTypes.number
+    };
+  }
 
-  propTypes: {
-    object: PropTypes.object,
-    enableInput: PropTypes.bool,
-    expandableStrings: PropTypes.bool,
-    filterPlaceHolder: PropTypes.string,
-    sectionNames: PropTypes.array,
-    openLink: PropTypes.func,
-    cropLimit: PropTypes.number
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       enableInput: true,
       enableFilter: true,
@@ -62,17 +62,26 @@ const PropertiesView = createClass({
       sectionNames: [],
       cropLimit: 1024
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       filterText: "",
     };
-  },
+
+    this.getRowClass = this.getRowClass.bind(this);
+    this.onFilter = this.onFilter.bind(this);
+    this.renderRowWithEditor = this.renderRowWithEditor.bind(this);
+    this.renderValueWithRep = this.renderValueWithRep.bind(this);
+    this.shouldRenderSearchBox = this.shouldRenderSearchBox.bind(this);
+    this.updateFilterText = this.updateFilterText.bind(this);
+  }
 
   getRowClass(object, sectionNames) {
     return sectionNames.includes(object.name) ? "tree-section" : "";
-  },
+  }
 
   onFilter(object, whiteList) {
     let { name, value } = object;
@@ -84,7 +93,7 @@ const PropertiesView = createClass({
 
     let jsonString = JSON.stringify({ [name]: value }).toLowerCase();
     return jsonString.includes(filterText.toLowerCase());
-  },
+  }
 
   renderRowWithEditor(props) {
     const { level, name, value, path } = props.member;
@@ -106,7 +115,7 @@ const PropertiesView = createClass({
     }
 
     return TreeRow(props);
-  },
+  }
 
   renderValueWithRep(props) {
     const { member } = props;
@@ -128,18 +137,18 @@ const PropertiesView = createClass({
       mode: MODE.TINY,
       cropLimit: this.props.cropLimit,
     }));
-  },
+  }
 
   shouldRenderSearchBox(object) {
     return this.props.enableFilter && object && Object.keys(object)
       .filter((section) => !object[section][EDITOR_CONFIG_ID]).length > 0;
-  },
+  }
 
   updateFilterText(filterText) {
     this.setState({
       filterText,
     });
-  },
+  }
 
   render() {
     const {
@@ -191,6 +200,6 @@ const PropertiesView = createClass({
       )
     );
   }
-});
+}
 
 module.exports = PropertiesView;

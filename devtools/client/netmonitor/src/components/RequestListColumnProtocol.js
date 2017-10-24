@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,17 +13,17 @@ const { getFormattedProtocol } = require("../utils/request-utils");
 
 const { div } = DOM;
 
-const RequestListColumnProtocol = createClass({
-  displayName: "RequestListColumnProtocol",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnProtocol extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return getFormattedProtocol(this.props.item) !==
       getFormattedProtocol(nextProps.item);
-  },
+  }
 
   render() {
     let protocol = getFormattedProtocol(this.props.item);
@@ -37,6 +37,6 @@ const RequestListColumnProtocol = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnProtocol;
