@@ -268,6 +268,15 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         head_rev=env['GECKO_HEAD_REV'],
         path='.\\build\\src')
 
+    if run['comm-checkout']:
+        hg_commands.extend(
+            checkout_repo(
+                base_repo=env['COMM_BASE_REPOSITORY'],
+                head_repo=env['COMM_HEAD_REPOSITORY'],
+                head_rev=env['COMM_HEAD_REV'],
+                path='.\\build\\src\\comm')
+        )
+
     worker['command'] = []
     if taskdesc.get('needs-sccache'):
         worker['command'].extend([
