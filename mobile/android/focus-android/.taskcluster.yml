@@ -30,7 +30,7 @@ tasks:
       command:
         - /bin/bash
         - '--login'
-        - '-c'
+        - '-cx'
         - >-
           git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
           && git config advice.detachedHead false
@@ -71,7 +71,7 @@ tasks:
       command:
         - /bin/bash
         - '--login'
-        - '-c'
+        - '-cx'
         - >-
           git fetch origin
           && git config advice.detachedHead false
@@ -111,7 +111,7 @@ tasks:
       command:
         - /bin/bash
         - '--login'
-        - '-c'
+        - '-cx'
         - >-
           git fetch origin --tags
           && git config advice.detachedHead false
