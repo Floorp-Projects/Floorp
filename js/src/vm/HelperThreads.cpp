@@ -2144,6 +2144,20 @@ js::StartOffThreadPromiseHelperTask(JSContext* cx, UniquePtr<PromiseHelperTask> 
     return true;
 }
 
+bool
+js::StartOffThreadPromiseHelperTask(PromiseHelperTask* task)
+{
+    MOZ_ASSERT(CanUseExtraThreads());
+
+    AutoLockHelperThreadState lock;
+
+    if (!HelperThreadState().promiseHelperTasks(lock).append(task))
+        return false;
+
+    HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
+    return true;
+}
+
 void
 GlobalHelperThreadState::trace(JSTracer* trc)
 {

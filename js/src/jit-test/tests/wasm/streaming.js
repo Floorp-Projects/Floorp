@@ -1,3 +1,10 @@
+try {
+    WebAssembly.compileStreaming();
+} catch (err) {
+    assertEq(String(err).indexOf("not supported with --no-threads") !== -1, true);
+    quit();
+}
+
 function testInstantiate(source, importObj, exportName, expectedValue) {
     var result;
     WebAssembly.instantiateStreaming(code, importObj).then(r => { result = r });
@@ -80,3 +87,10 @@ drainJobQueue();
 assertEq(results.length === 10, true);
 for (var i = 0; i < 10; i++)
     assertEq(results[i].instance.exports.run(), 5050);
+
+// No code section, but data section:
+var code = wasmTextToBinary('(module (memory (import "js" "mem") 1) (data (i32.const 0) "a"))');
+var mem = new WebAssembly.Memory({initial:1});
+WebAssembly.instantiateStreaming(code, {js:{mem}});
+drainJobQueue();
+assertEq(new Uint8Array(mem.buffer)[0], 97);

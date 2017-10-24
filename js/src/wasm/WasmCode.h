@@ -41,6 +41,8 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
 {
     // Vector is 'final', so instead make Vector a member and add boilerplate.
     Bytes bytes;
+    ShareableBytes() = default;
+    explicit ShareableBytes(Bytes&& bytes) : bytes(Move(bytes)) {}
     size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
     const uint8_t* begin() const { return bytes.begin(); }
     const uint8_t* end() const { return bytes.end(); }
