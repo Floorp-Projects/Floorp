@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 
 #include "jsfriendapi.h"
-#include "jsgc.h"
 
 #include "gc/AtomMarking.h"
 #include "gc/GCMarker.h"
@@ -20,6 +19,7 @@
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Tracer.h"
+#include "gc/GCParallelTask.h"
 #include "js/GCAnnotations.h"
 #include "js/UniquePtr.h"
 
