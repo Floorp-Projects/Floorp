@@ -33,6 +33,30 @@ public:
   ~ScrollingLayersHelper();
 
 private:
+  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  DefineClipChain(nsDisplayItem* aItem,
+                  const ActiveScrolledRoot* aAsr,
+                  const DisplayItemClipChain* aChain,
+                  int32_t aAppUnitsPerDevPixel,
+                  const StackingContextHelper& aStackingContext,
+                  WebRenderCommandBuilder::ClipIdMap& aCache);
+
+  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  RecurseAndDefineClip(nsDisplayItem* aItem,
+                       const ActiveScrolledRoot* aAsr,
+                       const DisplayItemClipChain* aChain,
+                       int32_t aAppUnitsPerDevPixel,
+                       const StackingContextHelper& aSc,
+                       WebRenderCommandBuilder::ClipIdMap& aCache);
+
+  std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
+  RecurseAndDefineAsr(nsDisplayItem* aItem,
+                      const ActiveScrolledRoot* aAsr,
+                      const DisplayItemClipChain* aChain,
+                      int32_t aAppUnitsPerDevPixel,
+                      const StackingContextHelper& aSc,
+                      WebRenderCommandBuilder::ClipIdMap& aCache);
+
   void DefineAndPushScrollLayers(nsDisplayItem* aItem,
                                  const ActiveScrolledRoot* aAsr,
                                  const DisplayItemClipChain* aChain,
