@@ -485,20 +485,25 @@ StrEscape(const char* aOriginal, nsCString& aResult)
 // Each set returns PREF_VALUECHANGED if the user value changed (triggering a
 // callback), or PREF_NOERROR if the value was unchanged.
 static nsresult
-PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
+PREF_SetCStringPref(const char* aPrefName,
+                    const nsACString& aValue,
+                    bool aSetDefault)
 {
-  if (strlen(aValue) > MAX_PREF_LENGTH) {
+  if (aValue.Length() > MAX_PREF_LENGTH) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  // It's ok to stash a pointer to the temporary PromiseFlatCString's chars in
+  // pref because pref_HashPref() duplicates those chars.
   PrefValue pref;
-  pref.mStringVal = const_cast<char*>(aValue);
+  const nsCString& flat = PromiseFlatCString(aValue);
+  pref.mStringVal = const_cast<char*>(flat.get());
 
   return pref_HashPref(
     aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
 }
 
-// Like PREF_SetCharPref(), but for integers.
+// Like PREF_SetCStringPref(), but for integers.
 static nsresult
 PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
 {
@@ -509,7 +514,7 @@ PREF_SetIntPref(const char* aPrefName, int32_t aValue, bool aSetDefault)
     aPrefName, pref, PrefType::Int, aSetDefault ? kPrefSetDefault : 0);
 }
 
-// Like PREF_SetCharPref(), but for booleans.
+// Like PREF_SetCStringPref(), but for booleans.
 static nsresult
 PREF_SetBoolPref(const char* aPrefName, bool aValue, bool aSetDefault)
 {
@@ -535,8 +540,7 @@ SetPrefValue(const char* aPrefName,
 
   switch (aValue.type()) {
     case dom::PrefValue::TnsCString:
-      return PREF_SetCharPref(
-        aPrefName, aValue.get_nsCString().get(), setDefault);
+      return PREF_SetCStringPref(aPrefName, aValue.get_nsCString(), setDefault);
 
     case dom::PrefValue::Tint32_t:
       return PREF_SetIntPref(aPrefName, aValue.get_int32_t(), setDefault);
@@ -718,9 +722,10 @@ PREF_HasUserPref(const char* aPrefName)
   return pref && pref->mPrefFlags.HasUserValue();
 }
 
-// This function allocates memory and the caller is responsible for freeing it.
 static nsresult
-PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
+PREF_GetCStringPref(const char* aPrefName,
+                    nsACString& aValueOut,
+                    bool aGetDefault)
 {
   if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -739,7 +744,7 @@ PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
     }
 
     if (stringVal) {
-      *aValueOut = moz_xstrdup(stringVal);
+      aValueOut = stringVal;
       rv = NS_OK;
     }
   }
@@ -2233,14 +2238,13 @@ protected:
                                         nsAString& aReturn);
 
   // As SetCharPref, but without any check on the length of |aValue|.
-  nsresult SetCharPrefInternal(const char* aPrefName, const char* aValue);
+  nsresult SetCharPrefInternal(const char* aPrefName, const nsACString& aValue);
 
   // Reject strings that are more than 1Mb, warn if strings are more than 16kb.
   nsresult CheckSanityOfStringLength(const char* aPrefName,
                                      const nsAString& aValue);
   nsresult CheckSanityOfStringLength(const char* aPrefName,
                                      const nsACString& aValue);
-  nsresult CheckSanityOfStringLength(const char* aPrefName, const char* aValue);
   nsresult CheckSanityOfStringLength(const char* aPrefName,
                                      const uint32_t aLength);
 
@@ -2333,11 +2337,9 @@ NS_INTERFACE_MAP_BEGIN(nsPrefBranch)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsPrefBranch::GetRoot(char** aRoot)
+nsPrefBranch::GetRoot(nsACString& aRoot)
 {
-  NS_ENSURE_ARG_POINTER(aRoot);
-
-  *aRoot = ToNewCString(mPrefRoot);
+  aRoot = mPrefRoot;
   return NS_OK;
 }
 
@@ -2423,7 +2425,7 @@ nsPrefBranch::GetFloatPref(const char* aPrefName, float* aRetVal)
   NS_ENSURE_ARG(aPrefName);
 
   nsAutoCString stringVal;
-  nsresult rv = GetCharPref(aPrefName, getter_Copies(stringVal));
+  nsresult rv = GetCharPref(aPrefName, stringVal);
   if (NS_SUCCEEDED(rv)) {
     *aRetVal = stringVal.ToFloat(&rv);
   }
@@ -2433,15 +2435,14 @@ nsPrefBranch::GetFloatPref(const char* aPrefName, float* aRetVal)
 
 NS_IMETHODIMP
 nsPrefBranch::GetCharPrefWithDefault(const char* aPrefName,
-                                     const char* aDefaultValue,
+                                     const nsACString& aDefaultValue,
                                      uint8_t aArgc,
-                                     char** aRetVal)
+                                     nsACString& aRetVal)
 {
   nsresult rv = GetCharPref(aPrefName, aRetVal);
 
   if (NS_FAILED(rv) && aArgc == 1) {
-    NS_ENSURE_ARG(aDefaultValue);
-    *aRetVal = moz_xstrdup(aDefaultValue);
+    aRetVal = aDefaultValue;
     return NS_OK;
   }
 
@@ -2449,15 +2450,15 @@ nsPrefBranch::GetCharPrefWithDefault(const char* aPrefName,
 }
 
 NS_IMETHODIMP
-nsPrefBranch::GetCharPref(const char* aPrefName, char** aRetVal)
+nsPrefBranch::GetCharPref(const char* aPrefName, nsACString& aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_CopyCharPref(pref.get(), aRetVal, mIsDefault);
+  return PREF_GetCStringPref(pref.get(), aRetVal, mIsDefault);
 }
 
 NS_IMETHODIMP
-nsPrefBranch::SetCharPref(const char* aPrefName, const char* aValue)
+nsPrefBranch::SetCharPref(const char* aPrefName, const nsACString& aValue)
 {
   nsresult rv = CheckSanityOfStringLength(aPrefName, aValue);
   if (NS_FAILED(rv)) {
@@ -2467,15 +2468,14 @@ nsPrefBranch::SetCharPref(const char* aPrefName, const char* aValue)
 }
 
 nsresult
-nsPrefBranch::SetCharPrefInternal(const char* aPrefName, const char* aValue)
-
+nsPrefBranch::SetCharPrefInternal(const char* aPrefName,
+                                  const nsACString& aValue)
 {
   ENSURE_MAIN_PROCESS("SetCharPref", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  NS_ENSURE_ARG(aValue);
 
   const PrefName& pref = GetPrefName(aPrefName);
-  return PREF_SetCharPref(pref.get(), aValue, mIsDefault);
+  return PREF_SetCStringPref(pref.get(), aValue, mIsDefault);
 }
 
 NS_IMETHODIMP
@@ -2485,7 +2485,7 @@ nsPrefBranch::GetStringPref(const char* aPrefName,
                             nsACString& aRetVal)
 {
   nsCString utf8String;
-  nsresult rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+  nsresult rv = GetCharPref(aPrefName, utf8String);
   if (NS_SUCCEEDED(rv)) {
     aRetVal = utf8String;
     return rv;
@@ -2507,7 +2507,7 @@ nsPrefBranch::SetStringPref(const char* aPrefName, const nsACString& aValue)
     return rv;
   }
 
-  return SetCharPrefInternal(aPrefName, PromiseFlatCString(aValue).get());
+  return SetCharPrefInternal(aPrefName, aValue);
 }
 
 NS_IMETHODIMP
@@ -2551,7 +2551,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   NS_ENSURE_ARG(aPrefName);
 
   nsresult rv;
-  nsCString utf8String;
+  nsAutoCString utf8String;
 
   // we have to do this one first because it's different than all the rest
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
@@ -2582,7 +2582,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
         theString->SetData(utf16String);
       }
     } else {
-      rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+      rv = GetCharPref(aPrefName, utf8String);
       if (NS_SUCCEEDED(rv)) {
         theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
       }
@@ -2596,7 +2596,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
   }
 
   // if we can't get the pref, there's no point in being here
-  rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+  rv = GetCharPref(aPrefName, utf8String);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2708,16 +2708,6 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
 
 nsresult
 nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName,
-                                        const char* aValue)
-{
-  if (!aValue) {
-    return NS_OK;
-  }
-  return CheckSanityOfStringLength(aPrefName, strlen(aValue));
-}
-
-nsresult
-nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName,
                                         const nsAString& aValue)
 {
   return CheckSanityOfStringLength(aPrefName, aValue.Length());
@@ -2796,7 +2786,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     nsAutoCString descriptorString;
     rv = file->GetPersistentDescriptor(descriptorString);
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPrefInternal(aPrefName, descriptorString.get());
+      rv = SetCharPrefInternal(aPrefName, descriptorString);
     }
     return rv;
   }
@@ -2840,7 +2830,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
     descriptorString.Append(relativeToKey);
     descriptorString.Append(']');
     descriptorString.Append(relDescriptor);
-    return SetCharPrefInternal(aPrefName, descriptorString.get());
+    return SetCharPrefInternal(aPrefName, descriptorString);
   }
 
   if (aType.Equals(NS_GET_IID(nsISupportsString)) ||
@@ -2857,8 +2847,7 @@ nsPrefBranch::SetComplexValue(const char* aPrefName,
         if (NS_FAILED(rv)) {
           return rv;
         }
-        rv = SetCharPrefInternal(aPrefName,
-                                 NS_ConvertUTF16toUTF8(wideString).get());
+        rv = SetCharPrefInternal(aPrefName, NS_ConvertUTF16toUTF8(wideString));
       }
     }
     return rv;
@@ -3149,9 +3138,8 @@ nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
 {
   // The default value contains a URL to a .properties file.
 
-  nsCString propertyFileURL;
-  nsresult rv =
-    PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), true);
+  nsAutoCString propertyFileURL;
+  nsresult rv = PREF_GetCStringPref(aPrefName, propertyFileURL, true);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3978,7 +3966,7 @@ Preferences::Init()
     return Ok();
   }
 
-  nsCString lockFileName;
+  nsAutoCString lockFileName;
 
   // The following is a small hack which will allow us to only load the library
   // which supports the netscape.cfg file if the preference is defined. We
@@ -3986,8 +3974,8 @@ Preferences::Init()
   // all-ns.js (netscape 6), and if it exists we startup the pref config
   // category which will do the rest.
 
-  nsresult rv = PREF_CopyCharPref(
-    "general.config.filename", getter_Copies(lockFileName), false);
+  nsresult rv =
+    PREF_GetCStringPref("general.config.filename", lockFileName, false);
   if (NS_SUCCEEDED(rv)) {
     NS_CreateServicesFromCategory(
       "pref-config-startup",
@@ -4914,7 +4902,7 @@ Preferences::GetFloat(const char* aPref, float* aResult)
   NS_PRECONDITION(aResult, "aResult must not be NULL");
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  nsresult rv = PREF_GetCStringPref(aPref, result, false);
   if (NS_SUCCEEDED(rv)) {
     *aResult = result.ToFloat(&rv);
   }
@@ -4925,12 +4913,7 @@ Preferences::GetFloat(const char* aPref, float* aResult)
 Preferences::GetCString(const char* aPref, nsACString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  char* result;
-  nsresult rv = PREF_CopyCharPref(aPref, &result, false);
-  if (NS_SUCCEEDED(rv)) {
-    aResult.Adopt(result);
-  }
-  return rv;
+  return PREF_GetCStringPref(aPref, aResult, false);
 }
 
 /* static */ nsresult
@@ -4938,7 +4921,7 @@ Preferences::GetString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  nsresult rv = PREF_GetCStringPref(aPref, result, false);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(result, aResult);
   }
@@ -4982,7 +4965,7 @@ Preferences::SetCString(const char* aPref, const char* aValue)
 {
   ENSURE_MAIN_PROCESS_WITH_WARNING("SetCString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCharPref(aPref, aValue, false);
+  return PREF_SetCStringPref(aPref, nsDependentCString(aValue), false);
 }
 
 /* static */ nsresult
@@ -4990,7 +4973,7 @@ Preferences::SetCString(const char* aPref, const nsACString& aValue)
 {
   ENSURE_MAIN_PROCESS_WITH_WARNING("SetCString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCharPref(aPref, PromiseFlatCString(aValue).get(), false);
+  return PREF_SetCStringPref(aPref, aValue, false);
 }
 
 /* static */ nsresult
@@ -4998,7 +4981,7 @@ Preferences::SetString(const char* aPref, const char16ptr_t aValue)
 {
   ENSURE_MAIN_PROCESS_WITH_WARNING("SetString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCharPref(aPref, NS_ConvertUTF16toUTF8(aValue).get(), false);
+  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
 }
 
 /* static */ nsresult
@@ -5006,7 +4989,7 @@ Preferences::SetString(const char* aPref, const nsAString& aValue)
 {
   ENSURE_MAIN_PROCESS_WITH_WARNING("SetString", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return PREF_SetCharPref(aPref, NS_ConvertUTF16toUTF8(aValue).get(), false);
+  return PREF_SetCStringPref(aPref, NS_ConvertUTF16toUTF8(aValue), false);
 }
 
 /* static */ nsresult
@@ -5405,12 +5388,7 @@ Preferences::GetDefaultInt(const char* aPref, int32_t* aResult)
 Preferences::GetDefaultCString(const char* aPref, nsACString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  char* result;
-  nsresult rv = PREF_CopyCharPref(aPref, &result, true);
-  if (NS_SUCCEEDED(rv)) {
-    aResult.Adopt(result);
-  }
-  return rv;
+  return PREF_GetCStringPref(aPref, aResult, true);
 }
 
 /* static */ nsresult
@@ -5418,7 +5396,7 @@ Preferences::GetDefaultString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsAutoCString result;
-  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), true);
+  nsresult rv = PREF_GetCStringPref(aPref, result, true);
   if (NS_SUCCEEDED(rv)) {
     CopyUTF8toUTF16(result, aResult);
   }

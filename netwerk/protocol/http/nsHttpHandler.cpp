@@ -1165,8 +1165,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 
     // general.useragent.override
     if (PREF_CHANGED(UA_PREF("override"))) {
-        prefs->GetCharPref(UA_PREF("override"),
-                            getter_Copies(mUserAgentOverride));
+        prefs->GetCharPref(UA_PREF("override"), mUserAgentOverride);
         mUserAgentIsDirty = true;
     }
 
@@ -1343,8 +1342,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
-        nsCString httpVersion;
-        prefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
+        nsAutoCString httpVersion;
+        prefs->GetCharPref(HTTP_PREF("version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
                 mHttpVersion = NS_HTTP_VERSION_1_1;
@@ -1356,8 +1355,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.version"))) {
-        nsCString httpVersion;
-        prefs->GetCharPref(HTTP_PREF("proxy.version"), getter_Copies(httpVersion));
+        nsAutoCString httpVersion;
+        prefs->GetCharPref(HTTP_PREF("proxy.version"), httpVersion);
         if (!httpVersion.IsVoid()) {
             if (httpVersion.EqualsLiteral("1.1"))
                 mProxyHttpVersion = NS_HTTP_VERSION_1_1;
@@ -1374,9 +1373,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
-        nsCString accept;
-        rv = prefs->GetCharPref(HTTP_PREF("accept.default"),
-                                  getter_Copies(accept));
+        nsAutoCString accept;
+        rv = prefs->GetCharPref(HTTP_PREF("accept.default"), accept);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAccept(accept.get());
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1384,9 +1382,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
-        nsCString acceptEncodings;
-        rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"),
-                                  getter_Copies(acceptEncodings));
+        nsAutoCString acceptEncodings;
+        rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"), acceptEncodings);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAcceptEncodings(acceptEncodings.get(), false);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1394,9 +1391,9 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding.secure"))) {
-        nsCString acceptEncodings;
+        nsAutoCString acceptEncodings;
         rv = prefs->GetCharPref(HTTP_PREF("accept-encoding.secure"),
-                                  getter_Copies(acceptEncodings));
+                                acceptEncodings);
         if (NS_SUCCEEDED(rv)) {
             rv = SetAcceptEncodings(acceptEncodings.get(), true);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1404,9 +1401,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {
-        nsCString sval;
-        rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"),
-                                getter_Copies(sval));
+        nsAutoCString sval;
+        rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"), sval);
         if (NS_SUCCEEDED(rv)) {
             if (sval.IsEmpty())
                 mDefaultSocketType.SetIsVoid(true);

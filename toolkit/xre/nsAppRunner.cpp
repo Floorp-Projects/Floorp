@@ -4359,8 +4359,8 @@ XREMain::XRE_mainRun()
     rv = prefs->GetDefaultBranch(nullptr, getter_AddRefs(defaultPrefBranch));
 
     if (NS_SUCCEEDED(rv)) {
-      nsCString sval;
-      rv = defaultPrefBranch->GetCharPref("app.update.channel", getter_Copies(sval));
+      nsAutoCString sval;
+      rv = defaultPrefBranch->GetCharPref("app.update.channel", sval);
       if (NS_SUCCEEDED(rv)) {
         CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ReleaseChannel"),
                                             sval);
