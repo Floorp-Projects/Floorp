@@ -127,7 +127,7 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
   }
 
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-    iter->CreateWebRenderCommands(aBuilder, aResources, aSc);
+    iter->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   }
 
   return true;

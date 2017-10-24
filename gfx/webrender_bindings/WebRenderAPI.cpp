@@ -631,7 +631,6 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
                                        const wr::LayoutSize& aContentSize,
                                        size_t aCapacity)
-  : mExtraClipCount(0)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
@@ -720,28 +719,45 @@ DisplayListBuilder::DefineClip(const Maybe<layers::FrameMetrics::ViewID>& aAnces
 }
 
 void
-DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aExtra)
+DisplayListBuilder::PushClip(const wr::WrClipId& aClipId,
+                             const DisplayItemClipChain* aParent)
 {
   wr_dp_push_clip(mWrState, aClipId.id);
   WRDL_LOG("PushClip id=%" PRIu64 "\n", mWrState, aClipId.id);
-  if (!aExtra) {
+  if (!aParent) {
     mClipStack.push_back(wr::ScrollOrClipId(aClipId));
   } else {
-    mExtraClipCount++;
+    auto it = mCacheOverride.insert({ aParent, std::vector<wr::WrClipId>() });
+    it.first->second.push_back(aClipId);
+    WRDL_LOG("Pushing override %p -> %" PRIu64 "\n", mWrState, aParent, aClipId.id);
   }
 }
 
 void
-DisplayListBuilder::PopClip(bool aExtra)
+DisplayListBuilder::PopClip(const DisplayItemClipChain* aParent)
 {
   WRDL_LOG("PopClip\n", mWrState);
-  if (!aExtra) {
+  if (!aParent) {
     MOZ_ASSERT(mClipStack.back().is<wr::WrClipId>());
     mClipStack.pop_back();
   } else {
-    mExtraClipCount--;
+    auto it = mCacheOverride.find(aParent);
+    MOZ_ASSERT(it != mCacheOverride.end());
+    MOZ_ASSERT(!(it->second.empty()));
+    WRDL_LOG("Popping override %p -> %" PRIu64 "\n", mWrState, aParent, it->second.back().id);
+    it->second.pop_back();
+    if (it->second.empty()) {
+      mCacheOverride.erase(it);
+    }
   }
   wr_dp_pop_clip(mWrState);
+}
+
+Maybe<wr::WrClipId>
+DisplayListBuilder::GetCacheOverride(const DisplayItemClipChain* aParent)
+{
+  auto it = mCacheOverride.find(aParent);
+  return it == mCacheOverride.end() ? Nothing() : Some(it->second.back());
 }
 
 wr::WrStickyId

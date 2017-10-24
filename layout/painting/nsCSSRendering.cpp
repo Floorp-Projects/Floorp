@@ -719,7 +719,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
       if (!br->CanCreateWebRenderCommands()) {
         return false;
       }
-      br->CreateWebRenderCommands(aBuilder, aResources, aSc);
+      br->CreateWebRenderCommands(aItem, aBuilder, aResources, aSc);
       return true;
     }
   }
