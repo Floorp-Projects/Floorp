@@ -1158,18 +1158,6 @@ pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
   return n;
 }
 
-static PrefType
-PREF_GetPrefType(const char* aPrefName)
-{
-  if (gHashTable) {
-    PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-    if (pref) {
-      return pref->mPrefFlags.GetPrefType();
-    }
-  }
-  return PrefType::Invalid;
-}
-
 // Bool function that returns whether or not the preference is locked and
 // therefore cannot be changed.
 static bool
@@ -2315,8 +2303,17 @@ NS_IMETHODIMP
 nsPrefBranch::GetPrefType(const char* aPrefName, int32_t* aRetVal)
 {
   NS_ENSURE_ARG(aPrefName);
+
   const PrefName& pref = GetPrefName(aPrefName);
-  switch (PREF_GetPrefType(pref.get())) {
+  PrefType type = PrefType::Invalid;
+  if (gHashTable) {
+    PrefHashEntry* entry = pref_HashTableLookup(pref.get());
+    if (entry) {
+      type = entry->mPrefFlags.GetPrefType();
+    }
+  }
+
+  switch (type) {
     case PrefType::String:
       *aRetVal = PREF_STRING;
       break;
