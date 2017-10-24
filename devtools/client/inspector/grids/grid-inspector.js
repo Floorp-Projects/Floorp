@@ -55,8 +55,8 @@ function GridInspector(inspector, window) {
   this.getSwatchColorPickerTooltip = this.getSwatchColorPickerTooltip.bind(this);
   this.updateGridPanel = this.updateGridPanel.bind(this);
 
-  this.onNavigate = this.onNavigate.bind(this);
   this.onHighlighterChange = this.onHighlighterChange.bind(this);
+  this.onNavigate = this.onNavigate.bind(this);
   this.onReflow = throttle(this.onReflow, 500, this);
   this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
   this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
@@ -216,6 +216,32 @@ GridInspector.prototype = {
   },
 
   /**
+   * Given a list of new grid fronts, and if we have a currently highlighted grid, check
+   * if its fragments have changed.
+   *
+   * @param  {Array} newGridFronts
+   *         A list of GridFront objects.
+   * @return {Boolean}
+   */
+  haveCurrentFragmentsChanged(newGridFronts) {
+    const currentNode = this.highlighters.gridHighlighterShown;
+    if (!currentNode) {
+      return false;
+    }
+
+    const newGridFront = newGridFronts.find(g => g.containerNodeFront === currentNode);
+    if (!newGridFront) {
+      return false;
+    }
+
+    const { grids } = this.store.getState();
+    const oldFragments = grids.find(g => g.nodeFront === currentNode).gridFragments;
+    const newFragments = newGridFront.gridFragments;
+
+    return !compareFragmentsGeometry(oldFragments, newFragments);
+  },
+
+  /**
    * Returns true if the layout panel is visible, and false otherwise.
    */
   isPanelVisible() {
@@ -318,16 +344,6 @@ GridInspector.prototype = {
   }),
 
   /**
-   * Handler for "new-root" event fired by the inspector, which indicates a page
-   * navigation. Updates grid panel contents.
-   */
-  onNavigate() {
-    if (this.isPanelVisible()) {
-      this.updateGridPanel();
-    }
-  },
-
-  /**
    * Handler for "grid-highlighter-shown" and "grid-highlighter-hidden" events emitted
    * from the HighlightersOverlay. Updates the NodeFront's grid highlighted state.
    *
@@ -361,29 +377,13 @@ GridInspector.prototype = {
   },
 
   /**
-   * Given a list of new grid fronts, and if we have a currently highlighted grid, check
-   * if its fragments have changed.
-   *
-   * @param  {Array} newGridFronts
-   *         A list of GridFront objects.
-   * @return {Boolean}
+   * Handler for "new-root" event fired by the inspector, which indicates a page
+   * navigation. Updates grid panel contents.
    */
-  haveCurrentFragmentsChanged(newGridFronts) {
-    const currentNode = this.highlighters.gridHighlighterShown;
-    if (!currentNode) {
-      return false;
+  onNavigate() {
+    if (this.isPanelVisible()) {
+      this.updateGridPanel();
     }
-
-    const newGridFront = newGridFronts.find(g => g.containerNodeFront === currentNode);
-    if (!newGridFront) {
-      return false;
-    }
-
-    const { grids } = this.store.getState();
-    const oldFragments = grids.find(g => g.nodeFront === currentNode).gridFragments;
-    const newFragments = newGridFront.gridFragments;
-
-    return !compareFragmentsGeometry(oldFragments, newFragments);
   },
 
   /**

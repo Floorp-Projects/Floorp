@@ -4,18 +4,29 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
-module.exports = createClass({
+class Font extends PureComponent {
+  static get propTypes() {
+    return PropTypes.shape(Types.font).isRequired;
+  }
 
-  displayName: "Font",
-
-  propTypes: PropTypes.shape(Types.font).isRequired,
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.getSectionClasses = this.getSectionClasses.bind(this);
+    this.renderFontCSS = this.renderFontCSS.bind(this);
+    this.renderFontCSSCode = this.renderFontCSSCode.bind(this);
+    this.renderFontFormatURL = this.renderFontFormatURL.bind(this);
+    this.renderFontName = this.renderFontName.bind(this);
+    this.renderFontPreview = this.renderFontPreview.bind(this);
+  }
 
   getSectionClasses() {
     let { font } = this.props;
@@ -28,7 +39,7 @@ module.exports = createClass({
     }
 
     return classes.join(" ");
-  },
+  }
 
   renderFontCSS(cssFamilyName) {
     return dom.p(
@@ -48,7 +59,7 @@ module.exports = createClass({
       ),
       "\""
     );
-  },
+  }
 
   renderFontCSSCode(rule, ruleText) {
     return dom.pre(
@@ -57,7 +68,7 @@ module.exports = createClass({
       },
       rule ? ruleText : null
     );
-  },
+  }
 
   renderFontFormatURL(url, format) {
     return dom.p(
@@ -88,7 +99,7 @@ module.exports = createClass({
           format
         )
     );
-  },
+  }
 
   renderFontName(name) {
     return dom.h1(
@@ -97,7 +108,7 @@ module.exports = createClass({
       },
       name
     );
-  },
+  }
 
   renderFontPreview(previewUrl) {
     return dom.div(
@@ -111,7 +122,7 @@ module.exports = createClass({
         }
       )
     );
-  },
+  }
 
   render() {
     let { font } = this.props;
@@ -153,4 +164,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = Font;

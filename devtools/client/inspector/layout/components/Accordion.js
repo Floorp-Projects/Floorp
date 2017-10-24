@@ -10,25 +10,30 @@
 "use strict";
 
 const React = require("devtools/client/shared/vendor/react");
-const { DOM: dom, PropTypes } = React;
+const { PureComponent, DOM: dom, PropTypes } = React;
 
 const { div, span } = dom;
 
-const Accordion = React.createClass({
-  displayName: "Accordion",
+class Accordion extends PureComponent {
+  static get propTypes() {
+    return {
+      items: PropTypes.array
+    };
+  }
 
-  propTypes: {
-    items: PropTypes.array
-  },
+  constructor(props) {
+    super(props);
 
-  mixins: [ React.addons.PureRenderMixin ],
+    this.state = {
+      opened: props.items.map(item => item.opened),
+      created: []
+    };
 
-  getInitialState: function () {
-    return { opened: this.props.items.map(item => item.opened),
-             created: [] };
-  },
+    this.handleHeaderClick = this.handleHeaderClick.bind(this);
+    this.renderContainer = this.renderContainer.bind(this);
+  }
 
-  handleHeaderClick: function (i) {
+  handleHeaderClick(i) {
     const opened = [...this.state.opened];
     const created = [...this.state.created];
     const item = this.props.items[i];
@@ -45,9 +50,9 @@ const Accordion = React.createClass({
     }
 
     this.setState({ opened, created });
-  },
+  }
 
-  renderContainer: function (item, i) {
+  renderContainer(item, i) {
     const { opened, created } = this.state;
     const containerClassName =
           item.header.toLowerCase().replace(/\s/g, "-") + "-pane";
@@ -75,14 +80,14 @@ const Accordion = React.createClass({
         ) :
         null
     );
-  },
+  }
 
-  render: function () {
+  render() {
     return div(
       { className: "accordion" },
       this.props.items.map(this.renderContainer)
     );
   }
-});
+}
 
 module.exports = Accordion;
