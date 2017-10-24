@@ -39,7 +39,6 @@
 ^browser/components/translation/cld2/.*
 ^browser/extensions/mortar/ppapi/.*
 ^db/sqlite3/src/.*
-^dom/media/platforms/ffmpeg/libav.*
 ^extensions/spellcheck/hunspell/src/.*
 ^gfx/angle/.*
 ^gfx/cairo/.*
@@ -84,8 +83,7 @@
 ^media/webrtc/signaling/src/sdp/sipcc/.*
 ^media/webrtc/trunk/.*
 ^mfbt/decimal/.*
-^mfbt/double-conversion/source/.*
-^mfbt/lz4.*
+^mfbt/double-conversion/double-conversion/.*
 ^mobile/android/geckoview/src/thirdparty/.*
 ^mobile/android/thirdparty/.*
 ^modules/brotli/.*
@@ -130,6 +128,7 @@
 ^third_party/python/which/.*
 ^third_party/rust/.*
 ^toolkit/components/jsoncpp/.*
+^toolkit/components/lz4/.*
 ^toolkit/components/protobuf/.*
 ^toolkit/components/url-classifier/chromium/.*
 ^toolkit/components/url-classifier/protobuf/.*

@@ -3365,6 +3365,9 @@ pref("dom.ipc.processCount.webLargeAllocation", 10);
 // Enable the Large-Allocation header
 pref("dom.largeAllocationHeader.enabled", true);
 
+// Disable e10s for Gecko by default. This is overridden in firefox.js.
+pref("browser.tabs.remote.autostart", false);
+
 // Pref to control whether we use separate content processes for top-level load
 // of file:// URIs.
 pref("browser.tabs.remote.separateFileUriProcess", true);

@@ -11,6 +11,6 @@ add_task(async function capture() {
     return;
   }
 
-  let sets = setsEnv.trim().split(",");
+  let sets = TestRunner.splitEnv(setsEnv.trim());
   await TestRunner.start(sets);
 });

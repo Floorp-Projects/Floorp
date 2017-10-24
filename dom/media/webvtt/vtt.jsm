@@ -912,27 +912,13 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
       return null;
     }
 
-    // Remove all previous children.
-    while (overlay.firstChild) {
-      overlay.firstChild.remove();
-    }
-
     var controlBar;
     var controlBarShown;
-
     if (controls) {
       controlBar = controls.ownerDocument.getAnonymousElementByAttribute(
         controls, "anonid", "controlBar");
       controlBarShown = controlBar ? !!controlBar.clientHeight : false;
     }
-
-    var rootOfCues = window.document.createElement("div");
-    rootOfCues.style.position = "absolute";
-    rootOfCues.style.left = "0";
-    rootOfCues.style.right = "0";
-    rootOfCues.style.top = "0";
-    rootOfCues.style.bottom = "0";
-    overlay.appendChild(rootOfCues);
 
     // Determine if we need to compute the display states of the cues. This could
     // be the case if a cue's state has been changed since the last computation or
@@ -952,13 +938,21 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
     // We don't need to recompute the cues' display states. Just reuse them.
     if (!shouldCompute(cues)) {
-      for (var i = 0; i < cues.length; i++) {
-        rootOfCues.appendChild(cues[i].displayState);
-      }
-      overlay.lastControlBarShownStatus = controlBarShown;
       return;
     }
     overlay.lastControlBarShownStatus = controlBarShown;
+
+    // Remove all previous children.
+    while (overlay.firstChild) {
+      overlay.firstChild.remove();
+    }
+    var rootOfCues = window.document.createElement("div");
+    rootOfCues.style.position = "absolute";
+    rootOfCues.style.left = "0";
+    rootOfCues.style.right = "0";
+    rootOfCues.style.top = "0";
+    rootOfCues.style.bottom = "0";
+    overlay.appendChild(rootOfCues);
 
     var boxPositions = [],
         containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues),

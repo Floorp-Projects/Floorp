@@ -450,7 +450,6 @@ UNIFIED_SOURCES += [
     'opengl/TextureHostOGL.cpp',
     'opengl/TexturePoolOGL.cpp',
     'PaintThread.cpp',
-    'protobuf/LayerScopePacket.pb.cc',
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
@@ -483,11 +482,12 @@ SOURCES += [
     'Layers.cpp',
     'LayerTreeInvalidation.cpp',
     'PersistentBufferProvider.cpp',
+    'protobuf/LayerScopePacket.pb.cc',
     'wr/WebRenderTextureHost.cpp',
 ]
 
-# Disable RTTI in google protocol buffer
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 # Workaround compiler bug (Bug 795594)
 if CONFIG['_MSC_VER'] and CONFIG['CPU_ARCH'] == 'x86_64':
@@ -563,6 +563,10 @@ LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+    # Suppress warnings in third-party code.
+    CXXFLAGS += [
+        '-Wno-maybe-uninitialized'
+    ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
   UNIFIED_SOURCES += [

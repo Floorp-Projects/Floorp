@@ -399,7 +399,18 @@ class JarMaker(object):
         # pick the right sourcedir -- l10n, topsrc or src
 
         if e.is_locale:
-            src_base = self.localedirs
+            # If the file is a Fluent l10n resource, we want to skip the
+            # 'en-US' fallbacking.
+            #
+            # To achieve that, we're testing if we have more than one localedir,
+            # and if the last of those has 'en-US' in it.
+            # If that's the case, we're removing the last one.
+            if (e.source.endswith('.ftl') and
+                len(self.localedirs) > 1 and
+                'en-US' in self.localedirs[-1]):
+                src_base = self.localedirs[:-1]
+            else:
+                src_base = self.localedirs
         elif src.startswith('/'):
             # path/in/jar/file_name.xul     (/path/in/sourcetree/file_name.xul)
             # refers to a path relative to topsourcedir, use that as base

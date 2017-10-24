@@ -4036,7 +4036,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   {
-    AutoProfilerTracing tracing("Paint", "DisplayListResources");
+    AUTO_PROFILER_TRACING("Paint", "DisplayListResources");
 
     // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
     if (!retainedBuilder) {

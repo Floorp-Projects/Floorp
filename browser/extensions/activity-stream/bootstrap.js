@@ -29,7 +29,7 @@ let waitingForBrowserReady = true;
 XPCOMUtils.defineLazyModuleGetter(this, "ActivityStream",
   "resource://activity-stream/lib/ActivityStream.jsm", null, null, () => {
     // Helper to fetch a resource directory listing and call back with each item
-    const processListing = async(uri, cb) => (await (await fetch(uri)).text())
+    const processListing = async (uri, cb) => (await (await fetch(uri)).text())
       .split("\n").slice(2).forEach(line => cb(line.split(" ").slice(1)));
 
     // Look for modules one level deeper than the top resource URI

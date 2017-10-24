@@ -179,12 +179,12 @@ describe("PlacesFeed", () => {
       assert.property(observer, "QueryInterface");
     });
     describe("#onDeleteURI", () => {
-      it("should dispatch a PLACES_LINKS_DELETED action with the right url", async() => {
+      it("should dispatch a PLACES_LINKS_DELETED action with the right url", async () => {
         await observer.onDeleteURI({spec: "foo.com"});
 
         assert.calledWith(dispatch, {type: at.PLACES_LINKS_DELETED, data: ["foo.com"]});
       });
-      it("should dispatch a PLACES_LINKS_DELETED action with multiple urls", async() => {
+      it("should dispatch a PLACES_LINKS_DELETED action with multiple urls", async () => {
         const promise = observer.onDeleteURI({spec: "bar.com"});
         observer.onDeleteURI({spec: "foo.com"});
         await promise;

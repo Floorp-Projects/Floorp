@@ -3,13 +3,11 @@ const {prerenderStore} = prerender;
 const {PrerenderData} = require("common/PrerenderData.jsm");
 
 describe("prerenderStore", () => {
-  it("should create a store", () => {
-    const store = prerenderStore();
-
-    assert.isFunction(store.getState);
+  it("should require a locale", () => {
+    assert.throws(() => prerenderStore());
   });
   it("should start uninitialized", () => {
-    const store = prerenderStore();
+    const store = prerenderStore("en-FOO");
 
     const state = store.getState();
     assert.equal(state.App.initialized, false);
@@ -25,13 +23,13 @@ describe("prerenderStore", () => {
     assert.equal(state.App.textDirection, "ltr");
   });
   it("should add the right initial prefs", () => {
-    const store = prerenderStore();
+    const store = prerenderStore("en-FOO");
 
     const state = store.getState();
     assert.equal(state.Prefs.values, PrerenderData.initialPrefs);
   });
   it("should add TopStories as the first section", () => {
-    const store = prerenderStore();
+    const store = prerenderStore("en-FOO");
 
     const state = store.getState();
     // TopStories
@@ -43,21 +41,27 @@ describe("prerenderStore", () => {
 });
 
 describe("prerender", () => {
-  it("should set the locale and get the right strings of whatever is passed in", () => {
-    const {store} = prerender("en-US");
+  it("should require a locale", () => {
+    assert.throws(() => prerender());
+  });
+  it("should set the locale and strings of whatever is passed in", () => {
+    const strings = {newtab_page_title: "New Tab"};
+    const {store} = prerender("en-US", strings);
 
     const state = store.getState();
     assert.equal(state.App.locale, "en-US");
     assert.equal(state.App.strings.newtab_page_title, "New Tab");
   });
-  it("should throw if an unknown locale is passed in", () => {
-    assert.throws(() => prerender("en-FOO"));
-  });
-  it("should set the locale to en-PRERENDER and have empty strings if no locale is passed in", () => {
-    const {store} = prerender();
+  it("should set the direction based on locale", () => {
+    const {store} = prerender("en-US");
 
     const state = store.getState();
-    assert.equal(state.App.locale, "en-PRERENDER");
-    assert.equal(state.App.strings.newtab_page_title, " ");
+    assert.equal(state.App.textDirection, "ltr");
+  });
+  it("should support direction for rtl locales", () => {
+    const {store} = prerender("ar");
+
+    const state = store.getState();
+    assert.equal(state.App.textDirection, "rtl");
   });
 });

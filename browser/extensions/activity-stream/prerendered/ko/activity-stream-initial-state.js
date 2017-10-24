@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "ko",
+    "strings": {
+      "newtab_page_title": "새 탭",
+      "default_label_loading": "읽는 중…",
+      "header_top_sites": "상위 사이트",
+      "header_stories": "상위 이야기",
+      "header_highlights": "하이라이트",
+      "header_visit_again": "다시 방문",
+      "header_bookmarks": "최근 북마크",
+      "header_recommended_by": "{provider} 추천",
+      "header_bookmarks_placeholder": "북마크가 없습니다.",
+      "header_stories_from": "출처",
+      "type_label_visited": "방문한 사이트",
+      "type_label_bookmarked": "즐겨찾기",
+      "type_label_synced": "다른 기기에서 동기화",
+      "type_label_recommended": "트랜드",
+      "type_label_open": "열기",
+      "type_label_topic": "주제",
+      "type_label_now": "지금",
+      "menu_action_bookmark": "즐겨찾기",
+      "menu_action_remove_bookmark": "즐겨찾기 삭제",
+      "menu_action_copy_address": "주소 복사",
+      "menu_action_email_link": "메일로 링크 보내기…",
+      "menu_action_open_new_window": "새 창에서 열기",
+      "menu_action_open_private_window": "새 사생활 보호 창에서 열기",
+      "menu_action_dismiss": "닫기",
+      "menu_action_delete": "방문 기록에서 삭제",
+      "menu_action_pin": "고정",
+      "menu_action_unpin": "고정 해제",
+      "confirm_history_delete_p1": "정말 이 페이지의 모든 인스턴스를 기록에서 지우겠습니까?",
+      "confirm_history_delete_notice_p2": "이 작업은 되돌릴 수 없습니다.",
+      "menu_action_save_to_pocket": "Pocket에 저장",
+      "search_for_something_with": "다음에서 {search_term} 검색:",
+      "search_button": "검색",
+      "search_header": "{search_engine_name} 검색",
+      "search_web_placeholder": "웹 검색",
+      "search_settings": "검색 설정 바꾸기",
+      "section_info_option": "정보",
+      "section_info_send_feedback": "의견 보내기",
+      "section_info_privacy_notice": "개인 정보 보호 정책",
+      "welcome_title": "새 탭을 소개합니다",
+      "welcome_body": "최근에 방문한 관련있는 즐겨찾기나 글, 동영상, 페이지를 Firefox가 여기에 표시해서 쉽게 다시 찾아볼 수 있게 할 것입니다.",
+      "welcome_label": "하이라이트 확인",
+      "time_label_less_than_minute": "<1분",
+      "time_label_minute": "{number}분",
+      "time_label_hour": "{number}시",
+      "time_label_day": "{number}일",
+      "settings_pane_button_label": "새 탭 페이지 꾸미기",
+      "settings_pane_header": "새 탭 설정",
+      "settings_pane_body2": "이 페이지에서 볼 것을 선택하세요.",
+      "settings_pane_search_header": "검색",
+      "settings_pane_search_body": "새 탭에서 웹을 검색하세요.",
+      "settings_pane_topsites_header": "상위 사이트",
+      "settings_pane_topsites_body": "가장 많이 방문한 웹 사이트에 접근하세요.",
+      "settings_pane_topsites_options_showmore": "두 줄로 보기",
+      "settings_pane_bookmarks_header": "최근 북마크",
+      "settings_pane_bookmarks_body": "최근 북마크가 편리하게 한 곳에 나타납니다.",
+      "settings_pane_visit_again_header": "다시 방문",
+      "settings_pane_visit_again_body": "Firefox will show you parts of your browsing history that you might want to remember or get back to.",
+      "settings_pane_highlights_header": "하이라이트",
+      "settings_pane_highlights_body2": "Find your way back to interesting things you’ve recently visited or bookmarked.",
+      "settings_pane_highlights_options_bookmarks": "Bookmarks",
+      "settings_pane_highlights_options_visited": "Visited Sites",
+      "settings_pane_snippets_header": "Snippets",
+      "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
+      "settings_pane_done_button": "완료",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "수정",
+      "edit_topsites_button_label": "상위 사이트 영역 꾸미기",
+      "edit_topsites_showmore_button": "더보기",
+      "edit_topsites_showless_button": "줄이기",
+      "edit_topsites_done_button": "완료",
+      "edit_topsites_pin_button": "이 사이트 고정",
+      "edit_topsites_unpin_button": "이 사이트 고정 취소",
+      "edit_topsites_edit_button": "이 사이트 수정",
+      "edit_topsites_dismiss_button": "이 사이트 제거",
+      "edit_topsites_add_button": "추가",
+      "topsites_form_add_header": "새로운 인기 사이트",
+      "topsites_form_edit_header": "인기 사이트 편집",
+      "topsites_form_title_placeholder": "제목 입력",
+      "topsites_form_url_placeholder": "URL 입력 또는 붙여 넣기",
+      "topsites_form_add_button": "추가",
+      "topsites_form_save_button": "저장",
+      "topsites_form_cancel_button": "취소",
+      "topsites_form_url_validation": "유효한 URL이 필요합니다",
+      "pocket_read_more": "인기 주제:",
+      "pocket_read_even_more": "더 많은 이야기 보기",
+      "pocket_feedback_header": "2천 5백만 명에 의해 추천되는 최고의 웹입니다.",
+      "pocket_description": "Mozilla와 하나가 된 Pocket의 도움으로 놓칠지도 모르는 고품질의 컨텐츠를 접해보세요.",
+      "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
+      "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
+      "manual_migration_explanation2": "다른 브라우저에 있는 북마크, 기록, 비밀번호를 사용해 Firefox를 이용해 보세요.",
+      "manual_migration_cancel_button": "괜찮습니다",
+      "manual_migration_import_button": "지금 가져오기"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

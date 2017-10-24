@@ -55,7 +55,7 @@ function merge(...args) {
  *
  * - The parameter sets provide factors for weighting which allows for
  * flexible targeting. The functionality to calculate final scores can
- * be seen in UserDomainAffinityProvider#calcuateScores
+ * be seen in UserDomainAffinityProvider#calculateScores
  *
  * - The user domain affinity scores are summed up across all time segments
  * see UserDomainAffinityProvider#calculateAllUserDomainAffinityScores
@@ -74,11 +74,22 @@ function merge(...args) {
  * lookups of scores[domain][parameterSet] is beneficial
  */
 this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
-  constructor(timeSegments = DEFAULT_TIME_SEGMENTS, parameterSets = DEFAULT_PARAMETER_SETS, maxHistoryQueryResults = DEFAULT_MAX_HISTORY_QUERY_RESULTS) {
+  constructor(
+    timeSegments = DEFAULT_TIME_SEGMENTS,
+    parameterSets = DEFAULT_PARAMETER_SETS,
+    maxHistoryQueryResults = DEFAULT_MAX_HISTORY_QUERY_RESULTS,
+    version,
+    scores) {
     this.timeSegments = timeSegments;
     this.maxHistoryQueryResults = maxHistoryQueryResults;
-    this.parameterSets = this.prepareParameterSets(parameterSets);
-    this.scores = this.calculateAllUserDomainAffinityScores();
+    this.version = version;
+    if (scores) {
+      this.parameterSets = parameterSets;
+      this.scores = scores;
+    } else {
+      this.parameterSets = this.prepareParameterSets(parameterSets);
+      this.scores = this.calculateAllUserDomainAffinityScores();
+    }
   }
 
   /**
@@ -271,7 +282,7 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
   calculateItemRelevanceScore(item) {
     const params = this.parameterSets[item.parameter_set];
     if (!item.domain_affinities || !params) {
-      return 1;
+      return item.item_score;
     }
 
     const scores = Object
@@ -302,6 +313,18 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
     return params.itemScoreFactor * (item.item_score - normalizedCombinedDomainScore) + normalizedCombinedDomainScore;
   }
 
+  /**
+   * Returns an object holding the settings and affinity scores of this provider instance.
+   */
+  getAffinities() {
+    return {
+      timeSegments: this.timeSegments,
+      parameterSets: this.parameterSets,
+      maxHistoryQueryResults: this.maxHistoryQueryResults,
+      version: this.version,
+      scores: this.scores
+    };
+  }
 };
 
 this.EXPORTED_SYMBOLS = ["UserDomainAffinityProvider"];

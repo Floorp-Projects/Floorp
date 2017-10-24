@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "zh-CN",
+    "strings": {
+      "newtab_page_title": "新标签页",
+      "default_label_loading": "正在载入…",
+      "header_top_sites": "常用网站",
+      "header_stories": "热门文章",
+      "header_highlights": "集锦",
+      "header_visit_again": "再次造访",
+      "header_bookmarks": "最近的书签",
+      "header_recommended_by": "{provider} 推荐",
+      "header_bookmarks_placeholder": "您还没有最近的书签。",
+      "header_stories_from": "出自",
+      "type_label_visited": "曾经访问",
+      "type_label_bookmarked": "已加书签",
+      "type_label_synced": "从其他设备同步而来",
+      "type_label_recommended": "趋势",
+      "type_label_open": "打开",
+      "type_label_topic": "主题",
+      "type_label_now": "现在",
+      "menu_action_bookmark": "添加书签",
+      "menu_action_remove_bookmark": "移除书签",
+      "menu_action_copy_address": "复制地址",
+      "menu_action_email_link": "用邮件发送链接…",
+      "menu_action_open_new_window": "新建窗口打开",
+      "menu_action_open_private_window": "新建隐私浏览窗口打开",
+      "menu_action_dismiss": "隐藏",
+      "menu_action_delete": "从历史记录中删除",
+      "menu_action_pin": "固定",
+      "menu_action_unpin": "取消固定",
+      "confirm_history_delete_p1": "确定删除此页面在您的历史记录中的所有记录？",
+      "confirm_history_delete_notice_p2": "此操作不能撤销。",
+      "menu_action_save_to_pocket": "保存到 Pocket",
+      "search_for_something_with": "搜索 {search_term}，使用：",
+      "search_button": "搜索",
+      "search_header": "{search_engine_name} 搜索",
+      "search_web_placeholder": "在网络上搜索",
+      "search_settings": "更改搜索设置",
+      "section_info_option": "信息",
+      "section_info_send_feedback": "提交反馈",
+      "section_info_privacy_notice": "隐私声明",
+      "welcome_title": "欢迎使用新标签页",
+      "welcome_body": "Firefox 会在这里显示对您最有用的书签、文章、视频和访问过的页面，便于您回到这些网站。",
+      "welcome_label": "正在为您准备集锦",
+      "time_label_less_than_minute": "1 分钟内",
+      "time_label_minute": "{number} 分钟前",
+      "time_label_hour": "{number} 小时前",
+      "time_label_day": "{number} 天前",
+      "settings_pane_button_label": "定制您的新标签页",
+      "settings_pane_header": "新标签页选项",
+      "settings_pane_body2": "选择您在此页面上想看到什么。",
+      "settings_pane_search_header": "搜索",
+      "settings_pane_search_body": "直接在您的新标签页搜遍网络。",
+      "settings_pane_topsites_header": "常用网站",
+      "settings_pane_topsites_body": "显示您经常访问的网站。",
+      "settings_pane_topsites_options_showmore": "双行显示",
+      "settings_pane_bookmarks_header": "最近的书签",
+      "settings_pane_bookmarks_body": "您最近创建的书签将在此显示。",
+      "settings_pane_visit_again_header": "再次造访",
+      "settings_pane_visit_again_body": "Firefox 在此显示您可能想记住或将再次访问的浏览记录。",
+      "settings_pane_highlights_header": "集锦",
+      "settings_pane_highlights_body2": "根据您最近访问的页面和添加的书签推荐您感兴趣的东西。",
+      "settings_pane_highlights_options_bookmarks": "书签",
+      "settings_pane_highlights_options_visited": "访问过的网站",
+      "settings_pane_snippets_header": "只言片语",
+      "settings_pane_snippets_body": "阅读 Mozilla 就 Firefox、互联网文化、偶尔还有模因提供的一些简短而有趣的小文章。",
+      "settings_pane_done_button": "完成",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "编辑",
+      "edit_topsites_button_label": "定制您的“常用网站”区域",
+      "edit_topsites_showmore_button": "显示更多",
+      "edit_topsites_showless_button": "显示更少",
+      "edit_topsites_done_button": "完成",
+      "edit_topsites_pin_button": "固定此网站",
+      "edit_topsites_unpin_button": "取消固定此网站",
+      "edit_topsites_edit_button": "编辑此网站",
+      "edit_topsites_dismiss_button": "隐藏此网站",
+      "edit_topsites_add_button": "添加",
+      "topsites_form_add_header": "新建常用网站",
+      "topsites_form_edit_header": "编辑常用网站",
+      "topsites_form_title_placeholder": "输入标题",
+      "topsites_form_url_placeholder": "输入或粘贴一个网址",
+      "topsites_form_add_button": "添加",
+      "topsites_form_save_button": "保存",
+      "topsites_form_cancel_button": "取消",
+      "topsites_form_url_validation": "需要有效的网址",
+      "pocket_read_more": "热门主题：",
+      "pocket_read_even_more": "查看更多文章",
+      "pocket_feedback_header": "由超过 2500 万人挑选出来的网上精华内容。",
+      "pocket_description": "借助 Pocket（目前属 Mozilla 旗下）发现您不容错过的高品质内容。",
+      "highlights_empty_state": "开始浏览旅程吧，之后这里会显示您最近看过或加了书签的精彩文章、视频以及其他页面。",
+      "topstories_empty_state": "所有文章都读完啦！晚点再来，{provider} 将推荐更多热门文章。等不及了？选择一个热门话题，找到更多网上的好文章。",
+      "manual_migration_explanation2": "把在其他浏览器中保存的书签、历史记录和密码带到 Firefox 吧。",
+      "manual_migration_cancel_button": "不用了",
+      "manual_migration_import_button": "立即导入"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

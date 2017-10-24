@@ -52,6 +52,9 @@ this.PrerenderData = new _PrerenderData({
     "showTopSites": true,
     "showSearch": true,
     "topSitesCount": 6,
+    "collapseTopSites": false,
+    "section.highlights.collapsed": false,
+    "section.topstories.collapsed": false,
     "feeds.section.topstories": true,
     "feeds.section.highlights": true
   },
@@ -64,6 +67,9 @@ this.PrerenderData = new _PrerenderData({
   validation: [
     "showTopSites",
     "showSearch",
+    "collapseTopSites",
+    "section.highlights.collapsed",
+    "section.topstories.collapsed",
     // This means if either of these are set to their default values,
     // prerendering can be used.
     {oneOf: ["feeds.section.topstories", "feeds.section.highlights"]}

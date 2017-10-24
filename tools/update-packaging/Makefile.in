@@ -43,6 +43,12 @@ MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out sha2signcode,$(MOZ_EXTERNAL_SIGNING_
 MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
 endif
 
+ifndef MAR_OLD_FORMAT
+MAR_SIGN_FORMAT=mar_sha384
+else
+MAR_SIGN_FORMAT=mar
+endif
+
 dir-stage := $(call mkdir_deps,$(STAGE_DIR))
 
 complete-patch:: $(dir-stage)
@@ -57,7 +63,7 @@ endif
 	  '$(DIST)/$(COMPLETE_MAR)' \
 	  '$(PACKAGE_DIR)'
 ifdef MOZ_SIGN_CMD
-	$(MOZ_SIGN_CMD) -f mar_sha384 '$(DIST)/$(COMPLETE_MAR)'
+	$(MOZ_SIGN_CMD) -f $(MAR_SIGN_FORMAT) '$(DIST)/$(COMPLETE_MAR)'
 endif
 
 partial-patch:: $(dir-stage)
@@ -69,5 +75,5 @@ partial-patch:: $(dir-stage)
 	  '$(SRC_BUILD)' \
 	  '$(DST_BUILD)'
 ifdef MOZ_SIGN_CMD
-	$(MOZ_SIGN_CMD) -f mar_sha384 '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
+	$(MOZ_SIGN_CMD) -f $(MAR_SIGN_FORMAT) '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
 endif

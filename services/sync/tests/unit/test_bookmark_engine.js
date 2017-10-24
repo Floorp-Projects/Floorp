@@ -791,3 +791,66 @@ add_task(async function test_sync_dateAdded() {
     await promiseStopServer(server);
   }
 });
+
+// Bug 890217.
+add_task(async function test_sync_imap_URLs() {
+  await Service.recordManager.clearCache();
+  await PlacesSyncUtils.bookmarks.reset();
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
+  let store  = engine._store;
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("bookmarks");
+
+  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+
+  try {
+    collection.insert("menu", encryptPayload({
+      id: "menu",
+      type: "folder",
+      parentid: "places",
+      title: "Bookmarks Menu",
+      children: ["bookmarkAAAA"],
+    }));
+    collection.insert("bookmarkAAAA", encryptPayload({
+      id: "bookmarkAAAA",
+      type: "bookmark",
+      parentid: "menu",
+      bmkUri: "imap://vs@eleven.vs.solnicky.cz:993/fetch%3EUID%3E/" +
+              "INBOX%3E56291?part=1.2&type=image/jpeg&filename=" +
+              "invalidazPrahy.jpg",
+      title: "invalidazPrahy.jpg (JPEG Image, 1280x1024 pixels) - Scaled (71%)",
+    }));
+
+    await PlacesUtils.bookmarks.insert({
+      guid: "bookmarkBBBB",
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: "imap://eleven.vs.solnicky.cz:993/fetch%3EUID%3E/" +
+           "CURRENT%3E2433?part=1.2&type=text/html&filename=TomEdwards.html",
+      title: "TomEdwards.html",
+    });
+
+    await sync_engine_and_validate_telem(engine, false);
+
+    let aInfo = await PlacesUtils.bookmarks.fetch("bookmarkAAAA");
+    equal(aInfo.url.href, "imap://vs@eleven.vs.solnicky.cz:993/" +
+      "fetch%3EUID%3E/INBOX%3E56291?part=1.2&type=image/jpeg&filename=" +
+      "invalidazPrahy.jpg",
+      "Remote bookmark A with IMAP URL should exist locally");
+
+    let bPayload = JSON.parse(JSON.parse(
+      collection.payload("bookmarkBBBB")).ciphertext);
+    equal(bPayload.bmkUri, "imap://eleven.vs.solnicky.cz:993/" +
+      "fetch%3EUID%3E/CURRENT%3E2433?part=1.2&type=text/html&filename=" +
+      "TomEdwards.html",
+      "Local bookmark B with IMAP URL should exist remotely");
+  } finally {
+    await store.wipe();
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+    await PlacesSyncUtils.bookmarks.reset();
+    await promiseStopServer(server);
+  }
+});

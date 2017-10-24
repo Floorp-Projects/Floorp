@@ -68,6 +68,7 @@ DevToolsModules(
     'system.js',
     'task.js',
     'ThreadSafeDevToolsUtils.js',
+    'throttle.js',
     'wasm-source-map.js',
 )
 

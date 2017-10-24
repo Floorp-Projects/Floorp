@@ -7,7 +7,7 @@
 #define ProtocolParser_h__
 
 #include "HashStore.h"
-#include "safebrowsing.pb.h"
+#include "chromium/safebrowsing.pb.h"
 
 namespace mozilla {
 namespace safebrowsing {

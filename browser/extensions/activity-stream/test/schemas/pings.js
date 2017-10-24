@@ -89,6 +89,9 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
   session_duration: Joi.number().integer(),
   action: Joi.valid("activity_stream_session").required(),
   perf: Joi.object().keys({
+    // How long it took in ms for data to be ready for display.
+    highlights_data_late_by_ms: Joi.number().positive(),
+
     // Timestamp of the action perceived by the user to trigger the load
     // of this page.
     //
@@ -105,6 +108,9 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
       "menu_plus_or_keyboard", "unexpected"])
       .notes(["server counter", "server counter alert"]).required(),
 
+    // How long it took in ms for data to be ready for display.
+    topsites_data_late_by_ms: Joi.number().positive(),
+
     // When did the topsites element finish painting?  Note that, at least for
     // the first tab to be loaded, and maybe some others, this will be before
     // topsites has yet to receive screenshots updates from the add-on code,
@@ -119,7 +125,13 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
     // visibility_event doesn't fire.  (It's not clear whether this
     // can happen in practice, but if it does, we'd like to know about it).
     visibility_event_rcvd_ts: Joi.number().positive()
-      .notes(["server counter", "server counter alert"])
+      .notes(["server counter", "server counter alert"]),
+
+    // The boolean to signify whether the page is preloaded or not.
+    is_preloaded: Joi.bool().required(),
+
+    // The boolean to signify whether the page is prerendered or not.
+    is_prerendered: Joi.bool().required()
   }).required()
 }));
 

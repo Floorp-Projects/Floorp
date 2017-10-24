@@ -236,7 +236,6 @@ for (const config of FEEDS_DATA) {
 }
 
 this.ActivityStream = class ActivityStream {
-
   /**
    * constructor - Initializes an instance of ActivityStream
    *
