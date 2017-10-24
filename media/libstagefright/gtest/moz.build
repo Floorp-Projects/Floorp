@@ -41,6 +41,7 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1389299.mp4',
     'test_case_1389527.mp4',
     'test_case_1395244.mp4',
+    'test_case_1410565.mp4',
 ]
 
 UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
