@@ -93,4 +93,8 @@ void       moz_container_move          (MozContainer *container,
                                         gint          width,
                                         gint          height);
 
+#ifdef MOZ_WAYLAND
+struct wl_surface* moz_container_get_wl_surface(MozContainer *container);
+#endif
+
 #endif /* __MOZ_CONTAINER_H__ */
