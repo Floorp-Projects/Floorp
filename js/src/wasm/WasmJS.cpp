@@ -390,7 +390,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     UniqueChars error;
-    SharedModule module = CompileInitialTier(*bytecode, *compileArgs, &error);
+    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -889,7 +889,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    SharedModule module = CompileInitialTier(*bytecode, *compileArgs, &error);
+    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -1969,7 +1969,7 @@ struct CompileBufferTask : PromiseHelperTask
     }
 
     void execute() override {
-        module = CompileInitialTier(*bytecode, *compileArgs, &error);
+        module = CompileBuffer(*compileArgs, *bytecode, &error);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
@@ -2128,8 +2128,13 @@ EnsureStreamSupport(JSContext* cx)
     if (!EnsurePromiseSupport(cx))
         return false;
 
+    if (!CanUseExtraThreads()) {
+        JS_ReportErrorASCII(cx, "WebAssembly.compileStreaming not supported with --no-threads");
+        return false;
+    }
+
     if (!cx->runtime()->consumeStreamCallback) {
-        JS_ReportErrorASCII(cx, "WebAssembly.compileStreaming not supported in this runtime.");
+        JS_ReportErrorASCII(cx, "WebAssembly streaming not supported in this runtime");
         return false;
     }
 
@@ -2143,63 +2148,229 @@ RejectWithErrorNumber(JSContext* cx, uint32_t errorNumber, Handle<PromiseObject*
     return RejectWithPendingException(cx, promise);
 }
 
-struct CompileStreamTask : OffThreadPromiseTask, JS::StreamConsumer
+class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
 {
-    SharedCompileArgs      compileArgs;
-    MutableBytes           streamBuffer;
-    UniqueChars            compileError;
-    Maybe<uint32_t>        streamError;
-    SharedModule           module;
-    bool                   instantiate;
-    PersistentRootedObject importObj;
+    enum StreamState { Env, Code, Tail, Closed };
+    typedef ExclusiveWaitableData<StreamState> ExclusiveStreamState;
 
-    CompileStreamTask(JSContext* cx, Handle<PromiseObject*> promise,
-                      const CompileArgs& compileArgs, bool instantiate,
-                      HandleObject importObj)
-      : OffThreadPromiseTask(cx, promise),
-        compileArgs(&compileArgs),
-        instantiate(instantiate),
-        importObj(cx, importObj)
-    {
-        MOZ_ASSERT_IF(importObj, instantiate);
+    // Immutable:
+    const SharedCompileArgs      compileArgs_;
+    const bool                   instantiate_;
+    const PersistentRootedObject importObj_;
+
+    // Mutated on a stream thread (consumeChunk() and streamClosed()):
+    ExclusiveStreamState         streamState_;
+    Bytes                        envBytes_;        // immutable after Env state
+    SectionRange                 codeSection_;     // immutable after Env state
+    Bytes                        codeBytes_;       // not resized after Env state
+    uint8_t*                     codeStreamEnd_;
+    ExclusiveStreamEnd           exclusiveCodeStreamEnd_;
+    Bytes                        tailBytes_;       // immutable after Tail state
+    ExclusiveTailBytesPtr        exclusiveTailBytes_;
+    Maybe<uint32_t>              streamError_;
+    Atomic<bool>                 streamFailed_;
+
+    // Mutated on helper thread (execute()):
+    SharedModule                 module_;
+    UniqueChars                  compileError_;
+
+    // Called on a stream thread:
+
+    // Until StartOffThreadPromiseHelperTask succeeds, we are responsible for
+    // dispatching ourselves back to the JS thread.
+    //
+    // Warning: After this function returns, 'this' can be deleted at any time, so the
+    // caller must immediately return from the stream callback.
+    void setClosedAndDestroyBeforeHelperThreadStarted() {
+        streamState_.lock().get() = Closed;
+        dispatchResolveAndDestroy();
     }
 
-    bool init(JSContext* cx) {
-        streamBuffer = cx->new_<ShareableBytes>();
-        if (!streamBuffer)
-            return false;
-        return OffThreadPromiseTask::init(cx);
+    // See setClosedAndDestroyBeforeHelperThreadStarted() comment.
+    bool rejectAndDestroyBeforeHelperThreadStarted(unsigned errorNumber) {
+        MOZ_ASSERT(streamState_.lock() == Env);
+        MOZ_ASSERT(!streamError_);
+        streamError_ = Some(errorNumber);
+        setClosedAndDestroyBeforeHelperThreadStarted();
+        return false;
+    }
+
+    // Once StartOffThreadPromiseHelperTask succeeds, the helper thread will
+    // dispatchResolveAndDestroy() after execute() returns, but execute()
+    // wait()s for state to be Closed.
+    //
+    // Warning: After this function returns, 'this' can be deleted at any time, so the
+    // caller must immediately return from the stream callback.
+    void setClosedAndDestroyAfterHelperThreadStarted() {
+        auto streamState = streamState_.lock();
+        streamState.get() = Closed;
+        streamState.notify_one(/* stream closed */);
+    }
+
+    // See setClosedAndDestroyAfterHelperThreadStarted() comment.
+    bool rejectAndDestroyAfterHelperThreadStarted(unsigned errorNumber) {
+        MOZ_ASSERT(streamState_.lock() == Code || streamState_.lock() == Tail);
+        MOZ_ASSERT(!streamError_);
+        streamError_ = Some(JSMSG_OUT_OF_MEMORY);
+        streamFailed_ = true;
+        exclusiveCodeStreamEnd_.lock().notify_one();
+        exclusiveTailBytes_.lock().notify_one();
+        setClosedAndDestroyAfterHelperThreadStarted();
+        return false;
     }
 
     bool consumeChunk(const uint8_t* begin, size_t length) override {
-        if (!streamBuffer->append(begin, length)) {
-            streamError = Some(JSMSG_OUT_OF_MEMORY);
-            dispatchResolveAndDestroy();
-            return false;
+        switch (streamState_.lock().get()) {
+          case Env: {
+            if (!envBytes_.append(begin, length))
+                return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+
+            if (!StartsCodeSection(envBytes_.begin(), envBytes_.end(), &codeSection_))
+                return true;
+
+            uint32_t extraBytes = envBytes_.length() - codeSection_.start;
+            if (extraBytes)
+                envBytes_.shrinkTo(codeSection_.start);
+
+            if (codeSection_.size > MaxModuleBytes)
+                return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+
+            if (!codeBytes_.resize(codeSection_.size))
+                return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+
+            codeStreamEnd_ = codeBytes_.begin();
+            exclusiveCodeStreamEnd_.lock().get() = codeStreamEnd_;
+
+            if (!StartOffThreadPromiseHelperTask(this))
+                return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+
+            // Set the state to Code iff StartOffThreadPromiseHelperTask()
+            // succeeds so that the state tells us whether we are before or
+            // after the helper thread started.
+            streamState_.lock().get() = Code;
+
+            if (extraBytes)
+                return consumeChunk(begin + length - extraBytes, extraBytes);
+
+            return true;
+          }
+          case Code: {
+            size_t copyLength = Min<size_t>(length, codeBytes_.end() - codeStreamEnd_);
+            memcpy(codeStreamEnd_, begin, copyLength);
+            codeStreamEnd_ += copyLength;
+
+            {
+                auto codeStreamEnd = exclusiveCodeStreamEnd_.lock();
+                codeStreamEnd.get() = codeStreamEnd_;
+                codeStreamEnd.notify_one();
+            }
+
+            if (codeStreamEnd_ != codeBytes_.end())
+                return true;
+
+            streamState_.lock().get() = Tail;
+
+            if (uint32_t extraBytes = length - copyLength)
+                return consumeChunk(begin + copyLength, extraBytes);
+
+            return true;
+          }
+          case Tail: {
+            if (!tailBytes_.append(begin, length))
+                return rejectAndDestroyAfterHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+
+            return true;
+          }
+          case Closed:
+            MOZ_CRASH("consumeChunk() in Closed state");
         }
-        return true;
+        MOZ_CRASH("unreachable");
     }
 
     void streamClosed(JS::StreamConsumer::CloseReason closeReason) override {
         switch (closeReason) {
           case JS::StreamConsumer::EndOfFile:
-            module = CompileInitialTier(*streamBuffer, *compileArgs, &compileError);
-            break;
+            switch (streamState_.lock().get()) {
+              case Env: {
+                SharedBytes bytecode = js_new<ShareableBytes>(Move(envBytes_));
+                if (!bytecode) {
+                    rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
+                    return;
+                }
+                module_ = CompileBuffer(*compileArgs_, *bytecode, &compileError_);
+                setClosedAndDestroyBeforeHelperThreadStarted();
+                return;
+              }
+              case Code:
+              case Tail:
+                {
+                    auto tailBytes = exclusiveTailBytes_.lock();
+                    tailBytes.get() = &tailBytes_;
+                    tailBytes.notify_one();
+                }
+                setClosedAndDestroyAfterHelperThreadStarted();
+                return;
+              case Closed:
+                MOZ_CRASH("streamClosed() in Closed state");
+            }
           case JS::StreamConsumer::Error:
-            streamError = Some(JSMSG_WASM_STREAM_ERROR);
-            break;
+            switch (streamState_.lock().get()) {
+              case Env:
+                rejectAndDestroyBeforeHelperThreadStarted(JSMSG_WASM_STREAM_ERROR);
+                return;
+              case Tail:
+              case Code:
+                rejectAndDestroyAfterHelperThreadStarted(JSMSG_WASM_STREAM_ERROR);
+                return;
+              case Closed:
+                MOZ_CRASH("streamClosed() in Closed state");
+            }
         }
-        dispatchResolveAndDestroy();
+        MOZ_CRASH("unreachable");
     }
 
+    // Called on a helper thread:
+
+    void execute() override {
+        module_ = CompileStreaming(*compileArgs_, envBytes_, codeBytes_, exclusiveCodeStreamEnd_,
+                                   exclusiveTailBytes_, streamFailed_, &compileError_);
+
+        // When execute() returns, the CompileStreamTask will be dispatched
+        // back to its JS thread to call resolve() and then be destroyed. We
+        // can't let this happen until the stream has been closed lest
+        // consumeChunk() or streamClosed() be called on a dead object.
+        auto streamState = streamState_.lock();
+        while (streamState != Closed)
+            streamState.wait(/* stream closed */);
+    }
+
+    // Called on a JS thread after streaming compilation completes/errors:
+
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
-        MOZ_ASSERT_IF(module, !streamError && !compileError);
-        MOZ_ASSERT_IF(!module, !!streamError ^ !!compileError);
-        return module
-               ? Resolve(cx, *module, *compileArgs, promise, instantiate, importObj)
-               : streamError
-                 ? RejectWithErrorNumber(cx, *streamError, promise)
-                 : Reject(cx, *compileArgs, Move(compileError), promise);
+        MOZ_ASSERT(streamState_.lock() == Closed);
+        MOZ_ASSERT_IF(module_, !streamFailed_ && !streamError_ && !compileError_);
+        return module_
+               ? Resolve(cx, *module_, *compileArgs_, promise, instantiate_, importObj_)
+               : streamError_
+                 ? RejectWithErrorNumber(cx, *streamError_, promise)
+                 : Reject(cx, *compileArgs_, Move(compileError_), promise);
+    }
+
+  public:
+    CompileStreamTask(JSContext* cx, Handle<PromiseObject*> promise,
+                      const CompileArgs& compileArgs, bool instantiate,
+                      HandleObject importObj)
+      : PromiseHelperTask(cx, promise),
+        compileArgs_(&compileArgs),
+        instantiate_(instantiate),
+        importObj_(cx, importObj),
+        streamState_(mutexid::WasmStreamStatus, Env),
+        codeStreamEnd_(nullptr),
+        exclusiveCodeStreamEnd_(mutexid::WasmCodeStreamEnd, nullptr),
+        exclusiveTailBytes_(mutexid::WasmTailBytesPtr, nullptr),
+        streamFailed_(false)
+    {
+        MOZ_ASSERT_IF(importObj_, instantiate_);
     }
 };
 

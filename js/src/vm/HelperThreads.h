@@ -479,6 +479,9 @@ CancelOffThreadWasmTier2Generator();
 bool
 StartOffThreadPromiseHelperTask(JSContext* cx, UniquePtr<PromiseHelperTask> task);
 
+bool
+StartOffThreadPromiseHelperTask(PromiseHelperTask* task);
+
 /*
  * Schedule an Ion compilation for a script, given a builder which has been
  * generated and read everything needed from the VM state.
@@ -791,6 +794,9 @@ struct PromiseHelperTask : OffThreadPromiseTask
 
     // May be called in the absence of helper threads or off-thread promise
     // support to synchronously execute and resolve a PromiseTask.
+    //
+    // Warning: After this function returns, 'this' can be deleted at any time, so the
+    // caller must immediately return from the stream callback.
     void executeAndResolveAndDestroy(JSContext* cx);
 };
 

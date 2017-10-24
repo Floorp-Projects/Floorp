@@ -32,6 +32,13 @@ struct SectionRange
 {
     uint32_t start;
     uint32_t size;
+
+    uint32_t end() const {
+        return start + size;
+    }
+    bool operator==(const SectionRange& rhs) const {
+        return start == rhs.start && size == rhs.size;
+    }
 };
 
 typedef Maybe<SectionRange> MaybeSectionRange;
@@ -353,6 +360,7 @@ class Decoder
 
     template <typename UInt>
     MOZ_MUST_USE bool readVarU(UInt* out) {
+        DebugOnly<const uint8_t*> before = cur_;
         const unsigned numBits = sizeof(UInt) * CHAR_BIT;
         const unsigned remainderBits = numBits % 7;
         const unsigned numBitsInSevens = numBits - remainderBits;
@@ -372,6 +380,7 @@ class Decoder
         if (!readFixedU8(&byte) || (byte & (unsigned(-1) << remainderBits)))
             return false;
         *out = u | (UInt(byte) << numBitsInSevens);
+        MOZ_ASSERT_IF(sizeof(UInt) == 4, unsigned(cur_ - before) <= MaxVarU32DecodedBytes);
         return true;
     }
 
@@ -416,11 +425,11 @@ class Decoder
     {
         MOZ_ASSERT(begin <= end);
     }
-    explicit Decoder(const Bytes& bytes, UniqueChars* error = nullptr)
+    explicit Decoder(const Bytes& bytes, size_t offsetInModule = 0, UniqueChars* error = nullptr)
       : beg_(bytes.begin()),
         end_(bytes.end()),
         cur_(bytes.begin()),
-        offsetInModule_(0),
+        offsetInModule_(offsetInModule),
         error_(error),
         resilientMode_(false)
     {}
