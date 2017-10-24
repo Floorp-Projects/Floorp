@@ -14,7 +14,6 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 
 class nsIGlobalObject;
 
@@ -40,7 +39,7 @@ namespace cache {
 class CacheStorageChild;
 class CacheWorkerHolder;
 
-class CacheStorage final : public nsIIPCBackgroundChildCreateCallback
+class CacheStorage final : public nsISupports
                          , public nsWrapperCache
                          , public TypeUtils
 {
@@ -79,10 +78,6 @@ public:
   nsISupports* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) override;
 
-  // nsIIPCbackgroundChildCreateCallback methods
-  virtual void ActorCreated(PBackgroundChild* aActor) override;
-  virtual void ActorFailed() override;
-
   // Called when CacheStorageChild actor is being destroyed
   void DestroyInternal(CacheStorageChild* aActor);
 
@@ -102,7 +97,8 @@ private:
   explicit CacheStorage(nsresult aFailureResult);
   ~CacheStorage();
 
-  void MaybeRunPendingRequests();
+  struct Entry;
+  void RunRequest(nsAutoPtr<Entry>&& aEntry);
 
   OpenMode
   GetOpenMode() const;
@@ -110,20 +106,15 @@ private:
   const Namespace mNamespace;
   nsCOMPtr<nsIGlobalObject> mGlobal;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
-  RefPtr<CacheWorkerHolder> mWorkerHolder;
 
   // weak ref cleared in DestroyInternal
   CacheStorageChild* mActor;
-
-  struct Entry;
-  nsTArray<nsAutoPtr<Entry>> mPendingRequests;
 
   nsresult mStatus;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CacheStorage,
-                                           nsIIPCBackgroundChildCreateCallback)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CacheStorage)
 };
 
 } // namespace cache
