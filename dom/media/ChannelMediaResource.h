@@ -103,9 +103,9 @@ public:
   // MediaCacheStream::NotifyDataReceived/Ended.
   void CacheClientSeek(int64_t aOffset, bool aResume);
   // Suspend the current load since data is currently not wanted
-  nsresult CacheClientSuspend();
+  void CacheClientSuspend();
   // Resume the current load since data is wanted again
-  nsresult CacheClientResume();
+  void CacheClientResume();
 
   bool IsSuspended();
 

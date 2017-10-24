@@ -1497,7 +1497,6 @@ MediaCache::Update()
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaCacheStream* stream = mStreams[i];
-    nsresult rv = NS_OK;
     switch (actions[i].mTag) {
       case StreamAction::SEEK:
         LOG("Stream %p CacheSeek to %" PRId64 " (resume=%d)",
@@ -1509,24 +1508,16 @@ MediaCache::Update()
         break;
       case StreamAction::RESUME:
         LOG("Stream %p Resumed", stream);
-        rv = stream->mClient->CacheClientResume();
+        stream->mClient->CacheClientResume();
         QueueSuspendedStatusUpdate(stream->mResourceID);
         break;
       case StreamAction::SUSPEND:
         LOG("Stream %p Suspended", stream);
-        rv = stream->mClient->CacheClientSuspend();
+        stream->mClient->CacheClientSuspend();
         QueueSuspendedStatusUpdate(stream->mResourceID);
         break;
       default:
-        rv = NS_OK;
         break;
-    }
-
-    if (NS_FAILED(rv)) {
-      // Close the streams that failed due to error. This will cause all
-      // client Read and Seek operations on those streams to fail. Blocked
-      // Reads will also be woken up.
-      stream->mClient->Close();
     }
   }
 
