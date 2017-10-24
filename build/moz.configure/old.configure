@@ -66,6 +66,7 @@ set_config('AUTOCONF', autoconf)
          old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
+@imports(_from='__builtin__', _import='sorted')
 @imports('glob')
 @imports('itertools')
 @imports('subprocess')
@@ -126,13 +127,21 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             log.debug('| %s', command)
 
         if mozconfig['path']:
+            inject('# start of mozconfig values')
+            items = {}
             for key, value in mozconfig['vars']['added'].items():
-                inject("%s=%s" % (key, quote(value)))
+                items[key] = (value, 'added')
             for key, (old, value) in mozconfig['vars']['modified'].items():
-                inject("%s=%s" % (key, quote(value)))
+                items[key] = (value, 'modified')
+
+            for key, (value, action) in sorted(items.items()):
+                inject("%s=%s # %s" % (key, quote(value), action))
+
             for t in ('env', 'vars'):
-                for key in mozconfig[t]['removed'].keys():
-                    inject("unset %s" % key)
+                for key in sorted(mozconfig[t]['removed'].keys()):
+                    inject("unset %s # from %s" % (key, t))
+
+            inject('# end of mozconfig values')
 
         # Autoconf is special, because it might be passed from
         # mozconfig['make_extra'], which we don't pass automatically above.
