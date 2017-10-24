@@ -1306,8 +1306,8 @@ MediaCache::Update()
     }
   }
 
-  int32_t resumeThreshold = Preferences::GetInt("media.cache_resume_threshold", 10);
-  int32_t readaheadLimit = Preferences::GetInt("media.cache_readahead_limit", 30);
+  int32_t resumeThreshold = MediaPrefs::MediaCacheResumeThreshold();
+  int32_t readaheadLimit = MediaPrefs::MediaCacheReadaheadLimit();
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     actions.AppendElement(StreamAction{});
