@@ -16,7 +16,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Geometry.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
                                   "resource://testing-common/BrowserTestUtils.jsm");
@@ -42,7 +41,6 @@ this.TestRunner = {
   currentComboIndex: 0,
   _lastCombo: null,
   _libDir: null,
-  croppingPadding: 10,
 
   init(extensionPath) {
     log.debug("init");
@@ -198,73 +196,6 @@ this.TestRunner = {
   },
 
   // helpers
-
-  /**
-  * Calculate the bounding box based on CSS selector from config for cropping
-  *
-  * @param {String[]} selectors - array of CSS selectors for relevant DOM element
-  * @return {Geometry.jsm Rect} Rect holding relevant x, y, width, height with padding
-  **/
-  _findBoundingBox(selectors, windowType) {
-    // No selectors provided
-    if (!selectors.length) {
-      log.info("_findBoundingBox: selectors argument is empty");
-      return null;
-    }
-
-    // Set window type, default "navigator:browser"
-    windowType = windowType || "navigator:browser";
-    let browserWindow = Services.wm.getMostRecentWindow(windowType);
-    // Scale for high-density displays
-    const scale = browserWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIBaseWindow)
-                        .devicePixelsPerDesktopPixel;
-
-    let finalRect = undefined;
-    // Grab bounding boxes and find the union
-    for (let selector of selectors) {
-      let element;
-      // Check for function to find anonymous content
-      if (typeof(selector) == "function") {
-        element = selector();
-      } else {
-        element = browserWindow.document.querySelector(selector);
-      }
-
-      // Selector not found
-      if (!element) {
-        log.info("_findBoundingBox: selector not found");
-        return null;
-      }
-
-      // Calculate box region, convert to Rect
-      let box = element.ownerDocument.getBoxObjectFor(element);
-      let newRect = new Rect(box.screenX * scale, box.screenY * scale,
-                             box.width * scale, box.height * scale);
-
-      if (!finalRect) {
-        finalRect = newRect;
-      } else {
-        finalRect = finalRect.union(newRect);
-      }
-    }
-
-    // Add fixed padding
-    finalRect = finalRect.inflateFixed(this.croppingPadding * scale);
-
-    let windowLeft = browserWindow.screenX * scale;
-    let windowTop = browserWindow.screenY * scale;
-    let windowWidth = browserWindow.outerWidth * scale;
-    let windowHeight = browserWindow.outerHeight * scale;
-
-    // Clip dimensions to window only
-    finalRect.left = Math.max(finalRect.left, windowLeft);
-    finalRect.top = Math.max(finalRect.top, windowTop);
-    finalRect.right = Math.min(finalRect.right, windowLeft + windowWidth);
-    finalRect.bottom = Math.min(finalRect.bottom, windowTop + windowHeight);
-
-    return finalRect;
-  },
 
   async _performCombo(combo) {
     let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);
