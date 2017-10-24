@@ -19,7 +19,6 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
                                              WebRenderCommandBuilder::ClipIdMap& aCache,
                                              bool aApzEnabled)
   : mBuilder(&aBuilder)
-  , mPushedClipAndScroll(false)
   , mCache(aCache)
 {
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -63,23 +62,28 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
   // the scroll stack
   if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
     MOZ_ASSERT(leafmostId == scrollId); // because !needClipAndScroll
-    mBuilder->PushScrollLayer(scrollId);
-    mPushedClips.push_back(wr::ScrollOrClipId(scrollId));
+    mItemClips.mScrollId = Some(scrollId);
   }
   // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
   // stack.
   if (ids.second && aItem->GetClipChain()->mASR == leafmostASR) {
-    mBuilder->PushClip(ids.second.ref());
-    mPushedClips.push_back(wr::ScrollOrClipId(ids.second.ref()));
+    mItemClips.mClipId = ids.second;
   }
   // If we need the ClipAndScroll, we want to replace the topmost scroll layer
   // with the item's ASR but preseve the topmost clip (which is scrolled by
   // some other ASR).
   if (needClipAndScroll) {
-    Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
-    mBuilder->PushClipAndScrollInfo(scrollId, clipId.ptrOr(nullptr));
-    mPushedClipAndScroll = true;
+    // If mClipId is set that means we want to push it such that it's going
+    // to be the TopmostClipId(), but we haven't actually pushed it yet.
+    // But we still want to take that instead of the actual current TopmostClipId().
+    Maybe<wr::WrClipId> clipId = mItemClips.mClipId;
+    if (!clipId) {
+      clipId = mBuilder->TopmostClipId();
+    }
+    mItemClips.mClipAndScroll = Some(std::make_pair(scrollId, clipId));
   }
+
+  mItemClips.Apply(mBuilder);
 }
 
 std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
@@ -352,18 +356,35 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
-  if (mPushedClipAndScroll) {
-    mBuilder->PopClipAndScrollInfo();
+  mItemClips.Unapply(mBuilder);
+}
+
+void
+ScrollingLayersHelper::ItemClips::Apply(wr::DisplayListBuilder* aBuilder)
+{
+  if (mScrollId) {
+    aBuilder->PushScrollLayer(mScrollId.ref());
   }
-  while (!mPushedClips.empty()) {
-    wr::ScrollOrClipId id = mPushedClips.back();
-    if (id.is<wr::WrClipId>()) {
-      mBuilder->PopClip();
-    } else {
-      MOZ_ASSERT(id.is<FrameMetrics::ViewID>());
-      mBuilder->PopScrollLayer();
-    }
-    mPushedClips.pop_back();
+  if (mClipId) {
+    aBuilder->PushClip(mClipId.ref());
+  }
+  if (mClipAndScroll) {
+    aBuilder->PushClipAndScrollInfo(mClipAndScroll->first,
+                                    mClipAndScroll->second.ptrOr(nullptr));
+  }
+}
+
+void
+ScrollingLayersHelper::ItemClips::Unapply(wr::DisplayListBuilder* aBuilder)
+{
+  if (mClipAndScroll) {
+    aBuilder->PopClipAndScrollInfo();
+  }
+  if (mClipId) {
+    aBuilder->PopClip();
+  }
+  if (mScrollId) {
+    aBuilder->PopScrollLayer();
   }
 }
 

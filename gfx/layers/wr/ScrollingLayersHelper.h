@@ -55,9 +55,18 @@ private:
                       const StackingContextHelper& aSc);
 
   wr::DisplayListBuilder* mBuilder;
-  bool mPushedClipAndScroll;
-  std::vector<wr::ScrollOrClipId> mPushedClips;
   WebRenderCommandBuilder::ClipIdMap& mCache;
+
+  struct ItemClips {
+    Maybe<FrameMetrics::ViewID> mScrollId;
+    Maybe<wr::WrClipId> mClipId;
+    Maybe<std::pair<FrameMetrics::ViewID, Maybe<wr::WrClipId>>> mClipAndScroll;
+
+    void Apply(wr::DisplayListBuilder* aBuilder);
+    void Unapply(wr::DisplayListBuilder* aBuilder);
+  };
+
+  ItemClips mItemClips;
 };
 
 } // namespace layers
