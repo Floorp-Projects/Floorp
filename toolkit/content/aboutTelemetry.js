@@ -220,19 +220,17 @@ var Settings = {
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
   render() {
-    let settingsExplanation = document.getElementById("settings-explanation");
-    let uploadEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
-    let extendedEnabled = Services.telemetry.canRecordExtended;
-    let collectedData = bundle.GetStringFromName(extendedEnabled ? "prereleaseData" : "releaseData");
+    let homeExplanation = document.getElementById("home-explanation");
+    let fhrEnabled = Preferences.get(this.SETTINGS[0].pref, this.SETTINGS[0].defaultPrefValue);
+    fhrEnabled = bundle.GetStringFromName(fhrEnabled ? "telemetryEnabled" : "telemetryDisabled");
+    let extendedEnabled = Preferences.get(this.SETTINGS[1].pref, this.SETTINGS[1].defaultPrefValue);
+    extendedEnabled = bundle.GetStringFromName(extendedEnabled ? "extendedTelemetryEnabled" : "extendedTelemetryDisabled");
+    let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
 
-    let parameters = [
-      collectedData,
-      this.convertStringToLink(uploadEnabled),
-    ];
-    let explanation = bundle.formatStringFromName("settingsExplanation", parameters, 2);
+    let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
 
     // eslint-disable-next-line no-unsanitized/property
-    settingsExplanation.innerHTML = explanation;
+    homeExplanation.innerHTML = explanation;
     this.attachObservers();
   },
 
