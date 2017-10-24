@@ -456,6 +456,28 @@ async _consoleOpenWithCachedMessagesTest() {
     await this.testTeardown();
   },
 
+  async _panelsInBackgroundReload() {
+    let url = "data:text/html;charset=UTF-8," + encodeURIComponent(`
+      <script>
+      // Log a significant amount of messages
+      for(let i = 0; i < 2000; i++) {
+        console.log("log in background", i);
+      }
+      </script>
+    `);
+    await this.testSetup(url);
+    let {toolbox} = await this.openToolbox("webconsole");
+
+    // Select the options panel to make the console be in background.
+    // Options panel should not do anything on page reload.
+    await toolbox.selectTool("options");
+
+    await this.reloadPageAndLog("panelsInBackground");
+
+    await this.closeToolbox();
+    await this.testTeardown();
+  },
+
   _getToolLoadingTests(url, label, { expectedMessages, expectedSources }) {
     let tests = {
       inspector: Task.async(function* () {
@@ -737,6 +759,8 @@ async _consoleOpenWithCachedMessagesTest() {
       topWindow.coldRunDAMP = true;
       tests["cold.inspector"] = this._coldInspectorOpen;
     }
+
+    tests["panelsInBackground.reload"] = this._panelsInBackgroundReload;
 
     Object.assign(tests, this._getToolLoadingTests(SIMPLE_URL, "simple", {
       expectedMessages: 1,
