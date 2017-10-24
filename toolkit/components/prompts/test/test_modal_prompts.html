@@ -26,7 +26,7 @@ async function runTests() {
     let prompter, promptArgs;
     if (usePromptService) {
         prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                   getService(Ci.nsIPromptService2);
+                   getService(Ci.nsIPromptService);
     } else {
         prompter = Cc["@mozilla.org/prompter;1"].
                    getService(Ci.nsIPromptFactory).
