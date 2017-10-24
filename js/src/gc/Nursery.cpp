@@ -14,7 +14,6 @@
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
