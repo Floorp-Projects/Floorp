@@ -5,9 +5,9 @@ function t1(v)
   return 0;
 }
 
-assertEq(t1(objectEmulatingUndefined()), 0);
-assertEq(t1(objectEmulatingUndefined()), 0);
-assertEq(t1(objectEmulatingUndefined()), 0);
+assertEq(t1(createIsHTMLDDA()), 0);
+assertEq(t1(createIsHTMLDDA()), 0);
+assertEq(t1(createIsHTMLDDA()), 0);
 
 function t2(v)
 {
@@ -19,6 +19,6 @@ function t2(v)
 assertEq(t2(17), 1);
 assertEq(t2(0), 0);
 assertEq(t2(-0), 0);
-assertEq(t2(objectEmulatingUndefined()), 0);
-assertEq(t2(objectEmulatingUndefined()), 0);
-assertEq(t2(objectEmulatingUndefined()), 0);
+assertEq(t2(createIsHTMLDDA()), 0);
+assertEq(t2(createIsHTMLDDA()), 0);
+assertEq(t2(createIsHTMLDDA()), 0);

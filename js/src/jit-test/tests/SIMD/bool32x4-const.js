@@ -12,7 +12,7 @@ function f1() {
         B(true),
         B(undefined, null, "", "x"),
         B({}, 0, 1, -0.0),
-        B(NaN, -NaN, Symbol(), objectEmulatingUndefined()),
+        B(NaN, -NaN, Symbol(), createIsHTMLDDA()),
 
         S(false),
         S(true),
@@ -29,7 +29,7 @@ function f1() {
         S(NaN),
         S(Symbol()),
 
-        S(objectEmulatingUndefined())
+        S(createIsHTMLDDA())
     ];
 }
 

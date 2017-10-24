@@ -56,7 +56,7 @@ protected:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
   nsCOMPtr<nsIContent>      mContent;
-  nsCOMPtr<nsIPrincipal>    mLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal>    mTriggeringPrincipal;
   nsContentPolicyType       mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
   nsMenuObjectX*            mMenuObject; // [weak]
