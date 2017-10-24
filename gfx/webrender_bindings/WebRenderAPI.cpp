@@ -725,7 +725,7 @@ DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aExtra)
   wr_dp_push_clip(mWrState, aClipId.id);
   WRDL_LOG("PushClip id=%" PRIu64 "\n", mWrState, aClipId.id);
   if (!aExtra) {
-    mClipIdStack.push_back(aClipId);
+    mClipStack.push_back(wr::ScrollOrClipId(aClipId));
   } else {
     mExtraClipCount++;
   }
@@ -734,9 +734,10 @@ DisplayListBuilder::PushClip(const wr::WrClipId& aClipId, bool aExtra)
 void
 DisplayListBuilder::PopClip(bool aExtra)
 {
-  WRDL_LOG("PopClip id=%" PRIu64 "\n", mWrState, mClipIdStack.back().id);
+  WRDL_LOG("PopClip\n", mWrState);
   if (!aExtra) {
-    mClipIdStack.pop_back();
+    MOZ_ASSERT(mClipStack.back().is<wr::WrClipId>());
+    mClipStack.pop_back();
   } else {
     mExtraClipCount--;
   }
@@ -812,14 +813,15 @@ DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollI
 {
   WRDL_LOG("PushScrollLayer id=%" PRIu64 "\n", mWrState, aScrollId);
   wr_dp_push_scroll_layer(mWrState, aScrollId);
-  mScrollIdStack.push_back(aScrollId);
+  mClipStack.push_back(wr::ScrollOrClipId(aScrollId));
 }
 
 void
 DisplayListBuilder::PopScrollLayer()
 {
-  WRDL_LOG("PopScrollLayer id=%" PRIu64 "\n", mWrState, mScrollIdStack.back());
-  mScrollIdStack.pop_back();
+  MOZ_ASSERT(mClipStack.back().is<layers::FrameMetrics::ViewID>());
+  WRDL_LOG("PopScrollLayer id=%" PRIu64 "\n", mWrState, mClipStack.back().as<layers::FrameMetrics::ViewID>());
+  mClipStack.pop_back();
   wr_dp_pop_scroll_layer(mWrState);
 }
 
@@ -831,14 +833,15 @@ DisplayListBuilder::PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aS
       aClipId ? Stringify(aClipId->id).c_str() : "none");
   wr_dp_push_clip_and_scroll_info(mWrState, aScrollId,
       aClipId ? &(aClipId->id) : nullptr);
-  mScrollIdStack.push_back(aScrollId);
+  mClipStack.push_back(wr::ScrollOrClipId(aScrollId));
 }
 
 void
 DisplayListBuilder::PopClipAndScrollInfo()
 {
+  MOZ_ASSERT(mClipStack.back().is<layers::FrameMetrics::ViewID>());
   WRDL_LOG("PopClipAndScroll\n", mWrState);
-  mScrollIdStack.pop_back();
+  mClipStack.pop_back();
   wr_dp_pop_clip_and_scroll_info(mWrState);
 }
 
@@ -1131,19 +1134,23 @@ DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
 Maybe<wr::WrClipId>
 DisplayListBuilder::TopmostClipId()
 {
-  if (mClipIdStack.empty()) {
-    return Nothing();
+  for (auto it = mClipStack.crbegin(); it != mClipStack.crend(); it++) {
+    if (it->is<wr::WrClipId>()) {
+      return Some(it->as<wr::WrClipId>());
+    }
   }
-  return Some(mClipIdStack.back());
+  return Nothing();
 }
 
 layers::FrameMetrics::ViewID
 DisplayListBuilder::TopmostScrollId()
 {
-  if (mScrollIdStack.empty()) {
-    return layers::FrameMetrics::NULL_SCROLL_ID;
+  for (auto it = mClipStack.crbegin(); it != mClipStack.crend(); it++) {
+    if (it->is<layers::FrameMetrics::ViewID>()) {
+      return it->as<layers::FrameMetrics::ViewID>();
+    }
   }
-  return mScrollIdStack.back();
+  return layers::FrameMetrics::NULL_SCROLL_ID;
 }
 
 } // namespace wr
