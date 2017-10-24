@@ -5,24 +5,24 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const { div } = DOM;
 
-const RequestListColumnCause = createClass({
-  displayName: "RequestListColumnCause",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-    onCauseBadgeMouseDown: PropTypes.func.isRequired,
-  },
+class RequestListColumnCause extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+      onCauseBadgeMouseDown: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.cause !== nextProps.item.cause;
-  },
+  }
 
   render() {
     let {
@@ -49,6 +49,6 @@ const RequestListColumnCause = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnCause;

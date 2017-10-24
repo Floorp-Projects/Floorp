@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -17,19 +17,19 @@ const { div } = DOM;
  * Renders a response header column in the requests list.  The actual
  * header to show is passed as a prop.
  */
-const RequestListColumnResponseHeader = createClass({
-  displayName: "RequestListColumnResponseHeader",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-    header: PropTypes.string.isRequired,
-  },
+class RequestListColumnResponseHeader extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+      header: PropTypes.string.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     const currHeader = getResponseHeader(this.props.item, this.props.header);
     const nextHeader = getResponseHeader(nextProps.item, nextProps.header);
     return currHeader !== nextHeader;
-  },
+  }
 
   render() {
     let header = getResponseHeader(this.props.item, this.props.header);
@@ -42,6 +42,6 @@ const RequestListColumnResponseHeader = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnResponseHeader;

@@ -5,28 +5,28 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const { div } = DOM;
 
-const RequestListColumnMethod = createClass({
-  displayName: "RequestListColumnMethod",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnMethod extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.method !== nextProps.item.method;
-  },
+  }
 
   render() {
     let { method } = this.props.item;
     return div({ className: "requests-list-column requests-list-method" }, method);
   }
-});
+}
 
 module.exports = RequestListColumnMethod;

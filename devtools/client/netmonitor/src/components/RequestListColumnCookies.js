@@ -5,19 +5,19 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const { div } = DOM;
 
-const RequestListColumnCookies = createClass({
-  displayName: "RequestListColumnCookies",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnCookies extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     let { requestCookies: currRequestCookies = { cookies: [] } } = this.props.item;
@@ -25,7 +25,7 @@ const RequestListColumnCookies = createClass({
     currRequestCookies = currRequestCookies.cookies || currRequestCookies;
     nextRequestCookies = nextRequestCookies.cookies || nextRequestCookies;
     return currRequestCookies !== nextRequestCookies;
-  },
+  }
 
   render() {
     let { requestCookies = { cookies: [] } } = this.props.item;
@@ -38,6 +38,6 @@ const RequestListColumnCookies = createClass({
       }, requestCookiesLength)
     );
   }
-});
+}
 
 module.exports = RequestListColumnCookies;

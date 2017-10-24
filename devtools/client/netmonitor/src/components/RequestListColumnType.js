@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -13,16 +13,16 @@ const { getAbbreviatedMimeType } = require("../utils/request-utils");
 
 const { div } = DOM;
 
-const RequestListColumnType = createClass({
-  displayName: "RequestListColumnType",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnType extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.mimeType !== nextProps.item.mimeType;
-  },
+  }
 
   render() {
     let { mimeType } = this.props.item;
@@ -41,6 +41,6 @@ const RequestListColumnType = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnType;

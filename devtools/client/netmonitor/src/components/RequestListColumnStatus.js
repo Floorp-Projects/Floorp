@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -21,16 +21,16 @@ const UPDATED_STATUS_PROPS = [
   "statusText",
 ];
 
-const RequestListColumnStatus = createClass({
-  displayName: "RequestListColumnStatus",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnStatus extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_STATUS_PROPS, this.props.item, nextProps.item);
-  },
+  }
 
   render() {
     let { fromCache, fromServiceWorker, status, statusText } = this.props.item;
@@ -69,6 +69,6 @@ const RequestListColumnStatus = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnStatus;

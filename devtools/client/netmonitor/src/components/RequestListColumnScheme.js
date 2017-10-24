@@ -5,23 +5,23 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 
 const { div } = DOM;
 
-const RequestListColumnScheme = createClass({
-  displayName: "RequestListColumnScheme",
-
-  propTypes: {
-    item: PropTypes.object.isRequired,
-  },
+class RequestListColumnScheme extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item.urlDetails.scheme !== nextProps.item.urlDetails.scheme;
-  },
+  }
 
   render() {
     const { urlDetails } = this.props.item;
@@ -34,6 +34,6 @@ const RequestListColumnScheme = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListColumnScheme;
