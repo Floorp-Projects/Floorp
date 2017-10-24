@@ -602,7 +602,7 @@ def main():
     if options['log_tbpl_level'] == 'debug' or options['log_mach_level'] == 'debug':
         dm_args['logLevel'] = logging.DEBUG
     if options['adbPath']:
-        dm_args['adbPath'] = adbPath
+        dm_args['adbPath'] = options['adbPath']
     dm = mozdevice.DroidADB(**dm_args)
 
     if options['interactive'] and not options['testPath']:
