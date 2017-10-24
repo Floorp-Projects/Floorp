@@ -117,6 +117,16 @@ ToDOMMediaKeyStatus(uint32_t aStatus)
 }
 
 void
+ChromiumCDMCallbackProxy::ResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                                      uint32_t aKeyStatus)
+{
+  DispatchToMainThread("ChromiumCDMProxy::OnResolvePromiseWithKeyStatus",
+                       &ChromiumCDMProxy::OnResolvePromiseWithKeyStatus,
+                       aPromiseId,
+                       ToDOMMediaKeyStatus(aKeyStatus));
+}
+
+void
 ChromiumCDMCallbackProxy::SessionKeysChange(const nsCString& aSessionId,
                                             nsTArray<mozilla::gmp::CDMKeyInformation> && aKeysInfo)
 {

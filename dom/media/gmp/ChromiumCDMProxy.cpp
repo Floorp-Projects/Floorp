@@ -466,6 +466,17 @@ ChromiumCDMProxy::OnResolveLoadSessionPromise(uint32_t aPromiseId,
 }
 
 void
+ChromiumCDMProxy::OnResolvePromiseWithKeyStatus(uint32_t aPromiseId,
+                                                dom::MediaKeyStatus aKeyStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  mKeys->ResolvePromiseWithKeyStatus(aPromiseId, aKeyStatus);
+}
+
+void
 ChromiumCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
                                    const nsTArray<uint8_t>& aMessage)
@@ -614,6 +625,13 @@ ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
                   NS_LITERAL_CSTRING("Null CDM in GetStatusForPolicy"));
     return;
   }
+
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsCString>(
+    "gmp::ChromiumCDMParent::GetStatusForPolicy",
+    cdm,
+    &gmp::ChromiumCDMParent::GetStatusForPolicy,
+    aPromiseId,
+    NS_ConvertUTF16toUTF8(aMinHdcpVersion)));
 }
 
 void
