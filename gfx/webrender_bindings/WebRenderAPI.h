@@ -388,7 +388,7 @@ public:
                      const wr::ColorF& aColor,
                      const float& aBlurRadius,
                      const float& aSpreadRadius,
-                     const float& aBorderRadius,
+                     const wr::BorderRadius& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
   // Returns the clip id that was most recently pushed with PushClip and that

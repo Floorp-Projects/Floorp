@@ -5630,7 +5630,6 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                                                      borderRect,
                                                      mFrame,
                                                      borderRadii);
-    MOZ_ASSERT(borderRadii.AreRadiiSame());
   }
 
   // Everything here is in app units, change to device units.
@@ -5663,9 +5662,17 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRect(deviceBox);
       wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
 
-      // TODO: support non-uniform border radius.
-      float borderRadius = hasBorderRadius ? borderRadii.TopLeft().width
-                                           : 0.0;
+      LayoutDeviceSize zeroSize;
+      wr::BorderRadius borderRadius = wr::ToBorderRadius(zeroSize, zeroSize,
+                                                         zeroSize, zeroSize);
+      if (hasBorderRadius) {
+        borderRadius = wr::ToBorderRadius(
+          LayoutDeviceSize::FromUnknownSize(borderRadii.TopLeft()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.TopRight()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.BottomLeft()),
+          LayoutDeviceSize::FromUnknownSize(borderRadii.BottomRight()));
+      }
+
       float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(deviceBoxRect,
@@ -5835,8 +5842,12 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
           appUnitsPerDevPixel);
 
       float blurRadius = float(shadowItem->mRadius) / float(appUnitsPerDevPixel);
-      // TODO: WR doesn't support non-uniform border radii
-      float borderRadius = innerRadii.TopLeft().width;
+
+      wr::BorderRadius borderRadius = wr::ToBorderRadius(
+        LayoutDeviceSize::FromUnknownSize(innerRadii.TopLeft()),
+        LayoutDeviceSize::FromUnknownSize(innerRadii.TopRight()),
+        LayoutDeviceSize::FromUnknownSize(innerRadii.BottomLeft()),
+        LayoutDeviceSize::FromUnknownSize(innerRadii.BottomRight()));
       // NOTE: Any spread radius > 0 will render nothing. WR Bug.
       float spreadRadius = float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
 
