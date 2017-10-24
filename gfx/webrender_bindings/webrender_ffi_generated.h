@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.26 */
+/* Generated with cbindgen:0.1.25 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -319,17 +319,6 @@ struct WrOpacityProperty {
   }
 };
 
-// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
-//
-// Transforms can be parametrized over the source and destination units, to describe a
-// transformation from a space to another.
-// For example, `TypedTransform3D<f32, WordSpace, ScreenSpace>::transform_point3d`
-// takes a `TypedPoint3D<f32, WordSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
-//
-// Transforms expose a set of convenience methods for pre- and post-transformations.
-// A pre-transformation corresponds to adding an operation that is applied before
-// the rest of the transformation, while a post-transformation adds an operation
-// that is applied after.
 struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
   float m11;
   float m12;
@@ -412,7 +401,6 @@ struct ColorF {
   }
 };
 
-// A 2d Point tagged with a unit.
 struct TypedPoint2D_f32__LayerPixel {
   float x;
   float y;
@@ -582,7 +570,6 @@ struct NinePatchDescriptor {
   }
 };
 
-// A 2d Vector tagged with a unit.
 struct TypedVector2D_f32__LayerPixel {
   float x;
   float y;
@@ -663,7 +650,6 @@ struct ByteSlice {
   }
 };
 
-// A 2d Point tagged with a unit.
 struct TypedPoint2D_u16__Tiles {
   uint16_t x;
   uint16_t y;
@@ -1126,14 +1112,12 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_line(WrState *aState,
-                     LayoutRect aClip,
+                     const LayoutRect *aClip,
                      bool aIsBackfaceVisible,
-                     float aBaseline,
-                     float aStart,
-                     float aEnd,
+                     const LayoutRect *aBounds,
+                     float aWavyLineThickness,
                      LineOrientation aOrientation,
-                     float aWidth,
-                     ColorF aColor,
+                     const ColorF *aColor,
                      LineStyle aStyle)
 WR_FUNC;
 
