@@ -184,6 +184,26 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
       // than aChain->mParent.
       ancestorIds.second = Nothing();
     }
+  } else {
+    MOZ_ASSERT(!ancestorIds.second);
+    // If aChain->mASR is already the topmost scroll layer on the stack, but
+    // but there was another clip pushed *on top* of that ASR, then that clip
+    // shares the ASR, and we need to make our clip a child of that clip, which
+    // in turn will already be a descendant of the correct ASR.
+    // This covers the cases where e.g. the Gecko display list has nested items,
+    // and the clip chain on the nested item implicitly extends from the clip
+    // chain on the containing wrapper item. In this case the aChain->mParent
+    // pointer will be null for the nested item but the containing wrapper's
+    // clip will be on the stack already and we can pick it up from there.
+    // Another way of thinking about this is that if the clip chain were
+    // "fully completed" then aChain->mParent wouldn't be null but would point
+    // to the clip corresponding to mBuilder->TopmostClipId(), and we would
+    // have gone into the |aChain->mParent->mASR == aAsr| branch above.
+    FrameMetrics::ViewID scrollId = aChain->mASR ? nsLayoutUtils::ViewIDForASR(aChain->mASR) : FrameMetrics::NULL_SCROLL_ID;
+    if (mBuilder->TopmostScrollId() == scrollId && mBuilder->TopmostIsClip()) {
+      ancestorIds.first = Nothing();
+      ancestorIds.second = mBuilder->TopmostClipId();
+    }
   }
   // At most one of the ancestor pair should be defined here, and the one that
   // is defined will be the parent clip for the new clip that we're defining.
