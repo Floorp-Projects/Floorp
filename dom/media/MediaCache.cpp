@@ -26,6 +26,7 @@
 #include "nsIPrincipal.h"
 #include "nsISeekableStream.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "prio.h"
 #include <algorithm>
@@ -1537,6 +1538,10 @@ public:
   NS_IMETHOD Run() override
   {
     mMediaCache->Update();
+    // Ensure MediaCache is deleted on the main thread.
+    NS_ProxyRelease("UpdateEvent::mMediaCache",
+                    SystemGroup::EventTargetFor(mozilla::TaskCategory::Other),
+                    mMediaCache.forget());
     return NS_OK;
   }
 
