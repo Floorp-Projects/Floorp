@@ -105,7 +105,7 @@ add_task(async function testDirectProxy() {
   uri.scheme = "https";
 
   let ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
+                  getService(Ci.nsIIOService2);
   let chan = ioService.
     newChannelFromURIWithProxyFlags2(uri,
                                      proxyURI,
@@ -131,7 +131,7 @@ add_task(async function testWebSocketProxy() {
                    Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
 
   let ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
+                  getService(Ci.nsIIOService2);
   let chan = ioService.
     newChannelFromURIWithProxyFlags2(uri,
                                      proxyURI,

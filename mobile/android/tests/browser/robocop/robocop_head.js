@@ -38,7 +38,7 @@ function _dump(str) {
 // not connected to a network.
 {
   let ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
+             .getService(Components.interfaces.nsIIOService2);
   ios.manageOfflineStatus = false;
   ios.offline = false;
 }
