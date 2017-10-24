@@ -405,6 +405,8 @@ public:
   Maybe<wr::WrClipId> TopmostClipId();
   // Same as TopmostClipId() but for scroll layers.
   layers::FrameMetrics::ViewID TopmostScrollId();
+  // If the topmost item on the stack is a clip or a scroll layer
+  bool TopmostIsClip();
 
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
