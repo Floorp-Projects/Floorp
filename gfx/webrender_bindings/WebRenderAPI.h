@@ -413,11 +413,9 @@ protected:
   wr::WrState* mWrState;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
-  // (by PushClip and PushScrollLayer, respectively) and are still active.
-  // This is helpful for knowing e.g. what the ancestor scroll id of a particular
-  // scroll id is, and doing other "queries" of current state.
-  std::vector<wr::WrClipId> mClipIdStack;
-  std::vector<layers::FrameMetrics::ViewID> mScrollIdStack;
+  // (by PushClip and PushScrollLayer/PushClipAndScrollInfo, respectively) and
+  // haven't yet been popped.
+  std::vector<wr::ScrollOrClipId> mClipStack;
 
   // Track each scroll id that we encountered. We use this structure to
   // ensure that we don't define a particular scroll layer multiple times,
