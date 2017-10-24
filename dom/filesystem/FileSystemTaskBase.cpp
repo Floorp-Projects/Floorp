@@ -105,8 +105,6 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS(FileSystemTaskChildBase, nsIIPCBackgroundChildCreateCallback)
-
 /**
  * FileSystemTaskBase class
  */
@@ -140,35 +138,9 @@ FileSystemTaskChildBase::Start()
   mFileSystem->AssertIsOnOwningThread();
 
   mozilla::ipc::PBackgroundChild* actor =
-    mozilla::ipc::BackgroundChild::GetForCurrentThread();
-  if (actor) {
-    ActorCreated(actor);
-  } else {
-    if (NS_WARN_IF(
-        !mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(this))) {
-      MOZ_CRASH();
-    }
-  }
-}
-
-void
-FileSystemTaskChildBase::ActorFailed()
-{
-  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-}
-
-void
-FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
-{
-  if (HasError()) {
-    // In this case we don't want to use IPC at all.
-    RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
-    FileSystemUtils::DispatchRunnable(mGlobalObject, runnable.forget());
-    return;
-  }
-
-  if (mFileSystem->IsShutdown()) {
-    return;
+    mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actor)) {
+    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
   }
 
   nsAutoString serialization;
@@ -190,10 +162,10 @@ FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
     nsIEventTarget* target = mGlobalObject->EventTargetFor(TaskCategory::Other);
     MOZ_ASSERT(target);
 
-    aActor->SetEventTargetForActor(this, target);
+    actor->SetEventTargetForActor(this, target);
   }
 
-  aActor->SendPFileSystemRequestConstructor(this, params);
+  actor->SendPFileSystemRequestConstructor(this, params);
 }
 
 void
