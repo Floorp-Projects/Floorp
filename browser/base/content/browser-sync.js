@@ -254,25 +254,12 @@ var gSync = {
     PanelUI.hide();
   },
 
-  openAccountsPage(action, urlParams = {}) {
-    let params = new URLSearchParams();
-    if (action) {
-      params.set("action", action);
-    }
-    for (let name in urlParams) {
-      if (urlParams[name] !== undefined) {
-        params.set(name, urlParams[name]);
-      }
-    }
-    let url = "about:accounts?" + params;
+  async openSignInAgainPage(entryPoint) {
+    const url = await fxAccounts.promiseAccountsForceSigninURI(entryPoint);
     switchToTabHavingURI(url, true, {
       replaceQueryString: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-  },
-
-  openSignInAgainPage(entryPoint) {
-    this.openAccountsPage("reauth", { entrypoint: entryPoint });
   },
 
   async openDevicesManagementPage(entryPoint) {
