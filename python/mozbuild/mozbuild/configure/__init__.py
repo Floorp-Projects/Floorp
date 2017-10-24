@@ -909,6 +909,9 @@ class ConfigureSandbox(dict):
         The `reason` argument indicates what caused the option to be implied.
         It is necessary when it cannot be inferred from the `value`.
         '''
+
+        when = self._normalize_when(when, 'imply_option')
+
         # Don't do anything when --help was on the command line
         if self._help:
             return
@@ -930,8 +933,6 @@ class ConfigureSandbox(dict):
                 "Cannot infer what implies '%s'. Please add a `reason` to "
                 "the `imply_option` call."
                 % option)
-
-        when = self._normalize_when(when, 'imply_option')
 
         prefix, name, values = Option.split_option(option)
         if values != ():
