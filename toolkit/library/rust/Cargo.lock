@@ -1,11 +1,3 @@
-[root]
-name = "gkrust"
-version = "0.1.0"
-dependencies = [
- "gkrust-shared 0.1.0",
- "stylo_tests 0.0.1",
-]
-
 [[package]]
 name = "aho-corasick"
 version = "0.6.3"
@@ -561,6 +553,14 @@ dependencies = [
  "smallvec 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
  "style_traits 0.0.1",
+]
+
+[[package]]
+name = "gkrust"
+version = "0.1.0"
+dependencies = [
+ "gkrust-shared 0.1.0",
+ "stylo_tests 0.0.1",
 ]
 
 [[package]]
