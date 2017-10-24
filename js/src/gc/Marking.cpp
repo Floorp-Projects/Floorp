@@ -12,7 +12,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsgc.h"
 #include "jsprf.h"
 
 #include "builtin/ModuleObject.h"
