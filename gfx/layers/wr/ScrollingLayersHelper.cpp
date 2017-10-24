@@ -5,41 +5,21 @@
 
 #include "mozilla/layers/ScrollingLayersHelper.h"
 
-#include "DisplayItemClipChain.h"
 #include "FrameMetrics.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "nsDisplayList.h"
 #include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
 
-ScrollingLayersHelper::ScrollingLayersHelper()
-  : mBuilder(nullptr)
-{
-}
-
-void
-ScrollingLayersHelper::BeginBuild(wr::DisplayListBuilder& aBuilder)
-{
-  MOZ_ASSERT(!mBuilder);
-  mBuilder = &aBuilder;
-  MOZ_ASSERT(mCache.empty());
-  MOZ_ASSERT(mItemClipStack.empty());
-}
-
-void
-ScrollingLayersHelper::EndBuild()
-{
-  mBuilder = nullptr;
-  mCache.clear();
-  MOZ_ASSERT(mItemClipStack.empty());
-}
-
-void
-ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
-                                 const StackingContextHelper& aStackingContext)
+ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
+                                             wr::DisplayListBuilder& aBuilder,
+                                             const StackingContextHelper& aStackingContext,
+                                             WebRenderCommandBuilder::ClipIdMap& aCache,
+                                             bool aApzEnabled)
+  : mBuilder(&aBuilder)
+  , mCache(aCache)
 {
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
 
@@ -78,17 +58,16 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // the item's ASR. So for those cases we need to use the ClipAndScroll API.
   bool needClipAndScroll = (leafmostId != scrollId);
 
-  ItemClips clips;
   // If we don't need a ClipAndScroll, ensure the item's ASR is at the top of
   // the scroll stack
   if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
     MOZ_ASSERT(leafmostId == scrollId); // because !needClipAndScroll
-    clips.mScrollId = Some(scrollId);
+    mItemClips.mScrollId = Some(scrollId);
   }
   // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
   // stack.
   if (ids.second && aItem->GetClipChain()->mASR == leafmostASR) {
-    clips.mClipId = ids.second;
+    mItemClips.mClipId = ids.second;
   }
   // If we need the ClipAndScroll, we want to replace the topmost scroll layer
   // with the item's ASR but preseve the topmost clip (which is scrolled by
@@ -97,15 +76,14 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
     // If mClipId is set that means we want to push it such that it's going
     // to be the TopmostClipId(), but we haven't actually pushed it yet.
     // But we still want to take that instead of the actual current TopmostClipId().
-    Maybe<wr::WrClipId> clipId = clips.mClipId;
+    Maybe<wr::WrClipId> clipId = mItemClips.mClipId;
     if (!clipId) {
       clipId = mBuilder->TopmostClipId();
     }
-    clips.mClipAndScroll = Some(std::make_pair(scrollId, clipId));
+    mItemClips.mClipAndScroll = Some(std::make_pair(scrollId, clipId));
   }
 
-  clips.Apply(mBuilder);
-  mItemClipStack.push_back(clips);
+  mItemClips.Apply(mBuilder);
 }
 
 std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
@@ -376,20 +354,9 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   return ids;
 }
 
-void
-ScrollingLayersHelper::EndItem(nsDisplayItem* aItem)
-{
-  MOZ_ASSERT(!mItemClipStack.empty());
-  ItemClips& clips = mItemClipStack.back();
-  clips.Unapply(mBuilder);
-  mItemClipStack.pop_back();
-}
-
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
-  MOZ_ASSERT(!mBuilder);
-  MOZ_ASSERT(mCache.empty());
-  MOZ_ASSERT(mItemClipStack.empty());
+  mItemClips.Unapply(mBuilder);
 }
 
 void
