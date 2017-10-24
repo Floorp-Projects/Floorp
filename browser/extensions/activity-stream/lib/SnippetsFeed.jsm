@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
 
 // Url to fetch snippets, in the urlFormatter service format.
 const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
@@ -124,9 +126,10 @@ this.SnippetsFeed = class SnippetsFeed {
     this.store.dispatch(ac.BroadcastToContent({type: at.SNIPPETS_RESET}));
   }
 
-  showFirefoxAccounts(browser) {
+  async showFirefoxAccounts(browser) {
+    const url = await fxAccounts.promiseAccountsSignUpURI("snippets");
     // We want to replace the current tab.
-    browser.loadURI("about:accounts?action=signup&entrypoint=snippets");
+    browser.loadURI(url);
   }
 
   onAction(action) {

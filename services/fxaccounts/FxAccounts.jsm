@@ -1297,16 +1297,29 @@ FxAccountsInternal.prototype = {
     return allowHttp !== true;
   },
 
-  promiseAccountsSignUpURI() {
-    return FxAccountsConfig.promiseAccountsSignUpURI();
+  async promiseAccountsSignUpURI(entrypoint) {
+    const url = new URL((await FxAccountsConfig.promiseAccountsSignUpURI()));
+    if (entrypoint) {
+      url.searchParams.append("entrypoint", entrypoint);
+    }
+    return url.href;
   },
 
-  promiseAccountsSignInURI() {
-    return FxAccountsConfig.promiseAccountsSignInURI();
+  async promiseAccountsSignInURI(entrypoint) {
+    const url = new URL((await FxAccountsConfig.promiseAccountsSignInURI()));
+    if (entrypoint) {
+      url.searchParams.append("entrypoint", entrypoint);
+    }
+    return url.href;
   },
 
-  promiseAccountsEmailURI() {
-    return FxAccountsConfig.promiseAccountsEmailURI();
+  async promiseAccountsEmailURI(email, entrypoint) {
+    const url = new URL((await FxAccountsConfig.promiseAccountsEmailURI()));
+    url.searchParams.append("email", email);
+    if (entrypoint) {
+      url.searchParams.append("entrypoint", entrypoint);
+    }
+    return url.href;
   },
 
   /**
@@ -1342,9 +1355,9 @@ FxAccountsInternal.prototype = {
 
   // Returns a promise that resolves with the URL to use to force a re-signin
   // of the current account.
-  async promiseAccountsForceSigninURI() {
+  async promiseAccountsForceSigninURI(entrypoint) {
     await FxAccountsConfig.ensureConfigured();
-    return this._formatPrefURL("identity.fxaccounts.remote.force_auth.uri");
+    return this._formatPrefURL("identity.fxaccounts.remote.force_auth.uri", entrypoint);
   },
 
   // Returns a promise that resolves with the URL to use to change
