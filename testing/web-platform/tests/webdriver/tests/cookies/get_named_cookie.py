@@ -3,7 +3,6 @@ from tests.support.fixtures import clear_all_cookies
 
 def test_get_named_cookie(session, url):
     session.url = url("/common/blank.html")
-    clear_all_cookies(session)
     session.execute_script("document.cookie = 'foo=bar'")
 
     result = session.transport.send("GET", "session/%s/cookie/foo" % session.session_id)
