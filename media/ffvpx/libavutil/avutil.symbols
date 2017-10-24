@@ -57,9 +57,6 @@ av_dict_parse_string
 av_dict_set
 av_dict_set_int
 av_dirname
-av_display_matrix_flip
-av_display_rotation_get
-av_display_rotation_set
 av_div_q
 av_dynarray2_add
 av_dynarray_add
