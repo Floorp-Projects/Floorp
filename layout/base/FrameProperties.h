@@ -288,12 +288,12 @@ public:
    * Remove and destroy all property values for the frame.
    */
   void DeleteAll(const nsIFrame* aFrame) {
-    mozilla::DebugOnly<size_t> len = mProperties.Length();
-    for (auto& prop : mProperties) {
+    nsTArray<PropertyValue> toDelete;
+    toDelete.SwapElements(mProperties);
+    for (auto& prop : toDelete) {
       prop.DestroyValueFor(aFrame);
-      MOZ_ASSERT(mProperties.Length() == len);
     }
-    mProperties.Clear();
+    MOZ_ASSERT(mProperties.IsEmpty(), "a property dtor added new properties");
   }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
