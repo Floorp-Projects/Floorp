@@ -118,8 +118,6 @@ class JSObject : public js::gc::Cell
     js::GetOwnPropertyOp getOpsGetOwnPropertyDescriptor()
                                                 const { return getClass()->getOpsGetOwnPropertyDescriptor(); }
     js::DeletePropertyOp getOpsDeleteProperty() const { return getClass()->getOpsDeleteProperty(); }
-    js::WatchOp          getOpsWatch()          const { return getClass()->getOpsWatch(); }
-    js::UnwatchOp        getOpsUnwatch()        const { return getClass()->getOpsUnwatch(); }
     js::GetElementsOp    getOpsGetElements()    const { return getClass()->getOpsGetElements(); }
     JSFunToStringOp      getOpsFunToString()    const { return getClass()->getOpsFunToString(); }
 

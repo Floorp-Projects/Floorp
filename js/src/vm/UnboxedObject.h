@@ -260,7 +260,6 @@ class UnboxedPlainObject : public UnboxedObject
 
     static bool newEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
                              bool enumerableOnly);
-    static bool obj_watch(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
 
     inline const UnboxedLayout& layout() const;
 
