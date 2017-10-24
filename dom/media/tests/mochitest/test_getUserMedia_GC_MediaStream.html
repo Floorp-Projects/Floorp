@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  "use strict";
+
+  createHTML({
+    title: "MediaStreams can be garbage collected",
+    bug: "1407542"
+  });
+
+  let SpecialStream = SpecialPowers.wrap(MediaStream);
+
+  async function testGC(stream, numCopies, copy) {
+    let startStreams = await SpecialStream.countUnderlyingStreams();
+
+    let copies = new Array(numCopies).fill(0).map(() => copy(stream));
+    ok(await SpecialStream.countUnderlyingStreams() > startStreams,
+        "MediaStream constructor creates more underlying streams");
+
+    copies = [];
+    await new Promise(r => SpecialPowers.exactGC(r));
+    is(await SpecialStream.countUnderlyingStreams(), startStreams,
+       "MediaStreams should have been collected");
+  }
+
+  runTest(async () => {
+    let gUMStream = await getUserMedia({video: true});
+    info("Testing GC of copy constructor");
+    await testGC(gUMStream, 10, s => new MediaStream(s));
+
+    info("Testing GC of track-array constructor");
+    await testGC(gUMStream, 10, s => new MediaStream(s.getTracks()));
+
+    info("Testing GC of empty constructor plus addTrack");
+    await testGC(gUMStream, 10, s => {
+      let s2 = new MediaStream();
+      s.getTracks().forEach(t => s2.addTrack(t));
+      return s2;
+    });
+
+    info("Testing GC of track-array constructor with cloned tracks");
+    await testGC(gUMStream, 10, s => new MediaStream(s.getTracks().map(t => t.clone())));
+
+    info("Testing GC of empty constructor plus addTrack with cloned tracks");
+    await testGC(gUMStream, 10, s => {
+      let s2 = new MediaStream();
+      s.getTracks().forEach(t => s2.addTrack(t.clone()));
+      return s2;
+    });
+
+    info("Testing GC of cloned stream");
+    await testGC(gUMStream, 10, s => s.clone());
+
+    info("Testing GC of gUM stream");
+    gUMStream = null;
+    await new Promise(r => SpecialPowers.exactGC(r));
+    is(await SpecialStream.countUnderlyingStreams(), 0,
+       "Original gUM stream should be collectable");
+  });
+</script>
+</pre>
+</body>
+</html>
