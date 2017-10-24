@@ -3083,24 +3083,25 @@ public:
                                             uint32_t aFlags);
 
   /**
-   * Query loadingPrincipal if it is specified as 'loadingprincipal' attribute on
-   * aLoadingNode, otherwise the NodePrincipal of aLoadingNode is returned
-   * (which is System Principal).
+   * Query triggeringPrincipal if there's a 'triggeringprincipal' attribute on
+   * aLoadingNode, if no such attribute is specified, aDefaultPrincipal is
+   * returned if it is provided, otherwise the NodePrincipal of aLoadingNode is
+   * returned.
    *
-   * Return true if aLoadingPrincipal has 'loadingprincipal' attributes, and
-   * the value 'loadingprincipal' is also successfully deserialized, otherwise
+   * Return true if aLoadingNode has a 'triggeringprincipal' attribute, and
+   * the value 'triggeringprincipal' is also successfully deserialized, otherwise
    * return false.
    */
   static bool
-  GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
-                                nsIPrincipal* aDefaultPrincipal,
-                                nsIPrincipal** aTriggeringPrincipal);
+  QueryTriggeringPrincipal(nsIContent* aLoadingNode,
+                           nsIPrincipal* aDefaultPrincipal,
+                           nsIPrincipal** aTriggeringPrincipal);
 
   static bool
-  GetLoadingPrincipalForXULNode(nsIContent* aLoadingNode,
-                                nsIPrincipal** aTriggeringPrincipal)
+  QueryTriggeringPrincipal(nsIContent* aLoadingNode,
+                           nsIPrincipal** aTriggeringPrincipal)
   {
-    return GetLoadingPrincipalForXULNode(aLoadingNode, nullptr, aTriggeringPrincipal);
+    return QueryTriggeringPrincipal(aLoadingNode, nullptr, aTriggeringPrincipal);
   }
 
   /**
@@ -3110,7 +3111,7 @@ public:
    */
   static void
   GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
-                                        nsIPrincipal** aLoadingPrincipal,
+                                        nsIPrincipal** aTriggeringPrincipal,
                                         nsContentPolicyType& aContentPolicyType,
                                         uint64_t* aRequestContextID);
 

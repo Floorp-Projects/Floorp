@@ -1193,16 +1193,17 @@ public:
       ? nsIContentPolicy::TYPE_INTERNAL_AUDIO :
         nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
-    // If aElement has 'loadingprincipal' attribute, we will use the value as
+    // If aElement has 'triggeringprincipal' attribute, we will use the value as
     // triggeringPrincipal for the channel, otherwise it will default to use
     // aElement->NodePrincipal().
-    // This function returns true when aElement has 'loadingprincipal', so if
+    // This function returns true when aElement has 'triggeringprincipal', so if
     // setAttrs is true we will override the origin attributes on the channel
     // later.
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-    bool setAttrs = nsContentUtils::GetLoadingPrincipalForXULNode(aElement,
-                                    aElement->mLoadingSrcTriggeringPrincipal,
-                                    getter_AddRefs(triggeringPrincipal));
+    bool setAttrs =
+      nsContentUtils::QueryTriggeringPrincipal(aElement,
+                                               aElement->mLoadingSrcTriggeringPrincipal,
+                                               getter_AddRefs(triggeringPrincipal));
 
     nsCOMPtr<nsILoadGroup> loadGroup = aElement->GetDocumentLoadGroup();
     nsCOMPtr<nsIChannel> channel;

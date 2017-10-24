@@ -38,7 +38,7 @@ private:
 
 private:
   bool mOpen;
-  RefPtr<layers::CompositorThreadHolder> mCompositorThreadRef;
+  RefPtr<layers::CompositorThreadHolderDebug> mCompositorThreadRef;
 };
 
 } // namespace gfx

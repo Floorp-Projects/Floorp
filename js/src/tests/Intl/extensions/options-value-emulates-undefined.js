@@ -20,7 +20,7 @@ if (typeof Intl !== 'object' && typeof quit == 'function') {
  * BEGIN TEST *
  **************/
 
-var opt = objectEmulatingUndefined();
+var opt = createIsHTMLDDA();
 opt.toString = function() { return "long"; };
 
 var str = new Date(2013, 12 - 1, 14).toLocaleString("en-US", { weekday: opt });

@@ -4925,12 +4925,9 @@ GetFileForPath(const nsAString& aPath)
 {
   MOZ_ASSERT(!aPath.IsEmpty());
 
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  if (NS_WARN_IF(!file)) {
-    return nullptr;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(file->InitWithPath(aPath)))) {
+  nsCOMPtr<nsIFile> file;
+  if (NS_WARN_IF(NS_FAILED(NS_NewLocalFile(aPath, false,
+                                           getter_AddRefs(file))))) {
     return nullptr;
   }
 
@@ -11255,13 +11252,8 @@ DatabaseConnection::GetFileSize(const nsAString& aPath, int64_t* aResult)
   MOZ_ASSERT(!aPath.IsEmpty());
   MOZ_ASSERT(aResult);
 
-  nsresult rv;
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->InitWithPath(aPath);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_NewLocalFile(aPath, false, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
