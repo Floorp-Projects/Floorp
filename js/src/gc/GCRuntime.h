@@ -13,6 +13,7 @@
 
 #include "jsfriendapi.h"
 
+#include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
 #include "gc/GCHelperState.h"
 #include "gc/GCMarker.h"
@@ -41,6 +42,7 @@ class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
+enum class ShouldCheckThresholds;
 class SweepGroupsIter;
 class WeakCacheSweepIterator;
 
