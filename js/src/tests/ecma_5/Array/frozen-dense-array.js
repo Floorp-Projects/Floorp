@@ -38,24 +38,5 @@ assertEq(delete a[0], false);
 
 assertArrayIsExpected();
 
-var watchpointCalled = false;
-// NOTE: Be careful with the position of this test, since this sparsifies the
-// elements and you might not test what you think you're testing otherwise.
-a.watch(2, function(prop, oldValue, newValue) {
-  watchpointCalled = true;
-  assertEq(prop, 2);
-  assertEq(oldValue, 1);
-  assertEq(newValue, "foo");
-});
-
-assertArrayIsExpected();
-
-a.length = 5;
-a[2] = "foo";
-assertEq(watchpointCalled, true);
-assertEq(delete a[0], false);
-
-assertArrayIsExpected();
-
 if (typeof reportCompare === "function")
   reportCompare(true, true);

@@ -1,6 +1,3 @@
-try {
-this.watch("b", "".substring);
-} catch(exc1) {}
 eval("\
 var URI = '';\
 test();\
