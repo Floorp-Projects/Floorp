@@ -32,7 +32,7 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   this.queuedMessageAdds = [];
   this.queuedMessageUpdates = [];
   this.queuedRequestUpdates = [];
-  this.throttledDispatchTimeout = false;
+  this.throttledDispatchPromise = null;
 
   store = configureStore(this.jsterm.hud);
 }
@@ -275,40 +275,53 @@ NewConsoleOutputWrapper.prototype = {
     this.setTimeoutIfNeeded();
   },
 
+  /**
+   * Returns a Promise that resolves once any async dispatch is finally dispatched.
+   */
+  waitAsyncDispatches: function () {
+    if (!this.throttledDispatchPromise) {
+      return Promise.resolve();
+    }
+    return this.throttledDispatchPromise;
+  },
+
   setTimeoutIfNeeded: function () {
-    if (this.throttledDispatchTimeout) {
+    if (this.throttledDispatchPromise) {
       return;
     }
 
-    this.throttledDispatchTimeout = setTimeout(() => {
-      this.throttledDispatchTimeout = null;
+    this.throttledDispatchPromise = new Promise(done => {
+      setTimeout(() => {
+        this.throttledDispatchPromise = null;
 
-      store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
-      this.queuedMessageAdds = [];
+        store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
+        this.queuedMessageAdds = [];
 
-      if (this.queuedMessageUpdates.length > 0) {
-        this.queuedMessageUpdates.forEach(({ message, res }) => {
-          store.dispatch(actions.networkMessageUpdate(message, null, res));
-          this.jsterm.hud.emit("network-message-updated", res);
-        });
-        this.queuedMessageUpdates = [];
-      }
-      if (this.queuedRequestUpdates.length > 0) {
-        this.queuedRequestUpdates.forEach(({ id, data}) => {
-          store.dispatch(actions.networkUpdateRequest(id, data));
-        });
-        this.queuedRequestUpdates = [];
+        if (this.queuedMessageUpdates.length > 0) {
+          this.queuedMessageUpdates.forEach(({ message, res }) => {
+            store.dispatch(actions.networkMessageUpdate(message, null, res));
+            this.jsterm.hud.emit("network-message-updated", res);
+          });
+          this.queuedMessageUpdates = [];
+        }
+        if (this.queuedRequestUpdates.length > 0) {
+          this.queuedRequestUpdates.forEach(({ id, data}) => {
+            store.dispatch(actions.networkUpdateRequest(id, data));
+          });
+          this.queuedRequestUpdates = [];
 
-        // Fire an event indicating that all data fetched from
-        // the backend has been received. This is based on
-        // 'FirefoxDataProvider.isQueuePayloadReady', see more
-        // comments in that method.
-        // (netmonitor/src/connector/firefox-data-provider).
-        // This event might be utilized in tests to find the right
-        // time when to finish.
-        this.jsterm.hud.emit("network-request-payload-ready");
-      }
-    }, 50);
+          // Fire an event indicating that all data fetched from
+          // the backend has been received. This is based on
+          // 'FirefoxDataProvider.isQueuePayloadReady', see more
+          // comments in that method.
+          // (netmonitor/src/connector/firefox-data-provider).
+          // This event might be utilized in tests to find the right
+          // time when to finish.
+          this.jsterm.hud.emit("network-request-payload-ready");
+        }
+        done();
+      }, 50);
+    });
   },
 
   // Should be used for test purpose only.

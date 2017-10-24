@@ -298,7 +298,7 @@ NewWebConsoleFrame.prototype = {
    * @param object packet
    *        Notification packet received from the server.
    */
-  handleTabNavigated: function (event, packet) {
+  handleTabNavigated: async function (event, packet) {
     if (event == "will-navigate") {
       if (this.persistLog) {
         // Add a _type to hit convertCachedPacket.
@@ -315,6 +315,13 @@ NewWebConsoleFrame.prototype = {
 
     if (event == "navigate" && !packet.nativeConsoleAPI) {
       this.logWarningAboutReplacedAPI();
+    }
+
+    if (event == "navigate") {
+      // Wait for completion of any async dispatch before notifying that the console
+      // is fully updated after a page reload
+      await this.newConsoleOutput.waitAsyncDispatches();
+      this.emit("reloaded");
     }
   },
 

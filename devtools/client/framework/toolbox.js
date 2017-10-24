@@ -1989,8 +1989,8 @@ Toolbox.prototype = {
    */
   async _onWillNavigate() {
     let toolId = this.currentToolId;
-    // For now, only inspector fires "reloaded" event
-    if (toolId != "inspector") {
+    // For now, only inspector and webconsole fires "reloaded" event
+    if (toolId != "inspector" && toolId != "webconsole") {
       return;
     }
 
