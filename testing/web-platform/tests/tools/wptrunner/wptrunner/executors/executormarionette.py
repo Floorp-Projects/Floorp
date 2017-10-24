@@ -167,9 +167,17 @@ class MarionetteProtocol(Protocol):
             self.load_runner(protocol)
 
     def wait(self):
-        socket_timeout = self.marionette.client.sock.gettimeout()
+        try:
+            socket_timeout = self.marionette.client.sock.gettimeout()
+        except AttributeError:
+            # This can happen if there was a crash
+            return
         if socket_timeout:
-            self.marionette.timeout.script = socket_timeout / 2
+            try:
+                self.marionette.timeout.script = socket_timeout / 2
+            except (socket.error, IOError):
+                self.logger.debug("Socket closed")
+                return
 
         self.marionette.switch_to_window(self.runner_handle)
         while True:
