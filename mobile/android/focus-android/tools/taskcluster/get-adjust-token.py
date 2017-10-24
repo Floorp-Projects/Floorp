@@ -8,6 +8,7 @@ Adjust token and write it to the .adjust_token file in the root
 directory.
 """
 
+import os
 import taskcluster
 
 # Get JSON data from taskcluster secrets service
