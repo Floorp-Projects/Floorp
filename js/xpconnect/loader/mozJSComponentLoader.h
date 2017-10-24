@@ -54,6 +54,8 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
     void FindTargetObject(JSContext* aCx,
                           JS::MutableHandleObject aTargetObject);
 
+    static already_AddRefed<mozJSComponentLoader> GetOrCreate();
+
     static mozJSComponentLoader* Get() { return sSelf; }
 
     nsresult Import(const nsACString& aResourceURI, JS::HandleValue aTargetObj,

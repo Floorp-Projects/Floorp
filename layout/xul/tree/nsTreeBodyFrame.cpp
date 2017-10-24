@@ -2790,7 +2790,7 @@ public:
 
   void Destroy(nsDisplayListBuilder* aBuilder) override
   {
-    aBuilder->UnregisterThemeGeometry(mFrame);
+    aBuilder->UnregisterThemeGeometry(this);
     nsDisplayItem::Destroy(aBuilder);
   }
 
@@ -2849,6 +2849,9 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!mView || !GetContent ()->GetComposedDoc()->GetWindow())
     return;
 
+  nsDisplayItem* item = new (aBuilder) nsDisplayTreeBody(aBuilder, this);
+  aLists.Content()->AppendToTop(item);
+
 #ifdef XP_MACOSX
   nsIContent* baseElement = GetBaseElement();
   nsIFrame* treeFrame =
@@ -2884,7 +2887,7 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
               nsRect rowRect(mInnerBox.x, mInnerBox.y + mRowHeight *
                              (i - FirstVisibleRow()), mInnerBox.width,
                              mRowHeight);
-              aBuilder->RegisterThemeGeometry(type, this,
+              aBuilder->RegisterThemeGeometry(type, item,
                 LayoutDeviceIntRect::FromUnknownRect(
                   (rowRect + aBuilder->ToReferenceFrame(this)).ToNearestPixels(
                     PresContext()->AppUnitsPerDevPixel())));
@@ -2895,9 +2898,6 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 #endif
-
-  aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayTreeBody(aBuilder, this));
 }
 
 DrawResult

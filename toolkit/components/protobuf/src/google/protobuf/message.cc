@@ -38,17 +38,22 @@
 
 #include <google/protobuf/message.h>
 
+#include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/mutex.h>
 #include <google/protobuf/stubs/once.h>
+#include <google/protobuf/reflection_internal.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_util.h>
+#include <google/protobuf/map_field.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
 #include <google/protobuf/stubs/strutil.h>
 #include <google/protobuf/stubs/map_util.h>
+#include <google/protobuf/stubs/singleton.h>
 #include <google/protobuf/stubs/stl_util.h>
 
 namespace google {
@@ -57,14 +62,12 @@ namespace protobuf {
 using internal::WireFormat;
 using internal::ReflectionOps;
 
-Message::~Message() {}
-
 void Message::MergeFrom(const Message& from) {
   const Descriptor* descriptor = GetDescriptor();
   GOOGLE_CHECK_EQ(from.GetDescriptor(), descriptor)
     << ": Tried to merge from a message with a different type.  "
        "to: " << descriptor->full_name() << ", "
-       "from:" << from.GetDescriptor()->full_name();
+       "from: " << from.GetDescriptor()->full_name();
   ReflectionOps::Merge(from, this);
 }
 
@@ -77,7 +80,7 @@ void Message::CopyFrom(const Message& from) {
   GOOGLE_CHECK_EQ(from.GetDescriptor(), descriptor)
     << ": Tried to copy from a message with a different type. "
        "to: " << descriptor->full_name() << ", "
-       "from:" << from.GetDescriptor()->full_name();
+       "from: " << from.GetDescriptor()->full_name();
   ReflectionOps::Copy(from, this);
 }
 
@@ -93,12 +96,12 @@ bool Message::IsInitialized() const {
   return ReflectionOps::IsInitialized(*this);
 }
 
-void Message::FindInitializationErrors(vector<string>* errors) const {
+void Message::FindInitializationErrors(std::vector<string>* errors) const {
   return ReflectionOps::FindInitializationErrors(*this, "", errors);
 }
 
 string Message::InitializationErrorString() const {
-  vector<string> errors;
+  std::vector<string> errors;
   FindInitializationErrors(&errors);
   return Join(errors, ", ");
 }
@@ -127,12 +130,12 @@ bool Message::ParsePartialFromFileDescriptor(int file_descriptor) {
   return ParsePartialFromZeroCopyStream(&input) && input.GetErrno() == 0;
 }
 
-bool Message::ParseFromIstream(istream* input) {
+bool Message::ParseFromIstream(std::istream* input) {
   io::IstreamInputStream zero_copy_input(input);
   return ParseFromZeroCopyStream(&zero_copy_input) && input->eof();
 }
 
-bool Message::ParsePartialFromIstream(istream* input) {
+bool Message::ParsePartialFromIstream(std::istream* input) {
   io::IstreamInputStream zero_copy_input(input);
   return ParsePartialFromZeroCopyStream(&zero_copy_input) && input->eof();
 }
@@ -140,12 +143,18 @@ bool Message::ParsePartialFromIstream(istream* input) {
 
 void Message::SerializeWithCachedSizes(
     io::CodedOutputStream* output) const {
-  WireFormat::SerializeWithCachedSizes(*this, GetCachedSize(), output);
+  const internal::SerializationTable* table =
+      static_cast<const internal::SerializationTable*>(InternalGetTable());
+  if (table == 0) {
+    WireFormat::SerializeWithCachedSizes(*this, GetCachedSize(), output);
+  } else {
+    internal::TableSerialize(*this, table, output);
+  }
 }
 
-int Message::ByteSize() const {
-  int size = WireFormat::ByteSize(*this);
-  SetCachedSize(size);
+size_t Message::ByteSizeLong() const {
+  size_t size = WireFormat::ByteSize(*this);
+  SetCachedSize(internal::ToCachedSize(size));
   return size;
 }
 
@@ -155,8 +164,8 @@ void Message::SetCachedSize(int /* size */) const {
                 "Must implement one or the other.";
 }
 
-int Message::SpaceUsed() const {
-  return GetReflection()->SpaceUsed(*this);
+size_t Message::SpaceUsedLong() const {
+  return GetReflection()->SpaceUsedLong(*this);
 }
 
 bool Message::SerializeToFileDescriptor(int file_descriptor) const {
@@ -169,7 +178,7 @@ bool Message::SerializePartialToFileDescriptor(int file_descriptor) const {
   return SerializePartialToZeroCopyStream(&output);
 }
 
-bool Message::SerializeToOstream(ostream* output) const {
+bool Message::SerializeToOstream(std::ostream* output) const {
   {
     io::OstreamOutputStream zero_copy_output(output);
     if (!SerializeToZeroCopyStream(&zero_copy_output)) return false;
@@ -177,7 +186,7 @@ bool Message::SerializeToOstream(ostream* output) const {
   return output->good();
 }
 
-bool Message::SerializePartialToOstream(ostream* output) const {
+bool Message::SerializePartialToOstream(std::ostream* output) const {
   io::OstreamOutputStream zero_copy_output(output);
   return SerializePartialToZeroCopyStream(&zero_copy_output);
 }
@@ -187,6 +196,10 @@ bool Message::SerializePartialToOstream(ostream* output) const {
 // Reflection and associated Template Specializations
 
 Reflection::~Reflection() {}
+
+void Reflection::AddAllocatedMessage(Message* /* message */,
+                                     const FieldDescriptor* /*field */,
+                                     Message* /* new_entry */) const {}
 
 #define HANDLE_TYPE(TYPE, CPPTYPE, CTYPE)                             \
 template<>                                                            \
@@ -222,6 +235,22 @@ void* Reflection::MutableRawRepeatedString(
 }
 
 
+MapIterator Reflection::MapBegin(
+    Message* message,
+    const FieldDescriptor* field) const {
+  GOOGLE_LOG(FATAL) << "Unimplemented Map Reflection API.";
+  MapIterator iter(message, field);
+  return iter;
+}
+
+MapIterator Reflection::MapEnd(
+    Message* message,
+    const FieldDescriptor* field) const {
+  GOOGLE_LOG(FATAL) << "Unimplemented Map Reflection API.";
+  MapIterator iter(message, field);
+  return iter;
+}
+
 // =============================================================================
 // MessageFactory
 
@@ -248,8 +277,8 @@ class GeneratedMessageFactory : public MessageFactory {
   hash_map<const char*, RegistrationFunc*,
            hash<const char*>, streq> file_map_;
 
-  // Initialized lazily, so requires locking.
   Mutex mutex_;
+  // Initialized lazily, so requires locking.
   hash_map<const Descriptor*, const Message*> type_map_;
 };
 
@@ -353,6 +382,112 @@ void MessageFactory::InternalRegisterGeneratedMessage(
   GeneratedMessageFactory::singleton()->RegisterType(descriptor, prototype);
 }
 
+
+MessageFactory* Reflection::GetMessageFactory() const {
+  GOOGLE_LOG(FATAL) << "Not implemented.";
+  return NULL;
+}
+
+void* Reflection::RepeatedFieldData(
+    Message* message, const FieldDescriptor* field,
+    FieldDescriptor::CppType cpp_type,
+    const Descriptor* message_type) const {
+  GOOGLE_LOG(FATAL) << "Not implemented.";
+  return NULL;
+}
+
+namespace internal {
+RepeatedFieldAccessor::~RepeatedFieldAccessor() {
+}
+}  // namespace internal
+
+const internal::RepeatedFieldAccessor* Reflection::RepeatedFieldAccessor(
+    const FieldDescriptor* field) const {
+  GOOGLE_CHECK(field->is_repeated());
+  switch (field->cpp_type()) {
+#define HANDLE_PRIMITIVE_TYPE(TYPE, type) \
+    case FieldDescriptor::CPPTYPE_ ## TYPE: \
+      return internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<type> >::get();
+    HANDLE_PRIMITIVE_TYPE(INT32, int32)
+    HANDLE_PRIMITIVE_TYPE(UINT32, uint32)
+    HANDLE_PRIMITIVE_TYPE(INT64, int64)
+    HANDLE_PRIMITIVE_TYPE(UINT64, uint64)
+    HANDLE_PRIMITIVE_TYPE(FLOAT, float)
+    HANDLE_PRIMITIVE_TYPE(DOUBLE, double)
+    HANDLE_PRIMITIVE_TYPE(BOOL, bool)
+    HANDLE_PRIMITIVE_TYPE(ENUM, int32)
+#undef HANDLE_PRIMITIVE_TYPE
+    case FieldDescriptor::CPPTYPE_STRING:
+      switch (field->options().ctype()) {
+        default:
+        case FieldOptions::STRING:
+          return internal::Singleton<internal::RepeatedPtrFieldStringAccessor>::get();
+      }
+      break;
+    case FieldDescriptor::CPPTYPE_MESSAGE:
+      if (field->is_map()) {
+        return internal::Singleton<internal::MapFieldAccessor>::get();
+      } else {
+        return internal::Singleton<internal::RepeatedPtrFieldMessageAccessor>::get();
+      }
+  }
+  GOOGLE_LOG(FATAL) << "Should not reach here.";
+  return NULL;
+}
+
+namespace internal {
+namespace {
+void ShutdownRepeatedFieldAccessor() {
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<int32> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<uint32> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<int64> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<uint64> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<float> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<double> >::ShutDown();
+  internal::Singleton<internal::RepeatedFieldPrimitiveAccessor<bool> >::ShutDown();
+  internal::Singleton<internal::RepeatedPtrFieldStringAccessor>::ShutDown();
+  internal::Singleton<internal::RepeatedPtrFieldMessageAccessor>::ShutDown();
+  internal::Singleton<internal::MapFieldAccessor>::ShutDown();
+}
+
+struct ShutdownRepeatedFieldRegister {
+  ShutdownRepeatedFieldRegister() {
+    OnShutdown(&ShutdownRepeatedFieldAccessor);
+  }
+} shutdown_;
+
+}  // namespace
+}  // namespace internal
+
+namespace internal {
+template<>
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+// Note: force noinline to workaround MSVC compiler bug with /Zc:inline, issue #240
+GOOGLE_ATTRIBUTE_NOINLINE
+#endif
+Message* GenericTypeHandler<Message>::NewFromPrototype(
+    const Message* prototype, google::protobuf::Arena* arena) {
+  return prototype->New(arena);
+}
+template<>
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+// Note: force noinline to workaround MSVC compiler bug with /Zc:inline, issue #240
+GOOGLE_ATTRIBUTE_NOINLINE
+#endif
+google::protobuf::Arena* GenericTypeHandler<Message>::GetArena(
+    Message* value) {
+  return value->GetArena();
+}
+template<>
+#if defined(_MSC_VER) && (_MSC_VER >= 1800)
+// Note: force noinline to workaround MSVC compiler bug with /Zc:inline, issue #240
+GOOGLE_ATTRIBUTE_NOINLINE
+#endif
+void* GenericTypeHandler<Message>::GetMaybeArenaPointer(
+    Message* value) {
+  return value->GetMaybeArenaPointer();
+}
+}  // namespace internal
 
 }  // namespace protobuf
 }  // namespace google

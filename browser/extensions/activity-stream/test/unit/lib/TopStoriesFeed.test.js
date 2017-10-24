@@ -8,8 +8,8 @@ describe("Top Stories Feed", () => {
   let TopStoriesFeed;
   let STORIES_UPDATE_TIME;
   let TOPICS_UPDATE_TIME;
-  let DOMAIN_AFFINITY_UPDATE_TIME;
   let SECTION_ID;
+  let SPOC_IMPRESSION_TRACKING_PREF;
   let instance;
   let clock;
   let globals;
@@ -31,7 +31,7 @@ describe("Top Stories Feed", () => {
     FakePrefs.prototype.prefs.apiKeyPref = "test-api-key";
 
     globals = new GlobalOverrider();
-    globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}});
+    globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}, obs: {addObserver: () => {}, removeObserver: () => {}}});
     globals.set("PlacesUtils", {history: {}});
     clock = sinon.useFakeTimers();
     shortURLStub = sinon.stub().callsFake(site => site.url);
@@ -43,8 +43,27 @@ describe("Top Stories Feed", () => {
       sections: new Map([["topstories", {order: 0, options: FAKE_OPTIONS}]])
     };
 
-    class FakeUserDomainAffinityProvider {}
-    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, DOMAIN_AFFINITY_UPDATE_TIME, SECTION_ID} = injector({
+    class FakeUserDomainAffinityProvider {
+      constructor(timeSegments, parameterSets, maxHistoryQueryResults, version, scores) {
+        this.timeSegments = timeSegments;
+        this.parameterSets = parameterSets;
+        this.maxHistoryQueryResults = maxHistoryQueryResults;
+        this.version = version;
+        this.scores = scores;
+      }
+
+      getAffinities() {
+        return {};
+      }
+    }
+
+    ({
+      TopStoriesFeed,
+      STORIES_UPDATE_TIME,
+      TOPICS_UPDATE_TIME,
+      SECTION_ID,
+      SPOC_IMPRESSION_TRACKING_PREF
+    } = injector({
       "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
       "lib/UserDomainAffinityProvider.jsm": {UserDomainAffinityProvider: FakeUserDomainAffinityProvider},
@@ -55,7 +74,6 @@ describe("Top Stories Feed", () => {
     instance.store = {getState() { return {Prefs: {values: {showSponsored: true}}}; }, dispatch: sinon.spy()};
     instance.storiesLastUpdated = 0;
     instance.topicsLastUpdated = 0;
-    instance.affinityProvider = {calculateItemRelevanceScore: s => 1};
   });
   afterEach(() => {
     globals.restore();
@@ -163,7 +181,8 @@ describe("Top Stories Feed", () => {
         "url": "rec-url",
         "hostname": "rec-url",
         "min_score": 0,
-        "score": 1
+        "score": 1,
+        "spoc_meta": {}
       }];
 
       instance.stories_endpoint = "stories-endpoint";
@@ -274,33 +293,8 @@ describe("Top Stories Feed", () => {
       assert.notCalled(instance.store.dispatch);
       assert.called(Components.utils.reportError);
     });
-    it("should initialize user domain affinity provider if personalization is preffed on", async () => {
-      const response = {
-        "recommendations":  [{
-          "id": "1",
-          "title": "title",
-          "excerpt": "description",
-          "image_src": "image-url",
-          "url": "rec-url",
-          "published_timestamp": "123"
-        }],
-        "settings": {"timeSegments": {}, "domainAffinityParameterSets": {}}
-      };
-
-      instance.affinityProvider = undefined;
-
-      instance.stories_endpoint = "stories-endpoint";
-      let fetchStub = globals.sandbox.stub();
-      globals.set("fetch", fetchStub);
-      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
-
-      await instance.fetchStories();
-      assert.isUndefined(instance.affinityProvider);
-
-      instance.personalized = true;
-      await instance.fetchStories();
-      assert.isDefined(instance.affinityProvider);
-    });
+  });
+  describe("#personalization", () => {
     it("should sort stories if personalization is preffed on", async () => {
       const response = {
         "recommendations":  [{"id": "1"}, {"id": "2"}],
@@ -381,6 +375,8 @@ describe("Top Stories Feed", () => {
       const rotated = instance.rotate(items);
       assert.deepEqual(items, rotated);
     });
+  });
+  describe("#spocs", () => {
     it("should insert spoc at provided interval", async () => {
       let fetchStub = globals.sandbox.stub();
       globals.set("fetch", fetchStub);
@@ -459,7 +455,6 @@ describe("Top Stories Feed", () => {
 
       const response = {
         "settings": {"spocsPerNewTabs": 2},
-        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -479,7 +474,6 @@ describe("Top Stories Feed", () => {
 
       const response = {
         "settings": {"spocsPerNewTabs": 2},
-        "recommendations": [{"id": "rec1"}, {"id": "rec2"}, {"id": "rec3"}],
         "spocs": [{"id": "spoc1"}, {"id": "spoc2"}]
       };
 
@@ -511,6 +505,181 @@ describe("Top Stories Feed", () => {
       instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
       assert.notCalled(instance.store.dispatch);
     });
+    it("should record spoc/campaign impressions for frequency capping", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
+      };
+
+      instance._prefs = {get: pref => undefined, set: sinon.spy()};
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      let expectedPrefValue = JSON.stringify({5: [0]});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      assert.calledWith(instance._prefs.set.firstCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValue);
+
+      clock.tick(1);
+      instance._prefs.get = pref => expectedPrefValue;
+      let expectedPrefValueCallTwo = JSON.stringify({5: [0, 1]});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      assert.calledWith(instance._prefs.set.secondCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValueCallTwo);
+
+      clock.tick(1);
+      instance._prefs.get = pref => expectedPrefValueCallTwo;
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 4}]}});
+      assert.calledWith(instance._prefs.set.thirdCall, SPOC_IMPRESSION_TRACKING_PREF, JSON.stringify({5: [0, 1], 6: [2]}));
+    });
+    it("should not record spoc/campaign impressions for non-view impressions", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
+      };
+
+      instance._prefs = {get: pref => undefined, set: sinon.spy()};
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {click: 0, tiles: [{id: 1}]}});
+      assert.notCalled(instance._prefs.set);
+
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {block: 0, tiles: [{id: 1}]}});
+      assert.notCalled(instance._prefs.set);
+
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {pocket: 0, tiles: [{id: 1}]}});
+      assert.notCalled(instance._prefs.set);
+    });
+    it("should clean up spoc/campaign impressions", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      instance._prefs = {get: pref => undefined, set: sinon.spy()};
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 2},
+        "spocs": [{"id": 1, "campaign_id": 5}, {"id": 4, "campaign_id": 6}]
+      };
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      // simulate impressions for campaign 5 and 6
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      instance._prefs.get = pref => JSON.stringify({5: [0]});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 4}]}});
+
+      let expectedPrefValue = JSON.stringify({5: [0], 6: [0]});
+      assert.calledWith(instance._prefs.set.secondCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValue);
+      instance._prefs.get = pref => expectedPrefValue;
+
+      // remove campaign 5 from response
+      const updatedResponse = {
+        "settings": {"spocsPerNewTabs": 2},
+        "spocs": [{"id": 4, "campaign_id": 6}]
+      };
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(updatedResponse)});
+      await instance.fetchStories();
+
+      // should remove campaign 5 from pref as no longer active
+      assert.calledWith(instance._prefs.set.thirdCall, SPOC_IMPRESSION_TRACKING_PREF, JSON.stringify({6: [0]}));
+    });
+    it("should maintain frequency caps when inserting spocs", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 1},
+        "recommendations": [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
+        "spocs": [
+          {"id": "spoc1", "campaign_id": 1, "caps": {"lifetime": 3, "campaign": {"count": 2, "period": 3600}}},
+          {"id": "spoc2", "campaign_id": 2, "caps": {"lifetime": 1}}
+        ]
+      };
+
+      instance.personalized = true;
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      clock.tick();
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      let action = instance.store.dispatch.firstCall.args[0];
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc1");
+      instance._prefs.get = pref => JSON.stringify({1: [1]});
+
+      clock.tick();
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      action = instance.store.dispatch.secondCall.args[0];
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc1");
+      instance._prefs.get = pref => JSON.stringify({1: [1, 2]});
+
+      // campaign 1 period frequency cap now reached (spoc 2 should be shown)
+      clock.tick();
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      action = instance.store.dispatch.thirdCall.args[0];
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc2");
+      instance._prefs.get = pref => JSON.stringify({1: [1, 2], 2: [3]});
+
+      // new campaign 1 period starting (spoc 1 sohuld be shown again)
+      clock.tick(2 * 60 * 60 * 1000);
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      action = instance.store.dispatch.lastCall.args[0];
+      assert.equal(action.data.rows[0].guid, "rec1");
+      assert.equal(action.data.rows[1].guid, "rec2");
+      assert.equal(action.data.rows[2].guid, "spoc1");
+      instance._prefs.get = pref => JSON.stringify({1: [1, 2, 7200003], 2: [3]});
+
+      // campaign 1 lifetime cap now reached (no spoc should be sent)
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.callCount(instance.store.dispatch, 4);
+    });
+    it("should maintain client-side MAX_LIFETIME_CAP", async () => {
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+
+      const response = {
+        "settings": {"spocsPerNewTabs": 1},
+        "recommendations": [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
+        "spocs": [
+          {"id": "spoc1", "campaign_id": 1, "caps": {"lifetime": 101}}
+        ]
+      };
+
+      instance.personalized = true;
+      instance.show_spocs = true;
+      instance.stories_endpoint = "stories-endpoint";
+      instance.store.getState = () => ({Sections: [{rows: response.recommendations}], Prefs: {values: {showSponsored: true}}});
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
+      await instance.fetchStories();
+
+      instance._prefs.get = pref => JSON.stringify({1: [...Array(100).keys()]});
+      instance.onAction({type: at.NEW_TAB_REHYDRATED, meta: {fromTarget: {}}});
+      assert.notCalled(instance.store.dispatch);
+    });
   });
   describe("#update", () => {
     it("should fetch stories after update interval", () => {
@@ -533,26 +702,27 @@ describe("Top Stories Feed", () => {
       instance.onAction({type: at.SYSTEM_TICK});
       assert.calledOnce(instance.fetchTopics);
     });
-    it("should update domain affinities after update interval", () => {
+    it("should update domain affinities on idle-daily, if personalization preffed on", () => {
       instance.init();
+      instance.affinityProvider = undefined;
+      instance.cache.set = sinon.spy();
+
+      instance.observe("", "idle-daily");
+      assert.isUndefined(instance.affinityProvider);
+
       instance.personalized = true;
-      const fakeSettings = {timeSegments: {}, parameterSets: {}};
-      instance.affinityProvider = {status: "not_changed"};
-
-      instance.updateSettings(fakeSettings);
-      assert.equal("not_changed", instance.affinityProvider.status);
-
-      clock.tick(DOMAIN_AFFINITY_UPDATE_TIME);
-      instance.updateSettings(fakeSettings);
-      assert.isUndefined(instance.affinityProvider.status);
+      instance.updateSettings({timeSegments: {}, domainAffinityParameterSets: {}});
+      instance.observe("", "idle-daily");
+      assert.isDefined(instance.affinityProvider);
+      assert.calledOnce(instance.cache.set);
+      assert.calledWith(instance.cache.set, "domainAffinities", instance.affinityProvider.getAffinities());
     });
     it("should send performance telemetry when updating domain affinities", () => {
       instance.init();
       instance.personalized = true;
-      const fakeSettings = {timeSegments: {}, parameterSets: {}};
+      instance.updateSettings({timeSegments: {}, domainAffinityParameterSets: {}});
+      instance.observe("", "idle-daily");
 
-      clock.tick(DOMAIN_AFFINITY_UPDATE_TIME);
-      instance.updateSettings(fakeSettings);
       assert.calledOnce(instance.store.dispatch);
       let action = instance.store.dispatch.firstCall.args[0];
       assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
@@ -561,27 +731,35 @@ describe("Top Stories Feed", () => {
     it("should re-init on options change", () => {
       instance.storiesLastUpdated = 1;
       instance.topicsLastUpdated = 1;
-      instance.affinityLastUpdated = 1;
 
       instance.onAction({type: at.SECTION_OPTIONS_CHANGED, data: "foo"});
       assert.notCalled(sectionsManagerStub.disableSection);
       assert.notCalled(sectionsManagerStub.enableSection);
       assert.equal(instance.storiesLastUpdated, 1);
       assert.equal(instance.topicsLastUpdated, 1);
-      assert.equal(instance.affinityLastUpdated, 1);
 
       instance.onAction({type: at.SECTION_OPTIONS_CHANGED, data: "topstories"});
       assert.calledOnce(sectionsManagerStub.disableSection);
       assert.calledOnce(sectionsManagerStub.enableSection);
       assert.equal(instance.storiesLastUpdated, 0);
       assert.equal(instance.topicsLastUpdated, 0);
-      assert.equal(instance.affinityLastUpdated, 0);
     });
     it("should filter spocs when link is blocked", () => {
       instance.spocs = [{"url": "not_blocked"}, {"url": "blocked"}];
       instance.onAction({type: at.PLACES_LINK_BLOCKED, data: {url: "blocked"}});
 
       assert.deepEqual(instance.spocs, [{"url": "not_blocked"}]);
+    });
+    it("should reset domain affinity scores if version changed", () => {
+      instance.init();
+      instance.personalized = true;
+      instance.resetDomainAffinityScores = sinon.spy();
+      instance.updateSettings({timeSegments: {}, domainAffinityParameterSets: {}, version: "1"});
+      instance.observe("", "idle-daily");
+      assert.notCalled(instance.resetDomainAffinityScores);
+
+      instance.updateSettings({timeSegments: {}, domainAffinityParameterSets: {}, version: "2"});
+      assert.calledOnce(instance.resetDomainAffinityScores);
     });
   });
   describe("#loadCachedData", () => {
@@ -596,10 +774,11 @@ describe("Top Stories Feed", () => {
           "url": "rec-url",
           "published_timestamp": "123",
           "context": "trending",
-          "icon": "icon"
+          "icon": "icon",
+          "item_score": 0.98
         }]
       };
-      const transformedStores = [{
+      const transformedStories = [{
         "guid": "1",
         "type": "now",
         "title": "title",
@@ -611,7 +790,8 @@ describe("Top Stories Feed", () => {
         "url": "rec-url",
         "hostname": "rec-url",
         "min_score": 0,
-        "score": 1
+        "score": 0.98,
+        "spoc_meta": {}
       }];
       const topics = {
         "_timestamp": 123,
@@ -624,13 +804,56 @@ describe("Top Stories Feed", () => {
       await instance.loadCachedData();
       assert.calledTwice(sectionsManagerStub.updateSection);
       assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {topics: topics.topics, read_more_endpoint: undefined});
-      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: transformedStores});
+      assert.calledWith(sectionsManagerStub.updateSection, SECTION_ID, {rows: transformedStories});
     });
     it("should NOT update section if there is no cached data", async () => {
       instance.cache.get = () => ({});
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
       await instance.loadCachedData();
       assert.notCalled(sectionsManagerStub.updateSection);
+    });
+    it("should initialize user domain affinity provider from cache if personalization is preffed on", async () => {
+      const domainAffinities = {
+        "parameterSets": {
+          "default": {
+            "recencyFactor": 0.4,
+            "frequencyFactor": 0.5,
+            "combinedDomainFactor": 0.5,
+            "perfectFrequencyVisits": 10,
+            "perfectCombinedDomainScore": 2,
+            "multiDomainBoost": 0.1,
+            "itemScoreFactor": 0
+          }
+        },
+        "scores": {"a.com": 1, "b.com": 0.9},
+        "maxHistoryQueryResults": 1000,
+        "timeSegments": {},
+        "version": "v1"
+      };
+
+      instance.affinityProvider = undefined;
+      instance.cache.get = () => ({domainAffinities});
+
+      await instance.loadCachedData();
+      assert.isUndefined(this.affinityProvider);
+
+      instance.personalized = true;
+      await instance.loadCachedData();
+      assert.isDefined(instance.affinityProvider);
+      assert.deepEqual(instance.affinityProvider.timeSegments, domainAffinities.timeSegments);
+      assert.equal(instance.affinityProvider.maxHistoryQueryResults, domainAffinities.maxHistoryQueryResults);
+      assert.deepEqual(instance.affinityProvider.parameterSets, domainAffinities.parameterSets);
+      assert.deepEqual(instance.affinityProvider.scores, domainAffinities.scores);
+      assert.deepEqual(instance.affinityProvider.version, domainAffinities.version);
+    });
+    it("should clear domain affinity cache when history is cleared", () => {
+      instance.cache.set = sinon.spy();
+      instance.affinityProvider = {};
+      instance.personalized = true;
+
+      instance.onAction({type: at.PLACES_HISTORY_CLEARED});
+      assert.calledWith(instance.cache.set, "domainAffinities", {});
+      assert.isUndefined(instance.affinityProvider);
     });
   });
 });

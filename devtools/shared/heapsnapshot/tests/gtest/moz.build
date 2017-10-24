@@ -10,6 +10,9 @@ LOCAL_INCLUDES += [
     '../..',
 ]
 
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
+
 UNIFIED_SOURCES = [
     'DeserializedNodeUbiNodes.cpp',
     'DeserializedStackFrameUbiStackFrames.cpp',

@@ -52,11 +52,11 @@ function test_newtab(testInfo) { // eslint-disable-line no-unused-vars
 
   // Helper to push prefs for just this test and pop them when done
   let needPopPrefs = false;
-  let scopedPushPrefs = async(...args) => {
+  let scopedPushPrefs = async (...args) => {
     needPopPrefs = true;
     await pushPrefs(...args);
   };
-  let scopedPopPrefs = async() => {
+  let scopedPopPrefs = async () => {
     if (needPopPrefs) {
       await popPrefs();
     }
@@ -64,7 +64,7 @@ function test_newtab(testInfo) { // eslint-disable-line no-unused-vars
 
   // Make the test task with optional before/after and content task to run in a
   // new tab that opens and closes.
-  let testTask = async() => {
+  let testTask = async () => {
     // Open about:newtab without using the default load listener
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
 
