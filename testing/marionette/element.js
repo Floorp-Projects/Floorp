@@ -95,8 +95,8 @@ element.Strategy = {
  * Stores known/seen elements and their associated web element
  * references.
  *
- * Elements are added by calling |add(el)| or |addAll(elements)|, and
- * may be queried by their web element reference using |get(element)|.
+ * Elements are added by calling {@link #add()} or {@link addAll()},
+ * and may be queried by their web element reference using {@link get()}.
  *
  * @class
  * @memberof element
@@ -122,7 +122,7 @@ element.Store = class {
    *
    * @return {Array.<WebElement>}
    *     List of the web element references associated with each element
-   *     from |els|.
+   *     from <var>els</var>.
    */
   addAll(els) {
     let add = this.add.bind(this);
@@ -258,11 +258,11 @@ element.Store = class {
  * document root or a given node.
  *
  * If |timeout| is above 0, an implicit search technique is used.
- * This will wait for the duration of |timeout| for the element
- * to appear in the DOM.
+ * This will wait for the duration of <var>timeout</var> for the
+ * element to appear in the DOM.
  *
- * See the |element.Strategy| enum for a full list of supported
- * search strategies that can be passed to |strategy|.
+ * See the {@link element.Strategy} enum for a full list of supported
+ * search strategies that can be passed to <var>strategy</var>.
  *
  * Available flags for <var>opts</var>:
  *
@@ -776,7 +776,7 @@ element.isSelected = function(el) {
  *     X- and Y coordinates.
  *
  * @throws TypeError
- *     If |xOffset| or |yOffset| are not numbers.
+ *     If <var>xOffset</var> or <var>yOffset</var> are not numbers.
  */
 element.coordinates = function(
     node, xOffset = undefined, yOffset = undefined) {
@@ -813,7 +813,7 @@ element.coordinates = function(
  *     the target's bounding box.
  *
  * @return {boolean}
- *     True if if |el| is in viewport, false otherwise.
+ *     True if if <var>el</var> is in viewport, false otherwise.
  */
 element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
