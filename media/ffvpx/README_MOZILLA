@@ -1,6 +1,6 @@
 This directory contains files used in gecko builds from FFmpeg
 (http://ffmpeg.org). The current files are from FFmpeg as of
-revision n3.2-65-gee56777
+revision n3.4-1-g587fadaef1
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8 and vp9 portion of the library, and only on x86
@@ -12,7 +12,7 @@ Once yasm is upgraded to 1.2 or later, AVX2 code could be re-enabled.
 Add --disable-avx2 to configure on those platforms.
 
 configuration files were generated as follow using the configure script:
-./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-asm --enable-yasm
+./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --enable-parser=flac --enable-asm --enable-yasm
 
 config*:
 replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
@@ -30,3 +30,13 @@ replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
 
 config_win32/64.h/asm:
 add to configure command: --toolchain=msvc
+
+Regenerate defaults_disabled.{h,asm} with:
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.h > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.h
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.asm > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.asm
+
+All new decoders/muxers/encoders/... should be added in the list of dummy functions found in libavcodec/dummy_funcs.c
+otherwise linkage will fail on Windows. On other platforms they are optimised out and aren't necessary.
+
+To update the source tree, the files listed in FILES should typically be able to be copied as-is from ffmpeg tree.
+Compilation will reveal if any files are missing.

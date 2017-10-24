@@ -45,6 +45,7 @@ SOURCES += [
     'rational.c',
     'reverse.c',
     'samplefmt.c',
+    'slicethread.c',
     'threadmessage.c',
     'time.c',
     'timecode.c',
