@@ -958,6 +958,8 @@ class TreeMetadataEmitter(LoggingMixin):
         elif dist_install is False:
             passthru.variables['NO_DIST_INSTALL'] = True
 
+        computed_flags = ComputedFlags(context, context['COMPILE_FLAGS'])
+
         # Ideally, this should be done in templates, but this is difficult at
         # the moment because USE_STATIC_LIBS can be set after a template
         # returns. Eventually, with context-based templates, it will be
@@ -972,6 +974,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 rtl_flag += 'd'
             # Use a list, like MOZBUILD_*FLAGS variables
             passthru.variables['RTL_FLAGS'] = [rtl_flag]
+            computed_flags.resolve_flags('RTL', [rtl_flag])
 
         generated_files = set()
         for obj in self._process_generated_files(context):
@@ -984,8 +987,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 path)
             generated_files.add(str(sub.relpath))
             yield sub
-
-        computed_flags = ComputedFlags(context, context['COMPILE_FLAGS'])
 
         for defines_var, cls in (('DEFINES', Defines),
                                  ('HOST_DEFINES', HostDefines)):
