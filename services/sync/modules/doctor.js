@@ -82,7 +82,7 @@ this.Doctor = {
           }
         }
       } finally {
-        this.lastRepairAdvance = this._now();
+        this.lastRepairAdvance = Math.floor(this._now());
       }
     }
   },
