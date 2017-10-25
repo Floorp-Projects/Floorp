@@ -131,7 +131,7 @@ private:
 
   typedef MozPromise<nsresult, nsresult, false> BackgroundActorPromise;
 
-  void GetOrCreateBackgroundActor();
+  bool MaybeCreateBackgroundActor();
 
   // IPC Channel for the current transaction.
   RefPtr<U2FTransactionChild> mChild;
