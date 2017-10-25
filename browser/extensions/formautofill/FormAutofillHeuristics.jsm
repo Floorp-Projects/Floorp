@@ -539,11 +539,14 @@ this.FormAutofillHeuristics = {
    *        all field details in the form.
    */
   getFormInfo(form, allowDuplicates = false) {
-    if (form.elements.length <= 0) {
+    const eligibleFields = Array.from(form.elements)
+      .filter(elem => FormAutofillUtils.isFieldEligibleForAutofill(elem));
+
+    if (eligibleFields.length <= 0) {
       return [];
     }
 
-    let fieldScanner = new FieldScanner(form.elements);
+    let fieldScanner = new FieldScanner(eligibleFields);
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
@@ -629,10 +632,6 @@ this.FormAutofillHeuristics = {
   },
 
   getInfo(element) {
-    if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
-      return null;
-    }
-
     let info = element.getAutocompleteInfo();
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
