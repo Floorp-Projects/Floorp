@@ -12,29 +12,31 @@ namespace mozilla {
 namespace dom {
 
 mozilla::ipc::IPCResult
-U2FTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aTransactionInfo)
+U2FTransactionParent::RecvRequestRegister(const uint64_t& aTransactionId,
+                                          const WebAuthnTransactionInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  mgr->Register(this, aTransactionInfo);
+  mgr->Register(this, aTransactionId, aTransactionInfo);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTransactionInfo)
+U2FTransactionParent::RecvRequestSign(const uint64_t& aTransactionId,
+                                      const WebAuthnTransactionInfo& aTransactionInfo)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  mgr->Sign(this, aTransactionInfo);
+  mgr->Sign(this, aTransactionId, aTransactionInfo);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionParent::RecvRequestCancel()
+U2FTransactionParent::RecvRequestCancel(const uint64_t& aTransactionId)
 {
   AssertIsOnBackgroundThread();
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  mgr->Cancel(this);
+  mgr->Cancel(this, aTransactionId);
   return IPC_OK();
 }
 

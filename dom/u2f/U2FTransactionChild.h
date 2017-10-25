@@ -23,11 +23,21 @@ class U2FTransactionChild final : public PWebAuthnTransactionChild
 public:
   NS_INLINE_DECL_REFCOUNTING(U2FTransactionChild);
   U2FTransactionChild();
-  mozilla::ipc::IPCResult RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer) override;
-  mozilla::ipc::IPCResult RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
-                                          nsTArray<uint8_t>&& aBuffer) override;
-  mozilla::ipc::IPCResult RecvAbort(const nsresult& aError) override;
+
+  mozilla::ipc::IPCResult
+  RecvConfirmRegister(const uint64_t& aTransactionId,
+                      nsTArray<uint8_t>&& aRegBuffer) override;
+
+  mozilla::ipc::IPCResult
+  RecvConfirmSign(const uint64_t& aTransactionId,
+                  nsTArray<uint8_t>&& aCredentialId,
+                  nsTArray<uint8_t>&& aBuffer) override;
+
+  mozilla::ipc::IPCResult
+  RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;
+
   void ActorDestroy(ActorDestroyReason why) override;
+
 private:
   ~U2FTransactionChild() = default;
 };
