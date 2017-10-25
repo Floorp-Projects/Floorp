@@ -206,7 +206,6 @@
               closemenu="single"
               selection="link|host"
               selectiontype="single"
-              hideifprivatebrowsing="true"
               forcehideselection="bookmark"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_sortBy:name"
