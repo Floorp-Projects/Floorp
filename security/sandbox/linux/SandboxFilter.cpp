@@ -539,6 +539,39 @@ private:
     return ConvertError(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));
   }
 
+  static intptr_t StatFsTrap(ArgsRef aArgs, void* aux) {
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    // *buf could be either struct statfs or struct statfs64,
+    // depending on syscall -- and the kernel ABI structs in
+    // <asm/statfs.h> are not the same as the C API structs in
+    // <sys/statfs.h>.  Since we're not touching any of the fields,
+    // avoid all that and just use void*.
+    auto buf = reinterpret_cast<void*>(aArgs.args[1]);
+
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) {
+      return -errno;
+    }
+
+    intptr_t rv;
+    switch (aArgs.nr) {
+    case __NR_statfs:
+      rv = DoSyscall(__NR_fstatfs, fd, buf);
+      break;
+#ifdef __NR_statfs64
+    case __NR_statfs64:
+      rv = DoSyscall(__NR_fstatfs64, fd, buf);
+      break;
+#endif
+    default:
+      MOZ_ASSERT(false);
+      rv = -ENOSYS;
+    }
+
+    close(fd);
+    return rv;
+  }
+
 public:
   explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                                 const std::vector<int>& aSyscallWhitelist)
@@ -691,10 +724,12 @@ public:
     case __NR_getppid:
       return Trap(GetPPidTrap, nullptr);
 
+    CASES_FOR_statfs:
+      return Trap(StatFsTrap, nullptr);
+
       // Filesystem syscalls that need more work to determine who's
       // using them, if they need to be, and what we intend to about it.
     case __NR_getcwd:
-    CASES_FOR_statfs:
     CASES_FOR_fstatfs:
     CASES_FOR_fchown:
     case __NR_fchmod:
