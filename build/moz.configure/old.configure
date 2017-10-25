@@ -306,6 +306,7 @@ def old_configure_options(*options):
 @imports('subprocess')
 @imports('sys')
 @imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.shellutil', _import='split')
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
     cmd = prepare_configure
@@ -366,7 +367,10 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
             log.error('old-configure failed')
         sys.exit(ret)
 
-    raw_config = {}
+    raw_config = {
+        'split': split,
+        'unique_list': unique_list,
+    }
     with encoded_open('config.data', 'r') as fh:
         code = compile(fh.read(), 'config.data', 'exec')
         # Every variation of the exec() function I tried led to:
