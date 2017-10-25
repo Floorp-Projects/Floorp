@@ -4503,15 +4503,18 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
 
     // If the parent is styled but is display:none, we're done.
     //
-    // We check for a frame to reduce the cases where we need the FFI call.
-    if (!parent->GetPrimaryFrame() && Servo_Element_IsDisplayNone(parent)) {
-      return;
-    }
-
-    // The check above doesn't work for <area> element because <area> always
-    // have display:none, but before we fix bug 135040, it may have primary
-    // frame from <img>.
-    if (parent->IsHTMLElement(nsGkAtoms::area)) {
+    // We can't check for a frame here, since <frame> elements inside <frameset>
+    // still need to generate a frame, even if they're display: none. :(
+    //
+    // The servo traversal doesn't keep style data under display: none subtrees, 
+    // so in order for it to not need to cleanup each time anything happens in a
+    // display: none subtree, we keep it clean.
+    //
+    // Also, we can't be much more smarter about using the parent's frame in
+    // order to avoid work here, because since the style system keeps style data
+    // in, e.g., subtrees under a leaf frame, missing restyles and such in there
+    // has observable behavior via getComputedStyle, for example.
+    if (Servo_Element_IsDisplayNone(parent)) {
       return;
     }
   }
