@@ -136,8 +136,9 @@ CreateClientInfo()
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-  nsAutoCString clientId;
-  nsresult rv = prefBranch->GetCharPref("browser.safebrowsing.id", clientId);
+  nsCString clientId;
+  nsresult rv = prefBranch->GetCharPref("browser.safebrowsing.id",
+                                        getter_Copies(clientId));
 
   if (NS_FAILED(rv)) {
     clientId = "Firefox"; // Use "Firefox" as fallback.
@@ -343,8 +344,8 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
   if (prefBranch) {
       nsPrintfCString prefName("browser.safebrowsing.provider.%s.pver",
                                nsCString(aProvider).get());
-      nsAutoCString version;
-      nsresult rv = prefBranch->GetCharPref(prefName.get(), version);
+      nsCString version;
+      nsresult rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(version));
 
       aVersion = NS_SUCCEEDED(rv) ? version.get() : DEFAULT_PROTOCOL_VERSION;
   } else {
@@ -835,8 +836,9 @@ nsUrlClassifierUtils::ReadProvidersFromPrefs(ProviderDictType& aDict)
     nsCString provider(entry->GetKey());
     nsPrintfCString owninListsPref("%s.lists", provider.get());
 
-    nsAutoCString owningLists;
-    nsresult rv = prefBranch->GetCharPref(owninListsPref.get(), owningLists);
+    nsCString owningLists;
+    nsresult rv = prefBranch->GetCharPref(owninListsPref.get(),
+                                          getter_Copies(owningLists));
     if (NS_FAILED(rv)) {
       continue;
     }

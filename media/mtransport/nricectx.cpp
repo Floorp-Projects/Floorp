@@ -457,7 +457,7 @@ NrIceCtx::InitializeGlobals(bool allow_loopback,
             &ice_tcp_listen_backlog);
         branch->GetCharPref(
             "media.peerconnection.ice.force_interface",
-            force_net_interface);
+            getter_Copies(force_net_interface));
       }
     }
 
@@ -633,8 +633,8 @@ NrIceCtx::Initialize(const std::string& ufrag,
     }
   }
 
-  nsAutoCString mapping_type;
-  nsAutoCString filtering_type;
+  nsCString mapping_type;
+  nsCString filtering_type;
   bool block_udp = false;
   bool block_tcp = false;
 
@@ -648,10 +648,10 @@ NrIceCtx::Initialize(const std::string& ufrag,
     if (NS_SUCCEEDED(rv)) {
       rv = pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.mapping_type",
-          mapping_type);
+          getter_Copies(mapping_type));
       rv = pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.filtering_type",
-          filtering_type);
+          getter_Copies(filtering_type));
       rv = pref_branch->GetBoolPref(
           "media.peerconnection.nat_simulator.block_udp",
           &block_udp);

@@ -458,7 +458,7 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
 {
 
     nsresult rv;
-    nsAutoCString prefValue;
+    nsCString prefValue;
 
     /* Getting an email address through set of three preferences:
        First getting a default account with
@@ -468,12 +468,12 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
     */
 
     rv = mPrefBranch->GetCharPref("mail.accountmanager.defaultaccount",
-                                  prefValue);
+                                  getter_Copies(prefValue));
     if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty()) {
         emailAddr = NS_LITERAL_CSTRING("mail.account.") +
             prefValue + NS_LITERAL_CSTRING(".identities");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
-                                      prefValue);
+                                      getter_Copies(prefValue));
         if (NS_FAILED(rv) || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
         int32_t commandIndex = prefValue.FindChar(',');
@@ -482,14 +482,15 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") +
             prefValue + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
-                                      prefValue);
+                                      getter_Copies(prefValue));
         if (NS_FAILED(rv)  || prefValue.IsEmpty())
             return PromptForEMailAddress(emailAddr);
         emailAddr = prefValue;
     }
     else {
         // look for 4.x pref in case we just migrated.
-        rv = mPrefBranch->GetCharPref("mail.identity.useremail", prefValue);
+        rv = mPrefBranch->GetCharPref("mail.identity.useremail",
+                                  getter_Copies(prefValue));
         if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty())
             emailAddr = prefValue;
         else
