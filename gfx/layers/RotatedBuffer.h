@@ -24,11 +24,9 @@
 namespace mozilla {
 namespace layers {
 
-class CapturedPaintState;
-
-typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
-
 class PaintedLayer;
+class CapturedBufferState;
+class ContentClient;
 
 // Mixin class for classes which need logic for loaning out a draw target.
 // See comments on BorrowDrawTargetForQuadrantUpdate.
@@ -158,15 +156,38 @@ public:
                                     bool aSetTransform = true,
                                     gfx::Matrix* aOutTransform = nullptr);
 
+  struct Parameters {
+    Parameters(const gfx::IntRect& aBufferRect,
+               const gfx::IntPoint& aBufferRotation)
+      : mBufferRect(aBufferRect)
+      , mBufferRotation(aBufferRotation)
+      , mDidSelfCopy(false)
+    {
+    }
+
+    bool IsRotated() const;
+    bool RectWrapsBuffer(const gfx::IntRect& aRect) const;
+
+    void SetUnrotated();
+
+    gfx::IntRect  mBufferRect;
+    gfx::IntPoint mBufferRotation;
+    bool mDidSelfCopy;
+  };
+
   /**
-   * Adjusts the buffer to be centered on the destination buffer rect,
-   * and ready to draw the specified bounds. Returns whether a new buffer
-   * needs to be created.
+   * Returns the new buffer parameters for rotating to a
+   * destination buffer rect.
    */
-  bool AdjustTo(const gfx::IntRect& aDestBufferRect,
-                const gfx::IntRect& aDrawBounds,
-                bool aCanHaveRotation,
-                bool aCanDrawRotated);
+  Parameters AdjustedParameters(const gfx::IntRect& aDestBufferRect) const;
+
+  /**
+   * Unrotates the pixels of the rotated buffer for the specified
+   * new buffer parameters.
+   */
+  bool UnrotateBufferTo(const Parameters& aParameters);
+
+  void SetParameters(const Parameters& aParameters);
 
   /**
    * |BufferRect()| is the rect of device pixels that this
@@ -222,6 +243,13 @@ public:
 
   virtual gfx::DrawTarget* GetDTBuffer() const = 0;
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const = 0;
+
+  /**
+   * Creates a shallow copy of the rotated buffer with the same underlying
+   * texture clients and draw targets. Rotated buffers are not thread safe,
+   * so a copy needs to be sent for off main thread painting.
+   */
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const = 0;
 
 protected:
   virtual ~RotatedBuffer() {}
@@ -300,6 +328,14 @@ public:
   virtual gfx::DrawTarget* GetDTBuffer() const override;
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
 
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+    return new RemoteRotatedBuffer {
+      mClient, mClientOnWhite,
+      mTarget, mTargetOnWhite,
+      mBufferRect, mBufferRotation
+    };
+  }
+
   TextureClient* GetClient() const { return mClient; }
   TextureClient* GetClientOnWhite() const { return mClientOnWhite; }
 
@@ -307,6 +343,17 @@ public:
   void Clear();
 
 private:
+  RemoteRotatedBuffer(TextureClient* aClient, TextureClient* aClientOnWhite,
+                      gfx::DrawTarget* aTarget, gfx::DrawTarget* aTargetOnWhite,
+                      const gfx::IntRect& aBufferRect,
+                      const gfx::IntPoint& aBufferRotation)
+    : RotatedBuffer(aBufferRect, aBufferRotation)
+    , mClient(aClient)
+    , mClientOnWhite(aClientOnWhite)
+    , mTarget(aTarget)
+    , mTargetOnWhite(aTargetOnWhite)
+  { }
+
   RefPtr<TextureClient> mClient;
   RefPtr<TextureClient> mClientOnWhite;
 
@@ -343,6 +390,13 @@ public:
   virtual gfx::DrawTarget* GetDTBuffer() const override;
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
 
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+    return new DrawTargetRotatedBuffer {
+        mTarget, mTargetOnWhite,
+        mBufferRect, mBufferRotation
+      };
+  }
+
 private:
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTarget> mTargetOnWhite;
@@ -376,6 +430,10 @@ public:
 
   virtual gfx::DrawTarget* GetDTBuffer() const override { return nullptr; }
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const override { return nullptr; }
+
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+    return nullptr;
+  }
 
 private:
   RefPtr<gfx::SourceSurface> mSource;
