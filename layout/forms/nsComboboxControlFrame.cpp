@@ -27,6 +27,7 @@
 #include "nsIDOMNode.h"
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
 #include "nsListControlFrame.h"
@@ -968,15 +969,6 @@ nsComboboxControlFrame::GetDropDown()
 
 ///////////////////////////////////////////////////////////////
 
-void
-nsComboboxControlFrame::SetPreviewText(const nsAString& aValue)
-{
-  nsAutoString previewValue(aValue);
-  nsContentUtils::RemoveNewlines(previewValue);
-
-  mPreviewText = previewValue;
-  RedisplayText();
-}
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplaySelectedText()
@@ -990,10 +982,14 @@ nsComboboxControlFrame::RedisplaySelectedText()
 nsresult
 nsComboboxControlFrame::RedisplayText()
 {
+  nsString previewValue;
   nsString previousText(mDisplayedOptionTextOrPreview);
+
+  auto* selectElement = static_cast<dom::HTMLSelectElement*>(GetContent());
+  selectElement->GetPreviewValue(previewValue);
   // Get the text to display
-  if (!mPreviewText.IsEmpty()) {
-    mDisplayedOptionTextOrPreview = mPreviewText;
+  if (!previewValue.IsEmpty()) {
+    mDisplayedOptionTextOrPreview = previewValue;
   } else if (mDisplayedIndex != -1) {
     mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionTextOrPreview);
   } else {
@@ -1674,7 +1670,6 @@ nsComboboxControlFrame::SaveState(nsPresState** aState)
   MOZ_ASSERT(!(*aState));
   (*aState) = new nsPresState();
   (*aState)->SetDroppedDown(mDroppedDown);
-  (*aState)->SetPreviewText(mPreviewText);
   return NS_OK;
 }
 
@@ -1684,7 +1679,6 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
   if (!aState) {
     return NS_ERROR_FAILURE;
   }
-  aState->GetPreviewText(mPreviewText);
   ShowList(aState->GetDroppedDown()); // might destroy us
   return NS_OK;
 }

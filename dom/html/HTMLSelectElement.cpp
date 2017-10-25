@@ -1932,22 +1932,14 @@ HTMLSelectElement::SetOpenInParentProcess(bool aVal)
 }
 
 void
-HTMLSelectElement::GetPreviewValue(nsAString& aValue)
-{
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
-  if (comboFrame) {
-    comboFrame->GetPreviewText(aValue);
-  }
-}
-
-void
 HTMLSelectElement::SetPreviewValue(const nsAString& aValue)
 {
+  mPreviewValue = aValue;
+  nsContentUtils::RemoveNewlines(mPreviewValue);
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
   nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
   if (comboFrame) {
-    comboFrame->SetPreviewText(aValue);
+    comboFrame->RedisplaySelectedText();
   }
 }
 

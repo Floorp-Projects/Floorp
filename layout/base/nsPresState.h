@@ -111,16 +111,6 @@ public:
     return mDroppedDown;
   }
 
-  void SetPreviewText(const nsAString& aValue)
-  {
-    mPreviewText = aValue;
-  }
-
-  void GetPreviewText(nsAString& aValue)
-  {
-    aValue = mPreviewText;
-  }
-
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsISupports> mContentData;
@@ -131,7 +121,6 @@ protected:
   bool mDisabledSet;
   bool mDisabled;
   bool mDroppedDown;
-  nsString mPreviewText;
 };
 
 #endif /* nsPresState_h_ */
