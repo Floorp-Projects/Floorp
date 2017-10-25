@@ -141,7 +141,7 @@ private:
                   uint32_t aSequenceID, bool mNeutered, State aState,
                   ErrorResult& aRv);
 
-  void ConnectToPBackground();
+  bool ConnectToPBackground();
 
   // Dispatch events from the Message Queue using a nsRunnable.
   void Dispatch();
