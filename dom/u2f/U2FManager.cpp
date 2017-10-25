@@ -142,18 +142,18 @@ U2FManager::~U2FManager()
   }
 }
 
-void
-U2FManager::GetOrCreateBackgroundActor()
+bool
+U2FManager::MaybeCreateBackgroundActor()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mChild) {
-    return;
+    return true;
   }
 
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    return false;
   }
 
   RefPtr<U2FTransactionChild> mgr(new U2FTransactionChild());
@@ -161,11 +161,13 @@ U2FManager::GetOrCreateBackgroundActor()
     actorChild->SendPWebAuthnTransactionConstructor(mgr);
 
   if (NS_WARN_IF(!constructedMgr)) {
-    return;
+    return false;
   }
 
   MOZ_ASSERT(constructedMgr == mgr);
   mChild = mgr.forget();
+
+  return true;
 }
 
 //static
@@ -263,6 +265,10 @@ U2FManager::Register(nsPIDOMWindowInner* aParent, const nsCString& aRpId,
     return U2FPromise::CreateAndReject(ErrorCode::OTHER_ERROR, __func__).forget();
   }
 
+  if (!MaybeCreateBackgroundActor()) {
+    return U2FPromise::CreateAndReject(ErrorCode::OTHER_ERROR, __func__).forget();
+  }
+
   ListenForVisibilityEvents(aParent, this);
 
   // Always blank for U2F
@@ -278,11 +284,7 @@ U2FManager::Register(nsPIDOMWindowInner* aParent, const nsCString& aRpId,
 
   mTransaction = Some(U2FTransaction(aParent, Move(info), aClientDataJSON));
 
-  GetOrCreateBackgroundActor();
-
-  if (mChild) {
-    mChild->SendRequestRegister(mTransaction.ref().mInfo);
-  }
+  mChild->SendRequestRegister(mTransaction.ref().mInfo);
 
   return mTransaction.ref().mPromise.Ensure(__func__);
 }
@@ -307,6 +309,10 @@ U2FManager::Sign(nsPIDOMWindowInner* aParent,
     return U2FPromise::CreateAndReject(ErrorCode::OTHER_ERROR, __func__).forget();
   }
 
+  if (!MaybeCreateBackgroundActor()) {
+    return U2FPromise::CreateAndReject(ErrorCode::OTHER_ERROR, __func__).forget();
+  }
+
   ListenForVisibilityEvents(aParent, this);
 
   // Always blank for U2F
@@ -321,11 +327,7 @@ U2FManager::Sign(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(aParent, Move(info), aClientDataJSON));
 
-  GetOrCreateBackgroundActor();
-
-  if (mChild) {
-    mChild->SendRequestSign(mTransaction.ref().mInfo);
-  }
+  mChild->SendRequestSign(mTransaction.ref().mInfo);
 
   return mTransaction.ref().mPromise.Ensure(__func__);
 }
