@@ -25,7 +25,7 @@ fuzzy-if(Android,5,4) skip-if(!asyncPan) == position-fixed-transformed-1.html po
 skip-if(!asyncPan) == split-layers-1.html split-layers-1-ref.html
 skip-if(!asyncPan) == split-layers-multi-scrolling-1.html split-layers-multi-scrolling-1-ref.html
 fuzzy-if(skiaContent,2,240000) fuzzy-if(browserIsRemote&&!skiaContent&&(cocoaWidget||winWidget),1,240000) skip-if(!asyncPan) == split-opacity-layers-1.html split-opacity-layers-1-ref.html
-skip-if(!asyncPan) fails-if(webrender) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
+skip-if(!asyncPan) == sticky-pos-scrollable-1.html sticky-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-2.html sticky-pos-scrollable-2-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.html
 skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
