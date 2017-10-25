@@ -7,5 +7,5 @@ with Files('aom/**'):
 with Files('rust/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
-with Files('speedometer/**'):
+with Files('webkit/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
