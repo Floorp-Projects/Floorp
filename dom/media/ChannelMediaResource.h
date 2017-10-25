@@ -156,6 +156,8 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
+  nsCString GetDebugInfo() override;
+
   class Listener final
     : public nsIStreamListener
     , public nsIInterfaceRequestor

@@ -966,6 +966,13 @@ ChannelMediaResource::GetOffset() const
   return mCacheStream.GetOffset();
 }
 
+nsCString
+ChannelMediaResource::GetDebugInfo()
+{
+  return NS_LITERAL_CSTRING("ChannelMediaResource: ") +
+         mCacheStream.GetDebugInfo();
+}
+
 // ChannelSuspendAgent
 
 bool
