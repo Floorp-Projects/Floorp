@@ -5,7 +5,7 @@
 "use strict";
 
 /* exported initPromise, shutdownPromise, waitForEvent, setE10sPrefs,
-            unsetE10sPrefs, forceGC */
+            unsetE10sPrefs */
 
 /**
  * Set e10s related preferences in the test environment.
@@ -125,16 +125,4 @@ function waitForEvent(eventType, expectedId) {
     };
     Services.obs.addObserver(eventObserver, "accessible-event");
   });
-}
-
-/**
- * Force garbage collection.
- */
-function forceGC() {
-  SpecialPowers.gc();
-  SpecialPowers.forceShrinkingGC();
-  SpecialPowers.forceCC();
-  SpecialPowers.gc();
-  SpecialPowers.forceShrinkingGC();
-  SpecialPowers.forceCC();
 }
