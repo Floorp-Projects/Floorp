@@ -803,7 +803,7 @@ public:
   {
     NS_ENSURE_TRUE(aNode, false);
 
-    if (!aNode->IsNodeOfType(nsINode::eCONTENT) || IsMozEditorBogusNode(aNode) ||
+    if (!aNode->IsContent() || IsMozEditorBogusNode(aNode) ||
         !IsModifiableNode(aNode)) {
       return false;
     }

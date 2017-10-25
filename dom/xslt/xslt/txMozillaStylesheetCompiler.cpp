@@ -672,8 +672,8 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     nsCOMPtr<nsIDocument> doc = aNode->OwnerDoc();
 
     nsCOMPtr<nsIURI> uri;
-    if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-      uri = static_cast<nsIContent*>(aNode)->GetBaseURI();
+    if (aNode->IsContent()) {
+      uri = aNode->AsContent()->GetBaseURI();
     }
     else {
       NS_ASSERTION(aNode->IsNodeOfType(nsINode::eDOCUMENT), "not a doc");

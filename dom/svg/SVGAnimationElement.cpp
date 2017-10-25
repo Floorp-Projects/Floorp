@@ -357,7 +357,7 @@ SVGAnimationElement::UnsetAttr(int32_t aNamespaceID,
 bool
 SVGAnimationElement::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eANIMATION));
+  return !(aFlags & ~eANIMATION);
 }
 
 //----------------------------------------------------------------------

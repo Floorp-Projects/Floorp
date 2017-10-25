@@ -106,8 +106,9 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   DOMNode->GetNodeValue(nodeValue);
   *aNodeValue = ::SysAllocString(nodeValue.get());
 
-  *aNameSpaceID = mNode->IsNodeOfType(nsINode::eCONTENT) ?
-    static_cast<short>(mNode->AsContent()->GetNameSpaceID()) : 0;
+  *aNameSpaceID = mNode->IsContent()
+    ? static_cast<short>(mNode->AsContent()->GetNameSpaceID())
+    : 0;
 
   // This is a unique ID for every content node. The 3rd party accessibility
   // application can compare this to the childID we return for events such as

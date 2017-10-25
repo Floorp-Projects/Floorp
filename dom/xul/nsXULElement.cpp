@@ -1682,7 +1682,7 @@ nsXULElement::GetBindingParent() const
 bool
 nsXULElement::IsNodeOfType(uint32_t aFlags) const
 {
-    return !(aFlags & ~eCONTENT);
+    return false;
 }
 
 nsresult

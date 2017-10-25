@@ -179,7 +179,7 @@ public:
    * Return node type information of DOM node associated with the accessible.
    */
   bool IsContent() const
-    { return GetNode() && GetNode()->IsNodeOfType(nsINode::eCONTENT); }
+    { return GetNode() && GetNode()->IsContent(); }
 
   /**
    * Return the unique identifier of the accessible.

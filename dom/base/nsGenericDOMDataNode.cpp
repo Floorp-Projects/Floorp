@@ -797,7 +797,7 @@ nsGenericDOMDataNode::SetXBLInsertionPoint(nsIContent* aContent)
 bool
 nsGenericDOMDataNode::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eDATA_NODE));
+  return !(aFlags & ~eDATA_NODE);
 }
 
 void
