@@ -15,7 +15,10 @@
          we branch on that value, rather than HardwareUtils, so our code is consistent with the used resources.
          See bug 1277379 for a initiative to move all of the HardwareUtils code over. -->
     <bool name="is_large_resource">false</bool>
-    <bool name="pref_activitystream_pocket_enabled_default">true</bool>
+
+    <!-- Pocket recommendations feature flag: change this to true when we want to ship (bug 1411657). -->
+    <bool name="pref_activitystream_pocket_enabled_default">false</bool>
+
     <bool name="pref_activitystream_visited_enabled_default">true</bool>
     <bool name="pref_activitystream_recentbookmarks_enabled_default">true</bool>
 </resources>
