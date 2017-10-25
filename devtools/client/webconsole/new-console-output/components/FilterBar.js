@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
@@ -23,20 +23,38 @@ const {
 const FilterButton = require("devtools/client/webconsole/new-console-output/components/FilterButton");
 const FilterCheckbox = require("devtools/client/webconsole/new-console-output/components/FilterCheckbox");
 
-const FilterBar = createClass({
+class FilterBar extends Component {
+  static get propTypes() {
+    return {
+      dispatch: PropTypes.func.isRequired,
+      filter: PropTypes.object.isRequired,
+      serviceContainer: PropTypes.shape({
+        attachRefToHud: PropTypes.func.isRequired,
+      }).isRequired,
+      filterBarVisible: PropTypes.bool.isRequired,
+      persistLogs: PropTypes.bool.isRequired,
+      filteredMessagesCount: PropTypes.object.isRequired,
+    };
+  }
 
-  displayName: "FilterBar",
+  constructor(props) {
+    super(props);
+    this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
+    this.onClickFilterBarToggle = this.onClickFilterBarToggle.bind(this);
+    this.onClickRemoveAllFilters = this.onClickRemoveAllFilters.bind(this);
+    this.onClickRemoveTextFilter = this.onClickRemoveTextFilter.bind(this);
+    this.onSearchInput = this.onSearchInput.bind(this);
+    this.onChangePersistToggle = this.onChangePersistToggle.bind(this);
+    this.renderFiltersConfigBar = this.renderFiltersConfigBar.bind(this);
+    this.renderFilteredMessagesBar = this.renderFilteredMessagesBar.bind(this);
+  }
 
-  propTypes: {
-    dispatch: PropTypes.func.isRequired,
-    filter: PropTypes.object.isRequired,
-    serviceContainer: PropTypes.shape({
-      attachRefToHud: PropTypes.func.isRequired,
-    }).isRequired,
-    filterBarVisible: PropTypes.bool.isRequired,
-    persistLogs: PropTypes.bool.isRequired,
-    filteredMessagesCount: PropTypes.object.isRequired,
-  },
+  componentDidMount() {
+    this.props.serviceContainer.attachRefToHud(
+      "filterBox",
+      this.wrapperNode.querySelector(".text-filter")
+    );
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     if (nextProps.filter !== this.props.filter) {
@@ -59,36 +77,31 @@ const FilterBar = createClass({
     }
 
     return false;
-  },
+  }
 
-  componentDidMount() {
-    this.props.serviceContainer.attachRefToHud("filterBox",
-      this.wrapperNode.querySelector(".text-filter"));
-  },
-
-  onClickMessagesClear: function () {
+  onClickMessagesClear() {
     this.props.dispatch(actions.messagesClear());
-  },
+  }
 
-  onClickFilterBarToggle: function () {
+  onClickFilterBarToggle() {
     this.props.dispatch(actions.filterBarToggle());
-  },
+  }
 
-  onClickRemoveAllFilters: function () {
+  onClickRemoveAllFilters() {
     this.props.dispatch(actions.defaultFiltersReset());
-  },
+  }
 
-  onClickRemoveTextFilter: function () {
+  onClickRemoveTextFilter() {
     this.props.dispatch(actions.filterTextSet(""));
-  },
+  }
 
-  onSearchInput: function (e) {
+  onSearchInput(e) {
     this.props.dispatch(actions.filterTextSet(e.target.value));
-  },
+  }
 
-  onChangePersistToggle: function () {
+  onChangePersistToggle() {
     this.props.dispatch(actions.persistToggle());
-  },
+  }
 
   renderFiltersConfigBar() {
     const {
@@ -167,7 +180,7 @@ const FilterBar = createClass({
         dispatch
       }),
     );
-  },
+  }
 
   renderFilteredMessagesBar() {
     const {
@@ -201,7 +214,7 @@ const FilterBar = createClass({
         onClick: this.onClickRemoveAllFilters
       }, l10n.getStr("webconsole.resetFiltersButton.label"))
     );
-  },
+  }
 
   render() {
     const {
@@ -264,7 +277,7 @@ const FilterBar = createClass({
       )
     );
   }
-});
+}
 
 function mapStateToProps(state) {
   let uiState = getAllUi(state);

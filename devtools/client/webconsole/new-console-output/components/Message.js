@@ -8,7 +8,7 @@
 
 // React & Redux
 const {
-  createClass,
+  Component,
   createFactory,
   DOM: dom,
   PropTypes
@@ -23,51 +23,57 @@ const MessageRepeat = require("devtools/client/webconsole/new-console-output/com
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
 
-const Message = createClass({
-  displayName: "Message",
-
-  propTypes: {
-    open: PropTypes.bool,
-    collapsible: PropTypes.bool,
-    collapseTitle: PropTypes.string,
-    source: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    level: PropTypes.string.isRequired,
-    indent: PropTypes.number.isRequired,
-    topLevelClasses: PropTypes.array.isRequired,
-    messageBody: PropTypes.any.isRequired,
-    repeat: PropTypes.any,
-    frame: PropTypes.any,
-    attachment: PropTypes.any,
-    stacktrace: PropTypes.any,
-    messageId: PropTypes.string,
-    scrollToMessage: PropTypes.bool,
-    exceptionDocURL: PropTypes.string,
-    parameters: PropTypes.object,
-    request: PropTypes.object,
-    dispatch: PropTypes.func,
-    timeStamp: PropTypes.number,
-    timestampsVisible: PropTypes.bool.isRequired,
-    serviceContainer: PropTypes.shape({
-      emitNewMessage: PropTypes.func.isRequired,
-      onViewSourceInDebugger: PropTypes.func,
-      onViewSourceInScratchpad: PropTypes.func,
-      onViewSourceInStyleEditor: PropTypes.func,
-      openContextMenu: PropTypes.func.isRequired,
-      openLink: PropTypes.func.isRequired,
-      sourceMapService: PropTypes.any,
-    }),
-    notes: PropTypes.arrayOf(PropTypes.shape({
-      messageBody: PropTypes.string.isRequired,
+class Message extends Component {
+  static get propTypes() {
+    return {
+      open: PropTypes.bool,
+      collapsible: PropTypes.bool,
+      collapseTitle: PropTypes.string,
+      source: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      level: PropTypes.string.isRequired,
+      indent: PropTypes.number.isRequired,
+      topLevelClasses: PropTypes.array.isRequired,
+      messageBody: PropTypes.any.isRequired,
+      repeat: PropTypes.any,
       frame: PropTypes.any,
-    })),
-  },
+      attachment: PropTypes.any,
+      stacktrace: PropTypes.any,
+      messageId: PropTypes.string,
+      scrollToMessage: PropTypes.bool,
+      exceptionDocURL: PropTypes.string,
+      parameters: PropTypes.object,
+      request: PropTypes.object,
+      dispatch: PropTypes.func,
+      timeStamp: PropTypes.number,
+      timestampsVisible: PropTypes.bool.isRequired,
+      serviceContainer: PropTypes.shape({
+        emitNewMessage: PropTypes.func.isRequired,
+        onViewSourceInDebugger: PropTypes.func,
+        onViewSourceInScratchpad: PropTypes.func,
+        onViewSourceInStyleEditor: PropTypes.func,
+        openContextMenu: PropTypes.func.isRequired,
+        openLink: PropTypes.func.isRequired,
+        sourceMapService: PropTypes.any,
+      }),
+      notes: PropTypes.arrayOf(PropTypes.shape({
+        messageBody: PropTypes.string.isRequired,
+        frame: PropTypes.any,
+      })),
+    };
+  }
 
-  getDefaultProps: function () {
+  static get defaultProps() {
     return {
       indent: 0
     };
-  },
+  }
+
+  constructor(props) {
+    super(props);
+    this.onLearnMoreClick = this.onLearnMoreClick.bind(this);
+    this.onContextMenu = this.onContextMenu.bind(this);
+  }
 
   componentDidMount() {
     if (this.messageNode) {
@@ -81,12 +87,12 @@ const Message = createClass({
           this.messageNode, this.props.messageId, this.props.timeStamp);
       }
     }
-  },
+  }
 
-  onLearnMoreClick: function () {
+  onLearnMoreClick() {
     let {exceptionDocURL} = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL);
-  },
+  }
 
   onContextMenu(e) {
     let { serviceContainer, source, request, messageId } = this.props;
@@ -98,7 +104,7 @@ const Message = createClass({
     serviceContainer.openContextMenu(e, messageInfo);
     e.stopPropagation();
     e.preventDefault();
-  },
+  }
 
   render() {
     const {
@@ -261,6 +267,6 @@ const Message = createClass({
       )
     );
   }
-});
+}
 
 module.exports = Message;

@@ -3,46 +3,47 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const NetInfoParams = React.createFactory(require("./net-info-params"));
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, createFactory, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
+const NetInfoParams = createFactory(require("./net-info-params"));
 
 /**
  * This template represents a group of data within a tab. For example,
  * Headers tab has two groups 'Request Headers' and 'Response Headers'
  * The Response tab can also have two groups 'Raw Data' and 'JSON'
  */
-var NetInfoGroup = React.createClass({
-  propTypes: {
-    type: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    params: PropTypes.array,
-    content: PropTypes.element,
-    open: PropTypes.bool
-  },
+class NetInfoGroup extends Component {
+  static get propTypes() {
+    return {
+      type: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      params: PropTypes.array,
+      content: PropTypes.element,
+      open: PropTypes.bool
+    };
+  }
 
-  displayName: "NetInfoGroup",
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       open: true,
     };
-  },
+  }
 
-  getInitialState() {
-    return {
-      open: this.props.open,
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      open: props.open,
     };
-  },
+
+    this.onToggle = this.onToggle.bind(this);
+  }
 
   onToggle(event) {
     this.setState({
       open: !this.state.open
     });
-  },
+  }
 
   render() {
     let content = this.props.content;
@@ -74,7 +75,7 @@ var NetInfoGroup = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = NetInfoGroup;

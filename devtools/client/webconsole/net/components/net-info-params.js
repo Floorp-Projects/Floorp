@@ -3,25 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 
 /**
  * This template renders list of parameters within a group.
  * It's essentially a list of name + value pairs.
  */
-var NetInfoParams = React.createClass({
-  displayName: "NetInfoParams",
-
-  propTypes: {
-    params: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired
-    })).isRequired,
-  },
+class NetInfoParams extends Component {
+  static get propTypes() {
+    return {
+      params: PropTypes.arrayOf(PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired
+      })).isRequired,
+    };
+  }
 
   render() {
     let params = this.props.params || [];
@@ -52,7 +49,7 @@ var NetInfoParams = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = NetInfoParams;

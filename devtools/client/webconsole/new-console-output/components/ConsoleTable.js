@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM: dom,
   PropTypes
@@ -18,21 +18,26 @@ const GripMessageBody = createFactory(require("devtools/client/webconsole/new-co
 const TABLE_ROW_MAX_ITEMS = 1000;
 const TABLE_COLUMN_MAX_ITEMS = 10;
 
-const ConsoleTable = createClass({
+class ConsoleTable extends Component {
+  static get propTypes() {
+    return {
+      dispatch: PropTypes.func.isRequired,
+      parameters: PropTypes.array.isRequired,
+      serviceContainer: PropTypes.shape({
+        hudProxy: PropTypes.object.isRequired,
+      }),
+      id: PropTypes.string.isRequired,
+      tableData: PropTypes.object,
+    };
+  }
 
-  displayName: "ConsoleTable",
+  constructor(props) {
+    super(props);
+    this.getHeaders = this.getHeaders.bind(this);
+    this.getRows = this.getRows.bind(this);
+  }
 
-  propTypes: {
-    dispatch: PropTypes.func.isRequired,
-    parameters: PropTypes.array.isRequired,
-    serviceContainer: PropTypes.shape({
-      hudProxy: PropTypes.object.isRequired,
-    }),
-    id: PropTypes.string.isRequired,
-    tableData: PropTypes.object,
-  },
-
-  componentWillMount: function () {
+  componentWillMount() {
     const {id, dispatch, serviceContainer, parameters} = this.props;
 
     if (!Array.isArray(parameters) || parameters.length === 0) {
@@ -44,15 +49,15 @@ const ConsoleTable = createClass({
 
     // Get all the object properties.
     dispatch(actions.messageTableDataGet(id, client, dataType));
-  },
+  }
 
-  getHeaders: function (columns) {
+  getHeaders(columns) {
     let headerItems = [];
     columns.forEach((value, key) => headerItems.push(dom.th({}, value)));
     return headerItems;
-  },
+  }
 
-  getRows: function (columns, items) {
+  getRows(columns, items) {
     const {
       dispatch,
       serviceContainer,
@@ -76,9 +81,9 @@ const ConsoleTable = createClass({
       });
       return dom.tr({}, cells);
     });
-  },
+  }
 
-  render: function () {
+  render() {
     const {parameters, tableData} = this.props;
     const headersGrip = parameters[1];
     const headers = headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
@@ -101,7 +106,7 @@ const ConsoleTable = createClass({
       )
     );
   }
-});
+}
 
 function getParametersDataType(parameters = null) {
   if (!Array.isArray(parameters) || parameters.length === 0) {
