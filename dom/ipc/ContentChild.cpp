@@ -1141,7 +1141,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
 
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    MOZ_CRASH("Failed to create PBackgroundChild!");
+    MOZ_ASSERT_UNREACHABLE("PBackground init can't fail at this point");
+    return;
   }
 
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
