@@ -3591,11 +3591,6 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
     if (mCompositeColors[i] != nullptr) {
       return false;
     }
-
-    if (mBorderStyles[i] == NS_STYLE_BORDER_STYLE_DOTTED ||
-        mBorderStyles[i] == NS_STYLE_BORDER_STYLE_DASHED) {
-      return false;
-    }
   }
 
   return true;
