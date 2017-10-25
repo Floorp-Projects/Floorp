@@ -26,3 +26,8 @@ HOST_SOURCES += [
 HostProgram('elfhack')
 
 NO_PGO = True
+
+COMPILE_FLAGS['OS_CXXFLAGS'] = [
+    f for f in COMPILE_FLAGS['OS_CXXFLAGS'] if f != '-fno-exceptions'
+] + ['-fexceptions']
+

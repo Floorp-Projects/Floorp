@@ -9,5 +9,3 @@ $(CSRCS): %.c: ../inject.c
 	cp $< $@
 
 GARBAGE += $(CSRCS)
-
-CFLAGS := -O2 -fno-stack-protector $(filter -m% -I% -idirafter%,$(subst -idirafter ,-idirafter,$(CFLAGS)))
