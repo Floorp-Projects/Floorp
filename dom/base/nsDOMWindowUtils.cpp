@@ -3931,48 +3931,62 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
     }
   }
   if (frame && nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    RefPtr<LayerManager> widgetLayerManager;
+    if (nsIWidget* widget = GetWidget()) {
+      widgetLayerManager = widget->GetLayerManager();
+    }
+
     if (aProperty.EqualsLiteral("opacity")) {
+      float value = 0;
+      bool hadAnimatedOpacity = false;
+
       Layer* layer =
         FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_OPACITY);
       if (layer) {
-        float value = 0;
-        bool hadAnimatedOpacity = false;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
           forwarder->GetShadowManager()->
             SendGetAnimationOpacity(layer->GetCompositorAnimationsId(),
                                     &value,
                                     &hadAnimatedOpacity);
-
-        } else if (WebRenderLayerManager* wrlm = layer->Manager()->AsWebRenderLayerManager()) {
+        }
+      } else if (WebRenderLayerManager* wrlm = widgetLayerManager->AsWebRenderLayerManager()) {
+        RefPtr<WebRenderAnimationData> animationData = wrlm->CommandBuilder()
+            .GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_OPACITY);
+        if (animationData) {
           wrlm->WrBridge()->SendGetAnimationOpacity(
-              layer->GetCompositorAnimationsId(),
+              animationData->GetAnimationInfo().GetCompositorAnimationsId(),
               &value,
               &hadAnimatedOpacity);
         }
-        if (hadAnimatedOpacity) {
-          cssValue = new nsROCSSPrimitiveValue;
-          cssValue->SetNumber(value);
-        }
+      }
+      if (hadAnimatedOpacity) {
+        cssValue = new nsROCSSPrimitiveValue;
+        cssValue->SetNumber(value);
       }
     } else if (aProperty.EqualsLiteral("transform")) {
+      MaybeTransform transform;
+
       Layer* layer =
         FrameLayerBuilder::GetDedicatedLayer(frame, DisplayItemType::TYPE_TRANSFORM);
       if (layer) {
-        MaybeTransform transform;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
           forwarder->GetShadowManager()->
             SendGetAnimationTransform(layer->GetCompositorAnimationsId(), &transform);
-        } else if (WebRenderLayerManager* wrlm = layer->Manager()->AsWebRenderLayerManager()) {
+        }
+      } else if (WebRenderLayerManager* wrlm = widgetLayerManager->AsWebRenderLayerManager()) {
+        RefPtr<WebRenderAnimationData> animationData = wrlm->CommandBuilder()
+            .GetWebRenderUserData<WebRenderAnimationData>(frame, (uint32_t)DisplayItemType::TYPE_TRANSFORM);
+        if (animationData) {
           wrlm->WrBridge()->SendGetAnimationTransform(
-              layer->GetCompositorAnimationsId(),
+              animationData->GetAnimationInfo().GetCompositorAnimationsId(),
               &transform);
         }
-        if (transform.type() == MaybeTransform::TMatrix4x4) {
-          Matrix4x4 matrix = transform.get_Matrix4x4();
-          cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
-        }
+      }
+      if (transform.type() == MaybeTransform::TMatrix4x4) {
+        Matrix4x4 matrix = transform.get_Matrix4x4();
+        cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
       }
     }
   }
