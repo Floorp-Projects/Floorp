@@ -127,10 +127,11 @@ class Watchdog
         MOZ_ASSERT(NS_IsMainThread());
         mLock = PR_NewLock();
         if (!mLock)
-            NS_RUNTIMEABORT("PR_NewLock failed.");
+            MOZ_CRASH("PR_NewLock failed.");
+
         mWakeup = PR_NewCondVar(mLock);
         if (!mWakeup)
-            NS_RUNTIMEABORT("PR_NewCondVar failed.");
+            MOZ_CRASH("PR_NewCondVar failed.");
 
         {
             AutoLockWatchdog lock(this);
@@ -142,7 +143,7 @@ class Watchdog
                                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                                       PR_JOINABLE_THREAD, 0);
             if (!mThread)
-                NS_RUNTIMEABORT("PR_CreateThread failed!");
+                MOZ_CRASH("PR_CreateThread failed!");
 
             // WatchdogMain acquires the lock and then asserts mInitialized. So
             // make sure to set mInitialized before releasing the lock here so
@@ -1148,16 +1149,13 @@ XPCJSContext::NewXPCJSContext(XPCJSContext* aPrimaryContext)
     XPCJSContext* self = new XPCJSContext();
     nsresult rv = self->Initialize(aPrimaryContext);
     if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
-        delete self;
-        return nullptr;
+        MOZ_CRASH("new XPCJSContext failed to initialize.");
     }
 
     if (self->Context())
         return self;
 
-    NS_RUNTIMEABORT("new XPCJSContext failed to initialize.");
-    return nullptr;
+    MOZ_CRASH("new XPCJSContext failed to initialize.");
 }
 
 void

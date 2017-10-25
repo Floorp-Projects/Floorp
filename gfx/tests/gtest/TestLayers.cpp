@@ -68,29 +68,24 @@ public:
   virtual bool BeginTransaction() { return true; }
   virtual already_AddRefed<ImageLayer> CreateImageLayer() {
     MOZ_CRASH("Not implemented.");
-    return nullptr;
   }
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() {
     RefPtr<PaintedLayer> layer = new TestPaintedLayer(this);
     return layer.forget();
   }
   virtual already_AddRefed<ColorLayer> CreateColorLayer() {
-    NS_RUNTIMEABORT("Not implemented.");
-    return nullptr;
+    MOZ_CRASH("Not implemented.");
   }
   virtual already_AddRefed<TextLayer> CreateTextLayer() {
-    NS_RUNTIMEABORT("Not implemented.");
-    return nullptr;
+    MOZ_CRASH("Not implemented.");
   }
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() {
-    NS_RUNTIMEABORT("Not implemented.");
-    return nullptr;
+    MOZ_CRASH("Not implemented.");
   }
   virtual void SetRoot(Layer* aLayer) {}
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
-    NS_RUNTIMEABORT("Not implemented.");
-    return nullptr;
+    MOZ_CRASH("Not implemented.");
   }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,

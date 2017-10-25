@@ -219,47 +219,44 @@ DisableSwitchNotifications(SwitchDevice aDevice)
 bool
 EnableAlarm()
 {
-  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
-  return false;
+  MOZ_CRASH("Alarms can't be programmed from sandboxed contexts.  Yet.");
 }
 
 void
 DisableAlarm()
 {
-  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
+  MOZ_CRASH("Alarms can't be programmed from sandboxed contexts.  Yet.");
 }
 
 bool
 SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
-  NS_RUNTIMEABORT("Alarms can't be programmed from sandboxed contexts.  Yet.");
-  return false;
+  MOZ_CRASH("Alarms can't be programmed from sandboxed contexts.  Yet.");
 }
 
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
-  NS_RUNTIMEABORT("Only the main process may set processes' priorities.");
+  MOZ_CRASH("Only the main process may set processes' priorities.");
 }
 
 bool
 SetProcessPrioritySupported()
 {
-  NS_RUNTIMEABORT("Only the main process may call SetProcessPrioritySupported().");
-  return false;
+  MOZ_CRASH("Only the main process may call SetProcessPrioritySupported().");
 }
 
 void
 SetCurrentThreadPriority(ThreadPriority aThreadPriority)
 {
-  NS_RUNTIMEABORT("Setting current thread priority cannot be called from sandboxed contexts.");
+  MOZ_CRASH("Setting current thread priority cannot be called from sandboxed contexts.");
 }
 
 void
 SetThreadPriority(PlatformThreadId aThreadId,
                   ThreadPriority aThreadPriority)
 {
-  NS_RUNTIMEABORT("Setting thread priority cannot be called from sandboxed contexts.");
+  MOZ_CRASH("Setting thread priority cannot be called from sandboxed contexts.");
 }
 
 void
