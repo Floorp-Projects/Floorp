@@ -89,6 +89,12 @@ initPopupListener();
 
 // Form with history only.
 add_task(async function history_only_menu_checking() {
+  // TODO: eliminate the timeout when we're able to indicate the right
+  // timing to start.
+  //
+  // After test process was re-spawning to https scheme. Wait 2 secs
+  // to ensure the environment is ready to do storage setup.
+  await sleep(2000);
   await setupFormHistory();
 
   await setInput("#cc-exp-year", "");
