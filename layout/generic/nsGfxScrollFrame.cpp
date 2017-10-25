@@ -3809,6 +3809,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
 Maybe<ScrollMetadata>
 ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
+                                         LayerManager* aLayerManager,
                                          const nsIFrame* aContainerReferenceFrame,
                                          const ContainerLayerParameters& aParameters,
                                          const DisplayItemClip* aClip) const
@@ -3858,7 +3859,7 @@ ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
 
   return Some(nsLayoutUtils::ComputeScrollMetadata(
     mScrolledFrame, mOuter, mOuter->GetContent(),
-    aContainerReferenceFrame, aLayer, mScrollParentID,
+    aContainerReferenceFrame, aLayerManager, mScrollParentID,
     scrollport, parentLayerClip, isRootContent, aParameters));
 }
 

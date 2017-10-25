@@ -8,6 +8,7 @@
 #include "DisplayItemClipChain.h"
 #include "FrameMetrics.h"
 #include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDisplayList.h"
 #include "UnitTransforms.h"
@@ -19,13 +20,17 @@ namespace mozilla {
 namespace layers {
 
 ScrollingLayersHelper::ScrollingLayersHelper()
-  : mBuilder(nullptr)
+  : mManager(nullptr)
+  , mBuilder(nullptr)
 {
 }
 
 void
-ScrollingLayersHelper::BeginBuild(wr::DisplayListBuilder& aBuilder)
+ScrollingLayersHelper::BeginBuild(WebRenderLayerManager* aManager,
+                                  wr::DisplayListBuilder& aBuilder)
 {
+  MOZ_ASSERT(!mManager);
+  mManager = aManager;
   MOZ_ASSERT(!mBuilder);
   mBuilder = &aBuilder;
   MOZ_ASSERT(mCache.empty());
@@ -36,6 +41,7 @@ void
 ScrollingLayersHelper::EndBuild()
 {
   mBuilder = nullptr;
+  mManager = nullptr;
   mCache.clear();
   MOZ_ASSERT(mItemClipStack.empty());
 }
@@ -352,8 +358,10 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
       aItem, aAsr->mParent, aChain, aAppUnitsPerDevPixel, aSc);
   ids = ancestorIds;
 
+  // Ok to pass nullptr for aLayer here (first arg) because aClip (last arg) is
+  // also nullptr.
   Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
-      nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+      nullptr, mManager, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
   MOZ_ASSERT(metadata);
   FrameMetrics& metrics = metadata->GetMetrics();
 

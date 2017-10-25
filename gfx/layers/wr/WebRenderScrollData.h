@@ -12,6 +12,7 @@
 #include "FrameMetrics.h"
 #include "ipc/IPCMessageUtils.h"
 #include "LayersTypes.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersMessageUtils.h"
@@ -132,7 +133,10 @@ class WebRenderScrollData
 {
 public:
   WebRenderScrollData();
+  explicit WebRenderScrollData(WebRenderLayerManager* aManager);
   ~WebRenderScrollData();
+
+  WebRenderLayerManager* GetManager() const;
 
   // Add the given ScrollMetadata if it doesn't already exist. Return an index
   // that can be used to look up the metadata later.
@@ -167,6 +171,11 @@ public:
   void Dump() const;
 
 private:
+  // Pointer back to the layer manager; if this is non-null, it will always be
+  // valid, because the WebRenderLayerManager that created |this| will
+  // outlive |this|.
+  WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
+
   // Internal data structure used to maintain uniqueness of mScrollMetadatas.
   // This is not serialized/deserialized over IPC because there's no need for it,
   // as the parent side doesn't need this at all. Also because we don't have any

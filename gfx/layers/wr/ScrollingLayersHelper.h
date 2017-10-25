@@ -25,13 +25,15 @@ namespace layers {
 
 struct FrameMetrics;
 class StackingContextHelper;
+class WebRenderLayerManager;
 
 class ScrollingLayersHelper
 {
 public:
   ScrollingLayersHelper();
 
-  void BeginBuild(wr::DisplayListBuilder& aBuilder);
+  void BeginBuild(WebRenderLayerManager* aManager,
+                  wr::DisplayListBuilder& aBuilder);
   void EndBuild();
 
   void BeginList();
@@ -75,6 +77,7 @@ private:
   // have separate clip ids. Hopefully this won't happen very often.
   typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
 
+  WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
   wr::DisplayListBuilder* mBuilder;
   ClipIdMap mCache;
 
