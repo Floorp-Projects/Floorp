@@ -54,7 +54,8 @@ public:
 
   nsISupports* GetParentObject() const { return mOwner; }
 
-  void Observe(const PerformanceObserverInit& aOptions);
+  void Observe(const PerformanceObserverInit& aOptions,
+               mozilla::ErrorResult& aRv);
 
   void Disconnect();
 
