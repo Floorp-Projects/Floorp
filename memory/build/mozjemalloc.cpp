@@ -1930,23 +1930,13 @@ pages_purge(void *addr, size_t length, bool force_zero)
 static void *
 chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
               RedBlackTree<extent_node_t, ExtentTreeTrait>* chunks_ad,
-              size_t size, size_t alignment, bool base, bool *zeroed)
+              size_t size, size_t alignment, bool *zeroed)
 {
 	void *ret;
 	extent_node_t *node;
 	extent_node_t key;
 	size_t alloc_size, leadsize, trailsize;
 	ChunkType chunk_type;
-
-	if (base) {
-		/*
-		 * This function may need to call base_node_{,de}alloc(), but
-		 * the current chunk allocation request is on behalf of the
-		 * base allocator.  Avoid deadlock (and if that weren't an
-		 * issue, potential for infinite recursion) by returning nullptr.
-		 */
-		return nullptr;
-	}
 
 	alloc_size = size + alignment - chunksize;
 	/* Beware size_t wrap-around. */
@@ -2050,9 +2040,11 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
 	MOZ_ASSERT(alignment != 0);
 	MOZ_ASSERT((alignment & chunksize_mask) == 0);
 
-	if (CAN_RECYCLE(size)) {
+	// Base allocations can't be fulfilled by recycling because of
+	// possible deadlock or infinite recursion.
+	if (CAN_RECYCLE(size) && !base) {
 		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
-			size, alignment, base, zeroed);
+			size, alignment, zeroed);
 		if (ret)
 			goto RETURN;
 	}
