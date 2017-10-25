@@ -194,7 +194,7 @@ class CMS(object):
         while b64:
             output += '\n' + b64[:64]
             b64 = b64[64:]
-        output += '\n-----END PKCS7-----'
+        output += '\n-----END PKCS7-----\n'
         return output
 
 

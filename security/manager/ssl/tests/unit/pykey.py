@@ -563,7 +563,7 @@ class RSAKey(object):
         while b64:
             output += '\n' + b64[:64]
             b64 = b64[64:]
-        output += '\n-----END PRIVATE KEY-----'
+        output += '\n-----END PRIVATE KEY-----\n'
         return output
 
     def asSubjectPublicKeyInfo(self):
