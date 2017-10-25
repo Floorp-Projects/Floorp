@@ -257,6 +257,9 @@ nsString gAbsoluteArgv0Path;
 #include <pango/pangofc-fontmap.h>
 #endif
 #include <gtk/gtk.h>
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
@@ -3007,44 +3010,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   (void) display;
 #endif
 }
-
-const char* DetectDisplay(void)
-{
-  bool tryX11 = false;
-  bool tryWayland = false;
-  bool tryBroadway = false;
-
-  // Honor user backend selection
-  const char *backend = PR_GetEnv("GDK_BACKEND");
-  if (!backend || strstr(backend, "*")) {
-    // Try all backends
-    tryX11 = true;
-    tryWayland = true;
-    tryBroadway = true;
-  } else if (backend) {
-    if (strstr(backend, "x11"))
-      tryX11 = true;
-    if (strstr(backend, "wayland"))
-      tryWayland = true;
-    if (strstr(backend, "broadway"))
-      tryBroadway = true;
-  }
-
-  const char *display_name;
-  if (tryX11 && (display_name = PR_GetEnv("DISPLAY"))) {
-    return display_name;
-  }
-  if (tryWayland && (display_name = PR_GetEnv("WAYLAND_DISPLAY"))) {
-    return display_name;
-  }
-  if (tryBroadway && (display_name = PR_GetEnv("BROADWAY_DISPLAY"))) {
-    return display_name;
-  }
-
-  PR_fprintf(PR_STDERR, "Error: GDK_BACKEND does not match available displays\n");
-  return nullptr;
-}
-#endif // MOZ_WIDGET_GTK
+#endif
 
 /**
  * NSPR will search for the "nspr_use_zone_allocator" symbol throughout
@@ -3920,22 +3886,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return result;
   }
 
-#if defined(MOZ_WIDGET_GTK)
-  // display_name is owned by gdk.
-  const char *display_name = nullptr;
-  bool saveDisplayArg = false;
-  if (!gfxPlatform::IsHeadless()) {
-    display_name = gdk_get_display_arg_name();
-    if (display_name) {
-      saveDisplayArg = true;
-    } else {
-      display_name = DetectDisplay();
-      if (!display_name) {
-        return 1;
-      }
-    }
-  }
-#endif /* MOZ_WIDGET_GTK */
 #ifdef MOZ_X11
   // Init X11 in thread-safe mode. Must be called prior to the first call to XOpenDisplay
   // (called inside gdk_display_open). This is a requirement for off main tread compositing.
@@ -3945,19 +3895,58 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 #endif
 #if defined(MOZ_WIDGET_GTK)
   if (!gfxPlatform::IsHeadless()) {
-    mGdkDisplay = gdk_display_open(display_name);
-    if (!mGdkDisplay) {
-      PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
-      return 1;
+    const char *display_name = nullptr;
+    bool saveDisplayArg = false;
+
+    // display_name is owned by gdk.
+    display_name = gdk_get_display_arg_name();
+    // if --display argument is given make sure it's
+    // also passed to ContentChild::Init() by MOZ_GDK_DISPLAY.
+    if (display_name) {
+      SaveWordToEnv("MOZ_GDK_DISPLAY", nsDependentCString(display_name));
+      saveDisplayArg = true;
     }
-    gdk_display_manager_set_default_display (gdk_display_manager_get(),
-                                             mGdkDisplay);
+
+    // On Wayland disabled builds read X11 DISPLAY env exclusively
+    // and don't care about different displays.
+#if !defined(MOZ_WAYLAND)
+    if (!display_name) {
+      display_name = PR_GetEnv("DISPLAY");
+      if (!display_name) {
+        PR_fprintf(PR_STDERR,
+                   "Error: no DISPLAY environment variable specified\n");
+        return 1;
+      }
+    }
+#endif
+
+    if (display_name) {
+      mGdkDisplay = gdk_display_open(display_name);
+      if (!mGdkDisplay) {
+        PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
+        return 1;
+      }
+      gdk_display_manager_set_default_display(gdk_display_manager_get(),
+                                              mGdkDisplay);
+      if (saveDisplayArg) {
+        if (GDK_IS_X11_DISPLAY(mGdkDisplay)) {
+            SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
+        }
+#ifdef MOZ_WAYLAND
+        else if (GDK_IS_WAYLAND_DISPLAY(mGdkDisplay)) {
+            SaveWordToEnv("WAYLAND_DISPLAY", nsDependentCString(display_name));
+        }
+#endif
+      }
+    }
+#if (MOZ_WIDGET_GTK == 3)
+    else {
+      mGdkDisplay = gdk_display_manager_open_display(gdk_display_manager_get(),
+                                                     nullptr);
+    }
+#endif
   }
-  if (!gfxPlatform::IsHeadless() && GDK_IS_X11_DISPLAY(mGdkDisplay)) {
-    if (saveDisplayArg) {
-      SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
-    }
-  } else {
+  else {
     mDisableRemote = true;
   }
 #endif
