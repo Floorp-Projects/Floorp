@@ -195,7 +195,6 @@ class CompileDBBackend(CommonBackend):
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
-        append_var('OS_COMPILE_%s' % self.CFLAGS[canonical_suffix])
         append_var('OS_CPPFLAGS')
         append_var('OS_%s' % self.CFLAGS[canonical_suffix])
         append_var('MOZ_DEBUG_FLAGS')
