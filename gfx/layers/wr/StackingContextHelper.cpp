@@ -60,12 +60,6 @@ StackingContextHelper::~StackingContextHelper()
   }
 }
 
-void
-StackingContextHelper::AdjustOrigin(const LayoutDevicePoint& aDelta)
-{
-  mOrigin += aDelta;
-}
-
 wr::LayoutRect
 StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
 {
