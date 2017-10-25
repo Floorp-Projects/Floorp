@@ -117,6 +117,12 @@ if CONFIG['MOZ_GPSD']:
 
 if CONFIG['MOZ_LINUX_32_SSE2_STARTUP_ERROR']:
     DEFINES['MOZ_LINUX_32_SSE2_STARTUP_ERROR'] = True
+    COMPILE_FLAGS['OS_CXXFLAGS'] = [
+        f for f in COMPILE_FLAGS.get('OS_CXXFLAGS', [])
+        if not f.startswith('-march=') and f not in ('-msse', '-msse2', '-mfpmath=sse')
+    ] + [
+        '-mno-sse', '-mno-sse2', '-mfpmath=387',
+    ]
 
 for icon in ('firefox', 'document', 'newwindow', 'newtab', 'pbmode'):
     DEFINES[icon.upper() + '_ICO'] = '"%s/%s/%s.ico"' % (
