@@ -893,7 +893,7 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
   // to clear those notifiers unless we have to.  (They'll be reset
   // when we paint, although we could miss a notification in that
   // interval.)
-  if (aOldLayers) {
+  if (aOldLayers && aFrame->HasImageRequest()) {
     CompareLayers(aOldLayers, aNewLayers,
       [&imageLoader, aFrame](imgRequestProxy* aReq)
       { imageLoader->DisassociateRequestFromFrame(aReq, aFrame); }

@@ -20,8 +20,11 @@ flake8:
         - testing/marionette/client
         - testing/marionette/harness
         - testing/marionette/puppeteer
-        - testing/mozbase
         - testing/mochitest
+        - testing/mozbase
+        - testing/mozharness/mozfile
+        - testing/mozharness/mozinfo
+        - testing/mozharness/scripts
         - testing/remotecppunittests.py
         - testing/runcppunittests.py
         - testing/talos/

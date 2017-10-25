@@ -85,23 +85,17 @@
 </main>
 
 <script>
-    tests = [
+    generate_tests(assert_equals, [
         [
-            document.getElementById('two').offsetHeight,
-            document.getElementById('one').offsetHeight,
             "col visibility:collapse doesn't change table height",
+            document.getElementById('two').offsetHeight,
+            document.getElementById('one').offsetHeight
         ],
         [
+            "col visibility:collapse changes table width",
             document.getElementById('two').offsetWidth,
-            116,
-            "col visibility:collapse changes table width"
-        ]];
-    for (i = 0; i< tests.length; i++) {
-        test(function()
-            {
-                assert_equals.apply(this, tests[i]);
-            },
-            tests[i][2]);
-    };
+            116
+        ]
+    ]);
 </script>
 </html>

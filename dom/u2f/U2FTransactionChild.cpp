@@ -18,30 +18,33 @@ U2FTransactionChild::U2FTransactionChild()
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionChild::RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer)
+U2FTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
+                                         nsTArray<uint8_t>&& aRegBuffer)
 {
   RefPtr<U2FManager> mgr = U2FManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->FinishRegister(aRegBuffer);
+  mgr->FinishRegister(aTransactionId, aRegBuffer);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionChild::RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
+U2FTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
+                                     nsTArray<uint8_t>&& aCredentialId,
                                      nsTArray<uint8_t>&& aBuffer)
 {
   RefPtr<U2FManager> mgr = U2FManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->FinishSign(aCredentialId, aBuffer);
+  mgr->FinishSign(aTransactionId, aCredentialId, aBuffer);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-U2FTransactionChild::RecvAbort(const nsresult& aError)
+U2FTransactionChild::RecvAbort(const uint64_t& aTransactionId,
+                               const nsresult& aError)
 {
   RefPtr<U2FManager> mgr = U2FManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->RequestAborted(aError);
+  mgr->RequestAborted(aTransactionId, aError);
   return IPC_OK();
 }
 

@@ -23,12 +23,20 @@ class WebAuthnTransactionParent final : public PWebAuthnTransactionParent
 public:
   NS_INLINE_DECL_REFCOUNTING(WebAuthnTransactionParent);
   WebAuthnTransactionParent() = default;
+
   virtual mozilla::ipc::IPCResult
-  RecvRequestRegister(const WebAuthnTransactionInfo& aTransactionInfo) override;
+  RecvRequestRegister(const uint64_t& aTransactionId,
+                      const WebAuthnTransactionInfo& aTransactionInfo) override;
+
   virtual mozilla::ipc::IPCResult
-  RecvRequestSign(const WebAuthnTransactionInfo& aTransactionInfo) override;
-  virtual mozilla::ipc::IPCResult RecvRequestCancel() override;
+  RecvRequestSign(const uint64_t& aTransactionId,
+                  const WebAuthnTransactionInfo& aTransactionInfo) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvRequestCancel(const uint64_t& aTransactionId) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
 private:
   ~WebAuthnTransactionParent() = default;
 };

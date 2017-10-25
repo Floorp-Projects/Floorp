@@ -113,9 +113,6 @@ syntax or reading a project-specific configuration file).
     The method to use to determine the target task set.  This is the suffix of
     one of the functions in ``taskcluster/taskgraph/target_tasks.py``.
 
-``optimize_target_tasks``
-    If true, then target tasks are eligible for optimization.
-
 ``include_nightly``
     If true, then nightly tasks are eligible for optimization.
 
@@ -124,6 +121,22 @@ syntax or reading a project-specific configuration file).
    partial updates for nightly releases.
    Suitable contents can be generated with ``mach release-history``,
    which will print to the console by default.
+
+Optimization
+------------
+
+``optimize_target_tasks``
+    If true, then target tasks are eligible for optimization.
+
+``do_not_optimize``
+   Specify tasks to not optimize out of the graph. This is a list of labels.
+   Any tasks in the graph matching one of the labels will not be optimized out
+   of the graph.
+
+``existing_tasks``
+   Specify tasks to optimize out of the graph. This is a dictionary of label to taskId.
+   Any tasks in the graph matching one of the labels will use the previously-run
+   taskId rather than submitting a new task.
 
 Comm Push Information
 ---------------------
