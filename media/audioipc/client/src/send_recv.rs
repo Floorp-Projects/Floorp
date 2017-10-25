@@ -32,21 +32,35 @@ macro_rules! send_recv {
         }
     });
     (__recv $conn:expr, $rmsg:ident) => ({
-        let r = $conn.receive().unwrap();
-        if let ClientMessage::$rmsg = r {
-            Ok(())
-        } else {
-            debug!("receive error - got={:?}", r);
-            Err(ErrorCode::Error.into())
+        match $conn.receive() {
+            Ok(ClientMessage::$rmsg) => Ok(()),
+            // Macro can see ErrorCode but not Error? I don't understand.
+            // ::cubeb_core::Error is fragile but this isn't general purpose code.
+            Ok(ClientMessage::Error(e)) => Err(unsafe { ::cubeb_core::Error::from_raw(e) }),
+            Ok(m) => {
+                debug!("receive unexpected message - got={:?}", m);
+                Err(ErrorCode::Error.into())
+            },
+            Err(e) => {
+                debug!("receive error - got={:?}", e);
+                Err(ErrorCode::Error.into())
+            },
         }
     });
     (__recv $conn:expr, $rmsg:ident __result) => ({
-        let r = $conn.receive().unwrap();
-        if let ClientMessage::$rmsg(v) = r {
-            Ok(v)
-        } else {
-            debug!("receive error - got={:?}", r);
-            Err(ErrorCode::Error.into())
+        match $conn.receive() {
+            Ok(ClientMessage::$rmsg(v)) => Ok(v),
+            // Macro can see ErrorCode but not Error? I don't understand.
+            // ::cubeb_core::Error is fragile but this isn't general purpose code.
+            Ok(ClientMessage::Error(e)) => Err(unsafe { ::cubeb_core::Error::from_raw(e) }),
+            Ok(m) => {
+                debug!("receive unexpected message - got={:?}", m);
+                Err(ErrorCode::Error.into())
+            },
+            Err(e) => {
+                debug!("receive error - got={:?}", e);
+                Err(ErrorCode::Error.into())
+            },
         }
     })
 }

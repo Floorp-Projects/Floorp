@@ -9,6 +9,7 @@ use mio::unix::EventedFd;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::collections::VecDeque;
+use std::error::Error;
 use std::fmt::Debug;
 use std::io::{self, Read};
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -126,7 +127,7 @@ impl Connection {
                 Ok(Async::NotReady) => bail!("Socket should be blocking."),
                 // TODO: Handle dropped message.
                 // Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => panic!("wouldblock"),
-                _ => bail!("socket write"),
+                Err(e) => bail!("stream recv_buf_fd returned: {}", e.description()),
             }
         }
     }

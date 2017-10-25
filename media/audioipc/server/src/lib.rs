@@ -763,7 +763,7 @@ pub fn run(running: Arc<AtomicBool>) -> Result<()> {
 }
 
 fn error(error: cubeb::Error) -> ClientMessage {
-    ClientMessage::ContextError(error.raw_code())
+    ClientMessage::Error(error.raw_code())
 }
 
 struct ServerWrapper {
