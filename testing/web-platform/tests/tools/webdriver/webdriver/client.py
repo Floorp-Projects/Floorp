@@ -548,7 +548,7 @@ class Session(object):
         assert elem_id
         if elem_id in self._element_cache:
             return self._element_cache[elem_id]
-        return Element(self, elem_id)
+        return Element(elem_id, self)
 
     @command
     def cookies(self, name=None):
@@ -619,9 +619,17 @@ class Element(object):
     """
     identifier = "element-6066-11e4-a52e-4f735466cecf"
 
-    def __init__(self, session, id):
-        self.session = session
+    def __init__(self, id, session):
+        """
+        Construct a new web element representation.
+
+        :param id: Web element UUID which must be unique across
+            all browsing contexts.
+        :param session: Current ``webdriver.Session``.
+        """
         self.id = id
+        self.session = session
+
         assert id not in self.session._element_cache
         self.session._element_cache[self.id] = self
 
