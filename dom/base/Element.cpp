@@ -2223,7 +2223,7 @@ Element::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
                                    const nsAString* aSerialized,
                                    bool aNotify)
 {
-  NS_NOTYETIMPLEMENTED("Element::SetInlineStyleDeclaration");
+  MOZ_ASSERT_UNREACHABLE("Element::SetInlineStyleDeclaration");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

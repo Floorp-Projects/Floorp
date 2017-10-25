@@ -4845,13 +4845,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     }
   }
 
-
   // text-align: enum, string, pair(enum|string), inherit, initial
   // NOTE: string is not implemented yet.
   const nsCSSValue* textAlignValue = aRuleData->ValueForTextAlign();
   text->mTextAlignTrue = false;
   if (eCSSUnit_String == textAlignValue->GetUnit()) {
-    NS_NOTYETIMPLEMENTED("align string");
+    MOZ_ASSERT_UNREACHABLE("align string");
   } else if (eCSSUnit_Enumerated == textAlignValue->GetUnit() &&
              NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT ==
                textAlignValue->GetIntValue()) {
@@ -4893,7 +4892,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
           textAlignValue = &textAlignValuePair.mYValue;
         }
       } else if (eCSSUnit_String == textAlignValue->GetUnit()) {
-        NS_NOTYETIMPLEMENTED("align string");
+        MOZ_ASSERT_UNREACHABLE("align string");
       }
     } else if (eCSSUnit_Inherit == textAlignValue->GetUnit() ||
                eCSSUnit_Unset == textAlignValue->GetUnit()) {
