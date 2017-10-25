@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom()
+{
+  document.designMode = 'on';
+  var otherDoc = document.implementation.createDocument("", "", null);
+  otherDoc.adoptNode(document.getElementById("t"));
+}
+</script>
+</head>
+<body onload="setTimeout(boom, 0);"><textarea id="t"></textarea></body>
+</html>
