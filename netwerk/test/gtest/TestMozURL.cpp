@@ -119,3 +119,32 @@ TEST(TestMozURL, InitWithBase)
   ASSERT_EQ(url2->GetSpec(out), NS_OK);
   ASSERT_TRUE(out.EqualsLiteral("https://example.net/a/c.png"));
 }
+
+TEST(TestMozURL, HostPort)
+{
+  nsAutoCString href("https://user:pass@example.net:1234/path?query#ref");
+  RefPtr<MozURL> url;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
+  nsAutoCString out;
+
+  ASSERT_EQ(url->GetHostPort(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("example.net:1234"));
+
+  RefPtr<MozURL> url2;
+  url->Mutate().SetHostPort(NS_LITERAL_CSTRING("test:321"))
+               .Finalize(getter_AddRefs(url2));
+
+  ASSERT_EQ(url2->GetHostPort(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("test:321"));
+  ASSERT_EQ(url2->GetSpec(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("https://user:pass@test:321/path?query#ref"));
+
+  href.Assign("https://user:pass@example.net:443/path?query#ref");
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
+  ASSERT_EQ(url->GetHostPort(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("example.net"));
+  int32_t port;
+  ASSERT_EQ(url->GetPort(&port), NS_OK);
+  ASSERT_EQ(port, -1);
+}
+

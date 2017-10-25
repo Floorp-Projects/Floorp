@@ -43,6 +43,10 @@ public:
   // Will return the hostname of URL. If the hostname is an IPv6 address,
   // it will be enclosed in square brackets, such as `[::1]`
   nsresult GetHostname(nsACString& aHost);
+  // If the URL's port number is equal to the default port, will only return the
+  // hostname, otherwise it will return a string of the form `{host}:{port}`
+  // See: https://url.spec.whatwg.org/#default-port
+  nsresult GetHostPort(nsACString& aHostPort);
   // Will return the port number, if specified, or -1
   nsresult GetPort(int32_t* aPort);
   nsresult GetFilePath(nsACString& aPath);
@@ -84,6 +88,7 @@ public:
     Mutator& SetUsername(const nsACString& aUser);
     Mutator& SetPassword(const nsACString& aPassword);
     Mutator& SetHostname(const nsACString& aHost);
+    Mutator& SetHostPort(const nsACString& aHostPort);
     Mutator& SetFilePath(const nsACString& aPath);
     Mutator& SetQuery(const nsACString& aQuery);
     Mutator& SetRef(const nsACString& aRef);
