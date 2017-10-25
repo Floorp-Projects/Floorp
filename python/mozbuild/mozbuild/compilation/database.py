@@ -196,8 +196,6 @@ class CompileDBBackend(CommonBackend):
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
-        append_var('DSO_CFLAGS')
-        append_var('DSO_PIC_CFLAGS')
         if canonical_suffix in ('.c', '.cpp'):
             db.append('$(RTL_FLAGS)')
         append_var('OS_COMPILE_%s' % self.CFLAGS[canonical_suffix])
