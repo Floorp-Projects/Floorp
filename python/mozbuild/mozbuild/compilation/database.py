@@ -76,8 +76,7 @@ class CompileDBBackend(CommonBackend):
 
         elif isinstance(obj, VariablePassthru):
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
-                        'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
-                        'RTL_FLAGS'):
+                        'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS'):
                 if var in obj.variables:
                     self._local_flags[obj.objdir][var] = obj.variables[var]
             if (obj.variables.get('ALLOW_COMPILER_WARNINGS') and
@@ -196,8 +195,6 @@ class CompileDBBackend(CommonBackend):
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
 
-        if canonical_suffix in ('.c', '.cpp'):
-            db.append('$(RTL_FLAGS)')
         append_var('OS_COMPILE_%s' % self.CFLAGS[canonical_suffix])
         append_var('OS_CPPFLAGS')
         append_var('OS_%s' % self.CFLAGS[canonical_suffix])
