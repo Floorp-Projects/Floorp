@@ -295,6 +295,9 @@ def main(args):
     # execution in aggregate. Without monitoring for this, people may not notice
     # the problem and tasks would be slower than they could be. We follow the
     # principle of "fail fast" to ensure optimal task execution.
+    #
+    # We also write an audit log of who used the caches. This log is printed
+    # during failures to help aid debugging.
 
     if 'TASKCLUSTER_CACHES' in os.environ:
         caches = os.environ['TASKCLUSTER_CACHES'].split(';')
@@ -321,6 +324,12 @@ def main(args):
         b'gid=%d' % gid,
     }
 
+    def write_audit_entry(path, msg):
+        now = datetime.datetime.utcnow().isoformat()
+        with open(path, 'ab') as fh:
+            fh.write(b'[%sZ %s] %s\n' % (
+                     now, os.environ.get('TASK_ID', 'UNKNOWN'), msg))
+
     for cache in caches:
         if not os.path.isdir(cache):
             print('error: cache %s is not a directory; this should never '
@@ -328,6 +337,7 @@ def main(args):
             return 1
 
         requires_path = os.path.join(cache, '.cacherequires')
+        audit_path = os.path.join(cache, '.cachelog')
 
         # The cache is empty. Configure it.
         if not os.listdir(cache):
@@ -341,6 +351,10 @@ def main(args):
 
             # And make it read-only as a precaution against deletion.
             os.chmod(requires_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+            write_audit_entry(audit_path,
+                              'created; requirements: %s' %
+                              ', '.join(sorted(our_requirements)))
 
             set_dir_permissions(cache, uid, gid)
 
@@ -374,6 +388,10 @@ def main(args):
                 with open(requires_path, 'wb') as fh:
                     fh.write(b'\n'.join(sorted(our_requirements)))
 
+                write_audit_entry(audit_path,
+                                  'chown; requirements: %s' %
+                                  ', '.join(sorted(our_requirements)))
+
             elif missing:
                 print('error: requirements for populated cache %s differ from '
                       'this task' % cache)
@@ -383,7 +401,19 @@ def main(args):
                     our_requirements)))
                 if any(s.startswith(('uid=', 'gid=')) for s in missing):
                     print(CACHE_UID_GID_MISMATCH)
+
+                write_audit_entry(audit_path,
+                                  'requirements mismatch; wanted: %s' %
+                                  ', '.join(sorted(our_requirements)))
+
+                print('')
+                print('audit log:')
+                with open(audit_path, 'rb') as fh:
+                    print(fh.read())
+
                 return 1
+            else:
+                write_audit_entry(audit_path, 'used')
 
             # We don't need to adjust permissions here because the cache is
             # associated with a uid/gid and the first task should have set
@@ -397,6 +427,8 @@ def main(args):
                   '.cacherequires file; the cache names for this task are '
                   'likely mis-configured or TASKCLUSTER_CACHES is not set '
                   'properly' % cache)
+
+            write_audit_entry(audit_path, 'missing .cacherequires')
             return 1
 
     if 'TASKCLUSTER_VOLUMES' in os.environ:
