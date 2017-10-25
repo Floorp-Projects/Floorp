@@ -29,7 +29,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8281f2ce7f61"
+        "revision": "7eb260478bd8"
     }, 
     "az": {
         "platforms": [
@@ -228,7 +228,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "7f39c7b60244"
+        "revision": "fe409f986d12"
     }, 
     "fi": {
         "platforms": [
@@ -236,7 +236,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "c61e9acfbf30"
+        "revision": "07009f0e67b8"
     }, 
     "fr": {
         "platforms": [
@@ -252,7 +252,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "5c5ee826d4ea"
+        "revision": "8334c2341110"
     }, 
     "ga-IE": {
         "platforms": [
@@ -268,7 +268,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "0774f51ffb47"
+        "revision": "3980cbeec542"
     }, 
     "gl": {
         "platforms": [
@@ -292,7 +292,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "60db5b5f2e8f"
+        "revision": "ae21f18516af"
     }, 
     "he": {
         "platforms": [
@@ -364,7 +364,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "33fdd07c7331"
+        "revision": "94fe6cff2122"
     }, 
     "ja": {
         "platforms": [
@@ -412,7 +412,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "a4a76ae690f7"
+        "revision": "c295a8dd5e98"
     }, 
     "lo": {
         "platforms": [
@@ -468,7 +468,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "aa315ffeb1ab"
+        "revision": "1809db03873d"
     }, 
     "my": {
         "platforms": [
@@ -587,7 +587,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "228c243b77ba"
+        "revision": "5a8f533d3a73"
     }, 
     "son": {
         "platforms": [
