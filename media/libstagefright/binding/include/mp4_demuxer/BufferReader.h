@@ -178,12 +178,12 @@ public:
     return mPtr;
   }
 
-  uint8_t PeekU8() const
+  mozilla::Result<uint8_t, nsresult> PeekU8() const
   {
     auto ptr = Peek(1);
     if (!ptr) {
       NS_WARNING("Failed to peek data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return *ptr;
   }
