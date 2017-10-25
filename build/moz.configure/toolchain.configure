@@ -11,6 +11,35 @@ option(env='MOZ_PGO', help='Build with profile guided optimizations')
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 
+# Code optimization
+# ==============================================================
+
+js_option('--enable-optimize',
+          nargs='?',
+          default=True,
+          help='Enable optimizations via compiler flags')
+
+@depends('--enable-optimize')
+def moz_optimize(option):
+    flags = None
+
+    if len(option):
+        val = '2'
+        flags = option[0]
+    elif option:
+        val = '1'
+    else:
+        val = None
+
+    return namespace(
+        optimize=val,
+        flags=flags,
+    )
+
+set_config('MOZ_OPTIMIZE', moz_optimize.optimize)
+add_old_configure_assignment('MOZ_OPTIMIZE', moz_optimize.optimize)
+add_old_configure_assignment('MOZ_CONFIGURE_OPTIMIZE_FLAGS', moz_optimize.flags)
+
 # yasm detection
 # ==============================================================
 yasm = check_prog('YASM', ['yasm'], allow_missing=True)
