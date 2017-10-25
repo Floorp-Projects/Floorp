@@ -95,11 +95,7 @@ public:
 
   mozilla::Result<int32_t, nsresult> Read24()
   {
-    auto res = ReadU24();
-    if (res.isErr()) {
-      return mozilla::Err(NS_ERROR_FAILURE);
-    }
-    return (int32_t)res.unwrap();
+    return ReadU24().map([] (uint32_t x) { return (int32_t)x; });
   }
 
   mozilla::Result<int32_t, nsresult> ReadLE24()
@@ -202,19 +198,19 @@ public:
     return mozilla::BigEndian::readUint16(ptr);
   }
 
-  uint32_t PeekU24() const
+  mozilla::Result<uint32_t, nsresult> PeekU24() const
   {
     auto ptr = Peek(3);
     if (!ptr) {
       NS_WARNING("Failed to peek data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
   }
 
-  uint32_t Peek24() const
+  mozilla::Result<int32_t, nsresult> Peek24() const
   {
-    return (uint32_t)PeekU24();
+    return PeekU24().map([] (uint32_t x) { return (int32_t)x; });
   }
 
   mozilla::Result<uint32_t, nsresult> PeekU32()
