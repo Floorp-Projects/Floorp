@@ -231,6 +231,18 @@ pub extern "C" fn rusturl_has_fragment(urlptr: Option<&Url>, has_fragment: &mut 
 }
 
 #[no_mangle]
+pub extern "C" fn rusturl_get_origin(urlptr: Option<&Url>, origin: &mut nsACString) -> nsresult {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
+    return NS_ERROR_INVALID_ARG;
+  };
+
+  origin.assign(&url.origin().ascii_serialization());
+  NS_OK
+}
+
+#[no_mangle]
 pub extern "C" fn rusturl_set_scheme(urlptr: Option<&mut Url>, scheme: &nsACString) -> nsresult {
   let url = if let Some(url) = urlptr {
     url

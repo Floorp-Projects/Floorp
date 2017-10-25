@@ -34,6 +34,7 @@ nsresult rusturl_get_path(const rusturl* url, nsACString* cont);
 nsresult rusturl_get_query(const rusturl* url, nsACString* cont);
 nsresult rusturl_get_fragment(const rusturl* url, nsACString* cont);
 nsresult rusturl_has_fragment(const rusturl* url, bool* has_fragment);
+nsresult rusturl_get_origin(const rusturl* url, nsACString* origin);
 
 nsresult rusturl_set_scheme(rusturl* url, const nsACString* scheme);
 nsresult rusturl_set_username(rusturl* url, const nsACString* user);
