@@ -7280,6 +7280,20 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+// Returns the smallest distance from "0" to the range [min, max] where
+// min <= max.
+static nscoord DistanceToRange(nscoord min, nscoord max) {
+  MOZ_ASSERT(min <= max);
+  if (max < 0) {
+    return max;
+  }
+  if (min > 0) {
+    return min;
+  }
+  MOZ_ASSERT(min <= 0 && max >= 0);
+  return 0;
+}
+
 bool
 nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -7287,22 +7301,12 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                                                  WebRenderLayerManager* aManager,
                                                  nsDisplayListBuilder* aDisplayListBuilder)
 {
-  LayoutDevicePoint scTranslation;
   StickyScrollContainer* stickyScrollContainer = StickyScrollContainer::GetStickyScrollContainerForFrame(mFrame);
   if (stickyScrollContainer) {
     float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
     bool snap;
     nsRect itemBounds = GetBounds(aDisplayListBuilder, &snap);
-
-    // The itemBounds here already take into account the main-thread
-    // position:sticky implementation, so we need to unapply that.
-    nsIFrame* firstCont = nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-    nsPoint translation = stickyScrollContainer->ComputePosition(firstCont) - firstCont->GetNormalPosition();
-    itemBounds.MoveBy(-translation);
-    scTranslation = LayoutDevicePoint::FromAppUnits(translation, auPerDevPixel);
-
-    LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(itemBounds, auPerDevPixel);
 
     Maybe<wr::StickySideConstraint> top;
     Maybe<wr::StickySideConstraint> right;
@@ -7313,7 +7317,13 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     nsRect inner;
     stickyScrollContainer->GetScrollRanges(mFrame, &outer, &inner);
 
+    nsIFrame* scrollFrame = do_QueryFrame(stickyScrollContainer->ScrollFrame());
+    nsPoint offset = scrollFrame->GetOffsetTo(ReferenceFrame());
+
+    // Adjust the scrollPort coordinates to be relative to the reference frame,
+    // so that it is in the same space as everything else.
     nsRect scrollPort = stickyScrollContainer->ScrollFrame()->GetScrollPortRect();
+    scrollPort += offset;
 
     // The following computations make more sense upon understanding the
     // semantics of "inner" and "outer", which is explained in the comment on
@@ -7321,56 +7331,67 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
     if (outer.YMost() != inner.YMost()) {
       // Question: How far will itemBounds.y be from the top of the scrollport
-      // when we have scrolled down from the current scroll position of "0" to a
-      // scroll position of "inner.YMost()" (which is >= 0 since we are
-      // scrolling down)?
-      // Answer: (itemBounds.y - 0) - (inner.YMost() - 0)
-      //      == itemBounds.y - inner.YMost()
-      float margin = NSAppUnitsToFloatPixels(itemBounds.y - inner.YMost(), auPerDevPixel);
-      // The scroll distance during which the item should remain "stuck"
-      float maxOffset = NSAppUnitsToFloatPixels(outer.YMost() - inner.YMost(), auPerDevPixel);
+      // when we have scrolled from the current scroll position of "0" to
+      // reach the range [inner.YMost(), outer.YMost()] where the item gets
+      // stuck?
+      // Answer: the current distance is "itemBounds.y - scrollPort.y". That
+      // needs to be adjusted by the distance to the range. If the distance is
+      // negative (i.e. inner.YMost() <= outer.YMost() < 0) then we would be
+      // scrolling upwards (decreasing scroll offset) to reach that range,
+      // which would increase itemBounds.y and make it farther away from the
+      // top of the scrollport. So in that case the adjustment is -distance.
+      // If the distance is positive (0 < inner.YMost() <= outer.YMost()) then
+      // we would be scrolling downwards, itemBounds.y would decrease, and we
+      // again need to adjust by -distance. If we are already in the range
+      // then no adjustment is needed and distance is 0 so again using
+      // -distance works.
+      nscoord distance = DistanceToRange(inner.YMost(), outer.YMost());
+      float margin = NSAppUnitsToFloatPixels(itemBounds.y - scrollPort.y - distance, auPerDevPixel);
+      // Question: Given the current state, what is the range during which
+      // WR will have to apply an adjustment to the item (in order to prevent
+      // the item from visually moving) as a result of async scrolling?
+      // Answer: [inner.YMost(), outer.YMost()]. But right now the WR API
+      // doesn't allow us to provide the whole range; it just takes one side
+      // of the range and assumes it has a particular sign. Bug 1411627 will
+      // fix this more completely but for now we do the best we can. Note that
+      // this value also needs to be converted from being relative to the
+      // scrollframe to being relative to the reference frame, so we have to
+      // adjust it by |offset|.
+      float maxOffset = NSAppUnitsToFloatPixels(std::max(0, outer.YMost() + offset.y), auPerDevPixel);
       top = Some(wr::StickySideConstraint { margin, maxOffset });
     }
     if (outer.y != inner.y) {
-      // Question: How far will itemBounds.YMost() be from the bottom of the
-      // scrollport when we have scrolled up from the current scroll position of
-      // "0" to a scroll position of "inner.y" (which is <= 0 since we are
-      // scrolling up)?
-      // Answer: (scrollPort.height - itemBounds.YMost()) - (0 - inner.y)
-      //      == scrollPort.height - itemBounds.YMost() + inner.y
-      float margin = NSAppUnitsToFloatPixels(scrollPort.height - itemBounds.YMost() + inner.y, auPerDevPixel);
-      // The scroll distance during which the item should remain "stuck"
-      float maxOffset = NSAppUnitsToFloatPixels(outer.y - inner.y, auPerDevPixel);
+      // Similar logic as in the previous section, but this time we care about
+      // the distance from itemBounds.YMost() to scrollPort.YMost().
+      nscoord distance = DistanceToRange(outer.y, inner.y);
+      float margin = NSAppUnitsToFloatPixels(scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel);
+      // And here WR will be moving the item upwards rather than downwards so
+      // again things are inverted from the previous block.
+      float maxOffset = NSAppUnitsToFloatPixels(std::min(0, outer.y + offset.y), auPerDevPixel);
       bottom = Some(wr::StickySideConstraint { margin, maxOffset });
     }
     // Same as above, but for the x-axis
     if (outer.XMost() != inner.XMost()) {
-      float margin = NSAppUnitsToFloatPixels(itemBounds.x - inner.XMost(), auPerDevPixel);
-      float maxOffset = NSAppUnitsToFloatPixels(outer.XMost() - inner.XMost(), auPerDevPixel);
+      nscoord distance = DistanceToRange(inner.XMost(), outer.XMost());
+      float margin = NSAppUnitsToFloatPixels(itemBounds.x - scrollPort.x - distance, auPerDevPixel);
+      float maxOffset = NSAppUnitsToFloatPixels(std::max(0, outer.XMost() + offset.x), auPerDevPixel);
       left = Some(wr::StickySideConstraint { margin, maxOffset });
     }
     if (outer.x != inner.x) {
-      float margin = NSAppUnitsToFloatPixels(scrollPort.width - itemBounds.XMost() + inner.x, auPerDevPixel);
-      float maxOffset = NSAppUnitsToFloatPixels(outer.x - inner.x, auPerDevPixel);
+      nscoord distance = DistanceToRange(outer.x, inner.x);
+      float margin = NSAppUnitsToFloatPixels(scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel);
+      float maxOffset = NSAppUnitsToFloatPixels(std::min(0, outer.x + offset.x), auPerDevPixel);
       right = Some(wr::StickySideConstraint { margin, maxOffset });
     }
 
+    LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(itemBounds, auPerDevPixel);
     wr::WrStickyId id = aBuilder.DefineStickyFrame(aSc.ToRelativeLayoutRect(bounds),
         top.ptrOr(nullptr), right.ptrOr(nullptr), bottom.ptrOr(nullptr), left.ptrOr(nullptr));
 
     aBuilder.PushStickyFrame(id, GetClipChain());
   }
 
-  // All the things inside this position:sticky item also have the main-thread
-  // translation already applied, so we need to make sure that gets unapplied.
-  // The easiest way to do it is to just create a new stacking context with an
-  // adjusted origin and use that for the nested items. This way all the
-  // ToRelativeLayoutRect calls on this StackingContextHelper object will
-  // include the necessary adjustment.
-  StackingContextHelper sc(aSc, aBuilder);
-  sc.AdjustOrigin(scTranslation);
-
-  nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, sc,
+  nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
       aManager, aDisplayListBuilder);
 
   if (stickyScrollContainer) {

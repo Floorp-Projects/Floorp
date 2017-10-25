@@ -46,8 +46,6 @@ public:
   // Pops the stacking context, if one was pushed during the constructor.
   ~StackingContextHelper();
 
-  void AdjustOrigin(const LayoutDevicePoint& aDelta);
-
   // When this StackingContextHelper is in scope, this function can be used
   // to convert a rect from the layer system's coordinate space to a LayoutRect
   // that is relative to the stacking context. This is useful because most
