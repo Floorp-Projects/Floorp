@@ -194,12 +194,6 @@ class CompileDBBackend(CommonBackend):
             db.extend(value)
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
-
-        append_var('OS_CPPFLAGS')
-        append_var('OS_%s' % self.CFLAGS[canonical_suffix])
-        append_var('MOZ_DEBUG_FLAGS')
-        append_var('MOZ_OPTIMIZE_FLAGS')
-        append_var('MOZ_FRAMEPTR_FLAGS')
         db.append('$(WARNINGS_AS_ERRORS)')
         db.append('$(MOZBUILD_%s)' % self.CFLAGS[canonical_suffix])
         if canonical_suffix == '.m':
