@@ -13,6 +13,8 @@ add_task(async function test_setup() {
   finishAddonManagerStartup();
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
+
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
 });
 
 add_task(async function test_record_activeTicks() {

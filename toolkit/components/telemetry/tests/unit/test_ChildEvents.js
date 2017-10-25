@@ -75,6 +75,7 @@ add_task(async function() {
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   finishAddonManagerStartup();
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   await TelemetryController.testSetup();
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
