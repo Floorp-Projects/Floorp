@@ -91,6 +91,12 @@ public:
    * Send bidi keyboard information to content process
    */
   static void SendBidiKeyboardInfoToContent();
+
+  /**
+   * Get branchShortName from string bundle
+   */
+  static void GetBrandShortName(nsAString& aBrandName);
+
 };
 
 } // namespace widget
