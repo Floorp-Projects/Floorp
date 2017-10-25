@@ -581,6 +581,16 @@ ChannelMediaDecoder::MetadataLoaded(
   mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 }
 
+nsCString
+ChannelMediaDecoder::GetDebugInfo()
+{
+  auto&& str = MediaDecoder::GetDebugInfo();
+  if (mResource) {
+    AppendStringIfNotEmpty(str, mResource->GetDebugInfo());
+  }
+  return str;
+}
+
 } // namespace mozilla
 
 // avoid redefined macro in unified build
