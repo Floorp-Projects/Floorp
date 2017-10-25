@@ -101,10 +101,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
   (async function() {
     SimpleTest.waitForExplicitFinish();
 
-    // On Windows, nsICommandLine doesn't support double-dash arguments,
-    // nor single-dash arguments whose value is specified via an equals sign,
-    // so we only test those variations on non-Windows platforms.
-
     // Test all four basic variations of the "screenshot" argument
     // when a file path is specified.
     await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", screenshotPath], screenshotPath);
