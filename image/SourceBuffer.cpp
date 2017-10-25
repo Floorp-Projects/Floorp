@@ -468,10 +468,18 @@ SourceBuffer::AppendFromInputStream(nsIInputStream* aInputStream,
   uint32_t bytesRead;
   nsresult rv = aInputStream->ReadSegments(AppendToSourceBuffer, this,
                                            aCount, &bytesRead);
-  if (!NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT(bytesRead == aCount,
-               "AppendToSourceBuffer should consume everything");
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
+
+  if (bytesRead == 0) {
+    // The loading of the image has been canceled.
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(bytesRead == aCount,
+             "AppendToSourceBuffer should consume everything");
+
   return rv;
 }
 
