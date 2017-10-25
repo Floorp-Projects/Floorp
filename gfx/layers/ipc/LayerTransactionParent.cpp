@@ -29,7 +29,6 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsLayoutUtils.h"              // for nsLayoutUtils
 #include "nsMathUtils.h"                // for NS_round

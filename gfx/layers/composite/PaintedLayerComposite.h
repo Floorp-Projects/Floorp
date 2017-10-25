@@ -13,10 +13,8 @@
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString
-
 
 namespace mozilla {
 namespace layers {
