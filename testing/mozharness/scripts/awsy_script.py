@@ -29,32 +29,33 @@ from mozharness.mozilla.testing.codecoverage import (
     code_coverage_config_options
 )
 
+
 class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCoverageMixin):
     config_options = [
         [["--e10s"],
-        {"action": "store_true",
-         "dest": "e10s",
-         "default": False,
-         "help": "Run tests with multiple processes. (Desktop builds only)",
-         }],
+         {"action": "store_true",
+          "dest": "e10s",
+          "default": False,
+          "help": "Run tests with multiple processes. (Desktop builds only)",
+          }],
         [["--enable-stylo"],
-        {"action": "store_true",
-         "dest": "enable_stylo",
-         "default": False,
-         "help": "Run tests with Stylo enabled.",
-         }],
+         {"action": "store_true",
+          "dest": "enable_stylo",
+          "default": False,
+          "help": "Run tests with Stylo enabled.",
+          }],
         [["--disable-stylo"],
-        {"action": "store_true",
-         "dest": "disable_stylo",
-         "default": False,
-         "help": "Run tests with Stylo disabled.",
-         }],
+         {"action": "store_true",
+          "dest": "disable_stylo",
+          "default": False,
+          "help": "Run tests with Stylo disabled.",
+          }],
         [["--single-stylo-traversal"],
-        {"action": "store_true",
-         "dest": "single_stylo_traversal",
-         "default": False,
-         "help": "Set STYLO_THREADS=1.",
-         }]
+         {"action": "store_true",
+          "dest": "single_stylo_traversal",
+          "default": False,
+          "help": "Set STYLO_THREADS=1.",
+          }]
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
 
@@ -121,7 +122,6 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
 
         self.register_virtualenv_module('awsy', self.awsy_path)
 
-
     def populate_webroot(self):
         """Populate the production test slaves' webroots"""
         self.info("Downloading pageset with tooltool...")
@@ -139,7 +139,6 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         unzip_cmd = [unzip, '-q', '-o', archive, '-d', page_load_test_dir]
         self.run_command(unzip_cmd, halt_on_failure=True)
         self.run_command("ls %s" % page_load_test_dir)
-
 
     def run_tests(self, args=None, **kw):
         '''

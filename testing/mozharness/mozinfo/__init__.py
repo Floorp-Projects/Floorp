@@ -52,5 +52,6 @@ Module variables:
 """
 
 import mozinfo
-from mozinfo import *
+from mozinfo import *  # noqa
+
 __all__ = mozinfo.__all__
