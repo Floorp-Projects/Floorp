@@ -61,6 +61,7 @@ var publicProperties = [
   "notifyDevices",
   "now",
   "promiseAccountsChangeProfileURI",
+  "promiseAccountsEmailURI",
   "promiseAccountsForceSigninURI",
   "promiseAccountsManageURI",
   "promiseAccountsManageDevicesURI",
@@ -1301,6 +1302,10 @@ FxAccountsInternal.prototype = {
 
   promiseAccountsSignInURI() {
     return FxAccountsConfig.promiseAccountsSignInURI();
+  },
+
+  promiseAccountsEmailURI() {
+    return FxAccountsConfig.promiseAccountsEmailURI();
   },
 
   /**
