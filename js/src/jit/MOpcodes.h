@@ -306,9 +306,9 @@ namespace jit {
     _(GetPrototypeOf)                                                       \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
-    _(AsmJSCompareExchangeHeap)                                             \
-    _(AsmJSAtomicExchangeHeap)                                              \
-    _(AsmJSAtomicBinopHeap)                                                 \
+    _(WasmCompareExchangeHeap)                                              \
+    _(WasmAtomicExchangeHeap)                                               \
+    _(WasmAtomicBinopHeap)                                                  \
     _(WasmNeg)                                                              \
     _(WasmBoundsCheck)                                                      \
     _(WasmAlignmentCheck)                                                   \

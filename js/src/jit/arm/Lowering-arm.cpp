@@ -915,7 +915,7 @@ LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 }
 
 void
-LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+LIRGeneratorARM::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -935,27 +935,27 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
         MOZ_ASSERT(ins->access().offset() == 0);
-        LAsmJSCompareExchangeCallout* lir =
-            new(alloc()) LAsmJSCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
-                                                      useFixedAtStart(ins->oldValue(), IntArgReg3),
-                                                      useFixedAtStart(ins->newValue(), CallTempReg0),
-                                                      useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                      tempFixed(IntArgReg0),
-                                                      tempFixed(IntArgReg1));
+        LWasmCompareExchangeCallout* lir =
+            new(alloc()) LWasmCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
+                                                     useFixedAtStart(ins->oldValue(), IntArgReg3),
+                                                     useFixedAtStart(ins->newValue(), CallTempReg0),
+                                                     useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                     tempFixed(IntArgReg0),
+                                                     tempFixed(IntArgReg1));
         defineReturn(lir, ins);
         return;
     }
 
-    LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base),
-                                               useRegister(ins->oldValue()),
-                                               useRegister(ins->newValue()));
+    LWasmCompareExchangeHeap* lir =
+        new(alloc()) LWasmCompareExchangeHeap(useRegister(base),
+                                              useRegister(ins->oldValue()),
+                                              useRegister(ins->newValue()));
 
     define(lir, ins);
 }
 
 void
-LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+LIRGeneratorARM::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
@@ -975,21 +975,21 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
         MOZ_ASSERT(ins->access().offset() == 0);
         // Call out on ARMv6.
-        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
-                                                              useFixedAtStart(ins->value(), IntArgReg3),
-                                                              useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                              tempFixed(IntArgReg0),
-                                                              tempFixed(IntArgReg1)), ins);
+        defineReturn(new(alloc()) LWasmAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
+                                                             useFixedAtStart(ins->value(), IntArgReg3),
+                                                             useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                             tempFixed(IntArgReg0),
+                                                             tempFixed(IntArgReg1)), ins);
         return;
     }
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
-    define(new(alloc()) LAsmJSAtomicExchangeHeap(base, value), ins);
+    define(new(alloc()) LWasmAtomicExchangeHeap(base, value), ins);
 }
 
 void
-LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
+LIRGeneratorARM::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
     if (ins->access().type() == Scalar::Int64) {
         auto* lir = new(alloc()) LWasmAtomicBinopI64(useRegister(ins->base()),
@@ -1010,30 +1010,30 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
         MOZ_ASSERT(ins->access().offset() == 0);
-        LAsmJSAtomicBinopCallout* lir =
-            new(alloc()) LAsmJSAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
-                                                  useFixedAtStart(ins->value(), IntArgReg3),
-                                                  useFixedAtStart(ins->tls(), WasmTlsReg),
-                                                  tempFixed(IntArgReg0),
-                                                  tempFixed(IntArgReg1));
+        LWasmAtomicBinopCallout* lir =
+            new(alloc()) LWasmAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
+                                                 useFixedAtStart(ins->value(), IntArgReg3),
+                                                 useFixedAtStart(ins->tls(), WasmTlsReg),
+                                                 tempFixed(IntArgReg0),
+                                                 tempFixed(IntArgReg1));
         defineReturn(lir, ins);
         return;
     }
 
     if (!ins->hasUses()) {
-        LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base),
-                                                        useRegister(ins->value()),
-                                                        /* flagTemp= */ temp());
+        LWasmAtomicBinopHeapForEffect* lir =
+            new(alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base),
+                                                       useRegister(ins->value()),
+                                                       /* flagTemp= */ temp());
         add(lir, ins);
         return;
     }
 
-    LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base),
-                                           useRegister(ins->value()),
-                                           /* temp = */ LDefinition::BogusTemp(),
-                                           /* flagTemp= */ temp());
+    LWasmAtomicBinopHeap* lir =
+        new(alloc()) LWasmAtomicBinopHeap(useRegister(base),
+                                          useRegister(ins->value()),
+                                          /* temp = */ LDefinition::BogusTemp(),
+                                          /* flagTemp= */ temp());
     define(lir, ins);
 }
 

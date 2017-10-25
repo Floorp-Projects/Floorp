@@ -109,9 +109,9 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitWasmStore(MWasmStore* ins);
     void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
-    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
-    void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins);
-    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
+    void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
+    void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
+    void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
