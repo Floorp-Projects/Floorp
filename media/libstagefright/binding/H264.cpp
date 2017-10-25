@@ -6,7 +6,7 @@
 #include "mozilla/PodOperations.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/BitReader.h"
-#include "mp4_demuxer/ByteReader.h"
+#include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "mp4_demuxer/H264.h"
 #include <media/stagefright/foundation/ABitReader.h>
@@ -277,7 +277,8 @@ public:
       return;
     }
 
-    mNumSPS = mReader.ReadU8() & 0x1f;
+    auto res = mReader.ReadU8();
+    mNumSPS = res.isOk() ? res.unwrap() & 0x1f : 0;
     if (mNumSPS == 0) {
       return;
     }
@@ -292,7 +293,8 @@ public:
     if (--mNumSPS == 0) {
       mEOS = true;
     }
-    uint16_t length = mReader.ReadU16();
+    auto res = mReader.ReadU16();
+    uint16_t length = res.isOk() ? res.unwrap() : 0;
     if (length == 0 || !mReader.Read(length)) {
       mEOS = true;
     }
@@ -307,10 +309,12 @@ public:
   SPSNAL operator*() const
   {
     MOZ_ASSERT(bool(*this));
-    ByteReader reader(mExtraDataPtr + mReader.Offset(), mReader.Remaining());
-    uint16_t length = reader.ReadU16();
+    BufferReader reader(mExtraDataPtr + mReader.Offset(), mReader.Remaining());
+
+    auto res = reader.ReadU16();
+    uint16_t length = res.isOk() ? res.unwrap() : 0;
     const uint8_t* ptr = reader.Read(length);
-    if (!ptr) {
+    if (!ptr || !length) {
       return SPSNAL();
     }
     return SPSNAL(ptr, length);
@@ -318,7 +322,7 @@ public:
 
 private:
   const uint8_t* mExtraDataPtr;
-  ByteReader mReader;
+  BufferReader mReader;
   bool mValid = false;
   bool mEOS = false;
   uint8_t mNumSPS = 0;
@@ -334,8 +338,12 @@ H264::DecodeNALUnit(const uint8_t* aNAL, size_t aLength)
   }
 
   RefPtr<mozilla::MediaByteBuffer> rbsp = new mozilla::MediaByteBuffer;
-  ByteReader reader(aNAL, aLength);
-  uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
+  BufferReader reader(aNAL, aLength);
+  auto res = reader.ReadU8();
+  if (res.isErr()) {
+    return nullptr;
+  }
+  uint8_t nal_unit_type = res.unwrap() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
   if (nal_unit_type == H264_NAL_PREFIX ||
       nal_unit_type == H264_NAL_SLICE_EXT ||
@@ -343,9 +351,17 @@ H264::DecodeNALUnit(const uint8_t* aNAL, size_t aLength)
     bool svc_extension_flag = false;
     bool avc_3d_extension_flag = false;
     if (nal_unit_type != H264_NAL_SLICE_EXT_DVC) {
-      svc_extension_flag = reader.PeekU8() & 0x80;
+      res = reader.PeekU8();
+      if (res.isErr()) {
+        return nullptr;
+      }
+      svc_extension_flag = res.unwrap() & 0x80;
     } else {
-      avc_3d_extension_flag = reader.PeekU8() & 0x80;
+      res = reader.PeekU8();
+      if (res.isErr()) {
+        return nullptr;
+      }
+      avc_3d_extension_flag = res.unwrap() & 0x80;
     }
     if (svc_extension_flag) {
       nalUnitHeaderBytes += 3;
@@ -360,7 +376,11 @@ H264::DecodeNALUnit(const uint8_t* aNAL, size_t aLength)
   }
   uint32_t lastbytes = 0xffff;
   while (reader.Remaining()) {
-    uint8_t byte = reader.ReadU8();
+    auto res = reader.ReadU8();
+    if (res.isErr()) {
+      return nullptr;
+    }
+    uint8_t byte = res.unwrap();
     if ((lastbytes & 0xffff) == 0 && byte == 0x03) {
       // reset last two bytes, to detect the 0x000003 sequence again.
       lastbytes = 0xffff;
@@ -788,15 +808,15 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
 
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
 
-  ByteReader reader(aSample->Data(), aSample->Size());
+  BufferReader reader(aSample->Data(), aSample->Size());
 
   while (reader.Remaining() >= nalLenSize) {
-    uint32_t nalLen;
+    uint32_t nalLen = 0;
     switch (nalLenSize) {
-      case 1: nalLen = reader.ReadU8();  break;
-      case 2: nalLen = reader.ReadU16(); break;
-      case 3: nalLen = reader.ReadU24(); break;
-      case 4: nalLen = reader.ReadU32(); break;
+      case 1: Unused << reader.ReadU8().map([&] (uint8_t x) mutable { return nalLen = x; }); break;
+      case 2: Unused << reader.ReadU16().map([&] (uint16_t x) mutable { return nalLen = x; }); break;
+      case 3: Unused << reader.ReadU24().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
+      case 4: Unused << reader.ReadU32().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
     }
     if (!nalLen) {
       continue;
@@ -851,7 +871,7 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
     sampleSize = aSample->mCrypto.mPlainSizes[0];
   }
 
-  ByteReader reader(aSample->Data(), sampleSize);
+  BufferReader reader(aSample->Data(), sampleSize);
 
   nsTArray<SPSData> SPSTable;
   // If we encounter SPS with the same id but different content, we will stop
@@ -860,12 +880,12 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
 
   // Find SPS and PPS NALUs in AVCC data
   while (reader.Remaining() > nalLenSize) {
-    uint32_t nalLen;
+    uint32_t nalLen = 0;
     switch (nalLenSize) {
-      case 1: nalLen = reader.ReadU8();  break;
-      case 2: nalLen = reader.ReadU16(); break;
-      case 3: nalLen = reader.ReadU24(); break;
-      case 4: nalLen = reader.ReadU32(); break;
+      case 1: Unused << reader.ReadU8().map([&] (uint8_t x) mutable { return nalLen = x; }); break;
+      case 2: Unused << reader.ReadU16().map([&] (uint16_t x) mutable { return nalLen = x; }); break;
+      case 3: Unused << reader.ReadU24().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
+      case 4: Unused << reader.ReadU32().map([&] (uint32_t x) mutable { return nalLen = x; }); break;
     }
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
@@ -946,12 +966,13 @@ H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData)
     return 0;
   }
 
-  ByteReader reader(aExtraData);
+  BufferReader reader(aExtraData);
   const uint8_t* ptr = reader.Read(5);
-  if (!ptr || !reader.CanRead8()) {
+  auto res = reader.ReadU8();
+  if (!ptr || res.isErr()) {
     return 0;
   }
-  return reader.ReadU8() & 0x1f;
+  return res.unwrap() & 0x1f;
 }
 
 /* static */ bool
@@ -982,25 +1003,19 @@ H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
   return true;
 }
 
-static inline bool
-ReadSEIInt(ByteReader& aBr, uint32_t& aOutput)
+static inline Result<Ok, nsresult>
+ReadSEIInt(BufferReader& aBr, uint32_t& aOutput)
 {
   uint8_t tmpByte;
 
   aOutput = 0;
-  if (!aBr.CanRead8()) {
-    return false;
-  }
-  tmpByte = aBr.ReadU8();
+  MOZ_TRY_VAR(tmpByte, aBr.ReadU8());
   while (tmpByte == 0xFF) {
     aOutput += 255;
-    if (!aBr.CanRead8()) {
-      return false;
-    }
-    tmpByte = aBr.ReadU8();
+    MOZ_TRY_VAR(tmpByte, aBr.ReadU8());
   }
   aOutput += tmpByte;   // this is the last byte
-  return true;
+  return Ok();
 }
 
 /* static */ bool
@@ -1011,18 +1026,18 @@ H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
     return false;
   }
   // sei_rbsp() as per 7.3.2.3 Supplemental enhancement information RBSP syntax
-  ByteReader br(aSEI);
+  BufferReader br(aSEI);
 
   do {
     // sei_message() as per
     // 7.3.2.3.1 Supplemental enhancement information message syntax
     uint32_t payloadType = 0;
-    if (!ReadSEIInt(br, payloadType)) {
+    if (ReadSEIInt(br, payloadType).isErr()) {
       return false;
     }
 
     uint32_t payloadSize = 0;
-    if (!ReadSEIInt(br, payloadSize)) {
+    if (ReadSEIInt(br, payloadSize).isErr()) {
       return false;
     }
 
@@ -1045,7 +1060,7 @@ H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
       aDest.changing_slice_group_idc = br.ReadBits(2);
       return true;
     }
-  } while(br.CanRead8() && br.PeekU8() != 0x80); // more_rbsp_data() msg[offset] != 0x80
+  } while(br.PeekU8().isOk() && br.PeekU8().unwrap() != 0x80); // more_rbsp_data() msg[offset] != 0x80
   // ignore the trailing bits rbsp_trailing_bits();
   return false;
 }
