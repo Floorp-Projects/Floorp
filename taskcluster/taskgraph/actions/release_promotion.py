@@ -75,7 +75,7 @@ from taskgraph.parameters import Parameters
                     'type': 'string',
                 },
             },
-        }
+        },
         "required": ['build_number', 'target_tasks_method', 'previous_graph_kinds'],
     }
 )
