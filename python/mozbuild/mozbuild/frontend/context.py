@@ -303,6 +303,7 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
 class CompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
         main_src_dir = mozpath.dirname(context.main_path)
+        self._context = context
 
         self.flag_variables = (
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
@@ -328,6 +329,19 @@ class CompileFlags(ContextDerivedValue, dict):
              ('CFLAGS',)),
             ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
              ('CXXFLAGS',)),
+            ('OS_CPPFLAGS', context.config.substs.get('OS_CPPFLAGS'),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OS_CFLAGS', context.config.substs.get('OS_CFLAGS'),
+             ('CFLAGS', 'C_LDFLAGS')),
+            ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
+             ('CXXFLAGS', 'CXX_LDFLAGS')),
+            ('DEBUG', (context.config.substs['MOZ_DEBUG_FLAGS'].split() if
+                       'MOZ_DEBUG_FLAGS' in context.config.substs else []),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OPTIMIZE', self._optimize_flags(),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
@@ -341,6 +355,18 @@ class CompileFlags(ContextDerivedValue, dict):
                                  for k, v, _ in self.flag_variables))
         else:
             dict.__init__(self)
+
+    def _optimize_flags(self):
+        if not self._context.config.substs.get('MOZ_OPTIMIZE'):
+            return []
+        optimize_flags = None
+        if self._context.config.substs.get('MOZ_PGO'):
+            optimize_flags = self._context.config.substs.get('MOZ_PGO_OPTIMIZE_FLAGS')
+        if not optimize_flags:
+            # If MOZ_PGO_OPTIMIZE_FLAGS is empty we fall back to MOZ_OPTIMIZE_FLAGS.
+            # Presently this occurs on Windows.
+            optimize_flags = self._context.config.substs.get('MOZ_OPTIMIZE_FLAGS')
+        return optimize_flags
 
     def __setitem__(self, key, value):
         if key not in self._known_keys:
