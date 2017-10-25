@@ -25,6 +25,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsISeekableStream.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "prio.h"
 #include <algorithm>
@@ -2718,6 +2719,19 @@ nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
       "Must have advanced to start of next range, or hit end of stream");
   }
   return NS_OK;
+}
+
+nsCString
+MediaCacheStream::GetDebugInfo()
+{
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  return nsPrintfCString("mStreamLength=%" PRId64 " mChannelOffset=%" PRId64
+                         " mCacheSuspended=%d mChannelEnded=%d mLoadID=%u",
+                         mStreamLength,
+                         mChannelOffset,
+                         mCacheSuspended,
+                         mChannelEnded,
+                         mLoadID);
 }
 
 } // namespace mozilla
