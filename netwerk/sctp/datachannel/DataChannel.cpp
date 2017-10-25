@@ -130,6 +130,38 @@ public:
 
 NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
 
+class DataChannelConnectionShutdown : public nsITimerCallback
+{
+public:
+  explicit DataChannelConnectionShutdown(DataChannelConnection* aConnection)
+    : mConnection(aConnection)
+  {
+    mTimer = NS_NewTimer(); // we'll crash if this fails
+    mTimer->InitWithCallback(this, 30*1000, nsITimer::TYPE_ONE_SHOT);
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  NS_IMETHODIMP
+  Notify(nsITimer* aTimer)
+  {
+    // safely release reference to ourself
+    RefPtr<DataChannelConnectionShutdown> grip(mConnection->mDelayedShutdown.forget());
+    return NS_OK;
+  }
+
+private:
+  virtual ~DataChannelConnectionShutdown()
+  {
+    mTimer->Cancel();
+  }
+
+  RefPtr<DataChannelConnection> mConnection;
+  nsCOMPtr<nsITimer> mTimer;
+};
+
+NS_IMPL_ISUPPORTS(DataChannelConnectionShutdown, nsITimerCallback)
+
 OutgoingMsg::OutgoingMsg(struct sctp_sendv_spa &info, const uint8_t *data,
                          size_t length)
   : mLength(length)
@@ -252,16 +284,12 @@ DataChannelConnection::~DataChannelConnection()
   ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
+  MOZ_ASSERT(!mTransportFlow);
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
   if (!IsSTSThread()) {
     ASSERT_WEBRTC(NS_IsMainThread());
-    if (mTransportFlow) {
-      ASSERT_WEBRTC(mSTS);
-      NS_ProxyRelease(
-        "DataChannelConnection::mTransportFlow", mSTS, mTransportFlow.forget());
-    }
 
     if (mInternalIOThread) {
       // Avoid spinning the event thread from here (which if we're mainthread
@@ -326,6 +354,19 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
   LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
 
   disconnect_all();
+
+  // we may have queued packet sends on STS after this; dispatch to ourselves before finishing here
+  // so we can be sure there aren't anymore runnables active that can try to touch the flow.
+  // DON'T use RUN_ON_THREAD, it queue-jumps!
+  mSTS->Dispatch(WrapRunnable(RefPtr<DataChannelConnection>(this),
+                              &DataChannelConnection::DestroyOnSTSFinal),
+                 NS_DISPATCH_NORMAL);
+}
+
+void DataChannelConnection::DestroyOnSTSFinal()
+{
+  mTransportFlow = nullptr;
+  mDelayedShutdown = new DataChannelConnectionShutdown(this);
 }
 
 bool
