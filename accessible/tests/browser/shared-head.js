@@ -11,7 +11,7 @@
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
-            Cc, Cu, arrayFromChildren */
+            Cc, Cu, arrayFromChildren, forceGC */
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
@@ -362,4 +362,16 @@ function queryInterfaces(accessible, interfaces) {
 function arrayFromChildren(accessible) {
   return Array.from({ length: accessible.childCount }, (c, i) =>
     accessible.getChildAt(i));
+}
+
+/**
+ * Force garbage collection.
+ */
+function forceGC() {
+  SpecialPowers.gc();
+  SpecialPowers.forceShrinkingGC();
+  SpecialPowers.forceCC();
+  SpecialPowers.gc();
+  SpecialPowers.forceShrinkingGC();
+  SpecialPowers.forceCC();
 }
