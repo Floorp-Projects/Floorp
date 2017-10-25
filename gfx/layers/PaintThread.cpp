@@ -21,6 +21,30 @@ namespace layers {
 
 using namespace gfx;
 
+bool
+CapturedBufferState::Copy::CopyBuffer()
+{
+  if (mSource->Lock(OpenMode::OPEN_READ_ONLY)) {
+    mDestination->UpdateDestinationFrom(*mSource, mBounds);
+    mSource->Unlock();
+    return true;
+  }
+  return false;
+}
+
+bool
+CapturedBufferState::Unrotate::UnrotateBuffer()
+{
+  return mBuffer->UnrotateBufferTo(mParameters);
+}
+
+bool
+CapturedBufferState::PrepareBuffer()
+{
+  return (!mBufferCopy || mBufferCopy->CopyBuffer()) &&
+         (!mBufferUnrotate || mBufferUnrotate->UnrotateBuffer());
+}
+
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
 StaticRefPtr<nsIThread> PaintThread::sThread;
 PlatformThreadId PaintThread::sThreadId;

@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for TextureDumpMode
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/layers/PaintThread.h"  // for CapturedBufferState
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "ReadbackProcessor.h"          // For ReadbackProcessor::Update
@@ -40,6 +41,9 @@ namespace layers {
 
 class PaintedLayer;
 class CapturedPaintState;
+class CapturedBufferState;
+
+typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState*);
 
 /**
  * A compositable client for PaintedLayers. These are different to Image/Canvas
@@ -216,7 +220,8 @@ protected:
    * aRegionToDraw is the region which is guaranteed to be overwritten when
    * drawing the next frame.
    */
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
+                             CapturedBufferState* aState) {}
 
   /**
    * Create a new rotated buffer for the specified content type, buffer rect,
@@ -361,7 +366,8 @@ public:
 
   virtual RefPtr<RotatedBuffer> GetFrontBuffer() const override;
 
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw,
+                             CapturedBufferState* aState) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {
