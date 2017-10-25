@@ -52,7 +52,7 @@ TEST(DeadlockDetectorScalability, DISABLED_OneLockNDeps)
     mozilla::Mutex* lock = new mozilla::Mutex("deadlockDetector.scalability.t2.master");
     mozilla::Mutex** locks = new mozilla::Mutex*[N];
     if (!locks)
-        NS_RUNTIMEABORT("couldn't allocate lock array");
+        MOZ_CRASH("couldn't allocate lock array");
 
     for (int i = 0; i < N; ++i)
         locks[i] =
@@ -94,7 +94,7 @@ TEST(DeadlockDetectorScalability, MaxDepsNsq)
 
     mozilla::Mutex** locks = new mozilla::Mutex*[N];
     if (!locks)
-        NS_RUNTIMEABORT("couldn't allocate lock array");
+        MOZ_CRASH("couldn't allocate lock array");
 
     for (int i = 0; i < N; ++i)
         locks[i] = new mozilla::Mutex("deadlockDetector.scalability.t3");

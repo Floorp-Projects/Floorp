@@ -3121,8 +3121,7 @@ ContentChild::RecvSetAudioSessionData(const nsID& aId,
     mozilla::widget::StartAudioSession();
     return IPC_OK();
 #else
-    NS_RUNTIMEABORT("Not Reached!");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("Not Reached!");
 #endif
 }
 
@@ -3580,8 +3579,7 @@ ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
   CodeCoverageHandler::Init(aHandle);
   return IPC_OK();
 #else
-  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
-  return IPC_FAIL_NO_REASON(this);
+  MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
 #endif
 }
 
@@ -3592,8 +3590,7 @@ ContentChild::RecvDumpCodeCoverageCounters()
   CodeCoverageHandler::DumpCounters(0);
   return IPC_OK();
 #else
-  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
-  return IPC_FAIL_NO_REASON(this);
+  MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
 #endif
 }
 
@@ -3604,8 +3601,7 @@ ContentChild::RecvResetCodeCoverageCounters()
   CodeCoverageHandler::ResetCounters(0);
   return IPC_OK();
 #else
-  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
-  return IPC_FAIL_NO_REASON(this);
+  MOZ_CRASH("Shouldn't receive this message in non-code coverage builds!");
 #endif
 }
 

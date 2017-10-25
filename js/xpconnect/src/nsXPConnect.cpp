@@ -73,7 +73,7 @@ nsXPConnect::nsXPConnect()
 
     XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext(nullptr);
     if (!xpccx) {
-        NS_RUNTIMEABORT("Couldn't create XPCJSContext.");
+        MOZ_CRASH("Couldn't create XPCJSContext.");
     }
     gPrimaryContext = xpccx;
     mRuntime = xpccx->Runtime();

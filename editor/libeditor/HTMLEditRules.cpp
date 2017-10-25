@@ -5188,7 +5188,7 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
           NS_ENSURE_SUCCESS(rv, rv);
         }
       } else if (aAction != nsIEditor::eNone) {
-        NS_RUNTIMEABORT("CheckForEmptyBlock doesn't support this action yet");
+        MOZ_CRASH("CheckForEmptyBlock doesn't support this action yet");
       }
     }
     NS_ENSURE_STATE(htmlEditor);
