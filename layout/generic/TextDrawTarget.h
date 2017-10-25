@@ -138,18 +138,6 @@ public:
   }
 
   void
-  PushClipRect(const Rect &aRect) override {
-    auto rect = mSc.ToRelativeLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
-    auto clipId = mBuilder.DefineClip(rect);
-    mBuilder.PushClip(clipId);
-  }
-
-  void
-  PopClip() override {
-    mBuilder.PopClip();
-  }
-
-  void
   AppendShadow(const wr::Shadow& aShadow)
   {
     mBuilder.PushShadow(mBoundsRect, mClipRect, mBackfaceVisible, aShadow);
@@ -173,20 +161,6 @@ public:
     mBuilder.PushRect(rect, mClipRect, mBackfaceVisible, color);
   }
 
-
-  // This function is basically designed to slide into the decoration drawing
-  // code of nsCSSRendering with minimum disruption, to minimize the
-  // chances of implementation drift. As such, it mostly looks like a call
-  // to a skia-style StrokeLine method: two end-points, with a thickness
-  // and style. Notably the end-points are *centered* in the block direction,
-  // even though webrender wants a rect-like representation, where the points
-  // are on corners.
-  //
-  // So we mangle the format here in a single centralized place, where neither
-  // webrender nor nsCSSRendering has to care about this mismatch.
-  //
-  // NOTE: we assume the points are axis-aligned, and aStart should be used
-  // as the top-left corner of the rect.
   void
   AppendDecoration(const Point& aStart,
                    const Point& aEnd,
@@ -195,20 +169,22 @@ public:
                    const Color& aColor,
                    const uint8_t aStyle)
   {
-    auto pos = LayoutDevicePoint::FromUnknownPoint(aStart);
-    LayoutDeviceSize size;
-
-    if (aVertical) {
-      pos.x -= aThickness / 2; // adjust from center to corner
-      size = LayoutDeviceSize(aThickness, aEnd.y - aStart.y);
-    } else {
-      pos.y -= aThickness / 2; // adjust from center to corner
-      size = LayoutDeviceSize(aEnd.x - aStart.x, aThickness);
-    }
-
     wr::Line decoration;
-    decoration.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(pos, size));
-    decoration.wavyLineThickness = 0; // dummy value, unused
+
+    // This function is basically designed to slide into the decoration drawing
+    // code of nsCSSRendering with minimum disruption, to minimize the
+    // chances of implementation drift. As such, it mostly looks like a call
+    // to a skia-style StrokeLine method: two end-points, with a thickness
+    // and style. Notably the end-points are *centered* in the block direction,
+    // even though webrender wants a rect-like representation, where the points
+    // are on corners.
+    //
+    // So we mangle the format here in a single centralized place, where neither
+    // webrender nor nsCSSRendering has to care about this mismatch.
+    decoration.baseline = (aVertical ? aStart.x : aStart.y) - aThickness / 2;
+    decoration.start = aVertical ? aStart.y : aStart.x;
+    decoration.end = aVertical ? aEnd.y : aEnd.x;
+    decoration.width = aThickness;
     decoration.color = wr::ToColorF(aColor);
     decoration.orientation = aVertical
       ? wr::LineOrientation::Vertical
@@ -224,36 +200,14 @@ public:
       case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
         decoration.style = wr::LineStyle::Dashed;
         break;
-      // Wavy lines should go through AppendWavyDecoration
       case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
+        decoration.style = wr::LineStyle::Wavy;
+        break;
       // Double lines should be lowered to two solid lines
       case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
       default:
         MOZ_CRASH("TextDrawTarget received unsupported line style");
     }
-
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, decoration);
-  }
-
-  // Seperated out from AppendDecoration because Wavy Lines are completely
-  // different, and trying to merge the concept is more of a mess than it's
-  // worth.
-  void
-  AppendWavyDecoration(const Rect& aBounds,
-                       const float aThickness,
-                       const bool aVertical,
-                       const Color& aColor)
-  {
-    wr::Line decoration;
-
-    decoration.bounds = mSc.ToRelativeLayoutRect(
-      LayoutDeviceRect::FromUnknownRect(aBounds));
-    decoration.wavyLineThickness = aThickness;
-    decoration.color = wr::ToColorF(aColor);
-    decoration.orientation = aVertical
-      ? wr::LineOrientation::Vertical
-      : wr::LineOrientation::Horizontal;
-    decoration.style = wr::LineStyle::Wavy;
 
     mBuilder.PushLine(mClipRect, mBackfaceVisible, decoration);
   }
@@ -418,14 +372,20 @@ public:
   }
 
   void PushClip(const Path *aPath) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    // Fine to pretend we do this
+  }
+
+  void PushClipRect(const Rect &aRect) override {
+    // Fine to pretend we do this
   }
 
   void PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount) override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
   }
 
-
+  void PopClip() override {
+    // Fine to pretend we do this
+  }
 
   void PushLayer(bool aOpaque, Float aOpacity,
                          SourceSurface* aMask,

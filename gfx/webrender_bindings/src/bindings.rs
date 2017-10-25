@@ -1525,28 +1525,18 @@ pub extern "C" fn wr_dp_pop_all_shadows(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_line(state: &mut WrState,
-                                  clip: &LayoutRect,
+                                  clip: LayoutRect,
                                   is_backface_visible: bool,
-                                  bounds: &LayoutRect,
-                                  _wavy_line_thickness: f32,
+                                  baseline: f32,
+                                  start: f32,
+                                  end: f32,
                                   orientation: LineOrientation,
-                                  color: &ColorF,
+                                  width: f32,
+                                  color: ColorF,
                                   style: LineStyle) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    // TODO: remove this once WR is updated to just check the bounds.
-    let (baseline, start, end, width) = match orientation {
-        LineOrientation::Horizontal => (bounds.origin.y,
-                                        bounds.origin.x,
-                                        bounds.origin.x + bounds.size.width,
-                                        bounds.size.height),
-        LineOrientation::Vertical => (bounds.origin.x,
-                                      bounds.origin.y,
-                                      bounds.origin.y + bounds.size.height,
-                                      bounds.size.width),
-    };
-
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(*bounds, (*clip).into());
+    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(LayoutRect::zero(), clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     state.frame_builder
          .dl_builder
@@ -1556,7 +1546,7 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                     end,
                     orientation,
                     width,
-                    *color,
+                    color,
                     style);
 
 }
