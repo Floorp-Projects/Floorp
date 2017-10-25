@@ -76,15 +76,10 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .instance(1));
         SearchEngineSelection.click();
         TestHelper.settingsHeading.waitUntilGone(waitingTime);
-        UiObject SearchEngineList = new UiScrollable(new UiSelector()
-                .resourceId("android:id/select_dialog_listview").enabled(true));
-        UiObject FirstSelection = SearchEngineList.getChild(new UiSelector()
-                .className("android.widget.LinearLayout")
-                .instance(0));
         Screengrab.screenshot("SearchEngine_Selection");
 
         /* scroll down */
-        FirstSelection.click();
+        TestHelper.pressBackKey();
         assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
         settingsView.scrollToEnd(4);
