@@ -373,11 +373,6 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   }
 
   double displayDensity = pctx->CSSPixelsToDevPixels(1.0f);
-  double overrideDPPX = pctx->GetOverrideDPPX();
-
-  if (overrideDPPX > 0) {
-    displayDensity = overrideDPPX;
-  }
 
   // Per spec, "In a UA-specific manner, choose one image source"
   // - For now, select the lowest density greater than displayDensity, otherwise
