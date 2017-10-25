@@ -2,6 +2,7 @@ load 448064.xhtml # This test instantiates a11y, so be careful about adding test
 load 471493.xul
 asserts-if(!browserIsRemote,2) load 884202.html
 load 893515.html
+load 1072792.xhtml
 
 # last_test_to_unload_testsuite.xul MUST be the last test in the list because it
 # is responsible for shutting down accessibility service affecting later tests.
