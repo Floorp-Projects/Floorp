@@ -1585,6 +1585,8 @@ static AntialiasMode Get2DAAMode(gfxFont::AntialiasOption aAAOption) {
 
 class GlyphBufferAzure
 {
+#define AUTO_BUFFER_SIZE (2048/sizeof(Glyph))
+
     typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 public:
@@ -1592,40 +1594,66 @@ public:
                      const FontDrawParams&    aFontParams)
         : mRunParams(aRunParams)
         , mFontParams(aFontParams)
+        , mBuffer(*mAutoBuffer.addr())
+        , mBufSize(AUTO_BUFFER_SIZE)
+        , mCapacity(0)
         , mNumGlyphs(0)
     {
     }
 
     ~GlyphBufferAzure()
     {
-        Flush(true); // flush any remaining buffered glyphs
+        if (mNumGlyphs > 0) {
+            Flush();
+        }
+
+        if (mBuffer != *mAutoBuffer.addr()) {
+            free(mBuffer);
+        }
+    }
+
+    // Ensure the buffer has enough space for aGlyphCount glyphs to be added.
+    // This MUST be called before OutputGlyph is used to actually store glyph
+    // records in the buffer. It may be called repeated to add further capacity
+    // in case we don't know up-front exactly what will be needed.
+    void AddCapacity(uint32_t aGlyphCount)
+    {
+        // See if the required capacity fits within the already-allocated space
+        if (mCapacity + aGlyphCount <= mBufSize) {
+            mCapacity += aGlyphCount;
+            return;
+        }
+        // We need to grow the buffer: determine a new size, allocate, and
+        // copy the existing data over if we didn't use realloc (which would
+        // do it automatically).
+        mBufSize = std::max(mCapacity + aGlyphCount, mBufSize * 2);
+        if (mBuffer == *mAutoBuffer.addr()) {
+            // switching from autobuffer to malloc, so we need to copy
+            mBuffer =
+                reinterpret_cast<Glyph*>(moz_xmalloc(mBufSize * sizeof(Glyph)));
+            std::memcpy(mBuffer, *mAutoBuffer.addr(),
+                        mNumGlyphs * sizeof(Glyph));
+        } else {
+            mBuffer =
+                reinterpret_cast<Glyph*>(moz_xrealloc(mBuffer,
+                                                      mBufSize * sizeof(Glyph)));
+        }
+        mCapacity += aGlyphCount;
     }
 
     void OutputGlyph(uint32_t aGlyphID, const gfx::Point& aPt)
     {
-        Glyph *glyph = AppendGlyph();
+        // Check that AddCapacity has been used appropriately!
+        MOZ_ASSERT(mNumGlyphs < mCapacity);
+        Glyph* glyph = mBuffer + mNumGlyphs++;
         glyph->mIndex = aGlyphID;
         glyph->mPosition = mFontParams.matInv.TransformPoint(aPt);
-        Flush(false); // this will flush only if the buffer is full
     }
 
     const TextRunDrawParams& mRunParams;
     const FontDrawParams& mFontParams;
 
 private:
-#define GLYPH_BUFFER_SIZE (2048/sizeof(Glyph))
-
-    Glyph* GlyphBuffer()
-    {
-        return *mGlyphBuffer.addr();
-    }
-
-
-    Glyph *AppendGlyph()
-    {
-        return &GlyphBuffer()[mNumGlyphs++];
-    }
-
     static DrawMode
     GetStrokeMode(DrawMode aMode)
     {
@@ -1633,24 +1661,15 @@ private:
                         DrawMode::GLYPH_STROKE_UNDERNEATH);
     }
 
-    // Render the buffered glyphs to the draw target and clear the buffer.
-    // This actually flushes the glyphs only if the buffer is full, or if the
-    // aFinish parameter is true; otherwise it simply returns.
-    void Flush(bool aFinish)
+    // Render the buffered glyphs to the draw target.
+    void Flush()
     {
-        // Ensure there's enough room for a glyph to be added to the buffer
-        if ((!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE) || !mNumGlyphs) {
-            return;
-        }
-
         if (mRunParams.isRTL) {
-            Glyph *begin = &GlyphBuffer()[0];
-            Glyph *end = &GlyphBuffer()[mNumGlyphs];
-            std::reverse(begin, end);
+            std::reverse(mBuffer, mBuffer + mNumGlyphs);
         }
 
         gfx::GlyphBuffer buf;
-        buf.mGlyphs = GlyphBuffer();
+        buf.mGlyphs = mBuffer;
         buf.mNumGlyphs = mNumGlyphs;
 
         const gfxContext::AzureState &state = mRunParams.context->CurrentState();
@@ -1779,8 +1798,6 @@ private:
             mFontParams.scaledFont->CopyGlyphsToBuilder(
                 buf, mRunParams.context->mPathBuilder, &mat);
         }
-
-        mNumGlyphs = 0;
     }
 
     void FlushStroke(gfx::GlyphBuffer& aBuf, const Pattern& aPattern)
@@ -1792,12 +1809,52 @@ private:
                                     mFontParams.renderingOptions);
     }
 
+    // We use an "inline" buffer automatically allocated (on the stack) as part
+    // of the GlyphBufferAzure object to hold the glyphs in most cases, falling
+    // back to a separately-allocated heap buffer if the count of buffered
+    // glyphs gets too big.
+    //
+    // This is basically a rudimentary AutoTArray; so why not use AutoTArray
+    // itself?
+    //
+    // If we used an AutoTArray, we'd want to avoid using SetLength or
+    // AppendElements to allocate the space we actually need, because those
+    // methods would default-construct the new elements.
+    //
+    // Could we use SetCapacity to reserve the necessary buffer space without
+    // default-constructing all the Glyph records? No, because of a failure
+    // that could occur when we need to grow the buffer, which happens when we
+    // encounter a DetailedGlyph in the textrun that refers to a sequence of
+    // several real glyphs. At that point, we need to add some extra capacity
+    // to the buffer we initially allocated based on the length of the textrun
+    // range we're rendering.
+    //
+    // This buffer growth would work fine as long as it still fits within the
+    // array's inline buffer (we just use a bit more of it), or if the buffer
+    // was already heap-allocated (in which case AutoTArray will use realloc(),
+    // preserving its contents). But a problem will arise when the initial
+    // capacity we allocated (based on the length of the run) fits within the
+    // array's inline buffer, but subsequently we need to extend the buffer
+    // beyond the inline buffer size, so we reallocate to the heap. Because we
+    // haven't "officially" filled the array with SetLength or AppendElements,
+    // its mLength is still zero; as far as it's concerned the buffer is just
+    // uninitialized space, and when it switches to use a malloc'd buffer it
+    // won't copy the existing contents.
+
     // Allocate space for a buffer of Glyph records, without initializing them.
-    AlignedStorage2<Glyph[GLYPH_BUFFER_SIZE]> mGlyphBuffer;
+    AlignedStorage2<Glyph[AUTO_BUFFER_SIZE]> mAutoBuffer;
 
-    unsigned int mNumGlyphs;
+    // Pointer to the buffer we're currently using -- initially mAutoBuffer,
+    // but may be changed to a malloc'd buffer, in which case that buffer must
+    // be free'd on destruction.
+    Glyph* mBuffer;
 
-#undef GLYPH_BUFFER_SIZE
+    uint32_t mBufSize;   // size of allocated buffer; capacity can grow to
+                         // this before reallocation is needed
+    uint32_t mCapacity;  // amount of buffer size reserved
+    uint32_t mNumGlyphs; // number of glyphs actually present in the buffer
+
+#undef AUTO_BUFFER_SIZE
 };
 
 // Bug 674909. When synthetic bolding text by drawing twice, need to
@@ -1847,6 +1904,10 @@ gfxFont::DrawGlyphs(const gfxShapedText*     aShapedText,
         inlineCoord += aBuffer.mRunParams.isRTL ? - space : space;
     }
 
+    // Allocate buffer space for the run, assuming all simple glyphs.
+    uint32_t capacityMult = 1 + aBuffer.mFontParams.extraStrikes;
+    aBuffer.AddCapacity(capacityMult * aCount);
+
     bool emittedGlyphs = false;
 
     for (uint32_t i = 0; i < aCount; ++i, ++glyphData) {
@@ -1863,6 +1924,8 @@ gfxFont::DrawGlyphs(const gfxShapedText*     aShapedText,
         } else {
             uint32_t glyphCount = glyphData->GetGlyphCount();
             if (glyphCount > 0) {
+                // Add extra buffer capacity to allow for multiple-glyph entry.
+                aBuffer.AddCapacity(capacityMult * (glyphCount - 1));
                 const gfxShapedText::DetailedGlyph *details =
                     aShapedText->GetDetailedGlyphs(aOffset + i);
                 MOZ_ASSERT(details, "missing DetailedGlyph!");
