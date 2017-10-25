@@ -5,12 +5,11 @@
 "use strict";
 
 const {
-  addons,
-  createClass, createFactory,
+  createFactory,
   DOM: dom,
   PropTypes,
+  PureComponent,
 } = require("devtools/client/shared/vendor/react");
-
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const ObjectTreeView = createFactory(require("./ObjectTreeView"));
@@ -24,15 +23,13 @@ const ObjectTreeView = createFactory(require("./ObjectTreeView"));
  *
  * TODO: implement the ExtensionPage viewMode.
  */
-const ExtensionSidebar = createClass({
-  displayName: "ExtensionSidebar",
-
-  propTypes: {
-    id: PropTypes.string.isRequired,
-    extensionsSidebar: PropTypes.object.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class ExtensionSidebar extends PureComponent {
+  static get propTypes() {
+    return {
+      id: PropTypes.string.isRequired,
+      extensionsSidebar: PropTypes.object.isRequired,
+    };
+  }
 
   render() {
     const { id, extensionsSidebar } = this.props;
@@ -58,6 +55,6 @@ const ExtensionSidebar = createClass({
 
     return dom.div({ id, className }, sidebarContentEl);
   }
-});
+}
 
 module.exports = connect(state => state)(ExtensionSidebar);

@@ -112,7 +112,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
     // to the common AGR (of both the existing item and the invalidated
     // frame) and determine if they can ever intersect.
     if (aAGR && i->GetAnimatedGeometryRoot()->GetAsyncAGR() != aAGR) {
-      mBuilder.MarkFrameForDisplayIfVisible(f);
+      mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
     }
 
     // TODO: This is here because we sometimes reuse the previous display list
@@ -632,7 +632,7 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
         // we need to keep bubbling up to the next stacking context.
         if (currentFrame != mBuilder.RootReferenceFrame() &&
             currentFrame->HasDisplayItems()) {
-          mBuilder.MarkFrameForDisplayIfVisible(currentFrame);
+          mBuilder.MarkFrameForDisplayIfVisible(currentFrame, mBuilder.RootReferenceFrame());
 
           // Store the stacking context relative dirty area such
           // that display list building will pick it up when it

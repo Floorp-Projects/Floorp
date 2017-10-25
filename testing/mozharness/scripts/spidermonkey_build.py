@@ -151,7 +151,8 @@ class SpidermonkeyBuild(MockMixin,
         if self.buildbot_config:
             bb_props = [('mock_target', 'mock_target', None),
                         ('hgurl', 'hgurl', None),
-                        ('clobberer_url', 'clobberer_url', 'https://api.pub.build.mozilla.org/clobberer/lastclobber'),
+                        ('clobberer_url', 'clobberer_url',
+                         'https://api.pub.build.mozilla.org/clobberer/lastclobber'),
                         ('force_clobber', 'force_clobber', None),
                         ('branch', 'blob_upload_branch', None),
                         ]
@@ -166,7 +167,7 @@ class SpidermonkeyBuild(MockMixin,
 
         dirs = self.query_abs_dirs()
         replacements = self.config['env_replacements'].copy()
-        for k,v in replacements.items():
+        for k, v in replacements.items():
             replacements[k] = v % dirs
 
         self.env = self.query_env(replace_dict=replacements,
@@ -236,14 +237,16 @@ class SpidermonkeyBuild(MockMixin,
 
     def query_compiler_manifest(self):
         dirs = self.query_abs_dirs()
-        manifest = os.path.join(dirs['abs_work_dir'], dirs['analysis_scriptdir'], self.config['compiler_manifest'])
+        manifest = os.path.join(dirs['abs_work_dir'], dirs['analysis_scriptdir'],
+                                self.config['compiler_manifest'])
         if os.path.exists(manifest):
             return manifest
         return os.path.join(dirs['abs_work_dir'], self.config['compiler_manifest'])
 
     def query_sixgill_manifest(self):
         dirs = self.query_abs_dirs()
-        manifest = os.path.join(dirs['abs_work_dir'], dirs['analysis_scriptdir'], self.config['sixgill_manifest'])
+        manifest = os.path.join(dirs['abs_work_dir'], dirs['analysis_scriptdir'],
+                                self.config['sixgill_manifest'])
         if os.path.exists(manifest):
             return manifest
         return os.path.join(dirs['abs_work_dir'], self.config['sixgill_manifest'])

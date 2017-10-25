@@ -4039,10 +4039,6 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
     // Off-thread parsing is inhibited after the start of GC which prevents
     // races between creating atoms during parsing and sweeping atoms on the
     // active thread.
-    //
-    // Otherwise, we always schedule a GC in the atoms zone so that atoms which
-    // the other collected zones are using are marked, and we can update the
-    // set of atoms in use by the other collected zones at the end of the GC.
     if (zone->isAtomsZone())
         return TlsContext.get()->canCollectAtoms();
 
@@ -5237,9 +5233,11 @@ UpdateAtomsBitmap(JSRuntime* runtime)
 
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
-    runtime->unsafeSymbolRegistry().sweep();
-    for (CompartmentsIter comp(runtime, SkipAtoms); !comp.done(); comp.next())
-        comp->sweepVarNames();
+    if (runtime->gc.shouldSweepAtomsZone()) {
+        runtime->unsafeSymbolRegistry().sweep();
+        for (CompartmentsIter comp(runtime, SkipAtoms); !comp.done(); comp.next())
+            comp->sweepVarNames();
+    }
 }
 
 static void
@@ -5495,7 +5493,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 
     AutoSCC scc(stats(), sweepGroupIndex);
 
-    bool sweepingAtoms = false;
+    bool groupIncludesAtomsZone = false;
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         /* Set the GC state to sweeping. */
         zone->changeGCState(Zone::Mark, Zone::Sweep);
@@ -5504,7 +5502,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->arenas.purge();
 
         if (zone->isAtomsZone())
-            sweepingAtoms = true;
+            groupIncludesAtomsZone = true;
 
 #ifdef DEBUG
         zone->gcLastSweepGroupIndex = sweepGroupIndex;
@@ -5536,7 +5534,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
         AutoLockHelperThreadState lock;
 
         Maybe<AutoRunParallelTask> updateAtomsBitmap;
-        if (sweepingAtoms)
+        if (groupIncludesAtomsZone)
             updateAtomsBitmap.emplace(rt, UpdateAtomsBitmap, PhaseKind::UPDATE_ATOMS_BITMAP, lock);
 
         AutoPhase ap(stats(), PhaseKind::SWEEP_COMPARTMENTS);
@@ -5565,13 +5563,15 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
             joinTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
     }
 
-    if (sweepingAtoms)
+    if (groupIncludesAtomsZone && shouldSweepAtomsZone())
         startSweepingAtomsTable();
 
     // Queue all GC things in all zones for sweeping, either on the foreground
     // or on the background thread.
 
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->isAtomsZone() && !shouldSweepAtomsZone())
+            continue;
 
         zone->arenas.queueForForegroundSweep(fop, ForegroundObjectFinalizePhase);
         zone->arenas.queueForForegroundSweep(fop, ForegroundNonObjectFinalizePhase);
@@ -5654,6 +5654,9 @@ GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcce
      */
 
     MOZ_ASSERT(!abortSweepAfterCurrentGroup);
+
+    MOZ_ASSERT(maybeAtomsToSweep.ref().isNothing());
+    MOZ_ASSERT(!rt->atomsAddedWhileSweeping());
 
     AutoSetThreadIsSweeping threadIsSweeping;
 
@@ -5829,7 +5832,7 @@ GCRuntime::startSweepingAtomsTable()
 IncrementalProgress
 GCRuntime::sweepAtomsTable(FreeOp* fop, SliceBudget& budget)
 {
-    if (!atomsZone->isGCSweeping())
+    if (!atomsZone->isGCSweeping() || !shouldSweepAtomsZone())
         return Finished;
 
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_ATOMS_TABLE);
@@ -6475,6 +6478,9 @@ GCRuntime::endSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& loc
 #endif
 
     AssertNoWrappersInGrayList(rt);
+
+    MOZ_ASSERT(maybeAtomsToSweep.ref().isNothing());
+    MOZ_ASSERT(!rt->atomsAddedWhileSweeping());
 }
 
 void
@@ -7237,6 +7243,15 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 {
     // Note that GC callbacks are allowed to re-enter GC.
     AutoCallGCCallbacks callCallbacks(*this);
+
+    // We always schedule a GC in the atoms zone so that atoms which the other
+    // collected zones are using are marked, and we can update the set of atoms
+    // in use by the other collected zones at the end of the GC.  However we
+    // only collect the atoms table if the atoms zone was actually scheduled.
+    if (!isIncrementalGCInProgress()) {
+        shouldSweepAtomsZone_ = atomsZone->isGCScheduled();
+        atomsZone->scheduleGC();
+    }
 
     gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), invocationKind, budget, reason);
 

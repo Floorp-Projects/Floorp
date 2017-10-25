@@ -7,14 +7,13 @@
 
 import copy
 import os
-import re
 import sys
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import BaseErrorList, TarErrorList
-from mozharness.base.log import INFO, ERROR, WARNING
+from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -34,7 +33,8 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 #       builds is turned off, Bug 1209180.
 
 
-class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMixin, CodeCoverageMixin):
+class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMixin,
+                     CodeCoverageMixin):
     config_options = [[
         ["--application"],
         {"action": "store",
@@ -54,7 +54,8 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         {"action": "store",
          "dest": "marionette_address",
          "default": None,
-         "help": "The host:port of the Marionette server running inside Gecko.  Unused for emulator testing",
+         "help": "The host:port of the Marionette server running inside Gecko. "
+                 "Unused for emulator testing",
          }
     ], [
         ["--emulator"],
@@ -98,7 +99,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
          "dest": "headless",
          "default": False,
          "help": "Run tests in headless mode.",
-        }
+         }
     ], [
        ["--allow-software-gl-layers"],
        {"action": "store_true",
@@ -154,7 +155,8 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
     def _pre_config_lock(self, rw_config):
         super(MarionetteTest, self)._pre_config_lock(rw_config)
         if not self.config.get('emulator') and not self.config.get('marionette_address'):
-                self.fatal("You need to specify a --marionette-address for non-emulator tests! (Try --marionette-address localhost:2828 )")
+                self.fatal("You need to specify a --marionette-address for non-emulator tests! "
+                           "(Try --marionette-address localhost:2828 )")
 
     def query_abs_dirs(self):
         if self.abs_dirs:

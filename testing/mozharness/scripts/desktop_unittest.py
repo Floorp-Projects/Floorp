@@ -2,6 +2,7 @@
 # ***** BEGIN LICENSE BLOCK *****
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
+
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 """desktop_unittest.py
@@ -24,7 +25,7 @@ from datetime import datetime, timedelta
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import BaseErrorList
-from mozharness.base.log import INFO, ERROR
+from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
@@ -39,13 +40,15 @@ from mozharness.mozilla.testing.codecoverage import (
 )
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
-SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
+SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell',
+                    'mozbase', 'mozmill']
 SUITE_DEFAULT_E10S = ['mochitest', 'reftest']
 SUITE_NO_E10S = ['xpcshell']
 
 
 # DesktopUnittest {{{1
-class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):
+class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin,
+                      CodeCoverageMixin):
     config_options = [
         [['--mochitest-suite', ], {
             "action": "extend",
@@ -151,7 +154,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "action": "store_true",
             "dest": "allow_software_gl_layers",
             "default": False,
-            "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}
+            "help": "Permits a software GL implementation (such as LLVMPipe) to use "
+                    "the GL compositor."}
          ],
         [["--single-stylo-traversal"], {
             "action": "store_true",
@@ -281,8 +285,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         dirs['abs_xpcshell_dir'] = os.path.join(dirs['abs_test_install_dir'], "xpcshell")
         dirs['abs_cppunittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "cppunittest")
         dirs['abs_gtest_dir'] = os.path.join(dirs['abs_test_install_dir'], "gtest")
-        dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
-        dirs['abs_jittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "jit-test", "jit-test")
+        dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+                                                   'blobber_upload_dir')
+        dirs['abs_jittest_dir'] = os.path.join(dirs['abs_test_install_dir'],
+                                               "jit-test", "jit-test")
         dirs['abs_mozbase_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozbase")
         dirs['abs_mozmill_dir'] = os.path.join(dirs['abs_test_install_dir'], "mozmill")
 
@@ -335,10 +341,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.register_virtualenv_module(name='mock')
         self.register_virtualenv_module(name='simplejson')
 
-        requirements_files = [
-                os.path.join(dirs['abs_test_install_dir'],
-                    'config',
-                    'marionette_requirements.txt')]
+        requirements_files = [os.path.join(dirs['abs_test_install_dir'],
+                              'config', 'marionette_requirements.txt')]
 
         if self._query_specified_suites('mochitest') is not None:
             # mochitest is the only thing that needs this
@@ -391,7 +395,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             str_format_values = {
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
-                'abs_work_dir' : dirs['abs_work_dir'],
+                'abs_work_dir': dirs['abs_work_dir'],
                 'abs_app_dir': abs_app_dir,
                 'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
@@ -419,11 +423,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 if suite_category == "mochitest":
                     base_cmd.append('--bisect-chunk=default')
                 else:
-                    self.warning("--no-random does not currently work with suites other than mochitest.")
-
+                    self.warning("--no-random does not currently work with suites other than "
+                                 "mochitest.")
 
             if c['headless']:
-                base_cmd.append('--headless');
+                base_cmd.append('--headless')
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')
@@ -514,7 +518,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             return False
         if suite_category not in unstructured_flavors:
             return True
-        if not unstructured_flavors.get(suite_category) or flavor in unstructured_flavors.get(suite_category):
+        if not unstructured_flavors.get(suite_category) or \
+                flavor in unstructured_flavors.get(suite_category):
             return False
         return True
 
@@ -557,9 +562,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         if rejected:
             self.buildbot_status(TBPL_EXCEPTION)
             self.fatal("There are specified suites that are incompatible with "
-                      "--artifact try syntax flag: {}".format(', '.join(rejected)),
+                       "--artifact try syntax flag: {}".format(', '.join(rejected)),
                        exit_code=self.return_code)
-
 
     def download_and_extract(self):
         """
@@ -698,7 +702,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 env = {}
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
-                    if self.config.get('verify') == True:
+                    if self.config.get('verify') is True:
                         tests_list = []
                     else:
                         tests_list = suites[suite].get('tests', [])
@@ -773,7 +777,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         # Verification has run out of time. That is okay! Stop running
                         # tests so that a task timeout is not triggered, and so that
                         # (partial) results are made available in a timely manner.
-                        self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
+                        self.info("TinderboxPrint: Verification too long: Not all tests "
+                                  "were verified.<br/>")
                         # Signal verify time exceeded, to break out of suites and
                         # suite categories loops also.
                         return False

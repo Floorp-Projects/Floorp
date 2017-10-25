@@ -28,8 +28,8 @@ var configs = [{time: 0, delay: 1000},
                {time: 5000, delay: 8000}];
 
 function makeFontFaceDeclaration(family, config, display) {
-    url = 'resources/slow-ahem-loading.py?ms=' + config.delay;
-    return '@font-face { font-family: ' + family + '; src: url(' + url + '); font-display: ' + display + '; }';
+    url = '/fonts/Ahem.ttf?pipe=trickle(d' + config.delay / 1000 + ')';
+    return '@font-face { font-family: ' + family + '; src: url("' + url + '"); font-display: ' + display + '; }';
 }
 
 

@@ -4,8 +4,12 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
@@ -16,17 +20,14 @@ const Types = require("../types");
 
 const PREVIEW_UPDATE_DELAY = 150;
 
-const App = createClass({
-
-  displayName: "App",
-
-  propTypes: {
-    fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
-    onPreviewFonts: PropTypes.func.isRequired,
-    onShowAllFont: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class App extends PureComponent {
+  static get propTypes() {
+    return {
+      fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
+      onPreviewFonts: PropTypes.func.isRequired,
+      onShowAllFont: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     let {
@@ -71,6 +72,6 @@ const App = createClass({
         )
     );
   }
-});
+}
 
 module.exports = connect(state => state)(App);

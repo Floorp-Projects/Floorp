@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom()
+{
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.setLineDash([-1]);
+    ctx.isPointInStroke(0, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

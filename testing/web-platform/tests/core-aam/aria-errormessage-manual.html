@@ -64,7 +64,6 @@
                   "[test]"
                ]
             ],
-            "AXAPI" : [],
             "IAccessible2" : [
                [
                   "relation",
@@ -86,7 +85,7 @@
   </head>
   <body>
   <p>This test examines the ARIA properties for aria-errormessage.</p>
-    <div role='group' id='test' aria-errormessage='error'>content</div>
+    <div role='group' id='test' aria-errormessage='error' aria-invalid='true'>content</div>
   <div id='error'>hello world</div>
 
   <div id="manualMode"></div>
@@ -94,4 +93,3 @@
   <div id="ATTAmessages"></div>
   </body>
 </html>
-
