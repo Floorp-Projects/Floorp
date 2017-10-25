@@ -346,7 +346,9 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
   // Register this component to PBackground.
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    // Firefox is probably shutting down. Let's return a 'generic' error.
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   PBroadcastChannelChild* actor =

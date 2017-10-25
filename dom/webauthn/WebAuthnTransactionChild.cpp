@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WebAuthnTransactionChild.h"
-#include "mozilla/dom/WebAuthnManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,30 +18,33 @@ WebAuthnTransactionChild::WebAuthnTransactionChild()
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionChild::RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer)
+WebAuthnTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
+                                              nsTArray<uint8_t>&& aRegBuffer)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->FinishMakeCredential(aRegBuffer);
+  mgr->FinishMakeCredential(aTransactionId, aRegBuffer);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionChild::RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
+WebAuthnTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
+                                          nsTArray<uint8_t>&& aCredentialId,
                                           nsTArray<uint8_t>&& aBuffer)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->FinishGetAssertion(aCredentialId, aBuffer);
+  mgr->FinishGetAssertion(aTransactionId, aCredentialId, aBuffer);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionChild::RecvAbort(const nsresult& aError)
+WebAuthnTransactionChild::RecvAbort(const uint64_t& aTransactionId,
+                                    const nsresult& aError)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->RequestAborted(aError);
+  mgr->RequestAborted(aTransactionId, aError);
   return IPC_OK();
 }
 

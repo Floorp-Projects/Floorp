@@ -849,7 +849,7 @@ nsSimplePageSequenceFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                            visible - child->GetPosition(),
                            aBuilder->IsAtRootOfPseudoStackingContext());
         child->BuildDisplayListForStackingContext(aBuilder, &content);
-        aBuilder->ResetMarkedFramesForDisplayList();
+        aBuilder->ResetMarkedFramesForDisplayList(this);
       }
       child = child->GetNextSibling();
     }

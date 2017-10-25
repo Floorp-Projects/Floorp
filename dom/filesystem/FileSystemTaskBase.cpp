@@ -140,7 +140,8 @@ FileSystemTaskChildBase::Start()
   mozilla::ipc::PBackgroundChild* actor =
     mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    // We are probably shutting down.
+    return;
   }
 
   nsAutoString serialization;

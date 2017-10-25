@@ -311,7 +311,10 @@ MessagePort::Initialize(const nsID& aUUID,
   }
 
   if (mState == eStateEntangling) {
-    ConnectToPBackground();
+    if (!ConnectToPBackground()) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
   } else {
     MOZ_ASSERT(mState == eStateUnshippedEntangled);
   }
@@ -781,7 +784,11 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
     // Disconnect the entangled port and connect it to PBackground.
-    mUnshippedEntangledPort->ConnectToPBackground();
+    if (!mUnshippedEntangledPort->ConnectToPBackground()) {
+      // We are probably shutting down. We cannot proceed.
+      return;
+    }
+
     mUnshippedEntangledPort = nullptr;
 
     // In this case, we don't need to be connected to the PBackground service.
@@ -794,7 +801,10 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     }
 
     // Register this component to PBackground.
-    ConnectToPBackground();
+    if (!ConnectToPBackground()) {
+      // We are probably shutting down. We cannot proceed.
+      return;
+    }
 
     mState = eStateEntanglingForDisentangle;
     return;
@@ -827,7 +837,7 @@ MessagePort::Closed()
   UpdateMustKeepAlive();
 }
 
-void
+bool
 MessagePort::ConnectToPBackground()
 {
   mState = eStateEntangling;
@@ -835,18 +845,22 @@ MessagePort::ConnectToPBackground()
   mozilla::ipc::PBackgroundChild* actorChild =
     mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    return false;
   }
 
   PMessagePortChild* actor =
     actorChild->SendPMessagePortConstructor(mIdentifier->uuid(),
                                             mIdentifier->destinationUuid(),
                                             mIdentifier->sequenceId());
+  if (NS_WARN_IF(!actor)) {
+    return false;
+  }
 
   mActor = static_cast<MessagePortChild*>(actor);
   MOZ_ASSERT(mActor);
 
   mActor->SetPort(this);
+  return true;
 }
 
 void
