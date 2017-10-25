@@ -70,6 +70,12 @@ if test -z "$JS_STANDALONE"; then
 fi
 AC_SUBST(autoconfmk)
 
+if test -n "$JS_STANDALONE"; then
+  jsconfdefs=$_objdir/js/src/js-confdefs.h
+else
+  jsconfdefs=$_objdir/js-confdefs.h
+fi
+
 MOZ_ANDROID_NDK
 
 case "$target" in
@@ -484,12 +490,12 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
-    _DEFINES_CFLAGS='-include $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS="-include $jsconfdefs -DMOZILLA_CLIENT"
     _USE_CPP_INCLUDE_FLAG=1
 fi
 
 if test "$GNU_CXX"; then
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/js/src/js-confdefs.h'
+    _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $jsconfdefs"
     _USE_CPP_INCLUDE_FLAG=1
 fi
 
@@ -675,8 +681,8 @@ case "$target" in
         WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS="-FI $jsconfdefs -DMOZILLA_CLIENT"
+        _DEFINES_CXXFLAGS="-FI $jsconfdefs -DMOZILLA_CLIENT"
         CFLAGS="$CFLAGS -W3 -Gy -Zc:inline"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Zc:inline"
         if test "$CPU_ARCH" = "x86";then
