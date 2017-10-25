@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -127,6 +128,21 @@ public class WebAppActivity extends AppCompatActivity
 
         mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
                                             getIntent().getStringExtra(MANIFEST_PATH));
+
+        if (mManifest == null) {
+            Log.w(LOGTAG, "Cannot retrieve manifest, launching in Firefox");
+            try {
+                Intent intent = new Intent(this, BrowserApp.class);
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setData(getIntent().getData());
+                intent.setPackage(getPackageName());
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Failed to fall back to launching in Firefox");
+            }
+            finish();
+            return;
+        }
 
         updateFromManifest();
 
