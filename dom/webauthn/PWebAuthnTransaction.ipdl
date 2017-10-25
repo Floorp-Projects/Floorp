@@ -39,13 +39,13 @@ async protocol PWebAuthnTransaction {
   manager PBackground;
   parent:
     async __delete__();
-    async RequestRegister(WebAuthnTransactionInfo aTransactionInfo);
-    async RequestSign(WebAuthnTransactionInfo aTransactionInfo);
-    async RequestCancel();
+    async RequestRegister(uint64_t aTransactionId, WebAuthnTransactionInfo aTransactionInfo);
+    async RequestSign(uint64_t aTransactionId, WebAuthnTransactionInfo aTransactionInfo);
+    async RequestCancel(uint64_t aTransactionId);
   child:
-    async ConfirmRegister(uint8_t[] RegBuffer);
-    async ConfirmSign(uint8_t[] CredentialID, uint8_t[] ReplyBuffer);
-    async Abort(nsresult Error);
+    async ConfirmRegister(uint64_t aTransactionId, uint8_t[] RegBuffer);
+    async ConfirmSign(uint64_t aTransactionId, uint8_t[] CredentialID, uint8_t[] ReplyBuffer);
+    async Abort(uint64_t aTransactionId, nsresult Error);
 };
 
 }
