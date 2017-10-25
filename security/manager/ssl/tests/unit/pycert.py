@@ -728,7 +728,7 @@ class Certificate(object):
         while b64:
             output += '\n' + b64[:64]
             b64 = b64[64:]
-        output += '\n-----END CERTIFICATE-----'
+        output += '\n-----END CERTIFICATE-----\n'
         return output
 
 
