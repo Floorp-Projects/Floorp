@@ -373,7 +373,7 @@ already_AddRefed<nsIContent>
 HTMLEditor::FindSelectionRoot(nsINode* aNode)
 {
   NS_PRECONDITION(aNode->IsNodeOfType(nsINode::eDOCUMENT) ||
-                  aNode->IsNodeOfType(nsINode::eCONTENT),
+                  aNode->IsContent(),
                   "aNode must be content or document node");
 
   nsCOMPtr<nsIDocument> doc = aNode->GetUncomposedDoc();

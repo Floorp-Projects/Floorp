@@ -2208,7 +2208,7 @@ Element::ShouldBlur(nsIContent *aContent)
 bool
 Element::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eCONTENT);
+  return false;
 }
 
 /* static */

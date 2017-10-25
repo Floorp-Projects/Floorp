@@ -52,7 +52,7 @@ txXPathTreeWalker::moveToRoot()
     else {
         nsINode *rootNode = mPosition.Root();
 
-        NS_ASSERTION(rootNode->IsNodeOfType(nsINode::eCONTENT),
+        NS_ASSERTION(rootNode->IsContent(),
                      "root of subtree wasn't an nsIContent");
 
         mPosition.mIndex = txXPathNode::eContent;
@@ -77,7 +77,7 @@ txXPathTreeWalker::moveToElementById(const nsAString& aID)
         // We're in a disconnected subtree, search only that subtree.
         nsINode *rootNode = mPosition.Root();
 
-        NS_ASSERTION(rootNode->IsNodeOfType(nsINode::eCONTENT),
+        NS_ASSERTION(rootNode->IsContent(),
                      "root of subtree wasn't an nsIContent");
 
         content = nsContentUtils::MatchElementId(

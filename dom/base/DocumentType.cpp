@@ -93,7 +93,7 @@ DocumentType::IsNodeOfType(uint32_t aFlags) const
   // nsGenericDOMDataNode for convinience. Doctypes aren't really
   // data nodes (they have a null .nodeValue and don't implement
   // nsIDOMCharacterData)
-  return !(aFlags & ~eCONTENT);
+  return false;
 }
 
 const nsTextFragment*
