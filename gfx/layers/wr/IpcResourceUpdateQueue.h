@@ -83,7 +83,8 @@ public:
 
   bool UpdateBlobImage(wr::ImageKey aKey,
                        const ImageDescriptor& aDescriptor,
-                       Range<uint8_t> aBytes);
+                       Range<uint8_t> aBytes,
+                       ImageIntRect aDirtyRect);
 
   void UpdateExternalImage(ImageKey aKey,
                            const ImageDescriptor& aDescriptor,

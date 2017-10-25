@@ -640,7 +640,7 @@ def handle_suite_category(config, tests):
 
         script = test['mozharness']['script']
         category_arg = None
-        if suite == 'test-verification':
+        if suite == 'test-verify':
             pass
         elif script == 'android_emulator_unittest.py':
             category_arg = '--test-suite'

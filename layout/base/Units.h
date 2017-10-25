@@ -32,12 +32,14 @@ struct RenderTargetPixel;
 struct ScreenPixel;
 struct ParentLayerPixel;
 struct DesktopPixel;
+struct ImagePixel;
 
 template<> struct IsPixel<CSSPixel>          : TrueType {};
 template<> struct IsPixel<LayoutDevicePixel> : TrueType {};
 template<> struct IsPixel<LayerPixel>        : TrueType {};
 template<> struct IsPixel<CSSTransformedLayerPixel> : TrueType {};
 template<> struct IsPixel<RenderTargetPixel> : TrueType {};
+template<> struct IsPixel<ImagePixel> : TrueType {};
 template<> struct IsPixel<ScreenPixel>       : TrueType {};
 template<> struct IsPixel<ParentLayerPixel>  : TrueType {};
 template<> struct IsPixel<DesktopPixel>      : TrueType {};
@@ -99,6 +101,8 @@ typedef gfx::IntRectTyped<RenderTargetPixel> RenderTargetIntRect;
 typedef gfx::MarginTyped<RenderTargetPixel> RenderTargetMargin;
 typedef gfx::IntMarginTyped<RenderTargetPixel> RenderTargetIntMargin;
 typedef gfx::IntRegionTyped<RenderTargetPixel> RenderTargetIntRegion;
+
+typedef gfx::IntRectTyped<ImagePixel> ImageIntRect;
 
 typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;
 typedef gfx::IntCoordTyped<ScreenPixel> ScreenIntCoord;
@@ -406,6 +410,13 @@ struct CSSTransformedLayerPixel {
  * have RenderTargetPixel == LayerPixel.
  */
 struct RenderTargetPixel {
+};
+
+/*
+ * This unit represents one pixel in an image. Image space
+ * is largely independent of any other space.
+ */
+struct ImagePixel {
 };
 
 /*

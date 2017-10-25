@@ -172,6 +172,10 @@ class MochitestRunner(MozbuildObject):
                             ('.py', 'r', imp.PY_SOURCE))
         import runtestsremote
 
+        from mozrunner.devices.android_device import get_adb_path
+        if not kwargs['adbPath']:
+            kwargs['adbPath'] = get_adb_path(self)
+
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
@@ -455,8 +459,11 @@ class RobocopCommands(MachCommandBase):
                 sorted(list(test_paths)))))
             return 1
 
-        from mozrunner.devices.android_device import grant_runtime_permissions
+        from mozrunner.devices.android_device import grant_runtime_permissions, get_adb_path
         grant_runtime_permissions(self)
+
+        if not kwargs['adbPath']:
+            kwargs['adbPath'] = get_adb_path(self)
 
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)

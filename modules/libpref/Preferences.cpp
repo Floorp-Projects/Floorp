@@ -98,7 +98,8 @@ using namespace mozilla;
     if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
       nsPrintfCString msg(                                                     \
         "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
-        func, pref);                                                           \
+        func,                                                                  \
+        pref);                                                                 \
       NS_ERROR(msg.get());                                                     \
       return NS_ERROR_NOT_AVAILABLE;                                           \
     }                                                                          \
@@ -109,7 +110,8 @@ using namespace mozilla;
     if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                \
       nsPrintfCString msg(                                                     \
         "ENSURE_MAIN_PROCESS: called %s on %s in a non-main process",          \
-        func, pref);                                                           \
+        func,                                                                  \
+        pref);                                                                 \
       NS_WARNING(msg.get());                                                   \
       return NS_ERROR_NOT_AVAILABLE;                                           \
     }                                                                          \
@@ -243,11 +245,8 @@ private:
   {
     PREF_FLAG_LOCKED = 4,
     PREF_FLAG_USERSET = 8,
-    PREF_FLAG_CONFIG = 16,
-    PREF_FLAG_REMOTE = 32,
-    PREF_FLAG_LILOCAL = 64,
-    PREF_FLAG_HAS_DEFAULT = 128,
-    PREF_FLAG_STICKY_DEFAULT = 256,
+    PREF_FLAG_HAS_DEFAULT = 16,
+    PREF_FLAG_STICKY_DEFAULT = 32,
   };
   uint16_t mValue;
 };
@@ -2176,8 +2175,6 @@ public:
 
   int32_t GetRootLength() const { return mPrefRoot.Length(); }
 
-  nsresult RemoveObserverFromMap(const char* aDomain, nsISupports* aObserver);
-
   static void NotifyObserver(const char* aNewpref, void* aData);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -2261,8 +2258,7 @@ private:
   nsClassHashtable<PrefCallback, PrefCallback> mObservers;
 };
 
-class nsPrefLocalizedString final
-  : public nsIPrefLocalizedString
+class nsPrefLocalizedString final : public nsIPrefLocalizedString
 {
 public:
   nsPrefLocalizedString();

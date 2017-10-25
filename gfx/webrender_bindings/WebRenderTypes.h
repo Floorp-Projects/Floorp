@@ -304,6 +304,16 @@ static inline wr::LayoutRect ToLayoutRect(const gfxRect rect)
   return r;
 }
 
+static inline wr::DeviceUintRect ToDeviceUintRect(const mozilla::ImageIntRect& rect)
+{
+  wr::DeviceUintRect r;
+  r.origin.x = rect.x;
+  r.origin.y = rect.y;
+  r.size.width = rect.width;
+  r.size.height = rect.height;
+  return r;
+}
+
 static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceIntRect& rect)
 {
   return ToLayoutRect(IntRectToRect(rect));

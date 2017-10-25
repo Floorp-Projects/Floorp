@@ -212,7 +212,7 @@ var Settings = {
 
   getStatusStringForSetting(setting) {
     let enabled = Preferences.get(setting.pref, setting.defaultPrefValue);
-    let status = bundle.GetStringFromName(enabled ? "telemetryEnabled" : "telemetryDisabled");
+    let status = bundle.GetStringFromName(enabled ? "telemetryUploadEnabled" : "telemetryUploadDisabled");
     return status;
   },
 
@@ -220,17 +220,19 @@ var Settings = {
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
   render() {
-    let homeExplanation = document.getElementById("home-explanation");
-    let fhrEnabled = Preferences.get(this.SETTINGS[0].pref, this.SETTINGS[0].defaultPrefValue);
-    fhrEnabled = bundle.GetStringFromName(fhrEnabled ? "telemetryEnabled" : "telemetryDisabled");
-    let extendedEnabled = Preferences.get(this.SETTINGS[1].pref, this.SETTINGS[1].defaultPrefValue);
-    extendedEnabled = bundle.GetStringFromName(extendedEnabled ? "extendedTelemetryEnabled" : "extendedTelemetryDisabled");
-    let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
+    let settingsExplanation = document.getElementById("settings-explanation");
+    let uploadEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
+    let extendedEnabled = Services.telemetry.canRecordExtended;
+    let collectedData = bundle.GetStringFromName(extendedEnabled ? "prereleaseData" : "releaseData");
 
-    let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
+    let parameters = [
+      collectedData,
+      this.convertStringToLink(uploadEnabled),
+    ];
+    let explanation = bundle.formatStringFromName("settingsExplanation", parameters, 2);
 
     // eslint-disable-next-line no-unsanitized/property
-    homeExplanation.innerHTML = explanation;
+    settingsExplanation.innerHTML = explanation;
     this.attachObservers();
   },
 
