@@ -3347,7 +3347,7 @@ void
 MediaDecoderStateMachine::DecodeError(const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOGE("Decode error");
+  LOGE("Decode error: %s", aError.Description().get());
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackErrorEvent.Notify(aError);
 }
