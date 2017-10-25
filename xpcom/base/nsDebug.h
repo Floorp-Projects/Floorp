@@ -163,21 +163,6 @@ inline void MOZ_PretendNoReturn()
 #endif
 
 /**
- * Trigger an debug-only abort.
- *
- * @see MOZ_RELEASE_ASSERT or MOZ_CRASH for release-mode asserts.
- */
-#ifdef DEBUG
-#define NS_ABORT()                                            \
-  do {                                                        \
-    NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                    \
-  } while(0)
-#else
-#define NS_ABORT()                     do { /* nothing */ } while(0)
-#endif
-
-/**
  * Trigger a debugger breakpoint, only in debug builds.
  */
 #ifdef DEBUG
