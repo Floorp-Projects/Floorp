@@ -43,6 +43,7 @@ namespace widget {
 nsWindow* IMEHandler::sFocusedWindow = nullptr;
 InputContextAction::Cause IMEHandler::sLastContextActionCause =
   InputContextAction::CAUSE_UNKNOWN;
+bool IMEHandler::sForceDisableCurrentIMM_IME = false;
 bool IMEHandler::sPluginHasFocus = false;
 
 #ifdef NS_ENABLE_TSF
@@ -82,6 +83,8 @@ IMEHandler::Initialize()
 #endif // #ifdef NS_ENABLE_TSF
 
   IMMHandler::Initialize();
+
+  sForceDisableCurrentIMM_IME = IMMHandler::IsActiveIMEInBlockList();
 }
 
 // static
@@ -185,8 +188,23 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
   }
 #endif // #ifdef NS_ENABLE_TSF
 
-  return IMMHandler::ProcessMessage(aWindow, aMessage, aWParam, aLParam,
-                                    aResult);
+  bool keepGoing =
+    IMMHandler::ProcessMessage(aWindow, aMessage, aWParam, aLParam, aResult);
+
+  // If user changes active IME to an IME which is listed in our block list,
+  // we should disassociate IMC from the window for preventing the IME to work
+  // and crash.
+  if (aMessage == WM_INPUTLANGCHANGE) {
+    bool disableIME = IMMHandler::IsActiveIMEInBlockList();
+    if (disableIME != sForceDisableCurrentIMM_IME) {
+      bool enable =
+        !disableIME && WinUtils::IsIMEEnabled(aWindow->InputContextRef());
+      AssociateIMEContext(aWindow, enable);
+      sForceDisableCurrentIMM_IME = disableIME;
+    }
+  }
+
+  return keepGoing;
 }
 
 #ifdef NS_ENABLE_TSF
@@ -421,7 +439,8 @@ IMEHandler::OnDestroyWindow(nsWindow* aWindow)
 bool
 IMEHandler::NeedsToAssociateIMC()
 {
-  return !sAssociateIMCOnlyWhenIMM_IMEActive || !IsIMMActive();
+  return !sForceDisableCurrentIMM_IME &&
+         (!sAssociateIMCOnlyWhenIMM_IMEActive || !IsIMMActive());
 }
 #endif // #ifdef NS_ENABLE_TSF
 

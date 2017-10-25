@@ -146,6 +146,7 @@ private:
   static nsWindow* sFocusedWindow;
   static InputContextAction::Cause sLastContextActionCause;
 
+  static bool sForceDisableCurrentIMM_IME;
   static bool sPluginHasFocus;
 
 #ifdef NS_ENABLE_TSF
