@@ -45,10 +45,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       // The current engine is not the same as the value that the ExtensionSettingsStore has.
       // This means that the user changed the engine, so we shouldn't control it anymore.
       // Do nothing and remove our entry from the ExtensionSettingsStore.
-      ExtensionSettingsStore.removeSetting(extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME);
+      ExtensionSettingsStore.removeSetting(extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME);
       return;
     }
-    item = ExtensionSettingsStore[action](extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME);
+    item = ExtensionSettingsStore[action](extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME);
     if (item) {
       try {
         let engine = Services.search.getEngineByName(item.value || item.initialValue);
@@ -67,7 +67,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 
     await ExtensionSettingsStore.initialize();
     if (manifest.chrome_settings_overrides.homepage) {
-      ExtensionPreferencesManager.setSetting(extension, "homepage_override",
+      ExtensionPreferencesManager.setSetting(extension.id, "homepage_override",
                                              manifest.chrome_settings_overrides.homepage);
     }
     if (manifest.chrome_settings_overrides.search_provider) {
@@ -142,7 +142,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         // only sets default for install or enable.
         await this.setDefault(engineName);
       } else if (ExtensionSettingsStore.hasSetting(
-                extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME)) {
+                extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME)) {
         // is_default has been removed, but we still have a setting. Remove it.
         // This won't cover the case where the entire search_provider is removed.
         this.processDefaultSearchSetting("removeSetting");
@@ -154,7 +154,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let {extension} = this;
     if (extension.startupReason === "ADDON_INSTALL") {
       let item = await ExtensionSettingsStore.addSetting(
-        extension, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
+        extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => {
           return Services.search.currentEngine.name;
         });
       Services.search.currentEngine = Services.search.getEngineByName(item.value);

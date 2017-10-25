@@ -146,8 +146,8 @@ function precedenceComparator(a, b) {
  * Helper method that alters a setting, either by changing its enabled status
  * or by removing it.
  *
- * @param {Extension} extension
- *        The extension for which a setting is being removed/disabled.
+ * @param {string} id
+ *        The id of the extension for which a setting is being removed/disabled.
  * @param {string} type
  *        The type of setting to be altered.
  * @param {string} key
@@ -161,7 +161,7 @@ function precedenceComparator(a, b) {
  *          corresponds to the current top precedent setting, or null if
  *          the current top precedent setting has not changed.
  */
-function alterSetting(extension, type, key, action) {
+function alterSetting(id, type, key, action) {
   let returnItem;
   ensureType(type);
 
@@ -174,7 +174,6 @@ function alterSetting(extension, type, key, action) {
       `Cannot alter the setting for ${type}:${key} as it does not exist.`);
   }
 
-  let id = extension.id;
   let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
 
   if (foundIndex === -1) {
@@ -235,8 +234,8 @@ this.ExtensionSettingsStore = {
    * Adds a setting to the store, possibly returning the current top precedent
    * setting.
    *
-   * @param {Extension} extension
-   *        The extension for which a setting is being added.
+   * @param {string} id
+   *        The id of the extension for which a setting is being added.
    * @param {string} type
    *        The type of setting to be stored.
    * @param {string} key
@@ -257,12 +256,11 @@ this.ExtensionSettingsStore = {
    *                          added does not need to be set because it is not
    *                          at the top of the precedence list.
    */
-  async addSetting(extension, type, key, value, initialValueCallback, callbackArgument = key) {
+  async addSetting(id, type, key, value, initialValueCallback, callbackArgument = key) {
     if (typeof initialValueCallback != "function") {
       throw new Error("initialValueCallback must be a function.");
     }
 
-    let id = extension.id;
     ensureType(type);
 
     if (!_store.data[type][key]) {
@@ -302,8 +300,8 @@ this.ExtensionSettingsStore = {
    * Removes a setting from the store, possibly returning the current top
    * precedent setting.
    *
-   * @param {Extension} extension
-   *        The extension for which a setting is being removed.
+   * @param {string} id
+   *        The id of the extension for which a setting is being removed.
    * @param {string} type
    *        The type of setting to be removed.
    * @param {string} key
@@ -314,16 +312,16 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  removeSetting(extension, type, key) {
-    return alterSetting(extension, type, key, "remove");
+  removeSetting(id, type, key) {
+    return alterSetting(id, type, key, "remove");
   },
 
   /**
    * Enables a setting in the store, possibly returning the current top
    * precedent setting.
    *
-   * @param {Extension} extension
-   *        The extension for which a setting is being enabled.
+   * @param {string} id
+   *        The id of the extension for which a setting is being enabled.
    * @param {string} type
    *        The type of setting to be enabled.
    * @param {string} key
@@ -334,16 +332,16 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  enable(extension, type, key) {
-    return alterSetting(extension, type, key, "enable");
+  enable(id, type, key) {
+    return alterSetting(id, type, key, "enable");
   },
 
   /**
    * Disables a setting in the store, possibly returning the current top
    * precedent setting.
    *
-   * @param {Extension} extension
-   *        The extension for which a setting is being disabled.
+   * @param {string} id
+   *        The id of the extension for which a setting is being disabled.
    * @param {string} type
    *        The type of setting to be disabled.
    * @param {string} key
@@ -354,8 +352,8 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  disable(extension, type, key) {
-    return alterSetting(extension, type, key, "disable");
+  disable(id, type, key) {
+    return alterSetting(id, type, key, "disable");
   },
 
   /**
@@ -382,18 +380,21 @@ this.ExtensionSettingsStore = {
   /**
    * Retrieves all settings from the store for a given extension.
    *
-   * @param {Extension} extension The extension for which a settings are being retrieved.
-   * @param {string} type The type of setting to be returned.
+   * @param {string} id
+   *        The id of the extension for which a settings are being retrieved.
+   * @param {string} type
+   *        The type of setting to be returned.
    *
-   * @returns {array} A list of settings which have been stored for the extension.
+   * @returns {array}
+   *          A list of settings which have been stored for the extension.
    */
-  getAllForExtension(extension, type) {
+  getAllForExtension(id, type) {
     ensureType(type);
 
     let keysObj = _store.data[type];
     let items = [];
     for (let key in keysObj) {
-      if (keysObj[key].precedenceList.find(item => item.id == extension.id)) {
+      if (keysObj[key].precedenceList.find(item => item.id == id)) {
         items.push(key);
       }
     }
@@ -417,14 +418,14 @@ this.ExtensionSettingsStore = {
    * Returns whether an extension currently has a stored setting for a given
    * key.
    *
-   * @param {Extension} extension The extension which is being checked.
+   * @param {string} id The id of the extension which is being checked.
    * @param {string} type The type of setting to be checked.
    * @param {string} key A string that uniquely identifies the setting.
    *
    * @returns {boolean} Whether the extension currently has a stored setting.
    */
-  hasSetting(extension, type, key) {
-    return this.getAllForExtension(extension, type).includes(key);
+  hasSetting(id, type, key) {
+    return this.getAllForExtension(id, type).includes(key);
   },
 
   /**
@@ -439,8 +440,8 @@ this.ExtensionSettingsStore = {
    * controllable_by_this_extension: can be controlled by this extension
    * controlled_by_this_extension: controlled by this extension
    *
-   * @param {Extension} extension
-   *        The extension for which levelOfControl is being requested.
+   * @param {string} id
+   *        The id of the extension for which levelOfControl is being requested.
    * @param {string} type
    *        The type of setting to be returned. For example `pref`.
    * @param {string} key
@@ -450,7 +451,7 @@ this.ExtensionSettingsStore = {
    * @returns {string}
    *          The level of control of the extension over the key.
    */
-  async getLevelOfControl(extension, type, key) {
+  async getLevelOfControl(id, type, key) {
     ensureType(type);
 
     let keyInfo = _store.data[type][key];
@@ -458,7 +459,6 @@ this.ExtensionSettingsStore = {
       return "controllable_by_this_extension";
     }
 
-    let id = extension.id;
     let enabledItems = keyInfo.precedenceList.filter(item => item.enabled);
     if (!enabledItems.length) {
       return "controllable_by_this_extension";
