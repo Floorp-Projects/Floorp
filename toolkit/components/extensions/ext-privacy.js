@@ -24,19 +24,19 @@ const getPrivacyAPI = (extension, name, callback) => {
         levelOfControl: details.incognito ?
           "not_controllable" :
           await ExtensionPreferencesManager.getLevelOfControl(
-            extension, name),
+            extension.id, name),
         value: await callback(),
       };
     },
     set(details) {
       checkScope(details.scope);
       return ExtensionPreferencesManager.setSetting(
-        extension, name, details.value);
+        extension.id, name, details.value);
     },
     clear(details) {
       checkScope(details.scope);
       return ExtensionPreferencesManager.removeSetting(
-        extension, name);
+        extension.id, name);
     },
   };
 };
