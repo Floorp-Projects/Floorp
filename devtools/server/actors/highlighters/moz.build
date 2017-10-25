@@ -14,6 +14,7 @@ DevToolsModules(
     'css-grid.js',
     'css-transform.js',
     'eye-dropper.js',
+    'flexbox.js',
     'geometry-editor.js',
     'measuring-tool.js',
     'paused-debugger.js',

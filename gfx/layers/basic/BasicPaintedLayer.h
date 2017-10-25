@@ -7,7 +7,7 @@
 #define GFX_BASICPAINTEDLAYER_H
 
 #include "Layers.h"                     // for PaintedLayer, LayerManager, etc
-#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedBuffer, etc
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfxPoint.h"                   // for gfxPoint
@@ -27,8 +27,8 @@ class ReadbackProcessor;
 
 class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
 public:
-  typedef RotatedContentBuffer::PaintState PaintState;
-  typedef RotatedContentBuffer::ContentType ContentType;
+  typedef ContentClient::PaintState PaintState;
+  typedef ContentClient::ContentType ContentType;
 
   explicit BasicPaintedLayer(BasicLayerManager* aLayerManager, gfx::BackendType aBackend) :
     PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
@@ -103,7 +103,6 @@ protected:
               const nsIntRegion& aRegionToDraw,
               const nsIntRegion& aExtendedRegionToDraw,
               const nsIntRegion& aRegionToInvalidate,
-              bool aDidSelfCopy,
               DrawRegionClip aClip,
               LayerManager::DrawPaintedLayerCallback aCallback,
               void* aCallbackData)

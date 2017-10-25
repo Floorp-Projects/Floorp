@@ -729,13 +729,13 @@ nsMultiplexInputStream::CloseWithStatus(nsresult aStatus)
 
 // This class is used to inform nsMultiplexInputStream that it's time to execute
 // the asyncWait callback.
-class AsyncWaitRunnable final : public Runnable
+class AsyncWaitRunnable final : public CancelableRunnable
 {
   RefPtr<nsMultiplexInputStream> mStream;
 
 public:
   explicit AsyncWaitRunnable(nsMultiplexInputStream* aStream)
-    : Runnable("AsyncWaitRunnable")
+    : CancelableRunnable("AsyncWaitRunnable")
     , mStream(aStream)
   {
     MOZ_ASSERT(aStream);

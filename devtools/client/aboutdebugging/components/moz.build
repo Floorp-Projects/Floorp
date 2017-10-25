@@ -9,9 +9,9 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'aboutdebugging.js',
-    'panel-header.js',
-    'panel-menu-entry.js',
-    'panel-menu.js',
-    'target-list.js',
+    'Aboutdebugging.js',
+    'PanelHeader.js',
+    'PanelMenu.js',
+    'PanelMenuEntry.js',
+    'TargetList.js',
 )

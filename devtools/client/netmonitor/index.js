@@ -44,7 +44,7 @@ const EventEmitter = require("devtools-modules/src/utils/event-emitter");
 EventEmitter.decorate(window);
 
 const { configureStore } = require("./src/utils/create-store");
-const App = require("./src/components/app");
+const App = require("./src/components/App");
 const { Connector } = require("./src/connector/index");
 const connector = new Connector();
 const store = configureStore(connector);

@@ -61,7 +61,10 @@ public:
     : mParent(aParent)
     , mInfo(aInfo)
     , mClientData(aClientData)
-  { }
+    , mId(NextId())
+  {
+    MOZ_ASSERT(mId > 0);
+  }
 
   // Parent of the context we're running the transaction in.
   nsCOMPtr<nsPIDOMWindowInner> mParent;
@@ -75,6 +78,18 @@ public:
 
   // Client data used to assemble reply objects.
   nsCString mClientData;
+
+  // Unique transaction id.
+  uint64_t mId;
+
+private:
+  // Generates a unique id for new transactions. This doesn't have to be unique
+  // forever, it's sufficient to differentiate between temporally close
+  // transactions, where messages can intersect. Can overflow.
+  static uint64_t NextId() {
+    static uint64_t id = 0;
+    return ++id;
+  }
 };
 
 class U2FManager final : public nsIDOMEventListener
@@ -97,10 +112,12 @@ public:
               const uint32_t& aTimeoutMillis,
               const nsTArray<WebAuthnScopedCredentialDescriptor>& aKeyList);
 
-  void FinishRegister(nsTArray<uint8_t>& aRegBuffer);
-  void FinishSign(nsTArray<uint8_t>& aCredentialId,
+  void FinishRegister(const uint64_t& aTransactionId,
+                      nsTArray<uint8_t>& aRegBuffer);
+  void FinishSign(const uint64_t& aTransactionId,
+                  nsTArray<uint8_t>& aCredentialId,
                   nsTArray<uint8_t>& aSigBuffer);
-  void RequestAborted(const nsresult& aError);
+  void RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
 
   // XXX This is exposed only until we fix bug 1410346.
   void MaybeCancelTransaction(const nsresult& aError) {
@@ -129,11 +146,9 @@ private:
   // parent) and rejects it by calling RejectTransaction().
   void CancelTransaction(const nsresult& aError);
 
-  typedef MozPromise<nsresult, nsresult, false> BackgroundActorPromise;
+  bool MaybeCreateBackgroundActor();
 
-  void GetOrCreateBackgroundActor();
-
-  // IPC Channel for the current transaction.
+  // IPC Channel to the parent process.
   RefPtr<U2FTransactionChild> mChild;
 
   // The current transaction, if any.

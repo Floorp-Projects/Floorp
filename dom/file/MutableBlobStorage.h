@@ -83,7 +83,7 @@ private:
 
   bool ShouldBeTemporaryStorage(uint64_t aSize) const;
 
-  void MaybeCreateTemporaryFile();
+  bool MaybeCreateTemporaryFile();
 
   void DispatchToIOThread(already_AddRefed<nsIRunnable> aRunnable);
 

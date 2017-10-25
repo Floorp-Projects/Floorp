@@ -990,12 +990,12 @@ CreateContentVsyncRefreshTimer(void*)
 
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
-    MOZ_CRASH("PVsync actor create failed!");
+    return;
   }
 
   layout::PVsyncChild* actor = actorChild->SendPVsyncConstructor();
   if (NS_WARN_IF(!actor)) {
-    MOZ_CRASH("PVsyncChild actor create failed!");
+    return;
   }
 
   layout::VsyncChild* child = static_cast<layout::VsyncChild*>(actor);
