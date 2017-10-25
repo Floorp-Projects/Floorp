@@ -791,10 +791,18 @@ DecodedStream::GetDebugInfo()
 {
   AssertOwnerThread();
   int64_t startTime = mStartTime.isSome() ? mStartTime->ToMicroseconds() : -1;
-  return nsPrintfCString(
-    "DecodedStream=%p mStartTime=%" PRId64 " mLastOutputTime=%" PRId64 " mPlaying=%d mData=%p",
-    this, startTime, mLastOutputTime.ToMicroseconds(), mPlaying, mData.get())
-    + (mData ? nsCString("\n") + mData->GetDebugInfo() : nsCString());
+  auto str =
+    nsPrintfCString("DecodedStream=%p mStartTime=%" PRId64
+                    " mLastOutputTime=%" PRId64 " mPlaying=%d mData=%p",
+                    this,
+                    startTime,
+                    mLastOutputTime.ToMicroseconds(),
+                    mPlaying,
+                    mData.get());
+  if (mData) {
+    AppendStringIfNotEmpty(str, mData->GetDebugInfo());
+  }
+  return str;
 }
 
 } // namespace mozilla
