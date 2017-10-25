@@ -1,4 +1,4 @@
-fails-if(Android) skip-if(browserIsRemote&&winWidget) == empty-1.xul empty-ref.xul # Windows: bug 1239170
+fails-if(Android) skip-if(browserIsRemote&&winWidget) fails-if(stylo&&winWidget) == empty-1.xul empty-ref.xul # Windows: bug 1239170, stylo: bug 1411460
 != empty-2.xul empty-ref.xul
 # There is no way to simulate an autocomplete textbox in windows XP/Vista/7/8/10 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
