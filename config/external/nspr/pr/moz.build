@@ -11,7 +11,7 @@ else:
 
 # We allow warnings for third-party code that can be updated from upstream.
 # TODO: fix NSPR warnings and remove this
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 DEFINES['_NSPR_BUILD_'] = True
 if CONFIG['OS_ARCH'] == 'Linux':

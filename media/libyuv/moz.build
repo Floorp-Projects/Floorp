@@ -35,4 +35,4 @@ GYP_DIRS['libyuv'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['libyuv'].non_unified_sources += libyuv_non_unified_sources
 
 # We allow warnings for third-party code that can be updated from upstream.
-GYP_DIRS['libyuv'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
+GYP_DIRS['libyuv'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}

@@ -44,7 +44,7 @@ Library('nksctp_s')
 include('/ipc/chromium/chromium-config.mozbuild')
 
 # We allow warnings for third-party code that can be updated from upstream.
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'xul'
 
