@@ -1538,18 +1538,6 @@ class PeerConnectionObserver {
         this.handleIceGatheringStateChange(this._dompc._pc.iceGatheringState);
         break;
 
-      case "SdpState":
-        // No-op
-        break;
-
-      case "ReadyState":
-        // No-op
-        break;
-
-      case "SipccState":
-        // No-op
-        break;
-
       default:
         this._dompc.logWarning("Unhandled state type: " + state);
         break;
