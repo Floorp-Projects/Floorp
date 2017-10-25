@@ -295,6 +295,7 @@ public:
     }
 };
 
+template<class C, typename T> jclass Context<C, T>::sClassRef;
 
 template<class Cls, typename Type = jobject>
 class ObjectBase
