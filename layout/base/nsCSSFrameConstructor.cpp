@@ -8038,6 +8038,16 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   }
 #endif
 
+  auto styleNewChildRangeEagerly =
+    [this, aInsertionKind, aContainer, aStartChild, aEndChild]() {
+      // When aInsertionKind == InsertionKind::Sync, we know that the
+      // styles are up-to-date already.
+      if (aInsertionKind == InsertionKind::Async &&
+          aContainer->IsStyledByServo()) {
+        StyleNewChildRange(aStartChild, aEndChild);
+      }
+    };
+
   bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
   NS_ASSERTION(isSingleInsert ||
                aInsertionKind == InsertionKind::Sync,
@@ -8047,6 +8057,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
 #ifdef MOZ_XUL
   if (aContainer && IsXULListBox(aContainer)) {
+    // For XUL list box, we need to style the new children eagerly.
+    styleNewChildRangeEagerly();
     if (isSingleInsert) {
       if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer,
                             // The insert case in NotifyListBoxBody
@@ -8143,11 +8155,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-  // styles are up-to-date already).
-  if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
-    StyleNewChildRange(aStartChild, aEndChild);
-  }
+  // if needed.
+  styleNewChildRangeEagerly();
 
   InsertionPoint insertion;
   if (isSingleInsert) {
