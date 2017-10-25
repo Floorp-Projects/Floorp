@@ -2,14 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import StringIO
 import re
 import time
 
-import version_codes
+from mozdevice import version_codes
 
-from devicemanagerADB import DeviceManagerADB
-from devicemanager import DMError
+from .devicemanagerADB import DeviceManagerADB
+from .devicemanager import DMError
 
 
 class DroidMixin(object):

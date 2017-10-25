@@ -1,0 +1,33 @@
+job-defaults:
+    platform: lint/opt
+    treeherder:
+        kind: test
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+
+bugzilla-components:
+    description: Generate metadata about source files and Bugzilla
+    treeherder:
+        symbol: Bugzilla
+    index:
+        product: source
+        job-name: source-bugzilla-info
+    run:
+        using: run-task
+        command: >
+            mkdir -p /builds/worker/artifacts
+            && cd /builds/worker/checkouts/gecko
+            && ./mach file-info bugzilla-component --format json '**' > /builds/worker/artifacts/components.json
+            && ./mach file-info missing-bugzilla --format json '**' | tee /builds/worker/artifacts/missing.json
+            && gzip --keep /builds/worker/artifacts/*.json
+    worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
+    when:
+        files-changed:
+            - '**'

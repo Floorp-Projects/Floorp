@@ -57,7 +57,7 @@ module.exports = {
     "react/no-did-update-set-state": "error",
     "react/no-direct-mutation-state": "error",
     "react/no-unknown-property": "error",
-    "react/prefer-es6-class": ["error", "never"],
+    "react/prefer-es6-class": ["off", "always"],
     "react/prop-types": "error",
     "react/sort-comp": ["error", {
       order: [

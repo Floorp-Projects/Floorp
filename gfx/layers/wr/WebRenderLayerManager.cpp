@@ -12,7 +12,6 @@
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
-#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"

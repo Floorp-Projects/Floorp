@@ -29,8 +29,12 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.vpx += files['IA32_EXPORTS']
     SOURCES += files['IA32_SOURCES']
     if CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
-        LOCAL_INCLUDES += [ '/media/libvpx/config/win/ia32/' ]
+        if CONFIG['CC_TYPE'] == 'gcc':
+            ASFLAGS += [ '-I%s/media/libvpx/config/win/mingw32/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libvpx/config/win/mingw32/' ]
+        else:
+            ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libvpx/config/win/ia32/' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libvpx/config/mac/ia32/' ]

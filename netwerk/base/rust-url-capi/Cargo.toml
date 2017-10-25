@@ -9,5 +9,5 @@ name = "rust_url_capi"
 [dependencies]
 libc = "0.2.0"
 url = "1.5.1"
-nsstring = { path = "../../../xpcom/rust/nsstring" }
+nsstring = { path = "../../../servo/support/gecko/nsstring" }
 nserror = { path = "../../../xpcom/rust/nserror" }

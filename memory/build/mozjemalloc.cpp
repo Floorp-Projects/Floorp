@@ -298,15 +298,6 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 #endif
 #endif
 
-#ifdef MOZ_DEBUG
-   /* Disable inlining to make debugging easier. */
-#ifdef inline
-#undef inline
-#endif
-
-#  define inline
-#endif
-
 /* Size of stack-allocated buffer passed to strerror_r(). */
 #define	STRERROR_BUF		64
 
@@ -1109,8 +1100,6 @@ static Mutex huge_mtx;
 static RedBlackTree<extent_node_t, ExtentTreeTrait> huge;
 
 /* Huge allocation statistics. */
-static uint64_t		huge_nmalloc;
-static uint64_t		huge_ndalloc;
 static size_t		huge_allocated;
 static size_t		huge_mapped;
 
@@ -1185,7 +1174,7 @@ static size_t	opt_dirty_max = DIRTY_MAX_DEFAULT;
 
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed=nullptr);
 static void	chunk_dealloc(void *chunk, size_t size, ChunkType chunk_type);
-static void	chunk_ensure_zero(void* ptr, size_t size, bool zeroed);
+static void chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
 static arena_t	*arenas_extend();
 static void	*huge_malloc(size_t size, bool zero);
 static void* huge_palloc(size_t aSize, size_t aAlignment, bool aZero);
@@ -2090,18 +2079,20 @@ RETURN:
 }
 
 static void
-chunk_ensure_zero(void* ptr, size_t size, bool zeroed)
+chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed)
 {
-	if (zeroed == false)
-		memset(ptr, 0, size);
+  if (aZeroed == false) {
+    memset(aPtr, 0, aSize);
+  }
 #ifdef MOZ_DEBUG
-	else {
-		size_t i;
-		size_t *p = (size_t *)(uintptr_t)ret;
+  else {
+    size_t i;
+    size_t* p = (size_t*)(uintptr_t)aPtr;
 
-		for (i = 0; i < size / sizeof(size_t); i++)
-			MOZ_ASSERT(p[i] == 0);
-	}
+    for (i = 0; i < aSize / sizeof(size_t); i++) {
+      MOZ_ASSERT(p[i] == 0);
+    }
+  }
 #endif
 }
 
@@ -4052,7 +4043,6 @@ huge_palloc(size_t aSize, size_t aAlignment, bool aZero)
   {
     MutexAutoLock lock(huge_mtx);
     huge.Insert(node);
-    huge_nmalloc++;
 
     /* Although we allocated space for csize bytes, we indicate that we've
      * allocated only psize bytes.
@@ -4197,7 +4187,6 @@ huge_dalloc(void* aPtr)
     MOZ_ASSERT(node->addr == aPtr);
     huge.Remove(node);
 
-    huge_ndalloc++;
     huge_allocated -= node->size;
     huge_mapped -= CHUNK_CEILING(node->size);
   }
@@ -4383,8 +4372,6 @@ MALLOC_OUT:
   /* Initialize huge allocation data. */
   huge_mtx.Init();
   huge.Init();
-  huge_nmalloc = 0;
-  huge_ndalloc = 0;
   huge_allocated = 0;
   huge_mapped = 0;
 

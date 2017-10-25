@@ -638,10 +638,10 @@ webrtc.nicer:
       For more info on ICE, see https://tools.ietf.org/html/rfc5245
       For more info on STUN, see https://tools.ietf.org/html/rfc5389
       For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
+    expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -659,10 +659,10 @@ webrtc.nicer:
       For more info on ICE, see https://tools.ietf.org/html/rfc5245
       For more info on STUN, see https://tools.ietf.org/html/rfc5389
       For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
+    expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -679,10 +679,10 @@ webrtc.nicer:
       For more info on ICE, see https://tools.ietf.org/html/rfc5245
       For more info on STUN, see https://tools.ietf.org/html/rfc5389
       For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
+    expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -698,10 +698,10 @@ webrtc.nicer:
       For more info on ICE, see https://tools.ietf.org/html/rfc5245
       For more info on STUN, see https://tools.ietf.org/html/rfc5389
       For more info on TURN, see https://tools.ietf.org/html/rfc5766
-    expires: "57"
+    expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'

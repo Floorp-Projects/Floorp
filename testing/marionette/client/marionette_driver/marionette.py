@@ -698,12 +698,20 @@ class Marionette(object):
                 sock.settimeout(0.5)
                 sock.connect((self.host, self.port))
                 data = sock.recv(16)
+
+                # If the application starts up very slowly (eg. Fennec on Android
+                # emulator) a response package has to be received first. Otherwise
+                # start_session will fail (see bug 1410366 comment 32 ff.)
                 if ":" in data:
                     return True
             except socket.error:
                 pass
             finally:
                 if sock is not None:
+                    try:
+                        sock.shutdown(socket.SHUT_RDWR)
+                    except:
+                        pass
                     sock.close()
 
             time.sleep(poll_interval)

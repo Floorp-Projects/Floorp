@@ -1,12 +1,12 @@
 == css-flex-1.xul css-flex-1-ref.html
 
-fails-if(styloVsGecko) == menuitem-key.xul menuitem-key-ref.xul # bug 1408831
+== menuitem-key.xul menuitem-key-ref.xul
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android) fails-if(styloVsGecko) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul # stylo: bug 1408824
-random-if(Android) fails-if(winWidget) fails-if(styloVsGecko) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul # stylo: bug 1408824
+random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
+random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) fails-if(styloVsGecko) == accesskey.xul accesskey-ref.xul # stylo: bug 1408811
+skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
 fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
 skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul

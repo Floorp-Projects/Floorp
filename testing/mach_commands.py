@@ -254,24 +254,16 @@ class Test(MachCommandBase):
                 print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
 
         if not what:
-            # TODO: This isn't really related to try, and should be
-            # extracted to a common library for vcs interactions when it is
-            # introduced in bug 1185599.
-            from autotry import AutoTry
+            from tryselect.selectors.syntax import AutoTry
             at = AutoTry(self.topsrcdir, resolver, self._mach_context)
-            changed_files = at.find_changed_files()
-            if changed_files:
+            res = at.find_paths_and_metadata(False, detect_paths=True)
+            paths = res['paths']
+            tags = res['tags']
+            flavors = res['flavors']
+
+            if paths:
                 print("Tests will be run based on modifications to the "
-                      "following files:\n\t%s" % "\n\t".join(changed_files))
-
-            reader = self.mozbuild_reader(config_mode='empty')
-            files_info = reader.files_info(changed_files)
-
-            paths, tags, flavors = set(), set(), set()
-            for info in files_info.values():
-                paths |= info.test_files
-                tags |= info.test_tags
-                flavors |= info.test_flavors
+                      "following files:\n\t%s" % "\n\t".join(paths))
 
             # This requires multiple calls to resolve_tests, because the test
             # resolver returns tests that match every condition, while we want

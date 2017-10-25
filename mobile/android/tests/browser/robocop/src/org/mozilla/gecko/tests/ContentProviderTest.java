@@ -25,7 +25,6 @@ import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.test.IsolatedContext;
 import android.test.RenamingDelegatingContext;
 import android.test.mock.MockContentResolver;
@@ -40,7 +39,7 @@ import android.test.mock.MockContext;
  *
  * For some tests, we need to have access to UI parts, or at least launch
  * the activity so the assets with test data become available, which requires
- * that we derive this test from BaseTest and consequently pull in some more
+ * that we derive this test from OldBaseTest and consequently pull in some more
  * UI code than we'd ideally want. Furthermore, we need to pass the
  * Activity and not the instrumentation Context for the UI part to find some
  * of its required resources.
@@ -50,7 +49,7 @@ import android.test.mock.MockContext;
  * is that databases used in the ContentProvider will be attempted to be
  * opened twice.
  */
-abstract class ContentProviderTest extends BaseTest {
+abstract class ContentProviderTest extends OldBaseTest {
     protected ContentProvider mProvider;
     protected ChangeRecordingMockContentResolver mResolver;
     protected ArrayList<Runnable> mTests;

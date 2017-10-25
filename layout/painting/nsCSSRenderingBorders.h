@@ -108,7 +108,8 @@ public:
   void DrawBorders();
 
   bool CanCreateWebRenderCommands();
-  void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+  void CreateWebRenderCommands(nsDisplayItem* aItem,
+                               mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
                                const mozilla::layers::StackingContextHelper& aSc);
 

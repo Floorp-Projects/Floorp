@@ -18,8 +18,10 @@ StaticRefPtr<URLExtraData> URLExtraData::sDummy;
 /* static */ void
 URLExtraData::InitDummy()
 {
-  sDummy = new URLExtraData(NullPrincipalURI::Create(),
-                            nullptr,
+  RefPtr<nsIURI> baseURI = NullPrincipalURI::Create();
+  RefPtr<nsIURI> referrer = baseURI;
+  sDummy = new URLExtraData(baseURI.forget(),
+                            referrer.forget(),
                             NullPrincipal::Create());
 }
 

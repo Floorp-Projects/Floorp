@@ -1112,9 +1112,7 @@ BrowserGlue.prototype = {
     }, 5000);
 
     if (AppConstants.MOZ_CRASHREPORTER) {
-      Services.tm.idleDispatchToMainThread(() => {
-        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
-      });
+      UnsubmittedCrashHandler.scheduleCheckForUnsubmittedCrashReports();
     }
 
     if (AppConstants.platform == "win") {

@@ -51,6 +51,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ClearOnShutdown.h"
 
+#include "CacheControlParser.h"
+
 using namespace mozilla;
 
 namespace mozilla {
@@ -1325,33 +1327,51 @@ Predictor::CalculatePredictions(nsICacheEntry *entry, nsIURI *referrer,
       UpdateRollingLoadCount(entry, flags, key, hitCount, lastHit);
     }
     PREDICTOR_LOG(("CalculatePredictions key=%s value=%s confidence=%d", key, value, confidence));
+    PrefetchIgnoreReason reason = PREFETCH_OK;
     if (!fullUri) {
       // Not full URI - don't prefetch! No sense in it!
       PREDICTOR_LOG(("    forcing non-cacheability - not full URI"));
+      if (flags & FLAG_PREFETCHABLE) {
+        // This only applies if we had somehow otherwise marked this
+        // prefetchable.
+        reason = NOT_FULL_URI;
+      }
       flags &= ~FLAG_PREFETCHABLE;
     } else if (!referrer) {
       // No referrer means we can't prefetch, so pretend it's non-cacheable,
       // no matter what.
       PREDICTOR_LOG(("    forcing non-cacheability - no referrer"));
+      if (flags & FLAG_PREFETCHABLE) {
+        // This only applies if we had somehow otherwise marked this
+        // prefetchable.
+        reason = NO_REFERRER;
+      }
       flags &= ~FLAG_PREFETCHABLE;
     } else {
       uint32_t expectedRollingLoadCount = (1 << mPrefetchRollingLoadCount) - 1;
       expectedRollingLoadCount <<= kRollingLoadOffset;
       if ((flags & expectedRollingLoadCount) != expectedRollingLoadCount) {
         PREDICTOR_LOG(("    forcing non-cacheability - missed a load"));
+        if (flags & FLAG_PREFETCHABLE) {
+          // This only applies if we had somehow otherwise marked this
+          // prefetchable.
+          reason = MISSED_A_LOAD;
+        }
         flags &= ~FLAG_PREFETCHABLE;
       }
     }
 
     PREDICTOR_LOG(("    setting up prediction"));
-    SetupPrediction(confidence, flags, uri);
+    SetupPrediction(confidence, flags, uri, reason);
   }
 }
 
 // (Maybe) adds a predictive action to the prediction runner, based on our
 // calculated confidence for the subresource in question.
 void
-Predictor::SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &uri)
+Predictor::SetupPrediction(int32_t confidence, uint32_t flags,
+                           const nsCString &uri,
+                           PrefetchIgnoreReason earlyReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1361,8 +1381,32 @@ Predictor::SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &
                  "flags=%d confidence=%d uri=%s", mEnablePrefetch,
                  mPrefetchMinConfidence, mPreconnectMinConfidence,
                  mPreresolveMinConfidence, flags, confidence, uri.get()));
-  if (mEnablePrefetch && (flags & FLAG_PREFETCHABLE) &&
-      (mPrefetchRollingLoadCount || (confidence >= mPrefetchMinConfidence))) {
+
+  bool prefetchOk = !!(flags & FLAG_PREFETCHABLE);
+  PrefetchIgnoreReason reason = earlyReason;
+  if (prefetchOk && !mEnablePrefetch) {
+    prefetchOk = false;
+    reason = PREFETCH_DISABLED;
+  } else if (prefetchOk && !mPrefetchRollingLoadCount &&
+             confidence < mPrefetchMinConfidence) {
+    prefetchOk = false;
+    if (!mPrefetchRollingLoadCount) {
+      reason = PREFETCH_DISABLED_VIA_COUNT;
+    } else {
+      reason = CONFIDENCE_TOO_LOW;
+    }
+  }
+
+  // prefetchOk == false and reason == PREFETCH_OK indicates that the reason
+  // we aren't prefetching this item is because it was marked un-prefetchable in
+  // our metadata. We already have separate telemetry on that decision, so we
+  // aren't going to accumulate more here. Right now we only care about why
+  // something we had marked prefetchable isn't being prefetched.
+  if (!prefetchOk && reason != PREFETCH_OK) {
+    Telemetry::Accumulate(Telemetry::PREDICTOR_PREFETCH_IGNORE_REASON, reason);
+  }
+
+  if (prefetchOk) {
     nsCOMPtr<nsIURI> prefetchURI;
     rv = NS_NewURI(getter_AddRefs(prefetchURI), uri, nullptr, nullptr,
                    mIOService);
@@ -2609,11 +2653,18 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
   if (self) {
     nsAutoCString method;
     requestHead.Method(method);
+
     nsAutoCString vary;
     Unused << responseHead->GetHeader(nsHttp::Vary, vary);
+
+    nsAutoCString cacheControlHeader;
+    Unused << responseHead->GetHeader(nsHttp::Cache_Control, cacheControlHeader);
+    CacheControlParser cacheControl(cacheControlHeader);
+
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
                                      method, *lci->OriginAttributesPtr(),
-                                     isTracking, !vary.IsEmpty());
+                                     isTracking, !vary.IsEmpty(),
+                                     cacheControl.NoStore());
   }
 }
 
@@ -2622,7 +2673,8 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       uint32_t httpStatus,
                                       const nsCString &method,
                                       const OriginAttributes& originAttributes,
-                                      bool isTracking, bool couldVary)
+                                      bool isTracking, bool couldVary,
+                                      bool isNoStore)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
 
@@ -2635,11 +2687,6 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
 
   if (!mEnabled) {
     PREDICTOR_LOG(("    not enabled"));
-    return;
-  }
-
-  if (!mEnablePrefetch) {
-    PREDICTOR_LOG(("    prefetch not enabled"));
     return;
   }
 
@@ -2660,7 +2707,7 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                        nsICacheStorage::CHECK_MULTITHREADED;
   RefPtr<Predictor::CacheabilityAction> action =
     new Predictor::CacheabilityAction(targetURI, httpStatus, method, isTracking,
-                                      couldVary, this);
+                                      couldVary, isNoStore, this);
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
@@ -2678,6 +2725,18 @@ Predictor::CacheabilityAction::OnCacheEntryCheck(nsICacheEntry *entry,
 {
   *result = nsICacheEntryOpenCallback::ENTRY_WANTED;
   return NS_OK;
+}
+
+namespace {
+enum PrefetchDecisionReason {
+  PREFETCHABLE,
+  STATUS_NOT_200,
+  METHOD_NOT_GET,
+  URL_HAS_QUERY_STRING,
+  RESOURCE_IS_TRACKING,
+  RESOURCE_COULD_VARY,
+  RESOURCE_IS_NO_STORE
+};
 }
 
 NS_IMETHODIMP
@@ -2735,10 +2794,34 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
     }
 
     if (strTargetURI.Equals(uri)) {
-      if (mHttpStatus == 200 && mMethod.EqualsLiteral("GET") &&
-          !hasQueryString &&
-          !mIsTracking &&
-          !mCouldVary) {
+      bool prefetchable = true;
+      PrefetchDecisionReason reason = PREFETCHABLE;
+
+      if (mHttpStatus != 200) {
+        prefetchable = false;
+        reason = STATUS_NOT_200;
+      } else if (!mMethod.EqualsLiteral("GET")) {
+        prefetchable = false;
+        reason = METHOD_NOT_GET;
+      } else if (hasQueryString) {
+        prefetchable = false;
+        reason = URL_HAS_QUERY_STRING;
+      } else if (mIsTracking) {
+        prefetchable = false;
+        reason = RESOURCE_IS_TRACKING;
+      } else if (mCouldVary) {
+        prefetchable = false;
+        reason = RESOURCE_COULD_VARY;
+      } else if (mIsNoStore) {
+        // We don't set prefetchable = false yet, because we just want to know
+        // what kind of effect this would have on prefetching.
+        reason = RESOURCE_IS_NO_STORE;
+      }
+
+      Telemetry::Accumulate(Telemetry::PREDICTOR_PREFETCH_DECISION_REASON,
+                            reason);
+
+      if (prefetchable) {
         PREDICTOR_LOG(("    marking %s cacheable", key));
         flags |= FLAG_PREFETCHABLE;
       } else {

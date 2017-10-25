@@ -8,12 +8,11 @@ import org.mozilla.gecko.Element;
 import org.mozilla.gecko.R;
 
 import android.app.Activity;
-import android.view.View;
 
 import com.robotium.solo.Condition;
 
 /* A simple test that creates 2 new tabs and checks that the tab count increases. */
-public class testNewTab extends BaseTest {
+public class testNewTab extends OldBaseTest {
     private Element tabCount = null;
     private Element tabs = null;
     private final Element closeTab = null;

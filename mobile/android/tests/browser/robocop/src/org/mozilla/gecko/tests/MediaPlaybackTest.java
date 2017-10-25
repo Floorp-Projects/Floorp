@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -18,13 +17,12 @@ import android.content.Context;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.service.notification.StatusBarNotification;
 
 import com.robotium.solo.Condition;
 
-abstract class MediaPlaybackTest extends BaseTest {
+abstract class MediaPlaybackTest extends OldBaseTest {
     private Context mContext;
     private int mPrevIcon = 0;
     protected String mPrevURL = "";

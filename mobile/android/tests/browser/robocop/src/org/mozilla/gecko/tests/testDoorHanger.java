@@ -17,7 +17,7 @@ import org.mozilla.gecko.util.GeckoBundle;
    * offline storage permission doorhangers - allowing and not allowing offline storage dismisses the doorhanger
    * Password Manager doorhangers - Remember and Not Now options dismiss the doorhanger
 */
-public class testDoorHanger extends BaseTest {
+public class testDoorHanger extends OldBaseTest {
     private boolean offlineAllowedByDefault = true;
 
     public void testDoorHanger() {

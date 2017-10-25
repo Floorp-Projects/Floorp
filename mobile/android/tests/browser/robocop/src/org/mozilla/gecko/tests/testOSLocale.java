@@ -15,7 +15,7 @@ import org.mozilla.gecko.PrefsHelper;
 import android.content.SharedPreferences;
 
 
-public class testOSLocale extends BaseTest {
+public class testOSLocale extends OldBaseTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();

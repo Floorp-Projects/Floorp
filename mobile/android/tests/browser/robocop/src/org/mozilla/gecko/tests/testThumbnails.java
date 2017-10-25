@@ -15,7 +15,7 @@ import com.robotium.solo.Condition;
  * - verifies thumbnail is updated for HTTP 200, but not HTTP 404
  * - finally, test that BrowserDB.removeThumbnails drops the thumbnails
  */
-public class testThumbnails extends BaseTest {
+public class testThumbnails extends OldBaseTest {
     public void testThumbnails() {
         final String site1Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=changeColor");
         final String site2Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=do404");

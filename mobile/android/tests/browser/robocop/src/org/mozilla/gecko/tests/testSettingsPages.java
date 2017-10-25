@@ -8,7 +8,7 @@ package org.mozilla.gecko.tests;
  *  Traverses through every setting item and tests it.
  */
 
-public class testSettingsPages extends BaseTest {
+public class testSettingsPages extends OldBaseTest {
 
     public void testSettingsPages() {
         blockForGeckoReady();

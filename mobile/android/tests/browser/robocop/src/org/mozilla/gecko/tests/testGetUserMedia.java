@@ -13,7 +13,7 @@ import com.robotium.solo.Condition;
 
 import android.hardware.Camera;
 
-public class testGetUserMedia extends BaseTest {
+public class testGetUserMedia extends OldBaseTest {
     private static final String LOGTAG = testGetUserMedia.class.getSimpleName();
 
     private static final String GUM_MESSAGE = "Would you like to share your camera and microphone with";

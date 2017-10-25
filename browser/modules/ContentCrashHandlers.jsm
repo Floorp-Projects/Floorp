@@ -28,6 +28,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
+  "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
@@ -40,6 +44,9 @@ const PENDING_CRASH_REPORT_DAYS = 28;
 const DAY = 24 * 60 * 60 * 1000; // milliseconds
 const DAYS_TO_SUPPRESS = 30;
 const MAX_UNSEEN_CRASHED_CHILD_IDS = 20;
+
+// Time after which we will begin scanning for unsubmitted crash reports
+const CHECK_FOR_UNSUBMITTED_CRASH_REPORTS_DELAY_MS = 60 * 10000; // 10 minutes
 
 /**
  * BrowserWeakMap is exactly like a WeakMap, but expects <xul:browser>
@@ -585,6 +592,8 @@ this.UnsubmittedCrashHandler = {
   // shouldShowPendingSubmissionsNotification().
   suppressed: false,
 
+  _checkTimeout: null,
+
   init() {
     if (this.initialized) {
       return;
@@ -621,6 +630,11 @@ this.UnsubmittedCrashHandler = {
 
     this.initialized = false;
 
+    if (this._checkTimeout) {
+      clearTimeout(this._checkTimeout);
+      this._checkTimeout = null;
+    }
+
     if (!this.enabled) {
       return;
     }
@@ -646,6 +660,14 @@ this.UnsubmittedCrashHandler = {
         break;
       }
     }
+  },
+
+  scheduleCheckForUnsubmittedCrashReports() {
+    this._checkTimeout = setTimeout(() => {
+      Services.tm.idleDispatchToMainThread(() => {
+        this.checkForUnsubmittedCrashReports();
+      });
+    }, CHECK_FOR_UNSUBMITTED_CRASH_REPORTS_DELAY_MS);
   },
 
   /**

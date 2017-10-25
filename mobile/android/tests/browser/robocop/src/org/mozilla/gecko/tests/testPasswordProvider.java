@@ -6,7 +6,6 @@ package org.mozilla.gecko.tests;
 
 import java.io.File;
 
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.GeckoDisabledHosts;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 
@@ -25,7 +24,7 @@ import android.net.Uri;
  * - inserts a disabled host
  * - queries for disabled host
  */
-public class testPasswordProvider extends BaseTest {
+public class testPasswordProvider extends OldBaseTest {
     private static final String DB_NAME = "signons.sqlite";
 
     public void testPasswordProvider() {

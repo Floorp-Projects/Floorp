@@ -459,8 +459,8 @@ class AutoTry(object):
 
         return " ".join(parts)
 
-    def find_paths_and_tags(self, verbose, detect_paths):
-        paths, tags = set(), set()
+    def find_paths_and_metadata(self, verbose, detect_paths):
+        paths, tags, flavors = set(), set(), set()
         changed_files = self.vcs.files_changed
         if changed_files and detect_paths:
             if verbose:
@@ -479,6 +479,7 @@ class AutoTry(object):
             for path, info in files_info.items():
                 paths |= info.test_files
                 tags |= info.test_tags
+                flavors |= info.test_flavors
 
             if verbose:
                 if paths:
@@ -487,7 +488,12 @@ class AutoTry(object):
                 if tags:
                     print("Pushing tests based on the following tags:\n\t%s" %
                           "\n\t".join(tags))
-        return paths, tags
+
+        return {
+            'paths': paths,
+            'tags': tags,
+            'flavors': flavors,
+        }
 
     def normalise_list(self, items, allow_subitems=False):
         rv = defaultdict(list)
@@ -585,8 +591,10 @@ class AutoTry(object):
                     kwargs[key] = defaults[key]
 
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
-            kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"],
-                                                                       kwargs["detect_paths"])
+            res = self.find_paths_and_metadata(kwargs['verbose'],
+                                               kwargs['detect_paths'])
+            kwargs['paths'] = res['paths']
+            kwargs['tags'] = res['tags']
 
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 
