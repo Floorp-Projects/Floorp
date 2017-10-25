@@ -271,7 +271,7 @@ void
 BlockingResourceBase::CheckAcquire()
 {
   if (mType == eCondVar) {
-    NS_NOTYETIMPLEMENTED(
+    MOZ_ASSERT_UNREACHABLE(
       "FIXME bug 456272: annots. to allow CheckAcquire()ing condvars");
     return;
   }
@@ -315,7 +315,7 @@ void
 BlockingResourceBase::Acquire()
 {
   if (mType == eCondVar) {
-    NS_NOTYETIMPLEMENTED(
+    MOZ_ASSERT_UNREACHABLE(
       "FIXME bug 456272: annots. to allow Acquire()ing condvars");
     return;
   }
@@ -340,7 +340,7 @@ void
 BlockingResourceBase::Release()
 {
   if (mType == eCondVar) {
-    NS_NOTYETIMPLEMENTED(
+    MOZ_ASSERT_UNREACHABLE(
       "FIXME bug 456272: annots. to allow Release()ing condvars");
     return;
   }

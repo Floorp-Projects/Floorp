@@ -113,20 +113,6 @@ inline void MOZ_PretendNoReturn()
 
 /**
  * This macros triggers a program failure if executed. It indicates that
- * an attempt was made to execute some unimplemented functionality.
- */
-#ifdef DEBUG
-#define NS_NOTYETIMPLEMENTED(str)                             \
-  do {                                                        \
-    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__); \
-    MOZ_PretendNoReturn();                                    \
-  } while(0)
-#else
-#define NS_NOTYETIMPLEMENTED(str)      do { /* nothing */ } while(0)
-#endif
-
-/**
- * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute a codepath which should not be reachable.
  */
 #ifdef DEBUG
