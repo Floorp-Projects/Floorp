@@ -263,7 +263,6 @@ if CONFIG['GNU_CXX']:
             '-Wno-unused-local-typedef',
         ]
 elif CONFIG['_MSC_VER']:
-    DEFINES['NOGDI'] = True  # wingdi.h defines ERROR as 0 and conflicts with logging.h
     CXXFLAGS += [
         '-wd4005',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4018',  # '<' : signed/unsigned mismatch
@@ -272,6 +271,9 @@ elif CONFIG['_MSC_VER']:
         '-wd4305',  # double to float truncation
         '-wd4506',  # no definition for inline function (protobuf issue #240)
     ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['NOGDI'] = True  # wingdi.h defines ERROR as 0 and conflicts with logging.h
 
 if CONFIG['MOZ_USE_PTHREADS']:
     DEFINES['HAVE_PTHREAD'] = True
