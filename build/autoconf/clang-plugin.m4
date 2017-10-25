@@ -4,10 +4,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 AC_DEFUN([MOZ_CONFIG_CLANG_PLUGIN], [
 
-MOZ_ARG_ENABLE_BOOL(clang-plugin,
-[  --enable-clang-plugin   Enable building with the mozilla clang plugin ],
-   ENABLE_CLANG_PLUGIN=1,
-   ENABLE_CLANG_PLUGIN= )
 if test -n "$ENABLE_CLANG_PLUGIN"; then
     if test -z "${CLANG_CC}${CLANG_CL}"; then
         AC_MSG_ERROR([Can't use clang plugin without clang.])
@@ -155,9 +151,12 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
       LLVM_CXXFLAGS="$LLVM_CXXFLAGS -DHAS_ACCEPTS_IGNORINGPARENIMPCASTS"
     fi
 
+    CLANG_PLUGIN_FLAGS="-Xclang -load -Xclang $CLANG_PLUGIN -Xclang -add-plugin -Xclang moz-check"
+
     AC_DEFINE(MOZ_CLANG_PLUGIN)
 fi
 
+AC_SUBST_LIST(CLANG_PLUGIN_FLAGS)
 AC_SUBST(LLVM_CXXFLAGS)
 AC_SUBST(LLVM_LDFLAGS)
 AC_SUBST(CLANG_LDFLAGS)

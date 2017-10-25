@@ -275,6 +275,22 @@ def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
 
 set_config('LINK_GTEST_DURING_COMPILE', build_gtest)
 
+# clang-plugin location
+# ==============================================================
+@depends(library_name_info, check_build_environment, when='--enable-clang-plugin')
+def clang_plugin_path(library_name_info, build_env):
+    topobjdir = build_env.topobjdir
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+    return os.path.abspath(
+        os.path.join(topobjdir, 'build', 'clang-plugin',
+                     '%sclang-plugin%s' % (library_name_info.dll.prefix,
+                                           library_name_info.dll.suffix))
+    )
+
+add_old_configure_assignment('CLANG_PLUGIN', clang_plugin_path)
+
+
 # Awk detection
 # ==============================================================
 awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
