@@ -4,7 +4,7 @@
 
 #include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/ByteReader.h"
+#include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/DecoderData.h"
 #include <media/stagefright/foundation/ABitReader.h>
 #include "media/stagefright/MetaData.h"
@@ -87,27 +87,27 @@ FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::MediaByteBuffer* aDe
   return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
 }
 
-bool
+Result<Ok, nsresult>
 CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
 {
-  ByteReader reader(aData, aLength);
+  BufferReader reader(aData, aLength);
   while (reader.Remaining()) {
     PsshInfo psshInfo;
     if (!reader.ReadArray(psshInfo.uuid, 16)) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
 
     if (!reader.CanReadType<uint32_t>()) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
     auto length = reader.ReadType<uint32_t>();
 
     if (!reader.ReadArray(psshInfo.data, length)) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
     pssh.AppendElement(psshInfo);
   }
-  return true;
+  return Ok();
 }
 
 static void
