@@ -570,13 +570,21 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    bool aIsForBrowser)
 {
 #ifdef MOZ_WIDGET_GTK
-  // We need to pass a display down to gtk_init because it's not going to
-  // use the one from the environment on its own when deciding which backend
-  // to use, and when starting under XWayland, it may choose to start with
-  // the wayland backend instead of the x11 backend.
+  // When running X11 only build we need to pass a display down
+  // to gtk_init because it's not going to use the one from the environment
+  // on its own when deciding which backend to use, and when starting under
+  // XWayland, it may choose to start with the wayland backend
+  // instead of the x11 backend.
   // The DISPLAY environment variable is normally set by the parent process.
+  // The MOZ_GDK_DISPLAY environment variable is set from nsAppRunner.cpp
+  // when --display is set by the command line.
   if (!gfxPlatform::IsHeadless()) {
-    const char* display_name = DetectDisplay();
+    const char* display_name = PR_GetEnv("MOZ_GDK_DISPLAY");
+#ifndef MOZ_WAYLAND
+    if (!display_name) {
+      display_name = PR_GetEnv("DISPLAY");
+    }
+#endif
     if (display_name) {
       int argc = 3;
       char option_name[] = "--display";
