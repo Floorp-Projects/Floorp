@@ -4891,13 +4891,12 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   } else {
     nsINode* ancestor =
       nsContentUtils::GetCommonAncestor(startContainer, endContainer);
-    NS_ASSERTION(!ancestor || ancestor->IsNodeOfType(nsINode::eCONTENT),
+    NS_ASSERTION(!ancestor || ancestor->IsContent(),
                  "common ancestor is not content");
-    if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
+    if (!ancestor || !ancestor->IsContent())
       return nullptr;
 
-    nsIContent* ancestorContent = static_cast<nsIContent*>(ancestor);
-    ancestorFrame = ancestorContent->GetPrimaryFrame();
+    ancestorFrame = ancestor->AsContent()->GetPrimaryFrame();
 
     // XXX deal with ancestorFrame being null due to display:contents
 

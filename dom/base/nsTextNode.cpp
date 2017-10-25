@@ -111,7 +111,7 @@ nsTextNode::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 bool
 nsTextNode::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eTEXT | eDATA_NODE));
+  return !(aFlags & ~(eTEXT | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*

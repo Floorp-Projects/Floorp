@@ -6575,7 +6575,7 @@ void HTMLMediaElement::NotifyShutdownEvent()
 bool
 HTMLMediaElement::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eMEDIA));
+  return !(aFlags & ~eMEDIA);
 }
 
 void HTMLMediaElement::DispatchAsyncSourceError(nsIContent* aSourceElement)

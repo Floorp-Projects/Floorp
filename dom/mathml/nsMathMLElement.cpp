@@ -944,7 +944,7 @@ nsMathMLElement::IntrinsicState() const
 bool
 nsMathMLElement::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eCONTENT);
+  return false;
 }
 
 void

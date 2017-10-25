@@ -921,7 +921,7 @@ nsSVGElement::GetAttributeChangeHint(const nsAtom* aAttribute,
 bool
 nsSVGElement::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eCONTENT);
+  return false;
 }
 
 void

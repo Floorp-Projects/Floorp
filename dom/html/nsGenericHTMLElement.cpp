@@ -1769,7 +1769,7 @@ nsGenericHTMLFormElement::GetScopeChainParent() const
 bool
 nsGenericHTMLFormElement::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eHTML_FORM_CONTROL));
+  return !(aFlags & ~eHTML_FORM_CONTROL);
 }
 
 void

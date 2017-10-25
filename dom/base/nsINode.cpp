@@ -341,7 +341,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 
   if (IsNodeOfType(eDOCUMENT))
     return static_cast<nsIDocument*>(this)->GetRootElement();
-  if (!IsNodeOfType(eCONTENT))
+  if (!IsContent())
     return nullptr;
 
   if (GetComposedDoc() != aPresShell->GetDocument()) {
@@ -435,7 +435,7 @@ nsINode::GetComposedDocInternal() const
 void
 nsINode::CheckNotNativeAnonymous() const
 {
-  if (!IsNodeOfType(eCONTENT))
+  if (!IsContent())
     return;
   nsIContent* content = static_cast<const nsIContent *>(this)->GetBindingParent();
   while (content) {
@@ -2100,7 +2100,7 @@ nsINode::EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
   if ((!IsNodeOfType(eDOCUMENT) &&
        !IsNodeOfType(eDOCUMENT_FRAGMENT) &&
        !IsElement()) ||
-      !aNewChild.IsNodeOfType(eCONTENT)) {
+      !aNewChild.IsContent()) {
     aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
   }
@@ -2610,8 +2610,7 @@ nsINode::Contains(const nsINode* aOther) const
   if (!aOther ||
       OwnerDoc() != aOther->OwnerDoc() ||
       IsInUncomposedDoc() != aOther->IsInUncomposedDoc() ||
-      !(aOther->IsElement() ||
-        aOther->IsNodeOfType(nsINode::eCONTENT)) ||
+      !aOther->IsContent() ||
       !GetFirstChild()) {
     return false;
   }
@@ -2647,8 +2646,8 @@ nsINode::Length() const
   case nsIDOMNode::CDATA_SECTION_NODE:
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
   case nsIDOMNode::COMMENT_NODE:
-    MOZ_ASSERT(IsNodeOfType(eCONTENT));
-    return static_cast<const nsIContent*>(this)->TextLength();
+    MOZ_ASSERT(IsContent());
+    return AsContent()->TextLength();
 
   default:
     return GetChildCount();
