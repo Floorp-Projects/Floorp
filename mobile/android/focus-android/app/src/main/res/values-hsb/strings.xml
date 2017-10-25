@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analyzowe přesćěhowaki blokować</string>
   <string name="preference_privacy_block_social">Socialne přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
-  <string name="preference_privacy_block_content_summary">Haći snano někotrym widejam a webstronam</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja</string>
   <string name="preference_category_performance">Wukon</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Wo %1$s</string>
   <string name="preference_search_installed_search_engines">Instalowane pytawy</string>
   <string name="preference_search_restore">Standardne pytawy wobnowić</string>
-  <string name="preference_search_add">Dalšu pytawu přidać</string>
   <string name="preference_search_remove_title">Pytawy wotstronić</string>
   <string name="preference_search_remove">Wotstronić</string>
   <string name="tutorial_search_manually_add">Manuelnje přidać</string>

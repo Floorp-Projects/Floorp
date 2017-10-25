@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">مسدود کردن ردیاب‌های آماری</string>
   <string name="preference_privacy_block_social">مسدود کردن ردیاب‌های شبکه‌های اجتماعی</string>
   <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
-  <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دچار مشکل کند</string>
   <string name="preference_privacy_secure_mode">حالت پنهان</string>
   <string name="preference_privacy_stealth_summary">هنگام تعویض برنامه‌ها صفحه‌های وب را مخفی کن</string>
   <string name="preference_category_performance">کارایی</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">درباره %1$s</string>
   <string name="preference_search_installed_search_engines">موتورهای جست‌وجو نصب شده</string>
   <string name="preference_search_restore">بازآوری موتورهای جست‌وجو پیش‌فرض</string>
-  <string name="preference_search_add">اضافه کردن موتور جست‌وجو دیگر</string>
   <string name="preference_search_remove_title">حذف موتورهای جست‌وجو</string>
   <string name="preference_search_remove">حذف</string>
   <string name="tutorial_search_manually_add">اضافه کردن دستی</string>

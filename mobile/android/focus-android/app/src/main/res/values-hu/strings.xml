@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analitikai követők blokkolása</string>
   <string name="preference_privacy_block_social">Közösségi oldalak követőinek blokkolása</string>
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
-  <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
   <string name="preference_privacy_secure_mode">Rejtőzködés</string>
   <string name="preference_privacy_stealth_summary">Weboldalak elrejtése alkalmazásváltáskor</string>
   <string name="preference_category_performance">Teljesítmény</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">A %1$s névjegye</string>
   <string name="preference_search_installed_search_engines">Telepített keresőszolgáltatások</string>
   <string name="preference_search_restore">Alapértelmezett keresőszolgáltatások visszaállítása</string>
-  <string name="preference_search_add">További keresőszolgáltatás felvétele</string>
   <string name="preference_search_remove_title">Keresőszolgáltatások eltávolítása</string>
   <string name="preference_search_remove">Eltávolítás</string>
   <string name="tutorial_search_manually_add">Kézi hozzáadás</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Bloca els elements de seguiment d\'anàlisi</string>
   <string name="preference_privacy_block_social">Bloca els elements de seguiment social</string>
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
-  <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
   <string name="preference_category_performance">Rendiment</string>

@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analyseverfolgung blockieren</string>
   <string name="preference_privacy_block_social">Verfolgung sozialer Netzwerke blockieren</string>
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
-  <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_privacy_secure_mode">Tarnung</string>
   <string name="preference_privacy_stealth_summary">Webseiten beim Wechseln von Apps verstecken</string>
   <string name="preference_category_performance">Leistung</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Über %1$s</string>
   <string name="preference_search_installed_search_engines">Installierte Suchmaschinen</string>
   <string name="preference_search_restore">Standard-Suchmaschinen wiederherstellen</string>
-  <string name="preference_search_add">Weitere Suchmaschine hinzufügen</string>
   <string name="preference_search_remove_title">Suchmaschinen entfernen</string>
   <string name="preference_search_remove">Entfernen</string>
   <string name="tutorial_search_manually_add">Manuell hinzufügen</string>

@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">アクセス解析をブロック</string>
   <string name="preference_privacy_block_social">ソーシャル追跡をブロック</string>
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
-  <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
   <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠す</string>
   <string name="preference_category_performance">パフォーマンス</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s について</string>
   <string name="preference_search_installed_search_engines">インストールされた検索エンジン</string>
   <string name="preference_search_restore">既定の検索エンジンを復元</string>
-  <string name="preference_search_add">別の検索エンジンを追加</string>
   <string name="preference_search_remove_title">検索エンジンを削除</string>
   <string name="preference_search_remove">削除</string>
   <string name="tutorial_search_manually_add">手動で追加</string>

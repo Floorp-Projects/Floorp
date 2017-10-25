@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">వైశ్లేషిక ట్రాకర్లను నిరోధించు</string>
   <string name="preference_privacy_block_social">సామాజిక ట్రాకర్లను నిరోధించు</string>
   <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
-  <string name="preference_privacy_block_content_summary">కొన్ని వీడియోలు, జాల పేజీలు పనిచేయకపోవచ్చు</string>
   <string name="preference_privacy_secure_mode">గోప్యత</string>
   <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు</string>
   <string name="preference_category_performance">పనితనం</string>

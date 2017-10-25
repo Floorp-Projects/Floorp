@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Bloquiar rastrexadores d\'analítiques</string>
   <string name="preference_privacy_block_social">Bloquiar rastrexadores sociales</string>
   <string name="preference_privacy_block_content">Bloquiar otros rastrexadores</string>
-  <string name="preference_privacy_block_content_summary">Quiciabes ruempa dellos vídeos y páxines web</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones</string>
   <string name="preference_category_performance">Rindimientu</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Tocante a %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de gueta instalaos</string>
   <string name="preference_search_restore">Reafitar motores de gueta</string>
-  <string name="preference_search_add">Amestar otru motor de gueta</string>
   <string name="preference_search_remove_title">Desaniciar motores de gueta</string>
   <string name="preference_search_remove">Desaniciar</string>
   <string name="tutorial_search_manually_add">Amiestu manual</string>

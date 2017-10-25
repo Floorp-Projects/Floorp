@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Blokker analysesporere</string>
   <string name="preference_privacy_block_social">Blokker sosiale media-sporere</string>
   <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
-  <string name="preference_privacy_block_content_summary">Kan ødelegge noen videoer og nettsider</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
   <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter appar</string>
   <string name="preference_category_performance">Ytelse</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerte søkemotorer</string>
   <string name="preference_search_restore">Gjenopprett standard søkemotorer</string>
-  <string name="preference_search_add">Legg til en annen søkemotor</string>
   <string name="preference_search_remove_title">Fjern søkemotorer</string>
   <string name="preference_search_remove">Fjern</string>
   <string name="tutorial_search_manually_add">Legg til manuelt</string>

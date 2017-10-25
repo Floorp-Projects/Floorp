@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Blokovat analytické prvky</string>
   <string name="preference_privacy_block_social">Blokovat sledující prvky sociálních sítí</string>
   <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
-  <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
   <string name="preference_privacy_secure_mode">Nenápadnost</string>
   <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací</string>
   <string name="preference_category_performance">Výkon</string>

@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Blokowanie śledzących statystyk</string>
   <string name="preference_privacy_block_social">Blokowanie śledzących społecznościowych</string>
   <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
-  <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron</string>
   <string name="preference_privacy_secure_mode">Tryb ukryty</string>
   <string name="preference_privacy_stealth_summary">Ukrywanie stron podczas przełączania aplikacji</string>
   <string name="preference_category_performance">Wydajność</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">O programie %1$s</string>
   <string name="preference_search_installed_search_engines">Zainstalowane wyszukiwarki</string>
   <string name="preference_search_restore">Przywróć domyślne wyszukiwarki</string>
-  <string name="preference_search_add">Dodaj inną wyszukiwarkę</string>
   <string name="preference_search_remove_title">Usuń wyszukiwarki</string>
   <string name="preference_search_remove">Usuń</string>
   <string name="tutorial_search_manually_add">Dodaj ręcznie</string>

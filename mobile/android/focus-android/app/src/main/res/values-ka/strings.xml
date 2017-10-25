@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_social">სოციალური ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
-  <string name="preference_privacy_block_content_summary">შესაძლოა ზოგიერთმა საიტმა, ან ვიდეომ არ იმუშაოს გამართულად</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
   <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას</string>
   <string name="preference_category_performance">წარმადობა</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s-ის შესახებ</string>
   <string name="preference_search_installed_search_engines">დაყენებული საძიებო სისტემები</string>
   <string name="preference_search_restore">ნაგულისხმევი საძიებო სისტემების აღდგენა</string>
-  <string name="preference_search_add">საძიებო სისტემების დამატება</string>
   <string name="preference_search_remove_title">საძიებო სისტემების ამოშლა</string>
   <string name="preference_search_remove">ამოღება</string>
   <string name="tutorial_search_manually_add">ხელით დამატება</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Blokuoti analizės stebėjimo elementus</string>
   <string name="preference_privacy_block_social">Blokuoti socialinius stebėjimo elementus</string>
   <string name="preference_privacy_block_content">Blokuoti kitus turinio stebėjimo elementus</string>
-  <string name="preference_privacy_block_content_summary">Gali sutrikti kai kurių vaizdo įrašų ir svetainių veikimas</string>
   <string name="preference_privacy_secure_mode">Slaptumas</string>
   <string name="preference_privacy_stealth_summary">Slėpti tinklalapius pereinant tarp programų</string>
   <string name="preference_category_performance">Našumas</string>

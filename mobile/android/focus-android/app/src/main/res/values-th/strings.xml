@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
   <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
   <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
-  <string name="preference_privacy_block_content_summary">อาจทำให้วิดีโอและหน้าเว็บบางส่วนไม่สมบูรณ์</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
   <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอป</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">เกี่ยวกับ %1$s</string>
   <string name="preference_search_installed_search_engines">เครื่องมือค้นหาที่ติดตั้งไว้</string>
   <string name="preference_search_restore">เรียกคืนเครื่องมือค้นหาเริ่มต้น</string>
-  <string name="preference_search_add">เพิ่มเครื่องมือค้นหาอื่น</string>
   <string name="preference_search_remove_title">เอาเครื่องมือค้นหาออก</string>
   <string name="preference_search_remove">เอาออก</string>
   <string name="tutorial_search_manually_add">เพิ่มด้วยตนเอง</string>

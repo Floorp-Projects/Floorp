@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Φραγή trackers αναλύσεων</string>
   <string name="preference_privacy_block_social">Φραγή κοινωνικών trackers</string>
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
-  <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
   <string name="preference_privacy_secure_mode">Αορατότητα</string>
   <string name="preference_privacy_stealth_summary">Απόκρυψη ιστοσελίδων κατά την εναλλαγή εφαρμογών</string>
   <string name="preference_category_performance">Απόδοση</string>

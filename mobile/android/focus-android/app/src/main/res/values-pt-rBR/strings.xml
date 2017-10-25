@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
   <string name="preference_privacy_block_social">Bloquear rastreadores sociais</string>
   <string name="preference_privacy_block_content">Bloquear outros rastreadores</string>
-  <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
   <string name="preference_privacy_secure_mode">Furtividade</string>
   <string name="preference_privacy_stealth_summary">Esconder páginas web quando trocar aplicativo</string>
   <string name="preference_category_performance">Desempenho</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Sobre o %1$s</string>
   <string name="preference_search_installed_search_engines">Mecanismos de pesquisa instalados</string>
   <string name="preference_search_restore">Restaurar mecanismos de pesquisa padrão</string>
-  <string name="preference_search_add">Adicionar outro mecanismo de pesquisa</string>
   <string name="preference_search_remove_title">Remover mecanismos de pesquisa</string>
   <string name="preference_search_remove">Remover</string>
   <string name="tutorial_search_manually_add">Adicionar manualmente</string>

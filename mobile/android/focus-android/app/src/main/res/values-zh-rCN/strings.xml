@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">拦截分析跟踪器</string>
   <string name="preference_privacy_block_social">拦截社交跟踪器</string>
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
-  <string name="preference_privacy_block_content_summary">可能对某些网页与视频有影响</string>
   <string name="preference_privacy_secure_mode">隐形</string>
   <string name="preference_privacy_stealth_summary">切换应用时隐藏网页</string>
   <string name="preference_category_performance">性能</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">关于 %1$s</string>
   <string name="preference_search_installed_search_engines">已安装的搜索引擎</string>
   <string name="preference_search_restore">恢复默认搜索引擎</string>
-  <string name="preference_search_add">添加更多搜索引擎</string>
   <string name="preference_search_remove_title">移除搜索引擎</string>
   <string name="preference_search_remove">移除</string>
   <string name="tutorial_search_manually_add">手动添加</string>

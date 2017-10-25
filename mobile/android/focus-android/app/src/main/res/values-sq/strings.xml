@@ -30,7 +30,6 @@
   <string name="preference_privacy_block_analytics">Blloko gjurmues analizash</string>
   <string name="preference_privacy_block_social">Blloko gjurmues platformash shoqërore</string>
   <string name="preference_privacy_block_content">Blloko të tjerë gjurmues lënde</string>
-  <string name="preference_privacy_block_content_summary">Mund të pengojë funksionimin e disa videove dhe faqeve Web</string>
   <string name="preference_category_performance">Punim</string>
   <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
   <string name="preference_performance_block_webfonts_summary">Mund të sjellë në mungesë ikonash ose figurash</string>

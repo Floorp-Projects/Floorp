@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Blokeatu analitiken jarraipena</string>
   <string name="preference_privacy_block_social">Blokeatu sare sozialetako jarraipena</string>
   <string name="preference_privacy_block_content">Blokeatu bestelako edukien jarraipena</string>
-  <string name="preference_privacy_block_content_summary">Zenbait bideo eta web orri apur litzake</string>
   <string name="preference_privacy_secure_mode">Modu isil-gordea</string>
   <string name="preference_privacy_stealth_summary">Ezkutatu web orriak aplikazioak aldatzean</string>
   <string name="preference_category_performance">Errendimendua</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s(r)i buruz</string>
   <string name="preference_search_installed_search_engines">Instalatutako bilaketa-motorrak</string>
   <string name="preference_search_restore">Berrezarri bilaketa-motor lehenetsiak</string>
-  <string name="preference_search_add">Gehitu beste bilaketa-motor bat</string>
   <string name="preference_search_remove_title">Kendu bilaketa-motorrak</string>
   <string name="preference_search_remove">Kendu</string>
   <string name="tutorial_search_manually_add">Gehitu eskuz</string>

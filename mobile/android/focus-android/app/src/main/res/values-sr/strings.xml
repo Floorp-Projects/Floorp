@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Блокирај аналитичке пратиоце</string>
   <string name="preference_privacy_block_social">Блокирај друштвене пратиоце</string>
   <string name="preference_privacy_block_content">Блокирај пратиоце осталог садржаја</string>
-  <string name="preference_privacy_block_content_summary">Може пореметити неке видео клипове и веб странице</string>
   <string name="preference_privacy_secure_mode">Потајни режим</string>
   <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација</string>
   <string name="preference_category_performance">Перформансе</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">О %1$s</string>
   <string name="preference_search_installed_search_engines">Инсталирани претраживачи</string>
   <string name="preference_search_restore">Врати на подразумеване претраживаче</string>
-  <string name="preference_search_add">Додај претраживач</string>
   <string name="preference_search_remove_title">Уклони претраживач</string>
   <string name="preference_search_remove">Уклони</string>
   <string name="tutorial_search_manually_add">Додај ручно</string>

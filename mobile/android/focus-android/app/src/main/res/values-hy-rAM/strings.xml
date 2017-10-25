@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Արգելափակել վերլուծական հետագծումները</string>
   <string name="preference_privacy_block_social">Արգելափակել սոցիալական հետագծումները</string>
   <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
-  <string name="preference_privacy_block_content_summary">Կարող է ընդհատել որոշ տեսանյութեր և վեբ էջեր</string>
   <string name="preference_privacy_secure_mode">Թաքնված</string>
   <string name="preference_privacy_stealth_summary">Թաքցնել վեբ էջերը հավելվածները փոխանջատելիս</string>
   <string name="preference_category_performance">Արդյունավետություն</string>

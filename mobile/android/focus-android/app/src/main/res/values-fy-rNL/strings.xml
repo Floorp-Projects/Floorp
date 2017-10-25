@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analysetrackers blokkearje</string>
   <string name="preference_privacy_block_social">Sosjale trackers blokkearje</string>
   <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
-  <string name="preference_privacy_block_content_summary">Kin guon fideo’s en websiden fersteure</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
   <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps</string>
   <string name="preference_category_performance">Prestaasjes</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Oer %1$s</string>
   <string name="preference_search_installed_search_engines">Ynstallearre sykmasinen</string>
   <string name="preference_search_restore">Standert-sykmasinen opnij ynstelle</string>
-  <string name="preference_search_add">In oare sykmasine tafoegje</string>
   <string name="preference_search_remove_title">Sykmasinen fuortsmite</string>
   <string name="preference_search_remove">Fuortsmite</string>
   <string name="tutorial_search_manually_add">Hânmjittich tafoegje</string>

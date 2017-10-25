@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
   <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
   <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
-  <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
   <string name="preference_privacy_secure_mode">Tusligt</string>
   <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen</string>
   <string name="preference_category_performance">Tamellit</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Γef %1$s</string>
   <string name="preference_search_installed_search_engines">Imseddayen n unadi ibedden</string>
   <string name="preference_search_restore">Err-d imseddayen n unadi imezwar</string>
-  <string name="preference_search_add">Rnu ugar n yimseddayen n unadi</string>
   <string name="preference_search_remove_title">Kkes imseddayen n unadi</string>
   <string name="preference_search_remove">Kkes</string>
   <string name="tutorial_search_manually_add">Rnu s ufus</string>

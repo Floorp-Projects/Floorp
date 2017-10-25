@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">تجزیاتی ٹریکرز کو بلاک کریں</string>
   <string name="preference_privacy_block_social">سماجی ٹریکرز بلاک کریں</string>
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
-  <string name="preference_privacy_block_content_summary">شاید کچھ وڈیوز اور ویب صفحات کو توڑ دے</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
   <string name="preference_privacy_stealth_summary">اہپس تبدیل کرنے وقت ویب صفحات کو چھپائیں</string>
   <string name="preference_category_performance">کارکردگی</string>

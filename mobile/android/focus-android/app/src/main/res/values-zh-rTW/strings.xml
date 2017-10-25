@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">封鎖分析型追蹤器</string>
   <string name="preference_privacy_block_social">封鎖社交追蹤器</string>
   <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
-  <string name="preference_privacy_block_content_summary">可能會影響網頁與影片載入</string>
   <string name="preference_privacy_secure_mode">秘密行動</string>
   <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容</string>
   <string name="preference_category_performance">效能</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">關於 %1$s</string>
   <string name="preference_search_installed_search_engines">已安裝的搜尋引擎</string>
   <string name="preference_search_restore">還原預設搜尋引擎</string>
-  <string name="preference_search_add">新增其他搜尋引擎</string>
   <string name="preference_search_remove_title">移除搜尋引擎</string>
   <string name="preference_search_remove">移除</string>
   <string name="tutorial_search_manually_add">手動新增</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Cuir cosc ar lorgairí anailísíochta</string>
   <string name="preference_privacy_block_social">Cuir cosc ar lorgairí sóisialta</string>
   <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
-  <string name="preference_privacy_block_content_summary">Seans go mbrisfidh seo físeáin agus leathanaigh Ghréasáin áirithe</string>
   <string name="preference_privacy_secure_mode">Mód Rúnda</string>
   <string name="preference_privacy_stealth_summary">Folaigh leathanaigh Ghréasáin agus an aip á hathrú</string>
   <string name="preference_category_performance">Feidhmíocht</string>

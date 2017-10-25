@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">विश्लेषणात्मक ट्रैकर्स को अवरुद्ध करें</string>
   <string name="preference_privacy_block_social">सामाजिक ट्रैकर्स को अवरुद्ध करें</string>
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रैकर्स को अवरुद्ध करें</string>
-  <string name="preference_privacy_block_content_summary">कुछ वीडियो और वेब पृष्ठ भंग हो सकते हैं</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
   <string name="preference_privacy_stealth_summary">ऐप्स को स्विच करते समय वेबपेज छिपाएं</string>
   <string name="preference_category_performance">प्रदर्शन</string>

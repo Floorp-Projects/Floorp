@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analyzowe pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_social">Socialne pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
-  <string name="preference_privacy_block_content_summary">Kazy snaź někotare wideo a webboki</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju</string>
   <string name="preference_category_performance">Wugbaśe</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Wó %1$s</string>
   <string name="preference_search_installed_search_engines">Zainstalěrowane pytnice</string>
   <string name="preference_search_restore">Standardne pytnice wótnowiś</string>
-  <string name="preference_search_add">Dalšnu pytnicu pśidaś</string>
   <string name="preference_search_remove_title">Pytnice wótwónoźeś</string>
   <string name="preference_search_remove">Wótwónoźeś</string>
   <string name="tutorial_search_manually_add">Manuelnje pśidaś</string>

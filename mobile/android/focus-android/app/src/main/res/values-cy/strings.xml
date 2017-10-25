@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">Rhwystro tracwyr dadansoddi</string>
   <string name="preference_privacy_block_social">Rhwystro tracwyr cymdeithasol</string>
   <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
-  <string name="preference_privacy_block_content_summary">Gall dorri rhai fideos a thudalennau Gwe</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
   <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth agor apiau</string>
   <string name="preference_category_performance">Perfformiad</string>
@@ -49,7 +48,6 @@
   <string name="preference_about">Ynghylch %1$s</string>
   <string name="preference_search_installed_search_engines">Peiriannau chwilio wedi eu gosod</string>
   <string name="preference_search_restore">Adfer peiriannau chwilio rhagosodedig</string>
-  <string name="preference_search_add">Ychwanegu peiriannau chwilio arall</string>
   <string name="preference_search_remove_title">Tynnu peiriannau chwilio</string>
   <string name="preference_search_remove">Tynnu</string>
   <string name="tutorial_search_manually_add">Ychwanegu â llaw</string>

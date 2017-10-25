@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analitik takipçilerini engelle</string>
   <string name="preference_privacy_block_social">Sosyal takipçileri engelle</string>
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
-  <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
   <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
   <string name="preference_category_performance">Performans</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s hakkında</string>
   <string name="preference_search_installed_search_engines">Yüklü arama motorları</string>
   <string name="preference_search_restore">Varsayılan arama motorlarını geri yükle</string>
-  <string name="preference_search_add">Başka bir arama motoru ekle</string>
   <string name="preference_search_remove_title">Arama motorlarını sil</string>
   <string name="preference_search_remove">Sil</string>
   <string name="tutorial_search_manually_add">Elle ekle</string>

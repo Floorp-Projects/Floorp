@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Bloker analytisk sporing</string>
   <string name="preference_privacy_block_social">Bloker sporing via sociale medier</string>
   <string name="preference_privacy_block_content">Bloker andre former for indholdssporing</string>
-  <string name="preference_privacy_block_content_summary">Kan forhindre visning af visse videoer og websider</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
   <string name="preference_privacy_stealth_summary">Skjul indhold på listen over senest brugte apps</string>
   <string name="preference_category_performance">Ydelse</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerede søgetjenester</string>
   <string name="preference_search_restore">Gendan standard-søgetjenester</string>
-  <string name="preference_search_add">Tilføj en ny søgetjeneste</string>
   <string name="preference_search_remove_title">Fjern søgetjenester</string>
   <string name="preference_search_remove">Fjern</string>
   <string name="tutorial_search_manually_add">Tilføj manuelt</string>

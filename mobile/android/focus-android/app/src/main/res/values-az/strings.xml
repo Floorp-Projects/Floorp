@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Analiz izləyicilərini əngəllə</string>
   <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
   <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
-  <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
   <string name="preference_privacy_secure_mode">Görünməzlik</string>
   <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s Haqqında</string>
   <string name="preference_search_installed_search_engines">Quraşdırılmış axtarış mühərrikləri</string>
   <string name="preference_search_restore">İlkin axtarış nizamlarını bərpa et</string>
-  <string name="preference_search_add">Digər axtarış mühərriyini əlavə et</string>
   <string name="preference_search_remove_title">Axtarış mühərriklərini sil</string>
   <string name="preference_search_remove">Sil</string>
   <string name="tutorial_search_manually_add">Əl ilə əlavə et</string>

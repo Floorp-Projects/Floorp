@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Аналитикалық трекерлерді блоктау</string>
   <string name="preference_privacy_block_social">Әлеуметтік желілер трекерлерін блоктау</string>
   <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
-  <string name="preference_privacy_block_content_summary">Кейбір видео және веб парақтарының жұмысына кері әсерін тигізуі мүмкін</string>
   <string name="preference_privacy_secure_mode">Жасырын</string>
   <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру</string>
   <string name="preference_category_performance">Өнімділік</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">%1$s туралы</string>
   <string name="preference_search_installed_search_engines">Орнатылған іздеу жүйелері</string>
   <string name="preference_search_restore">Үнсіз келісім іздеу жүйелерін қалпына келтіру</string>
-  <string name="preference_search_add">Басқа іздеу жүйесін қосу</string>
   <string name="preference_search_remove_title">Іздеу жүйелерін өшіру</string>
   <string name="preference_search_remove">Өшіру</string>
   <string name="tutorial_search_manually_add">Қолмен қосу</string>

@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">သရုပ်ခွဲလေ့လာသည့် နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
   <string name="preference_privacy_block_social">လူမှုမီဒီယာ နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
   <string name="preference_privacy_block_content">အခြားသော အကြောင်းအရာနောက်ယောက်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
-  <string name="preference_privacy_block_content_summary">အချို့သော ဗီဒီယိုများနှင့် ဝဘ်စာမျက်နှာများကို ထိခိုက်စေသည်</string>
   <string name="preference_privacy_secure_mode">တိတ်တဆိတ်အသုံးပြုမှု</string>
   <string name="preference_privacy_stealth_summary">အက်ပ်များကို ခုန်ကူးနေစဉ် ဝဘ်စာမျက်နှာများကို မပြပါနှင့်</string>
   <string name="preference_category_performance">လုပ်ဆောင်မှု</string>

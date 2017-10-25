@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Zavračaj sledilce analitike</string>
   <string name="preference_privacy_block_social">Zavračaj sledilce družbenih omrežij</string>
   <string name="preference_privacy_block_content">Zavračaj druge vsebinske sledilce</string>
-  <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
   <string name="preference_privacy_secure_mode">Skrivni način</string>
   <string name="preference_privacy_stealth_summary">Skrij strani pri preklapljanju med aplikacijami</string>
   <string name="preference_category_performance">Učinkovitost</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">O %1$su</string>
   <string name="preference_search_installed_search_engines">Nameščeni iskalniki</string>
   <string name="preference_search_restore">Ponastavi privzete iskalnike</string>
-  <string name="preference_search_add">Dodaj drug iskalnik</string>
   <string name="preference_search_remove_title">Odstrani iskalnike</string>
   <string name="preference_search_remove">Odstrani</string>
   <string name="tutorial_search_manually_add">Dodaj ročno</string>

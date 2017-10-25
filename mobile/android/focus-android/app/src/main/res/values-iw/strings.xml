@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>
   <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
-  <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
   <string name="preference_privacy_secure_mode">חשאיות</string>
   <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים</string>
   <string name="preference_category_performance">ביצועים</string>

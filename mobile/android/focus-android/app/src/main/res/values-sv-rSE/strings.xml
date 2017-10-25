@@ -34,7 +34,6 @@
   <string name="preference_privacy_block_analytics">Blockera analytiska trackers</string>
   <string name="preference_privacy_block_social">Blockera sociala trackers</string>
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
-  <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
   <string name="preference_privacy_secure_mode">Dolt läge</string>
   <string name="preference_privacy_stealth_summary">Dölj webbsidor när du byter appar</string>
   <string name="preference_category_performance">Prestanda</string>
@@ -50,7 +49,6 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerade sökmotorer</string>
   <string name="preference_search_restore">Återställ standardsökmotorer</string>
-  <string name="preference_search_add">Lägg till en annan sökmotor</string>
   <string name="preference_search_remove_title">Ta bort sökmotorer</string>
   <string name="preference_search_remove">Ta bort</string>
   <string name="tutorial_search_manually_add">Lägg till manuellt</string>
