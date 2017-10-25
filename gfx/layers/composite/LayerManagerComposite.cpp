@@ -49,7 +49,7 @@
 #include "nsAppRunner.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_WARNING, NS_RUNTIMEABORT, etc
+#include "nsDebug.h"                    // for NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect

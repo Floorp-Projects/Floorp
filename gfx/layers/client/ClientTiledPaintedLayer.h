@@ -11,7 +11,6 @@
 #include "Layers.h"                     // for PaintedLayer, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/TiledContentClient.h"
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRegion.h"                   // for nsIntRegion
 
 namespace mozilla {
