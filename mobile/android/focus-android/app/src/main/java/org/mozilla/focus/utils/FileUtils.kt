@@ -6,6 +6,7 @@
 package org.mozilla.focus.utils
 
 import android.content.Context
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
 import java.io.File
 
@@ -28,6 +29,8 @@ class FileUtils {
             ))
         }
 
+        @SuppressFBWarnings("BC_BAD_CAST_TO_ABSTRACT_COLLECTION",
+                "filter casts to Collection and storing in val casts back to List: https://youtrack.jetbrains.com/issue/KT-18311")
         private fun deleteContent(directory: File, doNotEraseWhitelist: Set<String> = emptySet()): Boolean {
             val filesToDelete = directory.listFiles()?.filter { !doNotEraseWhitelist.contains(it.name) } ?: return false
             return filesToDelete.all { it.deleteRecursively() }
