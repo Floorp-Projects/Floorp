@@ -143,7 +143,7 @@ def process_inputs(namespace, c_out, msg_file, inputs):
   assert len(deps) + len(sources) == len(inputs)
   cxx = shlex.split(buildconfig.substs['CXX'])
   pp_option = buildconfig.substs['PREPROCESS_OPTION']
-  cppflags = shlex.split(buildconfig.substs['OS_CPPFLAGS'])
+  cppflags = buildconfig.substs['OS_CPPFLAGS']
   cppflags += shlex.split(buildconfig.substs['WARNINGS_AS_ERRORS'])
   env = get_config_defines(buildconfig)
   js_path = re.sub(r"\.out\.h$", "", c_out.name) + ".js"
