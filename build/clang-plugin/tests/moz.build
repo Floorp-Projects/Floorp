@@ -47,3 +47,15 @@ SOURCES += [
 
 DisableStlWrapping()
 NoVisibilityFlags()
+
+# Build without any warning flags, and with clang verify flag for a
+# syntax-only build (no codegen), without a limit on the number of errors.
+COMPILE_FLAGS['OS_CXXFLAGS'] = (
+    [f for f in COMPILE_FLAGS.get('OS_CXXFLAGS', []) if not f.startswith('-W')] +
+    ['-fsyntax-only', '-Xclang', '-verify', '-ferror-limit=0', '-Wno-invalid-noreturn']
+)
+COMPILE_FLAGS['OS_CFLAGS'] = (
+    [f for f in COMPILE_FLAGS.get('OS_CFLAGS', []) if not f.startswith('-W')] +
+    ['-fsyntax-only', '-Xclang', '-verify', '-ferror-limit=0', '-std=c11',
+     '-Wno-invalid-noreturn']
+)

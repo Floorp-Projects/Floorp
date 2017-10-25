@@ -338,6 +338,8 @@ class CompileFlags(ContextDerivedValue, dict):
             ('DEBUG', (context.config.substs['MOZ_DEBUG_FLAGS'].split() if
                        'MOZ_DEBUG_FLAGS' in context.config.substs else []),
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('CLANG_PLUGIN', context.config.substs.get('CLANG_PLUGIN_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('OPTIMIZE', self._optimize_flags(),
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
@@ -393,7 +395,7 @@ class CompileFlags(ContextDerivedValue, dict):
         if key in self and self[key] is None:
             raise ValueError('`%s` may not be set in COMPILE_FLAGS from moz.build, this '
                              'value is resolved from the emitter.' % key)
-        if not (isinstance(value, list) and all(isinstance(v, unicode) for v in value)):
+        if not (isinstance(value, list) and all(isinstance(v, basestring) for v in value)):
             raise ValueError('A list of strings must be provided as a value for a '
                              'compile flags category.')
         dict.__setitem__(self, key, value)
