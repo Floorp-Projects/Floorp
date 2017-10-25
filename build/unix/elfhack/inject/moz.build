@@ -23,4 +23,19 @@ SOURCES += [
 
 NO_PGO = True
 
+for v in ('OS_CPPFLAGS', 'OS_CFLAGS', 'DEBUG', 'CLANG_PLUGIN', 'OPTIMIZE',
+          'FRAMEPTR'):
+    flags = []
+    idx = 0
+    for flag in COMPILE_FLAGS[v]:
+        if flag == '-idirafter':
+            flags.append(''.join(COMPILE_FLAGS[v][idx:idx + 2]))
+        elif flag.startswith(('-m', '-I', '-idirafter')):
+            flags.append(flag)
+        idx += 1
+    COMPILE_FLAGS[v] = flags
+
+COMPILE_FLAGS['OS_CFLAGS'] += ['-O2', '-fno-stack-protector']
+
+AllowCompilerWarnings()
 NoVisibilityFlags()
