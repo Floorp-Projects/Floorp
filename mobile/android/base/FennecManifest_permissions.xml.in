@@ -1,8 +1,3 @@
-<!-- The bouncer APK and the Fennec APK should define the same set of
-     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
-     the likelihood of permission-related surprises when installing the main APK
-     on top of a pre-installed bouncer APK.  Add such elements here, so that
-     they can be easily shared between the two APKs. -->
 
 #include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
 
@@ -23,9 +18,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <!-- READ_EXTERNAL_STORAGE was added in API 16, and is only enforced in API
-         19+.  We declare it so that the bouncer APK and the main APK have the
-         same set of permissions. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
