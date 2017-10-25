@@ -131,7 +131,7 @@ namespace mozilla {
 AutoSQLiteLifetime::AutoSQLiteLifetime()
 {
   if (++AutoSQLiteLifetime::sSingletonEnforcer != 1) {
-    NS_RUNTIMEABORT("multiple instances of AutoSQLiteLifetime constructed!");
+    MOZ_CRASH("multiple instances of AutoSQLiteLifetime constructed!");
   }
 
 #ifdef MOZ_STORAGE_MEMORY
