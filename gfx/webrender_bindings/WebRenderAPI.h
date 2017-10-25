@@ -415,6 +415,10 @@ public:
   bool HasExtraClip() { return !mCacheOverride.empty(); }
 
 protected:
+  void PushCacheOverride(const DisplayItemClipChain* aParent,
+                         const wr::WrClipId& aClipId);
+  void PopCacheOverride(const DisplayItemClipChain* aParent);
+
   wr::WrState* mWrState;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
