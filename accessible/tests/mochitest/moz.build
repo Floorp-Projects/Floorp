@@ -13,6 +13,7 @@ A11Y_MANIFESTS += [
     'editabletext/a11y.ini',
     'elm/a11y.ini',
     'events/a11y.ini',
+    'events/docload/a11y.ini',
     'focus/a11y.ini',
     'hittest/a11y.ini',
     'hyperlink/a11y.ini',
