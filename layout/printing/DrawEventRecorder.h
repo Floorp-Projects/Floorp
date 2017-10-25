@@ -33,11 +33,8 @@ public:
   }
 
   void Flush() {
-    // We need to be API compatible with std::ostream, and so we silently handle
-    // flushes on a closed FD.
-    if (IsOpen()) {
-      PR_Sync(mFd);
-    }
+    // For std::ostream this flushes any internal buffers. PRFileDesc's IO isn't
+    // buffered, so nothing to do here.
   }
 
   void Seek(PRInt32 aOffset, PRSeekWhence aWhence) {
@@ -45,7 +42,8 @@ public:
   }
 
   void write(const char* aData, size_t aSize) {
-    // See comment in Flush().
+    // We need to be API compatible with std::ostream, and so we silently handle
+    // writes on a closed FD.
     if (IsOpen()) {
       PR_Write(mFd, static_cast<const void*>(aData), aSize);
     }
