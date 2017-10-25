@@ -547,9 +547,9 @@ nsDNSService::Init()
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
     bool     notifyResolution = false;
 
-    nsAutoCString ipv4OnlyDomains;
-    nsAutoCString localDomains;
-    nsAutoCString forceResolve;
+    nsCString ipv4OnlyDomains;
+    nsCString localDomains;
+    nsCString forceResolve;
 
     // read prefs
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -564,9 +564,9 @@ nsDNSService::Init()
 
         // ASSUMPTION: pref branch does not modify out params on failure
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
-        prefs->GetCharPref(kPrefIPv4OnlyDomains, ipv4OnlyDomains);
-        prefs->GetCharPref(kPrefDnsLocalDomains, localDomains);
-        prefs->GetCharPref(kPrefDnsForceResolve, forceResolve);
+        prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
+        prefs->GetCharPref(kPrefDnsLocalDomains, getter_Copies(localDomains));
+        prefs->GetCharPref(kPrefDnsForceResolve, getter_Copies(forceResolve));
         prefs->GetBoolPref(kPrefDnsOfflineLocalhost, &offlineLocalhost);
         prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
         prefs->GetBoolPref(kPrefBlockDotOnion, &blockDotOnion);

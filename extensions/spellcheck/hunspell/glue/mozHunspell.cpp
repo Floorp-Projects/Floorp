@@ -314,8 +314,8 @@ mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
   // check preferences first
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
-    nsAutoCString extDictPath;
-    rv = prefs->GetCharPref("spellchecker.dictionary_path", extDictPath);
+    nsCString extDictPath;
+    rv = prefs->GetCharPref("spellchecker.dictionary_path", getter_Copies(extDictPath));
     if (NS_SUCCEEDED(rv)) {
       // set the spellchecker.dictionary_path
       rv = NS_NewNativeLocalFile(extDictPath, true, getter_AddRefs(dictDir));

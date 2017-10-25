@@ -115,8 +115,8 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
 nsresult nsReadConfig::readConfigFile()
 {
     nsresult rv = NS_OK;
-    nsAutoCString lockFileName;
-    nsAutoCString lockVendor;
+    nsCString lockFileName;
+    nsCString lockVendor;
     uint32_t fileNameLen = 0;
 
     nsCOMPtr<nsIPrefBranch> defaultPrefBranch;
@@ -133,7 +133,7 @@ nsresult nsReadConfig::readConfigFile()
     // running mozilla or netscp6)
 
     rv = defaultPrefBranch->GetCharPref("general.config.filename",
-                                        lockFileName);
+                                  getter_Copies(lockFileName));
 
 
     MOZ_LOG(MCD, LogLevel::Debug, ("general.config.filename = %s\n", lockFileName.get()));
@@ -179,14 +179,16 @@ nsresult nsReadConfig::readConfigFile()
       return rv;
     }
 
-    rv = prefBranch->GetCharPref("general.config.filename", lockFileName);
+    rv = prefBranch->GetCharPref("general.config.filename",
+                                  getter_Copies(lockFileName));
     if (NS_FAILED(rv))
         // There is NO REASON we should ever get here. This is POST reading
         // of the config file.
         return NS_ERROR_FAILURE;
 
 
-    rv = prefBranch->GetCharPref("general.config.vendor", lockVendor);
+    rv = prefBranch->GetCharPref("general.config.vendor",
+                                  getter_Copies(lockVendor));
     // If vendor is not nullptr, do this check
     if (NS_SUCCEEDED(rv)) {
 
@@ -201,8 +203,9 @@ nsresult nsReadConfig::readConfigFile()
     }
 
     // get the value of the autoconfig url
-    nsAutoCString urlName;
-    rv = prefBranch->GetCharPref("autoadmin.global_config_url", urlName);
+    nsCString urlName;
+    rv = prefBranch->GetCharPref("autoadmin.global_config_url",
+                                  getter_Copies(urlName));
     if (NS_SUCCEEDED(rv) && !urlName.IsEmpty()) {
 
         // Instantiating nsAutoConfig object if the pref is present

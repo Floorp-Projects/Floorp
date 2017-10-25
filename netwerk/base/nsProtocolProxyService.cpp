@@ -427,8 +427,8 @@ proxy_GetStringPref(nsIPrefBranch *aPrefBranch,
                     const char    *aPref,
                     nsCString     &aResult)
 {
-    nsAutoCString temp;
-    nsresult rv = aPrefBranch->GetCharPref(aPref, temp);
+    nsCString temp;
+    nsresult rv = aPrefBranch->GetCharPref(aPref, getter_Copies(temp));
     if (NS_FAILED(rv))
         aResult.Truncate();
     else {
@@ -560,8 +560,9 @@ nsProtocolProxyService::ReloadNetworkPAC()
     }
 
     if (type == PROXYCONFIG_PAC) {
-        nsAutoCString pacSpec;
-        prefs->GetCharPref(PROXY_PREF("autoconfig_url"), pacSpec);
+        nsCString pacSpec;
+        prefs->GetCharPref(PROXY_PREF("autoconfig_url"),
+                           getter_Copies(pacSpec));
         if (!pacSpec.IsEmpty()) {
             nsCOMPtr<nsIURI> pacURI;
             rv = NS_NewURI(getter_AddRefs(pacURI), pacSpec);
@@ -691,7 +692,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 {
     nsresult rv = NS_OK;
     bool reloadPAC = false;
-    nsAutoCString tempString;
+    nsCString tempString;
 
     if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
         int32_t type = -1;
@@ -775,7 +776,8 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                          mFailedProxyTimeout);
 
     if (!pref || !strcmp(pref, PROXY_PREF("no_proxies_on"))) {
-        rv = prefBranch->GetCharPref(PROXY_PREF("no_proxies_on"), tempString);
+        rv = prefBranch->GetCharPref(PROXY_PREF("no_proxies_on"),
+                                     getter_Copies(tempString));
         if (NS_SUCCEEDED(rv))
             LoadHostFilters(tempString);
     }
@@ -796,7 +798,8 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
     if (reloadPAC) {
         tempString.Truncate();
         if (mProxyConfig == PROXYCONFIG_PAC) {
-            prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"), tempString);
+            prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"),
+                                    getter_Copies(tempString));
             if (mPACMan && !mPACMan->IsPACURI(tempString)) {
                 LOG(("PAC Thread URI Changed - Reset Pac Thread"));
                 ResetPACThread();
@@ -1243,9 +1246,9 @@ nsProtocolProxyService::ReloadPAC()
     if (NS_FAILED(rv))
         return NS_OK;
 
-    nsAutoCString pacSpec;
+    nsCString pacSpec;
     if (type == PROXYCONFIG_PAC)
-        prefs->GetCharPref(PROXY_PREF("autoconfig_url"), pacSpec);
+        prefs->GetCharPref(PROXY_PREF("autoconfig_url"), getter_Copies(pacSpec));
     else if (type == PROXYCONFIG_WPAD)
         pacSpec.AssignLiteral(WPAD_URL);
     else if (type == PROXYCONFIG_SYSTEM) {

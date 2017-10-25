@@ -41,7 +41,7 @@ interface nsIPrefBranch : nsISupports
    * Called to get the root on which this branch is based, such as
    * "browser.startup."
    */
-  readonly attribute ACString root;
+  readonly attribute string root;
 
   /**
    * Called to determine the type of a specific preference.
@@ -104,15 +104,14 @@ interface nsIPrefBranch : nsISupports
    * @param aPrefName The string preference to retrieve.
    * @param aDefaultValue The string to return if the preference is not set.
    *
-   * @return ACString   The value of the requested string preference.
+   * @return string   The value of the requested string preference.
    *
    * @see setCharPref
    */
   [optional_argc,binaryname(GetCharPrefWithDefault)]
-  ACString getCharPref(in string aPrefName,
-                       [optional] in ACString aDefaultValue);
+  string getCharPref(in string aPrefName, [optional] in string aDefaultValue);
   [noscript,binaryname(GetCharPref)]
-  ACString getCharPrefXPCOM(in string aPrefName);
+  string getCharPrefXPCOM(in string aPrefName);
 
   /**
    * Called to set the state of an individual ascii string preference.
@@ -125,7 +124,7 @@ interface nsIPrefBranch : nsISupports
    *
    * @see getCharPref
    */
-  void setCharPref(in string aPrefName, in ACString aValue);
+  void setCharPref(in string aPrefName, in string aValue);
 
   /**
    * Called to get the state of an individual unicode string preference.
@@ -133,7 +132,7 @@ interface nsIPrefBranch : nsISupports
    * @param aPrefName The string preference to retrieve.
    * @param aDefaultValue The string to return if the preference is not set.
    *
-   * @return ACString   The value of the requested string preference.
+   * @return string   The value of the requested string preference.
    *
    * @see setStringPref
    */
