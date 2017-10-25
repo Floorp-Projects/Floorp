@@ -3699,17 +3699,23 @@ MediaDecoderStateMachine::GetDebugInfo()
            "%" PRId64 " mMediaSink=%p state=%s mPlayState=%d "
            "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
            "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
-           " mDecodedVideoEndTime=%" PRId64 "mAudioCompleted=%d "
+           " mDecodedVideoEndTime=%" PRId64 " mAudioCompleted=%d "
            "mVideoCompleted=%d",
            GetMediaTime().ToMicroseconds(),
            mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1,
-           mMediaSink.get(), ToStateStr(), mPlayState.Ref(),
-           mSentFirstFrameLoadedEvent, IsPlaying(), AudioRequestStatus(),
-           VideoRequestStatus(), mDecodedAudioEndTime.ToMicroseconds(),
+           mMediaSink.get(),
+           ToStateStr(),
+           mPlayState.Ref(),
+           mSentFirstFrameLoadedEvent,
+           IsPlaying(),
+           AudioRequestStatus(),
+           VideoRequestStatus(),
+           mDecodedAudioEndTime.ToMicroseconds(),
            mDecodedVideoEndTime.ToMicroseconds(),
-           mAudioCompleted, mVideoCompleted)
-         + mStateObj->GetDebugInfo() + nsCString("\n")
-         + mMediaSink->GetDebugInfo();
+           mAudioCompleted,
+           mVideoCompleted) +
+         mStateObj->GetDebugInfo() + nsCString("\n") +
+         mMediaSink->GetDebugInfo();
 }
 
 RefPtr<MediaDecoder::DebugInfoPromise>
