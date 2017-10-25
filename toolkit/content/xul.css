@@ -888,13 +888,9 @@ autorepeatbutton {
 
 /********** stringbundle **********/
 
+stringbundle,
 stringbundleset {
-  visibility: collapse;
-}
-
-stringbundle {
-  -moz-binding: url("chrome://global/content/bindings/stringbundle.xml#stringbundle");
-  visibility: collapse;
+  display: none;
 }
 
 /********** dialog **********/
