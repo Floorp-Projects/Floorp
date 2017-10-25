@@ -16,6 +16,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifndef IME_PROP_ACCEPT_WIDE_VKEY
 #define IME_PROP_ACCEPT_WIDE_VKEY 0x20
@@ -225,6 +226,54 @@ bool IMMHandler::sAssumeVerticalWritingModeNotSupported = false;
 bool IMMHandler::sHasFocus = false;
 bool IMMHandler::sNativeCaretIsCreatedForPlugin = false;
 
+#define IMPL_IS_IME_ACTIVE(aReadableName, aActualName)                         \
+bool                                                                           \
+IMMHandler::Is ## aReadableName ## Active()                                    \
+{                                                                              \
+  return sIMEName.Equals(aActualName);                                         \
+}                                                                              \
+
+IMPL_IS_IME_ACTIVE(ATOK2006, u"ATOK 2006")
+IMPL_IS_IME_ACTIVE(ATOK2007, u"ATOK 2007")
+IMPL_IS_IME_ACTIVE(ATOK2008, u"ATOK 2008")
+IMPL_IS_IME_ACTIVE(ATOK2009, u"ATOK 2009")
+IMPL_IS_IME_ACTIVE(ATOK2010, u"ATOK 2010")
+// NOTE: Even on Windows for en-US, the name of Google Japanese Input is
+//       written in Japanese.
+IMPL_IS_IME_ACTIVE(GoogleJapaneseInput,
+                   u"Google \x65E5\x672C\x8A9E\x5165\x529B "
+                   u"IMM32 \x30E2\x30B8\x30E5\x30FC\x30EB")
+IMPL_IS_IME_ACTIVE(Japanist2003, u"Japanist 2003")
+
+#undef IMPL_IS_IME_ACTIVE
+
+// static
+bool
+IMMHandler::IsActiveIMEInBlockList()
+{
+  if (sIMEName.IsEmpty()) {
+    return false;
+  }
+#ifdef _WIN64
+  // ATOK started to be TIP of TSF since 2011.  Older than it, i.e., ATOK 2010
+  // and earlier have a lot of problems even for daily use.  Perhaps, the
+  // reason is Win 8 has a lot of changes around IMM-IME support and TSF,
+  // and ATOK 2010 is released earlier than Win 8.
+  // ATOK 2006 crashes while converting a word with candidate window.
+  // ATOK 2007 doesn't paint and resize suggest window and candidate window
+  // correctly (showing white window or too big window).
+  // ATOK 2008 and ATOK 2009 crash when user just opens their open state.
+  // ATOK 2010 isn't installable newly on Win 7 or later, but we have a lot of
+  // crash reports.
+  if (IsWin8OrLater() &&
+      (IsATOK2006Active() || IsATOK2007Active() || IsATOK2008Active() ||
+       IsATOK2009Active() || IsATOK2010Active())) {
+    return true;
+  }
+#endif // #ifdef _WIN64
+  return false;
+}
+
 // static
 void
 IMMHandler::EnsureHandlerInstance()
@@ -287,23 +336,6 @@ IMMHandler::IsTopLevelWindowOfComposition(nsWindow* aWindow)
   }
   HWND wnd = gIMMHandler->mComposingWindow->GetWindowHandle();
   return WinUtils::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
-}
-
-// static
-bool
-IMMHandler::IsJapanist2003Active()
-{
-  return sIMEName.EqualsLiteral("Japanist 2003");
-}
-
-// static
-bool
-IMMHandler::IsGoogleJapaneseInputActive()
-{
-  // NOTE: Even on Windows for en-US, the name of Google Japanese Input is
-  //       written in Japanese.
-  return sIMEName.Equals(u"Google \x65E5\x672C\x8A9E\x5165\x529B "
-                         u"IMM32 \x30E2\x30B8\x30E5\x30FC\x30EB");
 }
 
 // static
