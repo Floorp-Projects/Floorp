@@ -442,9 +442,10 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
       int64_t presentationDuration =
         ctsOrder.LastElement()->mCompositionRange.end
         - ctsOrder[0]->mCompositionRange.start;
-      int64_t endDecodeTime =
-        aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart)
-        + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
+      auto decodeOffset = aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart);
+      auto offsetOffset = aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
+      int64_t endDecodeTime = decodeOffset.isOk() & offsetOffset.isOk() ?
+                              decodeOffset.unwrap() + offsetOffset.unwrap() : 0;
       int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
       double adjust = (double)decodeDuration / presentationDuration;
       int64_t dtsOffset = mIndex[0].mDecodeTime;
@@ -680,12 +681,13 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
       sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
       offset += sampleSize;
 
-      sample.mDecodeTime =
-        aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
-      sample.mCompositionRange = Interval<Microseconds>(
-        aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset),
-        aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
-
+      Microseconds decodeOffset, emptyOffset, startCts, endCts;
+      MOZ_TRY_VAR(decodeOffset, aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart));
+      MOZ_TRY_VAR(emptyOffset, aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
+      sample.mDecodeTime = decodeOffset + emptyOffset;
+      MOZ_TRY_VAR(startCts, aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart));
+      MOZ_TRY_VAR(endCts, aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
+      sample.mCompositionRange = Interval<Microseconds>(startCts + emptyOffset, endCts + emptyOffset);
       // Sometimes audio streams don't properly mark their samples as keyframes,
       // because every audio sample is a keyframe.
       sample.mSync = !(sampleFlags & 0x1010000) || aIsAudio;
@@ -697,7 +699,9 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     }
     decodeTime += sampleDuration;
   }
-  mMaxRoundingError += aMdhd.ToMicroseconds(sampleCount);
+  Microseconds roundTime;
+  MOZ_TRY_VAR(roundTime, aMdhd.ToMicroseconds(sampleCount));
+  mMaxRoundingError += roundTime;
 
   *aDecodeTime = decodeTime;
 

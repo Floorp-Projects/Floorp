@@ -164,7 +164,7 @@ const HeadersPanel = createClass({
     );
 
     let summaryUrl = urlDetails.unicodeUrl ?
-      this.renderSummary(SUMMARY_URL, urlDetails.unicodeUrl) : null;
+      this.renderSummary(SUMMARY_URL, new URL(urlDetails.unicodeUrl).origin) : null;
 
     let summaryMethod = method ?
       this.renderSummary(SUMMARY_METHOD, method) : null;
