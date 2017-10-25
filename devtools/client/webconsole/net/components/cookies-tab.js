@@ -3,28 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const NetInfoGroupList = React.createFactory(require("./net-info-group-list"));
-const Spinner = React.createFactory(require("./spinner"));
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, createFactory, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
+const NetInfoGroupList = createFactory(require("./net-info-group-list"));
+const Spinner = createFactory(require("./spinner"));
 
 /**
  * This template represents 'Cookies' tab displayed when the user
  * expands network log in the Console panel. It's responsible for rendering
  * sent and received cookies.
  */
-var CookiesTab = React.createClass({
-  propTypes: {
-    actions: PropTypes.shape({
-      requestData: PropTypes.func.isRequired
-    }),
-    data: PropTypes.object.isRequired,
-  },
-
-  displayName: "CookiesTab",
+class CookiesTab extends Component {
+  static get propTypes() {
+    return {
+      actions: PropTypes.shape({
+        requestData: PropTypes.func.isRequired
+      }),
+      data: PropTypes.object.isRequired,
+    };
+  }
 
   componentDidMount() {
     let { actions, data } = this.props;
@@ -39,7 +36,7 @@ var CookiesTab = React.createClass({
     if (!responseCookies || !responseCookies.length) {
       actions.requestData("responseCookies");
     }
-  },
+  }
 
   render() {
     let { actions, data: file } = this.props;
@@ -69,7 +66,7 @@ var CookiesTab = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = CookiesTab;

@@ -3,23 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const NetInfoGroup = React.createFactory(require("./net-info-group"));
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, createFactory, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
+const NetInfoGroup = createFactory(require("./net-info-group"));
 
 /**
  * This template is responsible for rendering sections/groups inside tabs.
  * It's used e.g to display Response and Request headers as separate groups.
  */
-var NetInfoGroupList = React.createClass({
-  propTypes: {
-    groups: PropTypes.array.isRequired,
-  },
-
-  displayName: "NetInfoGroupList",
+class NetInfoGroupList extends Component {
+  static get propTypes() {
+    return {
+      groups: PropTypes.array.isRequired,
+    };
+  }
 
   render() {
     let groups = this.props.groups;
@@ -41,7 +38,7 @@ var NetInfoGroupList = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = NetInfoGroupList;
