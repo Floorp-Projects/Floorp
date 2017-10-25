@@ -4206,8 +4206,7 @@ Tab.prototype = {
         } else if (list.indexOf("[search]") != -1 && aEvent.type == "DOMLinkAdded") {
           this.sendOpenSearchMessage(target);
         } else if (list.indexOf("[manifest]") != -1 &&
-                   aEvent.type == "DOMLinkAdded" &&
-                   SharedPreferences.forApp().getBoolPref("android.not_a_preference.pwa")){
+                   aEvent.type == "DOMLinkAdded"){
           this.makeManifestMessage(target);
           return;
         }
