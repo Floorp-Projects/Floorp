@@ -49,7 +49,7 @@ if CONFIG['OS_ARCH'] == 'SunOS':
     DEFINES['HAVE_ALLOCA_H'] = True
 
 # We allow warnings for third-party code that can be updated from upstream.
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'gkmedias'
 

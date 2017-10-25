@@ -9,7 +9,7 @@ FINAL_LIBRARY = 'js'
 if CONFIG['MOZ_SYSTEM_FFI']:
     OS_LIBS += CONFIG['MOZ_FFI_LIBS']
 else:
-    ALLOW_COMPILER_WARNINGS = True
+    AllowCompilerWarnings()
     NoVisibilityFlags()
 
     CONFIGURE_DEFINE_FILES += [

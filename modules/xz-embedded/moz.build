@@ -19,7 +19,7 @@ UNIFIED_SOURCES += [
     'src/xz_dec_stream.c',
 ]
 
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 if CONFIG['TARGET_CPU'].startswith('arm'):
     # Accept arm, armv7, etc.
