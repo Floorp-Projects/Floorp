@@ -136,8 +136,11 @@ class ReftestRunner(MozbuildObject):
         args.ignoreWindowSize = True
         args.printDeviceInfo = False
 
-        from mozrunner.devices.android_device import grant_runtime_permissions
+        from mozrunner.devices.android_device import grant_runtime_permissions, get_adb_path
         grant_runtime_permissions(self)
+
+        if not args.adb_path:
+            args.adb_path = get_adb_path(self)
 
         # A symlink and some path manipulations are required so that test
         # manifests can be found both locally and remotely (via a url)

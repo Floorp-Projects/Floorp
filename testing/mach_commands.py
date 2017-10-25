@@ -388,6 +388,9 @@ class MachCommands(MachCommandBase):
         commandline.add_logging_group(parser)
         options, args = parser.parse_args()
 
+        if not options.adb_path:
+            from mozrunner.devices.android_device import get_adb_path
+            options.adb_path = get_adb_path(self)
         options.symbols_path = symbols_path
         options.manifest_path = manifest_path
         options.xre_path = self.bindir

@@ -50,7 +50,7 @@ telemetry-tests-client:
 
 test-verify:
     description: "Extra verification of tests modified on this push"
-    suite: test-verification
+    suite: test-verify
     treeherder-symbol: tc(TV)
     loopback-video: true
     max-run-time: 5400
