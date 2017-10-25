@@ -6,7 +6,7 @@
 
 const { createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const PanelMenuEntry = createFactory(require("./panel-menu-entry"));
+const PanelMenuEntry = createFactory(require("./PanelMenuEntry"));
 
 module.exports = createClass({
   displayName: "PanelMenu",
