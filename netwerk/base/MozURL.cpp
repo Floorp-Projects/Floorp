@@ -99,6 +99,12 @@ MozURL::GetRef(nsACString& aRef)
   return rusturl_get_fragment(mURL.get(), &aRef);
 }
 
+nsresult
+MozURL::GetOrigin(nsACString& aOrigin)
+{
+  return rusturl_get_origin(mURL.get(), &aOrigin);
+}
+
 // MozURL::Mutator
 
 // This macro ensures that the mutator is still valid, meaning it hasn't been

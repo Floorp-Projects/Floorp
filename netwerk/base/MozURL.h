@@ -52,6 +52,7 @@ public:
   nsresult GetFilePath(nsACString& aPath);
   nsresult GetQuery(nsACString& aQuery);
   nsresult GetRef(nsACString& aRef);
+  nsresult GetOrigin(nsACString& aOrigin);
 
 private:
   explicit MozURL(rusturl* rawPtr)

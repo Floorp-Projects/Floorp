@@ -148,3 +148,19 @@ TEST(TestMozURL, HostPort)
   ASSERT_EQ(port, -1);
 }
 
+TEST(TestMozURL, Origin)
+{
+  nsAutoCString href("https://user:pass@example.net:1234/path?query#ref");
+  RefPtr<MozURL> url;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
+  nsAutoCString out;
+
+  ASSERT_EQ(url->GetOrigin(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("https://example.net:1234"));
+
+  RefPtr<MozURL> url2;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url2),
+                         NS_LITERAL_CSTRING("file:///tmp/foo")), NS_OK);
+  ASSERT_EQ(url2->GetOrigin(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("null"));
+}
