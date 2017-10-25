@@ -14,7 +14,7 @@ const { Cc, Ci } = require("chrome");
 const { createFactory, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
-const AddonsInstallError = createFactory(require("./install-error"));
+const AddonsInstallError = createFactory(require("./InstallError"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");

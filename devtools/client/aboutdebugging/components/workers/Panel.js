@@ -13,11 +13,11 @@ const { createClass, createFactory, DOM: dom, PropTypes } =
 const { getWorkerForms } = require("../../modules/worker");
 const Services = require("Services");
 
-const PanelHeader = createFactory(require("../panel-header"));
-const TargetList = createFactory(require("../target-list"));
-const WorkerTarget = createFactory(require("./target"));
-const MultiE10SWarning = createFactory(require("./multi-e10s-warning"));
-const ServiceWorkerTarget = createFactory(require("./service-worker-target"));
+const PanelHeader = createFactory(require("../PanelHeader"));
+const TargetList = createFactory(require("../TargetList"));
+const WorkerTarget = createFactory(require("./Target"));
+const MultiE10SWarning = createFactory(require("./MultiE10sWarning"));
+const ServiceWorkerTarget = createFactory(require("./ServiceWorkerTarget"));
 
 loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");

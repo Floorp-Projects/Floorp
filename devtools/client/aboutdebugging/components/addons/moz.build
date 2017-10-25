@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'controls.js',
-    'install-error.js',
-    'panel.js',
-    'target.js',
+    'Controls.js',
+    'InstallError.js',
+    'Panel.js',
+    'Target.js',
 )

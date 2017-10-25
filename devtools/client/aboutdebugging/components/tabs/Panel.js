@@ -10,9 +10,9 @@ const { createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
-const PanelHeader = createFactory(require("../panel-header"));
-const TargetList = createFactory(require("../target-list"));
-const TabTarget = createFactory(require("./target"));
+const PanelHeader = createFactory(require("../PanelHeader"));
+const TargetList = createFactory(require("../TargetList"));
+const TabTarget = createFactory(require("./Target"));
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
