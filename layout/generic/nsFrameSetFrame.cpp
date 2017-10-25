@@ -271,21 +271,18 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   // create the children frames; skip content which isn't <frameset> or <frame>
   mChildCount = 0; // number of <frame> or <frameset> children
 
-  // number of any type of children
-  uint32_t numChildren = mContent->GetChildCount();
-
-  for (uint32_t childX = 0; childX < numChildren; childX++) {
+  for (nsIContent* child = mContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
     if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
       // Clear the lazy bits in the remaining children.  Also clear
       // the restyle flags, like nsCSSFrameConstructor::ProcessChildren does.
-      for (uint32_t i = childX; i < numChildren; i++) {
-        nsIContent *child = mContent->GetChildAt(i);
+      for (; child; child = child->GetNextSibling()) {
         child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
         child->UnsetRestyleFlagsIfGecko();
       }
       break;
     }
-    nsIContent *child = mContent->GetChildAt(childX);
     child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
     // Also clear the restyle flags in the child like
     // nsCSSFrameConstructor::ProcessChildren does.
