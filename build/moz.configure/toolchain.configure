@@ -19,6 +19,7 @@ js_option('--enable-optimize',
           default=True,
           help='Enable optimizations via compiler flags')
 
+
 @depends('--enable-optimize')
 def moz_optimize(option):
     flags = None
@@ -35,6 +36,7 @@ def moz_optimize(option):
         optimize=val,
         flags=flags,
     )
+
 
 set_config('MOZ_OPTIMIZE', moz_optimize.optimize)
 add_old_configure_assignment('MOZ_OPTIMIZE', moz_optimize.optimize)
@@ -1308,6 +1310,7 @@ js_option(env='RUSTC_OPT_LEVEL',
 # --enable-release kicks in full optimizations.
 imply_option('RUSTC_OPT_LEVEL', '2', when='--enable-release')
 
+
 @depends('RUSTC_OPT_LEVEL', debug_rust, '--enable-debug-symbols',
          moz_optimize)
 def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
@@ -1354,6 +1357,7 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
         flags.append('-Cdebuginfo=%s' % debug_info)
 
     return flags
+
 
 set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
 
