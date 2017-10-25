@@ -83,7 +83,6 @@ var OS = SpecialPowers.Services.appinfo.OS;
 // available on that OS.
 if (OS === "WINNT") {
   suppressed_toggles.push("-moz-windows-classic");
-  toggles_enabled_in_content.push("-moz-windows-classic");
 }
 
 // __keyValMatches(key, val)__.
@@ -128,7 +127,7 @@ var testWindowsSpecific = function (resisting, queryName, possibleValues) {
       foundValue = val;
     }
   });
-  if (resisting) {
+  if (resisting || !is_chrome_window) {
     ok(!foundValue, queryName + " should have no match");
   } else {
     ok(foundValue, foundValue ? ("Match found: '" + queryName + ":" + foundValue + "'")
