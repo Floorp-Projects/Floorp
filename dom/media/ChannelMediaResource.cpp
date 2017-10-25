@@ -744,12 +744,12 @@ ChannelMediaResource::RecreateChannel()
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // The decoder is being shut down, so don't bother opening a new channel
-    return NS_OK;
+    return NS_ERROR_ABORT;
   }
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   if (!element) {
     // The decoder is being shut down, so don't bother opening a new channel
-    return NS_OK;
+    return NS_ERROR_ABORT;
   }
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
