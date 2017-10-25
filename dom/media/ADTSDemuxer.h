@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
-#include "mp4_demuxer/ByteReader.h"
 
 namespace mozilla {
 
