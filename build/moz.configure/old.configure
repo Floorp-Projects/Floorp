@@ -209,7 +209,6 @@ def old_configure_options(*options):
     '--enable-nspr-build',
     '--enable-official-branding',
     '--enable-oom-breakpoint',
-    '--enable-optimize',
     '--enable-parental-controls',
     '--enable-pie',
     '--enable-posix-nspr-emulation',
