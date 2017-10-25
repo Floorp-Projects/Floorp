@@ -17,7 +17,7 @@ no-static-ideograph-encoder-tables = ["gkrust-shared/no-static-ideograph-encoder
 
 [dependencies]
 mp4parse-gtest = { path = "../../../../dom/media/gtest" }
-nsstring-gtest = { path = "../../../../xpcom/rust/nsstring/gtest" }
+nsstring-gtest = { path = "../../../../xpcom/rust/gtest/nsstring" }
 gkrust-shared = { path = "../../rust/shared" }
 
 [lib]

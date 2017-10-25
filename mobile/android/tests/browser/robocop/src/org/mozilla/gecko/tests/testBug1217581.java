@@ -8,7 +8,7 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Telemetry;
 
-public class testBug1217581 extends BaseTest {
+public class testBug1217581 extends OldBaseTest {
     // Take arbitrary histogram names used by Fennec.
     private static final String TEST_HISTOGRAM_NAME = "FENNEC_SYNC_NUMBER_OF_SYNCS_COMPLETED";
     private static final String TEST_KEYED_HISTOGRAM_NAME = "FX_MIGRATION_ERRORS";

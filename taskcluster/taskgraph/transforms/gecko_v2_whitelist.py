@@ -95,6 +95,7 @@ JOB_NAME_WHITELIST = set([
     'sm-rootanalysis-debug',
     'sm-rust-bindings-debug',
     'sm-tsan-opt',
+    'source-bugzilla-info',
     'win32-add-on-devel',
     'win32-clang-tidy',
     'win32-debug',

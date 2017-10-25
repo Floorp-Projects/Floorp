@@ -29,7 +29,7 @@ def generate_symbols_file(output, *args):
         if undefine in pp.context:
             del pp.context[undefine]
     # Hack until MOZ_DEBUG_FLAGS are simply part of buildconfig.defines
-    if buildconfig.substs['MOZ_DEBUG']:
+    if buildconfig.substs.get('MOZ_DEBUG'):
         pp.context['DEBUG'] = '1'
     # Ensure @DATA@ works as expected (see the Windows section further below)
     if buildconfig.substs['OS_TARGET'] == 'WINNT':

@@ -44,14 +44,8 @@
   /* Since .toolbarbutton-icon uses a different width than the animatable box,
      we need to set a padding relative to the difference in widths. */
   margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 20px) / 2);
-  /* Set the min- and max- width and height of the box equal to that
-     of each frame of the SVG sprite. Setting the width and height via
-     the `width` and `height` CSS properties causes an assertion for
-     `inline-size less than zero: 'aContainingBlockISize >= 0'` (bug 1379332). */
-  min-width: 20px;
-  max-width: 20px;
-  min-height: 16px;
-  max-height: 16px;
+  width: 20px; /* Width of each frame within the SVG sprite */
+  height: 16px; /* Height of each frame within the SVG sprite */
 }
 
 #pocket-button-box[animate="true"] > #pocket-animatable-box {

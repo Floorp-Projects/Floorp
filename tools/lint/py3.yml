@@ -33,7 +33,6 @@ py3:
         - testing/gtest
         - testing/marionette
         - testing/mochitest
-        - testing/mozbase
         - testing/mozharness
         - testing/tools/iceserver
         - testing/tps

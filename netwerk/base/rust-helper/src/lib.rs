@@ -117,7 +117,7 @@ fn canonicalize_language_tag(token: &mut [u8]) {
     }
 
     let sub_tags = token.split_mut(|c| *c == ('-' as u8));
-    for (i, mut sub_tag) in sub_tags.enumerate() {
+    for (i, sub_tag) in sub_tags.enumerate() {
         if i == 0 {
             // ISO 639-1 language code, like the "en" in "en-US"
             continue;

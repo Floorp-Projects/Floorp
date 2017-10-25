@@ -105,14 +105,8 @@ toolbar[brighttext] {
   /* Since .toolbarbutton-icon uses a different width than the animatable-box,
      we need to set a padding relative to the difference in widths. */
   margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
-  /* Set the min- and max- width and height of the box equal to that
-     of each frame of the SVG sprite. Setting the width and height via
-     the `width` and `height` CSS properties causes an assertion for
-     `inline-size less than zero: 'aContainingBlockISize >= 0'` (bug 1379332). */
-  min-width: 18px;
-  max-width: 18px;
-  min-height: 20px;
-  max-height: 20px;
+  width: 18px; /* Width of each frame within the SVG sprite */
+  height: 20px; /* Height of each frame within the SVG sprite */
 }
 
 #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
@@ -480,12 +474,8 @@ toolbar[brighttext] {
      and the .toolbar-animatable-box. This is correct even in RTL because the item
      is positioned using `left`. */
   left: calc(var(--library-icon-x) + (16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
-  /* Set the min- and max- width and height of the box equal to that
-     of each frame of the SVG sprite (must use min- and max- due to bug 1379332). */
-  min-width: 22px;
-  max-width: 22px;
-  min-height: 54px;
-  max-height: 54px;
+  width: 22px; /* Width of each frame within the SVG sprite */
+  height: 54px; /* Height of each frame within the SVG sprite */
   z-index: 2;
 }
 

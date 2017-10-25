@@ -9,7 +9,7 @@ import org.mozilla.gecko.Actions;
 import com.robotium.solo.Condition;
 
 
-public class testBookmarklets extends BaseTest {
+public class testBookmarklets extends OldBaseTest {
     public void testBookmarklets() {
         final String url = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         final String title = "alertBookmarklet";

@@ -45,11 +45,6 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
 
 FINAL_LIBRARY = 'mozglue'
 
-if CONFIG['GNU_CXX']:
-    # too many warnings from functions generated through rb_wrab from rb.h.
-    CXXFLAGS += ['-Wno-unused-function',
-                 '-Wno-error=uninitialized']
-
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
 

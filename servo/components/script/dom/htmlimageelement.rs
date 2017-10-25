@@ -46,7 +46,7 @@ use net_traits::image::base::{Image, ImageMetadata};
 use net_traits::image_cache::{CanRequestImages, ImageCache, ImageOrMetadataAvailable};
 use net_traits::image_cache::{ImageResponder, ImageResponse, ImageState, PendingImageId};
 use net_traits::image_cache::UsePlaceholder;
-use net_traits::request::{RequestInit, Type as RequestType};
+use net_traits::request::RequestInit;
 use network_listener::{NetworkListener, PreInvoke};
 use num_traits::ToPrimitive;
 use script_thread::ScriptThread;
@@ -275,7 +275,6 @@ impl HTMLImageElement {
         let request = RequestInit {
             url: img_url.clone(),
             origin: document.origin().immutable().clone(),
-            type_: RequestType::Image,
             pipeline_id: Some(document.global().pipeline_id()),
             .. RequestInit::default()
         };
@@ -661,10 +660,7 @@ impl HTMLImageElement {
     }
     pub fn areas(&self) -> Option<Vec<DomRoot<HTMLAreaElement>>> {
         let elem = self.upcast::<Element>();
-        let usemap_attr = match elem.get_attribute(&ns!(), &local_name!("usemap")) {
-            Some(attr) => attr,
-            None => return None,
-        };
+        let usemap_attr = elem.get_attribute(&ns!(), &local_name!("usemap"))?;
 
         let value = usemap_attr.value();
 

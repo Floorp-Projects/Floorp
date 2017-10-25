@@ -279,7 +279,7 @@ skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
 == 253701-1.html 253701-1-ref.html
 fuzzy-if(skiaContent,1,5) == 255820-1.html 255820-1-ref.html
 == 260406-1.html 260406-1-ref.html
-fails-if(styloVsGecko) == 261826-1.xul 261826-1-ref.xul # bug 1408824
+== 261826-1.xul 261826-1-ref.xul
 == 262151-1.html 262151-1-ref.html
 fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 267353-1.html 267353-1-ref.html
@@ -290,10 +290,10 @@ fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 269908-5.html 269908-5-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
-fails-if(stylo&&cocoaWidget) == 272646-1.xul 272646-1-ref.xul # bug 1408824
-fails-if(styloVsGecko) == 272646-2a.xul 272646-2-ref.xul # bug 1408824
-fails-if(styloVsGecko) == 272646-2b.xul 272646-2-ref.xul # bug 1408824
-fails-if(styloVsGecko) == 272646-2c.xul 272646-2-ref.xul # bug 1408824
+fails-if(stylo&&cocoaWidget) == 272646-1.xul 272646-1-ref.xul # bug 1410787
+== 272646-2a.xul 272646-2-ref.xul
+== 272646-2b.xul 272646-2-ref.xul
+== 272646-2c.xul 272646-2-ref.xul
 fuzzy-if(Android,3,50) fuzzy-if(skiaContent,1,133) == 273681-1.html 273681-1-ref.html
 == 278266-1a.html 278266-1-ref.html
 == 278266-1b.html 278266-1-ref.html
@@ -339,7 +339,7 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
 == 309550-1.html 309550-1-ref.html
-fails-if(styloVsGecko) == 309914-1.xul 309914-1-ref.xul # bug 1408824
+== 309914-1.xul 309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
 == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
@@ -667,7 +667,7 @@ random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373533-3.xhtml about:blank
 == 374038-1.xul 374038-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
-random-if(d2d) fails-if(styloVsGecko) == 374719-1.xul 374719-1-ref.xul # bug 1408824
+random-if(d2d) == 374719-1.xul 374719-1-ref.xul
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375508-1.html 375508-1-ref.html
 == 375716-1.html 375716-1-ref.html
@@ -1504,7 +1504,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkia
 fuzzy-if(skiaContent,4,5) == 557087-1.html 557087-ref.html
 fuzzy-if(skiaContent&&!Android,2,5) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
-fails-if(styloVsGecko) != 558011-1.xul 558011-1-ref.xul # bug 1408824
+fails-if(styloVsGecko) != 558011-1.xul 558011-1-ref.xul # bug 1410784
 == 559284-1.html 559284-1-ref.html
 fails-if(Android) == 560455-1.xul 560455-1-ref.xul
 fuzzy-if(skiaContent,2,5) == 561981-1.html 561981-1-ref.html

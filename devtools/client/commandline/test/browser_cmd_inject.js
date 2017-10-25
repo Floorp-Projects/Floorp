@@ -3,7 +3,9 @@
 
 // Tests that the inject commands works as they should
 
-const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
+// Note that we use var instead of const here on purpose. Indeed, this test injects itself
+// in the test page, twice. Using a const would result in a const redeclaration JS error.
+var TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_inject.html";
 
 function test() {
@@ -62,6 +64,28 @@ function test() {
         },
         exec: {
           output: [ /http:\/\/example.com\/browser\/devtools\/client\/commandline\/test\/browser_cmd_inject.js loaded/ ]
+        }
+      },
+      {
+        setup:    "inject https://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js",
+        check: {
+          input:  "inject https://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js",
+          markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+          hints:                                                                                            "",
+          status: "VALID",
+          args: {
+            library: {
+              value: function (library) {
+                is(library.type, "url", "inject type name");
+                is(library.url.origin, "https://example.com", "inject url hostname");
+                ok(library.url.pathname.indexOf("_inject.js") != -1, "inject url path");
+              },
+              status: "VALID"
+            }
+          }
+        },
+        exec: {
+          output: [ /https:\/\/example.com\/browser\/devtools\/client\/commandline\/test\/browser_cmd_inject.js loaded/ ]
         }
       }
     ]);
