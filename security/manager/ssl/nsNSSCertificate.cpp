@@ -1142,6 +1142,12 @@ void nsNSSCertList::destructorSafeDestroyNSSReference()
   mCertList = nullptr;
 }
 
+nsNSSCertList*
+nsNSSCertList::GetCertList()
+{
+  return this;
+}
+
 NS_IMETHODIMP
 nsNSSCertList::AddCert(nsIX509Cert* aCert)
 {
@@ -1394,6 +1400,96 @@ nsNSSCertList::Equals(nsIX509CertList* other, bool* result)
   }
   if (otherHasMore) {
     *result = false;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertList::ForEachCertificateInChain(ForEachCertOperation& aOperation)
+{
+  nsCOMPtr<nsISimpleEnumerator> chainElt;
+  nsresult rv = GetEnumerator(getter_AddRefs(chainElt));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Each chain may have multiple certificates.
+  bool hasMore = false;
+  rv = chainElt->HasMoreElements(&hasMore);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!hasMore) {
+    return NS_OK; // Empty lists are fine
+  }
+
+  do {
+    nsCOMPtr<nsISupports> certSupports;
+    rv = chainElt->GetNext(getter_AddRefs(certSupports));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports, &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = chainElt->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    bool continueLoop = true;
+    rv = aOperation(cert, hasMore, continueLoop);
+    if (NS_FAILED(rv) || !continueLoop) {
+      return rv;
+    }
+  } while (hasMore);
+
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertList::SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
+                          /* out */ nsCOMPtr<nsIX509CertList>& aIntermediates,
+                          /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity)
+{
+  if (aRoot || aIntermediates || aEndEntity) {
+    // All passed-in nsCOMPtrs should be empty for the state machine to work
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aIntermediates = new nsNSSCertList();
+
+  nsresult rv = ForEachCertificateInChain(
+    [&aRoot, &aIntermediates, &aEndEntity] (nsCOMPtr<nsIX509Cert> aCert,
+                                            bool hasMore, bool& aContinue) {
+      if (!aRoot) {
+        // This is the root
+        aRoot = aCert;
+      } else if (!hasMore) {
+        // This is the end entity
+        aEndEntity = aCert;
+      } else {
+        // One of (potentially many) intermediates
+        if (NS_FAILED(aIntermediates->AddCert(aCert))) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+
+      return NS_OK;
+  });
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!aRoot || !aEndEntity) {
+    // No self-sigend (or empty) chains allowed
+    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;
