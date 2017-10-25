@@ -1112,9 +1112,25 @@ DisplayListBuilder::PushLine(const wr::LayoutRect& aClip,
                              bool aIsBackfaceVisible,
                              const wr::Line& aLine)
 {
- wr_dp_push_line(mWrState, &aClip, aIsBackfaceVisible,
-                 &aLine.bounds, aLine.wavyLineThickness, aLine.orientation,
-                 &aLine.color, aLine.style);
+ wr_dp_push_line(mWrState, aClip, aIsBackfaceVisible, aLine.baseline, aLine.start, aLine.end,
+                 aLine.orientation, aLine.width, aLine.color, aLine.style);
+
+/* TODO(Gankro): remove this
+  LayoutRect rect;
+  if (aLine.orientation == wr::LineOrientation::Horizontal) {
+    rect.origin.x = aLine.start;
+    rect.origin.y = aLine.baseline;
+    rect.size.width = aLine.end - aLine.start;
+    rect.size.height = aLine.width;
+  } else {
+    rect.origin.x = aLine.baseline;
+    rect.origin.y = aLine.start;
+    rect.size.width = aLine.width;
+    rect.size.height = aLine.end - aLine.start;
+  }
+
+  PushRect(rect, aClip, aLine.color);
+*/
 }
 
 void
