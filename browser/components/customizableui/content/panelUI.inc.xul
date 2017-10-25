@@ -542,8 +542,10 @@
         <toolbarseparator/>
         <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
           <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-          <spacer/>
+          <spacer class="before-label"/>
           <label value="&fullZoom.label;"/>
+          <!-- This spacer keeps the scrollbar from overlapping the view. -->
+          <spacer class="after-label"/>
           <toolbarbutton id="appMenu-zoomReduce-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomReduce"
@@ -568,8 +570,10 @@
         <toolbarseparator/>
         <toolbaritem id="appMenu-edit-controls" class="toolbaritem-combined-buttons" closemenu="none">
           <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-          <spacer/>
+          <spacer class="before-label"/>
           <label value="&editMenu.label;"/>
+          <!-- This spacer keeps the scrollbar from overlapping the view. -->
+          <spacer class="after-label"/>
           <toolbarbutton id="appMenu-cut-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_cut"
