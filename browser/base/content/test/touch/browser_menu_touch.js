@@ -105,3 +105,17 @@ add_task(async function test_customizationui_panel_touch() {
 
   CustomizableUI.reset();
 });
+
+// Test the overflow menu panel.
+add_task(async function test_overflow_panel_touch() {
+  // Move something in the overflow menu to make the button appear.
+  CustomizableUI.addWidgetToArea("library-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  await BrowserTestUtils.waitForCondition(() =>
+    CustomizableUI.getPlacementOfWidget("library-button").area == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  let overflowPanel = document.getElementById("widget-overflow");
+  let target = document.getElementById("nav-bar-overflow-button");
+  await openAndCheckMenu(overflowPanel, target);
+
+  CustomizableUI.reset();
+});
