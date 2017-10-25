@@ -70,7 +70,7 @@ load 430356-1.xhtml
 load 431738.xhtml
 load 432058-1.xul
 load 432068-1.xul
-skip-if(stylo) load 432068-2.xul # bug 1407865
+load 432068-2.xul
 load 433296-1.xul
 load 433429.xul
 load 434458-1.xul
