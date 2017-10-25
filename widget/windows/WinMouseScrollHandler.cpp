@@ -446,6 +446,14 @@ MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
 
     MOZ_ASSERT(destWindow, "destWindow must not be NULL");
 
+    // Some odd touchpad utils sets focus to window under the mouse cursor.
+    // this emulates the odd behavior for debug.
+    if (mUserPrefs.ShouldEmulateToMakeWindowUnderCursorForeground() &&
+        (aMessage == WM_MOUSEWHEEL || aMessage == WM_MOUSEHWHEEL) &&
+        ::GetForegroundWindow() != destWindow->GetWindowHandle()) {
+      ::SetForegroundWindow(destWindow->GetWindowHandle());
+    }
+
     // If the found window is our plugin window, it means that the message
     // has been handled by the plugin but not consumed.  We should handle the
     // message on its parent window.  However, note that the DOM event may
@@ -1121,6 +1129,9 @@ MouseScrollHandler::UserPrefs::Init()
   mForceEnableSystemSettingCache =
     Preferences::GetBool("mousewheel.system_settings_cache.force_enabled",
                          false);
+  mEmulateToMakeWindowUnderCursorForeground =
+    Preferences::GetBool("mousewheel.debug.make_window_under_cursor_foreground",
+                         false);
   mOverriddenVerticalScrollAmount =
     Preferences::GetInt("mousewheel.windows.vertical_amount_override", -1);
   mOverriddenHorizontalScrollAmount =
@@ -1134,12 +1145,14 @@ MouseScrollHandler::UserPrefs::Init()
        "mScrollMessageHandledAsWheelMessage=%s, "
        "mEnableSystemSettingCache=%s, "
        "mForceEnableSystemSettingCache=%s, "
+       "mEmulateToMakeWindowUnderCursorForeground=%s, "
        "mOverriddenVerticalScrollAmount=%d, "
        "mOverriddenHorizontalScrollAmount=%d, "
        "mMouseScrollTransactionTimeout=%d",
      GetBoolName(mScrollMessageHandledAsWheelMessage),
      GetBoolName(mEnableSystemSettingCache),
      GetBoolName(mForceEnableSystemSettingCache),
+     GetBoolName(mEmulateToMakeWindowUnderCursorForeground),
      mOverriddenVerticalScrollAmount, mOverriddenHorizontalScrollAmount,
      mMouseScrollTransactionTimeout));
 }
