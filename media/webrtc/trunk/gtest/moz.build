@@ -9,7 +9,7 @@
 # rather than building things here.
 include('/media/webrtc/webrtc.mozbuild')
 
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 DEFINES['GTEST_RELATIVE_PATH'] = True
 DEFINES['WEBRTC_APM_DEBUG_DUMP'] = True

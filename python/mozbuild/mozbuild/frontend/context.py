@@ -1052,15 +1052,6 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 #   (storage_type, input_types, docs)
 
 VARIABLES = {
-    'ALLOW_COMPILER_WARNINGS': (bool, bool,
-        """Whether to allow compiler warnings (i.e. *not* treat them as
-        errors).
-
-        This is commonplace (almost mandatory, in fact) in directories
-        containing third-party code that we regularly update from upstream and
-        thus do not control, but is otherwise discouraged.
-        """),
-
     # Variables controlling reading of other frontend files.
     'ANDROID_GENERATED_RESFILES': (StrictOrderingOnAppendList, list,
         """Android resource files generated as part of the build.
@@ -2409,6 +2400,16 @@ DEPRECATION_HINTS = {
         instead of
 
             SIMPLE_PROGRAMS += ['foo', 'bar']"
+        ''',
+
+    'ALLOW_COMPILER_WARNINGS': '''
+        Please use
+
+            AllowCompilerWarnings()
+
+        instead of
+
+            ALLOW_COMPILER_WARNINGS = True
         ''',
 
     'FORCE_SHARED_LIB': '''

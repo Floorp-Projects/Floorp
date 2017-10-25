@@ -105,9 +105,9 @@ else:
         # with linker scripts.
         'COMPILE_FLAGS': {
             'VISIBILITY': [],
+            # XXX: We should fix these warnings.
+            'WARNINGS_AS_ERRORS': [],
         },
-        # XXX: We should fix these warnings.
-        'ALLOW_COMPILER_WARNINGS': True,
         # NSS' build system doesn't currently build NSS with PGO.
         # We could probably do so, but not without a lot of
         # careful consideration.

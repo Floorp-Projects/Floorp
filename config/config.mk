@@ -267,28 +267,6 @@ HOST_CXXFLAGS	+= $(MOZ_OPTIMIZE_FLAGS)
 endif # MOZ_OPTIMIZE
 endif # CROSS_COMPILE
 
-# Check for ALLOW_COMPILER_WARNINGS (shorthand for Makefiles to request that we
-# *don't* use the warnings-as-errors compile flags)
-
-# Don't use warnings-as-errors in Windows PGO builds because it is suspected of
-# causing problems in that situation. (See bug 437002.)
-ifeq (WINNT_1,$(OS_ARCH)_$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
-ALLOW_COMPILER_WARNINGS=1
-endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
-
-# Don't use warnings-as-errors in clang-cl because it warns about many more
-# things than MSVC does.
-ifdef CLANG_CL
-ALLOW_COMPILER_WARNINGS=1
-endif # CLANG_CL
-
-# Use warnings-as-errors if ALLOW_COMPILER_WARNINGS is not set to 1 (which
-# includes the case where it's undefined).
-ifneq (1,$(ALLOW_COMPILER_WARNINGS))
-COMPUTED_CXXFLAGS += $(WARNINGS_AS_ERRORS)
-COMPUTED_CFLAGS   += $(WARNINGS_AS_ERRORS)
-endif # ALLOW_COMPILER_WARNINGS
-
 COMPILE_CFLAGS	= $(COMPUTED_CFLAGS) $(PGO_CFLAGS) $(MOZBUILD_CFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)
 COMPILE_CXXFLAGS = $(COMPUTED_CXXFLAGS) $(PGO_CFLAGS) $(MOZBUILD_CXXFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)
 COMPILE_CMFLAGS = $(OS_COMPILE_CMFLAGS) $(MOZBUILD_CMFLAGS)
