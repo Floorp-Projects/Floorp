@@ -4312,7 +4312,7 @@ OverflowableToolbar.prototype = {
     }
   },
 
-  show() {
+  show(aEvent) {
     if (this._panel.state == "open") {
       return Promise.resolve();
     }
@@ -4333,10 +4333,10 @@ OverflowableToolbar.prototype = {
       // Ensure we update the gEditUIVisible flag when opening the popup, in
       // case the edit controls are in it.
       this._panel.addEventListener("popupshowing", () => doc.defaultView.updateEditUIVisibility(), {once: true});
-      this._panel.openPopup(anchor || this._chevron);
+      this._panel.openPopup(anchor || this._chevron, { triggerEvent: aEvent });
       this._chevron.open = true;
 
-      this._panel.addEventListener("popupshown", aEvent => {
+      this._panel.addEventListener("popupshown", () => {
         this._panel.addEventListener("dragover", this);
         this._panel.addEventListener("dragend", this);
         resolve();
@@ -4349,7 +4349,7 @@ OverflowableToolbar.prototype = {
       this._panel.hidePopup();
       this._chevron.open = false;
     } else if (this._panel.state != "hiding" && !this._chevron.disabled) {
-      this.show();
+      this.show(aEvent);
     }
   },
 
