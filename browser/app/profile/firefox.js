@@ -1407,6 +1407,9 @@ pref("identity.fxaccounts.remote.force_auth.uri", "https://accounts.firefox.com/
 // The remote content URL shown for signin in. Must use HTTPS.
 pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/signin?service=sync&context=fx_desktop_v3");
 
+// The remote content URL shown for the email (FxA determines if we show sign-in or sign-up) endpoint. Must use HTTPS.
+pref("identity.fxaccounts.remote.email.uri", "https://accounts.firefox.com/?service=sync&context=fx_desktop_v3&action=email");
+
 // The remote content URL where FxAccountsWebChannel messages originate.
 pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com/");
 
