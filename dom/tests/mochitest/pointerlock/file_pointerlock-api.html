@@ -75,11 +75,7 @@
                           window);
 
           document.addEventListener("mousemove", mouseMoveHandler);
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
-            }, 0);
-          });
+          synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
         } else {
           info("Got pointerlockchange for exiting");
           pointerUnlocked = true;
