@@ -217,6 +217,8 @@ this.SiteDataManager = {
             cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
         }
       }
+
+      Services.obs.notifyObservers(null, "browser:purge-domain-data", principal.URI.host);
     }
   },
 
