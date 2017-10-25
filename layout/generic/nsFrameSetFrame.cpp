@@ -270,7 +270,6 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
 
   // create the children frames; skip content which isn't <frameset> or <frame>
   mChildCount = 0; // number of <frame> or <frameset> children
-  nsIFrame* frame;
 
   // number of any type of children
   uint32_t numChildren = mContent->GetChildCount();
@@ -294,39 +293,43 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed
-    if (!child->IsHTMLElement())
+    if (!child->IsHTMLElement()) {
       continue;
-
-    if (child->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame)) {
-      RefPtr<nsStyleContext> kidSC;
-
-      kidSC = shell->StyleSet()->ResolveStyleFor(child->AsElement(),
-                                                 mStyleContext,
-                                                 LazyComputeBehavior::Allow);
-      if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-        frame = NS_NewHTMLFramesetFrame(shell, kidSC);
-
-        nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
-        childFrame->SetParentFrameborder(frameborder);
-        childFrame->SetParentBorderWidth(borderWidth);
-        childFrame->SetParentBorderColor(borderColor);
-        frame->Init(child, this, nullptr);
-
-        mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
-      } else { // frame
-        frame = NS_NewSubDocumentFrame(shell, kidSC);
-
-        frame->Init(child, this, nullptr);
-
-        mChildFrameborder[mChildCount] = GetFrameBorder(child);
-        mChildBorderColors[mChildCount].Set(GetBorderColor(child));
-      }
-      child->SetPrimaryFrame(frame);
-
-      mFrames.AppendFrame(nullptr, frame);
-
-      mChildCount++;
     }
+
+    if (!child->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame)) {
+      continue;
+    }
+
+    RefPtr<nsStyleContext> kidSC =
+      shell->StyleSet()->ResolveStyleFor(child->AsElement(),
+                                         mStyleContext,
+                                         LazyComputeBehavior::Allow);
+
+    nsIFrame* frame;
+    if (child->IsHTMLElement(nsGkAtoms::frameset)) {
+      frame = NS_NewHTMLFramesetFrame(shell, kidSC);
+
+      nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
+      childFrame->SetParentFrameborder(frameborder);
+      childFrame->SetParentBorderWidth(borderWidth);
+      childFrame->SetParentBorderColor(borderColor);
+      frame->Init(child, this, nullptr);
+
+      mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
+    } else { // frame
+      frame = NS_NewSubDocumentFrame(shell, kidSC);
+
+      frame->Init(child, this, nullptr);
+
+      mChildFrameborder[mChildCount] = GetFrameBorder(child);
+      mChildBorderColors[mChildCount].Set(GetBorderColor(child));
+    }
+    child->SetPrimaryFrame(frame);
+
+    mFrames.AppendFrame(nullptr, frame);
+
+    mChildCount++;
   }
 
   mNonBlankChildCount = mChildCount;
