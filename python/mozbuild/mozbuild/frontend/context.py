@@ -324,6 +324,10 @@ class CompileFlags(ContextDerivedValue, dict):
             ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
+            ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
+             ('CFLAGS',)),
+            ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
+             ('CXXFLAGS',)),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
