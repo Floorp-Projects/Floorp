@@ -671,7 +671,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   // Initialize the JS engine.
   const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
   if (jsInitFailureReason) {
-    NS_RUNTIMEABORT(jsInitFailureReason);
+    MOZ_CRASH_UNSAFE_OOL(jsInitFailureReason);
   }
   sInitializedJS = true;
 
