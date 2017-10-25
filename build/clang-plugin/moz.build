@@ -59,3 +59,19 @@ if CONFIG['HOST_OS_ARCH'] == 'Darwin':
 DIRS += [
     'tests',
 ]
+
+
+# In the current moz.build world, we need to override essentially every
+# variable to limit ourselves to what we need to build the clang plugin.
+if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+    extra_cxxflags = ['-GR-', '-EHsc']
+else:
+    extra_cxxflags = ['-fno-rtti', '-fno-exceptions']
+
+if CONFIG['LLVM_CXXFLAGS']:
+    COMPILE_FLAGS['OS_CXXFLAGS'] = CONFIG['LLVM_CXXFLAGS'] + extra_cxxflags
+
+COMPILE_FLAGS['CLANG_PLUGIN'] = []
+COMPILE_FLAGS['OPTIMIZE'] = []
+COMPILE_FLAGS['DEBUG'] = []
+COMPILE_FLAGS['OS_COMPILE_CXXFLAGS'] = []
