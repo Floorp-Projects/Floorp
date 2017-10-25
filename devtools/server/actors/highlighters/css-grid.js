@@ -688,7 +688,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this._showGridElements();
 
     root.setAttribute("style",
-      `position:absolute; width:${width}px;height:${height}px; overflow:hidden`);
+      `position: absolute; width: ${width}px; height: ${height}px; overflow: hidden`);
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
     return true;

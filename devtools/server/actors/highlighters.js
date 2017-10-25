@@ -707,10 +707,11 @@ HighlighterEnvironment.prototype = {
 register("BoxModelHighlighter", "box-model");
 register("CssGridHighlighter", "css-grid");
 register("CssTransformHighlighter", "css-transform");
-register("SelectorHighlighter", "selector");
-register("GeometryEditorHighlighter", "geometry-editor");
-register("RulersHighlighter", "rulers");
-register("MeasuringToolHighlighter", "measuring-tool");
 register("EyeDropper", "eye-dropper");
+register("FlexboxHighlighter", "flexbox");
+register("GeometryEditorHighlighter", "geometry-editor");
+register("MeasuringToolHighlighter", "measuring-tool");
 register("PausedDebuggerOverlay", "paused-debugger");
+register("RulersHighlighter", "rulers");
+register("SelectorHighlighter", "selector");
 register("ShapesHighlighter", "shapes");
