@@ -14,6 +14,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.widget.RadioButton;
 
 import org.junit.After;
 import org.junit.Rule;
@@ -63,14 +64,7 @@ public class SearchEngineSelectionTest {
         UiObject searchName = SearchEngineSelection.getChild(new UiSelector()
                 .resourceId("android:id/title")
                 .enabled(true));
-        UiObject SearchEngineList = new UiScrollable(new UiSelector()
-                .resourceId("android:id/select_dialog_listview").enabled(true));
-        UiObject GoogleSelection = SearchEngineList.getChild(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/title")
-                .text("Google"));
-        UiObject YahooSelection = SearchEngineList.getChild(new UiSelector()
-                .resourceId("org.mozilla.focus.debug:id/title")
-                .text("Yahoo"));
+
         UiObject googleWebView = TestHelper.mDevice.findObject(new UiSelector()
                 .description("mozilla focus - Google Search")
                 .className("android.webkit.WebView"));
@@ -85,8 +79,19 @@ public class SearchEngineSelectionTest {
 
         /* Set the search engine to Google */
         SearchEngineSelection.click();
+
+        /* Get the dynamically generated search engine list from this settings page */
+        UiScrollable SearchEngineList = new UiScrollable(new UiSelector()
+                .resourceId("org.mozilla.focus.debug:id/search_engine_group").enabled(true));
+
+        UiObject GoogleSelection = SearchEngineList.getChildByText(new UiSelector()
+                .className(RadioButton.class), "Google");
+        UiObject YahooSelection = SearchEngineList.getChildByText(new UiSelector()
+                .className(RadioButton.class), "Yahoo");
+
         GoogleSelection.waitForExists(waitingTime);
         GoogleSelection.click();
+        TestHelper.pressBackKey();
         // Now it's changed to Google
         assertTrue(searchName.getText().equals("Google"));
         TestHelper.settingsHeading.waitForExists(waitingTime);
@@ -132,6 +137,7 @@ public class SearchEngineSelectionTest {
         SearchEngineSelection.click();
         YahooSelection.waitForExists(waitingTime);
         YahooSelection.click();
+        TestHelper.pressBackKey();
         assertTrue(searchName.getText().equals("Yahoo"));
         TestHelper.pressBackKey();
 
