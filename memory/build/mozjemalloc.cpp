@@ -1090,8 +1090,8 @@ static Mutex chunks_mtx;
  * address space.  Depending on function, different tree orderings are needed,
  * which is why there are two trees with the same contents.
  */
-static RedBlackTree<extent_node_t, ExtentTreeSzTrait> chunks_szad_mmap;
-static RedBlackTree<extent_node_t, ExtentTreeTrait> chunks_ad_mmap;
+static RedBlackTree<extent_node_t, ExtentTreeSzTrait> gChunksBySize;
+static RedBlackTree<extent_node_t, ExtentTreeTrait> gChunksByAddress;
 
 /* Protects huge allocation-related data structures. */
 static Mutex huge_mtx;
@@ -1928,9 +1928,7 @@ pages_purge(void *addr, size_t length, bool force_zero)
 }
 
 static void *
-chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
-              RedBlackTree<extent_node_t, ExtentTreeTrait>* chunks_ad,
-              size_t size, size_t alignment, bool *zeroed)
+chunk_recycle(size_t size, size_t alignment, bool *zeroed)
 {
 	void *ret;
 	extent_node_t *node;
@@ -1945,7 +1943,7 @@ chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 	key.addr = nullptr;
 	key.size = alloc_size;
 	chunks_mtx.Lock();
-	node = chunks_szad->SearchOrNext(&key);
+	node = gChunksBySize.SearchOrNext(&key);
 	if (!node) {
 		chunks_mtx.Unlock();
 		return nullptr;
@@ -1960,13 +1958,13 @@ chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 		*zeroed = (chunk_type == ZEROED_CHUNK);
 	}
 	/* Remove node from the tree. */
-	chunks_szad->Remove(node);
-	chunks_ad->Remove(node);
+	gChunksBySize.Remove(node);
+	gChunksByAddress.Remove(node);
 	if (leadsize != 0) {
 		/* Insert the leading space as a smaller chunk. */
 		node->size = leadsize;
-		chunks_szad->Insert(node);
-		chunks_ad->Insert(node);
+		gChunksBySize.Insert(node);
+		gChunksByAddress.Insert(node);
 		node = nullptr;
 	}
 	if (trailsize != 0) {
@@ -1990,8 +1988,8 @@ chunk_recycle(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 		node->addr = (void *)((uintptr_t)(ret) + size);
 		node->size = trailsize;
 		node->chunk_type = chunk_type;
-		chunks_szad->Insert(node);
-		chunks_ad->Insert(node);
+		gChunksBySize.Insert(node);
+		gChunksByAddress.Insert(node);
 		node = nullptr;
 	}
 
@@ -2043,8 +2041,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
 	// Base allocations can't be fulfilled by recycling because of
 	// possible deadlock or infinite recursion.
 	if (CAN_RECYCLE(size) && !base) {
-		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
-			size, alignment, zeroed);
+		ret = chunk_recycle(size, alignment, zeroed);
 		if (ret)
 			goto RETURN;
 	}
@@ -2089,9 +2086,7 @@ chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed)
 }
 
 static void
-chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
-             RedBlackTree<extent_node_t, ExtentTreeTrait>* chunks_ad,
-             void *chunk, size_t size, ChunkType chunk_type)
+chunk_record(void *chunk, size_t size, ChunkType chunk_type)
 {
 	extent_node_t *xnode, *node, *prev, *xprev, key;
 
@@ -2113,7 +2108,7 @@ chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 
 	chunks_mtx.Lock();
 	key.addr = (void *)((uintptr_t)chunk + size);
-	node = chunks_ad->SearchOrNext(&key);
+	node = gChunksByAddress.SearchOrNext(&key);
 	/* Try to coalesce forward. */
 	if (node && node->addr == key.addr) {
 		/*
@@ -2121,13 +2116,13 @@ chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 		 * not change the position within chunks_ad, so only
 		 * remove/insert from/into chunks_szad.
 		 */
-		chunks_szad->Remove(node);
+		gChunksBySize.Remove(node);
 		node->addr = chunk;
 		node->size += size;
 		if (node->chunk_type != chunk_type) {
 			node->chunk_type = RECYCLED_CHUNK;
 		}
-		chunks_szad->Insert(node);
+		gChunksBySize.Insert(node);
 	} else {
 		/* Coalescing forward failed, so insert a new node. */
 		if (!xnode) {
@@ -2144,12 +2139,12 @@ chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 		node->addr = chunk;
 		node->size = size;
 		node->chunk_type = chunk_type;
-		chunks_ad->Insert(node);
-		chunks_szad->Insert(node);
+		gChunksByAddress.Insert(node);
+		gChunksBySize.Insert(node);
 	}
 
 	/* Try to coalesce backward. */
-	prev = chunks_ad->Prev(node);
+	prev = gChunksByAddress.Prev(node);
 	if (prev && (void *)((uintptr_t)prev->addr + prev->size) ==
 	    chunk) {
 		/*
@@ -2157,16 +2152,16 @@ chunk_record(RedBlackTree<extent_node_t, ExtentTreeSzTrait>* chunks_szad,
 		 * not change the position within chunks_ad, so only
 		 * remove/insert node from/into chunks_szad.
 		 */
-		chunks_szad->Remove(prev);
-		chunks_ad->Remove(prev);
+		gChunksBySize.Remove(prev);
+		gChunksByAddress.Remove(prev);
 
-		chunks_szad->Remove(node);
+		gChunksBySize.Remove(node);
 		node->addr = prev->addr;
 		node->size += prev->size;
 		if (node->chunk_type != prev->chunk_type) {
 			node->chunk_type = RECYCLED_CHUNK;
 		}
-		chunks_szad->Insert(node);
+		gChunksBySize.Insert(node);
 
 		xprev = prev;
 	}
@@ -2209,7 +2204,7 @@ chunk_dealloc(void *chunk, size_t size, ChunkType type)
 			} else {
 				to_recycle = size;
 			}
-			chunk_record(&chunks_szad_mmap, &chunks_ad_mmap, chunk, to_recycle, type);
+			chunk_record(chunk, to_recycle, type);
 			return;
 		}
 	}
@@ -4370,8 +4365,8 @@ MALLOC_OUT:
 
   /* Initialize chunks data. */
   chunks_mtx.Init();
-  chunks_szad_mmap.Init();
-  chunks_ad_mmap.Init();
+  gChunksBySize.Init();
+  gChunksByAddress.Init();
 
   /* Initialize huge allocation data. */
   huge_mtx.Init();
