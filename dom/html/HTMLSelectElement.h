@@ -444,7 +444,10 @@ public:
   bool OpenInParentProcess();
   void SetOpenInParentProcess(bool aVal);
 
-  void GetPreviewValue(nsAString& aValue);
+  void GetPreviewValue(nsAString& aValue)
+  {
+    aValue = mPreviewValue;
+  }
   void SetPreviewValue(const nsAString& aValue);
 
 protected:
@@ -660,6 +663,11 @@ protected:
    * The live list of selected options.
   */
   RefPtr<nsContentList> mSelectedOptions;
+
+  /**
+   * The current displayed preview text.
+  */
+  nsString  mPreviewValue;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
