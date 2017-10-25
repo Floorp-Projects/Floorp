@@ -102,12 +102,23 @@ def assert_dialog_handled(session, expected_text):
 
 def assert_same_element(session, a, b):
     """Verify that two element references describe the same element."""
-    assert isinstance(a, dict), "Actual value is not a dictionary"
-    assert isinstance(b, dict), "Expected value is not a dictionary"
-    assert Element.identifier in a, "Actual value does not describe an element"
-    assert Element.identifier in b, "Expected value does not describe an element"
+    if isinstance(a, dict):
+        assert Element.identifier in a, "Actual value does not describe an element"
+        a_id = a[Element.identifier]
+    elif isinstance(a, Element):
+        a_id = a.id
+    else:
+        raise AssertionError("Actual value is not a dictionary or web element")
 
-    if a[Element.identifier] == b[Element.identifier]:
+    if isinstance(b, dict):
+        assert Element.identifier in b, "Expected value does not describe an element"
+        b_id = b[Element.identifier]
+    elif isinstance(b, Element):
+        b_id = b.id
+    else:
+        raise AssertionError("Expected value is not a dictionary or web element")
+
+    if a_id == b_id:
         return
 
     message = ("Expected element references to describe the same element, " +
@@ -116,8 +127,8 @@ def assert_same_element(session, a, b):
     # Attempt to provide more information, accounting for possible errors such
     # as stale element references or not visible elements.
     try:
-        a_markup = session.execute_script("return arguments[0].outerHTML;", args=[a])
-        b_markup = session.execute_script("return arguments[0].outerHTML;", args=[b])
+        a_markup = session.execute_script("return arguments[0].outerHTML;", args=(a,))
+        b_markup = session.execute_script("return arguments[0].outerHTML;", args=(b,))
         message += " Actual: `%s`. Expected: `%s`." % (a_markup, b_markup)
     except WebDriverException:
         pass
