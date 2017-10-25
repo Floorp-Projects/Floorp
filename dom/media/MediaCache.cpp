@@ -1318,6 +1318,12 @@ MediaCache::Update()
       continue;
     }
 
+    // We make decisions based on mSeekTarget when there is a pending seek.
+    // Otherwise we will keep issuing seek requests until mChannelOffset
+    // is changed by NotifyDataStarted() which is bad.
+    int64_t channelOffset =
+      stream->mSeekTarget != -1 ? stream->mSeekTarget : stream->mChannelOffset;
+
     // Figure out where we should be reading from. It's the first
     // uncached byte after the current mStreamOffset.
     int64_t dataOffset = stream->GetCachedDataEndInternal(stream->mStreamOffset);
@@ -1326,15 +1332,15 @@ MediaCache::Update()
     // Compute where we'd actually seek to to read at readOffset
     int64_t desiredOffset = dataOffset;
     if (stream->mIsTransportSeekable) {
-      if (desiredOffset > stream->mChannelOffset &&
-          desiredOffset <= stream->mChannelOffset + SEEK_VS_READ_THRESHOLD) {
+      if (desiredOffset > channelOffset &&
+          desiredOffset <= channelOffset + SEEK_VS_READ_THRESHOLD) {
         // Assume it's more efficient to just keep reading up to the
         // desired position instead of trying to seek
-        desiredOffset = stream->mChannelOffset;
+        desiredOffset = channelOffset;
       }
     } else {
       // We can't seek directly to the desired offset...
-      if (stream->mChannelOffset > desiredOffset) {
+      if (channelOffset > desiredOffset) {
         // Reading forward won't get us anywhere, we need to go backwards.
         // Seek back to 0 (the client will reopen the stream) and then
         // read forward.
@@ -1348,7 +1354,7 @@ MediaCache::Update()
       } else {
         // otherwise reading forward is looking good, so just stay where we
         // are and don't trigger a channel seek!
-        desiredOffset = stream->mChannelOffset;
+        desiredOffset = channelOffset;
       }
     }
 
@@ -1366,8 +1372,8 @@ MediaCache::Update()
       // But we don't want to seek to the end of the stream if we're not
       // already there.
       LOG("Stream %p at end of stream", stream);
-      enableReading = !stream->mCacheSuspended &&
-        stream->mStreamLength == stream->mChannelOffset;
+      enableReading =
+        !stream->mCacheSuspended && stream->mStreamLength == channelOffset;
     } else if (desiredOffset < stream->mStreamOffset) {
       // We're reading to try to catch up to where the current stream
       // reader wants to be. Better not stop.
@@ -1425,7 +1431,9 @@ MediaCache::Update()
         MediaCacheStream* other = mStreams[j];
         if (other->mResourceID == stream->mResourceID && !other->mClosed &&
             !other->mClient->IsSuspended() &&
-            OffsetToBlockIndexUnchecked(other->mChannelOffset) ==
+            OffsetToBlockIndexUnchecked(other->mSeekTarget != -1
+                                          ? other->mSeekTarget
+                                          : other->mChannelOffset) ==
               OffsetToBlockIndexUnchecked(desiredOffset)) {
           // This block is already going to be read by the other stream.
           // So don't try to read it from this stream as well.
@@ -1439,22 +1447,18 @@ MediaCache::Update()
       }
     }
 
-    if (stream->mChannelOffset != desiredOffset && enableReading) {
+    if (channelOffset != desiredOffset && enableReading) {
       // We need to seek now.
       NS_ASSERTION(stream->mIsTransportSeekable || desiredOffset == 0,
                    "Trying to seek in a non-seekable stream!");
       // Round seek offset down to the start of the block. This is essential
       // because we don't want to think we have part of a block already
       // in mPartialBlockBuffer.
-      stream->mChannelOffset =
+      stream->mSeekTarget =
         OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
       actions[i].mTag = StreamAction::SEEK;
       actions[i].mResume = stream->mCacheSuspended;
-      actions[i].mSeekTarget = stream->mChannelOffset;
-      // mChannelOffset is updated to a new position. We don't want data from
-      // the old channel to be written to the wrong position. 0 is a sentinel
-      // value which will not match any ID passed to NotifyDataReceived().
-      stream->mLoadID = 0;
+      actions[i].mSeekTarget = stream->mSeekTarget;
     } else if (enableReading && stream->mCacheSuspended) {
       actions[i].mTag = StreamAction::RESUME;
     } else if (!enableReading && !stream->mCacheSuspended) {
@@ -1920,7 +1924,7 @@ MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
   LOG("Stream %p DataStarted: %" PRId64 " aLoadID=%u", this, aOffset, aLoadID);
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  NS_WARNING_ASSERTION(aOffset == mChannelOffset,
+  NS_WARNING_ASSERTION(aOffset == mSeekTarget || aOffset == mChannelOffset,
                        "Server is giving us unexpected offset");
   MOZ_ASSERT(aOffset >= 0);
   mChannelOffset = aOffset;
@@ -1937,6 +1941,10 @@ MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
   // Queue an Update since we may change our strategy for dealing
   // with this stream
   mMediaCache->QueueUpdate();
+
+  // Reset mSeekTarget since the seek is completed so MediaCache::Update() will
+  // make decisions based on mChannelOffset instead of mSeekTarget.
+  mSeekTarget = -1;
 }
 
 void
