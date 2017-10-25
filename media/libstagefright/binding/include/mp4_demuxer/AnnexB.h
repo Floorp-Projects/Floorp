@@ -11,20 +11,22 @@ namespace mozilla {
 class MediaRawData;
 class MediaByteBuffer;
 }
+
 namespace mp4_demuxer
 {
-class ByteReader;
+class BufferReader;
 
 class AnnexB
 {
 public:
   // All conversions assume size of NAL length field is 4 bytes.
   // Convert a sample from AVCC format to Annex B.
-  static bool ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS = true);
+  static mozilla::Result<mozilla::Ok, nsresult>
+    ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS = true);
   // Convert a sample from Annex B to AVCC.
   // an AVCC extradata must not be set.
   static bool ConvertSampleToAVCC(mozilla::MediaRawData* aSample);
-  static bool ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample);
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample);
 
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<mozilla::MediaByteBuffer> ConvertExtraDataToAnnexB(
@@ -36,8 +38,8 @@ public:
 
 private:
   // AVCC box parser helper.
-  static void ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                              mozilla::MediaByteBuffer* aAnnexB);
+  static mozilla::Result<mozilla::Ok, nsresult>
+    ConvertSPSOrPPS(BufferReader& aReader, uint8_t aCount, mozilla::MediaByteBuffer* aAnnexB);
 };
 
 } // namespace mp4_demuxer

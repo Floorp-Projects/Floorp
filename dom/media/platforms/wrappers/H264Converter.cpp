@@ -121,7 +121,7 @@ H264Converter::Decode(MediaRawData* aSample)
   }
 
   if (!*mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
+      mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe).isErr()) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("ConvertSampleToAnnexB")),
@@ -375,7 +375,7 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
   }
 
   if (!*mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
+      mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe).isErr()) {
     mDecodePromise.Reject(MediaResult(NS_ERROR_OUT_OF_MEMORY,
                                       RESULT_DETAIL("ConvertSampleToAnnexB")),
                           __func__);
