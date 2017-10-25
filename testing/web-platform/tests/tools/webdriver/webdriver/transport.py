@@ -4,16 +4,28 @@ import urlparse
 
 import error
 
+
 class Response(object):
-    """Describes an HTTP response received from a remote en"Describes an HTTP
-    response received from a remote end whose body has been read and parsed as
-    appropriate."""
+    """
+    Describes an HTTP response received from a remote end whose
+    body has been read and parsed as appropriate.
+    """
+
     def __init__(self, status, body):
         self.status = status
         self.body = body
 
     def __repr__(self):
-        return "wdclient.Response(status=%d, body=%s)" % (self.status, self.body)
+        cls_name = self.__class__.__name__
+        if self.error:
+            return "<%s status=%s error=%s>" % (cls_name, self.status, repr(self.error))
+        return "<% status=%s body=%s>" % (cls_name, self.status, self.body)
+
+    @property
+    def error(self):
+        if self.status != 200:
+            return error.from_response(self)
+        return None
 
     @classmethod
     def from_http_response(cls, http_response):
@@ -45,17 +57,18 @@ class ToJsonEncoder(json.JSONEncoder):
 
 
 class HTTPWireProtocol(object):
-    """Transports messages (commands and responses) over the WebDriver
+    """
+    Transports messages (commands and responses) over the WebDriver
     wire protocol.
     """
 
     def __init__(self, host, port, url_prefix="/", timeout=None):
-        """Construct interface for communicating with the remote server.
+        """
+        Construct interface for communicating with the remote server.
 
         :param url: URL of remote WebDriver server.
         :param wait: Duration to wait for remote to appear.
         """
-
         self.host = host
         self.port = port
         self.url_prefix = url_prefix
@@ -66,7 +79,8 @@ class HTTPWireProtocol(object):
         return urlparse.urljoin(self.url_prefix, suffix)
 
     def send(self, method, uri, body=None, headers=None):
-        """Send a command to the remote.
+        """
+        Send a command to the remote.
 
         :param method: `GET`, `POST`, or `DELETE`.
         :param uri: Relative endpoint of the requests URL path.
@@ -76,7 +90,6 @@ class HTTPWireProtocol(object):
 
         :return: Instance of ``wdclient.Response`` describing the
             HTTP response received from the remote end.
-
         """
         if body is None and method == "POST":
             body = {}
