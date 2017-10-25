@@ -4,6 +4,24 @@ use std::mem;
 use std::os::unix::io::RawFd;
 use std::ptr;
 
+fn cvt(r: libc::ssize_t) -> io::Result<usize> {
+    if r == -1 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(r as usize)
+    }
+}
+
+// Convert return of -1 into error message, handling retry on EINTR
+fn cvt_r<F: FnMut() -> libc::ssize_t>(mut f: F) -> io::Result<usize> {
+    loop {
+        match cvt(f()) {
+            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {},
+            other => return other,
+        }
+    }
+}
+
 // Note: The following fields must be laid out together, the OS expects them
 // to be part of a single allocation.
 #[repr(C)]
@@ -59,12 +77,7 @@ pub fn sendmsg(fd: RawFd, to_send: &[u8], fd_to_send: Option<RawFd>) -> io::Resu
 
     cmsg.data = fd_to_send.unwrap_or(-1);
 
-    let result = unsafe { libc::sendmsg(fd, &msghdr, 0) };
-    if result >= 0 {
-        Ok(result as usize)
-    } else {
-        Err(io::Error::last_os_error())
-    }
+    cvt_r(|| unsafe { libc::sendmsg(fd, &msghdr, 0) })
 }
 
 pub fn recvmsg(fd: RawFd, to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd>)> {
@@ -85,21 +98,17 @@ pub fn recvmsg(fd: RawFd, to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd
     };
     iovec.iov_len = to_recv.len();
 
-    let result = unsafe { libc::recvmsg(fd, &mut msghdr, 0) };
-    if result >= 0 {
-        let fd = if msghdr.msg_controllen == cmsg_space() as _ &&
-            cmsg.cmsghdr.cmsg_len == cmsg_len() as _ &&
-            cmsg.cmsghdr.cmsg_level == libc::SOL_SOCKET &&
-            cmsg.cmsghdr.cmsg_type == libc::SCM_RIGHTS {
-                Some(cmsg.data)
-            } else {
-                None
-            };
-
-        Ok((result as usize, fd))
+    let result = try!(cvt_r(|| unsafe { libc::recvmsg(fd, &mut msghdr, 0) }));
+    let fd = if msghdr.msg_controllen == cmsg_space() as _ &&
+        cmsg.cmsghdr.cmsg_len == cmsg_len() as _ &&
+        cmsg.cmsghdr.cmsg_level == libc::SOL_SOCKET &&
+        cmsg.cmsghdr.cmsg_type == libc::SCM_RIGHTS {
+        Some(cmsg.data)
     } else {
-        Err(io::Error::last_os_error())
-    }
+        None
+    };
+
+    Ok((result as usize, fd))
 }
 
 #[cfg(test)]
