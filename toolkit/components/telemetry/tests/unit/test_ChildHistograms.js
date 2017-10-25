@@ -91,6 +91,7 @@ add_task(async function() {
   // Setup.
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   finishAddonManagerStartup();
   await TelemetryController.testSetup();
   if (runningInParent) {
