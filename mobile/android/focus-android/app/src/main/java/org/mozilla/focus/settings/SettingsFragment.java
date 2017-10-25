@@ -45,7 +45,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         final int prefResId = args != null ? args.getInt(FRAGMENT_RESID_INTENT_EXTRA) : R.xml.settings;
         final int titleResId = args != null ? args.getInt(TITLE_RESID_INTENT_EXTRA) : R.string.menu_settings;
 
-        // We've checked that this cast is legal in onAttach.
+       // We've checked that this cast is legal in onAttach.
         final TitleUpdater titleUpdater = (TitleUpdater) getActivity();
         if (titleUpdater != null) {
             titleUpdater.updateTitle(titleResId);
