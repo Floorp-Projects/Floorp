@@ -316,9 +316,6 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = {
-            'ALLOW_COMPILER_WARNINGS': [
-                'ALLOW_COMPILER_WARNINGS := 1',
-            ],
             'RCFILE': [
                 'RCFILE := foo.rc',
             ],

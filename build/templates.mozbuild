@@ -156,6 +156,9 @@ def DisableStlWrapping():
 def NoVisibilityFlags():
     COMPILE_FLAGS['VISIBILITY'] = []
 
+@template
+def AllowCompilerWarnings():
+    COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
 
 @template
 def RustTest(name, features=None):

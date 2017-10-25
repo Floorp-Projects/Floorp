@@ -342,6 +342,8 @@ class CompileFlags(ContextDerivedValue, dict):
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
@@ -355,6 +357,22 @@ class CompileFlags(ContextDerivedValue, dict):
                                  for k, v, _ in self.flag_variables))
         else:
             dict.__init__(self)
+
+    def _warnings_as_errors(self):
+        warnings_as_errors = self._context.config.substs.get('WARNINGS_AS_ERRORS')
+        if self._context.config.substs.get('MOZ_PGO'):
+            # Don't use warnings-as-errors in Windows PGO builds because it is suspected of
+            # causing problems in that situation. (See bug 437002.)
+            if self._context.config.substs['OS_ARCH'] == 'WINNT':
+                warnings_as_errors = None
+
+        if self._context.config.substs.get('CC_TYPE') == 'clang-cl':
+            # Don't use warnings-as-errors in clang-cl because it warns about many more
+            # things than MSVC does.
+            warnings_as_errors = None
+
+        if warnings_as_errors:
+            return [warnings_as_errors]
 
     def _optimize_flags(self):
         if not self._context.config.substs.get('MOZ_OPTIMIZE'):

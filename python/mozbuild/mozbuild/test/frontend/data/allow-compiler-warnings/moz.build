@@ -1,0 +1,17 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+@template
+def AllowCompilerWarnings():
+    COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
+
+@template
+def Library(name):
+    '''Template for libraries.'''
+    LIBRARY_NAME = name
+
+Library('dummy')
+
+UNIFIED_SOURCES += ['test1.c']
+
+AllowCompilerWarnings()
