@@ -38,3 +38,12 @@ SOURCES += [
 
 if CONFIG['CLANG_CXX']:
     CXXFLAGS += ['-Wno-unreachable-code-return']
+
+# According to the LLVM docs, LibFuzzer isn't supposed to be built with any
+# sanitizer flags and in fact, building it with ASan coverage currently causes
+# Clang 3.9+ to crash, so we filter out all sanitizer-related flags here.
+for flags_var in ('OS_CFLAGS', 'OS_CXXFLAGS'):
+    COMPILE_FLAGS[flags_var] = [
+        f for f in COMPILE_FLAGS.get(flags_var, [])
+        if not f.startswith('-fsanitize')
+    ]
