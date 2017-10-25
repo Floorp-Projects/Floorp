@@ -683,6 +683,12 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function () {
                       Cr.NS_OK));
 });
 
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("bug_1411458"),
+    check_open_result("bug 1411458", Cr.NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO));
+});
+
 // TODO: tampered MF, tampered SF
 // TODO: too-large MF, too-large RSA, too-large SF
 // TODO: MF and SF that end immediately after the last main header
