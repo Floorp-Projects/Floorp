@@ -141,7 +141,6 @@ nsHttpTransaction::nsHttpTransaction()
     , mSynchronousRatePaceRequest(false)
     , mClassOfService(0)
     , m0RTTInProgress(false)
-    , mDoNotTryEarlyData(false)
     , mEarlyDataDisposition(EARLY_NONE)
     , mFastOpenStatus(TFO_NOT_TRIED)
 {
@@ -1545,17 +1544,9 @@ nsHttpTransaction::HandleContentStart()
 
     if (mResponseHead) {
         if (mEarlyDataDisposition == EARLY_ACCEPTED) {
-            if (mResponseHead->Status() == 425) {
-                // We will report this state when the final responce arrives.
-                mEarlyDataDisposition = EARLY_425;
-            } else {
-                Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data, NS_LITERAL_CSTRING("accepted"));
-            }
+            Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data, NS_LITERAL_CSTRING("accepted"));
         } else if (mEarlyDataDisposition == EARLY_SENT) {
             Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data, NS_LITERAL_CSTRING("sent"));
-        } else if (mEarlyDataDisposition == EARLY_425) {
-            Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_Early_Data, NS_LITERAL_CSTRING("received 425"));
-            mEarlyDataDisposition = EARLY_NONE;
         } // no header on NONE case
 
         if (mFastOpenStatus == TFO_DATA_SENT) {
@@ -1621,14 +1612,6 @@ nsHttpTransaction::HandleContentStart()
             // retry on a new connection - just in case
             if (!mRestartCount) {
                 mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
-                mForceRestart = true; // force restart has built in loop protection
-                return NS_ERROR_NET_RESET;
-            }
-            break;
-        case 425:
-            LOG(("Too Early."));
-            if ((mEarlyDataDisposition == EARLY_425) && !mDoNotTryEarlyData) {
-                mDoNotTryEarlyData = true;
                 mForceRestart = true; // force restart has built in loop protection
                 return NS_ERROR_NET_RESET;
             }
@@ -2298,7 +2281,6 @@ bool
 nsHttpTransaction::CanDo0RTT()
 {
     if (mRequestHead->IsSafeMethod() &&
-        !mDoNotTryEarlyData &&
         (!mConnection ||
          !mConnection->IsProxyConnectInProgress())) {
         return true;
