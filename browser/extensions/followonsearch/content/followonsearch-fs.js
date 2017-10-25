@@ -22,13 +22,13 @@ let searchDomains = [{
   "domains": [ "search.yahoo.co.jp" ],
   "search": "p",
   "followOnSearch": "ai",
-  "prefix": "fr",
+  "prefix": ["fr"],
   "codes": ["mozff"],
   "sap": "yahoo",
 }, {
   "domains": [ "www.bing.com" ],
   "search": "q",
-  "prefix": "pc",
+  "prefix": ["pc"],
   "reportPrefix": "form",
   "codes": ["MOZI", "MOZD", "MZSL01", "MZSL02", "MZSL03", "MOZ2"],
   "sap": "bing",
@@ -36,17 +36,7 @@ let searchDomains = [{
   // The Yahoo domains to watch for.
   "domains": [
     "search.yahoo.com", "ca.search.yahoo.com", "hk.search.yahoo.com",
-    "tw.search.yahoo.com", "mozilla.search.yahoo.com", "us.search.yahoo.com"
-  ],
-  "search": "p",
-  "followOnSearch": "fr2",
-  "prefix": "hspart",
-  "reportPrefix": "hsimp",
-  "codes": ["mozilla"],
-  "sap": "yahoo",
-}, {
-  // The Yahoo legacy domains.
-  "domains": [
+    "tw.search.yahoo.com", "mozilla.search.yahoo.com", "us.search.yahoo.com",
     "no.search.yahoo.com", "ar.search.yahoo.com", "br.search.yahoo.com",
     "ch.search.yahoo.com", "cl.search.yahoo.com", "de.search.yahoo.com",
     "uk.search.yahoo.com", "es.search.yahoo.com", "espanol.search.yahoo.com",
@@ -56,8 +46,9 @@ let searchDomains = [{
   ],
   "search": "p",
   "followOnSearch": "fr2",
-  "prefix": "fr",
-  "codes": ["moz35"],
+  "prefix": ["hspart", "fr"],
+  "reportPrefix": "hsimp",
+  "codes": ["mozilla", "moz35"],
   "sap": "yahoo",
 }, {
   // The Google domains.
@@ -116,7 +107,7 @@ let searchDomains = [{
     "www.google.co.zm", "www.google.co.zw",
   ],
   "search": "q",
-  "prefix": "client",
+  "prefix": ["client"],
   "followOnSearch": "oq",
   "codes": ["firefox-b-ab", "firefox-b"],
   "sap": "google",
@@ -188,7 +179,13 @@ var webProgressListener = {
       }
 
       let queries = new URLSearchParams(aLocation.query);
-      let code = queries.get(domainInfo.prefix);
+      // Yahoo has switched to Unified search so we can get
+      // different codes on the same domain. Hack for now
+      // to allow two different prefixes for codes
+      let code = queries.get(domainInfo.prefix[0]);
+      if (!code && domainInfo.prefix.length > 1) {
+        code = queries.get(domainInfo.prefix[1]);
+      }
       // Special case Google so we can track searches
       // without codes from the browser.
       if (domainInfo.sap == "google") {
