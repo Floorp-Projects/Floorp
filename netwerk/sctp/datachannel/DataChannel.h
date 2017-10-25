@@ -112,8 +112,6 @@ public:
   uint8_t  *mData;
 };
 
-class DataChannelConnectionShutdown;
-
 // One per PeerConnection
 class DataChannelConnection final
   : public net::NeckoTargetHolder
@@ -152,7 +150,6 @@ public:
   // Finish Destroy on STS to avoid SCTP race condition with ABORT from far end
   void DestroyOnSTS(struct socket *aMasterSocket,
                     struct socket *aSocket);
-  void DestroyOnSTSFinal();
 
   void SetMaxMessageSize(bool aMaxMessageSizeSet, uint64_t aMaxMessageSize);
   uint64_t GetMaxMessageSize();
@@ -241,7 +238,6 @@ protected:
 
 private:
   friend class DataChannelConnectRunnable;
-  friend class DataChannelConnectionShutdown;
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void *data);
@@ -346,8 +342,6 @@ private:
   nsCOMPtr<nsIThread> mInternalIOThread;
   uint8_t mPendingType;
   nsCString mRecvBuffer;
-
-  RefPtr<DataChannelConnectionShutdown> mDelayedShutdown;
 };
 
 #define ENSURE_DATACONNECTION \
