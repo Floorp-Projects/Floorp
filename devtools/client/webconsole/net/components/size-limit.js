@@ -3,11 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 
 /**
  * This template represents a size limit notification message
@@ -15,17 +12,22 @@ const PropTypes = React.PropTypes;
  * size limit. The message contains a link allowing the user
  * to fetch the rest of the data from the backend (debugger server).
  */
-var SizeLimit = React.createClass({
-  propTypes: {
-    data: PropTypes.object.isRequired,
-    message: PropTypes.string.isRequired,
-    link: PropTypes.string.isRequired,
-    actions: PropTypes.shape({
-      resolveString: PropTypes.func.isRequired
-    }),
-  },
+class SizeLimit extends Component {
+  static get propTypes() {
+    return {
+      data: PropTypes.object.isRequired,
+      message: PropTypes.string.isRequired,
+      link: PropTypes.string.isRequired,
+      actions: PropTypes.shape({
+        resolveString: PropTypes.func.isRequired
+      }),
+    };
+  }
 
-  displayName: "SizeLimit",
+  constructor(props) {
+    super(props);
+    this.onClickLimit = this.onClickLimit.bind(this);
+  }
 
   // Event Handlers
 
@@ -34,7 +36,7 @@ var SizeLimit = React.createClass({
     let content = this.props.data;
 
     actions.resolveString(content, "text");
-  },
+  }
 
   // Rendering
 
@@ -56,7 +58,7 @@ var SizeLimit = React.createClass({
         )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = SizeLimit;

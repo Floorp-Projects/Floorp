@@ -3,23 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const { Component, createFactory, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 
 // Reps
-const TreeView = React.createFactory(require("devtools/client/shared/components/tree/TreeView"));
+const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 
 // Network
-const SizeLimit = React.createFactory(require("./size-limit"));
-const NetInfoGroupList = React.createFactory(require("./net-info-group-list"));
-const Spinner = React.createFactory(require("./spinner"));
+const SizeLimit = createFactory(require("./size-limit"));
+const NetInfoGroupList = createFactory(require("./net-info-group-list"));
+const Spinner = createFactory(require("./spinner"));
 const Json = require("../utils/json");
 const NetUtils = require("../utils/net");
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
 
 /**
  * This template represents 'Response' tab displayed when the user
@@ -30,16 +27,30 @@ const PropTypes = React.PropTypes;
  * text/xml, etc.), the response is parsed using appropriate parser
  * and rendered accordingly.
  */
-var ResponseTab = React.createClass({
-  propTypes: {
-    data: PropTypes.shape({
-      request: PropTypes.object.isRequired,
-      response: PropTypes.object.isRequired
-    }),
-    actions: PropTypes.object.isRequired
-  },
+class ResponseTab extends Component {
+  static get propTypes() {
+    return {
+      data: PropTypes.shape({
+        request: PropTypes.object.isRequired,
+        response: PropTypes.object.isRequired
+      }),
+      actions: PropTypes.object.isRequired
+    };
+  }
 
-  displayName: "ResponseTab",
+  constructor(props) {
+    super(props);
+    this.isJson = this.isJson.bind(this);
+    this.parseJson = this.parseJson.bind(this);
+    this.isImage = this.isImage.bind(this);
+    this.isXml = this.isXml.bind(this);
+    this.parseXml = this.parseXml.bind(this);
+    this.renderJson = this.renderJson.bind(this);
+    this.renderImage = this.renderImage.bind(this);
+    this.renderXml = this.renderXml.bind(this);
+    this.renderFormattedResponse = this.renderFormattedResponse.bind(this);
+    this.renderRawResponse = this.renderRawResponse.bind(this);
+  }
 
   // Response Types
 
@@ -49,7 +60,7 @@ var ResponseTab = React.createClass({
     }
 
     return Json.isJSON(content.mimeType, content.text);
-  },
+  }
 
   parseJson(file) {
     let content = file.response.content;
@@ -59,7 +70,7 @@ var ResponseTab = React.createClass({
 
     let jsonString = new String(content.text);
     return Json.parseJSONString(jsonString);
-  },
+  }
 
   isImage(content) {
     if (isLongString(content.text)) {
@@ -67,7 +78,7 @@ var ResponseTab = React.createClass({
     }
 
     return NetUtils.isImage(content.mimeType);
-  },
+  }
 
   isXml(content) {
     if (isLongString(content.text)) {
@@ -75,7 +86,7 @@ var ResponseTab = React.createClass({
     }
 
     return NetUtils.isHTML(content.mimeType);
-  },
+  }
 
   parseXml(file) {
     let content = file.response.content;
@@ -84,7 +95,7 @@ var ResponseTab = React.createClass({
     }
 
     return NetUtils.parseXml(content);
-  },
+  }
 
   // Rendering
 
@@ -111,7 +122,7 @@ var ResponseTab = React.createClass({
       }),
       name: Locale.$STR("jsonScopeName")
     };
-  },
+  }
 
   renderImage(file) {
     let content = file.response.content;
@@ -125,7 +136,7 @@ var ResponseTab = React.createClass({
       content: DOM.img({src: dataUri}),
       name: Locale.$STR("netRequest.image")
     };
-  },
+  }
 
   renderXml(file) {
     let content = file.response.content;
@@ -140,7 +151,7 @@ var ResponseTab = React.createClass({
 
     // Proper component for rendering XML should be used (see bug 1247392)
     return null;
-  },
+  }
 
   /**
    * If full response text is available, let's try to parse and
@@ -166,7 +177,7 @@ var ResponseTab = React.createClass({
     if (group) {
       return group;
     }
-  },
+  }
 
   renderRawResponse(file) {
     let group;
@@ -199,7 +210,7 @@ var ResponseTab = React.createClass({
     }
 
     return group;
-  },
+  }
 
   componentDidMount() {
     let { actions, data: file } = this.props;
@@ -209,7 +220,7 @@ var ResponseTab = React.createClass({
       // TODO: use async action objects as soon as Redux is in place
       actions.requestData("responseContent");
     }
-  },
+  }
 
   /**
    * The response panel displays two groups:
@@ -265,7 +276,7 @@ var ResponseTab = React.createClass({
       )
     );
   }
-});
+}
 
 // Helpers
 

@@ -4,7 +4,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM: dom,
   PropTypes
@@ -24,26 +24,30 @@ const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
-const ConsoleOutput = createClass({
+class ConsoleOutput extends Component {
+  static get propTypes() {
+    return {
+      messages: PropTypes.object.isRequired,
+      messagesUi: PropTypes.object.isRequired,
+      serviceContainer: PropTypes.shape({
+        attachRefToHud: PropTypes.func.isRequired,
+        openContextMenu: PropTypes.func.isRequired,
+        sourceMapService: PropTypes.object,
+      }),
+      dispatch: PropTypes.func.isRequired,
+      timestampsVisible: PropTypes.bool,
+      messagesTableData: PropTypes.object.isRequired,
+      messagesRepeat: PropTypes.object.isRequired,
+      networkMessagesUpdate: PropTypes.object.isRequired,
+      visibleMessages: PropTypes.array.isRequired,
+      networkMessageActiveTabId: PropTypes.string.isRequired,
+    };
+  }
 
-  displayName: "ConsoleOutput",
-
-  propTypes: {
-    messages: PropTypes.object.isRequired,
-    messagesUi: PropTypes.object.isRequired,
-    serviceContainer: PropTypes.shape({
-      attachRefToHud: PropTypes.func.isRequired,
-      openContextMenu: PropTypes.func.isRequired,
-      sourceMapService: PropTypes.object,
-    }),
-    dispatch: PropTypes.func.isRequired,
-    timestampsVisible: PropTypes.bool,
-    messagesTableData: PropTypes.object.isRequired,
-    messagesRepeat: PropTypes.object.isRequired,
-    networkMessagesUpdate: PropTypes.object.isRequired,
-    visibleMessages: PropTypes.array.isRequired,
-    networkMessageActiveTabId: PropTypes.string.isRequired,
-  },
+  constructor(props) {
+    super(props);
+    this.onContextMenu = this.onContextMenu.bind(this);
+  }
 
   componentDidMount() {
     // Do the scrolling in the nextTick since this could hit console startup performances.
@@ -52,7 +56,7 @@ const ConsoleOutput = createClass({
       scrollToBottom(this.outputNode);
     }, 0);
     this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
-  },
+  }
 
   componentWillUpdate(nextProps, nextState) {
     const outputNode = this.outputNode;
@@ -78,19 +82,19 @@ const ConsoleOutput = createClass({
     this.shouldScrollBottom =
       (messagesDelta > 0 && nextProps.messages.last().type === MESSAGE_TYPE.RESULT) ||
       (visibleMessagesDelta > 0 && isScrolledToBottom(lastChild, outputNode));
-  },
+  }
 
   componentDidUpdate() {
     if (this.shouldScrollBottom) {
       scrollToBottom(this.outputNode);
     }
-  },
+  }
 
   onContextMenu(e) {
     this.props.serviceContainer.openContextMenu(e);
     e.stopPropagation();
     e.preventDefault();
-  },
+  }
 
   render() {
     let {
@@ -131,7 +135,7 @@ const ConsoleOutput = createClass({
       )
     );
   }
-});
+}
 
 function scrollToBottom(node) {
   node.scrollTop = node.scrollHeight;
