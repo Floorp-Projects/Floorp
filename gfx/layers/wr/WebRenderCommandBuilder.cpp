@@ -60,11 +60,11 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
 
     StackingContextHelper sc;
     mParentCommands.Clear();
-    aScrollData = WebRenderScrollData();
+    aScrollData = WebRenderScrollData(mManager);
     MOZ_ASSERT(mLayerScrollData.empty());
     mLastCanvasDatas.Clear();
     mLastAsr = nullptr;
-    mScrollingHelper.BeginBuild(aBuilder);
+    mScrollingHelper.BeginBuild(mManager, aBuilder);
 
     {
       StackingContextHelper pageRootSc(sc, aBuilder);
@@ -85,7 +85,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
       return aScrollData.HasMetadataFor(aScrollId);
     };
     if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
-          aDisplayListBuilder, nullptr, ContainerLayerParameters(), callback)) {
+          aDisplayListBuilder, mManager, ContainerLayerParameters(), callback)) {
       mLayerScrollData.back().AppendScrollMetadata(aScrollData, rootMetadata.ref());
     }
     // Append the WebRenderLayerScrollData items into WebRenderScrollData

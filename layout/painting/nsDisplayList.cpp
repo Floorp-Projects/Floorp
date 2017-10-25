@@ -2485,7 +2485,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
     };
     if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
-          aBuilder, root, containerParameters, callback)) {
+          aBuilder, root->Manager(), containerParameters, callback)) {
       root->SetScrollMetadata(rootMetadata.value());
     }
 
@@ -6876,7 +6876,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 UniquePtr<ScrollMetadata>
-nsDisplaySubDocument::ComputeScrollMetadata(Layer* aLayer,
+nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
                                             const ContainerLayerParameters& aContainerParameters)
 {
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER)) {
@@ -6899,7 +6899,7 @@ nsDisplaySubDocument::ComputeScrollMetadata(Layer* aLayer,
   return MakeUnique<ScrollMetadata>(
     nsLayoutUtils::ComputeScrollMetadata(
       mFrame, rootScrollFrame, rootScrollFrame->GetContent(), ReferenceFrame(),
-      aLayer, mScrollParentId, viewport, Nothing(),
+      aLayerManager, mScrollParentId, viewport, Nothing(),
       isRootContentDocument, params));
 }
 
@@ -7426,7 +7426,7 @@ nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 UniquePtr<ScrollMetadata>
-nsDisplayScrollInfoLayer::ComputeScrollMetadata(Layer* aLayer,
+nsDisplayScrollInfoLayer::ComputeScrollMetadata(LayerManager* aLayerManager,
                                                 const ContainerLayerParameters& aContainerParameters)
 {
   nsRect viewport = mScrollFrame->GetRect() -
@@ -7435,7 +7435,7 @@ nsDisplayScrollInfoLayer::ComputeScrollMetadata(Layer* aLayer,
 
   ScrollMetadata metadata = nsLayoutUtils::ComputeScrollMetadata(
       mScrolledFrame, mScrollFrame, mScrollFrame->GetContent(),
-      ReferenceFrame(), aLayer,
+      ReferenceFrame(), aLayerManager,
       mScrollParentId, viewport, Nothing(), false, aContainerParameters);
   metadata.GetMetrics().SetIsScrollInfoLayer(true);
 
@@ -7448,7 +7448,7 @@ nsDisplayScrollInfoLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData*
 {
   if (aLayerData) {
     UniquePtr<ScrollMetadata> metadata =
-      ComputeScrollMetadata(nullptr, ContainerLayerParameters());
+      ComputeScrollMetadata(aData->GetManager(), ContainerLayerParameters());
     MOZ_ASSERT(aData);
     MOZ_ASSERT(metadata);
     aLayerData->AppendScrollMetadata(*aData, *metadata);

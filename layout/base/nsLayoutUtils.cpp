@@ -9177,7 +9177,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
                                      nsIFrame* aScrollFrame,
                                      nsIContent* aContent,
                                      const nsIFrame* aReferenceFrame,
-                                     Layer* aLayer,
+                                     LayerManager* aLayerManager,
                                      ViewID aScrollParentId,
                                      const nsRect& aViewport,
                                      const Maybe<nsRect>& aClipRect,
@@ -9203,14 +9203,14 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     if (nsLayoutUtils::GetDisplayPort(aContent, &dp)) {
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
       if (IsAPZTestLoggingEnabled()) {
-        LogTestDataForPaint(aLayer->Manager(), scrollId, "displayport",
+        LogTestDataForPaint(aLayerManager, scrollId, "displayport",
                             metrics.GetDisplayPort());
       }
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(aContent, &dp)) {
       metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
       if (IsAPZTestLoggingEnabled()) {
-        LogTestDataForPaint(aLayer->Manager(), scrollId, "criticalDisplayport",
+        LogTestDataForPaint(aLayerManager, scrollId, "criticalDisplayport",
                             metrics.GetCriticalDisplayPort());
       }
     }
@@ -9374,7 +9374,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
       content->Describe(contentDescription);
       metadata.SetContentDescription(NS_LossyConvertUTF16toASCII(contentDescription));
       if (IsAPZTestLoggingEnabled()) {
-        LogTestDataForPaint(aLayer->Manager(), scrollId, "contentDescription",
+        LogTestDataForPaint(aLayerManager, scrollId, "contentDescription",
                             metadata.GetContentDescription().get());
       }
     }
@@ -9414,7 +9414,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
 
 /*static*/ Maybe<ScrollMetadata>
 nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
-                               Layer* aRootLayer,
+                               LayerManager* aLayerManager,
                                const ContainerLayerParameters& aContainerParameters,
                                const std::function<bool(ViewID& aScrollId)>& aCallback)
 {
@@ -9464,7 +9464,7 @@ nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
     return Some(nsLayoutUtils::ComputeScrollMetadata(frame,
                            rootScrollFrame, content,
                            aBuilder->FindReferenceFrameFor(frame),
-                           aRootLayer, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
+                           aLayerManager, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
                            isRootContent, aContainerParameters));
   }
 

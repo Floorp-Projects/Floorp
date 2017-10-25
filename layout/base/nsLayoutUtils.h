@@ -2918,7 +2918,7 @@ public:
                                               nsIFrame* aScrollFrame,
                                               nsIContent* aContent,
                                               const nsIFrame* aReferenceFrame,
-                                              Layer* aLayer,
+                                              mozilla::layers::LayerManager* aLayerManager,
                                               ViewID aScrollParentId,
                                               const nsRect& aViewport,
                                               const mozilla::Maybe<nsRect>& aClipRect,
@@ -2931,7 +2931,7 @@ public:
    * already has a metadata for a given scroll id.
    */
   static mozilla::Maybe<ScrollMetadata> GetRootMetadata(nsDisplayListBuilder* aBuilder,
-                                                        Layer* aRootLayer,
+                                                        mozilla::layers::LayerManager* aLayerManager,
                                                         const ContainerLayerParameters& aContainerParameters,
                                                         const std::function<bool(ViewID& aScrollId)>& aCallback);
 
