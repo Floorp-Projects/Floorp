@@ -10,14 +10,14 @@ const { createFactory, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
-const PanelMenu = createFactory(require("./panel-menu"));
+const PanelMenu = createFactory(require("./PanelMenu"));
 
 loader.lazyGetter(this, "AddonsPanel",
-  () => createFactory(require("./addons/panel")));
+  () => createFactory(require("./addons/Panel")));
 loader.lazyGetter(this, "TabsPanel",
-  () => createFactory(require("./tabs/panel")));
+  () => createFactory(require("./tabs/Panel")));
 loader.lazyGetter(this, "WorkersPanel",
-  () => createFactory(require("./workers/panel")));
+  () => createFactory(require("./workers/Panel")));
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
