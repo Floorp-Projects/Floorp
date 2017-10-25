@@ -84,6 +84,7 @@ add_task(async function test_setup() {
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverridePreRelease, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, true);
   TelemetryStopwatch.setTestModeEnabled(true);
 });
