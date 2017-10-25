@@ -14,18 +14,16 @@
     assert_throws(new TypeError(), function () {
       obs.observe({entryTypes: "mark"});
     });
-  }, "entryTypes must be a sequence or throw a TypeError");
-
-  test(function () {
-    var obs = new PerformanceObserver(function () { return true; });
-    obs.observe({entryTypes: []});
-  }, "Empty sequence entryTypes is a no-op");
-
-  test(function () {
-    var obs = new PerformanceObserver(function () { return true; });
-    obs.observe({entryTypes: ["this-cannot-match-an-entryType"]});
-    obs.observe({entryTypes: ["marks","navigate", "resources"]});
-  }, "Unknown entryTypes are no-op");
+    assert_throws(new TypeError(), function () {
+      obs.observe({entryTypes: []});
+    });
+    assert_throws(new TypeError(), function () {
+      obs.observe({entryTypes: ["this-cannot-match-an-entryType"]});
+    });
+    assert_throws(new TypeError(), function () {
+      obs.observe({entryTypes: ["marks","navigate", "resources"]});
+    });
+  }, "Empty sequence entryTypes throws a TypeError");
 
   test(function () {
     var obs = new PerformanceObserver(function () { return true; });
