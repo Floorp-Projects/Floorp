@@ -113,6 +113,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/UniquePtr.h"
 
 /*
  * On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
@@ -1528,6 +1529,13 @@ base_node_dealloc(extent_node_t* aNode)
   base_nodes = aNode;
 }
 
+struct BaseNodeFreePolicy
+{
+  void operator()(extent_node_t* aPtr) { base_node_dealloc(aPtr); }
+};
+
+using UniqueBaseNode = mozilla::UniquePtr<extent_node_t, BaseNodeFreePolicy>;
+
 /*
  * End Utility functions/macros.
  */
@@ -1930,13 +1938,9 @@ pages_purge(void *addr, size_t length, bool force_zero)
 static void*
 chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
 {
-  void* ret;
-  extent_node_t* node;
   extent_node_t key;
-  size_t alloc_size, leadsize, trailsize;
-  ChunkType chunk_type;
 
-  alloc_size = aSize + aAlignment - chunksize;
+  size_t alloc_size = aSize + aAlignment - chunksize;
   /* Beware size_t wrap-around. */
   if (alloc_size < aSize) {
     return nullptr;
@@ -1944,17 +1948,17 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
   key.addr = nullptr;
   key.size = alloc_size;
   chunks_mtx.Lock();
-  node = gChunksBySize.SearchOrNext(&key);
+  extent_node_t* node = gChunksBySize.SearchOrNext(&key);
   if (!node) {
     chunks_mtx.Unlock();
     return nullptr;
   }
-  leadsize =
+  size_t leadsize =
     ALIGNMENT_CEILING((uintptr_t)node->addr, aAlignment) - (uintptr_t)node->addr;
   MOZ_ASSERT(node->size >= leadsize + aSize);
-  trailsize = node->size - leadsize - aSize;
-  ret = (void*)((uintptr_t)node->addr + leadsize);
-  chunk_type = node->chunk_type;
+  size_t trailsize = node->size - leadsize - aSize;
+  void* ret = (void*)((uintptr_t)node->addr + leadsize);
+  ChunkType chunk_type = node->chunk_type;
   if (aZeroed) {
     *aZeroed = (chunk_type == ZEROED_CHUNK);
   }
@@ -2033,7 +2037,7 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
 static void*
 chunk_alloc(size_t aSize, size_t aAlignment, bool aBase, bool* aZeroed)
 {
-  void* ret;
+  void* ret = nullptr;
 
   MOZ_ASSERT(aSize != 0);
   MOZ_ASSERT((aSize & chunksize_mask) == 0);
@@ -2044,23 +2048,14 @@ chunk_alloc(size_t aSize, size_t aAlignment, bool aBase, bool* aZeroed)
   // possible deadlock or infinite recursion.
   if (CAN_RECYCLE(aSize) && !aBase) {
     ret = chunk_recycle(aSize, aAlignment, aZeroed);
-    if (ret) {
-      goto RETURN;
+  }
+  if (!ret) {
+    ret = chunk_alloc_mmap(aSize, aAlignment);
+    if (aZeroed) {
+      *aZeroed = true;
     }
   }
-  ret = chunk_alloc_mmap(aSize, aAlignment);
-  if (aZeroed) {
-    *aZeroed = true;
-  }
-  if (ret) {
-    goto RETURN;
-  }
-
-  /* All strategies for allocation failed. */
-  ret = nullptr;
-RETURN:
-
-  if (ret && aBase == false) {
+  if (ret && !aBase) {
     if (!gChunkRTree.Set(ret, ret)) {
       chunk_dealloc(ret, aSize, UNKNOWN_CHUNK);
       return nullptr;
@@ -2092,7 +2087,7 @@ chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed)
 static void
 chunk_record(void* aChunk, size_t aSize, ChunkType aType)
 {
-  extent_node_t *xnode, *node, *prev, *xprev, key;
+  extent_node_t key;
 
   if (aType != ZEROED_CHUNK) {
     if (pages_purge(aChunk, aSize, aType == HUGE_CHUNK)) {
@@ -2106,13 +2101,15 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
    * be allocated, which could cause deadlock if chunks_mtx were already
    * held.
    */
-  xnode = base_node_alloc();
+  UniqueBaseNode xnode(base_node_alloc());
   /* Use xprev to implement conditional deferred deallocation of prev. */
-  xprev = nullptr;
+  UniqueBaseNode xprev;
 
-  chunks_mtx.Lock();
+  /* RAII deallocates xnode and xprev defined above after unlocking
+   * in order to avoid potential dead-locks */
+  MutexAutoLock lock(chunks_mtx);
   key.addr = (void*)((uintptr_t)aChunk + aSize);
-  node = gChunksByAddress.SearchOrNext(&key);
+  extent_node_t* node = gChunksByAddress.SearchOrNext(&key);
   /* Try to coalesce forward. */
   if (node && node->addr == key.addr) {
     /*
@@ -2136,10 +2133,9 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
        * already been purged, so this is only a virtual
        * memory leak.
        */
-      goto label_return;
+      return;
     }
-    node = xnode;
-    xnode = nullptr; /* Prevent deallocation below. */
+    node = xnode.release();
     node->addr = aChunk;
     node->size = aSize;
     node->chunk_type = aType;
@@ -2148,7 +2144,7 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
   }
 
   /* Try to coalesce backward. */
-  prev = gChunksByAddress.Prev(node);
+  extent_node_t* prev = gChunksByAddress.Prev(node);
   if (prev && (void*)((uintptr_t)prev->addr + prev->size) == aChunk) {
     /*
      * Coalesce chunk with the previous address range.  This does
@@ -2166,23 +2162,10 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
     }
     gChunksBySize.Insert(node);
 
-    xprev = prev;
+    xprev.reset(prev);
   }
 
   recycled_size += aSize;
-
-label_return:
-  chunks_mtx.Unlock();
-  /*
-   * Deallocate xnode and/or xprev after unlocking chunks_mtx in order to
-   * avoid potential deadlock.
-   */
-  if (xnode) {
-    base_node_dealloc(xnode);
-  }
-  if (xprev) {
-    base_node_dealloc(xprev);
-  }
 }
 
 static void
