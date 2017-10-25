@@ -183,7 +183,6 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[0], VariablePassthru)
 
         wanted = {
-            'ALLOW_COMPILER_WARNINGS': True,
             'NO_DIST_INSTALL': True,
             'RCFILE': 'foo.rc',
             'RESFILE': 'bar.res',
@@ -206,11 +205,14 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = maxDiff
 
     def test_compile_flags(self):
-        reader = self.reader('compile-flags')
+        reader = self.reader('compile-flags', extra_substs={
+            'WARNINGS_AS_ERRORS': '-Werror',
+        })
         sources, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], reader.config.substs['STL_FLAGS'])
         self.assertEqual(flags.flags['VISIBILITY'], reader.config.substs['VISIBILITY_FLAGS'])
+        self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], ['-Werror'])
 
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')
@@ -283,6 +285,13 @@ class TestEmitterBasic(unittest.TestCase):
                          ['-I%s/dist/include' % reader.config.topobjdir])
         self.assertEqual(flags.flags['LOCAL_INCLUDES'],
                          ['-I%s/subdir' % reader.config.topsrcdir])
+
+    def test_allow_compiler_warnings(self):
+        reader = self.reader('allow-compiler-warnings', extra_substs={
+            'WARNINGS_AS_ERRORS': '-Werror',
+        })
+        sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], [])
 
     def test_use_yasm(self):
         # When yasm is not available, this should raise.
