@@ -13,7 +13,4 @@ ifeq ($(OS_ARCH),WINNT)
 CC := $(subst clang-cl.exe,clang.exe --driver-mode=cl,$(CC:.EXE=.exe))
 CXX := $(subst clang-cl.exe,clang.exe --driver-mode=cl,$(CXX:.EXE=.exe))
 endif
-
-OS_CXXFLAGS += $(CLANG_PLUGIN_FLAGS)
-OS_CFLAGS += $(CLANG_PLUGIN_FLAGS)
 endif
