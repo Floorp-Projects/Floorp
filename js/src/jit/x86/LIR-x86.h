@@ -290,8 +290,8 @@ class LWasmCompareExchangeI64 : public LInstructionHelper<INT64_PIECES, 2 + 2*IN
         setInt64Operand(2 + INT64_PIECES, replacement);
     }
 
-    MAsmJSCompareExchangeHeap* mir() const {
-        return mir_->toAsmJSCompareExchangeHeap();
+    MWasmCompareExchangeHeap* mir() const {
+        return mir_->toWasmCompareExchangeHeap();
     }
     const LAllocation* memoryBase() {
         return getOperand(0);

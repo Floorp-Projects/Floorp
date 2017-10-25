@@ -295,7 +295,7 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 }
 
 void
-LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+LIRGeneratorX64::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -308,14 +308,14 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     const LAllocation oldval = useRegister(ins->oldValue());
     const LAllocation newval = useRegister(ins->newValue());
 
-    LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base), oldval, newval);
+    LWasmCompareExchangeHeap* lir =
+        new(alloc()) LWasmCompareExchangeHeap(useRegister(base), oldval, newval);
 
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
-LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+LIRGeneratorX64::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
@@ -326,13 +326,13 @@ LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     // so ignore the case where we're not using the value and just
     // use the output register as a temp.
 
-    LAsmJSAtomicExchangeHeap* lir =
-        new(alloc()) LAsmJSAtomicExchangeHeap(base, value);
+    LWasmAtomicExchangeHeap* lir =
+        new(alloc()) LWasmAtomicExchangeHeap(base, value);
     define(lir, ins);
 }
 
 void
-LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
+LIRGeneratorX64::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -350,8 +350,8 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
         LAllocation value = canTakeConstant
                             ? useRegisterOrConstant(ins->value())
                             : useRegister(ins->value());
-        LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base), value);
+        LWasmAtomicBinopHeapForEffect* lir =
+            new(alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base), value);
         add(lir, ins);
         return;
     }
@@ -390,12 +390,12 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
         value = useRegisterAtStart(ins->value());
     }
 
-    auto* lir = new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base),
+    auto* lir = new(alloc()) LWasmAtomicBinopHeap(useRegister(base),
                                                    value,
                                                    bitOp ? temp() : LDefinition::BogusTemp());
 
     if (reuseInput)
-        defineReuseInput(lir, ins, LAsmJSAtomicBinopHeap::valueOp);
+        defineReuseInput(lir, ins, LWasmAtomicBinopHeap::valueOp);
     else if (bitOp)
         defineFixed(lir, ins, LAllocation(AnyRegister(rax)));
     else
