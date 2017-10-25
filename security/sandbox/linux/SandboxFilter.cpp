@@ -97,6 +97,17 @@ protected:
     return -ENOSYS;
   }
 
+  // Convert Unix-style "return -1 and set errno" APIs back into the
+  // Linux ABI "return -err" style.
+  static intptr_t ConvertError(long rv) {
+    return rv < 0 ? -errno : rv;
+  }
+
+  template<typename... Args>
+  static intptr_t DoSyscall(long nr, Args... args) {
+    return ConvertError(syscall(nr, args...));
+  }
+
 private:
   // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
   // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
@@ -104,7 +115,7 @@ private:
   static intptr_t TKillCompatTrap(const sandbox::arch_seccomp_data& aArgs,
                                   void *aux)
   {
-    return syscall(__NR_tgkill, getpid(), aArgs.args[0], aArgs.args[1]);
+    return DoSyscall(__NR_tgkill, getpid(), aArgs.args[0], aArgs.args[1]);
   }
 
   static intptr_t SetNoNewPrivsTrap(ArgsRef& aArgs, void* aux) {
@@ -525,10 +536,7 @@ private:
     auto fds = reinterpret_cast<int*>(aArgs.args[3]);
     // Return sequential packet sockets instead of the expected
     // datagram sockets; see bug 1355274 for details.
-    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) != 0) {
-      return -errno;
-    }
-    return 0;
+    return ConvertError(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));
   }
 
 public:
@@ -1012,13 +1020,13 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   {
     const pid_t tid = syscall(__NR_gettid);
     if (aArgs.args[0] == static_cast<uint64_t>(tid)) {
-      return syscall(aArgs.nr,
-                     0,
-                     aArgs.args[1],
-                     aArgs.args[2],
-                     aArgs.args[3],
-                     aArgs.args[4],
-                     aArgs.args[5]);
+      return DoSyscall(aArgs.nr,
+                       0,
+                       aArgs.args[1],
+                       aArgs.args[2],
+                       aArgs.args[3],
+                       aArgs.args[4],
+                       aArgs.args[5]);
     }
     SANDBOX_LOG_ERROR("unsupported tid in SchedTrap");
     return BlockedSyscallTrap(aArgs, nullptr);
