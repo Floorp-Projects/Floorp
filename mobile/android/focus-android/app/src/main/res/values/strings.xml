@@ -110,10 +110,13 @@
 
     <string name="preference_category_privacy">Privacy</string>
     <string name="preference_privacy_block_ads">Block ad trackers</string>
+    <string name="preference_privacy_block_ads_summary">Some ads track site visits, even if you don’t click the ads</string>
     <string name="preference_privacy_block_analytics">Block analytic trackers</string>
+    <string name="preference_privacy_block_analytics_summary">Used to collect, analyze and measure activities like tapping and scrolling</string>
     <string name="preference_privacy_block_social">Block social trackers</string>
+    <string name="preference_privacy_block_social_summary">Embedded on sites to track your visits and to display functionality like share buttons</string>
     <string name="preference_privacy_block_content">Block other content trackers</string>
-    <string name="preference_privacy_block_content_summary">May break some videos and Web pages</string>
+    <string name="preference_privacy_block_content_summary2">Enabling may cause some pages to behave unexpectedly</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

@@ -44,7 +44,7 @@
             android:layout="@layout/focus_preference"
             android:title="@string/preference_privacy_block_content"
             android:key="@string/pref_key_privacy_block_other"
-            android:summary="@string/preference_privacy_block_content_summary"
+            android:summary="@string/preference_privacy_block_content_summary2"
             android:defaultValue="false" />
 
         <SwitchPreference
