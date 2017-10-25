@@ -26,18 +26,21 @@
             android:layout="@layout/focus_preference"
             android:title="@string/preference_privacy_block_ads"
             android:key="@string/pref_key_privacy_block_ads"
+            android:summary="@string/preference_privacy_block_ads_summary"
             android:defaultValue="true" />
 
         <SwitchPreference
             android:layout="@layout/focus_preference"
             android:title="@string/preference_privacy_block_analytics"
             android:key="@string/pref_key_privacy_block_analytics"
+            android:summary="@string/preference_privacy_block_analytics_summary"
             android:defaultValue="true" />
 
         <SwitchPreference
             android:layout="@layout/focus_preference"
             android:title="@string/preference_privacy_block_social"
             android:key="@string/pref_key_privacy_block_social"
+            android:summary="@string/preference_privacy_block_social_summary"
             android:defaultValue="true" />
 
         <SwitchPreference
