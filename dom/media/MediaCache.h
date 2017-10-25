@@ -501,6 +501,8 @@ private:
   // The load ID of the current channel. Used to check whether the data is
   // coming from an old channel and should be discarded.
   uint32_t mLoadID = 0;
+  // The seek target initiated by MediaCache. -1 if no seek is going on.
+  int64_t mSeekTarget = -1;
 
   bool mThrottleReadahead = false;
 
