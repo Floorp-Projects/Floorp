@@ -122,7 +122,7 @@ def get_pause_after_test(test_loader, **kwargs):
     if kwargs["pause_after_test"] is None:
         if kwargs["repeat_until_unexpected"]:
             return False
-        if kwargs["repeat"] == 1 and total_tests == 1:
+        if kwargs["repeat"] == 1 and kwargs["rerun"] == 1 and total_tests == 1:
             return True
         return False
     return kwargs["pause_after_test"]
@@ -241,6 +241,7 @@ def run_tests(config, test_paths, product, **kwargs):
                                       browser_kwargs,
                                       executor_cls,
                                       executor_kwargs,
+                                      kwargs["rerun"],
                                       kwargs["pause_after_test"],
                                       kwargs["pause_on_unexpected"],
                                       kwargs["restart_on_unexpected"],
@@ -260,6 +261,12 @@ def run_tests(config, test_paths, product, **kwargs):
                 logger.suite_end()
     return unexpected_total == 0
 
+
+def check_stability(**kwargs):
+    import stability
+    return stability.check_stability(logger, **kwargs)
+
+
 def start(**kwargs):
     if kwargs["list_test_groups"]:
         list_test_groups(**kwargs)
@@ -267,8 +274,11 @@ def start(**kwargs):
         list_disabled(**kwargs)
     elif kwargs["list_tests"]:
         list_tests(**kwargs)
+    elif kwargs["verify"]:
+        check_stability(**kwargs)
     else:
         return not run_tests(**kwargs)
+
 
 def main():
     """Main entry point when calling from the command line"""

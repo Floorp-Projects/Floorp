@@ -86,7 +86,8 @@ public:
 
   void UpdateBlobImage(wr::ImageKey aKey,
                        const ImageDescriptor& aDescriptor,
-                       wr::Vec_u8& aBytes);
+                       wr::Vec_u8& aBytes,
+                       const wr::DeviceUintRect& aDirtyRect);
 
   void UpdateExternalImage(ImageKey aKey,
                            const ImageDescriptor& aDescriptor,

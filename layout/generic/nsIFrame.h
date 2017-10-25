@@ -1701,9 +1701,13 @@ public:
   /**
    * Builds a display list for the content represented by this frame,
    * treating this frame as the root of a stacking context.
+   * Optionally sets aCreatedContainerItem to true if we created a
+   * single container display item for the stacking context, and no
+   * other wrapping items are needed.
    */
   void BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
-                                          nsDisplayList*        aList);
+                                          nsDisplayList*        aList,
+                                          bool*                 aCreatedContainerItem = nullptr);
 
   enum {
     DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT = 0x01,
@@ -3938,7 +3942,8 @@ public:
   uint8_t VerticalAlignEnum() const;
   enum { eInvalidVerticalAlign = 0xFF };
 
-  void CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder, nsDisplayList* aList);
+  void CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                              bool* aCreatedContainerItem = nullptr);
 
   /**
    * Adds the NS_FRAME_IN_POPUP state bit to aFrame, and

@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+<body>
+  <div style="float:left; width:200px; height:200px; background-color: red">
+    <div style="width:100px; height:100px;" id="hover"></div>
+  </div>
+</body>
+<script>
+function doTest() {
+  document.getElementById("hover").style.backgroundColor = "blue";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

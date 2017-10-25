@@ -418,7 +418,7 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           action="store",
                           type=str,
                           dest="adb_path",
-                          default="adb",
+                          default=None,
                           help="path to adb")
 
         self.add_argument("--deviceIP",
