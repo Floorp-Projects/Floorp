@@ -602,6 +602,14 @@ public:
   }
 #endif
 
+#ifdef MOZ_PULSEAUDIO
+  ResultExpr PrctlPolicy() const override {
+    Arg<int> op(0);
+    return If(op == PR_GET_NAME, Allow())
+      .Else(SandboxPolicyCommon::PrctlPolicy());
+  }
+#endif
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     // Straight allow for anything that got overriden via prefs
     if (std::find(mSyscallWhitelist.begin(), mSyscallWhitelist.end(), sysno)
