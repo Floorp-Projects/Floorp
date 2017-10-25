@@ -214,6 +214,35 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     };
   }
 
+  /**
+   * Changes the appearance of the mouse cursor on the highlighter.
+   *
+   * Because we can't attach event handlers to individual elements in the
+   * highlighter, we determine if the mouse is hovering over a point by seeing if
+   * it's within 5 pixels of it. This creates a square hitbox that doesn't match
+   * perfectly with the circular markers. So if we were to use the :hover
+   * pseudo-class to apply changes to the mouse cursor, the cursor change would not
+   * always accurately reflect whether you can interact with the point. This is
+   * also the reason we have the hidden marker-hover element instead of using CSS
+   * to fill in the marker.
+   *
+   * In addition, the cursor CSS property is applied to .shapes-root because if
+   * it were attached to .shapes-marker, the cursor change no longer applies if
+   * you are for example resizing the shape and your mouse goes off the point.
+   * Also, if you are dragging a polygon point, the marker plays catch up to your
+   * mouse position, resulting in an undesirable visual effect where the cursor
+   * rapidly flickers between "grab" and "auto".
+   *
+   * @param {String} cursorType the name of the cursor to display
+   */
+  setCursor(cursorType) {
+    let container = this.getElement("root");
+    let style = container.getAttribute("style");
+    // remove existing cursor definitions in the style
+    style = style.replace(/cursor:.*?;/g, "");
+    container.setAttribute("style", `${style}cursor:${cursorType};`);
+  }
+
   handleEvent(event, id) {
     // No event handling if the highlighter is hidden
     if (this.areShapesHidden()) {
@@ -265,6 +294,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       case "mouseup":
         if (this[_dragging]) {
           this[_dragging] = null;
+          this._handleMarkerHover(this.hoveredPoint);
         }
         break;
       case "mousemove":
@@ -674,6 +704,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let ratioX = (valueX / xComputed) || 1;
     let ratioY = (valueY / yComputed) || 1;
 
+    this.setCursor("grabbing");
     this[_dragging] = { point, unitX, unitY, valueX, valueY,
                         ratioX, ratioY, x: pageX, y: pageY };
   }
@@ -752,6 +783,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
+    this.setCursor("grabbing");
     if (point === "center") {
       let { cx, cy } = this.coordUnits;
       let cxComputed = this.coordinates.cx / 100 * width;
@@ -833,6 +865,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
+    this.setCursor("grabbing");
     if (point === "center") {
       let { cx, cy } = this.coordUnits;
       let cxComputed = this.coordinates.cx / 100 * width;
@@ -932,6 +965,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
+    this.setCursor("grabbing");
     let value = this.coordUnits[point];
     let size = (point === "left" || point === "right") ? width : height;
     let computedValue = this.coordinates[point] / 100 * size;
@@ -1021,40 +1055,51 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }
   }
 
+  /**
+   * Change the appearance of the given marker when the mouse hovers over it.
+   * @param {String|Number} point if the shape is a polygon, the integer index of the
+   *        point being hovered. Otherwise, a string identifying the point being hovered.
+   *        Integers < 0 and falsey values excluding 0 indicate no point is being hovered.
+   */
   _handleMarkerHover(point) {
     // Hide hover marker for now, will be shown if point is a valid hover target
     this.getElement("marker-hover").setAttribute("hidden", true);
-    if (point === null || point === undefined) {
+    // Catch all falsey values except when point === 0, as that's a valid point
+    if (!point && point !== 0) {
+      this.setCursor("auto");
       return;
     }
+    let hoverCursor = (this[_dragging]) ? "grabbing" : "grab";
 
     if (this.transformMode) {
-      if (!point) {
-        return;
-      }
       let { minX, minY, maxX, maxY } = this.boundingBox;
       let centerX = (minX + maxX) / 2;
       let centerY = (minY + maxY) / 2;
 
       const points = [
-        { pointName: "translate", x: centerX, y: centerY },
-        { pointName: "scale-se", x: maxX, y: maxY },
-        { pointName: "scale-ne", x: maxX, y: minY },
-        { pointName: "scale-sw", x: minX, y: maxY },
-        { pointName: "scale-nw", x: minX, y: minY },
+        { pointName: "translate", x: centerX, y: centerY, cursor: "move" },
+        { pointName: "scale-se", x: maxX, y: maxY, cursor: "nwse-resize" },
+        { pointName: "scale-ne", x: maxX, y: minY, cursor: "nesw-resize" },
+        { pointName: "scale-sw", x: minX, y: maxY, cursor: "nesw-resize" },
+        { pointName: "scale-nw", x: minX, y: minY, cursor: "nwse-resize" },
       ];
 
-      for (let { pointName, x, y } of points) {
+      for (let { pointName, x, y, cursor } of points) {
         if (point === pointName) {
           this._drawHoverMarker([[x, y]]);
+          this.setCursor(cursor);
         }
       }
     } else if (this.shapeType === "polygon") {
       if (point === -1) {
+        this.setCursor("auto");
         return;
       }
+      this.setCursor(hoverCursor);
       this._drawHoverMarker([this.coordinates[point]]);
     } else if (this.shapeType === "circle") {
+      this.setCursor(hoverCursor);
+
       let { cx, cy, rx } = this.coordinates;
       if (point === "radius") {
         this._drawHoverMarker([[cx + rx, cy]]);
@@ -1062,6 +1107,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         this._drawHoverMarker([[cx, cy]]);
       }
     } else if (this.shapeType === "ellipse") {
+      this.setCursor(hoverCursor);
+
       if (point === "center") {
         let { cx, cy } = this.coordinates;
         this._drawHoverMarker([[cx, cy]]);
@@ -1073,9 +1120,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         this._drawHoverMarker([[cx, cy + ry]]);
       }
     } else if (this.shapeType === "inset") {
-      if (!point) {
-        return;
-      }
+      this.setCursor(hoverCursor);
 
       let { top, right, bottom, left } = this.coordinates;
       let centerX = (left + (100 - right)) / 2;
@@ -1803,12 +1848,12 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       this._updateInsetShape(width, height, zoom);
     }
 
-    this._handleMarkerHover(this.hoveredPoint);
-
     let { width: winWidth, height: winHeight } = this._winDimensions;
     root.removeAttribute("hidden");
     root.setAttribute("style",
-      `position:absolute; width:${winWidth}px;height:${winHeight}px; overflow:hidden`);
+      `position:absolute; width:${winWidth}px;height:${winHeight}px; overflow:hidden;`);
+
+    this._handleMarkerHover(this.hoveredPoint);
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 
