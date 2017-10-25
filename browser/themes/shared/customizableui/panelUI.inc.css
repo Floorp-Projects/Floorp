@@ -466,7 +466,7 @@ photonpanelmultiview panelview {
 #appMenu-popup panelview,
 #customizationui-widget-multiview panelview:not([extension]) {
   min-width: @menuPanelWidth@;
-  max-width: 30em;
+  max-width: 35em;
 }
 
 #customizationui-widget-multiview #appMenu-libraryView,
@@ -1444,8 +1444,13 @@ photonpanelmultiview .toolbaritem-combined-buttons > label {
   margin: 0;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons > spacer {
+photonpanelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   width: 36px; /* 12px toolbarbutton padding + 16px icon + 8px label padding start */
+}
+
+photonpanelmultiview .toolbaritem-combined-buttons > spacer.after-label {
+  -moz-box-flex: 1;
+  width: 20px; /* a little bigger than the width of the scrollbar */
 }
 
 photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {
