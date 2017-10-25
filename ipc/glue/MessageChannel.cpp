@@ -2784,7 +2784,7 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
         pending.popFirst();
     }
 
-    NS_RUNTIMEABORT(why);
+    MOZ_CRASH_UNSAFE_OOL(why);
 }
 
 void

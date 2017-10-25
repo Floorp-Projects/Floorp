@@ -40,42 +40,42 @@ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
     NS_NAMED_LITERAL_CSTRING(serialString, "(Details: serial ");
     int32_t start = buffer.Find(serialString);
     if (start == kNotFound)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     start += serialString.Length();
     errno = 0;
     event.serial = strtol(buffer.BeginReading() + start, &endptr, 10);
     if (errno)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");
     if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), errorCodeString))
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     errno = 0;
     event.error_code = strtol(endptr + errorCodeString.Length(), &endptr, 10);
     if (errno)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     NS_NAMED_LITERAL_CSTRING(requestCodeString, " request_code ");
     if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), requestCodeString))
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     errno = 0;
     event.request_code = strtol(endptr + requestCodeString.Length(), &endptr, 10);
     if (errno)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     NS_NAMED_LITERAL_CSTRING(minorCodeString, " minor_code ");
     start = buffer.Find(minorCodeString, /* aIgnoreCase = */ false,
                         endptr - buffer.BeginReading());
     if (!start)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     errno = 0;
     event.minor_code = strtol(buffer.BeginReading() + start + minorCodeString.Length(), nullptr, 10);
     if (errno)
-      NS_RUNTIMEABORT(message);
+      MOZ_CRASH_UNSAFE_OOL(message);
 
     event.display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     // Gdk does not provide resource ID
@@ -84,7 +84,7 @@ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
     X11Error(event.display, &event);
   } else {
     g_log_default_handler(log_domain, log_level, message, user_data);
-    NS_RUNTIMEABORT(message);
+    MOZ_CRASH_UNSAFE_OOL(message);
   }
 }
 

@@ -2095,7 +2095,7 @@ gfxFontGroup::GetDefaultFont()
         mFamilyList.ToString(familiesString);
         SprintfLiteral(msg, "unable to find a usable font (%.220s)",
                        NS_ConvertUTF16toUTF8(familiesString).get());
-        NS_RUNTIMEABORT(msg);
+        MOZ_CRASH_UNSAFE_OOL(msg);
     }
 
     return mDefaultFont.get();
