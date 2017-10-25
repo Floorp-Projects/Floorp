@@ -482,7 +482,7 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
 }
 
 void
-LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+LIRGeneratorX86::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -522,15 +522,15 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     const LAllocation oldval = useRegister(ins->oldValue());
     const LAllocation newval = byteArray ? useFixed(ins->newValue(), ebx) : useRegister(ins->newValue());
 
-    LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base), oldval, newval, useRegister(memoryBase));
+    LWasmCompareExchangeHeap* lir =
+        new(alloc()) LWasmCompareExchangeHeap(useRegister(base), oldval, newval, useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
 
 void
-LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+LIRGeneratorX86::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
 {
     MDefinition* memoryBase = ins->memoryBase();
     MOZ_ASSERT(memoryBase->type() == MIRType::Pointer);
@@ -550,8 +550,8 @@ LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
 
-    LAsmJSAtomicExchangeHeap* lir =
-        new(alloc()) LAsmJSAtomicExchangeHeap(base, value, useRegister(memoryBase));
+    LWasmAtomicExchangeHeap* lir =
+        new(alloc()) LWasmAtomicExchangeHeap(base, value, useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     if (byteSize(ins->access().type()) == 1)
@@ -561,7 +561,7 @@ LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 }
 
 void
-LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
+LIRGeneratorX86::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 {
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
@@ -596,9 +596,9 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
             value = useFixed(ins->value(), ebx);
         else
             value = useRegisterOrConstant(ins->value());
-        LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base), value, LDefinition::BogusTemp(),
-                                                        useRegister(memoryBase));
+        LWasmAtomicBinopHeapForEffect* lir =
+            new(alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base), value, LDefinition::BogusTemp(),
+                                                       useRegister(memoryBase));
         lir->setAddrTemp(temp());
         add(lir, ins);
         return;
@@ -652,9 +652,9 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
         value = useRegisterAtStart(ins->value());
     }
 
-    LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base), value, tempDef, LDefinition::BogusTemp(),
-                                           useRegister(memoryBase));
+    LWasmAtomicBinopHeap* lir =
+        new(alloc()) LWasmAtomicBinopHeap(useRegister(base), value, tempDef, LDefinition::BogusTemp(),
+                                          useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
     if (byteArray || bitOp)
@@ -662,7 +662,7 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     else if (ins->value()->isConstant())
         define(lir, ins);
     else
-        defineReuseInput(lir, ins, LAsmJSAtomicBinopHeap::valueOp);
+        defineReuseInput(lir, ins, LWasmAtomicBinopHeap::valueOp);
 }
 
 void

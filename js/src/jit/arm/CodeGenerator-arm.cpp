@@ -2529,9 +2529,9 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
+CodeGeneratorARM::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 {
-    MAsmJSCompareExchangeHeap* mir = ins->mir();
+    MWasmCompareExchangeHeap* mir = ins->mir();
 
     Scalar::Type vt = mir->access().type();
     const LAllocation* ptr = ins->ptr();
@@ -2549,9 +2549,9 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins)
+CodeGeneratorARM::visitWasmCompareExchangeCallout(LWasmCompareExchangeCallout* ins)
 {
-    const MAsmJSCompareExchangeHeap* mir = ins->mir();
+    const MWasmCompareExchangeHeap* mir = ins->mir();
     MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
@@ -2576,9 +2576,9 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
 }
 
 void
-CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
+CodeGeneratorARM::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 {
-    MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    MWasmAtomicExchangeHeap* mir = ins->mir();
 
     Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
@@ -2591,9 +2591,9 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins)
+CodeGeneratorARM::visitWasmAtomicExchangeCallout(LWasmAtomicExchangeCallout* ins)
 {
-    const MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    const MWasmAtomicExchangeHeap* mir = ins->mir();
     MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
@@ -2616,9 +2616,9 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
 }
 
 void
-CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
+CodeGeneratorARM::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
 {
-    MAsmJSAtomicBinopHeap* mir = ins->mir();
+    MWasmAtomicBinopHeap* mir = ins->mir();
     MOZ_ASSERT(mir->hasUses());
 
     Scalar::Type vt = mir->access().type();
@@ -2642,9 +2642,9 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 }
 
 void
-CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
+CodeGeneratorARM::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffect* ins)
 {
-    MAsmJSAtomicBinopHeap* mir = ins->mir();
+    MWasmAtomicBinopHeap* mir = ins->mir();
     MOZ_ASSERT(!mir->hasUses());
 
     Scalar::Type vt = mir->access().type();
@@ -2663,9 +2663,9 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
 }
 
 void
-CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
+CodeGeneratorARM::visitWasmAtomicBinopCallout(LWasmAtomicBinopCallout* ins)
 {
-    const MAsmJSAtomicBinopHeap* mir = ins->mir();
+    const MWasmAtomicBinopHeap* mir = ins->mir();
     MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());

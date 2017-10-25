@@ -81,8 +81,8 @@ AlignmentMaskAnalysis::analyze()
             if (!graph_.alloc().ensureBallast())
                 return false;
 
-            // Note that we don't check for MAsmJSCompareExchangeHeap
-            // or MAsmJSAtomicBinopHeap, because the backend and the OOB
+            // Note that we don't check for MWasmCompareExchangeHeap
+            // or MWasmAtomicBinopHeap, because the backend and the OOB
             // mechanism don't support non-zero offsets for them yet.
             if (i->isAsmJSLoadHeap())
                 AnalyzeAsmHeapAddress(i->toAsmJSLoadHeap()->base(), graph_);
