@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function f()
+{
+    window.removeEventListener("pagehide", f, false);
+    var root = document.documentElement;
+    document.removeChild(root);
+    document.appendChild(root);
+}
+
+function boom()
+{
+    window.addEventListener("pagehide", f, false);
+    window.location = "data:text/html,4";
+}
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

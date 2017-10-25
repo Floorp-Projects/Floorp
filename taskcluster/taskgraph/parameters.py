@@ -31,6 +31,8 @@ def get_head_ref():
 PARAMETERS = {
     'base_repository': 'https://hg.mozilla.org/mozilla-unified',
     'build_date': lambda: int(time.time()),
+    'do_not_optimize': [],
+    'existing_tasks': {},
     'filters': ['check_servo', 'target_tasks_method'],
     'head_ref': get_head_ref,
     'head_repository': 'https://hg.mozilla.org/mozilla-central',

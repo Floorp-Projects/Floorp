@@ -166,7 +166,6 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
                    error_level=FATAL)
 
 
-
 # __main__ {{{1
 if __name__ == '__main__':
     PublishBalrog().run_and_exit()

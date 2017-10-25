@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
-
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const ComputedProperty = createFactory(require("./ComputedProperty"));
@@ -16,24 +19,26 @@ const Types = require("../types");
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 
-module.exports = createClass({
-
-  displayName: "BoxModelProperties",
-
-  propTypes: {
-    boxModel: PropTypes.shape(Types.boxModel).isRequired,
-    setSelectedNode: PropTypes.func.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
-
-  getInitialState() {
+class BoxModelProperties extends PureComponent {
+  static get propTypes() {
     return {
+      boxModel: PropTypes.shape(Types.boxModel).isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       isOpen: true,
     };
-  },
+
+    this.getReferenceElement = this.getReferenceElement.bind(this);
+    this.onToggleExpander = this.onToggleExpander.bind(this);
+  }
 
   /**
    * Various properties can display a reference element. E.g. position displays an offset
@@ -59,13 +64,13 @@ module.exports = createClass({
     }
 
     return {};
-  },
+  }
 
   onToggleExpander() {
     this.setState({
       isOpen: !this.state.isOpen,
     });
-  },
+  }
 
   render() {
     let {
@@ -121,6 +126,7 @@ module.exports = createClass({
         properties
       )
     );
-  },
+  }
+}
 
-});
+module.exports = BoxModelProperties;

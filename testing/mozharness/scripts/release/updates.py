@@ -94,8 +94,7 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
         # TODO: version and appVersion should come from repo
         props = self.buildbot_config["properties"]
         for prop in ['product', 'version', 'build_number', 'revision',
-                     'appVersion', 'balrog_api_root', "channels",
-                     'generate_bz2_blob']:
+                     'appVersion', 'balrog_api_root', "channels"]:
             if props.get(prop):
                 self.info("Overriding %s with %s" % (prop, props[prop]))
                 self.config[prop] = props.get(prop)
@@ -270,10 +269,6 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
     def submit_to_balrog(self):
         for _, channel_config in self.query_channel_configs():
             self._submit_to_balrog(channel_config)
-        if 'generate_bz2_blob' in self.config and \
-                self.config['generate_bz2_blob']:
-            for _, channel_config in self.query_channel_configs():
-                self._submit_to_balrog_bz2(channel_config)
 
     def _submit_to_balrog(self, channel_config):
         dirs = self.query_abs_dirs()
@@ -310,59 +305,6 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
             cmd.append("--dummy")
 
         self.retry(lambda: self.run_command(cmd, halt_on_failure=True))
-
-    def _submit_to_balrog_bz2(self, channel_config):
-        if "bz2_blob_suffix" not in channel_config:
-            self.info("No need to generate BZ2 blob")
-            return
-
-        dirs = self.query_abs_dirs()
-        # Use env varialbe instead of command line to avoid issues with blob
-        # names starting with "-", e.g. "-bz2"
-        env = {"BALROG_BLOB_SUFFIX": channel_config["bz2_blob_suffix"]}
-        auth = os.path.join(os.getcwd(), self.config['credentials_file'])
-        cmd = [
-            sys.executable,
-            os.path.join(dirs["abs_tools_dir"],
-                         "scripts/build-promotion/balrog-release-pusher.py")]
-        cmd.extend([
-            "--api-root", self.config["balrog_api_root"],
-            "--download-domain", self.config["download_domain"],
-            "--archive-domain", self.config["archive_domain"],
-            "--credentials-file", auth,
-            "--product", self.config["product"],
-            "--version", self.config["version"],
-            "--build-number", str(self.config["build_number"]),
-            "--app-version", self.config["appVersion"],
-            "--username", self.config["balrog_username"],
-            "--complete-mar-filename-pattern",
-            channel_config["complete_mar_filename_pattern"],
-            "--complete-mar-bouncer-product-pattern",
-            channel_config["complete_mar_bouncer_product_pattern"],
-            "--verbose",
-        ])
-
-        for v, build_number in self.query_matching_partials(channel_config):
-            if v < "56.0":
-                self.info("Adding %s to partials" % v)
-                partial = "{version}build{build_number}".format(
-                    version=v, build_number=build_number)
-                cmd.extend(["--partial-update", partial])
-            else:
-                self.info("Not adding %s to partials" % v)
-
-        for c in channel_config["channel_names"]:
-            cmd.extend(["--channel", c])
-        for r in channel_config["bz2_rules_to_update"]:
-            cmd.extend(["--rule-to-update", r])
-        for p in self.config["platforms"]:
-            cmd.extend(["--platform", p])
-        if channel_config["requires_mirrors"]:
-            cmd.append("--requires-mirrors")
-        if self.config["balrog_use_dummy_suffix"]:
-            cmd.append("--dummy")
-
-        self.retry(lambda: self.run_command(cmd, halt_on_failure=True, env=env))
 
 
 # __main__ {{{1

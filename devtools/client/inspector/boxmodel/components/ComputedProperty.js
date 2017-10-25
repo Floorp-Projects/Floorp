@@ -4,26 +4,63 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
+
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 
-module.exports = createClass({
+class ComputedProperty extends PureComponent {
+  static get propTypes() {
+    return {
+      name: PropTypes.string.isRequired,
+      referenceElement: PropTypes.object,
+      referenceElementType: PropTypes.string,
+      setSelectedNode: PropTypes.func.isRequired,
+      value: PropTypes.string,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+    };
+  }
 
-  displayName: "ComputedProperty",
+  constructor(props) {
+    super(props);
+    this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(this);
+    this.translateNodeFrontToGrip = this.translateNodeFrontToGrip.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+  }
 
-  propTypes: {
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string,
-    referenceElement: PropTypes.object,
-    referenceElementType: PropTypes.string,
-    setSelectedNode: PropTypes.func.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-  },
+  renderReferenceElementPreview() {
+    let {
+      referenceElement,
+      referenceElementType,
+      setSelectedNode,
+      onShowBoxModelHighlighterForNode,
+      onHideBoxModelHighlighter
+    } = this.props;
 
-  mixins: [ addons.PureRenderMixin ],
+    if (!referenceElement) {
+      return null;
+    }
+
+    return dom.div(
+      {
+        className: "reference-element"
+      },
+      dom.span({ className: "reference-element-type" }, referenceElementType),
+      Rep({
+        defaultRep: referenceElement,
+        mode: MODE.TINY,
+        object: this.translateNodeFrontToGrip(referenceElement),
+        onInspectIconClick: () => setSelectedNode(referenceElement, "box-model"),
+        onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(referenceElement),
+        onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+      })
+    );
+  }
 
   /**
    * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
@@ -56,40 +93,11 @@ module.exports = createClass({
         isConnected: true,
       }
     };
-  },
+  }
 
   onFocus() {
     this.container.focus();
-  },
-
-  renderReferenceElementPreview() {
-    let {
-      referenceElement,
-      referenceElementType,
-      setSelectedNode,
-      onShowBoxModelHighlighterForNode,
-      onHideBoxModelHighlighter
-    } = this.props;
-
-    if (!referenceElement) {
-      return null;
-    }
-
-    return dom.div(
-      {
-        className: "reference-element"
-      },
-      dom.span({ className: "reference-element-type" }, referenceElementType),
-      Rep({
-        defaultRep: referenceElement,
-        mode: MODE.TINY,
-        object: this.translateNodeFrontToGrip(referenceElement),
-        onInspectIconClick: () => setSelectedNode(referenceElement, "box-model"),
-        onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(referenceElement),
-        onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-      })
-    );
-  },
+  }
 
   render() {
     const { name, value } = this.props;
@@ -133,6 +141,7 @@ module.exports = createClass({
         this.renderReferenceElementPreview()
       )
     );
-  },
+  }
+}
 
-});
+module.exports = ComputedProperty;

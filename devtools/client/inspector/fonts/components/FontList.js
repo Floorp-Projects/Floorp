@@ -4,22 +4,23 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 
 const Font = createFactory(require("./Font"));
 
 const Types = require("../types");
 
-module.exports = createClass({
-
-  displayName: "FontList",
-
-  propTypes: {
-    fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+class FontList extends PureComponent {
+  static get propTypes() {
+    return {
+      fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired
+    };
+  }
 
   render() {
     let { fonts } = this.props;
@@ -38,6 +39,7 @@ module.exports = createClass({
         }))
       )
     );
-  },
+  }
+}
 
-});
+module.exports = FontList;

@@ -71,7 +71,10 @@ public:
     , mPromise(aPromise)
     , mInfo(aInfo)
     , mClientData(aClientData)
-  { }
+    , mId(NextId())
+  {
+    MOZ_ASSERT(mId > 0);
+  }
 
   // Parent of the context we're running the transaction in.
   nsCOMPtr<nsPIDOMWindowInner> mParent;
@@ -85,6 +88,18 @@ public:
 
   // Client data used to assemble reply objects.
   nsCString mClientData;
+
+  // Unique transaction id.
+  uint64_t mId;
+
+private:
+  // Generates a unique id for new transactions. This doesn't have to be unique
+  // forever, it's sufficient to differentiate between temporally close
+  // transactions, where messages can intersect. Can overflow.
+  static uint64_t NextId() {
+    static uint64_t id = 0;
+    return ++id;
+  }
 };
 
 class WebAuthnManager final : public nsIDOMEventListener
@@ -108,14 +123,16 @@ public:
   Store(nsPIDOMWindowInner* aParent, const Credential& aCredential);
 
   void
-  FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer);
+  FinishMakeCredential(const uint64_t& aTransactionId,
+                       nsTArray<uint8_t>& aRegBuffer);
 
   void
-  FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
+  FinishGetAssertion(const uint64_t& aTransactionId,
+                     nsTArray<uint8_t>& aCredentialId,
                      nsTArray<uint8_t>& aSigBuffer);
 
   void
-  RequestAborted(const nsresult& aError);
+  RequestAborted(const uint64_t& aTransactionId, const nsresult& aError);
 
   void ActorDestroyed();
 
@@ -131,11 +148,9 @@ private:
   // parent) and rejects it by calling RejectTransaction().
   void CancelTransaction(const nsresult& aError);
 
-  typedef MozPromise<nsresult, nsresult, false> BackgroundActorPromise;
+  bool MaybeCreateBackgroundActor();
 
-  void GetOrCreateBackgroundActor();
-
-  // IPC Channel for the current transaction.
+  // IPC Channel to the parent process.
   RefPtr<WebAuthnTransactionChild> mChild;
 
   // The current transaction, if any.
