@@ -1652,6 +1652,61 @@ class CreditCards extends AutofillRecords {
     }
     return null;
   }
+
+  /**
+   * Merge new credit card into the specified record if cc-number is identical.
+   *
+   * @param  {string} guid
+   *         Indicates which credit card to merge.
+   * @param  {Object} creditCard
+   *         The new credit card used to merge into the old one.
+   * @returns {boolean}
+   *          Return true if credit card is merged into target with specific guid or false if not.
+   */
+  mergeIfPossible(guid, creditCard) {
+    this.log.debug("mergeIfPossible:", guid, creditCard);
+
+    // Query raw data for comparing the decrypted credit card number
+    let creditCardFound = this.get(guid, {rawData: true});
+    if (!creditCardFound) {
+      throw new Error("No matching credit card.");
+    }
+
+    let creditCardToMerge = this._cloneAndCleanUp(creditCard);
+    this._normalizeRecord(creditCardToMerge);
+
+    for (let field of this.VALID_FIELDS) {
+      let existingField = creditCardFound[field];
+
+      // Make sure credit card field is existed and have value
+      if (field == "cc-number" && (!existingField || !creditCardToMerge[field])) {
+        return false;
+      }
+
+      if (!creditCardToMerge[field]) {
+        creditCardToMerge[field] = existingField;
+      }
+
+      let incomingField = creditCardToMerge[field];
+      if (incomingField && existingField) {
+        if (incomingField != existingField) {
+          this.log.debug("Conflicts: field", field, "has different value.");
+          return false;
+        }
+      }
+    }
+
+    // Early return if the data is the same.
+    let exactlyMatch = this.VALID_FIELDS.every((field) =>
+      creditCardFound[field] === creditCardToMerge[field]
+    );
+    if (exactlyMatch) {
+      return true;
+    }
+
+    this.update(guid, creditCardToMerge, true);
+    return true;
+  }
 }
 
 function ProfileStorage(path) {

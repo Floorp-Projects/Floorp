@@ -438,7 +438,12 @@ FormAutofillParent.prototype = {
         if (creditCard.record[field] === "" && !originalCCData[field]) {
           return true;
         }
-        return creditCard.untouchedFields.includes(field);
+        // Avoid updating the fields that users don't modify.
+        let untouched = creditCard.untouchedFields.includes(field);
+        if (untouched) {
+          creditCard.record[field] = originalCCData[field];
+        }
+        return untouched;
       });
 
       if (unchanged) {
@@ -481,7 +486,18 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    this.profileStorage.creditCards.add(creditCard.record);
+    let changedGUIDs = [];
+    // TODO: Autofill(with guid) case should show update doorhanger with update/create new.
+    // It'll be implemented in bug 1403881 and only avoid mergering for now.
+    if (creditCard.guid) {
+      changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+    } else {
+      changedGUIDs.push(...this.profileStorage.creditCards.mergeToStorage(creditCard.record));
+      if (!changedGUIDs.length) {
+        changedGUIDs.push(this.profileStorage.creditCards.add(creditCard.record));
+      }
+    }
+    changedGUIDs.forEach(guid => this.profileStorage.creditCards.notifyUsed(guid));
   },
 
   _onFormSubmit(data, target) {
