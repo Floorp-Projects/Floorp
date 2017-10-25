@@ -25,7 +25,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
-#include "nsIStringBundle.h"
+#include "mozilla/WidgetUtils.h"
 #include "nsIXULAppInfo.h"
 #include "nsContentUtils.h"
 #include "gfxPlatform.h"
@@ -125,21 +125,11 @@ ca_context_get_default()
         }
     }
 
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        mozilla::services::GetStringBundleService();
-    if (bundleService) {
-        nsCOMPtr<nsIStringBundle> brandingBundle;
-        bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                                    getter_AddRefs(brandingBundle));
-        if (brandingBundle) {
-            nsAutoString wbrand;
-            brandingBundle->GetStringFromName("brandShortName", wbrand);
-            NS_ConvertUTF16toUTF8 brand(wbrand);
-
-            ca_context_change_props(ctx, "application.name", brand.get(),
-                                    nullptr);
-        }
-    }
+    nsAutoString wbrand;
+    WidgetUtils::GetBrandShortName(wbrand);
+    ca_context_change_props(ctx, "application.name",
+                            NS_ConvertUTF16toUTF8(wbrand).get(),
+                            nullptr);
 
     nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
     if (appInfo) {

@@ -16,6 +16,7 @@
 #include "prenv.h"
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WidgetUtils.h"
 #include "GeckoProfiler.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
@@ -173,6 +174,18 @@ nsAppShell::Init()
             screenManager.SetHelper(mozilla::MakeUnique<HeadlessScreenHelper>());
         } else {
             screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperGTK>());
+        }
+    }
+
+    if (gtk_check_version(3, 16, 3) == nullptr) {
+        // Before 3.16.3, GDK cannot override classname by --class command line
+        // option when program uses gdk_set_program_class().
+        //
+        // See https://bugzilla.gnome.org/show_bug.cgi?id=747634
+        nsAutoString brandName;
+        mozilla::widget::WidgetUtils::GetBrandShortName(brandName);
+        if (!brandName.IsEmpty()) {
+            gdk_set_program_class(NS_ConvertUTF16toUTF8(brandName).get());
         }
     }
 
