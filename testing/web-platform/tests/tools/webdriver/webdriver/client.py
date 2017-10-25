@@ -1,7 +1,7 @@
-import json
 import urlparse
 
 import error
+import protocol
 import transport
 
 from mozlog import get_default_logger
@@ -145,7 +145,7 @@ class ActionSequence(object):
         if duration is not None:
             action["duration"] = duration
         if origin is not None:
-            action["origin"] = origin if isinstance(origin, basestring) else origin.json()
+            action["origin"] = origin
         self._actions.append(action)
         return self
 
@@ -297,18 +297,9 @@ class Find(object):
 
     def _find_element(self, strategy, selector, all):
         route = "elements" if all else "element"
-
         body = {"using": strategy,
                 "value": selector}
-
-        data = self.session.send_session_command("POST", route, body)
-
-        if all:
-            rv = [self.session._element(item) for item in data]
-        else:
-            rv = self.session._element(data)
-
-        return rv
+        return self.session.send_session_command("POST", route, body)
 
 
 class Cookies(object):
@@ -432,10 +423,15 @@ class Session(object):
             the `value` field returned after parsing the response
             body as JSON.
 
+        :raises ValueError: If the response body does not contain a
+            `value` key.
         :raises error.WebDriverException: If the remote end returns
             an error.
         """
-        response = self.transport.send(method, url, body)
+        response = self.transport.send(
+            method, url, body,
+            encoder=protocol.Encoder, decoder=protocol.Decoder,
+            session=self)
 
         if response.status != 200:
             raise error.from_response(response)
@@ -443,9 +439,8 @@ class Session(object):
         if "value" in response.body:
             value = response.body["value"]
         else:
-            raise error.UnknownErrorException(
-                "Expected 'value' key in response body:\n"
-                "%s" % json.dumps(response.body))
+            raise ValueError("Expected 'value' key in response body:\n"
+                "%s" % response)
 
         return value
 
@@ -520,10 +515,7 @@ class Session(object):
             body = None
         else:
             url = "frame"
-            if isinstance(frame, Element):
-                body = {"id": frame.json()}
-            else:
-                body = {"id": frame}
+            body = {"id": frame}
 
         return self.send_session_command("POST", url, body)
 
@@ -539,16 +531,7 @@ class Session(object):
     @property
     @command
     def active_element(self):
-        data = self.send_session_command("GET", "element/active")
-        if data is not None:
-            return self._element(data)
-
-    def _element(self, data):
-        elem_id = data[Element.identifier]
-        assert elem_id
-        if elem_id in self._element_cache:
-            return self._element_cache[elem_id]
-        return Element(elem_id, self)
+        return self.send_session_command("GET", "element/active")
 
     @command
     def cookies(self, name=None):
@@ -637,20 +620,23 @@ class Element(object):
         return isinstance(other, Element) and self.id == other.id \
                 and self.session == other.session
 
+    @classmethod
+    def from_json(cls, json, session):
+        assert Element.identifier in json
+        uuid = json[Element.identifier]
+        if uuid in session._element_cache:
+            return session._element_cache[uuid]
+        return cls(uuid, session)
+
     def send_element_command(self, method, uri, body=None):
         url = "element/%s/%s" % (self.id, uri)
         return self.session.send_session_command(method, url, body)
-
-    def json(self):
-        return {Element.identifier: self.id}
 
     @command
     def find_element(self, strategy, selector):
         body = {"using": strategy,
                 "value": selector}
-
-        elem = self.send_element_command("POST", "element", body)
-        return self.session._element(elem)
+        return self.send_element_command("POST", "element", body)
 
     @command
     def click(self):
