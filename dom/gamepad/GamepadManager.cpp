@@ -142,14 +142,15 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   if (mChannelChildren.IsEmpty()) {
     PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
     if (NS_WARN_IF(!actor)) {
-      MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+      // We are probably shutting down.
+      return;
     }
 
     GamepadEventChannelChild *child = new GamepadEventChannelChild();
     PGamepadEventChannelChild *initedChild =
       actor->SendPGamepadEventChannelConstructor(child);
     if (NS_WARN_IF(!initedChild)) {
-      MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+      // We are probably shutting down.
       return;
     }
 
