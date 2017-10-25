@@ -4135,6 +4135,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Build dependencies)
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$GNU_CC" -a "$GNU_CXX"; then
   _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
 else
@@ -4167,6 +4168,7 @@ else
     AC_SUBST(NONASCII)
   fi
 fi
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl =
