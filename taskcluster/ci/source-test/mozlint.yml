@@ -66,6 +66,8 @@ py-flake8:
         files-changed:
             - '**/*.py'
             - '**/.flake8'
+            # moz.configure files are also Python files.
+            - '**/*.configure'
 
 test-manifest:
     description: lint test manifests
