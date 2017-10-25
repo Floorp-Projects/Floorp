@@ -18,7 +18,7 @@ GECKO_SRCDIR = os.path.join(os.path.expanduser('~'), 'checkouts', 'gecko')
 TELEMETRY_TEST_HOME = os.path.join(GECKO_SRCDIR, 'toolkit', 'components', 'telemetry',
                                    'tests', 'marionette')
 
-from mozharness.base.python import PostScriptRun, PreScriptAction
+from mozharness.base.python import PreScriptAction
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
     TestingMixin,
@@ -36,7 +36,8 @@ telemetry_tests_config_options = [
         "action": "store_true",
         "dest": "allow_software_gl_layers",
         "default": False,
-        "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",
+        "help": "Permits a software GL implementation (such as LLVMPipe) "
+                "to use the GL compositor.",
     }],
     [["--enable-webrender"], {
         "action": "store_true",
@@ -101,7 +102,6 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
-        dirs = self.query_abs_dirs()
 
         requirements = os.path.join(GECKO_SRCDIR, 'testing',
                                     'config', 'telemetry_tests_requirements.txt')
@@ -158,7 +158,8 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
                                         strict=False)
 
         # Add the default tests to run
-        tests = [os.path.join(dirs['abs_telemetry_dir'], 'tests', test) for test in self.default_tests]
+        tests = [os.path.join(dirs['abs_telemetry_dir'], 'tests', test)
+                 for test in self.default_tests]
         cmd.extend(tests)
 
         # Set further environment settings

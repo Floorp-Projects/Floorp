@@ -12,7 +12,6 @@ import os
 import re
 import sys
 import signal
-import socket
 import subprocess
 import time
 import tempfile
@@ -32,34 +31,35 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 from mozharness.mozilla.testing.unittest import EmulatorMixin
 
 
-class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin, BaseScript, MozbaseMixin):
+class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin, BaseScript,
+                          MozbaseMixin):
     config_options = [[
         ["--test-suite"],
         {"action": "store",
          "dest": "test_suite",
          "default": None
-        }
+         }
     ], [
         ["--adb-path"],
         {"action": "store",
          "dest": "adb_path",
          "default": None,
          "help": "Path to adb",
-        }
+         }
     ], [
         ["--total-chunk"],
         {"action": "store",
          "dest": "total_chunks",
          "default": None,
          "help": "Number of total chunks",
-        }
+         }
     ], [
         ["--this-chunk"],
         {"action": "store",
          "dest": "this_chunk",
          "default": None,
          "help": "Number of this chunk",
-        }
+         }
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options)
 
@@ -86,7 +86,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                          'verify-emulator',
                          'install',
                          'run-tests',
-                        ],
+                         ],
             default_actions=['clobber',
                              'start-emulator',
                              'download-and-extract',
@@ -94,7 +94,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                              'verify-emulator',
                              'install',
                              'run-tests',
-                            ],
+                             ],
             require_config_file=require_config_file,
             config={
                 'virtualenv_modules': self.virtualenv_modules,
@@ -178,11 +178,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if self.test_suite == 'mochitest-media':
             # mochitest-media is the only thing that needs this
             requirements = os.path.join(dirs['abs_mochitest_dir'],
-                        'websocketprocessbridge',
-                        'websocketprocessbridge_requirements.txt')
+                                        'websocketprocessbridge',
+                                        'websocketprocessbridge_requirements.txt')
         elif self.test_suite == 'marionette':
             requirements = os.path.join(dirs['abs_test_install_dir'],
-                                    'config', 'marionette_requirements.txt')
+                                        'config', 'marionette_requirements.txt')
         if requirements:
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
@@ -226,7 +226,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             "tmp_file": tmp_file,
         }
 
-    def _retry(self, max_attempts, interval, func, description, max_time = 0):
+    def _retry(self, max_attempts, interval, func, description, max_time=0):
         '''
         Execute func until it returns True, up to max_attempts times, waiting for
         interval seconds between each attempt. description is logged on each attempt.
@@ -237,12 +237,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         status = False
         attempts = 0
         if max_time > 0:
-            end_time = datetime.datetime.now() + datetime.timedelta(seconds = max_time)
+            end_time = datetime.datetime.now() + datetime.timedelta(seconds=max_time)
         else:
             end_time = None
         while attempts < max_attempts and not status:
             if (end_time is not None) and (datetime.datetime.now() > end_time):
-                self.info("Maximum retry run-time of %d seconds exceeded; remaining attempts abandoned" % max_time)
+                self.info("Maximum retry run-time of %d seconds exceeded; "
+                          "remaining attempts abandoned" % max_time)
                 break
             if attempts != 0:
                 self.info("Sleeping %d seconds" % interval)
@@ -290,11 +291,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if not adb_ok:
             self.warning('Unable to communicate with adb')
             return False
-        adb_device_ok = self._retry(4, 30, self._verify_adb_device, "Verify emulator visible to adb")
+        adb_device_ok = self._retry(4, 30, self._verify_adb_device,
+                                    "Verify emulator visible to adb")
         if not adb_device_ok:
             self.warning('Unable to communicate with emulator via adb')
             return False
-        boot_ok = self._retry(30, 10, self._is_boot_completed, "Verify Android boot completed", max_time = 330)
+        boot_ok = self._retry(30, 10, self._is_boot_completed, "Verify Android boot completed",
+                              max_time=330)
         if not boot_ok:
             self.warning('Unable to verify Android boot completion')
             return False
@@ -319,9 +322,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _install_fennec_apk(self):
         install_ok = False
         if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.installer_path]
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g',
+                   self.installer_path]
         else:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.installer_path]
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
+                   self.installer_path]
         out = self._run_with_timeout(300, cmd, True)
         if 'Success' in out:
             install_ok = True
@@ -330,9 +335,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _install_robocop_apk(self):
         install_ok = False
         if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g', self.robocop_path]
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g',
+                   self.robocop_path]
         else:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', self.robocop_path]
+            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
+                   self.robocop_path]
         out = self._run_with_timeout(300, cmd, True)
         if 'Success' in out:
             install_ok = True
@@ -374,7 +381,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             return
         try:
             tmpfd, filename = tempfile.mkstemp(prefix=prefix, suffix='.png',
-                dir=dirs['abs_blob_upload_dir'])
+                                               dir=dirs['abs_blob_upload_dir'])
             os.close(tmpfd)
             self.info("Taking screenshot with %s; saving to %s" % (utility, filename))
             subprocess.call([utility, filename], env=self.query_env())
@@ -455,7 +462,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             if '%(app)' in option:
                 # only query package name if requested
-                cmd.extend([option % {'app' : self._query_package_name()}])
+                cmd.extend([option % {'app': self._query_package_name()}])
             else:
                 cmd.extend([option % str_format_values])
 
@@ -466,7 +473,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
-        if self.config.get('verify') != True:
+        if self.config.get('verify') is not True:
             cmd.extend(self.query_tests_args(
                 self.config["suite_definitions"][self.test_suite].get("tests"),
                 None,
@@ -494,7 +501,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             # something unexpected!
             repo = 'https://hg.mozilla.org/mozilla-central'
             revision = 'default'
-            self.warning('Unable to find repo/revision for manifest; using mozilla-central/default')
+            self.warning('Unable to find repo/revision for manifest; '
+                         'using mozilla-central/default')
         url = '%s/raw-file/%s/%s' % (
             repo,
             revision,
@@ -519,7 +527,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                             cache=c.get("tooltool_cache", None))
 
     ##########################################
-    ### Actions for AndroidEmulatorTest ###
+    # Actions for AndroidEmulatorTest        #
     ##########################################
     def setup_avds(self):
         '''
@@ -561,7 +569,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         '''
         Starts the emulator
         '''
-        if 'emulator_url' in self.config or 'emulator_manifest' in self.config or 'tools_manifest' in self.config:
+        if 'emulator_url' in self.config or 'emulator_manifest' in self.config or \
+           'tools_manifest' in self.config:
             self.install_emulator()
 
         if not os.path.isfile(self.adb_path):
@@ -618,19 +627,19 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
             f.write('\n\nEmulator /proc/cpuinfo:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                    'shell', 'cat', '/proc/cpuinfo']
+                   'shell', 'cat', '/proc/cpuinfo']
             out = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator /proc/meminfo:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                    'shell', 'cat', '/proc/meminfo']
+                   'shell', 'cat', '/proc/meminfo']
             out = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator process list:\n')
             cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                    'shell', 'ps']
+                   'shell', 'ps']
             out = self._run_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
@@ -641,10 +650,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         '''
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
         max_restarts = 5
-        emulator_ok = self._retry(max_restarts, 10, self._verify_emulator_and_restart_on_fail, "Check emulator")
+        emulator_ok = self._retry(max_restarts, 10, self._verify_emulator_and_restart_on_fail,
+                                  "Check emulator")
         if not emulator_ok:
             self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts' % max_restarts,
-                EXIT_STATUS_DICT[TBPL_RETRY])
+                       EXIT_STATUS_DICT[TBPL_RETRY])
         self._dump_perf_info()
         # Start logcat for the emulator. The adb process runs until the
         # corresponding emulator is killed. Output is written directly to
@@ -652,8 +662,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # at the end of the job.
         logcat_filename = 'logcat-%s.log' % self.emulator["device_id"]
         logcat_path = os.path.join(self.abs_dirs['abs_blob_upload_dir'], logcat_filename)
-        logcat_cmd = '%s -s %s logcat -v threadtime Trace:S StrictMode:S ExchangeService:S > %s &' % \
-            (self.adb_path, self.emulator["device_id"], logcat_path)
+        logcat_cmd = '%s -s %s logcat -v threadtime Trace:S StrictMode:S '\
+            ' ExchangeService:S > %s &' % (self.adb_path, self.emulator["device_id"], logcat_path)
         self.info(logcat_cmd)
         os.system(logcat_cmd)
         # Get a post-boot emulator process list for diagnostics
@@ -664,7 +674,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Download and extract fennec APK, tests.zip, host utils, and robocop (if required).
         """
-        super(AndroidEmulatorTest, self).download_and_extract(suite_categories=self._query_suite_categories())
+        super(AndroidEmulatorTest, self).download_and_extract(
+            suite_categories=self._query_suite_categories())
         dirs = self.query_abs_dirs()
         if self.test_suite and self.test_suite.startswith('robocop'):
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
@@ -687,29 +698,33 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Install APKs on the emulator
         """
-        install_needed = (not self.test_suite) or self.config["suite_definitions"][self.test_suite].get("install")
-        if install_needed == False:
+        install_needed = (not self.test_suite) or \
+            self.config["suite_definitions"][self.test_suite].get("install")
+        if install_needed is False:
             self.info("Skipping apk installation for %s" % self.test_suite)
             return
 
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
 
-        self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s', self.emulator['device_id'],
-            'shell', 'getprop', 'ro.build.version.sdk'])
+        self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s',
+                                                     self.emulator['device_id'],
+                                                'shell', 'getprop', 'ro.build.version.sdk'])
 
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_fennec_apk, "Install app APK")
         if not install_ok:
             self.fatal('INFRA-ERROR: Failed to install %s on %s' %
-                (self.installer_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
+                       (self.installer_path, self.emulator["name"]),
+                       EXIT_STATUS_DICT[TBPL_RETRY])
 
         # Install Robocop if required
         if self.test_suite and self.test_suite.startswith('robocop'):
             install_ok = self._retry(3, 30, self._install_robocop_apk, "Install Robocop APK")
             if not install_ok:
                 self.fatal('INFRA-ERROR: Failed to install %s on %s' %
-                    (self.robocop_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
+                           (self.robocop_path, self.emulator["name"]),
+                           EXIT_STATUS_DICT[TBPL_RETRY])
 
         self.info("Finished installing apps for %s" % self.emulator["name"])
 
@@ -773,7 +788,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                     # Verification has run out of time. That is okay! Stop running
                     # tests so that a task timeout is not triggered, and so that
                     # (partial) results are made available in a timely manner.
-                    self.info("TinderboxPrint: Verification too long: Not all tests were verified.<br/>")
+                    self.info("TinderboxPrint: Verification too long: "
+                              "Not all tests were verified.<br/>")
                     # Signal verify time exceeded, to break out of suites and
                     # suite categories loops also.
                     return False
@@ -815,7 +831,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if len(verify_args) > 0:
             self._dump_emulator_log()
 
-
     @PostScriptAction('run-tests')
     def stop_emulator(self, action, success=None):
         '''
@@ -836,6 +851,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             # have run anyway (it doesn't get run on interactive workers).
             self._kill_processes(self.config["emulator_process_name"])
         super(AndroidEmulatorTest, self).upload_blobber_files()
+
 
 if __name__ == '__main__':
     emulatorTest = AndroidEmulatorTest()

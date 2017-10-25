@@ -212,11 +212,13 @@ class L10nBumper(VCSScript):
             self.mkdir_p(dirs['abs_work_dir'])
         self.rmtree(treestatus_json)
 
-        self.run_command(["curl", "--retry", "4", "-o", treestatus_json, treestatus_url], throw_exception=True)
+        self.run_command(["curl", "--retry", "4", "-o", treestatus_json, treestatus_url],
+                         throw_exception=True)
 
         treestatus = self._read_json(treestatus_json)
         if treestatus['result']['status'] != 'closed':
-            self.info("treestatus is %s - assuming we can land" % repr(treestatus['result']['status']))
+            self.info("treestatus is %s - assuming we can land" %
+                      repr(treestatus['result']['status']))
             return True
 
         return False

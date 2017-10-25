@@ -29,10 +29,10 @@ __all__ = ['extract_tarball',
 try:
     WindowsError
 except NameError:
-    WindowsError = None # so we can unconditionally catch it later...
+    WindowsError = None  # so we can unconditionally catch it later...
 
 
-### utilities for extracting archives
+# utilities for extracting archives
 
 def extract_tarball(src, dest):
     """extract a .tar file"""
@@ -54,7 +54,7 @@ def extract_zip(src, dest):
     else:
         try:
             bundle = zipfile.ZipFile(src)
-        except Exception, e:
+        except Exception:
             print "src: %s" % src
             raise
 
@@ -118,7 +118,7 @@ def extract(src, dest=None):
     return top_level_files
 
 
-### utilities for removal of files and directories
+# utilities for removal of files and directories
 
 def rmtree(dir):
     """Deprecated wrapper method to remove a directory tree.
@@ -179,6 +179,7 @@ def remove(path):
         os.chmod(path, path_stats.st_mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         _call_with_windows_retry(shutil.rmtree, path)
 
+
 def depth(directory):
     """returns the integer depth of a directory or path relative to '/' """
 
@@ -191,19 +192,21 @@ def depth(directory):
             break
     return level
 
+
 # ASCII delimeters
 ascii_delimeters = {
-    'vertical_line' : '|',
-    'item_marker'   : '+',
-    'last_child'    : '\\'
+    'vertical_line': '|',
+    'item_marker': '+',
+    'last_child': '\\'
     }
 
 # unicode delimiters
 unicode_delimeters = {
-    'vertical_line' : '│',
-    'item_marker'   : '├',
-    'last_child'    : '└'
+    'vertical_line': '│',
+    'item_marker': '├',
+    'last_child': '└'
     }
+
 
 def tree(directory,
          item_marker=unicode_delimeters['item_marker'],
@@ -230,8 +233,7 @@ def tree(directory,
         for resource in (dirnames, filenames):
             resource[:] = sorted(resource, key=sort_key)
 
-        files_end =  item_marker
-        dirpath_marker = item_marker
+        files_end = item_marker
 
         if level > len(indent):
             indent.append(vertical_line)
@@ -254,21 +256,19 @@ def tree(directory,
 
         # append the directory and piece of tree structure
         # if the top-level entry directory, print as passed
-        retval.append('%s%s%s'% (''.join(indent[:-1]),
-                                 dirpath_mark,
-                                 basename if retval else directory))
+        retval.append('%s%s%s' % (''.join(indent[:-1]),
+                      dirpath_mark, basename if retval else directory))
         # add the files
         if filenames:
             last_file = filenames[-1]
             retval.extend([('%s%s%s' % (''.join(indent),
-                                        files_end if filename == last_file else item_marker,
-                                        filename))
-                                        for index, filename in enumerate(filenames)])
+                          files_end if filename == last_file else item_marker, filename))
+                          for index, filename in enumerate(filenames)])
 
     return '\n'.join(retval)
 
 
-### utilities for temporary resources
+# utilities for temporary resources
 
 class NamedTemporaryFile(object):
     """
@@ -340,7 +340,7 @@ def TemporaryDirectory():
         shutil.rmtree(tempdir)
 
 
-### utilities dealing with URLs
+# utilities dealing with URLs
 
 def is_url(thing):
     """
@@ -352,6 +352,7 @@ def is_url(thing):
         return len(parsed.scheme) >= 2
     else:
         return len(parsed[0]) >= 2
+
 
 def load(resource):
     """
@@ -369,4 +370,3 @@ def load(resource):
         return file(resource)
 
     return urllib2.urlopen(resource)
-
