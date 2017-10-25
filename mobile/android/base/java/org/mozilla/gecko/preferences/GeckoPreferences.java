@@ -150,7 +150,6 @@ public class GeckoPreferences
     public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
     public static final String PREFS_READ_PARTNER_BOOKMARKS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_bookmarks_provider";
     public static final String PREFS_CUSTOM_TABS = NON_PREF_PREFIX + "customtabs_58";
-    public static final String PREFS_PWA = NON_PREF_PREFIX + "pwa";
     public static final String PREFS_CATEGORY_EXPERIMENTAL_FEATURES = NON_PREF_PREFIX + "category_experimental";
     public static final String PREFS_COMPACT_TABS = NON_PREF_PREFIX + "compact_tabs";
     public static final String PREFS_SHOW_QUIT_MENU = NON_PREF_PREFIX + "distribution.show_quit_menu";
@@ -809,10 +808,6 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
-                } else if (PREFS_PWA.equals(key) && !AppConstants.MOZ_ANDROID_PWA) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
                 } else if (PREFS_COMPACT_TABS.equals(key)) {
                     if (HardwareUtils.isTablet()) {
                         preferences.removePreference(pref);
