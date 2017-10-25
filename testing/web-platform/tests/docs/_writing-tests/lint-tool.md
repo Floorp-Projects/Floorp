@@ -51,6 +51,9 @@ below to fix all errors reported.
   `<script src='/resources/testharnessreport.js'>` element ; **fix**: move
   the `<meta name="timeout"...>` element to precede the `script` element.
 
+* **LAYOUTTESTS APIS**: Test file uses `eventSender`, `testRunner`, or
+  `window.internals` which are LayoutTests-specific APIs used in WebKit/Blink.
+
 * **MALFORMED-VARIANT**: Test file with a `<meta name='variant'...>`
   element whose `content` attribute has a malformed value; **fix**: ensure
   the value of the `content` attribute starts with `?` or `#` or is empty.

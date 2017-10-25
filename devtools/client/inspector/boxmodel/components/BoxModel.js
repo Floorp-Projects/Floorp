@@ -4,8 +4,12 @@
 
 "use strict";
 
-const { addons, createClass, createFactory, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 
 const BoxModelInfo = createFactory(require("./BoxModelInfo"));
 const BoxModelMain = createFactory(require("./BoxModelMain"));
@@ -13,22 +17,24 @@ const BoxModelProperties = createFactory(require("./BoxModelProperties"));
 
 const Types = require("../types");
 
-module.exports = createClass({
+class BoxModel extends PureComponent {
+  static get propTypes() {
+    return {
+      boxModel: PropTypes.shape(Types.boxModel).isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      showBoxModelProperties: PropTypes.bool.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelEditor: PropTypes.func.isRequired,
+      onShowBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      onToggleGeometryEditor: PropTypes.func.isRequired,
+    };
+  }
 
-  displayName: "BoxModel",
-
-  propTypes: {
-    boxModel: PropTypes.shape(Types.boxModel).isRequired,
-    setSelectedNode: PropTypes.func.isRequired,
-    showBoxModelProperties: PropTypes.bool.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
-    onShowBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-    onToggleGeometryEditor: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.onKeyDown = this.onKeyDown.bind(this);
+  }
 
   onKeyDown(event) {
     let { target } = event;
@@ -36,7 +42,7 @@ module.exports = createClass({
     if (target == this.boxModelContainer) {
       this.boxModelMain.onKeyDown(event);
     }
-  },
+  }
 
   render() {
     let {
@@ -83,5 +89,7 @@ module.exports = createClass({
         :
         null
     );
-  },
-});
+  }
+}
+
+module.exports = BoxModel;

@@ -120,7 +120,7 @@ NS_IMPL_ISUPPORTS(U2FPrefManager, nsIObserver);
 
 U2FTokenManager::U2FTokenManager()
   : mTransactionParent(nullptr)
-  , mTransactionId(0)
+  , mLastTransactionId(0)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Create on the main thread to make sure ClearOnShutdown() works.
@@ -158,9 +158,10 @@ U2FTokenManager::Get()
 }
 
 void
-U2FTokenManager::AbortTransaction(const nsresult& aError)
+U2FTokenManager::AbortTransaction(const uint64_t& aTransactionId,
+                                  const nsresult& aError)
 {
-  Unused << mTransactionParent->SendAbort(aError);
+  Unused << mTransactionParent->SendAbort(aTransactionId, aError);
   ClearTransaction();
 }
 
@@ -183,8 +184,8 @@ U2FTokenManager::ClearTransaction()
   // Forget promises, if necessary.
   mRegisterPromise.DisconnectIfExists();
   mSignPromise.DisconnectIfExists();
-  // Bump transaction id.
-  mTransactionId++;
+  // Clear transaction id.
+  mLastTransactionId = 0;
 }
 
 RefPtr<U2FTokenTransport>
@@ -218,6 +219,7 @@ U2FTokenManager::GetTokenManagerImpl()
 
 void
 U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
+                          const uint64_t& aTransactionId,
                           const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
@@ -227,7 +229,7 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
   mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
@@ -237,11 +239,11 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
 
   if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
       (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    AbortTransaction(NS_ERROR_DOM_UNKNOWN_ERR);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
-  uint64_t tid = mTransactionId;
+  uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
   mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
                               aTransactionInfo.RpIdHash(),
@@ -270,36 +272,31 @@ U2FTokenManager::Register(PWebAuthnTransactionParent* aTransactionParent,
 }
 
 void
-U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
+U2FTokenManager::MaybeConfirmRegister(const uint64_t& aTransactionId,
                                       U2FRegisterResult& aResult)
 {
-  if (mTransactionId != aTransactionId) {
-    return;
-  }
-
+  MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mRegisterPromise.Complete();
 
   nsTArray<uint8_t> registration;
   aResult.ConsumeRegistration(registration);
 
-  Unused << mTransactionParent->SendConfirmRegister(registration);
+  Unused << mTransactionParent->SendConfirmRegister(aTransactionId, registration);
   ClearTransaction();
 }
 
 void
-U2FTokenManager::MaybeAbortRegister(uint64_t aTransactionId,
+U2FTokenManager::MaybeAbortRegister(const uint64_t& aTransactionId,
                                     const nsresult& aError)
 {
-  if (mTransactionId != aTransactionId) {
-    return;
-  }
-
+  MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mRegisterPromise.Complete();
-  AbortTransaction(aError);
+  AbortTransaction(aTransactionId, aError);
 }
 
 void
 U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
+                      const uint64_t& aTransactionId,
                       const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
@@ -309,17 +306,17 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
   if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
       (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    AbortTransaction(NS_ERROR_DOM_UNKNOWN_ERR);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
-  uint64_t tid = mTransactionId;
+  uint64_t tid = mLastTransactionId = aTransactionId;
   mozilla::TimeStamp startTime = mozilla::TimeStamp::Now();
   mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
                           aTransactionInfo.RpIdHash(),
@@ -348,13 +345,10 @@ U2FTokenManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 }
 
 void
-U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
+U2FTokenManager::MaybeConfirmSign(const uint64_t& aTransactionId,
                                   U2FSignResult& aResult)
 {
-  if (mTransactionId != aTransactionId) {
-    return;
-  }
-
+  MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mSignPromise.Complete();
 
   nsTArray<uint8_t> keyHandle;
@@ -362,25 +356,24 @@ U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
   nsTArray<uint8_t> signature;
   aResult.ConsumeSignature(signature);
 
-  Unused << mTransactionParent->SendConfirmSign(keyHandle, signature);
+  Unused << mTransactionParent->SendConfirmSign(aTransactionId, keyHandle, signature);
   ClearTransaction();
 }
 
 void
-U2FTokenManager::MaybeAbortSign(uint64_t aTransactionId, const nsresult& aError)
+U2FTokenManager::MaybeAbortSign(const uint64_t& aTransactionId,
+                                const nsresult& aError)
 {
-  if (mTransactionId != aTransactionId) {
-    return;
-  }
-
+  MOZ_ASSERT(mLastTransactionId == aTransactionId);
   mSignPromise.Complete();
-  AbortTransaction(aError);
+  AbortTransaction(aTransactionId, aError);
 }
 
 void
-U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent)
+U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent,
+                        const uint64_t& aTransactionId)
 {
-  if (mTransactionParent != aParent) {
+  if (mTransactionParent != aParent || mLastTransactionId != aTransactionId) {
     return;
   }
 

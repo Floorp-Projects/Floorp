@@ -4,9 +4,12 @@
 
 "use strict";
 
+const {
+  DOM: dom,
+  PropTypes,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const { addons, createClass, DOM: dom, PropTypes } =
-  require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
 
@@ -16,20 +19,22 @@ const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);
 
-module.exports = createClass({
+class BoxModelInfo extends PureComponent {
+  static get propTypes() {
+    return {
+      boxModel: PropTypes.shape(Types.boxModel).isRequired,
+      onToggleGeometryEditor: PropTypes.func.isRequired,
+    };
+  }
 
-  displayName: "BoxModelInfo",
-
-  propTypes: {
-    boxModel: PropTypes.shape(Types.boxModel).isRequired,
-    onToggleGeometryEditor: PropTypes.func.isRequired,
-  },
-
-  mixins: [ addons.PureRenderMixin ],
+  constructor(props) {
+    super(props);
+    this.onToggleGeometryEditor = this.onToggleGeometryEditor.bind(this);
+  }
 
   onToggleGeometryEditor(e) {
     this.props.onToggleGeometryEditor();
-  },
+  }
 
   render() {
     let { boxModel } = this.props;
@@ -76,6 +81,7 @@ module.exports = createClass({
         )
       )
     );
-  },
+  }
+}
 
-});
+module.exports = BoxModelInfo;

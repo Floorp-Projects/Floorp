@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<script>
+function init()
+{
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false],
+    ["security.data_uri.block_toplevel_data_uri_navigations", false],
+  ]}, boom);
+}
+
+function boom()
+{
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  frame.src = "data:text/html,1";
+  document.body.appendChild(frame);
+  var frameWin = frame.contentWindow;
+
+  var resizeListener = function() {
+    frameWin.removeEventListener("resize", resizeListener, false);
+    frameWin.document.write("3...");
+  };
+  frameWin.addEventListener("resize", resizeListener, false);
+
+  frameWin.document.write("2...");
+
+  SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
+}
+
+</script>
+<body onload="init();"></body>
+</html>

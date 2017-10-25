@@ -8,7 +8,7 @@
 
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "Layers.h"                     // for PaintedLayer, etc
-#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedBuffer, etc
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/ContentClient.h"  // for ContentClient
@@ -32,8 +32,8 @@ class SpecificLayerAttributes;
 class ClientPaintedLayer : public PaintedLayer,
                            public ClientLayer {
 public:
-  typedef RotatedContentBuffer::PaintState PaintState;
-  typedef RotatedContentBuffer::ContentType ContentType;
+  typedef ContentClient::PaintState PaintState;
+  typedef ContentClient::ContentType ContentType;
 
   explicit ClientPaintedLayer(ClientLayerManager* aLayerManager,
                              LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE) :

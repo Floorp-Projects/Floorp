@@ -5019,14 +5019,18 @@ static bool
 WrapWithProto(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Value obj = UndefinedValue(), proto = UndefinedValue();
-    if (args.length() == 2) {
-        obj = args[0];
-        proto = args[1];
-    }
+    Value obj = args.get(0);
+    Value proto = args.get(1);
     if (!obj.isObject() || !proto.isObjectOrNull()) {
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
                                   "wrapWithProto");
+        return false;
+    }
+
+    // Disallow constructing (deeply) nested wrapper chains, to avoid running
+    // out of stack space in isCallable/isConstructor. See bug 1126105.
+    if (IsWrapper(&obj.toObject())) {
+        JS_ReportErrorASCII(cx, "wrapWithProto cannot wrap a wrapper");
         return false;
     }
 
@@ -6821,6 +6825,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "nukeAllCCWs()",
 "  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current compartment."),
 
+    JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
+"wrapWithProto(obj)",
+"  Wrap an object into a noop wrapper with prototype semantics."),
+
     JS_FN_HELP("createMappedArrayBuffer", CreateMappedArrayBuffer, 1, 0,
 "createMappedArrayBuffer(filename, [offset, [size]])",
 "  Create an array buffer that mmaps the given file."),
@@ -6995,12 +7003,6 @@ TestAssertRecoveredOnBailout,
 "  original hook, that we reinstate after the call to |fun| completes,\n"
 "  might be asked for the source code of compilations that |fun|\n"
 "  performed, and which, presumably, only |hook| knows how to find.\n"),
-
-    JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
-"wrapWithProto(obj)",
-"  Wrap an object into a noop wrapper with prototype semantics.\n"
-"  Note: This is not fuzzing safe because it can be used to construct\n"
-"        deeply nested wrapper chains that cannot exist in the wild."),
 
     JS_FN_HELP("trackedOpts", ReflectTrackedOptimizations, 1, 0,
 "trackedOpts(fun)",

@@ -199,12 +199,6 @@ WebAuthnManager::ClearTransaction()
   }
 
   mTransaction.reset();
-
-  if (mChild) {
-    RefPtr<WebAuthnTransactionChild> c;
-    mChild.swap(c);
-    c->Send__delete__(c);
-  }
 }
 
 void
@@ -220,8 +214,8 @@ WebAuthnManager::RejectTransaction(const nsresult& aError)
 void
 WebAuthnManager::CancelTransaction(const nsresult& aError)
 {
-  if (mChild) {
-    mChild->SendRequestCancel();
+  if (!NS_WARN_IF(!mChild || mTransaction.isNothing())) {
+    mChild->SendRequestCancel(mTransaction.ref().mId);
   }
 
   RejectTransaction(aError);
@@ -234,20 +228,26 @@ WebAuthnManager::~WebAuthnManager()
   if (mTransaction.isSome()) {
     RejectTransaction(NS_ERROR_ABORT);
   }
+
+  if (mChild) {
+    RefPtr<WebAuthnTransactionChild> c;
+    mChild.swap(c);
+    c->Send__delete__(c);
+  }
 }
 
-void
-WebAuthnManager::GetOrCreateBackgroundActor()
+bool
+WebAuthnManager::MaybeCreateBackgroundActor()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mChild) {
-    return;
+    return true;
   }
 
   PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    return false;
   }
 
   RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild());
@@ -255,12 +255,13 @@ WebAuthnManager::GetOrCreateBackgroundActor()
     actor->SendPWebAuthnTransactionConstructor(mgr);
 
   if (NS_WARN_IF(!constructedMgr)) {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-    return;
+    return false;
   }
 
   MOZ_ASSERT(constructedMgr == mgr);
   mChild = mgr.forget();
+
+  return true;
 }
 
 //static
@@ -458,6 +459,11 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     excludeList.AppendElement(c);
   }
 
+  if (!MaybeCreateBackgroundActor()) {
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return promise.forget();
+  }
+
   // TODO: Add extension list building
   nsTArray<WebAuthnExtension> extensions;
 
@@ -475,11 +481,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
                                           Move(info),
                                           Move(clientDataJSON)));
 
-  GetOrCreateBackgroundActor();
-  if (mChild) {
-    mChild->SendRequestRegister(mTransaction.ref().mInfo);
-  }
-
+  mChild->SendRequestRegister(mTransaction.ref().mId, mTransaction.ref().mInfo);
   return promise.forget();
 }
 
@@ -601,6 +603,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
     allowList.AppendElement(c);
   }
 
+  if (!MaybeCreateBackgroundActor()) {
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return promise.forget();
+  }
+
   // TODO: Add extension list building
   // If extensions was specified, process any extensions supported by this
   // client platform, to produce the extension data that needs to be sent to the
@@ -623,11 +630,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
                                           Move(info),
                                           Move(clientDataJSON)));
 
-  GetOrCreateBackgroundActor();
-  if (mChild) {
-    mChild->SendRequestSign(mTransaction.ref().mInfo);
-  }
-
+  mChild->SendRequestSign(mTransaction.ref().mId, mTransaction.ref().mInfo);
   return promise.forget();
 }
 
@@ -655,12 +658,13 @@ WebAuthnManager::Store(nsPIDOMWindowInner* aParent,
 }
 
 void
-WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
+WebAuthnManager::FinishMakeCredential(const uint64_t& aTransactionId,
+                                      nsTArray<uint8_t>& aRegBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Check for a valid transaction.
-  if (mTransaction.isNothing()) {
+  if (mTransaction.isNothing() || mTransaction.ref().mId != aTransactionId) {
     return;
   }
 
@@ -782,13 +786,14 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 }
 
 void
-WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
+WebAuthnManager::FinishGetAssertion(const uint64_t& aTransactionId,
+                                    nsTArray<uint8_t>& aCredentialId,
                                     nsTArray<uint8_t>& aSigBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Check for a valid transaction.
-  if (mTransaction.isNothing()) {
+  if (mTransaction.isNothing() || mTransaction.ref().mId != aTransactionId) {
     return;
   }
 
@@ -867,11 +872,12 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 }
 
 void
-WebAuthnManager::RequestAborted(const nsresult& aError)
+WebAuthnManager::RequestAborted(const uint64_t& aTransactionId,
+                                const nsresult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mTransaction.isSome()) {
+  if (mTransaction.isSome() && mTransaction.ref().mId == aTransactionId) {
     RejectTransaction(aError);
   }
 }
@@ -890,9 +896,11 @@ WebAuthnManager::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDocument> doc =
     do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
-  MOZ_ASSERT(doc);
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (doc && doc->Hidden()) {
+  if (doc->Hidden()) {
     MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug,
             ("Visibility change: WebAuthn window is hidden, cancelling job."));
 

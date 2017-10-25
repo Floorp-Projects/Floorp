@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<script>
+<![CDATA[
+
+function boom()
+{
+  var p = document.body;
+  var t1 = document.createTextNode("1");
+  p.appendChild(t1);
+  var t2 = document.createTextNode("2");
+  p.appendChild(t2);
+  var t3 = document.createTextNode("3");
+  p.appendChild(t3);
+
+  function f() {
+  };
+  window.addEventListener("DOMSubtreeModified", f, false);
+
+  function g() {
+    window.removeEventListener("DOMNodeRemoved", g, false);
+    p.removeChild(t3);
+  };
+  window.addEventListener("DOMNodeRemoved", g, false);
+
+  document.normalize();
+}
+
+]]>
+</script>
+<body onload="boom();"></body>
+</html>

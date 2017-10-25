@@ -7,33 +7,36 @@
 const Services = require("Services");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
+  CANVAS_SIZE,
+  drawBubbleRect,
+  drawLine,
+  drawRect,
+  drawRoundedRect,
+  getBoundsFromPoints,
+  getCanvasPosition,
+  getCurrentMatrix,
+  getPathDescriptionFromPoints,
+  getPointsFromDiagonal,
+  updateCanvasElement,
+} = require("./utils/canvas");
+const {
   CanvasFrameAnonymousContentHelper,
   createNode,
   createSVGNode,
   moveInfobar,
 } = require("./utils/markup");
+const { apply } = require("devtools/shared/layout/dom-matrix-2d");
 const {
   getCurrentZoom,
   getDisplayPixelRatio,
   setIgnoreLayoutChanges,
-  getViewportDimensions,
 } = require("devtools/shared/layout/utils");
-const {
-  identity,
-  apply,
-  translate,
-  multiply,
-  scale,
-  isIdentity,
-  getNodeTransformationMatrix,
-} = require("devtools/shared/layout/dom-matrix-2d");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
-const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 const NEGATIVE_LINE_NUMBERS_PREF = "devtools.gridinspector.showNegativeLineNumbers";
 
 const DEFAULT_GRID_COLOR = "#4B0082";
@@ -74,263 +77,6 @@ const GRID_GAP_ALPHA = 0.5;
  * Cached used by `CssGridHighlighter.getGridGapPattern`.
  */
 const gCachedGridPattern = new Map();
-
-// We create a <canvas> element that has always 4096x4096 physical pixels, to displays
-// our grid's overlay.
-// Then, we move the element around when needed, to give the perception that it always
-// covers the screen (See bug 1345434).
-//
-// This canvas size value is the safest we can use because most GPUs can handle it.
-// It's also far from the maximum canvas memory allocation limit (4096x4096x4 is
-// 67.108.864 bytes, where the limit is 500.000.000 bytes, see:
-// http://searchfox.org/mozilla-central/source/gfx/thebes/gfxPrefs.h#401).
-//
-// Note:
-// Once bug 1232491 lands, we could try to refactor this code to use the values from
-// the displayport API instead.
-//
-// Using a fixed value should also solve bug 1348293.
-const CANVAS_SIZE = 4096;
-
-/**
- * Returns an array containing the four coordinates of a rectangle, given its diagonal
- * as input; optionally applying a matrix, and a function to each of the coordinates'
- * value.
- *
- * @param  {Number} x1
- *         The x-axis coordinate of the rectangle's diagonal start point.
- * @param  {Number} y1
- *         The y-axis coordinate of the rectangle's diagonal start point.
- * @param  {Number} x2
- *         The x-axis coordinate of the rectangle's diagonal end point.
- * @param  {Number} y2
- *         The y-axis coordinate of the rectangle's diagonal end point.
- * @param  {Array} [matrix=identity()]
- *         A transformation matrix to apply.
- * @return {Array}
- *         The rect four corners' points transformed by the matrix given.
- */
-function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
-  return [
-    [x1, y1],
-    [x2, y1],
-    [x2, y2],
-    [x1, y2]
-  ].map(point => {
-    let transformedPoint = apply(matrix, point);
-
-    return {x: transformedPoint[0], y: transformedPoint[1]};
-  });
-}
-
-/**
- * Takes an array of four points and returns a DOMRect-like object, represent the
- * boundaries defined by the points given.
- *
- * @param  {Array} points
- *         The four points.
- * @return {Object}
- *         A DOMRect-like object.
- */
-function getBoundsFromPoints(points) {
-  let bounds = {};
-
-  bounds.left = Math.min(points[0].x, points[1].x, points[2].x, points[3].x);
-  bounds.right = Math.max(points[0].x, points[1].x, points[2].x, points[3].x);
-  bounds.top = Math.min(points[0].y, points[1].y, points[2].y, points[3].y);
-  bounds.bottom = Math.max(points[0].y, points[1].y, points[2].y, points[3].y);
-
-  bounds.x = bounds.left;
-  bounds.y = bounds.top;
-  bounds.width = bounds.right - bounds.left;
-  bounds.height = bounds.bottom - bounds.top;
-
-  return bounds;
-}
-
-/**
- * Takes an array of four points and returns a string represent a path description.
- *
- * @param  {Array} points
- *         The four points.
- * @return {String}
- *         A Path Description that can be used in svg's <path> element.
- */
-function getPathDescriptionFromPoints(points) {
-  return "M" + points[0].x + "," + points[0].y + " " +
-         "L" + points[1].x + "," + points[1].y + " " +
-         "L" + points[2].x + "," + points[2].y + " " +
-         "L" + points[3].x + "," + points[3].y;
-}
-
-/**
- * Draws a line to the context given, applying a transformation matrix if passed.
- *
- * @param  {CanvasRenderingContext2D} ctx
- *         The 2d canvas context.
- * @param  {Number} x1
- *         The x-axis of the coordinate for the begin of the line.
- * @param  {Number} y1
- *         The y-axis of the coordinate for the begin of the line.
- * @param  {Number} x2
- *         The x-axis of the coordinate for the end of the line.
- * @param  {Number} y2
- *         The y-axis of the coordinate for the end of the line.
- * @param  {Object} [options]
- *         The options object.
- * @param  {Array} [options.matrix=identity()]
- *         The transformation matrix to apply.
- * @param  {Array} [options.extendToBoundaries]
- *         If set, the line will be extended to reach the boundaries specified.
- */
-function drawLine(ctx, x1, y1, x2, y2, options) {
-  let matrix = options.matrix || identity();
-
-  let p1 = apply(matrix, [x1, y1]);
-  let p2 = apply(matrix, [x2, y2]);
-
-  x1 = p1[0];
-  y1 = p1[1];
-  x2 = p2[0];
-  y2 = p2[1];
-
-  if (options.extendToBoundaries) {
-    if (p1[1] === p2[1]) {
-      x1 = options.extendToBoundaries[0];
-      x2 = options.extendToBoundaries[2];
-    } else {
-      y1 = options.extendToBoundaries[1];
-      x1 = (p2[0] - p1[0]) * (y1 - p1[1]) / (p2[1] - p1[1]) + p1[0];
-      y2 = options.extendToBoundaries[3];
-      x2 = (p2[0] - p1[0]) * (y2 - p1[1]) / (p2[1] - p1[1]) + p1[0];
-    }
-  }
-
-  ctx.moveTo(Math.round(x1), Math.round(y1));
-  ctx.lineTo(Math.round(x2), Math.round(y2));
-}
-
-/**
- * Draws a rect to the context given, applying a transformation matrix if passed.
- * The coordinates are the start and end points of the rectangle's diagonal.
- *
- * @param  {CanvasRenderingContext2D} ctx
- *         The 2d canvas context.
- * @param  {Number} x1
- *         The x-axis coordinate of the rectangle's diagonal start point.
- * @param  {Number} y1
- *         The y-axis coordinate of the rectangle's diagonal start point.
- * @param  {Number} x2
- *         The x-axis coordinate of the rectangle's diagonal end point.
- * @param  {Number} y2
- *         The y-axis coordinate of the rectangle's diagonal end point.
- * @param  {Array} [matrix=identity()]
- *         The transformation matrix to apply.
- */
-function drawRect(ctx, x1, y1, x2, y2, matrix = identity()) {
-  let p = getPointsFromDiagonal(x1, y1, x2, y2, matrix);
-
-  ctx.beginPath();
-  ctx.moveTo(Math.round(p[0].x), Math.round(p[0].y));
-  ctx.lineTo(Math.round(p[1].x), Math.round(p[1].y));
-  ctx.lineTo(Math.round(p[2].x), Math.round(p[2].y));
-  ctx.lineTo(Math.round(p[3].x), Math.round(p[3].y));
-  ctx.closePath();
-}
-
-/**
- * Utility method to draw a rounded rectangle in the provided canvas context.
- *
- * @param  {CanvasRenderingContext2D} ctx
- *         The 2d canvas context.
- * @param  {Number} x
- *         The x-axis origin of the rectangle.
- * @param  {Number} y
- *         The y-axis origin of the rectangle.
- * @param  {Number} width
- *         The width of the rectangle.
- * @param  {Number} height
- *         The height of the rectangle.
- * @param  {Number} radius
- *         The radius of the rounding.
- */
-function drawRoundedRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x, y + radius);
-  ctx.lineTo(x, y + height - radius);
-  ctx.arcTo(x, y + height, x + radius, y + height, radius);
-  ctx.lineTo(x + width - radius, y + height);
-  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
-  ctx.lineTo(x + width, y + radius);
-  ctx.arcTo(x + width, y, x + width - radius, y, radius);
-  ctx.lineTo(x + radius, y);
-  ctx.arcTo(x, y, x, y + radius, radius);
-  ctx.stroke();
-  ctx.fill();
-}
-
-/**
- * Utility method to draw an arrow-bubble rectangle in the provided canvas context.
- *
- * @param  {CanvasRenderingContext2D} ctx
- *         The 2d canvas context.
- * @param  {Number} x
- *         The x-axis origin of the rectangle.
- * @param  {Number} y
- *         The y-axis origin of the rectangle.
- * @param  {Number} width
- *         The width of the rectangle.
- * @param  {Number} height
- *         The height of the rectangle.
- * @param  {Number} radius
- *         The radius of the rounding.
- * @param  {Number} margin
- *         The distance of the origin point from the pointer.
- * @param  {Number} arrowSize
- *         The size of the arrow.
- * @param  {String} alignment
- *         The alignment of the rectangle in relation to its position to the grid.
- */
-function drawBubbleRect(ctx, x, y, width, height, radius, margin, arrowSize, alignment) {
-  let angle = 0;
-
-  if (alignment === "bottom") {
-    angle = 180;
-  } else if (alignment === "right") {
-    angle = 90;
-    [width, height] = [height, width];
-  } else if (alignment === "left") {
-    [width, height] = [height, width];
-    angle = 270;
-  }
-
-  let originX = x;
-  let originY = y;
-
-  ctx.save();
-  ctx.translate(originX, originY);
-  ctx.rotate(angle * (Math.PI / 180));
-  ctx.translate(-originX, -originY);
-  ctx.translate(-width / 2, -height - arrowSize - margin);
-
-  ctx.beginPath();
-  ctx.moveTo(x, y + radius);
-  ctx.lineTo(x, y + height - radius);
-  ctx.arcTo(x, y + height, x + radius, y + height, radius);
-  ctx.lineTo(x + width / 2 - arrowSize, y + height);
-  ctx.lineTo(x + width / 2, y + height + arrowSize);
-  ctx.lineTo(x + width / 2 + arrowSize, y + height);
-  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
-  ctx.lineTo(x + width, y + radius);
-  ctx.arcTo(x + width, y, x + width - radius, y, radius);
-  ctx.lineTo(x + radius, y);
-  ctx.arcTo(x, y, x, y + radius, radius);
-
-  ctx.stroke();
-  ctx.fill();
-
-  ctx.restore();
-}
 
 /**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
@@ -430,9 +176,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       y: 0
     };
 
-    // Calling `calculateCanvasPosition` anyway since the highlighter could be initialized
+    // Calling `getCanvasPosition` anyway since the highlighter could be initialized
     // on a page that has scrolled already.
-    this.calculateCanvasPosition();
+    let { canvasX, canvasY } = getCanvasPosition(this._canvasPosition, this._scroll,
+      this.win, this._winDimensions);
+    this._canvasPosition.x = canvasX;
+    this._canvasPosition.y = canvasY;
   }
 
   _buildMarkup() {
@@ -760,7 +509,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
   }
 
   _show() {
-    if (Services.prefs.getBoolPref(CSS_GRID_ENABLED_PREF) && !this.isGrid()) {
+    if (!this.isGrid()) {
       this.hide();
       return false;
     }
@@ -901,14 +650,17 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Updates the <canvas> element's position and size.
     // It also clear the <canvas>'s drawing context.
-    this.updateCanvasElement();
+    updateCanvasElement(this.canvas, this._canvasPosition, this.win.devicePixelRatio);
 
     // Clear the grid area highlights.
     this.clearGridAreas();
     this.clearGridCell();
 
     // Update the current matrix used in our canvas' rendering
-    this.updateCurrentMatrix();
+    let { currentMatrix, hasNodeTransformations } = getCurrentMatrix(this.currentNode,
+      this.win);
+    this.currentMatrix = currentMatrix;
+    this.hasNodeTransformations = hasNodeTransformations;
 
     // Start drawing the grid fragments.
     for (let i = 0; i < this.gridData.length; i++) {
@@ -936,7 +688,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this._showGridElements();
 
     root.setAttribute("style",
-      `position:absolute; width:${width}px;height:${height}px; overflow:hidden`);
+      `position: absolute; width: ${width}px; height: ${height}px; overflow: hidden`);
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
     return true;
@@ -1020,132 +772,12 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * to give the illusion that it always covers the viewport.
    */
   _scrollUpdate() {
-    let hasPositionChanged = this.calculateCanvasPosition();
+    let { hasUpdated } = getCanvasPosition(this._canvasPosition, this._scroll, this.win,
+      this._winDimensions);
 
-    if (hasPositionChanged) {
+    if (hasUpdated) {
       this._update();
     }
-  }
-
-  /**
-   * This method is responsible to do the math that updates the <canvas>'s position,
-   * in accordance with the page's scroll, document's size, canvas size, and
-   * viewport's size.
-   * It's called when a page's scroll is detected.
-   *
-   * @return {Boolean} `true` if the <canvas> position was updated, `false` otherwise.
-   */
-  calculateCanvasPosition() {
-    let cssCanvasSize = CANVAS_SIZE / this.win.devicePixelRatio;
-    let viewportSize = getViewportDimensions(this.win);
-    let documentSize = this._winDimensions;
-    let pageX = this._scroll.x;
-    let pageY = this._scroll.y;
-    let canvasWidth = cssCanvasSize;
-    let canvasHeight = cssCanvasSize;
-    let hasUpdated = false;
-
-    // Those values indicates the relative horizontal and vertical space the page can
-    // scroll before we have to reposition the <canvas>; they're 1/4 of the delta between
-    // the canvas' size and the viewport's size: that's because we want to consider both
-    // sides (top/bottom, left/right; so 1/2 for each side) and also we don't want to
-    // shown the edges of the canvas in case of fast scrolling (to avoid showing undraw
-    // areas, therefore another 1/2 here).
-    let bufferSizeX = (canvasWidth - viewportSize.width) >> 2;
-    let bufferSizeY = (canvasHeight - viewportSize.height) >> 2;
-
-    let { x, y } = this._canvasPosition;
-
-    // Defines the boundaries for the canvas.
-    let topBoundary = 0;
-    let bottomBoundary = documentSize.height - canvasHeight;
-    let leftBoundary = 0;
-    let rightBoundary = documentSize.width - canvasWidth;
-
-    // Defines the thresholds that triggers the canvas' position to be updated.
-    let topThreshold = pageY - bufferSizeY;
-    let bottomThreshold = pageY - canvasHeight + viewportSize.height + bufferSizeY;
-    let leftThreshold = pageX - bufferSizeX;
-    let rightThreshold = pageX - canvasWidth + viewportSize.width + bufferSizeX;
-
-    if (y < bottomBoundary && y < bottomThreshold) {
-      this._canvasPosition.y = Math.min(topThreshold, bottomBoundary);
-      hasUpdated = true;
-    } else if (y > topBoundary && y > topThreshold) {
-      this._canvasPosition.y = Math.max(bottomThreshold, topBoundary);
-      hasUpdated = true;
-    }
-
-    if (x < rightBoundary && x < rightThreshold) {
-      this._canvasPosition.x = Math.min(leftThreshold, rightBoundary);
-      hasUpdated = true;
-    } else if (x > leftBoundary && x > leftThreshold) {
-      this._canvasPosition.x = Math.max(rightThreshold, leftBoundary);
-      hasUpdated = true;
-    }
-
-    return hasUpdated;
-  }
-
-  /**
-   * Updates the <canvas> element's style in accordance with the current window's
-   * devicePixelRatio, and the position calculated in `calculateCanvasPosition`; it also
-   * clears the drawing context.
-   */
-  updateCanvasElement() {
-    let size = CANVAS_SIZE / this.win.devicePixelRatio;
-    let { x, y } = this._canvasPosition;
-
-    // Resize the canvas taking the dpr into account so as to have crisp lines, and
-    // translating it to give the perception that it always covers the viewport.
-    this.canvas.setAttribute("style",
-      `width:${size}px;height:${size}px; transform: translate(${x}px, ${y}px);`);
-
-    this.ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-  }
-
-  /**
-   * Updates the current matrices for both canvas drawing and SVG, taking in account the
-   * following transformations, in this order:
-   *   1. The scale given by the display pixel ratio.
-   *   2. The translation to the top left corner of the element.
-   *   3. The scale given by the current zoom.
-   *   4. The translation given by the top and left padding of the element.
-   *   5. Any CSS transformation applied directly to the element (only 2D
-   *      transformation; the 3D transformation are flattened, see `dom-matrix-2d` module
-   *      for further details.)
-   *
-   *  The transformations of the element's ancestors are not currently computed (see
-   *  bug 1355675).
-   */
-  updateCurrentMatrix() {
-    let computedStyle = this.currentNode.ownerGlobal.getComputedStyle(this.currentNode);
-
-    let paddingTop = parseFloat(computedStyle.paddingTop);
-    let paddingLeft = parseFloat(computedStyle.paddingLeft);
-    let borderTop = parseFloat(computedStyle.borderTopWidth);
-    let borderLeft = parseFloat(computedStyle.borderLeftWidth);
-
-    let nodeMatrix = getNodeTransformationMatrix(this.currentNode,
-      this.win.document.documentElement);
-
-    let m = identity();
-
-    // First, we scale based on the device pixel ratio.
-    m = multiply(m, scale(this.win.devicePixelRatio));
-    // Then, we apply the current node's transformation matrix, relative to the
-    // inspected window's root element, but only if it's not a identity matrix.
-    if (isIdentity(nodeMatrix)) {
-      this.hasNodeTransformations = false;
-    } else {
-      m = multiply(m, nodeMatrix);
-      this.hasNodeTransformations = true;
-    }
-
-    // Finally, we translate the origin based on the node's padding and border values.
-    m = multiply(m, translate(paddingLeft + borderLeft, paddingTop + borderTop));
-
-    this.currentMatrix = m;
   }
 
   getFirstRowLinePos(fragment) {
