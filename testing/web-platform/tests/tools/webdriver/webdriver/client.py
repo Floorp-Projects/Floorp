@@ -625,6 +625,10 @@ class Element(object):
         assert id not in self.session._element_cache
         self.session._element_cache[self.id] = self
 
+    def __eq__(self, other):
+        return isinstance(other, Element) and self.id == other.id \
+                and self.session == other.session
+
     def send_element_command(self, method, uri, body=None):
         url = "element/%s/%s" % (self.id, uri)
         return self.session.send_session_command(method, url, body)
