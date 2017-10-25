@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.tests;
 
-public class testPromptGridInput extends BaseTest {
+public class testPromptGridInput extends OldBaseTest {
     protected int index = 1;
     public void testPromptGridInput() {
         blockForGeckoReady();

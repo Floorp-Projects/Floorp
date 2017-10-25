@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import BaseHTTPServer
 import SimpleHTTPServer
 import errno
@@ -323,7 +325,7 @@ def main(args=sys.argv[1:]):
     # create the server
     server = MozHttpd(host=host, port=options.port, docroot=options.docroot)
 
-    print "Serving '%s' at %s:%s" % (server.docroot, server.host, server.port)
+    print("Serving '%s' at %s:%s" % (server.docroot, server.host, server.port))
     server.start(block=True)
 
 

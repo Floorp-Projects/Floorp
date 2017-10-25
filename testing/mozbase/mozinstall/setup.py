@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
 
 import os
 from setuptools import setup
@@ -12,11 +13,12 @@ try:
 except IOError:
     description = None
 
-PACKAGE_VERSION = '1.13'
+PACKAGE_VERSION = '1.14'
 
 deps = ['mozinfo >= 0.7',
         'mozfile >= 1.0',
         'requests',
+        'six >= 1.10.0',
         ]
 
 setup(name='mozInstall',

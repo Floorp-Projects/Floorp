@@ -168,12 +168,8 @@
 /* download start animation */
 
 #downloads-notification-anchor {
-  width: 42px;
-  /* Height is equal to height of each frame in the SVG animation
-     Use of min/max-height instead of height is to avoid an
-     assertion for `inline-size less than zero..` (bug 1379332). */
-  min-height: 98px;
-  max-height: 98px;
+  width: 42px; /* Width of each frame within the SVG sprite */
+  height: 98px; /* Height of each frame within the SVG sprite */
   overflow: hidden;
   /* animation is not directional and shouldn't be reversed in RTL */
   direction: ltr;

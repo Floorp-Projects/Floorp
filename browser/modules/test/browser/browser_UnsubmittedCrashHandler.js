@@ -199,11 +199,17 @@ add_task(async function setup() {
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
   // nsBrowserGlue starts up UnsubmittedCrashHandler automatically
-  // so at this point, it is initialized. It's possible that it
-  // was initialized, but is preffed off, so it's inert, so we
-  // shut it down, make sure it's preffed on, and then restart it.
-  // Note that making the component initialize even when it's
-  // disabled is an intentional choice, as this allows for easier
+  // on a timer, so at this point, it can be in one of several states:
+  //
+  // 1. The timer hasn't yet finished, and an automatic scan for crash
+  //    reports is pending.
+  // 2. The timer has already gone off and the scan has already completed.
+  // 3. The handler is disabled.
+  //
+  // To collapse all of these possibilities, we uninit the UnsubmittedCrashHandler
+  // to cancel the timer, make sure it's preffed on, and then restart it (which
+  // doesn't restart the timer). Note that making the component initialize
+  // even when it's disabled is an intentional choice, as this allows for easier
   // simulation of startup and shutdown.
   UnsubmittedCrashHandler.uninit();
 

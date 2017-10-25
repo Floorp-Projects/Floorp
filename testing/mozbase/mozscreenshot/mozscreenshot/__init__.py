@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import mozinfo
 import tempfile
@@ -16,7 +18,7 @@ def printstatus(name, returncode):
     Note that mozlog structured action "process_exit" should be used
     instead of that in new code.
     """
-    print "TEST-INFO | %s: %s" % (name, strstatus(returncode))
+    print("TEST-INFO | %s: %s" % (name, strstatus(returncode)))
 
 
 def dump_screen(utilityPath, log):
@@ -56,6 +58,6 @@ def dump_screen(utilityPath, log):
             log.process_exit(utilityname, returncode)
         else:
             printstatus(utilityname, returncode)
-    except OSError, err:
+    except OSError as err:
         log.info("Failed to start %s for screenshot: %s"
                  % (utility[0], err.strerror))

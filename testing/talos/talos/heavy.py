@@ -57,8 +57,10 @@ def follow_redirects(url, max=3):
         page = requests.head(location)
     if page.status_code == 303 and current == max:
         raise ValueError("Max redirects Reached")
-    last_modified = page.headers['Last-Modified']
-    last_modified = datetime.datetime(*parsedate(last_modified)[:6])
+
+    last_modified = page.headers.get('Last-Modified', None)
+    if last_modified is not None:
+        last_modified = datetime.datetime(*parsedate(last_modified)[:6])
     return location, last_modified
 
 

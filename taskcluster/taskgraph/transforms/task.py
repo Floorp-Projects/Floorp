@@ -113,7 +113,13 @@ task_description_schema = Schema({
     # if omitted, the build will not be indexed.
     Optional('index'): {
         # the name of the product this build produces
-        'product': Any('firefox', 'mobile', 'static-analysis', 'devedition'),
+        'product': Any(
+            'firefox',
+            'mobile',
+            'static-analysis',
+            'devedition',
+            'source',
+        ),
 
         # the names to use for this job in the TaskCluster index
         'job-name': basestring,

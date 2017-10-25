@@ -3261,15 +3261,16 @@ fn static_assert() {
                              data.longhands_by_name["animation-play-state"].keyword)}
 
     pub fn set_animation_iteration_count<I>(&mut self, v: I)
-        where I: IntoIterator<Item = longhands::animation_iteration_count::computed_value::single_value::T>,
-              I::IntoIter: ExactSizeIterator + Clone
+    where
+        I: IntoIterator<Item = values::computed::AnimationIterationCount>,
+        I::IntoIter: ExactSizeIterator + Clone
     {
         use std::f32;
-        use properties::longhands::animation_iteration_count::single_value::SpecifiedValue as AnimationIterationCount;
+        use values::generics::box_::AnimationIterationCount;
 
         let v = v.into_iter();
 
-        debug_assert!(v.len() != 0);
+        debug_assert_ne!(v.len(), 0);
         let input_len = v.len();
         unsafe { self.gecko.mAnimations.ensure_len(input_len) };
 
@@ -3281,10 +3282,12 @@ fn static_assert() {
             }
         }
     }
-    pub fn animation_iteration_count_at(&self, index: usize)
-        -> longhands::animation_iteration_count::computed_value::SingleComputedValue {
-        use properties::longhands::animation_iteration_count::single_value::computed_value::T
-            as AnimationIterationCount;
+
+    pub fn animation_iteration_count_at(
+        &self,
+        index: usize,
+    ) -> values::computed::AnimationIterationCount {
+        use values::generics::box_::AnimationIterationCount;
 
         if self.gecko.mAnimations[index].mIterationCount.is_infinite() {
             AnimationIterationCount::Infinite
@@ -3292,6 +3295,7 @@ fn static_assert() {
             AnimationIterationCount::Number(self.gecko.mAnimations[index].mIterationCount)
         }
     }
+
     ${impl_animation_count('iteration_count', 'IterationCount')}
     ${impl_copy_animation_value('iteration_count', 'IterationCount')}
 
@@ -3659,7 +3663,7 @@ fn static_assert() {
     %>
 
     <%self:simple_image_array_property name="repeat" shorthand="${shorthand}" field_name="mRepeat">
-        use properties::longhands::${shorthand}_repeat::single_value::computed_value::RepeatKeyword;
+        use values::specified::background::RepeatKeyword;
         use gecko_bindings::structs::nsStyleImageLayers_Repeat;
         use gecko_bindings::structs::StyleImageLayerRepeat;
 
@@ -3682,7 +3686,7 @@ fn static_assert() {
 
     pub fn clone_${shorthand}_repeat(&self) -> longhands::${shorthand}_repeat::computed_value::T {
         use properties::longhands::${shorthand}_repeat::single_value::computed_value::T;
-        use properties::longhands::${shorthand}_repeat::single_value::computed_value::RepeatKeyword;
+        use values::specified::background::RepeatKeyword;
         use gecko_bindings::structs::StyleImageLayerRepeat;
 
         fn to_servo(repeat: StyleImageLayerRepeat) -> RepeatKeyword {

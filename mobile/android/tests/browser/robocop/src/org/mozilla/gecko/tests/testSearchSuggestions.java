@@ -19,7 +19,7 @@ import com.robotium.solo.Condition;
  * Sends queries from AwesomeBar input and verifies that suggestions match
  * expected values.
  */
-public class testSearchSuggestions extends BaseTest {
+public class testSearchSuggestions extends OldBaseTest {
     private static final int SUGGESTION_MAX = 3;
     private static final int SUGGESTION_TIMEOUT = 15000;
 

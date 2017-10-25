@@ -130,7 +130,7 @@ public:
       return NS_ERROR_NOT_INITIALIZED;
     }
     if (sizeof(T) > mPayloadMaxLen ||
-        T::identifier <= RESERVED_CODE_LAST) {
+        (int)T::identifier <= (int)RESERVED_CODE_LAST) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
     if (::WaitForSingleObject(mGuard, mTimeout) != WAIT_OBJECT_0) {
@@ -300,7 +300,7 @@ protected:
       return NS_ERROR_NOT_INITIALIZED;
     }
     if (sizeof(T) > mPayloadMaxLen ||
-        T::identifier > RESERVED_CODE_LAST) {
+        (int)T::identifier > (int)RESERVED_CODE_LAST) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
     mWriteHeader->mId = T::identifier;

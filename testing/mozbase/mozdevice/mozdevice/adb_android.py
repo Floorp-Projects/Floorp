@@ -2,15 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import re
 import time
 
 from abc import ABCMeta
 
-import version_codes
+from . import version_codes
 
-from adb import ADBDevice, ADBError, ADBRootError
+from .adb import ADBDevice, ADBError, ADBRootError
 
 
 class ADBAndroid(ADBDevice):
@@ -22,9 +24,9 @@ class ADBAndroid(ADBDevice):
        from mozdevice import ADBAndroid
 
        adbdevice = ADBAndroid()
-       print adbdevice.list_files("/mnt/sdcard")
+       print(adbdevice.list_files("/mnt/sdcard"))
        if adbdevice.process_exist("org.mozilla.fennec"):
-           print "Fennec is running"
+           print("Fennec is running")
     """
     __metaclass__ = ABCMeta
 
@@ -90,7 +92,7 @@ class ADBAndroid(ADBDevice):
             if self.shell_output('getenforce', timeout=timeout) != 'Permissive':
                 self._logger.info('Setting SELinux Permissive Mode')
                 self.shell_output("setenforce Permissive", timeout=timeout, root=True)
-        except (ADBError, ADBRootError), e:
+        except (ADBError, ADBRootError) as e:
             self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
             self.selinux = False
 

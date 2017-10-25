@@ -75,7 +75,7 @@ template<typename... Ts>
 inline bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, Ts&&... aArgs)
 {
-  binding_detail::ThrowErrorMessage(aCx, static_cast<const unsigned>(aErrorNumber),
+  binding_detail::ThrowErrorMessage(aCx, static_cast<unsigned>(aErrorNumber),
                                     mozilla::Forward<Ts>(aArgs)...);
   return false;
 }

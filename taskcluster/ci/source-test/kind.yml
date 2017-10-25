@@ -13,6 +13,7 @@ transforms:
 jobs-from:
    - cram.yml
    - doc.yml
+   - file-metadata.yml
    - mocha.yml
    - mozlint.yml
    - python.yml

@@ -253,17 +253,16 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  /* Position the toolbar above the bottom of background tabs */
+  /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
-  z-index: 1;
 }
 
 #nav-bar {
-  border-top: 1px solid var(--tabs-border) !important;
+  box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
 }
 @media (-moz-windows-compositor: 0) {
   #TabsToolbar[collapsed="true"] + #nav-bar {
-    border-top-style: none !important;
+    box-shadow: none;
   }
 }
 
@@ -777,7 +776,6 @@ html|span.ac-emphasize-text-url {
 #TabsToolbar {
   min-height: 0;
   padding: 0;
-  margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap)); /* overlap the nav-bar's top border */
 }
 
 %include ../shared/tabs.inc.css

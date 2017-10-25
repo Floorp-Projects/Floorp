@@ -663,9 +663,7 @@ impl MarionetteSession {
         }
 
         if let Some(error) = resp.error {
-            let status = self.error_from_string(&error.status);
-
-            return Err(WebDriverError::new(status, error.message));
+            return Err(error.into());
         }
 
         try!(self.update(msg, &resp));
@@ -967,38 +965,6 @@ impl MarionetteSession {
             Ok(new_cookie)
         }).collect::<Result<Vec<_>, _>>()
     }
-
-    pub fn error_from_string(&self, error_code: &str) -> ErrorStatus {
-        match error_code {
-            "element click intercepted" => ErrorStatus::ElementClickIntercepted,
-            "element not interactable" | "element not visible" => ErrorStatus::ElementNotInteractable,
-            "element not selectable" => ErrorStatus::ElementNotSelectable,
-            "insecure certificate" => ErrorStatus::InsecureCertificate,
-            "invalid argument" => ErrorStatus::InvalidArgument,
-            "invalid cookie domain" => ErrorStatus::InvalidCookieDomain,
-            "invalid coordinates" | "invalid element coordinates" => ErrorStatus::InvalidCoordinates,
-            "invalid element state" => ErrorStatus::InvalidElementState,
-            "invalid selector" => ErrorStatus::InvalidSelector,
-            "invalid session id" => ErrorStatus::InvalidSessionId,
-            "javascript error" => ErrorStatus::JavascriptError,
-            "move target out of bounds" => ErrorStatus::MoveTargetOutOfBounds,
-            "no such alert" => ErrorStatus::NoSuchAlert,
-            "no such element" => ErrorStatus::NoSuchElement,
-            "no such frame" => ErrorStatus::NoSuchFrame,
-            "no such window" => ErrorStatus::NoSuchWindow,
-            "script timeout" => ErrorStatus::ScriptTimeout,
-            "session not created" => ErrorStatus::SessionNotCreated,
-            "stale element reference" => ErrorStatus::StaleElementReference,
-            "timeout" => ErrorStatus::Timeout,
-            "unable to capture screen" => ErrorStatus::UnableToCaptureScreen,
-            "unable to set cookie" => ErrorStatus::UnableToSetCookie,
-            "unexpected alert open" => ErrorStatus::UnexpectedAlertOpen,
-            "unknown command" => ErrorStatus::UnknownCommand,
-            "unknown error" => ErrorStatus::UnknownError,
-            "unsupported operation" => ErrorStatus::UnsupportedOperation,
-            _ => ErrorStatus::UnknownError,
-        }
-    }
 }
 
 pub struct MarionetteCommand {
@@ -1254,56 +1220,61 @@ impl ToJson for MarionetteResponse {
 
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct MarionetteError {
-    pub status: String,
+    pub code: String,
     pub message: String,
     pub stacktrace: Option<String>
 }
 
 impl MarionetteError {
-    fn new(status: String, message: String, stacktrace: Option<String>) -> MarionetteError {
-        MarionetteError {
-            status: status,
-            message: message,
-            stacktrace: stacktrace
-        }
-    }
-
     fn from_json(data: &Json) -> WebDriverResult<MarionetteError> {
         if !data.is_object() {
             return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                            "Expected an error object"));
         }
-        let status = try_opt!(
+
+        let code = try_opt!(
             try_opt!(data.find("error"),
                      ErrorStatus::UnknownError,
-                     "Error value has no status").as_string(),
+                     "Error value has no error code").as_string(),
             ErrorStatus::UnknownError,
             "Error status was not a string").into();
-
         let message = try_opt!(
             try_opt!(data.find("message"),
                      ErrorStatus::UnknownError,
                      "Error value has no message").as_string(),
             ErrorStatus::UnknownError,
             "Error message was not a string").into();
-
         let stacktrace = match data.find("stacktrace") {
             None | Some(&Json::Null) => None,
             Some(x) => Some(try_opt!(x.as_string(),
                                      ErrorStatus::UnknownError,
                                      "Error message was not a string").into()),
         };
-        Ok(MarionetteError::new(status, message, stacktrace))
+
+        Ok(MarionetteError { code, message, stacktrace })
     }
 }
 
 impl ToJson for MarionetteError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("status".into(), self.status.to_json());
+        data.insert("error".into(), self.code.to_json());
         data.insert("message".into(), self.message.to_json());
         data.insert("stacktrace".into(), self.stacktrace.to_json());
         Json::Object(data)
+    }
+}
+
+impl Into<WebDriverError> for MarionetteError {
+    fn into(self) -> WebDriverError {
+        let status = ErrorStatus::from(self.code);
+        let message = self.message;
+
+        if let Some(stack) = self.stacktrace {
+            WebDriverError::new_with_stack(status, message, stack)
+        } else {
+            WebDriverError::new(status, message)
+        }
     }
 }
 
