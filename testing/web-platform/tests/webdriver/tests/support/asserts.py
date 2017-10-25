@@ -1,5 +1,4 @@
-from webdriver.client import Element, element_key
-from webdriver.error import WebDriverException
+from webdriver import Element, WebDriverException
 
 # WebDriver specification ID: dfn-error-response-data
 errors = {
@@ -105,10 +104,10 @@ def assert_same_element(session, a, b):
     """Verify that two element references describe the same element."""
     assert isinstance(a, dict), "Actual value is not a dictionary"
     assert isinstance(b, dict), "Expected value is not a dictionary"
-    assert element_key in a, "Actual value does not describe an element"
-    assert element_key in b, "Expected value does not describe an element"
+    assert Element.identifier in a, "Actual value does not describe an element"
+    assert Element.identifier in b, "Expected value does not describe an element"
 
-    if a[element_key] == b[element_key]:
+    if a[Element.identifier] == b[Element.identifier]:
         return
 
     message = ("Expected element references to describe the same element, " +
