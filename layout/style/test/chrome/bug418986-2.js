@@ -4,8 +4,6 @@
 /* jshint loopfunc:true */
 /* global window, screen, ok, SpecialPowers, matchMedia */
 
-const is_chrome_window = window.location.protocol === "chrome:";
-
 // Expected values. Format: [name, pref_off_value, pref_on_value]
 // If pref_*_value is an array with two values, then we will match
 // any value in between those two values. If a value is null, then
@@ -54,7 +52,11 @@ var suppressed_toggles = [
 ];
 
 var toggles_enabled_in_content = [
+  "-moz-mac-graphite-theme",
   "-moz-touch-enabled",
+  "-moz-windows-compositor",
+  "-moz-windows-default-theme",
+  "-moz-windows-glass",
 ];
 
 // Possible values for '-moz-os-version'
@@ -83,6 +85,7 @@ var OS = SpecialPowers.Services.appinfo.OS;
 // available on that OS.
 if (OS === "WINNT") {
   suppressed_toggles.push("-moz-windows-classic");
+  toggles_enabled_in_content.push("-moz-windows-classic");
 }
 
 // __keyValMatches(key, val)__.
@@ -110,7 +113,7 @@ var testToggles = function (resisting) {
   suppressed_toggles.forEach(
     function (key) {
       var exists = keyValMatches(key, 0) || keyValMatches(key, 1);
-      if (resisting || (toggles_enabled_in_content.indexOf(key) === -1 && !is_chrome_window)) {
+      if (resisting || toggles_enabled_in_content.indexOf(key) === -1) {
          ok(!exists, key + " should not exist.");
       } else {
          ok(exists, key + " should exist.");
@@ -127,7 +130,7 @@ var testWindowsSpecific = function (resisting, queryName, possibleValues) {
       foundValue = val;
     }
   });
-  if (resisting || !is_chrome_window) {
+  if (resisting) {
     ok(!foundValue, queryName + " should have no match");
   } else {
     ok(foundValue, foundValue ? ("Match found: '" + queryName + ":" + foundValue + "'")
@@ -199,6 +202,7 @@ var suppressedMediaQueryCSSLine = function (key, color, suppressed) {
 // expected value, then the element will be colored green.
 var generateCSSLines = function (resisting) {
   let lines = ".spoof { background-color: red;}\n";
+  let is_chrome_window = window.location.protocol === "chrome:";
   expected_values.forEach(
     function ([key, offVal, onVal]) {
       lines += mediaQueryCSSLine(key, resisting ? onVal : offVal, "green");
