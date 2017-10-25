@@ -6,7 +6,7 @@
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
             getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForMasterPasswordDialog,
-            getNotification, getDoorhangerButton */
+            getNotification, getDoorhangerButton, removeAllRecords */
 
 "use strict";
 
@@ -287,7 +287,7 @@ function waitForMasterPasswordDialog(login = false) {
   });
 }
 
-registerCleanupFunction(async function() {
+async function removeAllRecords() {
   let addresses = await getAddresses();
   if (addresses.length) {
     await removeAddresses(addresses.map(address => address.guid));
@@ -297,4 +297,6 @@ registerCleanupFunction(async function() {
   if (creditCards.length) {
     await removeCreditCards(creditCards.map(cc => cc.guid));
   }
-});
+}
+
+registerCleanupFunction(removeAllRecords);
