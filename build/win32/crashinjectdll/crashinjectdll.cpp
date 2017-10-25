@@ -24,7 +24,7 @@ BOOL WINAPI DllMain(
   LPVOID lpvReserved
 )
 {
-  if (tid == -1)
+  if (tid == (DWORD)-1)
     // we have to crash on another thread because LoadLibrary() will
     // catch memory access errors and return failure to the calling process
     CreateThread(
