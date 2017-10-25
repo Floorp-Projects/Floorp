@@ -4411,8 +4411,7 @@ js::LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent, HandleVa
 {
     MOZ_ASSERT(fun->isArrow());
 
-    JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent, nullptr,
-                                                          TenuredObject);
+    JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
     if (!clone)
         return nullptr;
 

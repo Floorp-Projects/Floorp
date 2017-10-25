@@ -178,6 +178,11 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
                         help="port of remote device to test")
         defaults["device_port"] = 20701
 
+        self.add_option("--adbPath", action="store",
+                        type="string", dest="adb_path",
+                        help="Path to adb")
+        defaults["adb_path"] = None
+
         self.add_option("--noSetup", action="store_false",
                         dest="setup",
                         help="do not copy any files to device (to be used only if "
@@ -238,6 +243,8 @@ def run_test_harness(options, args):
         if options.device_ip:
             dm_args['host'] = options.device_ip
             dm_args['port'] = options.device_port
+        if options.adb_path:
+            dm_args['adbPath'] = options.adb_path
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             dm_args['logLevel'] = logging.DEBUG # noqa python 2 / 3
         dm = devicemanagerADB.DeviceManagerADB(**dm_args)

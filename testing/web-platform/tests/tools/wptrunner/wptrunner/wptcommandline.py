@@ -74,6 +74,9 @@ scheme host and port.""")
     mode_group.add_argument("--list-tests", action="store_true",
                             default=False,
                             help="List all tests that will run")
+    mode_group.add_argument("--verify", action="store_true",
+                            default=False,
+                            help="Run a stability check on the selected tests")
 
     test_selection_group = parser.add_argument_group("Test Selection")
     test_selection_group.add_argument("--test-types", action="store",
@@ -93,8 +96,10 @@ scheme host and port.""")
     debugging_group.add_argument('--debugger', const="__default__", nargs="?",
                                  help="run under a debugger, e.g. gdb or valgrind")
     debugging_group.add_argument('--debugger-args', help="arguments to the debugger")
+    debugging_group.add_argument("--rerun", action="store", type=int, default=1,
+                                 help="Number of times to re run each test without restarts")
     debugging_group.add_argument("--repeat", action="store", type=int, default=1,
-                                 help="Number of times to run the tests")
+                                 help="Number of times to run the tests, restarting between each run")
     debugging_group.add_argument("--repeat-until-unexpected", action="store_true", default=None,
                                  help="Run tests in a loop until one returns an unexpected result")
     debugging_group.add_argument('--pause-after-test', action="store_true", default=None,

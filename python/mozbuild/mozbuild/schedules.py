@@ -17,7 +17,7 @@ INCLUSIVE_COMPONENTS = [
     'yaml-lint',
     # test suites that only run when certain files have changed
     'jittest',
-    'test-verification',
+    'test-verify',
     # test flavors (narrower than suites)
     'jsreftest',
 ]

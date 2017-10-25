@@ -1129,15 +1129,14 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
       dirtyRectRelativeToDirtyFrame =
         nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
+      visible = dirtyRectRelativeToDirtyFrame;
 #ifdef MOZ_WIDGET_ANDROID
     } else {
       dirtyRectRelativeToDirtyFrame =
         nsRect(nsPoint(0, 0), aDirtyFrame->GetSize());
+      visible = dirtyRectRelativeToDirtyFrame;
 #endif
     }
-    // TODO: We probably don't want visible and dirty to be the same here, figure
-    // out what to do.
-    visible = dirtyRectRelativeToDirtyFrame;
   }
   nsPoint offset = aFrame->GetOffsetTo(aDirtyFrame);
   visible -= offset;

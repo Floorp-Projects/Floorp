@@ -2884,6 +2884,36 @@ js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString patt
     return BuildFlatReplacement(cx, string, repl, match, patternLength);
 }
 
+static ArrayObject*
+NewFullyAllocatedStringArray(JSContext* cx, HandleObjectGroup group, uint32_t length)
+{
+    ArrayObject* array = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+    if (!array)
+        return nullptr;
+
+    // Only string values will be added to this array. Inform TI early about
+    // the element type, so we can directly initialize all elements using
+    // NativeObject::initDenseElement() instead of the slightly more expensive
+    // NativeObject::initDenseElementWithType() method.
+    // Since this function is never called to create a zero-length array, it's
+    // always necessary and correct to call AddTypePropertyId here.
+    MOZ_ASSERT(length > 0);
+    AddTypePropertyId(cx, array, JSID_VOID, TypeSet::StringType());
+
+    return array;
+}
+
+static ArrayObject*
+SingleElementStringArray(JSContext* cx, HandleObjectGroup group, HandleLinearString str)
+{
+    ArrayObject* array = NewFullyAllocatedStringArray(cx, group, 1);
+    if (!array)
+        return nullptr;
+    array->setDenseInitializedLength(1);
+    array->initDenseElement(0, StringValue(str));
+    return array;
+}
+
 // ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
 static ArrayObject*
 SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleLinearString sep,
@@ -2903,8 +2933,7 @@ SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleLinearS
             return NewFullyAllocatedArrayTryUseGroup(cx, group, 0);
 
         // Steps 12.c-e.
-        RootedValue v(cx, StringValue(str));
-        return NewCopiedArrayTryUseGroup(cx, group, v.address(), 1);
+        return SingleElementStringArray(cx, group, str);
     }
 
     // Step 3 (reordered).
@@ -2991,19 +3020,22 @@ CharSplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleObj
 
     js::StaticStrings& staticStrings = cx->staticStrings();
     uint32_t resultlen = (limit < strLength ? limit : strLength);
+    MOZ_ASSERT(limit > 0 && resultlen > 0,
+               "Neither limit nor strLength is zero, so resultlen is greater than zero.");
 
-    AutoValueVector splits(cx);
-    if (!splits.reserve(resultlen))
+    RootedArrayObject splits(cx, NewFullyAllocatedStringArray(cx, group, resultlen));
+    if (!splits)
         return nullptr;
+    splits->ensureDenseInitializedLength(cx, 0, resultlen);
 
     for (size_t i = 0; i < resultlen; ++i) {
         JSString* sub = staticStrings.getUnitStringForElement(cx, str, i);
         if (!sub)
             return nullptr;
-        splits.infallibleAppend(StringValue(sub));
+        splits->initDenseElement(i, StringValue(sub));
     }
 
-    return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
+    return splits;
 }
 
 template <typename TextChar>
@@ -3019,34 +3051,36 @@ SplitSingleCharHelper(JSContext* cx, HandleLinearString str, const TextChar* tex
     }
 
     // Handle zero-occurrence case - return input string in an array.
-    if (count == 0) {
-        RootedValue strValue(cx, StringValue(str.get()));
-        return NewCopiedArrayTryUseGroup(cx, group, &strValue.get(), 1);
-    }
+    if (count == 0)
+        return SingleElementStringArray(cx, group, str);
 
-    // Reserve memory for substring values.
-    AutoValueVector splits(cx);
-    if (!splits.reserve(count + 1))
+    // Create the result array for the substring values.
+    RootedArrayObject splits(cx, NewFullyAllocatedStringArray(cx, group, count + 1));
+    if (!splits)
         return nullptr;
+    splits->ensureDenseInitializedLength(cx, 0, count + 1);
 
     // Add substrings.
+    uint32_t splitsIndex = 0;
     size_t lastEndIndex = 0;
     for (size_t index = 0; index < textLen; index++) {
         if (static_cast<char16_t>(text[index]) == patCh) {
             size_t subLength = size_t(index - lastEndIndex);
             JSString* sub = NewDependentString(cx, str, lastEndIndex, subLength);
-            if (!sub || !splits.append(StringValue(sub)))
+            if (!sub)
                 return nullptr;
+            splits->initDenseElement(splitsIndex++, StringValue(sub));
             lastEndIndex = index + 1;
         }
     }
 
     // Add substring for tail of string (after last match).
     JSString* sub = NewDependentString(cx, str, lastEndIndex, textLen - lastEndIndex);
-    if (!sub || !splits.append(StringValue(sub)))
+    if (!sub)
         return nullptr;
+    splits->initDenseElement(splitsIndex++, StringValue(sub));
 
-    return NewCopiedArrayTryUseGroup(cx, group, splits.begin(), splits.length());
+    return splits;
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
@@ -3071,6 +3105,8 @@ ArrayObject*
 js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep,
                      uint32_t limit)
 {
+    MOZ_ASSERT(limit > 0, "Only called for strictly positive limit.");
+
     RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return nullptr;
