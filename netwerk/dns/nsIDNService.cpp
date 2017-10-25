@@ -123,9 +123,9 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
       mIDNUseWhitelist = val;
   }
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
-    nsAutoCString profile;
+    nsCString profile;
     if (NS_FAILED(prefBranch->GetCharPref(NS_NET_PREF_IDNRESTRICTION,
-                                          profile))) {
+                                          getter_Copies(profile)))) {
       profile.Truncate();
     }
     if (profile.EqualsLiteral("moderate")) {

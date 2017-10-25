@@ -137,10 +137,14 @@ URIMatchesPrefPattern(nsIURI *uri, const char *pref)
     return false;
   }
 
-  nsAutoCString hostList;
-  if (NS_FAILED(prefs->GetCharPref(pref, hostList)) || hostList.IsEmpty()) {
+  char *hostList;
+  if (NS_FAILED(prefs->GetCharPref(pref, &hostList)) || !hostList) {
     return false;
   }
+
+  struct FreePolicy { void operator()(void* p) { free(p); } };
+  mozilla::UniquePtr<char[], FreePolicy> hostListScope;
+  hostListScope.reset(hostList);
 
   // pseudo-BNF
   // ----------
