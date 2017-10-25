@@ -3696,30 +3696,33 @@ MediaDecoderStateMachine::GetDebugInfo()
   MOZ_ASSERT(OnTaskQueue());
   int64_t duration =
     mDuration.Ref() ? mDuration.Ref().ref().ToMicroseconds() : -1;
-  return nsPrintfCString(
-           "MediaDecoderStateMachine State: duration=%" PRId64
-           " GetMediaTime=%" PRId64 " GetClock="
-           "%" PRId64 " mMediaSink=%p state=%s mPlayState=%d "
-           "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
-           "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
-           " mDecodedVideoEndTime=%" PRId64 " mAudioCompleted=%d "
-           "mVideoCompleted=%d",
-           duration,
-           GetMediaTime().ToMicroseconds(),
-           mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1,
-           mMediaSink.get(),
-           ToStateStr(),
-           mPlayState.Ref(),
-           mSentFirstFrameLoadedEvent,
-           IsPlaying(),
-           AudioRequestStatus(),
-           VideoRequestStatus(),
-           mDecodedAudioEndTime.ToMicroseconds(),
-           mDecodedVideoEndTime.ToMicroseconds(),
-           mAudioCompleted,
-           mVideoCompleted) +
-         mStateObj->GetDebugInfo() + nsCString("\n") +
-         mMediaSink->GetDebugInfo();
+  auto str = nsPrintfCString(
+    "MediaDecoderStateMachine State: duration=%" PRId64 " GetMediaTime=%" PRId64
+    " GetClock="
+    "%" PRId64 " mMediaSink=%p state=%s mPlayState=%d "
+    "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
+    "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
+    " mDecodedVideoEndTime=%" PRId64 " mAudioCompleted=%d "
+    "mVideoCompleted=%d %s",
+    duration,
+    GetMediaTime().ToMicroseconds(),
+    mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1,
+    mMediaSink.get(),
+    ToStateStr(),
+    mPlayState.Ref(),
+    mSentFirstFrameLoadedEvent,
+    IsPlaying(),
+    AudioRequestStatus(),
+    VideoRequestStatus(),
+    mDecodedAudioEndTime.ToMicroseconds(),
+    mDecodedVideoEndTime.ToMicroseconds(),
+    mAudioCompleted,
+    mVideoCompleted,
+    mStateObj->GetDebugInfo().get());
+
+  AppendStringIfNotEmpty(str, mMediaSink->GetDebugInfo());
+
+  return str;
 }
 
 RefPtr<MediaDecoder::DebugInfoPromise>
