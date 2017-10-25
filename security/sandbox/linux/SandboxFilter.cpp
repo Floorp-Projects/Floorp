@@ -696,7 +696,6 @@ public:
     case __NR_getcwd:
     CASES_FOR_statfs:
     CASES_FOR_fstatfs:
-    case __NR_quotactl:
     CASES_FOR_fchown:
     case __NR_fchmod:
     case __NR_flock:
