@@ -8,8 +8,6 @@ from mozlog import get_default_logger
 
 logger = get_default_logger()
 
-element_key = "element-6066-11e4-a52e-4f735466cecf"
-
 
 def command(func):
     def inner(self, *args, **kwargs):
@@ -537,7 +535,7 @@ class Session(object):
             return self._element(data)
 
     def _element(self, data):
-        elem_id = data[element_key]
+        elem_id = data[Element.identifier]
         assert elem_id
         if elem_id in self._element_cache:
             return self._element_cache[elem_id]
@@ -604,6 +602,14 @@ class Session(object):
 
 
 class Element(object):
+    """
+    Representation of a web element.
+
+    A web element is an abstraction used to identify an element when
+    it is transported via the protocol, between remote- and local ends.
+    """
+    identifier = "element-6066-11e4-a52e-4f735466cecf"
+
     def __init__(self, session, id):
         self.session = session
         self.id = id
@@ -615,7 +621,7 @@ class Element(object):
         return self.session.send_session_command(method, url, body)
 
     def json(self):
-        return {element_key: self.id}
+        return {Element.identifier: self.id}
 
     @command
     def find_element(self, strategy, selector):
