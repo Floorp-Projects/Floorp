@@ -1113,6 +1113,10 @@ case "$target" in
 
 esac
 
+if test -z "$MOZ_OPTIMIZE_FLAGS"; then
+    MOZ_OPTIMIZE_FLAGS="-O"
+fi
+
 AC_SUBST_LIST(MMX_FLAGS)
 AC_SUBST_LIST(SSE_FLAGS)
 AC_SUBST_LIST(SSE2_FLAGS)
@@ -3709,9 +3713,6 @@ fi
 dnl ========================================================
 dnl = Enable code optimization. ON by default.
 dnl ========================================================
-if test -z "$MOZ_OPTIMIZE_FLAGS"; then
-    MOZ_OPTIMIZE_FLAGS="-O"
-fi
 
 MOZ_ARG_ENABLE_STRING(optimize,
 [  --disable-optimize      Disable compiler optimization
