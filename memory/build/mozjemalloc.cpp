@@ -1927,86 +1927,86 @@ pages_purge(void *addr, size_t length, bool force_zero)
 #endif
 }
 
-static void *
-chunk_recycle(size_t size, size_t alignment, bool *zeroed)
+static void*
+chunk_recycle(size_t size, size_t alignment, bool* zeroed)
 {
-	void *ret;
-	extent_node_t *node;
-	extent_node_t key;
-	size_t alloc_size, leadsize, trailsize;
-	ChunkType chunk_type;
+  void* ret;
+  extent_node_t* node;
+  extent_node_t key;
+  size_t alloc_size, leadsize, trailsize;
+  ChunkType chunk_type;
 
-	alloc_size = size + alignment - chunksize;
-	/* Beware size_t wrap-around. */
-	if (alloc_size < size)
-		return nullptr;
-	key.addr = nullptr;
-	key.size = alloc_size;
-	chunks_mtx.Lock();
-	node = gChunksBySize.SearchOrNext(&key);
-	if (!node) {
-		chunks_mtx.Unlock();
-		return nullptr;
-	}
-	leadsize = ALIGNMENT_CEILING((uintptr_t)node->addr, alignment) -
-	    (uintptr_t)node->addr;
-	MOZ_ASSERT(node->size >= leadsize + size);
-	trailsize = node->size - leadsize - size;
-	ret = (void *)((uintptr_t)node->addr + leadsize);
-	chunk_type = node->chunk_type;
-	if (zeroed) {
-		*zeroed = (chunk_type == ZEROED_CHUNK);
-	}
-	/* Remove node from the tree. */
-	gChunksBySize.Remove(node);
-	gChunksByAddress.Remove(node);
-	if (leadsize != 0) {
-		/* Insert the leading space as a smaller chunk. */
-		node->size = leadsize;
-		gChunksBySize.Insert(node);
-		gChunksByAddress.Insert(node);
-		node = nullptr;
-	}
-	if (trailsize != 0) {
-		/* Insert the trailing space as a smaller chunk. */
-		if (!node) {
-			/*
+  alloc_size = size + alignment - chunksize;
+  /* Beware size_t wrap-around. */
+  if (alloc_size < size)
+    return nullptr;
+  key.addr = nullptr;
+  key.size = alloc_size;
+  chunks_mtx.Lock();
+  node = gChunksBySize.SearchOrNext(&key);
+  if (!node) {
+    chunks_mtx.Unlock();
+    return nullptr;
+  }
+  leadsize =
+    ALIGNMENT_CEILING((uintptr_t)node->addr, alignment) - (uintptr_t)node->addr;
+  MOZ_ASSERT(node->size >= leadsize + size);
+  trailsize = node->size - leadsize - size;
+  ret = (void*)((uintptr_t)node->addr + leadsize);
+  chunk_type = node->chunk_type;
+  if (zeroed) {
+    *zeroed = (chunk_type == ZEROED_CHUNK);
+  }
+  /* Remove node from the tree. */
+  gChunksBySize.Remove(node);
+  gChunksByAddress.Remove(node);
+  if (leadsize != 0) {
+    /* Insert the leading space as a smaller chunk. */
+    node->size = leadsize;
+    gChunksBySize.Insert(node);
+    gChunksByAddress.Insert(node);
+    node = nullptr;
+  }
+  if (trailsize != 0) {
+    /* Insert the trailing space as a smaller chunk. */
+    if (!node) {
+      /*
 			 * An additional node is required, but
 			 * base_node_alloc() can cause a new base chunk to be
 			 * allocated.  Drop chunks_mtx in order to avoid
 			 * deadlock, and if node allocation fails, deallocate
 			 * the result before returning an error.
 			 */
-			chunks_mtx.Unlock();
-			node = base_node_alloc();
-			if (!node) {
-				chunk_dealloc(ret, size, chunk_type);
-				return nullptr;
-			}
-			chunks_mtx.Lock();
-		}
-		node->addr = (void *)((uintptr_t)(ret) + size);
-		node->size = trailsize;
-		node->chunk_type = chunk_type;
-		gChunksBySize.Insert(node);
-		gChunksByAddress.Insert(node);
-		node = nullptr;
-	}
+      chunks_mtx.Unlock();
+      node = base_node_alloc();
+      if (!node) {
+        chunk_dealloc(ret, size, chunk_type);
+        return nullptr;
+      }
+      chunks_mtx.Lock();
+    }
+    node->addr = (void*)((uintptr_t)(ret) + size);
+    node->size = trailsize;
+    node->chunk_type = chunk_type;
+    gChunksBySize.Insert(node);
+    gChunksByAddress.Insert(node);
+    node = nullptr;
+  }
 
-	recycled_size -= size;
+  recycled_size -= size;
 
-	chunks_mtx.Unlock();
+  chunks_mtx.Unlock();
 
-	if (node)
-		base_node_dealloc(node);
+  if (node)
+    base_node_dealloc(node);
 #ifdef MALLOC_DECOMMIT
-	pages_commit(ret, size);
-	// pages_commit is guaranteed to zero the chunk.
-	if (zeroed) {
-		*zeroed = true;
-	}
+  pages_commit(ret, size);
+  // pages_commit is guaranteed to zero the chunk.
+  if (zeroed) {
+    *zeroed = true;
+  }
 #endif
-	return (ret);
+  return (ret);
 }
 
 #ifdef XP_WIN
@@ -2028,43 +2028,43 @@ chunk_recycle(size_t size, size_t alignment, bool *zeroed)
  * guaranteed to be full of zeroes. It can be omitted when the caller doesn't
  * care about the result.
  */
-static void *
-chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
+static void*
+chunk_alloc(size_t size, size_t alignment, bool base, bool* zeroed)
 {
-	void *ret;
+  void* ret;
 
-	MOZ_ASSERT(size != 0);
-	MOZ_ASSERT((size & chunksize_mask) == 0);
-	MOZ_ASSERT(alignment != 0);
-	MOZ_ASSERT((alignment & chunksize_mask) == 0);
+  MOZ_ASSERT(size != 0);
+  MOZ_ASSERT((size & chunksize_mask) == 0);
+  MOZ_ASSERT(alignment != 0);
+  MOZ_ASSERT((alignment & chunksize_mask) == 0);
 
-	// Base allocations can't be fulfilled by recycling because of
-	// possible deadlock or infinite recursion.
-	if (CAN_RECYCLE(size) && !base) {
-		ret = chunk_recycle(size, alignment, zeroed);
-		if (ret)
-			goto RETURN;
-	}
-	ret = chunk_alloc_mmap(size, alignment);
-	if (zeroed)
-		*zeroed = true;
-	if (ret) {
-		goto RETURN;
-	}
+  // Base allocations can't be fulfilled by recycling because of
+  // possible deadlock or infinite recursion.
+  if (CAN_RECYCLE(size) && !base) {
+    ret = chunk_recycle(size, alignment, zeroed);
+    if (ret)
+      goto RETURN;
+  }
+  ret = chunk_alloc_mmap(size, alignment);
+  if (zeroed)
+    *zeroed = true;
+  if (ret) {
+    goto RETURN;
+  }
 
-	/* All strategies for allocation failed. */
-	ret = nullptr;
+  /* All strategies for allocation failed. */
+  ret = nullptr;
 RETURN:
 
-	if (ret && base == false) {
-		if (!gChunkRTree.Set(ret, ret)) {
-			chunk_dealloc(ret, size, UNKNOWN_CHUNK);
-			return nullptr;
-		}
-	}
+  if (ret && base == false) {
+    if (!gChunkRTree.Set(ret, ret)) {
+      chunk_dealloc(ret, size, UNKNOWN_CHUNK);
+      return nullptr;
+    }
+  }
 
-	MOZ_ASSERT(CHUNK_ADDR2BASE(ret) == ret);
-	return (ret);
+  MOZ_ASSERT(CHUNK_ADDR2BASE(ret) == ret);
+  return (ret);
 }
 
 static void
@@ -2086,130 +2086,129 @@ chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed)
 }
 
 static void
-chunk_record(void *chunk, size_t size, ChunkType chunk_type)
+chunk_record(void* chunk, size_t size, ChunkType chunk_type)
 {
-	extent_node_t *xnode, *node, *prev, *xprev, key;
+  extent_node_t *xnode, *node, *prev, *xprev, key;
 
-	if (chunk_type != ZEROED_CHUNK) {
-		if (pages_purge(chunk, size, chunk_type == HUGE_CHUNK)) {
-			chunk_type = ZEROED_CHUNK;
-		}
-	}
+  if (chunk_type != ZEROED_CHUNK) {
+    if (pages_purge(chunk, size, chunk_type == HUGE_CHUNK)) {
+      chunk_type = ZEROED_CHUNK;
+    }
+  }
 
-	/*
+  /*
 	 * Allocate a node before acquiring chunks_mtx even though it might not
 	 * be needed, because base_node_alloc() may cause a new base chunk to
 	 * be allocated, which could cause deadlock if chunks_mtx were already
 	 * held.
 	 */
-	xnode = base_node_alloc();
-	/* Use xprev to implement conditional deferred deallocation of prev. */
-	xprev = nullptr;
+  xnode = base_node_alloc();
+  /* Use xprev to implement conditional deferred deallocation of prev. */
+  xprev = nullptr;
 
-	chunks_mtx.Lock();
-	key.addr = (void *)((uintptr_t)chunk + size);
-	node = gChunksByAddress.SearchOrNext(&key);
-	/* Try to coalesce forward. */
-	if (node && node->addr == key.addr) {
-		/*
+  chunks_mtx.Lock();
+  key.addr = (void*)((uintptr_t)chunk + size);
+  node = gChunksByAddress.SearchOrNext(&key);
+  /* Try to coalesce forward. */
+  if (node && node->addr == key.addr) {
+    /*
 		 * Coalesce chunk with the following address range.  This does
 		 * not change the position within chunks_ad, so only
 		 * remove/insert from/into chunks_szad.
 		 */
-		gChunksBySize.Remove(node);
-		node->addr = chunk;
-		node->size += size;
-		if (node->chunk_type != chunk_type) {
-			node->chunk_type = RECYCLED_CHUNK;
-		}
-		gChunksBySize.Insert(node);
-	} else {
-		/* Coalescing forward failed, so insert a new node. */
-		if (!xnode) {
-			/*
+    gChunksBySize.Remove(node);
+    node->addr = chunk;
+    node->size += size;
+    if (node->chunk_type != chunk_type) {
+      node->chunk_type = RECYCLED_CHUNK;
+    }
+    gChunksBySize.Insert(node);
+  } else {
+    /* Coalescing forward failed, so insert a new node. */
+    if (!xnode) {
+      /*
 			 * base_node_alloc() failed, which is an exceedingly
 			 * unlikely failure.  Leak chunk; its pages have
 			 * already been purged, so this is only a virtual
 			 * memory leak.
 			 */
-			goto label_return;
-		}
-		node = xnode;
-		xnode = nullptr; /* Prevent deallocation below. */
-		node->addr = chunk;
-		node->size = size;
-		node->chunk_type = chunk_type;
-		gChunksByAddress.Insert(node);
-		gChunksBySize.Insert(node);
-	}
+      goto label_return;
+    }
+    node = xnode;
+    xnode = nullptr; /* Prevent deallocation below. */
+    node->addr = chunk;
+    node->size = size;
+    node->chunk_type = chunk_type;
+    gChunksByAddress.Insert(node);
+    gChunksBySize.Insert(node);
+  }
 
-	/* Try to coalesce backward. */
-	prev = gChunksByAddress.Prev(node);
-	if (prev && (void *)((uintptr_t)prev->addr + prev->size) ==
-	    chunk) {
-		/*
+  /* Try to coalesce backward. */
+  prev = gChunksByAddress.Prev(node);
+  if (prev && (void*)((uintptr_t)prev->addr + prev->size) == chunk) {
+    /*
 		 * Coalesce chunk with the previous address range.  This does
 		 * not change the position within chunks_ad, so only
 		 * remove/insert node from/into chunks_szad.
 		 */
-		gChunksBySize.Remove(prev);
-		gChunksByAddress.Remove(prev);
+    gChunksBySize.Remove(prev);
+    gChunksByAddress.Remove(prev);
 
-		gChunksBySize.Remove(node);
-		node->addr = prev->addr;
-		node->size += prev->size;
-		if (node->chunk_type != prev->chunk_type) {
-			node->chunk_type = RECYCLED_CHUNK;
-		}
-		gChunksBySize.Insert(node);
+    gChunksBySize.Remove(node);
+    node->addr = prev->addr;
+    node->size += prev->size;
+    if (node->chunk_type != prev->chunk_type) {
+      node->chunk_type = RECYCLED_CHUNK;
+    }
+    gChunksBySize.Insert(node);
 
-		xprev = prev;
-	}
+    xprev = prev;
+  }
 
-	recycled_size += size;
+  recycled_size += size;
 
 label_return:
-	chunks_mtx.Unlock();
-	/*
+  chunks_mtx.Unlock();
+  /*
 	 * Deallocate xnode and/or xprev after unlocking chunks_mtx in order to
 	 * avoid potential deadlock.
 	 */
-	if (xnode)
-		base_node_dealloc(xnode);
-	if (xprev)
-		base_node_dealloc(xprev);
+  if (xnode)
+    base_node_dealloc(xnode);
+  if (xprev)
+    base_node_dealloc(xprev);
 }
 
 static void
-chunk_dealloc(void *chunk, size_t size, ChunkType type)
+chunk_dealloc(void* chunk, size_t size, ChunkType type)
 {
 
-	MOZ_ASSERT(chunk);
-	MOZ_ASSERT(CHUNK_ADDR2BASE(chunk) == chunk);
-	MOZ_ASSERT(size != 0);
-	MOZ_ASSERT((size & chunksize_mask) == 0);
+  MOZ_ASSERT(chunk);
+  MOZ_ASSERT(CHUNK_ADDR2BASE(chunk) == chunk);
+  MOZ_ASSERT(size != 0);
+  MOZ_ASSERT((size & chunksize_mask) == 0);
 
-	gChunkRTree.Unset(chunk);
+  gChunkRTree.Unset(chunk);
 
-	if (CAN_RECYCLE(size)) {
-		size_t recycled_so_far = load_acquire_z(&recycled_size);
-		// In case some race condition put us above the limit.
-		if (recycled_so_far < recycle_limit) {
-			size_t recycle_remaining = recycle_limit - recycled_so_far;
-			size_t to_recycle;
-			if (size > recycle_remaining) {
-				to_recycle = recycle_remaining;
-				// Drop pages that would overflow the recycle limit
-				pages_trim(chunk, size, 0, to_recycle);
-			} else {
-				to_recycle = size;
-			}
-			chunk_record(chunk, to_recycle, type);
-			return;
-		}
-	}
+  if (CAN_RECYCLE(size)) {
+    size_t recycled_so_far = load_acquire_z(&recycled_size);
+    // In case some race condition put us above the limit.
+    if (recycled_so_far < recycle_limit) {
+      size_t recycle_remaining = recycle_limit - recycled_so_far;
+      size_t to_recycle;
+      if (size > recycle_remaining) {
+        to_recycle = recycle_remaining;
+        // Drop pages that would overflow the recycle limit
+        pages_trim(chunk, size, 0, to_recycle);
+      } else {
+        to_recycle = size;
+      }
+      chunk_record(chunk, to_recycle, type);
+      return;
+    }
+  }
 
-	pages_unmap(chunk, size);
+  pages_unmap(chunk, size);
 }
 
 #undef CAN_RECYCLE
