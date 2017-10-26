@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="content" style="display: none"></div>
+<script src="utils.js"></script>
 <script type="text/javascript">
 "use strict";
 
@@ -49,16 +50,12 @@ add_task(async function test_integrity_serviceWorker() {
   var filename = make_absolute_url("fetch.js");
   var filename2 = make_absolute_url("fake.html");
 
-  // The SW will claim us once it activates; this is async, start listening now.
-  let waitForControlled = new Promise((resolve) => {
-    navigator.serviceWorker.oncontrollerchange = resolve;
-  });
-
   let registration = await navigator.serviceWorker.register("fetch.js",
                                                             { scope: "./" });
   let worker = registration.installing || registration.active;
+  await waitForState(worker, 'activated');
   worker.postMessage('claim');
-  await waitForControlled;
+  await waitForControlled(window);
 
   info("Test for mNavigationInterceptions.")
   // The client_win will reload to another URL after opening filename2.
