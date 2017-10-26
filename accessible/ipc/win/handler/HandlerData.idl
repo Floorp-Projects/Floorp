@@ -14,7 +14,7 @@ import "AccessibleText.idl";
 
 typedef struct _IA2Data
 {
-  long              mRole;
+  VARIANT           mRole;
   long              mState;
   long              mChildCount;
   long              mIA2Role;
