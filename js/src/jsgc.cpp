@@ -6396,9 +6396,6 @@ GCRuntime::allCCVisibleZonesWereCollected() const
     // These exceptions ensure that when the CC requests a full GC the gray mark
     // state ends up valid even it we don't collect all of the zones.
 
-    if (isFull)
-        return true;
-
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (!zone->isCollecting() &&
             !zone->usedByHelperThread() &&
@@ -6422,19 +6419,6 @@ GCRuntime::endSweepPhase(bool destroyingRuntime, AutoLockForExclusiveAccess& loc
     FreeOp fop(rt);
 
     MOZ_ASSERT_IF(destroyingRuntime, !sweepOnBackgroundThread);
-
-    /*
-     * Recalculate whether GC was full or not as this may have changed due to
-     * newly created zones.  Can only change from full to not full.
-     */
-    if (isFull) {
-        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-            if (!zone->isCollecting()) {
-                isFull = false;
-                break;
-            }
-        }
-    }
 
     {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DESTROY);
