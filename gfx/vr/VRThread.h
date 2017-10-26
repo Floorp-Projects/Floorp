@@ -27,21 +27,22 @@ public:
   static VRListenerThreadHolder* GetSingleton();
 
   static bool IsActive() {
-    return !!GetSingleton();
+    return !!GetSingleton() && !!Loop();
   }
 
   static void Start();
   static void Shutdown();
   static MessageLoop* Loop();
   static bool IsInVRListenerThread();
+  static TimeStamp GetStartTime();
 
 private:
   ~VRListenerThreadHolder();
 
-  base::Thread* const mThread;
-
   static base::Thread* CreateThread();
   static void DestroyThread(base::Thread* aThread);
+
+  base::Thread* const mThread;
 };
 
 base::Thread* VRListenerThread();
