@@ -595,9 +595,18 @@ void
 Http2Session::DontReuse()
 {
   LOG3(("Http2Session::DontReuse %p\n", this));
+  if (!OnSocketThread()) {
+    LOG3(("Http2Session %p not on socket thread\n", this));
+    nsCOMPtr<nsIRunnable> event = NewRunnableMethod(
+      "Http2Session::DontReuse", this, &Http2Session::DontReuse);
+    gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
+    return;
+  }
+
   mShouldGoAway = true;
-  if (!mStreamTransactionHash.Count())
+  if (!mClosed && !mStreamTransactionHash.Count()) {
     Close(NS_OK);
+  }
 }
 
 uint32_t

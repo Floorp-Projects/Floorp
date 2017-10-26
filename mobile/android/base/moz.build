@@ -1413,13 +1413,9 @@ ANDROID_ASSETS_DIRS += [
 ]
 
 if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
-    # If you change this, also change its equivalent in mobile/android/bouncer.
-    if not CONFIG['MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER']:
-        # If we are packaging the bouncer, it will have the distribution, so don't put
-        # it in the main APK as well.
-        ANDROID_ASSETS_DIRS += [
-            '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
-        ]
+    ANDROID_ASSETS_DIRS += [
+        '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
+    ]
 
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     # The Search Activity is mostly independent of Fennec proper, but

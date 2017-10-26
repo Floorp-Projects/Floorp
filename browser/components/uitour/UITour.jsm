@@ -115,13 +115,7 @@ this.UITour = {
       // to automatically open the appMenu when annotating this target.
       widgetName: "appMenu-fxa-label",
     }],
-    ["addons",      {
-      query: (aDocument) => {
-        // select toolbar icon if exist, fallback to appMenu item
-        let node = aDocument.getElementById("add-ons-button");
-        return node ? node : aDocument.getElementById("appMenu-addons-button");
-      },
-    }],
+    ["addons",      {query: "#appMenu-addons-button"}],
     ["appMenu",     {
       addTargetListener: (aDocument, aCallback) => {
         let panelPopup = aDocument.defaultView.PanelUI.panel;
@@ -152,13 +146,7 @@ this.UITour = {
     }],
     ["help",        {query: "#appMenu-help-button"}],
     ["home",        {query: "#home-button"}],
-    ["library",     {
-      query: (aDocument) => {
-        // select toolbar icon if exist, fallback to appMenu item
-        let node = aDocument.getElementById("library-button");
-        return node ? node : aDocument.getElementById("appMenu-library-button");
-      },
-    }],
+    ["library",     {query: "#appMenu-library-button"}],
     ["pocket", {
       allowAdd: true,
       query: (aDocument) => {

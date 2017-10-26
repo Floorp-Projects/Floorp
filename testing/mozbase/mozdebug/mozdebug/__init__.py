@@ -29,4 +29,4 @@ debugger-specific arguments:
 """
 from __future__ import absolute_import
 
-from mozdebug import *
+from .mozdebug import *

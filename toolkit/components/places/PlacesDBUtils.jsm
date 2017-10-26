@@ -714,8 +714,10 @@ this.PlacesDBUtils = {
 
     let deleteOrphanIcons = {
       query:
-      `DELETE FROM moz_icons WHERE root = 0 AND id NOT IN (
-         SELECT icon_id FROM moz_icons_to_pages
+      `DELETE FROM moz_icons WHERE id IN (
+        SELECT id FROM moz_icons WHERE root = 0
+        EXCEPT
+        SELECT icon_id FROM moz_icons_to_pages
        )`
     };
     cleanupStatements.push(deleteOrphanIcons);

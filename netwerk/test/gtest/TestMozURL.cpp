@@ -120,6 +120,23 @@ TEST(TestMozURL, InitWithBase)
   ASSERT_TRUE(out.EqualsLiteral("https://example.net/a/c.png"));
 }
 
+TEST(TestMozURL, Path)
+{
+  nsAutoCString href("about:blank");
+  RefPtr<MozURL> url;
+  ASSERT_EQ(MozURL::Init(getter_AddRefs(url), href), NS_OK);
+  nsAutoCString out;
+
+  ASSERT_EQ(url->GetSpec(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("about:blank"));
+
+  ASSERT_EQ(url->GetScheme(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("about"));
+
+  ASSERT_EQ(url->GetFilePath(out), NS_OK);
+  ASSERT_TRUE(out.EqualsLiteral("blank"));
+}
+
 TEST(TestMozURL, HostPort)
 {
   nsAutoCString href("https://user:pass@example.net:1234/path?query#ref");

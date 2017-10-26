@@ -11,13 +11,10 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "new-console-output/test/mochitest/test-jsterm-dollar.html";
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
-  yield test$(hud);
-  yield test$$(hud);
-
-  // Clear history to not affect next tests.
-  yield hud.jsterm.clearHistory();
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
+  await test$(hud);
+  await test$$(hud);
 });
 
 async function test$(hud) {

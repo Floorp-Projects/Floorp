@@ -12,48 +12,48 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
   "new-console-output/test/mochitest/test-console.html?_date=" + Date.now();
 const CONTEXT_MENU_ID = "#console-menu-copy-url";
 
-add_task(function* () {
+add_task(async function() {
   // Enable net messages in the console for this test.
-  yield pushPref("devtools.webconsole.filter.net", true);
+  await pushPref("devtools.webconsole.filter.net", true);
 
-  let hud = yield openNewTabAndConsole(TEST_URI);
+  let hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   info("Test Copy URL menu item for text log");
 
   info("Logging a text message in the content window");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.console.log("simple text message");
   });
-  let message = yield waitFor(() => findMessage(hud, "simple text message"));
+  let message = await waitFor(() => findMessage(hud, "simple text message"));
   ok(message, "Text log found in the console");
 
   info("Open and check the context menu for the logged text message");
-  let menuPopup = yield openContextMenu(hud, message);
+  let menuPopup = await openContextMenu(hud, message);
   let copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
   ok(!copyURLItem, "Copy URL menu item is hidden for a simple text message");
 
-  yield hideContextMenu(hud);
+  await hideContextMenu(hud);
   hud.jsterm.clearOutput();
 
   info("Test Copy URL menu item for network log");
 
   info("Reload the content window to produce a network log");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });
 
-  message = yield waitFor(() => findMessage(hud, "test-console.html"));
+  message = await waitFor(() => findMessage(hud, "test-console.html"));
   ok(message, "Network log found in the console");
 
   info("Open and check the context menu for the logged network message");
-  menuPopup = yield openContextMenu(hud, message);
+  menuPopup = await openContextMenu(hud, message);
   copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
   ok(copyURLItem, "Copy url menu item is available in context menu");
 
   info("Click on Copy URL menu item and wait for clipboard to be updated");
-  yield waitForClipboardPromise(() => copyURLItem.click(), TEST_URI);
+  await waitForClipboardPromise(() => copyURLItem.click(), TEST_URI);
   ok(true, "Expected text was copied to the clipboard.");
 
-  yield hideContextMenu(hud);
+  await hideContextMenu(hud);
 });

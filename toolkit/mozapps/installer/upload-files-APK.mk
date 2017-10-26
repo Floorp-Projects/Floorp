@@ -42,31 +42,6 @@ else
 INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
 endif
 
-ifdef MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
-INNER_INSTALL_BOUNCER_PACKAGE=true
-ifdef ENABLE_TESTS
-UPLOAD_EXTRA_FILES += bouncer.apk
-
-bouncer_package=$(ABS_DIST)/bouncer.apk
-
-# Package and release sign the install bouncer APK.  This assumes that the main
-# APK (that is, $(PACKAGE)) has already been produced, and verifies that the
-# bouncer APK and the main APK define the same set of permissions.  The
-# intention is to avoid permission-related surprises when bouncing to the
-# installation process in the Play Store.  N.b.: sort -u is Posix and saves
-# invoking uniq separately.  diff -u is *not* Posix, so we only add -c.
-INNER_INSTALL_BOUNCER_PACKAGE=\
-  $(call RELEASE_SIGN_ANDROID_APK,$(topobjdir)/mobile/android/bouncer/bouncer-unsigned-unaligned.apk,$(bouncer_package)) && \
-  ($(AAPT) dump permissions $(PACKAGE) | sort -u > $(PACKAGE).permissions && \
-   $(AAPT) dump permissions $(bouncer_package) | sort -u > $(bouncer_package).permissions && \
-   diff -c $(PACKAGE).permissions $(bouncer_package).permissions || \
-   (echo "*** Error: The permissions of the bouncer package differ from the permissions of the main package.  Ensure the bouncer and main package Android manifests agree, rebuild mobile/android, and re-package." && exit 1))
-else
-INNER_INSTALL_BOUNCER_PACKAGE=echo 'Testing is disabled, so the install bouncer is disabled - No trampolines for you'
-endif # ENABLE_TESTS
-else
-INNER_INSTALL_BOUNCER_PACKAGE=echo 'Install bouncer is disabled - No trampolines for you'
-endif # MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
 
 # Fennec's OMNIJAR_NAME can include a directory; for example, it might
 # be "assets/omni.ja". This path specifies where the omni.ja file
@@ -107,8 +82,7 @@ INNER_FENNEC_PACKAGE = \
 # Packaging produces many optional artifacts.
 package_fennec = \
   $(INNER_FENNEC_PACKAGE) && \
-  $(INNER_ROBOCOP_PACKAGE) && \
-  $(INNER_INSTALL_BOUNCER_PACKAGE)
+  $(INNER_ROBOCOP_PACKAGE)
 
 # Re-packaging only replaces Android resources and the omnijar before
 # (re-)signing.
