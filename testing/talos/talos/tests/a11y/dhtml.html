@@ -19,7 +19,7 @@
     TalosContentProfiler.resume("dhtml test start", true).then(() => {
       var container = document.getElementById("container");
       var lastchild = document.getElementById("lastchild");
-      var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
+      var start = new Date(); // eslint-disable-line mozilla/avoid-Date-timing
       var i, div;
       for (i = 0; i < 2000; i++) {
         div = document.createElement("div");

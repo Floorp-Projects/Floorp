@@ -30,8 +30,8 @@ Cu.import("resource://services-common/utils.js");
 this.WBORecord = function WBORecord(collection, id) {
   this.data = {};
   this.payload = {};
-  this.collection = collection;      // Optional.
-  this.id = id;                      // Optional.
+  this.collection = collection; // Optional.
+  this.id = id; // Optional.
 };
 WBORecord.prototype = {
   _logName: "Sync.Record.WBO",
@@ -51,7 +51,7 @@ WBORecord.prototype = {
 
     let r = await resource.get();
     if (r.success) {
-      this.deserialize(r);   // Warning! Muffles exceptions!
+      this.deserialize(r); // Warning! Muffles exceptions!
     }
     this.response = r;
     return this;
@@ -455,7 +455,7 @@ CollectionKeyManager.prototype = {
     const newKeys = Object.assign({}, this._collections);
     for (let c of collections) {
       if (newKeys[c]) {
-        continue;  // don't replace existing keys
+        continue; // don't replace existing keys
       }
 
       const b = new BulkKeyBundle(c);

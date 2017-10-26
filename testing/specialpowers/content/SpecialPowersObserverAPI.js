@@ -456,7 +456,7 @@ SpecialPowersObserverAPI.prototype = {
           default:
             throw new SpecialPowersError("Invalid operation for SPObserverervice");
         }
-        return undefined;       // See comment at the beginning of this function.
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPLoadChromeScript": {

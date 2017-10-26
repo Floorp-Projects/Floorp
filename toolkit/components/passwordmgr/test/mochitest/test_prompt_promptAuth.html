@@ -50,20 +50,20 @@ let prompterParent = runInParent(() => {
   channels.channel1 = ioService.newChannel2("http://example.com",
                                             null,
                                             null,
-                                            null,      // aLoadingNode
+                                            null, // aLoadingNode
                                             Services.
                                             scriptSecurityManager.getSystemPrincipal(),
-                                            null,      // aTriggeringPrincipal
+                                            null, // aTriggeringPrincipal
                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                             Ci.nsIContentPolicy.TYPE_OTHER);
 
   channels.channel2 = ioService.newChannel2("http://example2.com",
                                             null,
                                             null,
-                                            null,      // aLoadingNode
+                                            null, // aLoadingNode
                                             Services.
                                             scriptSecurityManager.getSystemPrincipal(),
-                                            null,      // aTriggeringPrincipal
+                                            null, // aTriggeringPrincipal
                                             Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                             Ci.nsIContentPolicy.TYPE_OTHER);
 

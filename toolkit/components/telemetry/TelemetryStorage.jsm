@@ -51,7 +51,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
                                   "resource://gre/modules/TelemetryHealthPing.jsm");
 // Maxmimum time, in milliseconds, archive pings should be retained.
-const MAX_ARCHIVED_PINGS_RETENTION_MS = 60 * 24 * 60 * 60 * 1000;  // 60 days
+const MAX_ARCHIVED_PINGS_RETENTION_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
 
 // Maximum space the archive can take on disk (in Bytes).
 const ARCHIVE_QUOTA_BYTES = 120 * 1024 * 1024; // 120 MB

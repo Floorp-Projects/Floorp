@@ -105,9 +105,9 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
     proxyChannel = ioService.newChannel2(proxiedHost,
                                          null,
                                          null,
-                                         null,      // aLoadingNode
+                                         null, // aLoadingNode
                                          systemPrincipal,
-                                         null,      // aTriggeringPrincipal
+                                         null, // aTriggeringPrincipal
                                          Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                          Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
@@ -124,9 +124,9 @@ function startup() {
   var channel = ios.newChannel2("http://example.com",
                                 null,
                                 null,
-                                null,      // aLoadingNode
+                                null, // aLoadingNode
                                 systemPrincipal,
-                                null,      // aTriggeringPrincipal
+                                null, // aTriggeringPrincipal
                                 Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                 Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);

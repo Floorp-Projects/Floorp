@@ -686,6 +686,7 @@ BrowserGlue.prototype = {
 
       let buildID = Services.appinfo.appBuildID;
       let today = new Date().getTime();
+      /* eslint-disable no-multi-spaces */
       let buildDate = new Date(buildID.slice(0, 4),     // year
                                buildID.slice(4, 6) - 1, // months are zero-based.
                                buildID.slice(6, 8),     // day
@@ -693,6 +694,7 @@ BrowserGlue.prototype = {
                                buildID.slice(10, 12),   // min
                                buildID.slice(12, 14))   // ms
       .getTime();
+      /* eslint-enable no-multi-spaces */
 
       const millisecondsIn24Hours = 86400000;
       let acceptableAge = Services.prefs.getIntPref("app.update.checkInstallTime.days") * millisecondsIn24Hours;

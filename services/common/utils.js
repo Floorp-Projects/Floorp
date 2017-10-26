@@ -304,7 +304,7 @@ this.CommonUtils = {
       function advance() {
         c  = str[cOffset++];
         if (!c || c == "" || c == "=") // Easier than range checking.
-          throw new Error("Done");     // Will be caught far away.
+          throw new Error("Done"); // Will be caught far away.
         val = key.indexOf(c);
         if (val == -1)
           throw new Error(`Unknown character in base32: ${c}`);

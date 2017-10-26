@@ -89,7 +89,7 @@ add_task(async function setup() {
 add_test(function test_prefAttributes() {
   _("Test various attributes corresponding to preferences.");
 
-  const INTERVAL = 42 * 60 * 1000;   // 42 minutes
+  const INTERVAL = 42 * 60 * 1000; // 42 minutes
   const THRESHOLD = 3142;
   const SCORE = 2718;
   const TIMESTAMP1 = 1275493471649;

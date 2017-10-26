@@ -2043,7 +2043,7 @@ GeckoDriver.prototype.multiAction = async function(cmd) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let {value, max_length} = cmd.parameters;  // eslint-disable-line camelcase
+  let {value, max_length} = cmd.parameters; // eslint-disable-line camelcase
 
   this.addFrameCloseListener("multi action chain");
   await this.listener.multiAction(value, max_length);

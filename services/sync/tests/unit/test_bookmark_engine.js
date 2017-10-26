@@ -234,7 +234,7 @@ async function test_restoreOrImport(aReplace) {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
 
   try {
 
@@ -513,7 +513,7 @@ add_task(async function test_bookmark_guidMap_fail() {
   let itemPayload = itemRecord.cleartext;
   coll.insert(itemGUID, encryptPayload(itemPayload));
 
-  engine.lastSync = 1;   // So we don't back up.
+  engine.lastSync = 1; // So we don't back up.
 
   // Make building the GUID map fail.
 
@@ -667,7 +667,7 @@ add_task(async function test_sync_dateAdded() {
   // intermittently - reset the last sync date so that we'll get all bookmarks.
   engine.lastSync = 1;
 
-  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
 
   // Just matters that it's in the past, not how far.
   let now = Date.now();
@@ -816,7 +816,7 @@ add_task(async function test_sync_imap_URLs() {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
 
   try {
     collection.insert("menu", encryptPayload({

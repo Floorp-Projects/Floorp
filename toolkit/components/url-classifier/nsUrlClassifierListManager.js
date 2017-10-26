@@ -325,7 +325,7 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
     }
   } else {
     log("Stopping managing lists (if currently active)");
-    this.stopUpdateCheckers();                    // Cancel pending updates
+    this.stopUpdateCheckers(); // Cancel pending updates
   }
 };
 
