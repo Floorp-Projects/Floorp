@@ -13,6 +13,7 @@ namespace mozilla {
 namespace gfx {
 
 static StaticRefPtr<VRListenerThreadHolder> sVRListenerThreadHolder;
+static TimeStamp sStartTime;
 static bool sFinishedVRListenerShutDown = false;
 
 VRListenerThreadHolder* GetVRListenerThreadHolder()
@@ -94,11 +95,22 @@ VRListenerThreadHolder::Start()
   MOZ_ASSERT(!sVRListenerThreadHolder, "The VR listener thread has already been started!");
 
   sVRListenerThreadHolder = new VRListenerThreadHolder();
+  sStartTime = TimeStamp::Now();
+}
+
+TimeStamp
+VRListenerThreadHolder::GetStartTime()
+{
+  return sStartTime;
 }
 
 void
 VRListenerThreadHolder::Shutdown()
 {
+  if (!IsActive()) {
+    return;
+  }
+
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread!");
   MOZ_ASSERT(sVRListenerThreadHolder, "The VR listener thread has already been shut down!");
 
@@ -111,7 +123,7 @@ VRListenerThreadHolder::Shutdown()
 VRListenerThreadHolder::IsInVRListenerThread()
 {
   return VRListenerThread() &&
-		 VRListenerThread()->thread_id() == PlatformThread::CurrentId();
+         VRListenerThread()->thread_id() == PlatformThread::CurrentId();
 }
 
 } // namespace gfx
