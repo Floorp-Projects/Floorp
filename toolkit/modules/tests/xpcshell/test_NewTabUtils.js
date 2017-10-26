@@ -735,9 +735,9 @@ add_task(async function activityStream_deleteBookmark() {
 
   let bookmarkGuid = await new Promise(resolve => PlacesUtils.bookmarks.fetch(
     {url: bookmarks[0].url}, bookmark => resolve(bookmark.guid)));
-  let deleted = await provider.deleteBookmark(bookmarkGuid);
-  Assert.equal(deleted.guid, bookmarkGuid, "the correct bookmark was deleted");
-
+  await provider.deleteBookmark(bookmarkGuid);
+  Assert.strictEqual((await PlacesUtils.bookmarks.fetch(bookmarkGuid)), null,
+    "the bookmark should no longer be found");
   bookmarksSize = await getBookmarksSize();
   Assert.equal(bookmarksSize, 1, "size 1 after deleting");
 });
@@ -794,4 +794,3 @@ TestProvider.prototype = {
     }
   },
 };
-
