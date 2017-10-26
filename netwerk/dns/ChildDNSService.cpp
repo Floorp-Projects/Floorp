@@ -26,7 +26,7 @@ namespace net {
 static ChildDNSService *gChildDNSService;
 static const char kPrefNameDisablePrefetch[] = "network.dns.disablePrefetch";
 
-ChildDNSService* ChildDNSService::GetSingleton()
+already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton()
 {
   MOZ_ASSERT(IsNeckoChild());
 
@@ -34,8 +34,7 @@ ChildDNSService* ChildDNSService::GetSingleton()
     gChildDNSService = new ChildDNSService();
   }
 
-  NS_ADDREF(gChildDNSService);
-  return gChildDNSService;
+  return do_AddRef(gChildDNSService);
 }
 
 NS_IMPL_ISUPPORTS(ChildDNSService,

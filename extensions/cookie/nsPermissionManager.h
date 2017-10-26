@@ -167,7 +167,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPermissionManager();
-  static nsIPermissionManager* GetXPCOMSingleton();
+  static already_AddRefed<nsIPermissionManager> GetXPCOMSingleton();
   nsresult Init();
 
   // enums for AddInternal()

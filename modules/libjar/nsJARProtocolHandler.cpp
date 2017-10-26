@@ -63,23 +63,19 @@ NS_IMPL_ISUPPORTS(nsJARProtocolHandler,
                   nsIProtocolHandler,
                   nsISupportsWeakReference)
 
-nsJARProtocolHandler*
+already_AddRefed<nsJARProtocolHandler>
 nsJARProtocolHandler::GetSingleton()
 {
     if (!gJarHandler) {
-        gJarHandler = new nsJARProtocolHandler();
-        if (!gJarHandler)
-            return nullptr;
-
-        NS_ADDREF(gJarHandler);
-        nsresult rv = gJarHandler->Init();
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(gJarHandler);
+        auto jar = MakeRefPtr<nsJARProtocolHandler>();
+        gJarHandler = jar.get();
+        if (NS_FAILED(jar->Init())) {
+            gJarHandler = nullptr;
             return nullptr;
         }
+        return jar.forget();
     }
-    NS_ADDREF(gJarHandler);
-    return gJarHandler;
+    return do_AddRef(gJarHandler);
 }
 
 NS_IMETHODIMP
