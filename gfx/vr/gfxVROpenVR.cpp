@@ -636,6 +636,13 @@ VRSystemManagerOpenVR::Shutdown()
 bool
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
+  // When running VR tests on local machines which have SteamVR runtime.
+  // VR_IsHmdPresent() would have chance to be true. Then, it makes us can't
+  // get the VRPuppet display.
+  if (gfxPrefs::VRPuppetEnabled()) {
+    return false;
+  }
+
   if (!::vr::VR_IsHmdPresent() ||
       (mOpenVRHMD && !mOpenVRHMD->GetIsHmdPresent())) {
     // OpenVR runtime could be quit accidentally,

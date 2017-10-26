@@ -10,6 +10,7 @@
 #include "ipc/VRLayerParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
+#include "mozilla/layers/CompositorThread.h"
 #include "VRThread.h"
 
 #if defined(XP_WIN)
@@ -260,6 +261,7 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
 {
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
 
+  MOZ_ASSERT(NS_IsInCompositorThread());
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
     return;
