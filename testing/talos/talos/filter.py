@@ -18,8 +18,6 @@ Each filter is a simple function, but it also have attached a special
   # data is filtered
 """
 
-_FILTERS = {}
-
 
 class Filter(object):
     def __init__(self, func, *args, **kwargs):
@@ -47,54 +45,9 @@ def define_filter(func):
     func.prepare = prepare
     return func
 
-
-def register_filter(func):
-    """
-    all filters defined in this module
-    should be registered
-    """
-    global _FILTERS
-
-    _FILTERS[func.__name__] = func
-    return func
-
-
-def filters(*args):
-    global _FILTERS
-
-    filters_ = [_FILTERS[filter] for filter in args]
-    return filters_
-
-
-def apply(data, filters):
-    for filter in filters:
-        data = filter(data)
-
-    return data
-
-
-def parse(string_):
-
-    def to_number(string_number):
-        try:
-            return int(string_number)
-        except ValueError:
-            return float(string_number)
-
-    tokens = string_.split(":")
-
-    func = tokens[0]
-    digits = []
-    if len(tokens) > 1:
-        digits.extend(tokens[1].split(","))
-        digits = [to_number(digit) for digit in digits]
-
-    return [func, digits]
-
-
 # filters that return a scalar
 
-@register_filter
+
 @define_filter
 def mean(series):
     """
@@ -103,7 +56,6 @@ def mean(series):
     return sum(series)/float(len(series))
 
 
-@register_filter
 @define_filter
 def median(series):
     """
@@ -119,7 +71,6 @@ def median(series):
         return 0.5*(series[middle-1] + series[middle])
 
 
-@register_filter
 @define_filter
 def variance(series):
     """
@@ -131,7 +82,6 @@ def variance(series):
     return variance
 
 
-@register_filter
 @define_filter
 def stddev(series):
     """
@@ -140,7 +90,6 @@ def stddev(series):
     return variance(series)**0.5
 
 
-@register_filter
 @define_filter
 def dromaeo(series):
     """
@@ -157,14 +106,12 @@ def dromaeo(series):
     return geometric_mean(means)
 
 
-@register_filter
 @define_filter
 def dromaeo_chunks(series, size):
     for i in range(0, len(series), size):
         yield series[i:i+size]
 
 
-@register_filter
 @define_filter
 def geometric_mean(series):
     """
@@ -178,7 +125,6 @@ def geometric_mean(series):
 # filters that return a list
 
 
-@register_filter
 @define_filter
 def ignore_first(series, number=1):
     """
@@ -190,7 +136,6 @@ def ignore_first(series, number=1):
     return series[number:]
 
 
-@register_filter
 @define_filter
 def ignore(series, function):
     """
@@ -205,7 +150,6 @@ def ignore(series, function):
     return series
 
 
-@register_filter
 @define_filter
 def ignore_max(series):
     """
@@ -214,7 +158,6 @@ def ignore_max(series):
     return ignore(series, max)
 
 
-@register_filter
 @define_filter
 def ignore_min(series):
     """
@@ -223,7 +166,6 @@ def ignore_min(series):
     return ignore(series, min)
 
 
-@register_filter
 @define_filter
 def v8_subtest(series, name):
     """
@@ -248,7 +190,6 @@ def v8_subtest(series, name):
     return reference[name] / geometric_mean(series)
 
 
-@register_filter
 @define_filter
 def responsiveness_Metric(val_list):
     return sum([float(x)*float(x) / 1000000.0 for x in val_list])
