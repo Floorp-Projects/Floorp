@@ -1121,12 +1121,14 @@ HttpChannelParent::ContinueRedirect2Verify(const nsresult& aResult)
 }
 
 mozilla::ipc::IPCResult
-HttpChannelParent::RecvDocumentChannelCleanup()
+HttpChannelParent::RecvDocumentChannelCleanup(const bool& clearCacheEntry)
 {
   // From now on only using mAssociatedContentSecurity.  Free everything else.
   CleanupBackgroundChannel(); // Background channel can be closed.
   mChannel = nullptr;          // Reclaim some memory sooner.
-  mCacheEntry = nullptr;  // Else we'll block other channels reading same URI
+  if (clearCacheEntry) {
+    mCacheEntry = nullptr;  // Else we'll block other channels reading same URI
+  }
   return IPC_OK();
 }
 

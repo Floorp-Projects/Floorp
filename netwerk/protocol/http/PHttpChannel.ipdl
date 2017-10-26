@@ -53,7 +53,7 @@ parent:
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
   // partial cleanup on parent.
-  async DocumentChannelCleanup();
+  async DocumentChannelCleanup(bool clearCacheEntry);
 
   // This might have to be sync. If this fails we must fail the document load
   // to avoid endless loop.
