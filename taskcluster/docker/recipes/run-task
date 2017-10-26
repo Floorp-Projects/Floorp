@@ -216,6 +216,16 @@ def vcs_checkout(source_repo, dest, store_path,
         cwd=dest)
 
     assert re.match('^[a-f0-9]{40}$', revision)
+
+    repo_name = source_repo.split('/')[-1]
+    print_line(b'vcs', b"TinderboxPrint:<a href={source_repo}/rev/{revision} "
+                       b"title='Built from {repo_name} revision {revision}'>"
+                       b"{revision}</a>\n".format(
+                           revision=revision,
+                           source_repo=source_repo,
+                           repo_name=repo_name,
+                       ))
+
     return revision
 
 
