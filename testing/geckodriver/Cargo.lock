@@ -177,7 +177,7 @@ dependencies = [
  "slog-stdlog 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-stream 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.31.0",
+ "webdriver 0.32.0",
  "zip 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -664,7 +664,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "webdriver"
-version = "0.31.0"
+version = "0.32.0"
 dependencies = [
  "backtrace 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cookie 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
