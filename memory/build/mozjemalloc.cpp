@@ -1304,12 +1304,18 @@ Mutex::Unlock()
  */
 
 /* Return the chunk address for allocation address a. */
-#define	CHUNK_ADDR2BASE(a)						\
-	((void *)((uintptr_t)(a) & ~chunksize_mask))
+static inline arena_chunk_t*
+GetChunkForPtr(const void* aPtr)
+{
+  return (arena_chunk_t*)(uintptr_t(aPtr) & ~chunksize_mask);
+}
 
 /* Return the chunk offset of address a. */
-#define	CHUNK_ADDR2OFFSET(a)						\
-	((size_t)((uintptr_t)(a) & chunksize_mask))
+static inline size_t
+GetChunkOffsetForPtr(const void* aPtr)
+{
+  return (size_t)(uintptr_t(aPtr) & chunksize_mask);
+}
 
 /* Return the smallest chunk multiple that is >= s. */
 #define	CHUNK_CEILING(s)						\
@@ -1366,7 +1372,7 @@ pages_decommit(void *addr, size_t size)
 	* time, we may touch any region in chunksized increments.
 	*/
 	size_t pages_size = std::min(size, chunksize -
-		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+		GetChunkOffsetForPtr(addr));
 	while (size > 0) {
 		if (!VirtualFree(addr, pages_size, MEM_DECOMMIT))
 			MOZ_CRASH();
@@ -1394,7 +1400,7 @@ pages_commit(void *addr, size_t size)
 	* time, we may touch any region in chunksized increments.
 	*/
 	size_t pages_size = std::min(size, chunksize -
-		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+		GetChunkOffsetForPtr(addr));
 	while (size > 0) {
 		if (!VirtualAlloc(addr, pages_size, MEM_COMMIT, PAGE_READWRITE))
 			MOZ_CRASH();
@@ -1893,7 +1899,7 @@ pages_purge(void *addr, size_t length, bool force_zero)
 	* time, we may touch any region in chunksized increments.
 	*/
 	size_t pages_size = std::min(length, chunksize -
-		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+		GetChunkOffsetForPtr(addr));
 	while (length > 0) {
 		VirtualAlloc(addr, pages_size, MEM_RESET, PAGE_READWRITE);
 		addr = (void *)((uintptr_t)addr + pages_size);
@@ -2044,7 +2050,7 @@ chunk_alloc(size_t aSize, size_t aAlignment, bool aBase, bool* aZeroed)
     }
   }
 
-  MOZ_ASSERT(CHUNK_ADDR2BASE(ret) == ret);
+  MOZ_ASSERT(GetChunkOffsetForPtr(ret) == 0);
   return ret;
 }
 
@@ -2154,7 +2160,7 @@ static void
 chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType)
 {
   MOZ_ASSERT(aChunk);
-  MOZ_ASSERT(CHUNK_ADDR2BASE(aChunk) == aChunk);
+  MOZ_ASSERT(GetChunkOffsetForPtr(aChunk) == 0);
   MOZ_ASSERT(aSize != 0);
   MOZ_ASSERT((aSize & chunksize_mask) == 0);
 
@@ -2409,7 +2415,7 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   arena_chunk_t* chunk;
   size_t old_ndirty, run_ind, total_pages, need_pages, rem_pages, i;
 
-  chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aRun);
+  chunk = GetChunkForPtr(aRun);
   old_ndirty = chunk->ndirty;
   run_ind = (unsigned)((uintptr_t(aRun) - uintptr_t(chunk)) >> pagesize_2pow);
   total_pages = (chunk->map[run_ind].bits & ~pagesize_mask) >> pagesize_2pow;
@@ -2610,8 +2616,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
   key.bits = aSize | CHUNK_MAP_KEY;
   mapelm = mRunsAvail.SearchOrNext(&key);
   if (mapelm) {
-    arena_chunk_t* chunk =
-        (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
+    arena_chunk_t* chunk = GetChunkForPtr(mapelm);
     size_t pageind = (uintptr_t(mapelm) - uintptr_t(chunk->map)) /
         sizeof(arena_chunk_map_t);
 
@@ -2746,7 +2751,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
   arena_chunk_t* chunk;
   size_t size, run_ind, run_pages;
 
-  chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aRun);
+  chunk = GetChunkForPtr(aRun);
   run_ind = (size_t)((uintptr_t(aRun) - uintptr_t(chunk)) >> pagesize_2pow);
   MOZ_DIAGNOSTIC_ASSERT(run_ind >= arena_chunk_header_npages);
   MOZ_DIAGNOSTIC_ASSERT(run_ind < chunk_npages);
@@ -3182,7 +3187,7 @@ arena_t::Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize)
       return nullptr;
     }
 
-    chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(ret);
+    chunk = GetChunkForPtr(ret);
 
     offset = uintptr_t(ret) & (aAlignment - 1);
     MOZ_ASSERT((offset & pagesize_mask) == 0);
@@ -3322,9 +3327,9 @@ arena_salloc(const void *ptr)
 	size_t pageind, mapbits;
 
 	MOZ_ASSERT(ptr);
-	MOZ_ASSERT(CHUNK_ADDR2BASE(ptr) != ptr);
+	MOZ_ASSERT(GetChunkOffsetForPtr(ptr) != 0);
 
-	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
+	chunk = GetChunkForPtr(ptr);
 	pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow);
 	mapbits = chunk->map[pageind].bits;
 	MOZ_DIAGNOSTIC_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
@@ -3356,7 +3361,7 @@ isalloc_validate(const void* aPtr)
     return 0;
   }
 
-  auto chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aPtr);
+  auto chunk = GetChunkForPtr(aPtr);
   if (!chunk) {
     return 0;
   }
@@ -3387,7 +3392,7 @@ isalloc(const void* aPtr)
 {
   MOZ_ASSERT(aPtr);
 
-  auto chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aPtr);
+  auto chunk = GetChunkForPtr(aPtr);
   if (chunk != aPtr) {
     /* Region. */
     MOZ_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
@@ -3412,7 +3417,7 @@ isalloc(const void* aPtr)
 template<> inline void
 MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
 {
-  arena_chunk_t* chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aPtr);
+  arena_chunk_t* chunk = GetChunkForPtr(aPtr);
 
   // Is the pointer null, or within one chunk's size of null?
   if (!chunk) {
@@ -3598,7 +3603,7 @@ arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr, arena_chunk_map_t* aMapE
     } else if (uintptr_t(run) < uintptr_t(bin->runcur)) {
       /* Switch runcur. */
       if (bin->runcur->nfree > 0) {
-        arena_chunk_t* runcur_chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(bin->runcur);
+        arena_chunk_t* runcur_chunk = GetChunkForPtr(bin->runcur);
         size_t runcur_pageind = (uintptr_t(bin->runcur) - uintptr_t(runcur_chunk)) >> pagesize_2pow;
         arena_chunk_map_t* runcur_mapelm = &runcur_chunk->map[runcur_pageind];
 
@@ -3636,7 +3641,7 @@ arena_dalloc(void* aPtr, size_t aOffset)
 {
   MOZ_ASSERT(aPtr);
   MOZ_ASSERT(aOffset != 0);
-  MOZ_ASSERT(CHUNK_ADDR2OFFSET(aPtr) == aOffset);
+  MOZ_ASSERT(GetChunkOffsetForPtr(aPtr) == aOffset);
 
   auto chunk = (arena_chunk_t*) ((uintptr_t)aPtr - aOffset);
   auto arena = chunk->arena;
@@ -3663,7 +3668,7 @@ idalloc(void *ptr)
 
 	MOZ_ASSERT(ptr);
 
-	offset = CHUNK_ADDR2OFFSET(ptr);
+	offset = GetChunkOffsetForPtr(ptr);
 	if (offset != 0)
 		arena_dalloc(ptr, offset);
 	else
@@ -3742,7 +3747,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 		arena_chunk_t *chunk;
 		arena_t *arena;
 
-		chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
+		chunk = GetChunkForPtr(ptr);
 		arena = chunk->arena;
 		MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 
@@ -4534,12 +4539,8 @@ BaseAllocator::free(void* aPtr)
 {
   size_t offset;
 
-  /*
-   * A version of idalloc that checks for nullptr pointer but only for
-   * huge allocations assuming that CHUNK_ADDR2OFFSET(nullptr) == 0.
-   */
-  MOZ_ASSERT(CHUNK_ADDR2OFFSET(nullptr) == 0);
-  offset = CHUNK_ADDR2OFFSET(aPtr);
+  // A version of idalloc that checks for nullptr pointer.
+  offset = GetChunkOffsetForPtr(aPtr);
   if (offset != 0) {
     arena_dalloc(aPtr, offset);
   } else if (aPtr) {
