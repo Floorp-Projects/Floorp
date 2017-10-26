@@ -206,6 +206,10 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessFlush()
   if (mCodecContext) {
     mLib->avcodec_flush_buffers(mCodecContext);
   }
+  if (mCodecParser) {
+    mLib->av_parser_close(mCodecParser);
+    mCodecParser = mLib->av_parser_init(mCodecID);
+  }
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
