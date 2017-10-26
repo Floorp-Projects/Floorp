@@ -6,6 +6,9 @@
 
 #include "EffectCompositor.h"
 
+#include <bitset>
+#include <initializer_list>
+
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
@@ -36,8 +39,7 @@
 #include "nsRuleProcessorData.h" // For ElementRuleProcessorData etc.
 #include "nsStyleContextInlines.h"
 #include "nsTArray.h"
-#include <bitset>
-#include <initializer_list>
+#include "PendingAnimationTracker.h"
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;
