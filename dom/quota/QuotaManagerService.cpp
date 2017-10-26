@@ -225,14 +225,11 @@ QuotaManagerService::Get()
 }
 
 // static
-QuotaManagerService*
+already_AddRefed<QuotaManagerService>
 QuotaManagerService::FactoryCreate()
 {
-  // Returns a raw pointer that carries an owning reference! Lame, but the
-  // singleton factory macros force this.
-  QuotaManagerService* quotaManagerService = GetOrCreate();
-  NS_IF_ADDREF(quotaManagerService);
-  return quotaManagerService;
+  RefPtr<QuotaManagerService> quotaManagerService = GetOrCreate();
+  return quotaManagerService.forget();
 }
 
 void

@@ -40,7 +40,7 @@ public:
    * Obtains a pointer that has had AddRef called on it.  Used by the service
    * manager only.
    */
-  static nsAndroidHistory* GetSingleton();
+  static already_AddRefed<nsAndroidHistory> GetSingleton();
 
   nsAndroidHistory();
 

@@ -351,23 +351,19 @@ nsIOService::InitializeProtocolProxyService()
     return rv;
 }
 
-nsIOService*
+already_AddRefed<nsIOService>
 nsIOService::GetInstance() {
     if (!gIOService) {
-        gIOService = new nsIOService();
-        if (!gIOService)
-            return nullptr;
-        NS_ADDREF(gIOService);
-
-        nsresult rv = gIOService->Init();
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(gIOService);
+        RefPtr<nsIOService> ios = new nsIOService();
+        gIOService = ios.get();
+        if (NS_FAILED(ios->Init())) {
+            gIOService = nullptr;
             return nullptr;
         }
-        return gIOService;
+
+        return ios.forget();
     }
-    NS_ADDREF(gIOService);
-    return gIOService;
+    return do_AddRef(gIOService);
 }
 
 NS_IMPL_ISUPPORTS(nsIOService,

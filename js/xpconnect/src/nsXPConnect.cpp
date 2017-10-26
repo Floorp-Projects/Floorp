@@ -141,12 +141,10 @@ nsXPConnect::InitStatics()
     gSelf->mRuntime->InitSingletonScopes();
 }
 
-nsXPConnect*
+already_AddRefed<nsXPConnect>
 nsXPConnect::GetSingleton()
 {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    NS_IF_ADDREF(xpc);
-    return xpc;
+    return do_AddRef(nsXPConnect::XPConnect());
 }
 
 // static
