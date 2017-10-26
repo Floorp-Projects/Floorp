@@ -13,7 +13,6 @@
 
 namespace sandbox {
 namespace bpf_dsl {
-class ErrorCode;
 class PolicyCompiler;
 
 namespace internal {

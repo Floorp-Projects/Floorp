@@ -10,9 +10,11 @@
 #include <string>
 
 #include "base/base_export.h"
+#include "base/hash.h"
 #include "base/macros.h"
 #include "base/memory/shared_memory_handle.h"
 #include "base/process/process_handle.h"
+#include "base/strings/string16.h"
 #include "build/build_config.h"
 
 #if defined(OS_POSIX)
@@ -34,7 +36,10 @@ class FilePath;
 
 // Options for creating a shared memory object.
 struct BASE_EXPORT SharedMemoryCreateOptions {
-#if !(defined(OS_MACOSX) && !defined(OS_IOS))
+#if defined(OS_MACOSX) && !defined(OS_IOS)
+  // The type of OS primitive that should back the SharedMemory object.
+  SharedMemoryHandle::Type type = SharedMemoryHandle::MACH;
+#elif !defined(OS_FUCHSIA)
   // DEPRECATED (crbug.com/345734):
   // If NULL, the object is anonymous.  This pointer is owned by the caller
   // and must live through the call to Create().
@@ -46,7 +51,7 @@ struct BASE_EXPORT SharedMemoryCreateOptions {
   // shared memory must not exist.  This flag is meaningless unless
   // name_deprecated is non-NULL.
   bool open_existing_deprecated = false;
-#endif  // !(defined(OS_MACOSX) && !defined(OS_IOS))
+#endif  // defined(OS_MACOSX) && !defined(OS_IOS)
 
   // Size of the shared memory object to be created.
   // When opening an existing object, this has no effect.
@@ -59,8 +64,10 @@ struct BASE_EXPORT SharedMemoryCreateOptions {
   bool share_read_only = false;
 };
 
-// Platform abstraction for shared memory.  Provides a C++ wrapper
-// around the OS primitive for a memory mapped file.
+// Platform abstraction for shared memory.
+// SharedMemory consumes a SharedMemoryHandle [potentially one that it created]
+// to map a shared memory OS resource into the virtual address space of the
+// current process.
 class BASE_EXPORT SharedMemory {
  public:
   SharedMemory();
@@ -69,15 +76,15 @@ class BASE_EXPORT SharedMemory {
   // Similar to the default constructor, except that this allows for
   // calling LockDeprecated() to acquire the named mutex before either Create or
   // Open are called on Windows.
-  explicit SharedMemory(const std::wstring& name);
+  explicit SharedMemory(const string16& name);
 #endif
 
   // Create a new SharedMemory object from an existing, open
   // shared memory file.
   //
   // WARNING: This does not reduce the OS-level permissions on the handle; it
-  // only affects how the SharedMemory will be mmapped.  Use
-  // ShareReadOnlyToProcess to drop permissions.  TODO(jln,jyasskin): DCHECK
+  // only affects how the SharedMemory will be mmapped. Use
+  // GetReadOnlyHandle to drop permissions. TODO(jln,jyasskin): DCHECK
   // that |read_only| matches the permissions of the handle.
   SharedMemory(const SharedMemoryHandle& handle, bool read_only);
 
@@ -88,31 +95,21 @@ class BASE_EXPORT SharedMemory {
   // invalid value; NULL for a HANDLE and -1 for a file descriptor)
   static bool IsHandleValid(const SharedMemoryHandle& handle);
 
-  // Returns invalid handle (see comment above for exact definition).
-  static SharedMemoryHandle NULLHandle();
-
   // Closes a shared memory handle.
   static void CloseHandle(const SharedMemoryHandle& handle);
 
   // Returns the maximum number of handles that can be open at once per process.
   static size_t GetHandleLimit();
 
-  // Duplicates The underlying OS primitive. Returns NULLHandle() on failure.
-  // The caller is responsible for destroying the duplicated OS primitive.
+  // Duplicates The underlying OS primitive. Returns an invalid handle on
+  // failure. The caller is responsible for destroying the duplicated OS
+  // primitive.
   static SharedMemoryHandle DuplicateHandle(const SharedMemoryHandle& handle);
 
-#if defined(OS_POSIX) && !(defined(OS_MACOSX) && !defined(OS_IOS))
+#if defined(OS_POSIX) && !defined(OS_FUCHSIA)
   // This method requires that the SharedMemoryHandle is backed by a POSIX fd.
   static int GetFdFromSharedMemoryHandle(const SharedMemoryHandle& handle);
 #endif
-
-#if defined(OS_POSIX) && !defined(OS_ANDROID)
-  // Gets the size of the shared memory region referred to by |handle|.
-  // Returns false on a failure to determine the size. On success, populates the
-  // output variable |size|.
-  static bool GetSizeFromSharedMemoryHandle(const SharedMemoryHandle& handle,
-                                            size_t* size);
-#endif  // defined(OS_POSIX) && !defined(OS_ANDROID)
 
   // Creates a shared memory object as described by the options struct.
   // Returns true on success and false on failure.
@@ -130,7 +127,7 @@ class BASE_EXPORT SharedMemory {
     return Create(options);
   }
 
-#if !defined(OS_MACOSX) || defined(OS_IOS)
+#if (!defined(OS_MACOSX) || defined(OS_IOS)) && !defined(OS_FUCHSIA)
   // DEPRECATED (crbug.com/345734):
   // Creates or opens a shared memory segment based on a name.
   // If open_existing is true, and the shared memory already exists,
@@ -204,89 +201,55 @@ class BASE_EXPORT SharedMemory {
   // It is safe to call Close repeatedly.
   void Close();
 
-  // Shares the shared memory to another process.  Attempts to create a
-  // platform-specific new_handle which can be used in a remote process to read
-  // the shared memory file.  new_handle is an output parameter to receive the
-  // handle for use in the remote process.
-  //
-  // |*this| must have been initialized using one of the Create*() or Open()
-  // methods with share_read_only=true. If it was constructed from a
-  // SharedMemoryHandle, this call will CHECK-fail.
-  //
-  // Returns true on success, false otherwise.
-  bool ShareReadOnlyToProcess(ProcessHandle process,
-                              SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(process, new_handle, false, SHARE_READONLY);
-  }
+  // Returns a read-only handle to this shared memory region. The caller takes
+  // ownership of the handle. For POSIX handles, CHECK-fails if the region
+  // wasn't Created or Opened with share_read_only=true, which is required to
+  // make the handle read-only. When the handle is passed to the IPC subsystem,
+  // that takes ownership of the handle. As such, it's not valid to pass the
+  // sample handle to the IPC subsystem twice. Returns an invalid handle on
+  // failure.
+  SharedMemoryHandle GetReadOnlyHandle();
 
-  // Logically equivalent to:
-  //   bool ok = ShareReadOnlyToProcess(process, new_handle);
-  //   Close();
-  //   return ok;
-  // Note that the memory is unmapped by calling this method, regardless of the
-  // return value.
-  bool GiveReadOnlyToProcess(ProcessHandle process,
-                             SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(process, new_handle, true, SHARE_READONLY);
-  }
-
-  // Shares the shared memory to another process.  Attempts
-  // to create a platform-specific new_handle which can be
-  // used in a remote process to access the shared memory
-  // file.  new_handle is an output parameter to receive
-  // the handle for use in the remote process.
-  // Returns true on success, false otherwise.
-  bool ShareToProcess(ProcessHandle process,
-                      SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(process, new_handle, false, SHARE_CURRENT_MODE);
-  }
-
-  // Logically equivalent to:
-  //   bool ok = ShareToProcess(process, new_handle);
-  //   Close();
-  //   return ok;
-  // Note that the memory is unmapped by calling this method, regardless of the
-  // return value.
-  bool GiveToProcess(ProcessHandle process,
-                     SharedMemoryHandle* new_handle) {
-    return ShareToProcessCommon(process, new_handle, true, SHARE_CURRENT_MODE);
-  }
+  // Returns an ID for the mapped region. This is ID of the SharedMemoryHandle
+  // that was mapped. The ID is valid even after the SharedMemoryHandle is
+  // Closed, as long as the region is not unmapped.
+  const UnguessableToken& mapped_id() const { return mapped_id_; }
 
  private:
 #if defined(OS_POSIX) && !defined(OS_NACL) && !defined(OS_ANDROID) && \
-    !(defined(OS_MACOSX) && !defined(OS_IOS))
-  bool PrepareMapFile(ScopedFILE fp, ScopedFD readonly);
+    !defined(OS_FUCHSIA) && (!defined(OS_MACOSX) || defined(OS_IOS))
   bool FilePathForMemoryName(const std::string& mem_name, FilePath* path);
 #endif
-  enum ShareMode {
-    SHARE_READONLY,
-    SHARE_CURRENT_MODE,
-  };
-  bool ShareToProcessCommon(ProcessHandle process,
-                            SharedMemoryHandle* new_handle,
-                            bool close_self,
-                            ShareMode);
 
 #if defined(OS_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
-  bool external_section_;
-  std::wstring       name_;
-  win::ScopedHandle  mapped_file_;
-#elif defined(OS_MACOSX) && !defined(OS_IOS)
+  bool external_section_ = false;
+  string16 name_;
+#else
+  // If valid, points to the same memory region as shm_, but with readonly
+  // permissions.
+  SharedMemoryHandle readonly_shm_;
+#endif
+
+#if defined(OS_MACOSX) && !defined(OS_IOS)
+  // The mechanism by which the memory is mapped. Only valid if |memory_| is not
+  // |nullptr|.
+  SharedMemoryHandle::Type mapped_memory_mechanism_ = SharedMemoryHandle::MACH;
+#endif
+
   // The OS primitive that backs the shared memory region.
   SharedMemoryHandle shm_;
-#elif defined(OS_POSIX)
-  int                mapped_file_;
-  int                readonly_mapped_file_;
-#endif
-  size_t             mapped_size_;
-  void*              memory_;
-  bool               read_only_;
-  size_t             requested_size_;
+
+  size_t mapped_size_ = 0;
+  void* memory_ = nullptr;
+  bool read_only_ = false;
+  size_t requested_size_ = 0;
+  base::UnguessableToken mapped_id_;
 
   DISALLOW_COPY_AND_ASSIGN(SharedMemory);
 };
+
 }  // namespace base
 
 #endif  // BASE_MEMORY_SHARED_MEMORY_H_
