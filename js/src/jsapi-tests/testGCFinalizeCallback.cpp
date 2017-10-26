@@ -4,7 +4,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static const unsigned BufferSize = 32;
+static const unsigned BufferSize = 20;
 static unsigned FinalizeCalls = 0;
 static JSFinalizeStatus StatusBuffer[BufferSize];
 
@@ -16,7 +16,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS_GC(cx);
     CHECK(cx->runtime()->gc.isFullGc());
-    CHECK(checkGroupCount(1));
+    CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
 
     /* Full GC, incremental. */
@@ -50,7 +50,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global1->zone());
     JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
     CHECK(!cx->runtime()->gc.isFullGc());
-    CHECK(checkGroupCount(1));
+    CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
 
     /* Zone GC, non-incremental, multiple zones. */
@@ -60,7 +60,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::PrepareZoneForGC(global3->zone());
     JS::GCForReason(cx, GC_NORMAL, JS::gcreason::API);
     CHECK(!cx->runtime()->gc.isFullGc());
-    CHECK(checkGroupCount(1));
+    CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
 
     /* Zone GC, incremental, single zone. */
@@ -73,7 +73,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     }
     CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
     CHECK(!cx->runtime()->gc.isFullGc());
-    CHECK(checkGroupCount(2)); // One for our zone, one for the atoms zone.
+    CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
 
     /* Zone GC, incremental, multiple zones. */
@@ -152,10 +152,10 @@ virtual void uninit() override
     JSAPITest::uninit();
 }
 
-bool checkGroupCount(size_t count)
+bool checkSingleGroup()
 {
     CHECK(FinalizeCalls < BufferSize);
-    CHECK(FinalizeCalls == count * 3 + 1);
+    CHECK(FinalizeCalls == 4);
     return true;
 }
 
