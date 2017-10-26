@@ -3164,7 +3164,7 @@ static bool
 SharedArrayRawBufferCount(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(SharedArrayRawBuffer::liveBuffers());
+    args.rval().setInt32(LiveMappedBufferCount());
     return true;
 }
 

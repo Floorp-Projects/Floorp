@@ -23,6 +23,34 @@ namespace js {
 class ArrayBufferViewObject;
 class WasmArrayRawBuffer;
 
+// Create a new mapping of size `mappedSize` with an initially committed prefix
+// of size `initialCommittedSize`.  Both arguments denote bytes and must be
+// multiples of the page size, with `initialCommittedSize` <= `mappedSize`.
+// Returns nullptr on failure.
+void* MapBufferMemory(size_t mappedSize, size_t initialCommittedSize);
+
+// Commit additional memory in an existing mapping.  `dataEnd` must be the
+// correct value for the end of the existing committed area, and `delta` must be
+// a byte amount to grow the mapping by, and must be a multiple of the page
+// size.  Returns false on failure.
+bool CommitBufferMemory(void* dataEnd, uint32_t delta);
+
+#ifndef WASM_HUGE_MEMORY
+// Extend an existing mapping by adding uncommited pages to it.  `dataStart`
+// must be the pointer to the start of the existing mapping, `mappedSize` the
+// size of the existing mapping, and `newMappedSize` the size of the extended
+// mapping (sizes in bytes), with `mappedSize` <= `newMappedSize`.  Both sizes
+// must be divisible by the page size.  Returns false on failure.
+bool ExtendBufferMapping(void* dataStart, size_t mappedSize, size_t newMappedSize);
+#endif
+
+// Remove an existing mapping.  `dataStart` must be the pointer to the start of
+// the mapping, and `mappedSize` the size of that mapping.
+void UnmapBufferMemory(void* dataStart, size_t mappedSize);
+
+// Return the number of currently live mapped buffers.
+int32_t LiveMappedBufferCount();
+
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
 //
