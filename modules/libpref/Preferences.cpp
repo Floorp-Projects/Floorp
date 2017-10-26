@@ -148,7 +148,7 @@ static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 static const uint32_t MAX_ADVISABLE_PREF_LENGTH = 4 * 1024;
 
 union PrefValue {
-  char* mStringVal;
+  const char* mStringVal;
   int32_t mIntVal;
   bool mBoolVal;
 };
@@ -262,12 +262,8 @@ ClearPrefEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   auto pref = static_cast<PrefHashEntry*>(aEntry);
   if (pref->mPrefFlags.IsTypeString()) {
-    if (pref->mDefaultPref.mStringVal) {
-      free(pref->mDefaultPref.mStringVal);
-    }
-    if (pref->mUserPref.mStringVal) {
-      free(pref->mUserPref.mStringVal);
-    }
+    free(const_cast<char*>(pref->mDefaultPref.mStringVal));
+    free(const_cast<char*>(pref->mUserPref.mStringVal));
   }
 
   // Don't need to free this because it's allocated in memory owned by
@@ -469,7 +465,7 @@ PREF_SetCharPref(const char* aPrefName, const char* aValue, bool aSetDefault)
   }
 
   PrefValue pref;
-  pref.mStringVal = const_cast<char*>(aValue);
+  pref.mStringVal = aValue;
 
   return pref_HashPref(
     aPrefName, pref, PrefType::String, aSetDefault ? kPrefSetDefault : 0);
@@ -604,7 +600,7 @@ pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry)
     return true;
   }
 
-  char* stringVal;
+  const char* stringVal;
   if (aHashEntry->mPrefFlags.HasDefault()) {
     stringVal = aHashEntry->mDefaultPref.mStringVal;
     if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
@@ -697,7 +693,7 @@ PREF_CopyCharPref(const char* aPrefName, char** aValueOut, bool aGetDefault)
   }
 
   nsresult rv = NS_ERROR_UNEXPECTED;
-  char* stringVal;
+  const char* stringVal;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
 
   if (pref && pref->mPrefFlags.IsTypeString()) {
@@ -950,7 +946,7 @@ pref_SetValue(PrefValue* aExistingValue,
               PrefType aNewType)
 {
   if (aExistingType == PrefType::String) {
-    free(aExistingValue->mStringVal);
+    free(const_cast<char*>(aExistingValue->mStringVal));
   }
 
   if (aNewType == PrefType::String) {
