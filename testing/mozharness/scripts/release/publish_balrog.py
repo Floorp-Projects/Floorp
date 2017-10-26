@@ -145,7 +145,6 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
             "--version", self.config["version"],
             "--product", self.config["product"],
             "--build-number", str(self.config["build_number"]),
-            "--suffix", channel_config["bz2_blob_suffix"],
             "--verbose",
         ])
         for r in channel_config["bz2_publish_rules"]:
