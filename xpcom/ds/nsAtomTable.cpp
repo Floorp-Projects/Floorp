@@ -455,7 +455,7 @@ public:
 
   // Static atoms aren't really refcounted. Because these entries live in a
   // global hashtable, this reference is essentially owning.
-  nsAtom* MOZ_OWNING_REF mAtom;
+  nsStaticAtom* MOZ_OWNING_REF mAtom;
 };
 
 /**
@@ -586,7 +586,7 @@ nsAtomFriend::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
 
   for (uint32_t i = 0; i < aCount; ++i) {
     const char16_t* string = aSetup[i].mString;
-    nsAtom** atomp = aSetup[i].mAtom;
+    nsStaticAtom** atomp = aSetup[i].mAtom;
 
     MOZ_ASSERT(nsCRT::IsAscii(string));
 
@@ -595,20 +595,21 @@ nsAtomFriend::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
     uint32_t hash;
     AtomTableEntry* he = GetAtomHashEntry(string, stringLen, &hash);
 
-    nsAtom* atom = he->mAtom;
-    if (atom) {
+    nsStaticAtom* atom;
+    if (he->mAtom) {
       // Disallow creating a dynamic atom, and then later, while the
       // dynamic atom is still alive, registering that same atom as a
       // static atom.  It causes subtle bugs, and we're programming in
       // C++ here, not Smalltalk.
-      if (!atom->IsStaticAtom()) {
+      if (!he->mAtom->IsStaticAtom()) {
         nsAutoCString name;
-        atom->ToUTF8String(name);
+        he->mAtom->ToUTF8String(name);
         MOZ_CRASH_UNSAFE_PRINTF(
           "Static atom registration for %s should be pushed back", name.get());
       }
+      atom = static_cast<nsStaticAtom*>(he->mAtom);
     } else {
-      atom = new nsAtom(string, stringLen, hash);
+      atom = new nsStaticAtom(string, stringLen, hash);
       he->mAtom = atom;
     }
     *atomp = atom;
@@ -757,7 +758,7 @@ NS_GetUnusedAtomCount(void)
   return gUnusedAtomCount;
 }
 
-nsAtom*
+nsStaticAtom*
 NS_GetStaticAtom(const nsAString& aUTF16String)
 {
   NS_PRECONDITION(gStaticAtomTable, "Static atom table not created yet.");

@@ -11,9 +11,6 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 
-// This class would be |final| if it wasn't for nsICSSAnonBoxPseudo and
-// nsICSSPseudoElement, which are trivial subclasses used to ensure only
-// certain atoms are passed to certain functions.
 class nsAtom
 {
 public:
@@ -85,13 +82,14 @@ private:
   friend class nsAtomFriend;
   friend class nsHtml5AtomEntry;
 
-  // Construction and destruction is done entirely by |friend|s.
+  // Dynamic atom construction is done by |friend|s.
   nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash);
-  nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash);
+
 protected:
+  nsAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash);
+
   ~nsAtom();
 
-private:
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
   uint32_t mLength: 30;
   uint32_t mKind: 2; // nsAtom::AtomKind
@@ -101,6 +99,30 @@ private:
   // that nsStringBuffer::FromData(mString) calls are only valid for non-static
   // atoms.
   char16_t* mString;
+};
+
+// A trivial subclass of nsAtom that can be used for known static atoms. The
+// main advantage of this class is that it doesn't require refcounting, so you
+// can use |nsStaticAtom*| in contrast with |RefPtr<nsAtom>|.
+//
+// This class would be |final| if it wasn't for nsICSSAnonBoxPseudo and
+// nsICSSPseudoElement, which are trivial subclasses used to ensure only
+// certain atoms are passed to certain functions.
+class nsStaticAtom : public nsAtom
+{
+public:
+  // These are deleted so it's impossible to RefPtr<nsStaticAtom>. Raw
+  // nsStaticAtom atoms should be used instead.
+  MozExternalRefCountType AddRef() = delete;
+  MozExternalRefCountType Release() = delete;
+
+private:
+  friend class nsAtomFriend;
+
+  // Construction is done entirely by |friend|s.
+  nsStaticAtom(const char16_t* aString, uint32_t aLength, uint32_t aHash)
+    : nsAtom(aString, aLength, aHash)
+  {}
 };
 
 // The four forms of NS_Atomize (for use with |RefPtr<nsAtom>|) return the
@@ -131,7 +153,7 @@ nsrefcnt NS_GetNumberOfAtoms();
 
 // Return a pointer for a static atom for the string or null if there's no
 // static atom for this string.
-nsAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
+nsStaticAtom* NS_GetStaticAtom(const nsAString& aUTF16String);
 
 // Seal the static atom table.
 void NS_SealStaticAtomTable();

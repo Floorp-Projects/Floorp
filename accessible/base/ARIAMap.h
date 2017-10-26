@@ -156,7 +156,7 @@ struct nsRoleMapEntry
     { return nsDependentAtomString(*roleAtom); }
 
   // ARIA role: string representation such as "button"
-  nsAtom** roleAtom;
+  nsStaticAtom** roleAtom;
 
   // Role mapping rule: maps to enum Role
   mozilla::a11y::role role;

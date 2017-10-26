@@ -810,7 +810,7 @@ public:
    * Attribute Mapping Helpers
    */
   struct MappedAttributeEntry {
-    nsAtom** attribute;
+    nsStaticAtom** attribute;
   };
 
   /**
@@ -827,7 +827,7 @@ public:
     return FindAttributeDependence(aAttribute, aMaps, N);
   }
 
-  static nsAtom*** HTMLSVGPropertiesToTraverseAndUnlink();
+  static nsStaticAtom*** HTMLSVGPropertiesToTraverseAndUnlink();
 
 private:
   void DescribeAttribute(uint32_t index, nsAString& aOutDescription) const;
