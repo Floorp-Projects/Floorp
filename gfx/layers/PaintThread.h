@@ -100,6 +100,7 @@ public:
    * for the frame.
    */
   bool PrepareBuffer();
+  void GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients);
 
   Maybe<Copy> mBufferCopy;
   Maybe<Unrotate> mBufferUnrotate;
@@ -129,6 +130,8 @@ public:
   // before any new painting occurs, as there can't be any async paints queued
   // or running while this is executing.
   void BeginLayerTransaction();
+
+  void PrepareBuffer(CapturedBufferState* aState);
 
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
@@ -160,6 +163,8 @@ private:
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
 
+  void AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
+                          CapturedBufferState* aState);
   void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);

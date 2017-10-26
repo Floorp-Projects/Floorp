@@ -497,7 +497,7 @@ RemoteRotatedBuffer::Lock(OpenMode aMode)
   mTarget = mClient->BorrowDrawTarget();
   if (!mTarget || !mTarget->IsValid()) {
     gfxCriticalNote << "Invalid draw target " << hexa(mTarget)
-                    << "in RemoteRotatedBuffer::Lock";
+                    << " in RemoteRotatedBuffer::Lock";
     Unlock();
     return false;
   }
@@ -507,7 +507,7 @@ RemoteRotatedBuffer::Lock(OpenMode aMode)
     if (!mTargetOnWhite || !mTargetOnWhite->IsValid()) {
       gfxCriticalNote << "Invalid draw target(s) " << hexa(mTarget)
                       << " and " << hexa(mTargetOnWhite)
-                      << "in RemoteRotatedBuffer::Lock";
+                      << " in RemoteRotatedBuffer::Lock";
       Unlock();
       return false;
     }
