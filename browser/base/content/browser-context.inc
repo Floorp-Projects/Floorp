@@ -332,7 +332,7 @@
           <menuitem id="context-reloadframe"
                     label="&reloadFrameCmd.label;"
                     accesskey="&reloadFrameCmd.accesskey;"
-                    oncommand="gContextMenu.reloadFrame();"/>
+                    oncommand="gContextMenu.reloadFrame(event);"/>
           <menuseparator/>
           <menuitem id="context-bookmarkframe"
                     label="&bookmarkThisFrameCmd.label;"

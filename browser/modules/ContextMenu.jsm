@@ -105,7 +105,8 @@ const messageListeners = {
   },
 
   "ContextMenu:ReloadFrame": function(aMessage) {
-    this.getTarget(aMessage).ownerDocument.location.reload();
+    let forceReload = aMessage.objects && aMessage.objects.forceReload;
+    this.getTarget(aMessage).ownerDocument.location.reload(forceReload);
   },
 
   "ContextMenu:ReloadImage": function(aMessage) {
