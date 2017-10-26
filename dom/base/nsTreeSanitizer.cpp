@@ -32,7 +32,7 @@ using namespace mozilla;
 //
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
 //
-nsAtom** const kElementsHTML[] = {
+nsStaticAtom** const kElementsHTML[] = {
   &nsGkAtoms::a,
   &nsGkAtoms::abbr,
   &nsGkAtoms::acronym,
@@ -147,7 +147,7 @@ nsAtom** const kElementsHTML[] = {
   nullptr
 };
 
-nsAtom** const kAttributesHTML[] = {
+nsStaticAtom** const kAttributesHTML[] = {
   &nsGkAtoms::abbr,
   &nsGkAtoms::accept,
   &nsGkAtoms::acceptcharset,
@@ -253,7 +253,7 @@ nsAtom** const kAttributesHTML[] = {
   nullptr
 };
 
-nsAtom** const kPresAttributesHTML[] = {
+nsStaticAtom** const kPresAttributesHTML[] = {
   &nsGkAtoms::align,
   &nsGkAtoms::background,
   &nsGkAtoms::bgcolor,
@@ -272,7 +272,7 @@ nsAtom** const kPresAttributesHTML[] = {
   nullptr
 };
 
-nsAtom** const kURLAttributesHTML[] = {
+nsStaticAtom** const kURLAttributesHTML[] = {
   &nsGkAtoms::action,
   &nsGkAtoms::href,
   &nsGkAtoms::src,
@@ -282,7 +282,7 @@ nsAtom** const kURLAttributesHTML[] = {
   nullptr
 };
 
-nsAtom** const kElementsSVG[] = {
+nsStaticAtom** const kElementsSVG[] = {
   &nsGkAtoms::a, // a
   &nsGkAtoms::circle, // circle
   &nsGkAtoms::clipPath, // clipPath
@@ -362,7 +362,7 @@ nsAtom** const kElementsSVG[] = {
   nullptr
 };
 
-nsAtom** const kAttributesSVG[] = {
+nsStaticAtom** const kAttributesSVG[] = {
   // accent-height
   &nsGkAtoms::accumulate, // accumulate
   &nsGkAtoms::additive, // additive
@@ -595,12 +595,12 @@ nsAtom** const kAttributesSVG[] = {
   nullptr
 };
 
-nsAtom** const kURLAttributesSVG[] = {
+nsStaticAtom** const kURLAttributesSVG[] = {
   &nsGkAtoms::href,
   nullptr
 };
 
-nsAtom** const kElementsMathML[] = {
+nsStaticAtom** const kElementsMathML[] = {
    &nsGkAtoms::abs_, // abs
    &nsGkAtoms::_and, // and
    &nsGkAtoms::annotation_, // annotation
@@ -799,7 +799,7 @@ nsAtom** const kElementsMathML[] = {
   nullptr
 };
 
-nsAtom** const kAttributesMathML[] = {
+nsStaticAtom** const kAttributesMathML[] = {
    &nsGkAtoms::accent_, // accent
    &nsGkAtoms::accentunder_, // accentunder
    &nsGkAtoms::actiontype_, // actiontype
@@ -917,7 +917,7 @@ nsAtom** const kAttributesMathML[] = {
   nullptr
 };
 
-nsAtom** const kURLAttributesMathML[] = {
+nsStaticAtom** const kURLAttributesMathML[] = {
   &nsGkAtoms::href,
   &nsGkAtoms::src,
   &nsGkAtoms::cdgroup_,
@@ -995,9 +995,9 @@ nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal)
 }
 
 bool
-nsTreeSanitizer::IsURL(nsAtom** const* aURLs, nsAtom* aLocalName)
+nsTreeSanitizer::IsURL(nsStaticAtom** const* aURLs, nsAtom* aLocalName)
 {
-  nsAtom** atomPtrPtr;
+  nsStaticAtom** atomPtrPtr;
   while ((atomPtrPtr = *aURLs)) {
     if (*atomPtrPtr == aLocalName) {
       return true;
@@ -1163,7 +1163,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                     nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
-                                    nsAtom** const* aURLs,
+                                    nsStaticAtom** const* aURLs,
                                     bool aAllowXLink,
                                     bool aAllowStyle,
                                     bool aAllowDangerousSrc)

@@ -289,8 +289,6 @@ protected:
     // pseudo constants
     static int32_t gRefCnt;
 
-    static nsAtom** kIdentityAttrs[];
-
     static nsIRDFService* gRDFService;
     static nsIRDFResource* kNC_persist;
     static nsIRDFResource* kNC_attribute;

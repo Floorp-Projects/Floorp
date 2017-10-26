@@ -169,7 +169,7 @@ struct txEXSLTFunctionDescriptor
     int8_t mMaxParams;
     Expr::ResultType mReturnType;
     int32_t mNamespaceID;
-    nsAtom** mName;
+    nsStaticAtom** mName;
     const char* mNamespaceURI;
 };
 

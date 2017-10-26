@@ -370,7 +370,7 @@ protected:
   static nsAtom* GetEventNameForAttr(nsAtom* aAttr);
 
   struct LengthInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     float     mDefaultValue;
     uint8_t   mDefaultUnitType;
     uint8_t   mCtxType;
@@ -391,7 +391,7 @@ protected:
   };
 
   struct NumberInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     float     mDefaultValue;
     bool mPercentagesAllowed;
   };
@@ -411,7 +411,7 @@ protected:
   };
 
   struct NumberPairInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     float     mDefaultValue1;
     float     mDefaultValue2;
   };
@@ -432,7 +432,7 @@ protected:
   };
 
   struct IntegerInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     int32_t   mDefaultValue;
   };
 
@@ -451,7 +451,7 @@ protected:
   };
 
   struct IntegerPairInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     int32_t   mDefaultValue1;
     int32_t   mDefaultValue2;
   };
@@ -472,7 +472,7 @@ protected:
   };
 
   struct AngleInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     float     mDefaultValue;
     uint8_t   mDefaultUnitType;
   };
@@ -492,7 +492,7 @@ protected:
   };
 
   struct BooleanInfo {
-    nsAtom**    mName;
+    nsStaticAtom** mName;
     bool mDefaultValue;
   };
 
@@ -513,7 +513,7 @@ protected:
   friend class nsSVGEnum;
 
   struct EnumInfo {
-    nsAtom**         mName;
+    nsStaticAtom**    mName;
     nsSVGEnumMapping* mMapping;
     uint16_t          mDefaultValue;
   };
@@ -533,7 +533,7 @@ protected:
   };
 
   struct NumberListInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
   };
 
   struct NumberListAttributesInfo {
@@ -553,7 +553,7 @@ protected:
   };
 
   struct LengthListInfo {
-    nsAtom** mName;
+    nsStaticAtom** mName;
     uint8_t   mAxis;
     /**
      * Flag to indicate whether appending zeros to the end of the list would
@@ -583,7 +583,7 @@ protected:
   };
 
   struct StringInfo {
-    nsAtom**    mName;
+    nsStaticAtom** mName;
     int32_t      mNamespaceID;
     bool mIsAnimatable;
   };
@@ -605,7 +605,7 @@ protected:
   friend class mozilla::DOMSVGStringList;
 
   struct StringListInfo {
-    nsAtom**    mName;
+    nsStaticAtom** mName;
   };
 
   struct StringListAttributesInfo {

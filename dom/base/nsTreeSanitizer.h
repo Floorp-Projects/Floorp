@@ -113,7 +113,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @param aLocalName the name to search on the list
      * @return true if aLocalName is on the aURLs list and false otherwise
      */
-    bool IsURL(nsAtom** const* aURLs, nsAtom* aLocalName);
+    bool IsURL(nsStaticAtom** const* aURLs, nsAtom* aLocalName);
 
     /**
      * Removes dangerous attributes from the element. If the style attribute
@@ -131,7 +131,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
                             nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
-                            nsAtom** const* aURLs,
+                            nsStaticAtom** const* aURLs,
                             bool aAllowXLink,
                             bool aAllowStyle,
                             bool aAllowDangerousSrc);
