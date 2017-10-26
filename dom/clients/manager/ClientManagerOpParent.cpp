@@ -6,6 +6,8 @@
 
 #include "ClientManagerOpParent.h"
 
+#include "ClientManagerService.h"
+
 namespace mozilla {
 namespace dom {
 
