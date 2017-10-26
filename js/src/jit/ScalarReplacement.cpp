@@ -151,7 +151,10 @@ static bool
 IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
 {
     MOZ_ASSERT(ins->type() == MIRType::Object);
-    MOZ_ASSERT(IsOptimizableObjectInstruction(ins) || ins->isGuardShape() ||
+    MOZ_ASSERT(IsOptimizableObjectInstruction(ins) ||
+               ins->isGuardShape() ||
+               ins->isGuardObjectGroup() ||
+               ins->isGuardUnboxedExpando() ||
                ins->isFunctionEnvironment());
 
     JitSpewDef(JitSpew_Escape, "Check object\n", ins);
@@ -243,6 +246,38 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
             break;
           }
 
+          case MDefinition::Opcode::GuardObjectGroup: {
+            MGuardObjectGroup* guard = def->toGuardObjectGroup();
+            MOZ_ASSERT(!ins->isGuardObjectGroup());
+            if (obj->group() != guard->group()) {
+                JitSpewDef(JitSpew_Escape, "has a non-matching guard group\n", guard);
+                return true;
+            }
+            if (IsObjectEscaped(def->toInstruction(), obj)) {
+                JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+                return true;
+            }
+            break;
+          }
+
+          case MDefinition::Opcode::GuardUnboxedExpando: {
+            MGuardUnboxedExpando* guard = def->toGuardUnboxedExpando();
+            MOZ_ASSERT(!ins->isGuardUnboxedExpando());
+            if (guard->requireExpando()) {
+                JitSpewDef(JitSpew_Escape, "requires an unboxed expando object\n", guard);
+                return true;
+            }
+            if (obj->as<UnboxedPlainObject>().maybeExpando()) {
+                JitSpewDef(JitSpew_Escape, "has an expando object\n", guard);
+                return true;
+            }
+            if (IsObjectEscaped(def->toInstruction(), obj)) {
+                JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+                return true;
+            }
+            break;
+          }
+
           case MDefinition::Opcode::Lambda:
           case MDefinition::Opcode::LambdaArrow: {
             if (IsLambdaEscaped(def->toInstruction(), obj)) {
@@ -311,6 +346,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
     void visitStoreSlot(MStoreSlot* ins);
     void visitLoadSlot(MLoadSlot* ins);
     void visitGuardShape(MGuardShape* ins);
+    void visitGuardObjectGroup(MGuardObjectGroup* ins);
+    void visitGuardUnboxedExpando(MGuardUnboxedExpando* ins);
     void visitFunctionEnvironment(MFunctionEnvironment* ins);
     void visitLambda(MLambda* ins);
     void visitLambdaArrow(MLambdaArrow* ins);
@@ -324,6 +361,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
   private:
     void storeOffset(MInstruction* ins, size_t offset, MDefinition* value);
     void loadOffset(MInstruction* ins, size_t offset);
+    void visitObjectGuard(MInstruction* ins, MDefinition* operand);
 };
 
 const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
@@ -626,17 +664,39 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot* ins)
 }
 
 void
-ObjectMemoryView::visitGuardShape(MGuardShape* ins)
+ObjectMemoryView::visitObjectGuard(MInstruction* ins, MDefinition* operand)
 {
-    // Skip loads made on other objects.
-    if (ins->object() != obj_)
+    MOZ_ASSERT(ins->numOperands() == 1);
+    MOZ_ASSERT(ins->getOperand(0) == operand);
+    MOZ_ASSERT(ins->type() == MIRType::Object);
+
+    // Skip guards on other objects.
+    if (operand != obj_)
         return;
 
-    // Replace the shape guard by its object.
+    // Replace the guard by its object.
     ins->replaceAllUsesWith(obj_);
 
     // Remove original instruction.
     ins->block()->discard(ins);
+}
+
+void
+ObjectMemoryView::visitGuardShape(MGuardShape* ins)
+{
+    visitObjectGuard(ins, ins->object());
+}
+
+void
+ObjectMemoryView::visitGuardObjectGroup(MGuardObjectGroup* ins)
+{
+    visitObjectGuard(ins, ins->object());
+}
+
+void
+ObjectMemoryView::visitGuardUnboxedExpando(MGuardUnboxedExpando* ins)
+{
+    visitObjectGuard(ins, ins->object());
 }
 
 void
