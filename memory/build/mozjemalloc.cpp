@@ -109,10 +109,11 @@
 
 #include "mozmemory_wrap.h"
 #include "mozjemalloc.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/Likely.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 
 /*
@@ -483,7 +484,7 @@ static size_t arena_maxclass; /* Max size class for arenas. */
 static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 
 /* The current amount of recycled bytes, updated atomically. */
-static size_t gRecycledSize;
+static mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gRecycledSize;
 
 /******************************************************************************/
 
@@ -1200,24 +1201,6 @@ FORK_HOOK void _malloc_postfork_child(void);
  * End forward declarations.
  */
 /******************************************************************************/
-
-static inline size_t
-load_acquire_z(size_t *p)
-{
-	volatile size_t result = *p;
-#  ifdef XP_WIN
-	/*
-	 * We use InterlockedExchange with a dummy value to insert a memory
-	 * barrier. This has been confirmed to generate the right instruction
-	 * and is also used by MinGW.
-	 */
-	volatile long dummy = 0;
-	InterlockedExchange(&dummy, 1);
-#  else
-	__sync_synchronize();
-#  endif
-	return result;
-}
 
 static void
 _malloc_message(const char *p)
@@ -2178,7 +2161,7 @@ chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType)
   gChunkRTree.Unset(aChunk);
 
   if (CAN_RECYCLE(aSize)) {
-    size_t recycled_so_far = load_acquire_z(&gRecycledSize);
+    size_t recycled_so_far = gRecycledSize;
     // In case some race condition put us above the limit.
     if (recycled_so_far < gRecycleLimit) {
       size_t recycle_remaining = gRecycleLimit - recycled_so_far;
