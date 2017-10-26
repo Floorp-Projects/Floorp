@@ -1599,12 +1599,14 @@ public:
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
-  void MarkFrameModifiedDuringBuilding(nsIFrame* aFrame)
+  bool MarkFrameModifiedDuringBuilding(nsIFrame* aFrame)
   {
     if (!aFrame->IsFrameModified()) {
       mModifiedFramesDuringBuilding.AppendElement(aFrame);
       aFrame->SetFrameIsModified(true);
+      return true;
     }
+    return false;
   }
 
   /**
