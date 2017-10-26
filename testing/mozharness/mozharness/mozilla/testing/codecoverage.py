@@ -26,6 +26,12 @@ code_coverage_config_options = [
       "default": False,
       "help": "Whether test run should package and upload code coverage data."
       }],
+    [["--jsd-code-coverage"],
+     {"action": "store_true",
+      "dest": "jsd_code_coverage",
+      "default": False,
+      "help": "Whether JSDebugger code coverage should be run."
+      }],
 ]
 
 
@@ -54,6 +60,17 @@ class CodeCoverageMixin(object):
             if self.config.get('disable_ccov_upload'):
                 return True
             return False
+        except (AttributeError, KeyError, TypeError):
+            return False
+
+    @property
+    def jsd_code_coverage_enabled(self):
+        try:
+            if self.config.get('jsd_code_coverage'):
+                return True
+
+            # XXX workaround because bug 1110465 is hard
+            return self.buildbot_config['properties']['stage_platform'] in ('linux64-jsdcov',)
         except (AttributeError, KeyError, TypeError):
             return False
 
@@ -89,6 +106,24 @@ class CodeCoverageMixin(object):
 
     @PostScriptAction('run-tests')
     def _package_coverage_data(self, action, success=None):
+        if self.jsd_code_coverage_enabled:
+            # Setup the command for compression
+            dirs = self.query_abs_dirs()
+            jsdcov_dir = dirs['abs_blob_upload_dir']
+            zipFile = os.path.join(jsdcov_dir, "jsdcov_artifacts.zip")
+            command = ["zip", "-r", zipFile, ".", "-i", "jscov*.json"]
+
+            self.info("Beginning compression of JSDCov artifacts...")
+            self.run_command(command, cwd=jsdcov_dir)
+
+            # Delete already compressed JSCov artifacts.
+            for filename in os.listdir(jsdcov_dir):
+                if filename.startswith("jscov") and filename.endswith(".json"):
+                    os.remove(os.path.join(jsdcov_dir, filename))
+
+            self.info("Completed compression of JSDCov artifacts!")
+            self.info("Path to JSDCov compressed artifacts: " + zipFile)
+
         if not self.code_coverage_enabled:
             return
         del os.environ['GCOV_PREFIX']
