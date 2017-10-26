@@ -86,15 +86,13 @@ VRManagerParent::UnregisterFromManager()
 /* static */ bool
 VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  MessageLoop* loop = VRListenerThreadHolder::Loop();
-
+  MessageLoop* loop = CompositorThreadHolder::Loop();
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), true);
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     "gfx::VRManagerParent::Bind",
     vmp,
     &VRManagerParent::Bind,
     Move(aEndpoint)));
-
   return true;
 }
 
@@ -110,7 +108,7 @@ VRManagerParent::Bind(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 /*static*/ void
-VRManagerParent::RegisterVRManagerInVRListenerThread(VRManagerParent* aVRManager)
+VRManagerParent::RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager)
 {
   aVRManager->RegisterWithManager();
 }
@@ -118,21 +116,21 @@ VRManagerParent::RegisterVRManagerInVRListenerThread(VRManagerParent* aVRManager
 /*static*/ VRManagerParent*
 VRManagerParent::CreateSameProcess()
 {
-  MessageLoop* loop = VRListenerThreadHolder::Loop();
+  MessageLoop* loop = CompositorThreadHolder::Loop();
   RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId(), false);
-  vmp->mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
+  vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
-  loop->PostTask(NewRunnableFunction(RegisterVRManagerInVRListenerThread, vmp.get()));
+  loop->PostTask(NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
   return vmp.get();
 }
 
 bool
 VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  MessageLoop* loop = VRListenerThreadHolder::Loop();
+  MessageLoop* loop = CompositorThreadHolder::Loop();
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), false);
-  vmp->mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
+  vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
   loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
     "gfx::VRManagerParent::Bind",
     vmp,
@@ -144,8 +142,23 @@ VRManagerParent::CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint)
 void
 VRManagerParent::DeferredDestroy()
 {
-  mVRListenerThreadHolder = nullptr;
+  mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
+}
+
+void
+VRManagerParent::RefreshDisplays()
+{
+  // This is called to refresh the VR Displays for Navigator.GetVRDevices().
+  // We must pass "true" to VRManager::RefreshVRDisplays()
+  // to ensure that the promise returned by Navigator.GetVRDevices
+  // can resolve even if there are no changes to the VR Displays.
+  VRManager* vm = VRManager::Get();
+  MessageLoop* loop = VRListenerThreadHolder::Loop();
+  loop->PostTask(
+    NewRunnableMethod<bool>(
+      "gfx::VRManager::RefreshVRDisplays",
+      vm, &VRManager::RefreshVRDisplays, true));
 }
 
 void
@@ -161,21 +174,25 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
 void
 VRManagerParent::OnChannelConnected(int32_t aPid)
 {
-  mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
+  mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
 }
 
 mozilla::ipc::IPCResult
 VRManagerParent::RecvRefreshDisplays()
 {
-  // TODO: Bug 1406327, Launch VR listener thread here.
-  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+  MOZ_ASSERT(NS_IsInCompositorThread());
 
-  // This is called to refresh the VR Displays for Navigator.GetVRDevices().
-  // We must pass "true" to VRManager::RefreshVRDisplays()
-  // to ensure that the promise returned by Navigator.GetVRDevices
-  // can resolve even if there are no changes to the VR Displays.
-  VRManager* vm = VRManager::Get();
-  vm->RefreshVRDisplays(true);
+  // When receiving refresh display messages at the first time,
+  // it is time to start the VR listener thread.
+  // Spawning threads needs to be at the main thread.
+  if (!VRListenerThreadHolder::IsActive()) {
+    RefPtr<Runnable> runnable = NewRunnableMethod(
+      "gfx::VRManagerParent::StartVRListenerThread",
+      this, &VRManagerParent::StartVRListenerThread);
+    NS_DispatchToMainThread(runnable.forget());
+  } else {
+    RefreshDisplays();
+  }
 
   return IPC_OK();
 }
@@ -201,6 +218,13 @@ VRManagerParent::RecvSetGroupMask(const uint32_t& aDisplayID, const uint32_t& aG
     display->SetGroupMask(aGroupMask);
   }
   return IPC_OK();
+}
+
+void
+VRManagerParent::StartVRListenerThread()
+{
+  VRListenerThreadHolder::Start();
+  RefreshDisplays();
 }
 
 bool
