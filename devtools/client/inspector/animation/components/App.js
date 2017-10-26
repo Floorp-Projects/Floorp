@@ -9,11 +9,13 @@ const { createFactory, DOM: dom, PropTypes, PureComponent } =
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const AnimationList = createFactory(require("./AnimationList"));
+const NoAnimationPanel = createFactory(require("./NoAnimationPanel"));
 
 class App extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      toggleElementPicker: PropTypes.func.isRequired,
     };
   }
 
@@ -22,15 +24,21 @@ class App extends PureComponent {
   }
 
   render() {
-    const { animations } = this.props;
+    const { animations, toggleElementPicker } = this.props;
 
     return dom.div(
       {
         id: "animation-container"
       },
-      AnimationList(
+      animations.length
+      ? AnimationList(
         {
           animations
+        }
+      )
+      : NoAnimationPanel(
+        {
+          toggleElementPicker
         }
       )
     );
