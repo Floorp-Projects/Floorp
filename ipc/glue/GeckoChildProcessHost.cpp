@@ -520,10 +520,6 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     // shiny new content-process specific tmpdir
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("TMPDIR")] =
       ENVIRONMENT_STRING(mTmpDirName);
-    mLaunchOptions->env_map[ENVIRONMENT_LITERAL("XDG_CACHE_HOME")] =
-      ENVIRONMENT_STRING(mTmpDirName);
-    mLaunchOptions->env_map[ENVIRONMENT_LITERAL("XDG_CACHE_DIR")] =
-      ENVIRONMENT_STRING(mTmpDirName);
     // Partial fix for bug 1380051 (not persistent - should be)
     mLaunchOptions->env_map[ENVIRONMENT_LITERAL("MESA_GLSL_CACHE_DIR")] =
       ENVIRONMENT_STRING(mTmpDirName);
