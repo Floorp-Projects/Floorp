@@ -25,22 +25,20 @@ NS_IMPL_ISUPPORTS(
 
 nsDownloadManager *nsDownloadManager::gDownloadManagerService = nullptr;
 
-nsDownloadManager *
+already_AddRefed<nsDownloadManager>
 nsDownloadManager::GetSingleton()
 {
   if (gDownloadManagerService) {
-    NS_ADDREF(gDownloadManagerService);
-    return gDownloadManagerService;
+    return do_AddRef(gDownloadManagerService);
   }
 
-  gDownloadManagerService = new nsDownloadManager();
-  if (gDownloadManagerService) {
-    NS_ADDREF(gDownloadManagerService);
-    if (NS_FAILED(gDownloadManagerService->Init()))
-      NS_RELEASE(gDownloadManagerService);
+  auto serv = MakeRefPtr<nsDownloadManager>();
+  gDownloadManagerService = serv.get();
+  if (NS_FAILED(serv->Init())) {
+    gDownloadManagerService = nullptr;
+    return nullptr;
   }
-
-  return gDownloadManagerService;
+  return serv.forget();
 }
 
 nsDownloadManager::~nsDownloadManager()

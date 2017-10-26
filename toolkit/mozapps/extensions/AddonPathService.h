@@ -23,7 +23,7 @@ class AddonPathService final : public amIAddonPathService
 public:
   AddonPathService();
 
-  static AddonPathService* GetInstance();
+  static already_AddRefed<AddonPathService> GetInstance();
 
   JSAddonId* Find(const nsAString& path);
   static JSAddonId* FindAddonId(const nsAString& path);

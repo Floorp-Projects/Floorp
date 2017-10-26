@@ -1552,21 +1552,13 @@ NS_IMPL_ISUPPORTS(ApplicationReputationService,
 ApplicationReputationService*
   ApplicationReputationService::gApplicationReputationService = nullptr;
 
-ApplicationReputationService*
+already_AddRefed<ApplicationReputationService>
 ApplicationReputationService::GetSingleton()
 {
-  if (gApplicationReputationService) {
-    NS_ADDREF(gApplicationReputationService);
-    return gApplicationReputationService;
+  if (!gApplicationReputationService) {
+    gApplicationReputationService = new ApplicationReputationService();
   }
-
-  // We're not initialized yet.
-  gApplicationReputationService = new ApplicationReputationService();
-  if (gApplicationReputationService) {
-    NS_ADDREF(gApplicationReputationService);
-  }
-
-  return gApplicationReputationService;
+  return do_AddRef(gApplicationReputationService);
 }
 
 ApplicationReputationService::ApplicationReputationService()
