@@ -720,7 +720,6 @@ class dromaeo_dom(dromaeo):
     gecko_profile_interval = 2
     gecko_profile_entries = 10000000
     tpmanifest = '${talos}/tests/dromaeo/dom.manifest'
-    tpdisable_e10s = True
     unit = 'score'
 
 

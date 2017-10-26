@@ -30,7 +30,6 @@ DEFAULTS = dict(
         cycles=1,
         profile_path='${talos}/base_profile',
         responsiveness=False,
-        e10s=False,
         gecko_profile=False,
         gecko_profile_interval=1,
         gecko_profile_entries=100000,
@@ -47,7 +46,6 @@ DEFAULTS = dict(
         userready=False,
         testeventmap=[],
         base_vs_ref=False,
-        tpdisable_e10s=False,
         tpnoisy=True,
         tppagecycles=1,
         tploadnocache=False,
@@ -290,12 +288,7 @@ def set_webserver(config):
 
 @validator
 def update_prefs(config):
-    # if e10s is enabled, set prefs accordingly
-    if config['e10s']:
-        config['preferences']['browser.tabs.remote.autostart'] = True
-    else:
-        config['preferences']['browser.tabs.remote.autostart'] = False
-
+    config['preferences']['browser.tabs.remote.autostart'] = True
     # update prefs from command line
     prefs = config.pop('extraPrefs')
     if prefs:
@@ -438,7 +431,6 @@ def get_browser_config(config):
                 'branch_name': '',
                 'child_process': 'plugin-container',
                 'develop': False,
-                'e10s': False,
                 'process': '',
                 'framework': 'talos',
                 'repository': None,
