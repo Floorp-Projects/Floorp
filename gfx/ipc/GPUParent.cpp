@@ -331,17 +331,6 @@ GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
 }
 
 mozilla::ipc::IPCResult
-GPUParent::RecvSimulateDeviceReset(GPUDeviceData* aOut)
-{
-#if defined(XP_WIN)
-  DeviceManagerDx::Get()->ForceDeviceReset(ForcedDeviceResetReason::COMPOSITOR_UPDATED);
-  DeviceManagerDx::Get()->MaybeResetAndReacquireDevices();
-#endif
-  RecvGetDeviceStatus(aOut);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 GPUParent::RecvNewContentCompositorManager(Endpoint<PCompositorManagerParent>&& aEndpoint)
 {
   CompositorManagerParent::Create(Move(aEndpoint));
