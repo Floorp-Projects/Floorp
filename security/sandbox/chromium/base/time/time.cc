@@ -21,11 +21,6 @@ namespace base {
 
 // TimeDelta ------------------------------------------------------------------
 
-// static
-TimeDelta TimeDelta::Max() {
-  return TimeDelta(std::numeric_limits<int64_t>::max());
-}
-
 int TimeDelta::InDays() const {
   if (is_max()) {
     // Preserve max to prevent overflow.
@@ -99,6 +94,14 @@ int64_t TimeDelta::InMicroseconds() const {
   return delta_;
 }
 
+int64_t TimeDelta::InNanoseconds() const {
+  if (is_max()) {
+    // Preserve max to prevent overflow.
+    return std::numeric_limits<int64_t>::max();
+  }
+  return delta_ * Time::kNanosecondsPerMicrosecond;
+}
+
 namespace time_internal {
 
 int64_t SaturatedAdd(TimeDelta delta, int64_t value) {
@@ -108,7 +111,7 @@ int64_t SaturatedAdd(TimeDelta delta, int64_t value) {
     return rv.ValueOrDie();
   // Positive RHS overflows. Negative RHS underflows.
   if (value < 0)
-    return -std::numeric_limits<int64_t>::max();
+    return std::numeric_limits<int64_t>::min();
   return std::numeric_limits<int64_t>::max();
 }
 
@@ -120,13 +123,13 @@ int64_t SaturatedSub(TimeDelta delta, int64_t value) {
   // Negative RHS overflows. Positive RHS underflows.
   if (value < 0)
     return std::numeric_limits<int64_t>::max();
-  return -std::numeric_limits<int64_t>::max();
+  return std::numeric_limits<int64_t>::min();
 }
 
 }  // namespace time_internal
 
 std::ostream& operator<<(std::ostream& os, TimeDelta time_delta) {
-  return os << time_delta.InSecondsF() << "s";
+  return os << time_delta.InSecondsF() << " s";
 }
 
 // Time -----------------------------------------------------------------------
@@ -203,6 +206,11 @@ double Time::ToJsTime() const {
           kMicrosecondsPerMillisecond);
 }
 
+Time Time::FromJavaTime(int64_t ms_since_epoch) {
+  return base::Time::UnixEpoch() +
+         base::TimeDelta::FromMilliseconds(ms_since_epoch);
+}
+
 int64_t Time::ToJavaTime() const {
   if (is_null()) {
     // Preserve 0 so the invalid result doesn't depend on the platform.
@@ -230,7 +238,12 @@ Time Time::LocalMidnight() const {
   exploded.minute = 0;
   exploded.second = 0;
   exploded.millisecond = 0;
-  return FromLocalExploded(exploded);
+  Time out_time;
+  if (FromLocalExploded(exploded, &out_time))
+    return out_time;
+  // This function must not fail.
+  NOTREACHED();
+  return Time();
 }
 
 #if !defined(MOZ_SANDBOX)

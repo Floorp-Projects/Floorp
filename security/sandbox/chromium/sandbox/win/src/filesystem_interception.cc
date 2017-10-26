@@ -14,7 +14,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 // This status occurs when trying to access a network share on the machine from
 // which it is shared.
@@ -38,10 +37,6 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
   if (STATUS_ACCESS_DENIED != status &&
       STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtCreateFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -75,6 +70,9 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IPC_NTCREATEFILE_TAG, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     // The following call must match in the parameters with
@@ -97,9 +95,6 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -119,10 +114,6 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
   if (STATUS_ACCESS_DENIED != status &&
       STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtOpenFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -156,6 +147,9 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IPC_NTOPENFILE_TAG, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code = CrossCall(ipc, IPC_NTOPENFILE_TAG, name, attributes,
@@ -176,9 +170,6 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -196,10 +187,6 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
   if (STATUS_ACCESS_DENIED != status &&
       STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtQueryAttributesFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -228,6 +215,9 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IPC_NTQUERYATTRIBUTESFILE_TAG, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name,
@@ -238,9 +228,6 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
 
     status = answer.nt_status;
 
-    mozilla::sandboxing::LogAllowed("NtQueryAttributesFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -259,10 +246,6 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
   if (STATUS_ACCESS_DENIED != status &&
       STATUS_NETWORK_OPEN_RESTRICTION != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtQueryFullAttributesFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -292,6 +275,9 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IPC_NTQUERYFULLATTRIBUTESFILE_TAG, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG, name,
@@ -301,10 +287,6 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
       break;
 
     status = answer.nt_status;
-
-    mozilla::sandboxing::LogAllowed("NtQueryFullAttributesFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -322,8 +304,6 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
                                             file_info_class);
   if (STATUS_ACCESS_DENIED != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtSetInformationFile");
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -368,6 +348,9 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IPC_NTSETINFO_RENAME_TAG, params.GetBase()))
+      break;
+
     InOutCountedBuffer io_status_buffer(io_status, sizeof(IO_STATUS_BLOCK));
     // This is actually not an InOut buffer, only In, but using InOut facility
     // really helps to simplify the code.
@@ -383,7 +366,6 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
       break;
 
     status = answer.nt_status;
-    mozilla::sandboxing::LogAllowed("NtSetInformationFile");
   } while (false);
 
   if (name)

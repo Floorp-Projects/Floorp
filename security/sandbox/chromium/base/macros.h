@@ -17,21 +17,16 @@
   TypeName(const TypeName&) = delete
 
 // Put this in the declarations for a class to be unassignable.
-#define DISALLOW_ASSIGN(TypeName) \
-  void operator=(const TypeName&) = delete
+#define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&) = delete
 
-// A macro to disallow the copy constructor and operator= functions.
-// This should be used in the private: declarations for a class.
+// Put this in the declarations for a class to be uncopyable and unassignable.
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&) = delete;      \
-  void operator=(const TypeName&) = delete
+  DISALLOW_COPY(TypeName);                 \
+  DISALLOW_ASSIGN(TypeName)
 
 // A macro to disallow all the implicit constructors, namely the
 // default constructor, copy constructor and operator= functions.
-//
-// This should be used in the private: declarations for a class
-// that wants to prevent anyone from instantiating it. This is
-// especially useful for classes containing only static methods.
+// This is especially useful for classes containing only static methods.
 #define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
   TypeName() = delete;                           \
   DISALLOW_COPY_AND_ASSIGN(TypeName)

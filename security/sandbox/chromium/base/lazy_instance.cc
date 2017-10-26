@@ -38,16 +38,16 @@ bool NeedsLazyInstance(subtle::AtomicWord* state) {
 
 void CompleteLazyInstance(subtle::AtomicWord* state,
                           subtle::AtomicWord new_instance,
-                          void* lazy_instance,
-                          void (*dtor)(void*)) {
+                          void (*destructor)(void*),
+                          void* destructor_arg) {
   // Instance is created, go from CREATING to CREATED.
   // Releases visibility over private_buf_ to readers. Pairing Acquire_Load's
   // are in NeedsInstance() and Pointer().
   subtle::Release_Store(state, new_instance);
 
   // Make sure that the lazily instantiated object will get destroyed at exit.
-  if (dtor)
-    AtExitManager::RegisterCallback(dtor, lazy_instance);
+  if (destructor)
+    AtExitManager::RegisterCallback(destructor, destructor_arg);
 }
 
 }  // namespace internal

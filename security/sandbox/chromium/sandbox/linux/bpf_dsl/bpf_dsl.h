@@ -76,6 +76,11 @@
 namespace sandbox {
 namespace bpf_dsl {
 
+template <typename T>
+class Caser;
+
+class Elser;
+
 // ResultExpr is an opaque reference to an immutable result expression tree.
 using ResultExpr = std::shared_ptr<const internal::ResultExprImpl>;
 

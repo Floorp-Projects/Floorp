@@ -206,7 +206,7 @@ class TargetPolicy {
 
   // Disconnect the target from CSRSS when TargetServices::LowerToken() is
   // called inside the target.
-  virtual void SetDisconnectCsrss() = 0;
+  virtual ResultCode SetDisconnectCsrss() = 0;
 
   // Sets the interceptions to operate in strict mode. By default, interceptions
   // are performed in "relaxed" mode, where if something inside NTDLL.DLL is

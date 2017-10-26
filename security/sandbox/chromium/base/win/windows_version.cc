@@ -50,8 +50,12 @@ Version MajorMinorBuildToVersion(int major, int minor, int build) {
   } else if (major == 10) {
     if (build < 10586) {
       return VERSION_WIN10;
-    } else {
+    } else if (build < 14393) {
       return VERSION_WIN10_TH2;
+    } else if (build < 15063) {
+      return VERSION_WIN10_RS1;
+    } else {
+      return VERSION_WIN10_RS2;
     }
   } else if (major > 6) {
     NOTREACHED();
@@ -176,9 +180,24 @@ OSInfo::OSInfo()
         break;
       case PRODUCT_PROFESSIONAL:
       case PRODUCT_ULTIMATE:
-      case PRODUCT_ENTERPRISE:
-      case PRODUCT_BUSINESS:
         version_type_ = SUITE_PROFESSIONAL;
+        break;
+      case PRODUCT_ENTERPRISE:
+      case PRODUCT_ENTERPRISE_E:
+      case PRODUCT_ENTERPRISE_EVALUATION:
+      case PRODUCT_ENTERPRISE_N:
+      case PRODUCT_ENTERPRISE_N_EVALUATION:
+      case PRODUCT_ENTERPRISE_S:
+      case PRODUCT_ENTERPRISE_S_EVALUATION:
+      case PRODUCT_ENTERPRISE_S_N:
+      case PRODUCT_ENTERPRISE_S_N_EVALUATION:
+      case PRODUCT_BUSINESS:
+      case PRODUCT_BUSINESS_N:
+        version_type_ = SUITE_ENTERPRISE;
+        break;
+      case PRODUCT_EDUCATION:
+      case PRODUCT_EDUCATION_N:
+        version_type_ = SUITE_EDUCATION;
         break;
       case PRODUCT_HOME_BASIC:
       case PRODUCT_HOME_PREMIUM:
