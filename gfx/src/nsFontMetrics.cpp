@@ -364,7 +364,7 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
     if (!textRun.get()) {
         return;
     }
-    gfxPoint pt(aX, aY);
+    gfx::Point pt(aX, aY);
     Range range(0, aLength);
     if (mTextRunRTL) {
         if (mVertical) {
@@ -392,7 +392,7 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
     if (!textRun.get()) {
         return;
     }
-    gfxPoint pt(aX, aY);
+    gfx::Point pt(aX, aY);
     Range range(0, aLength);
     if (mTextRunRTL) {
         if (mVertical) {

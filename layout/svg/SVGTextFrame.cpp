@@ -3691,7 +3691,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     if (drawMode != DrawMode(0)) {
       bool paintSVGGlyphs;
       nsTextFrame::PaintTextParams params(&aContext);
-      params.framePt = gfxPoint();
+      params.framePt = gfx::Point();
       params.dirtyRect = LayoutDevicePixel::
         FromAppUnits(frame->GetVisualOverflowRect(), auPerDevPx);
       params.contextPaint = contextPaint;

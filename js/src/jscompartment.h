@@ -622,7 +622,6 @@ struct JSCompartment
   public:
     bool                         isSelfHosting;
     bool                         marked;
-    bool                         warnedAboutDateToLocaleFormat : 1;
     bool                         warnedAboutExprClosure : 1;
     bool                         warnedAboutForEach : 1;
     bool                         warnedAboutLegacyGenerator : 1;

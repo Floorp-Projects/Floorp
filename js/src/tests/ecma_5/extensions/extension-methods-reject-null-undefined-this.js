@@ -34,8 +34,7 @@ var ClassToMethodMap =
                "sup", "sub", "substr", "trimLeft", "trimRight", "toJSON"],
     Boolean:  ["toSource", "toJSON"],
     Number:   ["toSource", "toJSON"],
-    Date:     ["toSource", "toLocaleFormat", "getYear", "setYear",
-               "toGMTString"],
+    Date:     ["toSource", "getYear", "setYear",  "toGMTString"],
     RegExp:   ["toSource"],
     Error:    ["toSource"],
   };
