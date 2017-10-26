@@ -3494,7 +3494,7 @@ nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable)
   if (!mWillPaintFallbackEvent.IsPending()) {
     mWillPaintFallbackEvent = new RunWillPaintObservers(this);
     Document()->Dispatch(TaskCategory::Other,
-                         do_AddRef(mWillPaintFallbackEvent.get()));
+                         do_AddRef(mWillPaintFallbackEvent));
   }
   mWillPaintObservers.AppendElement(aRunnable);
 }

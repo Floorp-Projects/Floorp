@@ -1441,7 +1441,7 @@ already_AddRefed<SystemPrincipal>
 nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
     if (gScriptSecMan)
-        return do_AddRef(gScriptSecMan->mSystemPrincipal.get()).downcast<SystemPrincipal>();
+        return do_AddRef(gScriptSecMan->mSystemPrincipal).downcast<SystemPrincipal>();
     return nullptr;
 }
 
