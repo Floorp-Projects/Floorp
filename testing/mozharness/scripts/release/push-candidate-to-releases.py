@@ -58,7 +58,7 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         [["-j", "--parallelization"], {
             "dest": "parallelization",
             "default": 20,
-            "type": int,
+            "type": "int",
             "help": "Number of copy requests to run concurrently",
         }],
     ] + virtualenv_config_options

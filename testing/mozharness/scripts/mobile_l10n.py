@@ -52,36 +52,42 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         ['--locale', ],
         {"action": "extend",
          "dest": "locales",
+         "type": "string",
          "help": "Specify the locale(s) to sign and update"
          }
     ], [
         ['--locales-file', ],
         {"action": "store",
          "dest": "locales_file",
+         "type": "string",
          "help": "Specify a file to determine which locales to sign and update"
          }
     ], [
         ['--tag-override', ],
         {"action": "store",
          "dest": "tag_override",
+         "type": "string",
          "help": "Override the tags set for all repos"
          }
     ], [
         ['--user-repo-override', ],
         {"action": "store",
          "dest": "user_repo_override",
+         "type": "string",
          "help": "Override the user repo path for all repos"
          }
     ], [
         ['--release-config-file', ],
         {"action": "store",
          "dest": "release_config_file",
+         "type": "string",
          "help": "Specify the release config file to use"
          }
     ], [
         ['--key-alias', ],
         {"action": "store",
          "dest": "key_alias",
+         "type": "choice",
          "default": "nightly",
          "choices": ["nightly", "release"],
          "help": "Specify the signing key alias"
@@ -90,14 +96,14 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         ['--this-chunk', ],
         {"action": "store",
          "dest": "this_locale_chunk",
-         "type": int,
+         "type": "int",
          "help": "Specify which chunk of locales to run"
          }
     ], [
         ['--total-chunks', ],
         {"action": "store",
          "dest": "total_locale_chunks",
-         "type": int,
+         "type": "int",
          "help": "Specify the total number of chunks of locales"
          }
     ], [
@@ -110,6 +116,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         ['--revision', ],
         {"action": "store",
          "dest": "revision",
+         "type": "string",
          "help": "Override the gecko revision to use (otherwise use buildbot supplied"
                  " value, or en-US revision) "}
     ]]
