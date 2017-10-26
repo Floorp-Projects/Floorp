@@ -35,7 +35,9 @@ function Prompt(aOptions) {
 
   if (this.window) {
     let window = getRootWindow(this.window);
-    var tab = window &&
+    let tab = window &&
+              window.document.documentElement
+                    .getAttribute("windowtype") === "navigator:browser" &&
               window.BrowserApp &&
               window.BrowserApp.getTabForWindow(this.window);
     if (tab) {

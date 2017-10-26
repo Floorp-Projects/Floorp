@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.shadowBlur = 1024;
+    ctx.shadowColor = "red"
+    ctx.transform(16384,-0.6842606067657471,32768,-1.0760749578475952,2048,-1.9289406538009644);
+    ctx.strokeText("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",0.691153419364978,0.7370920539221475);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
