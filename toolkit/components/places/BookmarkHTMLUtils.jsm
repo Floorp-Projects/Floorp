@@ -627,7 +627,7 @@ BookmarkImporter.prototype = {
   _handleContainerEnd: function handleContainerEnd() {
     let frame = this._curFrame;
     if (frame.containerNesting > 0)
-      frame.containerNesting --;
+      frame.containerNesting--;
     if (this._frames.length > 1 && frame.containerNesting == 0) {
       this._frames.pop();
     }

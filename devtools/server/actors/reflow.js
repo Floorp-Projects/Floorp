@@ -381,7 +381,7 @@ var observedWindows = new Map();
 function getLayoutChangesObserver(tabActor) {
   let observerData = observedWindows.get(tabActor);
   if (observerData) {
-    observerData.refCounting ++;
+    observerData.refCounting++;
     return observerData.observer;
   }
 
@@ -409,7 +409,7 @@ function releaseLayoutChangesObserver(tabActor) {
     return;
   }
 
-  observerData.refCounting --;
+  observerData.refCounting--;
   if (!observerData.refCounting) {
     observerData.observer.destroy();
     observedWindows.delete(tabActor);
