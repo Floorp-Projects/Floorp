@@ -255,7 +255,7 @@ const TEST_DATA = [
     ]
   },
 ];
-/*eslint-enable */
+/* eslint-enable */
 
 add_task(function* () {
   yield runEventPopupTests(TEST_URL, TEST_DATA);
