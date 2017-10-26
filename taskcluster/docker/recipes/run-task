@@ -467,6 +467,22 @@ def main(args):
                                   b'to %d:%d\n' % (volume, uid, gid))
             set_dir_permissions(volume, uid, gid)
 
+    all_caches_and_volumes = set(map(os.path.normpath, caches))
+    all_caches_and_volumes |= set(map(os.path.normpath, volumes))
+
+    def path_in_cache_or_volume(path):
+        path = os.path.normpath(path)
+
+        while path:
+            if path in all_caches_and_volumes:
+                return True
+
+            path, child = os.path.split(path)
+            if not child:
+                break
+
+        return False
+
     def prepare_checkout_dir(checkout):
         if not checkout:
             return
@@ -478,6 +494,13 @@ def main(args):
             print('error: cannot perform vcs checkout into cache root: %s' %
                   checkout)
             sys.exit(1)
+
+        # TODO given the performance implications, consider making this a fatal
+        # error.
+        if not path_in_cache_or_volume(checkout):
+            print_line(b'vcs', b'WARNING: vcs checkout path (%s) not in cache '
+                               b'or volume; performance will likely suffer\n' %
+                               checkout)
 
         # Ensure the directory for the source checkout exists.
         try:
@@ -497,6 +520,12 @@ def main(args):
             sys.exit(1)
 
         store_path = os.environ['HG_STORE_PATH']
+
+        if not path_in_cache_or_volume(store_path):
+            print_line(b'vcs', b'WARNING: HG_STORE_PATH (%s) not in cache or '
+                               b'volume; performance will likely suffer\n' %
+                               store_path)
+
         try:
             os.makedirs(store_path)
         except OSError as e:
