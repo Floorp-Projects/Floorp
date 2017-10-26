@@ -51,8 +51,16 @@ struct GamepadPoseState
   bool isOrientationValid;
 
   GamepadPoseState()
+    : flags(GamepadCapabilityFlags::Cap_None)
+    , orientation{ 0, 0, 0, 0 }
+    , position{ 0, 0, 0}
+    , angularVelocity{ 0, 0, 0}
+    , angularAcceleration{ 0, 0, 0}
+    , linearVelocity{ 0, 0, 0}
+    , linearAcceleration{ 0, 0, 0}
+    , isPositionValid(false)
+    , isOrientationValid(false)
   {
-    Clear();
   }
 
   bool operator==(const GamepadPoseState& aPose) const
@@ -87,7 +95,10 @@ struct GamepadPoseState
   }
 
   void Clear() {
-    memset(this, 0, sizeof(GamepadPoseState));
+    memset(&flags,
+           0,
+           reinterpret_cast<char*>(&isOrientationValid) +
+             sizeof(isOrientationValid) - reinterpret_cast<char*>(&flags));
   }
 };
 
