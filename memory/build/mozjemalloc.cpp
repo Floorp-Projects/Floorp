@@ -460,28 +460,27 @@ static unsigned nsbins; /* Number of (2^n)-spaced sub-page bins. */
 #define calculate_arena_maxclass() \
  (chunksize - (arena_chunk_header_npages << pagesize_2pow))
 
+#define CHUNKSIZE_DEFAULT ((size_t) 1 << CHUNK_2POW_DEFAULT)
+static const size_t chunksize = CHUNKSIZE_DEFAULT;
+static const size_t chunksize_mask = CHUNKSIZE_DEFAULT - 1;
+
+#ifdef MALLOC_STATIC_PAGESIZE
+static const size_t chunk_npages = CHUNKSIZE_DEFAULT >> pagesize_2pow;
+#define arena_chunk_header_npages calculate_arena_header_pages()
+#define arena_maxclass calculate_arena_maxclass()
+#else
+static size_t chunk_npages;
+static size_t arena_chunk_header_npages;
+static size_t arena_maxclass; /* Max size class for arenas. */
+#endif
+
 /*
  * Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
  * 6.25% of the process address space on a 32-bit OS for later use.
  */
 #define CHUNK_RECYCLE_LIMIT 128
 
-#ifdef MALLOC_STATIC_PAGESIZE
-#define CHUNKSIZE_DEFAULT ((size_t) 1 << CHUNK_2POW_DEFAULT)
-static const size_t chunksize = CHUNKSIZE_DEFAULT;
-static const size_t chunksize_mask = CHUNKSIZE_DEFAULT - 1;
-static const size_t chunk_npages = CHUNKSIZE_DEFAULT >> pagesize_2pow;
-#define arena_chunk_header_npages calculate_arena_header_pages()
-#define arena_maxclass calculate_arena_maxclass()
 static const size_t recycle_limit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
-#else
-static size_t chunksize;
-static size_t chunksize_mask; /* (chunksize - 1). */
-static size_t chunk_npages;
-static size_t arena_chunk_header_npages;
-static size_t arena_maxclass; /* Max size class for arenas. */
-static size_t recycle_limit;
-#endif
 
 /* The current amount of recycled bytes, updated atomically. */
 static size_t recycled_size;
@@ -4331,15 +4330,10 @@ MALLOC_OUT:
   bin_maxclass = (pagesize >> 1);
   nsbins = pagesize_2pow - SMALL_MAX_2POW_DEFAULT - 1;
 
-  /* Set variables according to the value of CHUNK_2POW_DEFAULT. */
-  chunksize = (1LU << CHUNK_2POW_DEFAULT);
-  chunksize_mask = chunksize - 1;
   chunk_npages = (chunksize >> pagesize_2pow);
 
   arena_chunk_header_npages = calculate_arena_header_pages();
   arena_maxclass = calculate_arena_maxclass();
-
-  recycle_limit = CHUNK_RECYCLE_LIMIT * chunksize;
 #endif
 
   recycled_size = 0;
