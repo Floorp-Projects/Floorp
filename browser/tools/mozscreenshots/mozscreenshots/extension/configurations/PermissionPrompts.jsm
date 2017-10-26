@@ -20,8 +20,6 @@ this.PermissionPrompts = {
   init(libDir) {
     Services.prefs.setBoolPref("browser.storageManager.enabled", true);
     Services.prefs.setBoolPref("media.navigator.permission.fake", true);
-    Services.prefs.setCharPref("media.getusermedia.screensharing.allowed_domains",
-                               "test1.example.com");
     Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
     Services.prefs.setBoolPref("signon.rememberSignons", true);
   },
