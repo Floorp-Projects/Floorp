@@ -2116,7 +2116,7 @@ public:
 
   static void ReportToConsole(const nsAString& aMessage);
 
-protected:
+private:
   // Helper class for either returning a raw cstring or nsCString.
   typedef mozilla::Variant<const char*, const nsCString> PrefNameBase;
   class PrefName : public PrefNameBase
@@ -2185,7 +2185,6 @@ protected:
 
   void FreeObserverList(void);
 
-private:
   const nsCString mPrefRoot;
   bool mIsDefault;
 
