@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <script>
+      o1 = (new DOMParser).parseFromString('', 'text/html');
+      o2 = document.createElement('canvas');
+      document.documentElement.appendChild(o2);
+      o3 = o2.animate([{'transform':'unset'}], {'delay':32});
+      o4 = o3.effect;
+      o5 = o1.createElement('d');
+      o6 = new Animation(o4, document.timeline);
+      o7 = o5.animate([], {});
+      o7.effect = o6.effect;
+    </script>
+  </head>
+</html>
