@@ -16,8 +16,7 @@ registerManifests(manifests);
 var ios = Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
 
-function do_run_test()
-{
+function do_run_test() {
   let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
            getService(Ci.nsIChromeRegistry);
 
@@ -62,7 +61,7 @@ function do_run_test()
         expectedURI = ios.newFileURI(manifestFile.parent).spec;
         sourceURI = "resource://foo/";
         break;
-    };
+    }
     try {
       sourceURI = ios.newURI(sourceURI);
       let uri;
@@ -71,14 +70,12 @@ function do_run_test()
         let rph = ios.getProtocolHandler("resource").
             QueryInterface(Ci.nsIResProtocolHandler);
         uri = rph.resolveURI(sourceURI);
-      }
-      else {
+      } else {
         uri = cr.convertChromeURL(sourceURI).spec;
       }
-      
+
       do_check_eq(expectedURI, uri);
-    }
-    catch (e) {
+    } catch (e) {
       dump(e + "\n");
       do_throw("Should have registered a handler for type '" +
                type + "'\n");
@@ -87,6 +84,7 @@ function do_run_test()
 }
 
 if (typeof run_test === "undefined") {
+  // eslint-disable-next-line no-native-reassign
   run_test = function() {
     do_run_test();
   };
