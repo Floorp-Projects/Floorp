@@ -29,6 +29,7 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
   , mExtraData(nullptr)
   , mCodecID(aCodecID)
   , mTaskQueue(aTaskQueue)
+  , mLastInputDts(media::TimeUnit::FromMicroseconds(INT64_MIN))
 {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -137,6 +138,8 @@ FFmpegDataDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
 
+  mLastInputDts = aSample->mTimecode;
+
   if (inputSize && mCodecParser) {
     while (inputSize) {
       uint8_t* data = inputData;
@@ -178,6 +181,19 @@ FFmpegDataDecoder<LIBAV_VER>::Drain()
 {
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
+}
+
+RefPtr<MediaDataDecoder::DecodePromise>
+FFmpegDataDecoder<LIBAV_VER>::ProcessDrain()
+{
+  RefPtr<MediaRawData> empty(new MediaRawData());
+  empty->mTimecode = mLastInputDts;
+  bool gotFrame = false;
+  DecodedData results;
+  while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) &&
+         gotFrame) {
+  }
+  return DecodePromise::CreateAndResolve(Move(results), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>

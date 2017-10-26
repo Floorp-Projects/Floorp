@@ -215,13 +215,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   return NS_OK;
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-FFmpegAudioDecoder<LIBAV_VER>::ProcessDrain()
-{
-  ProcessFlush();
-  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-}
-
 AVCodecID
 FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
 {
