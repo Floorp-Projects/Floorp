@@ -12,9 +12,3 @@
 .newtab-undo-button > .button-box {
   padding: 0;
 }
-
-.newtab-title {
-  font: message-box;
-  font-size: 13px;
-  line-height: 30px;
-}
