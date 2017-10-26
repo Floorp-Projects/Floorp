@@ -500,8 +500,6 @@ ShadowRoot::AttributeChanged(nsIDocument* aDocument,
   }
 
   // Attributes may change insertion point matching, find its new distribution.
-  //
-  // FIXME(emilio): What about state changes?
   if (!RedistributeElement(aElement)) {
     return;
   }

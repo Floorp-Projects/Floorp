@@ -73,7 +73,6 @@ const ErrorDocs = {
   JSMSG_GETTER_ONLY: "Getter_only",
   JSMSG_INVALID_DATE: "Invalid_date",
   JSMSG_DEPRECATED_STRING_METHOD: "Deprecated_String_generics",
-  JSMSG_DEPRECATED_TOLOCALEFORMAT: "Deprecated_toLocaleFormat",
   JSMSG_RESERVED_ID: "Reserved_identifier",
   JSMSG_BAD_CONST_ASSIGN: "Invalid_const_assignment",
   JSMSG_BAD_CONST_DECL: "Missing_initializer_in_const",

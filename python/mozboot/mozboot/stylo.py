@@ -5,4 +5,4 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 WINDOWS = 'win64-clang-cl'
-LINUX = 'linux64-clang'
+LINUX = 'linux64-clang-3.9'
