@@ -8,8 +8,7 @@
 #include "WAVDecoder.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoUtils.h"
-
-using mp4_demuxer::ByteReader;
+#include "mp4_demuxer/BufferReader.h"
 
 namespace mozilla {
 
@@ -78,7 +77,7 @@ RefPtr<MediaDataDecoder::DecodePromise>
 WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   size_t aLength = aSample->Size();
-  ByteReader aReader(aSample->Data(), aLength);
+  mp4_demuxer::BufferReader aReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
 
   int32_t frames = aLength * 8 / mInfo.mBitDepth / mInfo.mChannels;
@@ -91,28 +90,48 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mInfo.mChannels; ++j) {
       if (mInfo.mProfile == 6) {                              //ALAW Data
-        uint8_t v = aReader.ReadU8();
-        int16_t decoded = DecodeALawSample(v);
+        auto res = aReader.ReadU8();
+        if (res.isErr()) {
+          return DecodePromise::CreateAndReject(
+            MediaResult(res.unwrapErr(), __func__), __func__);
+        }
+        int16_t decoded = DecodeALawSample(res.unwrap());
         buffer[i * mInfo.mChannels + j] =
             IntegerToAudioSample<AudioDataValue>(decoded);
       } else if (mInfo.mProfile == 7) {                       //ULAW Data
-        uint8_t v = aReader.ReadU8();
-        int16_t decoded = DecodeULawSample(v);
+        auto res = aReader.ReadU8();
+        if (res.isErr()) {
+          return DecodePromise::CreateAndReject(
+            MediaResult(res.unwrapErr(), __func__), __func__);
+        }
+        int16_t decoded = DecodeULawSample(res.unwrap());
         buffer[i * mInfo.mChannels + j] =
             IntegerToAudioSample<AudioDataValue>(decoded);
       } else {                                                //PCM Data
         if (mInfo.mBitDepth == 8) {
-          uint8_t v = aReader.ReadU8();
+          auto res = aReader.ReadU8();
+          if (res.isErr()) {
+            return DecodePromise::CreateAndReject(
+              MediaResult(res.unwrapErr(), __func__), __func__);
+          }
           buffer[i * mInfo.mChannels + j] =
-              UInt8bitToAudioSample<AudioDataValue>(v);
+              UInt8bitToAudioSample<AudioDataValue>(res.unwrap());
         } else if (mInfo.mBitDepth == 16) {
-          int16_t v = aReader.ReadLE16();
+          auto res = aReader.ReadLE16();
+          if (res.isErr()) {
+            return DecodePromise::CreateAndReject(
+              MediaResult(res.unwrapErr(), __func__), __func__);
+          }
           buffer[i * mInfo.mChannels + j] =
-              IntegerToAudioSample<AudioDataValue>(v);
+              IntegerToAudioSample<AudioDataValue>(res.unwrap());
         } else if (mInfo.mBitDepth == 24) {
-          int32_t v = aReader.ReadLE24();
+          auto res = aReader.ReadLE24();
+          if (res.isErr()) {
+            return DecodePromise::CreateAndReject(
+              MediaResult(res.unwrapErr(), __func__), __func__);
+          }
           buffer[i * mInfo.mChannels + j] =
-              Int24bitToAudioSample<AudioDataValue>(v);
+              Int24bitToAudioSample<AudioDataValue>(res.unwrap());
         }
       }
     }
