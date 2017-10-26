@@ -84,10 +84,13 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
     if (nvalues > 0) {
         do {
             if (genObj->hasExpressionStack()) {
+                MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() == 0);
                 auto result = genObj->expressionStack().setOrExtendDenseElements(
                     cx, 0, vp, nvalues, ShouldUpdateTypes::DontUpdate);
-                if (result == DenseElementResult::Success)
+                if (result == DenseElementResult::Success) {
+                    MOZ_ASSERT(genObj->expressionStack().getDenseInitializedLength() == nvalues);
                     break;
+                }
                 if (result == DenseElementResult::Failure)
                     return false;
             }
@@ -182,12 +185,12 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
         activation.regs().fp()->initArgsObj(genObj->argsObj());
 
     if (genObj->hasExpressionStack() && !genObj->isExpressionStackEmpty()) {
-        uint32_t len = genObj->expressionStack().length();
+        uint32_t len = genObj->expressionStack().getDenseInitializedLength();
         MOZ_ASSERT(activation.regs().spForStackDepth(len));
         const Value* src = genObj->expressionStack().getDenseElements();
         mozilla::PodCopy(activation.regs().sp, src, len);
         activation.regs().sp += len;
-        genObj->expressionStack().setLengthInt32(0);
+        genObj->expressionStack().setDenseInitializedLength(0);
     }
 
     JSScript* script = callee->nonLazyScript();
