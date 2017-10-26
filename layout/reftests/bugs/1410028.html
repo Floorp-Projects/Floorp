@@ -1,0 +1,17 @@
+<!doctype html>
+<div></div>
+<script>
+let setStyle = (el, props) => {
+  for (prop in props)
+    el.style.setProperty(prop, props[prop]);
+};
+
+setStyle(document.querySelector('div'), {
+  all: 'initial',
+  'background-color': 'blue',
+  display: 'block',
+  width: '100px',
+  height: '100px',
+  padding: '10px'
+});
+</script>

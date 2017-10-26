@@ -12,6 +12,22 @@
 
 template<class T> struct already_AddRefed;
 
+/*
+ * Add a canary field to protect against double-frees of nsStringBuffer and
+ * other potential heap corruptions.  We intend to back this out before 58 hits
+ * beta.
+ */
+#if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(MOZ_ASAN)
+# define STRING_BUFFER_CANARY 1
+#endif
+
+#ifdef STRING_BUFFER_CANARY
+enum nsStringBufferCanary : uint32_t {
+  CANARY_OK = 0xaf57c8fa,
+  CANARY_POISON = 0x534dc0f5
+};
+#endif
+
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
  * case that nsTAString::mData does not point to one of these special
@@ -28,6 +44,10 @@ private:
 
   std::atomic<uint32_t> mRefCount;
   uint32_t mStorageSize;
+
+#ifdef STRING_BUFFER_CANARY
+  uint32_t mCanary;
+#endif
 
 public:
 
@@ -75,11 +95,12 @@ public:
    * This method returns the string buffer corresponding to the given data
    * pointer.  The data pointer must have been returned previously by a
    * call to the nsStringBuffer::Data method.
+   *
+   * This method is normally defined here in the header file for inlining into
+   * callers.  It has been outlined temporarily to make the canary checking code
+   * simpler WRT header include order.
    */
-  static nsStringBuffer* FromData(void* aData)
-  {
-    return reinterpret_cast<nsStringBuffer*>(aData) - 1;
-  }
+  static nsStringBuffer* FromData(void* aData);
 
   /**
    * This method returns the data pointer for this string buffer.

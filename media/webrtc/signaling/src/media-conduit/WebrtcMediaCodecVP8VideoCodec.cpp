@@ -92,7 +92,7 @@ public:
     CSFLogDebug(LOGTAG,  "%s %p", __FUNCTION__, this);
   }
 
-  void HandleOutput(Sample::Param aSample)
+  void HandleOutput(Sample::Param aSample) override
   {
     CSFLogDebug(LOGTAG,  "%s %p", __FUNCTION__, this);
     BufferInfo::LocalRef info = aSample->Info();

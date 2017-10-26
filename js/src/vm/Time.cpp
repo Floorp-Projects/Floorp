@@ -322,8 +322,6 @@ PRMJ_FormatTime(char* buf, int buflen, const char* fmt, PRMJTime* prtm)
      * Note that FAKE_YEAR_BASE should be a multiple of 100 to make 2-digit
      * year formats (%y) work correctly (since we won't find the fake year
      * in that case).
-     * e.g. new Date(1873, 0).toLocaleFormat('%Y %y') => "1873 73"
-     * See bug 327869.
      */
 #define FAKE_YEAR_BASE 9900
     if (prtm->tm_year < 1900 || prtm->tm_year > 9999) {
