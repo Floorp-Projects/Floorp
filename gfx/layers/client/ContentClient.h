@@ -118,6 +118,7 @@ public:
     SurfaceMode mMode;
     DrawRegionClip mClip;
     gfxContentType mContentType;
+    RefPtr<CapturedBufferState> mBufferState;
   };
 
   enum {
