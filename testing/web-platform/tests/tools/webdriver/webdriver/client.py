@@ -354,8 +354,13 @@ class UserPrompt(object):
 
 
 class Session(object):
-    def __init__(self, host, port, url_prefix="/", capabilities=None,
-                 timeout=None, extension=None):
+    def __init__(self,
+                 host,
+                 port,
+                 url_prefix="/",
+                 capabilities=None,
+                 timeout=None,
+                 extension=None):
         self.transport = transport.HTTPWireProtocol(
             host, port, url_prefix, timeout=timeout)
         self.capabilities = capabilities
@@ -372,6 +377,10 @@ class Session(object):
         self.find = Find(self)
         self.alert = UserPrompt(self)
         self.actions = Actions(self)
+
+    def __eq__(self, other):
+        return (self.session_id is not None and isinstance(other, Session)
+                and self.session_Id == other.session_id)
 
     def __enter__(self):
         self.start()
