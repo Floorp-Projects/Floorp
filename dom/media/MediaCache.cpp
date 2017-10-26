@@ -172,17 +172,18 @@ public:
   nsresult ReadCacheFile(int64_t aOffset, void* aData, int32_t aLength,
                          int32_t* aBytes);
 
+  // The generated IDs are always positive.
   int64_t AllocateResourceID()
   {
     mReentrantMonitor.AssertCurrentThreadIn();
-    return mNextResourceID++;
+    return ++mNextResourceID;
   }
 
   // mReentrantMonitor must be held, called on main thread.
   // These methods are used by the stream to set up and tear down streams,
   // and to handle reads and writes.
   // Add aStream to the list of streams.
-  void OpenStream(MediaCacheStream* aStream);
+  void OpenStream(MediaCacheStream* aStream, bool aIsClone = false);
   // Remove aStream from the list of streams.
   void ReleaseStream(MediaCacheStream* aStream);
   // Free all blocks belonging to aStream.
@@ -271,8 +272,7 @@ public:
 
 protected:
   explicit MediaCache(MediaBlockCacheBase* aCache)
-    : mNextResourceID(1)
-    , mReentrantMonitor("MediaCache.mReentrantMonitor")
+    : mReentrantMonitor("MediaCache.mReentrantMonitor")
     , mBlockCache(aCache)
     , mUpdateQueued(false)
 #ifdef DEBUG
@@ -415,7 +415,7 @@ protected:
 
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
-  int64_t                       mNextResourceID;
+  int64_t mNextResourceID = 0;
 
   // The monitor protects all the data members here. Also, off-main-thread
   // readers that need to block will Wait() on this monitor. When new
@@ -480,7 +480,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
   : mMediaCache(nullptr)
   , mClient(aClient)
   , mDidNotifyDataEnded(false)
-  , mResourceID(0)
   , mIsTransportSeekable(false)
   , mCacheSuspended(false)
   , mChannelEnded(false)
@@ -1740,14 +1739,22 @@ MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream,
 }
 
 void
-MediaCache::OpenStream(MediaCacheStream* aStream)
+MediaCache::OpenStream(MediaCacheStream* aStream, bool aIsClone)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   LOG("Stream %p opened", aStream);
   mStreams.AppendElement(aStream);
-  aStream->mResourceID = AllocateResourceID();
+
+  // A cloned stream should've got the ID from its original.
+  if (!aIsClone) {
+    MOZ_ASSERT(aStream->mResourceID == 0, "mResourceID has been initialized.");
+    aStream->mResourceID = AllocateResourceID();
+  }
+
+  // We should have a valid ID now no matter it is cloned or not.
+  MOZ_ASSERT(aStream->mResourceID > 0, "mResourceID is invalid");
 
   // Queue an update since a new stream has been opened.
   QueueUpdate();
@@ -2683,8 +2690,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   // Use the same MediaCache as our clone.
   mMediaCache = aOriginal->mMediaCache;
 
-  mMediaCache->OpenStream(this);
-
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
@@ -2717,6 +2722,8 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     // stream offset is zero
     mMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
   }
+
+  mMediaCache->OpenStream(this, true /* aIsClone */);
 }
 
 nsIEventTarget*

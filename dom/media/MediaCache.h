@@ -460,7 +460,9 @@ private:
   // This is a unique ID representing the resource we're loading.
   // All streams with the same mResourceID are loading the same
   // underlying resource and should share data.
-  int64_t mResourceID;
+  // Initialized to 0 as invalid. Will be allocated a valid ID (always positive)
+  // from the cache.
+  int64_t mResourceID = 0;
   // The last reported seekability state for the underlying channel
   bool mIsTransportSeekable;
   // True if the cache has suspended our channel because the cache is
