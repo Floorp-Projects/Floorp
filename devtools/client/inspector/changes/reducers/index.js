@@ -4,11 +4,4 @@
 
 "use strict";
 
-const { createEnum } = require("devtools/client/shared/enum");
-
-createEnum([
-
-  // Update the entire flexboxes state with the new list of flexboxes.
-  "UPDATE_FLEXBOXES",
-
-], module.exports);
+exports.changes = require("./changes");
