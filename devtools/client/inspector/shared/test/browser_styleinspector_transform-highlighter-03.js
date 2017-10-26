@@ -37,7 +37,7 @@ add_task(function* () {
     show: function (nodeFront) {
       this.nodeFront = nodeFront;
       this.isShown = true;
-      this.nbOfTimesShown ++;
+      this.nbOfTimesShown++;
       return promise.resolve(true);
     },
     hide: function () {
