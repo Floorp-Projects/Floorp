@@ -17,6 +17,7 @@ interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? active;
 
   readonly attribute USVString scope;
+  [Throws]
   readonly attribute ServiceWorkerUpdateViaCache updateViaCache;
 
   [Throws, NewObject]
