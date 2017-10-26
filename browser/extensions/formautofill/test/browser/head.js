@@ -2,7 +2,7 @@
             BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, FORM_URL, CREDITCARD_FORM_URL,
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, AUTOFILL_CREDITCARDS_AVAILABLE_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF,
-            SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF,
+            SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF,
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
             getAddresses, saveAddress, removeAddresses, saveCreditCard,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForMasterPasswordDialog,
@@ -27,6 +27,7 @@ const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.e
 const SYNC_USERNAME_PREF = "services.sync.username";
 const SYNC_ADDRESSES_PREF = "services.sync.engine.addresses";
 const SYNC_CREDITCARDS_PREF = "services.sync.engine.creditcards";
+const SYNC_CREDITCARDS_AVAILABLE_PREF = "services.sync.engine.creditcards.available";
 
 const TEST_ADDRESS_1 = {
   "given-name": "John",
