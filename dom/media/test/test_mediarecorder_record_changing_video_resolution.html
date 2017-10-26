@@ -96,6 +96,12 @@ function startTest() {
     video.onended = function() {
       is(numResizeRaised, resolution_change.length, "Expected number of resize events");
       SimpleTest.finish();
+      // This shouldn't be needed, however video.ended may not be set after
+      // seeking to the final frame. This can result in seekToNextFrame being
+      // called again by seekThroughFrames and onended being invoked again,
+      // resulting in multiple finish() calls.
+      // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1386489
+      video.onended = null;
     };
 
     document.getElementById("content").appendChild(video);
