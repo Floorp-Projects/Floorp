@@ -1,11 +1,7 @@
 [package]
 name = "geckodriver"
-version = "0.19.0"
-authors = [
-  "James Graham <james@hoppipolla.co.uk>",
-  "Andreas Tolfsen <ato@sny.no>",
-  "Henrik Skupin <mail@hskupin.info"
-]
+version = "0.19.1"
+authors = ["Mozilla <tools-marionette@lists.mozilla.org>"]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 keywords = ["webdriver", "w3c", "httpd", "mozilla", "firefox"]
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
