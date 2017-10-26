@@ -56,11 +56,15 @@ add_task(function* () {
       info("Testing " + JSON.stringify(result) + " encoded in " + encoding + ".");
 
       if (encoding.endsWith("BOM")) {
-        data = bom[encoding.split(" ")[0]] + data;
+        encoding = encoding.split(" ")[0];
+        data = bom[encoding] + data;
       }
 
       yield addJsonViewTab("data:application/json," + data);
       yield selectJsonViewContentTab("rawdata");
+
+      // Check encoding.
+      is(yield evalInContent("JSONView.encoding"), encoding, "Got the right encoding.");
 
       // Check displayed data.
       let output = yield getElementText(".textPanelBox .data");
