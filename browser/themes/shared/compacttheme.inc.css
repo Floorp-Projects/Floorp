@@ -75,6 +75,10 @@ toolbar[brighttext] .toolbarbutton-1 {
   color: var(--chrome-color);
 }
 
+#TabsToolbar:-moz-lwtheme-darktext {
+  -moz-appearance: -moz-mac-vibrancy-light;
+}
+
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
 .browserContainer > findbar,
 #browser-bottombox {
