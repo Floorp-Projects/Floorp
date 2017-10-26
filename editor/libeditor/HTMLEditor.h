@@ -294,7 +294,7 @@ public:
    * returns true if aParentTag can contain a child of type aChildTag.
    */
   virtual bool TagCanContainTag(nsAtom& aParentTag,
-                                nsAtom& aChildTag) override;
+                                nsAtom& aChildTag) const override;
 
   /**
    * Returns true if aNode is a container.
