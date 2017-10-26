@@ -164,7 +164,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "c6206c998026"
+        "revision": "357a881bf7ab"
     }, 
     "es-AR": {
         "platforms": [
