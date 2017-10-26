@@ -37,12 +37,12 @@ function run_test() {
   do_check_eq(chromeReg.getSelectedLocale("basepack"), "en-US");
   do_check_eq(chromeReg.getSelectedLocale("overpack"), "de");
   do_check_matches(enum_to_array(chromeReg.getLocalesForPackage("basepack")),
-                   ['en-US', 'fr']);
+                   ["en-US", "fr"]);
 
   // with override
   prefService.setCharPref("chrome.override_package.basepack", "overpack");
   do_check_eq(chromeReg.getSelectedLocale("basepack"), "de");
   do_check_matches(enum_to_array(chromeReg.getLocalesForPackage("basepack")),
-                   ['de', 'en-US']);
+                   ["de", "en-US"]);
 
 }
