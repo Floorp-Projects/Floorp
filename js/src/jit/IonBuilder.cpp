@@ -7825,9 +7825,6 @@ IonBuilder::getElemTryTypedObject(bool* emitted, MDefinition* obj, MDefinition* 
     MOZ_CRASH("Bad kind");
 }
 
-static MIRType
-MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble);
-
 bool
 IonBuilder::checkTypedObjectIndexInBounds(uint32_t elemSize,
                                           MDefinition* obj,
@@ -8791,29 +8788,6 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition* id,
     current->add(ptr);
 
     return ptr;
-}
-
-static MIRType
-MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-        return MIRType::Int32;
-      case Scalar::Uint32:
-        return observedDouble ? MIRType::Double : MIRType::Int32;
-      case Scalar::Float32:
-        return MIRType::Float32;
-      case Scalar::Float64:
-        return MIRType::Double;
-      default:
-        break;
-    }
-    MOZ_CRASH("Unknown typed array type");
 }
 
 AbortReasonOr<Ok>
