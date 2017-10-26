@@ -471,6 +471,14 @@ def main(args):
         if not checkout:
             return
 
+        # The checkout path becomes the working directory. Since there are
+        # special cache files in the cache's root directory and working
+        # directory purging could blow them away, disallow this scenario.
+        if os.path.exists(os.path.join(checkout, '.cacherequires')):
+            print('error: cannot perform vcs checkout into cache root: %s' %
+                  checkout)
+            sys.exit(1)
+
         # Ensure the directory for the source checkout exists.
         try:
             os.makedirs(os.path.dirname(checkout))
