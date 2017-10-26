@@ -646,37 +646,10 @@ Inspector.prototype = {
               this.browserRequire("devtools/client/inspector/layout/layout");
             this.layoutview = new LayoutView(this, this.panelWin);
           }
-
           return this.layoutview.provider;
         }
       },
       defaultTab == layoutId);
-
-    if (Services.prefs.getBoolPref("devtools.changesview.enabled")) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      let changesId = "changesview";
-      let changesTitle = INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle");
-      this.sidebar.addTab(
-        changesId,
-        changesTitle,
-        {
-          props: {
-            id: changesId,
-            title: changesTitle
-          },
-          panel: () => {
-            if (!this.changesview) {
-              const ChangesView =
-                this.browserRequire("devtools/client/inspector/changes/changes");
-              this.changesview = new ChangesView(this, this.panelWin);
-            }
-
-            return this.changesview.provider;
-          }
-        },
-        defaultTab == changesId);
-    }
 
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
@@ -705,7 +678,6 @@ Inspector.prototype = {
                 this.browserRequire("devtools/client/inspector/fonts/fonts");
               this.fontinspector = new FontInspector(this, this.panelWin);
             }
-
             return this.fontinspector.provider;
           }
         },

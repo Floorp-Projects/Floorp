@@ -7,5 +7,5 @@
 DevToolsModules(
     'Accordion.css',
     'Accordion.js',
-    'LayoutApp.js',
+    'App.js',
 )

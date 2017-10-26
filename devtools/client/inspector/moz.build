@@ -4,7 +4,6 @@
 
 DIRS += [
     'boxmodel',
-    'changes',
     'components',
     'computed',
     'extensions',
