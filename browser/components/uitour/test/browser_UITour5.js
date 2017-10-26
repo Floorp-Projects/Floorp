@@ -6,7 +6,41 @@ var gContentWindow;
 
 add_task(setup_UITourTest);
 
+add_UITour_task(async function test_highlight_library_icon_in_toolbar() {
+  let highlight = document.getElementById("UITourHighlight");
+  is_element_hidden(highlight, "Highlight should initially be hidden");
+
+  // Test highlighting the library button
+  let highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
+  gContentAPI.showHighlight("library");
+  await highlightVisiblePromise;
+  UITour.getTarget(window, "library").then((target) => {
+    is("library-button", target.node.id, "Should highlight the right target");
+  });
+});
+
+add_UITour_task(async function test_highlight_addons_icon_in_toolbar() {
+  CustomizableUI.addWidgetToArea("add-ons-button", CustomizableUI.AREA_NAVBAR, 0);
+  ok(!UITour.availableTargetsCache.has(window),
+     "Targets should be evicted from cache after widget change");
+  let highlight = document.getElementById("UITourHighlight");
+  is_element_hidden(highlight, "Highlight should initially be hidden");
+
+  // Test highlighting the addons button on toolbar
+  let highlightVisiblePromise = elementVisiblePromise(highlight, "Should show highlight");
+  gContentAPI.showHighlight("addons");
+  await highlightVisiblePromise;
+  UITour.getTarget(window, "addons").then((target) => {
+    is("add-ons-button", target.node.id, "Should highlight the right target");
+    CustomizableUI.removeWidgetFromArea("add-ons-button");
+  });
+});
+
 add_UITour_task(async function test_highlight_library_and_show_library_subview() {
+  CustomizableUI.removeWidgetFromArea("library-button");
+
+  ok(!UITour.availableTargetsCache.has(window),
+     "Targets should be evicted from cache after widget change");
   let highlight = document.getElementById("UITourHighlight");
   is_element_hidden(highlight, "Highlight should initially be hidden");
 
@@ -37,4 +71,6 @@ add_UITour_task(async function test_highlight_library_and_show_library_subview()
   gContentAPI.hideMenu("appMenu");
   await appMenuHiddenPromise;
   is(appMenu.state, "closed", "Should close the app menu");
+  CustomizableUI.addWidgetToArea("library", CustomizableUI.AREA_NAVBAR, 0);
 });
+
