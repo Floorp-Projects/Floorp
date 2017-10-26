@@ -116,8 +116,6 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
-
             aidl {
                 srcDir "${topsrcdir}/mobile/android/base/aidl"
             }
@@ -177,6 +175,18 @@ android {
                 }
                 srcDir "${topsrcdir}/mobile/android/app/assets"
             }
+        }
+
+        // Every configuration needs the stub manifest at
+        // src/main/AndroidManifest.xml and the generated manifest.  We can't
+        // use the main sourceSet without losing the stub, so we cover all the
+        // configurations by enumerating the buildTypes here.
+        debug {
+            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
+        }
+
+        release {
+            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
         }
 
         test {
