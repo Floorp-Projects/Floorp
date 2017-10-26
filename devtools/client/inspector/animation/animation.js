@@ -64,6 +64,8 @@ class AnimationInspector {
       return;
     }
 
+    const done = this.inspector.updating("newanimationinspector");
+
     const selection = this.inspector.selection;
     const animations =
       selection.isConnected() && selection.isElementNode()
@@ -74,6 +76,8 @@ class AnimationInspector {
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
     }
+
+    done();
   }
 
   isPanelVisible() {
