@@ -103,12 +103,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMREQUESTSERVICE
 
-  // Returns an owning reference! No one should call this but the factory.
-  static DOMRequestService* FactoryCreate()
+  // No one should call this but the factory.
+  static already_AddRefed<DOMRequestService> FactoryCreate()
   {
-    DOMRequestService* res = new DOMRequestService;
-    NS_ADDREF(res);
-    return res;
+    return MakeAndAddRef<DOMRequestService>();
   }
 };
 

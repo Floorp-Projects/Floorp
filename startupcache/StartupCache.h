@@ -214,7 +214,7 @@ class StartupCacheWrapper final
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTARTUPCACHE
 
-  static StartupCacheWrapper* GetSingleton();
+  static already_AddRefed<StartupCacheWrapper> GetSingleton();
   static StartupCacheWrapper *gStartupCacheWrapper;
 };
 

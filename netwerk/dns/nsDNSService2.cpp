@@ -499,7 +499,7 @@ NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
  ******************************************************************************/
 static nsDNSService *gDNSService;
 
-nsIDNSService*
+already_AddRefed<nsIDNSService>
 nsDNSService::GetXPCOMSingleton()
 {
     if (IsNeckoChild()) {
@@ -509,25 +509,23 @@ nsDNSService::GetXPCOMSingleton()
     return GetSingleton();
 }
 
-nsDNSService*
+already_AddRefed<nsDNSService>
 nsDNSService::GetSingleton()
 {
     NS_ASSERTION(!IsNeckoChild(), "not a parent process");
 
     if (gDNSService) {
-        NS_ADDREF(gDNSService);
-        return gDNSService;
+        return do_AddRef(gDNSService);
     }
 
-    gDNSService = new nsDNSService();
-    if (gDNSService) {
-        NS_ADDREF(gDNSService);
-        if (NS_FAILED(gDNSService->Init())) {
-              NS_RELEASE(gDNSService);
-        }
+    auto dns = MakeRefPtr<nsDNSService>();
+    gDNSService = dns.get();
+    if (NS_FAILED(dns->Init())) {
+        gDNSService = nullptr;
+        return nullptr;
     }
 
-    return gDNSService;
+    return dns.forget();
 }
 
 NS_IMETHODIMP
