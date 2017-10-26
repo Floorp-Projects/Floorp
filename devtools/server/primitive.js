@@ -21,7 +21,6 @@ const WebGLDrawArrays = "drawArrays";
 const WebGLDrawElements = "drawElements";
 
 exports.WebGLPrimitiveCounter = class WebGLPrimitiveCounter {
-
   constructor(tabActor) {
     this.tabActor = tabActor;
   }
