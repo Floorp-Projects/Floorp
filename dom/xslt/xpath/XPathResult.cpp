@@ -118,8 +118,7 @@ XPathResult::NodeWillBeDestroyed(const nsINode* aNode)
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     // Set to null to avoid unregistring unnecessarily
     mDocument = nullptr;
-    Invalidate(aNode->IsNodeOfType(nsINode::eCONTENT) ?
-               static_cast<const nsIContent*>(aNode) : nullptr);
+    Invalidate(aNode->IsContent() ? aNode->AsContent() : nullptr);
 }
 
 void
@@ -257,10 +256,9 @@ XPathResult::Invalidate(const nsIContent* aChangeRoot)
         // the changes are happening in a different anonymous trees, no
         // invalidation should happen.
         nsIContent* ctxBindingParent = nullptr;
-        if (contextNode->IsNodeOfType(nsINode::eCONTENT)) {
+        if (contextNode->IsContent()) {
             ctxBindingParent =
-                static_cast<nsIContent*>(contextNode.get())
-                    ->GetBindingParent();
+              contextNode->AsContent()->GetBindingParent();
         } else if (contextNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
             Element* parent =
               static_cast<Attr*>(contextNode.get())->GetElement();

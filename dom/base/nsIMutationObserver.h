@@ -298,8 +298,8 @@ public:
  /**
    * The node is in the process of being destroyed. Calling QI on the node is
    * not supported, however it is possible to get children and flags through
-   * nsINode as well as calling IsNodeOfType(eCONTENT) and casting to
-   * nsIContent to get attributes.
+   * nsINode as well as calling IsContent and casting to nsIContent to get
+   * attributes.
    *
    * NOTE: This notification is only called on observers registered directly
    * on the node. This is because when the node is destroyed it can not have

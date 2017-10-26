@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -31,25 +31,36 @@ const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
 /**
  * Renders the actual contents of the request list.
  */
-const RequestListContent = createClass({
-  displayName: "RequestListContent",
+class RequestListContent extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      columns: PropTypes.object.isRequired,
+      dispatch: PropTypes.func.isRequired,
+      displayedRequests: PropTypes.object.isRequired,
+      firstRequestStartedMillis: PropTypes.number.isRequired,
+      fromCache: PropTypes.bool,
+      onCauseBadgeMouseDown: PropTypes.func.isRequired,
+      onItemMouseDown: PropTypes.func.isRequired,
+      onSecurityIconMouseDown: PropTypes.func.isRequired,
+      onSelectDelta: PropTypes.func.isRequired,
+      onThumbnailMouseDown: PropTypes.func.isRequired,
+      onWaterfallMouseDown: PropTypes.func.isRequired,
+      scale: PropTypes.number,
+      selectedRequestId: PropTypes.string,
+    };
+  }
 
-  propTypes: {
-    connector: PropTypes.object.isRequired,
-    columns: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired,
-    displayedRequests: PropTypes.object.isRequired,
-    firstRequestStartedMillis: PropTypes.number.isRequired,
-    fromCache: PropTypes.bool,
-    onCauseBadgeMouseDown: PropTypes.func.isRequired,
-    onItemMouseDown: PropTypes.func.isRequired,
-    onSecurityIconMouseDown: PropTypes.func.isRequired,
-    onSelectDelta: PropTypes.func.isRequired,
-    onThumbnailMouseDown: PropTypes.func.isRequired,
-    onWaterfallMouseDown: PropTypes.func.isRequired,
-    scale: PropTypes.number,
-    selectedRequestId: PropTypes.string,
-  },
+  constructor(props) {
+    super(props);
+    this.setScalingStyles = this.setScalingStyles.bind(this);
+    this.isScrolledToBottom = this.isScrolledToBottom.bind(this);
+    this.onHover = this.onHover.bind(this);
+    this.onScroll = this.onScroll.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onContextMenu = this.onContextMenu.bind(this);
+    this.onFocusedNodeChange = this.onFocusedNodeChange.bind(this);
+  }
 
   componentWillMount() {
     const { dispatch, connector } = this.props;
@@ -60,7 +71,7 @@ const RequestListContent = createClass({
       openStatistics: (open) => dispatch(Actions.openStatistics(connector, open)),
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
-  },
+  }
 
   componentDidMount() {
     // Set the CSS variables for waterfall scaling
@@ -74,14 +85,14 @@ const RequestListContent = createClass({
 
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
-  },
+  }
 
   componentWillUpdate(nextProps) {
     // Check if the list is scrolled to bottom before the UI update.
     // The scroll is ever needed only if new rows are added to the list.
     const delta = nextProps.displayedRequests.size - this.props.displayedRequests.size;
     this.shouldScrollBottom = delta > 0 && this.isScrolledToBottom();
-  },
+  }
 
   componentDidUpdate(prevProps) {
     // Update the CSS variables for waterfall scaling after props change
@@ -92,14 +103,14 @@ const RequestListContent = createClass({
       let node = this.refs.contentEl;
       node.scrollTop = node.scrollHeight;
     }
-  },
+  }
 
   componentWillUnmount() {
     this.refs.contentEl.removeEventListener("scroll", this.onScroll, true);
 
     // Uninstall the tooltip event handler
     this.tooltip.stopTogglingOnHover();
-  },
+  }
 
   /**
    * Set the CSS variables for waterfall scaling. If React supported setting CSS
@@ -119,7 +130,7 @@ const RequestListContent = createClass({
     style.removeProperty("--timings-rev-scale");
     style.setProperty("--timings-scale", scale);
     style.setProperty("--timings-rev-scale", 1 / scale);
-  },
+  }
 
   isScrolledToBottom() {
     const { contentEl } = this.refs;
@@ -133,7 +144,7 @@ const RequestListContent = createClass({
     let contentRect = contentEl.getBoundingClientRect();
 
     return (lastChildRect.height + lastChildRect.top) <= contentRect.bottom;
-  },
+  }
 
   /**
    * The predicate used when deciding whether a popup should be shown
@@ -165,14 +176,14 @@ const RequestListContent = createClass({
     }
 
     return false;
-  },
+  }
 
   /**
    * Scroll listener for the requests menu view.
    */
   onScroll() {
     this.tooltip.hide();
-  },
+  }
 
   /**
    * Handler for keyboard events. For arrow up/down, page up/down, home/end,
@@ -210,12 +221,12 @@ const RequestListContent = createClass({
       evt.stopPropagation();
       this.props.onSelectDelta(delta);
     }
-  },
+  }
 
   onContextMenu(evt) {
     evt.preventDefault();
     this.contextMenu.open(evt);
-  },
+  }
 
   /**
    * If selection has just changed (by keyboard navigation), don't keep the list
@@ -223,7 +234,7 @@ const RequestListContent = createClass({
    */
   onFocusedNodeChange() {
     this.shouldScrollBottom = false;
-  },
+  }
 
   render() {
     const {
@@ -267,8 +278,8 @@ const RequestListContent = createClass({
         )
       )
     );
-  },
-});
+  }
+}
 
 module.exports = connect(
   (state) => ({

@@ -516,8 +516,8 @@ if test "$GNU_CC"; then
     SSSE3_FLAGS="-mssse3"
     # FIXME: Let us build with strict aliasing. bug 414641.
     CFLAGS="$CFLAGS -fno-strict-aliasing"
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
+    MKSHLIB='$(CXX) $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
+    MKCSHLIB='$(CC) $(COMPUTED_C_LDFLAGS) $(PGO_CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(DSO_SONAME) -o $@'
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
@@ -632,7 +632,7 @@ if test "$GNU_CC"; then
         fi
     fi
 
-    _DEFINES_CFLAGS='-include $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS="-include $_objdir/mozilla-config.h -DMOZILLA_CLIENT"
     _USE_CPP_INCLUDE_FLAG=1
 
     ASFLAGS="$ASFLAGS $_DEFINES_CFLAGS"
@@ -642,7 +642,7 @@ if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
 
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/mozilla-config.h'
+    _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $_objdir/mozilla-config.h"
     _USE_CPP_INCLUDE_FLAG=1
 fi
 
@@ -764,8 +764,8 @@ dnl ========================================================
 
 case "$target" in
 *-darwin*)
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CXX) $(COMPUTED_CXX_LDFLAGS) $(PGO_CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(COMPUTED_C_LDFLAGS) $(PGO_CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
     CXXFLAGS="$CXXFLAGS -stdlib=libc++"
     DSO_LDOPTS=''
@@ -904,8 +904,8 @@ case "$target" in
         WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(topobjdir)/mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS="-FI $_objdir/mozilla-config.h -DMOZILLA_CLIENT"
+        _DEFINES_CXXFLAGS="-FI $_objdir/mozilla-config.h -DMOZILLA_CLIENT"
         CFLAGS="$CFLAGS -W3 -Gy -Zc:inline"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Zc:inline"
         if test -z "$CLANG_CL"; then
@@ -1090,8 +1090,8 @@ case "$target" in
     if test "$LIBRUNPATH"; then
         DSO_LDOPTS="-Wl,-R$LIBRUNPATH $DSO_LDOPTS"
     fi
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(DSO_SONAME) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(DSO_SONAME) -o $@'
+    MKSHLIB='$(CXX) $(COMPUTED_CXX_LDFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(DSO_SONAME) -o $@'
+    MKCSHLIB='$(CC) $(COMPUTED_C_LDFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(DSO_SONAME) -o $@'
     ;;
 
 *-openbsd*)
@@ -1112,6 +1112,10 @@ case "$target" in
     ;;
 
 esac
+
+if test -z "$MOZ_OPTIMIZE_FLAGS"; then
+    MOZ_OPTIMIZE_FLAGS="-O"
+fi
 
 AC_SUBST_LIST(MMX_FLAGS)
 AC_SUBST_LIST(SSE_FLAGS)
@@ -3709,22 +3713,12 @@ fi
 dnl ========================================================
 dnl = Enable code optimization. ON by default.
 dnl ========================================================
-if test -z "$MOZ_OPTIMIZE_FLAGS"; then
-    MOZ_OPTIMIZE_FLAGS="-O"
-fi
 
-MOZ_ARG_ENABLE_STRING(optimize,
-[  --disable-optimize      Disable compiler optimization
-  --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
-[ if test "$enableval" != "no"; then
-    MOZ_OPTIMIZE=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_OPTIMIZE_FLAGS=`echo "$enableval" | sed -e 's|\\\ | |g'`
-        MOZ_OPTIMIZE=2
-    fi
-else
-    MOZ_OPTIMIZE=
-fi ], MOZ_OPTIMIZE=1)
+# Use value from moz.configure if one is defined. Else use our computed
+# value.
+if test -n "${MOZ_CONFIGURE_OPTIMIZE_FLAGS}"; then
+    MOZ_OPTIMIZE_FLAGS=${MOZ_CONFIGURE_OPTIMIZE_FLAGS}
+fi
 
 MOZ_SET_FRAMEPTR_FLAGS
 
@@ -3745,11 +3739,10 @@ if test -n "$MOZ_OPTIMIZE"; then
 fi
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(MOZ_OPTIMIZE)
-AC_SUBST(MOZ_FRAMEPTR_FLAGS)
-AC_SUBST(MOZ_OPTIMIZE_FLAGS)
+AC_SUBST_LIST(MOZ_FRAMEPTR_FLAGS)
+AC_SUBST_LIST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
-AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
+AC_SUBST_LIST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
 dnl = Disable treating compiler warnings as errors
@@ -4142,6 +4135,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Build dependencies)
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$GNU_CC" -a "$GNU_CXX"; then
   _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
 else
@@ -4174,6 +4168,7 @@ else
     AC_SUBST(NONASCII)
   fi
 fi
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl =
@@ -4821,11 +4816,11 @@ OS_COMPILE_CFLAGS="$COMPILE_CFLAGS"
 OS_COMPILE_CXXFLAGS="$COMPILE_CXXFLAGS"
 OS_LDFLAGS="$LDFLAGS"
 OS_LIBS="$LIBS"
-AC_SUBST(OS_CFLAGS)
-AC_SUBST(OS_CXXFLAGS)
-AC_SUBST(OS_CPPFLAGS)
-AC_SUBST(OS_COMPILE_CFLAGS)
-AC_SUBST(OS_COMPILE_CXXFLAGS)
+AC_SUBST_LIST(OS_CFLAGS)
+AC_SUBST_LIST(OS_CXXFLAGS)
+AC_SUBST_LIST(OS_CPPFLAGS)
+AC_SUBST_LIST(OS_COMPILE_CFLAGS)
+AC_SUBST_LIST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
 
@@ -4851,8 +4846,8 @@ AC_SUBST(GCC_USE_GNU_LD)
 AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(MKCSHLIB)
-AC_SUBST(DSO_CFLAGS)
-AC_SUBST(DSO_PIC_CFLAGS)
+AC_SUBST_LIST(DSO_CFLAGS)
+AC_SUBST_LIST(DSO_PIC_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(USE_N32)

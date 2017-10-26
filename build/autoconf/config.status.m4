@@ -28,7 +28,7 @@ define([AC_SUBST_SET],
 [ifdef([AC_SUBST_SET_$1], ,
 [define([AC_SUBST_SET_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
-    (''' $1 ''', unique_list(r''' [$]$1 '''.split()))
+    (''' $1 ''', unique_list(split(r''' [$]$1 ''')))
 AC_DIVERT_POP()dnl
 ])])])])
 
@@ -41,7 +41,7 @@ define([AC_SUBST_LIST],
 [ifdef([AC_SUBST_LIST_$1], ,
 [define([AC_SUBST_LIST_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
-    (''' $1 ''', list(r''' [$]$1 '''.split()))
+    (''' $1 ''', list(split(r''' [$]$1 ''')))
 AC_DIVERT_POP()dnl
 ])])])])
 
@@ -106,12 +106,6 @@ changequote(<<<, >>>)dnl
 echo creating $CONFIG_STATUS
 
 cat > $CONFIG_STATUS <<EOF
-def unique_list(l):
-    result = []
-    for i in l:
-        if l not in result:
-            result.append(i)
-    return result
 
 dnl All defines and substs are stored with an additional space at the beginning
 dnl and at the end of the string, to avoid any problem with values starting or

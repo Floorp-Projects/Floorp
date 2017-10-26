@@ -1317,7 +1317,7 @@ FlacState::FlacState(ogg_page* aBosPage)
 bool
 FlacState::DecodeHeader(OggPacketPtr aPacket)
 {
-  if (!mParser.DecodeHeaderBlock(aPacket->packet, aPacket->bytes)) {
+  if (mParser.DecodeHeaderBlock(aPacket->packet, aPacket->bytes).isErr()) {
     return false;
   }
   if (mParser.HasFullMetadata()) {
@@ -1349,7 +1349,8 @@ FlacState::PacketDuration(ogg_packet* aPacket)
 bool
 FlacState::IsHeader(ogg_packet* aPacket)
 {
-  return mParser.IsHeaderBlock(aPacket->packet, aPacket->bytes);
+  auto res = mParser.IsHeaderBlock(aPacket->packet, aPacket->bytes);
+  return res.isOk() ? res.unwrap() : false;
 }
 
 nsresult

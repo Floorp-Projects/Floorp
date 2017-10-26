@@ -35,7 +35,6 @@
  *
  * This contract implements the following interfaces:
  * nsIPromptService
- * nsIPromptService2 (optional)
  *
  * Embedders may override this ContractID with their own implementation if they
  * want more control over the way prompts, alerts, and confirmation dialogs are

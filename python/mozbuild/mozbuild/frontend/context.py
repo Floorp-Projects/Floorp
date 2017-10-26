@@ -303,6 +303,7 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
 class CompileFlags(ContextDerivedValue, dict):
     def __init__(self, context):
         main_src_dir = mozpath.dirname(context.main_path)
+        self._context = context
 
         self.flag_variables = (
             ('STL', context.config.substs.get('STL_FLAGS'), ('CXXFLAGS',)),
@@ -319,6 +320,32 @@ class CompileFlags(ContextDerivedValue, dict):
                 'NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS', 'MOZ_PNG_CFLAGS',
                 'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS')))),
              ('CXXFLAGS', 'CFLAGS')),
+            ('DSO', context.config.substs.get('DSO_CFLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
+             ('CXXFLAGS', 'CFLAGS')),
+            ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
+            ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
+             ('CFLAGS',)),
+            ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
+             ('CXXFLAGS',)),
+            ('OS_CPPFLAGS', context.config.substs.get('OS_CPPFLAGS'),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OS_CFLAGS', context.config.substs.get('OS_CFLAGS'),
+             ('CFLAGS', 'C_LDFLAGS')),
+            ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
+             ('CXXFLAGS', 'CXX_LDFLAGS')),
+            ('DEBUG', (context.config.substs['MOZ_DEBUG_FLAGS'].split() if
+                       'MOZ_DEBUG_FLAGS' in context.config.substs else []),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('CLANG_PLUGIN', context.config.substs.get('CLANG_PLUGIN_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('OPTIMIZE', self._optimize_flags(),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('FRAMEPTR', context.config.substs.get('MOZ_FRAMEPTR_FLAGS'),
+             ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
+             ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
@@ -333,6 +360,34 @@ class CompileFlags(ContextDerivedValue, dict):
         else:
             dict.__init__(self)
 
+    def _warnings_as_errors(self):
+        warnings_as_errors = self._context.config.substs.get('WARNINGS_AS_ERRORS')
+        if self._context.config.substs.get('MOZ_PGO'):
+            # Don't use warnings-as-errors in Windows PGO builds because it is suspected of
+            # causing problems in that situation. (See bug 437002.)
+            if self._context.config.substs['OS_ARCH'] == 'WINNT':
+                warnings_as_errors = None
+
+        if self._context.config.substs.get('CC_TYPE') == 'clang-cl':
+            # Don't use warnings-as-errors in clang-cl because it warns about many more
+            # things than MSVC does.
+            warnings_as_errors = None
+
+        if warnings_as_errors:
+            return [warnings_as_errors]
+
+    def _optimize_flags(self):
+        if not self._context.config.substs.get('MOZ_OPTIMIZE'):
+            return []
+        optimize_flags = None
+        if self._context.config.substs.get('MOZ_PGO'):
+            optimize_flags = self._context.config.substs.get('MOZ_PGO_OPTIMIZE_FLAGS')
+        if not optimize_flags:
+            # If MOZ_PGO_OPTIMIZE_FLAGS is empty we fall back to MOZ_OPTIMIZE_FLAGS.
+            # Presently this occurs on Windows.
+            optimize_flags = self._context.config.substs.get('MOZ_OPTIMIZE_FLAGS')
+        return optimize_flags
+
     def __setitem__(self, key, value):
         if key not in self._known_keys:
             raise ValueError('Invalid value. `%s` is not a compile flags '
@@ -340,7 +395,7 @@ class CompileFlags(ContextDerivedValue, dict):
         if key in self and self[key] is None:
             raise ValueError('`%s` may not be set in COMPILE_FLAGS from moz.build, this '
                              'value is resolved from the emitter.' % key)
-        if not (isinstance(value, list) and all(isinstance(v, unicode) for v in value)):
+        if not (isinstance(value, list) and all(isinstance(v, basestring) for v in value)):
             raise ValueError('A list of strings must be provided as a value for a '
                              'compile flags category.')
         dict.__setitem__(self, key, value)
@@ -999,15 +1054,6 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 #   (storage_type, input_types, docs)
 
 VARIABLES = {
-    'ALLOW_COMPILER_WARNINGS': (bool, bool,
-        """Whether to allow compiler warnings (i.e. *not* treat them as
-        errors).
-
-        This is commonplace (almost mandatory, in fact) in directories
-        containing third-party code that we regularly update from upstream and
-        thus do not control, but is otherwise discouraged.
-        """),
-
     # Variables controlling reading of other frontend files.
     'ANDROID_GENERATED_RESFILES': (StrictOrderingOnAppendList, list,
         """Android resource files generated as part of the build.
@@ -2356,6 +2402,16 @@ DEPRECATION_HINTS = {
         instead of
 
             SIMPLE_PROGRAMS += ['foo', 'bar']"
+        ''',
+
+    'ALLOW_COMPILER_WARNINGS': '''
+        Please use
+
+            AllowCompilerWarnings()
+
+        instead of
+
+            ALLOW_COMPILER_WARNINGS = True
         ''',
 
     'FORCE_SHARED_LIB': '''

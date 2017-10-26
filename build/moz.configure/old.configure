@@ -66,6 +66,7 @@ set_config('AUTOCONF', autoconf)
          old_configure_assignments, build_project)
 @imports(_from='__builtin__', _import='open')
 @imports(_from='__builtin__', _import='print')
+@imports(_from='__builtin__', _import='sorted')
 @imports('glob')
 @imports('itertools')
 @imports('subprocess')
@@ -126,13 +127,21 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
             log.debug('| %s', command)
 
         if mozconfig['path']:
+            inject('# start of mozconfig values')
+            items = {}
             for key, value in mozconfig['vars']['added'].items():
-                inject("%s=%s" % (key, quote(value)))
+                items[key] = (value, 'added')
             for key, (old, value) in mozconfig['vars']['modified'].items():
-                inject("%s=%s" % (key, quote(value)))
+                items[key] = (value, 'modified')
+
+            for key, (value, action) in sorted(items.items()):
+                inject("%s=%s # %s" % (key, quote(value), action))
+
             for t in ('env', 'vars'):
-                for key in mozconfig[t]['removed'].keys():
-                    inject("unset %s" % key)
+                for key in sorted(mozconfig[t]['removed'].keys()):
+                    inject("unset %s # from %s" % (key, t))
+
+            inject('# end of mozconfig values')
 
         # Autoconf is special, because it might be passed from
         # mozconfig['make_extra'], which we don't pass automatically above.
@@ -164,7 +173,6 @@ def old_configure_options(*options):
     '--enable-address-sanitizer',
     '--enable-alsa',
     '--enable-bundled-fonts',
-    '--enable-clang-plugin',
     '--enable-content-sandbox',
     '--enable-cookies',
     '--enable-cpp-rtti',
@@ -200,7 +208,6 @@ def old_configure_options(*options):
     '--enable-nspr-build',
     '--enable-official-branding',
     '--enable-oom-breakpoint',
-    '--enable-optimize',
     '--enable-parental-controls',
     '--enable-pie',
     '--enable-posix-nspr-emulation',
@@ -298,6 +305,7 @@ def old_configure_options(*options):
 @imports('subprocess')
 @imports('sys')
 @imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.shellutil', _import='split')
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
     cmd = prepare_configure
@@ -358,7 +366,10 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
             log.error('old-configure failed')
         sys.exit(ret)
 
-    raw_config = {}
+    raw_config = {
+        'split': split,
+        'unique_list': unique_list,
+    }
     with encoded_open('config.data', 'r') as fh:
         code = compile(fh.read(), 'config.data', 'exec')
         # Every variation of the exec() function I tried led to:

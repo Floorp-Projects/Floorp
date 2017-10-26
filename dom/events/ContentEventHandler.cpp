@@ -1421,10 +1421,8 @@ static nsresult GetFrameForTextRect(nsINode* aNode,
                                     bool aHint,
                                     nsIFrame** aReturnFrame)
 {
-  NS_ENSURE_TRUE(aNode && aNode->IsNodeOfType(nsINode::eCONTENT),
-                 NS_ERROR_UNEXPECTED);
-  nsIContent* content = static_cast<nsIContent*>(aNode);
-  nsIFrame* frame = content->GetPrimaryFrame();
+  NS_ENSURE_TRUE(aNode && aNode->IsContent(), NS_ERROR_UNEXPECTED);
+  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   int32_t childNodeOffset = 0;
   return frame->GetChildFrameContainingOffset(aNodeOffset, aHint,
@@ -2491,7 +2489,7 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
         if (!node) {
           break;
         }
-        if (!node->IsNodeOfType(nsINode::eCONTENT)) {
+        if (!node->IsContent()) {
           continue;
         }
         nsIFrame* primaryFrame = node->AsContent()->GetPrimaryFrame();
@@ -3087,13 +3085,11 @@ ContentEventHandler::GetStartFrameAndOffset(const RawRange& aRawRange,
   aOffsetInFrame = -1;
 
   nsINode* node = aRawRange.GetStartContainer();
-  if (NS_WARN_IF(!node) ||
-      NS_WARN_IF(!node->IsNodeOfType(nsINode::eCONTENT))) {
+  if (NS_WARN_IF(!node) || NS_WARN_IF(!node->IsContent())) {
     return NS_ERROR_FAILURE;
   }
-  nsIContent* content = static_cast<nsIContent*>(node);
   RefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
-  aFrame = fs->GetFrameForNodeOffset(content, aRawRange.StartOffset(),
+  aFrame = fs->GetFrameForNodeOffset(node->AsContent(), aRawRange.StartOffset(),
                                      fs->GetHint(), &aOffsetInFrame);
   if (NS_WARN_IF(!aFrame)) {
     return NS_ERROR_FAILURE;
@@ -3143,7 +3139,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
   // text node, to make sure the caret is drawn on a new line when the last
   // character of the text node is '\n' in <textarea>.
   int32_t textLength =
-    static_cast<int32_t>(static_cast<nsIContent*>(node)->TextLength());
+    static_cast<int32_t>(node->AsContent()->TextLength());
   MOZ_ASSERT(nodeOffset <= textLength, "Offset is past length of text node");
   if (nodeOffset != textLength) {
     return;

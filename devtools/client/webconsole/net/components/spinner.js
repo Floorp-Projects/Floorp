@@ -3,24 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-
-// Shortcuts
-const DOM = React.DOM;
+const { Component, DOM } = require("devtools/client/shared/vendor/react");
 
 /**
  * This template represents a throbber displayed when the UI
  * is waiting for data coming from the backend (debugging server).
  */
-var Spinner = React.createClass({
-  displayName: "Spinner",
-
+class Spinner extends Component {
   render() {
     return (
       DOM.div({className: "devtools-throbber"})
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = Spinner;

@@ -68,6 +68,8 @@ protected:
 
   explicit ChannelMediaDecoder(MediaDecoderInit& aInit);
 
+  nsCString GetDebugInfo() override;
+
 public:
 
   // Create a decoder for the given aType. Returns null if we were unable
