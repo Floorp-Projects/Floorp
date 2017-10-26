@@ -421,10 +421,6 @@ GPUProcessManager::SimulateDeviceReset()
   gfxPlatform::GetPlatform()->CompositorUpdated();
 
   if (mProcess) {
-    GPUDeviceData data;
-    if (mGPUChild->SendSimulateDeviceReset(&data)) {
-      gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
-    }
     OnRemoteProcessDeviceReset(mProcess);
   } else {
     OnInProcessDeviceReset();
