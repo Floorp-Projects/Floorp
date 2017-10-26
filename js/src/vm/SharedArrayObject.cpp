@@ -10,17 +10,7 @@
 
 #include "jsfriendapi.h"
 #include "jsprf.h"
-
-#ifdef XP_WIN
-# include "jswin.h"
-#endif
 #include "jswrapper.h"
-#ifndef XP_WIN
-# include <sys/mman.h>
-#endif
-#ifdef MOZ_VALGRIND
-# include <valgrind/memcheck.h>
-#endif
 
 #include "jit/AtomicOperations.h"
 #include "vm/SharedMem.h"
@@ -32,46 +22,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-
-static inline void*
-MapMemory(size_t length, bool commit)
-{
-#ifdef XP_WIN
-    int prot = (commit ? MEM_COMMIT : MEM_RESERVE);
-    int flags = (commit ? PAGE_READWRITE : PAGE_NOACCESS);
-    return VirtualAlloc(nullptr, length, prot, flags);
-#else
-    int prot = (commit ? (PROT_READ | PROT_WRITE) : PROT_NONE);
-    void* p = mmap(nullptr, length, prot, MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (p == MAP_FAILED)
-        return nullptr;
-    return p;
-#endif
-}
-
-static inline void
-UnmapMemory(void* addr, size_t len)
-{
-#ifdef XP_WIN
-    VirtualFree(addr, 0, MEM_RELEASE);
-#else
-    munmap(addr, len);
-#endif
-}
-
-static inline bool
-MarkValidRegion(void* addr, size_t len)
-{
-#ifdef XP_WIN
-    if (!VirtualAlloc(addr, len, MEM_COMMIT, PAGE_READWRITE))
-        return false;
-    return true;
-#else
-    if (mprotect(addr, len, PROT_READ | PROT_WRITE))
-        return false;
-    return true;
-#endif
-}
 
 // Since this SharedArrayBuffer will likely be used for asm.js code, prepare it
 // for asm.js by mapping the 4gb protected zone described in WasmTypes.h.
@@ -88,26 +38,10 @@ SharedArrayMappedSize(uint32_t allocSize)
 #endif
 }
 
-// If there are too many 4GB buffers live we run up against system resource
-// exhaustion (address space or number of memory map descriptors), see
-// bug 1068684, bug 1073934 for details.  The limiting case seems to be
-// Windows Vista Home 64-bit, where the per-process address space is limited
-// to 8TB.  Thus we track the number of live objects, and set a limit of
-// 1000 live objects per process; we run synchronous GC if necessary; and
-// we throw an OOM error if the per-process limit is exceeded.
-static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
-static const int32_t MaximumLiveSharedArrayBuffers = 1000;
-
 static uint32_t
 SharedArrayAllocSize(uint32_t length)
 {
     return AlignBytes(length + gc::SystemPageSize(), gc::SystemPageSize());
-}
-
-int32_t
-SharedArrayRawBuffer::liveBuffers()
-{
-    return liveBufferCount;
 }
 
 SharedArrayRawBuffer*
@@ -122,48 +56,15 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     if (allocSize <= length)
         return nullptr;
 
-    // Test >= to guard against the case where multiple extant runtimes
-    // race to allocate.
-    if (++liveBufferCount >= MaximumLiveSharedArrayBuffers) {
-        if (OnLargeAllocationFailure)
-            OnLargeAllocationFailure();
-        if (liveBufferCount >= MaximumLiveSharedArrayBuffers) {
-            liveBufferCount--;
-            return nullptr;
-        }
-    }
-
     bool preparedForAsmJS = jit::JitOptions.asmJSAtomicsEnable && IsValidAsmJSHeapLength(length);
 
     void* p = nullptr;
-    if (preparedForAsmJS) {
-        uint32_t mappedSize = SharedArrayMappedSize(allocSize);
-
-        // Get the entire reserved region (with all pages inaccessible)
-        p = MapMemory(mappedSize, false);
-        if (!p) {
-            liveBufferCount--;
-            return nullptr;
-        }
-
-        if (!MarkValidRegion(p, allocSize)) {
-            UnmapMemory(p, mappedSize);
-            liveBufferCount--;
-            return nullptr;
-        }
-
-# if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-        // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
-        VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)p + allocSize,
-                                                       mappedSize - allocSize);
-# endif
-    } else {
-        p = MapMemory(allocSize, true);
-        if (!p) {
-            liveBufferCount--;
-            return nullptr;
-        }
-    }
+    if (preparedForAsmJS)
+        p = MapBufferMemory(SharedArrayMappedSize(allocSize), allocSize);
+    else
+        p = MapBufferMemory(allocSize, allocSize);
+    if (!p)
+        return nullptr;
 
     uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
@@ -207,23 +108,10 @@ SharedArrayRawBuffer::dropReference()
 
     uint8_t* address = p.unwrap(/*safe - only reference*/);
     uint32_t allocSize = SharedArrayAllocSize(this->length);
-
-    if (this->preparedForAsmJS) {
-        uint32_t mappedSize = SharedArrayMappedSize(allocSize);
-        UnmapMemory(address, mappedSize);
-
-# if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-        // Tell Valgrind/Memcheck to recommence reporting accesses in the
-        // previously-inaccessible region.
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address, mappedSize);
-# endif
-    } else {
-        UnmapMemory(address, allocSize);
-    }
-
-    // Decrement the buffer counter at the end -- otherwise, a race condition
-    // could enable the creation of unlimited buffers.
-    liveBufferCount--;
+    if (this->preparedForAsmJS)
+        UnmapBufferMemory(address, SharedArrayMappedSize(allocSize));
+    else
+        UnmapBufferMemory(address, allocSize);
 }
 
 
