@@ -14,7 +14,7 @@ function run_test() {
     (function() {
       p.StopProfiler();
       let n = 10000;
-      while (--n);  // OSR happens here with the profiler disabled.
+      while (--n); // OSR happens here with the profiler disabled.
       // An assertion will fail when this function returns, if the
       // profiler stack was misbalanced.
     })();

@@ -68,11 +68,13 @@ this.Utils = {
   get userAgent() {
     if (!this._userAgent) {
       let hph = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler);
+      /* eslint-disable no-multi-spaces */
       this._userAgent =
         Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
         " (" + hph.oscpu + ")" +                                  // (oscpu)
         " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
         Services.appinfo.appBuildID + ".";                        // Build.
+      /* eslint-enable no-multi-spaces */
     }
     return this._userAgent + Svc.Prefs.get("client.type", "desktop");
   },

@@ -3,7 +3,7 @@
 
 "use strict";
 
-do_get_profile();   // so we can use FxAccounts
+do_get_profile(); // so we can use FxAccounts
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://services-common/utils.js");

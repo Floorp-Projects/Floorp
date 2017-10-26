@@ -1020,7 +1020,7 @@ function setItemValue(id, value) {
 }
 
 function formatNumber(number) {
-  return (+number).toLocaleString();  // coerce number to a numeric value before calling toLocaleString()
+  return (+number).toLocaleString(); // coerce number to a numeric value before calling toLocaleString()
 }
 
 function formatDate(datestr, unknown) {

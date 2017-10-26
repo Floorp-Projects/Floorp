@@ -10,7 +10,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
-const LESS_THAN_CLIENTS_TTL_REFRESH = 86400;  // 1 day
+const LESS_THAN_CLIENTS_TTL_REFRESH = 86400; // 1 day
 
 let engine;
 
@@ -123,7 +123,7 @@ add_task(async function test_bad_hmac() {
     deletedItems       = [];
 
     _("Change our keys and our client ID, reupload keys.");
-    let oldLocalID  = engine.localID;     // Preserve to test for deletion!
+    let oldLocalID  = engine.localID; // Preserve to test for deletion!
     engine.localID = Utils.makeGUID();
     await engine.resetClient();
     await generateNewKeys(Service.collectionKeys);
@@ -176,7 +176,7 @@ add_task(async function test_bad_hmac() {
     // Create a new client record and new keys. Now our keys are wrong, as well
     // as the object on the server. We'll download the new keys and also delete
     // the bad client record.
-    oldLocalID  = engine.localID;         // Preserve to test for deletion!
+    oldLocalID  = engine.localID; // Preserve to test for deletion!
     engine.localID = Utils.makeGUID();
     await engine.resetClient();
     await generateNewKeys(Service.collectionKeys);

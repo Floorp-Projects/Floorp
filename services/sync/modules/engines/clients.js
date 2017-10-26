@@ -972,9 +972,9 @@ ClientStore.prototype = {
       }
 
       // Optional fields.
-      record.os = Services.appinfo.OS;             // "Darwin"
+      record.os = Services.appinfo.OS; // "Darwin"
       record.appPackage = Services.appinfo.ID;
-      record.application = this.engine.brandName;   // "Nightly"
+      record.application = this.engine.brandName; // "Nightly"
 
       // We can't compute these yet.
       // record.device = "";            // Bug 1100723

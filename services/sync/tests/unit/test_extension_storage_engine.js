@@ -31,7 +31,7 @@ function mock(options) {
 add_task(async function setup() {
   await Service.engineManager.register(ExtensionStorageEngine);
   engine = Service.engineManager.get("extension-storage");
-  do_get_profile();   // so we can use FxAccounts
+  do_get_profile(); // so we can use FxAccounts
   loadWebExtensionTestFunctions();
 });
 

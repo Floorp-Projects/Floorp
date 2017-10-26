@@ -21,7 +21,7 @@ function initTest() {
                 [dummyTerm + ".edu", searchTerm + dummyTerm, dummyTerm], // match
                 [dummyTerm + ".net", dummyTerm, searchTerm],           // match
                 [dummyTerm + ".org", dummyTerm, searchTerm + dummyTerm], // match
-                [dummyTerm + ".int", dummyTerm, dummyTerm]];           // no match
+                [dummyTerm + ".int", dummyTerm, dummyTerm]]; // no match
 
     // matches must correspond to above data
     const matches = 6;

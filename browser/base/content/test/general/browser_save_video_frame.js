@@ -63,7 +63,7 @@ function rightClickVideo(browser) {
     utils.sendMouseEvent("contextmenu", left, top,
                          2, /* aButton */
                          1, /* aClickCount */
-                         0  /* aModifiers */);
+                         0 /* aModifiers */);
   };
   let mm = browser.messageManager;
   mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);

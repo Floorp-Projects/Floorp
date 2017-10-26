@@ -249,7 +249,7 @@ function getDefault(map, key, defaultMaker) {
 
 // Construct a filtration network of rules.
 function ruleset(...rules) {
-    const rulesByInputFlavor = new Map();  // [someInputFlavor: [rule, ...]]
+    const rulesByInputFlavor = new Map(); // [someInputFlavor: [rule, ...]]
 
     // File each rule under its input flavor:
     forEach(rule => getDefault(rulesByInputFlavor, rule.source.inputFlavor, () => []).push(rule),
@@ -266,7 +266,7 @@ function ruleset(...rules) {
 
             // Introduce the whole DOM into the KB as flavor 'dom' to get
             // things started:
-            const nonterminals = [[{tree}, "dom"]];  // [[node, flavor], [node, flavor], ...]
+            const nonterminals = [[{tree}, "dom"]]; // [[node, flavor], [node, flavor], ...]
 
             // While there are new facts, run the applicable rules over them to
             // generate even newer facts. Repeat until everything's fully
@@ -318,7 +318,7 @@ function ruleset(...rules) {
                         // that).
                         if (!outNode.flavors.has(fact.flavor)) {
                             outNode.flavors.set(fact.flavor, fact.notes);
-                            kb.indexNodeByFlavor(outNode, fact.flavor);  // TODO: better encapsulation rather than indexing explicitly
+                            kb.indexNodeByFlavor(outNode, fact.flavor); // TODO: better encapsulation rather than indexing explicitly
                             nonterminals.push([outNode, fact.flavor]);
                         }
                     }
@@ -334,7 +334,7 @@ function ruleset(...rules) {
 // flavor (used to dispatch further rules upon), a corresponding DOM element, a
 // score, and some other arbitrary notes opaque to fathom.
 function knowledgebase() {
-    const nodesByFlavor = new Map();  // Map{'texty' -> [NodeA],
+    const nodesByFlavor = new Map(); // Map{'texty' -> [NodeA],
                                       //     'spiffy' -> [NodeA, NodeB]}
                                       // NodeA = {element: <someElement>,
                                       //
@@ -395,7 +395,7 @@ function* resultsOfDomRule(rule, specialDomNode, kb) {
     // Use the special "tree" property of the special starting node:
     const matches = specialDomNode.tree.querySelectorAll(rule.source.selector);
 
-    for (let i = 0; i < matches.length; i++) {  // matches is a NodeList, which doesn't conform to iterator protocol
+    for (let i = 0; i < matches.length; i++) { // matches is a NodeList, which doesn't conform to iterator protocol
         const element = matches[i];
         const newFacts = explicitFacts(rule.ranker(kb.nodeForElement(element)));
         for (let fact of newFacts) {

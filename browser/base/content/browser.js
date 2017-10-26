@@ -2385,7 +2385,7 @@ function BrowserCloseTabOrWindow() {
 
 function BrowserTryToCloseWindow() {
   if (WindowIsClosing())
-    window.close();     // WindowIsClosing does all the necessary checks
+    window.close(); // WindowIsClosing does all the necessary checks
 }
 
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
@@ -4627,7 +4627,7 @@ var XULBrowserWindow = {
 
     if (aWebProgress.isTopLevel) {
       if ((location == "about:blank" && checkEmptyPageOrigin()) ||
-          location == "") {  // Second condition is for new tabs, otherwise
+          location == "") { // Second condition is for new tabs, otherwise
                              // reload function is enabled until tab is refreshed.
         this.reloadCommand.setAttribute("disabled", "true");
       } else {
@@ -8807,7 +8807,7 @@ var ToolbarIconColor = {
 
   handleEvent(event) {
     switch (event.type) {
-      case "activate":  // falls through
+      case "activate": // falls through
       case "deactivate":
         this.inferFromText(event.type);
         break;

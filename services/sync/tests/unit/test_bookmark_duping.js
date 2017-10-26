@@ -31,7 +31,7 @@ async function sharedSetup() {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
+  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
 
   return { engine, store, server, collection };
 }

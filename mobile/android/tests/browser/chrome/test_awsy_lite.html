@@ -38,8 +38,8 @@
 
   var BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(3);  // several long waits and GCs make for a long-running test
-  SimpleTest.requestCompleteLog();  // so that "PERFHERDER_DATA" can be scraped from the log
+  SimpleTest.requestLongerTimeout(3); // several long waits and GCs make for a long-running test
+  SimpleTest.requestCompleteLog(); // so that "PERFHERDER_DATA" can be scraped from the log
 
   function checkpoint(aName) {
     var mrm = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);

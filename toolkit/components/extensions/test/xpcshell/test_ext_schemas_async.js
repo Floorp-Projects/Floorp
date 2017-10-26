@@ -238,7 +238,7 @@ add_task(async function testAsyncResults() {
         return Promise.resolve(2);
       },
     });
-    if (!isChromeCompat) {  // No promises for chrome.
+    if (!isChromeCompat) { // No promises for chrome.
       do_print("testnamespace.async_required should be a Promise");
       let promise = testnamespace.async_required();
       do_check_true(promise instanceof context.cloneScope.Promise);
@@ -269,7 +269,7 @@ add_task(async function testAsyncResults() {
         async_optional() { return makeError("TWO"); },
       });
 
-      if (!isChromeCompat) {  // No promises for chrome.
+      if (!isChromeCompat) { // No promises for chrome.
         await Assert.rejects(testnamespace.async_required(), /ONE/,
             "should reject testnamespace.async_required()").catch(() => {});
         await Assert.rejects(testnamespace.async_optional(), /TWO/,
