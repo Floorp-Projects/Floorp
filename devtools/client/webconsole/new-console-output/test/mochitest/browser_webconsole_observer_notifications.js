@@ -11,13 +11,13 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
 let created = false;
 let destroyed = false;
 
-add_task(function* () {
+add_task(async function() {
   setupObserver();
-  yield openNewTabAndConsole(TEST_URI);
-  yield waitFor(() => created);
+  await openNewTabAndConsole(TEST_URI);
+  await waitFor(() => created);
 
-  yield closeTabAndToolbox(gBrowser.selectedTab);
-  yield waitFor(() => destroyed);
+  await closeTabAndToolbox(gBrowser.selectedTab);
+  await waitFor(() => destroyed);
 });
 
 function setupObserver() {

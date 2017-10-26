@@ -12,12 +12,12 @@ requestLongerTimeout(2);
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
   "new-console-output/test/mochitest/test-location-debugger-link.html";
 
-add_task(function* () {
+add_task(async function() {
   // Force the new debugger UI, in case this gets uplifted with the old
   // debugger still turned on
-  yield pushPref("devtools.debugger.new-debugger-frontend", true);
-  yield pushPref("devtools.webconsole.filter.error", true);
-  yield pushPref("devtools.webconsole.filter.log", true);
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
+  await pushPref("devtools.webconsole.filter.error", true);
+  await pushPref("devtools.webconsole.filter.log", true);
 
   // On e10s, the exception thrown in test-location-debugger-link-errors.js
   // is triggered in child process and is ignored by test harness
@@ -25,18 +25,18 @@ add_task(function* () {
     expectUncaughtException();
   }
 
-  let hud = yield openNewTabAndConsole(TEST_URI);
+  let hud = await openNewTabAndConsole(TEST_URI);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
 
-  yield testOpenInDebugger(hud, toolbox, "document.bar");
+  await testOpenInDebugger(hud, toolbox, "document.bar");
 
   info("Selecting the console again");
-  yield toolbox.selectTool("webconsole");
-  yield testOpenInDebugger(hud, toolbox, "Blah Blah");
+  await toolbox.selectTool("webconsole");
+  await testOpenInDebugger(hud, toolbox, "Blah Blah");
 
   // // check again the first node.
   info("Selecting the console again");
-  yield toolbox.selectTool("webconsole");
-  yield testOpenInDebugger(hud, toolbox, "document.bar");
+  await toolbox.selectTool("webconsole");
+  await testOpenInDebugger(hud, toolbox, "document.bar");
 });

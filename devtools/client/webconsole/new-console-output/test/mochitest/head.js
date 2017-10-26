@@ -42,16 +42,24 @@ registerCleanupFunction(function* () {
  *
  * @param string url
  *        The URL for the tab to be opened.
+ * @param Boolean clearJstermHistory
+ *        true (default) if the jsterm history should be cleared.
  * @return Promise
  *         Resolves when the tab has been added, loaded and the toolbox has been opened.
  *         Resolves to the toolbox.
  */
-var openNewTabAndConsole = Task.async(function* (url) {
-  let toolbox = yield openNewTabAndToolbox(url, "webconsole");
+async function openNewTabAndConsole(url, clearJstermHistory = true) {
+  let toolbox = await openNewTabAndToolbox(url, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
   hud.jsterm._lazyVariablesView = false;
+
+  if (clearJstermHistory) {
+    // Clearing history that might have been set in previous tests.
+    await hud.jsterm.clearHistory();
+  }
+
   return hud;
-});
+}
 
 /**
  * Wait for messages in the web console output, resolving once they are received.
@@ -220,18 +228,18 @@ function waitForNodeMutation(node, observeConfig = {}) {
  *        The text to search for.  This should be contained in the
  *        message.  The searching is done with @see findMessage.
  */
-function* testOpenInDebugger(hud, toolbox, text) {
+async function testOpenInDebugger(hud, toolbox, text) {
   info(`Finding message for open-in-debugger test; text is "${text}"`);
-  let messageNode = yield waitFor(() => findMessage(hud, text));
+  let messageNode = await waitFor(() => findMessage(hud, text));
   let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
   ok(frameLinkNode, "The message does have a location link");
-  yield checkClickOnNode(hud, toolbox, frameLinkNode);
+  await checkClickOnNode(hud, toolbox, frameLinkNode);
 }
 
 /**
  * Helper function for testOpenInDebugger.
  */
-function* checkClickOnNode(hud, toolbox, frameLinkNode) {
+async function checkClickOnNode(hud, toolbox, frameLinkNode) {
   info("checking click on node location");
 
   let url = frameLinkNode.getAttribute("data-url");
@@ -245,7 +253,7 @@ function* checkClickOnNode(hud, toolbox, frameLinkNode) {
   EventUtils.sendMouseEvent({ type: "click" },
     frameLinkNode.querySelector(".frame-link-filename"));
 
-  yield onSourceInDebuggerOpened;
+  await onSourceInDebuggerOpened;
 
   let dbg = toolbox.getPanel("jsdebugger");
   is(

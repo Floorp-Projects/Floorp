@@ -11,12 +11,9 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 817834";
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
-  // Clearing history that might have been set in previous tests.
-  yield hud.jsterm.clearHistory();
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
   testEditedInputHistory(hud);
-  yield hud.jsterm.clearHistory();
 });
 
 function testEditedInputHistory(hud) {

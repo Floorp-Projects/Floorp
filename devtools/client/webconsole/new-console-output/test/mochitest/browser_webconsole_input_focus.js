@@ -13,8 +13,8 @@ const TEST_URI =
     console.log("console message 1");
   </script>`;
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function() {
+  let hud = await openNewTabAndConsole(TEST_URI);
 
   let inputNode = hud.jsterm.inputNode;
   info("Focus after console is opened");
@@ -24,19 +24,19 @@ add_task(function* () {
   ok(hasFocus(inputNode), "input node is focused after output is cleared");
 
   info("Focus during message logging");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.wrappedJSObject.console.log("console message 2");
   });
-  let msg = yield waitFor(() => findMessage(hud, "console message 2"));
+  let msg = await waitFor(() => findMessage(hud, "console message 2"));
   ok(hasFocus(inputNode, "input node is focused, first time"));
 
   info("Focus after clicking in the output area");
-  yield waitForBlurredInput(hud);
+  await waitForBlurredInput(hud);
   EventUtils.sendMouseEvent({type: "click"}, msg);
   ok(hasFocus(inputNode), "input node is focused, second time");
 
   info("Setting a text selection and making sure a click does not re-focus");
-  yield waitForBlurredInput(hud);
+  await waitForBlurredInput(hud);
   let selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(msg.querySelector(".message-body"));
   EventUtils.sendMouseEvent({type: "click"}, msg);
