@@ -27,6 +27,7 @@ RELEASE_LOCALES = [
 	"bn-BD",
 	"bn-IN",
 	"ca",
+        "cak",
 	"cs",
 	"cy",
 	"da",
@@ -40,6 +41,7 @@ RELEASE_LOCALES = [
 	"es-MX",
 	"eu",
 	"fa",
+        "fi",
 	"fr",
 	"fy-NL",
 	"ga-IE",
@@ -56,9 +58,11 @@ RELEASE_LOCALES = [
 	"kk",
 	"ko",
 	"lo",
+        "mix",
 	"ms",
 	"my",
 	"nb-NO",
+        "ne-NP",
 	"nl",
 	"nn-NO",
 	"pl",
@@ -74,6 +78,7 @@ RELEASE_LOCALES = [
 	"te",
 	"th",
 	"tr",
+        "trs",
 	"uk",
 	"ur",
 	"vi",
@@ -86,13 +91,8 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
-	"cak",
-	"fi",
 	"lt",
 	"meh",	
-	"mix",
-	"ne-NP",
-	"trs",
 	"zam",
 ]
 
