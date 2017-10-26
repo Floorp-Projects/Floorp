@@ -53,6 +53,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--mochitest-suite', ], {
             "action": "extend",
             "dest": "specified_mochitest_suites",
+            "type": "string",
             "help": "Specify which mochi suite to run. "
                     "Suites are defined in the config file.\n"
                     "Examples: 'all', 'plain1', 'plain5', 'chrome', or 'a11y'"}
@@ -60,6 +61,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--reftest-suite', ], {
             "action": "extend",
             "dest": "specified_reftest_suites",
+            "type": "string",
             "help": "Specify which reftest suite to run. "
                     "Suites are defined in the config file.\n"
                     "Examples: 'all', 'crashplan', or 'jsreftest'"}
@@ -67,6 +69,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--xpcshell-suite', ], {
             "action": "extend",
             "dest": "specified_xpcshell_suites",
+            "type": "string",
             "help": "Specify which xpcshell suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'xpcshell'"}
@@ -74,6 +77,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--cppunittest-suite', ], {
             "action": "extend",
             "dest": "specified_cppunittest_suites",
+            "type": "string",
             "help": "Specify which cpp unittest suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'cppunittest'"}
@@ -81,6 +85,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--gtest-suite', ], {
             "action": "extend",
             "dest": "specified_gtest_suites",
+            "type": "string",
             "help": "Specify which gtest suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'gtest'"}
@@ -88,6 +93,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--jittest-suite', ], {
             "action": "extend",
             "dest": "specified_jittest_suites",
+            "type": "string",
             "help": "Specify which jit-test suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'jittest'"}
@@ -95,6 +101,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--mozbase-suite', ], {
             "action": "extend",
             "dest": "specified_mozbase_suites",
+            "type": "string",
             "help": "Specify which mozbase suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'mozbase'"}
@@ -102,6 +109,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         [['--mozmill-suite', ], {
             "action": "extend",
             "dest": "specified_mozmill_suites",
+            "type": "string",
             "help": "Specify which mozmill suite to run. "
                     "Suites are defined in the config file\n."
                     "Examples: 'mozmill'"}

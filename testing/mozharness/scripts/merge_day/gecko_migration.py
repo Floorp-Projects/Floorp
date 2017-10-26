@@ -42,27 +42,32 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         [['--hg-user', ], {
             "action": "store",
             "dest": "hg_user",
+            "type": "string",
             "default": "ffxbld <release@mozilla.com>",
             "help": "Specify what user to use to commit to hg.",
         }],
         [['--balrog-api-root', ], {
             "action": "store",
             "dest": "balrog_api_root",
+            "type": "string",
             "help": "Specify Balrog API root URL.",
         }],
         [['--balrog-username', ], {
             "action": "store",
             "dest": "balrog_username",
+            "type": "string",
             "help": "Specify what user to connect to Balrog with.",
         }],
         [['--balrog-credentials-file', ], {
             "action": "store",
             "dest": "balrog_credentials_file",
+            "type": "string",
             "help": "The file containing the Balrog credentials.",
         }],
         [['--remove-locale', ], {
             "action": "extend",
             "dest": "remove_locales",
+            "type": "string",
             "help": "Comma separated list of locales to remove from the 'to' repo.",
         }],
     ]

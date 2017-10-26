@@ -8,7 +8,7 @@
 gone by.
 
 The config should be built from script-level defaults, overlaid by
-config-file defaults, overlaid by command line arguments.
+config-file defaults, overlaid by command line options.
 
   (For buildbot-analogues that would be factory-level defaults,
    builder-level defaults, and build request/scheduler settings.)
@@ -24,8 +24,8 @@ TODO:
   these settings are set.
 """
 
-from argparse import ArgumentParser, Action
 from copy import deepcopy
+from optparse import OptionParser, Option, OptionGroup
 import os
 import sys
 import urllib2
@@ -39,12 +39,29 @@ except ImportError:
 from mozharness.base.log import DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL
 
 
-# argparse {{{1
-class ExtendAction(Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        items = getattr(namespace, self.dest) or []
-        items.extend(values.split(','))
-        setattr(namespace, self.dest, items)
+# optparse {{{1
+class ExtendedOptionParser(OptionParser):
+    """OptionParser, but with ExtendOption as the option_class.
+    """
+    def __init__(self, **kwargs):
+        kwargs['option_class'] = ExtendOption
+        OptionParser.__init__(self, **kwargs)
+
+
+class ExtendOption(Option):
+    """from http://docs.python.org/library/optparse.html?highlight=optparse#adding-new-actions"""
+    ACTIONS = Option.ACTIONS + ("extend",)
+    STORE_ACTIONS = Option.STORE_ACTIONS + ("extend",)
+    TYPED_ACTIONS = Option.TYPED_ACTIONS + ("extend",)
+    ALWAYS_TYPED_ACTIONS = Option.ALWAYS_TYPED_ACTIONS + ("extend",)
+
+    def take_action(self, action, dest, opt, value, values, parser):
+        if action == "extend":
+            lvalue = value.split(",")
+            values.ensure_value(dest, []).extend(lvalue)
+        else:
+            Option.take_action(
+                self, action, dest, opt, value, values, parser)
 
 
 def make_immutable(item):
@@ -196,7 +213,7 @@ class BaseConfig(object):
                  volatile_config=None, option_args=None,
                  require_config_file=False,
                  append_env_variables_from_configs=False,
-                 usage=None):
+                 usage="usage: %prog [options]"):
         self._config = {}
         self.all_cfg_files_and_dicts = []
         self.actions = []
@@ -231,10 +248,16 @@ class BaseConfig(object):
             )
             self.set_config(initial_config)
             # Since initial_config_file is only set when running unit tests,
-            # default option_args to [] to avoid parsing sys.argv (which are
-            # specified for nosetests).
+            # if no option_args have been specified, then the parser will
+            # parse sys.argv which in this case would be the command line
+            # options specified to run the tests, e.g. nosetests -v. Clearly,
+            # the options passed to nosetests (such as -v) should not be
+            # interpreted by mozharness as mozharness options, so we specify
+            # a dummy command line with no options, so that the parser does
+            # not add anything from the test invocation command line
+            # arguments to the mozharness options.
             if option_args is None:
-                option_args = []
+                option_args=['dummy_mozharness_script_with_no_command_line_options.py']
         if config_options is None:
             config_options = []
         self._create_config_parser(config_options, usage)
@@ -245,33 +268,36 @@ class BaseConfig(object):
         return ReadOnlyDict(self._config)
 
     def _create_config_parser(self, config_options, usage):
-        self.config_parser = ArgumentParser(usage=usage)
-        self.config_parser.register('action', 'extend', ExtendAction)
-        self.config_parser.add_argument(
-            "--work-dir", default="build",
+        self.config_parser = ExtendedOptionParser(usage=usage)
+        self.config_parser.add_option(
+            "--work-dir", action="store", dest="work_dir",
+            type="string", default="build",
             help="Specify the work_dir (subdir of base_work_dir)"
         )
-        self.config_parser.add_argument(
-            "--base-work-dir", default=os.getcwd(),
+        self.config_parser.add_option(
+            "--base-work-dir", action="store", dest="base_work_dir",
+            type="string", default=os.getcwd(),
             help="Specify the absolute path of the parent of the working directory"
         )
-        self.config_parser.add_argument(
+        self.config_parser.add_option(
             "-c", "--config-file", "--cfg", action="extend", dest="config_files",
-            help="Specify a config file; can be repeated"
+            type="string", help="Specify a config file; can be repeated"
         )
-        self.config_parser.add_argument(
+        self.config_parser.add_option(
             "-C", "--opt-config-file", "--opt-cfg", action="extend",
-            dest="opt_config_files", default=[],
+            dest="opt_config_files", type="string", default=[],
             help="Specify an optional config file, like --config-file but with no "
                  "error if the file is missing; can be repeated"
         )
-        self.config_parser.add_argument(
+        self.config_parser.add_option(
             "--dump-config", action="store_true",
+            dest="dump_config",
             help="List and dump the config generated from this run to "
                  "a JSON file."
         )
-        self.config_parser.add_argument(
+        self.config_parser.add_option(
             "--dump-config-hierarchy", action="store_true",
+            dest="dump_config_hierarchy",
             help="Like --dump-config but will list and dump which config "
                  "files were used making up the config and specify their own "
                  "keys/values that were not overwritten by another cfg -- "
@@ -279,69 +305,75 @@ class BaseConfig(object):
         )
 
         # Logging
-        log_option_group = self.config_parser.add_argument_group("Logging")
-        log_option_group.add_argument(
-            "--log-level", default=INFO,
+        log_option_group = OptionGroup(self.config_parser, "Logging")
+        log_option_group.add_option(
+            "--log-level", action="store",
+            type="choice", dest="log_level", default=INFO,
             choices=[DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL],
             help="Set log level (debug|info|warning|error|critical|fatal)"
         )
-        log_option_group.add_argument(
+        log_option_group.add_option(
             "-q", "--quiet", action="store_false", dest="log_to_console",
             default=True, help="Don't log to the console"
         )
-        log_option_group.add_argument(
-            "--append-to-log", action="store_true", default=False,
+        log_option_group.add_option(
+            "--append-to-log", action="store_true",
+            dest="append_to_log", default=False,
             help="Append to the log"
         )
-        log_option_group.add_argument(
+        log_option_group.add_option(
             "--multi-log", action="store_const", const="multi",
             dest="log_type", help="Log using MultiFileLogger"
         )
-        log_option_group.add_argument(
+        log_option_group.add_option(
             "--simple-log", action="store_const", const="simple",
             dest="log_type", help="Log using SimpleFileLogger"
         )
+        self.config_parser.add_option_group(log_option_group)
 
         # Actions
-        action_option_group = self.config_parser.add_argument_group(
-            "Actions", "Use these options to list or enable/disable actions.")
-        action_option_group.add_argument(
+        action_option_group = OptionGroup(
+            self.config_parser, "Actions",
+            "Use these options to list or enable/disable actions."
+        )
+        action_option_group.add_option(
             "--list-actions", action="store_true",
+            dest="list_actions",
             help="List all available actions, then exit"
         )
-        action_option_group.add_argument(
+        action_option_group.add_option(
             "--add-action", action="extend",
             dest="add_actions", metavar="ACTIONS",
             help="Add action %s to the list of actions" % self.all_actions
         )
-        action_option_group.add_argument(
+        action_option_group.add_option(
             "--no-action", action="extend",
             dest="no_actions", metavar="ACTIONS",
             help="Don't perform action"
         )
         for action in self.all_actions:
-            action_option_group.add_argument(
+            action_option_group.add_option(
                 "--%s" % action, action="append_const",
                 dest="actions", const=action,
                 help="Add %s to the limited list of actions" % action
             )
-            action_option_group.add_argument(
+            action_option_group.add_option(
                 "--no-%s" % action, action="append_const",
                 dest="no_actions", const=action,
                 help="Remove %s from the list of actions to perform" % action
             )
-
+        self.config_parser.add_option_group(action_option_group)
         # Child-specified options
         # TODO error checking for overlapping options
         if config_options:
             for option in config_options:
-                self.config_parser.add_argument(*option[0], **option[1])
+                self.config_parser.add_option(*option[0], **option[1])
 
         # Initial-config-specified options
         config_options = self._config.get('config_options', None)
         if config_options:
             for option in config_options:
-                self.config_parser.add_argument(*option[0], **option[1])
+                self.config_parser.add_option(*option[0], **option[1])
 
     def set_config(self, config, overwrite=False):
         """This is probably doable some other way."""
@@ -382,15 +414,15 @@ class BaseConfig(object):
             print "    " + ("*" if a in self.default_actions else " "), a
         raise SystemExit(0)
 
-    def get_cfgs_from_files(self, all_config_files, args):
+    def get_cfgs_from_files(self, all_config_files, options):
         """Returns the configuration derived from the list of configuration
         files.  The result is represented as a list of `(filename,
         config_dict)` tuples; they will be combined with keys in later
         dictionaries taking precedence over earlier.
 
         `all_config_files` is all files specified with `--config-file` and
-        `--opt-config-file`; `args` is the argparse Namespace object giving
-        access to any other command-line arguments.
+        `--opt-config-file`; `options` is the argparse options object giving
+        access to any other command-line options.
 
         This function is also responsible for downloading any configuration
         files specified by URL.  It uses ``parse_config_file`` in this module
@@ -413,7 +445,7 @@ class BaseConfig(object):
                 else:
                     all_cfg_files_and_dicts.append((cf, parse_config_file(cf)))
             except Exception:
-                if cf in args.opt_config_files:
+                if cf in options.opt_config_files:
                     print(
                         "WARNING: optional config file not found %s" % cf
                     )
@@ -423,17 +455,19 @@ class BaseConfig(object):
 
     def parse_args(self, args=None):
         """Parse command line arguments in a generic way.
-        Return the parser object after adding the basic arguments, so
+        Return the parser object after adding the basic options, so
         child objects can manipulate it.
         """
         self.command_line = ' '.join(sys.argv)
         if args is None:
             args = sys.argv[1:]
-        args = self.config_parser.parse_args(args)
+        (options, args) = self.config_parser.parse_args(args)
 
-        if not args.config_files:
+        defaults = self.config_parser.defaults.copy()
+
+        if not options.config_files:
             if self.require_config_file:
-                if args.list_actions:
+                if options.list_actions:
                     self.list_actions()
                 print("Required config file not set! (use --config-file option)")
                 raise SystemExit(-1)
@@ -444,7 +478,7 @@ class BaseConfig(object):
             # let's store this to self for things like --interpret-config-files
             self.all_cfg_files_and_dicts.extend(self.get_cfgs_from_files(
                 # append opt_config to allow them to overwrite previous configs
-                args.config_files + args.opt_config_files, args
+                options.config_files + options.opt_config_files, options=options
             ))
             config = {}
             if self.append_env_variables_from_configs:
@@ -465,32 +499,33 @@ class BaseConfig(object):
             #    as the keys/values that make up that instance. Ultimately,
             #    this becomes self.config during BaseScript's init
             self.set_config(config)
-
-        for key, value in vars(args).items():
+        for key in defaults.keys():
+            value = getattr(options, key)
             if value is None:
                 continue
             # Don't override config_file defaults with config_parser defaults
-            if value == self.config_parser.get_default(key) and key in self._config:
+            if key in defaults and value == defaults[key] and key in self._config:
                 continue
             self._config[key] = value
 
         # The idea behind the volatile_config is we don't want to save this
         # info over multiple runs.  This defaults to the action-specific
-        # config args, but can be anything.
+        # config options, but can be anything.
         for key in self.volatile_config.keys():
             if self._config.get(key) is not None:
                 self.volatile_config[key] = self._config[key]
                 del(self._config[key])
 
         self.update_actions()
-        if args.list_actions:
+        if options.list_actions:
             self.list_actions()
 
         # Keep? This is for saving the volatile config in the dump_config
         self._config['volatile_config'] = self.volatile_config
 
+        self.options = options
         self.args = args
-        return self.args
+        return (self.options, self.args)
 
     def update_actions(self):
         """ Update actions after reading in config.
@@ -500,7 +535,7 @@ class BaseConfig(object):
         First, if default_actions is specified in the config, set our
         default actions even if the script specifies other default actions.
 
-        Without any other action-specific arguments, run with default actions.
+        Without any other action-specific options, run with default actions.
 
         If we specify --ACTION or --only-ACTION once or multiple times,
         we want to override the default_actions list with the one(s) we list.
