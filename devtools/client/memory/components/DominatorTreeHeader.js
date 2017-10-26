@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
 
-module.exports = createClass({
-  displayName: "DominatorTreeHeader",
-
-  propTypes: { },
+class DominatorTreeHeader extends Component {
+  static get propTypes() {
+    return { };
+  }
 
   render() {
     return dom.div(
@@ -43,4 +43,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = DominatorTreeHeader;

@@ -5,38 +5,38 @@
 "use strict";
 
 const { assert, isSavedFrame } = require("devtools/shared/DevToolsUtils");
-const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/Frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 
-const Separator = createFactory(createClass({
-  displayName: "Separator",
-
+class SeparatorClass extends Component {
   render() {
     return dom.span({ className: "separator" }, "›");
   }
-}));
+}
 
-module.exports = createClass({
-  displayName: "DominatorTreeItem",
+const Separator = createFactory(SeparatorClass);
 
-  propTypes: {
-    item: PropTypes.object.isRequired,
-    depth: PropTypes.number.isRequired,
-    arrow: PropTypes.object,
-    expanded: PropTypes.bool.isRequired,
-    focused: PropTypes.bool.isRequired,
-    getPercentSize: PropTypes.func.isRequired,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-  },
+class DominatorTreeItem extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.object.isRequired,
+      depth: PropTypes.number.isRequired,
+      arrow: PropTypes.object,
+      expanded: PropTypes.bool.isRequired,
+      focused: PropTypes.bool.isRequired,
+      getPercentSize: PropTypes.func.isRequired,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item
       || this.props.depth != nextProps.depth
       || this.props.expanded != nextProps.expanded
       || this.props.focused != nextProps.focused;
-  },
+  }
 
   render() {
     let {
@@ -141,5 +141,7 @@ module.exports = createClass({
                  `@ 0x${item.nodeId.toString(16)}`)
       )
     );
-  },
-});
+  }
+}
+
+module.exports = DominatorTreeItem;
