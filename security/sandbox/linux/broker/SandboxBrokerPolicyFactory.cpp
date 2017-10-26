@@ -439,13 +439,10 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
       if (NS_SUCCEEDED(rv)) {
         rv = workDir->AppendNative(NS_LITERAL_CSTRING("chrome"));
         if (NS_SUCCEEDED(rv)) {
-          rv = workDir->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
+          nsAutoCString tmpPath;
+          rv = workDir->GetNativePath(tmpPath);
           if (NS_SUCCEEDED(rv)) {
-            nsAutoCString tmpPath;
-            rv = workDir->GetNativePath(tmpPath);
-            if (NS_SUCCEEDED(rv)) {
-              policy->AddPath(rdonly, tmpPath.get());
-            }
+            policy->AddDir(rdonly, tmpPath.get());
           }
         }
       }
