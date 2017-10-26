@@ -33,9 +33,10 @@ const CONFIG_PREFS = [
 
 this.FxAccountsConfig = {
 
-  async _getPrefURL(prefName) {
+  // Returns a promise that resolves with the URI of the remote UI flows.
+  async promiseAccountsSignUpURI() {
     await this.ensureConfigured();
-    let url = Services.urlFormatter.formatURLPref(prefName);
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.signup.uri");
     if (fxAccounts.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
@@ -43,17 +44,23 @@ this.FxAccountsConfig = {
   },
 
   // Returns a promise that resolves with the URI of the remote UI flows.
-  promiseAccountsSignUpURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.signup.uri");
+  async promiseAccountsSignInURI() {
+    await this.ensureConfigured();
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.signin.uri");
+    if (fxAccounts.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    return url;
   },
 
   // Returns a promise that resolves with the URI of the remote UI flows.
-  promiseAccountsSignInURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.signin.uri");
-  },
-
-  promiseAccountsEmailURI() {
-    return this._getPrefURL("identity.fxaccounts.remote.email.uri");
+  async promiseAccountsEmailURI() {
+    await this.ensureConfigured();
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.email.uri");
+    if (fxAccounts.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    return url;
   },
 
   resetConfigURLs() {

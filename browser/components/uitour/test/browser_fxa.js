@@ -48,7 +48,8 @@ var tests = [
   }),
 ];
 
-// Watch out - these will fire observers which if you aren't careful, may
+// Helpers copied from browser_aboutAccounts.js
+// watch out - these will fire observers which if you aren't careful, may
 // interfere with the tests.
 function setSignedInUser(data) {
   if (!data) {

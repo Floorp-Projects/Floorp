@@ -95,6 +95,8 @@ static const RedirEntry kRedirMap[] = {
   { "healthreport", "chrome://browser/content/abouthealthreport/abouthealth.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
 #endif
+  { "accounts", "chrome://browser/content/aboutaccounts/aboutaccounts.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT },
   { "reader", "chrome://global/content/reader/aboutReader.html",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT |
