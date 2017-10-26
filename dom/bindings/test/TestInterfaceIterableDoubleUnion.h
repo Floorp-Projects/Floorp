@@ -7,8 +7,9 @@
 #ifndef mozilla_dom_TestInterfaceIterableDoubleUnion_h
 #define mozilla_dom_TestInterfaceIterableDoubleUnion_h
 
-#include "nsWrapperCache.h"
+#include "mozilla/dom/TestInterfaceJSMaplikeSetlikeIterableBinding.h"
 #include "nsCOMPtr.h"
+#include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
 
