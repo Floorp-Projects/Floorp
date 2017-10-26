@@ -17,6 +17,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#include <algorithm>
 
 #if (MOZ_WIDGET_GTK == 2)
 #ifdef __cplusplus
