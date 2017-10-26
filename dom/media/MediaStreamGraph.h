@@ -784,6 +784,12 @@ public:
    */
   void EndAllTrackAndFinish();
 
+  /**
+   * Removes all direct listeners and signals to them that they have been
+   * uninstalled.
+   */
+  void RemoveAllDirectListeners();
+
   void RegisterForAudioMixing();
 
   /**
