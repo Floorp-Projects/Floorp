@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
 const Census = createFactory(require("./Census"));
 const CensusHeader = createFactory(require("./CensusHeader"));
@@ -180,29 +180,41 @@ function getError(snapshot, diffing, individuals) {
  * state of only a button to take a snapshot, loading states, the census view
  * tree, the dominator tree, etc.
  */
-module.exports = createClass({
-  displayName: "Heap",
+class Heap extends Component {
+  static get propTypes() {
+    return {
+      onSnapshotClick: PropTypes.func.isRequired,
+      onLoadMoreSiblings: PropTypes.func.isRequired,
+      onCensusExpand: PropTypes.func.isRequired,
+      onCensusCollapse: PropTypes.func.isRequired,
+      onDominatorTreeExpand: PropTypes.func.isRequired,
+      onDominatorTreeCollapse: PropTypes.func.isRequired,
+      onCensusFocus: PropTypes.func.isRequired,
+      onDominatorTreeFocus: PropTypes.func.isRequired,
+      onShortestPathsResize: PropTypes.func.isRequired,
+      snapshot: snapshotModel,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      onPopView: PropTypes.func.isRequired,
+      individuals: models.individuals,
+      onViewIndividuals: PropTypes.func.isRequired,
+      onFocusIndividual: PropTypes.func.isRequired,
+      diffing: diffingModel,
+      view: models.view.isRequired,
+      sizes: PropTypes.object.isRequired,
+    };
+  }
 
-  propTypes: {
-    onSnapshotClick: PropTypes.func.isRequired,
-    onLoadMoreSiblings: PropTypes.func.isRequired,
-    onCensusExpand: PropTypes.func.isRequired,
-    onCensusCollapse: PropTypes.func.isRequired,
-    onDominatorTreeExpand: PropTypes.func.isRequired,
-    onDominatorTreeCollapse: PropTypes.func.isRequired,
-    onCensusFocus: PropTypes.func.isRequired,
-    onDominatorTreeFocus: PropTypes.func.isRequired,
-    onShortestPathsResize: PropTypes.func.isRequired,
-    snapshot: snapshotModel,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    onPopView: PropTypes.func.isRequired,
-    individuals: models.individuals,
-    onViewIndividuals: PropTypes.func.isRequired,
-    onFocusIndividual: PropTypes.func.isRequired,
-    diffing: diffingModel,
-    view: models.view.isRequired,
-    sizes: PropTypes.object.isRequired,
-  },
+  constructor(props) {
+    super(props);
+    this._renderHeapView = this._renderHeapView.bind(this);
+    this._renderInitial = this._renderInitial.bind(this);
+    this._renderStatus = this._renderStatus.bind(this);
+    this._renderError = this._renderError.bind(this);
+    this._renderCensus = this._renderCensus.bind(this);
+    this._renderTreeMap = this._renderTreeMap.bind(this);
+    this._renderIndividuals = this._renderIndividuals.bind(this);
+    this._renderDominatorTree = this._renderDominatorTree.bind(this);
+  }
 
   /**
    * Render the heap view's container panel with the given contents inside of
@@ -225,7 +237,7 @@ module.exports = createClass({
         ...contents
       )
     );
-  },
+  }
 
   _renderInitial(onSnapshotClick) {
     return this._renderHeapView("initial", dom.button(
@@ -236,7 +248,7 @@ module.exports = createClass({
       },
       L10N.getStr("take-snapshot")
     ));
-  },
+  }
 
   _renderStatus(state, statusText, diffing) {
     let throbber = "";
@@ -250,7 +262,7 @@ module.exports = createClass({
       },
       statusText
     ));
-  },
+  }
 
   _renderError(state, statusText, error) {
     return this._renderHeapView(
@@ -258,7 +270,7 @@ module.exports = createClass({
       dom.span({ className: "snapshot-status error" }, statusText),
       dom.pre({}, safeErrorString(error))
     );
-  },
+  }
 
   _renderCensus(state, census, diffing, onViewSourceInDebugger, onViewIndividuals) {
     assert(census.report, "Should not render census that does not have a report");
@@ -293,14 +305,14 @@ module.exports = createClass({
     }));
 
     return this._renderHeapView(state, ...contents);
-  },
+  }
 
   _renderTreeMap(state, treeMap) {
     return this._renderHeapView(
       state,
       TreeMap({ treeMap })
     );
-  },
+  }
 
   _renderIndividuals(state, individuals, dominatorTree, onViewSourceInDebugger) {
     assert(individuals.state === individualsState.FETCHED,
@@ -355,7 +367,7 @@ module.exports = createClass({
         onResize: this.props.onShortestPathsResize,
       })
     );
-  },
+  }
 
   _renderDominatorTree(state, onViewSourceInDebugger, dominatorTree, onLoadMoreSiblings) {
     const tree = dom.div(
@@ -391,7 +403,7 @@ module.exports = createClass({
         onResize: this.props.onShortestPathsResize,
       })
     );
-  },
+  }
 
   render() {
     let {
@@ -454,5 +466,7 @@ module.exports = createClass({
     return this._renderDominatorTree(state, onViewSourceInDebugger,
                                      snapshot.dominatorTree,
                                      onLoadMoreSiblings);
-  },
-});
+  }
+}
+
+module.exports = Heap;
