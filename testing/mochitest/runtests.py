@@ -1805,6 +1805,12 @@ toolbar#nav-bar {
             "idle.lastDailyNotification=%d" %
             int(time.time()))
 
+        # Enable tracing output for detailed failures in case of
+        # failing connection attempts, and hangs (bug 1397201)
+        options.extraPrefs.append(
+            "marionette.logging=%s" %
+            "TRACE")
+
         # get extensions to install
         extensions = self.getExtensionsToInstall(options)
 
