@@ -364,9 +364,10 @@ VROculusSession::Refresh(bool aForceRefresh)
             "gfx::VROculusSession::Refresh",
             this,
             &VROculusSession::Refresh, true));
-
           return;
         }
+        // Calling ovr_SubmitFrame() must be at Compositor thread.
+        MOZ_ASSERT(NS_IsInCompositorThread());
         ovrLayerEyeFov layer;
         memset(&layer, 0, sizeof(layer));
         layer.Header.Type = ovrLayerType_Disabled;
