@@ -128,11 +128,9 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   , mImageAllocator(aAllocator)
   , mImageContainer(aImageContainer)
   , mInfo(aConfig)
-  , mCodecParser(nullptr)
   , mLastInputDts(INT64_MIN)
   , mLowLatency(aLowLatency)
 {
-  MOZ_COUNT_CTOR(FFmpegVideoDecoder);
   // Use a new MediaByteBuffer as the object will be modified during
   // initialization.
   mExtraData = new MediaByteBuffer;
@@ -184,65 +182,6 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
 
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
-
-  mCodecParser = mLib->av_parser_init(mCodecID);
-  if (mCodecParser) {
-    mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
-  }
-}
-
-RefPtr<MediaDataDecoder::DecodePromise>
-FFmpegVideoDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
-{
-  bool gotFrame = false;
-  DecodedData results;
-  MediaResult rv = DoDecode(aSample, &gotFrame, results);
-  if (NS_FAILED(rv)) {
-    return DecodePromise::CreateAndReject(rv, __func__);
-  }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
-}
-
-MediaResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
-                                        MediaDataDecoder::DecodedData& aResults)
-{
-  uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
-  size_t inputSize = aSample->Size();
-
-#if LIBAVCODEC_VERSION_MAJOR >= 54
-  if (inputSize && mCodecParser && (mCodecID == AV_CODEC_ID_VP8
-#if LIBAVCODEC_VERSION_MAJOR >= 55
-      || mCodecID == AV_CODEC_ID_VP9
-#endif
-      )) {
-    while (inputSize) {
-      uint8_t* data = inputData;
-      int size = inputSize;
-      int len = mLib->av_parser_parse2(
-        mCodecParser, mCodecContext, &data, &size, inputData, inputSize,
-        aSample->mTime.ToMicroseconds(), aSample->mTimecode.ToMicroseconds(),
-        aSample->mOffset);
-      if (size_t(len) > inputSize) {
-        return NS_ERROR_DOM_MEDIA_DECODE_ERR;
-      }
-      inputData += len;
-      inputSize -= len;
-      if (size) {
-        bool gotFrame = false;
-        MediaResult rv = DoDecode(aSample, data, size, &gotFrame, aResults);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        if (gotFrame && aGotFrame) {
-          *aGotFrame = true;
-        }
-      }
-    }
-    return NS_OK;
-  }
-#endif
-  return DoDecode(aSample, inputData, inputSize, aGotFrame, aResults);
 }
 
 MediaResult
@@ -426,7 +365,8 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
   empty->mTimecode = TimeUnit::FromMicroseconds(mLastInputDts);
   bool gotFrame = false;
   DecodedData results;
-  while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) && gotFrame) {
+  while (NS_SUCCEEDED(DoDecode(empty, nullptr, 0, &gotFrame, results)) &&
+         gotFrame) {
   }
   return DecodePromise::CreateAndResolve(Move(results), __func__);
 }
@@ -437,15 +377,6 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush()
   mPtsContext.Reset();
   mDurationMap.Clear();
   return FFmpegDataDecoder::ProcessFlush();
-}
-
-FFmpegVideoDecoder<LIBAV_VER>::~FFmpegVideoDecoder()
-{
-  MOZ_COUNT_DTOR(FFmpegVideoDecoder);
-  if (mCodecParser) {
-    mLib->av_parser_close(mCodecParser);
-    mCodecParser = nullptr;
-  }
 }
 
 AVCodecID

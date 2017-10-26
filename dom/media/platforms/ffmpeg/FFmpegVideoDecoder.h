@@ -33,7 +33,6 @@ public:
                      KnowsCompositor* aAllocator,
                      ImageContainer* aImageContainer,
                      bool aLowLatency);
-  virtual ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() override;
@@ -53,14 +52,22 @@ public:
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample) override;
   RefPtr<DecodePromise> ProcessDrain() override;
   RefPtr<FlushPromise> ProcessFlush() override;
-  MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
-                       DecodedData& aResults);
-  MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
-                       bool* aGotFrame, DecodedData& aResults);
+  MediaResult DoDecode(MediaRawData* aSample,
+                       uint8_t* aData,
+                       int aSize,
+                       bool* aGotFrame,
+                       DecodedData& aResults) override;
   void OutputDelayedFrames();
+  bool NeedParser() const override
+  {
+    return
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+      mCodecID == AV_CODEC_ID_VP9 ||
+#endif
+      mCodecID == AV_CODEC_ID_VP8;
+  }
 
   /**
    * This method allocates a buffer for FFmpeg's decoder, wrapped in an Image.
@@ -74,9 +81,6 @@ private:
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
   VideoInfo mInfo;
-
-  // Parser used for VP8 and VP9 decoding.
-  AVCodecParserContext* mCodecParser;
 
   class PtsCorrectionContext
   {
