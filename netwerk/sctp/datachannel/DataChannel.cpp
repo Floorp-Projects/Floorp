@@ -150,7 +150,7 @@ public:
 
       {
         StaticMutexAutoLock lock(sLock);
-        sConnections.Clear();
+        sConnections = nullptr; // clears as well
       }
       sDataChannelShutdown = nullptr;
     }
@@ -160,13 +160,18 @@ public:
   void CreateConnectionShutdown(DataChannelConnection* aConnection)
   {
     StaticMutexAutoLock lock(sLock);
-    sConnections.AppendElement(new DataChannelConnectionShutdown(aConnection));
+    if (!sConnections) {
+      sConnections = new nsTArray<RefPtr<DataChannelConnectionShutdown>>();
+    }
+    sConnections->AppendElement(new DataChannelConnectionShutdown(aConnection));
   }
 
   void RemoveConnectionShutdown(DataChannelConnectionShutdown* aConnectionShutdown)
   {
     StaticMutexAutoLock lock(sLock);
-    sConnections.RemoveElement(aConnectionShutdown);
+    if (sConnections) {
+      sConnections->RemoveElement(aConnectionShutdown);
+    }
   }
 
 private:
@@ -176,11 +181,11 @@ private:
 
   // protects sConnections
   static StaticMutex sLock;
-  static nsTArray<RefPtr<DataChannelConnectionShutdown>> sConnections;
+  static StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>> sConnections;
 };
 
 StaticMutex DataChannelShutdown::sLock;
-nsTArray<RefPtr<DataChannelConnectionShutdown>> DataChannelShutdown::sConnections;
+StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>> DataChannelShutdown::sConnections;
 
 NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
 
