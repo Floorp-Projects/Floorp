@@ -1,5 +1,3 @@
-import java.util.regex.Pattern
-
 def tryInt = { string ->
     if (string == null) {
         return string
@@ -55,10 +53,6 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.4') {
-            // Without these, we get errors linting.
-            exclude module: 'guava'
-        }
         // Provided in tree.
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
     }
@@ -92,21 +86,6 @@ if ('multi' == System.env.AB_CD) {
             }
         }
     }
-}
-
-// Skip unit test for all build variants, unless if it was specifically requested by user.
-// The enabled property for the unit test tasks is reset based on the command line task names just before the task execution.
-// I bet there is a easier/cleaner way to do this, but this gets the job done for now.
-Pattern pattern = Pattern.compile('.*test(.+UnitTest)?.*')
-boolean startTasksIncludeTest = gradle.startParameter.taskNames.any {
-    taskName ->
-        taskName.matches(pattern)
-}
-gradle.taskGraph.beforeTask {
-    Task task ->
-        if (task.name.matches(pattern)) {
-            task.enabled = startTasksIncludeTest
-        }
 }
 
 afterEvaluate {
