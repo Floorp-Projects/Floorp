@@ -119,6 +119,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mAttemptingEarlyData(attemptingEarlyData)
   , mOriginFrameActivated(false)
   , mTlsHandshakeFinished(false)
+  , mFlushOK(false)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -384,6 +385,13 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  MOZ_DIAGNOSTIC_ASSERT(!mFlushOK);
+  mFlushOK = true;
+  auto cleanup = MakeScopeExit([&] () {
+    MOZ_DIAGNOSTIC_ASSERT(mFlushOK);
+    mFlushOK = false;
+  });
+
   // integrity check
   if (mStreamTransactionHash.Get(aHttpTransaction)) {
     LOG3(("   New transaction already present\n"));
@@ -540,6 +548,22 @@ Http2Session::RealignOutputQueue()
           mOutputQueueBuffer.get() + mOutputQueueSent,
           mOutputQueueUsed);
   mOutputQueueSent = 0;
+}
+
+void
+Http2Session::MaybeFlushOutputQueue()
+{
+  // Only try to flush the output queue if we know any mSegmentReader that's set
+  // is properly set through the right channels. Otherwise, just set our write
+  // callbacks so the connection can call in with a proper segment reader that
+  // we'll be sure we can write to.
+  // See bug 1402014 comment 6
+  LOG3(("Http2Session::MaybeFlushOutputQueue mFlushOK = %d", mFlushOK));
+  if (mFlushOK) {
+    FlushOutputQueue();
+  } else {
+    SetWriteCallbacks();
+  }
 }
 
 void
@@ -794,7 +818,7 @@ Http2Session::GeneratePing(bool isAck)
   }
 
   LogIO(this, nullptr, "Generate Ping", packet, kFrameHeaderBytes + 8);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -808,7 +832,7 @@ Http2Session::GenerateSettingsAck()
   mOutputQueueUsed += kFrameHeaderBytes;
   CreateFrameHeader(packet, 0, FRAME_TYPE_SETTINGS, kFlag_ACK, 0);
   LogIO(this, nullptr, "Generate Settings ACK", packet, kFrameHeaderBytes);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -821,7 +845,7 @@ Http2Session::GeneratePriority(uint32_t aID, uint8_t aPriorityWeight)
   char *packet = CreatePriorityFrame(aID, 0, aPriorityWeight);
 
   LogIO(this, nullptr, "Generate Priority", packet, kFrameHeaderBytes + 5);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -848,7 +872,7 @@ Http2Session::GenerateRstStream(uint32_t aStatusCode, uint32_t aID)
   NetworkEndian::writeUint32(packet + kFrameHeaderBytes, aStatusCode);
 
   LogIO(this, nullptr, "Generate Reset", packet, frameSize);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -871,7 +895,7 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
   NetworkEndian::writeUint32(packet + frameSize - 4, aStatusCode);
 
   LogIO(this, nullptr, "Generate GoAway", packet, frameSize);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 // The Hello is comprised of
@@ -993,7 +1017,7 @@ Http2Session::SendHello()
     // Http2Session::OnTransportStatus. Yeah, that's right. YOU!
   }
 
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -1008,7 +1032,7 @@ Http2Session::SendPriorityFrame(uint32_t streamID,
   char *packet = CreatePriorityFrame(streamID, dependsOn, weight);
 
   LogIO(this, nullptr, "SendPriorityFrame", packet, kFrameHeaderBytes + 5);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 char *
@@ -2745,6 +2769,13 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
   MOZ_ASSERT(!mSegmentReader || !reader || (mSegmentReader == reader),
              "Inconsistent Write Function Callback");
 
+  MOZ_DIAGNOSTIC_ASSERT(!mFlushOK);
+  mFlushOK = true;
+  auto cleanup = MakeScopeExit([&] () {
+    MOZ_DIAGNOSTIC_ASSERT(mFlushOK);
+    mFlushOK = false;
+  });
+
   nsresult rv = ConfirmTLSProfile();
   if (NS_FAILED(rv)) {
     if (mGoAwayReason == INADEQUATE_SECURITY) {
@@ -2755,8 +2786,9 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
     return rv;
   }
 
-  if (reader)
-    mSegmentReader = reader;
+  if (reader) {
+    SetSegmentReader(reader);
+  }
 
   *countRead = 0;
 
@@ -2767,7 +2799,7 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
     LOG3(("Http2Session %p could not identify a stream to write; suspending.",
           this));
     uint32_t availBeforeFlush = mOutputQueueUsed - mOutputQueueSent;
-    FlushOutputQueue();
+    MaybeFlushOutputQueue();
     uint32_t availAfterFlush = mOutputQueueUsed - mOutputQueueSent;
     if (availBeforeFlush != availAfterFlush) {
       LOG3(("Http2Session %p ResumeRecv After early flush in ReadSegments", this));
@@ -2786,7 +2818,7 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
     if (!stream->Do0RTT()) {
       LOG3(("Http2Session %p will not get early data from Http2Stream %p 0x%X",
             this, stream, stream->StreamID()));
-      FlushOutputQueue();
+      MaybeFlushOutputQueue();
       SetWriteCallbacks();
       if (!mCannotDo0RTTStreams.Contains(stream)) {
         mCannotDo0RTTStreams.AppendElement(stream);
@@ -2828,7 +2860,7 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
   // tries to flush the output queue) - SENDING_FIN_STREAM can be an example
   // of that. But we might still have old data buffered that would be good
   // to flush.
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 
   // Allow new server reads - that might be data or control information
   // (e.g. window updates or http replies) that are responses to these writes
@@ -3632,7 +3664,7 @@ Http2Session::UpdateLocalRwin(Http2Stream *stream, uint32_t bytes)
 
   UpdateLocalStreamWindow(stream, bytes);
   UpdateLocalSessionWindow(bytes);
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 }
 
 void
@@ -3721,7 +3753,7 @@ Http2Session::OnReadSegment(const char *buf,
   // If we can release old queued data then we can try and write the new
   // data directly to the network without using the output queue at all
   if (mOutputQueueUsed)
-    FlushOutputQueue();
+    MaybeFlushOutputQueue();
 
   if (!mOutputQueueUsed && mSegmentReader) {
     // try and write directly without output queue
@@ -3763,7 +3795,7 @@ Http2Session::OnReadSegment(const char *buf,
   mOutputQueueUsed += count;
   *countRead = count;
 
-  FlushOutputQueue();
+  MaybeFlushOutputQueue();
 
   return NS_OK;
 }
@@ -3772,7 +3804,7 @@ nsresult
 Http2Session::CommitToSegmentSize(uint32_t count, bool forceCommitment)
 {
   if (mOutputQueueUsed && !mAttemptingEarlyData)
-    FlushOutputQueue();
+    MaybeFlushOutputQueue();
 
   // would there be enough room to buffer this if needed?
   if ((mOutputQueueUsed + count) <= (mOutputQueueSize - kQueueReserved))
@@ -4546,6 +4578,19 @@ Http2Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
 
   for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->TopLevelOuterContentWindowIdChanged(windowId);
+  }
+}
+
+void
+Http2Session::SetSegmentReader(nsAHttpSegmentReader *reader)
+{
+  LOG3(("Http2Session::SetSegmentReader this=%p mClosed=%d mSegmentReader=%p reader=%p",
+        this, mClosed, mSegmentReader, reader));
+  MOZ_DIAGNOSTIC_ASSERT(!mSegmentReader || reader == mSegmentReader);
+  if (mClosed) {
+    mSegmentReader = nullptr;
+  } else {
+    mSegmentReader = reader;
   }
 }
 
