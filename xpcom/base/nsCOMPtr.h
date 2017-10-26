@@ -1549,4 +1549,12 @@ RefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
   return *this;
 }
 
+template <class T>
+inline already_AddRefed<T>
+do_AddRef(const nsCOMPtr<T>& aObj)
+{
+  nsCOMPtr<T> ref(aObj);
+  return ref.forget();
+}
+
 #endif // !defined(nsCOMPtr_h___)
