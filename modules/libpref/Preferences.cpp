@@ -296,7 +296,7 @@ MatchPrefEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
 
 struct CallbackNode
 {
-  char* mDomain;
+  const char* mDomain;
 
   // If someone attempts to remove the node from the callback list while
   // pref_DoCallback is running, |func| is set to nullptr. Such nodes will
@@ -386,7 +386,7 @@ PREF_Cleanup()
 
   while (node) {
     next_node = node->mNext;
-    free(node->mDomain);
+    free(const_cast<char*>(node->mDomain));
     free(node);
     node = next_node;
   }
@@ -1202,7 +1202,7 @@ pref_RemoveCallbackNode(CallbackNode* aNode, CallbackNode* aPrevNode)
   if (gLastPriorityNode == aNode) {
     gLastPriorityNode = aPrevNode;
   }
-  free(aNode->mDomain);
+  free(const_cast<char*>(aNode->mDomain));
   free(aNode);
   return next_node;
 }
