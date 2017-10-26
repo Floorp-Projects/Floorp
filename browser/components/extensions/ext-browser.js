@@ -51,7 +51,7 @@ const getSender = (extension, target, sender) => {
 global.tabGetSender = getSender;
 
 /* eslint-disable mozilla/balanced-listeners */
-extensions.on("uninstall", (msg, extension) => {
+extensions.on("uninstalling", (msg, extension) => {
   if (extension.uninstallURL) {
     let browser = windowTracker.topWindow.gBrowser;
     browser.addTab(extension.uninstallURL, {relatedToCurrent: true});
