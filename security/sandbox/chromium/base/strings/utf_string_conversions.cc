@@ -180,10 +180,6 @@ bool UTF16ToUTF8(const char16* src, size_t src_len, std::string* output) {
 }
 
 std::string UTF16ToUTF8(StringPiece16 utf16) {
-  if (IsStringASCII(utf16)) {
-    return std::string(utf16.begin(), utf16.end());
-  }
-
   std::string ret;
   // Ignore the success flag of this call, it will do the best it can for
   // invalid input, which is what we want here.

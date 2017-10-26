@@ -10,6 +10,7 @@
 #include <wctype.h>
 
 #include <limits>
+#include <type_traits>
 
 #include "base/logging.h"
 #include "base/numerics/safe_math.h"
@@ -35,7 +36,8 @@ struct IntToStringT {
 
     // The ValueOrDie call below can never fail, because UnsignedAbs is valid
     // for all valid inputs.
-    auto res = CheckedNumeric<INT>(value).UnsignedAbs().ValueOrDie();
+    typename std::make_unsigned<INT>::type res =
+        CheckedNumeric<INT>(value).UnsignedAbs().ValueOrDie();
 
     CHR* end = outbuf + kOutputBufSize;
     CHR* i = end;

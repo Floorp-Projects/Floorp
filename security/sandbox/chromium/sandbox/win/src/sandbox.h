@@ -21,6 +21,7 @@
 
 #include <windows.h>
 
+#include "base/memory/ref_counted.h"
 #include "sandbox/win/src/sandbox_policy.h"
 #include "sandbox/win/src/sandbox_types.h"
 
@@ -56,7 +57,7 @@ class BrokerServices {
   // Returns the interface pointer to a new, empty policy object. Use this
   // interface to specify the sandbox policy for new processes created by
   // SpawnTarget()
-  virtual TargetPolicy* CreatePolicy() = 0;
+  virtual scoped_refptr<TargetPolicy> CreatePolicy() = 0;
 
   // Creates a new target (child process) in a suspended state.
   // Parameters:
@@ -79,7 +80,7 @@ class BrokerServices {
   //   ALL_OK if successful. All other return values imply failure.
   virtual ResultCode SpawnTarget(const wchar_t* exe_path,
                                  const wchar_t* command_line,
-                                 TargetPolicy* policy,
+                                 scoped_refptr<TargetPolicy> policy,
                                  ResultCode* last_warning,
                                  DWORD* last_error,
                                  PROCESS_INFORMATION* target) = 0;

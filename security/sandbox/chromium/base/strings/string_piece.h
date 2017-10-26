@@ -30,12 +30,9 @@
 #include "base/base_export.h"
 #include "base/logging.h"
 #include "base/strings/string16.h"
+#include "base/strings/string_piece_forward.h"
 
 namespace base {
-
-template <typename STRING_TYPE> class BasicStringPiece;
-typedef BasicStringPiece<std::string> StringPiece;
-typedef BasicStringPiece<string16> StringPiece16;
 
 // internal --------------------------------------------------------------------
 
@@ -244,6 +241,9 @@ template <typename STRING_TYPE> class BasicStringPiece {
     }
     return r;
   }
+
+  // This is the style of conversion preferred by std::string_view in C++17.
+  explicit operator STRING_TYPE() const { return as_string(); }
 
   STRING_TYPE as_string() const {
     // std::string doesn't like to take a NULL pointer even with a 0 size.
