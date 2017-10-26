@@ -554,11 +554,11 @@ pref_SetPref(const dom::PrefSetting& aPref)
 }
 
 static PrefSaveData
-pref_savePrefs(PLDHashTable* aTable)
+pref_savePrefs()
 {
-  PrefSaveData savedPrefs(aTable->EntryCount());
+  PrefSaveData savedPrefs(gHashTable->EntryCount());
 
-  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
     nsAutoCString prefValue;
@@ -4415,7 +4415,7 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 
     nsresult rv = NS_OK;
     mozilla::UniquePtr<PrefSaveData> prefs =
-      MakeUnique<PrefSaveData>(pref_savePrefs(gHashTable));
+      MakeUnique<PrefSaveData>(pref_savePrefs());
 
     // Put the newly constructed preference data into sPendingWriteData
     // for the next request to pick up
@@ -4450,7 +4450,7 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
   // This will do a main thread write. It is safe to do it this way because
   // AllowOffMainThreadSave() returns a consistent value for the lifetime of
   // the parent process.
-  PrefSaveData prefsData = pref_savePrefs(gHashTable);
+  PrefSaveData prefsData = pref_savePrefs();
   return PreferencesWriter::Write(aFile, prefsData);
 }
 
