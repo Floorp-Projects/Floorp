@@ -154,6 +154,7 @@ public:
   WebRenderScrollData& GetScrollData() { return mScrollData; }
 
   void WrUpdated();
+  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
 private:
   /**
@@ -191,6 +192,7 @@ private:
   // APZ to do it's job
   WebRenderScrollData mScrollData;
 
+  bool mWindowOverlayChanged;
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;
