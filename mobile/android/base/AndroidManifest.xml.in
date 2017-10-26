@@ -29,6 +29,10 @@
                  android:hardwareAccelerated="true"
                  android:supportsRtl="true"
                  android:allowBackup="false"
+#ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+# Android-Gradle 3.0+ doesn't respect android:debuggable from AndroidManifest.xml.
+                 >
+#else
 # The preprocessor does not yet support arbitrary parentheses, so this cannot
 # be parenthesized thus to clarify that the logical AND operator has precedence:
 #   !defined(MOZILLA_OFFICIAL) || (defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG))
@@ -36,6 +40,7 @@
                  android:debuggable="true">
 #else
                  android:debuggable="false">
+#endif
 #endif
 
         <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>

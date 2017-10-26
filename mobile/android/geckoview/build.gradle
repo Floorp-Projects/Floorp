@@ -38,12 +38,8 @@ def computeVersionCode() {
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
-        defaultPublishConfig 'release'
-        publishNonDefault true
-
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
@@ -154,8 +150,8 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
-    compile "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    implementation "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    implementation "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
@@ -218,7 +214,7 @@ android.libraryVariants.all { variant ->
 }
 
 android.libraryVariants.all { variant ->
-    configureVariantWithJNIWrappers(variant, "Generated")
+    configureLibraryVariantWithJNIWrappers(variant, "Generated")
 }
 
 apply plugin: 'maven'
