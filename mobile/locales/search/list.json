@@ -100,6 +100,13 @@
         ]
       }
     },
+    "bs": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "twitter", "wikipedia-bs"
+        ]
+      }
+    },
     "ca": {
       "default": {
         "visibleDefaultEngines": [
