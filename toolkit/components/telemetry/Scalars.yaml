@@ -707,6 +707,20 @@ webrtc.nicer:
       - 'main'
       - 'content'
 
+mathml:
+  doc_count:
+    bug_numbers:
+      - 1362187
+    description: >
+      The number of documents that contained enabled MathML elements.
+    expires: "63"
+    kind: uint
+    notification_emails:
+      - gsquelart@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'content'
+
 mediarecorder:
   recording_count:
     bug_numbers:

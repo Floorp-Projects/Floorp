@@ -4805,8 +4805,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return false;
   }
 
-  if (aNode->IsNodeOfType(nsINode::eCONTENT) &&
-      static_cast<nsIContent*>(aNode)->ChromeOnlyAccess()) {
+  if (aNode->IsContent() && aNode->AsContent()->ChromeOnlyAccess()) {
     return false;
   }
 
@@ -4832,11 +4831,11 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
       return true;
     }
 
-    if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-      nsIContent* content = static_cast<nsIContent*>(aNode);
-      nsIContent* insertionParent = content->GetXBLInsertionParent();
-      if (insertionParent) {
-        aNode = insertionParent;
+    if (aNode->IsContent()) {
+      nsIContent* insertionPoint = aNode->AsContent()->GetXBLInsertionPoint();
+      if (insertionPoint) {
+        aNode = insertionPoint->GetParent();
+        MOZ_ASSERT(aNode);
         continue;
       }
     }
@@ -5499,7 +5498,7 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
   NS_PRECONDITION(aContent,
                   "Must have a content to work with");
 
-  if (!aNode->IsNodeOfType(nsINode::eCONTENT)) {
+  if (!aNode->IsContent()) {
     /**
      * The root isn't an nsIContent, so it's a document or attribute.  The only
      * nodes in the same anonymous subtree as it will have a null

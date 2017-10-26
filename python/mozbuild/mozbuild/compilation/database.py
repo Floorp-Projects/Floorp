@@ -63,10 +63,6 @@ class CompileDBBackend(CommonBackend):
 
         if isinstance(obj, DirectoryTraversal):
             self._envs[obj.objdir] = obj.config
-            for var in ('WARNINGS_AS_ERRORS',):
-                value = obj.config.substs.get(var)
-                if value:
-                    self._local_flags[obj.objdir][var] = value
 
         elif isinstance(obj, (Sources, GeneratedSources)):
             # For other sources, include each source file.
@@ -76,13 +72,9 @@ class CompileDBBackend(CommonBackend):
 
         elif isinstance(obj, VariablePassthru):
             for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
-                        'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS',
-                        'RTL_FLAGS'):
+                        'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS'):
                 if var in obj.variables:
                     self._local_flags[obj.objdir][var] = obj.variables[var]
-            if (obj.variables.get('ALLOW_COMPILER_WARNINGS') and
-                    'WARNINGS_AS_ERRORS' in self._local_flags[obj.objdir]):
-                del self._local_flags[obj.objdir]['WARNINGS_AS_ERRORS']
 
         elif isinstance(obj, PerSourceFlag):
             self._per_source_flags[obj.file_name].extend(obj.flags)
@@ -195,18 +187,6 @@ class CompileDBBackend(CommonBackend):
             db.extend(value)
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
-
-        append_var('DSO_CFLAGS')
-        append_var('DSO_PIC_CFLAGS')
-        if canonical_suffix in ('.c', '.cpp'):
-            db.append('$(RTL_FLAGS)')
-        append_var('OS_COMPILE_%s' % self.CFLAGS[canonical_suffix])
-        append_var('OS_CPPFLAGS')
-        append_var('OS_%s' % self.CFLAGS[canonical_suffix])
-        append_var('MOZ_DEBUG_FLAGS')
-        append_var('MOZ_OPTIMIZE_FLAGS')
-        append_var('MOZ_FRAMEPTR_FLAGS')
-        db.append('$(WARNINGS_AS_ERRORS)')
         db.append('$(MOZBUILD_%s)' % self.CFLAGS[canonical_suffix])
         if canonical_suffix == '.m':
             append_var('OS_COMPILE_CMFLAGS')

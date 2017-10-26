@@ -8,7 +8,7 @@
 
 // React & Redux
 const {
-  createClass,
+  Component,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
@@ -26,25 +26,25 @@ const componentMap = new Map([
   ["PageError", require("./message-types/PageError")]
 ]);
 
-const MessageContainer = createClass({
-  displayName: "MessageContainer",
+class MessageContainer extends Component {
+  static get propTypes() {
+    return {
+      messageId: PropTypes.string.isRequired,
+      open: PropTypes.bool.isRequired,
+      serviceContainer: PropTypes.object.isRequired,
+      tableData: PropTypes.object,
+      timestampsVisible: PropTypes.bool.isRequired,
+      repeat: PropTypes.number,
+      networkMessageUpdate: PropTypes.object,
+      getMessage: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    messageId: PropTypes.string.isRequired,
-    open: PropTypes.bool.isRequired,
-    serviceContainer: PropTypes.object.isRequired,
-    tableData: PropTypes.object,
-    timestampsVisible: PropTypes.bool.isRequired,
-    repeat: PropTypes.number,
-    networkMessageUpdate: PropTypes.object,
-    getMessage: PropTypes.func.isRequired,
-  },
-
-  getDefaultProps: function () {
+  static get defaultProps() {
     return {
       open: false,
     };
-  },
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     const repeatChanged = this.props.repeat !== nextProps.repeat;
@@ -60,7 +60,7 @@ const MessageContainer = createClass({
       || tableDataChanged
       || timestampVisibleChanged
       || networkMessageUpdateChanged;
-  },
+  }
 
   render() {
     const message = this.props.getMessage();
@@ -68,7 +68,7 @@ const MessageContainer = createClass({
     let MessageComponent = getMessageComponent(message);
     return MessageComponent(Object.assign({message}, this.props));
   }
-});
+}
 
 function getMessageComponent(message) {
   if (!message) {

@@ -159,17 +159,30 @@ class MarionetteProtocol(Protocol):
             runner_handle = handles.pop(0)
 
         for handle in handles:
-            self.marionette.switch_to_window(handle)
-            self.marionette.close()
+            try:
+                self.marionette.switch_to_window(handle)
+                self.marionette.close()
+            except errors.NoSuchWindowException:
+                # We might have raced with the previous test to close this
+                # window, skip it.
+                pass
 
         self.marionette.switch_to_window(runner_handle)
         if runner_handle != self.runner_handle:
             self.load_runner(protocol)
 
     def wait(self):
-        socket_timeout = self.marionette.client.sock.gettimeout()
+        try:
+            socket_timeout = self.marionette.client.sock.gettimeout()
+        except AttributeError:
+            # This can happen if there was a crash
+            return
         if socket_timeout:
-            self.marionette.timeout.script = socket_timeout / 2
+            try:
+                self.marionette.timeout.script = socket_timeout / 2
+            except (socket.error, IOError):
+                self.logger.debug("Socket closed")
+                return
 
         self.marionette.switch_to_window(self.runner_handle)
         while True:

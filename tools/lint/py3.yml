@@ -36,7 +36,6 @@ py3:
         - testing/mozharness
         - testing/tools/iceserver
         - testing/tps
-        - testing/xpcshell
         - testing/web-platform
         - third_party
         - toolkit

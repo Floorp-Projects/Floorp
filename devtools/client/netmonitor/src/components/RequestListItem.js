@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -73,37 +73,37 @@ const UPDATED_REQ_PROPS = [
 /**
  * Render one row in the request list.
  */
-const RequestListItem = createClass({
-  displayName: "RequestListItem",
-
-  propTypes: {
-    columns: PropTypes.object.isRequired,
-    item: PropTypes.object.isRequired,
-    index: PropTypes.number.isRequired,
-    isSelected: PropTypes.bool.isRequired,
-    firstRequestStartedMillis: PropTypes.number.isRequired,
-    fromCache: PropTypes.bool,
-    onCauseBadgeMouseDown: PropTypes.func.isRequired,
-    onContextMenu: PropTypes.func.isRequired,
-    onFocusedNodeChange: PropTypes.func,
-    onMouseDown: PropTypes.func.isRequired,
-    onSecurityIconMouseDown: PropTypes.func.isRequired,
-    onThumbnailMouseDown: PropTypes.func.isRequired,
-    onWaterfallMouseDown: PropTypes.func.isRequired,
-    waterfallWidth: PropTypes.number,
-  },
+class RequestListItem extends Component {
+  static get propTypes() {
+    return {
+      columns: PropTypes.object.isRequired,
+      item: PropTypes.object.isRequired,
+      index: PropTypes.number.isRequired,
+      isSelected: PropTypes.bool.isRequired,
+      firstRequestStartedMillis: PropTypes.number.isRequired,
+      fromCache: PropTypes.bool,
+      onCauseBadgeMouseDown: PropTypes.func.isRequired,
+      onContextMenu: PropTypes.func.isRequired,
+      onFocusedNodeChange: PropTypes.func,
+      onMouseDown: PropTypes.func.isRequired,
+      onSecurityIconMouseDown: PropTypes.func.isRequired,
+      onThumbnailMouseDown: PropTypes.func.isRequired,
+      onWaterfallMouseDown: PropTypes.func.isRequired,
+      waterfallWidth: PropTypes.number,
+    };
+  }
 
   componentDidMount() {
     if (this.props.isSelected) {
       this.refs.listItem.focus();
     }
-  },
+  }
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
       !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps) ||
       !I.is(this.props.columns, nextProps.columns);
-  },
+  }
 
   componentDidUpdate(prevProps) {
     if (!prevProps.isSelected && this.props.isSelected) {
@@ -112,7 +112,7 @@ const RequestListItem = createClass({
         this.props.onFocusedNodeChange();
       }
     }
-  },
+  }
 
   render() {
     let {
@@ -174,6 +174,6 @@ const RequestListItem = createClass({
       )
     );
   }
-});
+}
 
 module.exports = RequestListItem;

@@ -3138,6 +3138,10 @@ pref("layout.display-list.retain", false);
 pref("layout.display-list.retain", false);
 #endif
 
+// Set the maximum amount of modified frames allowed before doing a full
+// display list rebuild.
+pref("layout.display-list.rebuild-frame-limit", 500);
+
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 

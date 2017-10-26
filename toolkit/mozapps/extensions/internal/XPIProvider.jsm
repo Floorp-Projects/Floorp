@@ -4838,9 +4838,9 @@ AddonInternal.prototype = {
     let requestedLocales = Services.locale.getRequestedLocales();
 
     /**
-     * If en is not the top locale, add "en-US" to the list.
+     * If en-US is not in the list, add it as the last fallback.
      */
-    if (!requestedLocales[0].startsWith("en")) {
+    if (!requestedLocales.includes("en-US")) {
       requestedLocales.push("en-US");
     }
 

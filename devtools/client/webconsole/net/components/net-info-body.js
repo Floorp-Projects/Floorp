@@ -3,21 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
+const { Component, createFactory, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/react-utils");
 const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/Tabs"));
 
 // Network
-const HeadersTab = React.createFactory(require("./headers-tab"));
-const ResponseTab = React.createFactory(require("./response-tab"));
-const ParamsTab = React.createFactory(require("./params-tab"));
-const CookiesTab = React.createFactory(require("./cookies-tab"));
-const PostTab = React.createFactory(require("./post-tab"));
-const StackTraceTab = React.createFactory(require("./stacktrace-tab"));
+const HeadersTab = createFactory(require("./headers-tab"));
+const ResponseTab = createFactory(require("./response-tab"));
+const ParamsTab = createFactory(require("./params-tab"));
+const CookiesTab = createFactory(require("./cookies-tab"));
+const PostTab = createFactory(require("./post-tab"));
+const StackTraceTab = createFactory(require("./stacktrace-tab"));
 const NetUtils = require("../utils/net");
 
-// Shortcuts
-const PropTypes = React.PropTypes;
 
 /**
  * This template renders the basic Network log info body. It's not
@@ -31,51 +30,58 @@ const PropTypes = React.PropTypes;
  * 4) Cookies - request and response cookies
  * 5) Post - posted data
  */
-var NetInfoBody = React.createClass({
-  propTypes: {
-    tabActive: PropTypes.number.isRequired,
-    actions: PropTypes.object.isRequired,
-    data: PropTypes.shape({
-      request: PropTypes.object.isRequired,
-      response: PropTypes.object.isRequired
-    }),
-    // Service to enable the source map feature.
-    sourceMapService: PropTypes.object,
-  },
+class NetInfoBody extends Component {
+  static get propTypes() {
+    return {
+      tabActive: PropTypes.number.isRequired,
+      actions: PropTypes.object.isRequired,
+      data: PropTypes.shape({
+        request: PropTypes.object.isRequired,
+        response: PropTypes.object.isRequired
+      }),
+      // Service to enable the source map feature.
+      sourceMapService: PropTypes.object,
+    };
+  }
 
-  displayName: "NetInfoBody",
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       tabActive: 0
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       data: {
         request: {},
         response: {}
       },
-      tabActive: this.props.tabActive,
+      tabActive: props.tabActive,
     };
-  },
+
+    this.onTabChanged = this.onTabChanged.bind(this);
+    this.hasCookies = this.hasCookies.bind(this);
+    this.hasStackTrace = this.hasStackTrace.bind(this);
+    this.getTabPanels = this.getTabPanels.bind(this);
+  }
 
   onTabChanged(index) {
     this.setState({tabActive: index});
-  },
+  }
 
   hasCookies() {
     let {request, response} = this.state.data;
     return this.state.hasCookies ||
       NetUtils.getHeaderValue(request.headers, "Cookie") ||
       NetUtils.getHeaderValue(response.headers, "Set-Cookie");
-  },
+  }
 
   hasStackTrace() {
     let {cause} = this.state.data;
     return cause && cause.stacktrace && cause.stacktrace.length > 0;
-  },
+  }
 
   getTabPanels() {
     let { actions, sourceMapService } = this.props;
@@ -163,7 +169,7 @@ var NetInfoBody = React.createClass({
     }
 
     return panels;
-  },
+  }
 
   render() {
     let tabActive = this.state.tabActive;
@@ -176,7 +182,7 @@ var NetInfoBody = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = NetInfoBody;

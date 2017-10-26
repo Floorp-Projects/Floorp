@@ -591,6 +591,15 @@ StringListContains(const ListString& aList, const ItemString& aItem)
   return false;
 }
 
+inline void
+AppendStringIfNotEmpty(nsACString& aDest, nsACString&& aSrc)
+{
+  if (!aSrc.IsEmpty()) {
+    aDest.Append(NS_LITERAL_CSTRING("\n"));
+    aDest.Append(aSrc);
+  }
+}
+
 } // end namespace mozilla
 
 #endif

@@ -219,8 +219,8 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
     aContent->SetXBLBinding(nullptr, this);
   }
 
-  // Clear out insertion parent and content lists.
-  aContent->SetXBLInsertionParent(nullptr);
+  // Clear out insertion point and content lists.
+  aContent->SetXBLInsertionPoint(nullptr);
 }
 
 nsAtom*
@@ -915,7 +915,7 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aChild,
                                  nsIContent* aPreviousSibling)
 {
-  aChild->SetXBLInsertionParent(nullptr);
+  aChild->SetXBLInsertionPoint(nullptr);
 
   XBLChildrenElement* point = nullptr;
   nsIContent* parent = aContainer;

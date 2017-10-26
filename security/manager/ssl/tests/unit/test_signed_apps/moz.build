@@ -25,9 +25,17 @@ def SignedAppFile(name, flags):
 
 # Temporarily disabled. See bug 1256495.
 #signed_app_files = (
-#    ['signed_app.zip'],
-#    ['unknown_issuer_app.zip', '-i', 'unknown issuer'],
+#    ['signed_app.zip', '-m', 'sha1', '-s', 'sha1'],
+#    ['unknown_issuer_app.zip', '-i', 'unknown issuer', '-m', 'sha1', '-s', 'sha1'],
 #    ['unsigned_app.zip', '-n'],
+#    ['signed_app_sha256.zip'],
+#    ['signed_app_sha1_and_sha256.zip', '-m', 'sha256', '-m', 'sha1', '-s', 'sha256', '-s', 'sha1'],
+#    ['signed_app_sha256_manifest.zip', '-s', 'sha1'],
+#    ['signed_app_sha256_signature_file.zip', '-m', 'sha1'],
+#    ['sha1_and_sha256_manifest_sha1_signature_file.zip', '-m', 'sha256', '-m', 'sha1', '-s', 'sha1'],
+#    ['sha1_and_sha256_manifest_sha256_signature_file.zip', '-m', 'sha256', '-m', 'sha1'],
+#    ['sha1_manifest_sha1_and_sha256_signature_file.zip', '-m', 'sha1', '-s', 'sha1', '-s', 'sha256'],
+#    ['sha256_manifest_sha1_and_sha256_signature_file.zip', '-s', 'sha1', '-s', 'sha256'],
 #)
 #
 #for signed_app_file_params in signed_app_files:

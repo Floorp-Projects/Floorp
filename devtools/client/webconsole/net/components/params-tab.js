@@ -3,26 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const NetInfoParams = React.createFactory(require("./net-info-params"));
-
-// Shortcuts
-const DOM = React.DOM;
-const PropTypes = React.PropTypes;
+const { Component, createFactory, DOM, PropTypes } =
+  require("devtools/client/shared/vendor/react");
+const NetInfoParams = createFactory(require("./net-info-params"));
 
 /**
  * This template represents 'Params' tab displayed when the user
  * expands network log in the Console panel. It's responsible for
  * displaying URL parameters (query string).
  */
-var ParamsTab = React.createClass({
-  propTypes: {
-    data: PropTypes.shape({
-      request: PropTypes.object.isRequired
-    })
-  },
-
-  displayName: "ParamsTab",
+class ParamsTab extends Component {
+  static get propTypes() {
+    return {
+      data: PropTypes.shape({
+        request: PropTypes.object.isRequired
+      })
+    };
+  }
 
   render() {
     let data = this.props.data;
@@ -35,7 +32,7 @@ var ParamsTab = React.createClass({
       )
     );
   }
-});
+}
 
 // Exports from this module
 module.exports = ParamsTab;

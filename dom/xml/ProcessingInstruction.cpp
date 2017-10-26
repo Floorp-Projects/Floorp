@@ -92,7 +92,7 @@ ProcessingInstruction::GetAttrValue(nsAtom *aName, nsAString& aValue)
 bool
 ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
+  return !(aFlags & ~(ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*

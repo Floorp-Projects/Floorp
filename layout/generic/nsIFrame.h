@@ -110,6 +110,7 @@ class EffectSet;
 
 namespace layers {
 class Layer;
+class LayerManager;
 } // namespace layers
 
 } // namespace mozilla
@@ -594,6 +595,7 @@ public:
 
   typedef mozilla::FrameProperties FrameProperties;
   typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layout::FrameChildList ChildList;
   typedef mozilla::layout::FrameChildListID ChildListID;
   typedef mozilla::layout::FrameChildListIDs ChildListIDs;

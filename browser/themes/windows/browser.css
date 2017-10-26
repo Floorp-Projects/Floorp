@@ -1118,6 +1118,7 @@ notification[value="translation"] {
 %include ../shared/contextmenu.inc.css
 
 /* Make menu items larger when opened through touch. */
+#widget-overflow[touchmode] .toolbarbutton-1,
 panel[touchmode] .PanelUI-subView .subviewbutton,
 menupopup[touchmode] menu,
 menupopup[touchmode] menuitem {
