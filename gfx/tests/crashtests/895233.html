@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.isPointInPath(7.5, 900);
+  ctx.setTransform(44.333333333333336, 61, 256.3333333333333, 135.8, 810, 200);
+  ctx.save();
+  ctx.bezierCurveTo(63, 91, 520, 83, 213.66666666666666, 384);
+  ctx.closePath();
+  ctx.bezierCurveTo(0.5, 83.16666666666667, 209, 276, 3.6, 453.5);
+  ctx.stroke();
+  ctx.restore();
+  ctx.isPointInStroke(0, 0);
+  ctx.setTransform(445, 33, 0, 403.5, 175.2, 49.4);
+  ctx.rotate(83.125);
+  ctx.transform(2097153, 477.5, 34.888888888888886, 63, 9.5, 914);
+  ctx.isPointInStroke(0, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
