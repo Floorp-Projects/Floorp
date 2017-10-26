@@ -355,45 +355,6 @@ android.applicationVariants.all { variant ->
     configureVariantWithJNIWrappers(variant, "Fennec")
 }
 
-apply plugin: 'spoon'
-
-spoon {
-    // For now, let's be verbose.
-    debug = true
-    // It's not helpful to pass when we don't have a device connected.
-    failIfNoDeviceConnected = true
-
-    def spoonPackageName
-    if (gradle.startParameter.taskNames.contains('runBrowserTests')) {
-        spoonPackageName = 'org.mozilla.tests.browser.junit3'
-    }
-    if (gradle.startParameter.taskNames.contains('runBackgroundTests')) {
-        spoonPackageName = 'org.mozilla.gecko.background'
-    }
-    if (project.hasProperty('spoonPackageName')) {
-        // Command line overrides everything.
-        spoonPackageName = project.spoonPackageName
-    }
-    if (spoonPackageName) {
-        instrumentationArgs = ['-e', "package=${spoonPackageName}".toString()]
-    }
-}
-
-// // See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
-// afterEvaluate {
-//     tasks["spoonLocal${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
-
-//     // This is an awkward way to define different sets of instrumentation tests.
-//     // The task name itself is fished at runtime and the package name configured
-//     // in the spoon configuration.
-//     task runBrowserTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-//     task runBackgroundTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-// }
-
 // Bug 1299015: Complain to treeherder if checkstyle, lint, or unittest fails.  It's not obvious
 // how to listen to individual errors in most cases, so we just link to the reports for now.
 def makeTaskExecutionListener(artifactRootUrl) {
