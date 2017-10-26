@@ -1,0 +1,157 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: #F2F2F2;
+  height: 100%;
+}
+
+body {
+  color: #424f59;
+  font: message-box;
+  font-size: 14px;
+  height: 100%;
+}
+
+a {
+  color: #0095dd;
+  cursor: pointer; /* Use the correct cursor for anchors without an href */
+}
+
+a:active {
+  outline: none;
+}
+
+a:focus {
+  outline: 1px dotted #0095dd;
+}
+
+
+a.no-underline {
+  text-decoration: none;
+}
+
+#stage {
+  background:#fff;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
+  margin: 0 auto;
+  min-height: 300px;
+  padding: 60px 40px 40px 40px;
+  position: relative;
+  text-align: center;
+  top: 80px;
+  width: 420px;
+}
+
+header h1
+{
+  font-size: 24px;
+  font-weight: 200;
+  line-height: 1em;
+}
+
+#intro header h1 {
+  margin: 0 0 32px 0;
+}
+
+#manage header h1 {
+  margin: 0 0 12px 0;
+}
+
+#manage header #email {
+  margin-bottom: 23px;
+  color: rgb(138, 155, 168);
+  font-size: 19px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.description {
+  font-size: 18px;
+}
+
+.button-row {
+  margin-top: 45px;
+  margin-bottom:20px;
+}
+
+.button-row button,
+.button-row a.button {
+  background: #0095dd;
+  border: none;
+  border-radius: 5px;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 15px 0;
+  transition-duration: 150ms;
+  transition-property: background-color;
+  width: 100%;
+}
+
+.button-row a.button {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.button-row a.button:active,
+.button-row a.button:hover,
+.button-row a.button:focus,
+.button-row button:active,
+.button-row button:hover,
+.button-row button:focus {
+  background: #08c;
+}
+
+
+.graphic-sync-intro {
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 231px;
+  width: 231px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-indent: 100%;
+  white-space: nowrap;
+  -moz-context-properties: fill;
+  fill: #bfcbd3;
+}
+
+.description,
+.button-row {
+  margin-top: 30px;
+}
+
+.links  {
+  margin: 20px 0;
+}
+
+@media only screen and (max-width: 500px) {
+  html {
+    background: #fff;
+  }
+
+  #stage {
+    box-shadow: none;
+    margin: 30px auto 0 auto;
+    min-height: none;
+    min-width: 320px;
+    padding: 0 10px;
+    width: 100%;
+  }
+
+  .button-row {
+    margin-top: 20px;
+  }
+
+  .button-row button,
+  .button-row a.button {
+    padding: 10px 0;
+  }
+
+}

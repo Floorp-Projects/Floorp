@@ -69,7 +69,9 @@
         <hbox align="center" flex="1">
           <html:a id="noFxaSignUp"
                   class="openLink"
-                  accesskey="&signedOut.accountBox.create2.accesskey;">&signedOut.accountBox.create2;</html:a>
+                  accesskey="&signedOut.accountBox.create2.accesskey;"
+                  onclick="gSyncPane.signUp();"
+                  onkeypress="gSyncPane.signUp();">&signedOut.accountBox.create2;</html:a>
         </hbox>
       </vbox>
     </hbox>

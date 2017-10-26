@@ -13,9 +13,9 @@ add_task(async function runTests() {
 
   let browser = tab.linkedBrowser;
 
-  browser.loadURI("about:healthreport");
+  browser.loadURI("about:accounts");
   let href = await BrowserTestUtils.browserLoaded(browser);
-  is(href, "about:healthreport", "Check about:healthreport loaded");
+  is(href, "about:accounts", "Check about:accounts loaded");
 
   // Using a dummy onunload listener to disable the bfcache as that can prevent
   // the test browser load detection mechanism from working.
@@ -26,7 +26,7 @@ add_task(async function runTests() {
 
   browser.goBack();
   href = await BrowserTestUtils.browserLoaded(browser);
-  is(href, "about:healthreport", "Check we've gone back to about:healthreport");
+  is(href, "about:accounts", "Check we've gone back to about:accounts");
 
   browser.goForward();
   href = await BrowserTestUtils.browserLoaded(browser);

@@ -573,18 +573,18 @@ if (typeof Mozilla == "undefined") {
    * for the URL opened by the browser.
    * @since 31, 47 for `extraURLCampaignParams`
    * @example
-   * // Will open https://accounts.firefox.com/signup?entrypoint=uitour
+   * // Will open about:accounts?action=signup&entrypoint=uitour
    * Mozilla.UITour.showFirefoxAccounts();
    * @example
    * // Will open:
-   * // https://accounts.firefox.com/signup?entrypoint=uitour&utm_foo=bar&utm_bar=baz
+   * // about:accounts?action=signup&entrypoint=uitour&utm_foo=bar&utm_bar=baz
    * Mozilla.UITour.showFirefoxAccounts({
    *   'utm_foo': 'bar',
    *   'utm_bar': 'baz'
    * });
    * @example
    * // Will open:
-   * // https://accounts.firefox.com/?action=email&email=foo%40bar.com&entrypoint=uitour
+   * // about:accounts?action=signup&entrypoint=uitour&email=foo%40bar.com
    * Mozilla.UITour.showFirefoxAccounts(null, "foo@bar.com");
    */
   Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams, email) {
