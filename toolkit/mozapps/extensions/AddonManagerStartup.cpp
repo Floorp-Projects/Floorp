@@ -512,15 +512,17 @@ InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)
  *****************************************************************************/
 
 static void
-EnableShims(const nsAString& addonId)
+EnableShimsAndCPOWs(const nsAString& addonId, bool enableShims)
 {
   NS_ConvertUTF16toUTF8 id(addonId);
 
-  nsCOMPtr<nsIAddonInterposition> interposition =
-     do_GetService("@mozilla.org/addons/multiprocess-shims;1");
+  if (enableShims) {
+    nsCOMPtr<nsIAddonInterposition> interposition =
+      do_GetService("@mozilla.org/addons/multiprocess-shims;1");
 
-  if (!interposition || !xpc::SetAddonInterposition(id, interposition)) {
-    return;
+    if (!interposition || !xpc::SetAddonInterposition(id, interposition)) {
+      return;
+    }
   }
 
   Unused << xpc::AllowCPOWsInAddon(id, true);
@@ -623,8 +625,8 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
       if (addon.Enabled() && !addon.Bootstrapped()) {
         Unused << AddInstallLocation(addon);
 
-        if (enableInterpositions && addon.ShimsEnabled()) {
-          EnableShims(addon.Id());
+        if (addon.ShimsEnabled()) {
+          EnableShimsAndCPOWs(addon.Id(), enableInterpositions);
         }
       }
     }
