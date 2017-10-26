@@ -848,9 +848,6 @@ Inspector.prototype = {
    * Reset the inspector on new root mutation.
    */
   onNewRoot: function () {
-    // Record new-root timing for telemetry
-    this._newRootStart = this.panelWin.performance.now();
-
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     this._destroyMarkup();
@@ -886,7 +883,7 @@ Inspector.prototype = {
       return;
     }
 
-    let onExpand = this.markup.expandNode(this.selection.nodeFront);
+    this.markup.expandNode(this.selection.nodeFront);
 
     // Restore the highlighter states prior to emitting "new-root".
     yield Promise.all([
@@ -895,26 +892,6 @@ Inspector.prototype = {
     ]);
 
     this.emit("new-root");
-
-    // Wait for full expand of the selected node in order to ensure
-    // the markup view is fully emitted before firing 'reloaded'.
-    // 'reloaded' is used to know when the panel is fully updated
-    // after a page reload.
-    yield onExpand;
-
-    this.emit("reloaded");
-
-    // Record the time between new-root event and inspector fully loaded.
-    if (this._newRootStart) {
-      // Only log the timing when inspector is in foreground.
-      if (this.toolbox.currentToolId == "inspector") {
-        let delay = this.panelWin.performance.now() - this._newRootStart;
-        let telemetryKey = "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS";
-        let histogram = Services.telemetry.getHistogramById(telemetryKey);
-        histogram.add(delay);
-      }
-      delete this._newRootStart;
-    }
   }),
 
   _selectionCssSelector: null,
