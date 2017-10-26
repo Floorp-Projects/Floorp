@@ -166,7 +166,7 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
       ProcessDecodedData(aResults);
       Unused << SendInputExhausted();
     },
-    [self, this](const MediaResult& aError) { Error(aError); });
+    [self](const MediaResult& aError) { self->Error(aError); });
   return IPC_OK();
 }
 
@@ -224,12 +224,12 @@ VideoDecoderParent::RecvFlush()
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Flush()->Then(
     mManagerTaskQueue, __func__,
-    [self, this]() {
-      if (!mDestroyed) {
-        Unused << SendFlushComplete();
+    [self]() {
+      if (!self->mDestroyed) {
+        Unused << self->SendFlushComplete();
       }
     },
-    [self, this](const MediaResult& aError) { Error(aError); });
+    [self](const MediaResult& aError) { self->Error(aError); });
 
   return IPC_OK();
 }
@@ -248,7 +248,7 @@ VideoDecoderParent::RecvDrain()
         Unused << SendDrainComplete();
       }
     },
-    [self, this](const MediaResult& aError) { Error(aError); });
+    [self](const MediaResult& aError) { self->Error(aError); });
   return IPC_OK();
 }
 
