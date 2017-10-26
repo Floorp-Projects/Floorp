@@ -706,18 +706,22 @@ SandboxBroker::ThreadMain(void)
 
       // Look up the first pathname but first translate relative paths.
       pathLen = ConvertToRealPath(pathBuf, sizeof(pathBuf), pathLen);
-      pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
       // We don't have read permissions on the requested dir.
-      // Did we arrive from a symlink in a path that is not writable?
-      // Then try to figure out the original path and see if that is readable.
       if (!(perms & MAY_READ)) {
-          // Work on the original path,
-          // this reverses ConvertToRealPath above.
-          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-          if (symlinkPerms > 0) {
-            perms = symlinkPerms;
+          // Was it a tempdir that we can remap?
+          pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
+          perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
+          if (!(perms & MAY_READ)) {
+            // Did we arrive from a symlink in a path that is not writable?
+            // Then try to figure out the original path and see if that is
+            // readable. Work on the original path, this reverses
+            // ConvertToRealPath above.
+            int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
+            if (symlinkPerms > 0) {
+              perms = symlinkPerms;
+            }
           }
       }
 
