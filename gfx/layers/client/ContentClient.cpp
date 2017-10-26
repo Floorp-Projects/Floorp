@@ -181,12 +181,31 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
         });
       }
 
-      if (bufferState->PrepareBuffer()) {
-        if (bufferState->mBufferUnrotate) {
-          newParameters.SetUnrotated();
+      // If we're async painting then return the buffer state to
+      // be dispatched to the paint thread, otherwise do it now
+      if (asyncPaint) {
+        // We cannot do a buffer unrotate if the buffer is already rotated
+        // and we're async painting as that may fail
+        if (!bufferState->mBufferUnrotate ||
+            mBuffer->BufferRotation() == IntPoint(0,0)) {
+          result.mBufferState = bufferState;
+
+          // We can then assume that preparing the buffer will always
+          // succeed and update our parameters unconditionally
+          if (bufferState->mBufferUnrotate) {
+            newParameters.SetUnrotated();
+          }
+          mBuffer->SetParameters(newParameters);
+          canReuseBuffer = true;
         }
-        mBuffer->SetParameters(newParameters);
-        canReuseBuffer = true;
+      } else {
+        if (bufferState->PrepareBuffer()) {
+          if (bufferState->mBufferUnrotate) {
+            newParameters.SetUnrotated();
+          }
+          mBuffer->SetParameters(newParameters);
+          canReuseBuffer = true;
+        }
       }
     }
 
@@ -241,9 +260,16 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
         newBuffer->BufferRect(),
       });
 
-      if (!bufferState->PrepareBuffer()) {
-        gfxCriticalNote << "Failed to copy front buffer to back buffer.";
-        return result;
+      // If we're async painting then return the buffer state to
+      // be dispatched to the paint thread, otherwise do it now
+      if (asyncPaint) {
+        MOZ_ASSERT(!result.mBufferState);
+        result.mBufferState = bufferState;
+      } else {
+        if (!bufferState->PrepareBuffer()) {
+          gfxCriticalNote << "Failed to copy front buffer to back buffer.";
+          return result;
+        }
       }
     }
 
