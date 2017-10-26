@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { debugWorker } = require("../../modules/worker");
 const Services = require("Services");
@@ -17,23 +17,28 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-module.exports = createClass({
-  displayName: "WorkerTarget",
+class WorkerTarget extends Component {
+  static get propTypes() {
+    return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      debugDisabled: PropTypes.bool,
+      target: PropTypes.shape({
+        icon: PropTypes.string,
+        name: PropTypes.string.isRequired,
+        workerActor: PropTypes.string
+      }).isRequired
+    };
+  }
 
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    debugDisabled: PropTypes.bool,
-    target: PropTypes.shape({
-      icon: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      workerActor: PropTypes.string
-    }).isRequired
-  },
+  constructor(props) {
+    super(props);
+    this.debug = this.debug.bind(this);
+  }
 
   debug() {
     let { client, target } = this.props;
     debugWorker(client, target.workerActor);
-  },
+  }
 
   render() {
     let { target, debugDisabled } = this.props;
@@ -54,4 +59,6 @@ module.exports = createClass({
       }, Strings.GetStringFromName("debug"))
     );
   }
-});
+}
+
+module.exports = WorkerTarget;
