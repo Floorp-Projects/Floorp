@@ -113,8 +113,8 @@ AppleVTDecoder::Shutdown()
 {
   if (mTaskQueue) {
     RefPtr<AppleVTDecoder> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-      ProcessShutdown();
+    return InvokeAsync(mTaskQueue, __func__, [self]() {
+      self->ProcessShutdown();
       return ShutdownPromise::CreateAndResolve(true, __func__);
     });
   }

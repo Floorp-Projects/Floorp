@@ -51,7 +51,6 @@ add_task(async function test_submit_creditCard_saved() {
 
       await promiseShown;
       await clickDoorhangerButton(MAIN_BUTTON);
-      await TestUtils.topicObserved("formautofill-storage-changed");
     }
   );
 
@@ -162,4 +161,130 @@ add_task(async function test_submit_creditCard_saved_with_mp_enabled_but_cancele
   let creditCards = await getCreditCards();
   is(creditCards.length, 2, "Still 2 credit cards in storage");
   LoginTestUtils.masterPassword.disable();
+});
+
+add_task(async function test_submit_creditCard_unavailable_with_sync_account() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [SYNC_USERNAME_PREF, "foo@bar.com"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_AVAILABLE_PREF), false,
+         "creditCards sync should be unavailable by default");
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 2");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput("1234123412341234");
+
+        // Wait 500ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 500));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let cb = getDoorhangerCheckbox();
+      ok(cb.hidden, "Sync checkbox should be hidden");
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+});
+
+add_task(async function test_submit_creditCard_with_sync_account() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [SYNC_USERNAME_PREF, "foo@bar.com"],
+      [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 2");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput("1234123412341234");
+
+        // Wait 500ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 500));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let cb = getDoorhangerCheckbox();
+      ok(!cb.hidden, "Sync checkbox should be visible");
+      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), false,
+         "creditCards sync should be disabled by default");
+
+      // Verify if the checkbox and button state is changed.
+      let secondaryButton = getDoorhangerButton(SECONDARY_BUTTON);
+      let menuButton = getDoorhangerButton(MENU_BUTTON);
+      is(cb.checked, false, "Checkbox state should match creditCards sync state");
+      is(secondaryButton.disabled, false, "Not saving button should be enabled");
+      is(menuButton.disabled, false, "Never saving menu button should be enabled");
+      // Click the checkbox to enable credit card sync.
+      cb.click();
+      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), true,
+         "creditCards sync should be enabled after checked");
+      is(secondaryButton.disabled, true, "Not saving button should be disabled");
+      is(menuButton.disabled, true, "Never saving menu button should be disabled");
+      // Click the checkbox again to disable credit card sync.
+      cb.click();
+      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_PREF), false,
+         "creditCards sync should be disabled after unchecked");
+      is(secondaryButton.disabled, false, "Not saving button should be enabled again");
+      is(menuButton.disabled, false, "Never saving menu button should be enabled again");
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+});
+
+add_task(async function test_submit_creditCard_with_synced_already() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [SYNC_CREDITCARDS_PREF, true],
+      [SYNC_USERNAME_PREF, "foo@bar.com"],
+      [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 2");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput("1234123412341234");
+
+        // Wait 500ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 500));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let cb = getDoorhangerCheckbox();
+      ok(cb.hidden, "Sync checkbox should be hidden");
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
 });

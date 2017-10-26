@@ -550,7 +550,7 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
 
   RefPtr<RemoteDataDecoder> self = this;
   RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mTaskQueue, __func__, [self, sample, this]() {
+  return InvokeAsync(mTaskQueue, __func__, [self, sample]() {
     jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
       const_cast<uint8_t*>(sample->Data()), sample->Size());
 
@@ -562,9 +562,9 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
     }
     bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
 
-    mDrainStatus = DrainStatus::DRAINABLE;
-    return mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(sample))
-           ? mDecodePromise.Ensure(__func__)
+    self->mDrainStatus = DrainStatus::DRAINABLE;
+    return self->mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(sample))
+           ? self->mDecodePromise.Ensure(__func__)
            : DecodePromise::CreateAndReject(
                MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
 

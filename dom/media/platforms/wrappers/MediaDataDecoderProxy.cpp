@@ -18,7 +18,7 @@ MediaDataDecoderProxy::Init()
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
-                     [self, this]() { return mProxyDecoder->Init(); });
+                     [self]() { return self->mProxyDecoder->Init(); });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -31,8 +31,8 @@ MediaDataDecoderProxy::Decode(MediaRawData* aSample)
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mProxyThread, __func__, [self, this, sample]() {
-    return mProxyDecoder->Decode(sample);
+  return InvokeAsync(mProxyThread, __func__, [self, sample]() {
+    return self->mProxyDecoder->Decode(sample);
   });
 }
 
@@ -46,7 +46,7 @@ MediaDataDecoderProxy::Flush()
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
-                     [self, this]() { return mProxyDecoder->Flush(); });
+                     [self]() { return self->mProxyDecoder->Flush(); });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -59,7 +59,7 @@ MediaDataDecoderProxy::Drain()
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
-                     [self, this]() { return mProxyDecoder->Drain(); });
+                     [self]() { return self->mProxyDecoder->Drain(); });
 }
 
 RefPtr<ShutdownPromise>
@@ -76,7 +76,7 @@ MediaDataDecoderProxy::Shutdown()
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
-                     [self, this]() { return mProxyDecoder->Shutdown(); });
+                     [self]() { return self->mProxyDecoder->Shutdown(); });
 }
 
 nsCString

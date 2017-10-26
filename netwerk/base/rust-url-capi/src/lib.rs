@@ -170,11 +170,7 @@ pub extern "C" fn rusturl_get_filepath(urlptr: Option<&Url>, cont: &mut nsACStri
     return NS_ERROR_INVALID_ARG;
   };
 
-  if url.cannot_be_a_base() {
-      cont.assign("");
-  } else {
-      cont.assign(&url[Position::BeforePath..Position::AfterPath]);
-  }
+  cont.assign(&url.path());
   NS_OK
 }
 
@@ -186,11 +182,7 @@ pub extern "C" fn rusturl_get_path(urlptr: Option<&Url>, cont: &mut nsACString) 
     return NS_ERROR_INVALID_ARG;
   };
 
-  if url.cannot_be_a_base() {
-      cont.assign("");
-  } else {
-      cont.assign(&url[Position::BeforePath..]);
-  }
+  cont.assign(&url[Position::BeforePath..]);
   NS_OK
 }
 

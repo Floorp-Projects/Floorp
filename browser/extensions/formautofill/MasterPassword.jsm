@@ -36,19 +36,42 @@ this.MasterPassword = {
   },
 
   /**
-   * Display the master password login prompt no matter it's logged in or not.
-   * If an existing MP prompt is already open, the result from it will be used instead.
-   *
-   * @returns {Promise<boolean>} True if it's logged in or no password is set and false
-   *                             if it's still not logged in (prompt canceled or other error).
+   * @returns {boolean} True if master password is logged in and false if not.
    */
-  async prompt() {
+  get isLoggedIn() {
+    return Services.logins.isLoggedIn;
+  },
+
+  /**
+   * @returns {boolean} True if there is another master password login dialog
+   *                    existing and false otherwise.
+   */
+  get isUIBusy() {
+    return Services.logins.uiBusy;
+  },
+
+  /**
+   * Ensure the master password is logged in. It will display the master password
+   * login prompt or do nothing if it's logged in already. If an existing MP
+   * prompt is already prompted, the result from it will be used instead.
+   *
+   * @param   {boolean} reauth Prompt the login dialog no matter it's logged in
+   *                           or not if it's set to true.
+   * @returns {Promise<boolean>} True if it's logged in or no password is set
+   *                             and false if it's still not logged in (prompt
+   *                             canceled or other error).
+   */
+  async ensureLoggedIn(reauth = false) {
     if (!this.isEnabled) {
       return true;
     }
 
+    if (this.isLoggedIn && !reauth) {
+      return true;
+    }
+
     // If a prompt is already showing then wait for and focus it.
-    if (Services.logins.uiBusy) {
+    if (this.isUIBusy) {
       return this.waitForExistingDialog();
     }
 
@@ -81,17 +104,28 @@ this.MasterPassword = {
    * @returns {Promise<string>} resolves to the decrypted string, or rejects otherwise.
    */
   async decrypt(cipherText, reauth = false) {
-    let loggedIn = false;
-    if (reauth) {
-      loggedIn = await this.prompt();
-    } else {
-      loggedIn = await this.waitForExistingDialog();
-    }
-
-    if (!loggedIn) {
+    if (!await this.ensureLoggedIn(reauth)) {
       throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
     }
+    return cryptoSDR.decrypt(cipherText);
+  },
 
+  /**
+   * Decrypts cipherText synchronously. "ensureLoggedIn()" needs to be called
+   * outside in case another dialog is showing.
+   *
+   * NOTE: This method will be removed soon once the ProfileStorage APIs are
+   *       refactored to be async functions (bug 1399367). Please use async
+   *       version instead.
+   *
+   * @deprecated
+   * @param   {string} cipherText Encrypted string including the algorithm details.
+   * @returns {string} The decrypted string.
+   */
+  decryptSync(cipherText) {
+    if (this.isUIBusy) {
+      throw Components.Exception("\"ensureLoggedIn()\" should be called first", Cr.NS_ERROR_UNEXPECTED);
+    }
     return cryptoSDR.decrypt(cipherText);
   },
 
@@ -102,10 +136,29 @@ this.MasterPassword = {
    * @returns {Promise<string>} resolves to the encrypted string (with algorithm), otherwise rejects.
    */
   async encrypt(plainText) {
-    if (Services.logins.uiBusy && !await this.waitForExistingDialog()) {
+    if (!await this.ensureLoggedIn()) {
       throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
     }
 
+    return cryptoSDR.encrypt(plainText);
+  },
+
+  /**
+   * Encrypts plainText synchronously. "ensureLoggedIn()" needs to be called
+   * outside in case another dialog is showing.
+   *
+   * NOTE: This method will be removed soon once the ProfileStorage APIs are
+   *       refactored to be async functions (bug 1399367). Please use async
+   *       version instead.
+   *
+   * @deprecated
+   * @param   {string} plainText A plain string to be encrypted.
+   * @returns {string} The encrypted cipher string.
+   */
+  encryptSync(plainText) {
+    if (this.isUIBusy) {
+      throw Components.Exception("\"ensureLoggedIn()\" should be called first", Cr.NS_ERROR_UNEXPECTED);
+    }
     return cryptoSDR.encrypt(plainText);
   },
 
@@ -118,10 +171,9 @@ this.MasterPassword = {
    *          Resolves with whether the user is logged in to MP.
    */
   async waitForExistingDialog() {
-    if (!Services.logins.uiBusy) {
-      log.debug("waitForExistingDialog: Dialog isn't showing. isLoggedIn:",
-                Services.logins.isLoggedIn);
-      return Services.logins.isLoggedIn;
+    if (!this.isUIBusy) {
+      log.debug("waitForExistingDialog: Dialog isn't showing. isLoggedIn:", this.isLoggedIn);
+      return this.isLoggedIn;
     }
 
     return new Promise((resolve) => {

@@ -18,7 +18,6 @@ Contents:
    adjust
    mma
    defaultdomains
-   bouncer
    shutdown
    push
 

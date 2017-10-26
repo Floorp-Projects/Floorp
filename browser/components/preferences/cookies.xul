@@ -8,7 +8,12 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/cookies.dtd" >
+<!DOCTYPE dialog [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+<!ENTITY % cookiesDTD SYSTEM "chrome://browser/locale/preferences/cookies.dtd">
+%cookiesDTD;
+]>
 
 <window id="CookiesDialog" windowtype="Browser:Cookies"
         class="windowDialog" title="&window.title;"
@@ -27,6 +32,7 @@
   <keyset>
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
     <key key="&focusSearch1.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   </keyset>
 
   <vbox flex="1" class="contentPane largeDialogContainer">
