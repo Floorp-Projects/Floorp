@@ -8,7 +8,6 @@
 #define WaveDecoder_h_
 
 #include "PlatformDecoderModule.h"
-#include "mp4_demuxer/ByteReader.h"
 
 namespace mozilla {
 
