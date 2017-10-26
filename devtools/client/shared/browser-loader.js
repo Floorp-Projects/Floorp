@@ -12,7 +12,6 @@ const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.j
 
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/boxmodel",
-  "resource://devtools/client/inspector/changes",
   "resource://devtools/client/inspector/computed",
   "resource://devtools/client/inspector/flexbox",
   "resource://devtools/client/inspector/fonts",
