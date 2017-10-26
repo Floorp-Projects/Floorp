@@ -3,13 +3,26 @@ Change log
 
 All notable changes to this program is documented in this file.
 
-Unreleased
-----------
+0.19.1 (2017-10-30)
+-------------------
+
+### Changed
+
+- Search suggestions in the location bar turned off as not to
+  trigger network connections
+
+- Block addons incompatible with E10s
+
+### Fixed
+
+- Marionette stacktraces are now correctly propagated
+
+- Some error messages have been clarified
 
 ### Removed
 
-- Removed `socksUsername` and `socksPassword` because both are no longer
-  valid keys for proxy capabilities
+- Removed obsolete `socksUsername` and `socksPassword` proxy
+  configuration keys because neither were picked up or recognised
 
 
 0.19.0 (2017-09-16)
@@ -25,11 +38,11 @@ Note that with geckodriver v0.19.0 the following versions are recommended:
   - POST `/session/{session id}/window/minimize` for the [Minimize Window]
     command
 
-- Added preference `extensions.shield-recipe-client.api_url` to disable shield
-  studies which could unexpectedly change the behavior of Firefox
+- Added preference `extensions.shield-recipe-client.api_url` to disable
+  shield studies which could unexpectedly change the behavior of Firefox
 
-- Introduced the temporary, boolean capability `moz:webdriverClick` to enable
-  the WebDriver conforming behavior of the [Element Click] command.
+- Introduced the temporary, boolean capability `moz:webdriverClick` to
+  enable the WebDriver conforming behavior of the [Element Click] command
 
 - Added crashreporter environment variables to better control the browser
   in case of crashes
