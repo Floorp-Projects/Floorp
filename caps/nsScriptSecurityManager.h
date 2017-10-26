@@ -53,7 +53,7 @@ public:
     // Invoked exactly once, by XPConnect.
     static void InitStatics();
 
-    static SystemPrincipal*
+    static already_AddRefed<SystemPrincipal>
     SystemPrincipalSingletonConstructor();
 
     /**

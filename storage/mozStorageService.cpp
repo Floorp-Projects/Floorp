@@ -193,12 +193,11 @@ NS_IMPL_ISUPPORTS(
 
 Service *Service::gService = nullptr;
 
-Service *
+already_AddRefed<Service>
 Service::getSingleton()
 {
   if (gService) {
-    NS_ADDREF(gService);
-    return gService;
+    return do_AddRef(gService);
   }
 
   // Ensure that we are using the same version of SQLite that we compiled with
@@ -222,14 +221,14 @@ Service::getSingleton()
   // The first reference to the storage service must be obtained on the
   // main thread.
   NS_ENSURE_TRUE(NS_IsMainThread(), nullptr);
-  gService = new Service();
-  if (gService) {
-    NS_ADDREF(gService);
-    if (NS_FAILED(gService->initialize()))
-      NS_RELEASE(gService);
+  RefPtr<Service> service = new Service();
+  gService = service.get();
+  if (NS_FAILED(service->initialize())) {
+    gService = nullptr;
+    return nullptr;
   }
 
-  return gService;
+  return service.forget();
 }
 
 nsIXPConnect *Service::sXPConnect = nullptr;

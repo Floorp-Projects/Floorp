@@ -21,7 +21,7 @@ public:
 
   nsresult Init();
 
-  static nsDownloadManager *GetSingleton();
+  static already_AddRefed<nsDownloadManager> GetSingleton();
 
   nsDownloadManager()
   {

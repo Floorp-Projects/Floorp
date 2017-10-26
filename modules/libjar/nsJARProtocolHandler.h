@@ -25,7 +25,7 @@ public:
     // nsJARProtocolHandler methods:
     nsJARProtocolHandler();
 
-    static nsJARProtocolHandler *GetSingleton();
+    static already_AddRefed<nsJARProtocolHandler> GetSingleton();
 
     nsresult Init();
 

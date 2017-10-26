@@ -700,13 +700,12 @@ StartupCacheWrapper* StartupCacheWrapper::gStartupCacheWrapper = nullptr;
 
 NS_IMPL_ISUPPORTS(StartupCacheWrapper, nsIStartupCache)
 
-StartupCacheWrapper* StartupCacheWrapper::GetSingleton()
+already_AddRefed<StartupCacheWrapper> StartupCacheWrapper::GetSingleton()
 {
   if (!gStartupCacheWrapper)
     gStartupCacheWrapper = new StartupCacheWrapper();
 
-  NS_ADDREF(gStartupCacheWrapper);
-  return gStartupCacheWrapper;
+  return do_AddRef(gStartupCacheWrapper);
 }
 
 nsresult
