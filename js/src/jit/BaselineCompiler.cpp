@@ -4837,24 +4837,22 @@ BaselineCompiler::emit_JSOP_RESUME()
     {
         masm.unboxObject(exprStackSlot, scratch2);
 
-        Register initLength = regs.takeAny();
+        Register arrayLength = regs.takeAny();
         masm.loadPtr(Address(scratch2, NativeObject::offsetOfElements()), scratch2);
-        masm.load32(Address(scratch2, ObjectElements::offsetOfInitializedLength()), initLength);
+        masm.load32(Address(scratch2, ObjectElements::offsetOfLength()), arrayLength);
+        masm.store32(Imm32(0), Address(scratch2, ObjectElements::offsetOfLength()));
 
         Label loop, loopDone;
         masm.bind(&loop);
-        masm.branchTest32(Assembler::Zero, initLength, initLength, &loopDone);
+        masm.branchTest32(Assembler::Zero, arrayLength, arrayLength, &loopDone);
         {
             masm.pushValue(Address(scratch2, 0));
             masm.addPtr(Imm32(sizeof(Value)), scratch2);
-            masm.sub32(Imm32(1), initLength);
+            masm.sub32(Imm32(1), arrayLength);
             masm.jump(&loop);
         }
         masm.bind(&loopDone);
-
-        masm.guardedCallPreBarrier(exprStackSlot, MIRType::Value);
-        masm.storeValue(NullValue(), exprStackSlot);
-        regs.add(initLength);
+        regs.add(arrayLength);
     }
 
     masm.bind(&noExprStack);
