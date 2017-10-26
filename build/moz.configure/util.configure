@@ -63,7 +63,7 @@ def check_cmd_output(*args, **kwargs):
         for out, desc in ((stdout, 'output'), (stderr, 'error output')):
             if out:
                 log.debug('Its %s was:', desc)
-                with LineIO(lambda l: log.debug('| %s', l)) as o:
+                with LineIO(lambda l: log.debug('| %s', l), 'replace') as o:
                     o.write(out)
         if onerror:
             return onerror()
