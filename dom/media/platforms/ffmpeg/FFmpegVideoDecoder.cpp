@@ -128,7 +128,6 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   , mImageAllocator(aAllocator)
   , mImageContainer(aImageContainer)
   , mInfo(aConfig)
-  , mLastInputDts(INT64_MIN)
   , mLowLatency(aLowLatency)
 {
   // Use a new MediaByteBuffer as the object will be modified during
@@ -195,7 +194,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   packet.data = aData;
   packet.size = aSize;
-  packet.dts = mLastInputDts = aSample->mTimecode.ToMicroseconds();
+  packet.dts = aSample->mTimecode.ToMicroseconds();
   packet.pts = aSample->mTime.ToMicroseconds();
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
@@ -356,19 +355,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     *aGotFrame = true;
   }
   return NS_OK;
-}
-
-RefPtr<MediaDataDecoder::DecodePromise>
-FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
-{
-  RefPtr<MediaRawData> empty(new MediaRawData());
-  empty->mTimecode = TimeUnit::FromMicroseconds(mLastInputDts);
-  bool gotFrame = false;
-  DecodedData results;
-  while (NS_SUCCEEDED(DoDecode(empty, nullptr, 0, &gotFrame, results)) &&
-         gotFrame) {
-  }
-  return DecodePromise::CreateAndResolve(Move(results), __func__);
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>
