@@ -244,6 +244,8 @@ class IonBuilder
                                              TemporaryTypeSet* types, bool innerized = false);
     AbortReasonOr<Ok> getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName* name,
                                              BarrierKind barrier, TemporaryTypeSet* types);
+    AbortReasonOr<Ok> getPropTryInlineProtoAccess(bool* emitted, MDefinition* obj, PropertyName* name,
+                                                  TemporaryTypeSet* types);
     AbortReasonOr<Ok> getPropTryTypedObject(bool* emitted, MDefinition* obj, PropertyName* name);
     AbortReasonOr<Ok> getPropTryScalarPropOfTypedObject(bool* emitted, MDefinition* typedObj,
                                                         int32_t fieldOffset,

@@ -108,6 +108,10 @@ class BaselineInspector
     MOZ_MUST_USE bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                              ObjectGroupVector& convertUnboxedGroups);
 
+    MOZ_MUST_USE bool maybeInfoForProtoReadSlot(jsbytecode* pc, ReceiverVector& receivers,
+                                                ObjectGroupVector& convertUnboxedGroups,
+                                                JSObject** holder);
+
     SetElemICInspector setElemICInspector(jsbytecode* pc) {
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
     }
