@@ -58,7 +58,7 @@ windowsZones:table(nofallback){
         }
         "Astrakhan Standard Time"{
             001{"Europe/Astrakhan"}
-            RU{"Europe/Astrakhan Europe/Saratov Europe/Ulyanovsk"}
+            RU{"Europe/Astrakhan Europe/Ulyanovsk"}
         }
         "Atlantic Standard Time"{
             001{"America/Halifax"}
@@ -372,6 +372,11 @@ windowsZones:table(nofallback){
             001{"Asia/Magadan"}
             RU{"Asia/Magadan"}
         }
+        "Magallanes Standard Time"{
+            001{"America/Punta_Arenas"}
+            AQ{"Antarctica/Palmer"}
+            CL{"America/Punta_Arenas"}
+        }
         "Marquesas Standard Time"{
             001{"Pacific/Marquesas"}
             PF{"Pacific/Marquesas"}
@@ -503,12 +508,11 @@ windowsZones:table(nofallback){
         }
         "SA Eastern Standard Time"{
             001{"America/Cayenne"}
-            AQ{"Antarctica/Rothera Antarctica/Palmer"}
+            AQ{"Antarctica/Rothera"}
             BR{
                 "America/Fortaleza America/Belem America/Maceio America/Recife Americ"
                 "a/Santarem"
             }
-            CL{"America/Punta_Arenas"}
             FK{"Atlantic/Stanley"}
             GF{"America/Cayenne"}
             SR{"America/Paramaribo"}
@@ -579,6 +583,10 @@ windowsZones:table(nofallback){
             001{"Pacific/Apia"}
             WS{"Pacific/Apia"}
         }
+        "Saratov Standard Time"{
+            001{"Europe/Saratov"}
+            RU{"Europe/Saratov"}
+        }
         "Singapore Standard Time"{
             001{"Asia/Singapore"}
             BN{"Asia/Brunei"}
@@ -637,10 +645,7 @@ windowsZones:table(nofallback){
         }
         "Tonga Standard Time"{
             001{"Pacific/Tongatapu"}
-            KI{"Pacific/Enderbury"}
-            TK{"Pacific/Fakaofo"}
             TO{"Pacific/Tongatapu"}
-            ZZ{"Etc/GMT-13"}
         }
         "Transbaikal Standard Time"{
             001{"Asia/Chita"}
@@ -680,6 +685,12 @@ windowsZones:table(nofallback){
             UM{"Pacific/Wake"}
             WF{"Pacific/Wallis"}
             ZZ{"Etc/GMT-12"}
+        }
+        "UTC+13"{
+            001{"Etc/GMT-13"}
+            KI{"Pacific/Enderbury"}
+            TK{"Pacific/Fakaofo"}
+            ZZ{"Etc/GMT-13"}
         }
         "UTC-02"{
             001{"Etc/GMT+2"}
