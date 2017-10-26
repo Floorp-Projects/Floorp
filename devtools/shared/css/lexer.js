@@ -202,7 +202,7 @@ const SUIJ = S | U | I | J;
 const SUIX = S | U | I | X;
 const SUIJX = S | U | I | J | X;
 
-/* eslint-disable indent, no-multi-spaces, comma-spacing, spaced-comment */
+/* eslint-disable indent, indent-legacy, no-multi-spaces, comma-spacing, spaced-comment */
 const gLexTable = [
 // 00    01    02    03    04    05    06    07
     0,    S,    S,    S,    S,    S,    S,    S,
@@ -237,7 +237,7 @@ const gLexTable = [
 //  x     y     z     {     |     }     ~    7F
  SUIJ, SUIJ, SUIJ,   SU,   SU,   SU,   SU,    S,
 ];
-/* eslint-enable indent, no-multi-spaces, comma-spacing, spaced-comment */
+/* eslint-enable indent, indent-legacy, no-multi-spaces, comma-spacing, spaced-comment */
 
 /**
  * True if 'ch' is in character class 'cls', which should be one of
