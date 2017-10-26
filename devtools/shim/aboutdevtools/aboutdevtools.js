@@ -21,6 +21,7 @@ const MESSAGES = {
 // we have to use http in order to have working searchParams.
 let url = new URL(window.location.href.replace("about:", "http://"));
 let reason = url.searchParams.get("reason");
+let tabid = parseInt(url.searchParams.get("tabid"), 10);
 
 function getToolboxShortcut() {
   const bundleUrl = "chrome://devtools-shim/locale/key-shortcuts.properties";
@@ -74,6 +75,25 @@ window.addEventListener("load", function () {
   // Update the current page based on the current value of DEVTOOLS_ENABLED_PREF.
   updatePage();
 }, { once: true });
+
+window.addEventListener("beforeunload", function () {
+  // Focus the tab that triggered the DevTools onboarding.
+  if (document.visibilityState != "visible") {
+    // Only try to focus the correct tab if the current tab is the about:devtools page.
+    return;
+  }
+
+  // Retrieve the original tab if it is still available.
+  let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  let { gBrowser } = browserWindow;
+  let originalBrowser = gBrowser.getBrowserForOuterWindowID(tabid);
+  let originalTab = gBrowser.getTabForBrowser(originalBrowser);
+
+  if (originalTab) {
+    // If the original tab was found, select it.
+    gBrowser.selectedTab = originalTab;
+  }
+}, {once: true});
 
 window.addEventListener("unload", function () {
   let installButton = document.getElementById("install");
