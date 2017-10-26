@@ -6,10 +6,15 @@
 
 :root {
   --animation-even-background-color: rgba(0,0,0,0.05);
+  --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
 }
 
 :root.theme-dark {
   --animation-even-background-color: rgba(255,255,255,0.05);
+}
+
+:root.theme-firebug {
+  --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
 }
 
 /* Settings for animations element */
@@ -26,4 +31,17 @@
 
 .animation-item:nth-child(2n+1) {
   background-color: var(--animation-even-background-color);
+}
+
+/* Settings for no animation message */
+.animation-error-message {
+  overflow: auto;
+}
+
+.animation-error-message > p {
+  white-space: pre;
+}
+
+.animation-element-picker::before {
+  background-image: var(--command-pick-image);
 }

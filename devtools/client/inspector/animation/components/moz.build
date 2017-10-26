@@ -5,5 +5,6 @@
 DevToolsModules(
     'AnimationItem.js',
     'AnimationList.js',
-    'App.js'
+    'App.js',
+    'NoAnimationPanel.js'
 )

@@ -9,4 +9,6 @@ const { createEnum } = require("devtools/client/shared/enum");
 createEnum([
   // Update the list of animation.
   "UPDATE_ANIMATIONS",
+  // Update state of the picker enabled.
+  "UPDATE_ELEMENT_PICKER_ENABLED",
 ], module.exports);
