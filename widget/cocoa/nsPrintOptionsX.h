@@ -39,17 +39,6 @@ protected:
   nsresult   _CreatePrintSettings(nsIPrintSettings **_retval);
   nsresult   ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags);
   nsresult   WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags);
-
-private:
-  /* Serialization done in child to be deserialized in the parent */
-  nsresult SerializeToPrintDataChild(nsIPrintSettings* aSettings,
-                                     nsIWebBrowserPrint* aWBP,
-                                     mozilla::embedding::PrintData* data);
-
-  /* Serialization done in parent to be deserialized in the child */
-  nsresult SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                      nsIWebBrowserPrint* aWBP,
-                                      mozilla::embedding::PrintData* data);
 };
 
 #endif // nsPrintOptionsX_h_

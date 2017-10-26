@@ -250,6 +250,10 @@ static const char contentSandboxRules[] = R"(
           (subpath debugWriteDir)
           (vnode-type REGULAR-FILE)))))
 
+  ; bug 1324610
+  (allow network-outbound file-read*
+    (literal "/private/var/run/cupsd"))
+
   (allow-shared-list "org.mozilla.plugincontainer")
 
 ; the following rule should be removed when microphone access
