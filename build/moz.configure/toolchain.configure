@@ -1346,15 +1346,19 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
     if debug_symbols:
         debug_info = '2'
 
-    flags = []
+    opts = []
 
     if opt_level is not None:
-        flags.append('-Copt-level=%s' % opt_level)
+        opts.append('opt-level=%s' % opt_level)
     if debug_assertions is not None:
-        flags.append('-Cdebug-assertions=%s' %
+        opts.append('debug-assertions=%s' %
                      ('yes' if debug_assertions else 'no'))
     if debug_info is not None:
-        flags.append('-Cdebuginfo=%s' % debug_info)
+        opts.append('debuginfo=%s' % debug_info)
+
+    flags = []
+    for opt in opts:
+        flags.extend(['-C', opt])
 
     return flags
 
