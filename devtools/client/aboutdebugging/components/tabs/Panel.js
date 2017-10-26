@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, createFactory, DOM: dom, PropTypes } =
+const { Component, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -20,30 +20,34 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-module.exports = createClass({
-  displayName: "TabsPanel",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    id: PropTypes.string.isRequired
-  },
-
-  getInitialState() {
+class TabsPanel extends Component {
+  static get propTypes() {
     return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      id: PropTypes.string.isRequired
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       tabs: []
     };
-  },
+
+    this.update = this.update.bind(this);
+  }
 
   componentDidMount() {
     let { client } = this.props;
     client.addListener("tabListChanged", this.update);
     this.update();
-  },
+  }
 
   componentWillUnmount() {
     let { client } = this.props;
     client.removeListener("tabListChanged", this.update);
-  },
+  }
 
   update() {
     this.props.client.mainRoot.listTabs().then(({ tabs }) => {
@@ -68,7 +72,7 @@ module.exports = createClass({
       });
       this.setState({ tabs });
     });
-  },
+  }
 
   render() {
     let { client, id } = this.props;
@@ -95,4 +99,6 @@ module.exports = createClass({
       })
     ));
   }
-});
+}
+
+module.exports = TabsPanel;

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createFactory, createClass, DOM: dom, PropTypes } =
+const { createFactory, Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -46,41 +46,46 @@ const panels = [{
 
 const defaultPanelId = "addons";
 
-module.exports = createClass({
-  displayName: "AboutDebuggingApp",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    telemetry: PropTypes.instanceOf(Telemetry).isRequired
-  },
-
-  getInitialState() {
+class AboutDebuggingApp extends Component {
+  static get propTypes() {
     return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      telemetry: PropTypes.instanceOf(Telemetry).isRequired
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       selectedPanelId: defaultPanelId
     };
-  },
+
+    this.onHashChange = this.onHashChange.bind(this);
+    this.selectPanel = this.selectPanel.bind(this);
+  }
 
   componentDidMount() {
     window.addEventListener("hashchange", this.onHashChange);
     this.onHashChange();
     this.props.telemetry.toolOpened("aboutdebugging");
-  },
+  }
 
   componentWillUnmount() {
     window.removeEventListener("hashchange", this.onHashChange);
     this.props.telemetry.toolClosed("aboutdebugging");
     this.props.telemetry.destroy();
-  },
+  }
 
   onHashChange() {
     this.setState({
       selectedPanelId: window.location.hash.substr(1) || defaultPanelId
     });
-  },
+  }
 
   selectPanel(panelId) {
     window.location.hash = "#" + panelId;
-  },
+  }
 
   render() {
     let { client } = this.props;
@@ -108,4 +113,6 @@ module.exports = createClass({
       dom.div({ className: "main-content" }, panel)
     );
   }
-});
+}
+
+module.exports = AboutDebuggingApp;

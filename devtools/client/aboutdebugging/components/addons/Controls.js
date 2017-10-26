@@ -11,7 +11,7 @@ loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const { Cc, Ci } = require("chrome");
-const { createFactory, createClass, DOM: dom, PropTypes } =
+const { createFactory, Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 const AddonsInstallError = createFactory(require("./InstallError"));
@@ -22,24 +22,31 @@ const Strings = Services.strings.createBundle(
 const MORE_INFO_URL = "https://developer.mozilla.org/docs/Tools" +
                       "/about:debugging#Enabling_add-on_debugging";
 
-module.exports = createClass({
-  displayName: "AddonsControls",
-
-  propTypes: {
-    debugDisabled: PropTypes.bool
-  },
-
-  getInitialState() {
+class AddonsControls extends Component {
+  static get propTypes() {
     return {
+      debugDisabled: PropTypes.bool
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       installError: null,
     };
-  },
+
+    this.onEnableAddonDebuggingChange = this.onEnableAddonDebuggingChange.bind(this);
+    this.loadAddonFromFile = this.loadAddonFromFile.bind(this);
+    this.retryInstall = this.retryInstall.bind(this);
+    this.installAddon = this.installAddon.bind(this);
+  }
 
   onEnableAddonDebuggingChange(event) {
     let enabled = event.target.checked;
     Services.prefs.setBoolPref("devtools.chrome.enabled", enabled);
     Services.prefs.setBoolPref("devtools.debugger.remote-enabled", enabled);
-  },
+  }
 
   loadAddonFromFile() {
     this.setState({ installError: null });
@@ -60,12 +67,12 @@ module.exports = createClass({
 
       this.installAddon(file);
     });
-  },
+  }
 
   retryInstall() {
     this.setState({ installError: null });
     this.installAddon(this.state.lastInstallErrorFile);
-  },
+  }
 
   installAddon(file) {
     AddonManager.installTemporaryAddon(file)
@@ -76,7 +83,7 @@ module.exports = createClass({
         console.error(e);
         this.setState({ installError: e.message, lastInstallErrorFile: file });
       });
-  },
+  }
 
   render() {
     let { debugDisabled } = this.props;
@@ -110,4 +117,6 @@ module.exports = createClass({
         retryInstall: this.retryInstall,
       }));
   }
-});
+}
+
+module.exports = AddonsControls;
