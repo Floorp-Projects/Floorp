@@ -135,8 +135,6 @@ public:
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
-  void SetTransactionIncomplete() { mTransactionIncomplete = true; }
-
   // See equivalent function in ClientLayerManager
   void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
                                   const std::string& aKey,
@@ -192,8 +190,6 @@ private:
   // This holds the scroll data that we need to send to the compositor for
   // APZ to do it's job
   WebRenderScrollData mScrollData;
-
-  bool mTransactionIncomplete;
 
   bool mNeedsComposite;
   bool mIsFirstPaint;

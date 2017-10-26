@@ -249,7 +249,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   WrBridge()->RemoveExpiredFontKeys();
 
   AUTO_PROFILER_TRACING("Paint", "RenderLayers");
-  mTransactionIncomplete = false;
 
 #if 0
   // Useful for debugging, it dumps the display list *before* we try to build
@@ -277,15 +276,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   WrBridge()->ClearReadLocks();
-
-  // We can't finish this transaction so return. This usually
-  // happens in an empty transaction where we can't repaint a painted layer.
-  // In this case, leave the transaction open and let a full transaction happen.
-  if (mTransactionIncomplete) {
-    DiscardLocalImages();
-    WrBridge()->ProcessWebRenderParentCommands();
-    return;
-  }
 
   if (AsyncPanZoomEnabled()) {
     mScrollData.SetFocusTarget(mFocusTarget);
