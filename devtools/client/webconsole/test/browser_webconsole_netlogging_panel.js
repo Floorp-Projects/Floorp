@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../../netmonitor/test/shared-head.js */
+
 // Tests that network log messages bring up the network panel.
 
 "use strict";
@@ -9,6 +11,9 @@
 const TEST_NETWORK_REQUEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/" +
   "test-network-request.html";
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js", this);
 
 add_task(function* () {
   let finishedRequest = waitForFinishedRequest(({ request }) => {
@@ -21,9 +26,9 @@ add_task(function* () {
   yield hud.ui.openNetworkPanel(request.actor);
   let toolbox = gDevTools.getToolbox(hud.target);
   is(toolbox.currentToolId, "netmonitor", "Network panel was opened");
-  let panel = toolbox.getCurrentPanel();
+  let monitor = toolbox.getCurrentPanel();
 
-  let { store, windowRequire } = panel.panelWin;
+  let { store, windowRequire } = monitor.panelWin;
   let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let selected = getSelectedRequest(store.getState());
@@ -31,4 +36,6 @@ add_task(function* () {
      "The correct request is selected");
   is(selected.url, request.request.url,
      "The correct request is definitely selected");
+
+  yield waitForExistingRequests(monitor);
 });

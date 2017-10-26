@@ -250,14 +250,13 @@ function test() {
       );
     });
 
-    expectEvent(EVENTS.RECEIVED_RESPONSE_CONTENT, async () => {
+    expectEvent(EVENTS.PAYLOAD_READY, async () => {
       await waitUntil(() => {
         let requestItem = getSortedRequests(store.getState()).get(0);
         return requestItem &&
                requestItem.transferredSize &&
                requestItem.contentSize &&
-               requestItem.mimeType &&
-               requestItem.responseContent;
+               requestItem.mimeType;
       });
 
       let requestItem = getSortedRequests(store.getState()).get(0);
@@ -268,21 +267,6 @@ function test() {
         "The contentSize data has an incorrect value.");
       is(requestItem.mimeType, "text/plain; charset=utf-8",
         "The mimeType data has an incorrect value.");
-
-      ok(requestItem.responseContent,
-        "There should be a responseContent data available.");
-      // eslint-disable-next-line mozilla/no-cpows-in-tests
-      is(requestItem.responseContent.content.mimeType,
-        "text/plain; charset=utf-8",
-        "The responseContent data has an incorrect |content.mimeType| property.");
-      // eslint-disable-next-line mozilla/no-cpows-in-tests
-      is(requestItem.responseContent.content.text,
-        "Hello world!",
-        "The responseContent data has an incorrect |content.text| property.");
-      // eslint-disable-next-line mozilla/no-cpows-in-tests
-      is(requestItem.responseContent.content.size,
-        12,
-        "The responseContent data has an incorrect |content.size| property.");
 
       verifyRequestItemTarget(
         document,
