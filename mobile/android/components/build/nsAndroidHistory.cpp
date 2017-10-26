@@ -30,7 +30,7 @@ NS_IMPL_ISUPPORTS(nsAndroidHistory, IHistory, nsIRunnable, nsITimerCallback, nsI
 nsAndroidHistory* nsAndroidHistory::sHistory = nullptr;
 
 /*static*/
-nsAndroidHistory*
+already_AddRefed<nsAndroidHistory>
 nsAndroidHistory::GetSingleton()
 {
   if (!sHistory) {
@@ -38,8 +38,7 @@ nsAndroidHistory::GetSingleton()
     NS_ENSURE_TRUE(sHistory, nullptr);
   }
 
-  NS_ADDREF(sHistory);
-  return sHistory;
+  return do_AddRef(sHistory);
 }
 
 nsAndroidHistory::nsAndroidHistory()
