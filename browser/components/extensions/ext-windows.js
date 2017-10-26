@@ -145,13 +145,13 @@ this.windows = class extends ExtensionAPI {
             args.appendElement(mkstr(aboutNewTabService.newTabURL));
           }
 
-          let features = ["chrome", "dialog=no"];
+          let features = ["chrome"];
 
           if (createData.type === null || createData.type == "normal") {
-            features.push("all");
+            features.push("dialog=no", "all");
           } else {
             // All other types create "popup"-type windows by default.
-            features.push("resizable", "minimizable", "centerscreen", "titlebar", "close");
+            features.push("dialog", "resizable", "minimizable", "centerscreen", "titlebar", "close");
           }
 
           if (createData.incognito !== null) {
