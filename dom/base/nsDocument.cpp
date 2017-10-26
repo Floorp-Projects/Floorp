@@ -1596,7 +1596,8 @@ nsIDocument::nsIDocument()
     mNotifiedPageForUseCounter(0),
     mIncCounters(),
     mUserHasInteracted(false),
-    mServoRestyleRootDirtyBits(0)
+    mServoRestyleRootDirtyBits(0),
+    mThrowOnDynamicMarkupInsertionCounter(0)
 {
   SetIsInDocument();
   for (auto& cnt : mIncCounters) {
