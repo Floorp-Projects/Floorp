@@ -48,7 +48,6 @@ public:
   mozilla::ipc::IPCResult RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
-  mozilla::ipc::IPCResult RecvSimulateDeviceReset(GPUDeviceData* aOutStatus) override;
   mozilla::ipc::IPCResult RecvAddLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   mozilla::ipc::IPCResult RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   mozilla::ipc::IPCResult RecvNotifyGpuObservers(const nsCString& aTopic) override;
