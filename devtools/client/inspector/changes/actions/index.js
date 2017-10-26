@@ -8,7 +8,7 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
-  // Update the entire flexboxes state with the new list of flexboxes.
-  "UPDATE_FLEXBOXES",
+  // Update the entire changes state with the new list of changes.
+  "UPDATE_CHANGES",
 
 ], module.exports);
