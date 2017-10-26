@@ -7959,7 +7959,8 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
         break;
       }
     } else {
-      type.SetAtomIdentValue(do_AddRef(nsGkAtoms::decimal));
+      type.SetAtomIdentValue(
+        do_AddRef(static_cast<nsAtom*>(nsGkAtoms::decimal)));
     }
 
     if (!ExpectSymbol(')', true)) {

@@ -22,7 +22,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsAtom** const unitMap[] =
+static nsStaticAtom** const unitMap[] =
 {
   nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
   nullptr, /* SVG_LENGTHTYPE_NUMBER */

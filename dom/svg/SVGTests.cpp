@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-nsAtom** SVGTests::sStringListNames[3] =
+nsStaticAtom** SVGTests::sStringListNames[3] =
 {
   &nsGkAtoms::requiredFeatures,
   &nsGkAtoms::requiredExtensions,

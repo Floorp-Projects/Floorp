@@ -50,7 +50,7 @@ nsHtml5AtomTable::GetAtom(const nsAString& aKey)
     return cachedAtom;
   }
 
-  nsAtom* atom = NS_GetStaticAtom(aKey);
+  nsStaticAtom* atom = NS_GetStaticAtom(aKey);
   if (atom) {
     mRecentlyUsedParserAtoms[index] = atom;
     return atom;
