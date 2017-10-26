@@ -57,12 +57,12 @@ public:
     RefPtr<EMEDecryptor> self = this;
     mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
       ->Then(mTaskQueue, __func__,
-             [self, this](RefPtr<MediaRawData> aSample) {
-               mKeyRequest.Complete();
-               ThrottleDecode(aSample);
+             [self](RefPtr<MediaRawData> aSample) {
+               self->mKeyRequest.Complete();
+               self->ThrottleDecode(aSample);
              },
-             [self, this]() {
-               mKeyRequest.Complete();
+             [self]() {
+               self->mKeyRequest.Complete();
              })
       ->Track(mKeyRequest);
 
@@ -74,12 +74,12 @@ public:
     RefPtr<EMEDecryptor> self = this;
     mThroughputLimiter.Throttle(aSample)
       ->Then(mTaskQueue, __func__,
-             [self, this] (RefPtr<MediaRawData> aSample) {
-               mThrottleRequest.Complete();
-               AttemptDecode(aSample);
+             [self] (RefPtr<MediaRawData> aSample) {
+               self->mThrottleRequest.Complete();
+               self->AttemptDecode(aSample);
              },
-             [self, this]() {
-                mThrottleRequest.Complete();
+             [self]() {
+               self->mThrottleRequest.Complete();
              })
       ->Track(mThrottleRequest);
   }
@@ -144,13 +144,13 @@ public:
       RefPtr<EMEDecryptor> self = this;
       mDecoder->Decode(aDecrypted.mSample)
         ->Then(mTaskQueue, __func__,
-               [self, this](const DecodedData& aResults) {
-                 mDecodeRequest.Complete();
-                 mDecodePromise.ResolveIfExists(aResults, __func__);
+               [self](const DecodedData& aResults) {
+                 self->mDecodeRequest.Complete();
+                 self->mDecodePromise.ResolveIfExists(aResults, __func__);
                },
-               [self, this](const MediaResult& aError) {
-                 mDecodeRequest.Complete();
-                 mDecodePromise.RejectIfExists(aError, __func__);
+               [self](const MediaResult& aError) {
+                 self->mDecodeRequest.Complete();
+                 self->mDecodePromise.RejectIfExists(aError, __func__);
                })
         ->Track(mDecodeRequest);
     }
@@ -286,8 +286,8 @@ EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
                       })
                ->Track(mDecodeRequest);
            },
-           [self, this]() {
-             mKeyRequest.Complete();
+           [self]() {
+             self->mKeyRequest.Complete();
              MOZ_CRASH("Should never get here");
            })
     ->Track(mKeyRequest);

@@ -726,6 +726,14 @@ var gCookiesWindow = {
         aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE)) {
       this.deleteCookie();
       aEvent.preventDefault();
+    } else if (aEvent.getModifierState("Accel") &&
+               document.getElementById("key_selectAll")
+                       .getAttribute("key")
+                       .toLocaleLowerCase()
+                       .charCodeAt(0) == aEvent.charCode) {
+      let view = gCookiesWindow._view;
+      view.selection.selectAll();
+      aEvent.preventDefault();
     }
   },
 

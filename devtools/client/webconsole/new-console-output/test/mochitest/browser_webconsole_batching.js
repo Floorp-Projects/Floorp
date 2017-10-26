@@ -10,33 +10,33 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-batching.html";
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function() {
+  let hud = await openNewTabAndConsole(TEST_URI);
   const messageNumber = 100;
-  yield testSimpleBatchLogging(hud, messageNumber);
-  yield testBatchLoggingAndClear(hud, messageNumber);
+  await testSimpleBatchLogging(hud, messageNumber);
+  await testBatchLoggingAndClear(hud, messageNumber);
 });
 
-function* testSimpleBatchLogging(hud, messageNumber) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
+async function testSimpleBatchLogging(hud, messageNumber) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
     function (numMessages) {
       content.wrappedJSObject.batchLog(numMessages);
     }
   );
 
   for (let i = 0; i < messageNumber; i++) {
-    let node = yield waitFor(() => findMessageAtIndex(hud, i, i));
+    let node = await waitFor(() => findMessageAtIndex(hud, i, i));
     is(node.textContent, i.toString(), `message at index "${i}" is the expected one`);
   }
 }
 
-function* testBatchLoggingAndClear(hud, messageNumber) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
+async function testBatchLoggingAndClear(hud, messageNumber) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, messageNumber,
     function (numMessages) {
       content.wrappedJSObject.batchLogAndClear(numMessages);
     }
   );
-  yield waitFor(() => findMessage(hud, l10n.getStr("consoleCleared")));
+  await waitFor(() => findMessage(hud, l10n.getStr("consoleCleared")));
   ok(true, "console cleared message is displayed");
 
   // Passing the text argument as an empty string will returns all the message,

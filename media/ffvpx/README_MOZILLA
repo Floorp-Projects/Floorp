@@ -1,6 +1,6 @@
 This directory contains files used in gecko builds from FFmpeg
 (http://ffmpeg.org). The current files are from FFmpeg as of
-revision n3.2-65-gee56777
+revision n3.4-1-g587fadaef1
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8 and vp9 portion of the library, and only on x86
@@ -12,7 +12,7 @@ Once yasm is upgraded to 1.2 or later, AVX2 code could be re-enabled.
 Add --disable-avx2 to configure on those platforms.
 
 configuration files were generated as follow using the configure script:
-./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-asm --enable-yasm
+./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --enable-parser=vp8 --enable-parser=vp9 --enable-decoder=vp8 --enable-decoder=vp9 --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --enable-parser=flac --enable-asm --enable-yasm
 
 config*:
 replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
@@ -31,9 +31,19 @@ replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
 config_win32/64.h/asm:
 add to configure command: --toolchain=msvc
 
-23 Sept 2016: libavcodec/pthread_frame.c has been patched so as to avoid
-generating large numbers of warnings from TSan (Thread Sanitizer) when
-decoding vp9 streams.  This will likely be fixed upstream sometime soon.
-When resyncing with upstream, first un-apply the patch shown at
-https://bugzilla.mozilla.org/show_bug.cgi?id=1274256#c60, then resync,
-then assess whether the patch is still necessary.
+Regenerate defaults_disabled.{h,asm} with:
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.h > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.h
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.asm > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.asm
+
+All new decoders/muxers/encoders/... should be added in the list of dummy functions found in libavcodec/dummy_funcs.c
+otherwise linkage will fail on Windows. On other platforms they are optimised out and aren't necessary.
+The GNU comm utility is a useful tool to compare and extract only the changes.
+
+To update the source tree, perform a diff on the files listed in FILES.
+The diffs should typically apply to the ffvpx tree.
+e.g. something like this would do:
+Run in the ffmpeg original tree:
+$ for i in `cat $PATH_CENTRAL/media/ffvpx/FILES`; do diff $REV_LASTSYNC HEAD >> patch.diff; done
+Then apply patch.diff on the ffvpx tree.
+
+Compilation will reveal if any files are missing.

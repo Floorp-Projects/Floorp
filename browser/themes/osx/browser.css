@@ -132,9 +132,6 @@
 #main-window:not([tabsintitlebar]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
 #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
   box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
-  /* Position the toolbar above the bottom of background tabs */
-  position: relative;
-  z-index: 1;
 }
 
 /* Always draw a border on Yosemite to ensure the border is well-defined there
@@ -148,11 +145,7 @@
   }
 
   #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
-    border-top: 1px solid var(--tabs-border);
-    background-clip: padding-box;
-    /* Position the toolbar above the bottom of background tabs */
-    position: relative;
-    z-index: 1;
+    box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
   }
 }
 

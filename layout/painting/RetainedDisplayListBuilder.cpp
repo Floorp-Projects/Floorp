@@ -727,11 +727,15 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {
-      mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret);
+      if (mBuilder.MarkFrameModifiedDuringBuilding(mPreviousCaret)) {
+        modifiedFrames.AppendElement(mPreviousCaret);
+      }
     }
 
     if (mBuilder.GetCaretFrame()) {
-      mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame());
+      if (mBuilder.MarkFrameModifiedDuringBuilding(mBuilder.GetCaretFrame())) {
+        modifiedFrames.AppendElement(mBuilder.GetCaretFrame());
+      }
     }
 
     mPreviousCaret = mBuilder.GetCaretFrame();
@@ -760,7 +764,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
       //printf_stderr("Painting --- Modified list (dirty %d,%d,%d,%d):\n",
       //      modifiedDirty.x, modifiedDirty.y, modifiedDirty.width, modifiedDirty.height);
-      //nsFrame::PrintDisplayList(&builder, modifiedDL);
+      //nsFrame::PrintDisplayList(&mBuilder, modifiedDL);
 
     } else {
       // TODO: We can also skip layer building and painting if
@@ -777,7 +781,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
     MergeDisplayLists(&modifiedDL, &mList, &mList);
 
     //printf_stderr("Painting --- Merged list:\n");
-    //nsFrame::PrintDisplayList(&builder, list);
+    //nsFrame::PrintDisplayList(&mBuilder, mList);
 
     merged = true;
   }

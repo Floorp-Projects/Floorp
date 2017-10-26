@@ -1052,6 +1052,8 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
     if ((httpResponseCode / 100) != 2) {
       MapStreamToPlainText();
     }
+    MapStreamToHttpConnection();
+    ClearTransactionsBlockedOnTunnel();
   }
 
   if (httpResponseCode == 101) {
@@ -1161,10 +1163,6 @@ Http2Stream::SetAllHeadersReceived()
   }
 
   mAllHeadersReceived = 1;
-  if (mIsTunnel) {
-    MapStreamToHttpConnection();
-    ClearTransactionsBlockedOnTunnel();
-  }
 }
 
 bool
