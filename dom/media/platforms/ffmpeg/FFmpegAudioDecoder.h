@@ -33,7 +33,6 @@ public:
   }
 
 private:
-  RefPtr<DecodePromise> ProcessDrain() override;
   MediaResult DoDecode(MediaRawData* aSample,
                        uint8_t* aData,
                        int aSize,

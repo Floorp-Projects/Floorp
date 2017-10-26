@@ -58,7 +58,7 @@ protected:
 
 private:
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
-  virtual RefPtr<DecodePromise> ProcessDrain() = 0;
+  RefPtr<DecodePromise> ProcessDrain();
   virtual MediaResult DoDecode(MediaRawData* aSample,
                                uint8_t* aData,
                                int aSize,
@@ -70,6 +70,7 @@ private:
   static StaticMutex sMonitor;
   const RefPtr<TaskQueue> mTaskQueue;
   MozPromiseHolder<DecodePromise> mPromise;
+  media::TimeUnit mLastInputDts;
 };
 
 } // namespace mozilla

@@ -52,7 +52,6 @@ public:
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  RefPtr<DecodePromise> ProcessDrain() override;
   RefPtr<FlushPromise> ProcessFlush() override;
   MediaResult DoDecode(MediaRawData* aSample,
                        uint8_t* aData,
@@ -98,7 +97,6 @@ private:
   };
 
   PtsCorrectionContext mPtsContext;
-  int64_t mLastInputDts;
 
   DurationMap mDurationMap;
   const bool mLowLatency;
