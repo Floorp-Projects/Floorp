@@ -163,10 +163,15 @@ body,
 
 .request-list-empty-notice {
   margin: 0;
-  padding: 12px;
-  font-size: 120%;
   flex: 1;
   overflow: auto;
+}
+
+.empty-notice-element {
+  padding-top: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 1.2rem;
 }
 
 .notice-perf-message {
@@ -249,10 +254,19 @@ body,
 
 /* Requests list headers */
 
+.requests-list-headers-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  padding: 0;
+}
+
 .requests-list-headers {
   display: table-header-group;
   height: 24px;
   padding: 0;
+  width: 100%;
 }
 
 .requests-list-headers .requests-list-column:first-child .requests-list-header-button {
@@ -742,6 +756,7 @@ body,
 /* Request list item */
 
 .request-list-item {
+  position: relative;
   display: table-row;
   height: 24px;
 }
