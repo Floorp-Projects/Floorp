@@ -48,7 +48,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
 
   static const int DEFAULT_VIDEO_FPS = 30;
-  static const int DEFAULT_VIDEO_MIN_FPS = 10;
   static const int DEFAULT_43_VIDEO_WIDTH = 640;
   static const int DEFAULT_43_VIDEO_HEIGHT = 480;
   static const int DEFAULT_169_VIDEO_WIDTH = 1280;
@@ -88,7 +87,6 @@ public:
     : mWidth(0)
     , mHeight(0)
     , mFPS(0)
-    , mMinFPS(0)
     , mFreq(0)
     , mAecOn(false)
     , mAgcOn(false)
@@ -107,7 +105,6 @@ public:
   int32_t mWidth;
   int32_t mHeight;
   int32_t mFPS;
-  int32_t mMinFPS;
   int32_t mFreq; // for test tones (fake:true)
   bool mAecOn;
   bool mAgcOn;
