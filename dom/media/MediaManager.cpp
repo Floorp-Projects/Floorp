@@ -152,17 +152,6 @@ static Atomic<bool> sInShutdown;
 
 typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
-static bool
-HostIsHttps(nsIURI &docURI)
-{
-  bool isHttps;
-  nsresult rv = docURI.SchemeIs("https", &isHttps);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  return isHttps;
-}
-
 class SourceListener : public MediaStreamListener {
 public:
   SourceListener();
@@ -2346,7 +2335,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                    "media.getusermedia.browser.enabled" :
                                    "media.getusermedia.screensharing.enabled"),
                                   false) ||
-            (!privileged && !HostIsHttps(*docURI))) {
+            (!privileged && !aWindow->IsSecureContext())) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
                                    NS_LITERAL_STRING("NotAllowedError"));
