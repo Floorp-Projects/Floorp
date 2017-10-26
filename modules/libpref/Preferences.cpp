@@ -999,18 +999,6 @@ pref_SetValue(PrefValue* aExistingValue,
 
 static pref_initPhase gPhase = START;
 
-static void
-pref_SetInitPhase(pref_initPhase aPhase)
-{
-  gPhase = aPhase;
-}
-
-static pref_initPhase
-pref_GetInitPhase()
-{
-  return gPhase;
-}
-
 struct StringComparator
 {
   const char* mKey;
@@ -4241,15 +4229,15 @@ Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
 
 #ifdef DEBUG
 void
-Preferences::SetInitPhase(pref_initPhase phase)
+Preferences::SetInitPhase(pref_initPhase aPhase)
 {
-  pref_SetInitPhase(phase);
+  gPhase = aPhase;
 }
 
 pref_initPhase
 Preferences::InitPhase()
 {
-  return pref_GetInitPhase();
+  return gPhase;
 }
 #endif
 
