@@ -62,8 +62,6 @@ pref("devtools.inspector.colorWidget.enabled", false);
 pref("devtools.inspector.shapesHighlighter.enabled", true);
 // Enable the Changes View
 pref("devtools.changesview.enabled", false);
-// Enable the Events View
-pref("devtools.eventsview.enabled", false);
 // Enable the Flexbox Inspector
 pref("devtools.flexboxinspector.enabled", false);
 
