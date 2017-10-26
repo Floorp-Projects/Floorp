@@ -9,12 +9,11 @@
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
 #include "jswrapper.h"
-
-#include "xpcpublic.h"
-
+#include "mozilla/dom/BlobImpl.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/StructuredCloneTags.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
