@@ -75,4 +75,7 @@ async function testNetmonitorLink(toolbox, hud, url) {
   });
 
   ok(true, "The attached url is correct.");
+
+  let monitor = toolbox.getCurrentPanel();
+  await waitForExistingRequests(monitor);
 }
