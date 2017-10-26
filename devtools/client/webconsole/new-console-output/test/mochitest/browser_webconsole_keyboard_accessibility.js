@@ -16,11 +16,11 @@ const TEST_URI =
   </script>
   `;
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
-  yield waitFor(() => findMessages(hud, "").length == 100);
+  await waitFor(() => findMessages(hud, "").length == 100);
   let currentPosition = outputScroller.scrollTop;
   const bottom = currentPosition;
   hud.jsterm.inputNode.focus();
@@ -53,7 +53,7 @@ add_task(function* () {
     clearShortcut = WCUL10n.getStr("webconsole.clear.key");
   }
   synthesizeKeyShortcut(clearShortcut);
-  yield waitFor(() => findMessages(hud, "").length == 0);
+  await waitFor(() => findMessages(hud, "").length == 0);
   ok(hasFocus(hud.jsterm.inputNode), "jsterm input is focused");
 
   // Focus filter
