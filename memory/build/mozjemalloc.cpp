@@ -480,10 +480,10 @@ static size_t arena_maxclass; /* Max size class for arenas. */
  */
 #define CHUNK_RECYCLE_LIMIT 128
 
-static const size_t recycle_limit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
+static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 
 /* The current amount of recycled bytes, updated atomically. */
-static size_t recycled_size;
+static size_t gRecycledSize;
 
 /******************************************************************************/
 
@@ -1997,7 +1997,7 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
     node = nullptr;
   }
 
-  recycled_size -= aSize;
+  gRecycledSize -= aSize;
 
   chunks_mtx.Unlock();
 
@@ -2164,7 +2164,7 @@ chunk_record(void* aChunk, size_t aSize, ChunkType aType)
     xprev.reset(prev);
   }
 
-  recycled_size += aSize;
+  gRecycledSize += aSize;
 }
 
 static void
@@ -2178,10 +2178,10 @@ chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType)
   gChunkRTree.Unset(aChunk);
 
   if (CAN_RECYCLE(aSize)) {
-    size_t recycled_so_far = load_acquire_z(&recycled_size);
+    size_t recycled_so_far = load_acquire_z(&gRecycledSize);
     // In case some race condition put us above the limit.
-    if (recycled_so_far < recycle_limit) {
-      size_t recycle_remaining = recycle_limit - recycled_so_far;
+    if (recycled_so_far < gRecycleLimit) {
+      size_t recycle_remaining = gRecycleLimit - recycled_so_far;
       size_t to_recycle;
       if (aSize > recycle_remaining) {
         to_recycle = recycle_remaining;
@@ -4336,7 +4336,7 @@ MALLOC_OUT:
   arena_maxclass = calculate_arena_maxclass();
 #endif
 
-  recycled_size = 0;
+  gRecycledSize = 0;
 
   /* Various sanity checks that regard configuration. */
   MOZ_ASSERT(quantum >= sizeof(void *));
