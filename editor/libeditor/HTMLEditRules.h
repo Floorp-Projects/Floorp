@@ -173,6 +173,12 @@ protected:
   nsresult InsertBRIfNeeded(Selection* aSelection);
 
   /**
+   * CanContainParagraph() returns true if aElement can have a <p> element as
+   * its child or its descendant.
+   */
+  bool CanContainParagraph(Element& aElement) const;
+
+  /**
    * Insert a normal <br> element or a moz-<br> element to aNode when
    * aNode is a block and it has no children.
    *
