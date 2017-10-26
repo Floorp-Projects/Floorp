@@ -33,8 +33,12 @@ public:
   }
 
 private:
-  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample) override;
   RefPtr<DecodePromise> ProcessDrain() override;
+  MediaResult DoDecode(MediaRawData* aSample,
+                       uint8_t* aData,
+                       int aSize,
+                       bool* aGotFrame,
+                       DecodedData& aResults) override;
 };
 
 } // namespace mozilla
