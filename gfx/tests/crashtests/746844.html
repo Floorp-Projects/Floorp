@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var ctx = document.querySelector("canvas").getContext('2d');
+  ctx.rotate(108);
+  ctx.shadowBlur = 220.75;
+  ctx.shadowColor = "#777777";
+  ctx.bezierCurveTo(450, 24.857142857142858, 191, 75.71428571428571, -1125899906842623, 0);
+  ctx.transform(843, 152.66666666666666, 42.7, 65.33333333333333, 86.66666666666667, 30.714285714285715);
+  ctx.transform(204, 112.5, 159, 96.75, 239.33333333333334, 0);
+  ctx.bezierCurveTo(42.4, 96.44444444444444, 480.5, 185.5, 44.666666666666664, 90.14285714285714);
+  ctx.isPointInPath(71.5, 81);
+  ctx.fill();
+}
+
+</script>
+</head>
+<body onload="boom();"><canvas width="100" height="100"></canvas></body>
+</html>
