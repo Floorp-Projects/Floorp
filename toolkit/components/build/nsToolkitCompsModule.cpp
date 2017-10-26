@@ -26,6 +26,7 @@
 #include "nsTypeAheadFind.h"
 
 #include "ApplicationReputation.h"
+#include "LoginReputation.h"
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "nsUrlClassifierUtils.h"
@@ -91,6 +92,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ApplicationReputationService,
                                          ApplicationReputationService::GetSingleton)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(LoginReputationService,
+                                         LoginReputationService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierPrefixSet)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierStreamUpdater)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierUtils, Init)
@@ -146,6 +149,7 @@ NS_DEFINE_NAMED_CID(NS_DOWNLOADPLATFORM_CID);
 NS_DEFINE_NAMED_CID(NS_FIND_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TYPEAHEADFIND_CID);
 NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_LOGIN_REPUTATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERPREFIXSET_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERDBSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERSTREAMUPDATER_CID);
@@ -181,6 +185,7 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_FIND_SERVICE_CID, false, nullptr, nsFindServiceConstructor },
   { &kNS_TYPEAHEADFIND_CID, false, nullptr, nsTypeAheadFindConstructor },
   { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, nullptr, ApplicationReputationServiceConstructor },
+  { &kNS_LOGIN_REPUTATION_SERVICE_CID, false, nullptr, LoginReputationServiceConstructor },
   { &kNS_URLCLASSIFIERPREFIXSET_CID, false, nullptr, nsUrlClassifierPrefixSetConstructor },
   { &kNS_URLCLASSIFIERDBSERVICE_CID, false, nullptr, nsUrlClassifierDBServiceConstructor },
   { &kNS_URLCLASSIFIERSTREAMUPDATER_CID, false, nullptr, nsUrlClassifierStreamUpdaterConstructor },
@@ -218,6 +223,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_FIND_SERVICE_CONTRACTID, &kNS_FIND_SERVICE_CID },
   { NS_TYPEAHEADFIND_CONTRACTID, &kNS_TYPEAHEADFIND_CID },
   { NS_APPLICATION_REPUTATION_SERVICE_CONTRACTID, &kNS_APPLICATION_REPUTATION_SERVICE_CID },
+  { NS_LOGIN_REPUTATION_SERVICE_CONTRACTID, &kNS_LOGIN_REPUTATION_SERVICE_CID },
   { NS_URLCLASSIFIERPREFIXSET_CONTRACTID, &kNS_URLCLASSIFIERPREFIXSET_CID },
   { NS_URLCLASSIFIERDBSERVICE_CONTRACTID, &kNS_URLCLASSIFIERDBSERVICE_CID },
   { NS_URICLASSIFIERSERVICE_CONTRACTID, &kNS_URLCLASSIFIERDBSERVICE_CID },
