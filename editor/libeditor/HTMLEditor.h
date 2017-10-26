@@ -187,7 +187,6 @@ public:
 
   // Block methods moved from EditorBase
   static Element* GetBlockNodeParent(nsINode* aNode);
-  static nsIDOMNode* GetBlockNodeParent(nsIDOMNode* aNode);
   static Element* GetBlock(nsINode& aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,

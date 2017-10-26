@@ -426,8 +426,8 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     NS_ENSURE_STATE(parentNodeNode || !parentNode);
     if (IsBlockNode(parentNodeNode)) {
       parentBlock = parentNode;
-    } else {
-      parentBlock = GetBlockNodeParent(parentNode);
+    } else if (parentNodeNode) {
+      parentBlock = GetAsDOMNode(GetBlockNodeParent(parentNodeNode));
     }
 
     int32_t listCount = nodeList.Length();

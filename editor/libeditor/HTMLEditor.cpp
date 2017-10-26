@@ -764,19 +764,6 @@ HTMLEditor::GetBlockNodeParent(nsINode* aNode)
   return nullptr;
 }
 
-nsIDOMNode*
-HTMLEditor::GetBlockNodeParent(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-
-  if (!node) {
-    NS_NOTREACHED("null node passed to GetBlockNodeParent()");
-    return nullptr;
-  }
-
-  return GetAsDOMNode(GetBlockNodeParent(node));
-}
-
 /**
  * Returns the node if it's a block, otherwise GetBlockNodeParent
  */
