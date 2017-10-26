@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("aboutaccounts/**"):
+    BUG_COMPONENT = ("Firefox", "Sync")
+
 with Files("abouthealthreport/**"):
     BUG_COMPONENT = ("Firefox Health Report", "Client: Desktop")
 

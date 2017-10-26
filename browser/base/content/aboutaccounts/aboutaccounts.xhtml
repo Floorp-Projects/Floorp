@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % aboutAccountsDTD SYSTEM "chrome://browser/locale/aboutAccounts.dtd">
+  %aboutAccountsDTD;
+  <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+  %syncBrandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" dir="&locale.dir;">
+  <head>
+   <title>&syncBrand.fullName.label;</title>
+   <meta name="viewport" content="width=device-width"/>
+
+
+   <link rel="icon" type="image/png" id="favicon"
+         href="chrome://branding/content/icon32.png"/>
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/normalize.css"
+     type="text/css" />
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/main.css"
+     type="text/css" />
+   <link rel="stylesheet"
+     href="chrome://browser/content/aboutaccounts/aboutaccounts.css"
+     type="text/css" />
+  </head>
+  <body>
+    <div id="stage">
+
+      <div id="manage">
+        <header>
+          <div id="email"></div>
+        </header>
+
+        <section>
+            <img class="graphic graphic-sync-intro" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+
+            <div class="button-row">
+              <button id="buttonOpenPrefs" class="button" href="#" tabindex="0">&aboutAccountsConfig.syncPreferences.label;</button>
+            </div>
+        </section>
+      </div>
+
+      <div id="intro">
+        <header>
+          <h1>&aboutAccounts.welcome;</h1>
+        </header>
+
+        <section>
+            <img class="graphic graphic-sync-intro" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+            <div class="description">&aboutAccountsConfig.description;</div>
+
+            <div class="button-row">
+              <button id="buttonGetStarted" class="button" tabindex="1">&aboutAccountsConfig.startButton.label;</button>
+            </div>
+        </section>
+      </div>
+
+      <div id="networkError">
+        <header>
+          <h1>&aboutAccounts.noConnection.title;</h1>
+        </header>
+
+        <section>
+            <img class="graphic graphic-sync-intro" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+            <div class="description">&aboutAccounts.noConnection.description;</div>
+
+            <div class="button-row">
+              <button id="buttonRetry" class="button" tabindex="3">&aboutAccounts.noConnection.retry;</button>
+            </div>
+        </section>
+      </div>
+
+      <div id="configError">
+        <header>
+          <h1>&aboutAccounts.badConfig.title;</h1>
+        </header>
+
+        <section>
+            <img class="graphic graphic-sync-intro" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+            <div class="description">&aboutAccounts.badConfig.description;</div>
+
+        </section>
+      </div>
+
+    </div>
+
+    <iframe mozframetype="content" id="remote" />
+
+    <script type="application/javascript"
+      src="chrome://browser/content/utilityOverlay.js"/>
+    <script type="text/javascript"
+      src="chrome://browser/content/aboutaccounts/aboutaccounts.js" />
+  </body>
+</html>
