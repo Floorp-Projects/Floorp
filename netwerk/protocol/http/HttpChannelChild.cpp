@@ -681,6 +681,12 @@ HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     Cancel(NS_ERROR_FAILURE);
     return;
   }
+
+  if (mSynthesizedResponsePump && mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
+    mSynthesizedResponsePump->PeekStream(CallTypeSniffers,
+                                         static_cast<nsIChannel*>(this));
+  }
+
   nsresult rv = mListener->OnStartRequest(aRequest, aContext);
   if (NS_FAILED(rv)) {
     Cancel(rv);
