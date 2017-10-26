@@ -1352,7 +1352,7 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
         opts.append('opt-level=%s' % opt_level)
     if debug_assertions is not None:
         opts.append('debug-assertions=%s' %
-                     ('yes' if debug_assertions else 'no'))
+                    ('yes' if debug_assertions else 'no'))
     if debug_info is not None:
         opts.append('debuginfo=%s' % debug_info)
 
