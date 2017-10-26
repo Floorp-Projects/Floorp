@@ -7,6 +7,7 @@
 // This file exposes the Redux reducers of the box model, grid and grid highlighter
 // settings.
 
+exports.animations = require("devtools/client/inspector/animation/reducers/animations");
 exports.boxModel = require("devtools/client/inspector/boxmodel/reducers/box-model");
 exports.changes = require("devtools/client/inspector/changes/reducers/changes");
 exports.events = require("devtools/client/inspector/events/reducers/events");
