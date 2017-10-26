@@ -2501,7 +2501,7 @@ nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
 
     MOZ_ASSERT(expanded->WhiteList().Length() > 0);
 
-    return do_AddRef(expanded->WhiteList().LastElement().get());
+    return do_AddRef(expanded->WhiteList().LastElement());
   }
 
   if (!sChromeInContentPrefCached) {
