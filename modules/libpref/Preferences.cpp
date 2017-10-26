@@ -1499,49 +1499,6 @@ pref_ReportParseProblem(PrefParseState& aPS,
   }
 }
 
-// This function is called when a complete pref name-value pair has been
-// extracted from the input data.
-//
-// @param aPS
-//        parse state instance
-//
-// @return false to indicate a fatal error.
-static bool
-pref_DoCallback(PrefParseState* aPS)
-{
-  PrefValue value;
-
-  switch (aPS->mVtype) {
-    case PrefType::String:
-      value.mStringVal = aPS->mVb;
-      break;
-
-    case PrefType::Int:
-      if ((aPS->mVb[0] == '-' || aPS->mVb[0] == '+') && aPS->mVb[1] == '\0') {
-        pref_ReportParseProblem(*aPS, "invalid integer value", 0, true);
-        NS_WARNING("malformed integer value");
-        return false;
-      }
-      value.mIntVal = atoi(aPS->mVb);
-      break;
-
-    case PrefType::Bool:
-      value.mBoolVal = (aPS->mVb == kTrue);
-      break;
-
-    default:
-      break;
-  }
-
-  (*aPS->mReader)(aPS->mClosure,
-                  aPS->mLb,
-                  value,
-                  aPS->mVtype,
-                  aPS->mIsDefault,
-                  aPS->mIsStickyDefault);
-  return true;
-}
-
 // Initialize a PrefParseState instance.
 //
 // |aPS| is the PrefParseState instance.
@@ -1986,9 +1943,40 @@ PREF_ParseBuf(PrefParseState* aPS, const char* aBuf, int aBufLen)
       case PREF_PARSE_UNTIL_SEMICOLON:
         // tolerate only whitespace and embedded comments
         if (c == ';') {
-          if (!pref_DoCallback(aPS)) {
-            return false;
+
+          PrefValue value;
+
+          switch (aPS->mVtype) {
+            case PrefType::String:
+              value.mStringVal = aPS->mVb;
+              break;
+
+            case PrefType::Int:
+              if ((aPS->mVb[0] == '-' || aPS->mVb[0] == '+') &&
+                  aPS->mVb[1] == '\0') {
+                pref_ReportParseProblem(*aPS, "invalid integer value", 0, true);
+                NS_WARNING("malformed integer value");
+                return false;
+              }
+              value.mIntVal = atoi(aPS->mVb);
+              break;
+
+            case PrefType::Bool:
+              value.mBoolVal = (aPS->mVb == kTrue);
+              break;
+
+            default:
+              break;
           }
+
+          // We've extracted a complete name/value pair.
+          aPS->mReader(aPS->mClosure,
+                       aPS->mLb,
+                       value,
+                       aPS->mVtype,
+                       aPS->mIsDefault,
+                       aPS->mIsStickyDefault);
+
           state = PREF_PARSE_INIT;
         } else if (c == '/') {
           aPS->mNextState = state; // return here when done with comment
