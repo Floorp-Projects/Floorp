@@ -5,7 +5,8 @@
 DIRS += [
     'actions',
     'components',
-    'reducers'
+    'reducers',
+    'utils'
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
