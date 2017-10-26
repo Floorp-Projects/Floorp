@@ -93,6 +93,13 @@
         ]
       }
     },
+    "bn-BD": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "ddg", "wikipedia-bn"
+        ]
+      }
+    },
     "bn-IN": {
       "default": {
         "visibleDefaultEngines": [
