@@ -22,6 +22,7 @@
 <pre id="test">
 </pre>
 
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
 // (This doesn't really need to be its own task, but it allows the actual test
 // case to be self-contained.)
@@ -39,14 +40,13 @@ add_task(async function grace_timeout_termination_with_interrupted_intercept() {
     ["dom.serviceWorkers.idle_timeout", 0],
     ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
 
-  // The SW will claim us once it activates; this is async, start listening now.
-  let waitForControlled = new Promise((resolve) => {
-    navigator.serviceWorker.oncontrollerchange = resolve;
-  });
-
   let registration = await navigator.serviceWorker.register(
     "unresolved_fetch_worker.js", { scope: "./"} );
-  await waitForControlled;
+
+  let worker = registration.installing || registration.active;
+  await waitForState(worker, 'activated');
+  worker.postMessage('claim');
+  await waitForControlled(window);
   ok(navigator.serviceWorker.controller, "Controlled"); // double check!
 
   // We want to make sure the SW is active and processing the fetch before we
