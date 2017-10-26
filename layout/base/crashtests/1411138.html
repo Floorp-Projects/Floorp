@@ -1,0 +1,13 @@
+<!-- Needs to be in quirks mode -->
+<html>
+  <head>
+    <script>
+      try { o1 = document.createElement('frameset') } catch(e) { }
+      try { o2 = document.createElement('body') } catch(e) { }
+      try { o2.style.overflow = 'auto'; } catch (e) {}
+      try { document.documentElement.appendChild(o1) } catch(e) { }
+      try { document.documentElement.appendChild(o2) } catch(e) { }
+      try { o2.scrollLeft } catch(e) { }
+    </script>
+  </head>
+</html>
