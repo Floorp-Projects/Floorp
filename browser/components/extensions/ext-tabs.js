@@ -292,12 +292,14 @@ this.tabs = class extends ExtensionAPI {
             }
           };
 
-          let isArticleChangeListener = (eventName, event) => {
-            let {gBrowser} = event.target.ownerGlobal;
-            let tab = tabManager.getWrapper(
-              gBrowser.getTabForBrowser(event.target));
+          let isArticleChangeListener = (messageName, message) => {
+            let {gBrowser} = message.target.ownerGlobal;
+            let nativeTab = gBrowser.getTabForBrowser(message.target);
 
-            fireForTab(tab, {isArticle: event.data.isArticle});
+            if (nativeTab) {
+              let tab = tabManager.getWrapper(nativeTab);
+              fireForTab(tab, {isArticle: message.data.isArticle});
+            }
           };
 
           windowTracker.addListener("status", statusListener);
