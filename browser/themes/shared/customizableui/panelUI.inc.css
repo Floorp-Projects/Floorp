@@ -1384,6 +1384,10 @@ panelview .toolbarbutton-1,
   transform: translateY(1px);
 }
 
+#main-window:not([customizing]) .subviewbutton-nav[disabled=true]::after {
+  opacity: 0.4;
+}
+
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
   transform: scaleX(-1) translateY(1px);
 }
