@@ -452,6 +452,7 @@ DevToolsStartup.prototype = {
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
     // i.e. especially take `initDevTools` into account.
+
     let startTime = window.performance.now();
     let require = this.initDevTools("KeyShortcut");
     if (require) {
@@ -513,6 +514,20 @@ DevToolsStartup.prototype = {
 
   openInstallPage: function (reason) {
     let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+
+    // Focus about:devtools tab if there is already one opened in the current window.
+    for (let tab of gBrowser.tabs) {
+      let browser = tab.linkedBrowser;
+      // browser.documentURI might be undefined if the browser tab is still loading.
+      let location = browser.documentURI ? browser.documentURI.spec : "";
+      if (location.startsWith("about:devtools") &&
+          !location.startsWith("about:devtools-toolbox")) {
+        // Focus the existing about:devtools tab and bail out.
+        gBrowser.selectedTab = tab;
+        return;
+      }
+    }
+
     let url = "about:devtools";
     if (reason) {
       url += "?reason=" + encodeURIComponent(reason);
