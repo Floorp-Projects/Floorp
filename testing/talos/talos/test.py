@@ -29,8 +29,6 @@ def test_dict():
 
 class Test(object):
     """abstract base class for a Talos test case"""
-    __test__ = False  # not pytest
-
     cycles = None  # number of cycles
     keys = []
     desktop = True
