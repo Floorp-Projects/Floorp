@@ -832,9 +832,10 @@ nsContextMenu.prototype = {
   },
 
   // Reload clicked-in frame.
-  reloadFrame() {
+  reloadFrame(aEvent) {
+    let forceReload = aEvent.shiftKey;
     this.browser.messageManager.sendAsyncMessage("ContextMenu:ReloadFrame",
-                                                 null, { target: this.target });
+                                                 null, { target: this.target, forceReload });
   },
 
   // Open clicked-in frame in its own window.
