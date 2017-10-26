@@ -4,9 +4,16 @@
 
 "use strict";
 
-const { DOM: dom, PureComponent } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, PropTypes, PureComponent } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 class App extends PureComponent {
+  static get propTypes() {
+    return {
+      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+    };
+  }
+
   render() {
     return dom.div(
       {
@@ -16,4 +23,4 @@ class App extends PureComponent {
   }
 }
 
-module.exports = App;
+module.exports = connect(state => state)(App);
