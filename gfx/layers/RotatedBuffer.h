@@ -243,6 +243,13 @@ public:
   virtual gfx::DrawTarget* GetDTBuffer() const = 0;
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const = 0;
 
+  virtual TextureClient* GetClient() const {
+    return nullptr;
+  }
+  virtual TextureClient* GetClientOnWhite() const {
+    return nullptr;
+  }
+
   /**
    * Creates a shallow copy of the rotated buffer with the same underlying
    * texture clients and draw targets. Rotated buffers are not thread safe,
@@ -337,9 +344,6 @@ public:
       mBufferRect, mBufferRotation
     };
   }
-
-  TextureClient* GetClient() const { return mClient; }
-  TextureClient* GetClientOnWhite() const { return mClientOnWhite; }
 
   void SyncWithObject(SyncObjectClient* aSyncObject);
   void Clear();
