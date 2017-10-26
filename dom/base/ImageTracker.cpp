@@ -9,6 +9,10 @@
 
 #include "ImageTracker.h"
 
+#include "imgIRequest.h"
+#include "mozilla/Preferences.h"
+#include "nsXULAppAPI.h"
+
 namespace mozilla {
 namespace dom {
 
