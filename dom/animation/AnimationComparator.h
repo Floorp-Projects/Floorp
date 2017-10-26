@@ -7,6 +7,8 @@
 #ifndef mozilla_AnimationComparator_h
 #define mozilla_AnimationComparator_h
 
+#include "mozilla/dom/Animation.h"
+
 namespace mozilla {
 
 // Although this file is called AnimationComparator, we don't actually
