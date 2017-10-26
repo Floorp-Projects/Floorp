@@ -204,9 +204,9 @@ OmxDataDecoder::Drain()
   LOG("");
 
   RefPtr<OmxDataDecoder> self = this;
-  return InvokeAsync(mOmxTaskQueue, __func__, [self, this]() {
-    RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
-    SendEosBuffer();
+  return InvokeAsync(mOmxTaskQueue, __func__, [self]() {
+    RefPtr<DecodePromise> p = self->mDrainPromise.Ensure(__func__);
+    self->SendEosBuffer();
     return p;
   });
 }

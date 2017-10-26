@@ -80,8 +80,8 @@ RefPtr<ShutdownPromise>
 AOMDecoder::Shutdown()
 {
   RefPtr<AOMDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    auto res = aom_codec_destroy(&mCodec);
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    auto res = aom_codec_destroy(&self->mCodec);
     if (res != AOM_CODEC_OK) {
       LOG_RESULT(res, "aom_codec_destroy");
     }
