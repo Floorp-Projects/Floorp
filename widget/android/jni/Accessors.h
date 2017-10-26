@@ -264,10 +264,6 @@ public:
 template<class T> jfieldID Field<T>::sID;
 
 
-// Define the sClassRef member declared in Refs.h and
-// used by Method and Field above.
-template<class C, typename T> jclass Context<C, T>::sClassRef;
-
 } // namespace jni
 } // namespace mozilla
 

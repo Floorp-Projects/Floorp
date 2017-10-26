@@ -372,9 +372,9 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
-            'base': 'third_party/speedometer',
+            'base': 'third_party/webkit/PerformanceTests',
             'pattern': '**',
-            'dest': 'talos/talos/tests/speedometer/',
+            'dest': 'talos/talos/tests/webkit/PerformanceTests/',
         },
     ],
     'awsy': [

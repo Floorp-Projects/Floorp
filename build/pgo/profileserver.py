@@ -18,7 +18,7 @@ from mozrunner import FirefoxRunner, CLI
 PORT = 8888
 
 PATH_MAPPINGS = {
-    '/js-input/speedometer': 'third_party/speedometer',
+    '/js-input/webkit/PerformanceTests': 'third_party/webkit/PerformanceTests',
 }
 
 
