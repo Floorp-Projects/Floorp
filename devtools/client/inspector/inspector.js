@@ -705,11 +705,35 @@ Inspector.prototype = {
     }
 
     if (this.target.form.animationsActor) {
-      this.sidebar.addFrameTab(
-        "animationinspector",
-        INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
-        "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
-        defaultTab == "animationinspector");
+      const animationTitle =
+        INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
+
+      if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
+        const animationId = "newanimationinspector";
+
+        this.sidebar.addTab(
+          animationId,
+          animationTitle,
+          {
+            props: {
+              id: animationId,
+              title: animationTitle
+            },
+            panel: () => {
+              const AnimationInspector =
+                this.browserRequire("devtools/client/inspector/animation/animation");
+              this.animationinspector = new AnimationInspector();
+              return this.animationinspector.provider;
+            }
+          },
+          defaultTab == animationId);
+      } else {
+        this.sidebar.addFrameTab(
+          "animationinspector",
+          animationTitle,
+          "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
+          defaultTab == "animationinspector");
+      }
     }
 
     if (this.canGetUsedFontFaces) {
