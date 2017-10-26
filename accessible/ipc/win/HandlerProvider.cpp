@@ -211,12 +211,10 @@ HandlerProvider::BuildIA2Data(IA2Data* aOutIA2Data)
     return;
   }
 
-  hr = target->get_accRole(kChildIdSelf, &varVal);
+  hr = target->get_accRole(kChildIdSelf, &aOutIA2Data->mRole);
   if (FAILED(hr)) {
     return;
   }
-
-  aOutIA2Data->mRole = varVal.lVal;
 
   hr = target->get_accState(kChildIdSelf, &varVal);
   if (FAILED(hr)) {
@@ -288,6 +286,7 @@ HandlerProvider::BuildIA2Data(IA2Data* aOutIA2Data)
 void
 HandlerProvider::ClearIA2Data(IA2Data& aData)
 {
+  ::VariantClear(&aData.mRole);
   ZeroMemory(&aData, sizeof(IA2Data));
 }
 
