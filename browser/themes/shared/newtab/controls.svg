@@ -1,85 +1,155 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="288" height="32" viewBox="0 0 288 32">
-  <defs>
-    <style>
-      /* Glyph Styles */
-      .glyphShape-style {
-        fill: #737373;
-      }
-      .glyphShape-style-pin {
-        fill: #b4b4b4;
-      }
-      .glyphShape-style-hover-gear {
-        fill: #4a90e2;
-      }
-      .glyphShape-style-hover-pin {
-        fill: #4a90e2;
-      }
-      .glyphShape-style-hover-delete {
-        fill: #ea0000;
-      }
-      .glyphShape-style-hover-active {
-        fill: #231f20;
-      }
-      /* Circle Background Styles */
-      .glyphShape-style-circle {
-        fill: #fff;
-      }
-      .glyphShape-style-circle-dropshadow {
-        fill: #000;
-        fill-opacity: .5;
-        filter: url(#filter-shadow-drop);
-      }
-    </style>
-    <filter id="filter-shadow-drop" x="-10%" y="-10%" width="120%" height="120%">
-      <feOffset in="SourceAlpha" dx="0" dy=".75" result="filter-shadow-drop-offset" />
-      <feGaussianBlur in="filter-shadow-drop-offset" stdDeviation="1" result="filter-shadow-drop-blur"/>
-    </filter>
-    <path id="glyphShape-gear" d="M28,16c0-1.7,0.9-3.1,2-3.3c-0.4-1.5-0.9-2.9-1.7-4.2c-0.9,0.7-2.6,0.3-3.8-0.9c-1.2-1.2-1.6-2.8-0.9-3.8 c-1.3-0.8-2.7-1.4-4.2-1.7c-0.2,1.1-1.6,2-3.3,2S13,3.1,12.8,2c-1.5,0.4-2.9,0.9-4.2,1.7c0.7,0.9,0.3,2.6-0.9,3.8 c-1.4,1.1-3,1.5-4,0.9C2.9,9.7,2.4,11.2,2,12.7c1.1,0.2,2,1.6,2,3.3s-0.9,3.1-2,3.3c0.4,1.5,0.9,2.9,1.7,4.2 c0.9-0.7,2.6-0.3,3.8,0.9c1.2,1.2,1.6,2.8,0.9,3.8c1.3,0.8,2.7,1.4,4.2,1.7c0.2-1.1,1.6-2,3.3-2s3.1,0.9,3.3,2 c1.5-0.4,2.9-0.9,4.2-1.7c-0.7-0.9-0.3-2.6,0.9-3.8c1.3-1.2,2.8-1.6,3.8-0.9c0.8-1.3,1.4-2.7,1.7-4.2C28.9,19.1,28,17.7,28,16z M16,24c-4.4,0-8-3.6-8-8s3.6-8,8-8s8,3.6,8,8S20.4,24,16,24z"/>
-    <circle id="glyphShape-circle" cx="16" cy="16" r="14"/>
-    <path id="glyphShape-pin" d="M19,15v-5h2V7H11v3h2v5l-3,2v2h5c0,4.5,0.4,8,1,8s1-3.5,1-8h5v-2L19,15z"/>
-    <polygon id="glyphShape-delete" points="23,11 21,9 16,14 11,9 9,11 14,16 9,21 11,23 16,18 21,23 23,21 18,16"/>
-  </defs>
-  <g id="icon-gear-default">
-    <use xlink:href="#glyphShape-gear" class="glyphShape-style"/>
-  </g>
-  <g id="icon-gear-default" transform="translate(32)">
-    <use xlink:href="#glyphShape-gear" class="glyphShape-style-hover-gear"/>
-  </g>
-  <g id="icon-pin-default" transform="translate(64)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-pin" class="glyphShape-style"/>
-  </g>
-  <g id="icon-pin-hover" transform="translate(96)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-pin" class="glyphShape-style-hover-pin"/>
-  </g>
-  <g id="icon-pin-hover-active" transform="translate(128)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-pin" class="glyphShape-style-hover-active"/>
-  </g>
-  <g id="icon-delete-default" transform="translate(160)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-delete" class="glyphShape-style"/>
-  </g>
-  <g id="icon-delete-hover" transform="translate(192)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-delete" class="glyphShape-style-hover-delete"/>
-  </g>
-  <g id="icon-delete-hover-active" transform="translate(224)">
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow"/>
-    <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle"/>
-    <use xlink:href="#glyphShape-delete" class="glyphShape-style-hover-active"/>
-  </g>
-  <g id="icon-pin-default" transform="translate(256)">
-    <use xlink:href="#glyphShape-pin" class="glyphShape-style-pin"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="288px" height="32px" viewBox="0 0 288 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>controls</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <circle id="path-3" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-4">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <circle id="path-5" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-6">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <circle id="path-7" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-8">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <circle id="path-9" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-10">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <circle id="path-11" cx="14" cy="14" r="14"></circle>
+        <filter x="-12.5%" y="-8.9%" width="125.0%" height="125.0%" filterUnits="objectBoundingBox" id="filter-12">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="1" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.246631567 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="controls" fill-rule="nonzero">
+            <g transform="translate(2.000000, 2.000000)">
+                <g id="icon-gear-default" fill-opacity="context-fill-opacity" fill="context-fill">
+                    <g id="glyphShape-gear-link">
+                        <path d="M24.5,12.5 L21.35,12.5 C21.1565841,11.5610207 20.7837667,10.6681942 20.252,9.8705 L22.487,7.6355 C23.0554583,7.04693167 23.0473286,6.11137283 22.4687279,5.53277214 C21.8901272,4.95417144 20.9545683,4.94604169 20.366,5.5145 L18.131,7.7495 C17.3329502,7.21706084 16.4395982,6.8437273 15.5,6.65 L15.5,3.5 C15.5,2.67157288 14.8284271,2 14,2 C13.1715729,2 12.5,2.67157288 12.5,3.5 L12.5,6.65 C11.5610318,6.84345197 10.668212,7.21626662 9.8705,7.748 L7.6355,5.513 C7.04938781,4.92730204 6.09944799,4.92763783 5.51375002,5.51375002 C4.92805204,6.0998622 4.92838782,7.04980202 5.5145,7.6355 L7.7495,9.8705 C7.21720441,10.6680797 6.84387483,11.5609129 6.65,12.5 L3.5,12.5 C2.67157289,12.5 2.00000004,13.1715729 2.00000004,14 C2.00000004,14.8284271 2.67157289,15.5 3.5,15.5 L6.65,15.5 C6.84390489,16.444731 7.21934843,17.3428409 7.7555,18.1445 C7.7345,18.164 7.7075,18.17 7.688,18.1895 L5.513,20.3645 C5.12306512,20.7411117 4.9666811,21.2988168 5.10395427,21.823261 C5.24122743,22.3477051 5.65079487,22.7572726 6.17523901,22.8945457 C6.69968316,23.0318189 7.25738829,22.8754349 7.634,22.4855 L9.809,20.3105 C9.8285,20.291 9.836,20.264 9.854,20.243 C10.6559957,20.7798585 11.5546382,21.1558212 12.5,21.35 L12.5,24.5 C12.5,25.3284271 13.1715729,26 14,26 C14.8284271,26 15.5,25.3284271 15.5,24.5 L15.5,21.35 C16.4389682,21.156548 17.331788,20.7837334 18.1295,20.252 L20.3645,22.487 C20.9530683,23.0554583 21.8886272,23.0473286 22.4672279,22.4687279 C23.0458286,21.8901272 23.0539583,20.9545683 22.4855,20.366 L20.2505,18.131 C20.7829725,17.332968 21.1563088,16.4396093 21.35,15.5 L24.5,15.5 C25.3284271,15.5 26,14.8284271 26,14 C26,13.1715729 25.3284271,12.5 24.5,12.5 Z M9.5,14 C9.5,11.5147186 11.5147186,9.5 14,9.5 C16.4852814,9.5 18.5,11.5147186 18.5,14 C18.5,16.4852814 16.4852814,18.5 14,18.5 C11.5147186,18.5 9.5,16.4852814 9.5,14 Z" id="glyphShape-gear"></path>
+                    </g>
+                </g>
+                <g id="icon-gear-default" transform="translate(34.000000, 2.000000)" fill="#0A84FF">
+                    <g id="glyphShape-gear-link">
+                        <path d="M22.5,10.5 L19.35,10.5 C19.1565841,9.56102069 18.7837667,8.66819421 18.252,7.8705 L20.487,5.6355 C21.0554583,5.04693167 21.0473286,4.11137283 20.4687279,3.53277214 C19.8901272,2.95417144 18.9545683,2.94604169 18.366,3.5145 L16.131,5.7495 C15.3329502,5.21706084 14.4395982,4.8437273 13.5,4.65 L13.5,1.5 C13.5,0.671572875 12.8284271,5.07265313e-17 12,0 C11.1715729,-5.07265313e-17 10.5,0.671572875 10.5,1.5 L10.5,4.65 C9.56103183,4.84345197 8.66821204,5.21626662 7.8705,5.748 L5.6355,3.513 C5.04938781,2.92730204 4.09944799,2.92763783 3.51375002,3.51375002 C2.92805204,4.0998622 2.92838782,5.04980202 3.5145,5.6355 L5.7495,7.8705 C5.21720441,8.6680797 4.84387483,9.56091293 4.65,10.5 L1.5,10.5 C0.671572893,10.5 4.47034837e-08,11.1715729 4.47034836e-08,12 C4.47034835e-08,12.8284271 0.671572893,13.5 1.5,13.5 L4.65,13.5 C4.84390489,14.444731 5.21934843,15.3428409 5.7555,16.1445 C5.7345,16.164 5.7075,16.17 5.688,16.1895 L3.513,18.3645 C3.12306512,18.7411117 2.9666811,19.2988168 3.10395427,19.823261 C3.24122743,20.3477051 3.65079487,20.7572726 4.17523901,20.8945457 C4.69968316,21.0318189 5.25738829,20.8754349 5.634,20.4855 L7.809,18.3105 C7.8285,18.291 7.836,18.264 7.854,18.243 C8.65599575,18.7798585 9.55463824,19.1558212 10.5,19.35 L10.5,22.5 C10.5,23.3284271 11.1715729,24 12,24 C12.8284271,24 13.5,23.3284271 13.5,22.5 L13.5,19.35 C14.4389682,19.156548 15.331788,18.7837334 16.1295,18.252 L18.3645,20.487 C18.9530683,21.0554583 19.8886272,21.0473286 20.4672279,20.4687279 C21.0458286,19.8901272 21.0539583,18.9545683 20.4855,18.366 L18.2505,16.131 C18.7829725,15.332968 19.1563088,14.4396093 19.35,13.5 L22.5,13.5 C23.3284271,13.5 24,12.8284271 24,12 C24,11.1715729 23.3284271,10.5 22.5,10.5 Z M7.5,12 C7.5,9.51471863 9.51471863,7.5 12,7.5 C14.4852814,7.5 16.5,9.51471863 16.5,12 C16.5,14.4852814 14.4852814,16.5 12,16.5 C9.51471863,16.5 7.5,14.4852814 7.5,12 Z" id="glyphShape-gear"></path>
+                    </g>
+                </g>
+                <g id="icon-pin-default" transform="translate(64.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-1"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-pin-link" transform="translate(2.000000, 2.000000)" fill-opacity="0.8" fill="#0C0C0D" opacity="0.5">
+                        <path d="M21.0602235,18.9392235 L16.1207235,13.9997235 L19.5602235,10.5602235 C20.1457964,9.97447373 20.1457964,9.02497329 19.5602235,8.43922351 C18.3214743,7.19329279 16.6356582,6.49487551 14.8787235,6.49972351 L14.6207235,6.49972351 C12.6212434,6.49889574 11.0005513,4.87820361 10.9997235,2.87872351 L10.9997235,1.99972351 C10.999594,1.39312966 10.6341323,0.846322434 10.0737053,0.614206542 C9.51327843,0.38209065 8.86821489,0.510361636 8.43922351,0.939223509 L0.939223509,8.43922351 C0.510361636,8.86821489 0.38209065,9.51327843 0.614206542,10.0737053 C0.846322434,10.6341323 1.39312966,10.999594 1.99972351,10.9997235 L2.87872351,10.9997235 C4.87820361,11.0005513 6.49889574,12.6212434 6.49972351,14.6207235 L6.49972351,14.8742235 C6.4271772,16.6769781 7.16247236,18.4181482 8.50522351,19.6232235 C9.0991645,20.1487898 9.99959214,20.1211854 10.5602235,19.5602235 L13.9997235,16.1207235 L18.9392235,21.0602235 C19.5277918,21.6286818 20.4633507,21.6205521 21.0419514,21.0419514 C21.6205521,20.4633507 21.6286818,19.5277918 21.0602235,18.9392235 Z M9.69322351,16.1837235 C9.55691479,15.7608895 9.49153122,15.3184099 9.49972351,14.8742235 L9.49972351,14.6207235 C9.50463372,12.8640717 8.80682056,11.17841 7.56172351,9.93922351 C6.89356311,9.26903844 6.08949822,8.7498744 5.20372351,8.41672351 L8.41822351,5.20372351 C8.75009692,6.08898872 9.26828926,6.89262165 9.93772351,7.56022351 C11.1768387,8.80652462 12.8632693,9.50497268 14.6207235,9.49972351 L14.8787235,9.49972351 C15.313005,9.49837795 15.7439466,9.5756222 16.1507235,9.72772351 L9.69322351,16.1837235 Z" id="glyphShape-pin"></path>
+                    </g>
+                </g>
+                <g id="icon-pin-hover" transform="translate(96.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-4)" xlink:href="#path-3"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-3"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-pin-link" transform="translate(2.000000, 2.000000)" fill="#0A84FF">
+                        <path d="M21.0602235,18.9395 L16.1207235,14 L19.5602235,10.5605 C20.1457964,9.97475022 20.1457964,9.02524978 19.5602235,8.4395 C18.3214743,7.19356928 16.6356582,6.495152 14.8787235,6.5 L14.6207235,6.5 C12.6212434,6.49917223 11.0005513,4.8784801 10.9997235,2.879 L10.9997235,2 C10.999594,1.39340615 10.6341323,0.846598925 10.0737053,0.614483033 C9.51327843,0.382367141 8.86821489,0.510638127 8.43922351,0.9395 L0.939223509,8.4395 C0.510361636,8.86849138 0.38209065,9.51355492 0.614206542,10.0739818 C0.846322434,10.6344087 1.39312966,10.9998705 1.99972351,11 L2.87872351,11 C4.87820361,11.0008278 6.49889574,12.6215199 6.49972351,14.621 L6.49972351,14.8745 C6.4271772,16.6772546 7.16247236,18.4184247 8.50522351,19.6235 C9.0991645,20.1490663 9.99959214,20.1214619 10.5602235,19.5605 L13.9997235,16.121 L18.9392235,21.0605 C19.5277918,21.6289583 20.4633507,21.6208286 21.0419514,21.0422279 C21.6205521,20.4636272 21.6286818,19.5280683 21.0602235,18.9395 Z M9.69322351,16.184 C9.55691479,15.761166 9.49153122,15.3186864 9.49972351,14.8745 L9.49972351,14.621 C9.50463372,12.8643482 8.80682056,11.1786865 7.56172351,9.9395 C6.89356311,9.26931493 6.08949822,8.75015089 5.20372351,8.417 L8.41822351,5.204 C8.75009692,6.08926521 9.26828926,6.89289814 9.93772351,7.5605 C11.1768387,8.80680111 12.8632693,9.50524918 14.6207235,9.5 L14.8787235,9.5 C15.313005,9.49865444 15.7439466,9.57589869 16.1507235,9.728 L9.69322351,16.184 Z" id="glyphShape-pin"></path>
+                    </g>
+                </g>
+                <g id="icon-pin-hover-active" transform="translate(128.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-6)" xlink:href="#path-5"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-5"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-pin-link" transform="translate(2.000000, 2.000000)" fill-opacity="0.8" fill="#0C0C0D">
+                        <path d="M21.0605,18.9395 L16.121,14 L19.5605,10.5605 C20.1460729,9.97475022 20.1460729,9.02524978 19.5605,8.4395 C18.3217508,7.19356928 16.6359346,6.495152 14.879,6.5 L14.621,6.5 C12.6215199,6.49917223 11.0008278,4.8784801 11,2.879 L11,2 C10.9998705,1.39340615 10.6344087,0.846598925 10.0739818,0.614483033 C9.51355492,0.382367141 8.86849138,0.510638127 8.4395,0.9395 L0.9395,8.4395 C0.510638127,8.86849138 0.382367141,9.51355492 0.614483033,10.0739818 C0.846598925,10.6344087 1.39340615,10.9998705 2,11 L2.879,11 C4.8784801,11.0008278 6.49917223,12.6215199 6.5,14.621 L6.5,14.8745 C6.42745369,16.6772546 7.16274886,18.4184247 8.5055,19.6235 C9.09944099,20.1490663 9.99986863,20.1214619 10.5605,19.5605 L14,16.121 L18.9395,21.0605 C19.5280683,21.6289583 20.4636272,21.6208286 21.0422279,21.0422279 C21.6208286,20.4636272 21.6289583,19.5280683 21.0605,18.9395 Z M9.6935,16.184 C9.55719129,15.761166 9.49180771,15.3186864 9.5,14.8745 L9.5,14.621 C9.50491021,12.8643482 8.80709705,11.1786865 7.562,9.9395 C6.8938396,9.26931493 6.08977471,8.75015089 5.204,8.417 L8.4185,5.204 C8.75037341,6.08926521 9.26856575,6.89289814 9.938,7.5605 C11.1771151,8.80680111 12.8635458,9.50524918 14.621,9.5 L14.879,9.5 C15.3132815,9.49865444 15.7442231,9.57589869 16.151,9.728 L9.6935,16.184 Z" id="glyphShape-pin"></path>
+                    </g>
+                </g>
+                <g id="icon-delete-default" transform="translate(160.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-8)" xlink:href="#path-7"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-7"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-delete-link" transform="translate(7.000000, 7.000000)" fill-opacity="0.8" fill="#0C0C0D" opacity="0.5">
+                        <path d="M8.74459268,7.15309268 L13.9495927,1.94809268 C14.375733,1.50646618 14.3693071,0.804796097 13.93515,0.37104824 C13.500993,-0.0626996171 12.7993172,-0.0684638996 12.3580927,0.358092679 L7.15309268,5.56159268 L1.94809268,0.358092679 C1.66763681,0.0571129121 1.24525937,-0.0667810937 0.846659316,0.0350143657 C0.448059266,0.136809825 0.136809825,0.448059266 0.0350143657,0.846659316 C-0.0667810937,1.24525937 0.0571129121,1.66763681 0.358092679,1.94809268 L5.56159268,7.15309268 L0.358092679,12.3580927 C0.0571129121,12.6385485 -0.0667810937,13.060926 0.0350143657,13.459526 C0.136809825,13.8581261 0.448059266,14.1693755 0.846659316,14.271171 C1.24525937,14.3729665 1.66763681,14.2490724 1.94809268,13.9480927 L7.15309268,8.74459268 L12.3580927,13.9495927 C12.7997192,14.375733 13.5013893,14.3693071 13.9351371,13.93515 C14.368885,13.500993 14.3746493,12.7993172 13.9480927,12.3580927 L8.74459268,7.15309268 Z" id="glyphShape-delete"></path>
+                    </g>
+                </g>
+                <g id="icon-delete-hover" transform="translate(192.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-10)" xlink:href="#path-9"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-9"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-delete-link" transform="translate(7.000000, 7.000000)" fill="#FF0039">
+                        <path d="M8.74459268,7.15309268 L13.9495927,1.94809268 C14.375733,1.50646618 14.3693071,0.804796097 13.93515,0.37104824 C13.500993,-0.0626996171 12.7993172,-0.0684638996 12.3580927,0.358092679 L7.15309268,5.56159268 L1.94809268,0.358092679 C1.66763681,0.0571129121 1.24525937,-0.0667810937 0.846659316,0.0350143657 C0.448059266,0.136809825 0.136809825,0.448059266 0.0350143657,0.846659316 C-0.0667810937,1.24525937 0.0571129121,1.66763681 0.358092679,1.94809268 L5.56159268,7.15309268 L0.358092679,12.3580927 C0.0571129121,12.6385485 -0.0667810937,13.060926 0.0350143657,13.459526 C0.136809825,13.8581261 0.448059266,14.1693755 0.846659316,14.271171 C1.24525937,14.3729665 1.66763681,14.2490724 1.94809268,13.9480927 L7.15309268,8.74459268 L12.3580927,13.9495927 C12.7997192,14.375733 13.5013893,14.3693071 13.9351371,13.93515 C14.368885,13.500993 14.3746493,12.7993172 13.9480927,12.3580927 L8.74459268,7.15309268 Z" id="glyphShape-delete"></path>
+                    </g>
+                </g>
+                <g id="icon-delete-hover-active" transform="translate(224.000000, 0.000000)">
+                    <g id="glyphShape-circle-link">
+                        <g id="glyphShape-circle">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-12)" xlink:href="#path-11"></use>
+                            <use fill-opacity="0.5" fill="#000000" fill-rule="evenodd" xlink:href="#path-11"></use>
+                        </g>
+                    </g>
+                    <g id="glyphShape-circle-link" fill="#FFFFFF">
+                        <circle id="glyphShape-circle" cx="14" cy="14" r="14"></circle>
+                    </g>
+                    <g id="glyphShape-delete-link" transform="translate(7.000000, 7.000000)" fill-opacity="0.8" fill="#0C0C0D">
+                        <path d="M8.74459268,7.15309268 L13.9495927,1.94809268 C14.375733,1.50646618 14.3693071,0.804796097 13.93515,0.37104824 C13.500993,-0.0626996171 12.7993172,-0.0684638996 12.3580927,0.358092679 L7.15309268,5.56159268 L1.94809268,0.358092679 C1.66763681,0.0571129121 1.24525937,-0.0667810937 0.846659316,0.0350143657 C0.448059266,0.136809825 0.136809825,0.448059266 0.0350143657,0.846659316 C-0.0667810937,1.24525937 0.0571129121,1.66763681 0.358092679,1.94809268 L5.56159268,7.15309268 L0.358092679,12.3580927 C0.0571129121,12.6385485 -0.0667810937,13.060926 0.0350143657,13.459526 C0.136809825,13.8581261 0.448059266,14.1693755 0.846659316,14.271171 C1.24525937,14.3729665 1.66763681,14.2490724 1.94809268,13.9480927 L7.15309268,8.74459268 L12.3580927,13.9495927 C12.7997192,14.375733 13.5013893,14.3693071 13.9351371,13.93515 C14.368885,13.500993 14.3746493,12.7993172 13.9480927,12.3580927 L8.74459268,7.15309268 Z" id="glyphShape-delete"></path>
+                    </g>
+                </g>
+                <g id="icon-pin-default" transform="translate(258.000000, 2.000000)" fill="#B4B4B4">
+                    <g id="glyphShape-pin-link">
+                        <path d="M21.0602235,18.9392235 L16.1207235,13.9997235 L19.5602235,10.5602235 C20.1457964,9.97447373 20.1457964,9.02497329 19.5602235,8.43922351 C18.3214743,7.19329279 16.6356582,6.49487551 14.8787235,6.49972351 L14.6207235,6.49972351 C12.6212434,6.49889574 11.0005513,4.87820361 10.9997235,2.87872351 L10.9997235,1.99972351 C10.999594,1.39312966 10.6341323,0.846322434 10.0737053,0.614206542 C9.51327843,0.38209065 8.86821489,0.510361636 8.43922351,0.939223509 L0.939223509,8.43922351 C0.510361636,8.86821489 0.38209065,9.51327843 0.614206542,10.0737053 C0.846322434,10.6341323 1.39312966,10.999594 1.99972351,10.9997235 L2.87872351,10.9997235 C4.87820361,11.0005513 6.49889574,12.6212434 6.49972351,14.6207235 L6.49972351,14.8742235 C6.4271772,16.6769781 7.16247236,18.4181482 8.50522351,19.6232235 C9.0991645,20.1487898 9.99959214,20.1211854 10.5602235,19.5602235 L13.9997235,16.1207235 L18.9392235,21.0602235 C19.5277918,21.6286818 20.4633507,21.6205521 21.0419514,21.0419514 C21.6205521,20.4633507 21.6286818,19.5277918 21.0602235,18.9392235 Z M9.69322351,16.1837235 C9.55691479,15.7608895 9.49153122,15.3184099 9.49972351,14.8742235 L9.49972351,14.6207235 C9.50463372,12.8640717 8.80682056,11.17841 7.56172351,9.93922351 C6.89356311,9.26903844 6.08949822,8.7498744 5.20372351,8.41672351 L8.41822351,5.20372351 C8.75009692,6.08898872 9.26828926,6.89262165 9.93772351,7.56022351 C11.1768387,8.80652462 12.8632693,9.50497268 14.6207235,9.49972351 L14.8787235,9.49972351 C15.313005,9.49837795 15.7439466,9.5756222 16.1507235,9.72772351 L9.69322351,16.1837235 Z" id="Shape"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
 </svg>

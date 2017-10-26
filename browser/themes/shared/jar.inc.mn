@@ -185,11 +185,9 @@
 
   skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
   skin/classic/browser/badge-add-engine@2x.png                 (../shared/search/badge-add-engine@2x.png)
-  skin/classic/browser/search-arrow-go.svg                     (../shared/search/search-arrow-go.svg)
   skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
   skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
   skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)
-  skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
 
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
