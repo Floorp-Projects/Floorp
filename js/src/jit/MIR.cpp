@@ -6193,6 +6193,14 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
         return BarrierKind::TypeSet;
     }
 
+    if (!name && IsTypedArrayClass(key->clasp())) {
+        Scalar::Type arrayType = Scalar::Type(key->clasp() - &TypedArrayObject::classes[0]);
+        MIRType type = MIRTypeForTypedArrayRead(arrayType, true);
+        if (observed->mightBeMIRType(type))
+            return BarrierKind::NoBarrier;
+        return BarrierKind::TypeSet;
+    }
+
     jsid id = name ? NameToId(name) : JSID_VOID;
     HeapTypeSetKey property = key->property(id);
     if (property.maybeTypes()) {
