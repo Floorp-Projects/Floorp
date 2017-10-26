@@ -128,10 +128,14 @@ const CONTENT = {
           return Services.prefs.getBoolPref("services.sync.engine.creditcards");
         },
         get label() {
-          // Only set the label when sync account is set and credit card sync is disabled,
+          // Only set the label when the fallowing conditions existed:
+          // - sync account is set
+          // - credit card sync is disabled
+          // - credit card sync is available
           // otherwise return null label to hide checkbox.
           return Services.prefs.prefHasUserValue("services.sync.username") &&
-            !Services.prefs.getBoolPref("services.sync.engine.creditcards") ?
+            !Services.prefs.getBoolPref("services.sync.engine.creditcards") &&
+            Services.prefs.getBoolPref("services.sync.engine.creditcards.available") ?
             GetStringFromName("creditCardsSyncCheckbox") : null;
         },
         callback(event) {

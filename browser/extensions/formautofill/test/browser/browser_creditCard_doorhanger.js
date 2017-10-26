@@ -163,10 +163,47 @@ add_task(async function test_submit_creditCard_saved_with_mp_enabled_but_cancele
   LoginTestUtils.masterPassword.disable();
 });
 
+add_task(async function test_submit_creditCard_unavailable_with_sync_account() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      [SYNC_USERNAME_PREF, "foo@bar.com"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab({gBrowser, url: CREDITCARD_FORM_URL},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      is(SpecialPowers.getBoolPref(SYNC_CREDITCARDS_AVAILABLE_PREF), false,
+         "creditCards sync should be unavailable by default");
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 2");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput("1234123412341234");
+
+        // Wait 500ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 500));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let cb = getDoorhangerCheckbox();
+      ok(cb.hidden, "Sync checkbox should be hidden");
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+});
+
 add_task(async function test_submit_creditCard_with_sync_account() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       [SYNC_USERNAME_PREF, "foo@bar.com"],
+      [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
     ],
   });
 
@@ -222,6 +259,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
     "set": [
       [SYNC_CREDITCARDS_PREF, true],
       [SYNC_USERNAME_PREF, "foo@bar.com"],
+      [SYNC_CREDITCARDS_AVAILABLE_PREF, true],
     ],
   });
 
