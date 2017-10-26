@@ -102,8 +102,9 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let info = FormAutofillContent.getInputDetails(focusedInput);
     let isAddressField = FormAutofillUtils.isAddressField(info.fieldName);
     let handler = FormAutofillContent.getFormHandler(focusedInput);
-    let allFieldNames = handler.allFieldNames;
-    let filledRecordGUID = isAddressField ? handler.address.filledRecordGUID : handler.creditCard.filledRecordGUID;
+    let section = handler.getSectionByElement(focusedInput);
+    let allFieldNames = section.allFieldNames;
+    let filledRecordGUID = isAddressField ? section.address.filledRecordGUID : section.creditCard.filledRecordGUID;
     let searchPermitted = isAddressField ?
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
@@ -149,7 +150,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       // Sort addresses by timeLastUsed for showing the lastest used address at top.
       records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
-      let adaptedRecords = handler.getAdaptedProfiles(records);
+      let adaptedRecords = handler.getAdaptedProfiles(records, focusedInput);
       let result = null;
       if (isAddressField) {
         result = new AddressResult(searchString,
@@ -481,7 +482,7 @@ var FormAutofillContent = {
 
   getAllFieldNames(element) {
     let formHandler = this.getFormHandler(element);
-    return formHandler ? formHandler.allFieldNames : null;
+    return formHandler ? formHandler.getAllFieldNames(element) : null;
   },
 
   identifyAutofillFields(element) {
