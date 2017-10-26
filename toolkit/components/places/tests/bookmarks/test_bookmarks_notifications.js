@@ -230,12 +230,39 @@ add_task(async function remove_bookmark() {
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   let observer = expectNotifications();
-  bm = await PlacesUtils.bookmarks.remove(bm.guid);
+  await PlacesUtils.bookmarks.remove(bm.guid);
   // TODO (Bug 653910): onItemAnnotationRemoved notified even if there were no
   // annotations.
   observer.check([ { name: "onItemRemoved",
                      arguments: [ itemId, parentId, bm.index, bm.type, bm.url,
                                   bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                 ]);
+});
+
+add_task(async function remove_multiple_bookmarks() {
+  let bm1 = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://remove.example.com/" });
+  let bm2 = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                 url: "http://remove1.example.com/" });
+  let itemId1 = await PlacesUtils.promiseItemId(bm1.guid);
+  let parentId1 = await PlacesUtils.promiseItemId(bm1.parentGuid);
+  let itemId2 = await PlacesUtils.promiseItemId(bm2.guid);
+  let parentId2 = await PlacesUtils.promiseItemId(bm2.parentGuid);
+
+  let observer = expectNotifications();
+  await PlacesUtils.bookmarks.remove([bm1, bm2]);
+  // TODO (Bug 653910): onItemAnnotationRemoved notified even if there were no
+  // annotations.
+  observer.check([ { name: "onItemRemoved",
+                     arguments: [ itemId1, parentId1, bm1.index, bm1.type, bm1.url,
+                                  bm1.guid, bm1.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                   { name: "onItemRemoved",
+                     arguments: [ itemId2, parentId2, bm2.index, bm2.type, bm2.url,
+                                  bm2.guid, bm2.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 });
@@ -247,7 +274,7 @@ add_task(async function remove_folder() {
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   let observer = expectNotifications();
-  bm = await PlacesUtils.bookmarks.remove(bm.guid);
+  await PlacesUtils.bookmarks.remove(bm.guid);
   observer.check([ { name: "onItemRemoved",
                      arguments: [ itemId, parentId, bm.index, bm.type, null,
                                   bm.guid, bm.parentGuid,
