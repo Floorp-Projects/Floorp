@@ -185,9 +185,20 @@ public:
   nsresult SetCSSBackgroundColor(const nsAString& aColor);
   nsresult SetHTMLBackgroundColor(const nsAString& aColor);
 
-  // Block methods moved from EditorBase
-  static Element* GetBlockNodeParent(nsINode* aNode);
-  static Element* GetBlock(nsINode& aNode);
+  /**
+   * GetBlockNodeParent() returns parent or nearest ancestor of aNode if
+   * there is a block parent.  If aAncestorLimiter is not nullptr,
+   * this stops looking for the result.
+   */
+  static Element* GetBlockNodeParent(nsINode* aNode,
+                                     nsINode* aAncestorLimiter = nullptr);
+  /**
+   * GetBlock() returns aNode itself, or parent or nearest ancestor of aNode
+   * if there is a block parent.  If aAncestorLimiter is not nullptr,
+   * this stops looking for the result.
+   */
+  static Element* GetBlock(nsINode& aNode,
+                           nsINode* aAncestorLimiter = nullptr);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
