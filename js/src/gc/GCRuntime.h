@@ -909,8 +909,6 @@ class GCRuntime
 
     bool fullGCForAtomsRequested() const { return fullGCForAtomsRequested_; }
 
-    bool shouldSweepAtomsZone() { return shouldSweepAtomsZone_; }
-
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes);
 
@@ -1302,9 +1300,6 @@ class GCRuntime
 
     /* Whether observed type information is being released in the current GC. */
     ActiveThreadData<bool> releaseObservedTypes;
-
-    /* Whether the atoms table will be swept. */
-    ActiveThreadOrGCTaskData<bool> shouldSweepAtomsZone_;
 
     /* Singly linked list of zones to be swept in the background. */
     ActiveThreadOrGCTaskData<ZoneList> backgroundSweepZones;
