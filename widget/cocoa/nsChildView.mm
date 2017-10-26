@@ -2100,14 +2100,6 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
       titlebarCGContextDataLength
     );
 
-    if (mTitlebarImageKey &&
-        mTitlebarImageSize != size) {
-      // Delete wr::ImageKey. wr::ImageKey does not support size change.
-      // TODO: that's not true anymore! (size change is now supported).
-      CleanupWebRenderWindowOverlay(aWrBridge, aResources);
-      MOZ_ASSERT(mTitlebarImageKey.isNothing());
-    }
-
     if (!mTitlebarImageKey) {
       mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
       wr::ImageDescriptor descriptor(size, stride, format);
@@ -2124,16 +2116,6 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
     aBuilder.PushImage(wr::LayoutRect{ rect.origin, { float(size.width), float(size.height) } },
                        rect, true, wr::ImageRendering::Auto, *mTitlebarImageKey);
-  }
-}
-
-void
-nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge,
-                                           wr::IpcResourceUpdateQueue& aResources)
-{
-  if (mTitlebarImageKey) {
-    aResources.DeleteImage(*mTitlebarImageKey);
-    mTitlebarImageKey = Nothing();
   }
 }
 
