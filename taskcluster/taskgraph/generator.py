@@ -291,6 +291,9 @@ class TaskGraphGenerator(object):
         return self._run_results[name]
 
     def verify_parameters(self, parameters):
+        if not parameters.strict:
+            return
+
         parameters_dict = dict(**parameters)
         verify_docs(
             filename="parameters.rst",

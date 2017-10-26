@@ -10778,10 +10778,12 @@ nsIFrame::GetPseudoElement(CSSPseudoElementType aType)
 }
 
 static bool
-IsFrameScrolledOutOfView(nsIFrame *aFrame)
+IsFrameScrolledOutOfView(nsIFrame* aTarget,
+                         const nsRect& aTargetRect,
+                         nsIFrame* aParent)
 {
   nsIScrollableFrame* scrollableFrame =
-    nsLayoutUtils::GetNearestScrollableFrame(aFrame,
+    nsLayoutUtils::GetNearestScrollableFrame(aParent,
       nsLayoutUtils::SCROLLABLE_SAME_DOC |
       nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (!scrollableFrame) {
@@ -10789,11 +10791,10 @@ IsFrameScrolledOutOfView(nsIFrame *aFrame)
   }
 
   nsIFrame *scrollableParent = do_QueryFrame(scrollableFrame);
-  nsRect rect = aFrame->GetVisualOverflowRectRelativeToSelf();
 
   nsRect transformedRect =
-    nsLayoutUtils::TransformFrameRectToAncestor(aFrame,
-                                                rect,
+    nsLayoutUtils::TransformFrameRectToAncestor(aTarget,
+                                                aTargetRect,
                                                 scrollableParent);
 
   nsRect scrollableRect = scrollableParent->GetVisualOverflowRect();
@@ -10815,13 +10816,14 @@ IsFrameScrolledOutOfView(nsIFrame *aFrame)
     return false;
   }
 
-  return IsFrameScrolledOutOfView(parent);
+  return IsFrameScrolledOutOfView(aTarget, aTargetRect, parent);
 }
 
 bool
 nsIFrame::IsScrolledOutOfView()
 {
-  return IsFrameScrolledOutOfView(this);
+  nsRect rect = GetVisualOverflowRectRelativeToSelf();
+  return IsFrameScrolledOutOfView(this, rect, this);
 }
 
 gfx::Matrix

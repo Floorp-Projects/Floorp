@@ -7,22 +7,22 @@
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-location-styleeditor-link.html";
 
-add_task(function* () {
-  yield pushPref("devtools.webconsole.filter.css", true);
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function () {
+  await pushPref("devtools.webconsole.filter.css", true);
+  let hud = await openNewTabAndConsole(TEST_URI);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
 
-  yield testViewSource(hud, toolbox, "\u2018font-weight\u2019");
+  await testViewSource(hud, toolbox, "\u2018font-weight\u2019");
 
   info("Selecting the console again");
-  yield toolbox.selectTool("webconsole");
-  yield testViewSource(hud, toolbox, "\u2018color\u2019");
+  await toolbox.selectTool("webconsole");
+  await testViewSource(hud, toolbox, "\u2018color\u2019");
 });
 
-function* testViewSource(hud, toolbox, text) {
+async function testViewSource(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
-  let messageNode = yield waitFor(() => findMessage(hud, text));
+  let messageNode = await waitFor(() => findMessage(hud, text));
   let frameLinkNode = messageNode.querySelector(".message-location .frame-link");
   ok(frameLinkNode, "The message does have a location link");
 
@@ -35,10 +35,10 @@ function* testViewSource(hud, toolbox, text) {
   EventUtils.sendMouseEvent({ type: "click" },
     messageNode.querySelector(".frame-link-filename"));
 
-  let panel = yield onStyleEditorSelected;
+  let panel = await onStyleEditorSelected;
   ok(true, "The style editor is selected when clicking on the location element");
 
-  yield onStyleEditorReady(panel);
+  await onStyleEditorReady(panel);
 
   info("style editor window focused");
   let href = frameLinkNode.getAttribute("data-url");
@@ -47,10 +47,10 @@ function* testViewSource(hud, toolbox, text) {
 
   let editor = getEditorForHref(panel.UI, href);
   ok(editor, "found style editor for " + href);
-  yield performLineCheck(panel.UI, editor, line - 1);
+  await performLineCheck(panel.UI, editor, line - 1);
 }
 
-function* onStyleEditorReady(panel) {
+async function onStyleEditorReady(panel) {
   let win = panel.panelWindow;
   ok(win, "Style Editor Window is defined");
   ok(panel.UI, "Style Editor UI is defined");
@@ -74,10 +74,10 @@ function getEditorForHref(styleEditorUI, href) {
   return foundEditor;
 }
 
-function* performLineCheck(styleEditorUI, editor, line) {
+async function performLineCheck(styleEditorUI, editor, line) {
   info("wait for source editor to load");
   // Get out of the styleeditor-selected event loop.
-  yield waitForTick();
+  await waitForTick();
 
   is(editor.sourceEditor.getCursor().line, line,
      "correct line is selected");

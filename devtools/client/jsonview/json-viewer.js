@@ -10,8 +10,11 @@ define(function (require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { MainTabbedArea } = createFactories(require("./components/MainTabbedArea"));
+  const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 
   const json = document.getElementById("json");
+  const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
+  const AUTO_EXPAND_MAX_LEVEL = 7;
 
   let prettyURL;
 
@@ -33,6 +36,16 @@ define(function (require, exports, module) {
     input.json = JSON.parse(input.jsonText);
   } catch (err) {
     input.json = err;
+  }
+
+  // Expand the document by default if its size isn't bigger than 100KB.
+  if (!(input.json instanceof Error) && input.jsonText.length <= AUTO_EXPAND_MAX_SIZE) {
+    input.expandedNodes = TreeViewClass.getExpandedNodes(
+      input.json,
+      {maxLevel: AUTO_EXPAND_MAX_LEVEL}
+    );
+  } else {
+    input.expandedNodes = new Set();
   }
 
   json.remove();

@@ -9,9 +9,9 @@
 #include "MediaResource.h"
 
 namespace mp4_demuxer {
-class ByteReader;
+class BufferReader;
 }
-using mp4_demuxer::ByteReader;
+using mp4_demuxer::BufferReader;
 
 namespace mozilla {
 
@@ -56,7 +56,7 @@ private:
 public:
   const RIFFHeader& RiffHeader() const;
 
-  uint32_t Parse(ByteReader& aReader);
+  Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 
@@ -90,7 +90,7 @@ private:
 public:
   const ChunkHeader& GiveHeader() const;
 
-  uint32_t Parse(ByteReader& aReader);
+  Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 
@@ -126,7 +126,7 @@ private:
 public:
   const FormatChunk& FmtChunk() const;
 
-  uint32_t Parse(ByteReader& aReader);
+  Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 

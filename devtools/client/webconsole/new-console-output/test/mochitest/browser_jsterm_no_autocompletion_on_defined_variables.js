@@ -10,8 +10,8 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html";
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
   testCompletion(hud);
 });
 

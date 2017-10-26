@@ -86,9 +86,9 @@ RefPtr<ShutdownPromise>
 VPXDecoder::Shutdown()
 {
   RefPtr<VPXDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    vpx_codec_destroy(&mVPX);
-    vpx_codec_destroy(&mVPXAlpha);
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    vpx_codec_destroy(&self->mVPX);
+    vpx_codec_destroy(&self->mVPXAlpha);
     return ShutdownPromise::CreateAndResolve(true, __func__);
   });
 }

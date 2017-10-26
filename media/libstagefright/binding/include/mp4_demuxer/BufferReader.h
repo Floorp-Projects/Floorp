@@ -192,12 +192,12 @@ public:
     return *ptr;
   }
 
-  uint16_t PeekU16() const
+  mozilla::Result<uint16_t, nsresult> PeekU16() const
   {
     auto ptr = Peek(2);
     if (!ptr) {
       NS_WARNING("Failed to peek data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint16(ptr);
   }
@@ -217,12 +217,12 @@ public:
     return (uint32_t)PeekU24();
   }
 
-  uint32_t PeekU32() const
+  mozilla::Result<uint32_t, nsresult> PeekU32()
   {
     auto ptr = Peek(4);
     if (!ptr) {
       NS_WARNING("Failed to peek data");
-      return 0;
+      return mozilla::Err(NS_ERROR_FAILURE);
     }
     return mozilla::BigEndian::readUint32(ptr);
   }
