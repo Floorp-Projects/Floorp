@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var canvasA = document.createElement('canvas');
+    var ctxA = (canvasA.getContext('2d'));
+
+    var canvasB = document.createElement('canvas');
+    var ctxB = (canvasB.getContext('2d'));
+
+    var canvasC = document.createElement('canvas');
+    var ctxC = (canvasC.getContext('2d'));
+
+    var canvasD = document.createElement('canvas');
+    document.body.appendChild(canvasD);
+    var ctxD = (canvasD.getContext('2d'));
+
+    ctxB.setTransform(0.11269837969744075, 0.5254615427752635, 0.2, 4, 0.8446743569440848, 0.144);
+    ctxB.strokeText("DDDD",2,16);
+
+    ctxC.setTransform(8,0.10555935723370857,-2,0.35743616669379086,8,0.6599638731358489);
+    ctxC.strokeText("CCCC",0.309,0.7226920560287992);
+
+    ctxD.setTransform(-6, -0.40335219665508537, -32, -16, 8, 0.06330341125449711);
+    ctxD.fillText("AAAAAAAA",0.749783522856837,3);
+
+    setTimeout(function() {
+
+        canvasC.height = 400;
+
+        setTimeout(function() {
+
+            ctxA.setTransform(-0.2578973174095154, 0, 8, -41.83665466308594, 4.02983283996582, 1041.4510498046875);
+            ctxA.fillText("AA",16,0.417);
+
+            ctxC.setTransform(0.22722245734818802, 0.04656468332897981, 8, 8, 2, 256);
+            ctxC.strokeText("QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ",2048,-0.903);
+
+        }, 0);
+
+    }, 0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
