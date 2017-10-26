@@ -159,7 +159,6 @@ class ProgressListenerWrapper {
       this.addBrowserProgressListener(event.originalTarget);
     }
   }
-
 }
 
 class WindowTracker extends WindowTrackerBase {
