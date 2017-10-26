@@ -116,6 +116,10 @@ class Repository(object):
     def head_ref(self):
         """Hash of HEAD revision."""
 
+    @abc.abstractproperty
+    def base_ref(self):
+        """Hash of revision the current topic branch is based on."""
+
     @abc.abstractmethod
     def sparse_checkout_present(self):
         """Whether the working directory is using a sparse checkout.
@@ -211,6 +215,10 @@ class HgRepository(Repository):
     @property
     def head_ref(self):
         return self._run('log', '-r', '.', '-T', '{node}')
+
+    @property
+    def base_ref(self):
+        return self._run('log', '-r', 'last(ancestors(.) and public())', '-T', '{node}')
 
     def __enter__(self):
         if self._client.server is None:
@@ -323,7 +331,16 @@ class GitRepository(Repository):
 
     @property
     def head_ref(self):
-        return self._run('rev-parse', 'HEAD')
+        return self._run('rev-parse', 'HEAD').strip()
+
+    @property
+    def base_ref(self):
+        refs = self._run('for-each-ref', 'refs/heads', 'refs/remotes',
+                         '--format=%(objectname)').splitlines()
+        head = self.head_ref
+        if head in refs:
+            refs.remove(head)
+        return self._run('merge-base', 'HEAD', *refs).strip()
 
     def sparse_checkout_present(self):
         # Not yet implemented.
