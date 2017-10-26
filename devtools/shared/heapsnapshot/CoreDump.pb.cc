@@ -11,10 +11,7 @@
 #include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/wire_format_lite_inl.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/generated_message_reflection.h>
-#include <google/protobuf/reflection_ops.h>
-#include <google/protobuf/wire_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 // @@protoc_insertion_point(includes)
 
 namespace mozilla {
@@ -62,13 +59,6 @@ public:
 
 namespace protobuf_CoreDump_2eproto {
 
-
-namespace {
-
-::google::protobuf::Metadata file_level_metadata[5];
-
-}  // namespace
-
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTableField
     const TableStruct::entries[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   {0, 0, 0, ::google::protobuf::internal::kInvalidMask, 0, 0},
@@ -87,132 +77,6 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
 };
 
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Metadata, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Metadata, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Metadata, timestamp_),
-  0,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, _internal_metadata_),
-  ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, _oneof_case_[0]),
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, parent_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, line_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, column_),
-  offsetof(StackFrame_DataDefaultTypeInternal, source_),
-  offsetof(StackFrame_DataDefaultTypeInternal, sourceref_),
-  offsetof(StackFrame_DataDefaultTypeInternal, functiondisplayname_),
-  offsetof(StackFrame_DataDefaultTypeInternal, functiondisplaynameref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, issystem_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, isselfhosted_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, SourceOrRef_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame_Data, FunctionDisplayNameOrRef_),
-  1,
-  0,
-  2,
-  3,
-  ~0u,
-  ~0u,
-  ~0u,
-  ~0u,
-  4,
-  5,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame, _internal_metadata_),
-  ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame, _oneof_case_[0]),
-  ~0u,  // no _weak_field_map_
-  offsetof(StackFrameDefaultTypeInternal, data_),
-  offsetof(StackFrameDefaultTypeInternal, ref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StackFrame, StackFrameType_),
-  ~0u,
-  ~0u,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, _internal_metadata_),
-  ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, _oneof_case_[0]),
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, id_),
-  offsetof(NodeDefaultTypeInternal, typename__),
-  offsetof(NodeDefaultTypeInternal, typenameref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, size_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, edges_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, allocationstack_),
-  offsetof(NodeDefaultTypeInternal, jsobjectclassname_),
-  offsetof(NodeDefaultTypeInternal, jsobjectclassnameref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, coarsetype_),
-  offsetof(NodeDefaultTypeInternal, scriptfilename_),
-  offsetof(NodeDefaultTypeInternal, scriptfilenameref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, TypeNameOrRef_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, JSObjectClassNameOrRef_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, ScriptFilenameOrRef_),
-  1,
-  ~0u,
-  ~0u,
-  2,
-  ~0u,
-  0,
-  ~0u,
-  ~0u,
-  3,
-  ~0u,
-  ~0u,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Edge, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Edge, _internal_metadata_),
-  ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Edge, _oneof_case_[0]),
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Edge, referent_),
-  offsetof(EdgeDefaultTypeInternal, name_),
-  offsetof(EdgeDefaultTypeInternal, nameref_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Edge, EdgeNameOrRef_),
-  0,
-  ~0u,
-  ~0u,
-};
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, 6, sizeof(Metadata)},
-  { 7, 24, sizeof(StackFrame_Data)},
-  { 34, 42, sizeof(StackFrame)},
-  { 44, 63, sizeof(Node)},
-  { 74, 83, sizeof(Edge)},
-};
-
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&_Metadata_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&_StackFrame_Data_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&_StackFrame_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&_Node_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&_Edge_default_instance_),
-};
-
-namespace {
-
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  ::google::protobuf::MessageFactory* factory = NULL;
-  AssignDescriptors(
-      "CoreDump.proto", schemas, file_default_instances, TableStruct::offsets, factory,
-      file_level_metadata, NULL, NULL);
-}
-
-void protobuf_AssignDescriptorsOnce() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 5);
-}
-
-}  // namespace
 void TableStruct::InitDefaultsImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -229,29 +93,8 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_Edge_default_instance_);_StackFrame_Data_default_instance_._instance.get_mutable()->parent_ = const_cast< ::mozilla::devtools::protobuf::StackFrame*>(
       ::mozilla::devtools::protobuf::StackFrame::internal_default_instance());
-  _StackFrame_Data_default_instance_.source_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _StackFrame_Data_default_instance_.sourceref_ = GOOGLE_ULONGLONG(0);
-  _StackFrame_Data_default_instance_.functiondisplayname_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _StackFrame_Data_default_instance_.functiondisplaynameref_ = GOOGLE_ULONGLONG(0);
-  _StackFrame_default_instance_.data_ = const_cast< ::mozilla::devtools::protobuf::StackFrame_Data*>(
-      ::mozilla::devtools::protobuf::StackFrame_Data::internal_default_instance());
-  _StackFrame_default_instance_.ref_ = GOOGLE_ULONGLONG(0);
-  _Node_default_instance_.typename__.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _Node_default_instance_.typenameref_ = GOOGLE_ULONGLONG(0);
   _Node_default_instance_._instance.get_mutable()->allocationstack_ = const_cast< ::mozilla::devtools::protobuf::StackFrame*>(
       ::mozilla::devtools::protobuf::StackFrame::internal_default_instance());
-  _Node_default_instance_.jsobjectclassname_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _Node_default_instance_.jsobjectclassnameref_ = GOOGLE_ULONGLONG(0);
-  _Node_default_instance_.scriptfilename_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _Node_default_instance_.scriptfilenameref_ = GOOGLE_ULONGLONG(0);
-  _Edge_default_instance_.name_.UnsafeSetDefault(
-      &::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _Edge_default_instance_.nameref_ = GOOGLE_ULONGLONG(0);
 }
 
 void InitDefaults() {
@@ -261,36 +104,6 @@ void InitDefaults() {
 namespace {
 void AddDescriptorsImpl() {
   InitDefaults();
-  static const char descriptor[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\016CoreDump.proto\022\031mozilla.devtools.proto"
-      "buf\"\035\n\010Metadata\022\021\n\ttimeStamp\030\001 \001(\004\"\216\003\n\nS"
-      "tackFrame\022:\n\004data\030\001 \001(\0132*.mozilla.devtoo"
-      "ls.protobuf.StackFrame.DataH\000\022\r\n\003ref\030\002 \001"
-      "(\004H\000\032\242\002\n\004Data\022\n\n\002id\030\001 \001(\004\0225\n\006parent\030\002 \001("
-      "\0132%.mozilla.devtools.protobuf.StackFrame"
-      "\022\014\n\004line\030\003 \001(\r\022\016\n\006column\030\004 \001(\r\022\020\n\006source"
-      "\030\005 \001(\014H\000\022\023\n\tsourceRef\030\006 \001(\004H\000\022\035\n\023functio"
-      "nDisplayName\030\007 \001(\014H\001\022 \n\026functionDisplayN"
-      "ameRef\030\010 \001(\004H\001\022\020\n\010isSystem\030\t \001(\010\022\024\n\014isSe"
-      "lfHosted\030\n \001(\010B\r\n\013SourceOrRefB\032\n\030Functio"
-      "nDisplayNameOrRefB\020\n\016StackFrameType\"\210\003\n\004"
-      "Node\022\n\n\002id\030\001 \001(\004\022\022\n\010typeName\030\002 \001(\014H\000\022\025\n\013"
-      "typeNameRef\030\003 \001(\004H\000\022\014\n\004size\030\004 \001(\004\022.\n\005edg"
-      "es\030\005 \003(\0132\037.mozilla.devtools.protobuf.Edg"
-      "e\022>\n\017allocationStack\030\006 \001(\0132%.mozilla.dev"
-      "tools.protobuf.StackFrame\022\033\n\021jsObjectCla"
-      "ssName\030\007 \001(\014H\001\022\036\n\024jsObjectClassNameRef\030\010"
-      " \001(\004H\001\022\025\n\ncoarseType\030\t \001(\r:\0010\022\030\n\016scriptF"
-      "ilename\030\n \001(\014H\002\022\033\n\021scriptFilenameRef\030\013 \001"
-      "(\004H\002B\017\n\rTypeNameOrRefB\030\n\026JSObjectClassNa"
-      "meOrRefB\025\n\023ScriptFilenameOrRef\"L\n\004Edge\022\020"
-      "\n\010referent\030\001 \001(\004\022\016\n\004name\030\002 \001(\014H\000\022\021\n\007name"
-      "Ref\030\003 \001(\004H\000B\017\n\rEdgeNameOrRef"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 948);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "CoreDump.proto", &protobuf_RegisterTypes);
 }
 } // anonymous namespace
 
@@ -298,12 +111,6 @@ void AddDescriptors() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
   ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
 }
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
 
 }  // namespace protobuf_CoreDump_2eproto
 
@@ -315,7 +122,7 @@ const int Metadata::kTimeStampFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Metadata::Metadata()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_CoreDump_2eproto::InitDefaults();
   }
@@ -323,7 +130,7 @@ Metadata::Metadata()
   // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Metadata)
 }
 Metadata::Metadata(const Metadata& from)
-  : ::google::protobuf::Message(),
+  : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
@@ -350,11 +157,6 @@ void Metadata::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* Metadata::descriptor() {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Metadata& Metadata::default_instance() {
   protobuf_CoreDump_2eproto::InitDefaults();
   return *internal_default_instance();
@@ -383,6 +185,12 @@ bool Metadata::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:mozilla.devtools.protobuf.Metadata)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
@@ -408,8 +216,8 @@ bool Metadata::MergePartialFromCodedStream(
         if (tag == 0) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
         break;
       }
     }
@@ -435,43 +243,17 @@ void Metadata::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->timestamp(), output);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:mozilla.devtools.protobuf.Metadata)
-}
-
-::google::protobuf::uint8* Metadata::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Metadata)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional uint64 timeStamp = 1;
-  if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->timestamp(), target);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Metadata)
-  return target;
 }
 
 size_t Metadata::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Metadata)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  total_size += _internal_metadata_.unknown_fields().size();
+
   // optional uint64 timeStamp = 1;
   if (has_timestamp()) {
     total_size += 1 +
@@ -486,19 +268,9 @@ size_t Metadata::ByteSizeLong() const {
   return total_size;
 }
 
-void Metadata::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:mozilla.devtools.protobuf.Metadata)
-  GOOGLE_DCHECK_NE(&from, this);
-  const Metadata* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Metadata>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:mozilla.devtools.protobuf.Metadata)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:mozilla.devtools.protobuf.Metadata)
-    MergeFrom(*source);
-  }
+void Metadata::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const Metadata*>(&from));
 }
 
 void Metadata::MergeFrom(const Metadata& from) {
@@ -511,13 +283,6 @@ void Metadata::MergeFrom(const Metadata& from) {
   if (from.has_timestamp()) {
     set_timestamp(from.timestamp());
   }
-}
-
-void Metadata::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:mozilla.devtools.protobuf.Metadata)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void Metadata::CopyFrom(const Metadata& from) {
@@ -543,9 +308,8 @@ void Metadata::InternalSwap(Metadata* other) {
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata Metadata::GetMetadata() const {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages];
+::std::string Metadata::GetTypeName() const {
+  return "mozilla.devtools.protobuf.Metadata";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -593,7 +357,7 @@ const int StackFrame_Data::kIsSelfHostedFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 StackFrame_Data::StackFrame_Data()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_CoreDump_2eproto::InitDefaults();
   }
@@ -601,7 +365,7 @@ StackFrame_Data::StackFrame_Data()
   // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.StackFrame.Data)
 }
 StackFrame_Data::StackFrame_Data(const StackFrame_Data& from)
-  : ::google::protobuf::Message(),
+  : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
@@ -674,11 +438,6 @@ void StackFrame_Data::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* StackFrame_Data::descriptor() {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const StackFrame_Data& StackFrame_Data::default_instance() {
   protobuf_CoreDump_2eproto::InitDefaults();
   return *internal_default_instance();
@@ -755,6 +514,12 @@ bool StackFrame_Data::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:mozilla.devtools.protobuf.StackFrame.Data)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
@@ -902,8 +667,8 @@ bool StackFrame_Data::MergePartialFromCodedStream(
         if (tag == 0) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
         break;
       }
     }
@@ -931,7 +696,7 @@ void StackFrame_Data::SerializeWithCachedSizes(
 
   // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
   if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->parent_, output);
   }
 
@@ -975,92 +740,17 @@ void StackFrame_Data::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->isselfhosted(), output);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:mozilla.devtools.protobuf.StackFrame.Data)
-}
-
-::google::protobuf::uint8* StackFrame_Data::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.StackFrame.Data)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional uint64 id = 1;
-  if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->id(), target);
-  }
-
-  // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
-  if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        2, *this->parent_, deterministic, target);
-  }
-
-  // optional uint32 line = 3;
-  if (cached_has_bits & 0x00000004u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(3, this->line(), target);
-  }
-
-  // optional uint32 column = 4;
-  if (cached_has_bits & 0x00000008u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->column(), target);
-  }
-
-  switch (SourceOrRef_case()) {
-    case kSource:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          5, this->source(), target);
-      break;
-    case kSourceRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(6, this->sourceref(), target);
-      break;
-    default: ;
-  }
-  switch (FunctionDisplayNameOrRef_case()) {
-    case kFunctionDisplayName:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          7, this->functiondisplayname(), target);
-      break;
-    case kFunctionDisplayNameRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->functiondisplaynameref(), target);
-      break;
-    default: ;
-  }
-  // optional bool isSystem = 9;
-  if (cached_has_bits & 0x00000010u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(9, this->issystem(), target);
-  }
-
-  // optional bool isSelfHosted = 10;
-  if (cached_has_bits & 0x00000020u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->isselfhosted(), target);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.StackFrame.Data)
-  return target;
 }
 
 size_t StackFrame_Data::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.StackFrame.Data)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  total_size += _internal_metadata_.unknown_fields().size();
+
   if (_has_bits_[0 / 32] & 63u) {
     // optional .mozilla.devtools.protobuf.StackFrame parent = 2;
     if (has_parent()) {
@@ -1146,19 +836,9 @@ size_t StackFrame_Data::ByteSizeLong() const {
   return total_size;
 }
 
-void StackFrame_Data::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:mozilla.devtools.protobuf.StackFrame.Data)
-  GOOGLE_DCHECK_NE(&from, this);
-  const StackFrame_Data* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const StackFrame_Data>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:mozilla.devtools.protobuf.StackFrame.Data)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:mozilla.devtools.protobuf.StackFrame.Data)
-    MergeFrom(*source);
-  }
+void StackFrame_Data::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const StackFrame_Data*>(&from));
 }
 
 void StackFrame_Data::MergeFrom(const StackFrame_Data& from) {
@@ -1218,13 +898,6 @@ void StackFrame_Data::MergeFrom(const StackFrame_Data& from) {
   }
 }
 
-void StackFrame_Data::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:mozilla.devtools.protobuf.StackFrame.Data)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void StackFrame_Data::CopyFrom(const StackFrame_Data& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:mozilla.devtools.protobuf.StackFrame.Data)
   if (&from == this) return;
@@ -1257,9 +930,8 @@ void StackFrame_Data::InternalSwap(StackFrame_Data* other) {
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata StackFrame_Data::GetMetadata() const {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages];
+::std::string StackFrame_Data::GetTypeName() const {
+  return "mozilla.devtools.protobuf.StackFrame.Data";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1707,7 +1379,7 @@ const int StackFrame::kRefFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 StackFrame::StackFrame()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_CoreDump_2eproto::InitDefaults();
   }
@@ -1715,7 +1387,7 @@ StackFrame::StackFrame()
   // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.StackFrame)
 }
 StackFrame::StackFrame(const StackFrame& from)
-  : ::google::protobuf::Message(),
+  : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
@@ -1758,11 +1430,6 @@ void StackFrame::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* StackFrame::descriptor() {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const StackFrame& StackFrame::default_instance() {
   protobuf_CoreDump_2eproto::InitDefaults();
   return *internal_default_instance();
@@ -1810,6 +1477,12 @@ bool StackFrame::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:mozilla.devtools.protobuf.StackFrame)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
@@ -1848,8 +1521,8 @@ bool StackFrame::MergePartialFromCodedStream(
         if (tag == 0) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
         break;
       }
     }
@@ -1871,7 +1544,7 @@ void StackFrame::SerializeWithCachedSizes(
 
   switch (StackFrameType_case()) {
     case kData:
-      ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteMessage(
         1, *StackFrameType_.data_, output);
       break;
     case kRef:
@@ -1879,48 +1552,17 @@ void StackFrame::SerializeWithCachedSizes(
       break;
     default: ;
   }
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:mozilla.devtools.protobuf.StackFrame)
-}
-
-::google::protobuf::uint8* StackFrame::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.StackFrame)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  switch (StackFrameType_case()) {
-    case kData:
-      target = ::google::protobuf::internal::WireFormatLite::
-        InternalWriteMessageNoVirtualToArray(
-          1, *StackFrameType_.data_, deterministic, target);
-      break;
-    case kRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->ref(), target);
-      break;
-    default: ;
-  }
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.StackFrame)
-  return target;
 }
 
 size_t StackFrame::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.StackFrame)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  total_size += _internal_metadata_.unknown_fields().size();
+
   switch (StackFrameType_case()) {
     // optional .mozilla.devtools.protobuf.StackFrame.Data data = 1;
     case kData: {
@@ -1947,19 +1589,9 @@ size_t StackFrame::ByteSizeLong() const {
   return total_size;
 }
 
-void StackFrame::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:mozilla.devtools.protobuf.StackFrame)
-  GOOGLE_DCHECK_NE(&from, this);
-  const StackFrame* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const StackFrame>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:mozilla.devtools.protobuf.StackFrame)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:mozilla.devtools.protobuf.StackFrame)
-    MergeFrom(*source);
-  }
+void StackFrame::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const StackFrame*>(&from));
 }
 
 void StackFrame::MergeFrom(const StackFrame& from) {
@@ -1982,13 +1614,6 @@ void StackFrame::MergeFrom(const StackFrame& from) {
       break;
     }
   }
-}
-
-void StackFrame::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:mozilla.devtools.protobuf.StackFrame)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
 }
 
 void StackFrame::CopyFrom(const StackFrame& from) {
@@ -2015,9 +1640,8 @@ void StackFrame::InternalSwap(StackFrame* other) {
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata StackFrame::GetMetadata() const {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages];
+::std::string StackFrame::GetTypeName() const {
+  return "mozilla.devtools.protobuf.StackFrame";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -2128,7 +1752,7 @@ const int Node::kScriptFilenameRefFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Node::Node()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_CoreDump_2eproto::InitDefaults();
   }
@@ -2136,7 +1760,7 @@ Node::Node()
   // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Node)
 }
 Node::Node(const Node& from)
-  : ::google::protobuf::Message(),
+  : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
       _cached_size_(0),
@@ -2228,11 +1852,6 @@ void Node::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* Node::descriptor() {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Node& Node::default_instance() {
   protobuf_CoreDump_2eproto::InitDefaults();
   return *internal_default_instance();
@@ -2329,6 +1948,12 @@ bool Node::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:mozilla.devtools.protobuf.Node)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
@@ -2487,8 +2112,8 @@ bool Node::MergePartialFromCodedStream(
         if (tag == 0) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
         break;
       }
     }
@@ -2532,13 +2157,13 @@ void Node::SerializeWithCachedSizes(
   // repeated .mozilla.devtools.protobuf.Edge edges = 5;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->edges_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, this->edges(static_cast<int>(i)), output);
   }
 
   // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 6;
   if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       6, *this->allocationstack_, output);
   }
 
@@ -2567,101 +2192,17 @@ void Node::SerializeWithCachedSizes(
       break;
     default: ;
   }
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:mozilla.devtools.protobuf.Node)
-}
-
-::google::protobuf::uint8* Node::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Node)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional uint64 id = 1;
-  if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->id(), target);
-  }
-
-  switch (TypeNameOrRef_case()) {
-    case kTypeName:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          2, this->typename_(), target);
-      break;
-    case kTypeNameRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(3, this->typenameref(), target);
-      break;
-    default: ;
-  }
-  // optional uint64 size = 4;
-  if (cached_has_bits & 0x00000004u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->size(), target);
-  }
-
-  // repeated .mozilla.devtools.protobuf.Edge edges = 5;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->edges_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        5, this->edges(static_cast<int>(i)), deterministic, target);
-  }
-
-  // optional .mozilla.devtools.protobuf.StackFrame allocationStack = 6;
-  if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageNoVirtualToArray(
-        6, *this->allocationstack_, deterministic, target);
-  }
-
-  switch (JSObjectClassNameOrRef_case()) {
-    case kJsObjectClassName:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          7, this->jsobjectclassname(), target);
-      break;
-    case kJsObjectClassNameRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->jsobjectclassnameref(), target);
-      break;
-    default: ;
-  }
-  // optional uint32 coarseType = 9 [default = 0];
-  if (cached_has_bits & 0x00000008u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(9, this->coarsetype(), target);
-  }
-
-  switch (ScriptFilenameOrRef_case()) {
-    case kScriptFilename:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          10, this->scriptfilename(), target);
-      break;
-    case kScriptFilenameRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(11, this->scriptfilenameref(), target);
-      break;
-    default: ;
-  }
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Node)
-  return target;
 }
 
 size_t Node::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Node)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  total_size += _internal_metadata_.unknown_fields().size();
+
   // repeated .mozilla.devtools.protobuf.Edge edges = 5;
   {
     unsigned int count = static_cast<unsigned int>(this->edges_size());
@@ -2767,19 +2308,9 @@ size_t Node::ByteSizeLong() const {
   return total_size;
 }
 
-void Node::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:mozilla.devtools.protobuf.Node)
-  GOOGLE_DCHECK_NE(&from, this);
-  const Node* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Node>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:mozilla.devtools.protobuf.Node)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:mozilla.devtools.protobuf.Node)
-    MergeFrom(*source);
-  }
+void Node::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const Node*>(&from));
 }
 
 void Node::MergeFrom(const Node& from) {
@@ -2847,13 +2378,6 @@ void Node::MergeFrom(const Node& from) {
   }
 }
 
-void Node::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:mozilla.devtools.protobuf.Node)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void Node::CopyFrom(const Node& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:mozilla.devtools.protobuf.Node)
   if (&from == this) return;
@@ -2887,9 +2411,8 @@ void Node::InternalSwap(Node* other) {
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata Node::GetMetadata() const {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages];
+::std::string Node::GetTypeName() const {
+  return "mozilla.devtools.protobuf.Node";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -3453,7 +2976,7 @@ const int Edge::kNameRefFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Edge::Edge()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_CoreDump_2eproto::InitDefaults();
   }
@@ -3461,7 +2984,7 @@ Edge::Edge()
   // @@protoc_insertion_point(constructor:mozilla.devtools.protobuf.Edge)
 }
 Edge::Edge(const Edge& from)
-  : ::google::protobuf::Message(),
+  : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
@@ -3506,11 +3029,6 @@ void Edge::SetCachedSize(int size) const {
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* Edge::descriptor() {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Edge& Edge::default_instance() {
   protobuf_CoreDump_2eproto::InitDefaults();
   return *internal_default_instance();
@@ -3559,6 +3077,12 @@ bool Edge::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:mozilla.devtools.protobuf.Edge)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
@@ -3611,8 +3135,8 @@ bool Edge::MergePartialFromCodedStream(
         if (tag == 0) {
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
         break;
       }
     }
@@ -3648,54 +3172,17 @@ void Edge::SerializeWithCachedSizes(
       break;
     default: ;
   }
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:mozilla.devtools.protobuf.Edge)
-}
-
-::google::protobuf::uint8* Edge::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:mozilla.devtools.protobuf.Edge)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional uint64 referent = 1;
-  if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->referent(), target);
-  }
-
-  switch (EdgeNameOrRef_case()) {
-    case kName:
-      target =
-        ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-          2, this->name(), target);
-      break;
-    case kNameRef:
-      target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(3, this->nameref(), target);
-      break;
-    default: ;
-  }
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:mozilla.devtools.protobuf.Edge)
-  return target;
 }
 
 size_t Edge::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:mozilla.devtools.protobuf.Edge)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  total_size += _internal_metadata_.unknown_fields().size();
+
   // optional uint64 referent = 1;
   if (has_referent()) {
     total_size += 1 +
@@ -3729,19 +3216,9 @@ size_t Edge::ByteSizeLong() const {
   return total_size;
 }
 
-void Edge::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:mozilla.devtools.protobuf.Edge)
-  GOOGLE_DCHECK_NE(&from, this);
-  const Edge* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Edge>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:mozilla.devtools.protobuf.Edge)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:mozilla.devtools.protobuf.Edge)
-    MergeFrom(*source);
-  }
+void Edge::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const Edge*>(&from));
 }
 
 void Edge::MergeFrom(const Edge& from) {
@@ -3769,13 +3246,6 @@ void Edge::MergeFrom(const Edge& from) {
   }
 }
 
-void Edge::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:mozilla.devtools.protobuf.Edge)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
 void Edge::CopyFrom(const Edge& from) {
 // @@protoc_insertion_point(class_specific_copy_from_start:mozilla.devtools.protobuf.Edge)
   if (&from == this) return;
@@ -3801,9 +3271,8 @@ void Edge::InternalSwap(Edge* other) {
   swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata Edge::GetMetadata() const {
-  protobuf_CoreDump_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_CoreDump_2eproto::file_level_metadata[kIndexInFileMessages];
+::std::string Edge::GetTypeName() const {
+  return "mozilla.devtools.protobuf.Edge";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
