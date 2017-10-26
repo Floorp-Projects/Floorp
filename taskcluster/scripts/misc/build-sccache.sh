@@ -1,7 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
-SCCACHE_REVISION=df04fa530d6b7d79fef8c848879d47dcc4d95b32
+# 0.2.2
+SCCACHE_REVISION=f5d7bac801a32734f4bf351edd6ae9a539424839
 
 # This script is for building sccache
 
