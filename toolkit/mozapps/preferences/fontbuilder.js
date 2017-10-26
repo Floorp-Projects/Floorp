@@ -39,17 +39,17 @@ var FontBuilder = {
     var popup = document.createElement("menupopup");
     var separator;
     if (fonts.length > 0) {
-      if (defaultFont) {
-        var bundlePreferences = document.getElementById("bundlePreferences");
-        var label = bundlePreferences.getFormattedString("labelDefaultFont", [defaultFont]);
-        var menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("label", label);
-        menuitem.setAttribute("value", ""); // Default Font has a blank value
-        popup.appendChild(menuitem);
+      var bundlePreferences = document.getElementById("bundlePreferences");
+      var defaultLabel = defaultFont ?
+        bundlePreferences.getFormattedString("labelDefaultFont", [defaultFont]) :
+        bundlePreferences.getString("labelDefaultFontUnnamed");
+      var menuitem = document.createElement("menuitem");
+      menuitem.setAttribute("label", defaultLabel);
+      menuitem.setAttribute("value", ""); // Default Font has a blank value
+      popup.appendChild(menuitem);
 
-        separator = document.createElement("menuseparator");
-        popup.appendChild(separator);
-      }
+      separator = document.createElement("menuseparator");
+      popup.appendChild(separator);
 
       for (var i = 0; i < fonts.length; ++i) {
         menuitem = document.createElement("menuitem");
