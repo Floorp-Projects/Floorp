@@ -37,6 +37,13 @@ $ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|
 
 All new decoders/muxers/encoders/... should be added in the list of dummy functions found in libavcodec/dummy_funcs.c
 otherwise linkage will fail on Windows. On other platforms they are optimised out and aren't necessary.
+The GNU comm utility is a useful tool to compare and extract only the changes.
 
-To update the source tree, the files listed in FILES should typically be able to be copied as-is from ffmpeg tree.
+To update the source tree, perform a diff on the files listed in FILES.
+The diffs should typically apply to the ffvpx tree.
+e.g. something like this would do:
+Run in the ffmpeg original tree:
+$ for i in `cat $PATH_CENTRAL/media/ffvpx/FILES`; do diff $REV_LASTSYNC HEAD >> patch.diff; done
+Then apply patch.diff on the ffvpx tree.
+
 Compilation will reveal if any files are missing.
