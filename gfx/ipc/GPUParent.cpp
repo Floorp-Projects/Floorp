@@ -121,8 +121,6 @@ GPUParent::Init(base::ProcessId aParentPid,
   }
 
   CompositorThreadHolder::Start();
-  // TODO: Bug 1406327, Start VRListenerThreadHolder when loading VR content.
-  VRListenerThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   APZCTreeManager::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
