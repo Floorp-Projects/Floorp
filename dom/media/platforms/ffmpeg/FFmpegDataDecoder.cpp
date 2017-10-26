@@ -140,8 +140,11 @@ FFmpegDataDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
 
   mLastInputDts = aSample->mTimecode;
 
-  if (inputSize && mCodecParser) {
-    while (inputSize) {
+  if (mCodecParser) {
+    if (aGotFrame) {
+      *aGotFrame = false;
+    }
+    do {
       uint8_t* data = inputData;
       int size = inputSize;
       int len = mLib->av_parser_parse2(
@@ -151,9 +154,7 @@ FFmpegDataDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
       if (size_t(len) > inputSize) {
         return NS_ERROR_DOM_MEDIA_DECODE_ERR;
       }
-      inputData += len;
-      inputSize -= len;
-      if (size) {
+      if (size || !inputSize) {
         bool gotFrame = false;
         MediaResult rv = DoDecode(aSample, data, size, &gotFrame, aResults);
         if (NS_FAILED(rv)) {
@@ -163,7 +164,9 @@ FFmpegDataDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
           *aGotFrame = true;
         }
       }
-    }
+      inputData += len;
+      inputSize -= len;
+    } while (inputSize > 0);
     return NS_OK;
   }
   return DoDecode(aSample, inputData, inputSize, aGotFrame, aResults);
