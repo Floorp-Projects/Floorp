@@ -56,7 +56,7 @@ RemoteVideoDecoder::Init()
   RefPtr<RemoteVideoDecoder> self = this;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
                      __func__,
-                     [self, this]() { return mActor->Init(); })
+                     [self]() { return self->mActor->Init(); })
     ->Then(VideoDecoderManagerChild::GetManagerAbstractThread(),
            __func__,
            [self, this](TrackType aTrack) {
@@ -79,7 +79,7 @@ RemoteVideoDecoder::Decode(MediaRawData* aSample)
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
                      __func__,
-                     [self, this, sample]() { return mActor->Decode(sample); });
+                     [self, sample]() { return self->mActor->Decode(sample); });
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>
@@ -87,7 +87,7 @@ RemoteVideoDecoder::Flush()
 {
   RefPtr<RemoteVideoDecoder> self = this;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self, this]() { return mActor->Flush(); });
+                     __func__, [self]() { return self->mActor->Flush(); });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -95,7 +95,7 @@ RemoteVideoDecoder::Drain()
 {
   RefPtr<RemoteVideoDecoder> self = this;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self, this]() { return mActor->Drain(); });
+                     __func__, [self]() { return self->mActor->Drain(); });
 }
 
 RefPtr<ShutdownPromise>
@@ -103,8 +103,8 @@ RemoteVideoDecoder::Shutdown()
 {
   RefPtr<RemoteVideoDecoder> self = this;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self, this]() {
-                       mActor->Shutdown();
+                     __func__, [self]() {
+                       self->mActor->Shutdown();
                        return ShutdownPromise::CreateAndResolve(true, __func__);
                      });
 }

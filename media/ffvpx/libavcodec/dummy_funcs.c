@@ -73,6 +73,16 @@ AVHWAccel ff_hevc_mediacodec_hwaccel;
 AVHWAccel ff_mpeg4_mediacodec_hwaccel;
 AVHWAccel ff_vp8_mediacodec_hwaccel;
 AVHWAccel ff_vp9_mediacodec_hwaccel;
+/* Added by FFmpeg 3.4 */
+AVHWAccel ff_h264_d3d11va2_hwaccel;
+AVHWAccel ff_hevc_d3d11va2_hwaccel;
+AVHWAccel ff_hevc_videotoolbox_hwaccel;
+AVHWAccel ff_mpeg2_d3d11va2_hwaccel;
+AVHWAccel ff_mpeg2_mediacodec_hwaccel;
+AVHWAccel ff_vc1_d3d11va2_hwaccel;
+AVHWAccel ff_vp8_qsv_hwaccel;
+AVHWAccel ff_vp9_d3d11va2_hwaccel;
+AVHWAccel ff_wmv3_d3d11va2_hwaccel;
 
 AVCodec ff_a64multi_encoder;
 AVCodec ff_a64multi5_encoder;
@@ -741,6 +751,55 @@ AVCodec ff_pcm_s64be_decoder;
 AVCodec ff_pcm_s64be_encoder;
 AVCodec ff_truehd_encoder;
 AVCodec ff_mlp_encoder;
+/* Added by FFmpeg 3.4 */
+AVCodec ff_clearvideo_decoder;
+AVCodec ff_fits_encoder;
+AVCodec ff_fits_decoder;
+AVCodec ff_fmvc_decoder;
+AVCodec ff_gdv_decoder;
+AVCodec ff_h263_v4l2m2m_decoder;
+AVCodec ff_h264_v4l2m2m_decoder;
+AVCodec ff_h264_rkmpp_decoder;
+AVCodec ff_hevc_rkmpp_decoder;
+AVCodec ff_hevc_v4l2m2m_decoder;
+AVCodec ff_mpeg4_v4l2m2m_decoder;
+AVCodec ff_mpeg1_v4l2m2m_decoder;
+AVCodec ff_mpeg2_v4l2m2m_decoder;
+AVCodec ff_mpeg2_mediacodec_decoder;
+AVCodec ff_mscc_decoder;
+AVCodec ff_pixlet_decoder;
+AVCodec ff_psd_decoder;
+AVCodec ff_scpr_decoder;
+AVCodec ff_speedhq_decoder;
+AVCodec ff_srgc_decoder;
+AVCodec ff_vc1_v4l2m2m_decoder;
+AVCodec ff_vp8_rkmpp_decoder;
+AVCodec ff_vp8_v4l2m2m_decoder;
+AVCodec ff_vp9_rkmpp_decoder;
+AVCodec ff_vp9_v4l2m2m_decoder;
+AVCodec ff_bitpacked_decoder;
+AVCodec ff_wrapped_avframe_decoder;
+AVCodec ff_xpm_decoder;
+AVCodec ff_atrac3al_decoder;
+AVCodec ff_atrac3pal_decoder;
+AVCodec ff_dolby_e_decoder;
+AVCodec ff_opus_encoder;
+AVCodec ff_qdmc_decoder;
+AVCodec ff_pcm_f16le_decoder;
+AVCodec ff_pcm_f24le_decoder;
+AVCodec ff_gremlin_dpcm_decoder;
+AVCodec ff_adpcm_g726le_encoder;
+AVCodec ff_librsvg_decoder;
+AVCodec ff_h263_v4l2m2m_encoder;
+AVCodec ff_h264_v4l2m2m_encoder;
+AVCodec ff_hevc_v4l2m2m_encoder;
+AVCodec ff_mpeg2_vaapi_encoder;
+AVCodec ff_mpeg4_v4l2m2m_encoder;
+AVCodec ff_vp8_qsv_decoder;
+AVCodec ff_vp8_v4l2m2m_encoder;
+AVCodec ff_vp8_vaapi_encoder;
+AVCodec ff_vp9_vaapi_encoder;
+
 
 AVCodecParser ff_aac_parser;
 AVCodecParser ff_aac_latm_parser;
@@ -777,6 +836,10 @@ AVCodecParser ff_tak_parser;
 AVCodecParser ff_vc1_parser;
 AVCodecParser ff_vorbis_parser;
 AVCodecParser ff_vp3_parser;
+/* Added by FFmpeg 3.4 */
+AVCodecParser ff_sipr_parser;
+AVCodecParser ff_xma_parser;
+
 AVBitStreamFilter ff_aac_adtstoasc_bsf;
 AVBitStreamFilter ff_chomp_bsf;
 AVBitStreamFilter ff_dump_extradata_bsf;
@@ -806,12 +869,15 @@ int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt, const AVF
 void ff_videodsp_init_aarch64(VideoDSPContext *ctx, int bpc) {}
 void ff_videodsp_init_arm(VideoDSPContext *ctx, int bpc) {}
 void ff_videodsp_init_ppc(VideoDSPContext *ctx, int bpc) {}
+void ff_videodsp_init_mips(VideoDSPContext *ctx, int bpc) {}
 void ff_vp7dsp_init(VP8DSPContext *c) {}
 void ff_vp78dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
+void ff_vp9dsp_init_aarch64(VP9DSPContext *dsp, int bpp) {}
+void ff_vp9dsp_init_arm(VP9DSPContext *dsp, int bpp) {}
 void ff_flacdsp_init_arm(FLACDSPContext *c, enum AVSampleFormat fmt, int channels, int bps) {}
 #if !defined(HAVE_64BIT_BUILD)
 void ff_flac_decorrelate_indep8_16_sse2(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
@@ -819,11 +885,3 @@ void ff_flac_decorrelate_indep8_32_avx(uint8_t **out, int32_t **in, int channels
 void ff_flac_decorrelate_indep8_16_avx(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
 void ff_flac_decorrelate_indep8_32_sse2(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
 #endif
-void av_bitstream_filter_close(AVBitStreamFilterContext *bsf) {}
-int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
-                               AVCodecContext *avctx, const char *args,
-                               uint8_t **poutbuf, int *poutbuf_size,
-                               const uint8_t *buf, int buf_size, int keyframe) { return 0; }
-AVBitStreamFilterContext *av_bitstream_filter_init(const char *name) { return NULL;}
-AVBitStreamFilter *av_bitstream_filter_next(const AVBitStreamFilter *f) { return NULL; }
-void av_register_bitstream_filter(AVBitStreamFilter *bsf) {}

@@ -24,20 +24,17 @@ let webpackConfig = {
         loader: "file-loader?name=[path][name].[ext]",
       },
       {
-        /*
-         * The version of webpack used in the launchpad seems to have trouble
-         * with the require("raw!${file}") that we use for the properties
-         * file in l10.js.
-         * This loader goes through the whole code and remove the "raw!" prefix
-         * so the raw-loader declared in devtools-launchpad config can load
-         * those files.
-         */
-        test: /\.js$/,
-        loader: "rewrite-raw",
-      },
-      {
         test: /\.js$/,
         loaders: [
+          /**
+            * The version of webpack used in the launchpad seems to have trouble
+            * with the require("raw!${file}") that we use for the properties
+            * file in l10.js.
+            * This loader goes through the whole code and remove the "raw!" prefix
+            * so the raw-loader declared in devtools-launchpad config can load
+            * those files.
+            */
+          "rewrite-raw",
           // Replace all references to this.browserRequire() by require()
           "rewrite-browser-require",
           // Replace all references to loader.lazyRequire() by require()
@@ -49,7 +46,7 @@ let webpackConfig = {
 
   resolveLoader: {
     modules: [
-      path.resolve("./node_modules"),
+      "node_modules",
       path.resolve("../shared/webpack"),
     ]
   },
@@ -64,8 +61,9 @@ let webpackConfig = {
   resolve: {
     modules: [
       // Make sure webpack is always looking for modules in
-      // `webconsole/node_modules` directory first.
-      path.resolve(__dirname, "node_modules"), "node_modules"
+      // `netmonitor/node_modules` directory first.
+      path.resolve(__dirname, "node_modules"),
+      "node_modules",
     ],
     alias: {
       "Services": "devtools-modules/src/Services",
@@ -138,9 +136,22 @@ let config = toolboxConfig(webpackConfig, getConfig(), {
 });
 
 // Remove loaders from devtools-launchpad's webpack.config.js
-// * For svg-inline loader:
-//   Netmonitor uses file loader to bundle image assets instead of svg-inline-loader
-config.module.rules = config.module.rules
-  .filter((rule) => !["svg-inline-loader"].includes(rule.loader));
+// For svg-inline loader:
+// Using file loader to bundle image assets instead of svg-inline-loader
+config.module.rules = config.module.rules.filter((rule) => !["svg-inline-loader"].includes(rule.loader));
+
+// For PostCSS loader:
+// Disable PostCSS loader
+config.module.rules.forEach(rule => {
+  if (Array.isArray(rule.use)) {
+    rule.use.some((use, idx) => {
+      if (use.loader === "postcss-loader") {
+        rule.use = rule.use.slice(0, idx);
+        return true;
+      }
+      return false;
+    });
+  }
+});
 
 module.exports = config;

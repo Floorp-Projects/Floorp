@@ -1096,10 +1096,12 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
 
   CleanupBackgroundChannel();
 
-  // DocumentChannelCleanup actually nulls out mCacheEntry in the parent, which
-  // we might need later to open the Alt-Data output stream, so just return here
+  // If there is a possibility we might want to write alt data to the cache
+  // entry, we keep the channel alive. We still send the DocumentChannelCleanup
+  // message but request the cache entry to be kept by the parent.
   if (!mPreferredCachedAltDataType.IsEmpty()) {
     mKeptAlive = true;
+    SendDocumentChannelCleanup(false); // don't clear cache entry
     return;
   }
 
@@ -1108,7 +1110,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     // If IPDL is already closed, then do nothing.
     if (mIPCOpen) {
       mKeptAlive = true;
-      SendDocumentChannelCleanup();
+      SendDocumentChannelCleanup(true);
     }
   } else {
     // The parent process will respond by sending a DeleteSelf message and

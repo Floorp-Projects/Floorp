@@ -11,41 +11,41 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
   "new-console-output/test/mochitest/test-console.html";
 
-add_task(function* () {
+add_task(async function() {
   // Enable net messages in the console for this test.
-  yield pushPref("devtools.webconsole.filter.net", true);
+  await pushPref("devtools.webconsole.filter.net", true);
 
-  let hud = yield openNewTabAndConsole(TEST_URI);
+  let hud = await openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
   info("Test Open URL menu item for text log");
 
   info("Logging a text message in the content window");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.console.log("simple text message");
   });
-  let message = yield waitFor(() => findMessage(hud, "simple text message"));
+  let message = await waitFor(() => findMessage(hud, "simple text message"));
   ok(message, "Text log found in the console");
 
   info("Open and check the context menu for the logged text message");
-  let menuPopup = yield openContextMenu(hud, message);
+  let menuPopup = await openContextMenu(hud, message);
   let openUrlItem = menuPopup.querySelector("#console-menu-open-url");
   ok(!openUrlItem, "Open URL menu item is not available");
 
-  yield hideContextMenu(hud);
+  await hideContextMenu(hud);
   hud.jsterm.clearOutput();
 
   info("Test Open URL menu item for network log");
 
   info("Reload the content window to produce a network log");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });
-  message = yield waitFor(() => findMessage(hud, "test-console.html"));
+  message = await waitFor(() => findMessage(hud, "test-console.html"));
   ok(message, "Network log found in the console");
 
   info("Open and check the context menu for the logged network message");
-  menuPopup = yield openContextMenu(hud, message);
+  menuPopup = await openContextMenu(hud, message);
   openUrlItem = menuPopup.querySelector("#console-menu-open-url");
   ok(openUrlItem, "Open URL menu item is available");
 
@@ -53,8 +53,8 @@ add_task(function* () {
   let tabLoaded = listenToTabLoad();
   info("Click on Open URL menu item and wait for new tab to open");
   openUrlItem.click();
-  yield hideContextMenu(hud);
-  let newTab = yield tabLoaded;
+  await hideContextMenu(hud);
+  let newTab = await tabLoaded;
   let newTabHref = newTab.linkedBrowser._contentWindow.location.href;
   is(newTabHref, TEST_URI, "Tab was opened with the expected URL");
 

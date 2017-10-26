@@ -73,8 +73,8 @@ AppleATDecoder::Decode(MediaRawData* aSample)
       (unsigned long long)aSample->Size());
   RefPtr<AppleATDecoder> self = this;
   RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mTaskQueue, __func__, [self, this, sample] {
-    return ProcessDecode(sample);
+  return InvokeAsync(mTaskQueue, __func__, [self, sample] {
+    return self->ProcessDecode(sample);
   });
 }
 
@@ -121,8 +121,8 @@ RefPtr<ShutdownPromise>
 AppleATDecoder::Shutdown()
 {
   RefPtr<AppleATDecoder> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-    ProcessShutdown();
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    self->ProcessShutdown();
     return ShutdownPromise::CreateAndResolve(true, __func__);
   });
 }

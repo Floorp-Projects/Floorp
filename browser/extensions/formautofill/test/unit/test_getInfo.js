@@ -158,12 +158,6 @@ const TESTCASES = [
     },
   },
   {
-    description: "non-input element",
-    document: `<label id="targetElement">street</label>`,
-    elementId: "targetElement",
-    expectedReturnValue: null,
-  },
-  {
     description: "input element with \"submit\" type",
     document: `<input id="targetElement" type="submit" />`,
     elementId: "targetElement",
