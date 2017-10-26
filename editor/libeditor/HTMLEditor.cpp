@@ -3471,7 +3471,7 @@ HTMLEditor::EndOperation()
 
 bool
 HTMLEditor::TagCanContainTag(nsAtom& aParentTag,
-                             nsAtom& aChildTag)
+                             nsAtom& aChildTag) const
 {
   int32_t childTagEnum;
   // XXX Should this handle #cdata-section too?
