@@ -18,9 +18,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 
 add_task(async function () {
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
-  // Clearing history that might have been set in previous tests.
-  await jsterm.clearHistory();
-
   const {
     autocompletePopup: popup,
     completeNode,
@@ -49,7 +46,4 @@ add_task(async function () {
   is(completeNode.value, "", "completeNode is empty");
   is(jsterm.history[jsterm.history.length - 1], "window.testBug",
      "jsterm history is correct");
-
-  // Cleaning history.
-  await jsterm.clearHistory();
 });

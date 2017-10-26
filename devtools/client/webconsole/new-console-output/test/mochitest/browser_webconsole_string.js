@@ -7,8 +7,8 @@
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/mochitest/test-console.html";
 
-add_task(function* () {
-  let hud = yield openNewTabAndConsole(TEST_URI);
+add_task(async function() {
+  let hud = await openNewTabAndConsole(TEST_URI);
 
   info("console.log with a string argument");
   let receivedMessages = waitForMessages({
@@ -19,16 +19,16 @@ add_task(function* () {
     }],
   });
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     content.wrappedJSObject.stringLog();
   });
 
-  yield receivedMessages;
+  await receivedMessages;
 
   info("evaluating a string constant");
   let jsterm = hud.jsterm;
-  yield jsterm.execute("\"string\\nconstant\"");
-  let msg = yield waitFor(() => findMessage(hud, "constant"));
+  await jsterm.execute("\"string\\nconstant\"");
+  let msg = await waitFor(() => findMessage(hud, "constant"));
   let body = msg.querySelector(".message-body");
   // On the other hand, a string constant result should be quoted, but
   // newlines should be let through.
