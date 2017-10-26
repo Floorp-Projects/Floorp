@@ -209,7 +209,7 @@ class StartupCacheDebugOutputStream final
 class StartupCacheWrapper final
   : public nsIStartupCache
 {
-  ~StartupCacheWrapper() {}
+  ~StartupCacheWrapper();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTARTUPCACHE
