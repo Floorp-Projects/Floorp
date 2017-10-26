@@ -1051,8 +1051,12 @@ CustomElementReactionsStack::PopAndInvokeElementQueue()
     // element, see https://github.com/w3c/webcomponents/issues/635.
     // We usually report the error to entry global in gecko, so just follow the
     // same behavior here.
+    // This may be null if it's called from parser, see the case of
+    // attributeChangedCallback in
+    // https://html.spec.whatwg.org/multipage/parsing.html#create-an-element-for-the-token
+    // In that case, the exception of callback reactions will be automatically
+    // reported in CallSetup.
     nsIGlobalObject* global = GetEntryGlobal();
-    MOZ_ASSERT(global, "Should always have a entry global here!");
     InvokeReactions(elementQueue, global);
   }
 
