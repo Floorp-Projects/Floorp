@@ -17,20 +17,20 @@
 // White space of any kind.  No value fields are used.  Note that
 // comments do *not* count as white space; comments separate tokens
 // but are not themselves tokens.
-const eCSSToken_Whitespace = "whitespace";     //
+const eCSSToken_Whitespace = "whitespace"; //
 // A comment.
-const eCSSToken_Comment = "comment";        // /*...*/
+const eCSSToken_Comment = "comment"; // /*...*/
 
 // Identifier-like tokens.  mIdent is the text of the identifier.
 // The difference between ID and Hash is: if the text after the #
 // would have been a valid Ident if the # hadn't been there, the
 // scanner produces an ID token.  Otherwise it produces a Hash token.
 // (This distinction is required by css3-selectors.)
-const eCSSToken_Ident = "ident";          // word
-const eCSSToken_Function = "function";       // word(
-const eCSSToken_AtKeyword = "at";      // @word
-const eCSSToken_ID = "id";             // #word
-const eCSSToken_Hash = "hash";           // #0word
+const eCSSToken_Ident = "ident"; // word
+const eCSSToken_Function = "function"; // word(
+const eCSSToken_AtKeyword = "at"; // @word
+const eCSSToken_ID = "id"; // #word
+const eCSSToken_Hash = "hash"; // #0word
 
 // Numeric tokens.  mNumber is the floating-point value of the
 // number, and mHasSign indicates whether there was an explicit sign
@@ -42,32 +42,32 @@ const eCSSToken_Hash = "hash";           // #0word
 // are always considered not to be integers, even if their numeric
 // value is integral (100% => mNumber = 1.0).  For Dimension
 // tokens, mIdent holds the text of the unit.
-const eCSSToken_Number = "number";         // 1 -5 +2e3 3.14159 7.297352e-3
-const eCSSToken_Dimension = "dimension";      // 24px 8.5in
-const eCSSToken_Percentage = "percentage";     // 85% 1280.4%
+const eCSSToken_Number = "number"; // 1 -5 +2e3 3.14159 7.297352e-3
+const eCSSToken_Dimension = "dimension"; // 24px 8.5in
+const eCSSToken_Percentage = "percentage"; // 85% 1280.4%
 
 // String-like tokens.  In all cases, mIdent holds the text
 // belonging to the string, and mSymbol holds the delimiter
 // character, which may be ', ", or zero (only for unquoted URLs).
 // Bad_String and Bad_URL tokens are emitted when the closing
 // delimiter or parenthesis was missing.
-const eCSSToken_String = "string";         // 'foo bar' "foo bar"
-const eCSSToken_Bad_String = "bad_string";     // 'foo bar
-const eCSSToken_URL = "url";            // url(foobar) url("foo bar")
-const eCSSToken_Bad_URL = "bad_url";        // url(foo
+const eCSSToken_String = "string"; // 'foo bar' "foo bar"
+const eCSSToken_Bad_String = "bad_string"; // 'foo bar
+const eCSSToken_URL = "url"; // url(foobar) url("foo bar")
+const eCSSToken_Bad_URL = "bad_url"; // url(foo
 
 // Any one-character symbol.  mSymbol holds the character.
-const eCSSToken_Symbol = "symbol";         // . ; { } ! *
+const eCSSToken_Symbol = "symbol"; // . ; { } ! *
 
 // Match operators.  These are single tokens rather than pairs of
 // Symbol tokens because css3-selectors forbids the presence of
 // comments between the two characters.  No value fields are used;
 // the token type indicates which operator.
-const eCSSToken_Includes = "includes";       // ~=
-const eCSSToken_Dashmatch = "dashmatch";      // |=
-const eCSSToken_Beginsmatch = "beginsmatch";    // ^=
-const eCSSToken_Endsmatch = "endsmatch";      // $=
-const eCSSToken_Containsmatch = "containsmatch";  // *=
+const eCSSToken_Includes = "includes"; // ~=
+const eCSSToken_Dashmatch = "dashmatch"; // |=
+const eCSSToken_Beginsmatch = "beginsmatch"; // ^=
+const eCSSToken_Endsmatch = "endsmatch"; // $=
+const eCSSToken_Containsmatch = "containsmatch"; // *=
 
 // Unicode-range token: currently used only in @font-face.
 // The lexical rule for this token includes several forms that are
@@ -77,7 +77,7 @@ const eCSSToken_Containsmatch = "containsmatch";  // *=
 // token is semantically valid.  In that case, mInteger holds the
 // lowest value included in the range, and mInteger2 holds the
 // highest value included in the range.
-const eCSSToken_URange = "urange";         // U+007e U+01?? U+2000-206F
+const eCSSToken_URange = "urange"; // U+007e U+01?? U+2000-206F
 
 // HTML comment delimiters, ignored as a unit when they appear at
 // the top level of a style sheet, for compatibility with websites
@@ -85,7 +85,7 @@ const eCSSToken_URange = "urange";         // U+007e U+01?? U+2000-206F
 // subsumes the css2.1 CDO and CDC tokens, which are always treated
 // the same by the parser.  mIdent holds the text of the token, for
 // diagnostics.
-const eCSSToken_HTMLComment = "htmlcomment";    // <!-- -->
+const eCSSToken_HTMLComment = "htmlcomment"; // <!-- -->
 
 const eEOFCharacters_None = 0x0000;
 

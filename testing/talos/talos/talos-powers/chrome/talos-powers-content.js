@@ -100,7 +100,7 @@ addEventListener("TalosPowers:ParentExec:QueryEvent", function(e) {
     throw new Error("TalosPowers:ParentExec may only be used with local content");
   }
   let uniqueMessageId = "TalosPowers:ParentExec:"
-                      + content.document.documentURI + Date.now() + Math.random();  // eslint-disable-line mozilla/avoid-Date-timing
+                      + content.document.documentURI + Date.now() + Math.random(); // eslint-disable-line mozilla/avoid-Date-timing
 
   // Listener for the reply from the parent process
   addMessageListener("TalosPowers:ParentExec:ReplyMsg", function done(reply) {
@@ -122,4 +122,4 @@ addEventListener("TalosPowers:ParentExec:QueryEvent", function(e) {
     command: e.detail.command,
     id: uniqueMessageId
   });
-}, false, true);  // wantsUntrusted since we're exposing to unprivileged
+}, false, true); // wantsUntrusted since we're exposing to unprivileged

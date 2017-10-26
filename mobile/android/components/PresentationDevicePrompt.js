@@ -98,10 +98,10 @@ PresentationDevicePrompt.prototype = {
       return;
     }
 
-    if (aIndex < 0) {                    // Cancel request if no selected device,
+    if (aIndex < 0) { // Cancel request if no selected device,
       this._request.cancel(Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
       return;
-    } else if (!this._devices.length) {  // or there is no available devices
+    } else if (!this._devices.length) { // or there is no available devices
       this._request.cancel(Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
       return;
     }

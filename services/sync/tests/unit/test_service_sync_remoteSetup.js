@@ -185,7 +185,7 @@ add_task(async function run_test() {
     let keys = Service.collectionKeys.asWBO();
     let b = new BulkKeyBundle("hmacerror");
     await b.generateRandom();
-    collections.crypto = keys.modified = 100 + (Date.now() / 1000);  // Future modification time.
+    collections.crypto = keys.modified = 100 + (Date.now() / 1000); // Future modification time.
     await keys.encrypt(b);
     await keys.upload(Service.resource(Service.cryptoKeysURL));
 

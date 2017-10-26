@@ -501,7 +501,7 @@ BookmarkImporter.prototype = {
 
     frame.previousFeed = null;
     frame.previousItem = null;
-    frame.previousText = "";  // Will hold link text, clear it.
+    frame.previousText = ""; // Will hold link text, clear it.
 
     // Get the attributes we care about.
     let href = this._safeTrim(aElt.getAttribute("href"));

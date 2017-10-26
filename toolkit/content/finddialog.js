@@ -10,8 +10,8 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/FormHistory.jsm");
 
-var dialog;     // Quick access to document/form elements.
-var gFindInst;   // nsIWebBrowserFind that we're going to use
+var dialog; // Quick access to document/form elements.
+var gFindInst; // nsIWebBrowserFind that we're going to use
 var gFindInstData; // use this to update the find inst data
 
 function initDialogObject() {

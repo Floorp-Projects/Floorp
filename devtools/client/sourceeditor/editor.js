@@ -552,7 +552,7 @@ Editor.prototype = {
   setText: function (value) {
     let cm = editors.get(this);
 
-    if (typeof value !== "string" && "binary" in value) {  // wasm?
+    if (typeof value !== "string" && "binary" in value) { // wasm?
       // binary does not survive as Uint8Array, converting from string
       let binary = value.binary;
       let data = new Uint8Array(binary.length);

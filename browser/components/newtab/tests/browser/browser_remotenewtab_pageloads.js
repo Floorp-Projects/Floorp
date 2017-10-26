@@ -26,7 +26,7 @@ add_task(async function open_newtab() {
    * the browser UI to access overriding URLs, for istance by click on the "+" button in the tab
    * bar, or by using the new tab shortcut key.
    */
-  BrowserOpenTab();  // jshint ignore:line
+  BrowserOpenTab(); // jshint ignore:line
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
@@ -43,7 +43,7 @@ add_task(async function open_newtab() {
 });
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {
-  return TestUtils.topicObserved("newtab-url-changed", function observer(aSubject, aData) {  // jshint unused:false
+  return TestUtils.topicObserved("newtab-url-changed", function observer(aSubject, aData) { // jshint unused:false
       Assert.equal(aData, aNewURL, testMessage);
       return true;
   });

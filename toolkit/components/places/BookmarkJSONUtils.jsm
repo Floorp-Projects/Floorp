@@ -274,7 +274,7 @@ BookmarkImporter.prototype = {
     // so we can repair any searches after inserting the bookmarks (see bug 824502).
     for (let node of nodes) {
       if (!node.children || node.children.length == 0)
-        continue;  // Nothing to restore for this root
+        continue; // Nothing to restore for this root
 
       // Ensure we set the source correctly.
       node.source = this._source;
