@@ -264,7 +264,7 @@ LoginManagerPrompter.prototype = {
     if (!this.__promptService)
       this.__promptService =
           Cc["@mozilla.org/embedcomp/prompt-service;1"].
-          getService(Ci.nsIPromptService2);
+          getService(Ci.nsIPromptService);
     return this.__promptService;
   },
 

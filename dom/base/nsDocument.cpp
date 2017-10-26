@@ -1771,6 +1771,10 @@ nsDocument::~nsDocument()
       if (mHasUnsafeEvalCSP) {
         Accumulate(Telemetry::CSP_UNSAFE_EVAL_DOCUMENTS_COUNT, 1);
       }
+
+      if (MOZ_UNLIKELY(GetMathMLEnabled())) {
+        ScalarAdd(Telemetry::ScalarID::MATHML_DOC_COUNT, 1);
+      }
     }
   }
 
@@ -7459,9 +7463,11 @@ nsDocument::ClearBoxObjectFor(nsIContent* aContent)
 }
 
 already_AddRefed<MediaQueryList>
-nsIDocument::MatchMedia(const nsAString& aMediaQueryList)
+nsIDocument::MatchMedia(const nsAString& aMediaQueryList,
+                        CallerType aCallerType)
 {
-  RefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
+  RefPtr<MediaQueryList> result =
+    new MediaQueryList(this, aMediaQueryList, aCallerType);
 
   mDOMMediaQueryLists.insertBack(result);
 

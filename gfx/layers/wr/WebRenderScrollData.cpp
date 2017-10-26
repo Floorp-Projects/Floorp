@@ -83,8 +83,10 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
        asr && asr != aStopAtAsr;
        asr = asr->mParent) {
+    MOZ_ASSERT(aOwner.GetManager());
     Maybe<ScrollMetadata> metadata = asr->mScrollableFrame->ComputeScrollMetadata(
-        nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+        nullptr, aOwner.GetManager(), aItem->ReferenceFrame(),
+        ContainerLayerParameters(), nullptr);
     MOZ_ASSERT(metadata);
     mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));
   }
@@ -146,13 +148,27 @@ WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
 }
 
 WebRenderScrollData::WebRenderScrollData()
-  : mIsFirstPaint(false)
+  : mManager(nullptr)
+  , mIsFirstPaint(false)
+  , mPaintSequenceNumber(0)
+{
+}
+
+WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager)
+  : mManager(aManager)
+  , mIsFirstPaint(false)
   , mPaintSequenceNumber(0)
 {
 }
 
 WebRenderScrollData::~WebRenderScrollData()
 {
+}
+
+WebRenderLayerManager*
+WebRenderScrollData::GetManager() const
+{
+  return mManager;
 }
 
 size_t

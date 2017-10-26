@@ -181,17 +181,16 @@ void
 nsNodeUtils::ContentInserted(nsINode* aContainer,
                              nsIContent* aChild)
 {
-  NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
+  NS_PRECONDITION(aContainer->IsContent() ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
   nsIContent* container;
   nsIDocument* doc = aContainer->OwnerDoc();
   nsIDocument* document;
-  if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
-    container = static_cast<nsIContent*>(aContainer);
+  if (aContainer->IsContent()) {
+    container = aContainer->AsContent();
     document = doc;
-  }
-  else {
+  } else {
     container = nullptr;
     document = static_cast<nsIDocument*>(aContainer);
   }
@@ -205,17 +204,16 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
                             nsIContent* aChild,
                             nsIContent* aPreviousSibling)
 {
-  NS_PRECONDITION(aContainer->IsNodeOfType(nsINode::eCONTENT) ||
+  NS_PRECONDITION(aContainer->IsContent() ||
                   aContainer->IsNodeOfType(nsINode::eDOCUMENT),
                   "container must be an nsIContent or an nsIDocument");
   nsIContent* container;
   nsIDocument* doc = aContainer->OwnerDoc();
   nsIDocument* document;
-  if (aContainer->IsNodeOfType(nsINode::eCONTENT)) {
+  if (aContainer->IsContent()) {
     container = static_cast<nsIContent*>(aContainer);
     document = doc;
-  }
-  else {
+  } else {
     container = nullptr;
     document = static_cast<nsIDocument*>(aContainer);
   }
@@ -411,7 +409,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   NS_PRECONDITION((!aClone && aNewNodeInfoManager) || !aReparentScope,
                   "If cloning or not getting a new nodeinfo we shouldn't "
                   "rewrap");
-  NS_PRECONDITION(!aParent || aNode->IsNodeOfType(nsINode::eCONTENT),
+  NS_PRECONDITION(!aParent || aNode->IsContent(),
                   "Can't insert document or attribute nodes into a parent");
 
   // First deal with aNode and walk its attributes (and their children). Then,

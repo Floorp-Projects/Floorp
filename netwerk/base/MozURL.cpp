@@ -54,6 +54,28 @@ MozURL::GetHostname(nsACString& aHost)
 }
 
 nsresult
+MozURL::GetHostPort(nsACString& aHostPort)
+{
+  nsresult rv = rusturl_get_host(mURL.get(), &aHostPort);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  int32_t port;
+  rv = GetPort(&port);
+  if (NS_FAILED(rv)) {
+    aHostPort.Truncate();
+    return rv;
+  }
+  if (port != -1) {
+    aHostPort.AppendLiteral(":");
+    aHostPort.AppendInt(port);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 MozURL::GetPort(int32_t* aPort)
 {
   return rusturl_get_port(mURL.get(), aPort);
@@ -75,6 +97,12 @@ nsresult
 MozURL::GetRef(nsACString& aRef)
 {
   return rusturl_get_fragment(mURL.get(), &aRef);
+}
+
+nsresult
+MozURL::GetOrigin(nsACString& aOrigin)
+{
+  return rusturl_get_origin(mURL.get(), &aOrigin);
 }
 
 // MozURL::Mutator
@@ -135,6 +163,14 @@ MozURL::Mutator::SetHostname(const nsACString& aHost)
 {
   ENSURE_VALID();
   mStatus = rusturl_set_host(mURL.get(), &aHost);
+  return *this;
+}
+
+MozURL::Mutator&
+MozURL::Mutator::SetHostPort(const nsACString& aHostPort)
+{
+  ENSURE_VALID();
+  mStatus = rusturl_set_host_port(mURL.get(), &aHostPort);
   return *this;
 }
 

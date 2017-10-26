@@ -29,7 +29,7 @@ NS_IMPL_ISUPPORTS_INHERITED(Comment, nsGenericDOMDataNode, nsIDOMNode,
 bool
 Comment::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eCOMMENT | eDATA_NODE));
+  return !(aFlags & ~(eCOMMENT | eDATA_NODE));
 }
 
 nsGenericDOMDataNode*

@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIDialogParamBlock.idl',
     'nsIPromptFactory.idl',
     'nsIPromptService.idl',
-    'nsIPromptService2.idl',
     'nsIWindowWatcher.idl',
     'nsPIPromptService.idl',
     'nsPIWindowWatcher.idl',

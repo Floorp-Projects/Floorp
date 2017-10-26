@@ -21,12 +21,15 @@ namespace mozilla {
 namespace dom {
 
 MediaQueryList::MediaQueryList(nsIDocument* aDocument,
-                               const nsAString& aMediaQueryList)
+                               const nsAString& aMediaQueryList,
+                               CallerType aCallerType)
   : mDocument(aDocument)
   , mMatchesValid(false)
 {
   mMediaList =
-    MediaList::Create(aDocument->GetStyleBackendType(), aMediaQueryList);
+    MediaList::Create(aDocument->GetStyleBackendType(),
+                      aMediaQueryList,
+                      aCallerType);
 
   KeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }

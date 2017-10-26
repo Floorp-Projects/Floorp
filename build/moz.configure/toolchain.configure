@@ -11,6 +11,37 @@ option(env='MOZ_PGO', help='Build with profile guided optimizations')
 set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 add_old_configure_assignment('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 
+# Code optimization
+# ==============================================================
+
+js_option('--enable-optimize',
+          nargs='?',
+          default=True,
+          help='Enable optimizations via compiler flags')
+
+
+@depends('--enable-optimize')
+def moz_optimize(option):
+    flags = None
+
+    if len(option):
+        val = '2'
+        flags = option[0]
+    elif option:
+        val = '1'
+    else:
+        val = None
+
+    return namespace(
+        optimize=val,
+        flags=flags,
+    )
+
+
+set_config('MOZ_OPTIMIZE', moz_optimize.optimize)
+add_old_configure_assignment('MOZ_OPTIMIZE', moz_optimize.optimize)
+add_old_configure_assignment('MOZ_CONFIGURE_OPTIMIZE_FLAGS', moz_optimize.flags)
+
 # yasm detection
 # ==============================================================
 yasm = check_prog('YASM', ['yasm'], allow_missing=True)
@@ -1269,6 +1300,67 @@ def developer_options(value):
 add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)
 set_config('DEVELOPER_OPTIONS', developer_options)
 
+# Rust compiler flags
+# ==============================================================
+
+js_option(env='RUSTC_OPT_LEVEL',
+          nargs=1,
+          help='Rust compiler optimization level (-C opt-level=%s)')
+
+# --enable-release kicks in full optimizations.
+imply_option('RUSTC_OPT_LEVEL', '2', when='--enable-release')
+
+
+@depends('RUSTC_OPT_LEVEL', debug_rust, '--enable-debug-symbols',
+         moz_optimize)
+def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
+                        moz_optimize):
+    optimize = moz_optimize.optimize
+
+    # Cargo currently supports only two interesting profiles for building:
+    # development and release. Those map (roughly) to --enable-debug and
+    # --disable-debug in Gecko, respectively.
+    #
+    # But we'd also like to support an additional axis of control for
+    # optimization level. Since Cargo only supports 2 profiles, we're in
+    # a bit of a bind.
+    #
+    # Code here derives various compiler options given other configure options.
+    # The options defined here effectively override defaults specified in
+    # Cargo.toml files.
+
+    opt_level = None
+    debug_assertions = None
+    debug_info = None
+
+    if opt_level_option.origin != 'default':
+        opt_level = opt_level_option[0]
+    else:
+        opt_level = '1' if optimize else '0'
+
+    # opt-level=0 implies -C debug-assertions, which may not be desired
+    # unless Rust debugging is enabled.
+    if opt_level == '0' and not debug_rust:
+        debug_assertions = False
+
+    if debug_symbols:
+        debug_info = '2'
+
+    flags = []
+
+    if opt_level is not None:
+        flags.append('-Copt-level=%s' % opt_level)
+    if debug_assertions is not None:
+        flags.append('-Cdebug-assertions=%s' %
+                     ('yes' if debug_assertions else 'no'))
+    if debug_info is not None:
+        flags.append('-Cdebuginfo=%s' % debug_info)
+
+    return flags
+
+
+set_config('MOZ_RUST_DEFAULT_FLAGS', rust_compiler_flags)
+
 # Linker detection
 # ==============================================================
 
@@ -1392,6 +1484,13 @@ def select_linker(linker, c_compiler, developer_options, build_env, toolchain_fl
 set_config('LD_IS_BFD', depends(select_linker.KIND)
            (lambda x: x == 'bfd' or None))
 set_config('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
+
+
+js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
+          help="Enable building with the mozilla clang plugin")
+
+add_old_configure_assignment('ENABLE_CLANG_PLUGIN',
+                             depends_if('--enable-clang-plugin')(lambda _: True))
 
 # Code Coverage
 # ==============================================================

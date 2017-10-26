@@ -14,12 +14,18 @@ async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function focusAndWaitForFieldsIdentified(input) {
+async function focusAndWaitForFieldsIdentified(input, mustBeIdentified = false) {
+  if (typeof input === "string") {
+    input = document.querySelector(input);
+  }
   const rootElement = input.form || input.ownerDocument.documentElement;
   const previouslyFocused = input != document.activeElement;
 
   input.focus();
 
+  if (mustBeIdentified) {
+    rootElement.removeAttribute("test-formautofill-identified");
+  }
   if (rootElement.hasAttribute("test-formautofill-identified")) {
     return;
   }

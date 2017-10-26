@@ -7,7 +7,7 @@
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { FILTER_TAGS } = require("../constants");
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -40,25 +40,34 @@ const CHARTS_CACHE_DISABLED = L10N.getStr("charts.cacheDisabled");
  * Performance analysis tool which shows you how long the browser takes to
  * download the different parts of your site.
  */
-const StatisticsPanel = createClass({
-  displayName: "StatisticsPanel",
-
-  propTypes: {
-    connector: PropTypes.object.isRequired,
-    closeStatistics: PropTypes.func.isRequired,
-    enableRequestFilterTypeOnly: PropTypes.func.isRequired,
-    requests: PropTypes.object,
-  },
-
-  getInitialState() {
+class StatisticsPanel extends Component {
+  static get propTypes() {
     return {
+      connector: PropTypes.object.isRequired,
+      closeStatistics: PropTypes.func.isRequired,
+      enableRequestFilterTypeOnly: PropTypes.func.isRequired,
+      requests: PropTypes.object,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       isVerticalSpliter: MediaQueryList.matches,
     };
-  },
+
+    this.createMDNLink = this.createMDNLink.bind(this);
+    this.unmountMDNLinkContainers = this.unmountMDNLinkContainers.bind(this);
+    this.createChart = this.createChart.bind(this);
+    this.sanitizeChartDataSource = this.sanitizeChartDataSource.bind(this);
+    this.responseIsFresh = this.responseIsFresh.bind(this);
+    this.onLayoutChange = this.onLayoutChange.bind(this);
+  }
 
   componentWillMount() {
     this.mdnLinkContainerNodes = new Map();
-  },
+  }
 
   componentDidUpdate(prevProps) {
     MediaQueryList.addListener(this.onLayoutChange);
@@ -83,12 +92,12 @@ const StatisticsPanel = createClass({
 
     this.createMDNLink("primedCacheChart", getPerformanceAnalysisURL());
     this.createMDNLink("emptyCacheChart", getPerformanceAnalysisURL());
-  },
+  }
 
   componentWillUnmount() {
     MediaQueryList.removeListener(this.onLayoutChange);
     this.unmountMDNLinkContainers();
-  },
+  }
 
   createMDNLink(chartId, url) {
     if (this.mdnLinkContainerNodes.has(chartId)) {
@@ -103,13 +112,13 @@ const StatisticsPanel = createClass({
     title.appendChild(containerNode);
     ReactDOM.render(MDNLink({ url }), containerNode);
     this.mdnLinkContainerNodes.set(chartId, containerNode);
-  },
+  }
 
   unmountMDNLinkContainers() {
     for (let [, node] of this.mdnLinkContainerNodes) {
       ReactDOM.unmountComponentAtNode(node);
     }
-  },
+  }
 
   createChart({ id, title, data }) {
     // Create a new chart.
@@ -166,7 +175,7 @@ const StatisticsPanel = createClass({
     }
 
     container.appendChild(chart.node);
-  },
+  }
 
   sanitizeChartDataSource(requests, emptyCache) {
     const data = FILTER_TAGS.map((type) => ({
@@ -225,7 +234,7 @@ const StatisticsPanel = createClass({
     }
 
     return data.filter(e => e.count > 0);
-  },
+  }
 
   /**
    * Checks if the "Expiration Calculations" defined in section 13.2.4 of the
@@ -263,13 +272,13 @@ const StatisticsPanel = createClass({
     }
 
     return false;
-  },
+  }
 
   onLayoutChange() {
     this.setState({
       isVerticalSpliter: MediaQueryList.matches,
     });
-  },
+  }
 
   render() {
     const { closeStatistics } = this.props;
@@ -297,7 +306,7 @@ const StatisticsPanel = createClass({
       )
     );
   }
-});
+}
 
 module.exports = connect(
   (state) => ({

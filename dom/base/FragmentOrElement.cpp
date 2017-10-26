@@ -206,7 +206,7 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
     }
   }
 
-  if (parent && nsContentUtils::HasDistributedChildren(parent) &&
+  if (nsContentUtils::HasDistributedChildren(parent) &&
       nsContentUtils::IsInSameAnonymousTree(parent, this)) {
     // This node is distributed to insertion points, thus we
     // need to consult the destination insertion points list to
@@ -218,9 +218,9 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
     parent = destInsertionPoints && !destInsertionPoints->IsEmpty() ?
       destInsertionPoints->LastElement()->GetParent() : nullptr;
   } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* insertionParent = GetXBLInsertionParent();
-    if (insertionParent) {
-      parent = insertionParent;
+    if (nsIContent* insertionPoint = GetXBLInsertionPoint()) {
+      parent = insertionPoint->GetParent();
+      MOZ_ASSERT(parent);
     }
   }
 
@@ -706,8 +706,8 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
   cb.NoteNativeChild(mExtendedSlots->mXBLBinding,
                      NS_CYCLE_COLLECTION_PARTICIPANT(nsXBLBinding));
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mXBLInsertionParent");
-  cb.NoteXPCOMChild(mExtendedSlots->mXBLInsertionParent.get());
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mXBLInsertionPoint");
+  cb.NoteXPCOMChild(mExtendedSlots->mXBLInsertionPoint.get());
 
   if (mExtendedSlots->mCustomElementData) {
     mExtendedSlots->mCustomElementData->Traverse(cb);
@@ -739,7 +739,7 @@ FragmentOrElement::nsDOMSlots::Unlink()
   mExtendedSlots->mContainingShadow = nullptr;
   mExtendedSlots->mAssignedSlot = nullptr;
   MOZ_ASSERT(!(mExtendedSlots->mXBLBinding));
-  mExtendedSlots->mXBLInsertionParent = nullptr;
+  mExtendedSlots->mXBLInsertionPoint = nullptr;
   if (mExtendedSlots->mCustomElementData) {
     mExtendedSlots->mCustomElementData->Unlink();
     mExtendedSlots->mCustomElementData = nullptr;
@@ -1160,12 +1160,12 @@ FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
 }
 
 nsIContent*
-FragmentOrElement::GetXBLInsertionParent() const
+FragmentOrElement::GetXBLInsertionPoint() const
 {
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     if (slots) {
-      return slots->mXBLInsertionParent;
+      return slots->mXBLInsertionPoint;
     }
   }
 
@@ -1221,24 +1221,24 @@ FragmentOrElement::SetAssignedSlot(HTMLSlotElement* aSlot)
 }
 
 void
-FragmentOrElement::SetXBLInsertionParent(nsIContent* aContent)
+FragmentOrElement::SetXBLInsertionPoint(nsIContent* aContent)
 {
-  nsCOMPtr<nsIContent> oldInsertionParent = nullptr;
+  nsCOMPtr<nsIContent> oldInsertionPoint = nullptr;
   if (aContent) {
     nsExtendedDOMSlots* slots = ExtendedDOMSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    oldInsertionParent = slots->mXBLInsertionParent.forget();
-    slots->mXBLInsertionParent = aContent;
+    oldInsertionPoint = slots->mXBLInsertionPoint.forget();
+    slots->mXBLInsertionPoint = aContent;
   } else {
     if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
-      oldInsertionParent = slots->mXBLInsertionParent.forget();
-      slots->mXBLInsertionParent = nullptr;
+      oldInsertionPoint = slots->mXBLInsertionPoint.forget();
+      slots->mXBLInsertionPoint = nullptr;
     }
   }
 
   // We just changed the flattened tree, so any Servo style data is now invalid.
   // We rely on nsXBLService::LoadBindings to re-traverse the subtree afterwards.
-  if (oldInsertionParent != aContent &&
+  if (oldInsertionPoint != aContent &&
       IsStyledByServo() && IsElement() && AsElement()->HasServoData()) {
     ServoRestyleManager::ClearServoDataFromSubtree(AsElement());
   }

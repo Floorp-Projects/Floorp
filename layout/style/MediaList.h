@@ -44,7 +44,9 @@ public:
    * Creates a MediaList backed by the given StyleBackendType.
    */
   static already_AddRefed<MediaList> Create(StyleBackendType,
-                                            const nsAString& aMedia);
+                                            const nsAString& aMedia,
+                                            CallerType aCallerType =
+                                              CallerType::NonSystem);
 
   virtual already_AddRefed<MediaList> Clone() = 0;
 

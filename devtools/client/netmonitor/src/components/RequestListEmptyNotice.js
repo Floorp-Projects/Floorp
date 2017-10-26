@@ -5,7 +5,7 @@
 "use strict";
 
 const {
-  createClass,
+  Component,
   createFactory,
   DOM,
   PropTypes,
@@ -32,14 +32,14 @@ const PERFORMANCE_NOTICE_3 = L10N.getStr("netmonitor.perfNotice3");
  * UI displayed when the request list is empty. Contains instructions on reloading
  * the page and on triggering performance analysis of the page.
  */
-const RequestListEmptyNotice = createClass({
-  displayName: "RequestListEmptyNotice",
-
-  propTypes: {
-    connector: PropTypes.object.isRequired,
-    onReloadClick: PropTypes.func.isRequired,
-    onPerfClick: PropTypes.func.isRequired,
-  },
+class RequestListEmptyNotice extends Component {
+  static get propTypes() {
+    return {
+      connector: PropTypes.object.isRequired,
+      onReloadClick: PropTypes.func.isRequired,
+      onPerfClick: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     return div(
@@ -71,7 +71,7 @@ const RequestListEmptyNotice = createClass({
       )
     );
   }
-});
+}
 
 module.exports = connect(
   undefined,

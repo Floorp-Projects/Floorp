@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: autocomplete on an autofocus form
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let MOCK_STORAGE = [{
+  name: "John Doe",
+  organization: "Sesame Street",
+  "address-level2": "Austin",
+  tel: "+13453453456",
+}, {
+  name: "Foo Bar",
+  organization: "Mozilla",
+  "address-level2": "San Francisco",
+  tel: "+16509030800",
+}];
+
+initPopupListener();
+
+async function setupAddressStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+}
+
+function addInputField(form, className) {
+  let newElem = document.createElement("input");
+  newElem.name = className;
+  newElem.autocomplete = className;
+  newElem.type = "text";
+  form.appendChild(newElem);
+}
+
+async function checkFormChangeHappened(formId) {
+  await focusAndWaitForFieldsIdentified(`#${formId} input[name=tel]`);
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.tel, secondary: address.name})
+  ));
+
+  // This is for checking the changes of element count.
+  addInputField(document.querySelector(`#${formId}`), "address-level2");
+
+  await focusAndWaitForFieldsIdentified(`#${formId} input[name=name]`);
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.name, secondary: address["address-level2"]})
+  ));
+
+  // This is for checking the changes of element removed and added then.
+  document.querySelector(`#${formId} input[name=address-level2]`).remove();
+  addInputField(document.querySelector(`#${formId}`), "address-level2");
+
+  await focusAndWaitForFieldsIdentified(`#${formId} input[name=address-level2]`, true);
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address["address-level2"], secondary: address.name})
+  ));
+}
+
+add_task(async function init_storage() {
+  await setupAddressStorage();
+});
+
+add_task(async function check_change_happened_in_form() {
+  await checkFormChangeHappened("form1");
+});
+
+add_task(async function check_change_happened_in_body() {
+  await checkFormChangeHappened("form2");
+});
+</script>
+
+<p id="display"></p>
+<div id="content">
+  <form id="form1">
+    <p><label>organization: <input name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>tel: <input name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>name: <input name="name" autocomplete="name" type="text"></label></p>
+  </form>
+  <div id="form2">
+    <p><label>organization: <input name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>tel: <input name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>name: <input name="name" autocomplete="name" type="text"></label></p>
+  </div>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

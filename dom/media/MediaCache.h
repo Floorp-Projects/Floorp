@@ -357,6 +357,8 @@ public:
   // been received from aPrincipal
   void UpdatePrincipal(nsIPrincipal* aPrincipal);
 
+  nsCString GetDebugInfo();
+
 private:
   friend class MediaCache;
 

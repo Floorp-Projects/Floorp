@@ -47,6 +47,67 @@ GetMarginBorderPadding(GtkStyleContext* aStyle);
 static void
 InsetByMargin(GdkRectangle* rect, GtkStyleContext* style);
 
+static void
+moz_gtk_add_style_margin(GtkStyleContext* style,
+                         gint* left, gint* top, gint* right, gint* bottom)
+{
+    GtkBorder margin;
+
+    gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
+
+    *left += margin.left;
+    *right += margin.right;
+    *top += margin.top;
+    *bottom += margin.bottom;
+}
+
+static void
+moz_gtk_add_style_border(GtkStyleContext* style,
+                         gint* left, gint* top, gint* right, gint* bottom)
+{
+    GtkBorder border;
+
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+
+    *left += border.left;
+    *right += border.right;
+    *top += border.top;
+    *bottom += border.bottom;
+}
+
+static void
+moz_gtk_add_style_padding(GtkStyleContext* style,
+                          gint* left, gint* top, gint* right, gint* bottom)
+{
+    GtkBorder padding;
+
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+
+    *left += padding.left;
+    *right += padding.right;
+    *top += padding.top;
+    *bottom += padding.bottom;
+}
+
+static void
+moz_gtk_add_margin_border_padding(GtkStyleContext *style,
+                                  gint* left, gint* top,
+                                  gint* right, gint* bottom)
+{
+    moz_gtk_add_style_margin(style, left, top, right, bottom);
+    moz_gtk_add_style_border(style, left, top, right, bottom);
+    moz_gtk_add_style_padding(style, left, top, right, bottom);
+}
+
+static void
+moz_gtk_add_border_padding(GtkStyleContext *style,
+                           gint* left, gint* top,
+                           gint* right, gint* bottom)
+{
+    moz_gtk_add_style_border(style, left, top, right, bottom);
+    moz_gtk_add_style_padding(style, left, top, right, bottom);
+}
+
 // GetStateFlagsFromGtkWidgetState() can be safely used for the specific
 // GtkWidgets that set both prelight and active flags.  For other widgets,
 // either the GtkStateFlags or Gecko's GtkWidgetState need to be carefully
@@ -1973,56 +2034,7 @@ moz_gtk_header_bar_paint(WidgetNodeType widgetType,
     return MOZ_GTK_SUCCESS;
 }
 
-static void
-moz_gtk_add_style_margin(GtkStyleContext* style,
-                         gint* left, gint* top, gint* right, gint* bottom)
-{
-    GtkBorder margin;
 
-    gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
-
-    *left += margin.left;
-    *right += margin.right;
-    *top += margin.top;
-    *bottom += margin.bottom;
-}
-
-static void
-moz_gtk_add_style_border(GtkStyleContext* style,
-                         gint* left, gint* top, gint* right, gint* bottom)
-{
-    GtkBorder border;
-
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-
-    *left += border.left;
-    *right += border.right;
-    *top += border.top;
-    *bottom += border.bottom;
-}
-
-static void
-moz_gtk_add_style_padding(GtkStyleContext* style,
-                          gint* left, gint* top, gint* right, gint* bottom)
-{
-    GtkBorder padding;
-
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
-
-    *left += padding.left;
-    *right += padding.right;
-    *top += padding.top;
-    *bottom += padding.bottom;
-}
-
-static void moz_gtk_add_margin_border_padding(GtkStyleContext *style,
-                                              gint* left, gint* top,
-                                              gint* right, gint* bottom)
-{
-    moz_gtk_add_style_margin(style, left, top, right, bottom);
-    moz_gtk_add_style_border(style, left, top, right, bottom);
-    moz_gtk_add_style_padding(style, left, top, right, bottom);
-}
 
 static GtkBorder
 GetMarginBorderPadding(GtkStyleContext* aStyle)
@@ -2079,8 +2091,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             // XXX: Subtract 1 pixel from the padding to account for the default
             // padding in forms.css. See bug 1187385.
             *left = *top = *right = *bottom = -1;
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
-            moz_gtk_add_style_border(style, left, top, right, bottom);
+            moz_gtk_add_border_padding(style, left, top, right, bottom);
 
             return MOZ_GTK_SUCCESS;
         }
@@ -2101,10 +2112,8 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             *left = *top = *right = *bottom =
                 gtk_container_get_border_width(GTK_CONTAINER(
                                                GetWidget(MOZ_GTK_TREE_HEADER_CELL)));
-
             style = GetStyleContext(MOZ_GTK_TREE_HEADER_CELL);
-            moz_gtk_add_style_border(style, left, top, right, bottom);
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
+            moz_gtk_add_border_padding(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TREE_HEADER_SORTARROW:
@@ -2130,8 +2139,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                 gtk_container_get_border_width(GTK_CONTAINER(
                                                GetWidget(MOZ_GTK_COMBOBOX_BUTTON)));
             style = GetStyleContext(MOZ_GTK_COMBOBOX_BUTTON);
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
-            moz_gtk_add_style_border(style, left, top, right, bottom);
+            moz_gtk_add_border_padding(style, left, top, right, bottom);
 
             /* If there is no separator, don't try to count its width. */
             separator_width = 0;
@@ -2185,10 +2193,8 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             style = gtk_widget_get_style_context(w);
 
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(w));
-            moz_gtk_add_style_border(style,
-                                     left, top, right, bottom);
-            moz_gtk_add_style_padding(style,
-                                      left, top, right, bottom);
+            moz_gtk_add_border_padding(style,
+                                       left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_MENUPOPUP:
@@ -2239,8 +2245,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
         {
             style = GetStyleContext(widget);
-            moz_gtk_add_style_border(style, left, top, right, bottom);
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
+            moz_gtk_add_border_padding(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:

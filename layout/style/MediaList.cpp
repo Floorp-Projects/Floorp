@@ -72,16 +72,19 @@ MediaList::DoMediaChange(Func aCallback)
 }
 
 /* static */ already_AddRefed<MediaList>
-MediaList::Create(StyleBackendType aBackendType, const nsAString& aMedia)
+MediaList::Create(
+    StyleBackendType aBackendType,
+    const nsAString& aMedia,
+    CallerType aCallerType)
 {
   if (aBackendType == StyleBackendType::Servo) {
-    RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia);
+    RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia, aCallerType);
     return mediaList.forget();
   }
 
   nsCSSParser parser;
   RefPtr<nsMediaList> mediaList = new nsMediaList();
-  parser.ParseMediaList(aMedia, nullptr, 0, mediaList);
+  parser.ParseMediaList(aMedia, nullptr, 0, mediaList, aCallerType);
   return mediaList.forget();
 }
 

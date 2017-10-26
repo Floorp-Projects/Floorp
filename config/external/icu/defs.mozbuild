@@ -33,7 +33,7 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     CXXFLAGS += ['-GR']
 
 DisableStlWrapping()
-ALLOW_COMPILER_WARNINGS = True
+AllowCompilerWarnings()
 
 # We allow compiler warnings, but we can at least cut down on spammy
 # warnings that get triggered for every file.
