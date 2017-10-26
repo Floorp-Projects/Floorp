@@ -28,7 +28,7 @@ public:
   /**
    * Obtains the VacuumManager object.
    */
-  static VacuumManager * getSingleton();
+  static already_AddRefed<VacuumManager> getSingleton();
 
 private:
   ~VacuumManager();

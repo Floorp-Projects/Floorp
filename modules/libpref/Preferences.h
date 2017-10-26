@@ -78,7 +78,7 @@ public:
   static void InitializeUserPrefs();
 
   // Returns the singleton instance which is addreffed.
-  static Preferences* GetInstanceForService();
+  static already_AddRefed<Preferences> GetInstanceForService();
 
   // Finallizes global members.
   static void Shutdown();

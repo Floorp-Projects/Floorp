@@ -27,7 +27,7 @@ public:
   NS_DECL_NSIAPPLICATIONREPUTATIONSERVICE
 
 public:
-  static ApplicationReputationService* GetSingleton();
+  static already_AddRefed<ApplicationReputationService> GetSingleton();
 
 private:
   friend class PendingLookup;
