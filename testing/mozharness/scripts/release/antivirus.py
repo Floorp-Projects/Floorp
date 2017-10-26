@@ -36,13 +36,13 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
         [["-d", "--download-parallelization"], {
             "dest": "download_parallelization",
             "default": 6,
-            "type": int,
+            "type": "int",
             "help": "Number of concurrent file downloads",
         }],
         [["-s", "--scan-parallelization"], {
             "dest": "scan_parallelization",
             "default": 4,
-            "type": int,
+            "type": "int",
             "help": "Number of concurrent file scans",
         }],
         [["--tools-repo"], {
