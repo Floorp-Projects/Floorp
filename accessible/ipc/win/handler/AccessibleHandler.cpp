@@ -517,10 +517,8 @@ AccessibleHandler::get_accRole(VARIANT varChild, VARIANT *pvarRole)
     return mIA2PassThru->get_accRole(varChild, pvarRole);
   }
 
-  pvarRole->vt = VT_I4;
   BEGIN_CACHE_ACCESS;
-  GET_FIELD(mRole, pvarRole->lVal);
-  return S_OK;
+  return ::VariantCopy(pvarRole, &mCachedData.mData.mRole);
 }
 
 
