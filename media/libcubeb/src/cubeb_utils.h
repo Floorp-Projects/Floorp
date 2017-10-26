@@ -17,7 +17,7 @@
 #include <assert.h>
 #include <mutex>
 #include <type_traits>
-#if defined(WIN32)
+#if defined(_WIN32)
 #include "cubeb_utils_win.h"
 #else
 #include "cubeb_utils_unix.h"
