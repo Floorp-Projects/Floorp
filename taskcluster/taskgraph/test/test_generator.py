@@ -45,6 +45,10 @@ class WithFakeKind(TaskGraphGenerator):
             yield FakeKind(kind_name, '/fake', config)
 
 
+class FakeParameters(dict):
+    strict = True
+
+
 class TestGenerator(unittest.TestCase):
 
     def maketgg(self, target_tasks=None, kinds=[('_fake', [])]):
@@ -56,11 +60,11 @@ class TestGenerator(unittest.TestCase):
 
         target_tasks_mod._target_task_methods['test_method'] = target_tasks_method
 
-        parameters = {
+        parameters = FakeParameters({
             '_kinds': kinds,
             'target_tasks_method': 'test_method',
             'try_mode': None,
-        }
+        })
 
         return WithFakeKind('/root', parameters)
 
