@@ -274,6 +274,8 @@ add_task(async function testExtensionControlledNewTab() {
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let addon = await AddonManager.getAddonByID("@set_newtab");
+  addon.uninstall();
 });
 
 add_task(async function testExtensionControlledHomepageUninstalledAddon() {
