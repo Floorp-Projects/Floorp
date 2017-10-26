@@ -722,7 +722,7 @@ Inspector.prototype = {
             panel: () => {
               const AnimationInspector =
                 this.browserRequire("devtools/client/inspector/animation/animation");
-              this.animationinspector = new AnimationInspector();
+              this.animationinspector = new AnimationInspector(this);
               return this.animationinspector.provider;
             }
           },
@@ -1178,6 +1178,10 @@ Inspector.prototype = {
 
     if (this.fontinspector) {
       this.fontinspector.destroy();
+    }
+
+    if (this.animationinspector) {
+      this.animationinspector.destroy();
     }
 
     let cssPropertiesDestroyer = this._cssPropertiesLoaded.then(({front}) => {
