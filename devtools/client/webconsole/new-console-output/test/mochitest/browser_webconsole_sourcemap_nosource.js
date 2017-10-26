@@ -24,17 +24,17 @@ const PAGE_URL = `data:text/html,
 
 </html>`;
 
-add_task(function* () {
+add_task(async function() {
   // Force the new debugger UI, in case this gets uplifted with the old
   // debugger still turned on
-  yield pushPref("devtools.debugger.new-debugger-frontend", true);
-  yield pushPref("devtools.source-map.client-service.enabled", true);
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
+  await pushPref("devtools.source-map.client-service.enabled", true);
 
-  const hud = yield openNewTabAndConsole(PAGE_URL);
+  const hud = await openNewTabAndConsole(PAGE_URL);
   const toolbox = hud.ui.newConsoleOutput.toolbox;
 
   info("Finding \"here\" message and waiting for source map to be applied");
-  yield waitFor(() => {
+  await waitFor(() => {
     let node = findMessage(hud, "here");
     if (!node) {
       return false;
@@ -44,12 +44,12 @@ add_task(function* () {
     return url.includes("nosuchfile");
   });
 
-  yield testOpenInDebugger(hud, toolbox, "here");
+  await testOpenInDebugger(hud, toolbox, "here");
 
   info("Selecting the console again");
-  yield toolbox.selectTool("webconsole");
+  await toolbox.selectTool("webconsole");
 
-  const node = yield waitFor(() => findMessage(hud, "original source"));
+  const node = await waitFor(() => findMessage(hud, "original source"));
   ok(node, "source map error is displayed in web console");
 
   ok(!!node.querySelector(".learn-more-link"), "source map error has learn more link");

@@ -13,10 +13,11 @@
 #include "mp4_demuxer/MoofParser.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "MediaData.h"
 #ifdef MOZ_FMP4
 #include "mp4_demuxer/AtomType.h"
-#include "mp4_demuxer/ByteReader.h"
+#include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/Stream.h"
 #endif
 #include "nsAutoPtr.h"
@@ -478,8 +479,14 @@ private:
     AtomParser(const MediaContainerType& aType, const MediaByteBuffer* aData,
                StopAt aStop = StopAt::eEnd)
     {
+      mValid = Init(aType, aData, aStop).isOk();
+    }
+
+    Result<Ok, nsresult> Init(const MediaContainerType& aType, const MediaByteBuffer* aData,
+               StopAt aStop)
+    {
       const MediaContainerType mType(aType); // for logging macro.
-      mp4_demuxer::ByteReader reader(aData);
+      mp4_demuxer::BufferReader reader(aData);
       mp4_demuxer::AtomType initAtom("moov");
       mp4_demuxer::AtomType mediaAtom("moof");
       mp4_demuxer::AtomType dataAtom("mdat");
@@ -496,9 +503,12 @@ private:
       };
 
       while (reader.Remaining() >= 8) {
-        uint64_t size = reader.ReadU32();
+        uint32_t tmp;
+        MOZ_TRY_VAR(tmp, reader.ReadU32());
+        uint64_t size = tmp;
         const uint8_t* typec = reader.Peek(4);
-        mp4_demuxer::AtomType type(reader.ReadU32());
+        MOZ_TRY_VAR(tmp, reader.ReadU32());
+        mp4_demuxer::AtomType type(tmp);
         MSE_DEBUGV(AtomParser ,"Checking atom:'%c%c%c%c' @ %u",
                    typec[0], typec[1], typec[2], typec[3],
                    (uint32_t)reader.Offset() - 8);
@@ -510,8 +520,7 @@ private:
           mLastInvalidBox[2] = typec[2];
           mLastInvalidBox[3] = typec[3];
           mLastInvalidBox[4] = '\0';
-          mValid = false;
-          break;
+          return Err(NS_ERROR_FAILURE);
         }
         if (mInitOffset.isNothing() &&
             mp4_demuxer::AtomType(type) == initAtom) {
@@ -527,10 +536,7 @@ private:
         }
         if (size == 1) {
           // 64 bits size.
-          if (!reader.CanReadType<uint64_t>()) {
-            break;
-          }
-          size = reader.ReadU64();
+          MOZ_TRY_VAR(size, reader.ReadU64());
         } else if (size == 0) {
           // Atom extends to the end of the buffer, it can't have what we're
           // looking for.
@@ -556,6 +562,8 @@ private:
           break;
         }
       }
+
+      return Ok();
     }
 
     bool StartWithInitSegment() const
@@ -574,7 +582,7 @@ private:
     Maybe<size_t> mInitOffset;
     Maybe<size_t> mMediaOffset;
     Maybe<size_t> mDataOffset;
-    bool mValid = true;
+    bool mValid;
     char mLastInvalidBox[5];
   };
 

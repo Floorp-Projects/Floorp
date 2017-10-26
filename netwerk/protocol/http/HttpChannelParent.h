@@ -193,7 +193,7 @@ protected:
                                                       const bool& aChooseAppcache) override;
   virtual mozilla::ipc::IPCResult RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no) override;
-  virtual mozilla::ipc::IPCResult RecvDocumentChannelCleanup() override;
+  virtual mozilla::ipc::IPCResult RecvDocumentChannelCleanup(const bool& clearCacheEntry) override;
   virtual mozilla::ipc::IPCResult RecvMarkOfflineCacheEntryAsForeign() override;
   virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset,

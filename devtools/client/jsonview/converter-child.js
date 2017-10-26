@@ -201,24 +201,23 @@ Converter.prototype = {
 // To save with the proper extension we need the original content type,
 // which has been replaced by application/vnd.mozilla.json.view
 function fixSave(request) {
-  let originalType;
+  let match;
   if (request instanceof Ci.nsIHttpChannel) {
     try {
       let header = request.getResponseHeader("Content-Type");
-      originalType = header.split(";")[0];
+      match = header.match(/^(application\/(?:[^;]+\+)?json)(?:;|$)/);
     } catch (err) {
       // Handled below
     }
   } else {
     let uri = request.QueryInterface(Ci.nsIChannel).URI.spec;
-    let match = uri.match(/^data:(.*?)[,;]/);
-    if (match) {
-      originalType = match[1];
-    }
+    match = uri.match(/^data:(application\/(?:[^;,]+\+)?json)[;,]/);
   }
-  const JSON_TYPES = ["application/json", "application/manifest+json"];
-  if (!JSON_TYPES.includes(originalType)) {
-    originalType = JSON_TYPES[0];
+  let originalType;
+  if (match) {
+    originalType = match[1];
+  } else {
+    originalType = "application/json";
   }
   request.QueryInterface(Ci.nsIWritablePropertyBag);
   request.setProperty("contentType", originalType);

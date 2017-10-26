@@ -774,8 +774,11 @@ var clear = async function(db) {
     // Expire orphan icons.
     await db.executeCached(`DELETE FROM moz_pages_w_icons
                             WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
-    await db.executeCached(`DELETE FROM moz_icons
-                            WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
+    await db.executeCached(`DELETE FROM moz_icons WHERE id IN (
+                              SELECT id FROM moz_icons WHERE root = 0
+                              EXCEPT
+                              SELECT icon_id FROM moz_icons_to_pages
+                            )`);
 
     // Expire annotations.
     await db.execute(`DELETE FROM moz_items_annos WHERE expiration = :expire_session`,
@@ -843,28 +846,34 @@ var clear = async function(db) {
 var cleanupPages = async function(db, pages) {
   await invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
 
-  let pageIdsToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id);
-  if (pageIdsToRemove.length > 0) {
-    let idsList = sqlList(pageIdsToRemove);
-    // Note, we are already in a transaction, since callers create it.
-    // Check relations regardless, to avoid creating orphans in case of
-    // async race conditions.
-    await db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
-                      AND foreign_count = 0 AND last_visit_date ISNULL`);
-    // Hosts accumulated during the places delete are updated through a trigger
-    // (see nsPlacesTriggers.h).
-    await db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+  let pagesToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits);
+  if (pagesToRemove.length == 0)
+    return;
 
-    // Expire orphans.
-    await db.executeCached(`DELETE FROM moz_pages_w_icons
-                            WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
-    await db.executeCached(`DELETE FROM moz_icons
-                            WHERE root = 0 AND id NOT IN (SELECT icon_id FROM moz_icons_to_pages)`);
-    await db.execute(`DELETE FROM moz_annos
-                      WHERE place_id IN ( ${ idsList } )`);
-    await db.execute(`DELETE FROM moz_inputhistory
-                      WHERE place_id IN ( ${ idsList } )`);
-  }
+  let idsList = sqlList(pagesToRemove.map(p => p.id));
+  // Note, we are already in a transaction, since callers create it.
+  // Check relations regardless, to avoid creating orphans in case of
+  // async race conditions.
+  await db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )
+                    AND foreign_count = 0 AND last_visit_date ISNULL`);
+  // Hosts accumulated during the places delete are updated through a trigger
+  // (see nsPlacesTriggers.h).
+  await db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+
+  // Expire orphans.
+  let hashesToRemove = pagesToRemove.map(p => p.hash);
+  await db.executeCached(`DELETE FROM moz_pages_w_icons
+                          WHERE page_url_hash IN (${sqlList(hashesToRemove)})`);
+  await db.executeCached(`DELETE FROM moz_icons WHERE id IN (
+                            SELECT id FROM moz_icons WHERE root = 0
+                            EXCEPT
+                            SELECT icon_id FROM moz_icons_to_pages
+                          )`);
+
+  await db.execute(`DELETE FROM moz_annos
+                    WHERE place_id IN ( ${ idsList } )`);
+  await db.execute(`DELETE FROM moz_inputhistory
+                    WHERE place_id IN ( ${ idsList } )`);
 };
 
 /**
@@ -1082,7 +1091,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
 
       // 3. Find out which pages have been orphaned
       await db.execute(
-        `SELECT id, url, guid,
+        `SELECT id, url, url_hash, guid,
           (foreign_count != 0) AS has_foreign,
           (last_visit_date NOTNULL) as has_visits
          FROM moz_places
@@ -1095,6 +1104,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
              hasForeign: row.getResultByName("has_foreign"),
              hasVisits: row.getResultByName("has_visits"),
              url: new URL(row.getResultByName("url")),
+             hash: row.getResultByName("url_hash"),
            };
            pages.push(page);
          });
@@ -1161,7 +1171,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
   // 3. Find out what needs to be removed
   let fragmentArray = [hostFilterSQLFragment, dateFilterSQLFragment];
   let query =
-      `SELECT h.id, url, rev_host, guid, title, frecency, foreign_count
+      `SELECT h.id, url, url_hash, rev_host, guid, title, frecency, foreign_count
        FROM moz_places h WHERE
        (${ fragmentArray.filter(f => f !== "").join(") AND (") })`;
   let onResultData = onResult ? [] : null;
@@ -1184,7 +1194,8 @@ var removeByFilter = async function(db, filter, onResult = null) {
         guid,
         hasForeign,
         hasVisits: false,
-        url: new URL(url)
+        url: new URL(url),
+        hash: row.getResultByName("url_hash"),
       };
       pages.push(page);
       if (onResult) {
@@ -1224,7 +1235,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
 var remove = async function(db, {guids, urls}, onResult = null) {
   // 1. Find out what needs to be removed
   let query =
-    `SELECT id, url, guid, foreign_count, title, frecency
+    `SELECT id, url, url_hash, guid, foreign_count, title, frecency
      FROM moz_places
      WHERE guid IN (${ sqlList(guids) })
         OR (url_hash IN (${ urls.map(u => "hash(" + JSON.stringify(u) + ")").join(",") })
@@ -1248,6 +1259,7 @@ var remove = async function(db, {guids, urls}, onResult = null) {
       hasForeign,
       hasVisits: false,
       url: new URL(url),
+      hash: row.getResultByName("url_hash"),
     };
     pages.push(page);
     if (onResult) {

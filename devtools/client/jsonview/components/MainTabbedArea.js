@@ -34,7 +34,8 @@ define(function (require, exports, module) {
         PropTypes.array,
         PropTypes.bool,
         PropTypes.number
-      ])
+      ]),
+      expandedNodes: PropTypes.instanceOf(Set),
     },
 
     getInitialState: function () {
@@ -60,7 +61,7 @@ define(function (require, exports, module) {
             title: JSONView.Locale.$STR("jsonViewer.tab.JSON")},
             JsonPanel({
               data: this.props.json,
-              jsonTextLength: this.props.jsonText.length,
+              expandedNodes: this.props.expandedNodes,
               actions: this.props.actions,
               searchFilter: this.state.searchFilter
             })

@@ -37,6 +37,13 @@
     }
   },
   "locales": {
+    "ach": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "wikipedia"
+        ]
+      }
+    },
     "an": {
       "default": {
         "visibleDefaultEngines": [
@@ -97,6 +104,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo-france", "bing", "twitter", "wikipedia-br"
+        ]
+      }
+    },
+    "bs": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "twitter", "wikipedia-bs"
         ]
       }
     },

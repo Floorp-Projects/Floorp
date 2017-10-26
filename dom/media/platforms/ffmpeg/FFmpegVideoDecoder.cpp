@@ -217,8 +217,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
 #endif
       )) {
     while (inputSize) {
-      uint8_t* data;
-      int size;
+      uint8_t* data = inputData;
+      int size = inputSize;
       int len = mLib->av_parser_parse2(
         mCodecParser, mCodecContext, &data, &size, inputData, inputSize,
         aSample->mTime.ToMicroseconds(), aSample->mTimecode.ToMicroseconds(),

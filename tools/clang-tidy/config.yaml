@@ -16,6 +16,8 @@ clang_checkers:
    publish: !!bool yes
  - name: misc-suspicious-semicolon
    publish: !!bool yes
+ - name: modernize-avoid-bind
+   publish: !!bool yes
  - name: modernize-loop-convert
    publish: !!bool yes
  - name: modernize-raw-string-literal

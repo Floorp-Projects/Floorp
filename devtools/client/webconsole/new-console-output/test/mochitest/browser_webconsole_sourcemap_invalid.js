@@ -24,11 +24,11 @@ const PAGE_URL = `data:text/html,
 
 </html>`;
 
-add_task(function* () {
-  yield pushPref("devtools.source-map.client-service.enabled", true);
+add_task(async function() {
+  await pushPref("devtools.source-map.client-service.enabled", true);
 
-  const hud = yield openNewTabAndConsole(PAGE_URL);
+  const hud = await openNewTabAndConsole(PAGE_URL);
 
-  const node = yield waitFor(() => findMessage(hud, "Source map error"));
+  const node = await waitFor(() => findMessage(hud, "Source map error"));
   ok(node, "source map error is displayed in web console");
 });

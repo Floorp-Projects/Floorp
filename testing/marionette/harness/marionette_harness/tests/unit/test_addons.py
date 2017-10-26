@@ -97,3 +97,7 @@ class TestAddons(MarionetteTestCase):
 
         with self.assertRaisesRegexp(AddonInstallException, "Could not find add-on at"):
             self.addons.install(addon_path)
+
+    def test_install_with_relative_path(self):
+        with self.assertRaisesRegexp(AddonInstallException, "is not an absolute path."):
+            self.addons.install('webextension.xpi')

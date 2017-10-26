@@ -164,7 +164,9 @@ WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
   codecParams.mMaxFramerate = aCodecSettings->maxFramerate;
   mMaxPayloadSize = aMaxPayloadSize;
 
-  memset(&mCodecSpecificInfo, 0, sizeof(webrtc::CodecSpecificInfo));
+  memset(&mCodecSpecificInfo.codecSpecific,
+         0,
+         sizeof(mCodecSpecificInfo.codecSpecific));
   mCodecSpecificInfo.codecType = webrtc::kVideoCodecH264;
   mCodecSpecificInfo.codecSpecific.H264.packetization_mode =
     aCodecSettings->H264().packetizationMode == 1 ?

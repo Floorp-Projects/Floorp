@@ -27,18 +27,18 @@ const PAGE_URL = `data:text/html,
 
 </html>`;
 
-add_task(function* () {
-  yield pushPref("devtools.source-map.client-service.enabled", true);
-  yield pushPref("devtools.webconsole.filter.css", true);
+add_task(async function() {
+  await pushPref("devtools.source-map.client-service.enabled", true);
+  await pushPref("devtools.webconsole.filter.css", true);
 
-  const hud = yield openNewTabAndConsole(PAGE_URL);
+  const hud = await openNewTabAndConsole(PAGE_URL);
 
   info("Waiting for css warning");
-  let node = yield waitFor(() => findMessage(hud, "octopus"));
+  let node = await waitFor(() => findMessage(hud, "octopus"));
   ok(!!node, "css warning seen");
 
   info("Waiting for source map to be applied");
-  let found = yield waitFor(() => {
+  let found = await waitFor(() => {
     let frameLinkNode = node.querySelector(".message-location .frame-link");
     let url = frameLinkNode.getAttribute("data-url");
     return url.includes("scss");
