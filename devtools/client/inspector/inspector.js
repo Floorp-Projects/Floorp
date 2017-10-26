@@ -678,6 +678,32 @@ Inspector.prototype = {
         defaultTab == changesId);
     }
 
+    if (Services.prefs.getBoolPref("devtools.eventsview.enabled")) {
+      // Inject a lazy loaded react tab by exposing a fake React object
+      // with a lazy defined Tab thanks to `panel` being a function
+      let eventsId = "eventsview";
+      let eventsTitle = INSPECTOR_L10N.getStr("inspector.sidebar.eventsViewTitle");
+      this.sidebar.addTab(
+        eventsId,
+        eventsTitle,
+        {
+          props: {
+            id: eventsId,
+            title: eventsTitle
+          },
+          panel: () => {
+            if (!this.eventview) {
+              const EventsView =
+                this.browserRequire("devtools/client/inspector/events/events");
+              this.eventsview = new EventsView(this, this.panelWin);
+            }
+
+            return this.eventsview.provider;
+          }
+        },
+        defaultTab == eventsId);
+    }
+
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
         "animationinspector",
