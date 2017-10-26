@@ -10,7 +10,7 @@
 add_task(function* () {
   requestLongerTimeout(4);
 
-  let { monitor } = yield initNetMonitor(INFINITE_GET_URL, true);
+  let { tab, monitor } = yield initNetMonitor(INFINITE_GET_URL, true);
   let { document, windowRequire, store } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
@@ -56,6 +56,11 @@ add_task(function* () {
   let requestsContainerHeaders = requestsContainer.firstChild;
   let headersHeight = requestsContainerHeaders.offsetHeight;
   is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
+
+  // Stop doing requests.
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function () {
+    content.wrappedJSObject.stopRequests();
+  });
 
   // Done: clean up.
   return teardown(monitor);

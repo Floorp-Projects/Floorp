@@ -48,7 +48,6 @@ const UPDATED_REQ_ITEM_PROPS = [
   "mimeType",
   "eventTimings",
   "securityState",
-  "responseContentDataUri",
   "status",
   "statusText",
   "fromCache",
