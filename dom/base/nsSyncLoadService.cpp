@@ -26,6 +26,8 @@
 #include "nsStreamUtils.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 using mozilla::net::ReferrerPolicy;
 
 /**

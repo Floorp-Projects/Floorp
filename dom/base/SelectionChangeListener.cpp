@@ -10,7 +10,11 @@
 
 #include "SelectionChangeListener.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
+#include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsFrameSelection.h"
 #include "nsRange.h"
 #include "Selection.h"

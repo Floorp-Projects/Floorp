@@ -7,12 +7,14 @@
 #include "nsTreeSanitizer.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
+#include "mozilla/dom/SRIMetadata.h"
 #include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
 #include "nsUnicharInputStream.h"
@@ -28,6 +30,7 @@
 #include "nsQueryObject.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 //
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist

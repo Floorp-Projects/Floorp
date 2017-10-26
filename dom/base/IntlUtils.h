@@ -7,6 +7,8 @@
 #define mozilla_dom_IntlUtils_h
 
 #include "mozilla/dom/IntlUtilsBinding.h"
+#include "nsWrapperCache.h"
+#include "xpcprivate.h"
 
 class nsPIDOMWindowInner;
 
