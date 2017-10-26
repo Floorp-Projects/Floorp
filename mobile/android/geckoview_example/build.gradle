@@ -4,7 +4,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         targetSdkVersion project.ext.targetSdkVersion
@@ -36,20 +35,17 @@ android {
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 
-    compile 'com.android.support:support-annotations:23.4.0'
+    implementation 'com.android.support:support-annotations:23.4.0'
 
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestImplementation 'com.android.support.test:runner:0.5'
     // Not defining this library again results in test-app assuming 23.1.1, and the following errors:
     // "Conflict with dependency 'com.android.support:support-annotations'. Resolved versions for app (23.4.0) and test app (23.1.1) differ."
-    androidTestCompile 'com.android.support:support-annotations:23.4.0'
+    androidTestImplementation 'com.android.support:support-annotations:23.4.0'
 
-    debugCompile project(path: ':geckoview', configuration: "debug")
-    releaseCompile project(path: ':geckoview', configuration: "release")
-    withGeckoBinariesCompile project(path: ':geckoview', configuration: "withGeckoBinaries")
-    withoutGeckoBinariesCompile project(path: ':geckoview', configuration: "withoutGeckoBinaries")
+    implementation project(path: ':geckoview')
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
