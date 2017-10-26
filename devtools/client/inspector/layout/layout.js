@@ -7,7 +7,7 @@
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const LayoutApp = createFactory(require("./components/LayoutApp"));
+const App = createFactory(require("./components/App"));
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
@@ -16,15 +16,15 @@ const INSPECTOR_L10N =
 loader.lazyRequireGetter(this, "FlexboxInspector", "devtools/client/inspector/flexbox/flexbox");
 loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
 
-class LayoutView {
+function LayoutView(inspector, window) {
+  this.document = window.document;
+  this.inspector = inspector;
+  this.store = inspector.store;
 
-  constructor(inspector, window) {
-    this.document = window.document;
-    this.inspector = inspector;
-    this.store = inspector.store;
+  this.init();
+}
 
-    this.init();
-  }
+LayoutView.prototype = {
 
   init() {
     if (!this.inspector) {
@@ -56,7 +56,7 @@ class LayoutView {
       onToggleShowInfiniteLines,
     } = this.gridInspector.getComponentProps();
 
-    let layoutApp = LayoutApp({
+    let app = App({
       getSwatchColorPickerTooltip,
       setSelectedNode,
       /**
@@ -84,11 +84,11 @@ class LayoutView {
       key: "layoutview",
       store: this.store,
       title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
-    }, layoutApp);
+    }, app);
 
     // Expose the provider to let inspector.js use it in setupSidebar.
     this.provider = provider;
-  }
+  },
 
   /**
    * Destruction function called when the inspector is destroyed. Cleans up references.
@@ -99,8 +99,8 @@ class LayoutView {
     this.document = null;
     this.inspector = null;
     this.store = null;
-  }
+  },
 
-}
+};
 
 module.exports = LayoutView;
