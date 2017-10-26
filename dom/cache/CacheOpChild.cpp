@@ -12,6 +12,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
+#include "mozilla/dom/cache/CacheWorkerHolder.h"
 
 namespace mozilla {
 namespace dom {

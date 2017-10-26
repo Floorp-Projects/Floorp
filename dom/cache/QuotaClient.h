@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/Client.h"
+#include "mozIStorageConnection.h"
 
 namespace mozilla {
 namespace dom {
