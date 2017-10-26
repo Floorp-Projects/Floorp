@@ -78,8 +78,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 ],
                 'stage_product': 'firefox',
                 'platform_supports_post_upload_to_latest': True,
-                'build_resources_path': \
-                '%(abs_src_dir)s/obj-firefox/.mozbuild/build_resources.json',
+                'build_resources_path': '%(abs_obj_dir)s/.mozbuild/build_resources.json',
                 'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
                 # try will overwrite these
