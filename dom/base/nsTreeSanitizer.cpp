@@ -995,7 +995,7 @@ nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal)
 }
 
 bool
-nsTreeSanitizer::IsURL(nsAtom*** aURLs, nsAtom* aLocalName)
+nsTreeSanitizer::IsURL(nsAtom** const* aURLs, nsAtom* aLocalName)
 {
   nsAtom** atomPtrPtr;
   while ((atomPtrPtr = *aURLs)) {
@@ -1163,7 +1163,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                     nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
-                                    nsAtom*** aURLs,
+                                    nsAtom** const* aURLs,
                                     bool aAllowXLink,
                                     bool aAllowStyle,
                                     bool aAllowDangerousSrc)
@@ -1428,14 +1428,14 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
         if (ns == kNameSpaceID_XHTML) {
           SanitizeAttributes(elt,
                              sAttributesHTML,
-                             (nsAtom***)kURLAttributesHTML,
+                             kURLAttributesHTML,
                              false,
                              mAllowStyles,
                              false);
         } else {
           SanitizeAttributes(elt,
                              sAttributesSVG,
-                             (nsAtom***)kURLAttributesSVG,
+                             kURLAttributesSVG,
                              true,
                              mAllowStyles,
                              false);
@@ -1467,21 +1467,21 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
       if (ns == kNameSpaceID_XHTML) {
         SanitizeAttributes(elt,
                            sAttributesHTML,
-                           (nsAtom***)kURLAttributesHTML,
+                           kURLAttributesHTML,
                            false, mAllowStyles,
                            (nsGkAtoms::img == localName) &&
                            !mCidEmbedsOnly);
       } else if (ns == kNameSpaceID_SVG) {
         SanitizeAttributes(elt,
                            sAttributesSVG,
-                           (nsAtom***)kURLAttributesSVG,
+                           kURLAttributesSVG,
                            true,
                            mAllowStyles,
                            false);
       } else {
         SanitizeAttributes(elt,
                            sAttributesMathML,
-                           (nsAtom***)kURLAttributesMathML,
+                           kURLAttributesMathML,
                            true,
                            false,
                            false);
