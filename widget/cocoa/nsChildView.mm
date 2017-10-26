@@ -71,6 +71,7 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "gfxUtils.h"
@@ -4021,6 +4022,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     if ([self isUsingOpenGL]) {
       if (ShadowLayerForwarder* slf = mGeckoChild->GetLayerManager()->AsShadowForwarder()) {
         slf->WindowOverlayChanged();
+      } else if (WebRenderLayerManager* wrlm = mGeckoChild->GetLayerManager()->AsWebRenderLayerManager()) {
+        wrlm->WindowOverlayChanged();
       }
     }
 
