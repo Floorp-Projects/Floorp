@@ -2425,19 +2425,6 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   MOZ_ASSERT(need_pages <= total_pages);
   rem_pages = total_pages - need_pages;
 
-  mRunsAvail.Remove(&chunk->map[run_ind]);
-
-  /* Keep track of trailing unused pages for later use. */
-  if (rem_pages > 0) {
-    chunk->map[run_ind+need_pages].bits = (rem_pages <<
-        pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
-        pagesize_mask);
-    chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
-        pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
-        pagesize_mask);
-    mRunsAvail.Insert(&chunk->map[run_ind+need_pages]);
-  }
-
   for (i = 0; i < need_pages; i++) {
     /*
      * Commit decommitted pages if necessary.  If a decommitted
@@ -2466,15 +2453,31 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
 #  ifdef MALLOC_DECOMMIT
       pages_commit((void*)(uintptr_t(chunk) + ((run_ind + i) << pagesize_2pow)),
                    j << pagesize_2pow);
+      // pages_commit zeroes pages, so mark them as such. That's checked
+      // further below to avoid manually zeroing the pages.
+      for (size_t k = 0; k < j; k++) {
+        chunk->map[run_ind + i + k].bits |= CHUNK_MAP_ZEROED;
+      }
 #  endif
 
       mStats.committed += j;
-
     }
-#  ifdef MALLOC_DECOMMIT
-    else /* No need to zero since commit zeroes. */
-#  endif
+  }
 
+  mRunsAvail.Remove(&chunk->map[run_ind]);
+
+  /* Keep track of trailing unused pages for later use. */
+  if (rem_pages > 0) {
+    chunk->map[run_ind+need_pages].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
+        pagesize_mask);
+    chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
+        pagesize_mask);
+    mRunsAvail.Insert(&chunk->map[run_ind+need_pages]);
+  }
+
+  for (i = 0; i < need_pages; i++) {
     /* Zero if necessary. */
     if (aZero) {
       if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED) == 0) {
