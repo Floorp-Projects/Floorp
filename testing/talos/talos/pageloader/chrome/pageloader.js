@@ -46,8 +46,6 @@ var gPaintWindow = window;
 var gPaintListener = false;
 var loadNoCache = false;
 var scrollTest = false;
-var gDisableE10S = false;
-var gUseE10S = false;
 var profilingInfo = false;
 var baseVsRef = false;
 
@@ -154,7 +152,6 @@ function plInit() {
     if (args.fnbpaint) useFNBPaint = true;
     if (args.loadnocache) loadNoCache = true;
     if (args.scrolltest) scrollTest = true;
-    if (args.disableE10S) gDisableE10S = true;
     if (args.profilinginfo) profilingInfo = JSON.parse(args.profilinginfo)
 
     if (profilingInfo) {
@@ -234,8 +231,8 @@ function plInit() {
       // able to resize the window and not have it get clobbered
       // by the persisted values
       setTimeout(function() {
-        // For e10s windows, since bug 1261842, the initial browser is remote unless
-        // it attempts to browse to a URI that should be non-remote (landed at bug 1047603).
+        // Since bug 1261842, the initial browser is remote unless it attempts
+        // to browse to a URI that should be non-remote (landed at bug 1047603).
         //
         // However, when it loads a URI that requires a different remote type,
         // we lose the load listener and the injected tpRecordTime.remote,
@@ -244,13 +241,11 @@ function plInit() {
         // instance which adds the load listener and injects tpRecordTime), all the
         // pages should be able to load in the same mode as the initial page - due
         // to this reinitialization on the switch.
-        if (browserWindow.gMultiProcessBrowser) {
-          let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
-          if (remoteType) {
-            browserWindow.XULBrowserWindow.forceInitialBrowserRemote(remoteType);
-          } else {
-            browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote(null);
-          }
+        let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
+        if (remoteType) {
+          browserWindow.XULBrowserWindow.forceInitialBrowserRemote(remoteType);
+        } else {
+          browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote(null);
         }
 
         browserWindow.resizeTo(winWidth, winHeight);
@@ -258,9 +253,6 @@ function plInit() {
         browserWindow.focus();
 
         content = browserWindow.getBrowser();
-        gUseE10S = !gDisableE10S || (plPageFlags() & EXECUTE_SCROLL_TEST) ||
-                    (content.selectedBrowser &&
-                    content.selectedBrowser.getAttribute("remote") == "true")
 
         // Load the frame script for e10s / IPC message support
         let contentScript = "data:,function _contentLoadHandler(e) { " +
@@ -495,11 +487,8 @@ var plNextPage = async function() {
       var tccend = new Date();
       report.recordCCTime(tccend - tccstart);
 
-      // Now asynchronously trigger GC / CC in the content process if we're
-      // in an e10s window.
-      if (browserWindow.gMultiProcessBrowser) {
-        await forceContentGC();
-      }
+      // Now asynchronously trigger GC / CC in the content process
+      await forceContentGC();
     }
 
     setTimeout(plLoadPage, delay);
@@ -727,7 +716,7 @@ function _loadHandler(fnbpaint = 0) {
   plNextPage();
 }
 
-// the core handler for remote (e10s) browser
+// the core handler
 function plLoadHandlerMessage(message) {
   let fnbpaint = 0;
   if (message.json.fnbpaint !== undefined) {
@@ -764,7 +753,7 @@ function plLoadHandlerMessage(message) {
   }
 }
 
-// the record time handler used for remote (e10s) browser
+// the record time handler
 function plRecordTimeMessage(message) {
   gTime = message.json.time;
   gStartTime = message.json.startTime;
