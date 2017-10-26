@@ -220,7 +220,7 @@ public:
   virtual MOZ_MUST_USE nsresult CommitToSegmentSize(uint32_t size,
                                                     bool forceCommitment) override;
   MOZ_MUST_USE nsresult BufferOutput(const char *, uint32_t, uint32_t *);
-  void     FlushOutputQueue();
+  void     MaybeFlushOutputQueue();
   uint32_t AmountOfOutputBuffered() { return mOutputQueueUsed - mOutputQueueSent; }
 
   uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
@@ -563,6 +563,11 @@ private:
   // We should propagate this events to the first nsHttpTransaction.
   RefPtr<nsHttpTransaction> mFirstHttpTransaction;
   bool mTlsHandshakeFinished;
+
+  void SetSegmentReader(nsAHttpSegmentReader *);
+  void FlushOutputQueue();
+  bool mFlushOK;
+
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);
