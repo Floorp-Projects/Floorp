@@ -191,7 +191,7 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
 
-    with LineIO(lambda l: log.info(l)) as out:
+    with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
             topsrcdir, topobjdir,
             os.path.join(topobjdir, '_virtualenv'), out,
