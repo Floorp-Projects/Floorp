@@ -334,7 +334,7 @@ public:
   static int64_t SizeOfIncludingThisAndOtherStuff(
     mozilla::MallocSizeOf aMallocSizeOf);
 
-  static void HandleDirty();
+  static void DirtyCallback();
 
   // Explicitly choosing synchronous or asynchronous (if allowed) preferences
   // file write. Only for the default file.  The guarantee for the "blocking"
