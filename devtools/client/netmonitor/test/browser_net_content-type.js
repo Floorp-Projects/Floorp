@@ -22,7 +22,7 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function () {
     content.wrappedJSObject.performRequests();
   });
   yield wait;
@@ -142,25 +142,25 @@ add_task(function* () {
     }
   );
 
-  yield selectIndexAndWaitForSourceEditor(0);
+  yield selectIndexAndWaitForSourceEditor(monitor, 0);
   yield testResponseTab("xml");
 
-  yield selectIndexAndWaitForSourceEditor(1);
+  yield selectIndexAndWaitForSourceEditor(monitor, 1);
   yield testResponseTab("css");
 
-  yield selectIndexAndWaitForSourceEditor(2);
+  yield selectIndexAndWaitForSourceEditor(monitor, 2);
   yield testResponseTab("js");
 
   yield selectIndexAndWaitForJSONView(3);
   yield testResponseTab("json");
 
-  yield selectIndexAndWaitForSourceEditor(4);
+  yield selectIndexAndWaitForSourceEditor(monitor, 4);
   yield testResponseTab("html");
 
   yield selectIndexAndWaitForImageView(5);
   yield testResponseTab("png");
 
-  yield selectIndexAndWaitForSourceEditor(6);
+  yield selectIndexAndWaitForSourceEditor(monitor, 6);
   yield testResponseTab("gzip");
 
   yield teardown(monitor);
@@ -270,32 +270,26 @@ add_task(function* () {
     }
   }
 
-  function* selectIndexAndWaitForSourceEditor(index) {
-    let editor = document.querySelector("#response-panel .CodeMirror-code");
-    if (!editor) {
-      let waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
-      EventUtils.sendMouseEvent({ type: "mousedown" },
-        document.querySelectorAll(".request-list-item")[index]);
-      document.querySelector("#response-tab").click();
-      yield waitDOM;
-    } else {
-      EventUtils.sendMouseEvent({ type: "mousedown" },
-        document.querySelectorAll(".request-list-item")[index]);
-    }
-  }
-
   function* selectIndexAndWaitForJSONView(index) {
+    let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
     store.dispatch(Actions.selectRequestByIndex(index));
     yield waitDOM;
+    yield onResponseContent;
+
+    // Waiting for RECEIVED_RESPONSE_CONTENT isn't enough.
+    // DOM may not be fully updated yet and checkVisibility(json) may still fail.
+    yield waitForTick();
   }
 
   function* selectIndexAndWaitForImageView(index) {
+    let onResponseContent = monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT);
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
     store.dispatch(Actions.selectRequestByIndex(index));
     let [imageNode] = yield waitDOM;
     yield once(imageNode, "load");
+    yield onResponseContent;
   }
 });

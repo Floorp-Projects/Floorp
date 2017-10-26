@@ -71,6 +71,7 @@ class RequestListContent extends Component {
       getTabTarget: connector.getTabTarget,
       getLongString: connector.getLongString,
       openStatistics: (open) => dispatch(Actions.openStatistics(connector, open)),
+      requestData: connector.requestData,
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
   }

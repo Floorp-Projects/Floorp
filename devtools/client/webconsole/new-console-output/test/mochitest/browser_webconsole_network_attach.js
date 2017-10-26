@@ -49,6 +49,8 @@ add_task(async function task() {
   info("network-request-payload-ready received");
 
   await testNetworkMessage(messageNode);
+
+  await waitForExistingRequests(monitor);
 });
 
 async function testNetworkMessage(messageNode) {
