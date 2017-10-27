@@ -25,13 +25,11 @@ var gRunningProcesses = new Set();
  * stack traces will be stored in the .extra file under the StackTraces= entry.
  *
  * @param minidumpPath {string} The path to the minidump file
- * @param allThreads {bool} Gather stack traces for all threads, not just the
- *                   crashing thread.
  *
  * @returns {Promise} A promise that gets resolved once minidump analysis has
  *          finished.
  */
-function runMinidumpAnalyzer(minidumpPath, allThreads) {
+function runMinidumpAnalyzer(minidumpPath) {
   return new Promise((resolve, reject) => {
     try {
       const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
@@ -53,10 +51,6 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
       process.init(exe);
       process.startHidden = true;
       process.noShell = true;
-
-      if (allThreads) {
-        args.unshift("--full");
-      }
 
       process.runAsync(args, args.length, (subject, topic, data) => {
         switch (topic) {
@@ -179,15 +173,12 @@ CrashService.prototype = Object.freeze({
       throw new Error("Unrecognized PROCESS_TYPE: " + processType);
     }
 
-    let allThreads = false;
-
     switch (crashType) {
     case Ci.nsICrashService.CRASH_TYPE_CRASH:
       crashType = Services.crashmanager.CRASH_TYPE_CRASH;
       break;
     case Ci.nsICrashService.CRASH_TYPE_HANG:
       crashType = Services.crashmanager.CRASH_TYPE_HANG;
-      allThreads = true;
       break;
     default:
       throw new Error("Unrecognized CRASH_TYPE: " + crashType);
@@ -203,7 +194,7 @@ CrashService.prototype = Object.freeze({
     if (!gQuitting) {
       // Minidump analysis can take a long time, don't start it if the browser
       // is already quitting.
-      await runMinidumpAnalyzer(minidumpPath, allThreads);
+      await runMinidumpAnalyzer(minidumpPath);
     }
 
     metadata = await processExtraFile(extraPath);
