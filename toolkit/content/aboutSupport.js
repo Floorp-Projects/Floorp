@@ -81,21 +81,36 @@ var snapshotFormatters = {
       $("contentprocesses-row").hidden = true;
     }
 
-    let styloReason;
-    if (!data.styloBuild) {
-      styloReason = strings.GetStringFromName("disabledByBuild");
-    } else if (data.styloResult != data.styloDefault) {
-      if (data.styloResult) {
-        styloReason = strings.GetStringFromName("enabledByUser");
+    function getReasonStringName(resultValue, defaultValue) {
+      if (resultValue != defaultValue) {
+        if (resultValue) {
+          return "enabledByUser";
+        } else {
+          return "disabledByUser";
+        }
       } else {
-        styloReason = strings.GetStringFromName("disabledByUser");
+        if (resultValue) {
+          return "enabledByDefault";
+        } else {
+          return "disabledByDefault";
+        }
       }
-    } else if (data.styloDefault) {
-      styloReason = strings.GetStringFromName("enabledByDefault");
-    } else {
-      styloReason = strings.GetStringFromName("disabledByDefault");
     }
-    $("stylo-box").textContent = `${data.styloResult} (${styloReason})`;
+    let styloReason;
+    let styloChromeReason;
+    if (!data.styloBuild) {
+      styloReason = "disabledByBuild";
+      styloChromeReason = "disabledByBuild";
+    } else {
+      styloReason = getReasonStringName(data.styloResult, data.styloDefault);
+      styloChromeReason = getReasonStringName(data.styloChromeResult,
+                                              data.styloChromeDefault);
+    }
+    styloReason = strings.GetStringFromName(styloReason);
+    styloChromeReason = strings.GetStringFromName(styloChromeReason);
+    $("stylo-box").textContent =
+      `content = ${data.styloResult} (${styloReason}), ` +
+      `chrome = ${data.styloChromeResult} (${styloChromeReason})`;
 
     let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
     $("key-google-box").textContent = strings.GetStringFromName(keyGoogleFound);
