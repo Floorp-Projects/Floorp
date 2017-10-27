@@ -18,11 +18,6 @@
 namespace mozilla {
 namespace layers {
 
-struct StyleAnimationValueCompositePair {
-  StyleAnimationValue mValue;
-  dom::CompositeOperation mComposite;
-};
-
 void
 CompositorAnimationStorage::Clear()
 {
@@ -139,26 +134,27 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 
 static StyleAnimationValue
 SampleValue(double aPortion, const layers::Animation& aAnimation,
-            const StyleAnimationValueCompositePair& aStart,
-            const StyleAnimationValueCompositePair& aEnd,
+            const AnimationPropertySegment&& aSegment,
             const StyleAnimationValue& aLastValue,
             uint64_t aCurrentIteration,
             const StyleAnimationValue& aUnderlyingValue)
 {
-  NS_ASSERTION(aStart.mValue.IsNull() || aEnd.mValue.IsNull() ||
-               aStart.mValue.GetUnit() == aEnd.mValue.GetUnit(),
+  NS_ASSERTION(aSegment.mFromValue.mGecko.IsNull() ||
+               aSegment.mToValue.mGecko.IsNull() ||
+               aSegment.mFromValue.mGecko.GetUnit() ==
+                 aSegment.mToValue.mGecko.GetUnit(),
                "Must have same unit");
 
   StyleAnimationValue startValue =
     dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
-                                                aStart.mValue,
+                                                aSegment.mFromValue.mGecko,
                                                 aUnderlyingValue,
-                                                aStart.mComposite);
+                                                aSegment.mFromComposite);
   StyleAnimationValue endValue =
     dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
-                                                aEnd.mValue,
+                                                aSegment.mToValue.mGecko,
                                                 aUnderlyingValue,
-                                                aEnd.mComposite);
+                                                aSegment.mToComposite);
 
   // Iteration composition for accumulate
   if (static_cast<dom::IterationCompositeOperation>
@@ -269,22 +265,41 @@ AnimationHelper::SampleAnimationForEachNode(
                                          positionInSegment,
                                      computedTiming.mBeforeFlag);
 
-    StyleAnimationValueCompositePair from {
-      animData.mStartValues[segmentIndex].mGecko,
-      static_cast<dom::CompositeOperation>(segment->startComposite())
-    };
-    StyleAnimationValueCompositePair to {
-      animData.mEndValues[segmentIndex].mGecko,
-      static_cast<dom::CompositeOperation>(segment->endComposite())
-    };
+    AnimationPropertySegment animSegment;
+    animSegment.mFromKey = 0.0;
+    animSegment.mToKey = 1.0;
+    animSegment.mFromValue = animData.mStartValues[segmentIndex];
+    animSegment.mToValue = animData.mEndValues[segmentIndex];
+    animSegment.mFromComposite =
+      static_cast<dom::CompositeOperation>(segment->startComposite());
+    animSegment.mToComposite =
+      static_cast<dom::CompositeOperation>(segment->endComposite());
+
     // interpolate the property
-    aAnimationValue.mGecko =
-      SampleValue(portion,
-                  animation,
-                  from, to,
-                  animData.mEndValues.LastElement().mGecko,
-                  computedTiming.mCurrentIteration,
-                  aAnimationValue.mGecko);
+    bool isServo = animSegment.mFromValue.mServo ||
+                   animSegment.mToValue.mServo;
+    if (isServo) {
+      dom::IterationCompositeOperation iterCompositeOperation =
+          static_cast<dom::IterationCompositeOperation>(
+            animation.iterationComposite());
+
+      aAnimationValue.mServo =
+        Servo_ComposeAnimationSegment(
+          &animSegment,
+          aAnimationValue.mServo,
+          animData.mEndValues.LastElement().mServo,
+          iterCompositeOperation,
+          portion,
+          computedTiming.mCurrentIteration).Consume();
+    } else {
+      aAnimationValue.mGecko =
+        SampleValue(portion,
+                    animation,
+                    Move(animSegment),
+                    animData.mEndValues.LastElement().mGecko,
+                    computedTiming.mCurrentIteration,
+                    aAnimationValue.mGecko);
+    }
     aHasInEffectAnimations = true;
   }
 
