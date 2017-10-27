@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {DOM, createClass, createFactory, PropTypes} = require("devtools/client/shared/vendor/react");
+const {DOM, Component, createFactory, PropTypes} = require("devtools/client/shared/vendor/react");
 
 const {findDOMNode} = require("devtools/client/shared/vendor/react-dom");
 const {button, div} = DOM;
@@ -12,34 +12,41 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
 
-module.exports = createClass({
-  displayName: "ToolboxTabs",
-
+class ToolboxTabs extends Component {
   // See toolbox-toolbar propTypes for details on the props used here.
-  propTypes: {
-    currentToolId: PropTypes.string,
-    focusButton: PropTypes.func,
-    focusedButton: PropTypes.string,
-    highlightedTool: PropTypes.string,
-    panelDefinitions: PropTypes.array,
-    selectTool: PropTypes.func,
-    toolbox: PropTypes.object,
-    L10N: PropTypes.object,
-  },
-
-  getInitialState() {
+  static get propTypes() {
     return {
+      currentToolId: PropTypes.string,
+      focusButton: PropTypes.func,
+      focusedButton: PropTypes.string,
+      highlightedTool: PropTypes.string,
+      panelDefinitions: PropTypes.array,
+      selectTool: PropTypes.func,
+      toolbox: PropTypes.object,
+      L10N: PropTypes.object,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       overflow: false,
     };
-  },
+
+    this.addFlowEvents = this.addFlowEvents.bind(this);
+    this.removeFlowEvents = this.removeFlowEvents.bind(this);
+    this.onOverflow = this.onOverflow.bind(this);
+    this.onUnderflow = this.onUnderflow.bind(this);
+  }
 
   componentDidUpdate() {
     this.addFlowEvents();
-  },
+  }
 
   componentWillUnmount() {
     this.removeFlowEvents();
-  },
+  }
 
   addFlowEvents() {
     this.removeFlowEvents();
@@ -48,7 +55,7 @@ module.exports = createClass({
       node.addEventListener("overflow", this.onOverflow);
       node.addEventListener("underflow", this.onUnderflow);
     }
-  },
+  }
 
   removeFlowEvents() {
     let node = findDOMNode(this);
@@ -56,19 +63,19 @@ module.exports = createClass({
       node.removeEventListener("overflow", this.onOverflow);
       node.removeEventListener("underflow", this.onUnderflow);
     }
-  },
+  }
 
   onOverflow() {
     this.setState({
       overflow: true
     });
-  },
+  }
 
   onUnderflow() {
     this.setState({
       overflow: false
     });
-  },
+  }
 
   /**
    * Render all of the tabs, based on the panel definitions and builds out
@@ -107,8 +114,10 @@ module.exports = createClass({
       ),
       this.state.overflow ? renderAllToolsButton(this.props) : null
     );
-  },
-});
+  }
+}
+
+module.exports = ToolboxTabs;
 
 /**
  * Render a button to access all tools, displayed only when the toolbar presents an
