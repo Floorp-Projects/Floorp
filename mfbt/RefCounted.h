@@ -17,6 +17,8 @@
 #include "mozilla/RefCountType.h"
 #include "mozilla/TypeTraits.h"
 
+#include <atomic>
+
 #if defined(MOZILLA_INTERNAL_API)
 #include "nsXPCOM.h"
 #endif
@@ -90,6 +92,74 @@ enum RefCountAtomicity
 };
 
 template<typename T, RefCountAtomicity Atomicity>
+class RC
+{
+public:
+  explicit RC(T aCount) : mValue(aCount) {}
+
+  T operator++() { return ++mValue; }
+  T operator--() { return --mValue; }
+
+  void operator=(const T& aValue) { mValue = aValue; }
+
+  operator T() const { return mValue; }
+
+private:
+  T mValue;
+};
+
+template<typename T>
+class RC<T, AtomicRefCount>
+{
+public:
+  explicit RC(T aCount) : mValue(aCount) {}
+
+  T operator++()
+  {
+    // Memory synchronization is not required when incrementing a
+    // reference count.  The first increment of a reference count on a
+    // thread is not important, since the first use of the object on a
+    // thread can happen before it.  What is important is the transfer
+    // of the pointer to that thread, which may happen prior to the
+    // first increment on that thread.  The necessary memory
+    // synchronization is done by the mechanism that transfers the
+    // pointer between threads.
+    return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
+  }
+
+  T operator--()
+  {
+    // Since this may be the last release on this thread, we need
+    // release semantics so that prior writes on this thread are visible
+    // to the thread that destroys the object when it reads mValue with
+    // acquire semantics.
+    T result = mValue.fetch_sub(1, std::memory_order_release) - 1;
+    if (result == 0) {
+      // We're going to destroy the object on this thread, so we need
+      // acquire semantics to synchronize with the memory released by
+      // the last release on other threads, that is, to ensure that
+      // writes prior to that release are now visible on this thread.
+      std::atomic_thread_fence(std::memory_order_acquire);
+    }
+    return result;
+  }
+
+  // This method is only called in debug builds, so we're not too concerned
+  // about its performance.
+  void operator=(const T& aValue) { mValue.store(aValue, std::memory_order_seq_cst); }
+
+  operator T() const
+  {
+    // Use acquire semantics since we're not sure what the caller is
+    // doing.
+    return mValue.load(std::memory_order_acquire);
+  }
+
+private:
+  std::atomic<T> mValue;
+};
+
+template<typename T, RefCountAtomicity Atomicity>
 class RefCounted
 {
 protected:
@@ -150,9 +220,7 @@ public:
   }
 
 private:
-  mutable typename Conditional<Atomicity == AtomicRefCount,
-                               Atomic<MozRefCountType>,
-                               MozRefCountType>::Type mRefCnt;
+  mutable RC<MozRefCountType, Atomicity> mRefCnt;
 };
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
