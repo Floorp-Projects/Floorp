@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "اقتُصّت هذه الصورة لتصبح $PIXELS$بكسل.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "خارج الخدمة."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "خذ لقطات الشاشة و احفظها و شاركها دون مغادرة فَيَرفُكس."
+  },
+  "tourHeaderPageAction": {
+    "message": "طريقة جديدة لحفظ اللقطات بها"
+  },
+  "tourBodyPageAction": {
+    "message": "وسّع قائمة إجراءات الصفحة في شريط العنوان لأخذ لقطة في أي وقت."
   },
   "tourHeaderClickAndDrag": {
     "message": "التقط ما تريده فقط"
