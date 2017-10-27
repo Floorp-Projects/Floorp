@@ -130,7 +130,7 @@ hb_ot_var_normalize_variations (hb_face_t            *face,
   for (unsigned int i = 0; i < variations_length; i++)
   {
     unsigned int axis_index;
-    if (hb_ot_var_find_axis (face, variations[i].tag, &axis_index, NULL) &&
+    if (hb_ot_var_find_axis (face, variations[i].tag, &axis_index, nullptr) &&
 	axis_index < coords_length)
       coords[axis_index] = fvar.normalize_axis_value (axis_index, variations[i].value);
   }

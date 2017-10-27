@@ -29,6 +29,48 @@
 
 #include "hb-open-type-private.hh"
 
+#define NUM_FORMAT1_NAMES 258
+
+static const char* const format1_names[NUM_FORMAT1_NAMES] =
+{
+  ".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl",
+  "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft",
+  "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash",
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+  "nine", "colon", "semicolon", "less", "equal", "greater", "question", "at",
+  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
+  "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "bracketleft",
+  "backslash", "bracketright", "asciicircum", "underscore", "grave", "a", "b",
+  "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q",
+  "r", "s", "t", "u", "v", "w", "x", "y", "z", "braceleft", "bar",
+  "braceright", "asciitilde", "Adieresis", "Aring", "Ccedilla", "Eacute",
+  "Ntilde", "Odieresis", "Udieresis", "aacute", "agrave", "acircumflex",
+  "adieresis", "atilde", "aring", "ccedilla", "eacute", "egrave",
+  "ecircumflex", "edieresis", "iacute", "igrave", "icircumflex", "idieresis",
+  "ntilde", "oacute", "ograve", "ocircumflex", "odieresis", "otilde", "uacute",
+  "ugrave", "ucircumflex", "udieresis", "dagger", "degree", "cent", "sterling",
+  "section", "bullet", "paragraph", "germandbls", "registered", "copyright",
+  "trademark", "acute", "dieresis", "notequal", "AE", "Oslash", "infinity",
+  "plusminus", "lessequal", "greaterequal", "yen", "mu", "partialdiff",
+  "summation", "product", "pi", "integral", "ordfeminine", "ordmasculine",
+  "Omega", "ae", "oslash", "questiondown", "exclamdown", "logicalnot",
+  "radical", "florin", "approxequal", "Delta", "guillemotleft",
+  "guillemotright", "ellipsis", "nonbreakingspace", "Agrave", "Atilde",
+  "Otilde", "OE", "oe", "endash", "emdash", "quotedblleft", "quotedblright",
+  "quoteleft", "quoteright", "divide", "lozenge", "ydieresis", "Ydieresis",
+  "fraction", "currency", "guilsinglleft", "guilsinglright", "fi", "fl",
+  "daggerdbl", "periodcentered", "quotesinglbase", "quotedblbase",
+  "perthousand", "Acircumflex", "Ecircumflex", "Aacute", "Edieresis", "Egrave",
+  "Iacute", "Icircumflex", "Idieresis", "Igrave", "Oacute", "Ocircumflex",
+  "apple", "Ograve", "Uacute", "Ucircumflex", "Ugrave", "dotlessi",
+  "circumflex", "tilde", "macron", "breve", "dotaccent", "ring", "cedilla",
+  "hungarumlaut", "ogonek", "caron", "Lslash", "lslash", "Scaron", "scaron",
+  "Zcaron", "zcaron", "brokenbar", "Eth", "eth", "Yacute", "yacute", "Thorn",
+  "thorn", "minus", "multiply", "onesuperior", "twosuperior", "threesuperior",
+  "onehalf", "onequarter", "threequarters", "franc", "Gbreve", "gbreve",
+  "Idotaccent", "Scedilla", "scedilla", "Cacute", "cacute", "Ccaron", "ccaron",
+  "dcroat",
+};
 
 namespace OT {
 
@@ -71,10 +113,139 @@ struct post
       return_trace (false);
     if (version.to_int () == 0x00020000)
     {
-      const postV2Tail &v2 = StructAfter<postV2Tail>(*this);
+      const postV2Tail &v2 = StructAfter<postV2Tail> (*this);
       return_trace (v2.sanitize (c));
     }
     return_trace (true);
+  }
+
+  inline bool get_glyph_name (hb_codepoint_t glyph,
+			      char *buffer, unsigned int buffer_length,
+			      unsigned int blob_len) const
+  {
+    if (version.to_int () == 0x00010000)
+    {
+      if (glyph >= NUM_FORMAT1_NAMES)
+	return false;
+
+      if (!buffer_length)
+	return true;
+      strncpy (buffer, format1_names[glyph], buffer_length);
+      buffer[buffer_length - 1] = '\0';
+      return true;
+    }
+
+    if (version.to_int () == 0x00020000)
+    {
+      const postV2Tail &v2 = StructAfter<postV2Tail> (*this);
+
+      if (glyph >= v2.numberOfGlyphs)
+	return false;
+
+      if (!buffer_length)
+	return true;
+
+      unsigned int index = v2.glyphNameIndex[glyph];
+      if (index < NUM_FORMAT1_NAMES)
+      {
+	if (!buffer_length)
+	  return true;
+	strncpy (buffer, format1_names[index], buffer_length);
+	buffer[buffer_length - 1] = '\0';
+	return true;
+      }
+      index -= NUM_FORMAT1_NAMES;
+
+      unsigned int offset = min_size + v2.min_size + 2 * v2.numberOfGlyphs;
+      unsigned char *data = (unsigned char *) this + offset;
+      unsigned char *end = (unsigned char *) this + blob_len;
+      for (unsigned int i = 0; data < end; i++)
+      {
+	unsigned int name_length = data[0];
+	data++;
+	if (i == index)
+	{
+	  if (unlikely (!name_length))
+	    return false;
+
+	  unsigned int remaining = end - data;
+	  name_length = MIN (name_length, buffer_length - 1);
+	  name_length = MIN (name_length, remaining);
+	  memcpy (buffer, data, name_length);
+	  buffer[name_length] = '\0';
+	  return true;
+	}
+	data += name_length;
+      }
+
+      return false;
+    }
+
+    return false;
+  }
+
+  inline bool get_glyph_from_name (const char *name, int len,
+				   hb_codepoint_t *glyph,
+				   unsigned int blob_len) const
+  {
+    if (len < 0)
+      len = strlen (name);
+
+    if (version.to_int () == 0x00010000)
+    {
+      for (int i = 0; i < NUM_FORMAT1_NAMES; i++)
+      {
+	if (strncmp (name, format1_names[i], len) == 0 && format1_names[i][len] == '\0')
+	{
+	  *glyph = i;
+	  return true;
+	}
+      }
+      return false;
+    }
+
+    if (version.to_int () == 0x00020000)
+    {
+      const postV2Tail &v2 = StructAfter<postV2Tail> (*this);
+      unsigned int offset = min_size + v2.min_size + 2 * v2.numberOfGlyphs;
+      char* data = (char*) this + offset;
+
+
+      /* XXX The following code is wrong. */
+      return false;
+      for (hb_codepoint_t gid = 0; gid < v2.numberOfGlyphs; gid++)
+      {
+	unsigned int index = v2.glyphNameIndex[gid];
+	if (index < NUM_FORMAT1_NAMES)
+	{
+	  if (strncmp (name, format1_names[index], len) == 0 && format1_names[index][len] == '\0')
+	  {
+	    *glyph = gid;
+	    return true;
+	  }
+	  continue;
+	}
+	index -= NUM_FORMAT1_NAMES;
+
+	for (unsigned int i = 0; data < (char*) this + blob_len; i++)
+	{
+	  unsigned int name_length = data[0];
+	  unsigned int remaining = (char*) this + blob_len - data - 1;
+	  name_length = MIN (name_length, remaining);
+	  if (name_length == (unsigned int) len && strncmp (name, data + 1, len) == 0)
+	  {
+	    *glyph = gid;
+	    return true;
+	  }
+	  data += name_length + 1;
+	}
+	return false;
+      }
+
+      return false;
+    }
+
+    return false;
   }
 
   public:

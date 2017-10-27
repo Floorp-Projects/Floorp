@@ -70,7 +70,7 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
   hb_ot_map_builder_t *map = &planner->map;
 
   map->add_global_bool_feature (HB_TAG('r','v','r','n'));
-  map->add_gsub_pause (NULL);
+  map->add_gsub_pause (nullptr);
 
   switch (props->direction) {
     case HB_DIRECTION_LTR:
@@ -176,7 +176,7 @@ _hb_ot_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan,
 {
   hb_ot_shape_plan_t *plan = (hb_ot_shape_plan_t *) calloc (1, sizeof (hb_ot_shape_plan_t));
   if (unlikely (!plan))
-    return NULL;
+    return nullptr;
 
   hb_ot_shape_planner_t planner (shape_plan);
 
@@ -190,7 +190,7 @@ _hb_ot_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan,
   if (plan->shaper->data_create) {
     plan->data = plan->shaper->data_create (plan);
     if (unlikely (!plan->data))
-      return NULL;
+      return nullptr;
   }
 
   return plan;
@@ -928,7 +928,7 @@ hb_ot_shape_glyphs_closure (hb_font_t          *font,
 {
   hb_ot_shape_plan_t plan;
 
-  const char *shapers[] = {"ot", NULL};
+  const char *shapers[] = {"ot", nullptr};
   hb_shape_plan_t *shape_plan = hb_shape_plan_create_cached (font->face, &buffer->props,
 							     features, num_features, shapers);
 
@@ -939,18 +939,19 @@ hb_ot_shape_glyphs_closure (hb_font_t          *font,
   for (unsigned int i = 0; i < count; i++)
     add_char (font, buffer->unicode, mirror, info[i].codepoint, glyphs);
 
-  hb_set_t lookups;
-  lookups.init ();
-  hb_ot_shape_plan_collect_lookups (shape_plan, HB_OT_TAG_GSUB, &lookups);
+  hb_set_t *lookups = hb_set_create ();
+  hb_ot_shape_plan_collect_lookups (shape_plan, HB_OT_TAG_GSUB, lookups);
 
   /* And find transitive closure. */
-  hb_set_t copy;
-  copy.init ();
+  hb_set_t *copy = hb_set_create ();
   do {
-    copy.set (glyphs);
-    for (hb_codepoint_t lookup_index = -1; hb_set_next (&lookups, &lookup_index);)
+    copy->set (glyphs);
+    for (hb_codepoint_t lookup_index = -1; hb_set_next (lookups, &lookup_index);)
       hb_ot_layout_lookup_substitute_closure (font->face, lookup_index, glyphs);
-  } while (!copy.is_equal (glyphs));
+  } while (!copy->is_equal (glyphs));
+  hb_set_destroy (copy);
+
+  hb_set_destroy (lookups);
 
   hb_shape_plan_destroy (shape_plan);
 }
