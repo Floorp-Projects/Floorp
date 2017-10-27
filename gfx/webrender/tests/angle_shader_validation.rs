@@ -67,10 +67,6 @@ const SHADERS: &[Shader] = &[
         features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_cache_image",
-        features: &["COLOR", "ALPHA"],
-    },
-    Shader {
         name: "ps_blend",
         features: PRIM_FEATURES,
     },
@@ -106,6 +102,10 @@ const SHADERS: &[Shader] = &[
     Shader {
         name: "brush_mask",
         features: &[],
+    },
+    Shader {
+        name: "brush_image",
+        features: &["COLOR_TARGET", "ALPHA_TARGET"],
     },
 ];
 

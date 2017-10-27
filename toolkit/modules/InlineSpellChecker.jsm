@@ -133,7 +133,7 @@ InlineSpellChecker.prototype = {
     var spellchecker = this.mRemote || this.mInlineSpellChecker.spellChecker;
     try {
       if (!this.mRemote && !spellchecker.CheckCurrentWord(this.mMisspelling))
-        return 0;  // word seems not misspelled after all (?)
+        return 0; // word seems not misspelled after all (?)
     } catch (e) {
         return 0;
     }

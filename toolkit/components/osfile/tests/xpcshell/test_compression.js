@@ -52,7 +52,7 @@ add_task(async function test_uncompressed() {
 
 add_task(async function test_no_header() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "no_header.tmp");
-  let array = new Uint8Array(8).fill(0, 0);  // Small array with no header
+  let array = new Uint8Array(8).fill(0, 0); // Small array with no header
 
   do_print("Writing data with no header");
 

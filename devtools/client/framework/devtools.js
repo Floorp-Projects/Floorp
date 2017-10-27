@@ -37,8 +37,8 @@ const MAX_ORDINAL = 99;
  * set of tools and keeps track of open toolboxes in the browser.
  */
 function DevTools() {
-  this._tools = new Map();     // Map<toolId, tool>
-  this._themes = new Map();    // Map<themeId, theme>
+  this._tools = new Map(); // Map<toolId, tool>
+  this._themes = new Map(); // Map<themeId, theme>
   this._toolboxes = new Map(); // Map<target, toolbox>
   // List of toolboxes that are still in process of creation
   this._creatingToolboxes = new Map(); // Map<target, toolbox Promise>

@@ -783,9 +783,9 @@ function processPathEntry(path, fileArray) {
 
   var tilde_file = file.clone();
   tilde_file.append("~");
-  if (path[0] == "~" &&                        // Expand ~ to $HOME, except:
+  if (path[0] == "~" && // Expand ~ to $HOME, except:
       !(path == "~" && tilde_file.exists()) && // If ~ was entered and such a file exists, don't expand
-      (path.length == 1 || path[1] == "/"))    // We don't want to expand ~file to ${HOME}file
+      (path.length == 1 || path[1] == "/")) // We don't want to expand ~file to ${HOME}file
     filePath = homeDir.path + path.substring(1);
   else
     filePath = path;
@@ -793,7 +793,7 @@ function processPathEntry(path, fileArray) {
   // Unescape quotes
   filePath = filePath.replace(/\\\"/g, "\"");
 
-  if (filePath[0] == "/")   /* an absolute path was entered */
+  if (filePath[0] == "/") /* an absolute path was entered */
     file.initWithPath(filePath);
   else if ((filePath.indexOf("/../") > 0) ||
            (filePath.substr(-3) == "/..") ||

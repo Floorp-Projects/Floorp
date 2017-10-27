@@ -545,7 +545,7 @@ function projector(type, signed) {
     throw new TypeError("Argument is not a proper C type");
   }
   // Determine if type is projected to Int64/Uint64
-  if (type.size == 8           // Usual case
+  if (type.size == 8 // Usual case
       // The following cases have special treatment in js-ctypes
       // Regardless of their size, the value getter returns
       // a Int64/Uint64

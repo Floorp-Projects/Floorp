@@ -483,7 +483,7 @@ public:
    * @return ATTR_MISSING, ATTR_VALUE_NO_MATCH or the non-negative index
    * indicating the first value of aValues that matched
    */
-  typedef nsAtom* const* const AttrValuesArray;
+  typedef nsStaticAtom* const* const AttrValuesArray;
   virtual int32_t FindAttrValueIn(int32_t aNameSpaceID,
                                   nsAtom* aName,
                                   AttrValuesArray* aValues,

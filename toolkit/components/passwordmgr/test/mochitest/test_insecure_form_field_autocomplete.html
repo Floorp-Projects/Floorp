@@ -358,8 +358,8 @@ add_task(async function test_form1_wraparound_down_up_up() {
   await shownPromise;
 
   doKey("down"); // select first entry
-  doKey("up");   // selects nothing!
-  doKey("up");   // select last entry
+  doKey("up"); // selects nothing!
+  doKey("up"); // select last entry
   doKey("return");
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");

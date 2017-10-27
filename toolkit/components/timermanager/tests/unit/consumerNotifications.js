@@ -19,7 +19,7 @@ const PREF_APP_UPDATE_TIMERFIRSTINTERVAL = "app.update.timerFirstInterval";
 const PREF_APP_UPDATE_LOG_ALL = "app.update.log.all";
 const PREF_BRANCH_LAST_UPDATE_TIME = "app.update.lastUpdateTime.";
 
-const MAIN_TIMER_INTERVAL = 1000;  // milliseconds
+const MAIN_TIMER_INTERVAL = 1000; // milliseconds
 const CONSUMER_TIMER_INTERVAL = 1; // seconds
 
 const TESTS = [ {

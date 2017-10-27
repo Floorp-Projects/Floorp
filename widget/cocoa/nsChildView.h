@@ -458,9 +458,6 @@ public:
                                                  mozilla::wr::DisplayListBuilder& aBuilder,
                                                  mozilla::wr::IpcResourceUpdateQueue& aResourceUpdates) override;
 
-  virtual void CleanupWebRenderWindowOverlay(mozilla::layers::WebRenderBridgeChild* aWrBridge,
-                                             mozilla::wr::IpcResourceUpdateQueue& aResources) override;
-
   virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual void DrawWindowOverlay(mozilla::widget::WidgetRenderingContext* aManager,

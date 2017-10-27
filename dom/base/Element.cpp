@@ -3420,7 +3420,7 @@ nsDOMTokenListPropertyDestructor(void *aObject, nsAtom *aProperty,
   NS_RELEASE(list);
 }
 
-static nsAtom** sPropertiesToTraverseAndUnlink[] =
+static nsStaticAtom** sPropertiesToTraverseAndUnlink[] =
   {
     &nsGkAtoms::sandbox,
     &nsGkAtoms::sizes,
@@ -3429,7 +3429,7 @@ static nsAtom** sPropertiesToTraverseAndUnlink[] =
   };
 
 // static
-nsAtom***
+nsStaticAtom***
 Element::HTMLSVGPropertiesToTraverseAndUnlink()
 {
   return sPropertiesToTraverseAndUnlink;
@@ -3440,8 +3440,7 @@ Element::GetTokenList(nsAtom* aAtom,
                       const DOMTokenListSupportedTokenArray aSupportedTokens)
 {
 #ifdef DEBUG
-  nsAtom*** props =
-    HTMLSVGPropertiesToTraverseAndUnlink();
+  nsStaticAtom*** props = HTMLSVGPropertiesToTraverseAndUnlink();
   bool found = false;
   for (uint32_t i = 0; props[i]; ++i) {
     if (*props[i] == aAtom) {

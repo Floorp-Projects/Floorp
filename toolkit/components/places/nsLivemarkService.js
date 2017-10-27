@@ -265,7 +265,7 @@ LivemarkService.prototype = {
     // Check if there's a currently running reload, to save some useless work.
     let notWorthRestarting =
       this._forceUpdate || // We're already forceUpdating.
-      !aForceUpdate;       // The caller didn't request a forced update.
+      !aForceUpdate; // The caller didn't request a forced update.
     if (this._reloading && notWorthRestarting) {
       // Ignore this call.
       return;
