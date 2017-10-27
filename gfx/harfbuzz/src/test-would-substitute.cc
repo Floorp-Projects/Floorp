@@ -47,7 +47,7 @@
 int
 main (int argc, char **argv)
 {
-  hb_blob_t *blob = NULL;
+  hb_blob_t *blob = nullptr;
 
   if (argc != 4 && argc != 5) {
     fprintf (stderr, "usage: %s font-file lookup-index first-glyph [second-glyph]\n", argv[0]);
@@ -63,7 +63,7 @@ main (int argc, char **argv)
     hb_memory_mode_t mm;
 
 #ifdef HAVE_GLIB
-    GMappedFile *mf = g_mapped_file_new (argv[1], false, NULL);
+    GMappedFile *mf = g_mapped_file_new (argv[1], false, nullptr);
     font_data = g_mapped_file_get_contents (mf);
     len = g_mapped_file_get_length (mf);
     destroy = (hb_destroy_func_t) g_mapped_file_unref;
@@ -89,7 +89,7 @@ main (int argc, char **argv)
   /* Create the face */
   hb_face_t *face = hb_face_create (blob, 0 /* first face */);
   hb_blob_destroy (blob);
-  blob = NULL;
+  blob = nullptr;
 
   hb_font_t *font = hb_font_create (face);
 #ifdef HAVE_FREETYPE
@@ -102,5 +102,5 @@ main (int argc, char **argv)
       (argc > 4 &&
        !hb_font_glyph_from_string (font, argv[4], -1, &glyphs[1])))
     return 2;
-  return !hb_ot_layout_lookup_would_substitute (face, strtol (argv[2], NULL, 0), glyphs, len, false);
+  return !hb_ot_layout_lookup_would_substitute (face, strtol (argv[2], nullptr, 0), glyphs, len, false);
 }

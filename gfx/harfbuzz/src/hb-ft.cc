@@ -33,8 +33,6 @@
 
 #include "hb-font-private.hh"
 
-#include "hb-cache-private.hh" // Maybe use in the future?
-
 #include FT_ADVANCES_H
 #include FT_MULTIPLE_MASTERS_H
 #include FT_TRUETYPE_TABLES_H
@@ -83,7 +81,7 @@ _hb_ft_font_create (FT_Face ft_face, bool symbol, bool unref)
   hb_ft_font_t *ft_font = (hb_ft_font_t *) calloc (1, sizeof (hb_ft_font_t));
 
   if (unlikely (!ft_font))
-    return NULL;
+    return nullptr;
 
   ft_font->ft_face = ft_face;
   ft_font->symbol = symbol;
@@ -158,7 +156,7 @@ FT_Face
 hb_ft_font_get_face (hb_font_t *font)
 {
   if (font->destroy != _hb_ft_font_destroy)
-    return NULL;
+    return nullptr;
 
   const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font->user_data;
 
@@ -424,7 +422,7 @@ hb_ft_get_font_h_extents (hb_font_t *font HB_UNUSED,
   return true;
 }
 
-static hb_font_funcs_t *static_ft_funcs = NULL;
+static hb_font_funcs_t *static_ft_funcs = nullptr;
 
 #ifdef HB_USE_ATEXIT
 static
@@ -444,24 +442,24 @@ retry:
   {
     funcs = hb_font_funcs_create ();
 
-    hb_font_funcs_set_font_h_extents_func (funcs, hb_ft_get_font_h_extents, NULL, NULL);
-    //hb_font_funcs_set_font_v_extents_func (funcs, hb_ft_get_font_v_extents, NULL, NULL);
-    hb_font_funcs_set_nominal_glyph_func (funcs, hb_ft_get_nominal_glyph, NULL, NULL);
-    hb_font_funcs_set_variation_glyph_func (funcs, hb_ft_get_variation_glyph, NULL, NULL);
-    hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ft_get_glyph_h_advance, NULL, NULL);
-    hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ft_get_glyph_v_advance, NULL, NULL);
-    //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ft_get_glyph_h_origin, NULL, NULL);
-    hb_font_funcs_set_glyph_v_origin_func (funcs, hb_ft_get_glyph_v_origin, NULL, NULL);
-    hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ft_get_glyph_h_kerning, NULL, NULL);
-    //hb_font_funcs_set_glyph_v_kerning_func (funcs, hb_ft_get_glyph_v_kerning, NULL, NULL);
-    hb_font_funcs_set_glyph_extents_func (funcs, hb_ft_get_glyph_extents, NULL, NULL);
-    hb_font_funcs_set_glyph_contour_point_func (funcs, hb_ft_get_glyph_contour_point, NULL, NULL);
-    hb_font_funcs_set_glyph_name_func (funcs, hb_ft_get_glyph_name, NULL, NULL);
-    hb_font_funcs_set_glyph_from_name_func (funcs, hb_ft_get_glyph_from_name, NULL, NULL);
+    hb_font_funcs_set_font_h_extents_func (funcs, hb_ft_get_font_h_extents, nullptr, nullptr);
+    //hb_font_funcs_set_font_v_extents_func (funcs, hb_ft_get_font_v_extents, nullptr, nullptr);
+    hb_font_funcs_set_nominal_glyph_func (funcs, hb_ft_get_nominal_glyph, nullptr, nullptr);
+    hb_font_funcs_set_variation_glyph_func (funcs, hb_ft_get_variation_glyph, nullptr, nullptr);
+    hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ft_get_glyph_h_advance, nullptr, nullptr);
+    hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ft_get_glyph_v_advance, nullptr, nullptr);
+    //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ft_get_glyph_h_origin, nullptr, nullptr);
+    hb_font_funcs_set_glyph_v_origin_func (funcs, hb_ft_get_glyph_v_origin, nullptr, nullptr);
+    hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ft_get_glyph_h_kerning, nullptr, nullptr);
+    //hb_font_funcs_set_glyph_v_kerning_func (funcs, hb_ft_get_glyph_v_kerning, nullptr, nullptr);
+    hb_font_funcs_set_glyph_extents_func (funcs, hb_ft_get_glyph_extents, nullptr, nullptr);
+    hb_font_funcs_set_glyph_contour_point_func (funcs, hb_ft_get_glyph_contour_point, nullptr, nullptr);
+    hb_font_funcs_set_glyph_name_func (funcs, hb_ft_get_glyph_name, nullptr, nullptr);
+    hb_font_funcs_set_glyph_from_name_func (funcs, hb_ft_get_glyph_from_name, nullptr, nullptr);
 
     hb_font_funcs_make_immutable (funcs);
 
-    if (!hb_atomic_ptr_cmpexch (&static_ft_funcs, NULL, funcs)) {
+    if (!hb_atomic_ptr_cmpexch (&static_ft_funcs, nullptr, funcs)) {
       hb_font_funcs_destroy (funcs);
       goto retry;
     }
@@ -490,17 +488,17 @@ reference_table  (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
 
   /* Note: FreeType like HarfBuzz uses the NONE tag for fetching the entire blob */
 
-  error = FT_Load_Sfnt_Table (ft_face, tag, 0, NULL, &length);
+  error = FT_Load_Sfnt_Table (ft_face, tag, 0, nullptr, &length);
   if (error)
-    return NULL;
+    return nullptr;
 
   buffer = (FT_Byte *) malloc (length);
   if (!buffer)
-    return NULL;
+    return nullptr;
 
   error = FT_Load_Sfnt_Table (ft_face, tag, 0, buffer, &length);
   if (error)
-    return NULL;
+    return nullptr;
 
   return hb_blob_create ((const char *) buffer, length,
 			 HB_MEMORY_MODE_WRITABLE,
@@ -581,7 +579,7 @@ hb_ft_face_create_cached (FT_Face ft_face)
     if (ft_face->generic.finalizer)
       ft_face->generic.finalizer (ft_face);
 
-    ft_face->generic.data = hb_ft_face_create (ft_face, NULL);
+    ft_face->generic.data = hb_ft_face_create (ft_face, nullptr);
     ft_face->generic.finalizer = (FT_Generic_Finalizer) hb_ft_face_finalize;
   }
 
@@ -633,7 +631,7 @@ hb_ft_font_changed (hb_font_t *font)
 #endif
 
 #ifdef HAVE_FT_GET_VAR_BLEND_COORDINATES
-  FT_MM_Var *mm_var = NULL;
+  FT_MM_Var *mm_var = nullptr;
   if (!FT_Get_MM_Var (ft_face, &mm_var))
   {
     FT_Fixed *ft_coords = (FT_Fixed *) calloc (mm_var->num_axis, sizeof (FT_Fixed));
@@ -694,9 +692,9 @@ retry:
   {
     /* Not found; allocate one. */
     if (FT_Init_FreeType (&library))
-      return NULL;
+      return nullptr;
 
-    if (!hb_atomic_ptr_cmpexch (&ft_library, NULL, library)) {
+    if (!hb_atomic_ptr_cmpexch (&ft_library, nullptr, library)) {
       FT_Done_FreeType (library);
       goto retry;
     }
@@ -724,7 +722,7 @@ hb_ft_font_set_funcs (hb_font_t *font)
   if (unlikely (!blob_length))
     DEBUG_MSG (FT, font, "Font face has empty blob");
 
-  FT_Face ft_face = NULL;
+  FT_Face ft_face = nullptr;
   FT_Error err = FT_New_Memory_Face (get_ft_library (),
 				     (const FT_Byte *) blob_data,
 				     blob_length,
@@ -751,7 +749,7 @@ hb_ft_font_set_funcs (hb_font_t *font)
   {
     FT_Matrix matrix = { font->x_scale < 0 ? -1 : +1, 0,
 			  0, font->y_scale < 0 ? -1 : +1};
-    FT_Set_Transform (ft_face, &matrix, NULL);
+    FT_Set_Transform (ft_face, &matrix, nullptr);
   }
 
   unsigned int num_coords;

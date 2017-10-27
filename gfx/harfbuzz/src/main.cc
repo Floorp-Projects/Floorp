@@ -47,11 +47,11 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  const char *font_data = NULL;
+  const char *font_data = nullptr;
   int len = 0;
 
 #ifdef HAVE_GLIB
-  GMappedFile *mf = g_mapped_file_new (argv[1], false, NULL);
+  GMappedFile *mf = g_mapped_file_new (argv[1], false, nullptr);
   font_data = g_mapped_file_get_contents (mf);
   len = g_mapped_file_get_length (mf);
 #else
