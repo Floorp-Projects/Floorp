@@ -1650,6 +1650,7 @@ var gPrivacyPane = {
     let buttonIndex = confirmRestartPrompt(checked, 0, true, false);
     if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
       Services.prefs.setIntPref("accessibility.force_disabled", checked ? 1 : 0);
+      Services.telemetry.scalarSet("preferences.prevent_accessibility_services", true);
       Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
     }
 
