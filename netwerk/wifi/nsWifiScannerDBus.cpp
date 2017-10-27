@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWifiScannerDBus.h"
-#include "mozilla/ipc/DBusMessageRefPtr.h"
+#include "mozilla/DBusHelpers.h"
 #include "nsWifiAccessPoint.h"
 
 namespace mozilla {
