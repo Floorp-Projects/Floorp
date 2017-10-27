@@ -249,6 +249,9 @@ protected:
   RefPtr<Listener> mListener;
   // A mono-increasing integer to uniquely identify the channel we are loading.
   uint32_t mLoadID = 0;
+  // Used by the cache to store the offset to seek to when we are resumed.
+  // -1 means no seek initiated by the cache is waiting.
+  int64_t mPendingSeekOffset = -1;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;

@@ -742,9 +742,11 @@ ChannelMediaResource::Resume()
       // in the future, it will call CacheClientSeek itself which will reopen the
       // channel.
       if (totalLength < 0 || GetOffset() < totalLength) {
-        // There is (or may be) data to read at mOffset, so start reading it.
+        // There is (or may be) data to read, so start reading it.
         // Need to recreate the channel.
-        Seek(GetOffset(), false);
+        Seek(mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset(),
+             false);
+        mPendingSeekOffset = -1;
         element->DownloadResumed();
       } else {
         // The channel remains dead. Do not notify DownloadResumed() which
@@ -899,9 +901,12 @@ ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
   // Don't create a new channel if we are still suspended. The channel will
   // be recreated when we are resumed.
   if (mSuspendAgent.IsSuspended()) {
+    // Store the offset so we know where to seek when resumed.
+    mPendingSeekOffset = aOffset;
     return NS_OK;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(mPendingSeekOffset == -1);
   nsresult rv = RecreateChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
