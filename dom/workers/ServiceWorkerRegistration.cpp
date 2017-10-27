@@ -140,7 +140,7 @@ public:
   }
 
   ServiceWorkerUpdateViaCache
-  UpdateViaCache() const override
+  GetUpdateViaCache(ErrorResult& aRv) const override
   {
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
@@ -154,7 +154,18 @@ public:
     nsCOMPtr<nsIServiceWorkerRegistrationInfo> registration;
     nsresult rv = swm->GetRegistrationByPrincipal(doc->NodePrincipal(), mScope,
                                                   getter_AddRefs(registration));
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && registration);
+
+    /*
+     *  xxx: We should probably store the `updateViaCache` value on the
+     *  ServiceWorkerRegistration object and update it when necessary.
+     *  We don't have a good way to reach all ServiceWorkerRegistration objects
+     *  from the ServiceWorkerRegistratinInfo right now, though.
+     *  This is a short term fix to avoid crashing.
+     */
+    if (NS_FAILED(rv) || !registration) {
+      aRv = NS_ERROR_DOM_INVALID_STATE_ERR;
+      return ServiceWorkerUpdateViaCache::None;
+    }
 
     uint16_t updateViaCache;
     rv = registration->GetUpdateViaCache(&updateViaCache);
@@ -944,7 +955,7 @@ public:
   }
 
   ServiceWorkerUpdateViaCache
-  UpdateViaCache() const override
+  GetUpdateViaCache(ErrorResult& aRv) const override
   {
     // FIXME(hopang): Will be implemented after Bug 1113522.
     return ServiceWorkerUpdateViaCache::Imports;

@@ -1562,6 +1562,7 @@ nsIDocument::nsIDocument()
     mMightHaveStaleServoData(false),
     mDidCallBeginLoad(false),
     mBufferingCSPViolations(false),
+    mAllowPaymentRequest(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -1813,6 +1814,9 @@ nsDocument::~nsDocument()
   DestroyElementMaps();
 
   nsAutoScriptBlocker scriptBlocker;
+
+  // Invalidate cached array of child nodes
+  InvalidateChildNodes();
 
   for (uint32_t indx = mChildren.ChildCount(); indx-- != 0; ) {
     mChildren.ChildAt(indx)->UnbindFromTree();
@@ -2368,6 +2372,10 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   uint32_t count = mChildren.ChildCount();
   { // Scope for update
     MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, true);
+
+    // Invalidate cached array of child nodes
+    InvalidateChildNodes();
+
     for (int32_t i = int32_t(count) - 1; i >= 0; i--) {
       nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
@@ -4296,6 +4304,18 @@ SubDocInitEntry(PLDHashEntryHdr *entry, const void *key)
   e->mSubDocument = nullptr;
 }
 
+bool
+nsDocument::AllowPaymentRequest() const
+{
+  return mAllowPaymentRequest;
+}
+
+void
+nsDocument::SetAllowPaymentRequest(bool aAllowPaymentRequest)
+{
+  mAllowPaymentRequest = aAllowPaymentRequest;
+}
+
 nsresult
 nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 {
@@ -4305,6 +4325,10 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
     // aSubDoc is nullptr, remove the mapping
 
     if (mSubDocuments) {
+      nsIDocument* subDoc = GetSubDocumentFor(aElement);
+      if (subDoc) {
+        subDoc->SetAllowPaymentRequest(false);
+      }
       mSubDocuments->Remove(aElement);
     }
   } else {
@@ -4332,6 +4356,7 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
     }
 
     if (entry->mSubDocument) {
+      entry->mSubDocument->SetAllowPaymentRequest(false);
       entry->mSubDocument->SetParentDocument(nullptr);
 
       // Release the old sub document
@@ -4340,6 +4365,23 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
 
     entry->mSubDocument = aSubDoc;
     NS_ADDREF(entry->mSubDocument);
+
+    // set allowpaymentrequest for the binding subdocument
+    if (!mAllowPaymentRequest) {
+      aSubDoc->SetAllowPaymentRequest(false);
+    } else {
+      nsresult rv = nsContentUtils::CheckSameOrigin(aElement, aSubDoc);
+      if (NS_SUCCEEDED(rv)) {
+        aSubDoc->SetAllowPaymentRequest(true);
+      } else {
+        if (aElement->IsHTMLElement(nsGkAtoms::iframe) &&
+            aElement->GetBoolAttr(nsGkAtoms::allowpaymentrequest)) {
+          aSubDoc->SetAllowPaymentRequest(true);
+        } else {
+          aSubDoc->SetAllowPaymentRequest(false);
+        }
+      }
+    }
 
     aSubDoc->SetParentDocument(this);
   }

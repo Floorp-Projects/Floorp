@@ -89,9 +89,6 @@ add_task(async function setup() {
   // Enable the urlbar one-off buttons.
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
 
-  // Enable Extended Telemetry.
-  await SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
-
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;

@@ -370,7 +370,7 @@ hb_glib_get_unicode_funcs (void)
   static const hb_unicode_funcs_t _hb_glib_unicode_funcs = {
     HB_OBJECT_HEADER_STATIC,
 
-    NULL, /* parent */
+    nullptr, /* parent */
     true, /* immutable */
     {
 #define HB_UNICODE_FUNC_IMPLEMENT(name) hb_glib_unicode_##name,

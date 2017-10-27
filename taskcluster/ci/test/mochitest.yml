@@ -36,11 +36,10 @@ mochitest:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 48
             android.*: 20
-            macosx.*: 5
-            windows.*: 5
-            linux32/debug: 16
-            linux32-stylo-disabled/debug: 16
-            linux.*: 10
+            linux.*/debug: 16
+            linux64-asan/opt: 10
+            linux64-*cov/opt: 10
+            default: 5
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
@@ -95,12 +94,9 @@ mochitest-browser-chrome:
     loopback-video: true
     chunks:
         by-test-platform:
-            linux64/debug: 16
-            linux64-stylo-disabled/debug: 16
+            linux.*/debug: 16
             linux64-asan/opt: 16
             linux64-jsdcov/opt: 35
-            linux32/debug: 16
-            linux32-stylo-disabled/debug: 16
             default: 7
     e10s:
         by-test-platform:
@@ -109,12 +105,8 @@ mochitest-browser-chrome:
             default: true
     max-run-time:
         by-test-platform:
-            linux64-jsdcov/opt: 7200
-            linux64-ccov/opt: 7200
-            linux64/debug: 5400
-            linux64-stylo-disabled/debug: 5400
-            linux32/debug: 5400
-            linux32-stylo-disabled/debug: 5400
+            linux64-*cov/opt: 7200
+            linux.*/debug: 5400
             default: 3600
     mozharness:
         mochitest-flavor: browser
@@ -223,11 +215,7 @@ mochitest-devtools-chrome:
     treeherder-symbol: tc-M(dt)
     loopback-video: true
     max-run-time: 5400
-    chunks:
-        by-test-platform:
-            windows.*: 8
-            macosx.*: 8
-            default: 10
+    chunks: 8
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
@@ -284,7 +272,6 @@ mochitest-media:
             default: large
     chunks:
         by-test-platform:
-            android.*: 3
             macosx64.*: 1
             windows10-64.*: 1
             default: 3
@@ -309,8 +296,8 @@ mochitest-plain-headless:
     loopback-video: true
     chunks:
         by-test-platform:
-            linux.*: 10
-            windows.*: 5
+            linux.*/debug: 16
+            default: 5
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false

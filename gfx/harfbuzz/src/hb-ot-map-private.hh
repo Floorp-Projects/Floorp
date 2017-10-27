@@ -53,8 +53,8 @@ struct hb_ot_map_t
     unsigned int auto_zwnj : 1;
     unsigned int auto_zwj : 1;
 
-    static int cmp (const feature_map_t *a, const feature_map_t *b)
-    { return a->tag < b->tag ? -1 : a->tag > b->tag ? 1 : 0; }
+    inline int cmp (const hb_tag_t *tag_) const
+    { return *tag_ < tag ? -1 : *tag_ > tag ? 1 : 0; }
   };
 
   struct lookup_map_t {
@@ -79,7 +79,7 @@ struct hb_ot_map_t
 
   inline hb_mask_t get_global_mask (void) const { return global_mask; }
 
-  inline hb_mask_t get_mask (hb_tag_t feature_tag, unsigned int *shift = NULL) const {
+  inline hb_mask_t get_mask (hb_tag_t feature_tag, unsigned int *shift = nullptr) const {
     const feature_map_t *map = features.bsearch (&feature_tag);
     if (shift) *shift = map ? map->shift : 0;
     return map ? map->mask : 0;
@@ -108,14 +108,14 @@ struct hb_ot_map_t
   inline void get_stage_lookups (unsigned int table_index, unsigned int stage,
 				 const struct lookup_map_t **plookups, unsigned int *lookup_count) const {
     if (unlikely (stage == (unsigned int) -1)) {
-      *plookups = NULL;
+      *plookups = nullptr;
       *lookup_count = 0;
       return;
     }
     assert (stage <= stages[table_index].len);
     unsigned int start = stage ? stages[table_index][stage - 1].last_lookup : 0;
     unsigned int end   = stage < stages[table_index].len ? stages[table_index][stage].last_lookup : lookups[table_index].len;
-    *plookups = end == start ? NULL : &lookups[table_index][start];
+    *plookups = end == start ? nullptr : &lookups[table_index][start];
     *lookup_count = end - start;
   }
 

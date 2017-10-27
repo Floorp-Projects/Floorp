@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="content" style="display: none"></div>
+<script src="utils.js"></script>
 <script type="text/javascript">
 "use strict";
 
@@ -94,15 +95,12 @@ add_task(async function test_bypassServiceWorker() {
   const swURL = "fetch.js";
   let registration = await navigator.serviceWorker.register(swURL);
 
-  // Wait for the service worker to control the document
-  let waitForControlled = new Promise(resolve => {
-    navigator.serviceWorker.oncontrollerchange = resolve;
-  });
-
   let sw =
     registration.active || registration.waiting || registration.installing;
+
+  await waitForState(sw, 'activated');
   sw.postMessage("claim");
-  await waitForControlled;
+  await waitForControlled(window);
 
   try {
     await testBypassSW();

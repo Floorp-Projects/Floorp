@@ -193,7 +193,7 @@ static inline void *hb_object_get_user_data (Type               *obj,
 					     hb_user_data_key_t *key)
 {
   if (unlikely (!obj || hb_object_is_inert (obj)))
-    return NULL;
+    return nullptr;
   assert (hb_object_is_valid (obj));
   return obj->header.user_data.get (key);
 }

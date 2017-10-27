@@ -179,6 +179,7 @@ fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-2b.h
 fuzzy-if(Android,54,852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
 
 == 1361631-mongolian-upright-1.html 1361631-mongolian-upright-1-ref.html
+== 1395926-vertical-upright-gpos-1.html 1395926-vertical-upright-gpos-1-ref.html
 
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends

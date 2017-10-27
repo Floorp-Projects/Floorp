@@ -45,8 +45,8 @@
 #define HB_BUFFER_MAX_LEN_DEFAULT 0x3FFFFFFF /* Shaping more than a billion chars? Let us know! */
 #endif
 
-ASSERT_STATIC (sizeof (hb_glyph_info_t) == 20);
-ASSERT_STATIC (sizeof (hb_glyph_info_t) == sizeof (hb_glyph_position_t));
+static_assert ((sizeof (hb_glyph_info_t) == 20), "");
+static_assert ((sizeof (hb_glyph_info_t) == sizeof (hb_glyph_position_t)), "");
 
 HB_MARK_AS_FLAG_T (hb_buffer_flags_t);
 HB_MARK_AS_FLAG_T (hb_buffer_serialize_flags_t);

@@ -541,33 +541,23 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // If the node has the same origin as the parent node, the feature is allowed-to-use.
-  // Otherwise, only allow-to-use this feature when the browsing context container is
-  // an iframe with "allowpaymentrequest" attribute.
+
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  nsINode* node = static_cast<nsINode*>(doc);
-  if (!node) {
+  if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsCOMPtr<nsIPrincipal> topLevelPrincipal;
-  do {
-    nsINode* parentNode = nsContentUtils::GetCrossDocParentNode(node);
-    if (parentNode) {
-      nsresult rv = nsContentUtils::CheckSameOrigin(node, parentNode);
-      if (NS_FAILED(rv)) {
-        nsIContent* content = static_cast<nsIContent*>(parentNode);
-        if (!content->IsHTMLElement(nsGkAtoms::iframe) ||
-            !content->HasAttr(kNameSpaceID_None, nsGkAtoms::allowpaymentrequest)) {
-          aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-          return nullptr;
-        }
-      }
-    }
-    topLevelPrincipal = node->NodePrincipal();
-    node = parentNode;
-  } while (node);
+  // Check if AllowPaymentRequest on the owner document
+  if (!doc->AllowPaymentRequest()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  // Get the top level principal
+  nsCOMPtr<nsIDocument> topLevelDoc = doc->GetTopLevelContentDocument();
+  MOZ_ASSERT(topLevelDoc);
+  nsCOMPtr<nsIPrincipal> topLevelPrincipal = topLevelDoc->NodePrincipal();
 
   // Check payment methods and details
   nsAutoString message;

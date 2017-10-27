@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	BUILD.md \
 	RELEASING.md \
 	CMakeLists.txt \
+	replace-enum-strings.cmake \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

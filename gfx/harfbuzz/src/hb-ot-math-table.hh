@@ -50,7 +50,7 @@ struct MathValueRecord
   protected:
   SHORT			value;		/* The X or Y value in design units */
   OffsetTo<Device>	deviceTable;	/* Offset to the device table - from the
-					 * beginning of parent table. May be NULL.
+					 * beginning of parent table. May be nullptr.
 					 * Suggested format for device table is 1. */
 
   public:
@@ -319,7 +319,7 @@ struct MathKernInfoRecord
 
   protected:
   /* Offset to MathKern table for each corner -
-   * from the beginning of MathKernInfo table. May be NULL. */
+   * from the beginning of MathKernInfo table. May be nullptr. */
   OffsetTo<MathKern> mathKern[4];
 
   public:
@@ -402,7 +402,7 @@ struct MathGlyphInfo
    * from the beginning of MathGlyphInfo table. When the left or right glyph of
    * a box is an extended shape variant, the (ink) box (and not the default
    * position defined by values in MathConstants table) should be used for
-   * vertical positioning purposes. May be NULL.. */
+   * vertical positioning purposes. May be nullptr.. */
   OffsetTo<Coverage> extendedShapeCoverage;
 
    /* Offset to MathKernInfo table -
@@ -463,8 +463,8 @@ struct MathGlyphPartRecord
     out.end_connector_length	= font->em_scale (endConnectorLength, scale);
     out.full_advance		= font->em_scale (fullAdvance, scale);
 
-    ASSERT_STATIC ((unsigned int) HB_MATH_GLYPH_PART_FLAG_EXTENDER ==
-		   (unsigned int) PartFlags::Extender);
+    static_assert ((unsigned int) HB_MATH_GLYPH_PART_FLAG_EXTENDER ==
+		   (unsigned int) PartFlags::Extender, "");
 
     out.flags = (hb_ot_math_glyph_part_flags_t)
 		(unsigned int)
@@ -571,7 +571,7 @@ struct MathGlyphConstruction
 
   protected:
   /* Offset to MathGlyphAssembly table for this shape - from the beginning of
-     MathGlyphConstruction table. May be NULL. */
+     MathGlyphConstruction table. May be nullptr. */
   OffsetTo<MathGlyphAssembly>	  glyphAssembly;
 
   /* MathGlyphVariantRecords for alternative variants of the glyphs. */

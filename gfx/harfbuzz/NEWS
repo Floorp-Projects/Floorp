@@ -1,3 +1,35 @@
+Overview of changes leading to 1.6.3
+Thursday, October 26th, 2017
+====================================
+
+- Fix hb_set_t some more.  Should be solid now.
+- Implement get_glyph_name() for hb-ot-font.
+- Misc fixes.
+
+
+Overview of changes leading to 1.6.2
+Monday, October 23nd, 2017
+====================================
+
+- Yesterday's release had a bad crasher; don't use it.  That's what
+  happens when one works on Sunday...
+  https://github.com/behdad/harfbuzz/issues/578
+- Build fixes for FreeBSD and Chrome Android.
+
+
+Overview of changes leading to 1.6.1
+Sunday, October 22nd, 2017
+====================================
+
+- Don't skip over COMBINING GRAPHEME JOINER when ligating, etc.
+  To be refined: https://github.com/behdad/harfbuzz/issues/554
+- Faster hb_set_t implementation.
+- Don't use deprecated ICU API.
+- Fix undefined-behavior in Myanmar shaper, introduced in 1.6.0
+- Deprecated API:
+  hb_set_invert()
+
+
 Overview of changes leading to 1.6.0
 Friday, October the 13th, 2017
 ====================================

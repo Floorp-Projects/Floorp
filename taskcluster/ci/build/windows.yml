@@ -421,7 +421,7 @@ win64-asan/debug:
     worker:
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2015.manifest"
     run:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
@@ -446,7 +446,7 @@ win64-asan/opt:
     worker:
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2015.manifest"
     run:
         using: mozharness
         script: mozharness/scripts/fx_desktop_build.py

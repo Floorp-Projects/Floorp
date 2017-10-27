@@ -121,6 +121,7 @@ class ExitReason
       : payload_(0x0 | (uint32_t(exitReason) << 1))
     {
         MOZ_ASSERT(isFixed());
+        MOZ_ASSERT_IF(isNone(), payload_ == 0);
     }
 
     explicit ExitReason(SymbolicAddress sym)
@@ -167,14 +168,24 @@ class ProfilingFrameIterator
     void* stackAddress_;
     ExitReason exitReason_;
 
-    void initFromExitFP(const Frame* fp = nullptr);
+    void initFromExitFP(const Frame* fp);
 
   public:
     ProfilingFrameIterator();
-    explicit ProfilingFrameIterator(const jit::JitActivation& activation,
-                                    const Frame* fp = nullptr);
+
+    // Start unwinding at a non-innermost activation that has necessarily been
+    // exited from wasm code (and thus activation.hasWasmExitFP).
+    explicit ProfilingFrameIterator(const jit::JitActivation& activation);
+
+    // Start unwinding at a group of wasm frames after unwinding an inner group
+    // of JSJit frames.
+    ProfilingFrameIterator(const jit::JitActivation& activation, const Frame* fp);
+
+    // Start unwinding at the innermost activation given the register state when
+    // the thread was suspended.
     ProfilingFrameIterator(const jit::JitActivation& activation,
                            const JS::ProfilingFrameIterator::RegisterState& state);
+
     void operator++();
     bool done() const { return !codeRange_; }
 
@@ -185,7 +196,7 @@ class ProfilingFrameIterator
 // Prologue/epilogue code generation
 
 void
-SetExitFP(jit::MacroAssembler& masm, jit::Register scratch);
+SetExitFP(jit::MacroAssembler& masm, ExitReason reason, jit::Register scratch);
 void
 ClearExitFP(jit::MacroAssembler& masm, jit::Register scratch);
 

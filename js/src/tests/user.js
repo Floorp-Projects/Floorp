@@ -22,7 +22,7 @@ user_pref("javascript.options.strict", false);
 user_pref("javascript.options.werror", false);
 user_pref("toolkit.startup.max_resumed_crashes", -1);
 user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
-user_pref("toolkit.telemetry.enabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);

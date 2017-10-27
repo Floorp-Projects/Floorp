@@ -132,8 +132,8 @@ typedef struct hb_segment_properties_t {
 #define HB_SEGMENT_PROPERTIES_DEFAULT {HB_DIRECTION_INVALID, \
 				       HB_SCRIPT_INVALID, \
 				       HB_LANGUAGE_INVALID, \
-				       NULL, \
-				       NULL}
+				       (void *) 0, \
+				       (void *) 0}
 
 HB_EXTERN hb_bool_t
 hb_segment_properties_equal (const hb_segment_properties_t *a,

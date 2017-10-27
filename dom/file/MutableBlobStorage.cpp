@@ -652,8 +652,10 @@ MutableBlobStorage::ErrorPropagated(nsresult aRv)
   MOZ_ASSERT(NS_IsMainThread());
   mErrorResult = aRv;
 
-  mActor->SendOperationDone(false, EmptyCString());
-  mActor = nullptr;
+  if (mActor) {
+    mActor->SendOperationDone(false, EmptyCString());
+    mActor = nullptr;
+  }
 }
 
 void

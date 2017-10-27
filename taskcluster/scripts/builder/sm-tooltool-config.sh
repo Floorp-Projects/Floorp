@@ -59,6 +59,6 @@ export TOOLTOOL_CHECKOUT
 (cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain -v $TOOLTOOL_AUTH_FLAGS --tooltool-url $TOOLTOOL_SERVER --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST ${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
 
 # Add all the tooltool binaries to our $PATH.
-for bin in ls $TOOLTOOL_CHECKOUT/*/bin; do
+for bin in $TOOLTOOL_CHECKOUT/*/bin $TOOLTOOL_CHECKOUT/VC/bin/Hostx64/x86; do
     export PATH="$bin:$PATH"
 done
