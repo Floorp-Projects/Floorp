@@ -12,12 +12,7 @@ typedef struct CERTCertListStr CERTCertList;
 %}
 [ptr] native CERTCertListPtr(CERTCertList);
 
-%{C++
-class nsNSSCertList;
-%}
-[ptr] native nsNSSCertListPtr(nsNSSCertList);
-
-[scriptable, builtinclass, uuid(ae74cda5-cd2f-473f-96f5-f0b7fff62c68)]
+[scriptable, uuid(ae74cda5-cd2f-473f-96f5-f0b7fff62c68)]
 interface nsIX509CertList : nsISupports {
   [must_use]
   void addCert(in nsIX509Cert cert);
@@ -42,12 +37,6 @@ interface nsIX509CertList : nsISupports {
    */
   [must_use]
   boolean equals(in nsIX509CertList other);
-
-  /**
-   * Retrieves the PSM helper class that wraps the NSS certificate list
-   */
-  [notxpcom, noscript, must_use]
-  nsNSSCertListPtr getCertList();
 };
 
 %{C++
