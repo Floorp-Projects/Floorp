@@ -5493,3 +5493,21 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
   }
   return result;
 }
+
+/* static */ AnimationValue
+AnimationValue::Opacity(StyleBackendType aBackendType, float aOpacity)
+{
+  AnimationValue result;
+
+  switch (aBackendType) {
+    case StyleBackendType::Servo:
+      result.mServo = Servo_AnimationValue_Opacity(aOpacity).Consume();
+      break;
+    case StyleBackendType::Gecko:
+      result.mGecko.SetFloatValue(aOpacity);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
+  }
+  return result;
+}
