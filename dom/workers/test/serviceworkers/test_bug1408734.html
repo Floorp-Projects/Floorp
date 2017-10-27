@@ -1,0 +1,65 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1408734</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+// setup prefs
+add_task(() => {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+// test for bug 1408734
+add_task(async () => {
+  let waitForControlled = new Promise((resolve) => {
+    navigator.serviceWorker.oncontrollerchange = resolve;
+  });
+
+  // register a service worker
+  let registration = await navigator.serviceWorker.register("fetch.js", {scope: "./"});
+  let worker = registration.installing || registration.active;
+
+  // wait for control changed
+  worker.postMessage('claim');
+  await waitForControlled;
+
+  // get the ServiceWorkerRegistration we just register through GetRegistration
+  registration = await navigator.serviceWorker.getRegistration("./");
+  ok(registration, "should get the registration under scope './'");
+
+  // call unregister()
+  await registration.unregister();
+
+  // access registration.updateViaCache to trigger the bug
+  // we really care that we don't crash. In the future we will fix
+  // updateViaCache to be accessible after unregister().
+  try {
+    if (registration.updateViaCache) {
+      ok(false,
+         "Expected InvalidStateError when accessing registration.updateViaCache after unregister()");
+    }
+  } catch (err) {
+    is(err.name, "InvalidStateError", "Expected InvalidStateError.");
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>

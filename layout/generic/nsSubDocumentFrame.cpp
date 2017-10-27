@@ -577,13 +577,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
-  if (needsOwnLayer) {
-    // We always want top level content documents to be in their own layer.
-    nsDisplaySubDocument* layerItem = new (aBuilder) nsDisplaySubDocument(
-      aBuilder, subdocRootFrame ? subdocRootFrame : this, this,
-      &childItems, flags);
-    childItems.AppendToTop(layerItem);
-  }
+
+  // We always want top level content documents to be in their own layer.
+  nsDisplaySubDocument* layerItem = new (aBuilder) nsDisplaySubDocument(
+    aBuilder, subdocRootFrame ? subdocRootFrame : this, this,
+    &childItems, flags);
+  childItems.AppendToTop(layerItem);
+  layerItem->SetShouldFlattenAway(!needsOwnLayer);
 
   // If we're using containers for root frames, then the earlier call
   // to AddCanvasBackgroundColorItem won't have been able to add an

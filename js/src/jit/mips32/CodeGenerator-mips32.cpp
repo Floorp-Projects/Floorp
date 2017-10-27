@@ -488,7 +488,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {
-            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne),
+            masm.ma_load_unaligned(mir->access(), output.low, BaseIndex(HeapReg, ptr, TimesOne),
                                    temp, static_cast<LoadStoreSize>(8 * byteSize),
                                    isSigned ? SignExtend : ZeroExtend);
             if (!isSigned)
@@ -496,13 +496,12 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
             else
                 masm.ma_sra(output.high, output.low, Imm32(31));
         } else {
-            ScratchRegisterScope scratch(masm);
             MOZ_ASSERT(output.low != ptr);
-            masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne),
-                                   temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
-            masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
-            masm.ma_load_unaligned(output.high, BaseIndex(HeapReg, scratch, TimesOne),
-                                   temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
+            masm.ma_load_unaligned(mir->access(), output.low,
+                                   BaseIndex(HeapReg, ptr, TimesOne), temp, SizeWord, ZeroExtend);
+            masm.ma_load_unaligned(mir->access(), output.high,
+                                   BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), temp,
+                                   SizeWord, SignExtend);
         }
         return;
     }
@@ -510,16 +509,17 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
     if (byteSize <= 4) {
         masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne),
                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
+        masm.append(mir->access(), masm.size() - 4 , masm.framePushed());
         if (!isSigned)
             masm.move32(Imm32(0), output.high);
         else
             masm.ma_sra(output.high, output.low, Imm32(31));
     } else {
-        ScratchRegisterScope scratch(masm);
         MOZ_ASSERT(output.low != ptr);
         masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
-        masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
-        masm.ma_load(output.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
+        masm.append(mir->access(), masm.size() - 4 , masm.framePushed());
+        masm.ma_load(output.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), SizeWord);
+        masm.append(mir->access(), masm.size() - 4 , masm.framePushed());
     }
 
     masm.memoryBarrier(mir->access().barrierAfter());
@@ -577,16 +577,15 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {
-            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne),
+            masm.ma_store_unaligned(mir->access(), value.low, BaseIndex(HeapReg, ptr, TimesOne),
                                     temp, static_cast<LoadStoreSize>(8 * byteSize),
                                     isSigned ? SignExtend : ZeroExtend);
         } else {
-            ScratchRegisterScope scratch(masm);
-            masm.ma_store_unaligned(value.low, BaseIndex(HeapReg, ptr, TimesOne),
-                                    temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
-            masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
-            masm.ma_store_unaligned(value.high, BaseIndex(HeapReg, scratch, TimesOne),
-                                    temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
+            masm.ma_store_unaligned(mir->access(), value.high,
+                                    BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), temp,
+                                    SizeWord, SignExtend);
+            masm.ma_store_unaligned(mir->access(), value.low, BaseIndex(HeapReg, ptr, TimesOne),
+                                    temp, SizeWord, ZeroExtend);
         }
         return;
     }
@@ -594,11 +593,12 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
     if (byteSize <= 4) {
         masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne),
                       static_cast<LoadStoreSize>(8 * byteSize));
+        masm.append(mir->access(), masm.size() - 4, masm.framePushed());
+
     } else {
-        ScratchRegisterScope scratch(masm);
+        masm.ma_store(value.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), SizeWord);
+        masm.append(mir->access(), masm.size() - 4, masm.framePushed());
         masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
-        masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
-        masm.ma_store(value.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
     }
 
     masm.memoryBarrier(mir->access().barrierAfter());

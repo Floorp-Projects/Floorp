@@ -72,8 +72,8 @@ _hb_blob_destroy_user_data (hb_blob_t *blob)
 {
   if (blob->destroy) {
     blob->destroy (blob->user_data);
-    blob->user_data = NULL;
-    blob->destroy = NULL;
+    blob->user_data = nullptr;
+    blob->destroy = nullptr;
   }
 }
 
@@ -194,12 +194,12 @@ hb_blob_get_empty (void)
 
     true, /* immutable */
 
-    NULL, /* data */
+    nullptr, /* data */
     0, /* length */
     HB_MEMORY_MODE_READONLY, /* mode */
 
-    NULL, /* user_data */
-    NULL  /* destroy */
+    nullptr, /* user_data */
+    nullptr  /* destroy */
   };
 
   return const_cast<hb_blob_t *> (&_hb_blob_nil);
@@ -379,7 +379,7 @@ hb_blob_get_data_writable (hb_blob_t *blob, unsigned int *length)
     if (length)
       *length = 0;
 
-    return NULL;
+    return nullptr;
   }
 
   if (length)

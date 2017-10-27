@@ -33,7 +33,6 @@ const PREF_APP_UPDATE_URL_MANUAL                 = "app.update.url.manual";
 const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";
 const PREF_DISTRIBUTION_VERSION      = "distribution.version";
-const PREF_TOOLKIT_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
