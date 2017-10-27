@@ -18,18 +18,10 @@
 #include "nsNavHistory.h"
 #include "mozilla/Likely.h"
 #include "nsVariant.h"
-#include "mozilla/HashFunctions.h"
-#include <algorithm>
 
 // Maximum number of chars to search through.
 // MatchAutoCompleteFunction won't look for matches over this threshold.
 #define MAX_CHARS_TO_SEARCH_THROUGH 255
-
-// Maximum number of chars to use for calculating hashes. This value has been
-// picked to ensure low hash collisions on a real world common places.sqlite.
-// While collisions are not a big deal for functionality, a low ratio allows
-// for slightly more efficient SELECTs.
-#define MAX_CHARS_TO_HASH 1500U
 
 using namespace mozilla::storage;
 
@@ -1051,47 +1043,12 @@ namespace places {
       aArguments->GetUTF8String(1, mode);
     }
 
-    // HashString doesn't stop at the string boundaries if a length is passed to
-    // it, so ensure to pass a proper value.
-    const uint32_t maxLenToHash = std::min(static_cast<uint32_t>(str.Length()),
-                                           MAX_CHARS_TO_HASH);
     RefPtr<nsVariant> result = new nsVariant();
-    if (mode.IsEmpty()) {
-      // URI-like strings (having a prefix before a colon), are handled specially,
-      // as a 48 bit hash, where first 16 bits are the prefix hash, while the
-      // other 32 are the string hash.
-      // The 16 bits have been decided based on the fact hashing all of the IANA
-      // known schemes, plus "places", does not generate collisions.
-      // Since we only care about schemes, we just search in the first 50 chars.
-      // The longest known IANA scheme, at this time, is 30 chars.
-      const nsDependentCSubstring& strHead = StringHead(str, 50);
-      nsACString::const_iterator start, tip, end;
-      strHead.BeginReading(tip);
-      start = tip;
-      strHead.EndReading(end);
-      uint32_t strHash = HashString(str.get(), maxLenToHash);
-      if (FindCharInReadable(':', tip, end)) {
-        const nsDependentCSubstring& prefix = Substring(start, tip);
-        uint64_t prefixHash = static_cast<uint64_t>(HashString(prefix) & 0x0000FFFF);
-        // The second half of the url is more likely to be unique, so we add it.
-        uint64_t hash = (prefixHash << 32) + strHash;
-        result->SetAsInt64(hash);
-      } else {
-        result->SetAsInt64(strHash);
-      }
-    } else if (mode.EqualsLiteral("prefix_lo")) {
-      // Keep only 16 bits.
-      uint64_t hash = static_cast<uint64_t>(HashString(str.get(), maxLenToHash) & 0x0000FFFF) << 32;
-      result->SetAsInt64(hash);
-    } else if (mode.EqualsLiteral("prefix_hi")) {
-      // Keep only 16 bits.
-      uint64_t hash = static_cast<uint64_t>(HashString(str.get(), maxLenToHash) & 0x0000FFFF) << 32;
-      // Make this a prefix upper bound by filling the lowest 32 bits.
-      hash +=  0xFFFFFFFF;
-      result->SetAsInt64(hash);
-    } else {
-      return NS_ERROR_FAILURE;
-    }
+    uint64_t hash;
+    rv = HashURL(str, mode, &hash);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = result->SetAsInt64(hash);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     result.forget(_result);
     return NS_OK;

@@ -15,7 +15,7 @@ add_test(function test_creation() {
   let server = new SyncServer({
     __proto__: SyncServerCallback,
   });
-  do_check_true(!!server);       // Just so we have a check.
+  do_check_true(!!server); // Just so we have a check.
   server.start(null, function() {
     _("Started on " + server.port);
     server.stop(run_next_test);

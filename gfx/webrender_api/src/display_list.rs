@@ -491,6 +491,7 @@ impl<'a, 'b> Serialize for DisplayItemRef<'a, 'b> {
 struct UnsafeVecWriter(*mut u8);
 
 impl Write for UnsafeVecWriter {
+    #[inline(always)]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         unsafe {
             ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
@@ -498,16 +499,36 @@ impl Write for UnsafeVecWriter {
         }
         Ok(buf.len())
     }
+
+    #[inline(always)]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        unsafe {
+            ptr::copy_nonoverlapping(buf.as_ptr(), self.0, buf.len());
+            self.0 = self.0.offset(buf.len() as isize);
+        }
+        Ok(())
+    }
+
+    #[inline(always)]
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
 struct SizeCounter(usize);
 
 impl<'a> Write for SizeCounter {
+    #[inline(always)]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.0 += buf.len();
         Ok(buf.len())
     }
+
+    #[inline(always)]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        self.0 += buf.len();
+        Ok(())
+    }
+
+    #[inline(always)]
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
@@ -773,21 +794,15 @@ impl DisplayListBuilder {
     pub fn push_line(
         &mut self,
         info: &LayoutPrimitiveInfo,
-        baseline: f32,
-        start: f32,
-        end: f32,
+        wavy_line_thickness: f32,
         orientation: LineOrientation,
-        width: f32,
-        color: ColorF,
+        color: &ColorF,
         style: LineStyle,
     ) {
         let item = SpecificDisplayItem::Line(LineDisplayItem {
-            baseline,
-            start,
-            end,
+            wavy_line_thickness,
             orientation,
-            width,
-            color,
+            color: *color,
             style,
         });
 

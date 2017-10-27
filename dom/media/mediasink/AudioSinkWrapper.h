@@ -74,6 +74,8 @@ public:
 
   void Shutdown() override;
 
+  nsCString GetDebugInfo() override;
+
 private:
   virtual ~AudioSinkWrapper();
 

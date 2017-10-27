@@ -71,6 +71,7 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "gfxUtils.h"
@@ -2099,14 +2100,6 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
       titlebarCGContextDataLength
     );
 
-    if (mTitlebarImageKey &&
-        mTitlebarImageSize != size) {
-      // Delete wr::ImageKey. wr::ImageKey does not support size change.
-      // TODO: that's not true anymore! (size change is now supported).
-      CleanupWebRenderWindowOverlay(aWrBridge, aResources);
-      MOZ_ASSERT(mTitlebarImageKey.isNothing());
-    }
-
     if (!mTitlebarImageKey) {
       mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
       wr::ImageDescriptor descriptor(size, stride, format);
@@ -2123,16 +2116,6 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
     aBuilder.PushImage(wr::LayoutRect{ rect.origin, { float(size.width), float(size.height) } },
                        rect, true, wr::ImageRendering::Auto, *mTitlebarImageKey);
-  }
-}
-
-void
-nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge,
-                                           wr::IpcResourceUpdateQueue& aResources)
-{
-  if (mTitlebarImageKey) {
-    aResources.DeleteImage(*mTitlebarImageKey);
-    mTitlebarImageKey = Nothing();
   }
 }
 
@@ -4021,6 +4004,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     if ([self isUsingOpenGL]) {
       if (ShadowLayerForwarder* slf = mGeckoChild->GetLayerManager()->AsShadowForwarder()) {
         slf->WindowOverlayChanged();
+      } else if (WebRenderLayerManager* wrlm = mGeckoChild->GetLayerManager()->AsWebRenderLayerManager()) {
+        wrlm->WindowOverlayChanged();
       }
     }
 

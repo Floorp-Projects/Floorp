@@ -26,27 +26,23 @@ chromeReg.checkForNewChrome();
 var rph = gIOS.getProtocolHandler("resource")
               .QueryInterface(Ci.nsIResProtocolHandler);
 
-function test_succeeded_mapping(namespace, target)
-{
+function test_succeeded_mapping(namespace, target) {
   try {
     do_check_true(rph.hasSubstitution(namespace));
     var uri = gIOS.newURI("resource://" + namespace);
     dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
     do_check_eq(rph.resolveURI(uri), target);
-  }
-  catch (ex) {
+  } catch (ex) {
     dump(ex + "\n");
     do_throw(namespace);
   }
 }
 
-function test_failed_mapping(namespace)
-{
+function test_failed_mapping(namespace) {
   do_check_false(rph.hasSubstitution(namespace));
 }
 
-function run_test()
-{
+function run_test() {
   var data = gIOS.newFileURI(do_get_file("data")).spec;
   test_succeeded_mapping("test1", data + "test1/");
   test_succeeded_mapping("test3", "jar:" + data + "test3.jar!/resources/");

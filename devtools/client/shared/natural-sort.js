@@ -12,8 +12,8 @@
 "use strict";
 
 var re = /(^([+\-]?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?(?=\D|\s|$))|^0x[\da-fA-F]+$|\d+)/g;
-var sre = /^\s+|\s+$/g;   // trim pre-post whitespace
-var snre = /\s+/g;        // normalize all whitespace to single ' ' character
+var sre = /^\s+|\s+$/g; // trim pre-post whitespace
+var snre = /\s+/g; // normalize all whitespace to single ' ' character
 
 // eslint-disable-next-line
 var dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/;

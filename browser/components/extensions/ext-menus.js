@@ -218,7 +218,7 @@ var gMenuBuilder = {
       element.setAttribute("disabled", "true");
     }
 
-    element.addEventListener("command", event => {  // eslint-disable-line mozilla/balanced-listeners
+    element.addEventListener("command", event => { // eslint-disable-line mozilla/balanced-listeners
       if (event.target !== event.currentTarget) {
         return;
       }

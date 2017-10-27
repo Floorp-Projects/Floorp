@@ -200,7 +200,7 @@ add_task(async function test_add_visits_to_database() {
     // calculated excluding download transitions, but the query includes
     // downloads.
     // TODO: Bug 488966 could fix this behavior.
-    //Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
+    // Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   ];
 
   function newTimeInMicroseconds() {

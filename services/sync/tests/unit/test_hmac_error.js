@@ -83,7 +83,7 @@ add_task(async function hmac_error_during_404() {
 
     _("Partially resetting client, as if after a restart, and forcing redownload.");
     Service.collectionKeys.clear();
-    engine.lastSync = 0;        // So that we redownload records.
+    engine.lastSync = 0; // So that we redownload records.
     key404Counter = 1;
     _("---------------------------");
     await sync_and_validate_telem();

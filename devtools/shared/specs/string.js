@@ -30,7 +30,6 @@ exports.longStringSpec = longStringSpec;
  * LongStringFront but will not make unnecessary trips to the server.
  */
 class SimpleStringFront {
-
   constructor(str) {
     this.str = str;
   }

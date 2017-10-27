@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define PRIMITIVE_HAS_PICTURE_TASK
+
 #include shared,prim_shared
 
 varying vec3 vUv;
@@ -18,16 +20,6 @@ void main(void) {
 
     int glyph_index = prim.user_data0;
     int resource_address = prim.user_data1;
-    int picture_address = prim.user_data2;
-
-    // Fetch the owning picture for this primitive. This allows the code
-    // below to normalize the glyph offsets relative to the original text
-    // shadow rect, which is the union of all elements that make up this
-    // text shadow. This allows the text shadow to be rendered at an
-    // arbitrary location in a render target (provided by the render
-    // task render_target_origin field).
-    PrimitiveGeometry shadow_geom = fetch_primitive_geometry(picture_address);
-    Picture pic = fetch_picture(picture_address + VECS_PER_PRIM_HEADER);
 
     Glyph glyph = fetch_glyph(prim.specific_prim_address,
                               glyph_index,
@@ -40,8 +32,8 @@ void main(void) {
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = (res.uv_rect.zw - res.uv_rect.xy) * res.scale;
     vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
-    vec2 origin = prim.task.render_target_origin +
-                  uDevicePixelRatio * (local_pos + pic.offset - shadow_geom.local_rect.p0);
+    vec2 origin = prim.task.target_rect.p0 +
+                  uDevicePixelRatio * (local_pos - prim.task.content_origin);
     vec4 local_rect = vec4(origin, size);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
@@ -53,7 +45,7 @@ void main(void) {
                    aPosition.xy);
 
     vUv = vec3(mix(st0, st1, aPosition.xy), res.layer);
-    vColor = pic.color;
+    vColor = prim.task.color;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }

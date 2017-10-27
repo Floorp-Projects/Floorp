@@ -44,6 +44,8 @@ public:
   ~ScrollingLayersHelper();
 
 private:
+  typedef std::pair<FrameMetrics::ViewID, Maybe<wr::WrClipId>> ClipAndScroll;
+
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>>
   DefineClipChain(nsDisplayItem* aItem,
                   const ActiveScrolledRoot* aAsr,
@@ -64,6 +66,8 @@ private:
                       const DisplayItemClipChain* aChain,
                       int32_t aAppUnitsPerDevPixel,
                       const StackingContextHelper& aSc);
+
+  Maybe<ClipAndScroll> EnclosingClipAndScroll() const;
 
   // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
   // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
@@ -90,7 +94,7 @@ private:
 
     Maybe<FrameMetrics::ViewID> mScrollId;
     Maybe<wr::WrClipId> mClipId;
-    Maybe<std::pair<FrameMetrics::ViewID, Maybe<wr::WrClipId>>> mClipAndScroll;
+    Maybe<ClipAndScroll> mClipAndScroll;
 
     void Apply(wr::DisplayListBuilder* aBuilder);
     void Unapply(wr::DisplayListBuilder* aBuilder);
