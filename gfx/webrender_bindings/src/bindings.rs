@@ -1528,35 +1528,20 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   clip: &LayoutRect,
                                   is_backface_visible: bool,
                                   bounds: &LayoutRect,
-                                  _wavy_line_thickness: f32,
+                                  wavy_line_thickness: f32,
                                   orientation: LineOrientation,
                                   color: &ColorF,
                                   style: LineStyle) {
     debug_assert!(unsafe { is_in_main_thread() });
-
-    // TODO: remove this once WR is updated to just check the bounds.
-    let (baseline, start, end, width) = match orientation {
-        LineOrientation::Horizontal => (bounds.origin.y,
-                                        bounds.origin.x,
-                                        bounds.origin.x + bounds.size.width,
-                                        bounds.size.height),
-        LineOrientation::Vertical => (bounds.origin.x,
-                                      bounds.origin.y,
-                                      bounds.origin.y + bounds.size.height,
-                                      bounds.size.width),
-    };
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(*bounds, (*clip).into());
     prim_info.is_backface_visible = is_backface_visible;
     state.frame_builder
          .dl_builder
          .push_line(&prim_info,
-                    baseline,
-                    start,
-                    end,
+                    wavy_line_thickness,
                     orientation,
-                    width,
-                    *color,
+                    color,
                     style);
 
 }
