@@ -21,9 +21,9 @@ var FontBuilder = {
     while (aMenuList.hasChildNodes())
       aMenuList.firstChild.remove();
 
-    var defaultFont = null;
+    let defaultFont = null;
     // Load Font Lists
-    var fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, aFontType);
+    let fonts = await this.enumerator.EnumerateFontsAsync(aLanguage, aFontType);
     if (fonts.length > 0)
       defaultFont = this.enumerator.getDefaultFont(aLanguage, aFontType);
     else {
@@ -36,14 +36,14 @@ var FontBuilder = {
       this._allFonts = await this.enumerator.EnumerateAllFontsAsync({});
 
     // Build the UI for the Default Font and Fonts for this CSS type.
-    var popup = document.createElement("menupopup");
-    var separator;
+    const popup = document.createElement("menupopup");
+    let separator;
     if (fonts.length > 0) {
-      var bundlePreferences = document.getElementById("bundlePreferences");
-      var defaultLabel = defaultFont ?
+      const bundlePreferences = document.getElementById("bundlePreferences");
+      let defaultLabel = defaultFont ?
         bundlePreferences.getFormattedString("labelDefaultFont", [defaultFont]) :
         bundlePreferences.getString("labelDefaultFontUnnamed");
-      var menuitem = document.createElement("menuitem");
+      let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("label", defaultLabel);
       menuitem.setAttribute("value", ""); // Default Font has a blank value
       popup.appendChild(menuitem);
@@ -51,10 +51,10 @@ var FontBuilder = {
       separator = document.createElement("menuseparator");
       popup.appendChild(separator);
 
-      for (var i = 0; i < fonts.length; ++i) {
+      for (let font of fonts) {
         menuitem = document.createElement("menuitem");
-        menuitem.setAttribute("value", fonts[i]);
-        menuitem.setAttribute("label", fonts[i]);
+        menuitem.setAttribute("value", font);
+        menuitem.setAttribute("label", font);
         popup.appendChild(menuitem);
       }
     }
@@ -65,17 +65,17 @@ var FontBuilder = {
       // Both lists are sorted, and the Fonts-By-Type list is a subset of the
       // All-Fonts list, so walk both lists side-by-side, skipping values we've
       // already created menu items for.
-      var builtItem = separator ? separator.nextSibling : popup.firstChild;
-      var builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
+      let builtItem = separator ? separator.nextSibling : popup.firstChild;
+      let builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
 
       separator = document.createElement("menuseparator");
       popup.appendChild(separator);
 
-      for (i = 0; i < this._allFonts.length; ++i) {
-        if (this._allFonts[i] != builtItemValue) {
-          menuitem = document.createElement("menuitem");
-          menuitem.setAttribute("value", this._allFonts[i]);
-          menuitem.setAttribute("label", this._allFonts[i]);
+      for (let font of this._allFonts) {
+        if (font != builtItemValue) {
+          const menuitem = document.createElement("menuitem");
+          menuitem.setAttribute("value", font);
+          menuitem.setAttribute("label", font);
           popup.appendChild(menuitem);
         } else {
           builtItem = builtItem.nextSibling;
@@ -91,9 +91,9 @@ var FontBuilder = {
     // - there is no setting
     // - the font selected by the user is no longer present (e.g. deleted from
     //   fonts folder)
-    let preference = document.getElementById(aElement.getAttribute("preference"));
+    const preference = document.getElementById(aElement.getAttribute("preference"));
     if (preference.value) {
-      let fontItems = aElement.getElementsByAttribute("value", preference.value);
+      const fontItems = aElement.getElementsByAttribute("value", preference.value);
 
       // There is a setting that actually is in the list. Respect it.
       if (fontItems.length)
