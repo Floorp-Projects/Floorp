@@ -214,6 +214,24 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(flags.flags['VISIBILITY'], reader.config.substs['VISIBILITY_FLAGS'])
         self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], ['-Werror'])
 
+    def test_debug_flags(self):
+        reader = self.reader('compile-flags', extra_substs={
+            'MOZ_DEBUG_FLAGS': '-g',
+            'MOZ_DEBUG_SYMBOLS': '1',
+        })
+        sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['DEBUG'], ['-g'])
+
+    def test_disable_debug_flags(self):
+        reader = self.reader('compile-flags', extra_substs={
+            'MOZ_DEBUG_FLAGS': '-g',
+            'MOZ_DEBUG_SYMBOLS': '',
+        })
+        sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['DEBUG'], [])
+
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')
 
