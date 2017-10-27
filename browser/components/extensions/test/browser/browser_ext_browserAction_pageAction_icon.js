@@ -260,7 +260,7 @@ add_task(async function testDetailsObjects() {
 
   await extension.startup();
 
-  let pageActionId = `${makeWidgetId(extension.id)}-page-action`;
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
   let browserActionWidget = getBrowserActionWidget(extension);
 
   let tests = await extension.awaitMessage("ready");
@@ -360,7 +360,7 @@ add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
 
   await promiseAnimationFrame();
 
-  let pageActionId = `${makeWidgetId(extension.id)}-page-action`;
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
   let pageActionImage = document.getElementById(pageActionId);
 
   const iconURL = new URL(getListStyleImage(pageActionImage));
