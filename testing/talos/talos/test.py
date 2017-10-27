@@ -982,6 +982,7 @@ class tp6_facebook_heavy(tp6_facebook):
     """
     profile = 'simple'
 
+
 @register_test()
 class displaylist_mutate(PageloaderTest):
     """
