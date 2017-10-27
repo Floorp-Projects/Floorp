@@ -171,9 +171,9 @@ ffs(int x)
 	unsigned long i;
 
 	if (_BitScanForward(&i, x) != 0) {
-		return (i + 1);
+		return i + 1;
 	}
-	return (0);
+	return 0;
 }
 
 /* Implement getenv without using malloc */
@@ -186,7 +186,7 @@ getenv(const char *name)
 
 	if (GetEnvironmentVariableA(name, mozillaMallocOptionsBuf,
 		    sizeof(mozillaMallocOptionsBuf)) > 0) {
-		return (mozillaMallocOptionsBuf);
+		return mozillaMallocOptionsBuf;
 	}
 
 	return nullptr;
@@ -1351,14 +1351,14 @@ pow2_ceil(size_t x)
 	x |= x >> 32;
 #endif
 	x++;
-	return (x);
+	return x;
 }
 
 static inline const char *
 _getprogname(void)
 {
 
-	return ("<jemalloc>");
+	return "<jemalloc>";
 }
 
 /******************************************************************************/
@@ -1435,7 +1435,7 @@ base_pages_alloc(size_t minsize)
 	csize = CHUNK_CEILING(minsize);
 	base_pages = chunk_alloc(csize, chunksize, true);
 	if (!base_pages) {
-		return (true);
+		return true;
 	}
 	base_next_addr = base_pages;
 	base_past_addr = (void *)((uintptr_t)base_pages + csize);
@@ -1453,7 +1453,7 @@ base_pages_alloc(size_t minsize)
 	base_mapped += csize;
 	base_committed += pminsize;
 
-	return (false);
+	return false;
 }
 
 static void*
@@ -1519,7 +1519,7 @@ base_node_alloc(void)
 		ret = (extent_node_t *)base_alloc(sizeof(extent_node_t));
 	}
 
-	return (ret);
+	return ret;
 }
 
 static void
@@ -1553,7 +1553,7 @@ pages_map(void *addr, size_t size)
 	void *ret = nullptr;
 	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
 	    PAGE_READWRITE);
-	return (ret);
+	return ret;
 }
 
 static void
@@ -1662,7 +1662,7 @@ pages_map(void *addr, size_t size)
 	MOZ_ASSERT(!ret || (!addr && ret != addr)
 	    || (addr && ret == addr));
 #endif
-	return (ret);
+	return ret;
 }
 
 static void
@@ -1813,7 +1813,7 @@ pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
                 pages_unmap(addr, alloc_size);
                 new_addr = pages_map(ret, size);
                 if (new_addr == ret) {
-                        return (ret);
+                        return ret;
                 }
                 if (new_addr) {
                         pages_unmap(new_addr, size);
@@ -1830,7 +1830,7 @@ pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
                 if (trailsize != 0) {
                         pages_unmap((void *)((uintptr_t)ret + size), trailsize);
                 }
-                return (ret);
+                return ret;
         }
 #endif
 }
@@ -1857,7 +1857,7 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment)
         } while (!ret);
 
         MOZ_ASSERT(ret);
-        return (ret);
+        return ret;
 }
 
 static void *
@@ -1886,11 +1886,11 @@ chunk_alloc_mmap(size_t size, size_t alignment)
         offset = ALIGNMENT_ADDR2OFFSET(ret, alignment);
         if (offset != 0) {
                 pages_unmap(ret, size);
-                return (chunk_alloc_mmap_slow(size, alignment));
+                return chunk_alloc_mmap_slow(size, alignment);
         }
 
         MOZ_ASSERT(ret);
-        return (ret);
+        return ret;
 }
 
 /* Purge and release the pages in the chunk of length `length` at `addr` to
@@ -2266,7 +2266,7 @@ choose_arena(size_t size)
     ret = thread_local_arena(false);
   }
   MOZ_DIAGNOSTIC_ASSERT(ret);
-  return (ret);
+  return ret;
 }
 
 static inline void *
@@ -2298,7 +2298,7 @@ arena_run_reg_alloc(arena_run_t *run, arena_bin_t *bin)
 		mask ^= (1U << bit);
 		run->regs_mask[i] = mask;
 
-		return (ret);
+		return ret;
 	}
 
 	for (i++; i < bin->regs_mask_nelms; i++) {
@@ -2322,7 +2322,7 @@ arena_run_reg_alloc(arena_run_t *run, arena_bin_t *bin)
 			 */
 			run->regs_minelm = i; /* Low payoff: + (mask == 0); */
 
-			return (ret);
+			return ret;
 		}
 	}
 	/* Not reached. */
@@ -3083,7 +3083,7 @@ arena_bin_run_size_calc(arena_bin_t *bin, size_t min_run_size)
 	bin->regs_mask_nelms = good_mask_nelms;
 	bin->reg0_offset = good_reg0_offset;
 
-	return (good_run_size);
+	return good_run_size;
 }
 
 void*
@@ -3170,7 +3170,7 @@ arena_t::MallocLarge(size_t aSize, bool aZero)
     }
   }
 
-  return (ret);
+  return ret;
 }
 
 void*
@@ -3370,7 +3370,7 @@ arena_salloc(const void *ptr)
 		MOZ_DIAGNOSTIC_ASSERT(ret != 0);
 	}
 
-	return (ret);
+	return ret;
 }
 
 /*
@@ -4217,10 +4217,10 @@ malloc_init(void)
 {
 
 	if (malloc_initialized == false) {
-		return (malloc_init_hard());
+		return malloc_init_hard();
 	}
 
-	return (false);
+	return false;
 }
 #endif
 
