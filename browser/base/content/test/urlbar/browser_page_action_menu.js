@@ -548,7 +548,7 @@ add_task(async function sendToDevice_inUrlbar() {
 
     // Click it to open its panel.
     let urlbarButton = document.getElementById(
-      BrowserPageActions._urlbarButtonNodeIDForActionID(action.id)
+      BrowserPageActions.urlbarButtonNodeIDForActionID(action.id)
     );
     Assert.ok(!urlbarButton.disabled);
     let panelPromise =

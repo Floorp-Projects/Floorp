@@ -95,7 +95,7 @@ var BrowserPageActions = {
    */
   placeActionInPanel(action) {
     let insertBeforeID = PageActions.nextActionIDInPanel(action);
-    let id = this._panelButtonNodeIDForActionID(action.id);
+    let id = this.panelButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (!node) {
       let panelViewNode;
@@ -104,10 +104,11 @@ var BrowserPageActions = {
       let insertBeforeNode = null;
       if (insertBeforeID) {
         let insertBeforeNodeID =
-          this._panelButtonNodeIDForActionID(insertBeforeID);
+          this.panelButtonNodeIDForActionID(insertBeforeID);
         insertBeforeNode = document.getElementById(insertBeforeNodeID);
       }
       this.mainViewBodyNode.insertBefore(node, insertBeforeNode);
+      this.updateAction(action);
       action.onPlacedInPanel(node);
       if (panelViewNode) {
         action.subview.onPlaced(panelViewNode);
@@ -127,10 +128,6 @@ var BrowserPageActions = {
       "subviewbutton-iconic",
       "pageAction-panel-button"
     );
-    buttonNode.setAttribute("label", action.title);
-    if (action.iconURL) {
-      buttonNode.style.listStyleImage = `url('${action.iconURL}')`;
-    }
     if (action.nodeAttributes) {
       for (let name in action.nodeAttributes) {
         buttonNode.setAttribute(name, action.nodeAttributes[name]);
@@ -177,18 +174,49 @@ var BrowserPageActions = {
     return panelViewNode;
   },
 
-  _toggleActivatedActionPanelForAction(action) {
-    let panelNode = this.activatedActionPanelNode;
+  /**
+   * Shows or hides a panel for an action.  You can supply your own panel;
+   * otherwise one is created.
+   *
+   * @param  action (PageActions.Action, required)
+   *         The action for which to toggle the panel.  If the action is in the
+   *         urlbar, then the panel will be anchored to it.  Otherwise, a
+   *         suitable anchor will be used.
+   * @param  panelNode (DOM node, optional)
+   *         The panel to use.  This method takes a hands-off approach with
+   *         regard to your panel in terms of attributes, styling, etc.
+   */
+  togglePanelForAction(action, panelNode = null) {
+    let aaPanelNode = this.activatedActionPanelNode;
     if (panelNode) {
-      panelNode.hidePopup();
-      return null;
+      if (panelNode.state != "closed") {
+        panelNode.hidePopup();
+        return;
+      }
+      if (aaPanelNode) {
+        aaPanelNode.hidePopup();
+      }
+    } else if (aaPanelNode) {
+      aaPanelNode.hidePopup();
+      return;
+    } else {
+      panelNode = this._makeActivatedActionPanelForAction(action);
     }
 
-    // Before creating the panel, get the anchor node for it because it'll throw
-    // if there isn't one (which shouldn't happen, but still).
-    let anchorNode = this.panelAnchorNodeForAction(action);
+    // Hide the main panel before showing the action's panel.
+    this.panelNode.hidePopup();
 
-    panelNode = document.createElement("panel");
+    let anchorNode = this.panelAnchorNodeForAction(action);
+    anchorNode.setAttribute("open", "true");
+    panelNode.addEventListener("popuphiding", () => {
+      anchorNode.removeAttribute("open");
+    }, { once: true });
+
+    panelNode.openPopup(anchorNode, "bottomcenter topright");
+  },
+
+  _makeActivatedActionPanelForAction(action) {
+    let panelNode = document.createElement("panel");
     panelNode.id = this._activatedActionPanelID;
     panelNode.classList.add("cui-widget-panel");
     panelNode.setAttribute("actionID", action.id);
@@ -226,26 +254,18 @@ var BrowserPageActions = {
       panelNode.remove();
     }, { once: true });
 
-    panelNode.addEventListener("popuphiding", () => {
-      if (iframeNode) {
+    if (iframeNode) {
+      panelNode.addEventListener("popupshown", () => {
+        action.onIframeShown(iframeNode, panelNode);
+      }, { once: true });
+      panelNode.addEventListener("popuphiding", () => {
         action.onIframeHiding(iframeNode, panelNode);
-      }
-      anchorNode.removeAttribute("open");
-    }, { once: true });
+      }, { once: true });
+    }
 
     if (panelViewNode) {
       action.subview.onPlaced(panelViewNode);
       action.subview.onShowing(panelViewNode);
-    }
-
-    // Hide the main page action panel before showing the activated-action
-    // panel.
-    this.panelNode.hidePopup();
-    panelNode.openPopup(anchorNode, "bottomcenter topright");
-    anchorNode.setAttribute("open", "true");
-
-    if (iframeNode) {
-      action.onIframeShown(iframeNode, panelNode);
     }
 
     return panelNode;
@@ -274,14 +294,14 @@ var BrowserPageActions = {
    *         anchored.
    */
   panelAnchorNodeForAction(action, event) {
-    // Try each of the following nodes in order, using the first that's visible.
     if (event && event.target.closest("panel")) {
       return this.mainButtonNode;
     }
 
+    // Try each of the following nodes in order, using the first that's visible.
     let potentialAnchorNodeIDs = [
       action && action.anchorIDOverride,
-      action && this._urlbarButtonNodeIDForActionID(action.id),
+      action && this.urlbarButtonNodeIDForActionID(action.id),
       this.mainButtonNode.id,
       "identity-icon",
     ];
@@ -318,7 +338,7 @@ var BrowserPageActions = {
    */
   placeActionInUrlbar(action) {
     let insertBeforeID = PageActions.nextActionIDInUrlbar(action);
-    let id = this._urlbarButtonNodeIDForActionID(action.id);
+    let id = this.urlbarButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
 
     if (!action.shownInUrlbar) {
@@ -347,10 +367,11 @@ var BrowserPageActions = {
       let insertBeforeNode = null;
       if (insertBeforeID) {
         let insertBeforeNodeID =
-          this._urlbarButtonNodeIDForActionID(insertBeforeID);
+          this.urlbarButtonNodeIDForActionID(insertBeforeID);
         insertBeforeNode = document.getElementById(insertBeforeNodeID);
       }
       parentNode.insertBefore(node, insertBeforeNode);
+      this.updateAction(action);
       action.onPlacedInUrlbar(node);
 
       // urlbar buttons should always have tooltips, so if the node doesn't have
@@ -358,7 +379,7 @@ var BrowserPageActions = {
       // button.  Why not set tooltiptext to action.title when the node is
       // created?  Because the consumer may set a title dynamically.
       if (!node.hasAttribute("tooltiptext")) {
-        let panelNodeID = this._panelButtonNodeIDForActionID(action.id);
+        let panelNodeID = this.panelButtonNodeIDForActionID(action.id);
         let panelNode = document.getElementById(panelNodeID);
         if (panelNode) {
           node.setAttribute("tooltiptext", panelNode.getAttribute("label"));
@@ -371,12 +392,6 @@ var BrowserPageActions = {
     let buttonNode = document.createElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
     buttonNode.setAttribute("role", "button");
-    if (action.tooltip) {
-      buttonNode.setAttribute("tooltiptext", action.tooltip);
-    }
-    if (action.iconURL) {
-      buttonNode.style.listStyleImage = `url('${action.iconURL}')`;
-    }
     buttonNode.setAttribute("context", "pageActionPanelContextMenu");
     buttonNode.addEventListener("contextmenu", event => {
       BrowserPageActions.onContextMenu(event);
@@ -404,7 +419,7 @@ var BrowserPageActions = {
   },
 
   _removeActionFromPanel(action) {
-    let id = this._panelButtonNodeIDForActionID(action.id);
+    let id = this.panelButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (node) {
       node.remove();
@@ -420,7 +435,7 @@ var BrowserPageActions = {
     // between the built-ins and non-built-ins.
     if (!PageActions.nonBuiltInActions.length) {
       let separator = document.getElementById(
-        this._panelButtonNodeIDForActionID(
+        this.panelButtonNodeIDForActionID(
           PageActions.ACTION_ID_BUILT_IN_SEPARATOR
         )
       );
@@ -431,7 +446,7 @@ var BrowserPageActions = {
   },
 
   _removeActionFromUrlbar(action) {
-    let id = this._urlbarButtonNodeIDForActionID(action.id);
+    let id = this.urlbarButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (node) {
       node.remove();
@@ -439,40 +454,97 @@ var BrowserPageActions = {
   },
 
   /**
-   * Updates the DOM nodes of an action to reflect its changed iconURL.
+   * Updates the DOM nodes of an action to reflect either a changed property or
+   * all properties.
    *
    * @param  action (PageActions.Action, required)
    *         The action to update.
+   * @param  nameToUpdate (string, optional)
+   *         The property's name.  If not given, then DOM nodes will be updated
+   *         to reflect the current values of all properties.
    */
-  updateActionIconURL(action) {
-    let url = action.iconURL ? `url('${action.iconURL}')` : null;
+  updateAction(action, nameToUpdate = null) {
+    let names = nameToUpdate ? [nameToUpdate] : [
+      "disabled",
+      "iconURL",
+      "title",
+      "tooltip",
+    ];
+    for (let name of names) {
+      let upper = name[0].toUpperCase() + name.substr(1);
+      this[`_updateAction${upper}`](action);
+    }
+  },
+
+  _updateActionDisabled(action) {
     let nodeIDs = [
-      this._panelButtonNodeIDForActionID(action.id),
-      this._urlbarButtonNodeIDForActionID(action.id),
+      this.panelButtonNodeIDForActionID(action.id),
+      this.urlbarButtonNodeIDForActionID(action.id),
     ];
     for (let nodeID of nodeIDs) {
       let node = document.getElementById(nodeID);
       if (node) {
-        if (url) {
-          node.style.listStyleImage = url;
+        if (action.getDisabled(window)) {
+          node.setAttribute("disabled", "true");
         } else {
-          node.style.removeProperty("list-style-image");
+          node.removeAttribute("disabled");
         }
       }
     }
   },
 
-  /**
-   * Updates the DOM nodes of an action to reflect its changed title.
-   *
-   * @param  action (PageActions.Action, required)
-   *         The action to update.
-   */
-  updateActionTitle(action) {
-    let id = this._panelButtonNodeIDForActionID(action.id);
-    let node = document.getElementById(id);
+  _updateActionIconURL(action) {
+    let nodeIDs = [
+      this.panelButtonNodeIDForActionID(action.id),
+      this.urlbarButtonNodeIDForActionID(action.id),
+    ];
+    for (let nodeID of nodeIDs) {
+      let node = document.getElementById(nodeID);
+      if (node) {
+        for (let size of [16, 32]) {
+          let url = action.iconURLForSize(size, window);
+          let prop = `--pageAction-image-${size}px`;
+          if (url) {
+            node.style.setProperty(prop, `url("${url}")`);
+          } else {
+            node.style.removeProperty(prop);
+          }
+        }
+      }
+    }
+  },
+
+  _updateActionTitle(action) {
+    let title = action.getTitle(window);
+    if (!title) {
+      // `title` is a required action property, but the bookmark action's is an
+      // empty string since its actual title is set via
+      // BookmarkingUI.updateBookmarkPageMenuItem().  The purpose of this early
+      // return is to ignore that empty title.
+      return;
+    }
+    let attrNamesByNodeIDFnName = {
+      panelButtonNodeIDForActionID: "label",
+      urlbarButtonNodeIDForActionID: "aria-label",
+    };
+    for (let [fnName, attrName] of Object.entries(attrNamesByNodeIDFnName)) {
+      let nodeID = this[fnName](action.id);
+      let node = document.getElementById(nodeID);
+      if (node) {
+        node.setAttribute(attrName, title);
+      }
+    }
+    // tooltiptext falls back to the title, so update it, too.
+    this._updateActionTooltip(action);
+  },
+
+  _updateActionTooltip(action) {
+    let node = document.getElementById(
+      this.urlbarButtonNodeIDForActionID(action.id)
+    );
     if (node) {
-      node.setAttribute("label", action.title);
+      let tooltip = action.getTooltip(window) || action.getTitle(window);
+      node.setAttribute("tooltiptext", tooltip);
     }
   },
 
@@ -496,7 +568,7 @@ var BrowserPageActions = {
 
     // Toggle the activated action's panel if necessary
     if (action.subview || action.wantsIframe) {
-      this._toggleActivatedActionPanelForAction(action);
+      this.togglePanelForAction(action);
       return;
     }
 
@@ -535,13 +607,25 @@ var BrowserPageActions = {
     return action;
   },
 
-  // The ID of the given action's top-level button in the panel.
-  _panelButtonNodeIDForActionID(actionID) {
+  /**
+   * The ID of the given action's top-level button in the main panel.
+   *
+   * @param  actionID (string, required)
+   *         The action ID.
+   * @return (string) The ID of the action's button in the main panel.
+   */
+  panelButtonNodeIDForActionID(actionID) {
     return `pageAction-panel-${actionID}`;
   },
 
-  // The ID of the given action's button in the urlbar.
-  _urlbarButtonNodeIDForActionID(actionID) {
+  /**
+   * The ID of the given action's button in the urlbar.
+   *
+   * @param  actionID (string, required)
+   *         The action ID.
+   * @return (string) The ID of the action's urlbar button node.
+   */
+  urlbarButtonNodeIDForActionID(actionID) {
     let action = PageActions.actionForID(actionID);
     if (action && action.urlbarIDOverride) {
       return action.urlbarIDOverride;
@@ -618,7 +702,7 @@ var BrowserPageActions = {
    */
   showPanel(event = null) {
     for (let action of PageActions.actions) {
-      let buttonNodeID = this._panelButtonNodeIDForActionID(action.id);
+      let buttonNodeID = this.panelButtonNodeIDForActionID(action.id);
       let buttonNode = document.getElementById(buttonNodeID);
       action.onShowingInPanel(buttonNode);
     }
@@ -693,20 +777,37 @@ var BrowserPageActions = {
   _contextAction: null,
 
   /**
-   * A bunch of strings (labels for actions and the like) are defined in DTD,
-   * but actions are created in JS.  So what we do is add a bunch of attributes
-   * to the page action panel's definition in the markup, whose values hold
-   * these DTD strings.  Then when each built-in action is set up, we get the
-   * related strings from the panel node and set up the action's node with them.
+   * Titles for a few of the built-in actions are defined in DTD, but the
+   * actions are created in JS.  So what we do is for each title, set an
+   * attribute in markup on the main page action panel whose value is the DTD
+   * string.  In gBuiltInActions, where the built-in actions are defined, we set
+   * the action's initial title to the name of this attribute.  Then when the
+   * action is set up, we get the action's current title, and then get the
+   * attribute on the main panel whose name is that title.  If the attribute
+   * exists, then its value is the actual title, and we update the action with
+   * this title.  Otherwise the action's title has already been set up in this
+   * manner.
    *
-   * The convention is to set for example the "title" property in an action's JS
-   * definition to the name of the attribute on the panel node that holds the
-   * actual title string.  Then call this function, passing the action's related
-   * DOM node and the name of the attribute that you are setting on the DOM
-   * node -- "label" or "title" in this example (either will do).
+   * @param  action (PageActions.Action, required)
+   *         The action whose title you're setting.
+   */
+  takeActionTitleFromPanel(action) {
+    let titleOrAttrNameOnPanel = action.getTitle();
+    let attrValueOnPanel = this.panelNode.getAttribute(titleOrAttrNameOnPanel);
+    if (attrValueOnPanel) {
+      this.panelNode.removeAttribute(titleOrAttrNameOnPanel);
+      action.setTitle(attrValueOnPanel);
+    }
+  },
+
+  /**
+   * This is similar to takeActionTitleFromPanel, except it sets an attribute on
+   * a DOM node instead of setting the title on an action.  The point is to map
+   * attributes on the node to strings on the main panel.  Use this for DOM
+   * nodes that don't correspond to actions, like buttons in subviews.
    *
    * @param  node (DOM node, required)
-   *         The node of an action you're setting up.
+   *         The node you're setting up.
    * @param  attrName (string, required)
    *         The name of the attribute *on the node you're setting up*.
    */
@@ -733,6 +834,7 @@ var BrowserPageActions = {
     }
   },
 };
+
 
 var BrowserPageActionFeedback = {
   /**
@@ -778,6 +880,7 @@ var BrowserPageActionFeedback = {
   },
 };
 
+
 // built-in actions below //////////////////////////////////////////////////////
 
 // bookmark
@@ -796,7 +899,8 @@ BrowserPageActions.bookmark = {
 // copy URL
 BrowserPageActions.copyURL = {
   onPlacedInPanel(buttonNode) {
-    BrowserPageActions.takeNodeAttributeFromPanel(buttonNode, "title");
+    let action = PageActions.actionForID("copyURL");
+    BrowserPageActions.takeActionTitleFromPanel(action);
   },
 
   onCommand(event, buttonNode) {
@@ -812,7 +916,8 @@ BrowserPageActions.copyURL = {
 // email link
 BrowserPageActions.emailLink = {
   onPlacedInPanel(buttonNode) {
-    BrowserPageActions.takeNodeAttributeFromPanel(buttonNode, "title");
+    let action = PageActions.actionForID("emailLink");
+    BrowserPageActions.takeActionTitleFromPanel(action);
   },
 
   onCommand(event, buttonNode) {
@@ -824,7 +929,8 @@ BrowserPageActions.emailLink = {
 // send to device
 BrowserPageActions.sendToDevice = {
   onPlacedInPanel(buttonNode) {
-    BrowserPageActions.takeNodeAttributeFromPanel(buttonNode, "title");
+    let action = PageActions.actionForID("sendToDevice");
+    BrowserPageActions.takeActionTitleFromPanel(action);
   },
 
   onSubviewPlaced(panelViewNode) {

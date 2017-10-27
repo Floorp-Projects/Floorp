@@ -40,8 +40,8 @@ add_task(async function simple() {
   let onShowingInPanelCallCount = 0;
   let onCommandExpectedButtonID;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let initialActions = PageActions.actions;
 
@@ -74,13 +74,13 @@ add_task(async function simple() {
     },
   }));
 
-  Assert.equal(action.iconURL, iconURL, "iconURL");
+  Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
   Assert.deepEqual(action.nodeAttributes, nodeAttributes, "nodeAttributes");
   Assert.equal(action.shownInUrlbar, false, "shownInUrlbar");
   Assert.equal(action.subview, null, "subview");
-  Assert.equal(action.title, title, "title");
-  Assert.equal(action.tooltip, tooltip, "tooltip");
+  Assert.equal(action.getTitle(), title, "title");
+  Assert.equal(action.getTooltip(), tooltip, "tooltip");
   Assert.equal(action.urlbarIDOverride, null, "urlbarIDOverride");
   Assert.equal(action.wantsIframe, false, "wantsIframe");
 
@@ -115,7 +115,8 @@ add_task(async function simple() {
   // The action's panel button should have been created.
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
-  Assert.equal(panelButtonNode.getAttribute("label"), action.title, "label");
+  Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
+               "label");
   for (let name in action.nodeAttributes) {
     Assert.ok(panelButtonNode.hasAttribute(name), "Has attribute: " + name);
     Assert.equal(panelButtonNode.getAttribute(name),
@@ -130,7 +131,7 @@ add_task(async function simple() {
   Assert.notEqual(panelButtonNode.previousSibling, null, "previousSibling");
   Assert.equal(
     panelButtonNode.previousSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
     "previousSibling.id"
@@ -178,9 +179,10 @@ add_task(async function simple() {
 
   // Set a new title.
   let newTitle = title + " new title";
-  action.title = newTitle;
-  Assert.equal(action.title, newTitle, "New title");
-  Assert.equal(panelButtonNode.getAttribute("label"), action.title, "New label");
+  action.setTitle(newTitle);
+  Assert.equal(action.getTitle(), newTitle, "New title");
+  Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
+               "New label");
 
   // Now that shownInUrlbar has been toggled, make sure that it sticks across
   // app restarts.  Simulate that by "unregistering" the action (not by removing
@@ -223,7 +225,7 @@ add_task(async function simple() {
   // The separator between the built-in actions and non-built-in actions should
   // be gone now, too.
   let separatorNode = document.getElementById(
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     )
   );
@@ -245,8 +247,8 @@ add_task(async function withSubview() {
   let onSubviewShowingCount = 0;
   let onButtonCommandCallCount = 0;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let panelViewIDPanel =
     BrowserPageActions._panelViewNodeIDForActionID(id, false);
@@ -433,8 +435,8 @@ add_task(async function withIframe() {
   let onPlacedInUrlbarCallCount = 0;
   let onIframeShownCount = 0;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let action = PageActions.addAction(new PageActions.Action({
     iconURL: "chrome://browser/skin/mail.svg",
@@ -557,7 +559,7 @@ add_task(async function withIframe() {
 // Tests an action with the _insertBeforeActionID option set.
 add_task(async function insertBeforeActionID() {
   let id = "test-insertBeforeActionID";
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
 
   let initialActions = PageActions.actions;
   let initialBuiltInActions = PageActions.builtInActions;
@@ -606,7 +608,7 @@ add_task(async function insertBeforeActionID() {
                   "panelButtonNode.nextSibling");
   Assert.equal(
     panelButtonNode.nextSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BOOKMARK_SEPARATOR
     ),
     "panelButtonNode.nextSibling.id"
@@ -616,7 +618,7 @@ add_task(async function insertBeforeActionID() {
   // been created.
   Assert.equal(
     document.getElementById(
-      BrowserPageActions._panelButtonNodeIDForActionID(
+      BrowserPageActions.panelButtonNodeIDForActionID(
         PageActions.ACTION_ID_BUILT_IN_SEPARATOR
       )
     ),
@@ -669,14 +671,14 @@ add_task(async function multipleNonBuiltInOrdering() {
   // Check the button nodes in the panel.
   let expectedIndex = 1;
   let buttonNode = document.getElementById(
-    BrowserPageActions._panelButtonNodeIDForActionID(idPrefix + expectedIndex)
+    BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex)
   );
   Assert.notEqual(buttonNode, null, "buttonNode");
   Assert.notEqual(buttonNode.previousSibling, null,
                   "buttonNode.previousSibling");
   Assert.equal(
     buttonNode.previousSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
     "buttonNode.previousSibling.id"
@@ -685,7 +687,7 @@ add_task(async function multipleNonBuiltInOrdering() {
     Assert.notEqual(buttonNode, null, "buttonNode at index: " + i);
     Assert.equal(
       buttonNode.id,
-      BrowserPageActions._panelButtonNodeIDForActionID(idPrefix + expectedIndex),
+      BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex),
       "buttonNode.id at index: " + i
     );
     buttonNode = buttonNode.nextSibling;
@@ -700,7 +702,7 @@ add_task(async function multipleNonBuiltInOrdering() {
   // The separator between the built-in and non-built-in actions should be gone.
   Assert.equal(
     document.getElementById(
-      BrowserPageActions._panelButtonNodeIDForActionID(
+      BrowserPageActions.panelButtonNodeIDForActionID(
         PageActions.ACTION_ID_BUILT_IN_SEPARATOR
       )
     ),
@@ -750,7 +752,7 @@ add_task(async function nonBuiltFirst() {
   // Check the panel.
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    [BrowserPageActions._panelButtonNodeIDForActionID(action.id)],
+    [BrowserPageActions.panelButtonNodeIDForActionID(action.id)],
     "Action should be in panel"
   );
 
@@ -785,7 +787,7 @@ add_task(async function nonBuiltFirst() {
     initialActions.map(a => a.id).concat(
       [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
-    ).map(id => BrowserPageActions._panelButtonNodeIDForActionID(id)),
+    ).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
     "Panel should contain all actions"
   );
 
@@ -812,7 +814,7 @@ add_task(async function nonBuiltFirst() {
   // Check the panel.
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    initialActions.map(a => BrowserPageActions._panelButtonNodeIDForActionID(a.id)),
+    initialActions.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Action should no longer be in panel"
   );
 });
@@ -884,7 +886,7 @@ add_task(async function urlbarOrderNewWindow() {
   // Now check that they're in the right order.
   Assert.deepEqual(
     actualUrlbarNodeIDs,
-    ids.map(id => win.BrowserPageActions._urlbarButtonNodeIDForActionID(id)),
+    ids.map(id => win.BrowserPageActions.urlbarButtonNodeIDForActionID(id)),
     "Expected actions in new window's urlbar"
   );
 
@@ -964,7 +966,7 @@ add_task(async function migrate1() {
   // Now check that they're in the right order.
   Assert.deepEqual(
     actualUrlbarNodeIDs,
-    orderedIDs.map(id => win.BrowserPageActions._urlbarButtonNodeIDForActionID(id)),
+    orderedIDs.map(id => win.BrowserPageActions.urlbarButtonNodeIDForActionID(id)),
     "Expected actions in new window's urlbar"
   );
 
@@ -973,6 +975,70 @@ add_task(async function migrate1() {
   Services.prefs.clearUserPref(PageActions.PREF_PERSISTED_ACTIONS);
   PageActions.actionForID("copyURL")._shownInUrlbar = false;
 });
+
+
+// Opens a new browser window and makes sure per-window state works right.
+add_task(async function perWindowState() {
+  // Add a test action.
+  let title = "Test perWindowState";
+  let action = PageActions.addAction(new PageActions.Action({
+    iconURL: "chrome://browser/skin/mail.svg",
+    id: "test-perWindowState",
+    shownInUrlbar: true,
+    title,
+  }));
+
+  // Open a new browser window and load an actionable page so that the action
+  // shows up in it.
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: newWindow.gBrowser,
+    url: "http://example.com/",
+  });
+
+  // Set a new title globally.
+  let newGlobalTitle = title + " new title";
+  action.setTitle(newGlobalTitle);
+  Assert.equal(action.getTitle(), newGlobalTitle,
+               "Title: global");
+  Assert.equal(action.getTitle(window), newGlobalTitle,
+               "Title: old window");
+  Assert.equal(action.getTitle(newWindow), newGlobalTitle,
+               "Title: new window");
+
+  // The action's panel button nodes should be updated in both windows.
+  let panelButtonID =
+    BrowserPageActions.panelButtonNodeIDForActionID(action.id);
+  for (let win of [window, newWindow]) {
+    let panelButtonNode = win.document.getElementById(panelButtonID);
+    Assert.equal(panelButtonNode.getAttribute("label"), newGlobalTitle,
+                 "Panel button label should be global title");
+  }
+
+  // Set a new title in the new window.
+  let newPerWinTitle = title + " new title in new window";
+  action.setTitle(newPerWinTitle, newWindow);
+  Assert.equal(action.getTitle(), newGlobalTitle,
+               "Title: global should remain same");
+  Assert.equal(action.getTitle(window), newGlobalTitle,
+               "Title: old window should remain same");
+  Assert.equal(action.getTitle(newWindow), newPerWinTitle,
+               "Title: new window should be new");
+
+  // The action's panel button node should be updated in the new window but the
+  // same in the old window.
+  let panelButtonNode1 = document.getElementById(panelButtonID);
+  Assert.equal(panelButtonNode1.getAttribute("label"), newGlobalTitle,
+               "Panel button label in old window");
+  let panelButtonNode2 = newWindow.document.getElementById(panelButtonID);
+  Assert.equal(panelButtonNode2.getAttribute("label"), newPerWinTitle,
+               "Panel button label in new window");
+
+  // Done, clean up.
+  await BrowserTestUtils.closeWindow(newWindow);
+  action.remove();
+});
+
 
 function promisePageActionPanelOpen() {
   let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
