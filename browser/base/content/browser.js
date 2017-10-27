@@ -8132,6 +8132,7 @@ const gAccessibilityServiceIndicator = {
       let a11yServicesSupportURL =
         Services.urlFormatter.formatURLPref("accessibility.support.url");
       gBrowser.selectedTab = gBrowser.addTab(a11yServicesSupportURL);
+      Services.telemetry.scalarSet("a11y.indicator_acted_on", true);
     }
   },
 
