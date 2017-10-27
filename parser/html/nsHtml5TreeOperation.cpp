@@ -41,6 +41,7 @@
 #include "nsIHTMLDocument.h"
 #include "mozilla/Likely.h"
 #include "nsTextNode.h"
+#include "nsHtml5AutoPauseUpdate.h"
 
 using namespace mozilla;
 
@@ -72,29 +73,6 @@ class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
     }
   private:
     nsCOMPtr<nsIDocument> mDocument;
-};
-
-/**
- * Helper class to temporary break out of the document update batch. Use this
- * with caution as this will cause blocked scripts to run.
- */
-class MOZ_RAII mozAutoPauseContentUpdate final
-{
-public:
-  explicit mozAutoPauseContentUpdate(nsIDocument* aDocument)
-    : mDocument(aDocument)
-  {
-    MOZ_ASSERT(mDocument);
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
-
-  ~mozAutoPauseContentUpdate()
-  {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
-
-private:
-  nsCOMPtr<nsIDocument> mDocument;
 };
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
@@ -442,7 +420,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
   if (willExecuteScript) { // This will cause custom element constructors to run
     AutoSetThrowOnDynamicMarkupInsertionCounter
       throwOnDynamicMarkupInsertionCounter(document);
-    mozAutoPauseContentUpdate autoPauseContentUpdate(document);
+    nsHtml5AutoPauseUpdate autoPauseContentUpdate(aBuilder);
     {
       nsAutoMicroTask mt;
     }
