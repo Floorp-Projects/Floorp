@@ -219,7 +219,6 @@ endif
 
 MAKEFILE      = $(wildcard $(OBJDIR)/Makefile)
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
-CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
 $(CONFIGURES): %: %.in
 	@echo Generating $@
