@@ -34,8 +34,15 @@ message ChromeUserPopulation {
     EXTENDED_REPORTING = 2;
   }
   optional UserPopulation user_population = 1;
-}
 
+  // If user enabled history sync.
+  optional bool is_history_sync_enabled = 2;
+
+  // The finch active groups this user belongs to (if any). Active group is
+  // defined by finch trial name and group name. Trial name and group name are
+  // concatenated with separator "|", e.g. "PingOnlyTrial|DefaultGroup".
+  repeated string finch_active_groups = 4;
+}
 
 message ClientPhishingRequest {
   // URL that the client visited.  The CGI parameters are stripped by the
@@ -148,6 +155,136 @@ message ClientMalwareRequest {
 
   // Population that the reporting user is part of.
   optional ChromeUserPopulation population = 9;
+}
+
+// The message is used for client request to determine whether the provided URL
+// is safe for the purposes of entering user credentials for logging in.
+message LoginReputationClientRequest {
+  // The top level frame URL of the webpage that hosts the login form.
+  optional string page_url = 1;
+
+  // Type for the request.
+  // It could be low reputation request or password reuse request.
+  enum TriggerType {
+    TRIGGER_TYPE_UNSPECIFIED = 0;
+    UNFAMILIAR_LOGIN_PAGE = 1;
+    PASSWORD_REUSE_EVENT = 2;
+  }
+  optional TriggerType trigger_type = 2;
+
+  // The message contains features which can describe a frame. A frame can be
+  // a top level web page or an iframe.
+  message Frame {
+    // Id of a frame. The frame whose index = 0 is the top level web page.
+    optional int32 frame_index = 1;
+
+    // Id of the parent frame.
+    optional int32 parent_frame_index = 2;
+
+    // Url of the frame. If could be top level url (from web page) or url of
+    // the iframe.
+    optional string url = 3;
+
+    // Whether the frame contains password field.
+    optional bool has_password_field = 4;
+
+    // URLs transitions in reverse chronological order, i.e. the top level url
+    // or the url of the iframe comes first in the list.
+    repeated ReferrerChainEntry referrer_chain = 5;
+
+    // The message contains features of a form.
+    message Form {
+      // Action url of the form.
+      optional string action_url = 1;
+
+      // Whether the form contains password field.
+      optional bool has_password_field = 2;
+    }
+
+    repeated Form forms = 6;
+  }
+
+  repeated Frame frames = 3;
+
+  // The message contains fields needed for a password reuse event.
+  // Next tag: 4
+  message PasswordReuseEvent {
+    // Domains from the Chrome password manager DB that are associated with
+    // the same password as the one triggering this event. The field is filled
+    // in only when TriggerType is PASSWORD_REUSE_EVENT, and only for users
+    // opted in to extended reporting.
+    repeated string domains_matching_password = 1;
+
+    // The frame that the password reuse is detected.
+    optional int32 frame_id = 2;
+
+    // Whether the reused password is used for Chrome signin.
+    optional bool is_chrome_signin_password = 3;
+
+    // Sync account type. Only set if |is_chrome_signin_password| is true.
+    enum SyncAccountType {
+      // Not a sign-in user.
+      NOT_SIGNED_IN = 0;
+
+      // User signed in with @gmail.com, or @googlemail.com account.
+      GMAIL = 1;
+
+      // User signed in with a G Suite account.
+      GSUITE = 2;
+    }
+    optional SyncAccountType sync_account_type = 4;
+  }
+
+  optional PasswordReuseEvent password_reuse_event = 4;
+
+  // The number of verdicts stored on the client.
+  optional int32 stored_verdict_cnt = 5;
+
+  // Chrome user population.
+  optional ChromeUserPopulation population = 6;
+
+  // If user clicked through safe browsing interstitial on this page.
+  optional bool clicked_through_interstitial = 7;
+}
+
+// The message is used for client response for login reputation requests.
+message LoginReputationClientResponse {
+  // Type of verdicts issued by the server.
+  enum VerdictType {
+    VERDICT_TYPE_UNSPECIFIED = 0;
+    // No warning will be displayed.
+    SAFE = 1;
+    // The site has low reputation or low popularity.
+    LOW_REPUTATION = 2;
+    // The url matches with blacklist entries.
+    PHISHING = 3;
+  }
+  optional VerdictType verdict_type = 1;
+
+  // TTL of the verdict in seconds.
+  optional int64 cache_duration_sec = 2;
+
+  // A host-suffix/path-prefix expression which defines a collections of pages
+  // with common ownership from the same domain.
+  // Generally, the pattern is defined on the granularity of domains.
+  // For domains managed by multiple parties, especially in the case of large
+  // hosting sites (e.g., geocities.com), we further divide the domains.
+  //
+  // Examples:
+  //    www.google.com/foo/bar?param=val -> google.com
+  //    www.geocities.com/foo/bar.html -> geocities.com/foo
+  //    adwords.blogspot.com/index.html -> adwords.blogspot.com
+  //
+  // The pattern will always match the page_url of the request, and will be
+  // a substring of page_url.
+  optional string cache_expression = 3;
+
+  // Deprecated.
+  optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+
+  // A token unique to each request which correlates response and post-warning
+  // actions.
+  optional bytes verdict_token = 5;
 }
 
 message ClientMalwareResponse {
@@ -353,7 +490,8 @@ message ClientDownloadRequest {
   // Fields 19-21 are reserved for server-side use and are never sent by the
   // client.
 
-  // A binary contained in an archive (e.g., a .zip archive).
+  // A binary or archive contained in an archive (e.g., a .exe in a .zip
+  // archive, or a .zip inside a .zip).
   message ArchivedBinary {
     optional string file_basename = 1;
     optional DownloadType download_type = 2;
@@ -371,7 +509,7 @@ message ClientDownloadRequest {
   // True if the .zip or DMG, etc, was 100% successfully unpacked.
   optional bool archive_valid = 26;
 
-    // True if this ClientDownloadRequest is from a whitelisted domain.
+  // True if this ClientDownloadRequest is from a whitelisted domain.
   optional bool skipped_url_whitelist = 28;
 
   // True if this ClientDownloadRequest contains a whitelisted certificate.
@@ -382,45 +520,81 @@ message ClientDownloadRequest {
   // the leading extension separator.
   repeated string alternate_extensions = 35;
 
-  message URLChainEntry {
-    enum URLType {
-      DOWNLOAD_URL = 1;
-      DOWNLOAD_REFERRER = 2;
-      LANDING_PAGE = 3;
-      LANDING_REFERRER = 4;
-      CLIENT_REDIRECT = 5;
-      SERVER_REDIRECT = 6;
-    }
-
-    // [required] The url of this Entry.
-    optional string url = 1;
-
-    // Type of URLs, such as download url, download referrer, etc.
-    optional URLType type = 2;
-
-    // IP address corresponding to url.
-    optional string ip_address = 3;
-
-    // Referrer url of this entry.
-    optional string referrer = 4;
-
-    // Main frame URL of referrer.
-    optional string main_frame_referrer = 5;
-
-    // If this URL loads in a different tab/frame from previous one.
-    optional bool is_retargeting = 6;
-
-    // If there is a user gesture attached to this transition.
-    optional bool is_user_initiated = 7;
-
-    optional double timestamp_in_millisec = 8;
-  }  // End of URLChainEntry
-
   // URLs transitions from landing referrer to download in reverse chronological
   // order, i.e. download url comes first in this list, and landing referrer
   // comes last.
-  repeated URLChainEntry url_chain = 36;
+  repeated ReferrerChainEntry referrer_chain = 36;
+
+  // Deprecated.
+  optional bool DEPRECATED_download_attribution_finch_enabled = 39
+      [deprecated = true];
+
+  // The Mac disk image code signature.
+  // The underlying structure of code signature is defined at
+  // https://opensource.apple.com/source/xnu/xnu-2782.1.97/bsd/sys/codesign.h
+  optional bytes udif_code_signature = 40;
 }
+
+// Please update SafeBrowsingNavigationObserverManager::SanitizeReferrerChain()
+// if you're adding more fields to this message.
+message ReferrerChainEntry {
+  enum URLType {
+    // URL of safe browsing events that are at the end of the referrer chain.
+    // e.g. URL of a download, URL of a low reputation login page, etc.
+    EVENT_URL = 1;  // e.g.
+
+    // Landing page is the page user directly interacts with to trigger the
+    // above event, e.g. the page where user clicks a download button.
+    LANDING_PAGE = 2;
+
+    // Landing referrer is the one user directly interacts with right before
+    // navigating to the landing page.
+    LANDING_REFERRER = 3;
+
+    // Client redirect refers to committed navigation between landing page and
+    // the targeted event, or between landing referrer page and landing page.
+    // Client redirect is not triggered by user gesture.
+    CLIENT_REDIRECT = 4;
+
+    DEPRECATED_SERVER_REDIRECT = 5;  // Deprecated
+  }
+
+  message ServerRedirect {
+    // [required] server redirect url
+    optional string url = 1;
+
+    // Additional fields for future expansion.
+  }
+
+  // [required] The url of this Entry.
+  optional string url = 1;
+
+  // Only set if it is different from |url|.
+  optional string main_frame_url = 9;
+
+  // Type of URLs, such as event url, landing page, etc.
+  optional URLType type = 2 [default = CLIENT_REDIRECT];
+
+  // IP addresses corresponding to this host.
+  repeated string ip_addresses = 3;
+
+  // Referrer url of this entry.
+  optional string referrer_url = 4;
+
+  // Main frame URL of referrer.
+  // Only set if it is different from |referrer_url|.
+  optional string referrer_main_frame_url = 5;
+
+  // If this URL loads in a different tab/frame from previous one.
+  optional bool is_retargeting = 6;
+
+  optional double navigation_time_msec = 7;
+
+  // Set only if server redirects happened in navigation.
+  // The first entry in |server_redirect_chain| should be the original request
+  // url, and the last entry should be the same as |url|.
+  repeated ServerRedirect server_redirect_chain = 8;
+}  // End of ReferrerChainEntry
 
 message ClientDownloadResponse {
   enum Verdict {
@@ -453,6 +627,9 @@ message ClientDownloadResponse {
 
   // An arbitrary token that should be sent along for further server requests.
   optional bytes token = 3;
+
+  // Whether the server requests that this binary be uploaded.
+  optional bool upload = 5;
 }
 
 // The following protocol buffer holds the feedback report gathered
@@ -460,9 +637,7 @@ message ClientDownloadResponse {
 message ClientDownloadReport {
   // The information of user who provided the feedback.
   // This is going to be useful for handling appeals.
-  message UserInformation {
-    optional string email = 1;
-  }
+  message UserInformation { optional string email = 1; }
 
   enum Reason {
     SHARE = 0;
@@ -512,6 +687,8 @@ message ClientIncidentReport {
         WEAK_LEGACY_OBSOLETE = 2;
         CHANGED = 3;
         UNTRUSTED_UNKNOWN_VALUE = 4;
+        BYPASS_CLEARED = 5;
+        BYPASS_CHANGED = 6;
       }
 
       optional string path = 1;
@@ -534,17 +711,6 @@ message ClientIncidentReport {
       repeated ContainedFile contained_file = 5;
     }
 
-    message BlacklistLoadIncident {
-      optional string path = 1;
-      optional ClientDownloadRequest.Digests digest = 2;
-      optional string version = 3;
-      optional bool blacklist_initialized = 4;
-      optional ClientDownloadRequest.SignatureInfo signature = 5;
-      optional ClientDownloadRequest.ImageHeaders image_headers = 6;
-    }
-    message VariationsSeedSignatureIncident {
-      optional string variations_seed_signature = 1;
-    }
     message ResourceRequestIncident {
       enum Type {
         UNKNOWN = 0;
@@ -554,21 +720,15 @@ message ClientIncidentReport {
       optional string origin = 2;
       optional Type type = 3 [default = UNKNOWN];
     }
-    message SuspiciousModuleIncident {
-      optional string path = 1;
-      optional ClientDownloadRequest.Digests digest = 2;
-      optional string version = 3;
-      optional ClientDownloadRequest.SignatureInfo signature = 4;
-      optional ClientDownloadRequest.ImageHeaders image_headers = 5;
-    }
+
     optional int64 incident_time_msec = 1;
     optional TrackedPreferenceIncident tracked_preference = 2;
     optional BinaryIntegrityIncident binary_integrity = 3;
-    optional BlacklistLoadIncident blacklist_load = 4;
-    // Note: skip tag 5 because it was previously used.
-    optional VariationsSeedSignatureIncident variations_seed_signature = 6;
+    // Note: skip tag 4,5,6 because they were previously used.
+    reserved 4 to 6;
     optional ResourceRequestIncident resource_request = 7;
-    optional SuspiciousModuleIncident suspicious_module = 8;
+    // Note: skip tag 8 because it was previously used.
+    reserved 8;
   }
 
   repeated IncidentData incident = 1;
@@ -630,7 +790,8 @@ message ClientIncidentReport {
       optional Channel chrome_update_channel = 5;
       optional int64 uptime_msec = 6;
       optional bool metrics_consent = 7;
-      optional bool extended_consent = 8;
+      // Obsolete: extended consent is now required for incident reporting.
+      optional bool OBSOLETE_extended_consent = 8;
       message Dll {
         enum Feature {
           UNKNOWN = 0;
@@ -664,7 +825,8 @@ message ClientIncidentReport {
         repeated Modification modification = 4;
       }
       repeated ModuleState module_state = 11;
-      optional bool field_trial_participant = 12;
+      // Obsolete: field trials no longer enable incident reporting.
+      optional bool OBSOLETE_field_trial_participant = 12;
     }
     optional Process process = 3;
   }
@@ -739,7 +901,7 @@ message DownloadMetadata {
 // A Detailed Safebrowsing Report from clients. Chrome safebrowsing reports are
 // only sent by Chrome users who have opted into extended Safe Browsing.
 // This proto is replacing ClientMalwareReportRequest.
-// Next tag: 16
+// Next tag: 19
 message ClientSafeBrowsingReportRequest {
   // Note: A lot of the "optional" fields would make sense to be
   // "required" instead.  However, having them as optional allows the
@@ -751,11 +913,14 @@ message ClientSafeBrowsingReportRequest {
     URL_PHISHING = 1;
     URL_MALWARE = 2;
     URL_UNWANTED = 3;
-    CLIENT_SIDE_PHISHING_URL = 4;
-    CLIENT_SIDE_MALWARE_URL = 5;
+    URL_CLIENT_SIDE_PHISHING = 4;
+    URL_CLIENT_SIDE_MALWARE = 5;
     DANGEROUS_DOWNLOAD_RECOVERY = 6;
     DANGEROUS_DOWNLOAD_WARNING = 7;
     DANGEROUS_DOWNLOAD_BY_API = 10;
+    URL_PASSWORD_PROTECTION_PHISHING = 12;
+    DANGEROUS_DOWNLOAD_OPENED = 13;
+    AD_SAMPLE = 14;
   }
 
   message HTTPHeader {
@@ -783,7 +948,7 @@ message ClientSafeBrowsingReportRequest {
   message HTTPResponse {
     message FirstLine {
       optional int32 code = 1;
-      optional bytes reason = 2;
+      optional bytes message = 2;
       optional bytes version = 3;
     }
 
@@ -818,6 +983,10 @@ message ClientSafeBrowsingReportRequest {
 
   repeated Resource resources = 4;
 
+  // Contains the hierarchy of elements on the page (ie: the DOM). Some
+  // elements can be Resources and will refer to the resources list (above).
+  repeated HTMLElement dom = 16;
+
   // Whether the report is complete.
   optional bool complete = 5;
 
@@ -832,8 +1001,92 @@ message ClientSafeBrowsingReportRequest {
   // Whether user visited this origin before.
   optional bool repeat_visit = 9;
 
-  // The same token in ClientDownloadResponse. This field is only set if its
-  // report type is DANGEROUS_DOWNLOAD_RECOVERY, DANGEROUS_DOWNLOAD_WARNING or
-  // DANGEROUS_DOWNLOAD_BY_API.
+  // The same token in ClientDownloadResponse or LoginReputationClientResponse.
+  // This field is only set if its report type is DANGEROUS_DOWNLOAD_RECOVERY,
+  // DANGEROUS_DOWNLOAD_WARNING, DANGEROUS_DOWNLOAD_BY_API,
+  // URL_PASSWORD_PROTECTION_PHISHING, or DANGEROUS_DOWNLOAD_OPENED.
   optional bytes token = 15;
+
+  enum SafeBrowsingUrlApiType {
+    SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED = 0;
+    // Native implementation of Safe Browsing API v3 protocol.
+    PVER3_NATIVE = 1;
+    // Native implementation of Safe Browsing API v4 protocol.
+    PVER4_NATIVE = 2;
+    // Android SafetyNet API.
+    // https://developer.android.com/training/safetynet/safebrowsing.html
+    ANDROID_SAFETYNET = 3;
+    // Flywheel (data compression service).
+    FLYWHEEL = 4;
+  }
+
+  // The information propagated from the client about various environment
+  // variables including SDK version, Google Play Services version and so on.
+  message SafeBrowsingClientProperties {
+    optional string client_version = 1;
+    optional int64 google_play_services_version = 2;
+    optional bool is_instant_apps = 3;
+    optional SafeBrowsingUrlApiType url_api_type = 4;
+  }
+  optional SafeBrowsingClientProperties client_properties = 17;
+
+  // Only set if report type is DANGEROUS_DOWNLOAD_EXECUTION.
+  // True means user opened the folder where this download is in via browser.
+  // False means user directly executed this download via download shelf or
+  // other download UIs.
+  optional bool show_download_in_folder = 18;
+}
+
+// An HTML Element on the page (eg: iframe, div, script, etc).
+message HTMLElement {
+  // Id of this element.
+  optional int32 id = 1;
+
+  // The tag type of this element (eg: iframe, div, script, etc).
+  optional string tag = 2;
+
+  // IDs of elements that are children of this element.
+  repeated int32 child_ids = 3;
+
+  // If this element represents a Resource then this is the id of the
+  // Resource, which contains additional data about the Resource. Otherwise
+  // unset.
+  optional int32 resource_id = 5;
+
+  // An Attribute of the element (eg: id, border, foo etc) and its value.
+  message Attribute {
+    optional string name = 1;
+    optional string value = 2;
+  }
+  repeated Attribute attribute = 6;
+}
+
+// Canonical representation of raster image data.
+message ImageData {
+  // Image bitmap, after downscaling to <= 512x512.
+  optional bytes data = 1;
+
+  // Encoding scheme for the bitmap.
+  optional string mime_type = 2;
+
+  message Dimensions {
+    optional int32 width = 1;
+    optional int32 height = 2;
+  }
+
+  // Dimensions of the image stored in |data|.
+  optional Dimensions dimensions = 3;
+  optional Dimensions original_dimensions = 4;  // iff downscaled
+}
+
+// Reporting protobuf for an image served as part of a browser notification.
+// There is no response (an empty body) to this request.
+message NotificationImageReportRequest {
+  optional string notification_origin = 1;  // Src-origin of the notification.
+  optional ImageData image = 2;             // The bitmap of the image.
+
+  // Note that the image URL is deliberately omitted as it would be untrusted,
+  // since the notification image fetch may be intercepted by a Service Worker
+  // (even if the image URL is cross-origin). Otherwise a website could mislead
+  // Safe Browsing into associating phishing image bitmaps with safe image URLs.
 }
