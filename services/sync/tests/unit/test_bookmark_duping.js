@@ -12,19 +12,20 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
 
 const bms = PlacesUtils.bookmarks;
-let engine;
-let store;
 
 add_task(async function setup() {
   initTestLogging("Trace");
-  await Service.engineManager.register(BookmarksEngine);
-  engine = Service.engineManager.get("bookmarks");
-  store = engine._store;
-  store._log.level = Log.Level.Trace;
-  engine._log.level = Log.Level.Trace;
+  await Service.engineManager.unregister("bookmarks");
 });
 
 async function sharedSetup() {
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
+  let store = engine._store;
+
+  store._log.level = Log.Level.Trace;
+  engine._log.level = Log.Level.Trace;
+
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -32,16 +33,18 @@ async function sharedSetup() {
 
   Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
 
-  return { server, collection };
+  return { engine, store, server, collection };
 }
 
-async function cleanup(server) {
+async function cleanup(engine, server) {
   Svc.Obs.notify("weave:engine:stop-tracking");
   let promiseStartOver = promiseOneObserver("weave:service:start-over:finish");
   await Service.startOver();
   await promiseStartOver;
   await promiseStopServer(server);
   await bms.eraseEverything();
+  await engine.resetClient();
+  await engine.finalize();
 }
 
 async function syncIdToId(syncId) {
@@ -122,7 +125,7 @@ async function validate(collection, expectedFailures = []) {
 add_task(async function test_dupe_bookmark() {
   _("Ensure that a bookmark we consider a dupe is handled correctly.");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -186,14 +189,14 @@ add_task(async function test_dupe_bookmark() {
     await validate(collection);
     PlacesUtils.bookmarks.removeObserver(obs);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
 add_task(async function test_dupe_reparented_bookmark() {
   _("Ensure that a bookmark we consider a dupe from a different parent is handled correctly");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -252,14 +255,14 @@ add_task(async function test_dupe_reparented_bookmark() {
     // and a final sanity check - use the validator
     await validate(collection);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
 add_task(async function test_dupe_reparented_locally_changed_bookmark() {
   _("Ensure that a bookmark with local changes we consider a dupe from a different parent is handled correctly");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -333,7 +336,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     // and a final sanity check - use the validator
     await validate(collection);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -341,7 +344,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
   _("Ensure that a bookmark we consider a dupe from a different parent that " +
     "appears in the same sync before the dupe item");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, store, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -410,7 +413,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
     // Make sure the validator thinks everything is hunky-dory.
     await validate(collection);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -418,7 +421,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
   _("Ensure that a bookmark we consider a dupe from a different parent that " +
     "doesn't exist locally as we process the child, but does appear in the same sync");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, store, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -487,7 +490,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
     // Make sure the validator thinks everything is hunky-dory.
     await validate(collection);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -495,7 +498,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
   _("Ensure that a bookmark we consider a dupe from a different parent that " +
     "doesn't exist locally and doesn't appear in this Sync is handled correctly");
 
-  let { server, collection } = await this.sharedSetup();
+  let { engine, store, server, collection } = await this.sharedSetup();
 
   try {
     // The parent folder and one bookmark in it.
@@ -611,7 +614,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
     await validate(collection, expected);
 
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 
@@ -619,7 +622,7 @@ add_task(async function test_dupe_empty_folder() {
   _("Ensure that an empty folder we consider a dupe is handled correctly.");
   // Empty folders aren't particularly interesting in practice (as that seems
   // an edge-case) but duping folders with items is broken - bug 1293163.
-  let { server, collection } = await this.sharedSetup();
+  let { engine, server, collection } = await this.sharedSetup();
 
   try {
     // The folder we will end up duping away.
@@ -653,7 +656,7 @@ add_task(async function test_dupe_empty_folder() {
     ok(getServerRecord(collection, folder1_guid).deleted);
     await promiseNoLocalItem(folder1_guid);
   } finally {
-    await cleanup(server);
+    await cleanup(engine, server);
   }
 });
 // XXX - TODO - folders with children. Bug 1293163

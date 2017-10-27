@@ -271,37 +271,44 @@ var Bookmarks = Object.freeze({
    *
    * @param {Object} tree
    *        object representing a tree of bookmark items to insert.
+   * @param {Object} options [optional]
+   *        object with properties representing options.  Current options are:
+   *         - fixupOrSkipInvalidEntries: makes the insert more lenient to
+   *           mistakes in the input tree.  Properties of an entry that are
+   *           fixable will be corrected, otherwise the entry will be skipped.
+   *           This is particularly convenient for import/restore operations,
+   *           but should not be abused for common inserts, since it may hide
+   *           bugs in the calling code.
    *
    * @return {Promise} resolved when the creation is complete.
    * @resolves to an object representing the created bookmark.
    * @rejects if it's not possible to create the requested bookmark.
    * @throws if the arguments are invalid.
    */
-  insertTree(tree) {
+  insertTree(tree, options) {
     if (!tree || typeof tree != "object") {
       throw new Error("Should be provided a valid tree object.");
     }
-
     if (!Array.isArray(tree.children) || !tree.children.length) {
       throw new Error("Should have a non-zero number of children to insert.");
     }
-
     if (!PlacesUtils.isValidGuid(tree.guid)) {
       throw new Error(`The parent guid is not valid (${tree.guid} ${tree.title}).`);
     }
-
     if (tree.guid == this.rootGuid) {
       throw new Error("Can't insert into the root.");
     }
-
     if (tree.guid == this.tagsGuid) {
       throw new Error("Can't use insertTree to insert tags.");
     }
-
     if (tree.hasOwnProperty("source") &&
         !Object.values(this.SOURCES).includes(tree.source)) {
       throw new Error("Can't use source value " + tree.source);
     }
+    if (options && typeof options != "object") {
+      throw new Error("Options should be a valid object");
+    }
+    let fixupOrSkipInvalidEntries = options && !!options.fixupOrSkipInvalidEntries;
 
     // Serialize the tree into an array of items to insert into the db.
     let insertInfos = [];
@@ -319,6 +326,7 @@ var Bookmarks = Object.freeze({
     // Reuse the 'source' property for all the entries.
     let source = tree.source || SOURCES.DEFAULT;
 
+    // This is recursive.
     function appendInsertionInfoForInfoArray(infos, indexToUse, parentGuid) {
       // We want to keep the index of items that will be inserted into the root
       // NULL, and then use a subquery to select the right index, to avoid
@@ -339,28 +347,22 @@ var Bookmarks = Object.freeze({
       // we insert.
       let lastAddedForParent = new Date(0);
       for (let info of infos) {
-        // Add a guid if none is present.
-        if (!info.hasOwnProperty("guid")) {
-          info.guid = PlacesUtils.history.makeGuid();
-        }
-        // Set the correct parent guid.
-        info.parentGuid = parentGuid;
         // Ensure to use the same date for dateAdded and lastModified, even if
         // dateAdded may be imposed by the caller.
         let time = (info && info.dateAdded) || fallbackLastAdded;
-        let insertInfo = validateBookmarkObject("Bookmarks.jsm: insertTree",
-                                                info, {
+        let insertInfo = {
+          guid: { defaultValue: PlacesUtils.history.makeGuid() },
           type: { defaultValue: TYPE_BOOKMARK },
           url: { requiredIf: b => b.type == TYPE_BOOKMARK,
                  validIf: b => b.type == TYPE_BOOKMARK },
-          parentGuid: { required: true },
+          parentGuid: { replaceWith: parentGuid }, // Set the correct parent guid.
           title: { defaultValue: "",
                    validIf: b => b.type == TYPE_BOOKMARK ||
                                  b.type == TYPE_FOLDER ||
                                  b.title === "" },
           dateAdded: { defaultValue: time,
                        validIf: b => !b.lastModified ||
-                                      b.dateAdded <= b.lastModified },
+                                     b.dateAdded <= b.lastModified },
           lastModified: { defaultValue: time,
                           validIf: b => (!b.dateAdded && b.lastModified >= time) ||
                                         (b.dateAdded && b.lastModified >= b.dateAdded) },
@@ -372,7 +374,22 @@ var Bookmarks = Object.freeze({
           postData: { validIf: b => b.type == TYPE_BOOKMARK },
           tags: { validIf: b => b.type == TYPE_BOOKMARK },
           children: { validIf: b => b.type == TYPE_FOLDER && Array.isArray(b.children) }
-        });
+        };
+        if (fixupOrSkipInvalidEntries) {
+          insertInfo.guid.fixup = b => b.guid = PlacesUtils.history.makeGuid();
+          insertInfo.dateAdded.fixup = insertInfo.lastModified.fixup =
+            b => b.lastModified = b.dateAdded = fallbackLastAdded;
+        }
+        try {
+          insertInfo = validateBookmarkObject("Bookmarks.jsm: insertTree", info, insertInfo);
+        } catch (ex) {
+          if (fixupOrSkipInvalidEntries) {
+            indexToUse--;
+            continue;
+          } else {
+            throw ex;
+          }
+        }
 
         if (shouldUseNullIndices) {
           insertInfo.index = null;
@@ -439,7 +456,24 @@ var Bookmarks = Object.freeze({
       await insertBookmarkTree(insertInfos, source, treeParent,
                                urlsThatMightNeedPlaces, lastAddedForParent);
 
-      await insertLivemarkData(insertLivemarkInfos);
+      for (let info of insertLivemarkInfos) {
+        try {
+          await insertLivemarkData(info);
+        } catch (ex) {
+          // This can arguably fail, if some of the livemarks data is invalid.
+          if (fixupOrSkipInvalidEntries) {
+            // The placeholder should have been removed at this point, thus we
+            // can avoid to notify about it.
+            let placeholderIndex = insertInfos.findIndex(item => item.guid == info.guid);
+            if (placeholderIndex != -1) {
+              insertInfos.splice(placeholderIndex, 1);
+            }
+          } else {
+            // Throw if we're not lenient to input mistakes.
+            throw ex;
+          }
+        }
+      }
 
       // Now update the indices of root items in the objects we return.
       // These may be wrong if someone else modified the table between
@@ -481,7 +515,13 @@ var Bookmarks = Object.freeze({
         // Note, annotations for livemark data are deleted from insertInfo
         // within appendInsertionInfoForInfoArray, so we won't be duplicating
         // the insertions here.
-        await handleBookmarkItemSpecialData(itemId, item);
+        try {
+          await handleBookmarkItemSpecialData(itemId, item);
+        } catch (ex) {
+          // This is not critical, regardless the bookmark has been created
+          // and we should continue notifying the next ones.
+          Cu.reportError(`An error occured while handling special bookmark data: ${ex}`);
+        }
 
         // Remove non-enumerable properties.
         delete item.source;
@@ -1461,57 +1501,51 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
 }
 
 /**
- * Handles any Livemarks within the passed items.
+ * Handles data for a Livemark insert.
  *
- * @param {Array} items Livemark items that need to be added.
+ * @param {Object} item Livemark item that need to be added.
  */
-async function insertLivemarkData(items) {
-  for (let item of items) {
-    let feedURI = null;
-    let siteURI = null;
-    item.annos = item.annos.filter(function(aAnno) {
-      switch (aAnno.name) {
-        case PlacesUtils.LMANNO_FEEDURI:
-          feedURI = NetUtil.newURI(aAnno.value);
-          return false;
-        case PlacesUtils.LMANNO_SITEURI:
-          siteURI = NetUtil.newURI(aAnno.value);
-          return false;
-        default:
-          return true;
-      }
-    });
+async function insertLivemarkData(item) {
+  // Delete the placeholder but note the index of it, so that we can insert the
+  // livemark item at the right place.
+  let placeholder = await Bookmarks.fetch(item.guid);
+  let index = placeholder.index;
+  await removeBookmark(item, {source: item.source});
 
-    let index = null;
+  let feedURI = null;
+  let siteURI = null;
+  item.annos = item.annos.filter(function(aAnno) {
+    switch (aAnno.name) {
+      case PlacesUtils.LMANNO_FEEDURI:
+        feedURI = NetUtil.newURI(aAnno.value);
+        return false;
+      case PlacesUtils.LMANNO_SITEURI:
+        siteURI = NetUtil.newURI(aAnno.value);
+        return false;
+      default:
+        return true;
+    }
+  });
 
-    // Delete the placeholder but note the index of it, so that we
-    // can insert the livemark item at the right place.
-    let placeholder = await Bookmarks.fetch(item.guid);
-    index = placeholder.index;
+  if (feedURI) {
+    item.feedURI = feedURI;
+    item.siteURI = siteURI;
+    item.index = index;
 
-    await Bookmarks.remove(item.guid, {source: item.source});
+    if (item.dateAdded) {
+      item.dateAdded = PlacesUtils.toPRTime(item.dateAdded);
+    }
+    if (item.lastModified) {
+      item.lastModified = PlacesUtils.toPRTime(item.lastModified);
+    }
 
-    if (feedURI) {
-      item.feedURI = feedURI;
-      item.siteURI = siteURI;
-      item.index = index;
+    let livemark = await PlacesUtils.livemarks.addLivemark(item);
 
-      if (item.dateAdded) {
-        item.dateAdded = PlacesUtils.toPRTime(item.dateAdded);
-      }
-      if (item.lastModified) {
-        item.lastModified = PlacesUtils.toPRTime(item.lastModified);
-      }
-
-      let livemark = await PlacesUtils.livemarks.addLivemark(item);
-
-      let id = livemark.id;
-      if (item.annos && item.annos.length) {
-        // Note: for annotations, we intentionally skip updating the last modified
-        // value for the bookmark, to avoid a second update of the added bookmark.
-        PlacesUtils.setAnnotationsForItem(id, item.annos,
-                                          item.source, true);
-      }
+    let id = livemark.id;
+    if (item.annos && item.annos.length) {
+      // Note: for annotations, we intentionally skip updating the last modified
+      // value for the bookmark, to avoid a second update of the added bookmark.
+      PlacesUtils.setAnnotationsForItem(id, item.annos, item.source, true);
     }
   }
 }
@@ -1527,7 +1561,11 @@ async function handleBookmarkItemSpecialData(itemId, item) {
   if (item.annos && item.annos.length) {
     // Note: for annotations, we intentionally skip updating the last modified
     // value for the bookmark, to avoid a second update of the added bookmark.
-    PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source, true);
+    try {
+      PlacesUtils.setAnnotationsForItem(itemId, item.annos, item.source, true);
+    } catch (ex) {
+      Cu.reportError(`Failed to insert annotations for item: ${ex}`);
+    }
   }
   if ("keyword" in item && item.keyword) {
     // POST data could be set in 2 ways:
@@ -1544,7 +1582,7 @@ async function handleBookmarkItemSpecialData(itemId, item) {
         source: item.source
       });
     } catch (ex) {
-      Cu.reportError(`Failed to insert keywords: ${ex}`);
+      Cu.reportError(`Failed to insert keyword "${item.keyword} for ${item.url}": ${ex}`);
     }
   }
   if ("tags" in item) {
@@ -1556,7 +1594,11 @@ async function handleBookmarkItemSpecialData(itemId, item) {
     }
   }
   if ("charset" in item && item.charset) {
-    await PlacesUtils.setCharsetForURI(NetUtil.newURI(item.url), item.charset);
+    try {
+      await PlacesUtils.setCharsetForURI(NetUtil.newURI(item.url), item.charset);
+    } catch (ex) {
+      Cu.reportError(`Failed to set charset "${item.charset}" for ${item.url}: ${ex}`);
+    }
   }
 }
 

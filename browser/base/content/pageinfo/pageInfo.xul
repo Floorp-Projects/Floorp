@@ -280,14 +280,6 @@
       </hbox>
 
       <vbox id="permList" flex="1">
-        <hbox id="perm-indexedDB-extras">
-          <spacer flex="1"/>
-          <vbox id="permIndexedDBStatusBox" pack="center">
-            <label id="indexedDBStatus" control="indexedDBClear" hidden="true"/>
-          </vbox>
-          <button id="indexedDBClear" label="&permClearStorage;" hidden="true"
-                  accesskey="&permClearStorage.accesskey;" onclick="onIndexedDBClear();"/>
-        </hbox>
         <vbox class="permission" id="perm-plugins-row">
           <label class="permissionLabel" id="permPluginsLabel"
                  value="&permPlugins;" control="pluginsRadioGroup"/>

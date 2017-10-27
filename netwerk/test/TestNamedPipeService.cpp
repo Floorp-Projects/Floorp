@@ -18,8 +18,6 @@
 
 using namespace mozilla;
 
-namespace {
-
 /**
  * Unlike a monitor, an event allows a thread to wait on another thread
  * completing an action without regard to ordering of the wait and the notify.
@@ -51,9 +49,7 @@ private:
   bool mSignaled = false;
 };
 
-} // anonymous namespace
-
-class nsNamedPipeDataObserver : public nsINamedPipeDataObserver
+class nsNamedPipeDataObserver final : public nsINamedPipeDataObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -306,10 +302,10 @@ TEST(TestNamedPipeService,Test)
 
   ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(readPipe, readObserver)));
   ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(writePipe, writeObserver)));
-  ASSERT_EQ(writeObserver->Write(TEST_STR, sizeof(TEST_STR)), sizeof(TEST_STR));
+  ASSERT_EQ(std::size_t(writeObserver->Write(TEST_STR, sizeof(TEST_STR))), sizeof(TEST_STR));
 
   char buffer[sizeof(TEST_STR)];
-  ASSERT_EQ(readObserver->Read(buffer, sizeof(buffer)), sizeof(TEST_STR));
+  ASSERT_EQ(std::size_t(readObserver->Read(buffer, sizeof(buffer))), sizeof(TEST_STR));
   ASSERT_STREQ(buffer, TEST_STR) << "I/O mismatch";
 
   ASSERT_TRUE(NS_SUCCEEDED(svc->RemoveDataObserver(readPipe, readObserver)));

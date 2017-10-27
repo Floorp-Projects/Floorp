@@ -126,7 +126,7 @@ public:
     // since if the binding fetch fails then we don't want to destroy the
     // frames.
     if (nsIPresShell* shell = doc->GetShell()) {
-      shell->DestroyFramesFor(mBoundElement->AsElement());
+      shell->DestroyFramesForAndRestyle(mBoundElement->AsElement());
     }
     MOZ_ASSERT(!mBoundElement->GetPrimaryFrame());
   }

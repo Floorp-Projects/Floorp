@@ -59,7 +59,7 @@ add_task(async function setup() {
 // The test expects the about:preferences#sync page to open in the current tab
 async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   info("Check Sync button functionality");
-  Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "http://example.com/");
+  Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "https://example.com/");
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   await waitForOverflowButtonShown();

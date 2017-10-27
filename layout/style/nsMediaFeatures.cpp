@@ -394,6 +394,9 @@ GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
   const bool isAccessibleFromContentPages =
     !(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
 
+  MOZ_ASSERT(!isAccessibleFromContentPages ||
+             *aFeature->mName == nsGkAtoms::_moz_touch_enabled);
+
   if (isAccessibleFromContentPages &&
       ShouldResistFingerprinting(aPresContext)) {
     // If "privacy.resistFingerprinting" is enabled, then we simply don't
@@ -404,6 +407,7 @@ GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
 
   MOZ_ASSERT(aFeature->mValueType == nsMediaFeature::eBoolInteger,
              "unexpected type");
+
   nsAtom* metricAtom = *aFeature->mData.mMetric;
   bool hasMetric = nsCSSRuleProcessor::HasSystemMetric(metricAtom);
   aResult.SetIntValue(hasMetric ? 1 : 0, eCSSUnit_Integer);
@@ -414,6 +418,8 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
 {
   aResult.Reset();
+
+  MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
   if (ShouldResistFingerprinting(aPresContext)) {
     return;
   }
@@ -442,6 +448,8 @@ GetOperatingSystemVersion(nsPresContext* aPresContext, const nsMediaFeature* aFe
                          nsCSSValue& aResult)
 {
   aResult.Reset();
+
+  MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
   if (ShouldResistFingerprinting(aPresContext)) {
     return;
   }
@@ -466,6 +474,7 @@ static void
 GetIsGlyph(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
           nsCSSValue& aResult)
 {
+  MOZ_ASSERT(aFeature->mReqFlags & nsMediaFeature::eUserAgentAndChromeOnly);
   aResult.SetIntValue(aPresContext->IsGlyph() ? 1 : 0, eCSSUnit_Integer);
 }
 
@@ -683,7 +692,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_overlay_scrollbars,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::overlay_scrollbars },
     GetSystemMetric
   },
@@ -691,7 +700,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_default_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_default_theme },
     GetSystemMetric
   },
@@ -699,7 +708,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_mac_graphite_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::mac_graphite_theme },
     GetSystemMetric
   },
@@ -707,7 +716,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_mac_yosemite_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::mac_yosemite_theme },
     GetSystemMetric
   },
@@ -715,7 +724,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_accent_color_in_titlebar,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_accent_color_in_titlebar },
     GetSystemMetric
   },
@@ -723,7 +732,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_compositor,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_compositor },
     GetSystemMetric
   },
@@ -731,7 +740,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_classic,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_classic },
     GetSystemMetric
   },
@@ -739,7 +748,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_glass,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::windows_glass },
     GetSystemMetric
   },
@@ -747,6 +756,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_touch_enabled,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
+    // FIXME(emilio): Restrict (or remove?) when bug 1035774 lands.
     nsMediaFeature::eNoRequirements,
     { &nsGkAtoms::touch_enabled },
     GetSystemMetric
@@ -755,7 +765,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_menubar_drag,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::menubar_drag },
     GetSystemMetric
   },
@@ -763,7 +773,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_windows_theme,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetWindowsTheme
   },
@@ -771,7 +781,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_os_version,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eIdent,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetOperatingSystemVersion
   },
@@ -780,7 +790,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_swipe_animation_enabled,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { &nsGkAtoms::swipe_animation_enabled },
     GetSystemMetric
   },
@@ -792,7 +802,7 @@ nsMediaFeatures::features[] = {
     &nsGkAtoms::_moz_is_glyph,
     nsMediaFeature::eMinMaxNotAllowed,
     nsMediaFeature::eBoolInteger,
-    nsMediaFeature::eNoRequirements,
+    nsMediaFeature::eUserAgentAndChromeOnly,
     { nullptr },
     GetIsGlyph
   },

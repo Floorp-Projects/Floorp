@@ -90,13 +90,12 @@
   padding: 0;
   /* only display the text label when CSS backgrounds are disabled (e.g. in high contrast mode) */
   color: transparent;
+  fill: rgba(12, 12, 12, 0.6);
+  -moz-context-properties: fill;
 }
 
 #newtab-customize-button:-moz-any(:hover, :active, [active]) {
-  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 64, 32, 32);
-  background-color: #FFFFFF;
-  border: solid 1px #CCCCCC;
-  border-radius: 2px;
+  background-color: #EDEDF0;
 }
 
 /* GRID */
@@ -114,7 +113,7 @@
 
 /* CELLS */
 .newtab-cell {
-  --cell-corner-radius: 8px;
+  --cell-corner-radius: 4px;
   background-color: rgba(255,255,255,.2);
   border-radius: var(--cell-corner-radius);
 }
@@ -132,22 +131,8 @@ body.compact .newtab-cell {
 /* SITES */
 .newtab-site {
   border-radius: var(--cell-corner-radius);
-  box-shadow: 0 1px 3px #c1c1c1;
+  box-shadow: 0 2px 4px #c1c1c1;
   text-decoration: none;
-  transition-property: top, left, opacity, box-shadow, background-color;
-}
-
-.newtab-cell:not([ignorehover]) .newtab-control:hover ~ .newtab-link,
-.newtab-cell:not([ignorehover]) .newtab-link:hover,
-.newtab-site[dragged] {
-  border: 2px solid white;
-  box-shadow: 0 0 6px 1px #add6ff;
-  margin: -2px;
-}
-
-.newtab-site[dragged] {
-  transition-property: box-shadow, background-color;
-  background-color: rgb(242,242,242);
 }
 
 /* LINKS */
@@ -209,11 +194,12 @@ body.compact .newtab-site[type=affiliate] .newtab-thumbnail {
 /* TITLES */
 
 .newtab-title {
-  background-color: #F2F2F2;
-  font-size: 13px;
+  background-color: #F9F9FA;
+  font-size: 14px;
   line-height: 30px;
   border: 1px solid #fff;
   border-radius: 0 0 var(--cell-corner-radius) var(--cell-corner-radius);
+  color: rgba(12, 12, 13, 0.76);
 }
 
 body.compact .newtab-title {
@@ -225,19 +211,14 @@ body.compact .newtab-title {
   background-clip: padding-box;
 }
 
-.newtab-title {
-  color: #5c5c5c;
-}
-
 body.compact .newtab-title {
   color: black;
 }
 
 body:not(.compact) .newtab-site:hover .newtab-title {
   color: white;
-  background-color: #333;
-  border-color: #333;
-  border-top-color: white;
+  background-color: #4A4A4F;
+  border-color: white;
 }
 
 body.compact .newtab-site:hover .newtab-title {
@@ -247,18 +228,14 @@ body.compact .newtab-site:hover .newtab-title {
   border-top-color: white;
 }
 
-.newtab-site[pinned] .newtab-title {
-  padding-inline-start: 24px;
-}
-
 .newtab-site[pinned] .newtab-title::before {
-  background-image: -moz-image-rect(url("chrome://browser/skin/newtab/controls.svg"), 7, 278, 28, 266);
-  background-size: 10px;
+  background-image: -moz-image-rect(url("chrome://browser/skin/newtab/controls.svg"), 0, 298, 28, 256);
+  background-size: 20px;
   content: "";
-  height: 17px;
+  height: 20px;
   left: 0;
   position: absolute;
-  width: 10px;
+  width: 20px;
   margin-left: 8px;
   margin-top: 6px;
 }
@@ -271,21 +248,21 @@ body.compact .newtab-site:hover .newtab-title {
 /* CONTROLS */
 .newtab-control {
   background-color: transparent;
-  background-size: 24px;
+  background-size: 26px;
   border: none;
-  height: 24px;
-  width: 24px;
-  top: 4px;
+  height: 26px;
+  width: 26px;
+  top: 8px;
 }
 
 .newtab-control-pin:dir(ltr),
 .newtab-control-block:dir(rtl) {
-  left: 4px;
+  left: 8px;
 }
 
 .newtab-control-block:dir(ltr),
 .newtab-control-pin:dir(rtl) {
-  right: 4px;
+  right: 8px;
 }
 
 body.compact .newtab-control {

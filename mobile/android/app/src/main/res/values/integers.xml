@@ -12,7 +12,6 @@
     <integer name="number_of_inline_share_devices">2</integer>
     <integer name="max_search_suggestions">2</integer>
     <integer name="max_saved_suggestions">2</integer>
-    <integer name="search_assist_launch_res">0</integer>
     <integer name="shift_duration_suggestion">500</integer>
 
 </resources>

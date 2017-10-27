@@ -122,7 +122,14 @@ def search_path(mozilla_dir, packages_txt):
     with open(os.path.join(mozilla_dir, packages_txt)) as f:
         packages = [line.rstrip().split(':') for line in f]
 
-    for package in packages:
+    def handle_package(package):
+        if package[0] == 'optional':
+            try:
+                for path in handle_package(package[1:]):
+                    yield path
+            except:
+                pass
+
         if package[0] == 'packages.txt':
             assert len(package) == 2
             for p in search_path(mozilla_dir, package[1]):
@@ -131,6 +138,10 @@ def search_path(mozilla_dir, packages_txt):
         if package[0].endswith('.pth'):
             assert len(package) == 2
             yield os.path.join(mozilla_dir, package[1])
+
+    for package in packages:
+        for path in handle_package(package):
+            yield path
 
 
 def bootstrap(topsrcdir, mozilla_dir=None):
