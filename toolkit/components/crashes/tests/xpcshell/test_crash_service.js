@@ -60,22 +60,19 @@ async function teardown() {
   await OS.File.remove(gExtraFile);
 }
 
-async function test_addCrashBase(crashId, allThreads) {
+add_task(async function test_addCrash() {
+  const crashId = "56cd87bc-bb26-339b-3a8e-f00c0f11380e";
   await setup(crashId);
 
-  let crashType = Ci.nsICrashService.CRASH_TYPE_CRASH;
-  if (allThreads) {
-    crashType = Ci.nsICrashService.CRASH_TYPE_HANG;
-  }
   let cs = Cc["@mozilla.org/crashservice;1"].getService(Ci.nsICrashService);
-  await cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT, crashType,
-    crashId);
+  await cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT,
+                    Ci.nsICrashService.CRASH_TYPE_CRASH, crashId);
   let crashes = await Services.crashmanager.getCrashes();
   let crash = crashes.find(c => { return c.id === crashId; });
   Assert.ok(crash, "Crash " + crashId + " has been stored successfully.");
   Assert.equal(crash.metadata.ProcessType, "content");
   Assert.equal(crash.metadata.MinidumpSha256Hash,
-    "c8ad56a2096310f40c8a4b46c890625a740fdd72e409f412933011ff947c5a40");
+    "24b0ea7794b2d2523c46c9aea72c03ccbb0ab88ad76d8258d3752c7b71d233ff");
   Assert.ok(crash.metadata.StackTraces, "The StackTraces field is present.\n");
 
   try {
@@ -84,16 +81,8 @@ async function test_addCrashBase(crashId, allThreads) {
     Assert.ok(stackTraces.crash_info, "The crash_info field is populated.");
     Assert.ok(stackTraces.modules && (stackTraces.modules.length > 0),
               "The module list is populated.");
-    Assert.ok(stackTraces.threads && (stackTraces.threads.length > 0),
+    Assert.ok(stackTraces.threads && (stackTraces.modules.length > 0),
               "The thread list is populated.");
-
-    if (allThreads) {
-      Assert.ok(stackTraces.threads.length > 1,
-        "The stack trace contains more than one thread.");
-    } else {
-      Assert.ok(stackTraces.threads.length == 1,
-        "The stack trace contains exactly one thread.");
-    }
 
     let frames = stackTraces.threads[0].frames;
     Assert.ok(frames && (frames.length > 0), "The stack trace is present.\n");
@@ -110,14 +99,6 @@ async function test_addCrashBase(crashId, allThreads) {
   }
 
   await teardown();
-};
-
-add_task(async function test_addCrash() {
-  await test_addCrashBase("56cd87bc-bb26-339b-3a8e-f00c0f11380e", false);
-});
-
-add_task(async function test_addCrashAllThreads() {
-  await test_addCrashBase("071843c4-da89-4447-af9f-965163e0b253", true);
 });
 
 add_task(async function test_addCrash_quitting() {

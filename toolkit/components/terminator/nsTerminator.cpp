@@ -157,9 +157,6 @@ RunWatchdog(void* arg)
     }
 
     // Shutdown is apparently dead. Crash the process.
-#if defined(MOZ_CRASHREPORTER)
-    CrashReporter::SetMinidumpAnalysisAllThreads();
-#endif
     MOZ_CRASH("Shutdown too long, probably frozen, causing a crash.");
   }
 }
