@@ -1165,7 +1165,7 @@ extern "C"
 static
 #endif
   bool
-  malloc_init_hard(void);
+  malloc_init_hard();
 
 #ifdef XP_DARWIN
 #define FORK_HOOK extern "C"
@@ -4065,17 +4065,18 @@ huge_dalloc(void* aPtr)
 // implementation has to take pains to avoid infinite recursion during
 // initialization.
 #if defined(XP_WIN)
-#define malloc_init() false
+#define malloc_init() true
 #else
+// Returns whether the allocator was successfully initialized.
 static inline bool
-malloc_init(void)
+malloc_init()
 {
 
   if (malloc_initialized == false) {
     return malloc_init_hard();
   }
 
-  return false;
+  return true;
 }
 #endif
 
@@ -4096,11 +4097,12 @@ GetKernelPageSize()
   return kernel_page_size;
 }
 
+// Returns whether the allocator was successfully initialized.
 #if !defined(XP_WIN)
 static
 #endif
   bool
-  malloc_init_hard(void)
+  malloc_init_hard()
 {
   unsigned i;
   const char* opts;
@@ -4113,11 +4115,11 @@ static
   if (malloc_initialized) {
     // Another thread initialized the allocator before this one
     // acquired gInitLock.
-    return false;
+    return true;
   }
 
   if (!thread_arena.init()) {
-    return false;
+    return true;
   }
 
   // Get page size and number of CPUs
@@ -4255,7 +4257,7 @@ static
   arenas_extend();
   gMainArena = gArenaTree.First();
   if (!gMainArena) {
-    return true;
+    return false;
   }
   // arena_t::Init() sets this to a lower value for thread local arenas;
   // reset to the default value for the main arena.
@@ -4265,7 +4267,7 @@ static
   thread_arena.set(gMainArena);
 
   if (!gChunkRTree.Init()) {
-    return true;
+    return false;
   }
 
   malloc_initialized = true;
@@ -4279,7 +4281,7 @@ static
     _malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
 #endif
 
-  return false;
+  return true;
 }
 
 // End general internal functions.
@@ -4321,7 +4323,7 @@ BaseAllocator::malloc(size_t aSize)
 {
   void* ret;
 
-  if (malloc_init()) {
+  if (!malloc_init()) {
     ret = nullptr;
     goto RETURN;
   }
@@ -4347,7 +4349,7 @@ BaseAllocator::memalign(size_t aAlignment, size_t aSize)
 
   MOZ_ASSERT(((aAlignment - 1) & aAlignment) == 0);
 
-  if (malloc_init()) {
+  if (!malloc_init()) {
     return nullptr;
   }
 
@@ -4367,7 +4369,7 @@ BaseAllocator::calloc(size_t aNum, size_t aSize)
   void* ret;
   size_t num_size;
 
-  if (malloc_init()) {
+  if (!malloc_init()) {
     ret = nullptr;
     goto RETURN;
   }
@@ -4414,7 +4416,7 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
       errno = ENOMEM;
     }
   } else {
-    if (malloc_init()) {
+    if (!malloc_init()) {
       ret = nullptr;
     } else {
       ret = imalloc(aSize, /* zero = */ false, mArena);
