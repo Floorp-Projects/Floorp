@@ -368,6 +368,12 @@ AccessibleHandler::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
                            pVarResult, pExcepInfo, puArgErr);
 }
 
+inline static BSTR
+CopyBSTR(BSTR aSrc)
+{
+  return ::SysAllocStringLen(aSrc, ::SysStringLen(aSrc));
+}
+
 #define BEGIN_CACHE_ACCESS \
   { \
     HRESULT hr; \
@@ -376,11 +382,15 @@ AccessibleHandler::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     } \
   }
 
-static BSTR
-CopyBSTR(BSTR aSrc)
-{
-  return SysAllocStringLen(aSrc, SysStringLen(aSrc));
-}
+#define GET_FIELD(member, assignTo) \
+  { \
+    assignTo = mCachedData.mData.member; \
+  }
+
+#define GET_BSTR(member, assignTo) \
+  { \
+    assignTo = CopyBSTR(mCachedData.mData.member); \
+  }
 
 HRESULT
 AccessibleHandler::get_accParent(IDispatch **ppdispParent)
@@ -398,11 +408,18 @@ AccessibleHandler::get_accChildCount(long *pcountChildren)
   if (!pcountChildren) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accChildCount(pcountChildren);
   }
-  return mIA2PassThru->get_accChildCount(pcountChildren);
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mChildCount, *pcountChildren);
+  return S_OK;
 }
 
 HRESULT
@@ -430,11 +447,18 @@ AccessibleHandler::get_accName(VARIANT varChild, BSTR *pszName)
   if (!pszName) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accName(varChild, pszName);
   }
-  return mIA2PassThru->get_accName(varChild, pszName);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mName, *pszName);
+  return S_OK;
 }
 
 HRESULT
@@ -443,11 +467,18 @@ AccessibleHandler::get_accValue(VARIANT varChild, BSTR *pszValue)
   if (!pszValue) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accValue(varChild, pszValue);
   }
-  return mIA2PassThru->get_accValue(varChild, pszValue);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mValue, *pszValue);
+  return S_OK;
 }
 
 HRESULT
@@ -456,11 +487,18 @@ AccessibleHandler::get_accDescription(VARIANT varChild, BSTR *pszDescription)
   if (!pszDescription) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accDescription(varChild, pszDescription);
   }
-  return mIA2PassThru->get_accDescription(varChild, pszDescription);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mDescription, *pszDescription);
+  return S_OK;
 }
 
 
@@ -470,11 +508,17 @@ AccessibleHandler::get_accRole(VARIANT varChild, VARIANT *pvarRole)
   if (!pvarRole) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accRole(varChild, pvarRole);
   }
-  return mIA2PassThru->get_accRole(varChild, pvarRole);
+
+  BEGIN_CACHE_ACCESS;
+  return ::VariantCopy(pvarRole, &mCachedData.mData.mRole);
 }
 
 
@@ -484,11 +528,19 @@ AccessibleHandler::get_accState(VARIANT varChild, VARIANT *pvarState)
   if (!pvarState) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accState(varChild, pvarState);
   }
-  return mIA2PassThru->get_accState(varChild, pvarState);
+
+  pvarState->vt = VT_I4;
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mState, pvarState->lVal);
+  return S_OK;
 }
 
 HRESULT
@@ -522,11 +574,18 @@ AccessibleHandler::get_accKeyboardShortcut(VARIANT varChild,
   if (!pszKeyboardShortcut) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accKeyboardShortcut(varChild, pszKeyboardShortcut);
   }
-  return mIA2PassThru->get_accKeyboardShortcut(varChild, pszKeyboardShortcut);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mKeyboardShortcut, *pszKeyboardShortcut);
+  return S_OK;
 }
 
 HRESULT
@@ -556,11 +615,18 @@ AccessibleHandler::get_accDefaultAction(VARIANT varChild,
   if (!pszDefaultAction) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_accDefaultAction(varChild, pszDefaultAction);
   }
-  return mIA2PassThru->get_accDefaultAction(varChild, pszDefaultAction);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mDefaultAction, *pszDefaultAction);
+  return S_OK;
 }
 
 HRESULT
@@ -577,12 +643,25 @@ HRESULT
 AccessibleHandler::accLocation(long *pxLeft, long *pyTop, long *pcxWidth,
                                long *pcyHeight, VARIANT varChild)
 {
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+  if (varChild.lVal != CHILDID_SELF || !HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->accLocation(pxLeft, pyTop, pcxWidth, pcyHeight,
+                                     varChild);
   }
-  return mIA2PassThru->accLocation(pxLeft, pyTop, pcxWidth, pcyHeight,
-                                   varChild);
+
+  if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight) {
+    return E_INVALIDARG;
+  }
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mLeft, *pxLeft);
+  GET_FIELD(mTop, *pyTop);
+  GET_FIELD(mWidth, *pcxWidth);
+  GET_FIELD(mHeight, *pcyHeight);
+  return S_OK;
 }
 
 HRESULT
@@ -669,11 +748,18 @@ AccessibleHandler::role(long* role)
   if (!role) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->role(role);
   }
-  return mIA2PassThru->role(role);
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mIA2Role, *role);
+  return S_OK;
 }
 
 HRESULT
@@ -715,11 +801,18 @@ AccessibleHandler::get_states(AccessibleStates* states)
   if (!states) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_states(states);
   }
-  return mIA2PassThru->get_states(states);
+
+  BEGIN_CACHE_ACCESS;
+  GET_FIELD(mIA2States, *states);
+  return S_OK;
 }
 
 HRESULT
@@ -805,11 +898,20 @@ AccessibleHandler::get_windowHandle(HWND* windowHandle)
   if (!windowHandle) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_windowHandle(windowHandle);
   }
-  return mIA2PassThru->get_windowHandle(windowHandle);
+
+  BEGIN_CACHE_ACCESS;
+  long hwnd = 0;
+  GET_FIELD(mHwnd, hwnd);
+  *windowHandle = reinterpret_cast<HWND>(uintptr_t(hwnd));
+  return S_OK;
 }
 
 HRESULT
@@ -828,11 +930,19 @@ AccessibleHandler::get_locale(IA2Locale* locale)
   if (!locale) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_locale(locale);
   }
-  return mIA2PassThru->get_locale(locale);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mIA2Locale.language, locale->language);
+  GET_BSTR(mIA2Locale.country, locale->country);
+  GET_BSTR(mIA2Locale.variant, locale->variant);
   return S_OK;
 }
 
@@ -842,11 +952,18 @@ AccessibleHandler::get_attributes(BSTR* attributes)
   if (!attributes) {
     return E_INVALIDARG;
   }
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
+
+  if (!HasPayload()) {
+    HRESULT hr = ResolveIA2();
+    if (FAILED(hr)) {
+      return hr;
+    }
+    return mIA2PassThru->get_attributes(attributes);
   }
-  return mIA2PassThru->get_attributes(attributes);
+
+  BEGIN_CACHE_ACCESS;
+  GET_BSTR(mAttributes, *attributes);
+  return S_OK;
 }
 
 HRESULT

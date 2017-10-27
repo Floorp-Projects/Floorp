@@ -30,6 +30,9 @@ class JitZone;
 
 namespace gc {
 
+class GCSchedulingState;
+class GCSchedulingTunables;
+
 // This class encapsulates the data that determines when we need to do a zone GC.
 class ZoneHeapThreshold
 {
@@ -419,11 +422,35 @@ struct Zone : public JS::shadow::Zone,
     // Malloc counter to measure memory pressure for GC scheduling. This
     // counter should be used only when it's not possible to know the size of
     // a free.
-    js::gc::MemoryCounter<Zone> gcMallocCounter;
+    js::gc::MemoryCounter gcMallocCounter;
 
     // Counter of JIT code executable memory for GC scheduling. Also imprecise,
     // since wasm can generate code that outlives a zone.
-    js::gc::MemoryCounter<Zone> jitCodeCounter;
+    js::gc::MemoryCounter jitCodeCounter;
+
+    void updateMemoryCounter(js::gc::MemoryCounter& counter, size_t nbytes) {
+        JSRuntime* rt = runtimeFromAnyThread();
+
+        counter.update(nbytes);
+        auto trigger = counter.shouldTriggerGC(rt->gc.tunables);
+        if (MOZ_LIKELY(trigger == js::gc::NoTrigger) || trigger <= counter.triggered())
+            return;
+
+        if (!js::CurrentThreadCanAccessRuntime(rt))
+            return;
+
+        bool wouldInterruptGC = rt->gc.isIncrementalGCInProgress() && !isCollecting();
+        if (wouldInterruptGC && !counter.shouldResetIncrementalGC(rt->gc.tunables))
+            return;
+
+        if (!rt->gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC,
+                                  counter.bytes(), counter.maxBytes()))
+        {
+            return;
+        }
+
+        counter.recordTrigger(trigger);
+    }
 
   public:
     js::RegExpZone regExps;
@@ -432,21 +459,11 @@ struct Zone : public JS::shadow::Zone,
 
     bool addTypeDescrObject(JSContext* cx, HandleObject obj);
 
-    bool triggerGCForTooMuchMalloc() {
-        JSRuntime* rt = runtimeFromAnyThread();
-
-        if (js::CurrentThreadCanAccessRuntime(rt)) {
-            return rt->gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC,
-                                        gcMallocCounter.bytes(), gcMallocCounter.maxBytes());
-        }
-        return false;
-    }
-
     void setGCMaxMallocBytes(size_t value, const js::AutoLockGC& lock) {
         gcMallocCounter.setMax(value, lock);
     }
     void updateMallocCounter(size_t nbytes) {
-        gcMallocCounter.update(this, nbytes);
+        updateMemoryCounter(gcMallocCounter, nbytes);
     }
     void adoptMallocBytes(Zone* other) {
         gcMallocCounter.adopt(other->gcMallocCounter);
@@ -454,16 +471,23 @@ struct Zone : public JS::shadow::Zone,
     size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
     size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
 
-    void updateJitCodeMallocBytes(size_t size) { jitCodeCounter.update(this, size); }
-
-    // Updates all the memory counters after GC.
-    void updateAllMallocBytesOnGC(const js::AutoLockGC& lock) {
-        gcMallocCounter.updateOnGC(lock);
-        jitCodeCounter.updateOnGC(lock);
+    void updateJitCodeMallocBytes(size_t nbytes) {
+        updateMemoryCounter(jitCodeCounter, nbytes);
     }
-    bool isTooMuchMalloc() const {
-        return gcMallocCounter.isTooMuchMalloc() ||
-               jitCodeCounter.isTooMuchMalloc();
+
+    void updateAllGCMallocCountersOnGCStart() {
+        gcMallocCounter.updateOnGCStart();
+        jitCodeCounter.updateOnGCStart();
+    }
+    void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock) {
+        auto& gc = runtimeFromAnyThread()->gc;
+        gcMallocCounter.updateOnGCEnd(gc.tunables, lock);
+        jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
+    }
+    js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc() {
+        auto& gc = runtimeFromAnyThread()->gc;
+        return std::max(gcMallocCounter.shouldTriggerGC(gc.tunables),
+                        jitCodeCounter.shouldTriggerGC(gc.tunables));
     }
 
   private:

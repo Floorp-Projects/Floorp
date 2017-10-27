@@ -61,8 +61,10 @@ public:
   // IInterceptorSink
   STDMETHODIMP SetInterceptor(IWeakReference* aInterceptor) override;
   STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) override;
-  STDMETHODIMP GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize) override;
-  STDMETHODIMP WriteHandlerPayload(NotNull<IStream*> aStream) override;
+  STDMETHODIMP GetHandlerPayloadSize(NotNull<IInterceptor*> aInterceptor,
+                                     NotNull<DWORD*> aOutPayloadSize) override;
+  STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor,
+                                   NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
 
   // ICallFrameWalker

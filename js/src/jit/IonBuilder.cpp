@@ -28,6 +28,7 @@
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -7806,9 +7807,6 @@ IonBuilder::getElemTryTypedObject(bool* emitted, MDefinition* obj, MDefinition* 
     MOZ_CRASH("Bad kind");
 }
 
-static MIRType
-MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble);
-
 bool
 IonBuilder::checkTypedObjectIndexInBounds(uint32_t elemSize,
                                           MDefinition* obj,
@@ -8762,29 +8760,6 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition* id,
     current->add(ptr);
 
     return ptr;
-}
-
-static MIRType
-MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble)
-{
-    switch (arrayType) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-        return MIRType::Int32;
-      case Scalar::Uint32:
-        return observedDouble ? MIRType::Double : MIRType::Int32;
-      case Scalar::Float32:
-        return MIRType::Float32;
-      case Scalar::Float64:
-        return MIRType::Double;
-      default:
-        break;
-    }
-    MOZ_CRASH("Unknown typed array type");
 }
 
 AbortReasonOr<Ok>
@@ -10387,6 +10362,13 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (emitted)
             return Ok();
 
+        // Try to emit a property access on the prototype based on baseline
+        // caches.
+        trackOptimizationAttempt(TrackedStrategy::GetProp_InlineProtoAccess);
+        MOZ_TRY(getPropTryInlineProtoAccess(&emitted, obj, name, types));
+        if (emitted)
+            return Ok();
+
         // Try to emit loads from a module namespace.
         trackOptimizationAttempt(TrackedStrategy::GetProp_ModuleNamespace);
         MOZ_TRY(getPropTryModuleNamespace(&emitted, obj, name, barrier, types));
@@ -11293,6 +11275,52 @@ IonBuilder::getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName
     MOZ_TRY(pushTypeBarrier(load, types, barrier));
 
     trackOptimizationOutcome(TrackedOutcome::Polymorphic);
+    *emitted = true;
+    return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::getPropTryInlineProtoAccess(bool* emitted, MDefinition* obj, PropertyName* name,
+                                        TemporaryTypeSet* types)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    BaselineInspector::ReceiverVector receivers(alloc());
+    BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
+    JSObject* holder = nullptr;
+    if (!inspector->maybeInfoForProtoReadSlot(pc, receivers, convertUnboxedGroups, &holder))
+        return abort(AbortReason::Alloc);
+
+    if (!canInlinePropertyOpShapes(receivers))
+        return Ok();
+
+    MOZ_ASSERT(holder);
+    holder = checkNurseryObject(holder);
+
+    BarrierKind barrier;
+    MOZ_TRY_VAR(barrier, PropertyReadOnPrototypeNeedsTypeBarrier(this, obj, name, types));
+
+    MIRType rvalType = types->getKnownMIRType();
+    if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
+        rvalType = MIRType::Value;
+
+    // Guard on the receiver shapes/groups.
+    obj = convertUnboxedObjects(obj, convertUnboxedGroups);
+    obj = addGuardReceiverPolymorphic(obj, receivers);
+    if (!obj)
+        return abort(AbortReason::Alloc);
+
+    // Guard on the holder's shape.
+    MInstruction* holderDef = constant(ObjectValue(*holder));
+    Shape* holderShape = holder->as<NativeObject>().shape();
+    holderDef = addShapeGuard(holderDef, holderShape, Bailout_ShapeGuard);
+
+    Shape* propShape = holderShape->searchLinear(NameToId(name));
+    MOZ_ASSERT(propShape);
+
+    MOZ_TRY(loadSlot(holderDef, propShape, rvalType, barrier, types));
+
+    trackOptimizationSuccess();
     *emitted = true;
     return Ok();
 }

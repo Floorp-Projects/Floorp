@@ -11,7 +11,6 @@
 #endif
 
 #include "jscntxt.h"
-#include "jsgc.h"
 #include "jsprf.h"
 #include "jstypes.h"
 

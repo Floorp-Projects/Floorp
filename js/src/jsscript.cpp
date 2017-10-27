@@ -26,7 +26,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"

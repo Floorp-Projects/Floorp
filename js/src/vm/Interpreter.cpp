@@ -23,7 +23,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsiter.h"
 #include "jslibmath.h"
 #include "jsnum.h"

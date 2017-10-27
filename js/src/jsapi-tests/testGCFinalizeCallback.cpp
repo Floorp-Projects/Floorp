@@ -111,7 +111,6 @@ BEGIN_TEST(testGCFinalizeCallback)
     while (cx->runtime()->gc.isIncrementalGCInProgress())
         cx->runtime()->gc.debugGCSlice(budget);
     CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
-    CHECK(!cx->runtime()->gc.isFullGc());
     CHECK(checkMultipleGroups());
     CHECK(checkFinalizeStatus());
 

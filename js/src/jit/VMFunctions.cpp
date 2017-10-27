@@ -6,8 +6,6 @@
 
 #include "jit/VMFunctions.h"
 
-#include "jsgc.h"
-
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"

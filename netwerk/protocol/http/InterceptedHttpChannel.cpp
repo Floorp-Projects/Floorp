@@ -1001,6 +1001,11 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
   if (!mProgressSink) {
     GetCallback(mProgressSink);
   }
+
+  if (mPump && mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
+    mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
+  }
+
   if (mListener) {
     mListener->OnStartRequest(this, mListenerContext);
   }

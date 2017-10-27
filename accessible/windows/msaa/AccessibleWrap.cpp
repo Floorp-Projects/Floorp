@@ -43,6 +43,7 @@
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ReverseIterator.h"
 #include "nsIXULRuntime.h"
 #include "mozilla/mscom/AsyncInvoker.h"
 
@@ -1136,6 +1137,35 @@ AccessibleWrap::SetID(uint32_t aID)
   mID = aID;
 }
 
+static bool
+IsHandlerInvalidationNeeded(uint32_t aEvent)
+{
+  // We want to return true for any events that would indicate that something
+  // in the handler cache is out of date.
+  switch (aEvent) {
+    case EVENT_OBJECT_STATECHANGE:
+    case EVENT_OBJECT_LOCATIONCHANGE:
+    case EVENT_OBJECT_NAMECHANGE:
+    case EVENT_OBJECT_DESCRIPTIONCHANGE:
+    case EVENT_OBJECT_VALUECHANGE:
+    case IA2_EVENT_ACTION_CHANGED:
+    case IA2_EVENT_DOCUMENT_LOAD_COMPLETE:
+    case IA2_EVENT_DOCUMENT_LOAD_STOPPED:
+    case IA2_EVENT_DOCUMENT_ATTRIBUTE_CHANGED:
+    case IA2_EVENT_DOCUMENT_CONTENT_CHANGED:
+    case IA2_EVENT_PAGE_CHANGED:
+    case IA2_EVENT_TEXT_ATTRIBUTE_CHANGED:
+    case IA2_EVENT_TEXT_CHANGED:
+    case IA2_EVENT_TEXT_INSERTED:
+    case IA2_EVENT_TEXT_REMOVED:
+    case IA2_EVENT_TEXT_UPDATED:
+    case IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED:
+      return true;
+    default:
+      return false;
+  }
+}
+
 void
 AccessibleWrap::FireWinEvent(Accessible* aTarget, uint32_t aEventType)
 {
@@ -1156,6 +1186,10 @@ AccessibleWrap::FireWinEvent(Accessible* aTarget, uint32_t aEventType)
   HWND hwnd = GetHWNDFor(aTarget);
   if (!hwnd) {
     return;
+  }
+
+  if (IsHandlerInvalidationNeeded(winEvent)) {
+    InvalidateHandlers();
   }
 
   // Fire MSAA event for client area window.
@@ -1659,6 +1693,38 @@ AccessibleWrap::SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl)
   sHandlerControllers->AppendElement(Move(ctrlData));
 }
 
+/* static */
+void
+AccessibleWrap::InvalidateHandlers()
+{
+  static const HRESULT kErrorServerDied =
+    HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE);
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
+    return;
+  }
+
+  // We iterate in reverse so that we may safely remove defunct elements while
+  // executing the loop.
+  for (auto& controller : Reversed(*sHandlerControllers)) {
+    MOZ_ASSERT(controller.mPid);
+    MOZ_ASSERT(controller.mCtrl);
+
+    ASYNC_INVOKER_FOR(IHandlerControl) invoker(controller.mCtrl,
+                                               Some(controller.mIsProxy));
+
+    HRESULT hr = ASYNC_INVOKE(invoker, Invalidate);
+
+    if (hr == CO_E_OBJNOTCONNECTED || hr == kErrorServerDied) {
+      sHandlerControllers->RemoveElement(controller);
+    } else {
+      NS_WARN_IF(FAILED(hr));
+    }
+  }
+}
 
 bool
 AccessibleWrap::DispatchTextChangeToHandler(bool aIsInsert,

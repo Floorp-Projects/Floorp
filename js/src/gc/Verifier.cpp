@@ -13,7 +13,6 @@
 #include "mozilla/Sprintf.h"
 
 #include "jscntxt.h"
-#include "jsgc.h"
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"

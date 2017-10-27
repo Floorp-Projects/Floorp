@@ -9,7 +9,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 
 #include "jit/ExecutableAllocator.h"
 #include "jit/IonCode.h"

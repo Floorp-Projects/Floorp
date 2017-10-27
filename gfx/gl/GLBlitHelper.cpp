@@ -56,7 +56,11 @@ const char* const kFragHeader_Tex2DRect = "\
 const char* const kFragHeader_TexExt = "\
     #extension GL_OES_EGL_image_external : require                           \n\
     #define SAMPLER samplerExternalOES                                       \n\
-    #define TEXTURE texture2D                                                \n\
+    #if __VERSION__ >= 130                                                   \n\
+        #define TEXTURE texture                                              \n\
+    #else                                                                    \n\
+        #define TEXTURE texture2D                                            \n\
+    #endif                                                                   \n\
 ";
 
 const char* const kFragBody_RGBA = "\
@@ -71,14 +75,13 @@ const char* const kFragBody_RGBA = "\
 const char* const kFragBody_CrYCb = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
         vec4 yuv = vec4(TEXTURE(uTex0, vTexCoord0).gbr,                      \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
 const char* const kFragBody_NV12 = "\
@@ -86,15 +89,14 @@ const char* const kFragBody_NV12 = "\
     VARYING vec2 vTexCoord1;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
     uniform SAMPLER uTex1;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
         vec4 yuv = vec4(TEXTURE(uTex0, vTexCoord0).x,                        \n\
                         TEXTURE(uTex1, vTexCoord1).xy,                       \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
 const char* const kFragBody_PlanarYUV = "\
@@ -103,7 +105,7 @@ const char* const kFragBody_PlanarYUV = "\
     uniform SAMPLER uTex0;                                                   \n\
     uniform SAMPLER uTex1;                                                   \n\
     uniform SAMPLER uTex2;                                                   \n\
-    uniform mat4 uColorMatrix;                                               \n\
+    uniform MAT4X3 uColorMatrix;                                             \n\
                                                                              \n\
     void main(void)                                                          \n\
     {                                                                        \n\
@@ -111,10 +113,85 @@ const char* const kFragBody_PlanarYUV = "\
                         TEXTURE(uTex1, vTexCoord1).x,                        \n\
                         TEXTURE(uTex2, vTexCoord1).x,                        \n\
                         1.0);                                                \n\
-        vec4 rgb = uColorMatrix * yuv;                                       \n\
-        FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
+        FRAG_COLOR = vec4((uColorMatrix * yuv).rgb, 1.0);                    \n\
     }                                                                        \n\
 ";
+
+// --
+
+template<uint8_t N>
+/*static*/ Mat<N>
+Mat<N>::Zero()
+{
+    Mat<N> ret;
+    for (auto& x : ret.m) {
+        x = 0.0f;
+    }
+    return ret;
+}
+
+template<uint8_t N>
+/*static*/ Mat<N>
+Mat<N>::I()
+{
+    auto ret = Mat<N>::Zero();
+    for (uint8_t i = 0; i < N; i++) {
+        ret.at(i,i) = 1.0f;
+    }
+    return ret;
+}
+
+template<uint8_t N>
+Mat<N>
+Mat<N>::operator*(const Mat<N>& r) const
+{
+    Mat<N> ret;
+    for (uint8_t x = 0; x < N; x++) {
+        for (uint8_t y = 0; y < N; y++) {
+            float sum = 0.0f;
+            for (uint8_t i = 0; i < N; i++) {
+                sum += at(i,y) * r.at(x,i);
+            }
+            ret.at(x,y) = sum;
+        }
+    }
+    return ret;
+}
+
+Mat3
+SubRectMat3(const float x, const float y, const float w, const float h)
+{
+    auto ret = Mat3::Zero();
+    ret.at(0,0) = w;
+    ret.at(1,1) = h;
+    ret.at(2,0) = x;
+    ret.at(2,1) = y;
+    ret.at(2,2) = 1.0f;
+    return ret;
+}
+
+Mat3
+SubRectMat3(const gfx::IntRect& subrect, const gfx::IntSize& size)
+{
+    return SubRectMat3(float(subrect.x) / size.width,
+                       float(subrect.y) / size.height,
+                       float(subrect.width) / size.width,
+                       float(subrect.height) / size.height);
+}
+
+Mat3
+SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
+            const gfx::IntSize& divisors)
+{
+    const float x = float(bigSubrect.x) / divisors.width;
+    const float y = float(bigSubrect.y) / divisors.height;
+    const float w = float(bigSubrect.width) / divisors.width;
+    const float h = float(bigSubrect.height) / divisors.height;
+    return SubRectMat3(x / smallSize.width,
+                       y / smallSize.height,
+                       w / smallSize.width,
+                       h / smallSize.height);
+}
 
 // --
 
@@ -266,6 +343,7 @@ public:
         mGL.fColorMask(true, true, true, true);
 
         mGL.fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
+        MOZ_ASSERT(destSize.width && destSize.height);
         mGL.fViewport(0, 0, destSize.width, destSize.height);
     }
 
@@ -294,19 +372,33 @@ public:
 DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     : mParent(*parent)
     , mProg(prog)
-    , mLoc_u1ForYFlip(mParent.mGL->fGetUniformLocation(mProg, "u1ForYFlip"))
-    , mLoc_uSrcRect(mParent.mGL->fGetUniformLocation(mProg, "uSrcRect"))
-    , mLoc_uTexSize0(mParent.mGL->fGetUniformLocation(mProg, "uTexSize0"))
-    , mLoc_uTexSize1(mParent.mGL->fGetUniformLocation(mProg, "uTexSize1"))
-    , mLoc_uDivisors(mParent.mGL->fGetUniformLocation(mProg, "uDivisors"))
+    , mLoc_uDestMatrix(mParent.mGL->fGetUniformLocation(mProg, "uDestMatrix"))
+    , mLoc_uTexMatrix0(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix0"))
+    , mLoc_uTexMatrix1(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix1"))
     , mLoc_uColorMatrix(mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix"))
+    , mType_uColorMatrix(0)
 {
-    MOZ_ASSERT(mLoc_u1ForYFlip != -1);
-    MOZ_ASSERT(mLoc_uSrcRect != -1);
-    MOZ_ASSERT(mLoc_uTexSize0 != -1);
+    MOZ_ASSERT(mLoc_uDestMatrix != -1);
+    MOZ_ASSERT(mLoc_uTexMatrix0 != -1);
     if (mLoc_uColorMatrix != -1) {
-        MOZ_ASSERT(mLoc_uTexSize1 != -1);
-        MOZ_ASSERT(mLoc_uDivisors != -1);
+        MOZ_ASSERT(mLoc_uTexMatrix1 != -1);
+
+        const auto& gl = mParent.mGL;
+        int32_t numActiveUniforms = 0;
+        gl->fGetProgramiv(mProg, LOCAL_GL_ACTIVE_UNIFORMS, &numActiveUniforms);
+
+        const size_t kMaxNameSize = 32;
+        char name[kMaxNameSize] = {0};
+        GLint size = 0;
+        GLenum type = 0;
+        for (int32_t i = 0; i < numActiveUniforms; i++) {
+            gl->fGetActiveUniform(mProg, i, kMaxNameSize, nullptr, &size, &type, name);
+            if (strcmp("uColorMatrix", name) == 0) {
+                mType_uColorMatrix = type;
+                break;
+            }
+        }
+        MOZ_ASSERT(mType_uColorMatrix);
     }
 }
 
@@ -329,18 +421,49 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
 
     // --
 
-    gl->fUniform1f(mLoc_u1ForYFlip, args.yFlip ? 1 : 0);
-    gl->fUniform4f(mLoc_uSrcRect,
-                   args.srcRect.x, args.srcRect.y,
-                   args.srcRect.width, args.srcRect.height);
-    gl->fUniform2f(mLoc_uTexSize0, args.texSize0.width, args.texSize0.height);
+    Mat3 destMatrix;
+    if (args.destRect) {
+        const auto& destRect = args.destRect.value();
+        destMatrix = SubRectMat3(destRect.x / args.destSize.width,
+                                 destRect.y / args.destSize.height,
+                                 destRect.width / args.destSize.width,
+                                 destRect.height / args.destSize.height);
+    } else {
+        destMatrix = Mat3::I();
+    }
+
+    if (args.yFlip) {
+        // Apply the y-flip matrix before the destMatrix.
+        // That is, flip y=[0-1] to y=[1-0] before we restrict to the destRect.
+        destMatrix.at(2,1) += destMatrix.at(1,1);
+        destMatrix.at(1,1) *= -1.0f;
+    }
+
+    gl->fUniformMatrix3fv(mLoc_uDestMatrix, 1, false, destMatrix.m);
+    gl->fUniformMatrix3fv(mLoc_uTexMatrix0, 1, false, args.texMatrix0.m);
 
     MOZ_ASSERT(bool(argsYUV) == (mLoc_uColorMatrix != -1));
     if (argsYUV) {
-        gl->fUniform2f(mLoc_uTexSize1, argsYUV->texSize1.width, argsYUV->texSize1.height);
-        gl->fUniform2f(mLoc_uDivisors, argsYUV->divisors.width, argsYUV->divisors.height);
+        gl->fUniformMatrix3fv(mLoc_uTexMatrix1, 1, false, argsYUV->texMatrix1.m);
+
         const auto& colorMatrix = gfxUtils::YuvToRgbMatrix4x4ColumnMajor(argsYUV->colorSpace);
-        gl->fUniformMatrix4fv(mLoc_uColorMatrix, 1, false, colorMatrix);
+        float mat4x3[4*3];
+        switch (mType_uColorMatrix) {
+        case LOCAL_GL_FLOAT_MAT4:
+            gl->fUniformMatrix4fv(mLoc_uColorMatrix, 1, false, colorMatrix);
+            break;
+        case LOCAL_GL_FLOAT_MAT4x3:
+            for (int x = 0; x < 4; x++) {
+                for (int y = 0; y < 3; y++) {
+                    mat4x3[3*x+y] = colorMatrix[4*x+y];
+                }
+            }
+            gl->fUniformMatrix4x3fv(mLoc_uColorMatrix, 1, false, mat4x3);
+            break;
+        default:
+            gfxCriticalError() << "Bad mType_uColorMatrix: "
+                               << gfx::hexa(mType_uColorMatrix);
+        }
     }
 
     // --
@@ -424,8 +547,12 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
 
     // --
 
-    if (!mGL->IsGLES()) {
-        const auto glslVersion = mGL->ShadingLanguageVersion();
+    const auto glslVersion = mGL->ShadingLanguageVersion();
+    if (mGL->IsGLES()) {
+        if (glslVersion >= 300) {
+            mDrawBlitProg_VersionLine = nsPrintfCString("#version %u es\n", glslVersion);
+        }
+    } else {
         if (glslVersion >= 130) {
             mDrawBlitProg_VersionLine = nsPrintfCString("#version %u\n", glslVersion);
         }
@@ -440,31 +567,24 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
             #define VARYING varying                                          \n\
         #endif                                                               \n\
                                                                              \n\
-        ATTRIBUTE vec2 aVert;                                                \n\
+        ATTRIBUTE vec2 aVert; // [0.0-1.0]                                   \n\
                                                                              \n\
-        uniform float u1ForYFlip;                                            \n\
-        uniform vec4 uSrcRect;                                               \n\
-        uniform vec2 uTexSize0;                                              \n\
-        uniform vec2 uTexSize1;                                              \n\
-        uniform vec2 uDivisors;                                              \n\
+        uniform mat3 uDestMatrix;                                            \n\
+        uniform mat3 uTexMatrix0;                                            \n\
+        uniform mat3 uTexMatrix1;                                            \n\
                                                                              \n\
         VARYING vec2 vTexCoord0;                                             \n\
         VARYING vec2 vTexCoord1;                                             \n\
                                                                              \n\
         void main(void)                                                      \n\
         {                                                                    \n\
-            vec2 vertPos = aVert * 2.0 - 1.0;                                \n\
-            gl_Position = vec4(vertPos, 0.0, 1.0);                           \n\
+            vec2 destPos = (uDestMatrix * vec3(aVert, 1.0)).xy;              \n\
+            gl_Position = vec4(destPos * 2.0 - 1.0, 0.0, 1.0);               \n\
                                                                              \n\
-            vec2 texCoord = aVert;                                           \n\
-            texCoord.y = abs(u1ForYFlip - texCoord.y);                       \n\
-            texCoord = texCoord * uSrcRect.zw + uSrcRect.xy;                 \n\
-                                                                             \n\
-            vTexCoord0 = texCoord / uTexSize0;                               \n\
-            vTexCoord1 = texCoord / (uTexSize1 * uDivisors);                 \n\
+            vTexCoord0 = (uTexMatrix0 * vec3(aVert, 1.0)).xy;                \n\
+            vTexCoord1 = (uTexMatrix1 * vec3(aVert, 1.0)).xy;                \n\
         }                                                                    \n\
     ";
-
     const char* const parts[] = {
         mDrawBlitProg_VersionLine.get(),
         kVertSource
@@ -506,7 +626,6 @@ GLBlitHelper::GetDrawBlitProg(const DrawBlitProg::Key& key) const
     return pair.second;
 }
 
-
 const DrawBlitProg*
 GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
 {
@@ -522,11 +641,16 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
         #if __VERSION__ >= 130                                               \n\
             #define VARYING in                                               \n\
             #define FRAG_COLOR oFragColor                                    \n\
-                                                                             \n\
             out vec4 FRAG_COLOR;                                             \n\
         #else                                                                \n\
             #define VARYING varying                                          \n\
             #define FRAG_COLOR gl_FragColor                                  \n\
+        #endif                                                               \n\
+                                                                             \n\
+        #if __VERSION__ >= 120                                               \n\
+            #define MAT4X3 mat4x3                                            \n\
+        #else                                                                \n\
+            #define MAT4X3 mat4                                              \n\
         #endif                                                               \n\
     ";
 
@@ -578,13 +702,13 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
     mGL->fGetShaderiv(vs, LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&vsLogLen);
     const UniquePtr<char[]> vsLog(new char[vsLogLen+1]);
     mGL->fGetShaderInfoLog(vs, vsLogLen, nullptr, vsLog.get());
-    progLog[progLogLen] = 0;
+    vsLog[vsLogLen] = 0;
 
     GLuint fsLogLen = 0;
     mGL->fGetShaderiv(fs, LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&fsLogLen);
     const UniquePtr<char[]> fsLog(new char[fsLogLen+1]);
     mGL->fGetShaderInfoLog(fs, fsLogLen, nullptr, fsLog.get());
-    progLog[progLogLen] = 0;
+    fsLog[fsLogLen] = 0;
 
     gfxCriticalError() << "DrawBlitProg link failed:\n"
                        << "progLog: " << progLog.get() << "\n"
@@ -596,9 +720,9 @@ GLBlitHelper::CreateDrawBlitProg(const DrawBlitProg::Key& key) const
 // -----------------------------------------------------------------------------
 
 bool
-GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
+GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
                                      const gfx::IntSize& destSize,
-                                     OriginPos destOrigin)
+                                     const OriginPos destOrigin)
 {
     switch (srcImage->GetFormat()) {
     case ImageFormat::PLANAR_YCBCR:
@@ -618,8 +742,7 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         return BlitImage(static_cast<layers::GPUVideoImage*>(srcImage), destSize,
                          destOrigin);
     case ImageFormat::D3D11_YCBCR_IMAGE:
-        return BlitImage((layers::D3D11YCbCrImage*)srcImage, destSize,
-                         destOrigin);
+        return BlitImage((layers::D3D11YCbCrImage*)srcImage, destSize, destOrigin);
     case ImageFormat::D3D9_RGB32_TEXTURE:
         return false; // todo
 #endif
@@ -774,14 +897,18 @@ GLBlitHelper::BlitImage(layers::PlanarYCbCrImage* const yuvImage,
 
     // --
 
+    const auto& clipRect = yuvData->GetPictureRect();
     const auto srcOrigin = OriginPos::BottomLeft;
     const bool yFlip = (destOrigin != srcOrigin);
-    const auto& clipRect = yuvData->GetPictureRect();
-    const auto& colorSpace = yuvData->mYUVColorSpace;
 
-    const DrawBlitProg::BaseArgs baseArgs = { destSize, yFlip, clipRect, yTexSize };
-    const DrawBlitProg::YUVArgs yuvArgs = { uvTexSize, divisors, colorSpace };
-
+    const DrawBlitProg::BaseArgs baseArgs = {
+        SubRectMat3(clipRect, yTexSize),
+        yFlip, destSize, Nothing()
+    };
+    const DrawBlitProg::YUVArgs yuvArgs = {
+        SubRectMat3(clipRect, uvTexSize, divisors),
+        yuvData->mYUVColorSpace
+    };
     prog->Draw(baseArgs, &yuvArgs);
     return true;
 }
@@ -802,13 +929,14 @@ GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
     const auto cglContext = glCGL->GetCGLContext();
 
     const auto& srcOrigin = OriginPos::BottomLeft;
-    const bool yFlip = destOrigin != srcOrigin;
-    const gfx::IntRect clipRect({0, 0}, srcImage->GetSize());
-    const gfx::IntSize texRectNormFactor(1, 1);
 
-    const DrawBlitProg::BaseArgs baseArgs = { destSize, yFlip, clipRect,
-                                              texRectNormFactor };
-    DrawBlitProg::YUVArgs yuvArgs = { texRectNormFactor, {2,2}, YUVColorSpace::BT601 };
+    DrawBlitProg::BaseArgs baseArgs;
+    baseArgs.yFlip = (destOrigin != srcOrigin);
+    baseArgs.destSize = destSize;
+
+    DrawBlitProg::YUVArgs yuvArgs;
+    yuvArgs.colorSpace = YUVColorSpace::BT601;
+
     const DrawBlitProg::YUVArgs* pYuvArgs = nullptr;
 
     auto planes = iosurf->GetPlaneCount();
@@ -918,6 +1046,11 @@ GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
             gfxCriticalError() << errStr.get() << " (iosurf format: " << formatStr << ")";
             return false;
         }
+
+        if (p == 0) {
+            baseArgs.texMatrix0 = SubRectMat3(0, 0, width, height);
+            yuvArgs.texMatrix1 = SubRectMat3(0, 0, width / 2.0, height / 2.0);
+        }
     }
 
     const auto& prog = GetDrawBlitProg({fragHeader, fragBody});
@@ -937,31 +1070,29 @@ GLBlitHelper::DrawBlitTextureToFramebuffer(const GLuint srcTex,
                                            const gfx::IntSize& destSize,
                                            const GLenum srcTarget) const
 {
-    const gfx::IntRect clipRect(0, 0, srcSize.width, srcSize.height);
-
-    DrawBlitProg::Key key;
-    gfx::IntSize texSizeDivisor;
+    const char* fragHeader;
+    Mat3 texMatrix0;
     switch (srcTarget) {
     case LOCAL_GL_TEXTURE_2D:
-        key = {kFragHeader_Tex2D, kFragBody_RGBA};
-        texSizeDivisor = srcSize;
+        fragHeader = kFragHeader_Tex2D;
+        texMatrix0 = Mat3::I();
         break;
     case LOCAL_GL_TEXTURE_RECTANGLE_ARB:
-        key = {kFragHeader_Tex2DRect, kFragBody_RGBA};
-        texSizeDivisor = gfx::IntSize(1, 1);
+        fragHeader = kFragHeader_Tex2DRect;
+        texMatrix0 = SubRectMat3(0, 0, srcSize.width, srcSize.height);
         break;
     default:
         gfxCriticalError() << "Unexpected srcTarget: " << srcTarget;
         return;
     }
-    const auto& prog = GetDrawBlitProg(key);
+    const auto& prog = GetDrawBlitProg({ fragHeader, kFragBody_RGBA});
     MOZ_ASSERT(prog);
 
     const ScopedSaveMultiTex saveTex(mGL, 1, srcTarget);
     mGL->fBindTexture(srcTarget, srcTex);
 
     const bool yFlip = false;
-    const DrawBlitProg::BaseArgs baseArgs = { destSize, yFlip, clipRect, texSizeDivisor };
+    const DrawBlitProg::BaseArgs baseArgs = { texMatrix0, yFlip, destSize, Nothing() };
     prog->Draw(baseArgs);
 }
 

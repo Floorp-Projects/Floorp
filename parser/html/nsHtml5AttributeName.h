@@ -581,6 +581,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_CLOSURE;
     static nsHtml5AttributeName* ATTR_CLOSE;
     static nsHtml5AttributeName* ATTR_CLASS;
+    static nsHtml5AttributeName* ATTR_IS;
     static nsHtml5AttributeName* ATTR_KEYSYSTEM;
     static nsHtml5AttributeName* ATTR_KEYSPLINES;
     static nsHtml5AttributeName* ATTR_LOWSRC;
