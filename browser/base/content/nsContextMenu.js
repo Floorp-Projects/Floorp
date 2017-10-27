@@ -189,7 +189,7 @@ nsContextMenu.prototype = {
     this.linkProtocol        = context.linkProtocol;
     this.linkTextStr         = context.linkTextStr;
     this.linkURL             = context.linkURL;
-    this.linkURI             = this.getLinkURI();  // can't send; regenerate
+    this.linkURI             = this.getLinkURI(); // can't send; regenerate
 
     this.onAudio             = context.onAudio;
     this.onCanvas            = context.onCanvas;

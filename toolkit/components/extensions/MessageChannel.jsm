@@ -828,7 +828,7 @@ this.MessageChannel = {
         Cu.reportError(e);
         return Promise.reject(e);
       }
-      return Promise.resolve();  // Not expecting any reply.
+      return Promise.resolve(); // Not expecting any reply.
     }
 
     let broker = this.responseManagers.get(target);

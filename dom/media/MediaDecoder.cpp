@@ -55,8 +55,7 @@ LazyLogModule gMediaDecoderLog("MediaDecoder");
 #define LOG(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
 
-#define DUMP(x, ...) \
-  printf_stderr("%s\n", nsPrintfCString("Decoder=%p " x, this, ##__VA_ARGS__).get())
+#define DUMP(x, ...) printf_stderr(x "\n", ##__VA_ARGS__)
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 
@@ -1522,11 +1521,14 @@ nsCString
 MediaDecoder::GetDebugInfo()
 {
   return nsPrintfCString(
-    "MediaDecoder State: channels=%u rate=%u hasAudio=%d hasVideo=%d "
-    "mPlayState=%s mdsm=%p",
-    mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
-    mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
-    PlayStateStr(), GetStateMachine());
+    "MediaDecoder=%p: channels=%u rate=%u hasAudio=%d hasVideo=%d "
+    "mPlayState=%s",
+    this,
+    mInfo ? mInfo->mAudio.mChannels : 0,
+    mInfo ? mInfo->mAudio.mRate : 0,
+    mInfo ? mInfo->HasAudio() : 0,
+    mInfo ? mInfo->HasVideo() : 0,
+    PlayStateStr());
 }
 
 void

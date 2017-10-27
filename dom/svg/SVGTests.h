@@ -13,6 +13,7 @@
 
 class nsAttrValue;
 class nsAtom;
+class nsStaticAtom;
 
 namespace mozilla {
 class DOMSVGStringList;
@@ -102,7 +103,7 @@ protected:
 private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };
   SVGStringList mStringListAttributes[3];
-  static nsAtom** sStringListNames[3];
+  static nsStaticAtom** sStringListNames[3];
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGTests, MOZILLA_DOMSVGTESTS_IID)

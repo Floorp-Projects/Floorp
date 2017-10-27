@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
-const FORMS_TTL = 3 * 365 * 24 * 60 * 60;   // Three years in seconds.
+const FORMS_TTL = 3 * 365 * 24 * 60 * 60; // Three years in seconds.
 
 this.FormRec = function FormRec(collection, id) {
   CryptoWrapper.call(this, collection, id);

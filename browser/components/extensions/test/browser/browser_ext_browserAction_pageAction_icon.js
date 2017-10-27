@@ -28,7 +28,7 @@ add_task(async function testDetailsObjects() {
       green: getImageData("green"),
     };
 
-    /* eslint-disable comma-dangle, indent */
+    /* eslint-disable comma-dangle, indent, indent-legacy */
     let iconDetails = [
       // Only paths.
       {details: {"path": "a.png"},

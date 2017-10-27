@@ -969,13 +969,11 @@ AccessibleHandler::get_attributes(BSTR* attributes)
 HRESULT
 AccessibleHandler::get_attribute(BSTR name, VARIANT* attribute)
 {
-  // We could extract these individually from cached mAttributes.
-  // Consider it if traffic warrants it
-  HRESULT hr = ResolveIA2();
-  if (FAILED(hr)) {
-    return hr;
-  }
-  return mIA2PassThru->get_attribute(name, attribute);
+  // Not yet implemented by ia2Accessible.
+  // Once ia2Accessible implements this, we could either pass it through
+  // or we could extract these individually from cached mAttributes.
+  // The latter should be considered if traffic warrants it.
+  return E_NOTIMPL;
 }
 
 HRESULT

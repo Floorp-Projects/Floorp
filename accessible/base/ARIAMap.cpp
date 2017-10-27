@@ -1230,7 +1230,7 @@ static const EStateRule sWAIUnivStateMap[] = {
 
 struct AttrCharacteristics
 {
-  nsAtom** attributeName;
+  nsStaticAtom** attributeName;
   const uint8_t characteristics;
 };
 

@@ -177,7 +177,7 @@ add_task(async function test_updates() {
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {  // jshint unused:false
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) { // jshint unused:false
       Services.obs.removeObserver(observer, aTopic);
       Assert.equal(aData, aNewURL, testMessage);
       resolve();
@@ -187,7 +187,7 @@ function nextChangeNotificationPromise(aNewURL, testMessage) {
 
 function setBoolPrefAndWaitForChange(pref, value, testMessage) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {  // jshint unused:false
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) { // jshint unused:false
       Services.obs.removeObserver(observer, aTopic);
       Assert.equal(aData, aboutNewTabService.newTabURL, testMessage);
       resolve();

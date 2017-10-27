@@ -36,7 +36,7 @@ async function checkClipboardHasTestImage(imageType) {
       canvas.width = 1;
       canvas.height = 1;
       let ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);  // Draw without scaling.
+      ctx.drawImage(img, 0, 0); // Draw without scaling.
       let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
       let expectedColor;
       if (imageType === "png") {
@@ -76,7 +76,7 @@ async function checkClipboardHasTestImage(imageType) {
         resolve();
       }, {once: true});
 
-      document.execCommand("paste");  // requires clipboardWrite permission.
+      document.execCommand("paste"); // requires clipboardWrite permission.
     });
 
     // When image data is copied, its first frame is decoded and exported to the
@@ -137,7 +137,7 @@ add_task(async function test_without_clipboard_permission() {
 
 add_task(async function test_copy_png() {
   if (AppConstants.platform === "android") {
-    return;  // Android does not support images on the clipboard.
+    return; // Android does not support images on the clipboard.
   }
   let extension = ExtensionTestUtils.loadExtension({
     async background() {
@@ -163,7 +163,7 @@ add_task(async function test_copy_png() {
 
 add_task(async function test_copy_jpeg() {
   if (AppConstants.platform === "android") {
-    return;  // Android does not support images on the clipboard.
+    return; // Android does not support images on the clipboard.
   }
   let extension = ExtensionTestUtils.loadExtension({
     async background() {

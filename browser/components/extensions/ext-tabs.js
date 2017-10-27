@@ -292,12 +292,14 @@ this.tabs = class extends ExtensionAPI {
             }
           };
 
-          let isArticleChangeListener = (eventName, event) => {
-            let {gBrowser} = event.target.ownerGlobal;
-            let tab = tabManager.getWrapper(
-              gBrowser.getTabForBrowser(event.target));
+          let isArticleChangeListener = (messageName, message) => {
+            let {gBrowser} = message.target.ownerGlobal;
+            let nativeTab = gBrowser.getTabForBrowser(message.target);
 
-            fireForTab(tab, {isArticle: event.data.isArticle});
+            if (nativeTab) {
+              let tab = tabManager.getWrapper(nativeTab);
+              fireForTab(tab, {isArticle: message.data.isArticle});
+            }
           };
 
           windowTracker.addListener("status", statusListener);
@@ -847,8 +849,8 @@ this.tabs = class extends ExtensionAPI {
                 // OK clicked (retval == 0) or replace confirmed (retval == 2)
                 try {
                   let fstream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-                  fstream.init(picker.file, 0x2A, 0x1B6, 0);  // write|create|truncate, file permissions rw-rw-rw- = 0666 = 0x1B6
-                  fstream.close();  // unlock file
+                  fstream.init(picker.file, 0x2A, 0x1B6, 0); // write|create|truncate, file permissions rw-rw-rw- = 0666 = 0x1B6
+                  fstream.close(); // unlock file
                 } catch (e) {
                   resolve(retval == 0 ? "not_saved" : "not_replaced");
                   return;

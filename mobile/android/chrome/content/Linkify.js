@@ -15,7 +15,7 @@ Linkifier.prototype = {
     let cleanedText = "";
     for (let i = 0; i < aNumberText.length; i++) {
       let c = aNumberText.charAt(i);
-      if ((c >= "0" && c <= "9") || c == "+")  // assuming there is only the leading '+'.
+      if ((c >= "0" && c <= "9") || c == "+") // assuming there is only the leading '+'.
         cleanedText += c;
     }
     anchorNode.setAttribute("href", "tel:" + cleanedText);

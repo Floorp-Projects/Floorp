@@ -9,11 +9,10 @@ var manifests = [
 ];
 registerManifests(manifests);
 
-function run_test()
-{
+function run_test() {
   const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-  Components.utils.import("resource://testing-common/AppInfo.jsm", this);
+  let newAppInfo = Components.utils.import("resource://testing-common/AppInfo.jsm", {}).newAppInfo;
   let XULAppInfo = newAppInfo({
     name: "XPCShell",
     ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",
@@ -26,7 +25,7 @@ function run_test()
     CID: uuidGenerator.generateUUID(),
     scheme: "XULAppInfo",
     contractID: XULAPPINFO_CONTRACTID,
-    createInstance: function (outer, iid) {
+    createInstance(outer, iid) {
       if (outer != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return XULAppInfo.QueryInterface(iid);
@@ -58,17 +57,15 @@ function run_test()
         });
         old_factories_inds.push(true);
         registrar.unregisterFactory(old_factories[i].CID, old_factories[i].factory);
-      }
-      else {
+      } else {
         dump(factory.scheme + " has never been registered. Registering...")
         old_factories.push({CID: "", factory: null});
         old_factories_inds.push(false);
       }
 
       registrar.registerFactory(factory.CID, "test-" + factory.scheme, factory.contractID, factory);
-    }
-    else {
-      do_throw("CID " + factory.CID +  " has already been registered!");
+    } else {
+      do_throw("CID " + factory.CID + " has already been registered!");
     }
   }
 
@@ -88,8 +85,7 @@ function run_test()
     let uri = cr.convertChromeURL(sourceURI).spec;
 
     do_check_eq(expectedURI, uri);
-  }
-  catch (e) {
+  } catch (e) {
     dump(e + "\n");
     do_throw("Should have registered our URI!");
   }

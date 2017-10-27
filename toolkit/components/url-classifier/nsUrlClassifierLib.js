@@ -177,7 +177,7 @@ RequestBackoff.prototype.isErrorStatus = function(status) {
 // to throttle pending requests.
 function RequestBackoffV4(maxRequests, requestPeriod) {
   let rand = Math.random();
-  let retryInterval = Math.floor(15 * 60 * 1000 * (rand + 1));   // 15 ~ 30 min.
+  let retryInterval = Math.floor(15 * 60 * 1000 * (rand + 1)); // 15 ~ 30 min.
   let backoffInterval = Math.floor(30 * 60 * 1000 * (rand + 1)); // 30 ~ 60 min.
 
   return new RequestBackoff(2 /* max errors */,
