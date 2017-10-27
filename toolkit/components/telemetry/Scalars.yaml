@@ -19,6 +19,20 @@ a11y:
     keyed: false
     cpp_guard: 'ACCESSIBILITY'
 
+  indicator_acted_on:
+    bug_numbers:
+      - 1412358
+    description: >
+      Recorded on click or SPACE/ENTER keypress event. Boolean stating if the
+      accessibility indicactor button was acted on.
+    expires: "62"
+    kind: boolean
+    notification_emails:
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains the aushelper system add-on scalars.
 aushelper:
   websense_reg_version:
@@ -545,6 +559,20 @@ preferences:
     release_channel_collection: opt-in
     record_in_processes:
       - main
+  prevent_accessibility_services:
+    bug_numbers:
+      - 1412358
+    description: >
+      Recorded on command event. Boolean stating if the preference checkbox for
+      preventing accessibility from accessing the browser (Privacy & Security)
+      was checked.
+    expires: "62"
+    kind: boolean
+    notification_emails:
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
