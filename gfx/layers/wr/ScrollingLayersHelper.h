@@ -65,6 +65,8 @@ private:
                       int32_t aAppUnitsPerDevPixel,
                       const StackingContextHelper& aSc);
 
+  bool InsideClipAndScroll() const;
+
   // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
   // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
   // (A != B). In this hopefully-rare case, they will get separate entries

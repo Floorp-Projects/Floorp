@@ -115,6 +115,19 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // the item's ASR. So for those cases we need to use the ClipAndScroll API.
   bool needClipAndScroll = (leafmostId != scrollId);
 
+  // The other scenario where we need to push a ClipAndScroll is when we are
+  // in a nested display item where the enclosing item pushed a ClipAndScroll,
+  // and our clip chain extends from that item's clip chain. To check this we
+  // want to make sure that (a) we are InsideClipAndScroll(), and (b) nothing
+  // else was pushed onto mBuilder's stack since that ClipAndScroll.
+  if (!needClipAndScroll &&
+      InsideClipAndScroll() &&
+      mBuilder->TopmostScrollId() == scrollId &&
+      !mBuilder->TopmostIsClip()) {
+    MOZ_ASSERT(mItemClipStack.back().mClipAndScroll->first == scrollId);
+    needClipAndScroll = true;
+  }
+
   // If we don't need a ClipAndScroll, ensure the item's ASR is at the top of
   // the scroll stack
   if (!needClipAndScroll && mBuilder->TopmostScrollId() != scrollId) {
@@ -261,23 +274,39 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
     }
   } else {
     MOZ_ASSERT(!ancestorIds.second);
-    // If aChain->mASR is already the topmost scroll layer on the stack, but
-    // but there was another clip pushed *on top* of that ASR, then that clip
-    // shares the ASR, and we need to make our clip a child of that clip, which
-    // in turn will already be a descendant of the correct ASR.
-    // This covers the cases where e.g. the Gecko display list has nested items,
-    // and the clip chain on the nested item implicitly extends from the clip
-    // chain on the containing wrapper item. In this case the aChain->mParent
-    // pointer will be null for the nested item but the containing wrapper's
-    // clip will be on the stack already and we can pick it up from there.
-    // Another way of thinking about this is that if the clip chain were
-    // "fully completed" then aChain->mParent wouldn't be null but would point
-    // to the clip corresponding to mBuilder->TopmostClipId(), and we would
-    // have gone into the |aChain->mParent->mASR == aAsr| branch above.
     FrameMetrics::ViewID scrollId = aChain->mASR ? nsLayoutUtils::ViewIDForASR(aChain->mASR) : FrameMetrics::NULL_SCROLL_ID;
-    if (mBuilder->TopmostScrollId() == scrollId && mBuilder->TopmostIsClip()) {
-      ancestorIds.first = Nothing();
-      ancestorIds.second = mBuilder->TopmostClipId();
+    if (mBuilder->TopmostScrollId() == scrollId) {
+      if (mBuilder->TopmostIsClip()) {
+        // If aChain->mASR is already the topmost scroll layer on the stack, but
+        // but there was another clip pushed *on top* of that ASR, then that clip
+        // shares the ASR, and we need to make our clip a child of that clip, which
+        // in turn will already be a descendant of the correct ASR.
+        // This covers the cases where e.g. the Gecko display list has nested items,
+        // and the clip chain on the nested item implicitly extends from the clip
+        // chain on the containing wrapper item. In this case the aChain->mParent
+        // pointer will be null for the nested item but the containing wrapper's
+        // clip will be on the stack already and we can pick it up from there.
+        // Another way of thinking about this is that if the clip chain were
+        // "fully completed" then aChain->mParent wouldn't be null but would point
+        // to the clip corresponding to mBuilder->TopmostClipId(), and we would
+        // have gone into the |aChain->mParent->mASR == aAsr| branch above.
+        ancestorIds.first = Nothing();
+        ancestorIds.second = mBuilder->TopmostClipId();
+      } else if (InsideClipAndScroll()) {
+        // If aChain->mASR is already the topmost scroll layer on the stack, but
+        // it was pushed as part of a "clip and scroll" entry (i.e. because an
+        // item had a clip scrolled by a different ASR than the item itself),
+        // then we have need to propagate that behaviour as well. For example if
+        // the enclosing display item pushed a ClipAndScroll with (scrollid=S,
+        // clipid=C), then then clip we're defining here (call it D) needs to be
+        // defined as a child of C, and we'll need to push the ClipAndScroll
+        // (S, D) for this item. This hunk of code ensures that we define D
+        // as a child of C, and when we set the needClipAndScroll flag elsewhere
+        // in this file we make sure to set it for this scenario.
+        MOZ_ASSERT(mItemClipStack.back().mClipAndScroll->first == scrollId);
+        ancestorIds.first = Nothing();
+        ancestorIds.second = mItemClipStack.back().mClipAndScroll->second;
+      }
     }
   }
   // At most one of the ancestor pair should be defined here, and the one that
@@ -414,6 +443,12 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
 
   ids.first = Some(scrollId);
   return ids;
+}
+
+bool
+ScrollingLayersHelper::InsideClipAndScroll() const
+{
+  return !mItemClipStack.empty() && mItemClipStack.back().mClipAndScroll.isSome();
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
