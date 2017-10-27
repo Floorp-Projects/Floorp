@@ -8,6 +8,9 @@
   "myShotsLink": {
     "message": "Les mios captures"
   },
+  "screenshotInstructions": {
+    "message": "Arrastra o primi na páxina pa esbillar una rexón. Primi ESC pa encaboxar."
+  },
   "saveScreenshotSelectedArea": {
     "message": "Guardar"
   },
@@ -34,6 +37,15 @@
   },
   "unshootablePageErrorDetails": {
     "message": "Esta páxina web nun ye estándar, asina que nun pues capturala."
+  },
+  "emptySelectionErrorTitle": {
+    "message": "La esbilla ye perpequeña"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Les captures de pantalla tán desactivaes nel mou Restolar en privao"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Perdón poles molesties. Tamos trabayando nesta carauterística pa llanzamientos futuros."
   },
   "tourHeaderClickAndDrag": {
     "message": "Captura lo que quies"
