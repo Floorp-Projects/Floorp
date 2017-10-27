@@ -1632,6 +1632,13 @@ private:
   RefPtr<T> mEvent;
 };
 
+template <class T>
+inline already_AddRefed<T>
+do_AddRef(nsRevocableEventPtr<T>& aObj)
+{
+  return do_AddRef(aObj.get());
+}
+
 /**
  * A simple helper to suffix thread pool name
  * with incremental numbers.

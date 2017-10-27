@@ -151,6 +151,10 @@ class nsHtml5TreeOperation final {
                                   nsHtml5HtmlAttributes* aAttributes,
                                   nsHtml5DocumentBuilder* aBuilder);
 
+    static void SetHTMLElementAttributes(mozilla::dom::Element* aElement,
+                                         nsAtom* aName,
+                                         nsHtml5HtmlAttributes* aAttributes);
+
     static nsIContent* CreateHTMLElement(
       nsAtom* aName,
       nsHtml5HtmlAttributes* aAttributes,

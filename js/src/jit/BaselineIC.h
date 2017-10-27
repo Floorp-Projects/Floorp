@@ -11,7 +11,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsopcode.h"
 
 #include "builtin/TypedObject.h"

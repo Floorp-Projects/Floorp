@@ -9,12 +9,13 @@
 
 #include "NamespaceImports.h"
 #include "ds/Bitmap.h"
-#include "gc/Heap.h"
 #include "threading/ProtectedData.h"
 #include "vm/Symbol.h"
 
 namespace js {
 namespace gc {
+
+class Arena;
 
 // This class manages state used for marking atoms during GCs.
 // See AtomMarking.cpp for details.

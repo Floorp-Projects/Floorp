@@ -45,7 +45,7 @@ public:
 
   already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
-    return do_AddRef(mTarget.get());
+    return do_AddRef(mTarget);
   }
 
 protected:

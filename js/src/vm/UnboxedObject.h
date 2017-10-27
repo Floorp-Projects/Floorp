@@ -7,7 +7,6 @@
 #ifndef vm_UnboxedObject_h
 #define vm_UnboxedObject_h
 
-#include "jsgc.h"
 #include "jsobj.h"
 
 #include "gc/Zone.h"

@@ -20,7 +20,7 @@ const Types = require("../types");
 
 const PREVIEW_UPDATE_DELAY = 150;
 
-class App extends PureComponent {
+class FontsApp extends PureComponent {
   static get propTypes() {
     return {
       fonts: PropTypes.arrayOf(PropTypes.shape(Types.font)).isRequired,
@@ -74,4 +74,4 @@ class App extends PureComponent {
   }
 }
 
-module.exports = connect(state => state)(App);
+module.exports = connect(state => state)(FontsApp);

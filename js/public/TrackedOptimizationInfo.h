@@ -24,9 +24,9 @@ namespace JS {
     _(GetProp_Unboxed)                                  \
     _(GetProp_CommonGetter)                             \
     _(GetProp_InlineAccess)                             \
+    _(GetProp_InlineProtoAccess)                        \
     _(GetProp_Innerize)                                 \
     _(GetProp_InlineCache)                              \
-    _(GetProp_SharedCache)                              \
     _(GetProp_ModuleNamespace)                          \
                                                         \
     _(SetProp_CommonSetter)                             \

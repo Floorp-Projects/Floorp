@@ -144,7 +144,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
     RefPtr<nsFontMetrics> fm = new nsFontMetrics(aFont, params, mContext);
     // the mFontMetrics list has the "head" at the end, because append
     // is cheaper than insert
-    mFontMetrics.AppendElement(do_AddRef(fm.get()).take());
+    mFontMetrics.AppendElement(do_AddRef(fm).take());
     return fm.forget();
 }
 

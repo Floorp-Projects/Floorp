@@ -12,7 +12,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsgc.h"
 #include "jsprf.h"
 
 #include "builtin/ModuleObject.h"
@@ -2891,6 +2890,12 @@ js::TenuringTracer::traceSlots(Value* vp, Value* end)
 {
     for (; vp != end; ++vp)
         traverse(vp);
+}
+
+inline void
+js::TenuringTracer::traceSlots(JS::Value* vp, uint32_t nslots)
+{
+    traceSlots(vp, vp + nslots);
 }
 
 #ifdef DEBUG

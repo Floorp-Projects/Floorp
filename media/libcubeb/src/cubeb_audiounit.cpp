@@ -651,13 +651,19 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
      * device. This is considered the most expected behavior for the user. */
     if (flags & DEV_INPUT) {
       r = audiounit_set_device_info(stm, 0, INPUT);
-      assert(r == CUBEB_OK);
+      if (r != CUBEB_OK) {
+        LOG("(%p) Set input device info failed. This can happen when last media device is unplugged", stm);
+        return CUBEB_ERROR;
+      }
     }
     /* Always use the default output on reinit. This is not correct in every case
      * but it is sufficient for Firefox and prevent reinit from reporting failures.
      * It will change soon when reinit mechanism will be updated. */
     r = audiounit_set_device_info(stm, 0, OUTPUT);
-    assert(r == CUBEB_OK);
+    if (r != CUBEB_OK) {
+      LOG("(%p) Set output device info failed. This can happen when last media device is unplugged", stm);
+      return CUBEB_ERROR;
+    }
 
     if (audiounit_setup_stream(stm) != CUBEB_OK) {
       LOG("(%p) Stream reinit failed.", stm);
@@ -696,6 +702,8 @@ event_addr_to_string(AudioObjectPropertySelector selector)
       return "Unknown";
   }
 }
+
+static int audiounit_uninstall_system_changed_callback(cubeb_stream * stm);
 
 static OSStatus
 audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
@@ -775,6 +783,9 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
   // Get/SetProperties method from inside notify callback
   dispatch_async(stm->context->serial_queue, ^() {
     if (audiounit_reinit_stream(stm, switch_side) != CUBEB_OK) {
+      if (audiounit_uninstall_system_changed_callback(stm) != CUBEB_OK) {
+        LOG("(%p) Could not uninstall the device changed callback", stm);
+      }
       stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
       LOG("(%p) Could not reopen the stream after switching.", stm);
     }
@@ -921,7 +932,7 @@ audiounit_uninstall_system_changed_callback(cubeb_stream * stm)
 {
   OSStatus r;
 
-  if (stm->output_unit) {
+  if (has_output(stm)) {
     r = audiounit_remove_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultOutputDevice,
                                   kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
     if (r != noErr) {
@@ -929,7 +940,7 @@ audiounit_uninstall_system_changed_callback(cubeb_stream * stm)
     }
   }
 
-  if (stm->input_unit) {
+  if (has_input(stm)) {
     r = audiounit_remove_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultInputDevice,
                                   kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
     if (r != noErr) {
@@ -2498,7 +2509,9 @@ audiounit_stream_init(cubeb * context,
                       cubeb_state_callback state_callback,
                       void * user_ptr)
 {
-  std::unique_ptr<cubeb_stream, decltype(&audiounit_stream_destroy)> stm(nullptr, audiounit_stream_destroy);
+  std::unique_ptr<cubeb_stream, decltype(&audiounit_stream_destroy)> stm(new cubeb_stream(context),
+                                                                         audiounit_stream_destroy);
+  context->active_streams += 1;
   int r;
 
   assert(context);
@@ -2508,8 +2521,6 @@ audiounit_stream_init(cubeb * context,
       (output_device && !output_stream_params)) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
-
-  stm.reset(new cubeb_stream(context));
 
   /* These could be different in the future if we have both
    * full-duplex stream and different devices for input vs output. */
@@ -2539,7 +2550,6 @@ audiounit_stream_init(cubeb * context,
     // It's not critical to lock here, because no other thread has been started
     // yet, but it allows to assert that the lock has been taken in
     // `audiounit_setup_stream`.
-    context->active_streams += 1;
     auto_lock lock(stm->mutex);
     r = audiounit_setup_stream(stm.get());
   }

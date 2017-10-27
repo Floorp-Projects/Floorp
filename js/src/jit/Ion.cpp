@@ -11,7 +11,6 @@
 #include "mozilla/ThreadLocal.h"
 
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsprf.h"
 
 #include "gc/Marking.h"

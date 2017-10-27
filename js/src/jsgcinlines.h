@@ -7,8 +7,6 @@
 #ifndef jsgcinlines_h
 #define jsgcinlines_h
 
-#include "jsgc.h"
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
@@ -17,6 +15,8 @@
 
 namespace js {
 namespace gc {
+
+class AutoAssertEmptyNursery;
 
 inline void
 MakeAccessibleAfterMovingGC(void* anyp) {}

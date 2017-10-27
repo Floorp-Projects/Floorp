@@ -8,8 +8,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jscompartment.h"
-
 #include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Runtime.h"

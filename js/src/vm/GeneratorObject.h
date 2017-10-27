@@ -100,6 +100,9 @@ class GeneratorObject : public NativeObject
     bool hasExpressionStack() const {
         return getFixedSlot(EXPRESSION_STACK_SLOT).isObject();
     }
+    bool isExpressionStackEmpty() const {
+        return expressionStack().getDenseInitializedLength() == 0;
+    }
     ArrayObject& expressionStack() const {
         return getFixedSlot(EXPRESSION_STACK_SLOT).toObject().as<ArrayObject>();
     }

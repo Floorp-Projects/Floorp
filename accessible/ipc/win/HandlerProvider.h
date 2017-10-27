@@ -41,8 +41,10 @@ public:
 
   // IHandlerProvider
   STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) override;
-  STDMETHODIMP GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize) override;
-  STDMETHODIMP WriteHandlerPayload(NotNull<IStream*> aStream) override;
+  STDMETHODIMP GetHandlerPayloadSize(NotNull<mscom::IInterceptor*> aInterceptor,
+                                     NotNull<DWORD*> aOutPayloadSize) override;
+  STDMETHODIMP WriteHandlerPayload(NotNull<mscom::IInterceptor*> aInterceptor,
+                                   NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
   STDMETHODIMP_(REFIID) GetEffectiveOutParamIid(REFIID aCallIid,
                                                 ULONG aCallMethod) override;

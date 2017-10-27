@@ -49,7 +49,8 @@ static const mozilla::mscom::ArrayData sPlatformChildArrayData[] = {
 // we intend to instantiate them. Therefore RegisterProxy() must be called
 // via EnsureMTA.
 PlatformChild::PlatformChild()
-  : mAccTypelib(mozilla::mscom::RegisterTypelib(L"oleacc.dll",
+  : mIA2Proxy(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"))
+  , mAccTypelib(mozilla::mscom::RegisterTypelib(L"oleacc.dll",
         mozilla::mscom::RegistrationFlags::eUseSystemDirectory))
   , mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb"))
   , mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll"))
@@ -72,11 +73,12 @@ PlatformChild::PlatformChild()
   });
   mCustomProxy = Move(customProxy);
 
-  UniquePtr<mozilla::mscom::RegisteredProxy> ia2Proxy;
-  mozilla::mscom::EnsureMTA([&ia2Proxy]() -> void {
-    ia2Proxy = Move(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"));
+  // IA2 needs to be registered in both the main thread's STA as well as the MTA
+  UniquePtr<mozilla::mscom::RegisteredProxy> ia2ProxyMTA;
+  mozilla::mscom::EnsureMTA([&ia2ProxyMTA]() -> void {
+    ia2ProxyMTA = Move(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"));
   });
-  mIA2Proxy = Move(ia2Proxy);
+  mIA2ProxyMTA = Move(ia2ProxyMTA);
 }
 
 } // namespace a11y
