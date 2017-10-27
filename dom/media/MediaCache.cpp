@@ -2501,6 +2501,13 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         break;
       }
 
+      if (mStreamOffset != streamOffset) {
+        // Updat mStreamOffset before we drop the lock. We need to run
+        // Update() again since stream reading strategy might have changed.
+        mStreamOffset = streamOffset;
+        mMediaCache->QueueUpdate();
+      }
+
       // No data has been read yet, so block
       mon.Wait();
       if (mClosed) {
