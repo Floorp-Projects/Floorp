@@ -10,7 +10,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
 
 // Shortcuts
-const { PropTypes, createClass, DOM } = React;
+const { PropTypes, Component, DOM } = React;
 const { div, span, button } = DOM;
 
 // Priority Levels
@@ -34,72 +34,81 @@ const PriorityLevels = {
  * See also MDN for more info about <xul:notificationbox>:
  * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/notificationbox
  */
-var NotificationBox = createClass({
-  displayName: "NotificationBox",
-
-  propTypes: {
-    // List of notifications appended into the box.
-    notifications: PropTypes.arrayOf(PropTypes.shape({
-      // label to appear on the notification.
-      label: PropTypes.string.isRequired,
-
-      // Value used to identify the notification
-      value: PropTypes.string.isRequired,
-
-      // URL of image to appear on the notification. If "" then an icon
-      // appropriate for the priority level is used.
-      image: PropTypes.string.isRequired,
-
-      // Notification priority; see Priority Levels.
-      priority: PropTypes.number.isRequired,
-
-      // Array of button descriptions to appear on the notification.
-      buttons: PropTypes.arrayOf(PropTypes.shape({
-        // Function to be called when the button is activated.
-        // This function is passed three arguments:
-        // 1) the NotificationBox component the button is associated with
-        // 2) the button description as passed to appendNotification.
-        // 3) the element which was the target of the button press event.
-        // If the return value from this function is not True, then the
-        // notification is closed. The notification is also not closed
-        // if an error is thrown.
-        callback: PropTypes.func.isRequired,
-
-        // The label to appear on the button.
+class NotificationBox extends Component {
+  static get propTypes() {
+    return {
+      // List of notifications appended into the box.
+      notifications: PropTypes.arrayOf(PropTypes.shape({
+        // label to appear on the notification.
         label: PropTypes.string.isRequired,
 
-        // The accesskey attribute set on the <button> element.
-        accesskey: PropTypes.string,
+        // Value used to identify the notification
+        value: PropTypes.string.isRequired,
+
+        // URL of image to appear on the notification. If "" then an icon
+        // appropriate for the priority level is used.
+        image: PropTypes.string.isRequired,
+
+        // Notification priority; see Priority Levels.
+        priority: PropTypes.number.isRequired,
+
+        // Array of button descriptions to appear on the notification.
+        buttons: PropTypes.arrayOf(PropTypes.shape({
+          // Function to be called when the button is activated.
+          // This function is passed three arguments:
+          // 1) the NotificationBox component the button is associated with
+          // 2) the button description as passed to appendNotification.
+          // 3) the element which was the target of the button press event.
+          // If the return value from this function is not True, then the
+          // notification is closed. The notification is also not closed
+          // if an error is thrown.
+          callback: PropTypes.func.isRequired,
+
+          // The label to appear on the button.
+          label: PropTypes.string.isRequired,
+
+          // The accesskey attribute set on the <button> element.
+          accesskey: PropTypes.string,
+        })),
+
+        // A function to call to notify you of interesting things that happen
+        // with the notification box.
+        eventCallback: PropTypes.func,
       })),
 
-      // A function to call to notify you of interesting things that happen
-      // with the notification box.
-      eventCallback: PropTypes.func,
-    })),
+      // Message that should be shown when hovering over the close button
+      closeButtonTooltip: PropTypes.string
+    };
+  }
 
-    // Message that should be shown when hovering over the close button
-    closeButtonTooltip: PropTypes.string
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       closeButtonTooltip: l10n.getStr("notificationBox.closeTooltip")
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       notifications: new Immutable.OrderedMap()
     };
-  },
+
+    this.appendNotification = this.appendNotification.bind(this);
+    this.removeNotification = this.removeNotification.bind(this);
+    this.getNotificationWithValue = this.getNotificationWithValue.bind(this);
+    this.getCurrentNotification = this.getCurrentNotification.bind(this);
+    this.close = this.close.bind(this);
+    this.renderButton = this.renderButton.bind(this);
+    this.renderNotification = this.renderNotification.bind(this);
+  }
 
   /**
    * Create a new notification and display it. If another notification is
    * already present with a higher priority, the new notification will be
    * added behind it. See `propTypes` for arguments description.
    */
-  appendNotification(label, value, image, priority, buttons = [],
-    eventCallback) {
+  appendNotification(label, value, image, priority, buttons = [], eventCallback) {
     // Priority level must be within expected interval
     // (see priority levels at the top of this file).
     if (priority < PriorityLevels.PRIORITY_INFO_LOW ||
@@ -137,14 +146,14 @@ var NotificationBox = createClass({
     this.setState({
       notifications: notifications
     });
-  },
+  }
 
   /**
    * Remove specific notification from the list.
    */
   removeNotification(notification) {
     this.close(this.state.notifications.get(notification.value));
-  },
+  }
 
   /**
    * Returns an object that represents a notification. It can be
@@ -163,11 +172,11 @@ var NotificationBox = createClass({
         this.close(notification);
       }
     });
-  },
+  }
 
   getCurrentNotification() {
     return this.state.notifications.first();
-  },
+  }
 
   /**
    * Close specified notification.
@@ -184,7 +193,7 @@ var NotificationBox = createClass({
     this.setState({
       notifications: this.state.notifications.remove(notification.value)
     });
-  },
+  }
 
   /**
    * Render a button. A notification can have a set of custom buttons.
@@ -210,7 +219,7 @@ var NotificationBox = createClass({
         props.label
       )
     );
-  },
+  }
 
   /**
    * Render a notification.
@@ -241,7 +250,7 @@ var NotificationBox = createClass({
         )
       )
     );
-  },
+  }
 
   /**
    * Render the top (highest priority) notification. Only one
@@ -256,8 +265,8 @@ var NotificationBox = createClass({
     return div({className: "notificationbox"},
       content
     );
-  },
-});
+  }
+}
 
 module.exports.NotificationBox = NotificationBox;
 module.exports.PriorityLevels = PriorityLevels;
