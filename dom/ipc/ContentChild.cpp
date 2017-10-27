@@ -1810,7 +1810,8 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
   if (!hasRunOnce) {
     hasRunOnce = true;
     MOZ_ASSERT(!gFirstIdleTask);
-    RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction(FirstIdle);
+    RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction("FirstIdleRunnable",
+                                                                             FirstIdle);
     gFirstIdleTask = firstIdleTask;
     NS_IdleDispatchToCurrentThread(firstIdleTask.forget());
   }
