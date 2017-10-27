@@ -426,9 +426,15 @@ struct ParamTraits<nsAString>
     if (!ReadParam(aMsg, aIter, &length)) {
       return false;
     }
+
     aResult->SetLength(length);
 
-    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), length * sizeof(char16_t));
+    mozilla::CheckedInt<uint32_t> byteLength = mozilla::CheckedInt<uint32_t>(length) * sizeof(char16_t);
+    if (!byteLength.isValid()) {
+      return false;
+    }
+
+    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), byteLength.value());
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
