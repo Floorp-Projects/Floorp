@@ -54,7 +54,6 @@ const EVENT_WHITELIST = {
   // track when click the overlay "skip tour" button
   "overlay-skip-tour": {topic: "firefox-onboarding-event", category: "overlay-interactions"},
 };
-const ONBOARDING_STATE_DEFAULT = "default";
 const ONBOARDING_ID = "onboarding";
 
 let OnboardingTelemetry = {
@@ -71,23 +70,25 @@ let OnboardingTelemetry = {
   },
 
   // register per tab session data
-  registerNewTelemetrySession(session_key, page) {
+  registerNewTelemetrySession(data) {
+    let { page, session_key, tour_type } = data;
     if (this.state.sessions[session_key]) {
       return;
     }
     // session_key and page url are must have
-    if (!session_key || !page) {
-      throw new Error("session_key and page url are required for onboarding-register-session");
+    if (!session_key || !page || !tour_type) {
+      throw new Error("session_key, page url, and tour_type are required for onboarding-register-session");
     }
     let session_id = gUUIDGenerator.generateUUID().toString();
     this.state.sessions[session_key] = {
-      session_id,
       page,
+      session_id,
+      tour_type,
     };
   },
 
   process(data) {
-    let { event, page, session_key } = data;
+    let { event, session_key } = data;
 
     let topic = EVENT_WHITELIST[event] && EVENT_WHITELIST[event].topic;
     if (!topic) {
@@ -95,7 +96,7 @@ let OnboardingTelemetry = {
     }
 
     if (event === "onboarding-register-session") {
-      this.registerNewTelemetrySession(session_key, page);
+      this.registerNewTelemetrySession(data);
     }
 
     if (!this.state.sessions[session_key]) {
@@ -135,8 +136,12 @@ let OnboardingTelemetry = {
       overlay_session_begin,
       page,
       session_id,
+      tour_type,
     } = this.state.sessions[session_key];
     let category = EVENT_WHITELIST[event].category;
+    // the field is used to identify how user open the overlay (through default logo or watermark),
+    // the number of open from notification can be retrieved via `notification-cta-click` event
+    let tour_source = Services.prefs.getStringPref("browser.onboarding.state", "default");
     let session_begin;
     switch (topic) {
       case "firefox-onboarding-session":
@@ -165,11 +170,7 @@ let OnboardingTelemetry = {
             break;
         }
 
-        // the field is used to identify how user open the overlay (through default logo or watermark),
-        // the number of open from notification can be retrieved via `notification-cta-click` event
-        const tour_source = Services.prefs.getStringPref("browser.onboarding.state",
-          ONBOARDING_STATE_DEFAULT);
-        const session_end = Date.now();
+        let session_end = Date.now();
         this.sessionProbe && this.sessionProbe.sendPing({
           addon_version,
           category,
@@ -180,12 +181,14 @@ let OnboardingTelemetry = {
           session_id,
           tour_id,
           tour_source,
+          tour_type,
         }, {filter: ONBOARDING_ID});
         break;
       case "firefox-onboarding-event":
         let impression = (event === "notification-close-button-click" ||
           event === "notification-cta-click") ?
           Services.prefs.getIntPref("browser.onboarding.notification.prompt-count", 0) : -1;
+        let timestamp = Date.now();
         this.eventProbe && this.eventProbe.sendPing({
           addon_version,
           category,
@@ -193,7 +196,10 @@ let OnboardingTelemetry = {
           impression,
           page,
           session_id,
+          timestamp,
           tour_id,
+          tour_source,
+          tour_type,
         }, {filter: ONBOARDING_ID});
         break;
     }
