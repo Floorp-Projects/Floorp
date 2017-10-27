@@ -221,15 +221,7 @@ MAKEFILE      = $(wildcard $(OBJDIR)/Makefile)
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
 CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
-EXTRA_CONFIG_DEPS := \
-  $(TOPSRCDIR)/aclocal.m4 \
-  $(TOPSRCDIR)/old-configure.in \
-  $(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
-  $(TOPSRCDIR)/js/src/aclocal.m4 \
-  $(TOPSRCDIR)/js/src/old-configure.in \
-  $(NULL)
-
-$(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
+$(CONFIGURES): %: %.in
 	@echo Generating $@
 	cp -f $< $@
 	chmod +x $@
