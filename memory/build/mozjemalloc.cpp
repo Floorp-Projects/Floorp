@@ -108,6 +108,7 @@
 #include "mozmemory_wrap.h"
 #include "mozjemalloc.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Alignment.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
@@ -116,6 +117,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/fallible.h"
 #include "Utils.h"
 
 // On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
@@ -447,6 +449,9 @@ static Atomic<size_t, ReleaseAcquire> gRecycledSize;
 #if defined(MALLOC_DECOMMIT) && defined(MALLOC_DOUBLE_PURGE)
 #error MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
 #endif
+
+static void*
+base_alloc(size_t aSize);
 
 // Mutexes based on spinlocks.  We can't use normal pthread spinlocks in all
 // places, because they require malloc()ed memory, which causes bootstrapping
@@ -950,7 +955,7 @@ public:
   //   --------+------+
   arena_bin_t mBins[1]; // Dynamically sized.
 
-  bool Init();
+  arena_t();
 
   static inline arena_t* GetById(arena_id_t aArenaId);
 
@@ -1016,6 +1021,21 @@ public:
   void Purge(bool aAll);
 
   void HardPurge();
+
+  void* operator new(size_t aCount) = delete;
+
+  void* operator new(size_t aCount, const fallible_t&)
+#if !defined(_MSC_VER) || defined(_CPPUNWIND)
+    noexcept
+#endif
+  {
+    MOZ_ASSERT(aCount == sizeof(arena_t));
+    // Allocate enough space for trailing bins.
+    return base_alloc(aCount +
+                      (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
+  }
+
+  void operator delete(void*) = delete;
 };
 
 struct ArenaTreeTrait
@@ -3720,17 +3740,13 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
                                    : huge_ralloc(aPtr, aSize, oldsize);
 }
 
-// Returns whether initialization succeeded.
-bool
-arena_t::Init()
+arena_t::arena_t()
 {
   unsigned i;
   arena_bin_t* bin;
   size_t prev_run_size;
 
-  if (!mLock.Init()) {
-    return false;
-  }
+  MOZ_RELEASE_ASSERT(mLock.Init());
 
   memset(&mLink, 0, sizeof(mLink));
   memset(&mStats, 0, sizeof(arena_stats_t));
@@ -3794,8 +3810,6 @@ arena_t::Init()
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mMagic = ARENA_MAGIC;
 #endif
-
-  return true;
 }
 
 static inline arena_t*
@@ -3817,11 +3831,10 @@ static arena_t*
 arenas_extend()
 {
   arena_t* ret;
+  fallible_t fallible;
 
-  // Allocate enough space for trailing bins.
-  ret = (arena_t*)base_alloc(
-    sizeof(arena_t) + (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
-  if (!ret || !ret->Init()) {
+  ret = new (fallible) arena_t();
+  if (!ret) {
     return arenas_fallback();
   }
 
@@ -4219,7 +4232,7 @@ static
   if (!gMainArena) {
     return false;
   }
-  // arena_t::Init() sets this to a lower value for thread local arenas;
+  // arena_t constructor sets this to a lower value for thread local arenas;
   // reset to the default value for the main arena.
   gMainArena->mMaxDirty = opt_dirty_max;
 
@@ -4715,10 +4728,12 @@ arena_t::GetById(arena_id_t aArenaId)
   if (!malloc_initialized) {
     return nullptr;
   }
-  arena_t key;
-  key.mId = aArenaId;
+  // Use AlignedStorage2 to avoid running the arena_t constructor, while
+  // we only need it as a placeholder for mId.
+  mozilla::AlignedStorage2<arena_t> key;
+  key.addr()->mId = aArenaId;
   MutexAutoLock lock(arenas_lock);
-  arena_t* result = gArenaTree.Search(&key);
+  arena_t* result = gArenaTree.Search(key.addr());
   MOZ_RELEASE_ASSERT(result);
   return result;
 }
