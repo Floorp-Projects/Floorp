@@ -1548,26 +1548,39 @@ using UniqueBaseNode = mozilla::UniquePtr<extent_node_t, BaseNodeFreePolicy>;
 #ifdef XP_WIN
 
 static void *
-pages_map(void *addr, size_t size)
+pages_map(void *aAddr, size_t aSize)
 {
 	void *ret = nullptr;
-	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
+	ret = VirtualAlloc(aAddr, aSize, MEM_COMMIT | MEM_RESERVE,
 	    PAGE_READWRITE);
 	return ret;
 }
 
 static void
-pages_unmap(void *addr, size_t size)
+pages_unmap(void *aAddr, size_t aSize)
 {
-	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
+	if (VirtualFree(aAddr, 0, MEM_RELEASE) == 0) {
 		_malloc_message(_getprogname(),
 		    ": (malloc) Error in VirtualFree()\n");
 	}
 }
 #else
 
+static void
+pages_unmap(void *aAddr, size_t aSize)
+{
+	if (munmap(aAddr, aSize) == -1) {
+		char buf[STRERROR_BUF];
+
+		if (strerror_r(errno, buf, sizeof(buf)) == 0) {
+			_malloc_message(_getprogname(),
+				": (malloc) Error in munmap(): ", buf, "\n");
+		}
+	}
+}
+
 static void *
-pages_map(void *addr, size_t size)
+pages_map(void *aAddr, size_t aSize)
 {
 	void *ret;
 #if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
@@ -1585,8 +1598,8 @@ pages_map(void *addr, size_t size)
          * See Bug 589735 for more information.
          */
 	bool check_placement = true;
-        if (!addr) {
-		addr = (void*)0x0000070000000000;
+        if (!aAddr) {
+		aAddr = (void*)0x0000070000000000;
 		check_placement = false;
 	}
 #endif
@@ -1599,11 +1612,11 @@ pages_map(void *addr, size_t size)
 
     uintptr_t hint;
     void* region = MAP_FAILED;
-    for (hint = start; region == MAP_FAILED && hint + size <= end; hint += chunksize) {
-           region = mmap((void*)hint, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    for (hint = start; region == MAP_FAILED && hint + aSize <= end; hint += chunksize) {
+           region = mmap((void*)hint, aSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
            if (region != MAP_FAILED) {
-                   if (((size_t) region + (size - 1)) & 0xffff800000000000) {
-                           if (munmap(region, size)) {
+                   if (((size_t) region + (aSize - 1)) & 0xffff800000000000) {
+                           if (munmap(region, aSize)) {
                                    MOZ_ASSERT(errno == ENOMEM);
                            }
                            region = MAP_FAILED;
@@ -1617,7 +1630,7 @@ pages_map(void *addr, size_t size)
 	 * We don't use MAP_FIXED here, because it can cause the *replacement*
 	 * of existing mappings, and we only want to create new mappings.
 	 */
-	ret = mmap(addr, size, PROT_READ | PROT_WRITE,
+	ret = mmap(aAddr, aSize, PROT_READ | PROT_WRITE,
 		MAP_PRIVATE | MAP_ANON, -1, 0);
 	MOZ_ASSERT(ret);
 #endif
@@ -1630,53 +1643,32 @@ pages_map(void *addr, size_t size)
          * as out of memory.
         */
         else if ((long long)ret & 0xffff800000000000) {
-		munmap(ret, size);
+		munmap(ret, aSize);
                 ret = nullptr;
         }
         /* If the caller requested a specific memory location, verify that's what mmap returned. */
-	else if (check_placement && ret != addr) {
+	else if (check_placement && ret != aAddr) {
 #else
-	else if (addr && ret != addr) {
+	else if (aAddr && ret != aAddr) {
 #endif
 		/*
 		 * We succeeded in mapping memory, but not in the right place.
 		 */
-		if (munmap(ret, size) == -1) {
-			char buf[STRERROR_BUF];
-
-			if (strerror_r(errno, buf, sizeof(buf)) == 0) {
-				_malloc_message(_getprogname(),
-					": (malloc) Error in munmap(): ", buf, "\n");
-			}
-		}
+		pages_unmap(ret, aSize);
 		ret = nullptr;
 	}
 	if (ret) {
-		MozTagAnonymousMemory(ret, size, "jemalloc");
+		MozTagAnonymousMemory(ret, aSize, "jemalloc");
 	}
 
 #if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
 	MOZ_ASSERT(!ret || (!check_placement && ret)
-	    || (check_placement && ret == addr));
+	    || (check_placement && ret == aAddr));
 #else
-	MOZ_ASSERT(!ret || (!addr && ret != addr)
-	    || (addr && ret == addr));
+	MOZ_ASSERT(!ret || (!aAddr && ret != aAddr)
+	    || (aAddr && ret == aAddr));
 #endif
 	return ret;
-}
-
-static void
-pages_unmap(void *addr, size_t size)
-{
-
-	if (munmap(addr, size) == -1) {
-		char buf[STRERROR_BUF];
-
-		if (strerror_r(errno, buf, sizeof(buf)) == 0) {
-			_malloc_message(_getprogname(),
-				": (malloc) Error in munmap(): ", buf, "\n");
-		}
-	}
 }
 #endif
 
