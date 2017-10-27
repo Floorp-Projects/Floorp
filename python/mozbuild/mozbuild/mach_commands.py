@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import collections
-import errno
 import hashlib
 import itertools
 import json
@@ -29,8 +28,6 @@ from mach.decorators import (
     SubCommand,
 )
 
-from mach.mixin.logging import LoggingMixin
-
 from mach.main import Mach
 
 from mozbuild.base import (
@@ -38,9 +35,6 @@ from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
-    MozconfigFindException,
-    MozconfigLoadException,
-    ObjdirMismatchException,
 )
 from mozbuild.util import ensureParentDir
 
@@ -89,217 +83,6 @@ and tell us about your machine and build configuration so we can adjust the
 warning heuristic.
 ===================
 '''
-
-
-class TerminalLoggingHandler(logging.Handler):
-    """Custom logging handler that works with terminal window dressing.
-
-    This class should probably live elsewhere, like the mach core. Consider
-    this a proving ground for its usefulness.
-    """
-    def __init__(self):
-        logging.Handler.__init__(self)
-
-        self.fh = sys.stdout
-        self.footer = None
-
-    def flush(self):
-        self.acquire()
-
-        try:
-            self.fh.flush()
-        finally:
-            self.release()
-
-    def emit(self, record):
-        msg = self.format(record)
-
-        self.acquire()
-
-        try:
-            if self.footer:
-                self.footer.clear()
-
-            self.fh.write(msg)
-            self.fh.write('\n')
-
-            if self.footer:
-                self.footer.draw()
-
-            # If we don't flush, the footer may not get drawn.
-            self.fh.flush()
-        finally:
-            self.release()
-
-
-class Footer(object):
-    """Handles display of a footer in a terminal.
-
-    This class implements the functionality common to all mach commands
-    that render a footer.
-    """
-
-    def __init__(self, terminal):
-        # terminal is a blessings.Terminal.
-        self._t = terminal
-        self._fh = sys.stdout
-
-    def clear(self):
-        """Removes the footer from the current terminal."""
-        self._fh.write(self._t.move_x(0))
-        self._fh.write(self._t.clear_eol())
-
-    def write(self, parts):
-        """Write some output in the footer, accounting for terminal width.
-
-        parts is a list of 2-tuples of (encoding_function, input).
-        None means no encoding."""
-
-        # We don't want to write more characters than the current width of the
-        # terminal otherwise wrapping may result in weird behavior. We can't
-        # simply truncate the line at terminal width characters because a)
-        # non-viewable escape characters count towards the limit and b) we
-        # don't want to truncate in the middle of an escape sequence because
-        # subsequent output would inherit the escape sequence.
-        max_width = self._t.width
-        written = 0
-        write_pieces = []
-        for part in parts:
-            try:
-                func, part = part
-                encoded = getattr(self._t, func)(part)
-            except ValueError:
-                encoded = part
-
-            len_part = len(part)
-            len_spaces = len(write_pieces)
-            if written + len_part + len_spaces > max_width:
-                write_pieces.append(part[0:max_width - written - len_spaces])
-                written += len_part
-                break
-
-            write_pieces.append(encoded)
-            written += len_part
-
-        with self._t.location():
-            self._t.move(self._t.height-1,0)
-            self._fh.write(' '.join(write_pieces))
-
-
-class BuildProgressFooter(Footer):
-    """Handles display of a build progress indicator in a terminal.
-
-    When mach builds inside a blessings-supported terminal, it will render
-    progress information collected from a BuildMonitor. This class converts the
-    state of BuildMonitor into terminal output.
-    """
-
-    def __init__(self, terminal, monitor):
-        Footer.__init__(self, terminal)
-        self.tiers = monitor.tiers.tier_status.viewitems()
-
-    def draw(self):
-        """Draws this footer in the terminal."""
-
-        if not self.tiers:
-            return
-
-        # The drawn terminal looks something like:
-        # TIER: static export libs tools
-
-        parts = [('bold', 'TIER:')]
-        append = parts.append
-        for tier, status in self.tiers:
-            if status is None:
-                append(tier)
-            elif status == 'finished':
-                append(('green', tier))
-            else:
-                append(('underline_yellow', tier))
-
-        self.write(parts)
-
-
-class OutputManager(LoggingMixin):
-    """Handles writing job output to a terminal or log."""
-
-    def __init__(self, log_manager, footer):
-        self.populate_logger()
-
-        self.footer = None
-        terminal = log_manager.terminal
-
-        # TODO convert terminal footer to config file setting.
-        if not terminal or os.environ.get('MACH_NO_TERMINAL_FOOTER', None):
-            return
-        if os.environ.get('INSIDE_EMACS', None):
-            return
-
-        self.t = terminal
-        self.footer = footer
-
-        self._handler = TerminalLoggingHandler()
-        self._handler.setFormatter(log_manager.terminal_formatter)
-        self._handler.footer = self.footer
-
-        old = log_manager.replace_terminal_handler(self._handler)
-        self._handler.level = old.level
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.footer:
-            self.footer.clear()
-            # Prevents the footer from being redrawn if logging occurs.
-            self._handler.footer = None
-
-    def write_line(self, line):
-        if self.footer:
-            self.footer.clear()
-
-        print(line)
-
-        if self.footer:
-            self.footer.draw()
-
-    def refresh(self):
-        if not self.footer:
-            return
-
-        self.footer.clear()
-        self.footer.draw()
-
-class BuildOutputManager(OutputManager):
-    """Handles writing build output to a terminal, to logs, etc."""
-
-    def __init__(self, log_manager, monitor, footer):
-        self.monitor = monitor
-        OutputManager.__init__(self, log_manager, footer)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        OutputManager.__exit__(self, exc_type, exc_value, traceback)
-
-        # Ensure the resource monitor is stopped because leaving it running
-        # could result in the process hanging on exit because the resource
-        # collection child process hasn't been told to stop.
-        self.monitor.stop_resource_recording()
-
-
-    def on_line(self, line):
-        warning, state_changed, relevant = self.monitor.on_line(line)
-
-        if relevant:
-            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
-        elif state_changed:
-            have_handler = hasattr(self, 'handler')
-            if have_handler:
-                self.handler.acquire()
-            try:
-                self.refresh()
-            finally:
-                if have_handler:
-                    self.handler.release()
 
 
 class StoreDebugParamsAndWarnAction(argparse.Action):
@@ -387,8 +170,11 @@ class Build(MachCommandBase):
         there are build actions not captured by either. If things don't appear to
         be rebuilding, perform a vanilla `mach build` to rebuild the world.
         """
-        import which
-        from mozbuild.controller.building import BuildMonitor
+        from mozbuild.controller.building import (
+            BuildMonitor,
+            BuildOutputManager,
+            BuildProgressFooter,
+        )
         from mozbuild.util import (
             mkdir,
             resolve_target_to_make,
@@ -2121,62 +1907,6 @@ class StaticAnalysisMonitor(object):
         return (warning, True)
 
 
-class StaticAnalysisFooter(Footer):
-    """Handles display of a static analysis progress indicator in a terminal.
-    """
-
-    def __init__(self, terminal, monitor):
-        Footer.__init__(self, terminal)
-        self.monitor = monitor
-
-    def draw(self):
-        """Draws this footer in the terminal."""
-
-        monitor = self.monitor
-        total = monitor.num_files
-        processed = monitor.num_files_processed
-        percent = '(%.2f%%)' % (processed * 100.0 / total)
-        parts = [
-            ('dim', 'Processing'),
-            ('yellow', str(processed)),
-            ('dim', 'of'),
-            ('yellow', str(total)),
-            ('dim', 'files'),
-            ('green', percent)
-        ]
-        if monitor.current_file:
-            parts.append(('bold', monitor.current_file))
-
-        self.write(parts)
-
-
-class StaticAnalysisOutputManager(OutputManager):
-    """Handles writing static analysis output to a terminal."""
-
-    def __init__(self, log_manager, monitor, footer):
-        self.monitor = monitor
-        OutputManager.__init__(self, log_manager, footer)
-
-    def on_line(self, line):
-        warning, relevant = self.monitor.on_line(line)
-
-        if warning:
-            self.log(logging.INFO, 'compiler_warning', warning,
-                'Warning: {flag} in {filename}: {message}')
-
-        if relevant:
-            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
-        else:
-            have_handler = hasattr(self, 'handler')
-            if have_handler:
-                self.handler.acquire()
-            try:
-                self.refresh()
-            finally:
-                if have_handler:
-                    self.handler.release()
-
-
 @CommandProvider
 class StaticAnalysis(MachCommandBase):
     """Utilities for running C++ static analysis checks."""
@@ -2213,6 +1943,11 @@ class StaticAnalysis(MachCommandBase):
                           'of each translation unit are always displayed')
     def check(self, source=None, jobs=2, strip=1, verbose=False,
               checks='-*', fix=False, header_filter=''):
+        from mozbuild.controller.building import (
+            StaticAnalysisFooter,
+            StaticAnalysisOutputManager,
+        )
+
         self._set_log_level(verbose)
         rc = self._build_compile_db(verbose=verbose)
         if rc != 0:
