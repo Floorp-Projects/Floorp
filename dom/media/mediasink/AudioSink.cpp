@@ -535,5 +535,22 @@ AudioSink::DrainConverter(uint32_t aMaxFrames)
   return data->mFrames;
 }
 
+nsCString
+AudioSink::GetDebugInfo()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return nsPrintfCString("AudioSink: StartTime=%" PRId64
+                         " LastGoodPosition=%" PRId64
+                         " Playing=%d  OutputRate=%u Written=%" PRId64
+                         " Errored=%d PlaybackComplete=%d",
+                         mStartTime.ToMicroseconds(),
+                         mLastGoodPosition.ToMicroseconds(),
+                         mPlaying,
+                         mOutputRate,
+                         mWritten,
+                         bool(mErrored),
+                         bool(mPlaybackComplete));
+}
+
 } // namespace media
 } // namespace mozilla
