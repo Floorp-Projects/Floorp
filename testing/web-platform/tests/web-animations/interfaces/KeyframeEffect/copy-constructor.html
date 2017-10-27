@@ -14,13 +14,13 @@
 'use strict';
 
 test(function(t) {
-  var effect = new KeyframeEffectReadOnly(createDiv(t), null);
-  var copiedEffect = new KeyframeEffectReadOnly(effect);
+  const effect = new KeyframeEffectReadOnly(createDiv(t), null);
+  const copiedEffect = new KeyframeEffectReadOnly(effect);
   assert_equals(copiedEffect.target, effect.target, 'same target');
-}, 'Test copied keyframeEffectReadOnly has the same target');
+}, 'Copied KeyframeEffectReadOnly has the same target');
 
 test(function(t) {
-  var effect =
+  const effect =
     new KeyframeEffectReadOnly(null,
                                [ { marginLeft: '0px' },
                                  { marginLeft: '-20px', easing: 'ease-in',
@@ -29,57 +29,58 @@ test(function(t) {
                                  { marginLeft: '50px' } ],
                                { spacing: 'paced(margin-left)' });
 
-  var copiedEffect = new KeyframeEffectReadOnly(effect);
-  var KeyframesA = effect.getKeyframes();
-  var KeyframesB = copiedEffect.getKeyframes();
-  assert_equals(KeyframesA.length, KeyframesB.length, 'same keyframes length');
+  const copiedEffect = new KeyframeEffectReadOnly(effect);
+  const keyframesA = effect.getKeyframes();
+  const keyframesB = copiedEffect.getKeyframes();
+  assert_equals(keyframesA.length, keyframesB.length, 'same keyframes length');
 
-  for (var i = 0; i < KeyframesA.length; ++i) {
-    assert_equals(KeyframesA[i].offset, KeyframesB[i].offset,
-                  'Keyframe ' + i + ' has the same offset');
-    assert_equals(KeyframesA[i].computedOffset, KeyframesB[i].computedOffset,
-                  'keyframe ' + i + ' has the same computedOffset');
-    assert_equals(KeyframesA[i].easing, KeyframesB[i].easing,
-                  'keyframe ' + i + ' has the same easing');
-    assert_equals(KeyframesA[i].composite, KeyframesB[i].composite,
-                  'keyframe ' + i + ' has the same composite');
+  for (let i = 0; i < keyframesA.length; ++i) {
+    assert_equals(keyframesA[i].offset, keyframesB[i].offset,
+                  `Keyframe ${i} has the same offset`);
+    assert_equals(keyframesA[i].computedOffset, keyframesB[i].computedOffset,
+                  `Keyframe ${i} has the same computedOffset`);
+    assert_equals(keyframesA[i].easing, keyframesB[i].easing,
+                  `Keyframe ${i} has the same easing`);
+    assert_equals(keyframesA[i].composite, keyframesB[i].composite,
+                  `Keyframe ${i} has the same composite`);
 
-    assert_true(!!KeyframesA[i].marginLeft,
-                'original keyframe ' + i + ' has the valid property value');
-    assert_true(!!KeyframesB[i].marginLeft,
-                'new keyframe ' + i + ' has the valid property value');
-    assert_equals(KeyframesA[i].marginLeft, KeyframesB[i].marginLeft,
-                  'keyframe ' + i + ' has the same property value pair');
+    assert_true(!!keyframesA[i].marginLeft,
+                `Original keyframe ${i} has a valid property value`);
+    assert_true(!!keyframesB[i].marginLeft,
+                `New keyframe ${i} has a valid property value`);
+    assert_equals(keyframesA[i].marginLeft, keyframesB[i].marginLeft,
+                  `Keyframe ${i} has the same property value pair`);
   }
-}, 'Test copied keyframeEffectReadOnly has the same keyframes');
+}, 'Copied KeyframeEffectReadOnly has the same keyframes');
 
 test(function(t) {
-  var effect = new KeyframeEffectReadOnly(null, null,
-                                          { spacing: 'paced(margin-left)',
-                                            iterationComposite: 'accumulate' });
+  const effect =
+    new KeyframeEffectReadOnly(null, null,
+                               { spacing: 'paced(margin-left)',
+                                 iterationComposite: 'accumulate' });
 
-  var copiedEffect = new KeyframeEffectReadOnly(effect);
+  const copiedEffect = new KeyframeEffectReadOnly(effect);
   assert_equals(copiedEffect.spacing, effect.spacing, 'same spacing');
   assert_equals(copiedEffect.iterationComposite, effect.iterationComposite,
                 'same iterationCompositeOperation');
   assert_equals(copiedEffect.composite, effect.composite,
                 'same compositeOperation');
-}, 'Test copied keyframeEffectReadOnly has the same keyframeEffectOptions');
+}, 'Copied KeyframeEffectReadOnly has the same KeyframeEffectOptions');
 
 test(function(t) {
-  var effect = new KeyframeEffectReadOnly(null, null,
-                                          { duration: 100 * MS_PER_SEC,
-                                            delay: -1 * MS_PER_SEC,
-                                            endDelay: 2 * MS_PER_SEC,
-                                            fill: 'forwards',
-                                            iterationStart: 2,
-                                            iterations: 20,
-                                            easing: 'ease-out',
-                                            direction: 'alternate' } );
+  const effect = new KeyframeEffectReadOnly(null, null,
+                                            { duration: 100 * MS_PER_SEC,
+                                              delay: -1 * MS_PER_SEC,
+                                              endDelay: 2 * MS_PER_SEC,
+                                              fill: 'forwards',
+                                              iterationStart: 2,
+                                              iterations: 20,
+                                              easing: 'ease-out',
+                                              direction: 'alternate' } );
 
-  var copiedEffect = new KeyframeEffectReadOnly(effect);
-  var timingA = effect.timing;
-  var timingB = copiedEffect.timing;
+  const copiedEffect = new KeyframeEffectReadOnly(effect);
+  const timingA = effect.timing;
+  const timingB = copiedEffect.timing;
   assert_not_equals(timingA, timingB, 'different timing objects');
   assert_equals(timingA.delay, timingB.delay, 'same delay');
   assert_equals(timingA.endDelay, timingB.endDelay, 'same endDelay');
@@ -90,19 +91,19 @@ test(function(t) {
   assert_equals(timingA.duration, timingB.duration, 'same duration');
   assert_equals(timingA.direction, timingB.direction, 'same direction');
   assert_equals(timingA.easing, timingB.easing, 'same easing');
-}, 'Test copied keyframeEffectReadOnly has the same timing content');
+}, 'Copied KeyframeEffectReadOnly has the same timing content');
 
 test(function(t) {
-  var effect = new KeyframeEffectReadOnly(createDiv(t), null);
+  const effect = new KeyframeEffectReadOnly(createDiv(t), null);
   assert_equals(effect.constructor.name, 'KeyframeEffectReadOnly');
   assert_equals(effect.timing.constructor.name,
                 'AnimationEffectTimingReadOnly');
 
   // Make a mutable copy
-  var copiedEffect = new KeyframeEffect(effect);
+  const copiedEffect = new KeyframeEffect(effect);
   assert_equals(copiedEffect.constructor.name, 'KeyframeEffect');
   assert_equals(copiedEffect.timing.constructor.name, 'AnimationEffectTiming');
-}, 'Test mutable copy from a KeyframeEffectReadOnly source');
+}, 'KeyframeEffect constructed from a KeyframeEffectReadOnly is mutable');
 
 </script>
 </body>
