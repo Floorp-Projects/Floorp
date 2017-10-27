@@ -134,7 +134,7 @@ hb_language_from_string (const char *str, int len);
 HB_EXTERN const char *
 hb_language_to_string (hb_language_t language);
 
-#define HB_LANGUAGE_INVALID ((hb_language_t) NULL)
+#define HB_LANGUAGE_INVALID ((hb_language_t) 0)
 
 HB_EXTERN hb_language_t
 hb_language_get_default (void);

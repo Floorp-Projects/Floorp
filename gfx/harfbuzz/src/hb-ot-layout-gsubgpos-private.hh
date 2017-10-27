@@ -77,7 +77,7 @@ struct hb_closure_context_t :
 		        unsigned int nesting_level_left_ = HB_MAX_NESTING_LEVEL) :
 			  face (face_),
 			  glyphs (glyphs_),
-			  recurse_func (NULL),
+			  recurse_func (nullptr),
 			  nesting_level_left (nesting_level_left_),
 			  debug_depth (0) {}
 
@@ -146,7 +146,7 @@ struct hb_collect_glyphs_context_t :
     if (unlikely (nesting_level_left == 0 || !recurse_func))
       return default_return_value ();
 
-    /* Note that GPOS sets recurse_func to NULL already, so it doesn't get
+    /* Note that GPOS sets recurse_func to nullptr already, so it doesn't get
      * past the previous check.  For GSUB, we only want to collect the output
      * glyphs in the recursion.  If output is not requested, we can go home now.
      *
@@ -160,7 +160,7 @@ struct hb_collect_glyphs_context_t :
       return HB_VOID;
 
     /* Return if new lookup was recursed to before. */
-    if (recursed_lookups.has (lookup_index))
+    if (recursed_lookups->has (lookup_index))
       return HB_VOID;
 
     hb_set_t *old_before = before;
@@ -176,7 +176,7 @@ struct hb_collect_glyphs_context_t :
     input  = old_input;
     after  = old_after;
 
-    recursed_lookups.add (lookup_index);
+    recursed_lookups->add (lookup_index);
 
     return HB_VOID;
   }
@@ -187,31 +187,31 @@ struct hb_collect_glyphs_context_t :
   hb_set_t *after;
   hb_set_t *output;
   recurse_func_t recurse_func;
-  hb_set_t recursed_lookups;
+  hb_set_t *recursed_lookups;
   unsigned int nesting_level_left;
   unsigned int debug_depth;
 
   hb_collect_glyphs_context_t (hb_face_t *face_,
-			       hb_set_t  *glyphs_before, /* OUT. May be NULL */
-			       hb_set_t  *glyphs_input,  /* OUT. May be NULL */
-			       hb_set_t  *glyphs_after,  /* OUT. May be NULL */
-			       hb_set_t  *glyphs_output, /* OUT. May be NULL */
+			       hb_set_t  *glyphs_before, /* OUT. May be nullptr */
+			       hb_set_t  *glyphs_input,  /* OUT. May be nullptr */
+			       hb_set_t  *glyphs_after,  /* OUT. May be nullptr */
+			       hb_set_t  *glyphs_output, /* OUT. May be nullptr */
 			       unsigned int nesting_level_left_ = HB_MAX_NESTING_LEVEL) :
 			      face (face_),
 			      before (glyphs_before ? glyphs_before : hb_set_get_empty ()),
 			      input  (glyphs_input  ? glyphs_input  : hb_set_get_empty ()),
 			      after  (glyphs_after  ? glyphs_after  : hb_set_get_empty ()),
 			      output (glyphs_output ? glyphs_output : hb_set_get_empty ()),
-			      recurse_func (NULL),
-			      recursed_lookups (),
+			      recurse_func (nullptr),
+			      recursed_lookups (nullptr),
 			      nesting_level_left (nesting_level_left_),
 			      debug_depth (0)
   {
-    recursed_lookups.init ();
+    recursed_lookups = hb_set_create ();
   }
   ~hb_collect_glyphs_context_t (void)
   {
-    recursed_lookups.fini ();
+    hb_set_destroy (recursed_lookups);
   }
 
   void set_recurse_func (recurse_func_t func) { recurse_func = func; }
@@ -273,8 +273,8 @@ struct hb_apply_context_t :
 #define arg1(arg) (arg) /* Remove the macro to see why it's needed! */
 	     syllable arg1(0),
 #undef arg1
-	     match_func (NULL),
-	     match_data (NULL) {};
+	     match_func (nullptr),
+	     match_data (nullptr) {};
 
     typedef bool (*match_func_t) (hb_codepoint_t glyph_id, const USHORT &value, const void *data);
 
@@ -342,8 +342,8 @@ struct hb_apply_context_t :
     inline void init (hb_apply_context_t *c_, bool context_match = false)
     {
       c = c_;
-      match_glyph_data = NULL;
-      matcher.set_match_func (NULL, NULL);
+      match_glyph_data = nullptr;
+      matcher.set_match_func (nullptr, nullptr);
       matcher.set_lookup_props (c->lookup_props);
       /* Ignore ZWNJ if we are matching GSUB context, or matching GPOS. */
       matcher.set_ignore_zwnj (c->table_index == 1 || (context_match && c->auto_zwnj));
@@ -491,7 +491,7 @@ struct hb_apply_context_t :
 		      hb_buffer_t *buffer_) :
 			iter_input (), iter_context (),
 			font (font_), face (font->face), buffer (buffer_),
-			recurse_func (NULL),
+			recurse_func (nullptr),
 			gdef (*hb_ot_layout_from_face (face)->gdef),
 			var_store (gdef.get_var_store ()),
 			direction (buffer_->props.direction),
@@ -719,10 +719,10 @@ static inline bool match_input (hb_apply_context_t *c,
 				const void *match_data,
 				unsigned int *end_offset,
 				unsigned int match_positions[HB_MAX_CONTEXT_LENGTH],
-				bool *p_is_mark_ligature = NULL,
-				unsigned int *p_total_component_count = NULL)
+				bool *p_is_mark_ligature = nullptr,
+				unsigned int *p_total_component_count = nullptr)
 {
-  TRACE_APPLY (NULL);
+  TRACE_APPLY (nullptr);
 
   if (unlikely (count > HB_MAX_CONTEXT_LENGTH)) return_trace (false);
 
@@ -846,7 +846,7 @@ static inline bool ligate_input (hb_apply_context_t *c,
 				 bool is_mark_ligature,
 				 unsigned int total_component_count)
 {
-  TRACE_APPLY (NULL);
+  TRACE_APPLY (nullptr);
 
   hb_buffer_t *buffer = c->buffer;
 
@@ -943,7 +943,7 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 				    const void *match_data,
 				    unsigned int *match_start)
 {
-  TRACE_APPLY (NULL);
+  TRACE_APPLY (nullptr);
 
   hb_apply_context_t::skipping_iterator_t &skippy_iter = c->iter_context;
   skippy_iter.reset (c->buffer->backtrack_len (), count);
@@ -966,7 +966,7 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 				    unsigned int offset,
 				    unsigned int *end_index)
 {
-  TRACE_APPLY (NULL);
+  TRACE_APPLY (nullptr);
 
   hb_apply_context_t::skipping_iterator_t &skippy_iter = c->iter_context;
   skippy_iter.reset (c->buffer->idx + offset - 1, count);
@@ -1016,7 +1016,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 				 const LookupRecord lookupRecord[], /* Array of LookupRecords--in design order */
 				 unsigned int match_length)
 {
-  TRACE_APPLY (NULL);
+  TRACE_APPLY (nullptr);
 
   hb_buffer_t *buffer = c->buffer;
   int end;
@@ -1334,7 +1334,7 @@ struct ContextFormat1
 
     struct ContextClosureLookupContext lookup_context = {
       {intersects_glyph},
-      NULL
+      nullptr
     };
 
     unsigned int count = ruleSet.len;
@@ -1352,7 +1352,7 @@ struct ContextFormat1
 
     struct ContextCollectGlyphsLookupContext lookup_context = {
       {collect_glyph},
-      NULL
+      nullptr
     };
 
     unsigned int count = ruleSet.len;
@@ -1367,7 +1367,7 @@ struct ContextFormat1
     const RuleSet &rule_set = this+ruleSet[(this+coverage).get_coverage (c->glyphs[0])];
     struct ContextApplyLookupContext lookup_context = {
       {match_glyph},
-      NULL
+      nullptr
     };
     return_trace (rule_set.would_apply (c, lookup_context));
   }
@@ -1387,7 +1387,7 @@ struct ContextFormat1
     const RuleSet &rule_set = this+ruleSet[index];
     struct ContextApplyLookupContext lookup_context = {
       {match_glyph},
-      NULL
+      nullptr
     };
     return_trace (rule_set.apply (c, lookup_context));
   }
@@ -1892,7 +1892,7 @@ struct ChainContextFormat1
 
     struct ChainContextClosureLookupContext lookup_context = {
       {intersects_glyph},
-      {NULL, NULL, NULL}
+      {nullptr, nullptr, nullptr}
     };
 
     unsigned int count = ruleSet.len;
@@ -1910,7 +1910,7 @@ struct ChainContextFormat1
 
     struct ChainContextCollectGlyphsLookupContext lookup_context = {
       {collect_glyph},
-      {NULL, NULL, NULL}
+      {nullptr, nullptr, nullptr}
     };
 
     unsigned int count = ruleSet.len;
@@ -1925,7 +1925,7 @@ struct ChainContextFormat1
     const ChainRuleSet &rule_set = this+ruleSet[(this+coverage).get_coverage (c->glyphs[0])];
     struct ChainContextApplyLookupContext lookup_context = {
       {match_glyph},
-      {NULL, NULL, NULL}
+      {nullptr, nullptr, nullptr}
     };
     return_trace (rule_set.would_apply (c, lookup_context));
   }
@@ -1944,7 +1944,7 @@ struct ChainContextFormat1
     const ChainRuleSet &rule_set = this+ruleSet[index];
     struct ChainContextApplyLookupContext lookup_context = {
       {match_glyph},
-      {NULL, NULL, NULL}
+      {nullptr, nullptr, nullptr}
     };
     return_trace (rule_set.apply (c, lookup_context));
   }
