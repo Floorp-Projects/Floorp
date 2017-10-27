@@ -106,7 +106,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   let deviceRemoveButton = document.querySelector(".device-remove-button");
   let removed = Promise.all([
     waitUntilState(store, state => state.devices.custom.length == 0),
-    once(ui, "device-removed")
+    once(ui, "device-association-removed")
   ]);
   Simulate.click(deviceRemoveButton);
   yield removed;
