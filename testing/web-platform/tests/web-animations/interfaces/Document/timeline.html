@@ -12,12 +12,12 @@
 
 test(function() {
   assert_equals(document.timeline, document.timeline,
-    'document.timeline returns the same object every time');
+    'Document.timeline returns the same object every time');
   const iframe = document.getElementById('iframe');
   assert_not_equals(document.timeline, iframe.contentDocument.timeline,
-    'document.timeline returns a different object for each document');
+    'Document.timeline returns a different object for each document');
   assert_not_equals(iframe.contentDocument.timeline, null,
-    'document.timeline on an iframe is not null');
-}, 'document.timeline identity tests');
+    'Document.timeline on an iframe is not null');
+}, 'Document.timeline returns the default document timeline');
 
 </script>

@@ -11,7 +11,7 @@
 
 async_test(function(t) {
   assert_true(document.timeline.currentTime > 0,
-    'document.timeline.currentTime is positive');
+    'The current time is initially is positive');
   // document.timeline.currentTime should be set even before document
   // load fires. We expect this code to be run before document load and hence
   // the above assertion is sufficient.
@@ -28,11 +28,10 @@ async_test(function(t) {
   window.requestAnimationFrame(function(rafTime) {
     t.step(function() {
       assert_equals(document.timeline.currentTime, rafTime,
-                    'document.timeline.currentTime matches' +
-                    ' requestAnimationFrame time');
+                    'The current time matches requestAnimationFrame time');
     });
     t.done();
   });
-}, 'document.timeline.currentTime value tests');
+}, 'Document timelines report current time relative to navigationStart');
 
 </script>
