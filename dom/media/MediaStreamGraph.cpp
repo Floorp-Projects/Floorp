@@ -1589,6 +1589,19 @@ public:
       // teardown and just leak, for safety.
       return NS_OK;
     }
+
+    for (MediaStream* stream : mGraph->AllStreams()) {
+      // Clean up all MediaSegments since we cannot release Images too
+      // late during shutdown. Also notify listeners that they were removed
+      // so they can clean up any gfx resources.
+      if (SourceMediaStream* source = stream->AsSourceStream()) {
+        // Finishing a SourceStream prevents new data from being appended.
+        source->Finish();
+      }
+      stream->GetStreamTracks().Clear();
+      stream->RemoveAllListenersImpl();
+    }
+
     mGraph->mForceShutdownTicket = nullptr;
 
     // We can't block past the final LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
@@ -1606,18 +1619,6 @@ public:
       // delete it.
       NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
                    "Not in forced shutdown?");
-      for (MediaStream* stream : mGraph->AllStreams()) {
-        // Clean up all MediaSegments since we cannot release Images too
-        // late during shutdown. Also notify listeners that they were removed
-        // so they can clean up any gfx resources.
-        if (SourceMediaStream* source = stream->AsSourceStream()) {
-          // Finishing a SourceStream prevents new data from being appended.
-          source->Finish();
-        }
-        stream->GetStreamTracks().Clear();
-        stream->RemoveAllListenersImpl();
-      }
-
       mGraph->mLifecycleState =
         MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION;
     }
