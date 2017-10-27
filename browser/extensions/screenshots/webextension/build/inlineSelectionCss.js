@@ -257,6 +257,9 @@ window.inlineSelectionCss = `
     position: absolute;
     right: 0;
     top: 0; }
+  body.hcm .hover-highlight {
+    background-color: white;
+    opacity: 0.2; }
 
 .mover-target.direction-topLeft {
   cursor: nwse-resize;
@@ -358,6 +361,9 @@ window.inlineSelectionCss = `
   background-color: rgba(0, 0, 0, 0.7);
   position: absolute;
   z-index: 9999999999; }
+  body.hcm .bghighlight {
+    background-color: black;
+    opacity: 0.7; }
 
 .preview-overlay {
   align-items: center;
@@ -372,6 +378,9 @@ window.inlineSelectionCss = `
   top: 0;
   width: 100%;
   z-index: 9999999999; }
+  body.hcm .preview-overlay {
+    background-color: black;
+    opacity: 0.7; }
 
 .highlight {
   border-radius: 2px;
@@ -380,6 +389,9 @@ window.inlineSelectionCss = `
   cursor: move;
   position: absolute;
   z-index: 9999999999; }
+  body.hcm .highlight {
+    border: 2px dashed white;
+    opacity: 1.0; }
 
 .highlight-buttons {
   display: flex;

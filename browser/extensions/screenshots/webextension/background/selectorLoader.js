@@ -87,7 +87,7 @@ this.selectorLoader = (function() {
       lastPromise = lastPromise.then(() => {
         return browser.tabs.executeScript(tabId, {
           file,
-          runAt: "document_end"
+          runAt: "document_start"
         }).catch((error) => {
           log.error("error in script:", file, error);
           error.scriptName = file;
