@@ -200,12 +200,19 @@ this.auth = (function() {
 
   communication.register("getAuthInfo", (sender, ownershipCheck) => {
     return registrationInfoFetched.then(() => {
+      return exports.authHeaders();
+    }).then((authHeaders) => {
       let info = registrationInfo;
       if (info.registered) {
         return login({ownershipCheck}).then((result) => {
-          return {isOwner: result && result.isOwner, deviceId: registrationInfo.deviceId};
+          return {
+            isOwner: result && result.isOwner,
+            deviceId: registrationInfo.deviceId,
+            authHeaders
+          };
         });
       }
+      info = Object.assign({authHeaders}, info);
       return info;
     });
   });

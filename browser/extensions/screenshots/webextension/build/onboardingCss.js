@@ -257,6 +257,12 @@ body {
   .active-slide-1 #next {
     background-image: url("MOZ_EXTENSION/icons/back-highlight.svg"); }
 
+[dir='rtl'] #next {
+  transform: rotate(0deg); }
+
+[dir='rtl'] #prev {
+  transform: rotate(180deg); }
+
 #skip {
   background: none;
   border: 0;
