@@ -153,6 +153,12 @@ const SNAPSHOT_SCHEMA = {
         styloResult: {
           type: "boolean",
         },
+        styloChromeDefault: {
+          type: "boolean",
+        },
+        styloChromeResult: {
+          type: "boolean",
+        },
         keyGoogleFound: {
           type: "boolean",
         },
