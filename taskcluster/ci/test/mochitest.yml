@@ -215,9 +215,7 @@ mochitest-devtools-chrome:
     treeherder-symbol: tc-M(dt)
     loopback-video: true
     max-run-time: 5400
-    chunks:
-        by-test-platform:
-            default: 8
+    chunks: 8
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
