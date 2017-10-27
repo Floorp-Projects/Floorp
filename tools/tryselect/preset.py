@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import ConfigParser
 import os
+import subprocess
 
 from mozboot.util import get_state_dir
 
@@ -22,7 +23,7 @@ def list_presets(section=None):
         for s in sections:
             try:
                 data.extend(config.items(s))
-            except ConfigParser.NoOptionError:
+            except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
                 pass
 
     if not data:
@@ -30,6 +31,13 @@ def list_presets(section=None):
 
     for name, value in data:
         print("%s: %s" % (name, value))
+
+
+def edit_presets(section=None):
+    if 'EDITOR' not in os.environ:
+        print("error: must set the $EDITOR environment variable to use --edit-presets")
+        return
+    subprocess.call([os.environ['EDITOR'], CONFIG_PATH])
 
 
 def load(name, section=None):
