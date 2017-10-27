@@ -73,6 +73,11 @@ public:
 
   void ClearWrBridge();
 
+  void EnableUseAsyncImagePipeline()
+  {
+    mUseAsyncImagePipeline = true;
+  }
+
   TextureHost* GetCurrentTextureHost() { return mCurrentTextureHost; }
 
 protected:
@@ -84,6 +89,7 @@ protected:
   WebRenderBridgeParent* MOZ_NON_OWNING_REF mWrBridge;
 
   uint32_t mWrBridgeBindings;
+  bool mUseAsyncImagePipeline;
 
   CompositableTextureHostRef mCurrentTextureHost;
 };
