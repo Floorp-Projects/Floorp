@@ -5,7 +5,7 @@
 // This file tests the unicode functions that we have added
 
 const LATIN1_AE = "\xc6"; // "Æ"
-const LATIN1_ae = "\xe6";  // "æ"
+const LATIN1_ae = "\xe6"; // "æ"
 
 add_task(async function setup() {
   getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT");

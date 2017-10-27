@@ -575,13 +575,13 @@ SystemUsesNegativeSign(uint8_t aSystem)
 class BuiltinCounterStyle : public CounterStyle
 {
 public:
-  constexpr BuiltinCounterStyle(int32_t aStyle, nsAtom** aName)
+  constexpr BuiltinCounterStyle(int32_t aStyle, nsStaticAtom** aName)
     : CounterStyle(aStyle)
     , mName(aName)
   {
   }
 
-  virtual nsAtom* GetStyleName() const final;
+  virtual nsStaticAtom* GetStyleName() const final;
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
@@ -615,10 +615,10 @@ private:
   // Extra indirection to point to nsGkAtoms members rather than the
   // nsAtom, because members of nsGkAtoms are updated at runtime but
   // we want to construct BuiltinCounterStyle at compile time.
-  nsAtom** const mName;
+  nsStaticAtom** const mName;
 };
 
-/* virtual */ nsAtom*
+/* virtual */ nsStaticAtom*
 BuiltinCounterStyle::GetStyleName() const
 {
   return *mName;

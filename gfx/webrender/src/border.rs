@@ -243,10 +243,10 @@ impl FrameBuilder {
         let bottom = &border.bottom;
 
         // These colors are used during inset/outset scaling.
-        let left_color = left.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
-        let top_color = top.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
-        let right_color = right.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
-        let bottom_color = bottom.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
+        let left_color = left.border_color(1.0, 2.0 / 3.0, 0.3, 0.7).premultiplied();
+        let top_color = top.border_color(1.0, 2.0 / 3.0, 0.3, 0.7).premultiplied();
+        let right_color = right.border_color(2.0 / 3.0, 1.0, 0.7, 0.3).premultiplied();
+        let bottom_color = bottom.border_color(2.0 / 3.0, 1.0, 0.7, 0.3).premultiplied();
 
         let prim_cpu = BorderPrimitiveCpu {
             corner_instances,

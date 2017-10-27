@@ -76,7 +76,7 @@ public:
 
 private:
   // This would use NS_STATIC_ATOM_DECL if it wasn't an array.
-  static nsAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
+  static nsStaticAtom* sTagAtomTable[eHTMLTag_userdefined - 1];
   static const char16_t* const sTagUnicodeTable[];
 
   static int32_t gTableRefCount;

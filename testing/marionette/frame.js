@@ -122,7 +122,7 @@ frame.Manager = class {
         }
     }
   }
-  /*eslint-enable*/
+  /* eslint-enable*/
 
   getOopFrame(winId, frameId) {
     // get original frame window

@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef WR_FEATURE_CACHE
+    #define PRIMITIVE_HAS_PICTURE_TASK
+#endif
+
 #include shared,prim_shared
 
 varying vec4 vColor;
@@ -22,13 +26,14 @@ varying vec2 vLocalPos;
 
 struct Line {
     vec4 color;
+    float wavyLineThickness;
     float style;
     float orientation;
 };
 
 Line fetch_line(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Line(data[0], data[1].x, data[1].y);
+    return Line(data[0], data[1].x, data[1].y, data[1].z);
 }
 
 void main(void) {
@@ -58,59 +63,51 @@ void main(void) {
             break;
         }
         case LINE_STYLE_DASHED: {
-            // y = dash on + off length
-            // z = dash length
-            // w = center line of edge cross-axis (for dots only)
-            float desired_dash_length = size.y * 3.0;
-            // Consider half total length since there is an equal on/off for each dash.
-            float dash_count = 1.0 + ceil(size.x / desired_dash_length);
-            float dash_length = size.x / dash_count;
-            vParams = vec4(2.0 * dash_length,
-                           dash_length,
+            float dash_length = size.y * 3.0;
+            vParams = vec4(2.0 * dash_length, // period
+                           dash_length,       // dash length
                            0.0,
                            0.0);
             break;
         }
         case LINE_STYLE_DOTTED: {
             float diameter = size.y;
-            float radius = 0.5 * diameter;
-            float dot_count = ceil(0.5 * size.x / diameter);
-            float empty_space = size.x - dot_count * diameter;
-            float distance_between_centers = diameter + empty_space / dot_count;
+            float period = diameter * 2.0;
             float center_line = pos.y + 0.5 * size.y;
-            vParams = vec4(distance_between_centers,
-                           radius,
+            float max_x = floor(size.x / period) * period;
+            vParams = vec4(period,
+                           diameter / 2.0, // radius
                            center_line,
-                           0.0);
+                           max_x);
             break;
         }
         case LINE_STYLE_WAVY: {
-            // Choose some arbitrary values to scale thickness,
-            // wave period etc.
-            // TODO(gw): Tune these to get closer to what Gecko uses.
-            float thickness = 0.15 * size.y;
-            vParams = vec4(thickness,
-                           size.y * 0.5,
-                           size.y * 0.75,
-                           size.y * 0.5);
+            // This logic copied from gecko to get the same results
+            float line_thickness = max(line.wavyLineThickness, 1.0);
+            // Difference in height between peaks and troughs
+            // (and since slopes are 45 degrees, the length of each slope)
+            float slope_length = size.y - line_thickness;
+            // Length of flat runs
+            float flat_length = max((line_thickness - 1.0) * 2.0, 1.0);
+
+            vParams = vec4(line_thickness / 2.0,
+                           slope_length,
+                           flat_length,
+                           size.y);
             break;
         }
     }
 
 #ifdef WR_FEATURE_CACHE
-    int picture_address = prim.user_data0;
-    PrimitiveGeometry picture_geom = fetch_primitive_geometry(picture_address);
-    Picture pic = fetch_picture(picture_address + VECS_PER_PRIM_HEADER);
-
-    vec2 device_origin = prim.task.render_target_origin +
-                         uDevicePixelRatio * (prim.local_rect.p0 + pic.offset - picture_geom.local_rect.p0);
+    vec2 device_origin = prim.task.target_rect.p0 +
+                         uDevicePixelRatio * (prim.local_rect.p0 - prim.task.content_origin);
     vec2 device_size = uDevicePixelRatio * prim.local_rect.size;
 
     vec2 device_pos = mix(device_origin,
                           device_origin + device_size,
                           aPosition.xy);
 
-    vColor = pic.color;
+    vColor = prim.task.color;
     vLocalPos = mix(prim.local_rect.p0,
                     prim.local_rect.p0 + prim.local_rect.size,
                     aPosition.xy);
@@ -142,6 +139,9 @@ void main(void) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
+
+#define MAGIC_WAVY_LINE_AA_SNAP         0.7
+
 float det(vec2 a, vec2 b) {
     return a.x * b.y - b.x * a.y;
 }
@@ -215,40 +215,51 @@ void main(void) {
             vec2 dot_relative_pos = vec2(x, pos.y) - vParams.yz;
             float dot_distance = length(dot_relative_pos) - vParams.y;
             alpha = min(alpha, distance_aa(aa_range, dot_distance));
+            // Clip off partial dots
+            alpha *= step(pos.x - vLocalOrigin.x, vParams.w);
             break;
         }
         case LINE_STYLE_WAVY: {
             vec2 normalized_local_pos = pos - vLocalOrigin.xy;
 
-            float y0 = vParams.y;
-            float dy = vParams.z;
-            float dx = vParams.w;
+            float half_line_thickness = vParams.x;
+            float slope_length = vParams.y;
+            float flat_length = vParams.z;
+            float vertical_bounds = vParams.w;
+            // Our pattern is just two slopes and two flats
+            float half_period = slope_length + flat_length;
 
-            // Flip the position of the bezier center points each
-            // wave period.
-            dy *= step(mod(normalized_local_pos.x, 4.0 * dx), 2.0 * dx) * 2.0 - 1.0;
+            float mid_height = vertical_bounds / 2.0;
+            float peak_offset = mid_height - half_line_thickness;
+            // Flip the wave every half period
+            float flip = -2.0 * (step(mod(normalized_local_pos.x, 2.0 * half_period), half_period) - 0.5);
+            // float flip = -1.0;
+            peak_offset *= flip;
+            float peak_height = mid_height + peak_offset;
 
-            // Convert pos to a local position within one wave period.
-            normalized_local_pos.x = dx + mod(normalized_local_pos.x, 2.0 * dx);
+            // Convert pos to a local position within one half period
+            normalized_local_pos.x = mod(normalized_local_pos.x, half_period);
 
-            // Evaluate SDF to the first bezier.
-            vec2 b0_0 = vec2(0.0 * dx,  y0);
-            vec2 b1_0 = vec2(1.0 * dx,  y0 - dy);
-            vec2 b2_0 = vec2(2.0 * dx,  y0);
-            float d1 = approx_distance(normalized_local_pos, b0_0, b1_0, b2_0);
+            // Compute signed distance to the 3 lines that make up an arc
+            float dist1 = distance_to_line(vec2(0.0, peak_height),
+                                           vec2(1.0, -flip),
+                                           normalized_local_pos);
+            float dist2 = distance_to_line(vec2(0.0, peak_height),
+                                           vec2(0, -flip),
+                                           normalized_local_pos);
+            float dist3 = distance_to_line(vec2(flat_length, peak_height),
+                                           vec2(-1.0, -flip),
+                                           normalized_local_pos);
+            float dist = abs(max(max(dist1, dist2), dist3));
 
-            // Evaluate SDF to the second bezier.
-            vec2 b0_1 = vec2(2.0 * dx,  y0);
-            vec2 b1_1 = vec2(3.0 * dx,  y0 + dy);
-            vec2 b2_1 = vec2(4.0 * dx,  y0);
-            float d2 = approx_distance(normalized_local_pos, b0_1, b1_1, b2_1);
+            // Apply AA based on the thickness of the wave
+            alpha = distance_aa(aa_range, dist - half_line_thickness);
 
-            // SDF union - this is needed to avoid artifacts where the
-            // bezier curves join.
-            float d = min(d1, d2);
+            // Disable AA for thin lines
+            if (half_line_thickness <= 1.0) {
+                alpha = 1.0 - step(alpha, MAGIC_WAVY_LINE_AA_SNAP);
+            }
 
-            // Apply AA based on the thickness of the wave.
-            alpha = distance_aa(aa_range, d - vParams.x);
             break;
         }
     }

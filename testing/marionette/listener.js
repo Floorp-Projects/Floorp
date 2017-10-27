@@ -49,7 +49,7 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let listenerId = null;  // unique ID of this listener
+let listenerId = null; // unique ID of this listener
 let curContainer = {frame: content, shadowRoot: null};
 let previousContainer = null;
 

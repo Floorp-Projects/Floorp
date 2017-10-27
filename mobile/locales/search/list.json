@@ -93,6 +93,13 @@
         ]
       }
     },
+    "bn-BD": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "ddg", "wikipedia-bn"
+        ]
+      }
+    },
     "bn-IN": {
       "default": {
         "visibleDefaultEngines": [
@@ -450,6 +457,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "twitter", "wikipedia-lt"
+        ]
+      }
+    },
+    "ltg": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazon-co-uk", "twitter", "wikipedia-ltg"
         ]
       }
     },

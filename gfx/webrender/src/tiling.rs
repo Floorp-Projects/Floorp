@@ -11,9 +11,11 @@ use border::{BorderCornerInstance, BorderCornerSide};
 use clip::{ClipSource, ClipStore};
 use clip_scroll_tree::CoordinateSystemId;
 use device::Texture;
+use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuCacheUpdateList};
 use gpu_types::{BlurDirection, BlurInstance, BrushInstance, ClipMaskInstance};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
+use gpu_types::{BRUSH_FLAG_USES_PICTURE};
 use internal_types::{FastHashMap, SourceTexture};
 use internal_types::BatchTextures;
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
@@ -62,6 +64,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
                     FontRenderMode::Bitmap => BlendMode::PremultipliedAlpha,
                 }
             }
+            PrimitiveKind::Rectangle |
+            PrimitiveKind::Border |
             PrimitiveKind::Image |
             PrimitiveKind::AlignedGradient |
             PrimitiveKind::AngleGradient |
@@ -71,7 +75,9 @@ impl AlphaBatchHelpers for PrimitiveStore {
             } else {
                 BlendMode::None
             },
-            _ => if needs_blending {
+            PrimitiveKind::YuvImage |
+            PrimitiveKind::Line |
+            PrimitiveKind::Brush => if needs_blending {
                 BlendMode::Alpha
             } else {
                 BlendMode::None
@@ -137,7 +143,7 @@ impl AlphaBatchList {
                 // the input to the next composite. Perhaps we can
                 // optimize this in the future.
             }
-            BatchKind::Transformable(_, TransformBatchKind::TextRun) => {
+            BatchKind::Transformable(_, TransformBatchKind::TextRun(_)) => {
                 'outer_text: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
                     // Subpixel text is drawn in two passes. Because of this, we need
                     // to check for overlaps with every batch (which is a bit different
@@ -544,7 +550,7 @@ impl AlphaRenderItem {
                             &text_cpu.glyph_keys,
                             glyph_fetch_buffer,
                             gpu_cache,
-                            |texture_id, glyphs| {
+                            |texture_id, glyph_format, glyphs| {
                                 debug_assert_ne!(texture_id, SourceTexture::Invalid);
 
                                 let textures = BatchTextures {
@@ -557,7 +563,7 @@ impl AlphaRenderItem {
 
                                 let kind = BatchKind::Transformable(
                                     transform_kind,
-                                    TransformBatchKind::TextRun,
+                                    TransformBatchKind::TextRun(glyph_format),
                                 );
 
                                 let key = BatchKey::new(kind, blend_mode, textures);
@@ -579,13 +585,22 @@ impl AlphaRenderItem {
                         let cache_task_id = picture.render_task_id.expect("no render task!");
                         let cache_task_address = render_tasks.get_task_address(cache_task_id);
                         let textures = BatchTextures::render_target_cache();
-                        let kind = BatchKind::Transformable(
-                            transform_kind,
-                            TransformBatchKind::CacheImage(picture.target_kind()),
+                        let kind = BatchKind::Brush(
+                            BrushBatchKind::Image(picture.target_kind()),
                         );
                         let key = BatchKey::new(kind, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(key, item_bounding_rect);
-                        batch.push(base_instance.build(0, cache_task_address.0 as i32, 0));
+                        let instance = BrushInstance {
+                            picture_address: task_address,
+                            prim_address: prim_cache_address,
+                            layer_address: packed_layer_index.into(),
+                            clip_task_address,
+                            z,
+                            flags: 0,
+                            user_data0: cache_task_address.0 as i32,
+                            user_data1: 0,
+                        };
+                        batch.push(PrimitiveInstance::from(instance));
                     }
                     PrimitiveKind::AlignedGradient => {
                         let gradient_cpu =
@@ -1158,8 +1173,6 @@ impl RenderTarget for ColorRenderTarget {
             }
             RenderTaskKind::Picture(ref task_info) => {
                 let prim_metadata = ctx.prim_store.get_metadata(task_info.prim_index);
-                let prim_address = prim_metadata.gpu_location.as_int(gpu_cache);
-
                 match prim_metadata.prim_kind {
                     PrimitiveKind::Picture => {
                         let prim = &ctx.prim_store.cpu_pictures[prim_metadata.cpu_prim_index.0];
@@ -1197,7 +1210,7 @@ impl RenderTarget for ColorRenderTarget {
                                             &text.glyph_keys,
                                             &mut self.glyph_fetch_buffer,
                                             gpu_cache,
-                                            |texture_id, glyphs| {
+                                            |texture_id, _glyph_format, glyphs| {
                                                 let batch = text_run_cache_prims
                                                     .entry(texture_id)
                                                     .or_insert(Vec::new());
@@ -1206,7 +1219,7 @@ impl RenderTarget for ColorRenderTarget {
                                                     batch.push(instance.build(
                                                         glyph.index_in_text_run,
                                                         glyph.uv_rect_address.as_int(),
-                                                        prim_address,
+                                                        0
                                                     ));
                                                 }
                                             },
@@ -1214,7 +1227,7 @@ impl RenderTarget for ColorRenderTarget {
                                     }
                                     PrimitiveKind::Line => {
                                         self.line_cache_prims
-                                            .push(instance.build(prim_address, 0, 0));
+                                            .push(instance.build(0, 0, 0));
                                     }
                                     _ => {
                                         unreachable!("Unexpected sub primitive type");
@@ -1334,7 +1347,21 @@ impl RenderTarget for AlphaRenderTarget {
 
                                 match sub_metadata.prim_kind {
                                     PrimitiveKind::Brush => {
-                                        let instance = BrushInstance::new(task_index, sub_prim_address);
+                                        let instance = BrushInstance {
+                                            picture_address: task_index,
+                                            prim_address: sub_prim_address,
+                                            // TODO(gw): In the future, when brush
+                                            //           primitives on picture backed
+                                            //           tasks support clip masks and
+                                            //           transform primitives, these
+                                            //           will need to be filled out!
+                                            layer_address: PackedLayerIndex(0).into(),
+                                            clip_task_address: RenderTaskAddress(0),
+                                            z: 0,
+                                            flags: BRUSH_FLAG_USES_PICTURE,
+                                            user_data0: 0,
+                                            user_data1: 0,
+                                        };
                                         self.rect_cache_prims.push(PrimitiveInstance::from(instance));
                                     }
                                     _ => {
@@ -1533,16 +1560,20 @@ impl RenderPass {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum TransformBatchKind {
     Rectangle(bool),
-    TextRun,
+    TextRun(GlyphFormat),
     Image(ImageBufferKind),
     YuvImage(ImageBufferKind, YuvFormat, YuvColorSpace),
     AlignedGradient,
     AngleGradient,
     RadialGradient,
-    CacheImage(RenderTargetKind),
     BorderCorner,
     BorderEdge,
     Line,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub enum BrushBatchKind {
+    Image(RenderTargetKind)
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -1556,6 +1587,7 @@ pub enum BatchKind {
     SplitComposite,
     Blend,
     Transformable(TransformedRectKind, TransformBatchKind),
+    Brush(BrushBatchKind),
 }
 
 #[derive(Copy, Clone, Debug)]

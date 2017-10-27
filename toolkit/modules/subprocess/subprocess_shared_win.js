@@ -470,7 +470,7 @@ win32.createPipe = function(secAttr, readFlags = 0, writeFlags = 0, size = 0) {
     win32.PIPE_TYPE_BYTE | win32.PIPE_WAIT,
     1, /* number of connections */
     size, /* output buffer size */
-    size,  /* input buffer size */
+    size, /* input buffer size */
     0, /* timeout */
     secAttr.address());
 

@@ -16,7 +16,7 @@ const logsdir            = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 // so otherwise we can end up with all of our files -- the ones we want to
 // keep, and the ones we want to clean up -- having the same modified time.
 const CLEANUP_DELAY      = 2000;
-const DELAY_BUFFER       = 500;  // Buffer for timers on different OS platforms.
+const DELAY_BUFFER       = 500; // Buffer for timers on different OS platforms.
 
 const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 2) * 1000;
