@@ -76,10 +76,16 @@ public:
     return result;
   }
 
-  UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) final
+  UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) override final
   {
     UnscaledFont* result = mUnscaledFonts.GetWeak(aRefPtr);
     MOZ_ASSERT(result);
+    return result;
+  }
+
+  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t index) override final
+  {
+    UnscaledFont* result = mUnscaledFontTable[index];
     return result;
   }
 
@@ -179,6 +185,7 @@ private:
   RefPtr<DrawTarget> mBaseDT;
   void*              mFontContext;
 
+  std::vector<RefPtr<UnscaledFont>> mUnscaledFontTable;
   nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
   nsRefPtrHashtable<nsPtrHashKey<void>, Path> mPaths;
   nsRefPtrHashtable<nsPtrHashKey<void>, SourceSurface> mSourceSurfaces;

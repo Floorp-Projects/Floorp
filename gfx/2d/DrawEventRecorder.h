@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include <unordered_set>
+#include <unordered_map>
 
 namespace mozilla {
 namespace gfx {
@@ -85,6 +86,22 @@ public:
     return mStoredFontData.find(aFontDataKey) != mStoredFontData.end();
   }
 
+  // Returns the index of the UnscaledFont
+  size_t GetUnscaledFontIndex(UnscaledFont *aFont) {
+    auto i = mUnscaledFontMap.find(aFont);
+    size_t index;
+    if (i == mUnscaledFontMap.end()) {
+      mUnscaledFonts.push_back(aFont);
+      index = mUnscaledFonts.size() - 1;
+      mUnscaledFontMap.insert({{aFont, index}});
+    } else {
+      index = i->second;
+    }
+    return index;
+  }
+
+  bool WantsExternalFonts() { return mExternalFonts; }
+
 protected:
   virtual void Flush() = 0;
 
@@ -92,6 +109,9 @@ protected:
   std::unordered_set<uint64_t> mStoredFontData;
   std::unordered_set<ScaledFont*> mStoredFonts;
   std::unordered_set<SourceSurface*> mStoredSurfaces;
+  std::vector<RefPtr<UnscaledFont>> mUnscaledFonts;
+  std::unordered_map<UnscaledFont*, size_t> mUnscaledFontMap;
+  bool mExternalFonts;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate
