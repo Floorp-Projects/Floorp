@@ -38,6 +38,7 @@ jobs:
             using: mozharness
             actions: [build]
             config:
+                - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
                 - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
@@ -64,6 +65,7 @@ jobs:
             using: mozharness
             actions: [build]
             config:
+                - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_stat_and_opt.py
                 - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
@@ -92,6 +94,7 @@ jobs:
             using: mozharness
             script: mozharness/scripts/fx_desktop_build.py
             config:
+                - builds/releng_base_firefox.py
                 - builds/taskcluster_firefox_win32_clang_debug.py
         toolchains:
             - win32-clang-cl
@@ -116,6 +119,7 @@ jobs:
             using: mozharness
             script: mozharness/scripts/fx_desktop_build.py
             config:
+                - builds/releng_base_firefox.py
                 - builds/taskcluster_firefox_win32_clang.py
         toolchains:
             - win32-clang-cl
@@ -140,6 +144,7 @@ jobs:
             using: mozharness
             script: mozharness/scripts/fx_desktop_build.py
             config:
+                - builds/releng_base_firefox.py
                 - builds/taskcluster_firefox_win64_clang_debug.py
         toolchains:
             - win64-clang-cl
@@ -164,6 +169,7 @@ jobs:
             using: mozharness
             script: mozharness/scripts/fx_desktop_build.py
             config:
+                - builds/releng_base_firefox.py
                 - builds/taskcluster_firefox_win64_clang.py
         toolchains:
             - win64-clang-cl

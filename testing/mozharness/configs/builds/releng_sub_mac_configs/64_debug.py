@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -16,7 +14,6 @@ config = {
     ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
-    'objdir': 'obj-firefox',
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     #### 64 bit build specific #####

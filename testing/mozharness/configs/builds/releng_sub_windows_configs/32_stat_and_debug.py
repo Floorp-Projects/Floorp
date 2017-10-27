@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -19,7 +17,6 @@ config = {
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/\
 releng.manifest",
     'platform_supports_post_upload_to_latest': False,
-    'objdir': MOZ_OBJDIR,
     'perfherder_extra_options': ['static-analysis'],
     #### 32 bit build specific #####
     'env': {
