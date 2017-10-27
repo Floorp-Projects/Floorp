@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     'default_actions': [
         'clobber',
@@ -22,7 +20,6 @@ clang.manifest",
     'enable_signing': False,
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
-    'objdir': MOZ_OBJDIR,
     'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####
     'env': {

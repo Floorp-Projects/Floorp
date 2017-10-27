@@ -54,7 +54,6 @@ config = {
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,
