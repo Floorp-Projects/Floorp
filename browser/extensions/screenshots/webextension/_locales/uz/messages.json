@@ -30,15 +30,23 @@
     "message": "Havoladan nusxa olindi"
   },
   "notificationLinkCopiedDetails": {
-    "message": "Rasm havolasidan maxsus xotiraga nusxa olindi. Qo‘yish uchun $META_KEY$-V tugmalarini bosing.",
+    "message": "Rasm havolasidan vaqtinchalik xotiraga nusxa olindi. Qo‘yish uchun $META_KEY$-V tugmalarini bosing.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Bu rasm $PIXELS$px hajmida kesildi.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
-    "message": "Xizmat hozircha ishlamayapti"
+    "message": "Xizmat hozircha ishlamayapti."
   },
   "requestErrorDetails": {
     "message": "Uzr! Rasmni saqlay olmaymiz. Keyinroq urinib ko‘ring."
@@ -60,5 +68,23 @@
   },
   "selfScreenshotErrorTitle": {
     "message": "Firefox Screenshot sahifasini rasmga tushirish mumkin emas!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Tanlangan hudud juda kichik"
+  },
+  "privateWindowErrorTitle": {
+    "message": "Maxfiy ko‘rish rejimida rasmga olib bo‘lmaydi"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Noqulaylik uchun uzr. Biz keyingi versiyalar uchun bu funksiya ustida ishlayapmiz."
+  },
+  "tourBodyIntro": {
+    "message": "Firefox brauzeridan chiqmasdan sahifalarni rasmga olish, saqlash va bo‘lishish mumkin."
+  },
+  "tourHeaderPageAction": {
+    "message": "Saqlashning yangi usuli"
+  },
+  "libraryLabel": {
+    "message": "Rasmlar"
   }
 }
