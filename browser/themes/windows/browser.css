@@ -258,7 +258,7 @@
 }
 
 #nav-bar {
-  box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
+  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
 }
 @media (-moz-windows-compositor: 0) {
   #TabsToolbar[collapsed="true"] + #nav-bar {
