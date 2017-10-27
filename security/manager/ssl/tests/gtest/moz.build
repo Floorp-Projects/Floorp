@@ -6,7 +6,6 @@
 
 SOURCES += [
     'CertDBTest.cpp',
-    'CertListTest.cpp',
     'DataStorageTest.cpp',
     'DeserializeCertTest.cpp',
     'MD4Test.cpp',

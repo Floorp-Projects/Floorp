@@ -69,9 +69,6 @@ SECStatus ConstructCERTCertListFromReversedDERArray(
 
 } // namespace mozilla
 
-typedef const std::function<nsresult(nsCOMPtr<nsIX509Cert>& aCert,
-                bool aHasMore, /* out */ bool& aContinue)> ForEachCertOperation;
-
 class nsNSSCertList: public nsIX509CertList,
                      public nsISerializable,
                      public nsNSSShutDownObject
@@ -90,26 +87,6 @@ public:
   static mozilla::UniqueCERTCertList DupCertList(
     const mozilla::UniqueCERTCertList& certList,
     const nsNSSShutDownPreventionLock& proofOfLock);
-
-  // For each certificate in this CertList, run the operation aOperation.
-  // To end early with NS_OK, set the `aContinue` argument false before
-  // returning. To end early with an error, return anything except NS_OK.
-  // The `aHasMore` argument is false when this is the last certificate in the
-  // chain.
-  nsresult ForEachCertificateInChain(ForEachCertOperation& aOperation);
-
-  // Split a certificate chain into the root, intermediates (if any), and end
-  // entity. This method does so blindly, assuming that the current list object
-  // is ordered [root, intermediates..., end entity]. If that isn't true, this
-  // method will return the certificates at the two ends without regard to the
-  // actual chain of trust. Callers are encouraged to check, if there's any
-  // doubt.
-  // Will return error if used on self-signed or empty chains.
-  // This method requires that all arguments be empty, notably the list
-  // `aIntermediates` must be empty.
-  nsresult SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
-                           /* out */ nsCOMPtr<nsIX509CertList>& aIntermediates,
-                           /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
 
 private:
    virtual ~nsNSSCertList();
