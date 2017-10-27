@@ -510,7 +510,7 @@
     "ltg": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "dict-enlv", "ddg", "salidzinilv", "sslv", "wikipedia-lv"
+          "google", "yahoo", "dict-enlv", "ddg", "salidzinilv", "sslv", "wikipedia-ltg"
         ]
       }
     },
