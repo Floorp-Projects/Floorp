@@ -474,7 +474,9 @@ ToAnimationValue(const Animatable& aAnimatable)
     case Animatable::TArrayOfTransformFunction: {
         const InfallibleTArray<TransformFunction>& transforms =
           aAnimatable.get_ArrayOfTransformFunction();
-        result.mGecko.SetTransformValue(CreateCSSValueList(transforms));
+        RefPtr<nsCSSValueSharedList> list(CreateCSSValueList(transforms));
+        MOZ_ASSERT(list, "Transform list should be non null");
+        result = AnimationValue::Transform(StyleBackendType::Gecko, *list);
       }
       break;
     case Animatable::Tfloat:
