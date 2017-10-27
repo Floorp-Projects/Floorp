@@ -40,11 +40,6 @@ caption > label:not(.dialogTitle) {
   margin-top: 2px !important;
 }
 
-menulist.actionsMenu > .menulist-dropmarker {
-  margin-top: 11px;
-  margin-bottom: 11px;
-}
-
 filefield + button {
   margin-inline-start: -4px;
 }
