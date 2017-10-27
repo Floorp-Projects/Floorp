@@ -24,7 +24,6 @@ NON_CHROME = set([
     'extensions/langpack-*@*',
     'distribution/extensions/langpack-*@*',
     'chrome/**/searchplugins/*.xml',
-    '**/multilocale.json'
 ])
 
 
