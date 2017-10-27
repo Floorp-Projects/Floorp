@@ -26,8 +26,7 @@ test(function(t) {
                                  { marginLeft: '-20px', easing: 'ease-in',
                                    offset: 0.1 },
                                  { marginLeft: '100px', easing: 'ease-out' },
-                                 { marginLeft: '50px' } ],
-                               { spacing: 'paced(margin-left)' });
+                                 { marginLeft: '50px' } ]);
 
   const copiedEffect = new KeyframeEffectReadOnly(effect);
   const keyframesA = effect.getKeyframes();
@@ -56,11 +55,9 @@ test(function(t) {
 test(function(t) {
   const effect =
     new KeyframeEffectReadOnly(null, null,
-                               { spacing: 'paced(margin-left)',
-                                 iterationComposite: 'accumulate' });
+                               { iterationComposite: 'accumulate' });
 
   const copiedEffect = new KeyframeEffectReadOnly(effect);
-  assert_equals(copiedEffect.spacing, effect.spacing, 'same spacing');
   assert_equals(copiedEffect.iterationComposite, effect.iterationComposite,
                 'same iterationCompositeOperation');
   assert_equals(copiedEffect.composite, effect.composite,
