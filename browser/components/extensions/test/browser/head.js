@@ -393,7 +393,10 @@ async function openActionContextMenu(extension, kind, win = window) {
   // See comment from clickPageAction below.
   SetPageProxyState("valid");
   await promiseAnimationFrame(win);
-  const id = `#${makeWidgetId(extension.id)}-${kind}-action`;
+  const id =
+    kind == "page" ?
+    `#${BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id))}` :
+    `#${makeWidgetId(extension.id)}-${kind}-action`;
   return openChromeContextMenu("toolbar-context-menu", id, win);
 }
 
@@ -425,7 +428,8 @@ async function clickPageAction(extension, win = window) {
 
   await promiseAnimationFrame(win);
 
-  let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+
   let elem = win.document.getElementById(pageActionId);
 
   EventUtils.synthesizeMouseAtCenter(elem, {}, win);

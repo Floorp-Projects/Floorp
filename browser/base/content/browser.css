@@ -387,10 +387,6 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
     list-style-image: var(--webextension-menupanel-image-dark, inherit);
   }
 
-  .webextension-page-action {
-    list-style-image: var(--webextension-urlbar-image, inherit);
-  }
-
   .webextension-menuitem {
     list-style-image: var(--webextension-menuitem-image, inherit);
   }
@@ -421,10 +417,6 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
   .webextension-browser-action[cui-areatype="menu-panel"]:-moz-lwtheme-darktext,
   toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
     list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
-  }
-
-  .webextension-page-action {
-    list-style-image: var(--webextension-urlbar-image-2x, inherit);
   }
 
   .webextension-menuitem {
