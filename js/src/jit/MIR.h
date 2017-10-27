@@ -15002,6 +15002,29 @@ ArrayPrototypeHasIndexedProperty(IonBuilder* builder, JSScript* script);
 AbortReasonOr<bool>
 TypeCanHaveExtraIndexedProperties(IonBuilder* builder, TemporaryTypeSet* types);
 
+inline MIRType
+MIRTypeForTypedArrayRead(Scalar::Type arrayType, bool observedDouble)
+{
+    switch (arrayType) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+        return MIRType::Int32;
+      case Scalar::Uint32:
+        return observedDouble ? MIRType::Double : MIRType::Int32;
+      case Scalar::Float32:
+        return MIRType::Float32;
+      case Scalar::Float64:
+        return MIRType::Double;
+      default:
+        break;
+    }
+    MOZ_CRASH("Unknown typed array type");
+}
+
 } // namespace jit
 } // namespace js
 

@@ -6,8 +6,6 @@
 
 #include "gc/Zone.h"
 
-#include "jsgc.h"
-
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -69,7 +67,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
 
     AutoLockGC lock(rt);
     threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables, rt->gc.schedulingState, lock);
-    setGCMaxMallocBytes(rt->gc.maxMallocBytesAllocated() * 0.9, lock);
+    setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
     jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
 

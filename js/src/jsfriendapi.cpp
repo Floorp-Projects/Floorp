@@ -12,7 +12,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsobj.h"
 #include "jsprf.h"
 #include "jsweakmap.h"

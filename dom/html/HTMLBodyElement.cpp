@@ -94,11 +94,6 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     int32_t bodyLeftMargin = -1;
     int32_t bodyRightMargin = -1;
 
-    // check the mode (fortunately, the GenericSpecifiedValues has a presContext for us to use!)
-    NS_ASSERTION(aData->mPresContext, "null presContext in MapAttributesIntoRule was unexpected");
-    nsCompatibility mode = aData->mPresContext->CompatibilityMode();
-
-
     const nsAttrValue* value;
     // if marginwidth/marginheight are set, reflect them as 'margin'
     value = aAttributes->GetAttr(nsGkAtoms::marginwidth);
@@ -177,20 +172,6 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         nscoord frameMarginHeight=-1; // default value
         docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
         docShell->GetMarginHeight(&frameMarginHeight);
-        if (frameMarginWidth >= 0 && bodyMarginWidth == -1) { // set in <frame> & not in <body>
-          if (eCompatibility_NavQuirks == mode) {
-            if (bodyMarginHeight == -1 && 0 > frameMarginHeight) { // nav quirk
-              frameMarginHeight = 0;
-            }
-          }
-        }
-        if (frameMarginHeight >= 0 && bodyMarginHeight == -1) { // set in <frame> & not in <body>
-          if (eCompatibility_NavQuirks == mode) {
-            if (bodyMarginWidth == -1 && 0 > frameMarginWidth) { // nav quirk
-              frameMarginWidth = 0;
-            }
-          }
-        }
 
         if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
           if (bodyLeftMargin == -1) {

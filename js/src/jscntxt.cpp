@@ -33,7 +33,6 @@
 #include "jsdtoa.h"
 #include "jsexn.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsiter.h"
 #include "jsnativestack.h"
 #include "jsobj.h"

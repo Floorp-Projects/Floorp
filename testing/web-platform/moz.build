@@ -30,6 +30,9 @@ with Files("**"):
         'web-platform-tests-wdspec',
     ]
 
+with Files("meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 

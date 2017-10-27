@@ -4840,20 +4840,19 @@ BaselineCompiler::emit_JSOP_RESUME()
         Register initLength = regs.takeAny();
         masm.loadPtr(Address(scratch2, NativeObject::offsetOfElements()), scratch2);
         masm.load32(Address(scratch2, ObjectElements::offsetOfInitializedLength()), initLength);
+        masm.store32(Imm32(0), Address(scratch2, ObjectElements::offsetOfInitializedLength()));
 
         Label loop, loopDone;
         masm.bind(&loop);
         masm.branchTest32(Assembler::Zero, initLength, initLength, &loopDone);
         {
             masm.pushValue(Address(scratch2, 0));
+            masm.guardedCallPreBarrier(Address(scratch2, 0), MIRType::Value);
             masm.addPtr(Imm32(sizeof(Value)), scratch2);
             masm.sub32(Imm32(1), initLength);
             masm.jump(&loop);
         }
         masm.bind(&loopDone);
-
-        masm.guardedCallPreBarrier(exprStackSlot, MIRType::Value);
-        masm.storeValue(NullValue(), exprStackSlot);
         regs.add(initLength);
     }
 

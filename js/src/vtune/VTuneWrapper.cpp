@@ -10,7 +10,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsgc.h"
 
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"

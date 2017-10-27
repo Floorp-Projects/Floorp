@@ -1,0 +1,135 @@
+<html>
+
+<head>
+  <title>Accessible events testing for document</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../../common.js"></script>
+  <script type="application/javascript"
+          src="../../role.js"></script>
+
+  <script type="application/javascript">
+    // Front end stuff sometimes likes to stuff things in the hidden window(s)
+    // in which case there's accessibles for that content.
+    Components.utils.import("resource://gre/modules/Services.jsm");
+
+    // Force the creation of an accessible for the hidden window's document.
+    let doc = Services.appShell.hiddenDOMWindow.document;
+    gAccService.getAccessibleFor(doc);
+
+    // The private hidden window will be lazily created that's why we need to do
+    // it here *before* loading '../../events.js' or else we'll have a duplicate
+    // reorder event.
+    let privateDoc = Services.appShell.hiddenPrivateDOMWindow.document;
+
+    // Force the creation of an accessible for the private hidden window's doc.
+    gAccService.getAccessibleFor(privateDoc);
+  </script>
+
+  <script type="application/javascript"
+          src="../../events.js"></script>
+
+  <script type="application/javascript">
+    // //////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    let gDialog;
+    let gDialogDoc;
+    let gRootAcc;
+
+    function openDialogWnd(aURL) {
+      // Get application root accessible.
+      let docAcc = getAccessible(document);
+      while (docAcc) {
+        gRootAcc = docAcc;
+        try {
+          docAcc = docAcc.parent;
+        } catch (e) {
+          ok(false, `Can't get parent for ${prettyName(docAcc)}`);
+          throw e;
+        }
+      }
+
+      this.eventSeq = [ new invokerChecker(EVENT_REORDER, gRootAcc) ];
+
+      this.invoke = () => (gDialog = window.openDialog(aURL));
+
+      this.finalCheck = () => {
+        const accTree = {
+          role: ROLE_APP_ROOT,
+          children: [
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            }
+          ]
+        };
+
+        testAccessibleTree(gRootAcc, accTree)
+
+        gDialogDoc = gDialog.document;
+        ok(isAccessibleInCache(gDialogDoc),
+          `The document accessible for '${aURL}' is not in cache!`);
+      };
+
+      this.getID = () => `open dialog '${aURL}'`;
+    }
+
+    function closeDialogWnd() {
+      this.eventSeq = [ new invokerChecker(EVENT_FOCUS, getAccessible(document)) ];
+
+      this.invoke = () => gDialog.close();
+
+      this.finalCheck = () => {
+        ok(!isAccessibleInCache(gDialogDoc),
+          `The document accessible for dialog is in cache still!`);
+
+        gDialog = gDialogDoc = gRootAcc = null;
+      };
+
+      this.getID = () => "close dialog";
+    }
+
+    // //////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    function doTests() {
+      const gQueue = new eventQueue();
+      gQueue.push(new openDialogWnd("about:"));
+      gQueue.push(new closeDialogWnd());
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=506206"
+     title="Fire event_reorder application root accessible">
+    Mozilla Bug 506206
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

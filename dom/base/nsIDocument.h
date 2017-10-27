@@ -3195,6 +3195,22 @@ public:
 
   inline void SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits);
 
+  bool ShouldThrowOnDynamicMarkupInsertion()
+  {
+    return mThrowOnDynamicMarkupInsertionCounter;
+  }
+
+  void IncrementThrowOnDynamicMarkupInsertionCounter()
+  {
+    ++mThrowOnDynamicMarkupInsertionCounter;
+  }
+
+  void DecrementThrowOnDynamicMarkupInsertionCounter()
+  {
+    MOZ_ASSERT(mThrowOnDynamicMarkupInsertionCounter);
+    --mThrowOnDynamicMarkupInsertionCounter;
+  }
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3736,6 +3752,11 @@ protected:
   // root corresponds to.
   nsCOMPtr<nsINode> mServoRestyleRoot;
   uint32_t mServoRestyleRootDirtyBits;
+
+  // Used in conjunction with the create-an-element-for-the-token algorithm to
+  // prevent custom element constructors from being able to use document.open(),
+  // document.close(), and document.write() when they are invoked by the parser.
+  uint32_t mThrowOnDynamicMarkupInsertionCounter;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
@@ -3790,6 +3811,23 @@ public:
 private:
   nsCOMArray<nsIDocument> mDocuments;
   uint32_t                mMicroTaskLevel;
+};
+
+class MOZ_RAII AutoSetThrowOnDynamicMarkupInsertionCounter final {
+  public:
+    explicit AutoSetThrowOnDynamicMarkupInsertionCounter(
+      nsIDocument* aDocument)
+      : mDocument(aDocument)
+    {
+      mDocument->IncrementThrowOnDynamicMarkupInsertionCounter();
+    }
+
+    ~AutoSetThrowOnDynamicMarkupInsertionCounter() {
+      mDocument->DecrementThrowOnDynamicMarkupInsertionCounter();
+    }
+
+  private:
+    nsIDocument* mDocument;
 };
 
 // XXX These belong somewhere else

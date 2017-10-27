@@ -1222,6 +1222,101 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
     return true;
 }
 
+static bool
+GetCacheIRReceiverForProtoReadSlot(ICCacheIR_Monitored* stub, ReceiverGuard* receiver,
+                                   JSObject** holderResult)
+{
+    // We match:
+    //
+    //   GuardIsObject 0
+    //   <ReceiverGuard>
+    //   1: LoadObject holder
+    //   GuardShape 1
+    //   LoadFixedSlotResult 1 or LoadDynamicSlotResult 1
+
+    *receiver = ReceiverGuard();
+    CacheIRReader reader(stub->stubInfo());
+
+    ObjOperandId objId = ObjOperandId(0);
+    if (!reader.matchOp(CacheOp::GuardIsObject, objId))
+        return false;
+
+    if (!MatchCacheIRReceiverGuard(reader, stub, stub->stubInfo(), objId, receiver))
+        return false;
+
+    if (!reader.matchOp(CacheOp::LoadObject))
+        return false;
+    ObjOperandId holderId = reader.objOperandId();
+    JSObject* holder = stub->stubInfo()->getStubField<JSObject*>(stub, reader.stubOffset()).get();
+
+    if (!reader.matchOp(CacheOp::GuardShape, holderId))
+        return false;
+    Shape* holderShape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
+
+    if (!reader.matchOpEither(CacheOp::LoadFixedSlotResult, CacheOp::LoadDynamicSlotResult))
+        return false;
+    if (reader.objOperandId() != holderId)
+        return false;
+
+    if (holder->maybeShape() != holderShape)
+        return false;
+    if (*holderResult && *holderResult != holder)
+        return false;
+
+    *holderResult = holder;
+    return true;
+}
+
+bool
+BaselineInspector::maybeInfoForProtoReadSlot(jsbytecode* pc, ReceiverVector& receivers,
+                                             ObjectGroupVector& convertUnboxedGroups,
+                                             JSObject** holder)
+{
+    // This is like maybeInfoForPropertyOp, but for when the property exists on
+    // the prototype.
+
+    MOZ_ASSERT(receivers.empty());
+    MOZ_ASSERT(convertUnboxedGroups.empty());
+    MOZ_ASSERT(!*holder);
+
+    if (!hasBaselineScript())
+        return true;
+
+    MOZ_ASSERT(isValidPC(pc));
+    const ICEntry& entry = icEntryFromPC(pc);
+
+    ICStub* stub = entry.firstStub();
+    while (stub->next()) {
+        ReceiverGuard receiver;
+        if (stub->isCacheIR_Monitored()) {
+            if (!GetCacheIRReceiverForProtoReadSlot(stub->toCacheIR_Monitored(), &receiver,
+                                                    holder))
+            {
+                receivers.clear();
+                return true;
+            }
+        } else {
+            receivers.clear();
+            return true;
+        }
+
+        if (!AddReceiver(receiver, receivers, convertUnboxedGroups))
+            return false;
+
+        stub = stub->next();
+    }
+
+    if (stub->toGetProp_Fallback()->hadUnoptimizableAccess())
+        receivers.clear();
+
+    // Don't inline if there are more than 5 receivers.
+    if (receivers.length() > 5)
+        receivers.clear();
+
+    MOZ_ASSERT_IF(!receivers.empty(), *holder);
+    return true;
+}
+
 static MIRType
 GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
 {
