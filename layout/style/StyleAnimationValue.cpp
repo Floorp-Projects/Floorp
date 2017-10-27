@@ -5511,3 +5511,22 @@ AnimationValue::Opacity(StyleBackendType aBackendType, float aOpacity)
   }
   return result;
 }
+
+/* static */ AnimationValue
+AnimationValue::Transform(StyleBackendType aBackendType,
+                          nsCSSValueSharedList& aList)
+{
+  AnimationValue result;
+
+  switch (aBackendType) {
+    case StyleBackendType::Servo:
+      result.mServo = Servo_AnimationValue_Transform(aList).Consume();
+      break;
+    case StyleBackendType::Gecko:
+      result.mGecko.SetTransformValue(&aList);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
+  }
+  return result;
+}
