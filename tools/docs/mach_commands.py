@@ -44,6 +44,7 @@ class Documentation(MachCommandBase):
                    http=None, archive=False, upload=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
+        self.virtualenv_manager.install_pip_package('recommonmark==0.4.0')
 
         import sphinx
         import webbrowser

@@ -130,16 +130,16 @@ mochitest-browser-chrome:
             windows10-64-asan.*: 3
             default: default
 
-mochitest-browser-screenshots:
-    description: "Mochitest Browser Screenshots"
+browser-screenshots:
+    description: "Browser Screenshots"
     suite: mochitest/browser-chrome-screenshots
     treeherder-symbol: tc-M(ss)
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            windows.*/opt: ['mozilla-central', 'try']
-            linux64/opt: ['mozilla-central', 'try']
-            macosx.*/opt: ['mozilla-central', 'try']
+            windows.*/opt: ['mozilla-central']
+            linux64/opt: ['mozilla-central']
+            macosx.*/opt: ['mozilla-central']
             windows7-32-devedition/opt: []
             windows10-64-devedition/opt: []
             default: []

@@ -35,9 +35,6 @@ with Files('geckoview_example/**'):
 with Files('gradle/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
-with Files('search/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Search Activity')
-
 with Files('services/**'):
     BUG_COMPONENT = ('Android Background Services', 'Android Sync')
 

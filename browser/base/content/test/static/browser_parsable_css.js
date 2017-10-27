@@ -27,9 +27,6 @@ let whitelist = [
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown property.*appearance/i,
    isFromDevTools: false},
-  // Tracked in bug 1004428.
-  {sourceName: /aboutaccounts\/(main|normalize)\.css$/i,
-   isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
@@ -38,6 +35,10 @@ let whitelist = [
   {sourceName: /responsive-ua\.css$/i,
    errorMessage: /Unknown pseudo-class.*moz-dropdown-list/i,
    isFromDevTools: true},
+  // UA-only media features.
+  {sourceName: /\b(autocomplete-item|svg)\.css$/,
+   errorMessage: /Expected media feature name but found \u2018-moz.*/i,
+   isFromDevTools: false},
 
   {sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
    errorMessage: /Unknown pseudo-class.*-moz-/i,
