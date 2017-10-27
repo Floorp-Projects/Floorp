@@ -16,12 +16,12 @@ promise_test(function(t) {
     // Wait 50ms
   }
   assert_equals(document.timeline.currentTime, valueAtStart,
-    'document.timeline.currentTime does not change within a script block');
+    'Timeline time does not change within an animation frame');
   return waitForAnimationFrames(1).then(function() {
     assert_greater_than(document.timeline.currentTime, valueAtStart,
-      'document.timeline.currentTime increases between script blocks');
+      'Timeline time increases between animation frames');
   });
-}, 'document.timeline.currentTime liveness tests');
+}, 'Timeline time increases once per animation frame');
 
 async_test(function(t) {
   const iframe = document.createElement('iframe');
@@ -36,18 +36,18 @@ async_test(function(t) {
       // Wait 50ms
     }
     assert_equals(iframeTimeline.currentTime, valueAtStart,
-      'iframe document.timeline.currentTime does not change within a '
-      + ' script block');
+      'Timeline time within an iframe does not change within an '
+      + ' animation frame');
 
     iframe.contentWindow.requestAnimationFrame(t.step_func_done(() => {
       assert_greater_than(iframeTimeline.currentTime, valueAtStart,
-        'iframe document.timeline.currentTime increases between script blocks');
+        'Timeline time within an iframe increases between animation frames');
       iframe.remove();
     }));
   }));
 
   document.body.appendChild(iframe);
-}, 'iframe document.timeline.currentTime liveness tests');
+}, 'Timeline time increases once per animation frame in an iframe');
 
 async_test(function(t) {
   const startTime = document.timeline.currentTime;
@@ -56,7 +56,7 @@ async_test(function(t) {
   requestAnimationFrame(function() {
     t.step(function() {
       assert_greater_than_equal(document.timeline.currentTime, startTime,
-                                'currentTime should have progressed');
+                                'Timeline time should have progressed');
       firstRafTime = document.timeline.currentTime;
     });
   });
@@ -64,11 +64,11 @@ async_test(function(t) {
   requestAnimationFrame(function() {
     t.step(function() {
       assert_equals(document.timeline.currentTime, firstRafTime,
-                    'currentTime should be the same');
+                    'Timeline time should be the same');
     });
     t.done();
   });
-}, 'document.timeline.currentTime time should be the same for all RAF'
-   + ' callbacks in a frame');
+}, 'Timeline time should be the same for all RAF callbacks in an animation'
+   + ' frame');
 
 </script>
