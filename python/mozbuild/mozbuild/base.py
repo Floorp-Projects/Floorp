@@ -215,8 +215,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         if not isinstance(self._mozconfig, dict):
             loader = MozconfigLoader(self.topsrcdir)
-            self._mozconfig = loader.read_mozconfig(path=self._mozconfig,
-                moz_build_app=os.environ.get('MOZ_CURRENT_PROJECT'))
+            self._mozconfig = loader.read_mozconfig(path=self._mozconfig)
 
         return self._mozconfig
 
