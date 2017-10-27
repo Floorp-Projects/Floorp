@@ -83,8 +83,8 @@ class TrySelect(MachCommandBase):
         scheduling with the `syntax` selector.
         """
         from tryselect import preset
-        if kwargs['list_presets']:
-            preset.list_presets()
+        if kwargs['mod_presets']:
+            getattr(preset, kwargs['mod_presets'])()
             return
 
         # We do special handling of presets here so that `./mach try --preset foo`
