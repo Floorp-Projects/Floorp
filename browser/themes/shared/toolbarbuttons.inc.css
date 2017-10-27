@@ -5,6 +5,7 @@
 :root {
   --toolbarbutton-hover-transition-duration: 150ms;
 
+  --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
 
   /* These hover and active colors should work on both light and dark
@@ -25,7 +26,7 @@
 }
 
 :root[uidensity=compact] {
-  --toolbarbutton-inner-padding: 5px;
+  --toolbarbutton-outer-padding: 1px;
 }
 
 :root[uidensity=touch] {
@@ -100,11 +101,11 @@ toolbar[brighttext] {
 toolbar .toolbarbutton-1 {
   -moz-appearance: none;
   margin: 0;
-  padding: 0 2px;
+  padding: 0 var(--toolbarbutton-outer-padding);
   -moz-box-pack: center;
 }
 
-#PanelUI-menu-button {
+:root:not([uidensity=compact]) #PanelUI-menu-button {
   padding-inline-start: 5px;
   padding-inline-end: 5px;
 }
@@ -200,7 +201,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 :root:not([uidensity=compact]) #back-button {
   padding-top: 3px;
   padding-bottom: 3px;
-  padding-inline-start: 5px !important;
+  padding-inline-start: 3px;
   padding-inline-end: 0 !important;
   position: relative !important;
   z-index: 1 !important;
@@ -221,8 +222,8 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-clip: padding-box;
   border: 1px solid var(--backbutton-border-color);
   border-radius: 10000px;
-  width: 32px;
-  padding: 7px;
+  width: 34px;
+  padding: 8px;
   transition-property: box-shadow;
   transition-duration: var(--toolbarbutton-hover-transition-duration);
 }
@@ -230,6 +231,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 :root[uidensity=touch] #back-button {
   padding-top: 1px;
   padding-bottom: 1px;
+  padding-inline-start: 1px;
 }
 
 :root[uidensity=touch] #back-button > .toolbarbutton-icon {
