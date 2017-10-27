@@ -56,6 +56,11 @@ public class CustomTabsService extends Service {
                                    Bundle bundle) throws RemoteException {
                 return 0;
             }
+
+            @Override
+            public boolean validateRelationship(ICustomTabsCallback iCustomTabsCallback, int i, Uri uri, Bundle bundle) throws RemoteException {
+                return false;
+            }
         };
     }
 }
