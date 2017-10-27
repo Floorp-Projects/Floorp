@@ -89,6 +89,7 @@ public:
   virtual GradientStops *LookupGradientStops(ReferencePtr aRefPtr) = 0;
   virtual ScaledFont *LookupScaledFont(ReferencePtr aRefPtr) = 0;
   virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
+  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t aIndex) { return nullptr; }
   virtual NativeFontResource *LookupNativeFontResource(uint64_t aKey) = 0;
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
@@ -241,6 +242,7 @@ public:
     GRADIENTSTOPSDESTRUCTION,
     SNAPSHOT,
     SCALEDFONTCREATION,
+    SCALEDFONTCREATIONBYINDEX,
     SCALEDFONTDESTRUCTION,
     MASKSURFACE,
     FILTERNODECREATION,
