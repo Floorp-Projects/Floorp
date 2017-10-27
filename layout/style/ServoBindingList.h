@@ -454,7 +454,8 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_HasCSSWideKeyword, bool,
                    nsCSSPropertyID property)
 // Compose animation value for a given property.
 // |base_values| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
-// We use RawServoAnimationValueTableBorrowed to avoid exposing nsRefPtrHashtable in FFI.
+// We use RawServoAnimationValueTableBorrowed to avoid exposing
+// nsRefPtrHashtable in FFI.
 SERVO_BINDING_FUNC(Servo_AnimationCompose, void,
                    RawServoAnimationValueMapBorrowedMut animation_values,
                    RawServoAnimationValueTableBorrowed base_values,
@@ -462,7 +463,22 @@ SERVO_BINDING_FUNC(Servo_AnimationCompose, void,
                    RawGeckoAnimationPropertySegmentBorrowed animation_segment,
                    RawGeckoAnimationPropertySegmentBorrowed last_segment,
                    RawGeckoComputedTimingBorrowed computed_timing,
-                   mozilla::dom::IterationCompositeOperation iteration_composite)
+                   mozilla::dom::IterationCompositeOperation iter_composite)
+// Calculate the result of interpolating given animation segment at the given
+// progress and current iteration.
+// This includes combining the segment endpoints with the underlying value
+// and/or last value depending the composite modes specified on the
+// segment endpoints and the supplied iteration composite mode.
+// The caller is responsible for providing an underlying value and
+// last value in all situations where there are needed.
+SERVO_BINDING_FUNC(Servo_ComposeAnimationSegment,
+                   RawServoAnimationValueStrong,
+                   RawGeckoAnimationPropertySegmentBorrowed animation_segment,
+                   RawServoAnimationValueBorrowedOrNull underlying_value,
+                   RawServoAnimationValueBorrowedOrNull last_value,
+                   mozilla::dom::IterationCompositeOperation iter_composite,
+                   double progress,
+                   uint64_t current_iteration)
 
 // presentation attributes
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_PropertyIsSet, bool,
