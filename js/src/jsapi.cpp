@@ -28,7 +28,6 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsnum.h"

@@ -10,7 +10,6 @@
 
 #include "jsapi.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jsutil.h"

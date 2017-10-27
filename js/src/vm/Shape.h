@@ -23,7 +23,6 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
-#include "gc/Marking.h"
 #include "gc/Rooting.h"
 #include "js/HashTable.h"
 #include "js/MemoryMetrics.h"

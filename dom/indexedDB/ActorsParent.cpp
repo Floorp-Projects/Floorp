@@ -18602,6 +18602,7 @@ Maintenance::DirectoryWork()
         continue;
       }
 
+      nsCString suffix;
       nsCString group;
       nsCString origin;
       nsTArray<nsString> databasePaths;
@@ -18659,17 +18660,17 @@ Maintenance::DirectoryWork()
 
         // Found a database.
         if (databasePaths.IsEmpty()) {
+          MOZ_ASSERT(suffix.IsEmpty());
           MOZ_ASSERT(group.IsEmpty());
           MOZ_ASSERT(origin.IsEmpty());
 
           int64_t dummyTimeStamp;
           bool dummyPersisted;
-          nsCString dummySuffix;
           if (NS_WARN_IF(NS_FAILED(
                 quotaManager->GetDirectoryMetadata2(originDir,
                                                     &dummyTimeStamp,
                                                     &dummyPersisted,
-                                                    dummySuffix,
+                                                    suffix,
                                                     group,
                                                     origin)))) {
             // Not much we can do here...
@@ -18687,6 +18688,21 @@ Maintenance::DirectoryWork()
                                                     group,
                                                     origin,
                                                     Move(databasePaths)));
+
+        nsCOMPtr<nsIFile> directory;
+
+        // Idle maintenance may occur before origin is initailized.
+        // Ensure origin is initialized first. It will initialize all origins
+        // for temporary storage including IDB origins.
+        rv = quotaManager->EnsureOriginIsInitialized(persistenceType,
+                                                     suffix,
+                                                     group,
+                                                     origin,
+                                                     getter_AddRefs(directory));
+
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }

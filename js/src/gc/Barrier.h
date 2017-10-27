@@ -9,7 +9,7 @@
 
 #include "NamespaceImports.h"
 
-#include "gc/Heap.h"
+#include "gc/Cell.h"
 #include "gc/StoreBuffer.h"
 #include "js/HeapAPI.h"
 #include "js/Id.h"

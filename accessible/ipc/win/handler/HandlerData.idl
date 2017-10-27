@@ -14,7 +14,24 @@ import "AccessibleText.idl";
 
 typedef struct _IA2Data
 {
-  long mUniqueId;
+  VARIANT           mRole;
+  long              mState;
+  long              mChildCount;
+  long              mIA2Role;
+  AccessibleStates  mIA2States;
+  long              mLeft;
+  long              mTop;
+  long              mWidth;
+  long              mHeight;
+  long              mHwnd;
+  BSTR              mKeyboardShortcut;
+  BSTR              mName;
+  BSTR              mDescription;
+  BSTR              mDefaultAction;
+  BSTR              mValue;
+  BSTR              mAttributes;
+  IA2Locale         mIA2Locale;
+  long              mUniqueId;
 } IA2Data;
 
 interface IGeckoBackChannel;

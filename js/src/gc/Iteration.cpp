@@ -7,7 +7,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jscompartment.h"
-#include "jsgc.h"
 
 #include "gc/GCInternals.h"
 #include "js/HashTable.h"

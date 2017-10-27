@@ -7,8 +7,6 @@
 #ifndef gc_ZoneGroup_h
 #define gc_ZoneGroup_h
 
-#include "jsgc.h"
-
 #include "gc/Statistics.h"
 #include "vm/Caches.h"
 #include "vm/Stack.h"

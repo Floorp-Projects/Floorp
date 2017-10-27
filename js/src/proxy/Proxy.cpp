@@ -13,7 +13,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jsgc.h"
 #include "jswrapper.h"
 
 #include "gc/Marking.h"

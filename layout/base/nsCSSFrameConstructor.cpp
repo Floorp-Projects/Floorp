@@ -12296,7 +12296,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
                                   GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   GetFloatContainingBlock(aParentFrame),
-                                  do_AddRef(mTempFrameTreeState.get()));
+                                  do_AddRef(mTempFrameTreeState));
 
     // If we ever initialize the ancestor filter on |state|, make sure
     // to push the right parent!
