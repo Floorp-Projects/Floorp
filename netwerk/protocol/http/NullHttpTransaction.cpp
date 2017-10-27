@@ -103,6 +103,7 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
   , mCapsToClear(0)
   , mIsDone(false)
   , mClaimed(false)
+  , mFastOpenStatus(TFO_NOT_TRIED)
   , mCallbacks(callbacks)
   , mConnectionInfo(ci)
 {
