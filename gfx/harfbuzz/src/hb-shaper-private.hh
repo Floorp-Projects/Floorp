@@ -100,7 +100,7 @@ HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
     /* Drop and recreate. */ \
     /* If someone dropped it in the mean time, throw it away and don't touch it. \
      * Otherwise, destruct it. */ \
-    if (hb_atomic_ptr_cmpexch (&HB_SHAPER_DATA (shaper, object), data, NULL)) { \
+    if (hb_atomic_ptr_cmpexch (&HB_SHAPER_DATA (shaper, object), data, nullptr)) { \
       HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data); \
     } \
     goto retry; \
@@ -109,7 +109,7 @@ HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
     data = HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (object); \
     if (unlikely (!data)) \
       data = (HB_SHAPER_DATA_TYPE (shaper, object) *) HB_SHAPER_DATA_INVALID; \
-    if (!hb_atomic_ptr_cmpexch (&HB_SHAPER_DATA (shaper, object), NULL, data)) { \
+    if (!hb_atomic_ptr_cmpexch (&HB_SHAPER_DATA (shaper, object), nullptr, data)) { \
       if (data && \
 	  data != HB_SHAPER_DATA_INVALID && \
 	  data != HB_SHAPER_DATA_SUCCEEDED) \
@@ -117,7 +117,7 @@ HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
       goto retry; \
     } \
   } \
-  return data != NULL && !HB_SHAPER_DATA_IS_INVALID (data); \
+  return data != nullptr && !HB_SHAPER_DATA_IS_INVALID (data); \
 }
 
 

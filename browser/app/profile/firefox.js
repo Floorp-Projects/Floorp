@@ -696,7 +696,7 @@ pref("accessibility.typeaheadfind.flashBar", 1);
 
 // Accessibility indicator preferences such as support URL, enabled flag.
 pref("accessibility.support.url", "https://support.mozilla.org/%LOCALE%/kb/accessibility-services");
-pref("accessibility.indicator.enabled", true);
+pref("accessibility.indicator.enabled", false);
 
 pref("plugins.click_to_play", true);
 pref("plugins.testmode", false);

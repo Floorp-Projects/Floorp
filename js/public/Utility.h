@@ -54,6 +54,9 @@ namespace js {
  * Thread types are used to tag threads for certain kinds of testing (see
  * below), and also used to characterize threads in the thread scheduler (see
  * js/src/vm/HelperThreads.cpp).
+ *
+ * Please update oom::FirstThreadTypeToTest and oom::LastThreadTypeToTest when
+ * adding new thread types.
  */
 enum ThreadType {
     THREAD_TYPE_NONE = 0,       // 0
@@ -83,13 +86,22 @@ namespace oom {
  * is in jsutil.cpp.
  */
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+
+// Define the range of threads tested by simulated OOM testing and the
+// like. Testing worker threads is not supported.
+const ThreadType FirstThreadTypeToTest = THREAD_TYPE_COOPERATING;
+const ThreadType LastThreadTypeToTest = THREAD_TYPE_WASM_TIER2;
+
 extern bool InitThreadType(void);
 extern void SetThreadType(ThreadType);
 extern JS_FRIEND_API(uint32_t) GetThreadType(void);
+
 # else
+
 inline bool InitThreadType(void) { return true; }
 inline void SetThreadType(ThreadType t) {};
 inline uint32_t GetThreadType(void) { return 0; }
+
 # endif
 
 } /* namespace oom */

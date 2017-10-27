@@ -202,9 +202,9 @@ struct hb_uniscribe_shaper_funcs_t {
   inline void init (void)
   {
     HMODULE hinstLib;
-    this->ScriptItemizeOpenType = NULL;
-    this->ScriptShapeOpenType   = NULL;
-    this->ScriptPlaceOpenType   = NULL;
+    this->ScriptItemizeOpenType = nullptr;
+    this->ScriptShapeOpenType   = nullptr;
+    this->ScriptPlaceOpenType   = nullptr;
 
     hinstLib = GetModuleHandle (TEXT ("usp10.dll"));
     if (hinstLib)
@@ -217,7 +217,7 @@ struct hb_uniscribe_shaper_funcs_t {
 	!this->ScriptShapeOpenType   ||
 	!this->ScriptPlaceOpenType)
     {
-      DEBUG_MSG (UNISCRIBE, NULL, "OpenType versions of functions not found; falling back.");
+      DEBUG_MSG (UNISCRIBE, nullptr, "OpenType versions of functions not found; falling back.");
       this->ScriptItemizeOpenType = hb_ScriptItemizeOpenType;
       this->ScriptShapeOpenType   = hb_ScriptShapeOpenType;
       this->ScriptPlaceOpenType   = hb_ScriptPlaceOpenType;
@@ -242,11 +242,11 @@ retry:
   {
     funcs = (hb_uniscribe_shaper_funcs_t *) calloc (1, sizeof (hb_uniscribe_shaper_funcs_t));
     if (unlikely (!funcs))
-      return NULL;
+      return nullptr;
 
     funcs->init ();
 
-    if (!hb_atomic_ptr_cmpexch (&uniscribe_funcs, NULL, funcs)) {
+    if (!hb_atomic_ptr_cmpexch (&uniscribe_funcs, nullptr, funcs)) {
       free (funcs);
       goto retry;
     }
@@ -316,7 +316,7 @@ _hb_generate_unique_face_name (wchar_t *face_name, unsigned int *plen)
   const char *enc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
   UUID id;
   UuidCreate ((UUID*) &id);
-  ASSERT_STATIC (2 + 3 * (16/2) < LF_FACESIZE);
+  static_assert ((2 + 3 * (16/2) < LF_FACESIZE), "");
   unsigned int name_str_len = 0;
   face_name[name_str_len++] = 'F';
   face_name[name_str_len++] = '_';
@@ -369,7 +369,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
   if (!new_sfnt_data)
   {
     hb_blob_destroy (blob);
-    return NULL;
+    return nullptr;
   }
 
   memcpy(new_sfnt_data, orig_sfnt_data, length);
@@ -417,7 +417,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
     {
       free (new_sfnt_data);
       hb_blob_destroy (blob);
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -427,7 +427,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
 
   hb_blob_destroy (blob);
   return hb_blob_create ((const char *) new_sfnt_data, new_length,
-			 HB_MEMORY_MODE_WRITABLE, NULL, free);
+			 HB_MEMORY_MODE_WRITABLE, nullptr, free);
 }
 
 hb_uniscribe_shaper_face_data_t *
@@ -435,13 +435,13 @@ _hb_uniscribe_shaper_face_data_create (hb_face_t *face)
 {
   hb_uniscribe_shaper_face_data_t *data = (hb_uniscribe_shaper_face_data_t *) calloc (1, sizeof (hb_uniscribe_shaper_face_data_t));
   if (unlikely (!data))
-    return NULL;
+    return nullptr;
 
   data->funcs = hb_uniscribe_shaper_get_funcs ();
   if (unlikely (!data->funcs))
   {
     free (data);
-    return NULL;
+    return nullptr;
   }
 
   hb_blob_t *blob = hb_face_reference_blob (face);
@@ -452,18 +452,18 @@ _hb_uniscribe_shaper_face_data_create (hb_face_t *face)
   if (unlikely (!blob))
   {
     free (data);
-    return NULL;
+    return nullptr;
   }
 
   DWORD num_fonts_installed;
-  data->fh = AddFontMemResourceEx ((void *) hb_blob_get_data (blob, NULL),
+  data->fh = AddFontMemResourceEx ((void *) hb_blob_get_data (blob, nullptr),
 				   hb_blob_get_length (blob),
 				   0, &num_fonts_installed);
   if (unlikely (!data->fh))
   {
     DEBUG_MSG (UNISCRIBE, face, "Face AddFontMemResourceEx() failed");
     free (data);
-    return NULL;
+    return nullptr;
   }
 
   return data;
@@ -509,11 +509,11 @@ populate_log_font (LOGFONTW  *lf,
 hb_uniscribe_shaper_font_data_t *
 _hb_uniscribe_shaper_font_data_create (hb_font_t *font)
 {
-  if (unlikely (!hb_uniscribe_shaper_face_data_ensure (font->face))) return NULL;
+  if (unlikely (!hb_uniscribe_shaper_face_data_ensure (font->face))) return nullptr;
 
   hb_uniscribe_shaper_font_data_t *data = (hb_uniscribe_shaper_font_data_t *) calloc (1, sizeof (hb_uniscribe_shaper_font_data_t));
   if (unlikely (!data))
-    return NULL;
+    return nullptr;
 
   int font_size = font->face->get_upem (); /* Default... */
   /* No idea if the following is even a good idea. */
@@ -525,25 +525,25 @@ _hb_uniscribe_shaper_font_data_create (hb_font_t *font)
   data->x_mult = (double) font->x_scale / font_size;
   data->y_mult = (double) font->y_scale / font_size;
 
-  data->hdc = GetDC (NULL);
+  data->hdc = GetDC (nullptr);
 
   if (unlikely (!populate_log_font (&data->log_font, font, font_size))) {
     DEBUG_MSG (UNISCRIBE, font, "Font populate_log_font() failed");
     _hb_uniscribe_shaper_font_data_destroy (data);
-    return NULL;
+    return nullptr;
   }
 
   data->hfont = CreateFontIndirectW (&data->log_font);
   if (unlikely (!data->hfont)) {
     DEBUG_MSG (UNISCRIBE, font, "Font CreateFontIndirectW() failed");
     _hb_uniscribe_shaper_font_data_destroy (data);
-     return NULL;
+     return nullptr;
   }
 
   if (!SelectObject (data->hdc, data->hfont)) {
     DEBUG_MSG (UNISCRIBE, font, "Font SelectObject() failed");
     _hb_uniscribe_shaper_font_data_destroy (data);
-     return NULL;
+     return nullptr;
   }
 
   return data;
@@ -553,7 +553,7 @@ void
 _hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_shaper_font_data_t *data)
 {
   if (data->hdc)
-    ReleaseDC (NULL, data->hdc);
+    ReleaseDC (nullptr, data->hdc);
   if (data->hfont)
     DeleteObject (data->hfont);
   if (data->script_cache)
@@ -564,7 +564,7 @@ _hb_uniscribe_shaper_font_data_destroy (hb_uniscribe_shaper_font_data_t *data)
 LOGFONTW *
 hb_uniscribe_font_get_logfontw (hb_font_t *font)
 {
-  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
+  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return nullptr;
   hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
   return &font_data->log_font;
 }
@@ -572,7 +572,7 @@ hb_uniscribe_font_get_logfontw (hb_font_t *font)
 HFONT
 hb_uniscribe_font_get_hfont (hb_font_t *font)
 {
-  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return NULL;
+  if (unlikely (!hb_uniscribe_shaper_font_data_ensure (font))) return nullptr;
   hb_uniscribe_shaper_font_data_t *font_data =  HB_SHAPER_DATA_GET (font);
   return font_data->hfont;
 }
@@ -738,7 +738,7 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
 
 #define FAIL(...) \
   HB_STMT_START { \
-    DEBUG_MSG (UNISCRIBE, NULL, __VA_ARGS__); \
+    DEBUG_MSG (UNISCRIBE, nullptr, __VA_ARGS__); \
     return false; \
   } HB_STMT_END;
 
@@ -960,7 +960,7 @@ retry:
 				     /* out */
 				     advances + glyphs_offset,
 				     offsets + glyphs_offset,
-				     NULL);
+				     nullptr);
     if (unlikely (FAILED (hr)))
       FAIL ("ScriptPlaceOpenType() failed: 0x%08xL", hr);
 

@@ -245,7 +245,7 @@ struct IndexSubtableArray
         return &indexSubtablesZ[i];
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   protected:
@@ -344,7 +344,7 @@ struct CBLC
       }
     }
 
-    return NULL;
+    return nullptr;
   }
 
   protected:

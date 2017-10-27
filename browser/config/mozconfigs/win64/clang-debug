@@ -12,7 +12,7 @@ ac_add_options --enable-debug
 
 ac_add_options --enable-clang-plugin
 
-. $topsrcdir/build/win64/mozconfig.vs-latest
+. $topsrcdir/build/win64/mozconfig.vs2015
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.clang-cl"
