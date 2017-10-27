@@ -30,8 +30,6 @@
 #   MOZ_PREFLIGHT      }   MOZ_BUILD_PROJECTS, before each project, after
 #   MOZ_POSTFLIGHT     }   each project, and after all projects; these
 #   MOZ_POSTFLIGHT_ALL }   variables contain space-separated lists
-#   MOZ_UNIFY_BDATE      - Set to use the same bdate for each project in
-#                          MOZ_BUILD_PROJECTS
 #
 #######################################################################
 # Defines
@@ -249,18 +247,6 @@ profiledbuild::
 	$(call BUILDSTATUS,TIER_START pgo_profile_use)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
 	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
-
-#####################################################
-# Build date unification
-
-ifdef MOZ_UNIFY_BDATE
-ifndef MOZ_BUILD_DATE
-ifdef MOZ_BUILD_PROJECTS
-MOZ_BUILD_DATE = $(shell $(PYTHON) $(TOPSRCDIR)/build/variables.py buildid_header | awk '{print $$3}')
-export MOZ_BUILD_DATE
-endif
-endif
-endif
 
 #####################################################
 # Preflight, before building any project
