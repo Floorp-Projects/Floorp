@@ -214,14 +214,6 @@ add_task(async function simple() {
   urlbarButtonNode = document.getElementById(urlbarButtonID);
   Assert.equal(urlbarButtonNode, null, "urlbarButtonNode");
 
-  Assert.deepEqual(PageActions.actions, initialActions,
-                   "Actions should go back to initial");
-  Assert.equal(PageActions.actionForID(action.id), null,
-               "actionForID should be null");
-
-  Assert.ok(!PageActions._persistedActions.ids.includes(action.id),
-            "PageActions should remove action from its list of seen actions");
-
   // The separator between the built-in actions and non-built-in actions should
   // be gone now, too.
   let separatorNode = document.getElementById(
@@ -233,6 +225,17 @@ add_task(async function simple() {
   Assert.ok(!BrowserPageActions.mainViewBodyNode
             .lastChild.localName.includes("separator"),
             "Last child should not be separator");
+
+  Assert.deepEqual(PageActions.actions, initialActions,
+                   "Actions should go back to initial");
+  Assert.equal(PageActions.actionForID(action.id), null,
+               "actionForID should be null");
+
+  Assert.ok(PageActions._persistedActions.ids.includes(action.id),
+            "Action ID should remain in cache until purged");
+  PageActions._purgeUnregisteredPersistedActions();
+  Assert.ok(!PageActions._persistedActions.ids.includes(action.id),
+            "Action ID should be removed from cache after being purged");
 });
 
 
@@ -872,6 +875,12 @@ add_task(async function urlbarOrderNewWindow() {
     "PageActions._persistedActions.idsInUrlbar now has new actions at front"
   );
 
+  // _persistedActions will contain the IDs of test actions added and removed
+  // above (unless PageActions._purgeUnregisteredPersistedActions() was called
+  // for all of them, which it wasn't).  Filter them out because they should
+  // not appear in the new window (or any window at this point).
+  ids = ids.filter(id => PageActions.actionForID(id));
+
   // Open the new window.
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -973,7 +982,7 @@ add_task(async function migrate1() {
   // Done, clean up.
   await BrowserTestUtils.closeWindow(win);
   Services.prefs.clearUserPref(PageActions.PREF_PERSISTED_ACTIONS);
-  PageActions.actionForID("copyURL")._shownInUrlbar = false;
+  PageActions.actionForID("copyURL").shownInUrlbar = false;
 });
 
 
@@ -1037,6 +1046,111 @@ add_task(async function perWindowState() {
   // Done, clean up.
   await BrowserTestUtils.closeWindow(newWindow);
   action.remove();
+});
+
+
+// Adds an action, changes its placement in the urlbar to something non-default,
+// removes the action, and then adds it back.  Since the action was removed and
+// re-added without restarting the app (or more accurately without calling
+// PageActions._purgeUnregisteredPersistedActions), the action should remain in
+// persisted state and retain its last placement in the urlbar.
+add_task(async function removeRetainState() {
+  // Get the list of actions initially in the urlbar.
+  let initialActionsInUrlbar = PageActions.actionsInUrlbar;
+  Assert.ok(initialActionsInUrlbar.length > 0,
+            "This test expects there to be at least one action in the urlbar initially (like the bookmark star)");
+
+  // Add a test action.
+  let id = "test-removeRetainState";
+  let testAction = PageActions.addAction(new PageActions.Action({
+    id,
+    title: "Test removeRetainState",
+  }));
+
+  // Show its button in the urlbar.
+  testAction.shownInUrlbar = true;
+
+  // "Move" the test action to the front of the urlbar by toggling shownInUrlbar
+  // for all the other actions in the urlbar.
+  for (let action of initialActionsInUrlbar) {
+    action.shownInUrlbar = false;
+    action.shownInUrlbar = true;
+  }
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    [testAction].concat(initialActionsInUrlbar).map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order: testAction followed by all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  let actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    [testAction].concat(initialActionsInUrlbar).map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order: testAction followed by all initial actions"
+  );
+
+  // Remove the test action.
+  testAction.remove();
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    initialActionsInUrlbar.map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order after removing test action: all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    initialActionsInUrlbar.map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order after removing test action: all initial actions"
+  );
+
+  // Add the test action again.
+  testAction = PageActions.addAction(new PageActions.Action({
+    id,
+    title: "Test removeRetainState",
+  }));
+
+  // Show its button in the urlbar again.
+  testAction.shownInUrlbar = true;
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    [testAction].concat(initialActionsInUrlbar).map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order after re-adding test action: testAction followed by all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    [testAction].concat(initialActionsInUrlbar).map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order after re-adding test action: testAction followed by all initial actions"
+  );
+
+  // Done, clean up.
+  testAction.remove();
 });
 
 

@@ -21,6 +21,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
   "resource://gre/modules/BinarySearch.jsm");
 
@@ -64,6 +66,16 @@ this.PageActions = {
     while (callbacks && callbacks.length) {
       callbacks.shift()();
     }
+
+    // Purge removed actions from persisted state on shutdown.  The point is not
+    // to do it on Action.remove().  That way actions that are removed and
+    // re-added while the app is running will have their urlbar placement and
+    // other state remembered and restored.  This happens for upgraded and
+    // downgraded extensions, for example.
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      "PageActions: purging unregistered actions from cache",
+      () => this._purgeUnregisteredPersistedActions(),
+    );
   },
 
   _deferredAddActionCalls: [],
@@ -247,6 +259,7 @@ this.PageActions = {
     this._storePersistedActions();
   },
 
+  // These keep track of currently registered actions.
   _builtInActions: [],
   _nonBuiltInActions: [],
   _actionsByID: new Map(),
@@ -322,7 +335,7 @@ this.PageActions = {
    */
   onActionRemoved(action) {
     if (!this.actionForID(action.id)) {
-      // The action isn't present.  Not an error.
+      // The action isn't registered (yet).  Not an error.
       return;
     }
 
@@ -334,16 +347,6 @@ this.PageActions = {
         break;
       }
     }
-
-    // Remove the action from persisted storage.
-    for (let name of ["ids", "idsInUrlbar"]) {
-      let array = this._persistedActions[name];
-      let index = array.indexOf(action.id);
-      if (index >= 0) {
-        array.splice(index, 1);
-      }
-    }
-    this._storePersistedActions();
 
     for (let bpa of allBrowserPageActions()) {
       bpa.removeAction(action);
@@ -400,6 +403,17 @@ this.PageActions = {
     } catch (ex) {}
   },
 
+  _purgeUnregisteredPersistedActions() {
+    // Remove all action IDs from persisted state that do not correspond to
+    // currently registered actions.
+    for (let name of ["ids", "idsInUrlbar"]) {
+      this._persistedActions[name] = this._persistedActions[name].filter(id => {
+        return this.actionForID(id);
+      });
+    }
+    this._storePersistedActions();
+  },
+
   _migratePersistedActions(actions) {
     // Start with actions.version and migrate one version at a time, all the way
     // up to the current version.
@@ -433,6 +447,9 @@ this.PageActions = {
     };
   },
 
+  // This keeps track of all actions, even those that are not currently
+  // registered because they have been removed, so long as
+  // _purgeUnregisteredPersistedActions has not been called.
   _persistedActions: {
     version: PERSISTED_ACTIONS_CURRENT_VERSION,
     // action IDs that have ever been seen and not removed, order not important
@@ -920,12 +937,12 @@ Action.prototype = {
   },
 
   /**
-   * Makes PageActions forget about this action and removes its DOM nodes from
-   * all browser windows.  Call this when the user removes your action, like
-   * when your extension is uninstalled.  You probably don't want to call it
-   * simply when your extension is disabled or the app quits, because then
-   * PageActions won't remember it the next time your extension is enabled or
-   * the app starts.
+   * Removes the action's DOM nodes from all browser windows.
+   *
+   * PageActions will remember the action's urlbar placement, if any, after this
+   * method is called until app shutdown.  If the action is not added again
+   * before shutdown, then PageActions will discard the placement, and the next
+   * time the action is added, its placement will be reset.
    */
   remove() {
     PageActions.onActionRemoved(this);
