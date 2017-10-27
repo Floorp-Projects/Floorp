@@ -313,6 +313,10 @@ protected:
   friend class DrawEventRecorderPrivate;
   friend class DrawEventRecorderFile;
   friend class DrawEventRecorderMemory;
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, std::ostream *aOutput);
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, MemStream &aOutput);
+  template<class S>
+  static void RecordUnscaledFontImpl(UnscaledFont *aUnscaledFont, S &aOutput);
 
   MOZ_IMPLICIT RecordedEvent(int32_t aType) : mType(aType)
   {}

@@ -128,6 +128,7 @@ public:
 
   void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont *aUnscaledFont) final
   {
+    mUnscaledFontTable.push_back(aUnscaledFont);
     mUnscaledFonts.Put(aRefPtr, aUnscaledFont);
   }
 
