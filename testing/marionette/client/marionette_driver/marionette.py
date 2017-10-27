@@ -1227,7 +1227,7 @@ class Marionette(object):
         else:
             # In the case when Marionette doesn't manage the binary wait until
             # its server component has been started.
-            self.wait_for_port(timeout=timeout)
+            self.raise_for_port(timeout=timeout)
 
         self.client = transport.TcpTransport(
             self.host,
