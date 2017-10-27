@@ -3691,6 +3691,7 @@ arena_t::RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
   mStats.allocated_large -= aOldSize - aSize;
 }
 
+/* Returns whether reallocation was successful. */
 bool
 arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
                          size_t aOldSize)
@@ -3721,15 +3722,16 @@ arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
         CHUNK_MAP_ALLOCATED;
 
     mStats.allocated_large += aSize - aOldSize;
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 /*
  * Try to resize a large allocation, in order to avoid copying.  This will
  * always fail if growing an object, and the following run is already in use.
+ * Returns whether reallocation was successful.
  */
 static bool
 arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
@@ -3742,7 +3744,7 @@ arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
     if (aSize < aOldSize) {
       memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
     }
-    return false;
+    return true;
   } else {
     arena_chunk_t* chunk;
     arena_t* arena;
@@ -3755,10 +3757,10 @@ arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
       /* Fill before shrinking in order avoid a race. */
       memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
       arena->RallocShrinkLarge(chunk, aPtr, psize, aOldSize);
-      return false;
+      return true;
     } else {
       bool ret = arena->RallocGrowLarge(chunk, aPtr, psize, aOldSize);
-      if (ret == false && opt_zero) {
+      if (ret && opt_zero) {
         memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
       }
       return ret;
@@ -3792,7 +3794,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     }
   } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
     MOZ_ASSERT(aSize > bin_maxclass);
-    if (arena_ralloc_large(aPtr, aSize, aOldSize) == false) {
+    if (arena_ralloc_large(aPtr, aSize, aOldSize)) {
       return aPtr;
     }
   }
