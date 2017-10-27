@@ -67,7 +67,7 @@ public class WebViewDataTest {
     private static final Set<String> WHITELIST_DATA_DIR_CONTENTS;
     static {
         final Set<String> whitelistDataDirContents = new HashSet<>(Arrays.asList(
-                "cache", // We assert that this folder is empty
+                "cache",
                 "code_cache",
                 "shared_prefs",
                 "app_dxmaker_cache",
@@ -225,7 +225,7 @@ public class WebViewDataTest {
         assertEquals("WebView directory contains one subdirectory", 1, webViewDirectory.list().length);
         assertEquals("WebView subdirectory is local storage directory", "Local Storage", webViewDirectory.list()[0]);
 
-        assertIsEmpty(appContext.getCacheDir());
+        assertCacheDirContentsPostErase();
 
         for (final String name : dataDir.list()) {
             if (WHITELIST_EMPTY_FOLDERS.contains(name)) {
@@ -280,8 +280,26 @@ public class WebViewDataTest {
         }
     }
 
-    private void assertIsEmpty(File directory) {
-        assertTrue(directory.isDirectory() && directory.list().length == 0);
+    private void assertCacheDirContentsPostErase() {
+        final File cacheDir = appContext.getCacheDir();
+        assertTrue(cacheDir.isDirectory());
+
+        final File[] cacheContents = cacheDir.listFiles();
+        assertEquals(1, cacheContents.length);
+
+        // Concern: different versions of WebView may have different structures to their files:
+        // we'll cross that bridge when we come to it.
+        final File webViewCacheDir = cacheContents[0];
+        assertEquals("org.chromium.android_webview", webViewCacheDir.getName());
+        assertTrue(webViewCacheDir.isDirectory());
+
+        final List<File> webviewCacheContents = Arrays.asList(webViewCacheDir.listFiles());
+        assertEquals(2, webviewCacheContents.size());
+
+        // WebView leaves these index files around.
+        Collections.sort(webviewCacheContents);
+        assertEquals("index", webviewCacheContents.get(0).getName());
+        assertEquals("index-dir", webviewCacheContents.get(1).getName());
     }
 
 

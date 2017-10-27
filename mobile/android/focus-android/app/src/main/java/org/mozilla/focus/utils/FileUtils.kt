@@ -10,16 +10,20 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
 import java.io.File
 
+// WebView directory and contents.
 private const val WEBVIEW_DIRECTORY = "app_webview"
 private const val LOCAL_STORAGE_DIR = "Local Storage"
+
+// Cache directory contents.
+private const val WEBVIEW_CACHE_DIR = "org.chromium.android_webview"
 
 class FileUtils {
     companion object {
         @JvmStatic
-        fun truncateCacheDirectory(context: Context): Boolean {
-            val cacheDirectory = context.cacheDir
-            return cacheDirectory.exists() && deleteContent(cacheDirectory)
-        }
+        fun truncateCacheDirectory(context: Context) = deleteContent(context.cacheDir, doNotEraseWhitelist = setOf(
+                // If the folder or its contents are deleted, WebView will stop using the disk cache entirely.
+                WEBVIEW_CACHE_DIR
+        ))
 
         @JvmStatic
         fun deleteWebViewDirectory(context: Context): Boolean {
