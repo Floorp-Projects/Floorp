@@ -22,6 +22,7 @@ namespace gfx {
 template<class Derived>
 class RecordedEventDerived : public RecordedEvent {
   using RecordedEvent::RecordedEvent;
+  public:
   void RecordToStream(std::ostream &aStream) const {
     static_cast<const Derived*>(this)->Record(aStream);
   }
