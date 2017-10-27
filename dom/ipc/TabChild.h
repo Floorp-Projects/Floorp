@@ -580,6 +580,8 @@ public:
   void MakeVisible();
   void MakeHidden();
 
+  void OnDocShellActivated(bool aIsActive);
+
   nsIContentChild* Manager() const { return mManager; }
 
   static inline TabChild*
