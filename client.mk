@@ -26,10 +26,8 @@
 #                          of MOZ_OBJDIR
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
-#   MOZ_PREFLIGHT_ALL  } - Makefiles to run before any project in
-#   MOZ_PREFLIGHT      }   MOZ_BUILD_PROJECTS, before each project, after
-#   MOZ_POSTFLIGHT     }   each project, and after all projects; these
-#   MOZ_POSTFLIGHT_ALL }   variables contain space-separated lists
+#   MOZ_PREFLIGHT_ALL    - Makefiles to run before building.
+#   MOZ_POSTFLIGHT_ALL   - Makefiles to run after building.
 #
 #######################################################################
 # Defines
@@ -275,7 +273,7 @@ endif
 # loop through them.
 
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
-configure realbuild preflight postflight $(OBJDIR_TARGETS)::
+configure realbuild $(OBJDIR_TARGETS)::
 	set -e; \
 	for app in $(MOZ_BUILD_PROJECTS); do \
 	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
@@ -391,18 +389,6 @@ $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
 	$(PYTHON) $(OBJDIR)/config.status -n --file=$(OBJDIR)/config/autoconf.mk
 endif
 
-
-####################################
-# Preflight
-
-realbuild preflight::
-ifdef MOZ_PREFLIGHT
-	set -e; \
-	for mkfile in $(MOZ_PREFLIGHT); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
-endif
-
 ####################################
 # Build it
 
@@ -415,17 +401,6 @@ realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Pass these target onto the real build system
 $(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	+$(MOZ_MAKE) $@
-
-####################################
-# Postflight
-
-realbuild postflight::
-ifdef MOZ_POSTFLIGHT
-	set -e; \
-	for mkfile in $(MOZ_POSTFLIGHT); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
-	done
-endif
 
 endif # MOZ_CURRENT_PROJECT
 
@@ -482,7 +457,5 @@ echo-variable-%:
     everything \
     configure \
     preflight_all \
-    preflight \
-    postflight \
     postflight_all \
     $(OBJDIR_TARGETS)
