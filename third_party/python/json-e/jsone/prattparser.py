@@ -2,11 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 from collections import namedtuple
-from .shared import JSONTemplateError
+from .shared import TemplateError
 from .six import with_metaclass, viewitems
 
 
-class SyntaxError(JSONTemplateError):
+class SyntaxError(TemplateError):
 
     @classmethod
     def unexpected(cls, got, exp):
