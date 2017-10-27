@@ -12,7 +12,7 @@ namespace gfx {
 
 using namespace std;
 
-DrawEventRecorderPrivate::DrawEventRecorderPrivate()
+DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false)
 {
 }
 
