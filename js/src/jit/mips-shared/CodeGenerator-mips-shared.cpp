@@ -1908,12 +1908,14 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {
+            FloatRegister output = ToFloatRegister(lir->output());
+
             if (byteSize == 4)
-                masm.loadUnalignedFloat32(address, temp, ToFloatRegister(lir->output()));
+                masm.loadUnalignedFloat32(mir->access(), address, temp, output);
             else
-                masm.loadUnalignedDouble(address, temp, ToFloatRegister(lir->output()));
+                masm.loadUnalignedDouble(mir->access(), address, temp, output);
         } else {
-            masm.ma_load_unaligned(ToRegister(lir->output()), address, temp,
+            masm.ma_load_unaligned(mir->access(), ToRegister(lir->output()), address, temp,
                                    static_cast<LoadStoreSize>(8 * byteSize),
                                    isSigned ? SignExtend : ZeroExtend);
         }
@@ -1923,16 +1925,20 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
     }
 
     if (isFloat) {
-        if (byteSize == 4)
-            masm.loadFloat32(address, ToFloatRegister(lir->output()));
-        else
-            masm.loadDouble(address, ToFloatRegister(lir->output()));
+        FloatRegister output = ToFloatRegister(lir->output());
+
+        if (byteSize == 4) {
+            masm.loadFloat32(address, output);
+        } else {
+            masm.computeScaledAddress(address, SecondScratchReg);
+            masm.as_ld(output, SecondScratchReg, 0);
+        }
     } else {
         masm.ma_load(ToRegister(lir->output()), address,
                      static_cast<LoadStoreSize>(8 * byteSize),
                      isSigned ? SignExtend : ZeroExtend);
     }
-
+    masm.append(mir->access(), masm.size() - 4, masm.framePushed());
     masm.memoryBarrier(mir->access().barrierAfter());
 }
 
@@ -1993,12 +1999,14 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {
+            FloatRegister value = ToFloatRegister(lir->value());
+
             if (byteSize == 4)
-                masm.storeUnalignedFloat32(ToFloatRegister(lir->value()), temp, address);
+                masm.storeUnalignedFloat32(mir->access(), value, temp, address);
             else
-                masm.storeUnalignedDouble(ToFloatRegister(lir->value()), temp, address);
+                masm.storeUnalignedDouble(mir->access(), value, temp, address);
         } else {
-            masm.ma_store_unaligned(ToRegister(lir->value()), address, temp,
+            masm.ma_store_unaligned(mir->access(), ToRegister(lir->value()), address, temp,
                                     static_cast<LoadStoreSize>(8 * byteSize),
                                     isSigned ? SignExtend : ZeroExtend);
         }
@@ -2008,16 +2016,23 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
     }
 
     if (isFloat) {
+        FloatRegister value = ToFloatRegister(lir->value());
+
         if (byteSize == 4) {
-            masm.storeFloat32(ToFloatRegister(lir->value()), address);
-        } else
-            masm.storeDouble(ToFloatRegister(lir->value()), address);
+            masm.storeFloat32(value, address);
+        } else {
+            // For time being storeDouble for mips32 uses two store instructions,
+            // so we emit only one to get correct behavior in case of OOB access.
+            masm.computeScaledAddress(address, SecondScratchReg);
+            masm.as_sd(value, SecondScratchReg, 0);
+        }
     } else {
         masm.ma_store(ToRegister(lir->value()), address,
                       static_cast<LoadStoreSize>(8 * byteSize),
                       isSigned ? SignExtend : ZeroExtend);
     }
-
+    // Only the last emitted instruction is a memory access.
+    masm.append(mir->access(), masm.size() - 4, masm.framePushed());
     masm.memoryBarrier(mir->access().barrierAfter());
 }
 

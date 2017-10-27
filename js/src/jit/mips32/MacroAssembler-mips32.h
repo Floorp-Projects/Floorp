@@ -904,7 +904,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void loadDouble(const Address& addr, FloatRegister dest);
     void loadDouble(const BaseIndex& src, FloatRegister dest);
-    void loadUnalignedDouble(const BaseIndex& src, Register temp, FloatRegister dest);
+    void loadUnalignedDouble(const wasm::MemoryAccessDesc& access, const BaseIndex& src,
+                             Register temp, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
     void loadFloatAsDouble(const Address& addr, FloatRegister dest);
@@ -912,7 +913,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void loadFloat32(const Address& addr, FloatRegister dest);
     void loadFloat32(const BaseIndex& src, FloatRegister dest);
-    void loadUnalignedFloat32(const BaseIndex& src, Register temp, FloatRegister dest);
+    void loadUnalignedFloat32(const wasm::MemoryAccessDesc& access, const BaseIndex& src,
+                              Register temp, FloatRegister dest);
 
     void store8(Register src, const Address& address);
     void store8(Imm32 imm, const Address& address);
@@ -953,8 +955,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void storePtr(Register src, const BaseIndex& address);
     void storePtr(Register src, AbsoluteAddress dest);
 
-    void storeUnalignedFloat32(FloatRegister src, Register temp, const BaseIndex& dest);
-    void storeUnalignedDouble(FloatRegister src, Register temp, const BaseIndex& dest);
+    void storeUnalignedFloat32(const wasm::MemoryAccessDesc& access, FloatRegister src,
+                               Register temp, const BaseIndex& dest);
+    void storeUnalignedDouble(const wasm::MemoryAccessDesc& access, FloatRegister src,
+                              Register temp, const BaseIndex& dest);
 
     void moveDouble(FloatRegister src, FloatRegister dest) {
         as_movd(dest, src);
