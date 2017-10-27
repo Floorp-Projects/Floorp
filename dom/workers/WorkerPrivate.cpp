@@ -7215,20 +7215,6 @@ EventTarget::IsOnCurrentThreadInfallible()
 
 BEGIN_WORKERS_NAMESPACE
 
-WorkerCrossThreadDispatcher*
-GetWorkerCrossThreadDispatcher(JSContext* aCx, const JS::Value& aWorker)
-{
-  if (!aWorker.isObject()) {
-    return nullptr;
-  }
-
-  JS::Rooted<JSObject*> obj(aCx, &aWorker.toObject());
-  WorkerPrivate* w = nullptr;
-  UNWRAP_OBJECT(Worker, &obj, w);
-  MOZ_ASSERT(w);
-  return w->GetCrossThreadDispatcher();
-}
-
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
 
