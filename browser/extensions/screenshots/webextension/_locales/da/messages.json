@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "Billedet er blevet beskåret til $PIXELS$ px.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Ude af funktion"
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Tag, gem og del skærmbilleder uden at forlade Firefox. "
+  },
+  "tourHeaderPageAction": {
+    "message": "En ny måde at gemme på"
+  },
+  "tourBodyPageAction": {
+    "message": "Klik på Sidehandlinger i adressefeltet, når du vil tage et skærmbillede."
   },
   "tourHeaderClickAndDrag": {
     "message": "Gem lige hvad du vil."
