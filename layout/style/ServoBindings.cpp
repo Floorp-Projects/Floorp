@@ -2871,3 +2871,12 @@ Gecko_ContentList_AppendAll(
     aList->AppendElement(const_cast<Element*>(aElements[i]));
   }
 }
+
+const nsTArray<Element*>*
+Gecko_GetElementsWithId(const nsIDocument* aDocument, nsAtom* aId)
+{
+  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aId);
+
+  return aDocument->GetAllElementsForId(nsDependentAtomString(aId));
+}

@@ -475,6 +475,7 @@ structs-types = [
     "RawGeckoCSSPropertyIDList",
     "RawGeckoDocument",
     "RawGeckoElement",
+    "Element",
     "RawGeckoKeyframeList",
     "RawGeckoPropertyValuePairList",
     "RawGeckoComputedKeyframeValuesList",
