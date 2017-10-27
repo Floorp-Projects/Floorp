@@ -1477,6 +1477,9 @@ class JitActivation : public Activation
     // wasm frame (bit set to ExitFpWasmBit) or not (bit set to !ExitFpWasmBit).
     uint8_t* packedExitFP_;
 
+    // When hasWasmExitFP(), encodedWasmExitReason_ holds ExitReason.
+    uint32_t encodedWasmExitReason_;
+
     JitActivation* prevJitActivation_;
 
     // Rematerialized Ion frames which has info copied out of snapshots. Maps
@@ -1652,6 +1655,13 @@ class JitActivation : public Activation
         } else {
             packedExitFP_ = nullptr;
         }
+    }
+    wasm::ExitReason wasmExitReason() const {
+        MOZ_ASSERT(hasWasmExitFP());
+        return wasm::ExitReason::Decode(encodedWasmExitReason_);
+    }
+    static size_t offsetOfEncodedWasmExitReason() {
+        return offsetof(JitActivation, encodedWasmExitReason_);
     }
 
     // Interrupts are started from the interrupt signal handler (or the ARM
