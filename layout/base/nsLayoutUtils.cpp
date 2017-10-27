@@ -8152,7 +8152,8 @@ nsLayoutUtils::ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal)
   // supported. Other principal aren't able to use XUL by default, and
   // the back door to enable XUL is mostly just for testing, which means
   // they don't matter, and we shouldn't respect them at the same time.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (!StyloChromeEnabled() &&
+      nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return false;
   }
   // Check any internal page which we need to explicitly blacklist.
@@ -8231,6 +8232,21 @@ nsLayoutUtils::RemoveFromStyloBlocklist(const nsACString& aBlockedDomain)
     delete sStyloBlocklist;
     sStyloBlocklist = nullptr;
   }
+}
+
+/* static */
+bool
+nsLayoutUtils::StyloChromeEnabled()
+{
+  static bool sInitialized = false;
+  static bool sEnabled = false;
+  if (!sInitialized) {
+    // We intentionally don't allow dynamic toggling of this pref
+    // because it is rather risky to mix style backend in XUL.
+    sEnabled = Preferences::GetBool("layout.css.servo.chrome.enabled");
+    sInitialized = true;
+  }
+  return sEnabled;
 }
 #endif
 
