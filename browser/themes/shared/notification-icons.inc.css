@@ -157,7 +157,7 @@ html|*#webRTC-previewVideo {
 }
 
 .identity-popup-popup-menulist {
-  width: 72px;
+  min-width: 6.5em;
 }
 
 /* EME */

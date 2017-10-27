@@ -76,12 +76,12 @@ exports.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
 // valid after we generate it (e.g., the signed cert won't expire in this
 // period).
 exports.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
-exports.CERT_LIFETIME      = 1000 * 3600 * 6;  // 6 hours
+exports.CERT_LIFETIME      = 1000 * 3600 * 6; // 6 hours
 exports.KEY_LIFETIME       = 1000 * 3600 * 12; // 12 hours
 
 // After we start polling for account verification, we stop polling when this
 // many milliseconds have elapsed.
-exports.POLL_SESSION       = 1000 * 60 * 20;   // 20 minutes
+exports.POLL_SESSION       = 1000 * 60 * 20; // 20 minutes
 
 // Observer notifications.
 exports.ONLOGIN_NOTIFICATION = "fxaccounts:onlogin";

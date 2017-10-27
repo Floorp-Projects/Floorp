@@ -27,7 +27,10 @@ struct ClipCorner {
     vec4 outer_inner_radius;
 };
 
-ClipCorner fetch_clip_corner(ivec2 address) {
+// index is of type float instead of int because using an int led to shader
+// miscompilations with a macOS 10.12 Intel driver.
+ClipCorner fetch_clip_corner(ivec2 address, float index) {
+    address += ivec2(2 + 2 * int(index), 0);
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     return ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
@@ -44,22 +47,10 @@ ClipData fetch_clip(ivec2 address) {
     ClipData clip;
 
     clip.rect = fetch_clip_rect(address);
-
-    // Read the corners in groups of two texels, and adjust the read address
-    // before every read.
-    // The address adjustment is done inside this function, and not by passing
-    // the corner index to fetch_clip_corner and computing the correct address
-    // there, because doing so was hitting a driver bug on certain Intel macOS
-    // drivers which creates wrong results when doing arithmetic with integer
-    // variables (under certain, unknown, circumstances).
-    address.x += 2;
-    clip.top_left = fetch_clip_corner(address);
-    address.x += 2;
-    clip.top_right = fetch_clip_corner(address);
-    address.x += 2;
-    clip.bottom_left = fetch_clip_corner(address);
-    address.x += 2;
-    clip.bottom_right = fetch_clip_corner(address);
+    clip.top_left = fetch_clip_corner(address, 0.0);
+    clip.top_right = fetch_clip_corner(address, 1.0);
+    clip.bottom_left = fetch_clip_corner(address, 2.0);
+    clip.bottom_right = fetch_clip_corner(address, 3.0);
 
     return clip;
 }
@@ -111,7 +102,7 @@ void main(void) {
                                     vClipCenter_Radius_BR,
                                     vClipCenter_Radius_BL);
 
-    float combined_alpha = min(alpha, clip_alpha);
+    float combined_alpha = alpha * clip_alpha;
 
     // Select alpha or inverse alpha depending on clip in/out.
     float final_alpha = mix(combined_alpha, 1.0 - combined_alpha, vClipMode);

@@ -282,13 +282,13 @@ PasswordStore.prototype = {
       return;
     }
 
-    this._log.debug("Adding login for " + record.hostname);
+    this._log.trace("Adding login for " + record.hostname);
     this._log.trace("httpRealm: " + JSON.stringify(login.httpRealm) + "; " +
                     "formSubmitURL: " + JSON.stringify(login.formSubmitURL));
     try {
       Services.logins.addLogin(login);
     } catch (ex) {
-      this._log.debug(`Adding record ${record.id} resulted in exception`, ex);
+      this._log.error(`Adding record ${record.id} resulted in exception`, ex);
     }
   },
 
@@ -307,11 +307,11 @@ PasswordStore.prototype = {
   async update(record) {
     let loginItem = await this._getLoginFromGUID(record.id);
     if (!loginItem) {
-      this._log.debug("Skipping update for unknown item: " + record.hostname);
+      this._log.trace("Skipping update for unknown item: " + record.hostname);
       return;
     }
 
-    this._log.debug("Updating " + record.hostname);
+    this._log.trace("Updating " + record.hostname);
     let newinfo = this._nsLoginInfoFromRecord(record);
     if (!newinfo) {
       return;

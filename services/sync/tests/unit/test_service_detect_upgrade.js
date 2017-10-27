@@ -222,8 +222,8 @@ add_task(async function v5_upgrade() {
     // Fill the keys with bad data.
     let badKeys = new BulkKeyBundle("crypto");
     await badKeys.generateRandom();
-    await update_server_keys(badKeys, "keys", "crypto/keys");  // v4
-    await update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
+    await update_server_keys(badKeys, "keys", "crypto/keys"); // v4
+    await update_server_keys(badKeys, "bulk", "crypto/bulk"); // v5
 
     _("Generating new keys.");
     await generateNewKeys(Service.collectionKeys);

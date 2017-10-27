@@ -9,7 +9,7 @@ Cu.import("resource://services-common/utils.js");
 
 _("Make sure querySpinningly will synchronously fetch rows for a query asyncly");
 
-const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.html
+const SQLITE_CONSTRAINT_VIOLATION = 19; // http://www.sqlite.org/c3ref/c_abort.html
 
 // This test is a bit hacky - it was originally written to use the
 // formhistory.sqlite database using the nsIFormHistory2 sync APIs. However,

@@ -3,6 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals newAppInfo */
 
 var manifests = [
   do_get_file("data/test_no_remote_registration.manifest"),
@@ -11,8 +12,7 @@ registerManifests(manifests);
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function ProtocolHandler(aScheme, aFlags)
-{
+function ProtocolHandler(aScheme, aFlags) {
   this.scheme = aScheme;
   this.protocolFlags = aFlags;
   this.contractID = "@mozilla.org/network/protocol;1?name=" + aScheme;
@@ -22,8 +22,7 @@ ProtocolHandler.prototype =
 {
   defaultPort: -1,
   allowPort: () => false,
-  newURI: function(aSpec, aCharset, aBaseURI)
-  {
+  newURI(aSpec, aCharset, aBaseURI) {
     let uri = Cc["@mozilla.org/network/standard-url;1"].
               createInstance(Ci.nsIURI);
     uri.spec = aSpec;
@@ -33,8 +32,8 @@ ProtocolHandler.prototype =
     }
     return uri;
   },
-  newChannel2: function() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
-  newChannel: function() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
+  newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
+  newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIProtocolHandler
   ])
@@ -68,8 +67,7 @@ var testProtocols = [
    shouldRegister: true
   },
 ];
-function run_test()
-{
+function run_test() {
   Components.utils.import("resource://testing-common/AppInfo.jsm", this);
   let XULAppInfo = newAppInfo({
     name: "XPCShell",
@@ -85,7 +83,7 @@ function run_test()
     CID: uuidGenerator.generateUUID(),
     scheme: "XULAppInfo",
     contractID: "@mozilla.org/xre/app-info;1",
-    createInstance: function (outer, iid) {
+    createInstance(outer, iid) {
       if (outer != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
       return XULAppInfo.QueryInterface(iid);
@@ -102,8 +100,7 @@ function run_test()
       flags: testProtocols[i].flags,
       CID: testProtocols[i].CID,
       contractID: "@mozilla.org/network/protocol;1?name=" + testProtocols[i].scheme,
-      createInstance: function(aOuter, aIID)
-      {
+      createInstance(aOuter, aIID) {
         if (aOuter != null)
           throw Cr.NS_ERROR_NO_AGGREGATION;
         let handler = new ProtocolHandler(this.scheme, this.flags, this.CID);
@@ -132,15 +129,13 @@ function run_test()
       old_factory.CID = registrar.contractIDToCID(XULAppInfoFactory.contractID);
       old_factory.factory = Components.manager.getClassObject(Cc[XULAppInfoFactory.contractID], Ci.nsIFactory);
       registrar.unregisterFactory(old_factory.CID, old_factory.factory);
-    }
-    else {
+    } else {
       dump(XULAppInfoFactory.scheme + " has never been registered. Registering...")
     }
 
     registrar.registerFactory(XULAppInfoFactory.CID, "test-" + XULAppInfoFactory.scheme, XULAppInfoFactory.contractID, XULAppInfoFactory);
-  }
-  else {
-    do_throw("CID " + XULAppInfoFactory.CID +  " has already been registered!");
+  } else {
+    do_throw("CID " + XULAppInfoFactory.CID + " has already been registered!");
   }
 
   // Check for new chrome
@@ -181,7 +176,7 @@ function run_test()
         case "resource":
           sourceURI = "resource://" + protocol.scheme + "/";
           break;
-      };
+      }
       try {
         let ios = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
@@ -193,22 +188,19 @@ function run_test()
                     QueryInterface(Ci.nsIResProtocolHandler);
           // this throws for packages that are not registered
           uri = rph.resolveURI(sourceURI);
-        }
-        else {
+        } else {
           // this throws for packages that are not registered
           uri = cr.convertChromeURL(sourceURI).spec;
         }
 
         if (protocol.shouldRegister) {
           do_check_eq(expectedURI, uri);
-        }
-        else {
+        } else {
           // Overrides will not throw, so we'll get to here.  We want to make
           // sure that the two strings are not the same in this situation.
           do_check_neq(expectedURI, uri);
         }
-      }
-      catch (e) {
+      } catch (e) {
         if (protocol.shouldRegister) {
           dump(e + "\n");
           do_throw("Should have registered our URI for protocol " +

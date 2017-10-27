@@ -12,15 +12,13 @@ registerManifests(MANIFESTS);
 var gIOS;
 var gCR;
 
-function check_accessibility(spec, desired)
-{
+function check_accessibility(spec, desired) {
   var uri = gIOS.newURI(spec);
   var actual = gCR.allowContentToAccess(uri);
   do_check_eq(desired, actual);
 }
 
-function run_test()
-{
+function run_test() {
   gIOS = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
   gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].

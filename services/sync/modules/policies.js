@@ -635,8 +635,8 @@ ErrorHandler.prototype = {
         }
         break;
       case "weave:engine:sync:error": {
-        let exception = subject;  // exception thrown by engine's sync() method
-        let engine_name = data;   // engine name that threw the exception
+        let exception = subject; // exception thrown by engine's sync() method
+        let engine_name = data; // engine name that threw the exception
 
         this.checkServerError(exception);
 

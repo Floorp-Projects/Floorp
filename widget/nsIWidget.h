@@ -1295,13 +1295,6 @@ class nsIWidget : public nsISupports
                                                    mozilla::wr::IpcResourceUpdateQueue& aResources) {}
 
     /**
-     * Called on the main thread when WebRender resources used for
-     * AddWindowOverlayWebRenderCommands need to be destroyed.
-     */
-    virtual void CleanupWebRenderWindowOverlay(mozilla::layers::WebRenderBridgeChild* aWrBridge,
-                                               mozilla::wr::IpcResourceUpdateQueue& aResources) {}
-
-    /**
      * Called when Gecko knows which themed widgets exist in this window.
      * The passed array contains an entry for every themed widget of the right
      * type (currently only NS_THEME_TOOLBAR) within the window, except for

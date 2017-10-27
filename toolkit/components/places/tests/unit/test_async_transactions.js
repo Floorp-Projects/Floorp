@@ -685,8 +685,8 @@ add_task(async function test_move_items_to_folder() {
   ensureUndo();
 
   // Clean up
-  await PT.undo();  // folder_b_txn
-  await PT.undo();  // folder_a_txn + the bookmarks;
+  await PT.undo(); // folder_b_txn
+  await PT.undo(); // folder_a_txn + the bookmarks;
   do_check_eq(observer.itemsRemoved.size, 4);
   ensureUndoState([ [moveTxn],
                     [folder_b_txn],

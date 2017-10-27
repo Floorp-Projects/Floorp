@@ -160,8 +160,8 @@ const OS_PARAM_START_PAGE   = "startPage";
 
 // Default values
 const OS_PARAM_COUNT_DEF        = "20"; // 20 results
-const OS_PARAM_START_INDEX_DEF  = "1";  // start at 1st result
-const OS_PARAM_START_PAGE_DEF   = "1";  // 1st page
+const OS_PARAM_START_INDEX_DEF  = "1"; // start at 1st result
+const OS_PARAM_START_PAGE_DEF   = "1"; // 1st page
 
 // A array of arrays containing parameters that we don't fully support, and
 // their default values. We will only send values for these parameters if

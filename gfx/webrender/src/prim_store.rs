@@ -160,7 +160,7 @@ pub struct RectanglePrimitive {
 
 impl ToGpuBlocks for RectanglePrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.color);
+        request.push(self.color.premultiplied());
     }
 }
 
@@ -197,6 +197,7 @@ impl ToGpuBlocks for BrushPrimitive {
 #[repr(C)]
 pub struct LinePrimitive {
     pub color: ColorF,
+    pub wavy_line_thickness: f32,
     pub style: LineStyle,
     pub orientation: LineOrientation,
 }
@@ -205,9 +206,9 @@ impl ToGpuBlocks for LinePrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
         request.push(self.color);
         request.push([
+            self.wavy_line_thickness,
             pack_as_float(self.style as u32),
             pack_as_float(self.orientation as u32),
-            0.0,
             0.0,
         ]);
     }
@@ -586,7 +587,7 @@ impl TextRunPrimitiveCpu {
     }
 
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
-        request.push(ColorF::from(self.font.color));
+        request.push(ColorF::from(self.font.color).premultiplied());
         request.push([
             self.offset.x,
             self.offset.y,
@@ -1059,7 +1060,6 @@ impl PrimitiveStore {
                 self.cpu_pictures[metadata.cpu_prim_index.0]
                     .prepare_for_render(
                         prim_index,
-                        metadata,
                         prim_context,
                         render_tasks
                     );

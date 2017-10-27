@@ -53,15 +53,15 @@ xpcAccessibleApplication* XPCApplicationAcc();
 typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
 
 struct MarkupAttrInfo {
-  nsAtom** name;
-  nsAtom** value;
+  nsStaticAtom** name;
+  nsStaticAtom** value;
 
-  nsAtom** DOMAttrName;
-  nsAtom** DOMAttrValue;
+  nsStaticAtom** DOMAttrName;
+  nsStaticAtom** DOMAttrValue;
 };
 
 struct MarkupMapInfo {
-  nsAtom** tag;
+  nsStaticAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
   MarkupAttrInfo attrs[4];

@@ -26,31 +26,26 @@ chromeReg.checkForNewChrome();
 var target = gIOS.newFileURI(do_get_file("data"));
 target = target.spec + "test/test.xul";
 
-function test_succeeded_mapping(namespace)
-{
+function test_succeeded_mapping(namespace) {
   var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     var result = chromeReg.convertChromeURL(uri);
     do_check_eq(result.spec, target);
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw(namespace);
   }
 }
 
-function test_failed_mapping(namespace)
-{
+function test_failed_mapping(namespace) {
   var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
   try {
-    var result = chromeReg.convertChromeURL(uri);
+    chromeReg.convertChromeURL(uri);
     do_throw(namespace);
-  }
-  catch (ex) {
+  } catch (ex) {
   }
 }
 
-function run_test()
-{
+function run_test() {
   test_succeeded_mapping("test1");
   test_succeeded_mapping("test2");
   test_succeeded_mapping("test3");

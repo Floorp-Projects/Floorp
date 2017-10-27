@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(test)]
-use api::{ColorF, IdNamespace, LayoutPoint};
-use api::{DevicePoint, DeviceUintSize, FontInstance};
-use api::{FontKey, FontTemplate, FontRenderMode, ColorU};
-use api::{GlyphDimensions, GlyphKey, SubpixelDirection};
+use api::{ColorF, IdNamespace, LayoutPoint, SubpixelDirection};
+use api::{DevicePoint, DeviceUintSize, FontInstance, FontRenderMode};
+use api::{FontKey, FontTemplate, GlyphDimensions, GlyphKey};
 use api::{ImageData, ImageDescriptor, ImageFormat};
 #[cfg(test)]
 use app_units::Au;
@@ -14,7 +13,7 @@ use device::TextureFilter;
 use glyph_cache::{CachedGlyphInfo, GlyphCache};
 use gpu_cache::GpuCache;
 use internal_types::FastHashSet;
-use platform::font::{FontContext, RasterizedGlyph};
+use platform::font::FontContext;
 use profiler::TextureCacheProfileCounters;
 use rayon::ThreadPool;
 use rayon::prelude::*;
@@ -23,6 +22,35 @@ use std::mem;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use texture_cache::{TextureCache, TextureCacheHandle};
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub enum GlyphFormat {
+    Mono,
+    Alpha,
+    Subpixel,
+    ColorBitmap,
+}
+
+impl From<FontRenderMode> for GlyphFormat {
+    fn from(render_mode: FontRenderMode) -> GlyphFormat {
+        match render_mode {
+            FontRenderMode::Mono => GlyphFormat::Mono,
+            FontRenderMode::Alpha => GlyphFormat::Alpha,
+            FontRenderMode::Subpixel => GlyphFormat::Subpixel,
+            FontRenderMode::Bitmap => GlyphFormat::ColorBitmap,
+        }
+    }
+}
+
+pub struct RasterizedGlyph {
+    pub top: f32,
+    pub left: f32,
+    pub width: u32,
+    pub height: u32,
+    pub scale: f32,
+    pub format: GlyphFormat,
+    pub bytes: Vec<u8>,
+}
 
 pub struct FontContexts {
     // These worker are mostly accessed from their corresponding worker threads.
@@ -145,26 +173,7 @@ impl GlyphRasterizer {
     }
 
     pub fn prepare_font(&self, font: &mut FontInstance) {
-        // In alpha/mono mode, the color of the font is irrelevant.
-        // Forcing it to black in those cases saves rasterizing glyphs
-        // of different colors when not needed.
-        match font.render_mode {
-            FontRenderMode::Mono | FontRenderMode::Bitmap => {
-                font.color = ColorU::new(255, 255, 255, 255);
-                // Subpixel positioning is disabled in mono and bitmap modes.
-                font.subpx_dir = SubpixelDirection::None;
-            }
-            FontRenderMode::Alpha => {
-                font.color = ColorU::new(255, 255, 255, 255);
-            }
-            FontRenderMode::Subpixel => {
-                // In subpixel mode, we only actually need the color if preblending
-                // is used in the font backend.
-                if !FontContext::has_gamma_correct_subpixel_aa() {
-                    font.color = ColorU::new(255, 255, 255, 255);
-                }
-            }
-        }
+        FontContext::prepare_font(font);
     }
 
     pub fn request_glyphs(
@@ -345,6 +354,7 @@ impl GlyphRasterizer {
                         size: DeviceUintSize::new(glyph.width, glyph.height),
                         offset: DevicePoint::new(glyph.left, glyph.top),
                         scale: glyph.scale,
+                        format: glyph.format,
                     })
                 } else {
                     None

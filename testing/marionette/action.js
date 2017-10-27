@@ -374,8 +374,8 @@ action.PointerOrigin.get = function(obj) {
 action.PointerType = {
   Mouse: "mouse",
   // TODO For now, only mouse is supported
-  //Pen: "pen",
-  //Touch: "touch",
+  // Pen: "pen",
+  // Touch: "touch",
 };
 
 /**

@@ -135,8 +135,6 @@ public:
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
-  void SetTransactionIncomplete() { mTransactionIncomplete = true; }
-
   // See equivalent function in ClientLayerManager
   void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
                                   const std::string& aKey,
@@ -156,6 +154,7 @@ public:
   WebRenderScrollData& GetScrollData() { return mScrollData; }
 
   void WrUpdated();
+  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
 private:
   /**
@@ -193,8 +192,7 @@ private:
   // APZ to do it's job
   WebRenderScrollData mScrollData;
 
-  bool mTransactionIncomplete;
-
+  bool mWindowOverlayChanged;
   bool mNeedsComposite;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;

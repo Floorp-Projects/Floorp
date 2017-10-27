@@ -173,12 +173,6 @@ public:
     mIsOpenInParentProcess = aVal;
   }
 
-  void GetPreviewText(nsAString& aValue) override
-  {
-    aValue = mPreviewText;
-  }
-  void SetPreviewText(const nsAString& aValue) override;
-
   // nsISelectControlFrame
   NS_IMETHOD AddOption(int32_t index) override;
   NS_IMETHOD RemoveOption(int32_t index) override;
@@ -304,7 +298,6 @@ protected:
   int32_t               mRecentSelectedIndex;
   int32_t               mDisplayedIndex;
   nsString              mDisplayedOptionTextOrPreview;
-  nsString              mPreviewText;
 
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.

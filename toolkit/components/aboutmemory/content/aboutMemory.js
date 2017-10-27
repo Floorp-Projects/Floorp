@@ -249,7 +249,7 @@ function appendButton(aP, aTitle, aOnClick, aText, aId) {
 function appendHiddenFileInput(aP, aId, aChangeListener) {
   let input = appendElementWithText(aP, "input", "hidden", "");
   input.type = "file";
-  input.id = aId;      // used in testing
+  input.id = aId; // used in testing
   input.addEventListener("change", aChangeListener);
   return input;
 }
@@ -325,7 +325,7 @@ function onLoad() {
   let label1 = appendElementWithText(labelDiv1, "label", "");
   gVerbose = appendElement(label1, "input", "");
   gVerbose.type = "checkbox";
-  gVerbose.id = "verbose";   // used for testing
+  gVerbose.id = "verbose"; // used for testing
   appendTextNode(label1, "verbose");
 
   const kEllipsis = "\u2026";
@@ -859,7 +859,7 @@ function diffDReportMaps(aDReportMap1, aDReportMap2) {
       r2_amount = r2._amount;
       r2_nMerged = r2._nMerged;
       delete aDReportMap2[processPath];
-      presence = undefined;   // represents that it's present in both
+      presence = undefined; // represents that it's present in both
     } else {
       r2_amount = 0;
       r2_nMerged = 0;
@@ -1400,7 +1400,7 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
     appendElementWithText(div, "p", "",
       "This indicates a defect in one or more memory reporters.  The " +
       "invalid values are highlighted.\n\n");
-    gUnsafePathsWithInvalidValuesForThisProcess = [];  // reset for the next process
+    gUnsafePathsWithInvalidValuesForThisProcess = []; // reset for the next process
   }
 }
 
@@ -1475,7 +1475,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
       appendTreeElements(pre, t, aProcess, "");
       delete aTrees[treeName];
     }
-    appendTextNode(aP, "\n");  // gives nice spacing when we copy and paste
+    appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
   }
 
   // Fill in and sort all the non-degenerate other trees.
@@ -1509,14 +1509,14 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   for (let i = 0; i < otherTrees.length; i++) {
     let t = otherTrees[i];
     appendTreeElements(pre, t, aProcess, "");
-    appendTextNode(pre, "\n");  // blank lines after non-degenerate trees
+    appendTextNode(pre, "\n"); // blank lines after non-degenerate trees
   }
   for (let i = 0; i < otherDegenerates.length; i++) {
     let t = otherDegenerates[i];
     let padText = pad("", maxStringLength - t.toString().length, " ");
     appendTreeElements(pre, t, aProcess, padText);
   }
-  appendTextNode(aP, "\n");  // gives nice spacing when we copy and paste
+  appendTextNode(aP, "\n"); // gives nice spacing when we copy and paste
 
   // Add any warnings about inaccuracies in the "explicit" tree due to platform
   // limitations.  These must be computed after generating all the text.  The
@@ -1539,8 +1539,8 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
  * @return A boolean.
  */
 function hasNegativeSign(aN) {
-  if (aN === 0) {                   // this succeeds for 0 and -0
-    return 1 / aN === -Infinity;    // this succeeds for -0
+  if (aN === 0) { // this succeeds for 0 and -0
+    return 1 / aN === -Infinity; // this succeeds for -0
   }
   return aN < 0;
 }
@@ -1773,14 +1773,14 @@ function expandPathToThisElement(aElement) {
   if (aElement.classList.contains("kids")) {
     // Unhide the kids.
     aElement.classList.remove("hidden");
-    expandPathToThisElement(aElement.previousSibling);  // hasKids
+    expandPathToThisElement(aElement.previousSibling); // hasKids
 
   } else if (aElement.classList.contains("hasKids")) {
     // Change the separator to '--'.
     let sepSpan = aElement.childNodes[2];
     assertClassListContains(sepSpan, "mrSep");
     sepSpan.textContent = kShowKidsSep;
-    expandPathToThisElement(aElement.parentNode);       // kids or pre.entries
+    expandPathToThisElement(aElement.parentNode); // kids or pre.entries
 
   } else {
     assertClassListContains(aElement, "entries");
