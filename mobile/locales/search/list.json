@@ -460,6 +460,13 @@
         ]
       }
     },
+    "ltg": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazon-co-uk", "twitter", "wikipedia-ltg"
+        ]
+      }
+    },
     "lv": {
       "default": {
         "visibleDefaultEngines": [
