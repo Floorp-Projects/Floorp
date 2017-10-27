@@ -1167,6 +1167,58 @@ formautofill.creditCards:
     record_in_processes:
       - 'main'
 
+# The following section contains scalars for Screenshots.
+screenshots:
+  download:
+    bug_numbers:
+      - 1412411
+    description: >
+      The count of new screenshots created, then downloaded per session
+      via the Firefox Screenshots feature. Excludes failed attempts due
+      to any error.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jhirsch@mozilla.com
+      - ibicking@mozilla.com
+      - clouserw@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  upload:
+    bug_numbers:
+      - 1412411
+    description: >
+      The count of new screenshots created, then uploaded per session
+      via the Firefox Screenshots feature. Excludes attempts to create
+      and upload the screenshot that may have failed.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jhirsch@mozilla.com
+      - ibicking@mozilla.com
+      - clouserw@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  copy:
+    bug_numbers:
+      - 1412411
+    description: >
+      The count of new screenshots created, then copied directly to the
+      clipboard per session via the Firefox Screenshots feature.
+    expires: never
+    kind: uint
+    notification_emails:
+      - jhirsch@mozilla.com
+      - ibicking@mozilla.com
+      - clouserw@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section is for probes for tcp protocol.
 network.tcp:
   overlapped_io_canceled_before_finished:
