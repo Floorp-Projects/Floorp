@@ -1,14 +1,18 @@
 ---
-$if: task.tags['kind'] == "build"
+$if: task["tags"]
 then:
-    $mergeDeep:
-        - $eval: task
-        - extra:
-              treeherder:
-                  symbol: Ba
-        - payload:
-              env:
-                  USE_ARTIFACT:
-                      $eval: input.enabled
+    $if: task.tags["kind"] == "build"
+    then:
+        $mergeDeep:
+            - $eval: task
+            - extra:
+                  treeherder:
+                      symbol: Ba
+            - payload:
+                  env:
+                      USE_ARTIFACT:
+                          $eval: input.enabled
+    else:
+        $eval: task
 else:
     $eval: task
