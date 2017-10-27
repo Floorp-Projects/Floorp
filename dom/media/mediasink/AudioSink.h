@@ -63,6 +63,8 @@ public:
     return mAudibleEvent;
   }
 
+  nsCString GetDebugInfo();
+
 private:
   // Allocate and initialize mAudioStream. Returns NS_OK on success.
   nsresult InitializeAudioStream(const PlaybackParams& aParams);
