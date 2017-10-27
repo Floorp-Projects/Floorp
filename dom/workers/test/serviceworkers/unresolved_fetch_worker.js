@@ -14,6 +14,8 @@ onfetch = function(event) {
   event.respondWith((keepPromiseAlive = new Promise(function(res, rej) {})));
 }
 
-onactivate = function(event) {
-  event.waitUntil(clients.claim());
+onmessage = function(event) {
+  if (event.data === 'claim') {
+    event.waitUntil(clients.claim());
+  }
 }
