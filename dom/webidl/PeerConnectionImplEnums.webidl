@@ -17,12 +17,6 @@ enum PCImplSignalingState {
   "SignalingClosed",
 };
 
-enum PCImplSipccState {
-  "Idle",
-  "Starting",
-  "Started"
-};
-
 enum PCImplIceConnectionState {
     "new",
     "checking",

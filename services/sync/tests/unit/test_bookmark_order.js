@@ -148,8 +148,13 @@ async function resolveConflict(engine, collection, timestamp, buildTree,
     expectedTree, message);
 }
 
+add_task(async function setup() {
+  await Service.engineManager.unregister("bookmarks");
+});
+
 add_task(async function test_local_order_newer() {
-  let engine = Service.engineManager.get("bookmarks");
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
 
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -190,11 +195,13 @@ add_task(async function test_local_order_newer() {
     await engine.wipeClient();
     await Service.startOver();
     await promiseStopServer(server);
+    await engine.finalize();
   }
 });
 
 add_task(async function test_remote_order_newer() {
-  let engine = Service.engineManager.get("bookmarks");
+  let engine = new BookmarksEngine(Service);
+  await engine.initialize();
 
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -235,6 +242,7 @@ add_task(async function test_remote_order_newer() {
     await engine.wipeClient();
     await Service.startOver();
     await promiseStopServer(server);
+    await engine.finalize();
   }
 });
 

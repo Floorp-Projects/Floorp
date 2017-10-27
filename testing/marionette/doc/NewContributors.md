@@ -14,7 +14,7 @@ actual bug, yay!
 
 
 Accounts, communication
-=======================
+-----------------------
 
   1. Set up [IRC].
 
@@ -33,7 +33,7 @@ Accounts, communication
 
 
 Getting the code, running tests
-===============================
+-------------------------------
 
   1. Follow this tutorial to get a copy of Firefox source code and
      build it: http://areweeveryoneyet.org/onramp/desktop.html
@@ -101,7 +101,7 @@ Getting the code, running tests
 
 
 Work on bugs and get code review
-================================
+--------------------------------
 
 Once you've completed the above basics, ask :maja_zf, :whimboo,
 or :ato in #ateam for a good first bug to work on.  (Or you can
@@ -125,7 +125,7 @@ Bugzilla (not LDAP) and you can only use HTTPS, not SSH.)
 
 
 Resources
-=========
+---------
 
   * Sometimes (often?) documentation is out-of-date.  If something looks
     off, do ask us for help!

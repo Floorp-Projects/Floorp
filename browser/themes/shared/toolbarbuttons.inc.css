@@ -58,6 +58,7 @@ toolbar[brighttext] {
 #nav-bar-overflow-button[disabled=true] > .toolbarbutton-icon,
 #PanelUI-menu-button[disabled=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-text,
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   opacity: 0.4;
 }

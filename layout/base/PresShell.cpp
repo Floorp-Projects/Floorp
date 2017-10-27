@@ -2922,7 +2922,7 @@ PresShell::CancelAllPendingReflows()
 }
 
 void
-PresShell::DestroyFramesFor(Element* aElement)
+PresShell::DestroyFramesForAndRestyle(Element* aElement)
 {
   MOZ_ASSERT(aElement);
   NS_ENSURE_TRUE_VOID(mPresContext);
@@ -2940,21 +2940,15 @@ PresShell::DestroyFramesFor(Element* aElement)
   bool didReconstruct = fc->DestroyFramesFor(aElement);
   fc->EndUpdate();
 
-  // XXXmats doesn't frame state need to be restored in this case?
-  if (!didReconstruct) {
-    PostRecreateFramesFor(aElement);
-  }
+  auto changeHint = didReconstruct
+    ? nsChangeHint(0)
+    : nsChangeHint_ReconstructFrame;
 
-  // NOTE(emilio): This is needed to force also a full subtree restyle for the
-  // content (in Stylo, where the existence of frames != the existence of
-  // styles).
-  //
-  // It's a bit out of place in a function called DestroyFramesFor,
-  // however the two only callers of this code really need this (given they
-  // shuffle the flattened tree around), and this avoids exposing additional
-  // APIs on the pres shell.
+  // NOTE(emilio): eRestyle_Subtree is needed to force also a full subtree
+  // restyle for the content (in Stylo, where the existence of frames != the
+  // existence of styles).
   mPresContext->RestyleManager()->PostRestyleEvent(
-    aElement, eRestyle_Subtree, nsChangeHint(0));
+    aElement, eRestyle_Subtree, changeHint);
 
   --mChangeNestCount;
 }

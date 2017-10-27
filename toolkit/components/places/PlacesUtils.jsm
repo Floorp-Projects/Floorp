@@ -537,6 +537,8 @@ this.PlacesUtils = {
    *         - validIf: if the provided condition is not satisfied, then this
    *                    property is invalid.
    *         - defaultValue: an undefined property should default to this value.
+   *         - fixup: a function invoked when validation fails, takes the input
+   *                  object as argument and must fix the property.
    *
    * @return a validated and normalized item.
    * @throws if the object contains invalid data.
@@ -559,7 +561,11 @@ this.PlacesUtils = {
       }
       if (behavior[prop].hasOwnProperty("validIf") && input[prop] !== undefined &&
           !behavior[prop].validIf(input)) {
-        throw new Error(`${name}: Invalid value for property '${prop}': ${JSON.stringify(input[prop])}`);
+        if (behavior[prop].hasOwnProperty("fixup")) {
+          behavior[prop].fixup(input);
+        } else {
+          throw new Error(`${name}: Invalid value for property '${prop}': ${JSON.stringify(input[prop])}`);
+        }
       }
       if (behavior[prop].hasOwnProperty("defaultValue") && input[prop] === undefined) {
         input[prop] = behavior[prop].defaultValue;
@@ -580,7 +586,12 @@ this.PlacesUtils = {
         try {
           normalizedInput[prop] = validators[prop](input[prop], input);
         } catch (ex) {
-          throw new Error(`${name}: Invalid value for property '${prop}': ${JSON.stringify(input[prop])}`);
+          if (behavior.hasOwnProperty(prop) && behavior[prop].hasOwnProperty("fixup")) {
+            behavior[prop].fixup(input);
+            normalizedInput[prop] = input[prop];
+          } else {
+            throw new Error(`${name}: Invalid value for property '${prop}': ${JSON.stringify(input[prop])}`);
+          }
         }
       }
     }

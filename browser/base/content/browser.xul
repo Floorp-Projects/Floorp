@@ -796,8 +796,6 @@
                          tooltiptext="&urlbar.webNotificationsBlocked.tooltip;"/>
                   <image data-permission-id="camera" class="blocked-permission-icon camera-icon" role="button"
                          tooltiptext="&urlbar.cameraBlocked.tooltip;"/>
-                  <image data-permission-id="indexedDB" class="blocked-permission-icon indexedDB-icon" role="button"
-                         tooltiptext="&urlbar.indexedDBBlocked.tooltip;"/>
                   <image data-permission-id="microphone" class="blocked-permission-icon microphone-icon" role="button"
                          tooltiptext="&urlbar.microphoneBlocked.tooltip;"/>
                   <image data-permission-id="screen" class="blocked-permission-icon screen-icon" role="button"

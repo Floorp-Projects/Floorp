@@ -90,8 +90,6 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/widget/themed/ThemedImageButton.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/widget/themed/ThemedImageView.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/widget/themed/ThemedTextView.java"/>
-        <ignore path="**/mobile/android/search/java/org/mozilla/search/ui/BackCaptureEditText.java"/>
-        <ignore path="**/mobile/android/search/java/org/mozilla/search/ui/FacetBar.java"/>
     </issue>
 
     <!-- WHEN YOU FIX A LINT WARNING, ADD IT TO THIS LIST.

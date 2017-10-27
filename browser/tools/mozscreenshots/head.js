@@ -49,14 +49,7 @@ function shouldCapture() {
     return false;
   }
 
-  // Don't run pre-defined sets (e.g. primaryUI) on try, require MOZSCREENSHOTS_SETS.
-  // The job is only scheduled on specific repos:
-  // https://dxr.mozilla.org/build-central/search?q=MOCHITEST_BC_SCREENSHOTS
-  let capture = !AppConstants.SOURCE_REVISION_URL.includes("/try/rev/");
-  if (!capture) {
-    ok(true, "Capturing is disabled for this REPO. You may need to use MOZSCREENSHOTS_SETS");
-  }
-  return capture;
+  return true;
 }
 
 add_task(setup);

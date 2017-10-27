@@ -55,11 +55,9 @@ final class UnusedResourcesUtil {
     };
 
     public static final int[] USED_IN_MANIFEST = {
-            R.drawable.search_launcher,
             R.string.crash_reporter_title,
             R.xml.fxaccount_authenticator,
             R.xml.fxaccount_syncadapter,
-            R.xml.search_widget_info,
             R.xml.searchable,
     };
 

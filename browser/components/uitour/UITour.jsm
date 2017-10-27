@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
   "resource:///modules/PageActions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -548,25 +550,20 @@ this.UITour = {
       }
 
       case "showFirefoxAccounts": {
-        let p;
-        if (data.email) {
-          // With email parameter added, we need to use 'email' action to help FxA determine
-          // whether the email is registered or not and direct the user down the correct flow
-          p =  new URLSearchParams("action=email&entrypoint=uitour");
-          p.append("email", data.email);
-        } else {
-          // 'signup' is the default action that makes sense currently, so we don't
-          // accept arbitrary actions just to be safe...
-          p =  new URLSearchParams("action=signup&entrypoint=uitour");
-        }
-        // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
-        if (!this._populateCampaignParams(p, data.extraURLCampaignParams)) {
-          log.warn("showFirefoxAccounts: invalid campaign args specified");
-          return false;
-        }
+        Promise.resolve().then(() => {
+          return data.email ? fxAccounts.promiseAccountsEmailURI(data.email, "uitour") :
+                              fxAccounts.promiseAccountsSignUpURI("uitour");
+        }).then(uri => {
+          const url = new URL(uri);
+          // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
+          if (!this._populateCampaignParams(url, data.extraURLCampaignParams)) {
+            log.warn("showFirefoxAccounts: invalid campaign args specified");
+            return;
+          }
 
-        // We want to replace the current tab.
-        browser.loadURI("about:accounts?" + p.toString());
+          // We want to replace the current tab.
+          browser.loadURI(url.href);
+        });
         break;
       }
 
@@ -761,9 +758,9 @@ this.UITour = {
 
   // Given a string that is a JSONified represenation of an object with
   // additional utm_* URL params that should be appended, validate and append
-  // them to the passed URLSearchParams object. Returns true if the params
+  // them to the passed URL object. Returns true if the params
   // were validated and appended, and false if the request should be ignored.
-  _populateCampaignParams(urlSearchParams, extraURLCampaignParams) {
+  _populateCampaignParams(url, extraURLCampaignParams) {
     // We are extra paranoid about what params we allow to be appended.
     if (typeof extraURLCampaignParams == "undefined") {
       // no params, so it's all good.
@@ -799,7 +796,7 @@ this.UITour = {
           log.warn("_populateCampaignParams: invalid campaign param specified");
           return false;
         }
-        urlSearchParams.append(name, value);
+        url.searchParams.append(name, value);
       }
     }
     return true;

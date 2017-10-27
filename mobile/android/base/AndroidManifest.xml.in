@@ -263,9 +263,6 @@
         </receiver>
 
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
-#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-#include ../search/manifests/SearchAndroidManifest_activities.xml.in
-#endif
 
 #ifdef MOZ_CRASHREPORTER
   <activity android:name="org.mozilla.gecko.CrashReporter"
@@ -418,9 +415,6 @@
             android:exported="false" />
 
 
-#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-#include ../search/manifests/SearchAndroidManifest_services.xml.in
-#endif
 #ifdef MOZ_ANDROID_MLS_STUMBLER
 #include ../stumbler/manifests/StumblerManifest_services.xml.in
 #endif

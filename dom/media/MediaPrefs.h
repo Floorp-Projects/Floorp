@@ -94,6 +94,9 @@ private:
                                                               MediaMemoryCachesCombinedLimitPcSysmem, uint32_t, 5);
   DECL_MEDIA_PREF("media.cache.resource-index",               MediaResourceIndexCache, uint32_t, 8192);
 
+  DECL_MEDIA_PREF("media.cache_resume_threshold",             MediaCacheResumeThreshold, int32_t, 10);
+  DECL_MEDIA_PREF("media.cache_readahead_limit",              MediaCacheReadaheadLimit, int32_t, 30);
+
   // AudioSink
   DECL_MEDIA_PREF("accessibility.monoaudio.enable",           MonoAudio, bool, false);
   DECL_MEDIA_PREF("media.resampling.enabled",                 AudioSinkResampling, bool, false);

@@ -93,7 +93,7 @@ stylo-disabled-tests:
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
-    - mochitest-browser-screenshots
+    - browser-screenshots
     - mochitest-chrome
     - mochitest-clipboard
     - mochitest-gpu
@@ -303,7 +303,7 @@ linux32-opt-tests:
     - mochitest-devtools-chrome
 
 desktop-screenshot-capture:
-    - mochitest-browser-screenshots
+    - browser-screenshots
 
 android-common-tests:
     - cppunit

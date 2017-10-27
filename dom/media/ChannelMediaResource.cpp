@@ -290,8 +290,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   // any consumer can see the new data.
   UpdatePrincipal();
 
-  mCacheStream.NotifyDataStarted(mLoadID, startOffset);
-  mCacheStream.SetTransportSeekable(seekable);
+  mCacheStream.NotifyDataStarted(mLoadID, startOffset, seekable);
   mChannelStatistics.Start();
   mReopenOnError = false;
 
@@ -303,7 +302,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   // TODO: Don't turn this on until we fix all data races.
   nsCOMPtr<nsIThreadRetargetableRequest> retarget;
   if (Preferences::GetBool("media.omt_data_delivery.enabled", false) &&
-      (retarget = do_QueryInterface(aRequest)) && mCacheStream.OwnerThread()) {
+      (retarget = do_QueryInterface(aRequest))) {
     // Note this will not always succeed. We need to handle the case where
     // all resources sharing the same cache might run their data callbacks
     // on different threads.
@@ -390,7 +389,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     // not at the end of stream. We don't restart the stream if we're at the
     // end because not all web servers handle this case consistently; see:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
-    nsresult rv = CacheClientSeek(GetOffset(), false);
+    nsresult rv = Seek(GetOffset(), false);
     if (NS_SUCCEEDED(rv)) {
       return rv;
     }
@@ -745,12 +744,12 @@ ChannelMediaResource::RecreateChannel()
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // The decoder is being shut down, so don't bother opening a new channel
-    return NS_OK;
+    return NS_ERROR_ABORT;
   }
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   if (!element) {
     // The decoder is being shut down, so don't bother opening a new channel
-    return NS_OK;
+    return NS_ERROR_ABORT;
   }
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
@@ -849,17 +848,18 @@ ChannelMediaResource::UpdatePrincipal()
 void
 ChannelMediaResource::CacheClientNotifySuspendedStatusChanged()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-  mCallback->NotifySuspendedStatusChanged(IsSuspendedByCache());
+  mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<bool>(
+    "MediaResourceCallback::NotifySuspendedStatusChanged",
+    mCallback.get(),
+    &MediaResourceCallback::NotifySuspendedStatusChanged,
+    IsSuspendedByCache()));
 }
 
 nsresult
-ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
+ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-
-  LOG("CacheClientSeek requested for aOffset [%" PRId64 "] for decoder [%p]",
-      aOffset, mCallback.get());
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG("Seek requested for aOffset [%" PRId64 "]", aOffset);
 
   CloseChannel();
 
@@ -879,18 +879,38 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   return OpenChannel(aOffset);
 }
 
-nsresult
-ChannelMediaResource::CacheClientSuspend()
+void
+ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 {
-  Suspend(false);
-  return NS_OK;
+  RefPtr<ChannelMediaResource> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaResource::Seek", [self, aOffset, aResume]() {
+      nsresult rv = self->Seek(aOffset, aResume);
+      if (NS_FAILED(rv)) {
+        // Close the streams that failed due to error. This will cause all
+        // client Read and Seek operations on those streams to fail. Blocked
+        // Reads will also be woken up.
+        self->Close();
+      }
+    });
+  mCallback->AbstractMainThread()->Dispatch(r.forget());
 }
 
-nsresult
+void
+ChannelMediaResource::CacheClientSuspend()
+{
+  mCallback->AbstractMainThread()->Dispatch(
+    NewRunnableMethod<bool>("ChannelMediaResource::Suspend",
+                            this,
+                            &ChannelMediaResource::Suspend,
+                            false));
+}
+
+void
 ChannelMediaResource::CacheClientResume()
 {
-  Resume();
-  return NS_OK;
+  mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod(
+    "ChannelMediaResource::Resume", this, &ChannelMediaResource::Resume));
 }
 
 int64_t

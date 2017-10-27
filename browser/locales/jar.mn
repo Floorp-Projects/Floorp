@@ -10,7 +10,6 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
 *   locale/browser/bookmarks.html                  (generic/profile/bookmarks.html.in)
-    locale/browser/aboutAccounts.dtd               (%chrome/browser/aboutAccounts.dtd)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
     locale/browser/aboutPrivateBrowsing.properties (%chrome/browser/aboutPrivateBrowsing.properties)
