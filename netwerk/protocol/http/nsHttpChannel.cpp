@@ -2623,6 +2623,11 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
             mAuthRetryPending = true; // see DoAuthRetry
         }
         break;
+
+    case 425:
+        // Do not cache 425.
+        CloseCacheEntry(false);
+        MOZ_FALLTHROUGH; // process normally
     default:
         rv = ProcessNormal();
         MaybeInvalidateCacheEntryForSubsequentGet();

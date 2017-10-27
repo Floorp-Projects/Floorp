@@ -658,7 +658,7 @@ struct Ligature
     if (likely (!match_input (c, count,
 			      &component[1],
 			      match_glyph,
-			      NULL,
+			      nullptr,
 			      &match_length,
 			      match_positions,
 			      &is_mark_ligature,

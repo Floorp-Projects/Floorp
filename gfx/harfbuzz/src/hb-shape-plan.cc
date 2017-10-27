@@ -115,7 +115,7 @@ hb_shape_plan_create (hb_face_t                     *face,
 {
   return hb_shape_plan_create2 (face, props,
 				user_features, num_user_features,
-				NULL, 0,
+				nullptr, 0,
 				shaper_list);
 }
 
@@ -128,7 +128,7 @@ hb_shape_plan_create2 (hb_face_t                     *face,
 		       unsigned int                   num_coords,
 		       const char * const            *shaper_list)
 {
-  DEBUG_MSG_FUNC (SHAPE_PLAN, NULL,
+  DEBUG_MSG_FUNC (SHAPE_PLAN, nullptr,
 		  "face=%p num_features=%d num_coords=%d shaper_list=%p",
 		  face,
 		  num_user_features,
@@ -136,8 +136,8 @@ hb_shape_plan_create2 (hb_face_t                     *face,
 		  shaper_list);
 
   hb_shape_plan_t *shape_plan;
-  hb_feature_t *features = NULL;
-  int *coords = NULL;
+  hb_feature_t *features = nullptr;
+  int *coords = nullptr;
 
   if (unlikely (!face))
     face = hb_face_get_empty ();
@@ -196,16 +196,16 @@ hb_shape_plan_get_empty (void)
     HB_OBJECT_HEADER_STATIC,
 
     true, /* default_shaper_list */
-    NULL, /* face */
+    nullptr, /* face */
     HB_SEGMENT_PROPERTIES_DEFAULT, /* props */
 
-    NULL, /* shaper_func */
-    NULL, /* shaper_name */
+    nullptr, /* shaper_func */
+    nullptr, /* shaper_name */
 
-    NULL, /* user_features */
+    nullptr, /* user_features */
     0,    /* num_user_featurs */
 
-    NULL, /* coords */
+    nullptr, /* coords */
     0,    /* num_coords */
 
     {
@@ -470,7 +470,7 @@ hb_shape_plan_create_cached (hb_face_t                     *face,
 {
   return hb_shape_plan_create_cached2 (face, props,
 				       user_features, num_user_features,
-				       NULL, 0,
+				       nullptr, 0,
 				       shaper_list);
 }
 
@@ -483,7 +483,7 @@ hb_shape_plan_create_cached2 (hb_face_t                     *face,
 			      unsigned int                   num_coords,
 			      const char * const            *shaper_list)
 {
-  DEBUG_MSG_FUNC (SHAPE_PLAN, NULL,
+  DEBUG_MSG_FUNC (SHAPE_PLAN, nullptr,
 		  "face=%p num_features=%d shaper_list=%p",
 		  face,
 		  num_user_features,
@@ -494,7 +494,7 @@ hb_shape_plan_create_cached2 (hb_face_t                     *face,
     shaper_list,
     user_features,
     num_user_features,
-    NULL
+    nullptr
   };
 
   if (shaper_list) {

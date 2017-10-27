@@ -138,7 +138,7 @@ hb_ot_map_builder_t::compile (hb_ot_map_t  &m,
 			      const int    *coords,
 			      unsigned int  num_coords)
 {
-  ASSERT_STATIC (!(HB_GLYPH_FLAG_DEFINED & (HB_GLYPH_FLAG_DEFINED + 1)));
+  static_assert ((!(HB_GLYPH_FLAG_DEFINED & (HB_GLYPH_FLAG_DEFINED + 1))), "");
   unsigned int global_bit_mask = HB_GLYPH_FLAG_DEFINED + 1;
   unsigned int global_bit_shift = _hb_popcount32 (HB_GLYPH_FLAG_DEFINED);
 
@@ -269,8 +269,8 @@ hb_ot_map_builder_t::compile (hb_ot_map_t  &m,
   feature_infos.shrink (0); /* Done with these */
 
 
-  add_gsub_pause (NULL);
-  add_gpos_pause (NULL);
+  add_gsub_pause (nullptr);
+  add_gpos_pause (nullptr);
 
   for (unsigned int table_index = 0; table_index < 2; table_index++)
   {

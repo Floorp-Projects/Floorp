@@ -43,9 +43,9 @@ const hb_face_t _hb_face_nil = {
 
   true, /* immutable */
 
-  NULL, /* reference_table_func */
-  NULL, /* user_data */
-  NULL, /* destroy */
+  nullptr, /* reference_table_func */
+  nullptr, /* user_data */
+  nullptr, /* destroy */
 
   0,    /* index */
   1000, /* upem */
@@ -57,7 +57,7 @@ const hb_face_t _hb_face_nil = {
 #undef HB_SHAPER_IMPLEMENT
   },
 
-  NULL, /* shape_plans */
+  nullptr, /* shape_plans */
 };
 
 
@@ -109,7 +109,7 @@ _hb_face_for_data_closure_create (hb_blob_t *blob, unsigned int index)
 
   closure = (hb_face_for_data_closure_t *) calloc (1, sizeof (hb_face_for_data_closure_t));
   if (unlikely (!closure))
-    return NULL;
+    return nullptr;
 
   closure->blob = blob;
   closure->index = index;

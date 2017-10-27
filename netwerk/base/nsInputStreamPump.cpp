@@ -98,23 +98,23 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
 {
   RecursiveMutexAutoLock lock(mMutex);
 
-  NS_ASSERTION(mAsyncStream, "PeekStream called without stream");
+  MOZ_ASSERT(mAsyncStream, "PeekStream called without stream");
 
   nsresult rv = CreateBufferedStreamIfNeeded();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // See if the pipe is closed by checking the return of Available.
   uint64_t dummy64;
-  rv = mBufferedStream->Available(&dummy64);
+  rv = mAsyncStream->Available(&dummy64);
   if (NS_FAILED(rv))
     return rv;
   uint32_t dummy = (uint32_t)std::min(dummy64, (uint64_t)UINT32_MAX);
 
   PeekData data(callback, closure);
-  return mBufferedStream->ReadSegments(CallPeekFunc,
-                                       &data,
-                                       nsIOService::gDefaultSegmentSize,
-                                       &dummy);
+  return mAsyncStream->ReadSegments(CallPeekFunc,
+                                    &data,
+                                    nsIOService::gDefaultSegmentSize,
+                                    &dummy);
 }
 
 nsresult
@@ -544,7 +544,7 @@ nsInputStreamPump::OnStateTransfer()
     }
 
     uint64_t avail;
-    rv = mBufferedStream->Available(&avail);
+    rv = mAsyncStream->Available(&avail);
     LOG(("  Available returned [stream=%p rv=%" PRIx32 " avail=%" PRIu64 "]\n", mAsyncStream.get(),
          static_cast<uint32_t>(rv), avail));
 
@@ -569,7 +569,7 @@ nsInputStreamPump::OnStateTransfer()
         // in most cases this QI will succeed (mAsyncStream is almost always
         // a nsPipeInputStream, which implements nsISeekableStream::Tell).
         int64_t offsetBefore;
-        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mBufferedStream);
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
         if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
             NS_NOTREACHED("Tell failed on readable stream");
             offsetBefore = 0;
@@ -588,7 +588,7 @@ nsInputStreamPump::OnStateTransfer()
             // nsInputStreamPumps are needed (e.g. nsHttpChannel).
             RecursiveMutexAutoUnlock unlock(mMutex);
             rv = mListener->OnDataAvailable(this, mListenerContext,
-                                            mBufferedStream, mStreamOffset,
+                                            mAsyncStream, mStreamOffset,
                                             odaAvail);
         }
 
@@ -631,7 +631,7 @@ nsInputStreamPump::OnStateTransfer()
             // Available may return 0 bytes available at the moment; that
             // would not mean that we are done.
             // XXX async streams should have a GetStatus method!
-            rv = mBufferedStream->Available(&avail);
+            rv = mAsyncStream->Available(&avail);
             if (NS_SUCCEEDED(rv))
                 return STATE_TRANSFER;
             if (rv != NS_BASE_STREAM_CLOSED)
@@ -693,7 +693,6 @@ nsInputStreamPump::OnStateStop()
         mAsyncStream->Close();
 
     mAsyncStream = nullptr;
-    mBufferedStream = nullptr;
     mTargetThread = nullptr;
     mIsPending = false;
     {
@@ -715,7 +714,7 @@ nsInputStreamPump::OnStateStop()
 nsresult
 nsInputStreamPump::CreateBufferedStreamIfNeeded()
 {
-  if (mBufferedStream) {
+  if (mAsyncStream) {
     return NS_OK;
   }
 
@@ -723,14 +722,17 @@ nsInputStreamPump::CreateBufferedStreamIfNeeded()
   // it, we wrap a nsIBufferedInputStream around it, if needed.
 
   if (NS_InputStreamIsBuffered(mAsyncStream)) {
-    mBufferedStream = mAsyncStream;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAsyncInputStream> stream = mAsyncStream;
-  nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(mBufferedStream),
-                                          stream.forget(), 4096);
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(stream),
+                                          mAsyncStream.forget(), 4096);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // A buffered inputStream must implement nsIAsyncInputStream.
+  mAsyncStream = do_QueryInterface(stream);
+  MOZ_DIAGNOSTIC_ASSERT(mAsyncStream);
 
   return NS_OK;
 }

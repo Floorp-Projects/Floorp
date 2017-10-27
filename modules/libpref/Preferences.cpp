@@ -4775,6 +4775,7 @@ pref_InitInitialObjects()
   NS_ENSURE_SUCCESS(
     rv, Err("pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST) failed"));
 
+#ifdef MOZ_WIDGET_ANDROID
   // Set up the correct default for toolkit.telemetry.enabled. If this build
   // has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta channel, telemetry
   // is on by default, otherwise not. This is necessary so that beta users who
@@ -4793,6 +4794,19 @@ pref_InitInitialObjects()
 #endif
     PREF_SetBoolPref(kTelemetryPref, prerelease, true);
   }
+#else
+  // For platforms with Unified Telemetry (here meaning not-Android),
+  // toolkit.telemetry.enabled determines whether we send "extended" data.
+  // We only want extended data from pre-release channels due to size.
+  if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
+    PREF_SetBoolPref(kTelemetryPref, true, true);
+  } else {
+    PREF_SetBoolPref(kTelemetryPref, false, true);
+  }
+  PREF_LockPref(kTelemetryPref, true);
+#endif // MOZ_WIDGET_ANDROID
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                 nullptr,

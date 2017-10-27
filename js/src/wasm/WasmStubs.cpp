@@ -874,7 +874,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         // The JIT might have clobbered exitFP at this point. Since there's
         // going to be a CoerceInPlace call, pretend we're still doing the JIT
         // call by restoring our tagged exitFP.
-        SetExitFP(masm, scratch);
+        SetExitFP(masm, ExitReason::Fixed::ImportJit, scratch);
 
         // argument 0: argv
         ABIArgMIRTypeIter i(coerceArgTypes);

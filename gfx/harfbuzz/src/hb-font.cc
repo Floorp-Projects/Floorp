@@ -36,7 +36,7 @@
  */
 
 static hb_bool_t
-hb_font_get_font_h_extents_nil (hb_font_t *font,
+hb_font_get_font_h_extents_nil (hb_font_t *font HB_UNUSED,
 				void *font_data HB_UNUSED,
 				hb_font_extents_t *metrics,
 				void *user_data HB_UNUSED)
@@ -60,7 +60,7 @@ hb_font_get_font_h_extents_parent (hb_font_t *font,
 }
 
 static hb_bool_t
-hb_font_get_font_v_extents_nil (hb_font_t *font,
+hb_font_get_font_v_extents_nil (hb_font_t *font HB_UNUSED,
 				void *font_data HB_UNUSED,
 				hb_font_extents_t *metrics,
 				void *user_data HB_UNUSED)
@@ -347,12 +347,12 @@ static const hb_font_funcs_t _hb_font_funcs_nil = {
   true, /* immutable */
 
   {
-#define HB_FONT_FUNC_IMPLEMENT(name) NULL,
+#define HB_FONT_FUNC_IMPLEMENT(name) nullptr,
     HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
   },
   {
-#define HB_FONT_FUNC_IMPLEMENT(name) NULL,
+#define HB_FONT_FUNC_IMPLEMENT(name) nullptr,
     HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
   },
@@ -370,12 +370,12 @@ static const hb_font_funcs_t _hb_font_funcs_parent = {
   true, /* immutable */
 
   {
-#define HB_FONT_FUNC_IMPLEMENT(name) NULL,
+#define HB_FONT_FUNC_IMPLEMENT(name) nullptr,
     HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
   },
   {
-#define HB_FONT_FUNC_IMPLEMENT(name) NULL,
+#define HB_FONT_FUNC_IMPLEMENT(name) nullptr,
     HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
   },
@@ -563,8 +563,8 @@ hb_font_funcs_set_##name##_func (hb_font_funcs_t             *ffuncs,    \
     ffuncs->destroy.name = destroy;                                      \
   } else {                                                               \
     ffuncs->get.f.name = hb_font_get_##name##_parent;                    \
-    ffuncs->user_data.name = NULL;                                       \
-    ffuncs->destroy.name = NULL;                                         \
+    ffuncs->user_data.name = nullptr;                                       \
+    ffuncs->destroy.name = nullptr;                                         \
   }                                                                      \
 }
 
@@ -1161,7 +1161,7 @@ hb_font_create_sub_font (hb_font_t *parent)
 
   font->num_coords = parent->num_coords;
   if (!font->num_coords)
-    font->coords = NULL;
+    font->coords = nullptr;
   else
   {
     unsigned int size = parent->num_coords * sizeof (parent->coords[0]);
@@ -1192,7 +1192,7 @@ hb_font_get_empty (void)
 
     true, /* immutable */
 
-    NULL, /* parent */
+    nullptr, /* parent */
     const_cast<hb_face_t *> (&_hb_face_nil),
 
     1000, /* x_scale */
@@ -1203,11 +1203,11 @@ hb_font_get_empty (void)
     0, /* ptem */
 
     0, /* num_coords */
-    NULL, /* coords */
+    nullptr, /* coords */
 
     const_cast<hb_font_funcs_t *> (&_hb_font_funcs_nil), /* klass */
-    NULL, /* user_data */
-    NULL, /* destroy */
+    nullptr, /* user_data */
+    nullptr, /* destroy */
 
     {
 #define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
@@ -1639,13 +1639,13 @@ hb_font_set_variations (hb_font_t *font,
 
   if (!variations_length)
   {
-    hb_font_set_var_coords_normalized (font, NULL, 0);
+    hb_font_set_var_coords_normalized (font, nullptr, 0);
     return;
   }
 
   unsigned int coords_length = hb_ot_var_get_axis_count (font->face);
 
-  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : NULL;
+  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
   if (unlikely (coords_length && !normalized))
     return;
 
@@ -1668,7 +1668,7 @@ hb_font_set_var_coords_design (hb_font_t *font,
   if (font->immutable)
     return;
 
-  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : NULL;
+  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : nullptr;
   if (unlikely (coords_length && !normalized))
     return;
 
@@ -1689,7 +1689,7 @@ hb_font_set_var_coords_normalized (hb_font_t *font,
   if (font->immutable)
     return;
 
-  int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : NULL;
+  int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : nullptr;
   if (unlikely (coords_length && !copy))
     return;
 
@@ -1749,7 +1749,7 @@ trampoline_create (FuncType           func,
   trampoline_t *trampoline = (trampoline_t *) calloc (1, sizeof (trampoline_t));
 
   if (unlikely (!trampoline))
-    return NULL;
+    return nullptr;
 
   trampoline->closure.user_data = user_data;
   trampoline->closure.destroy = destroy;

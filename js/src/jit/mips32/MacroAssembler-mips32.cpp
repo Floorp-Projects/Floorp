@@ -935,26 +935,32 @@ MacroAssemblerMIPSCompat::loadDouble(const BaseIndex& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPSCompat::loadUnalignedDouble(const BaseIndex& src, Register temp,
-                                              FloatRegister dest)
+MacroAssemblerMIPSCompat::loadUnalignedDouble(const wasm::MemoryAccessDesc& access,
+                                              const BaseIndex& src, Register temp, FloatRegister dest)
 {
     computeScaledAddress(src, SecondScratchReg);
 
+    uint32_t framePushed = asMasm().framePushed();
+    BufferOffset load;
     if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 7)) {
-        as_lwl(temp, SecondScratchReg, src.offset + INT64LOW_OFFSET + 3);
+        load = as_lwl(temp, SecondScratchReg, src.offset + INT64LOW_OFFSET + 3);
         as_lwr(temp, SecondScratchReg, src.offset + INT64LOW_OFFSET);
+        append(access, load.getOffset(), framePushed);
         moveToDoubleLo(temp, dest);
-        as_lwl(temp, SecondScratchReg, src.offset + INT64HIGH_OFFSET + 3);
+        load = as_lwl(temp, SecondScratchReg, src.offset + INT64HIGH_OFFSET + 3);
         as_lwr(temp, SecondScratchReg, src.offset + INT64HIGH_OFFSET);
+        append(access, load.getOffset(), framePushed);
         moveToDoubleHi(temp, dest);
     } else {
         ma_li(ScratchRegister, Imm32(src.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
-        as_lwl(temp, ScratchRegister, INT64LOW_OFFSET + 3);
+        load = as_lwl(temp, ScratchRegister, INT64LOW_OFFSET + 3);
         as_lwr(temp, ScratchRegister, INT64LOW_OFFSET);
+        append(access, load.getOffset(), framePushed);
         moveToDoubleLo(temp, dest);
-        as_lwl(temp, ScratchRegister, INT64HIGH_OFFSET + 3);
+        load = as_lwl(temp, ScratchRegister, INT64HIGH_OFFSET + 3);
         as_lwr(temp, ScratchRegister, INT64HIGH_OFFSET);
+        append(access, load.getOffset(), framePushed);
         moveToDoubleHi(temp, dest);
     }
 }
@@ -987,21 +993,21 @@ MacroAssemblerMIPSCompat::loadFloat32(const BaseIndex& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerMIPSCompat::loadUnalignedFloat32(const BaseIndex& src, Register temp,
-                                               FloatRegister dest)
+MacroAssemblerMIPSCompat::loadUnalignedFloat32(const wasm::MemoryAccessDesc& access,
+                                               const BaseIndex& src, Register temp, FloatRegister dest)
 {
     computeScaledAddress(src, SecondScratchReg);
-
+    BufferOffset load;
     if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 3)) {
-        as_lwl(temp, SecondScratchReg, src.offset + 3);
+        load = as_lwl(temp, SecondScratchReg, src.offset + 3);
         as_lwr(temp, SecondScratchReg, src.offset);
     } else {
         ma_li(ScratchRegister, Imm32(src.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
-        as_lwl(temp, ScratchRegister, 3);
+        load = as_lwl(temp, ScratchRegister, 3);
         as_lwr(temp, ScratchRegister, 0);
     }
-
+    append(access, load.getOffset(), asMasm().framePushed());
     moveToFloat32(temp, dest);
 }
 
@@ -1139,46 +1145,52 @@ MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
 }
 
 void
-MacroAssemblerMIPSCompat::storeUnalignedFloat32(FloatRegister src, Register temp,
-                                                const BaseIndex& dest)
+MacroAssemblerMIPSCompat::storeUnalignedFloat32(const wasm::MemoryAccessDesc& access,
+                                                FloatRegister src, Register temp, const BaseIndex& dest)
 {
     computeScaledAddress(dest, SecondScratchReg);
     moveFromFloat32(src, temp);
 
+    BufferOffset store;
     if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + 3)) {
-        as_swl(temp, SecondScratchReg, dest.offset + 3);
+        store = as_swl(temp, SecondScratchReg, dest.offset + 3);
         as_swr(temp, SecondScratchReg, dest.offset);
     } else {
         ma_li(ScratchRegister, Imm32(dest.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
-        as_swl(temp, ScratchRegister, 3);
+        store = as_swl(temp, ScratchRegister, 3);
         as_swr(temp, ScratchRegister, 0);
     }
+    append(access, store.getOffset(), asMasm().framePushed());
 }
 
 void
-MacroAssemblerMIPSCompat::storeUnalignedDouble(FloatRegister src, Register temp,
-                                               const BaseIndex& dest)
+MacroAssemblerMIPSCompat::storeUnalignedDouble(const wasm::MemoryAccessDesc& access,
+                                               FloatRegister src, Register temp, const BaseIndex& dest)
 {
     computeScaledAddress(dest, SecondScratchReg);
 
+    uint32_t framePushed = asMasm().framePushed();
+    BufferOffset store;
     if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + 7)) {
+        moveFromDoubleHi(src, temp);
+        store = as_swl(temp, SecondScratchReg, dest.offset + INT64HIGH_OFFSET + 3);
+        as_swr(temp, SecondScratchReg, dest.offset + INT64HIGH_OFFSET);
         moveFromDoubleLo(src, temp);
         as_swl(temp, SecondScratchReg, dest.offset + INT64LOW_OFFSET + 3);
         as_swr(temp, SecondScratchReg, dest.offset + INT64LOW_OFFSET);
-        moveFromDoubleHi(src, temp);
-        as_swl(temp, SecondScratchReg, dest.offset + INT64HIGH_OFFSET + 3);
-        as_swr(temp, SecondScratchReg, dest.offset + INT64HIGH_OFFSET);
+
     } else {
         ma_li(ScratchRegister, Imm32(dest.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
+        moveFromDoubleHi(src, temp);
+        store = as_swl(temp, ScratchRegister, INT64HIGH_OFFSET + 3);
+        as_swr(temp, ScratchRegister, INT64HIGH_OFFSET);
         moveFromDoubleLo(src, temp);
         as_swl(temp, ScratchRegister, INT64LOW_OFFSET + 3);
         as_swr(temp, ScratchRegister, INT64LOW_OFFSET);
-        moveFromDoubleHi(src, temp);
-        as_swl(temp, ScratchRegister, INT64HIGH_OFFSET + 3);
-        as_swr(temp, ScratchRegister, INT64HIGH_OFFSET);
     }
+    append(access, store.getOffset(), framePushed);
 }
 
 // Note: this function clobbers the input register.
