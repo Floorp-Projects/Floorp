@@ -504,7 +504,7 @@ static const unsigned MaxBrTableElems        =  1000000;
 static const unsigned MaxMemoryInitialPages  = 16384;
 static const unsigned MaxMemoryMaximumPages  = 65536;
 static const unsigned MaxModuleBytes         = 1024 * 1024 * 1024;
-static const unsigned MaxFunctionBytes       =         128 * 1024;
+static const unsigned MaxFunctionBytes       =  7654321;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
