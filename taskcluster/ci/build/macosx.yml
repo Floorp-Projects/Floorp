@@ -16,6 +16,7 @@ macosx64/debug:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -47,6 +48,7 @@ macosx64/opt:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -77,6 +79,7 @@ macosx64-dmd/opt:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         custom-build-variant-cfg: dmd
@@ -112,6 +115,7 @@ macosx64-devedition-nightly/opt:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - disable_signing.py
             - taskcluster_nightly.py
@@ -147,6 +151,7 @@ macosx64-noopt/debug:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -181,6 +186,7 @@ macosx64-add-on-devel/opt:
        using: mozharness
        actions: [get-secrets build update]
        config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - balrog/production.py
        script: "mozharness/scripts/fx_desktop_build.py"
@@ -217,6 +223,7 @@ macosx64-nightly/opt:
         using: mozharness
         actions: [get-secrets build update]
         config:
+            - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
             - disable_signing.py
             - taskcluster_nightly.py

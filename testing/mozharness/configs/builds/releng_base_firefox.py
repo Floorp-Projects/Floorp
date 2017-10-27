@@ -1,0 +1,3 @@
+config = {
+    'objdir': 'obj-firefox',
+}

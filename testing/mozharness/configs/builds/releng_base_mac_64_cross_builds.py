@@ -27,7 +27,6 @@ config = {
     ],
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox/',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,

@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
@@ -15,7 +13,6 @@ config = {
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': MOZ_OBJDIR,
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,

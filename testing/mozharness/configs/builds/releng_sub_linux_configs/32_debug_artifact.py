@@ -1,7 +1,5 @@
 import os
 
-MOZ_OBJDIR = 'obj-firefox'
-
 config = {
     #########################################################################
     ######## LINUX GENERIC CONFIG KEYS/VAlUES
@@ -24,7 +22,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': MOZ_OBJDIR,
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,

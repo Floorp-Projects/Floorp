@@ -21,7 +21,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'vcs_share_base': '/builds/hg-shared',
-    'objdir': 'obj-firefox',
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
