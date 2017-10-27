@@ -7,39 +7,41 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  // ReactJS
   const React = require("devtools/client/shared/vendor/react");
-
-  // Shortcuts
+  const { Component, PropTypes } = React;
   const { thead, tr, td, div } = React.DOM;
-  const PropTypes = React.PropTypes;
 
   /**
    * This component is responsible for rendering tree header.
    * It's based on <thead> element.
    */
-  let TreeHeader = React.createClass({
-    displayName: "TreeHeader",
-
+  class TreeHeader extends Component {
     // See also TreeView component for detailed info about properties.
-    propTypes: {
-      // Custom tree decorator
-      decorator: PropTypes.object,
-      // True if the header should be visible
-      header: PropTypes.bool,
-      // Array with column definition
-      columns: PropTypes.array
-    },
+    static get propTypes() {
+      return {
+        // Custom tree decorator
+        decorator: PropTypes.object,
+        // True if the header should be visible
+        header: PropTypes.bool,
+        // Array with column definition
+        columns: PropTypes.array
+      };
+    }
 
-    getDefaultProps: function () {
+    static get defaultProps() {
       return {
         columns: [{
           id: "default"
         }]
       };
-    },
+    }
 
-    getHeaderClass: function (colId) {
+    constructor(props) {
+      super(props);
+      this.getHeaderClass = this.getHeaderClass.bind(this);
+    }
+
+    getHeaderClass(colId) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getHeaderClass) {
         return [];
@@ -56,9 +58,9 @@ define(function (require, exports, module) {
       }
 
       return classNames;
-    },
+    }
 
-    render: function () {
+    render() {
       let cells = [];
       let visible = this.props.header;
 
@@ -97,7 +99,7 @@ define(function (require, exports, module) {
         }, cells))
       );
     }
-  });
+  }
 
   // Exports from this module
   module.exports = TreeHeader;

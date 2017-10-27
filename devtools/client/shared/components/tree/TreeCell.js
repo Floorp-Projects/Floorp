@@ -8,45 +8,48 @@
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
-
-  // Shortcuts
+  const { Component, PropTypes } = React;
   const { input, span, td } = React.DOM;
-  const PropTypes = React.PropTypes;
 
   /**
    * This template represents a cell in TreeView row. It's rendered
    * using <td> element (the row is <tr> and the entire tree is <table>).
    */
-  let TreeCell = React.createClass({
-    displayName: "TreeCell",
-
+  class TreeCell extends Component {
     // See TreeView component for detailed property explanation.
-    propTypes: {
-      value: PropTypes.any,
-      decorator: PropTypes.object,
-      id: PropTypes.string.isRequired,
-      member: PropTypes.object.isRequired,
-      renderValue: PropTypes.func.isRequired,
-      enableInput: PropTypes.bool,
-    },
-
-    getInitialState: function () {
+    static get propTypes() {
       return {
+        value: PropTypes.any,
+        decorator: PropTypes.object,
+        id: PropTypes.string.isRequired,
+        member: PropTypes.object.isRequired,
+        renderValue: PropTypes.func.isRequired,
+        enableInput: PropTypes.bool,
+      };
+    }
+
+    constructor(props) {
+      super(props);
+
+      this.state = {
         inputEnabled: false,
       };
-    },
+
+      this.getCellClass = this.getCellClass.bind(this);
+      this.updateInputEnabled = this.updateInputEnabled.bind(this);
+    }
 
     /**
      * Optimize cell rendering. Rerender cell content only if
      * the value or expanded state changes.
      */
-    shouldComponentUpdate: function (nextProps, nextState) {
+    shouldComponentUpdate(nextProps, nextState) {
       return (this.props.value != nextProps.value) ||
         (this.state !== nextState) ||
         (this.props.member.open != nextProps.member.open);
-    },
+    }
 
-    getCellClass: function (object, id) {
+    getCellClass(object, id) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getCellClass) {
         return [];
@@ -63,15 +66,15 @@ define(function (require, exports, module) {
       }
 
       return classNames;
-    },
+    }
 
-    updateInputEnabled: function (evt) {
+    updateInputEnabled(evt) {
       this.setState(Object.assign({}, this.state, {
         inputEnabled: evt.target.nodeName.toLowerCase() !== "input",
       }));
-    },
+    }
 
-    render: function () {
+    render() {
       let {
         member,
         id,
@@ -127,7 +130,7 @@ define(function (require, exports, module) {
         )
       );
     }
-  });
+  }
 
   // Default value rendering.
   let defaultRenderValue = props => {

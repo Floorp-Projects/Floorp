@@ -8,7 +8,7 @@
 
 define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
-  const { DOM } = React;
+  const { Component, DOM } = React;
   const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
   /**
@@ -31,43 +31,45 @@ define(function (require, exports, module) {
    *  </div>
    * <div>
    */
-  let Tabs = React.createClass({
-    displayName: "Tabs",
+  class Tabs extends Component {
+    static get propTypes() {
+      return {
+        className: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.string,
+          React.PropTypes.object
+        ]),
+        tabActive: React.PropTypes.number,
+        onMount: React.PropTypes.func,
+        onBeforeChange: React.PropTypes.func,
+        onAfterChange: React.PropTypes.func,
+        children: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.element
+        ]).isRequired,
+        showAllTabsMenu: React.PropTypes.bool,
+        onAllTabsMenuClick: React.PropTypes.func,
 
-    propTypes: {
-      className: React.PropTypes.oneOfType([
-        React.PropTypes.array,
-        React.PropTypes.string,
-        React.PropTypes.object
-      ]),
-      tabActive: React.PropTypes.number,
-      onMount: React.PropTypes.func,
-      onBeforeChange: React.PropTypes.func,
-      onAfterChange: React.PropTypes.func,
-      children: React.PropTypes.oneOfType([
-        React.PropTypes.array,
-        React.PropTypes.element
-      ]).isRequired,
-      showAllTabsMenu: React.PropTypes.bool,
-      onAllTabsMenuClick: React.PropTypes.func,
+        // Set true will only render selected panel on DOM. It's complete
+        // opposite of the created array, and it's useful if panels content
+        // is unpredictable and update frequently.
+        renderOnlySelected: React.PropTypes.bool,
+      };
+    }
 
-      // Set true will only render selected panel on DOM. It's complete
-      // opposite of the created array, and it's useful if panels content
-      // is unpredictable and update frequently.
-      renderOnlySelected: React.PropTypes.bool,
-    },
-
-    getDefaultProps: function () {
+    static get defaultProps() {
       return {
         tabActive: 0,
         showAllTabsMenu: false,
         renderOnlySelected: false,
       };
-    },
+    }
 
-    getInitialState: function () {
-      return {
-        tabActive: this.props.tabActive,
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        tabActive: props.tabActive,
 
         // This array is used to store an information whether a tab
         // at specific index has already been created (e.g. selected
@@ -82,9 +84,17 @@ define(function (require, exports, module) {
         // True if tabs can't fit into available horizontal space.
         overflow: false,
       };
-    },
 
-    componentDidMount: function () {
+      this.onOverflow = this.onOverflow.bind(this);
+      this.onUnderflow = this.onUnderflow.bind(this);
+      this.onKeyDown = this.onKeyDown.bind(this);
+      this.onClickTab = this.onClickTab.bind(this);
+      this.setActive = this.setActive.bind(this);
+      this.renderMenuItems = this.renderMenuItems.bind(this);
+      this.renderPanels = this.renderPanels.bind(this);
+    }
+
+    componentDidMount() {
       let node = findDOMNode(this);
       node.addEventListener("keydown", this.onKeyDown);
 
@@ -101,9 +111,9 @@ define(function (require, exports, module) {
       if (this.props.onMount) {
         this.props.onMount(index);
       }
-    },
+    }
 
-    componentWillReceiveProps: function (nextProps) {
+    componentWillReceiveProps(nextProps) {
       let { children, tabActive } = nextProps;
 
       // Check type of 'tabActive' props to see if it's valid
@@ -123,9 +133,9 @@ define(function (require, exports, module) {
           tabActive,
         });
       }
-    },
+    }
 
-    componentWillUnmount: function () {
+    componentWillUnmount() {
       let node = findDOMNode(this);
       node.removeEventListener("keydown", this.onKeyDown);
 
@@ -133,27 +143,27 @@ define(function (require, exports, module) {
         node.removeEventListener("overflow", this.onOverflow);
         node.removeEventListener("underflow", this.onUnderflow);
       }
-    },
+    }
 
     // DOM Events
 
-    onOverflow: function (event) {
+    onOverflow(event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
           overflow: true
         });
       }
-    },
+    }
 
-    onUnderflow: function (event) {
+    onUnderflow(event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
           overflow: false
         });
       }
-    },
+    }
 
-    onKeyDown: function (event) {
+    onKeyDown(event) {
       // Bail out if the focus isn't on a tab.
       if (!event.target.closest(".tabs-menu-item")) {
         return;
@@ -174,19 +184,19 @@ define(function (require, exports, module) {
       if (this.state.tabActive != tabActive) {
         this.setActive(tabActive);
       }
-    },
+    }
 
-    onClickTab: function (index, event) {
+    onClickTab(index, event) {
       this.setActive(index);
 
       if (event) {
         event.preventDefault();
       }
-    },
+    }
 
     // API
 
-    setActive: function (index) {
+    setActive(index) {
       let onAfterChange = this.props.onAfterChange;
       let onBeforeChange = this.props.onBeforeChange;
 
@@ -217,11 +227,11 @@ define(function (require, exports, module) {
           onAfterChange(index);
         }
       });
-    },
+    }
 
     // Rendering
 
-    renderMenuItems: function () {
+    renderMenuItems() {
       if (!this.props.children) {
         throw new Error("There must be at least one Tab");
       }
@@ -299,9 +309,9 @@ define(function (require, exports, module) {
           allTabsMenu
         )
       );
-    },
+    }
 
-    renderPanels: function () {
+    renderPanels() {
       let { children, renderOnlySelected } = this.props;
 
       if (!children) {
@@ -359,38 +369,38 @@ define(function (require, exports, module) {
           panels
         )
       );
-    },
+    }
 
-    render: function () {
+    render() {
       return (
         DOM.div({ className: ["tabs", this.props.className].join(" ") },
           this.renderMenuItems(),
           this.renderPanels()
         )
       );
-    },
-  });
+    }
+  }
 
   /**
    * Renders simple tab 'panel'.
    */
-  let Panel = React.createClass({
-    displayName: "Panel",
+  class Panel extends Component {
+    static get propTypes() {
+      return {
+        title: React.PropTypes.string.isRequired,
+        children: React.PropTypes.oneOfType([
+          React.PropTypes.array,
+          React.PropTypes.element
+        ]).isRequired
+      };
+    }
 
-    propTypes: {
-      title: React.PropTypes.string.isRequired,
-      children: React.PropTypes.oneOfType([
-        React.PropTypes.array,
-        React.PropTypes.element
-      ]).isRequired
-    },
-
-    render: function () {
+    render() {
       return DOM.div({className: "tab-panel"},
         this.props.children
       );
     }
-  });
+  }
 
   // Exports from this module
   exports.TabPanel = Panel;
