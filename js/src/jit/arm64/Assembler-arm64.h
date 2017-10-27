@@ -452,9 +452,10 @@ static constexpr Register ABINonArgReg2 = r10;
 static constexpr Register ABINonArgReturnReg0 = r8;
 static constexpr Register ABINonArgReturnReg1 = r9;
 
-// This register is guaranteed to be clobberable during the prologue of an ABI
-// call which must preserve both ABI argument and non-volatile registers.
-static constexpr Register NativeABIPrologueClobberable = lr;
+// This register is guaranteed to be clobberable during the prologue and
+// epilogue of an ABI call which must preserve both ABI argument, return
+// and non-volatile registers.
+static constexpr Register ABINonArgReturnVolatileReg = lr;
 
 // TLS pointer argument register for WebAssembly functions. This must not alias
 // any other register used for passing function arguments or return values.
