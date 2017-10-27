@@ -9,19 +9,19 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
                  "popup closes on tab switch";
+const TEST_URI_NAVIGATE = "data:text/html;charset=utf-8,<p>testing autocomplete closes";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
   let popup = hud.jsterm.autocompletePopup;
   let popupShown = once(popup, "popup-opened");
 
   hud.jsterm.setInputValue("sc");
   EventUtils.synthesizeKey("r", {});
 
-  yield popupShown;
+  await popupShown;
 
-  yield loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes");
+  await addTab(TEST_URI_NAVIGATE);
 
   ok(!popup.isOpen, "Popup closes on tab switch");
 });
