@@ -223,36 +223,6 @@ public:
     return mozilla::BigEndian::readUint32(ptr);
   }
 
-  int32_t Peek32() const
-  {
-    auto ptr = Peek(4);
-    if (!ptr) {
-      NS_WARNING("Failed to peek data");
-      return 0;
-    }
-    return mozilla::BigEndian::readInt32(ptr);
-  }
-
-  uint64_t PeekU64() const
-  {
-    auto ptr = Peek(8);
-    if (!ptr) {
-      NS_WARNING("Failed to peek data");
-      return 0;
-    }
-    return mozilla::BigEndian::readUint64(ptr);
-  }
-
-  int64_t Peek64() const
-  {
-    auto ptr = Peek(8);
-    if (!ptr) {
-      NS_WARNING("Failed to peek data");
-      return 0;
-    }
-    return mozilla::BigEndian::readInt64(ptr);
-  }
-
   const uint8_t* Peek(size_t aCount) const
   {
     if (aCount > mRemaining) {
