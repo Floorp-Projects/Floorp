@@ -118,14 +118,15 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // The other scenario where we need to push a ClipAndScroll is when we are
   // in a nested display item where the enclosing item pushed a ClipAndScroll,
   // and our clip chain extends from that item's clip chain. To check this we
-  // want to make sure that (a) we are InsideClipAndScroll(), and (b) nothing
+  // want to make sure that (a) we are inside a ClipAndScroll, and (b) nothing
   // else was pushed onto mBuilder's stack since that ClipAndScroll.
   if (!needClipAndScroll &&
-      InsideClipAndScroll() &&
       mBuilder->TopmostScrollId() == scrollId &&
       !mBuilder->TopmostIsClip()) {
-    MOZ_ASSERT(mItemClipStack.back().mClipAndScroll->first == scrollId);
-    needClipAndScroll = true;
+    if (auto cs = EnclosingClipAndScroll()) {
+      MOZ_ASSERT(cs->first == scrollId);
+      needClipAndScroll = true;
+    }
   }
 
   // If we don't need a ClipAndScroll, ensure the item's ASR is at the top of
@@ -292,7 +293,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
         // have gone into the |aChain->mParent->mASR == aAsr| branch above.
         ancestorIds.first = Nothing();
         ancestorIds.second = mBuilder->TopmostClipId();
-      } else if (InsideClipAndScroll()) {
+      } else if (auto cs = EnclosingClipAndScroll()) {
         // If aChain->mASR is already the topmost scroll layer on the stack, but
         // it was pushed as part of a "clip and scroll" entry (i.e. because an
         // item had a clip scrolled by a different ASR than the item itself),
@@ -303,9 +304,9 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
         // (S, D) for this item. This hunk of code ensures that we define D
         // as a child of C, and when we set the needClipAndScroll flag elsewhere
         // in this file we make sure to set it for this scenario.
-        MOZ_ASSERT(mItemClipStack.back().mClipAndScroll->first == scrollId);
+        MOZ_ASSERT(cs->first == scrollId);
         ancestorIds.first = Nothing();
-        ancestorIds.second = mItemClipStack.back().mClipAndScroll->second;
+        ancestorIds.second = cs->second;
       }
     }
   }
@@ -445,10 +446,21 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   return ids;
 }
 
-bool
-ScrollingLayersHelper::InsideClipAndScroll() const
+Maybe<ScrollingLayersHelper::ClipAndScroll>
+ScrollingLayersHelper::EnclosingClipAndScroll() const
 {
-  return !mItemClipStack.empty() && mItemClipStack.back().mClipAndScroll.isSome();
+  for (auto it = mItemClipStack.rbegin(); it != mItemClipStack.rend(); it++) {
+    if (it->mClipAndScroll) {
+      return it->mClipAndScroll;
+    }
+    // If an entry in the stack pushed a single clip or scroll without pushing
+    // a mClipAndScroll, we abort because we are effectively no longer inside
+    // a ClipAndScroll
+    if (it->mClipId || it->mScrollId) {
+      break;
+    }
+  }
+  return Nothing();
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()

@@ -54,6 +54,7 @@ fuzzy-if(Android,6,4) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed
 fuzzy-if(Android,6,8) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html   # bug 1377187 for webrender
 fuzzy-if(Android,6,8) fails-if(webrender) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html   # bug 1377187 for webrender
 fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html
+skip-if(!asyncPan) == fixed-pos-scrolled-clip-5.html fixed-pos-scrolled-clip-5-ref.html
 fuzzy-if(Android,6,4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
 fuzzy-if(Android,6,4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 
