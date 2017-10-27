@@ -509,7 +509,7 @@ VideoSink::GetDebugInfo()
 {
   AssertOwnerThread();
   auto str = nsPrintfCString(
-    "VideoSink Status: IsStarted=%d IsPlaying=%d VideoQueue(finished=%d "
+    "VideoSink: IsStarted=%d IsPlaying=%d VideoQueue(finished=%d "
     "size=%zu) mVideoFrameEndTime=%" PRId64 " mHasVideo=%d "
     "mVideoSinkEndRequest.Exists()=%d mEndPromiseHolder.IsEmpty()=%d",
     IsStarted(),

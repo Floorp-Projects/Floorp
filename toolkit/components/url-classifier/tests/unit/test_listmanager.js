@@ -66,7 +66,7 @@ let gHttpServV4 = null;
 // These two variables are used to synchronize the last two racing updates
 // (in terms of "update URL") in test_update_all_tables().
 let gUpdatedCntForTableData = 0; // For TEST_TABLE_DATA_LIST.
-let gIsV4Updated = false;   // For TEST_TABLE_DATA_V4.
+let gIsV4Updated = false; // For TEST_TABLE_DATA_V4.
 
 const NEW_CLIENT_STATE = "sta\0te";
 const CHECKSUM = "\x30\x67\xc7\x2c\x5e\x50\x1c\x31\xe3\xfe\xca\x73\xf0\x47\xdc\x34\x1a\x95\x63\x99\xec\x70\x5e\x0a\xee\x9e\xfb\x17\xa1\x55\x35\x78";
@@ -220,7 +220,7 @@ function run_test() {
     }
 
     if (gIsV4Updated) {
-      run_next_test();  // All tests are done. Just finish.
+      run_next_test(); // All tests are done. Just finish.
       return;
     }
 

@@ -18,12 +18,16 @@ AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 add_task(async function test_browser_settings() {
+  const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
+  const PERM_UNKNOWN_ACTION = Services.perms.UNKNOWN_ACTION;
+
   // Create an object to hold the values to which we will initialize the prefs.
   const PREFS = {
     "browser.cache.disk.enable": true,
     "browser.cache.memory.enable": true,
     "dom.popup_allowed_events": Preferences.get("dom.popup_allowed_events"),
     "image.animation_mode": "none",
+    "permissions.default.desktop-notification": PERM_UNKNOWN_ACTION,
   };
 
   async function background() {
@@ -94,6 +98,17 @@ add_task(async function test_browser_settings() {
       "imageAnimationBehavior", value,
       {"image.animation_mode": value});
   }
+
+  await testSetting(
+    "webNotificationsDisabled", true,
+    {"permissions.default.desktop-notification": PERM_DENY_ACTION});
+  await testSetting(
+    "webNotificationsDisabled", false,
+    {
+      // This pref is not defaulted on Android.
+      "permissions.default.desktop-notification":
+        AppConstants.MOZ_BUILD_APP !== "browser" ? undefined : PERM_UNKNOWN_ACTION,
+    });
 
   await extension.unload();
 

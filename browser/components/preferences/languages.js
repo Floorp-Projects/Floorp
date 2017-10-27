@@ -59,7 +59,7 @@ var gLanguagesDialog = {
       var property = currString.key.split("."); // ab[-cd].accept
       if (property[1] == "accept") {
         var abCD = property[0];
-        var abCDPairs = abCD.split("-");      // ab[-cd]
+        var abCDPairs = abCD.split("-"); // ab[-cd]
         var useABCDFormat = abCDPairs.length > 1;
         var ab = useABCDFormat ? abCDPairs[0] : abCD;
         var cd = useABCDFormat ? abCDPairs[1] : "";

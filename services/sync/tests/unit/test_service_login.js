@@ -130,7 +130,7 @@ add_task(async function test_login_on_sync() {
     Service.login = async function() {
       loginCalled = true;
       Service.status.login = LOGIN_SUCCEEDED;
-      this._loggedIn = false;           // So that sync aborts.
+      this._loggedIn = false; // So that sync aborts.
       return true;
     };
 

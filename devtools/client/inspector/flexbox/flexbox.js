@@ -5,7 +5,6 @@
 "use strict";
 
 class FlexboxInspector {
-
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
@@ -17,7 +16,6 @@ class FlexboxInspector {
     this.inspector = null;
     this.store = null;
   }
-
 }
 
 module.exports = FlexboxInspector;

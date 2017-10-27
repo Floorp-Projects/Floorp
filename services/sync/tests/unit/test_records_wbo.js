@@ -69,7 +69,7 @@ add_task(async function test_fetch() {
 
     // Testing collection extraction.
     _("Extracting collection.");
-    let rec3 = new WBORecord("tabs", "foo");   // Create through constructor.
+    let rec3 = new WBORecord("tabs", "foo"); // Create through constructor.
     do_check_eq(rec3.collection, "tabs");
 
   } finally {

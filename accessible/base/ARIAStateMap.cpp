@@ -20,11 +20,11 @@ using namespace mozilla::a11y::aria;
 struct EnumTypeData
 {
   // ARIA attribute name.
-  nsAtom* const mAttrName;
+  nsStaticAtom* const mAttrName;
 
   // States if the attribute value is matched to the enum value. Used as
   // nsIContent::AttrValuesArray, last item must be nullptr.
-  nsAtom* const* const mValues[4];
+  nsStaticAtom* const* const mValues[4];
 
   // States applied if corresponding enum values are matched.
   const uint64_t mStates[3];

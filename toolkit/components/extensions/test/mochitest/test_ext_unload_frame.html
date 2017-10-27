@@ -19,7 +19,7 @@
 function sendMessage_background() {
   browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     browser.test.assertEq("from frame", msg, "Expected message from frame");
-    sendResponse("msg from back");  // Should not throw or anything like that.
+    sendResponse("msg from back"); // Should not throw or anything like that.
     delayedNotifyPass("Received sendMessage from closing frame");
   });
 }

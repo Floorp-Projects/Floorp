@@ -157,7 +157,7 @@ impl RendererFrame {
         pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
         layers_bouncing_back: FastHashSet<ClipId>,
         frame: Option<tiling::Frame>,
-    ) -> RendererFrame {
+    ) -> Self {
         RendererFrame {
             pipeline_epoch_map,
             layers_bouncing_back,

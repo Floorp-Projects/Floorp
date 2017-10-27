@@ -875,7 +875,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
       while (extEnumerator.hasMore()) {
         var extension = extEnumerator.getNext();
         if (extString)
-          extString += "; ";    // If adding more than one extension,
+          extString += "; "; // If adding more than one extension,
                                 // separate by semi-colon
         extString += "*." + extension;
       }
@@ -982,7 +982,7 @@ function getDefaultFileName(aDefaultFileName, aURI, aDocument,
     const mhpContractID = "@mozilla.org/network/mime-hdrparam;1";
     const mhpIID = Components.interfaces.nsIMIMEHeaderParam;
     const mhp = Components.classes[mhpContractID].getService(mhpIID);
-    var dummy = { value: null };  // Need an out param...
+    var dummy = { value: null }; // Need an out param...
     var charset = getCharsetforSave(aDocument);
 
     var fileName = null;
@@ -1103,7 +1103,7 @@ function getNormalizedLeafName(aFile, aDefaultExtension) {
 
 function getDefaultExtension(aFilename, aURI, aContentType) {
   if (aContentType == "text/plain" || aContentType == "application/octet-stream" || aURI.scheme == "ftp")
-    return "";   // temporary fix for bug 120327
+    return ""; // temporary fix for bug 120327
 
   // First try the extension from the filename
   const stdURLContractID = "@mozilla.org/network/standard-url;1";

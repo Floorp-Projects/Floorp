@@ -3697,8 +3697,7 @@ MediaDecoderStateMachine::GetDebugInfo()
   int64_t duration =
     mDuration.Ref() ? mDuration.Ref().ref().ToMicroseconds() : -1;
   auto str = nsPrintfCString(
-    "MediaDecoderStateMachine State: duration=%" PRId64 " GetMediaTime=%" PRId64
-    " GetClock="
+    "MDSM: duration=%" PRId64 " GetMediaTime=%" PRId64 " GetClock="
     "%" PRId64 " mMediaSink=%p state=%s mPlayState=%d "
     "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
     "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64

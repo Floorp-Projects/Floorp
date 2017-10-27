@@ -15,8 +15,7 @@ function is_registered(name) {
   try {
     var d = catman.getCategoryEntry("abitest", name);
     return d == "found";
-  }
-  catch (e) {
+  } catch (e) {
     return false;
   }
 }

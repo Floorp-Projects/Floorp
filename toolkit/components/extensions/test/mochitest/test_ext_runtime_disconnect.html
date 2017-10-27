@@ -63,7 +63,7 @@ add_task(async function test_contentscript() {
 
   // Add an "unload" listener so that we don't put the window in the
   // bfcache. This way it gets destroyed immediately upon navigation.
-  win.addEventListener("unload", function() {});  // eslint-disable-line mozilla/balanced-listeners
+  win.addEventListener("unload", function() {}); // eslint-disable-line mozilla/balanced-listeners
 
   win.location = "http://example.com";
   await extension.awaitMessage("disconnected");

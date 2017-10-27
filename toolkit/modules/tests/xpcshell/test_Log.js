@@ -572,7 +572,7 @@ add_task(function* format_errors() {
 
   // Test that JS-generated Errors are recognized and formatted.
   try {
-    yield Promise.resolve();  // Scrambles the stack
+    yield Promise.resolve(); // Scrambles the stack
     // eslint-disable-next-line no-eval
     eval("javascript syntax error");
   } catch (e) {
