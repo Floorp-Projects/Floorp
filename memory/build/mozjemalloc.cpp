@@ -1182,6 +1182,25 @@ _malloc_postfork_child(void);
 // End forward declarations.
 // ***************************************************************************
 
+// FreeBSD's pthreads implementation calls malloc(3), so the malloc
+// implementation has to take pains to avoid infinite recursion during
+// initialization.
+#if defined(XP_WIN)
+#define malloc_init() true
+#else
+// Returns whether the allocator was successfully initialized.
+static inline bool
+malloc_init()
+{
+
+  if (malloc_initialized == false) {
+    return malloc_init_hard();
+  }
+
+  return true;
+}
+#endif
+
 static void
 _malloc_message(const char* p)
 {
@@ -2161,7 +2180,9 @@ template<>
 inline void
 MozJemalloc::jemalloc_thread_local_arena(bool aEnabled)
 {
-  thread_local_arena(aEnabled);
+  if (malloc_init()) {
+    thread_local_arena(aEnabled);
+  }
 }
 
 // Choose an arena based on a per-thread value.
@@ -3318,7 +3339,9 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   arena_chunk_t* chunk = GetChunkForPtr(aPtr);
 
   // Is the pointer null, or within one chunk's size of null?
-  if (!chunk) {
+  // Alternatively, if the allocator is not initialized yet, the pointer
+  // can't be known.
+  if (!chunk || !malloc_initialized) {
     *aInfo = { TagUnknown, nullptr, 0 };
     return;
   }
@@ -4061,25 +4084,6 @@ huge_dalloc(void* aPtr)
   base_node_dealloc(node);
 }
 
-// FreeBSD's pthreads implementation calls malloc(3), so the malloc
-// implementation has to take pains to avoid infinite recursion during
-// initialization.
-#if defined(XP_WIN)
-#define malloc_init() true
-#else
-// Returns whether the allocator was successfully initialized.
-static inline bool
-malloc_init()
-{
-
-  if (malloc_initialized == false) {
-    return malloc_init_hard();
-  }
-
-  return true;
-}
-#endif
-
 static size_t
 GetKernelPageSize()
 {
@@ -4408,7 +4412,7 @@ BaseAllocator::realloc(void* aPtr, size_t aSize)
   }
 
   if (aPtr) {
-    MOZ_ASSERT(malloc_initialized);
+    MOZ_RELEASE_ASSERT(malloc_initialized);
 
     ret = iralloc(aPtr, aSize, mArena);
 
@@ -4438,8 +4442,10 @@ BaseAllocator::free(void* aPtr)
   // A version of idalloc that checks for nullptr pointer.
   offset = GetChunkOffsetForPtr(aPtr);
   if (offset != 0) {
+    MOZ_RELEASE_ASSERT(malloc_initialized);
     arena_dalloc(aPtr, offset);
   } else if (aPtr) {
+    MOZ_RELEASE_ASSERT(malloc_initialized);
     huge_dalloc(aPtr);
   }
 }
@@ -4557,7 +4563,13 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
 {
   size_t non_arena_mapped, chunk_header_size;
 
-  MOZ_ASSERT(aStats);
+  if (!aStats) {
+    return;
+  }
+  if (!malloc_initialized) {
+    memset(aStats, 0, sizeof(*aStats));
+    return;
+  }
 
   // Gather runtime settings.
   aStats->opt_junk = opt_junk;
@@ -4717,9 +4729,11 @@ template<>
 inline void
 MozJemalloc::jemalloc_purge_freed_pages()
 {
-  MutexAutoLock lock(arenas_lock);
-  for (auto arena : gArenaTree.iter()) {
-    arena->HardPurge();
+  if (malloc_initialized) {
+    MutexAutoLock lock(arenas_lock);
+    for (auto arena : gArenaTree.iter()) {
+      arena->HardPurge();
+    }
   }
 }
 
@@ -4738,16 +4752,21 @@ template<>
 inline void
 MozJemalloc::jemalloc_free_dirty_pages(void)
 {
-  MutexAutoLock lock(arenas_lock);
-  for (auto arena : gArenaTree.iter()) {
-    MutexAutoLock arena_lock(arena->mLock);
-    arena->Purge(true);
+  if (malloc_initialized) {
+    MutexAutoLock lock(arenas_lock);
+    for (auto arena : gArenaTree.iter()) {
+      MutexAutoLock arena_lock(arena->mLock);
+      arena->Purge(true);
+    }
   }
 }
 
 inline arena_t*
 arena_t::GetById(arena_id_t aArenaId)
 {
+  if (!malloc_initialized) {
+    return nullptr;
+  }
   arena_t key;
   key.mId = aArenaId;
   MutexAutoLock lock(arenas_lock);
@@ -4761,8 +4780,11 @@ template<>
 inline arena_id_t
 MozJemalloc::moz_create_arena()
 {
-  arena_t* arena = arenas_extend();
-  return arena->mId;
+  if (malloc_init()) {
+    arena_t* arena = arenas_extend();
+    return arena->mId;
+  }
+  return 0;
 }
 
 template<>
@@ -4770,11 +4792,13 @@ inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
   arena_t* arena = arena_t::GetById(aArenaId);
-  MutexAutoLock lock(arenas_lock);
-  gArenaTree.Remove(arena);
-  // The arena is leaked, and remaining allocations in it still are alive
-  // until they are freed. After that, the arena will be empty but still
-  // taking have at least a chunk taking address space. TODO: bug 1364359.
+  if (arena) {
+    MutexAutoLock lock(arenas_lock);
+    gArenaTree.Remove(arena);
+    // The arena is leaked, and remaining allocations in it still are alive
+    // until they are freed. After that, the arena will be empty but still
+    // taking have at least a chunk taking address space. TODO: bug 1364359.
+  }
 }
 
 #define MALLOC_DECL(name, return_type, ...)                                    \
