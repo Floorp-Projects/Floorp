@@ -327,14 +327,14 @@ already_AddRefed<nsIThreadObserver>
 SchedulerEventQueue::GetObserver()
 {
   MutexAutoLock lock(mLock);
-  return do_AddRef(mObserver.get());
+  return do_AddRef(mObserver);
 }
 
 already_AddRefed<nsIThreadObserver>
 SchedulerEventQueue::GetObserverOnThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return do_AddRef(mObserver.get());
+  return do_AddRef(mObserver);
 }
 
 void

@@ -4,8 +4,10 @@
 
 DIRS += [
     'boxmodel',
+    'changes',
     'components',
     'computed',
+    'events',
     'extensions',
     'flexbox',
     'fonts',

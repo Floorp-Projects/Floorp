@@ -338,7 +338,7 @@ ExtensionProtocolHandler::GetSingleton()
     sSingleton = new ExtensionProtocolHandler();
     ClearOnShutdown(&sSingleton);
   }
-  return do_AddRef(sSingleton.get());
+  return do_AddRef(sSingleton);
 }
 
 ExtensionProtocolHandler::ExtensionProtocolHandler()

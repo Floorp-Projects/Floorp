@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  createElement, createFactory,
-} = require("devtools/client/shared/vendor/react");
-
+const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const ExtensionSidebarComponent = createFactory(require("./components/ExtensionSidebar"));

@@ -1486,10 +1486,9 @@ nsIFrame::HasAnimationOfTransform(EffectSet* aEffectSet) const
   EffectSet* effects =
     aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
 
-  return mContent &&
+  return IsPrimaryFrame() &&
     nsLayoutUtils::HasAnimationOfProperty(effects, eCSSProperty_transform) &&
-    IsFrameOfType(eSupportsCSSTransforms) &&
-    IsPrimaryFrame();
+    IsFrameOfType(eSupportsCSSTransforms);
 }
 
 bool

@@ -1691,17 +1691,15 @@ exports.isStream = isStream;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.LZWStream = exports.StringStream = exports.StreamsSequenceStream = exports.Stream = exports.RunLengthStream = exports.PredictorStream = exports.NullStream = exports.JpxStream = exports.JpegStream = exports.Jbig2Stream = exports.FlateStream = exports.DecodeStream = exports.DecryptStream = exports.CCITTFaxStream = exports.AsciiHexStream = exports.Ascii85Stream = undefined;
+exports.LZWStream = exports.StringStream = exports.StreamsSequenceStream = exports.Stream = exports.RunLengthStream = exports.PredictorStream = exports.NullStream = exports.JpxStream = exports.JpegStream = exports.FlateStream = exports.DecodeStream = exports.DecryptStream = exports.AsciiHexStream = exports.Ascii85Stream = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
 var _primitives = __w_pdfjs_require__(1);
 
-var _jbig = __w_pdfjs_require__(24);
+var _jpg = __w_pdfjs_require__(24);
 
-var _jpg = __w_pdfjs_require__(25);
-
-var _jpx = __w_pdfjs_require__(10);
+var _jpx = __w_pdfjs_require__(9);
 
 var Stream = function StreamClosure() {
   function Stream(arrayBuffer, start, length, dict) {
@@ -1783,11 +1781,7 @@ var Stream = function StreamClosure() {
 }();
 var StringStream = function StringStreamClosure() {
   function StringStream(str) {
-    var length = str.length;
-    var bytes = new Uint8Array(length);
-    for (var n = 0; n < length; ++n) {
-      bytes[n] = str.charCodeAt(n);
-    }
+    let bytes = (0, _util.stringToBytes)(str);
     Stream.call(this, bytes);
   }
   StringStream.prototype = Stream.prototype;
@@ -2487,54 +2481,6 @@ var JpxStream = function JpxStreamClosure() {
   };
   return JpxStream;
 }();
-var Jbig2Stream = function Jbig2StreamClosure() {
-  function Jbig2Stream(stream, maybeLength, dict, params) {
-    this.stream = stream;
-    this.maybeLength = maybeLength;
-    this.dict = dict;
-    this.params = params;
-    DecodeStream.call(this, maybeLength);
-  }
-  Jbig2Stream.prototype = Object.create(DecodeStream.prototype);
-  Object.defineProperty(Jbig2Stream.prototype, 'bytes', {
-    get: function Jbig2Stream_bytes() {
-      return (0, _util.shadow)(this, 'bytes', this.stream.getBytes(this.maybeLength));
-    },
-    configurable: true
-  });
-  Jbig2Stream.prototype.ensureBuffer = function Jbig2Stream_ensureBuffer(req) {
-    if (this.bufferLength) {
-      return;
-    }
-    var jbig2Image = new _jbig.Jbig2Image();
-    var chunks = [];
-    if ((0, _primitives.isDict)(this.params)) {
-      var globalsStream = this.params.get('JBIG2Globals');
-      if ((0, _primitives.isStream)(globalsStream)) {
-        var globals = globalsStream.getBytes();
-        chunks.push({
-          data: globals,
-          start: 0,
-          end: globals.length
-        });
-      }
-    }
-    chunks.push({
-      data: this.bytes,
-      start: 0,
-      end: this.bytes.length
-    });
-    var data = jbig2Image.parseChunks(chunks);
-    var dataLength = data.length;
-    for (var i = 0; i < dataLength; i++) {
-      data[i] ^= 0xFF;
-    }
-    this.buffer = data;
-    this.bufferLength = dataLength;
-    this.eof = true;
-  };
-  return Jbig2Stream;
-}();
 var DecryptStream = function DecryptStreamClosure() {
   function DecryptStream(str, maybeLength, decrypt) {
     this.str = str;
@@ -2726,529 +2672,6 @@ var RunLengthStream = function RunLengthStreamClosure() {
   };
   return RunLengthStream;
 }();
-var CCITTFaxStream = function CCITTFaxStreamClosure() {
-  var ccittEOL = -2;
-  var ccittEOF = -1;
-  var twoDimPass = 0;
-  var twoDimHoriz = 1;
-  var twoDimVert0 = 2;
-  var twoDimVertR1 = 3;
-  var twoDimVertL1 = 4;
-  var twoDimVertR2 = 5;
-  var twoDimVertL2 = 6;
-  var twoDimVertR3 = 7;
-  var twoDimVertL3 = 8;
-  var twoDimTable = [[-1, -1], [-1, -1], [7, twoDimVertL3], [7, twoDimVertR3], [6, twoDimVertL2], [6, twoDimVertL2], [6, twoDimVertR2], [6, twoDimVertR2], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0]];
-  var whiteTable1 = [[-1, -1], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [12, 1984], [12, 2048], [12, 2112], [12, 2176], [12, 2240], [12, 2304], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [12, 2368], [12, 2432], [12, 2496], [12, 2560]];
-  var whiteTable2 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [8, 29], [8, 29], [8, 30], [8, 30], [8, 45], [8, 45], [8, 46], [8, 46], [7, 22], [7, 22], [7, 22], [7, 22], [7, 23], [7, 23], [7, 23], [7, 23], [8, 47], [8, 47], [8, 48], [8, 48], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [7, 20], [7, 20], [7, 20], [7, 20], [8, 33], [8, 33], [8, 34], [8, 34], [8, 35], [8, 35], [8, 36], [8, 36], [8, 37], [8, 37], [8, 38], [8, 38], [7, 19], [7, 19], [7, 19], [7, 19], [8, 31], [8, 31], [8, 32], [8, 32], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [8, 53], [8, 53], [8, 54], [8, 54], [7, 26], [7, 26], [7, 26], [7, 26], [8, 39], [8, 39], [8, 40], [8, 40], [8, 41], [8, 41], [8, 42], [8, 42], [8, 43], [8, 43], [8, 44], [8, 44], [7, 21], [7, 21], [7, 21], [7, 21], [7, 28], [7, 28], [7, 28], [7, 28], [8, 61], [8, 61], [8, 62], [8, 62], [8, 63], [8, 63], [8, 0], [8, 0], [8, 320], [8, 320], [8, 384], [8, 384], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [7, 27], [7, 27], [7, 27], [7, 27], [8, 59], [8, 59], [8, 60], [8, 60], [9, 1472], [9, 1536], [9, 1600], [9, 1728], [7, 18], [7, 18], [7, 18], [7, 18], [7, 24], [7, 24], [7, 24], [7, 24], [8, 49], [8, 49], [8, 50], [8, 50], [8, 51], [8, 51], [8, 52], [8, 52], [7, 25], [7, 25], [7, 25], [7, 25], [8, 55], [8, 55], [8, 56], [8, 56], [8, 57], [8, 57], [8, 58], [8, 58], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [8, 448], [8, 448], [8, 512], [8, 512], [9, 704], [9, 768], [8, 640], [8, 640], [8, 576], [8, 576], [9, 832], [9, 896], [9, 960], [9, 1024], [9, 1088], [9, 1152], [9, 1216], [9, 1280], [9, 1344], [9, 1408], [7, 256], [7, 256], [7, 256], [7, 256], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7]];
-  var blackTable1 = [[-1, -1], [-1, -1], [12, ccittEOL], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [11, 1792], [11, 1792], [12, 1984], [12, 1984], [12, 2048], [12, 2048], [12, 2112], [12, 2112], [12, 2176], [12, 2176], [12, 2240], [12, 2240], [12, 2304], [12, 2304], [11, 1856], [11, 1856], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [11, 1920], [11, 1920], [12, 2368], [12, 2368], [12, 2432], [12, 2432], [12, 2496], [12, 2496], [12, 2560], [12, 2560], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [12, 52], [12, 52], [13, 640], [13, 704], [13, 768], [13, 832], [12, 55], [12, 55], [12, 56], [12, 56], [13, 1280], [13, 1344], [13, 1408], [13, 1472], [12, 59], [12, 59], [12, 60], [12, 60], [13, 1536], [13, 1600], [11, 24], [11, 24], [11, 24], [11, 24], [11, 25], [11, 25], [11, 25], [11, 25], [13, 1664], [13, 1728], [12, 320], [12, 320], [12, 384], [12, 384], [12, 448], [12, 448], [13, 512], [13, 576], [12, 53], [12, 53], [12, 54], [12, 54], [13, 896], [13, 960], [13, 1024], [13, 1088], [13, 1152], [13, 1216], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64]];
-  var blackTable2 = [[8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [11, 23], [11, 23], [12, 50], [12, 51], [12, 44], [12, 45], [12, 46], [12, 47], [12, 57], [12, 58], [12, 61], [12, 256], [10, 16], [10, 16], [10, 16], [10, 16], [10, 17], [10, 17], [10, 17], [10, 17], [12, 48], [12, 49], [12, 62], [12, 63], [12, 30], [12, 31], [12, 32], [12, 33], [12, 40], [12, 41], [11, 22], [11, 22], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [12, 128], [12, 192], [12, 26], [12, 27], [12, 28], [12, 29], [11, 19], [11, 19], [11, 20], [11, 20], [12, 34], [12, 35], [12, 36], [12, 37], [12, 38], [12, 39], [11, 21], [11, 21], [12, 42], [12, 43], [10, 0], [10, 0], [10, 0], [10, 0], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12]];
-  var blackTable3 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [6, 9], [6, 8], [5, 7], [5, 7], [4, 6], [4, 6], [4, 6], [4, 6], [4, 5], [4, 5], [4, 5], [4, 5], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]];
-  function CCITTFaxStream(str, maybeLength, params) {
-    this.str = str;
-    this.dict = str.dict;
-    if (!(0, _primitives.isDict)(params)) {
-      params = _primitives.Dict.empty;
-    }
-    this.encoding = params.get('K') || 0;
-    this.eoline = params.get('EndOfLine') || false;
-    this.byteAlign = params.get('EncodedByteAlign') || false;
-    this.columns = params.get('Columns') || 1728;
-    this.rows = params.get('Rows') || 0;
-    var eoblock = params.get('EndOfBlock');
-    if (eoblock === null || eoblock === undefined) {
-      eoblock = true;
-    }
-    this.eoblock = eoblock;
-    this.black = params.get('BlackIs1') || false;
-    this.codingLine = new Uint32Array(this.columns + 1);
-    this.refLine = new Uint32Array(this.columns + 2);
-    this.codingLine[0] = this.columns;
-    this.codingPos = 0;
-    this.row = 0;
-    this.nextLine2D = this.encoding < 0;
-    this.inputBits = 0;
-    this.inputBuf = 0;
-    this.outputBits = 0;
-    this.rowsDone = false;
-    var code1;
-    while ((code1 = this.lookBits(12)) === 0) {
-      this.eatBits(1);
-    }
-    if (code1 === 1) {
-      this.eatBits(12);
-    }
-    if (this.encoding > 0) {
-      this.nextLine2D = !this.lookBits(1);
-      this.eatBits(1);
-    }
-    DecodeStream.call(this, maybeLength);
-  }
-  CCITTFaxStream.prototype = Object.create(DecodeStream.prototype);
-  CCITTFaxStream.prototype.readBlock = function CCITTFaxStream_readBlock() {
-    while (!this.eof) {
-      var c = this.lookChar();
-      this.ensureBuffer(this.bufferLength + 1);
-      this.buffer[this.bufferLength++] = c;
-    }
-  };
-  CCITTFaxStream.prototype.addPixels = function ccittFaxStreamAddPixels(a1, blackPixels) {
-    var codingLine = this.codingLine;
-    var codingPos = this.codingPos;
-    if (a1 > codingLine[codingPos]) {
-      if (a1 > this.columns) {
-        (0, _util.info)('row is wrong length');
-        this.err = true;
-        a1 = this.columns;
-      }
-      if (codingPos & 1 ^ blackPixels) {
-        ++codingPos;
-      }
-      codingLine[codingPos] = a1;
-    }
-    this.codingPos = codingPos;
-  };
-  CCITTFaxStream.prototype.addPixelsNeg = function ccittFaxStreamAddPixelsNeg(a1, blackPixels) {
-    var codingLine = this.codingLine;
-    var codingPos = this.codingPos;
-    if (a1 > codingLine[codingPos]) {
-      if (a1 > this.columns) {
-        (0, _util.info)('row is wrong length');
-        this.err = true;
-        a1 = this.columns;
-      }
-      if (codingPos & 1 ^ blackPixels) {
-        ++codingPos;
-      }
-      codingLine[codingPos] = a1;
-    } else if (a1 < codingLine[codingPos]) {
-      if (a1 < 0) {
-        (0, _util.info)('invalid code');
-        this.err = true;
-        a1 = 0;
-      }
-      while (codingPos > 0 && a1 < codingLine[codingPos - 1]) {
-        --codingPos;
-      }
-      codingLine[codingPos] = a1;
-    }
-    this.codingPos = codingPos;
-  };
-  CCITTFaxStream.prototype.lookChar = function CCITTFaxStream_lookChar() {
-    var refLine = this.refLine;
-    var codingLine = this.codingLine;
-    var columns = this.columns;
-    var refPos, blackPixels, bits, i;
-    if (this.outputBits === 0) {
-      if (this.rowsDone) {
-        this.eof = true;
-      }
-      if (this.eof) {
-        return null;
-      }
-      this.err = false;
-      var code1, code2, code3;
-      if (this.nextLine2D) {
-        for (i = 0; codingLine[i] < columns; ++i) {
-          refLine[i] = codingLine[i];
-        }
-        refLine[i++] = columns;
-        refLine[i] = columns;
-        codingLine[0] = 0;
-        this.codingPos = 0;
-        refPos = 0;
-        blackPixels = 0;
-        while (codingLine[this.codingPos] < columns) {
-          code1 = this.getTwoDimCode();
-          switch (code1) {
-            case twoDimPass:
-              this.addPixels(refLine[refPos + 1], blackPixels);
-              if (refLine[refPos + 1] < columns) {
-                refPos += 2;
-              }
-              break;
-            case twoDimHoriz:
-              code1 = code2 = 0;
-              if (blackPixels) {
-                do {
-                  code1 += code3 = this.getBlackCode();
-                } while (code3 >= 64);
-                do {
-                  code2 += code3 = this.getWhiteCode();
-                } while (code3 >= 64);
-              } else {
-                do {
-                  code1 += code3 = this.getWhiteCode();
-                } while (code3 >= 64);
-                do {
-                  code2 += code3 = this.getBlackCode();
-                } while (code3 >= 64);
-              }
-              this.addPixels(codingLine[this.codingPos] + code1, blackPixels);
-              if (codingLine[this.codingPos] < columns) {
-                this.addPixels(codingLine[this.codingPos] + code2, blackPixels ^ 1);
-              }
-              while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                refPos += 2;
-              }
-              break;
-            case twoDimVertR3:
-              this.addPixels(refLine[refPos] + 3, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                ++refPos;
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVertR2:
-              this.addPixels(refLine[refPos] + 2, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                ++refPos;
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVertR1:
-              this.addPixels(refLine[refPos] + 1, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                ++refPos;
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVert0:
-              this.addPixels(refLine[refPos], blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                ++refPos;
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVertL3:
-              this.addPixelsNeg(refLine[refPos] - 3, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                if (refPos > 0) {
-                  --refPos;
-                } else {
-                  ++refPos;
-                }
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVertL2:
-              this.addPixelsNeg(refLine[refPos] - 2, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                if (refPos > 0) {
-                  --refPos;
-                } else {
-                  ++refPos;
-                }
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case twoDimVertL1:
-              this.addPixelsNeg(refLine[refPos] - 1, blackPixels);
-              blackPixels ^= 1;
-              if (codingLine[this.codingPos] < columns) {
-                if (refPos > 0) {
-                  --refPos;
-                } else {
-                  ++refPos;
-                }
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-              }
-              break;
-            case ccittEOF:
-              this.addPixels(columns, 0);
-              this.eof = true;
-              break;
-            default:
-              (0, _util.info)('bad 2d code');
-              this.addPixels(columns, 0);
-              this.err = true;
-          }
-        }
-      } else {
-        codingLine[0] = 0;
-        this.codingPos = 0;
-        blackPixels = 0;
-        while (codingLine[this.codingPos] < columns) {
-          code1 = 0;
-          if (blackPixels) {
-            do {
-              code1 += code3 = this.getBlackCode();
-            } while (code3 >= 64);
-          } else {
-            do {
-              code1 += code3 = this.getWhiteCode();
-            } while (code3 >= 64);
-          }
-          this.addPixels(codingLine[this.codingPos] + code1, blackPixels);
-          blackPixels ^= 1;
-        }
-      }
-      var gotEOL = false;
-      if (this.byteAlign) {
-        this.inputBits &= ~7;
-      }
-      if (!this.eoblock && this.row === this.rows - 1) {
-        this.rowsDone = true;
-      } else {
-        code1 = this.lookBits(12);
-        if (this.eoline) {
-          while (code1 !== ccittEOF && code1 !== 1) {
-            this.eatBits(1);
-            code1 = this.lookBits(12);
-          }
-        } else {
-          while (code1 === 0) {
-            this.eatBits(1);
-            code1 = this.lookBits(12);
-          }
-        }
-        if (code1 === 1) {
-          this.eatBits(12);
-          gotEOL = true;
-        } else if (code1 === ccittEOF) {
-          this.eof = true;
-        }
-      }
-      if (!this.eof && this.encoding > 0 && !this.rowsDone) {
-        this.nextLine2D = !this.lookBits(1);
-        this.eatBits(1);
-      }
-      if (this.eoblock && gotEOL && this.byteAlign) {
-        code1 = this.lookBits(12);
-        if (code1 === 1) {
-          this.eatBits(12);
-          if (this.encoding > 0) {
-            this.lookBits(1);
-            this.eatBits(1);
-          }
-          if (this.encoding >= 0) {
-            for (i = 0; i < 4; ++i) {
-              code1 = this.lookBits(12);
-              if (code1 !== 1) {
-                (0, _util.info)('bad rtc code: ' + code1);
-              }
-              this.eatBits(12);
-              if (this.encoding > 0) {
-                this.lookBits(1);
-                this.eatBits(1);
-              }
-            }
-          }
-          this.eof = true;
-        }
-      } else if (this.err && this.eoline) {
-        while (true) {
-          code1 = this.lookBits(13);
-          if (code1 === ccittEOF) {
-            this.eof = true;
-            return null;
-          }
-          if (code1 >> 1 === 1) {
-            break;
-          }
-          this.eatBits(1);
-        }
-        this.eatBits(12);
-        if (this.encoding > 0) {
-          this.eatBits(1);
-          this.nextLine2D = !(code1 & 1);
-        }
-      }
-      if (codingLine[0] > 0) {
-        this.outputBits = codingLine[this.codingPos = 0];
-      } else {
-        this.outputBits = codingLine[this.codingPos = 1];
-      }
-      this.row++;
-    }
-    var c;
-    if (this.outputBits >= 8) {
-      c = this.codingPos & 1 ? 0 : 0xFF;
-      this.outputBits -= 8;
-      if (this.outputBits === 0 && codingLine[this.codingPos] < columns) {
-        this.codingPos++;
-        this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
-      }
-    } else {
-      bits = 8;
-      c = 0;
-      do {
-        if (this.outputBits > bits) {
-          c <<= bits;
-          if (!(this.codingPos & 1)) {
-            c |= 0xFF >> 8 - bits;
-          }
-          this.outputBits -= bits;
-          bits = 0;
-        } else {
-          c <<= this.outputBits;
-          if (!(this.codingPos & 1)) {
-            c |= 0xFF >> 8 - this.outputBits;
-          }
-          bits -= this.outputBits;
-          this.outputBits = 0;
-          if (codingLine[this.codingPos] < columns) {
-            this.codingPos++;
-            this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
-          } else if (bits > 0) {
-            c <<= bits;
-            bits = 0;
-          }
-        }
-      } while (bits);
-    }
-    if (this.black) {
-      c ^= 0xFF;
-    }
-    return c;
-  };
-  CCITTFaxStream.prototype.findTableCode = function ccittFaxStreamFindTableCode(start, end, table, limit) {
-    var limitValue = limit || 0;
-    for (var i = start; i <= end; ++i) {
-      var code = this.lookBits(i);
-      if (code === ccittEOF) {
-        return [true, 1, false];
-      }
-      if (i < end) {
-        code <<= end - i;
-      }
-      if (!limitValue || code >= limitValue) {
-        var p = table[code - limitValue];
-        if (p[0] === i) {
-          this.eatBits(i);
-          return [true, p[1], true];
-        }
-      }
-    }
-    return [false, 0, false];
-  };
-  CCITTFaxStream.prototype.getTwoDimCode = function ccittFaxStreamGetTwoDimCode() {
-    var code = 0;
-    var p;
-    if (this.eoblock) {
-      code = this.lookBits(7);
-      p = twoDimTable[code];
-      if (p && p[0] > 0) {
-        this.eatBits(p[0]);
-        return p[1];
-      }
-    } else {
-      var result = this.findTableCode(1, 7, twoDimTable);
-      if (result[0] && result[2]) {
-        return result[1];
-      }
-    }
-    (0, _util.info)('Bad two dim code');
-    return ccittEOF;
-  };
-  CCITTFaxStream.prototype.getWhiteCode = function ccittFaxStreamGetWhiteCode() {
-    var code = 0;
-    var p;
-    if (this.eoblock) {
-      code = this.lookBits(12);
-      if (code === ccittEOF) {
-        return 1;
-      }
-      if (code >> 5 === 0) {
-        p = whiteTable1[code];
-      } else {
-        p = whiteTable2[code >> 3];
-      }
-      if (p[0] > 0) {
-        this.eatBits(p[0]);
-        return p[1];
-      }
-    } else {
-      var result = this.findTableCode(1, 9, whiteTable2);
-      if (result[0]) {
-        return result[1];
-      }
-      result = this.findTableCode(11, 12, whiteTable1);
-      if (result[0]) {
-        return result[1];
-      }
-    }
-    (0, _util.info)('bad white code');
-    this.eatBits(1);
-    return 1;
-  };
-  CCITTFaxStream.prototype.getBlackCode = function ccittFaxStreamGetBlackCode() {
-    var code, p;
-    if (this.eoblock) {
-      code = this.lookBits(13);
-      if (code === ccittEOF) {
-        return 1;
-      }
-      if (code >> 7 === 0) {
-        p = blackTable1[code];
-      } else if (code >> 9 === 0 && code >> 7 !== 0) {
-        p = blackTable2[(code >> 1) - 64];
-      } else {
-        p = blackTable3[code >> 7];
-      }
-      if (p[0] > 0) {
-        this.eatBits(p[0]);
-        return p[1];
-      }
-    } else {
-      var result = this.findTableCode(2, 6, blackTable3);
-      if (result[0]) {
-        return result[1];
-      }
-      result = this.findTableCode(7, 12, blackTable2, 64);
-      if (result[0]) {
-        return result[1];
-      }
-      result = this.findTableCode(10, 13, blackTable1);
-      if (result[0]) {
-        return result[1];
-      }
-    }
-    (0, _util.info)('bad black code');
-    this.eatBits(1);
-    return 1;
-  };
-  CCITTFaxStream.prototype.lookBits = function CCITTFaxStream_lookBits(n) {
-    var c;
-    while (this.inputBits < n) {
-      if ((c = this.str.getByte()) === -1) {
-        if (this.inputBits === 0) {
-          return ccittEOF;
-        }
-        return this.inputBuf << n - this.inputBits & 0xFFFF >> 16 - n;
-      }
-      this.inputBuf = this.inputBuf << 8 | c;
-      this.inputBits += 8;
-    }
-    return this.inputBuf >> this.inputBits - n & 0xFFFF >> 16 - n;
-  };
-  CCITTFaxStream.prototype.eatBits = function CCITTFaxStream_eatBits(n) {
-    if ((this.inputBits -= n) < 0) {
-      this.inputBits = 0;
-    }
-  };
-  return CCITTFaxStream;
-}();
 var LZWStream = function LZWStreamClosure() {
   function LZWStream(str, maybeLength, earlyChange) {
     this.str = str;
@@ -3374,11 +2797,9 @@ var NullStream = function NullStreamClosure() {
 }();
 exports.Ascii85Stream = Ascii85Stream;
 exports.AsciiHexStream = AsciiHexStream;
-exports.CCITTFaxStream = CCITTFaxStream;
 exports.DecryptStream = DecryptStream;
 exports.DecodeStream = DecodeStream;
 exports.FlateStream = FlateStream;
-exports.Jbig2Stream = Jbig2Stream;
 exports.JpegStream = JpegStream;
 exports.JpxStream = JpxStream;
 exports.NullStream = NullStream;
@@ -4375,6 +3796,10 @@ var _util = __w_pdfjs_require__(0);
 
 var _primitives = __w_pdfjs_require__(1);
 
+var _ccitt_stream = __w_pdfjs_require__(25);
+
+var _jbig2_stream = __w_pdfjs_require__(27);
+
 var MAX_LENGTH_TO_CACHE = 1000;
 var Parser = function ParserClosure() {
   function Parser(lexer, allowStreams, xref, recoveryMode) {
@@ -4870,7 +4295,7 @@ var Parser = function ParserClosure() {
         }
         if (name === 'CCITTFaxDecode' || name === 'CCF') {
           xrefStreamStats[_util.StreamType.CCF] = true;
-          return new _stream.CCITTFaxStream(stream, maybeLength, params);
+          return new _ccitt_stream.CCITTFaxStream(stream, maybeLength, params);
         }
         if (name === 'RunLengthDecode' || name === 'RL') {
           xrefStreamStats[_util.StreamType.RL] = true;
@@ -4878,7 +4303,7 @@ var Parser = function ParserClosure() {
         }
         if (name === 'JBIG2Decode') {
           xrefStreamStats[_util.StreamType.JBIG] = true;
-          return new _stream.Jbig2Stream(stream, maybeLength, stream.dict, params);
+          return new _jbig2_stream.Jbig2Stream(stream, maybeLength, stream.dict, params);
         }
         (0, _util.warn)('filter "' + name + '" not supported yet');
         return stream;
@@ -11840,351 +11265,11 @@ exports.FileSpec = FileSpec;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var ArithmeticDecoder = function ArithmeticDecoderClosure() {
-  var QeTable = [{
-    qe: 0x5601,
-    nmps: 1,
-    nlps: 1,
-    switchFlag: 1
-  }, {
-    qe: 0x3401,
-    nmps: 2,
-    nlps: 6,
-    switchFlag: 0
-  }, {
-    qe: 0x1801,
-    nmps: 3,
-    nlps: 9,
-    switchFlag: 0
-  }, {
-    qe: 0x0AC1,
-    nmps: 4,
-    nlps: 12,
-    switchFlag: 0
-  }, {
-    qe: 0x0521,
-    nmps: 5,
-    nlps: 29,
-    switchFlag: 0
-  }, {
-    qe: 0x0221,
-    nmps: 38,
-    nlps: 33,
-    switchFlag: 0
-  }, {
-    qe: 0x5601,
-    nmps: 7,
-    nlps: 6,
-    switchFlag: 1
-  }, {
-    qe: 0x5401,
-    nmps: 8,
-    nlps: 14,
-    switchFlag: 0
-  }, {
-    qe: 0x4801,
-    nmps: 9,
-    nlps: 14,
-    switchFlag: 0
-  }, {
-    qe: 0x3801,
-    nmps: 10,
-    nlps: 14,
-    switchFlag: 0
-  }, {
-    qe: 0x3001,
-    nmps: 11,
-    nlps: 17,
-    switchFlag: 0
-  }, {
-    qe: 0x2401,
-    nmps: 12,
-    nlps: 18,
-    switchFlag: 0
-  }, {
-    qe: 0x1C01,
-    nmps: 13,
-    nlps: 20,
-    switchFlag: 0
-  }, {
-    qe: 0x1601,
-    nmps: 29,
-    nlps: 21,
-    switchFlag: 0
-  }, {
-    qe: 0x5601,
-    nmps: 15,
-    nlps: 14,
-    switchFlag: 1
-  }, {
-    qe: 0x5401,
-    nmps: 16,
-    nlps: 14,
-    switchFlag: 0
-  }, {
-    qe: 0x5101,
-    nmps: 17,
-    nlps: 15,
-    switchFlag: 0
-  }, {
-    qe: 0x4801,
-    nmps: 18,
-    nlps: 16,
-    switchFlag: 0
-  }, {
-    qe: 0x3801,
-    nmps: 19,
-    nlps: 17,
-    switchFlag: 0
-  }, {
-    qe: 0x3401,
-    nmps: 20,
-    nlps: 18,
-    switchFlag: 0
-  }, {
-    qe: 0x3001,
-    nmps: 21,
-    nlps: 19,
-    switchFlag: 0
-  }, {
-    qe: 0x2801,
-    nmps: 22,
-    nlps: 19,
-    switchFlag: 0
-  }, {
-    qe: 0x2401,
-    nmps: 23,
-    nlps: 20,
-    switchFlag: 0
-  }, {
-    qe: 0x2201,
-    nmps: 24,
-    nlps: 21,
-    switchFlag: 0
-  }, {
-    qe: 0x1C01,
-    nmps: 25,
-    nlps: 22,
-    switchFlag: 0
-  }, {
-    qe: 0x1801,
-    nmps: 26,
-    nlps: 23,
-    switchFlag: 0
-  }, {
-    qe: 0x1601,
-    nmps: 27,
-    nlps: 24,
-    switchFlag: 0
-  }, {
-    qe: 0x1401,
-    nmps: 28,
-    nlps: 25,
-    switchFlag: 0
-  }, {
-    qe: 0x1201,
-    nmps: 29,
-    nlps: 26,
-    switchFlag: 0
-  }, {
-    qe: 0x1101,
-    nmps: 30,
-    nlps: 27,
-    switchFlag: 0
-  }, {
-    qe: 0x0AC1,
-    nmps: 31,
-    nlps: 28,
-    switchFlag: 0
-  }, {
-    qe: 0x09C1,
-    nmps: 32,
-    nlps: 29,
-    switchFlag: 0
-  }, {
-    qe: 0x08A1,
-    nmps: 33,
-    nlps: 30,
-    switchFlag: 0
-  }, {
-    qe: 0x0521,
-    nmps: 34,
-    nlps: 31,
-    switchFlag: 0
-  }, {
-    qe: 0x0441,
-    nmps: 35,
-    nlps: 32,
-    switchFlag: 0
-  }, {
-    qe: 0x02A1,
-    nmps: 36,
-    nlps: 33,
-    switchFlag: 0
-  }, {
-    qe: 0x0221,
-    nmps: 37,
-    nlps: 34,
-    switchFlag: 0
-  }, {
-    qe: 0x0141,
-    nmps: 38,
-    nlps: 35,
-    switchFlag: 0
-  }, {
-    qe: 0x0111,
-    nmps: 39,
-    nlps: 36,
-    switchFlag: 0
-  }, {
-    qe: 0x0085,
-    nmps: 40,
-    nlps: 37,
-    switchFlag: 0
-  }, {
-    qe: 0x0049,
-    nmps: 41,
-    nlps: 38,
-    switchFlag: 0
-  }, {
-    qe: 0x0025,
-    nmps: 42,
-    nlps: 39,
-    switchFlag: 0
-  }, {
-    qe: 0x0015,
-    nmps: 43,
-    nlps: 40,
-    switchFlag: 0
-  }, {
-    qe: 0x0009,
-    nmps: 44,
-    nlps: 41,
-    switchFlag: 0
-  }, {
-    qe: 0x0005,
-    nmps: 45,
-    nlps: 42,
-    switchFlag: 0
-  }, {
-    qe: 0x0001,
-    nmps: 45,
-    nlps: 43,
-    switchFlag: 0
-  }, {
-    qe: 0x5601,
-    nmps: 46,
-    nlps: 46,
-    switchFlag: 0
-  }];
-  function ArithmeticDecoder(data, start, end) {
-    this.data = data;
-    this.bp = start;
-    this.dataEnd = end;
-    this.chigh = data[start];
-    this.clow = 0;
-    this.byteIn();
-    this.chigh = this.chigh << 7 & 0xFFFF | this.clow >> 9 & 0x7F;
-    this.clow = this.clow << 7 & 0xFFFF;
-    this.ct -= 7;
-    this.a = 0x8000;
-  }
-  ArithmeticDecoder.prototype = {
-    byteIn: function ArithmeticDecoder_byteIn() {
-      var data = this.data;
-      var bp = this.bp;
-      if (data[bp] === 0xFF) {
-        var b1 = data[bp + 1];
-        if (b1 > 0x8F) {
-          this.clow += 0xFF00;
-          this.ct = 8;
-        } else {
-          bp++;
-          this.clow += data[bp] << 9;
-          this.ct = 7;
-          this.bp = bp;
-        }
-      } else {
-        bp++;
-        this.clow += bp < this.dataEnd ? data[bp] << 8 : 0xFF00;
-        this.ct = 8;
-        this.bp = bp;
-      }
-      if (this.clow > 0xFFFF) {
-        this.chigh += this.clow >> 16;
-        this.clow &= 0xFFFF;
-      }
-    },
-    readBit: function ArithmeticDecoder_readBit(contexts, pos) {
-      var cx_index = contexts[pos] >> 1,
-          cx_mps = contexts[pos] & 1;
-      var qeTableIcx = QeTable[cx_index];
-      var qeIcx = qeTableIcx.qe;
-      var d;
-      var a = this.a - qeIcx;
-      if (this.chigh < qeIcx) {
-        if (a < qeIcx) {
-          a = qeIcx;
-          d = cx_mps;
-          cx_index = qeTableIcx.nmps;
-        } else {
-          a = qeIcx;
-          d = 1 ^ cx_mps;
-          if (qeTableIcx.switchFlag === 1) {
-            cx_mps = d;
-          }
-          cx_index = qeTableIcx.nlps;
-        }
-      } else {
-        this.chigh -= qeIcx;
-        if ((a & 0x8000) !== 0) {
-          this.a = a;
-          return cx_mps;
-        }
-        if (a < qeIcx) {
-          d = 1 ^ cx_mps;
-          if (qeTableIcx.switchFlag === 1) {
-            cx_mps = d;
-          }
-          cx_index = qeTableIcx.nlps;
-        } else {
-          d = cx_mps;
-          cx_index = qeTableIcx.nmps;
-        }
-      }
-      do {
-        if (this.ct === 0) {
-          this.byteIn();
-        }
-        a <<= 1;
-        this.chigh = this.chigh << 1 & 0xFFFF | this.clow >> 15 & 1;
-        this.clow = this.clow << 1 & 0xFFFF;
-        this.ct--;
-      } while ((a & 0x8000) === 0);
-      this.a = a;
-      contexts[pos] = cx_index << 1 | cx_mps;
-      return d;
-    }
-  };
-  return ArithmeticDecoder;
-}();
-exports.ArithmeticDecoder = ArithmeticDecoder;
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 exports.JpxImage = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _arithmetic_decoder = __w_pdfjs_require__(9);
+var _arithmetic_decoder = __w_pdfjs_require__(10);
 
 let JpxError = function JpxErrorClosure() {
   function JpxError(msg) {
@@ -14098,6 +13183,346 @@ var JpxImage = function JpxImageClosure() {
 exports.JpxImage = JpxImage;
 
 /***/ }),
+/* 10 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var ArithmeticDecoder = function ArithmeticDecoderClosure() {
+  var QeTable = [{
+    qe: 0x5601,
+    nmps: 1,
+    nlps: 1,
+    switchFlag: 1
+  }, {
+    qe: 0x3401,
+    nmps: 2,
+    nlps: 6,
+    switchFlag: 0
+  }, {
+    qe: 0x1801,
+    nmps: 3,
+    nlps: 9,
+    switchFlag: 0
+  }, {
+    qe: 0x0AC1,
+    nmps: 4,
+    nlps: 12,
+    switchFlag: 0
+  }, {
+    qe: 0x0521,
+    nmps: 5,
+    nlps: 29,
+    switchFlag: 0
+  }, {
+    qe: 0x0221,
+    nmps: 38,
+    nlps: 33,
+    switchFlag: 0
+  }, {
+    qe: 0x5601,
+    nmps: 7,
+    nlps: 6,
+    switchFlag: 1
+  }, {
+    qe: 0x5401,
+    nmps: 8,
+    nlps: 14,
+    switchFlag: 0
+  }, {
+    qe: 0x4801,
+    nmps: 9,
+    nlps: 14,
+    switchFlag: 0
+  }, {
+    qe: 0x3801,
+    nmps: 10,
+    nlps: 14,
+    switchFlag: 0
+  }, {
+    qe: 0x3001,
+    nmps: 11,
+    nlps: 17,
+    switchFlag: 0
+  }, {
+    qe: 0x2401,
+    nmps: 12,
+    nlps: 18,
+    switchFlag: 0
+  }, {
+    qe: 0x1C01,
+    nmps: 13,
+    nlps: 20,
+    switchFlag: 0
+  }, {
+    qe: 0x1601,
+    nmps: 29,
+    nlps: 21,
+    switchFlag: 0
+  }, {
+    qe: 0x5601,
+    nmps: 15,
+    nlps: 14,
+    switchFlag: 1
+  }, {
+    qe: 0x5401,
+    nmps: 16,
+    nlps: 14,
+    switchFlag: 0
+  }, {
+    qe: 0x5101,
+    nmps: 17,
+    nlps: 15,
+    switchFlag: 0
+  }, {
+    qe: 0x4801,
+    nmps: 18,
+    nlps: 16,
+    switchFlag: 0
+  }, {
+    qe: 0x3801,
+    nmps: 19,
+    nlps: 17,
+    switchFlag: 0
+  }, {
+    qe: 0x3401,
+    nmps: 20,
+    nlps: 18,
+    switchFlag: 0
+  }, {
+    qe: 0x3001,
+    nmps: 21,
+    nlps: 19,
+    switchFlag: 0
+  }, {
+    qe: 0x2801,
+    nmps: 22,
+    nlps: 19,
+    switchFlag: 0
+  }, {
+    qe: 0x2401,
+    nmps: 23,
+    nlps: 20,
+    switchFlag: 0
+  }, {
+    qe: 0x2201,
+    nmps: 24,
+    nlps: 21,
+    switchFlag: 0
+  }, {
+    qe: 0x1C01,
+    nmps: 25,
+    nlps: 22,
+    switchFlag: 0
+  }, {
+    qe: 0x1801,
+    nmps: 26,
+    nlps: 23,
+    switchFlag: 0
+  }, {
+    qe: 0x1601,
+    nmps: 27,
+    nlps: 24,
+    switchFlag: 0
+  }, {
+    qe: 0x1401,
+    nmps: 28,
+    nlps: 25,
+    switchFlag: 0
+  }, {
+    qe: 0x1201,
+    nmps: 29,
+    nlps: 26,
+    switchFlag: 0
+  }, {
+    qe: 0x1101,
+    nmps: 30,
+    nlps: 27,
+    switchFlag: 0
+  }, {
+    qe: 0x0AC1,
+    nmps: 31,
+    nlps: 28,
+    switchFlag: 0
+  }, {
+    qe: 0x09C1,
+    nmps: 32,
+    nlps: 29,
+    switchFlag: 0
+  }, {
+    qe: 0x08A1,
+    nmps: 33,
+    nlps: 30,
+    switchFlag: 0
+  }, {
+    qe: 0x0521,
+    nmps: 34,
+    nlps: 31,
+    switchFlag: 0
+  }, {
+    qe: 0x0441,
+    nmps: 35,
+    nlps: 32,
+    switchFlag: 0
+  }, {
+    qe: 0x02A1,
+    nmps: 36,
+    nlps: 33,
+    switchFlag: 0
+  }, {
+    qe: 0x0221,
+    nmps: 37,
+    nlps: 34,
+    switchFlag: 0
+  }, {
+    qe: 0x0141,
+    nmps: 38,
+    nlps: 35,
+    switchFlag: 0
+  }, {
+    qe: 0x0111,
+    nmps: 39,
+    nlps: 36,
+    switchFlag: 0
+  }, {
+    qe: 0x0085,
+    nmps: 40,
+    nlps: 37,
+    switchFlag: 0
+  }, {
+    qe: 0x0049,
+    nmps: 41,
+    nlps: 38,
+    switchFlag: 0
+  }, {
+    qe: 0x0025,
+    nmps: 42,
+    nlps: 39,
+    switchFlag: 0
+  }, {
+    qe: 0x0015,
+    nmps: 43,
+    nlps: 40,
+    switchFlag: 0
+  }, {
+    qe: 0x0009,
+    nmps: 44,
+    nlps: 41,
+    switchFlag: 0
+  }, {
+    qe: 0x0005,
+    nmps: 45,
+    nlps: 42,
+    switchFlag: 0
+  }, {
+    qe: 0x0001,
+    nmps: 45,
+    nlps: 43,
+    switchFlag: 0
+  }, {
+    qe: 0x5601,
+    nmps: 46,
+    nlps: 46,
+    switchFlag: 0
+  }];
+  function ArithmeticDecoder(data, start, end) {
+    this.data = data;
+    this.bp = start;
+    this.dataEnd = end;
+    this.chigh = data[start];
+    this.clow = 0;
+    this.byteIn();
+    this.chigh = this.chigh << 7 & 0xFFFF | this.clow >> 9 & 0x7F;
+    this.clow = this.clow << 7 & 0xFFFF;
+    this.ct -= 7;
+    this.a = 0x8000;
+  }
+  ArithmeticDecoder.prototype = {
+    byteIn: function ArithmeticDecoder_byteIn() {
+      var data = this.data;
+      var bp = this.bp;
+      if (data[bp] === 0xFF) {
+        var b1 = data[bp + 1];
+        if (b1 > 0x8F) {
+          this.clow += 0xFF00;
+          this.ct = 8;
+        } else {
+          bp++;
+          this.clow += data[bp] << 9;
+          this.ct = 7;
+          this.bp = bp;
+        }
+      } else {
+        bp++;
+        this.clow += bp < this.dataEnd ? data[bp] << 8 : 0xFF00;
+        this.ct = 8;
+        this.bp = bp;
+      }
+      if (this.clow > 0xFFFF) {
+        this.chigh += this.clow >> 16;
+        this.clow &= 0xFFFF;
+      }
+    },
+    readBit: function ArithmeticDecoder_readBit(contexts, pos) {
+      var cx_index = contexts[pos] >> 1,
+          cx_mps = contexts[pos] & 1;
+      var qeTableIcx = QeTable[cx_index];
+      var qeIcx = qeTableIcx.qe;
+      var d;
+      var a = this.a - qeIcx;
+      if (this.chigh < qeIcx) {
+        if (a < qeIcx) {
+          a = qeIcx;
+          d = cx_mps;
+          cx_index = qeTableIcx.nmps;
+        } else {
+          a = qeIcx;
+          d = 1 ^ cx_mps;
+          if (qeTableIcx.switchFlag === 1) {
+            cx_mps = d;
+          }
+          cx_index = qeTableIcx.nlps;
+        }
+      } else {
+        this.chigh -= qeIcx;
+        if ((a & 0x8000) !== 0) {
+          this.a = a;
+          return cx_mps;
+        }
+        if (a < qeIcx) {
+          d = 1 ^ cx_mps;
+          if (qeTableIcx.switchFlag === 1) {
+            cx_mps = d;
+          }
+          cx_index = qeTableIcx.nlps;
+        } else {
+          d = cx_mps;
+          cx_index = qeTableIcx.nmps;
+        }
+      }
+      do {
+        if (this.ct === 0) {
+          this.byteIn();
+        }
+        a <<= 1;
+        this.chigh = this.chigh << 1 & 0xFFFF | this.clow >> 15 & 1;
+        this.clow = this.clow << 1 & 0xFFFF;
+        this.ct--;
+      } while ((a & 0x8000) === 0);
+      this.a = a;
+      contexts[pos] = cx_index << 1 | cx_mps;
+      return d;
+    }
+  };
+  return ArithmeticDecoder;
+}();
+exports.ArithmeticDecoder = ArithmeticDecoder;
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
@@ -15704,13 +15129,13 @@ exports.PartialEvaluator = exports.OperatorList = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _cmap = __w_pdfjs_require__(26);
+var _cmap = __w_pdfjs_require__(29);
 
 var _stream = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(1);
 
-var _fonts = __w_pdfjs_require__(27);
+var _fonts = __w_pdfjs_require__(30);
 
 var _encodings = __w_pdfjs_require__(4);
 
@@ -15718,23 +15143,23 @@ var _unicode = __w_pdfjs_require__(15);
 
 var _standard_fonts = __w_pdfjs_require__(14);
 
-var _pattern = __w_pdfjs_require__(31);
+var _pattern = __w_pdfjs_require__(34);
 
 var _parser = __w_pdfjs_require__(5);
 
-var _bidi = __w_pdfjs_require__(32);
+var _bidi = __w_pdfjs_require__(35);
 
 var _colorspace = __w_pdfjs_require__(3);
 
 var _glyphlist = __w_pdfjs_require__(6);
 
-var _metrics = __w_pdfjs_require__(33);
+var _metrics = __w_pdfjs_require__(36);
 
 var _function = __w_pdfjs_require__(16);
 
-var _murmurhash = __w_pdfjs_require__(35);
+var _murmurhash = __w_pdfjs_require__(38);
 
-var _image = __w_pdfjs_require__(36);
+var _image = __w_pdfjs_require__(39);
 
 var PartialEvaluator = function PartialEvaluatorClosure() {
   const DefaultPartialEvaluatorOptions = {
@@ -18755,7 +18180,7 @@ exports.CFFCompiler = exports.CFFPrivateDict = exports.CFFTopDict = exports.CFFC
 
 var _util = __w_pdfjs_require__(0);
 
-var _charsets = __w_pdfjs_require__(28);
+var _charsets = __w_pdfjs_require__(31);
 
 var _encodings = __w_pdfjs_require__(4);
 
@@ -19162,21 +18587,7 @@ var CFFParser = function CFFParserClosure() {
       var names = [];
       for (var i = 0, ii = index.count; i < ii; ++i) {
         var name = index.get(i);
-        var length = Math.min(name.length, 127);
-        var data = [];
-        for (var j = 0; j < length; ++j) {
-          var c = name[j];
-          if (j === 0 && c === 0) {
-            data[j] = c;
-            continue;
-          }
-          if (c < 33 || c > 126 || c === 91 || c === 93 || c === 40 || c === 41 || c === 123 || c === 125 || c === 60 || c === 62 || c === 47 || c === 37 || c === 35) {
-            data[j] = 95;
-            continue;
-          }
-          data[j] = c;
-        }
-        names.push((0, _util.bytesToString)(data));
+        names.push((0, _util.bytesToString)(name));
       }
       return names;
     },
@@ -19968,7 +19379,21 @@ var CFFCompiler = function CFFCompilerClosure() {
     compileNameIndex: function CFFCompiler_compileNameIndex(names) {
       var nameIndex = new CFFIndex();
       for (var i = 0, ii = names.length; i < ii; ++i) {
-        nameIndex.add((0, _util.stringToBytes)(names[i]));
+        var name = names[i];
+        var length = Math.min(name.length, 127);
+        var sanitizedName = new Array(length);
+        for (var j = 0; j < length; j++) {
+          var char = name[j];
+          if (char < '!' || char > '~' || char === '[' || char === ']' || char === '(' || char === ')' || char === '{' || char === '}' || char === '<' || char === '>' || char === '/' || char === '%') {
+            char = '_';
+          }
+          sanitizedName[j] = char;
+        }
+        sanitizedName = sanitizedName.join('');
+        if (sanitizedName === '') {
+          sanitizedName = 'Bad_Font_Name';
+        }
+        nameIndex.add((0, _util.stringToBytes)(sanitizedName));
       }
       return this.compileIndex(nameIndex);
     },
@@ -22803,7 +22228,7 @@ var _util = __w_pdfjs_require__(0);
 
 var _primitives = __w_pdfjs_require__(1);
 
-var _ps_parser = __w_pdfjs_require__(34);
+var _ps_parser = __w_pdfjs_require__(37);
 
 let IsEvalSupportedCached = {
   get value() {
@@ -23850,8 +23275,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '1.9.659';
-var pdfjsBuild = '3ac4baff';
+var pdfjsVersion = '1.10.88';
+var pdfjsBuild = 'c62a1938';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -24046,7 +23471,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '1.9.659';
+    let workerVersion = '1.10.88';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -27689,7 +27114,7 @@ var _stream = __w_pdfjs_require__(2);
 
 var _evaluator = __w_pdfjs_require__(12);
 
-var _annotation = __w_pdfjs_require__(37);
+var _annotation = __w_pdfjs_require__(40);
 
 var _crypto = __w_pdfjs_require__(11);
 
@@ -28198,11 +27623,1589 @@ exports.PDFDocument = PDFDocument;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.JpegImage = undefined;
+
+var _util = __w_pdfjs_require__(0);
+
+let JpegError = function JpegErrorClosure() {
+  function JpegError(msg) {
+    this.message = 'JPEG error: ' + msg;
+  }
+  JpegError.prototype = new Error();
+  JpegError.prototype.name = 'JpegError';
+  JpegError.constructor = JpegError;
+  return JpegError;
+}();
+var JpegImage = function JpegImageClosure() {
+  var dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
+  var dctCos1 = 4017;
+  var dctSin1 = 799;
+  var dctCos3 = 3406;
+  var dctSin3 = 2276;
+  var dctCos6 = 1567;
+  var dctSin6 = 3784;
+  var dctSqrt2 = 5793;
+  var dctSqrt1d2 = 2896;
+  function JpegImage() {
+    this.decodeTransform = null;
+    this.colorTransform = -1;
+  }
+  function buildHuffmanTable(codeLengths, values) {
+    var k = 0,
+        code = [],
+        i,
+        j,
+        length = 16;
+    while (length > 0 && !codeLengths[length - 1]) {
+      length--;
+    }
+    code.push({
+      children: [],
+      index: 0
+    });
+    var p = code[0],
+        q;
+    for (i = 0; i < length; i++) {
+      for (j = 0; j < codeLengths[i]; j++) {
+        p = code.pop();
+        p.children[p.index] = values[k];
+        while (p.index > 0) {
+          p = code.pop();
+        }
+        p.index++;
+        code.push(p);
+        while (code.length <= i) {
+          code.push(q = {
+            children: [],
+            index: 0
+          });
+          p.children[p.index] = q.children;
+          p = q;
+        }
+        k++;
+      }
+      if (i + 1 < length) {
+        code.push(q = {
+          children: [],
+          index: 0
+        });
+        p.children[p.index] = q.children;
+        p = q;
+      }
+    }
+    return code[0].children;
+  }
+  function getBlockBufferOffset(component, row, col) {
+    return 64 * ((component.blocksPerLine + 1) * row + col);
+  }
+  function decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successivePrev, successive) {
+    var mcusPerLine = frame.mcusPerLine;
+    var progressive = frame.progressive;
+    var startOffset = offset,
+        bitsData = 0,
+        bitsCount = 0;
+    function readBit() {
+      if (bitsCount > 0) {
+        bitsCount--;
+        return bitsData >> bitsCount & 1;
+      }
+      bitsData = data[offset++];
+      if (bitsData === 0xFF) {
+        var nextByte = data[offset++];
+        if (nextByte) {
+          throw new JpegError(`unexpected marker ${(bitsData << 8 | nextByte).toString(16)}`);
+        }
+      }
+      bitsCount = 7;
+      return bitsData >>> 7;
+    }
+    function decodeHuffman(tree) {
+      var node = tree;
+      while (true) {
+        node = node[readBit()];
+        if (typeof node === 'number') {
+          return node;
+        }
+        if (typeof node !== 'object') {
+          throw new JpegError('invalid huffman sequence');
+        }
+      }
+    }
+    function receive(length) {
+      var n = 0;
+      while (length > 0) {
+        n = n << 1 | readBit();
+        length--;
+      }
+      return n;
+    }
+    function receiveAndExtend(length) {
+      if (length === 1) {
+        return readBit() === 1 ? 1 : -1;
+      }
+      var n = receive(length);
+      if (n >= 1 << length - 1) {
+        return n;
+      }
+      return n + (-1 << length) + 1;
+    }
+    function decodeBaseline(component, offset) {
+      var t = decodeHuffman(component.huffmanTableDC);
+      var diff = t === 0 ? 0 : receiveAndExtend(t);
+      component.blockData[offset] = component.pred += diff;
+      var k = 1;
+      while (k < 64) {
+        var rs = decodeHuffman(component.huffmanTableAC);
+        var s = rs & 15,
+            r = rs >> 4;
+        if (s === 0) {
+          if (r < 15) {
+            break;
+          }
+          k += 16;
+          continue;
+        }
+        k += r;
+        var z = dctZigZag[k];
+        component.blockData[offset + z] = receiveAndExtend(s);
+        k++;
+      }
+    }
+    function decodeDCFirst(component, offset) {
+      var t = decodeHuffman(component.huffmanTableDC);
+      var diff = t === 0 ? 0 : receiveAndExtend(t) << successive;
+      component.blockData[offset] = component.pred += diff;
+    }
+    function decodeDCSuccessive(component, offset) {
+      component.blockData[offset] |= readBit() << successive;
+    }
+    var eobrun = 0;
+    function decodeACFirst(component, offset) {
+      if (eobrun > 0) {
+        eobrun--;
+        return;
+      }
+      var k = spectralStart,
+          e = spectralEnd;
+      while (k <= e) {
+        var rs = decodeHuffman(component.huffmanTableAC);
+        var s = rs & 15,
+            r = rs >> 4;
+        if (s === 0) {
+          if (r < 15) {
+            eobrun = receive(r) + (1 << r) - 1;
+            break;
+          }
+          k += 16;
+          continue;
+        }
+        k += r;
+        var z = dctZigZag[k];
+        component.blockData[offset + z] = receiveAndExtend(s) * (1 << successive);
+        k++;
+      }
+    }
+    var successiveACState = 0,
+        successiveACNextValue;
+    function decodeACSuccessive(component, offset) {
+      var k = spectralStart;
+      var e = spectralEnd;
+      var r = 0;
+      var s;
+      var rs;
+      while (k <= e) {
+        var z = dctZigZag[k];
+        switch (successiveACState) {
+          case 0:
+            rs = decodeHuffman(component.huffmanTableAC);
+            s = rs & 15;
+            r = rs >> 4;
+            if (s === 0) {
+              if (r < 15) {
+                eobrun = receive(r) + (1 << r);
+                successiveACState = 4;
+              } else {
+                r = 16;
+                successiveACState = 1;
+              }
+            } else {
+              if (s !== 1) {
+                throw new JpegError('invalid ACn encoding');
+              }
+              successiveACNextValue = receiveAndExtend(s);
+              successiveACState = r ? 2 : 3;
+            }
+            continue;
+          case 1:
+          case 2:
+            if (component.blockData[offset + z]) {
+              component.blockData[offset + z] += readBit() << successive;
+            } else {
+              r--;
+              if (r === 0) {
+                successiveACState = successiveACState === 2 ? 3 : 0;
+              }
+            }
+            break;
+          case 3:
+            if (component.blockData[offset + z]) {
+              component.blockData[offset + z] += readBit() << successive;
+            } else {
+              component.blockData[offset + z] = successiveACNextValue << successive;
+              successiveACState = 0;
+            }
+            break;
+          case 4:
+            if (component.blockData[offset + z]) {
+              component.blockData[offset + z] += readBit() << successive;
+            }
+            break;
+        }
+        k++;
+      }
+      if (successiveACState === 4) {
+        eobrun--;
+        if (eobrun === 0) {
+          successiveACState = 0;
+        }
+      }
+    }
+    function decodeMcu(component, decode, mcu, row, col) {
+      var mcuRow = mcu / mcusPerLine | 0;
+      var mcuCol = mcu % mcusPerLine;
+      var blockRow = mcuRow * component.v + row;
+      var blockCol = mcuCol * component.h + col;
+      var offset = getBlockBufferOffset(component, blockRow, blockCol);
+      decode(component, offset);
+    }
+    function decodeBlock(component, decode, mcu) {
+      var blockRow = mcu / component.blocksPerLine | 0;
+      var blockCol = mcu % component.blocksPerLine;
+      var offset = getBlockBufferOffset(component, blockRow, blockCol);
+      decode(component, offset);
+    }
+    var componentsLength = components.length;
+    var component, i, j, k, n;
+    var decodeFn;
+    if (progressive) {
+      if (spectralStart === 0) {
+        decodeFn = successivePrev === 0 ? decodeDCFirst : decodeDCSuccessive;
+      } else {
+        decodeFn = successivePrev === 0 ? decodeACFirst : decodeACSuccessive;
+      }
+    } else {
+      decodeFn = decodeBaseline;
+    }
+    var mcu = 0,
+        fileMarker;
+    var mcuExpected;
+    if (componentsLength === 1) {
+      mcuExpected = components[0].blocksPerLine * components[0].blocksPerColumn;
+    } else {
+      mcuExpected = mcusPerLine * frame.mcusPerColumn;
+    }
+    var h, v;
+    while (mcu < mcuExpected) {
+      var mcuToRead = resetInterval ? Math.min(mcuExpected - mcu, resetInterval) : mcuExpected;
+      for (i = 0; i < componentsLength; i++) {
+        components[i].pred = 0;
+      }
+      eobrun = 0;
+      if (componentsLength === 1) {
+        component = components[0];
+        for (n = 0; n < mcuToRead; n++) {
+          decodeBlock(component, decodeFn, mcu);
+          mcu++;
+        }
+      } else {
+        for (n = 0; n < mcuToRead; n++) {
+          for (i = 0; i < componentsLength; i++) {
+            component = components[i];
+            h = component.h;
+            v = component.v;
+            for (j = 0; j < v; j++) {
+              for (k = 0; k < h; k++) {
+                decodeMcu(component, decodeFn, mcu, j, k);
+              }
+            }
+          }
+          mcu++;
+        }
+      }
+      bitsCount = 0;
+      fileMarker = findNextFileMarker(data, offset);
+      if (fileMarker && fileMarker.invalid) {
+        (0, _util.warn)('decodeScan - unexpected MCU data, next marker is: ' + fileMarker.invalid);
+        offset = fileMarker.offset;
+      }
+      var marker = fileMarker && fileMarker.marker;
+      if (!marker || marker <= 0xFF00) {
+        throw new JpegError('marker was not found');
+      }
+      if (marker >= 0xFFD0 && marker <= 0xFFD7) {
+        offset += 2;
+      } else {
+        break;
+      }
+    }
+    fileMarker = findNextFileMarker(data, offset);
+    if (fileMarker && fileMarker.invalid) {
+      (0, _util.warn)('decodeScan - unexpected Scan data, next marker is: ' + fileMarker.invalid);
+      offset = fileMarker.offset;
+    }
+    return offset - startOffset;
+  }
+  function quantizeAndInverse(component, blockBufferOffset, p) {
+    var qt = component.quantizationTable,
+        blockData = component.blockData;
+    var v0, v1, v2, v3, v4, v5, v6, v7;
+    var p0, p1, p2, p3, p4, p5, p6, p7;
+    var t;
+    if (!qt) {
+      throw new JpegError('missing required Quantization Table.');
+    }
+    for (var row = 0; row < 64; row += 8) {
+      p0 = blockData[blockBufferOffset + row];
+      p1 = blockData[blockBufferOffset + row + 1];
+      p2 = blockData[blockBufferOffset + row + 2];
+      p3 = blockData[blockBufferOffset + row + 3];
+      p4 = blockData[blockBufferOffset + row + 4];
+      p5 = blockData[blockBufferOffset + row + 5];
+      p6 = blockData[blockBufferOffset + row + 6];
+      p7 = blockData[blockBufferOffset + row + 7];
+      p0 *= qt[row];
+      if ((p1 | p2 | p3 | p4 | p5 | p6 | p7) === 0) {
+        t = dctSqrt2 * p0 + 512 >> 10;
+        p[row] = t;
+        p[row + 1] = t;
+        p[row + 2] = t;
+        p[row + 3] = t;
+        p[row + 4] = t;
+        p[row + 5] = t;
+        p[row + 6] = t;
+        p[row + 7] = t;
+        continue;
+      }
+      p1 *= qt[row + 1];
+      p2 *= qt[row + 2];
+      p3 *= qt[row + 3];
+      p4 *= qt[row + 4];
+      p5 *= qt[row + 5];
+      p6 *= qt[row + 6];
+      p7 *= qt[row + 7];
+      v0 = dctSqrt2 * p0 + 128 >> 8;
+      v1 = dctSqrt2 * p4 + 128 >> 8;
+      v2 = p2;
+      v3 = p6;
+      v4 = dctSqrt1d2 * (p1 - p7) + 128 >> 8;
+      v7 = dctSqrt1d2 * (p1 + p7) + 128 >> 8;
+      v5 = p3 << 4;
+      v6 = p5 << 4;
+      v0 = v0 + v1 + 1 >> 1;
+      v1 = v0 - v1;
+      t = v2 * dctSin6 + v3 * dctCos6 + 128 >> 8;
+      v2 = v2 * dctCos6 - v3 * dctSin6 + 128 >> 8;
+      v3 = t;
+      v4 = v4 + v6 + 1 >> 1;
+      v6 = v4 - v6;
+      v7 = v7 + v5 + 1 >> 1;
+      v5 = v7 - v5;
+      v0 = v0 + v3 + 1 >> 1;
+      v3 = v0 - v3;
+      v1 = v1 + v2 + 1 >> 1;
+      v2 = v1 - v2;
+      t = v4 * dctSin3 + v7 * dctCos3 + 2048 >> 12;
+      v4 = v4 * dctCos3 - v7 * dctSin3 + 2048 >> 12;
+      v7 = t;
+      t = v5 * dctSin1 + v6 * dctCos1 + 2048 >> 12;
+      v5 = v5 * dctCos1 - v6 * dctSin1 + 2048 >> 12;
+      v6 = t;
+      p[row] = v0 + v7;
+      p[row + 7] = v0 - v7;
+      p[row + 1] = v1 + v6;
+      p[row + 6] = v1 - v6;
+      p[row + 2] = v2 + v5;
+      p[row + 5] = v2 - v5;
+      p[row + 3] = v3 + v4;
+      p[row + 4] = v3 - v4;
+    }
+    for (var col = 0; col < 8; ++col) {
+      p0 = p[col];
+      p1 = p[col + 8];
+      p2 = p[col + 16];
+      p3 = p[col + 24];
+      p4 = p[col + 32];
+      p5 = p[col + 40];
+      p6 = p[col + 48];
+      p7 = p[col + 56];
+      if ((p1 | p2 | p3 | p4 | p5 | p6 | p7) === 0) {
+        t = dctSqrt2 * p0 + 8192 >> 14;
+        t = t < -2040 ? 0 : t >= 2024 ? 255 : t + 2056 >> 4;
+        blockData[blockBufferOffset + col] = t;
+        blockData[blockBufferOffset + col + 8] = t;
+        blockData[blockBufferOffset + col + 16] = t;
+        blockData[blockBufferOffset + col + 24] = t;
+        blockData[blockBufferOffset + col + 32] = t;
+        blockData[blockBufferOffset + col + 40] = t;
+        blockData[blockBufferOffset + col + 48] = t;
+        blockData[blockBufferOffset + col + 56] = t;
+        continue;
+      }
+      v0 = dctSqrt2 * p0 + 2048 >> 12;
+      v1 = dctSqrt2 * p4 + 2048 >> 12;
+      v2 = p2;
+      v3 = p6;
+      v4 = dctSqrt1d2 * (p1 - p7) + 2048 >> 12;
+      v7 = dctSqrt1d2 * (p1 + p7) + 2048 >> 12;
+      v5 = p3;
+      v6 = p5;
+      v0 = (v0 + v1 + 1 >> 1) + 4112;
+      v1 = v0 - v1;
+      t = v2 * dctSin6 + v3 * dctCos6 + 2048 >> 12;
+      v2 = v2 * dctCos6 - v3 * dctSin6 + 2048 >> 12;
+      v3 = t;
+      v4 = v4 + v6 + 1 >> 1;
+      v6 = v4 - v6;
+      v7 = v7 + v5 + 1 >> 1;
+      v5 = v7 - v5;
+      v0 = v0 + v3 + 1 >> 1;
+      v3 = v0 - v3;
+      v1 = v1 + v2 + 1 >> 1;
+      v2 = v1 - v2;
+      t = v4 * dctSin3 + v7 * dctCos3 + 2048 >> 12;
+      v4 = v4 * dctCos3 - v7 * dctSin3 + 2048 >> 12;
+      v7 = t;
+      t = v5 * dctSin1 + v6 * dctCos1 + 2048 >> 12;
+      v5 = v5 * dctCos1 - v6 * dctSin1 + 2048 >> 12;
+      v6 = t;
+      p0 = v0 + v7;
+      p7 = v0 - v7;
+      p1 = v1 + v6;
+      p6 = v1 - v6;
+      p2 = v2 + v5;
+      p5 = v2 - v5;
+      p3 = v3 + v4;
+      p4 = v3 - v4;
+      p0 = p0 < 16 ? 0 : p0 >= 4080 ? 255 : p0 >> 4;
+      p1 = p1 < 16 ? 0 : p1 >= 4080 ? 255 : p1 >> 4;
+      p2 = p2 < 16 ? 0 : p2 >= 4080 ? 255 : p2 >> 4;
+      p3 = p3 < 16 ? 0 : p3 >= 4080 ? 255 : p3 >> 4;
+      p4 = p4 < 16 ? 0 : p4 >= 4080 ? 255 : p4 >> 4;
+      p5 = p5 < 16 ? 0 : p5 >= 4080 ? 255 : p5 >> 4;
+      p6 = p6 < 16 ? 0 : p6 >= 4080 ? 255 : p6 >> 4;
+      p7 = p7 < 16 ? 0 : p7 >= 4080 ? 255 : p7 >> 4;
+      blockData[blockBufferOffset + col] = p0;
+      blockData[blockBufferOffset + col + 8] = p1;
+      blockData[blockBufferOffset + col + 16] = p2;
+      blockData[blockBufferOffset + col + 24] = p3;
+      blockData[blockBufferOffset + col + 32] = p4;
+      blockData[blockBufferOffset + col + 40] = p5;
+      blockData[blockBufferOffset + col + 48] = p6;
+      blockData[blockBufferOffset + col + 56] = p7;
+    }
+  }
+  function buildComponentData(frame, component) {
+    var blocksPerLine = component.blocksPerLine;
+    var blocksPerColumn = component.blocksPerColumn;
+    var computationBuffer = new Int16Array(64);
+    for (var blockRow = 0; blockRow < blocksPerColumn; blockRow++) {
+      for (var blockCol = 0; blockCol < blocksPerLine; blockCol++) {
+        var offset = getBlockBufferOffset(component, blockRow, blockCol);
+        quantizeAndInverse(component, offset, computationBuffer);
+      }
+    }
+    return component.blockData;
+  }
+  function findNextFileMarker(data, currentPos, startPos) {
+    function peekUint16(pos) {
+      return data[pos] << 8 | data[pos + 1];
+    }
+    var maxPos = data.length - 1;
+    var newPos = startPos < currentPos ? startPos : currentPos;
+    if (currentPos >= maxPos) {
+      return null;
+    }
+    var currentMarker = peekUint16(currentPos);
+    if (currentMarker >= 0xFFC0 && currentMarker <= 0xFFFE) {
+      return {
+        invalid: null,
+        marker: currentMarker,
+        offset: currentPos
+      };
+    }
+    var newMarker = peekUint16(newPos);
+    while (!(newMarker >= 0xFFC0 && newMarker <= 0xFFFE)) {
+      if (++newPos >= maxPos) {
+        return null;
+      }
+      newMarker = peekUint16(newPos);
+    }
+    return {
+      invalid: currentMarker.toString(16),
+      marker: newMarker,
+      offset: newPos
+    };
+  }
+  JpegImage.prototype = {
+    parse: function parse(data) {
+      function readUint16() {
+        var value = data[offset] << 8 | data[offset + 1];
+        offset += 2;
+        return value;
+      }
+      function readDataBlock() {
+        var length = readUint16();
+        var endOffset = offset + length - 2;
+        var fileMarker = findNextFileMarker(data, endOffset, offset);
+        if (fileMarker && fileMarker.invalid) {
+          (0, _util.warn)('readDataBlock - incorrect length, next marker is: ' + fileMarker.invalid);
+          endOffset = fileMarker.offset;
+        }
+        var array = data.subarray(offset, endOffset);
+        offset += array.length;
+        return array;
+      }
+      function prepareComponents(frame) {
+        var mcusPerLine = Math.ceil(frame.samplesPerLine / 8 / frame.maxH);
+        var mcusPerColumn = Math.ceil(frame.scanLines / 8 / frame.maxV);
+        for (var i = 0; i < frame.components.length; i++) {
+          component = frame.components[i];
+          var blocksPerLine = Math.ceil(Math.ceil(frame.samplesPerLine / 8) * component.h / frame.maxH);
+          var blocksPerColumn = Math.ceil(Math.ceil(frame.scanLines / 8) * component.v / frame.maxV);
+          var blocksPerLineForMcu = mcusPerLine * component.h;
+          var blocksPerColumnForMcu = mcusPerColumn * component.v;
+          var blocksBufferSize = 64 * blocksPerColumnForMcu * (blocksPerLineForMcu + 1);
+          component.blockData = new Int16Array(blocksBufferSize);
+          component.blocksPerLine = blocksPerLine;
+          component.blocksPerColumn = blocksPerColumn;
+        }
+        frame.mcusPerLine = mcusPerLine;
+        frame.mcusPerColumn = mcusPerColumn;
+      }
+      var offset = 0;
+      var jfif = null;
+      var adobe = null;
+      var frame, resetInterval;
+      var quantizationTables = [];
+      var huffmanTablesAC = [],
+          huffmanTablesDC = [];
+      var fileMarker = readUint16();
+      if (fileMarker !== 0xFFD8) {
+        throw new JpegError('SOI not found');
+      }
+      fileMarker = readUint16();
+      while (fileMarker !== 0xFFD9) {
+        var i, j, l;
+        switch (fileMarker) {
+          case 0xFFE0:
+          case 0xFFE1:
+          case 0xFFE2:
+          case 0xFFE3:
+          case 0xFFE4:
+          case 0xFFE5:
+          case 0xFFE6:
+          case 0xFFE7:
+          case 0xFFE8:
+          case 0xFFE9:
+          case 0xFFEA:
+          case 0xFFEB:
+          case 0xFFEC:
+          case 0xFFED:
+          case 0xFFEE:
+          case 0xFFEF:
+          case 0xFFFE:
+            var appData = readDataBlock();
+            if (fileMarker === 0xFFE0) {
+              if (appData[0] === 0x4A && appData[1] === 0x46 && appData[2] === 0x49 && appData[3] === 0x46 && appData[4] === 0) {
+                jfif = {
+                  version: {
+                    major: appData[5],
+                    minor: appData[6]
+                  },
+                  densityUnits: appData[7],
+                  xDensity: appData[8] << 8 | appData[9],
+                  yDensity: appData[10] << 8 | appData[11],
+                  thumbWidth: appData[12],
+                  thumbHeight: appData[13],
+                  thumbData: appData.subarray(14, 14 + 3 * appData[12] * appData[13])
+                };
+              }
+            }
+            if (fileMarker === 0xFFEE) {
+              if (appData[0] === 0x41 && appData[1] === 0x64 && appData[2] === 0x6F && appData[3] === 0x62 && appData[4] === 0x65) {
+                adobe = {
+                  version: appData[5] << 8 | appData[6],
+                  flags0: appData[7] << 8 | appData[8],
+                  flags1: appData[9] << 8 | appData[10],
+                  transformCode: appData[11]
+                };
+              }
+            }
+            break;
+          case 0xFFDB:
+            var quantizationTablesLength = readUint16();
+            var quantizationTablesEnd = quantizationTablesLength + offset - 2;
+            var z;
+            while (offset < quantizationTablesEnd) {
+              var quantizationTableSpec = data[offset++];
+              var tableData = new Uint16Array(64);
+              if (quantizationTableSpec >> 4 === 0) {
+                for (j = 0; j < 64; j++) {
+                  z = dctZigZag[j];
+                  tableData[z] = data[offset++];
+                }
+              } else if (quantizationTableSpec >> 4 === 1) {
+                for (j = 0; j < 64; j++) {
+                  z = dctZigZag[j];
+                  tableData[z] = readUint16();
+                }
+              } else {
+                throw new JpegError('DQT - invalid table spec');
+              }
+              quantizationTables[quantizationTableSpec & 15] = tableData;
+            }
+            break;
+          case 0xFFC0:
+          case 0xFFC1:
+          case 0xFFC2:
+            if (frame) {
+              throw new JpegError('Only single frame JPEGs supported');
+            }
+            readUint16();
+            frame = {};
+            frame.extended = fileMarker === 0xFFC1;
+            frame.progressive = fileMarker === 0xFFC2;
+            frame.precision = data[offset++];
+            frame.scanLines = readUint16();
+            frame.samplesPerLine = readUint16();
+            frame.components = [];
+            frame.componentIds = {};
+            var componentsCount = data[offset++],
+                componentId;
+            var maxH = 0,
+                maxV = 0;
+            for (i = 0; i < componentsCount; i++) {
+              componentId = data[offset];
+              var h = data[offset + 1] >> 4;
+              var v = data[offset + 1] & 15;
+              if (maxH < h) {
+                maxH = h;
+              }
+              if (maxV < v) {
+                maxV = v;
+              }
+              var qId = data[offset + 2];
+              l = frame.components.push({
+                h,
+                v,
+                quantizationId: qId,
+                quantizationTable: null
+              });
+              frame.componentIds[componentId] = l - 1;
+              offset += 3;
+            }
+            frame.maxH = maxH;
+            frame.maxV = maxV;
+            prepareComponents(frame);
+            break;
+          case 0xFFC4:
+            var huffmanLength = readUint16();
+            for (i = 2; i < huffmanLength;) {
+              var huffmanTableSpec = data[offset++];
+              var codeLengths = new Uint8Array(16);
+              var codeLengthSum = 0;
+              for (j = 0; j < 16; j++, offset++) {
+                codeLengthSum += codeLengths[j] = data[offset];
+              }
+              var huffmanValues = new Uint8Array(codeLengthSum);
+              for (j = 0; j < codeLengthSum; j++, offset++) {
+                huffmanValues[j] = data[offset];
+              }
+              i += 17 + codeLengthSum;
+              (huffmanTableSpec >> 4 === 0 ? huffmanTablesDC : huffmanTablesAC)[huffmanTableSpec & 15] = buildHuffmanTable(codeLengths, huffmanValues);
+            }
+            break;
+          case 0xFFDD:
+            readUint16();
+            resetInterval = readUint16();
+            break;
+          case 0xFFDA:
+            readUint16();
+            var selectorsCount = data[offset++];
+            var components = [],
+                component;
+            for (i = 0; i < selectorsCount; i++) {
+              var componentIndex = frame.componentIds[data[offset++]];
+              component = frame.components[componentIndex];
+              var tableSpec = data[offset++];
+              component.huffmanTableDC = huffmanTablesDC[tableSpec >> 4];
+              component.huffmanTableAC = huffmanTablesAC[tableSpec & 15];
+              components.push(component);
+            }
+            var spectralStart = data[offset++];
+            var spectralEnd = data[offset++];
+            var successiveApproximation = data[offset++];
+            var processed = decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successiveApproximation >> 4, successiveApproximation & 15);
+            offset += processed;
+            break;
+          case 0xFFFF:
+            if (data[offset] !== 0xFF) {
+              offset--;
+            }
+            break;
+          default:
+            if (data[offset - 3] === 0xFF && data[offset - 2] >= 0xC0 && data[offset - 2] <= 0xFE) {
+              offset -= 3;
+              break;
+            }
+            throw new JpegError('unknown marker ' + fileMarker.toString(16));
+        }
+        fileMarker = readUint16();
+      }
+      this.width = frame.samplesPerLine;
+      this.height = frame.scanLines;
+      this.jfif = jfif;
+      this.adobe = adobe;
+      this.components = [];
+      for (i = 0; i < frame.components.length; i++) {
+        component = frame.components[i];
+        var quantizationTable = quantizationTables[component.quantizationId];
+        if (quantizationTable) {
+          component.quantizationTable = quantizationTable;
+        }
+        this.components.push({
+          output: buildComponentData(frame, component),
+          scaleX: component.h / frame.maxH,
+          scaleY: component.v / frame.maxV,
+          blocksPerLine: component.blocksPerLine,
+          blocksPerColumn: component.blocksPerColumn
+        });
+      }
+      this.numComponents = this.components.length;
+    },
+    _getLinearizedBlockData: function getLinearizedBlockData(width, height) {
+      var scaleX = this.width / width,
+          scaleY = this.height / height;
+      var component, componentScaleX, componentScaleY, blocksPerScanline;
+      var x, y, i, j, k;
+      var index;
+      var offset = 0;
+      var output;
+      var numComponents = this.components.length;
+      var dataLength = width * height * numComponents;
+      var data = new Uint8ClampedArray(dataLength);
+      var xScaleBlockOffset = new Uint32Array(width);
+      var mask3LSB = 0xfffffff8;
+      for (i = 0; i < numComponents; i++) {
+        component = this.components[i];
+        componentScaleX = component.scaleX * scaleX;
+        componentScaleY = component.scaleY * scaleY;
+        offset = i;
+        output = component.output;
+        blocksPerScanline = component.blocksPerLine + 1 << 3;
+        for (x = 0; x < width; x++) {
+          j = 0 | x * componentScaleX;
+          xScaleBlockOffset[x] = (j & mask3LSB) << 3 | j & 7;
+        }
+        for (y = 0; y < height; y++) {
+          j = 0 | y * componentScaleY;
+          index = blocksPerScanline * (j & mask3LSB) | (j & 7) << 3;
+          for (x = 0; x < width; x++) {
+            data[offset] = output[index + xScaleBlockOffset[x]];
+            offset += numComponents;
+          }
+        }
+      }
+      var transform = this.decodeTransform;
+      if (transform) {
+        for (i = 0; i < dataLength;) {
+          for (j = 0, k = 0; j < numComponents; j++, i++, k += 2) {
+            data[i] = (data[i] * transform[k] >> 8) + transform[k + 1];
+          }
+        }
+      }
+      return data;
+    },
+    _isColorConversionNeeded() {
+      if (this.adobe) {
+        return !!this.adobe.transformCode;
+      }
+      if (this.numComponents === 3) {
+        if (this.colorTransform === 0) {
+          return false;
+        }
+        return true;
+      }
+      if (this.colorTransform === 1) {
+        return true;
+      }
+      return false;
+    },
+    _convertYccToRgb: function convertYccToRgb(data) {
+      var Y, Cb, Cr;
+      for (var i = 0, length = data.length; i < length; i += 3) {
+        Y = data[i];
+        Cb = data[i + 1];
+        Cr = data[i + 2];
+        data[i] = Y - 179.456 + 1.402 * Cr;
+        data[i + 1] = Y + 135.459 - 0.344 * Cb - 0.714 * Cr;
+        data[i + 2] = Y - 226.816 + 1.772 * Cb;
+      }
+      return data;
+    },
+    _convertYcckToRgb: function convertYcckToRgb(data) {
+      var Y, Cb, Cr, k;
+      var offset = 0;
+      for (var i = 0, length = data.length; i < length; i += 4) {
+        Y = data[i];
+        Cb = data[i + 1];
+        Cr = data[i + 2];
+        k = data[i + 3];
+        data[offset++] = -122.67195406894 + Cb * (-6.60635669420364e-5 * Cb + 0.000437130475926232 * Cr - 5.4080610064599e-5 * Y + 0.00048449797120281 * k - 0.154362151871126) + Cr * (-0.000957964378445773 * Cr + 0.000817076911346625 * Y - 0.00477271405408747 * k + 1.53380253221734) + Y * (0.000961250184130688 * Y - 0.00266257332283933 * k + 0.48357088451265) + k * (-0.000336197177618394 * k + 0.484791561490776);
+        data[offset++] = 107.268039397724 + Cb * (2.19927104525741e-5 * Cb - 0.000640992018297945 * Cr + 0.000659397001245577 * Y + 0.000426105652938837 * k - 0.176491792462875) + Cr * (-0.000778269941513683 * Cr + 0.00130872261408275 * Y + 0.000770482631801132 * k - 0.151051492775562) + Y * (0.00126935368114843 * Y - 0.00265090189010898 * k + 0.25802910206845) + k * (-0.000318913117588328 * k - 0.213742400323665);
+        data[offset++] = -20.810012546947 + Cb * (-0.000570115196973677 * Cb - 2.63409051004589e-5 * Cr + 0.0020741088115012 * Y - 0.00288260236853442 * k + 0.814272968359295) + Cr * (-1.53496057440975e-5 * Cr - 0.000132689043961446 * Y + 0.000560833691242812 * k - 0.195152027534049) + Y * (0.00174418132927582 * Y - 0.00255243321439347 * k + 0.116935020465145) + k * (-0.000343531996510555 * k + 0.24165260232407);
+      }
+      return data;
+    },
+    _convertYcckToCmyk: function convertYcckToCmyk(data) {
+      var Y, Cb, Cr;
+      for (var i = 0, length = data.length; i < length; i += 4) {
+        Y = data[i];
+        Cb = data[i + 1];
+        Cr = data[i + 2];
+        data[i] = 434.456 - Y - 1.402 * Cr;
+        data[i + 1] = 119.541 - Y + 0.344 * Cb + 0.714 * Cr;
+        data[i + 2] = 481.816 - Y - 1.772 * Cb;
+      }
+      return data;
+    },
+    _convertCmykToRgb: function convertCmykToRgb(data) {
+      var c, m, y, k;
+      var offset = 0;
+      var scale = 1 / 255;
+      for (var i = 0, length = data.length; i < length; i += 4) {
+        c = data[i] * scale;
+        m = data[i + 1] * scale;
+        y = data[i + 2] * scale;
+        k = data[i + 3] * scale;
+        data[offset++] = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) - k * (21.86122147463605 * k + 189.48180835922747);
+        data[offset++] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) - k * (20.737325471181034 * k + 187.80453709719578);
+        data[offset++] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) - k * (22.33816807309886 * k + 180.12613974708367);
+      }
+      return data;
+    },
+    getData: function getData(width, height, forceRGBoutput) {
+      if (this.numComponents > 4) {
+        throw new JpegError('Unsupported color mode');
+      }
+      var data = this._getLinearizedBlockData(width, height);
+      if (this.numComponents === 1 && forceRGBoutput) {
+        var dataLength = data.length;
+        var rgbData = new Uint8ClampedArray(dataLength * 3);
+        var offset = 0;
+        for (var i = 0; i < dataLength; i++) {
+          var grayColor = data[i];
+          rgbData[offset++] = grayColor;
+          rgbData[offset++] = grayColor;
+          rgbData[offset++] = grayColor;
+        }
+        return rgbData;
+      } else if (this.numComponents === 3 && this._isColorConversionNeeded()) {
+        return this._convertYccToRgb(data);
+      } else if (this.numComponents === 4) {
+        if (this._isColorConversionNeeded()) {
+          if (forceRGBoutput) {
+            return this._convertYcckToRgb(data);
+          }
+          return this._convertYcckToCmyk(data);
+        } else if (forceRGBoutput) {
+          return this._convertCmykToRgb(data);
+        }
+      }
+      return data;
+    }
+  };
+  return JpegImage;
+}();
+exports.JpegImage = JpegImage;
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CCITTFaxStream = undefined;
+
+var _primitives = __w_pdfjs_require__(1);
+
+var _ccitt = __w_pdfjs_require__(26);
+
+var _stream = __w_pdfjs_require__(2);
+
+var CCITTFaxStream = function CCITTFaxStreamClosure() {
+  function CCITTFaxStream(str, maybeLength, params) {
+    this.str = str;
+    this.dict = str.dict;
+    if (!(0, _primitives.isDict)(params)) {
+      params = _primitives.Dict.empty;
+    }
+    const source = {
+      next() {
+        return str.getByte();
+      }
+    };
+    this.ccittFaxDecoder = new _ccitt.CCITTFaxDecoder(source, {
+      K: params.get('K'),
+      EndOfLine: params.get('EndOfLine'),
+      EncodedByteAlign: params.get('EncodedByteAlign'),
+      Columns: params.get('Columns'),
+      Rows: params.get('Rows'),
+      EndOfBlock: params.get('EndOfBlock'),
+      BlackIs1: params.get('BlackIs1')
+    });
+    _stream.DecodeStream.call(this, maybeLength);
+  }
+  CCITTFaxStream.prototype = Object.create(_stream.DecodeStream.prototype);
+  CCITTFaxStream.prototype.readBlock = function () {
+    while (!this.eof) {
+      let c = this.ccittFaxDecoder.readNextChar();
+      if (c === -1) {
+        this.eof = true;
+        return;
+      }
+      this.ensureBuffer(this.bufferLength + 1);
+      this.buffer[this.bufferLength++] = c;
+    }
+  };
+  return CCITTFaxStream;
+}();
+exports.CCITTFaxStream = CCITTFaxStream;
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CCITTFaxDecoder = undefined;
+
+var _util = __w_pdfjs_require__(0);
+
+let CCITTFaxDecoder = function CCITTFaxDecoder() {
+  const ccittEOL = -2;
+  const ccittEOF = -1;
+  const twoDimPass = 0;
+  const twoDimHoriz = 1;
+  const twoDimVert0 = 2;
+  const twoDimVertR1 = 3;
+  const twoDimVertL1 = 4;
+  const twoDimVertR2 = 5;
+  const twoDimVertL2 = 6;
+  const twoDimVertR3 = 7;
+  const twoDimVertL3 = 8;
+  const twoDimTable = [[-1, -1], [-1, -1], [7, twoDimVertL3], [7, twoDimVertR3], [6, twoDimVertL2], [6, twoDimVertL2], [6, twoDimVertR2], [6, twoDimVertR2], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0]];
+  const whiteTable1 = [[-1, -1], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [12, 1984], [12, 2048], [12, 2112], [12, 2176], [12, 2240], [12, 2304], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [12, 2368], [12, 2432], [12, 2496], [12, 2560]];
+  const whiteTable2 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [8, 29], [8, 29], [8, 30], [8, 30], [8, 45], [8, 45], [8, 46], [8, 46], [7, 22], [7, 22], [7, 22], [7, 22], [7, 23], [7, 23], [7, 23], [7, 23], [8, 47], [8, 47], [8, 48], [8, 48], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [7, 20], [7, 20], [7, 20], [7, 20], [8, 33], [8, 33], [8, 34], [8, 34], [8, 35], [8, 35], [8, 36], [8, 36], [8, 37], [8, 37], [8, 38], [8, 38], [7, 19], [7, 19], [7, 19], [7, 19], [8, 31], [8, 31], [8, 32], [8, 32], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [8, 53], [8, 53], [8, 54], [8, 54], [7, 26], [7, 26], [7, 26], [7, 26], [8, 39], [8, 39], [8, 40], [8, 40], [8, 41], [8, 41], [8, 42], [8, 42], [8, 43], [8, 43], [8, 44], [8, 44], [7, 21], [7, 21], [7, 21], [7, 21], [7, 28], [7, 28], [7, 28], [7, 28], [8, 61], [8, 61], [8, 62], [8, 62], [8, 63], [8, 63], [8, 0], [8, 0], [8, 320], [8, 320], [8, 384], [8, 384], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [7, 27], [7, 27], [7, 27], [7, 27], [8, 59], [8, 59], [8, 60], [8, 60], [9, 1472], [9, 1536], [9, 1600], [9, 1728], [7, 18], [7, 18], [7, 18], [7, 18], [7, 24], [7, 24], [7, 24], [7, 24], [8, 49], [8, 49], [8, 50], [8, 50], [8, 51], [8, 51], [8, 52], [8, 52], [7, 25], [7, 25], [7, 25], [7, 25], [8, 55], [8, 55], [8, 56], [8, 56], [8, 57], [8, 57], [8, 58], [8, 58], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [8, 448], [8, 448], [8, 512], [8, 512], [9, 704], [9, 768], [8, 640], [8, 640], [8, 576], [8, 576], [9, 832], [9, 896], [9, 960], [9, 1024], [9, 1088], [9, 1152], [9, 1216], [9, 1280], [9, 1344], [9, 1408], [7, 256], [7, 256], [7, 256], [7, 256], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7]];
+  const blackTable1 = [[-1, -1], [-1, -1], [12, ccittEOL], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [11, 1792], [11, 1792], [12, 1984], [12, 1984], [12, 2048], [12, 2048], [12, 2112], [12, 2112], [12, 2176], [12, 2176], [12, 2240], [12, 2240], [12, 2304], [12, 2304], [11, 1856], [11, 1856], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [11, 1920], [11, 1920], [12, 2368], [12, 2368], [12, 2432], [12, 2432], [12, 2496], [12, 2496], [12, 2560], [12, 2560], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [12, 52], [12, 52], [13, 640], [13, 704], [13, 768], [13, 832], [12, 55], [12, 55], [12, 56], [12, 56], [13, 1280], [13, 1344], [13, 1408], [13, 1472], [12, 59], [12, 59], [12, 60], [12, 60], [13, 1536], [13, 1600], [11, 24], [11, 24], [11, 24], [11, 24], [11, 25], [11, 25], [11, 25], [11, 25], [13, 1664], [13, 1728], [12, 320], [12, 320], [12, 384], [12, 384], [12, 448], [12, 448], [13, 512], [13, 576], [12, 53], [12, 53], [12, 54], [12, 54], [13, 896], [13, 960], [13, 1024], [13, 1088], [13, 1152], [13, 1216], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64]];
+  const blackTable2 = [[8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [11, 23], [11, 23], [12, 50], [12, 51], [12, 44], [12, 45], [12, 46], [12, 47], [12, 57], [12, 58], [12, 61], [12, 256], [10, 16], [10, 16], [10, 16], [10, 16], [10, 17], [10, 17], [10, 17], [10, 17], [12, 48], [12, 49], [12, 62], [12, 63], [12, 30], [12, 31], [12, 32], [12, 33], [12, 40], [12, 41], [11, 22], [11, 22], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [12, 128], [12, 192], [12, 26], [12, 27], [12, 28], [12, 29], [11, 19], [11, 19], [11, 20], [11, 20], [12, 34], [12, 35], [12, 36], [12, 37], [12, 38], [12, 39], [11, 21], [11, 21], [12, 42], [12, 43], [10, 0], [10, 0], [10, 0], [10, 0], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12]];
+  const blackTable3 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [6, 9], [6, 8], [5, 7], [5, 7], [4, 6], [4, 6], [4, 6], [4, 6], [4, 5], [4, 5], [4, 5], [4, 5], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]];
+  function CCITTFaxDecoder(source, options = {}) {
+    if (!source || typeof source.next !== 'function') {
+      throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
+    }
+    this.source = source;
+    this.eof = false;
+    this.encoding = options['K'] || 0;
+    this.eoline = options['EndOfLine'] || false;
+    this.byteAlign = options['EncodedByteAlign'] || false;
+    this.columns = options['Columns'] || 1728;
+    this.rows = options['Rows'] || 0;
+    let eoblock = options['EndOfBlock'];
+    if (eoblock === null || eoblock === undefined) {
+      eoblock = true;
+    }
+    this.eoblock = eoblock;
+    this.black = options['BlackIs1'] || false;
+    this.codingLine = new Uint32Array(this.columns + 1);
+    this.refLine = new Uint32Array(this.columns + 2);
+    this.codingLine[0] = this.columns;
+    this.codingPos = 0;
+    this.row = 0;
+    this.nextLine2D = this.encoding < 0;
+    this.inputBits = 0;
+    this.inputBuf = 0;
+    this.outputBits = 0;
+    this.rowsDone = false;
+    let code1;
+    while ((code1 = this._lookBits(12)) === 0) {
+      this._eatBits(1);
+    }
+    if (code1 === 1) {
+      this._eatBits(12);
+    }
+    if (this.encoding > 0) {
+      this.nextLine2D = !this._lookBits(1);
+      this._eatBits(1);
+    }
+  }
+  CCITTFaxDecoder.prototype = {
+    readNextChar() {
+      if (this.eof) {
+        return -1;
+      }
+      let refLine = this.refLine;
+      let codingLine = this.codingLine;
+      let columns = this.columns;
+      let refPos, blackPixels, bits, i;
+      if (this.outputBits === 0) {
+        if (this.rowsDone) {
+          this.eof = true;
+        }
+        if (this.eof) {
+          return -1;
+        }
+        this.err = false;
+        let code1, code2, code3;
+        if (this.nextLine2D) {
+          for (i = 0; codingLine[i] < columns; ++i) {
+            refLine[i] = codingLine[i];
+          }
+          refLine[i++] = columns;
+          refLine[i] = columns;
+          codingLine[0] = 0;
+          this.codingPos = 0;
+          refPos = 0;
+          blackPixels = 0;
+          while (codingLine[this.codingPos] < columns) {
+            code1 = this._getTwoDimCode();
+            switch (code1) {
+              case twoDimPass:
+                this._addPixels(refLine[refPos + 1], blackPixels);
+                if (refLine[refPos + 1] < columns) {
+                  refPos += 2;
+                }
+                break;
+              case twoDimHoriz:
+                code1 = code2 = 0;
+                if (blackPixels) {
+                  do {
+                    code1 += code3 = this._getBlackCode();
+                  } while (code3 >= 64);
+                  do {
+                    code2 += code3 = this._getWhiteCode();
+                  } while (code3 >= 64);
+                } else {
+                  do {
+                    code1 += code3 = this._getWhiteCode();
+                  } while (code3 >= 64);
+                  do {
+                    code2 += code3 = this._getBlackCode();
+                  } while (code3 >= 64);
+                }
+                this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
+                if (codingLine[this.codingPos] < columns) {
+                  this._addPixels(codingLine[this.codingPos] + code2, blackPixels ^ 1);
+                }
+                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                  refPos += 2;
+                }
+                break;
+              case twoDimVertR3:
+                this._addPixels(refLine[refPos] + 3, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertR2:
+                this._addPixels(refLine[refPos] + 2, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertR1:
+                this._addPixels(refLine[refPos] + 1, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVert0:
+                this._addPixels(refLine[refPos], blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL3:
+                this._addPixelsNeg(refLine[refPos] - 3, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL2:
+                this._addPixelsNeg(refLine[refPos] - 2, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL1:
+                this._addPixelsNeg(refLine[refPos] - 1, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case ccittEOF:
+                this._addPixels(columns, 0);
+                this.eof = true;
+                break;
+              default:
+                (0, _util.info)('bad 2d code');
+                this._addPixels(columns, 0);
+                this.err = true;
+            }
+          }
+        } else {
+          codingLine[0] = 0;
+          this.codingPos = 0;
+          blackPixels = 0;
+          while (codingLine[this.codingPos] < columns) {
+            code1 = 0;
+            if (blackPixels) {
+              do {
+                code1 += code3 = this._getBlackCode();
+              } while (code3 >= 64);
+            } else {
+              do {
+                code1 += code3 = this._getWhiteCode();
+              } while (code3 >= 64);
+            }
+            this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
+            blackPixels ^= 1;
+          }
+        }
+        let gotEOL = false;
+        if (this.byteAlign) {
+          this.inputBits &= ~7;
+        }
+        if (!this.eoblock && this.row === this.rows - 1) {
+          this.rowsDone = true;
+        } else {
+          code1 = this._lookBits(12);
+          if (this.eoline) {
+            while (code1 !== ccittEOF && code1 !== 1) {
+              this._eatBits(1);
+              code1 = this._lookBits(12);
+            }
+          } else {
+            while (code1 === 0) {
+              this._eatBits(1);
+              code1 = this._lookBits(12);
+            }
+          }
+          if (code1 === 1) {
+            this._eatBits(12);
+            gotEOL = true;
+          } else if (code1 === ccittEOF) {
+            this.eof = true;
+          }
+        }
+        if (!this.eof && this.encoding > 0 && !this.rowsDone) {
+          this.nextLine2D = !this._lookBits(1);
+          this._eatBits(1);
+        }
+        if (this.eoblock && gotEOL && this.byteAlign) {
+          code1 = this._lookBits(12);
+          if (code1 === 1) {
+            this._eatBits(12);
+            if (this.encoding > 0) {
+              this._lookBits(1);
+              this._eatBits(1);
+            }
+            if (this.encoding >= 0) {
+              for (i = 0; i < 4; ++i) {
+                code1 = this._lookBits(12);
+                if (code1 !== 1) {
+                  (0, _util.info)('bad rtc code: ' + code1);
+                }
+                this._eatBits(12);
+                if (this.encoding > 0) {
+                  this._lookBits(1);
+                  this._eatBits(1);
+                }
+              }
+            }
+            this.eof = true;
+          }
+        } else if (this.err && this.eoline) {
+          while (true) {
+            code1 = this._lookBits(13);
+            if (code1 === ccittEOF) {
+              this.eof = true;
+              return -1;
+            }
+            if (code1 >> 1 === 1) {
+              break;
+            }
+            this._eatBits(1);
+          }
+          this._eatBits(12);
+          if (this.encoding > 0) {
+            this._eatBits(1);
+            this.nextLine2D = !(code1 & 1);
+          }
+        }
+        if (codingLine[0] > 0) {
+          this.outputBits = codingLine[this.codingPos = 0];
+        } else {
+          this.outputBits = codingLine[this.codingPos = 1];
+        }
+        this.row++;
+      }
+      let c;
+      if (this.outputBits >= 8) {
+        c = this.codingPos & 1 ? 0 : 0xFF;
+        this.outputBits -= 8;
+        if (this.outputBits === 0 && codingLine[this.codingPos] < columns) {
+          this.codingPos++;
+          this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
+        }
+      } else {
+        bits = 8;
+        c = 0;
+        do {
+          if (this.outputBits > bits) {
+            c <<= bits;
+            if (!(this.codingPos & 1)) {
+              c |= 0xFF >> 8 - bits;
+            }
+            this.outputBits -= bits;
+            bits = 0;
+          } else {
+            c <<= this.outputBits;
+            if (!(this.codingPos & 1)) {
+              c |= 0xFF >> 8 - this.outputBits;
+            }
+            bits -= this.outputBits;
+            this.outputBits = 0;
+            if (codingLine[this.codingPos] < columns) {
+              this.codingPos++;
+              this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
+            } else if (bits > 0) {
+              c <<= bits;
+              bits = 0;
+            }
+          }
+        } while (bits);
+      }
+      if (this.black) {
+        c ^= 0xFF;
+      }
+      return c;
+    },
+    _addPixels(a1, blackPixels) {
+      let codingLine = this.codingLine;
+      let codingPos = this.codingPos;
+      if (a1 > codingLine[codingPos]) {
+        if (a1 > this.columns) {
+          (0, _util.info)('row is wrong length');
+          this.err = true;
+          a1 = this.columns;
+        }
+        if (codingPos & 1 ^ blackPixels) {
+          ++codingPos;
+        }
+        codingLine[codingPos] = a1;
+      }
+      this.codingPos = codingPos;
+    },
+    _addPixelsNeg(a1, blackPixels) {
+      let codingLine = this.codingLine;
+      let codingPos = this.codingPos;
+      if (a1 > codingLine[codingPos]) {
+        if (a1 > this.columns) {
+          (0, _util.info)('row is wrong length');
+          this.err = true;
+          a1 = this.columns;
+        }
+        if (codingPos & 1 ^ blackPixels) {
+          ++codingPos;
+        }
+        codingLine[codingPos] = a1;
+      } else if (a1 < codingLine[codingPos]) {
+        if (a1 < 0) {
+          (0, _util.info)('invalid code');
+          this.err = true;
+          a1 = 0;
+        }
+        while (codingPos > 0 && a1 < codingLine[codingPos - 1]) {
+          --codingPos;
+        }
+        codingLine[codingPos] = a1;
+      }
+      this.codingPos = codingPos;
+    },
+    _findTableCode(start, end, table, limit) {
+      let limitValue = limit || 0;
+      for (let i = start; i <= end; ++i) {
+        let code = this._lookBits(i);
+        if (code === ccittEOF) {
+          return [true, 1, false];
+        }
+        if (i < end) {
+          code <<= end - i;
+        }
+        if (!limitValue || code >= limitValue) {
+          let p = table[code - limitValue];
+          if (p[0] === i) {
+            this._eatBits(i);
+            return [true, p[1], true];
+          }
+        }
+      }
+      return [false, 0, false];
+    },
+    _getTwoDimCode() {
+      let code = 0;
+      let p;
+      if (this.eoblock) {
+        code = this._lookBits(7);
+        p = twoDimTable[code];
+        if (p && p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(1, 7, twoDimTable);
+        if (result[0] && result[2]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('Bad two dim code');
+      return ccittEOF;
+    },
+    _getWhiteCode() {
+      let code = 0;
+      let p;
+      if (this.eoblock) {
+        code = this._lookBits(12);
+        if (code === ccittEOF) {
+          return 1;
+        }
+        if (code >> 5 === 0) {
+          p = whiteTable1[code];
+        } else {
+          p = whiteTable2[code >> 3];
+        }
+        if (p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(1, 9, whiteTable2);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(11, 12, whiteTable1);
+        if (result[0]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('bad white code');
+      this._eatBits(1);
+      return 1;
+    },
+    _getBlackCode() {
+      let code, p;
+      if (this.eoblock) {
+        code = this._lookBits(13);
+        if (code === ccittEOF) {
+          return 1;
+        }
+        if (code >> 7 === 0) {
+          p = blackTable1[code];
+        } else if (code >> 9 === 0 && code >> 7 !== 0) {
+          p = blackTable2[(code >> 1) - 64];
+        } else {
+          p = blackTable3[code >> 7];
+        }
+        if (p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(2, 6, blackTable3);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(7, 12, blackTable2, 64);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(10, 13, blackTable1);
+        if (result[0]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('bad black code');
+      this._eatBits(1);
+      return 1;
+    },
+    _lookBits(n) {
+      let c;
+      while (this.inputBits < n) {
+        if ((c = this.source.next()) === -1) {
+          if (this.inputBits === 0) {
+            return ccittEOF;
+          }
+          return this.inputBuf << n - this.inputBits & 0xFFFF >> 16 - n;
+        }
+        this.inputBuf = this.inputBuf << 8 | c;
+        this.inputBits += 8;
+      }
+      return this.inputBuf >> this.inputBits - n & 0xFFFF >> 16 - n;
+    },
+    _eatBits(n) {
+      if ((this.inputBits -= n) < 0) {
+        this.inputBits = 0;
+      }
+    }
+  };
+  return CCITTFaxDecoder;
+}();
+exports.CCITTFaxDecoder = CCITTFaxDecoder;
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Jbig2Stream = undefined;
+
+var _primitives = __w_pdfjs_require__(1);
+
+var _stream = __w_pdfjs_require__(2);
+
+var _jbig = __w_pdfjs_require__(28);
+
+var _util = __w_pdfjs_require__(0);
+
+var Jbig2Stream = function Jbig2StreamClosure() {
+  function Jbig2Stream(stream, maybeLength, dict, params) {
+    this.stream = stream;
+    this.maybeLength = maybeLength;
+    this.dict = dict;
+    this.params = params;
+    _stream.DecodeStream.call(this, maybeLength);
+  }
+  Jbig2Stream.prototype = Object.create(_stream.DecodeStream.prototype);
+  Object.defineProperty(Jbig2Stream.prototype, 'bytes', {
+    get() {
+      return (0, _util.shadow)(this, 'bytes', this.stream.getBytes(this.maybeLength));
+    },
+    configurable: true
+  });
+  Jbig2Stream.prototype.ensureBuffer = function (req) {
+    if (this.bufferLength) {
+      return;
+    }
+    var jbig2Image = new _jbig.Jbig2Image();
+    var chunks = [];
+    if ((0, _primitives.isDict)(this.params)) {
+      var globalsStream = this.params.get('JBIG2Globals');
+      if ((0, _primitives.isStream)(globalsStream)) {
+        var globals = globalsStream.getBytes();
+        chunks.push({
+          data: globals,
+          start: 0,
+          end: globals.length
+        });
+      }
+    }
+    chunks.push({
+      data: this.bytes,
+      start: 0,
+      end: this.bytes.length
+    });
+    var data = jbig2Image.parseChunks(chunks);
+    var dataLength = data.length;
+    for (var i = 0; i < dataLength; i++) {
+      data[i] ^= 0xFF;
+    }
+    this.buffer = data;
+    this.bufferLength = dataLength;
+    this.eof = true;
+  };
+  return Jbig2Stream;
+}();
+exports.Jbig2Stream = Jbig2Stream;
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.Jbig2Image = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _arithmetic_decoder = __w_pdfjs_require__(9);
+var _arithmetic_decoder = __w_pdfjs_require__(10);
 
 let Jbig2Error = function Jbig2ErrorClosure() {
   function Jbig2Error(msg) {
@@ -29430,923 +30433,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 exports.Jbig2Image = Jbig2Image;
 
 /***/ }),
-/* 25 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.JpegImage = undefined;
-
-var _util = __w_pdfjs_require__(0);
-
-let JpegError = function JpegErrorClosure() {
-  function JpegError(msg) {
-    this.message = 'JPEG error: ' + msg;
-  }
-  JpegError.prototype = new Error();
-  JpegError.prototype.name = 'JpegError';
-  JpegError.constructor = JpegError;
-  return JpegError;
-}();
-var JpegImage = function JpegImageClosure() {
-  var dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
-  var dctCos1 = 4017;
-  var dctSin1 = 799;
-  var dctCos3 = 3406;
-  var dctSin3 = 2276;
-  var dctCos6 = 1567;
-  var dctSin6 = 3784;
-  var dctSqrt2 = 5793;
-  var dctSqrt1d2 = 2896;
-  function JpegImage() {
-    this.decodeTransform = null;
-    this.colorTransform = -1;
-  }
-  function buildHuffmanTable(codeLengths, values) {
-    var k = 0,
-        code = [],
-        i,
-        j,
-        length = 16;
-    while (length > 0 && !codeLengths[length - 1]) {
-      length--;
-    }
-    code.push({
-      children: [],
-      index: 0
-    });
-    var p = code[0],
-        q;
-    for (i = 0; i < length; i++) {
-      for (j = 0; j < codeLengths[i]; j++) {
-        p = code.pop();
-        p.children[p.index] = values[k];
-        while (p.index > 0) {
-          p = code.pop();
-        }
-        p.index++;
-        code.push(p);
-        while (code.length <= i) {
-          code.push(q = {
-            children: [],
-            index: 0
-          });
-          p.children[p.index] = q.children;
-          p = q;
-        }
-        k++;
-      }
-      if (i + 1 < length) {
-        code.push(q = {
-          children: [],
-          index: 0
-        });
-        p.children[p.index] = q.children;
-        p = q;
-      }
-    }
-    return code[0].children;
-  }
-  function getBlockBufferOffset(component, row, col) {
-    return 64 * ((component.blocksPerLine + 1) * row + col);
-  }
-  function decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successivePrev, successive) {
-    var mcusPerLine = frame.mcusPerLine;
-    var progressive = frame.progressive;
-    var startOffset = offset,
-        bitsData = 0,
-        bitsCount = 0;
-    function readBit() {
-      if (bitsCount > 0) {
-        bitsCount--;
-        return bitsData >> bitsCount & 1;
-      }
-      bitsData = data[offset++];
-      if (bitsData === 0xFF) {
-        var nextByte = data[offset++];
-        if (nextByte) {
-          throw new JpegError(`unexpected marker ${(bitsData << 8 | nextByte).toString(16)}`);
-        }
-      }
-      bitsCount = 7;
-      return bitsData >>> 7;
-    }
-    function decodeHuffman(tree) {
-      var node = tree;
-      while (true) {
-        node = node[readBit()];
-        if (typeof node === 'number') {
-          return node;
-        }
-        if (typeof node !== 'object') {
-          throw new JpegError('invalid huffman sequence');
-        }
-      }
-    }
-    function receive(length) {
-      var n = 0;
-      while (length > 0) {
-        n = n << 1 | readBit();
-        length--;
-      }
-      return n;
-    }
-    function receiveAndExtend(length) {
-      if (length === 1) {
-        return readBit() === 1 ? 1 : -1;
-      }
-      var n = receive(length);
-      if (n >= 1 << length - 1) {
-        return n;
-      }
-      return n + (-1 << length) + 1;
-    }
-    function decodeBaseline(component, offset) {
-      var t = decodeHuffman(component.huffmanTableDC);
-      var diff = t === 0 ? 0 : receiveAndExtend(t);
-      component.blockData[offset] = component.pred += diff;
-      var k = 1;
-      while (k < 64) {
-        var rs = decodeHuffman(component.huffmanTableAC);
-        var s = rs & 15,
-            r = rs >> 4;
-        if (s === 0) {
-          if (r < 15) {
-            break;
-          }
-          k += 16;
-          continue;
-        }
-        k += r;
-        var z = dctZigZag[k];
-        component.blockData[offset + z] = receiveAndExtend(s);
-        k++;
-      }
-    }
-    function decodeDCFirst(component, offset) {
-      var t = decodeHuffman(component.huffmanTableDC);
-      var diff = t === 0 ? 0 : receiveAndExtend(t) << successive;
-      component.blockData[offset] = component.pred += diff;
-    }
-    function decodeDCSuccessive(component, offset) {
-      component.blockData[offset] |= readBit() << successive;
-    }
-    var eobrun = 0;
-    function decodeACFirst(component, offset) {
-      if (eobrun > 0) {
-        eobrun--;
-        return;
-      }
-      var k = spectralStart,
-          e = spectralEnd;
-      while (k <= e) {
-        var rs = decodeHuffman(component.huffmanTableAC);
-        var s = rs & 15,
-            r = rs >> 4;
-        if (s === 0) {
-          if (r < 15) {
-            eobrun = receive(r) + (1 << r) - 1;
-            break;
-          }
-          k += 16;
-          continue;
-        }
-        k += r;
-        var z = dctZigZag[k];
-        component.blockData[offset + z] = receiveAndExtend(s) * (1 << successive);
-        k++;
-      }
-    }
-    var successiveACState = 0,
-        successiveACNextValue;
-    function decodeACSuccessive(component, offset) {
-      var k = spectralStart;
-      var e = spectralEnd;
-      var r = 0;
-      var s;
-      var rs;
-      while (k <= e) {
-        var z = dctZigZag[k];
-        switch (successiveACState) {
-          case 0:
-            rs = decodeHuffman(component.huffmanTableAC);
-            s = rs & 15;
-            r = rs >> 4;
-            if (s === 0) {
-              if (r < 15) {
-                eobrun = receive(r) + (1 << r);
-                successiveACState = 4;
-              } else {
-                r = 16;
-                successiveACState = 1;
-              }
-            } else {
-              if (s !== 1) {
-                throw new JpegError('invalid ACn encoding');
-              }
-              successiveACNextValue = receiveAndExtend(s);
-              successiveACState = r ? 2 : 3;
-            }
-            continue;
-          case 1:
-          case 2:
-            if (component.blockData[offset + z]) {
-              component.blockData[offset + z] += readBit() << successive;
-            } else {
-              r--;
-              if (r === 0) {
-                successiveACState = successiveACState === 2 ? 3 : 0;
-              }
-            }
-            break;
-          case 3:
-            if (component.blockData[offset + z]) {
-              component.blockData[offset + z] += readBit() << successive;
-            } else {
-              component.blockData[offset + z] = successiveACNextValue << successive;
-              successiveACState = 0;
-            }
-            break;
-          case 4:
-            if (component.blockData[offset + z]) {
-              component.blockData[offset + z] += readBit() << successive;
-            }
-            break;
-        }
-        k++;
-      }
-      if (successiveACState === 4) {
-        eobrun--;
-        if (eobrun === 0) {
-          successiveACState = 0;
-        }
-      }
-    }
-    function decodeMcu(component, decode, mcu, row, col) {
-      var mcuRow = mcu / mcusPerLine | 0;
-      var mcuCol = mcu % mcusPerLine;
-      var blockRow = mcuRow * component.v + row;
-      var blockCol = mcuCol * component.h + col;
-      var offset = getBlockBufferOffset(component, blockRow, blockCol);
-      decode(component, offset);
-    }
-    function decodeBlock(component, decode, mcu) {
-      var blockRow = mcu / component.blocksPerLine | 0;
-      var blockCol = mcu % component.blocksPerLine;
-      var offset = getBlockBufferOffset(component, blockRow, blockCol);
-      decode(component, offset);
-    }
-    var componentsLength = components.length;
-    var component, i, j, k, n;
-    var decodeFn;
-    if (progressive) {
-      if (spectralStart === 0) {
-        decodeFn = successivePrev === 0 ? decodeDCFirst : decodeDCSuccessive;
-      } else {
-        decodeFn = successivePrev === 0 ? decodeACFirst : decodeACSuccessive;
-      }
-    } else {
-      decodeFn = decodeBaseline;
-    }
-    var mcu = 0,
-        fileMarker;
-    var mcuExpected;
-    if (componentsLength === 1) {
-      mcuExpected = components[0].blocksPerLine * components[0].blocksPerColumn;
-    } else {
-      mcuExpected = mcusPerLine * frame.mcusPerColumn;
-    }
-    var h, v;
-    while (mcu < mcuExpected) {
-      var mcuToRead = resetInterval ? Math.min(mcuExpected - mcu, resetInterval) : mcuExpected;
-      for (i = 0; i < componentsLength; i++) {
-        components[i].pred = 0;
-      }
-      eobrun = 0;
-      if (componentsLength === 1) {
-        component = components[0];
-        for (n = 0; n < mcuToRead; n++) {
-          decodeBlock(component, decodeFn, mcu);
-          mcu++;
-        }
-      } else {
-        for (n = 0; n < mcuToRead; n++) {
-          for (i = 0; i < componentsLength; i++) {
-            component = components[i];
-            h = component.h;
-            v = component.v;
-            for (j = 0; j < v; j++) {
-              for (k = 0; k < h; k++) {
-                decodeMcu(component, decodeFn, mcu, j, k);
-              }
-            }
-          }
-          mcu++;
-        }
-      }
-      bitsCount = 0;
-      fileMarker = findNextFileMarker(data, offset);
-      if (fileMarker && fileMarker.invalid) {
-        (0, _util.warn)('decodeScan - unexpected MCU data, next marker is: ' + fileMarker.invalid);
-        offset = fileMarker.offset;
-      }
-      var marker = fileMarker && fileMarker.marker;
-      if (!marker || marker <= 0xFF00) {
-        throw new JpegError('marker was not found');
-      }
-      if (marker >= 0xFFD0 && marker <= 0xFFD7) {
-        offset += 2;
-      } else {
-        break;
-      }
-    }
-    fileMarker = findNextFileMarker(data, offset);
-    if (fileMarker && fileMarker.invalid) {
-      (0, _util.warn)('decodeScan - unexpected Scan data, next marker is: ' + fileMarker.invalid);
-      offset = fileMarker.offset;
-    }
-    return offset - startOffset;
-  }
-  function quantizeAndInverse(component, blockBufferOffset, p) {
-    var qt = component.quantizationTable,
-        blockData = component.blockData;
-    var v0, v1, v2, v3, v4, v5, v6, v7;
-    var p0, p1, p2, p3, p4, p5, p6, p7;
-    var t;
-    if (!qt) {
-      throw new JpegError('missing required Quantization Table.');
-    }
-    for (var row = 0; row < 64; row += 8) {
-      p0 = blockData[blockBufferOffset + row];
-      p1 = blockData[blockBufferOffset + row + 1];
-      p2 = blockData[blockBufferOffset + row + 2];
-      p3 = blockData[blockBufferOffset + row + 3];
-      p4 = blockData[blockBufferOffset + row + 4];
-      p5 = blockData[blockBufferOffset + row + 5];
-      p6 = blockData[blockBufferOffset + row + 6];
-      p7 = blockData[blockBufferOffset + row + 7];
-      p0 *= qt[row];
-      if ((p1 | p2 | p3 | p4 | p5 | p6 | p7) === 0) {
-        t = dctSqrt2 * p0 + 512 >> 10;
-        p[row] = t;
-        p[row + 1] = t;
-        p[row + 2] = t;
-        p[row + 3] = t;
-        p[row + 4] = t;
-        p[row + 5] = t;
-        p[row + 6] = t;
-        p[row + 7] = t;
-        continue;
-      }
-      p1 *= qt[row + 1];
-      p2 *= qt[row + 2];
-      p3 *= qt[row + 3];
-      p4 *= qt[row + 4];
-      p5 *= qt[row + 5];
-      p6 *= qt[row + 6];
-      p7 *= qt[row + 7];
-      v0 = dctSqrt2 * p0 + 128 >> 8;
-      v1 = dctSqrt2 * p4 + 128 >> 8;
-      v2 = p2;
-      v3 = p6;
-      v4 = dctSqrt1d2 * (p1 - p7) + 128 >> 8;
-      v7 = dctSqrt1d2 * (p1 + p7) + 128 >> 8;
-      v5 = p3 << 4;
-      v6 = p5 << 4;
-      v0 = v0 + v1 + 1 >> 1;
-      v1 = v0 - v1;
-      t = v2 * dctSin6 + v3 * dctCos6 + 128 >> 8;
-      v2 = v2 * dctCos6 - v3 * dctSin6 + 128 >> 8;
-      v3 = t;
-      v4 = v4 + v6 + 1 >> 1;
-      v6 = v4 - v6;
-      v7 = v7 + v5 + 1 >> 1;
-      v5 = v7 - v5;
-      v0 = v0 + v3 + 1 >> 1;
-      v3 = v0 - v3;
-      v1 = v1 + v2 + 1 >> 1;
-      v2 = v1 - v2;
-      t = v4 * dctSin3 + v7 * dctCos3 + 2048 >> 12;
-      v4 = v4 * dctCos3 - v7 * dctSin3 + 2048 >> 12;
-      v7 = t;
-      t = v5 * dctSin1 + v6 * dctCos1 + 2048 >> 12;
-      v5 = v5 * dctCos1 - v6 * dctSin1 + 2048 >> 12;
-      v6 = t;
-      p[row] = v0 + v7;
-      p[row + 7] = v0 - v7;
-      p[row + 1] = v1 + v6;
-      p[row + 6] = v1 - v6;
-      p[row + 2] = v2 + v5;
-      p[row + 5] = v2 - v5;
-      p[row + 3] = v3 + v4;
-      p[row + 4] = v3 - v4;
-    }
-    for (var col = 0; col < 8; ++col) {
-      p0 = p[col];
-      p1 = p[col + 8];
-      p2 = p[col + 16];
-      p3 = p[col + 24];
-      p4 = p[col + 32];
-      p5 = p[col + 40];
-      p6 = p[col + 48];
-      p7 = p[col + 56];
-      if ((p1 | p2 | p3 | p4 | p5 | p6 | p7) === 0) {
-        t = dctSqrt2 * p0 + 8192 >> 14;
-        t = t < -2040 ? 0 : t >= 2024 ? 255 : t + 2056 >> 4;
-        blockData[blockBufferOffset + col] = t;
-        blockData[blockBufferOffset + col + 8] = t;
-        blockData[blockBufferOffset + col + 16] = t;
-        blockData[blockBufferOffset + col + 24] = t;
-        blockData[blockBufferOffset + col + 32] = t;
-        blockData[blockBufferOffset + col + 40] = t;
-        blockData[blockBufferOffset + col + 48] = t;
-        blockData[blockBufferOffset + col + 56] = t;
-        continue;
-      }
-      v0 = dctSqrt2 * p0 + 2048 >> 12;
-      v1 = dctSqrt2 * p4 + 2048 >> 12;
-      v2 = p2;
-      v3 = p6;
-      v4 = dctSqrt1d2 * (p1 - p7) + 2048 >> 12;
-      v7 = dctSqrt1d2 * (p1 + p7) + 2048 >> 12;
-      v5 = p3;
-      v6 = p5;
-      v0 = (v0 + v1 + 1 >> 1) + 4112;
-      v1 = v0 - v1;
-      t = v2 * dctSin6 + v3 * dctCos6 + 2048 >> 12;
-      v2 = v2 * dctCos6 - v3 * dctSin6 + 2048 >> 12;
-      v3 = t;
-      v4 = v4 + v6 + 1 >> 1;
-      v6 = v4 - v6;
-      v7 = v7 + v5 + 1 >> 1;
-      v5 = v7 - v5;
-      v0 = v0 + v3 + 1 >> 1;
-      v3 = v0 - v3;
-      v1 = v1 + v2 + 1 >> 1;
-      v2 = v1 - v2;
-      t = v4 * dctSin3 + v7 * dctCos3 + 2048 >> 12;
-      v4 = v4 * dctCos3 - v7 * dctSin3 + 2048 >> 12;
-      v7 = t;
-      t = v5 * dctSin1 + v6 * dctCos1 + 2048 >> 12;
-      v5 = v5 * dctCos1 - v6 * dctSin1 + 2048 >> 12;
-      v6 = t;
-      p0 = v0 + v7;
-      p7 = v0 - v7;
-      p1 = v1 + v6;
-      p6 = v1 - v6;
-      p2 = v2 + v5;
-      p5 = v2 - v5;
-      p3 = v3 + v4;
-      p4 = v3 - v4;
-      p0 = p0 < 16 ? 0 : p0 >= 4080 ? 255 : p0 >> 4;
-      p1 = p1 < 16 ? 0 : p1 >= 4080 ? 255 : p1 >> 4;
-      p2 = p2 < 16 ? 0 : p2 >= 4080 ? 255 : p2 >> 4;
-      p3 = p3 < 16 ? 0 : p3 >= 4080 ? 255 : p3 >> 4;
-      p4 = p4 < 16 ? 0 : p4 >= 4080 ? 255 : p4 >> 4;
-      p5 = p5 < 16 ? 0 : p5 >= 4080 ? 255 : p5 >> 4;
-      p6 = p6 < 16 ? 0 : p6 >= 4080 ? 255 : p6 >> 4;
-      p7 = p7 < 16 ? 0 : p7 >= 4080 ? 255 : p7 >> 4;
-      blockData[blockBufferOffset + col] = p0;
-      blockData[blockBufferOffset + col + 8] = p1;
-      blockData[blockBufferOffset + col + 16] = p2;
-      blockData[blockBufferOffset + col + 24] = p3;
-      blockData[blockBufferOffset + col + 32] = p4;
-      blockData[blockBufferOffset + col + 40] = p5;
-      blockData[blockBufferOffset + col + 48] = p6;
-      blockData[blockBufferOffset + col + 56] = p7;
-    }
-  }
-  function buildComponentData(frame, component) {
-    var blocksPerLine = component.blocksPerLine;
-    var blocksPerColumn = component.blocksPerColumn;
-    var computationBuffer = new Int16Array(64);
-    for (var blockRow = 0; blockRow < blocksPerColumn; blockRow++) {
-      for (var blockCol = 0; blockCol < blocksPerLine; blockCol++) {
-        var offset = getBlockBufferOffset(component, blockRow, blockCol);
-        quantizeAndInverse(component, offset, computationBuffer);
-      }
-    }
-    return component.blockData;
-  }
-  function findNextFileMarker(data, currentPos, startPos) {
-    function peekUint16(pos) {
-      return data[pos] << 8 | data[pos + 1];
-    }
-    var maxPos = data.length - 1;
-    var newPos = startPos < currentPos ? startPos : currentPos;
-    if (currentPos >= maxPos) {
-      return null;
-    }
-    var currentMarker = peekUint16(currentPos);
-    if (currentMarker >= 0xFFC0 && currentMarker <= 0xFFFE) {
-      return {
-        invalid: null,
-        marker: currentMarker,
-        offset: currentPos
-      };
-    }
-    var newMarker = peekUint16(newPos);
-    while (!(newMarker >= 0xFFC0 && newMarker <= 0xFFFE)) {
-      if (++newPos >= maxPos) {
-        return null;
-      }
-      newMarker = peekUint16(newPos);
-    }
-    return {
-      invalid: currentMarker.toString(16),
-      marker: newMarker,
-      offset: newPos
-    };
-  }
-  JpegImage.prototype = {
-    parse: function parse(data) {
-      function readUint16() {
-        var value = data[offset] << 8 | data[offset + 1];
-        offset += 2;
-        return value;
-      }
-      function readDataBlock() {
-        var length = readUint16();
-        var endOffset = offset + length - 2;
-        var fileMarker = findNextFileMarker(data, endOffset, offset);
-        if (fileMarker && fileMarker.invalid) {
-          (0, _util.warn)('readDataBlock - incorrect length, next marker is: ' + fileMarker.invalid);
-          endOffset = fileMarker.offset;
-        }
-        var array = data.subarray(offset, endOffset);
-        offset += array.length;
-        return array;
-      }
-      function prepareComponents(frame) {
-        var mcusPerLine = Math.ceil(frame.samplesPerLine / 8 / frame.maxH);
-        var mcusPerColumn = Math.ceil(frame.scanLines / 8 / frame.maxV);
-        for (var i = 0; i < frame.components.length; i++) {
-          component = frame.components[i];
-          var blocksPerLine = Math.ceil(Math.ceil(frame.samplesPerLine / 8) * component.h / frame.maxH);
-          var blocksPerColumn = Math.ceil(Math.ceil(frame.scanLines / 8) * component.v / frame.maxV);
-          var blocksPerLineForMcu = mcusPerLine * component.h;
-          var blocksPerColumnForMcu = mcusPerColumn * component.v;
-          var blocksBufferSize = 64 * blocksPerColumnForMcu * (blocksPerLineForMcu + 1);
-          component.blockData = new Int16Array(blocksBufferSize);
-          component.blocksPerLine = blocksPerLine;
-          component.blocksPerColumn = blocksPerColumn;
-        }
-        frame.mcusPerLine = mcusPerLine;
-        frame.mcusPerColumn = mcusPerColumn;
-      }
-      var offset = 0;
-      var jfif = null;
-      var adobe = null;
-      var frame, resetInterval;
-      var quantizationTables = [];
-      var huffmanTablesAC = [],
-          huffmanTablesDC = [];
-      var fileMarker = readUint16();
-      if (fileMarker !== 0xFFD8) {
-        throw new JpegError('SOI not found');
-      }
-      fileMarker = readUint16();
-      while (fileMarker !== 0xFFD9) {
-        var i, j, l;
-        switch (fileMarker) {
-          case 0xFFE0:
-          case 0xFFE1:
-          case 0xFFE2:
-          case 0xFFE3:
-          case 0xFFE4:
-          case 0xFFE5:
-          case 0xFFE6:
-          case 0xFFE7:
-          case 0xFFE8:
-          case 0xFFE9:
-          case 0xFFEA:
-          case 0xFFEB:
-          case 0xFFEC:
-          case 0xFFED:
-          case 0xFFEE:
-          case 0xFFEF:
-          case 0xFFFE:
-            var appData = readDataBlock();
-            if (fileMarker === 0xFFE0) {
-              if (appData[0] === 0x4A && appData[1] === 0x46 && appData[2] === 0x49 && appData[3] === 0x46 && appData[4] === 0) {
-                jfif = {
-                  version: {
-                    major: appData[5],
-                    minor: appData[6]
-                  },
-                  densityUnits: appData[7],
-                  xDensity: appData[8] << 8 | appData[9],
-                  yDensity: appData[10] << 8 | appData[11],
-                  thumbWidth: appData[12],
-                  thumbHeight: appData[13],
-                  thumbData: appData.subarray(14, 14 + 3 * appData[12] * appData[13])
-                };
-              }
-            }
-            if (fileMarker === 0xFFEE) {
-              if (appData[0] === 0x41 && appData[1] === 0x64 && appData[2] === 0x6F && appData[3] === 0x62 && appData[4] === 0x65) {
-                adobe = {
-                  version: appData[5] << 8 | appData[6],
-                  flags0: appData[7] << 8 | appData[8],
-                  flags1: appData[9] << 8 | appData[10],
-                  transformCode: appData[11]
-                };
-              }
-            }
-            break;
-          case 0xFFDB:
-            var quantizationTablesLength = readUint16();
-            var quantizationTablesEnd = quantizationTablesLength + offset - 2;
-            var z;
-            while (offset < quantizationTablesEnd) {
-              var quantizationTableSpec = data[offset++];
-              var tableData = new Uint16Array(64);
-              if (quantizationTableSpec >> 4 === 0) {
-                for (j = 0; j < 64; j++) {
-                  z = dctZigZag[j];
-                  tableData[z] = data[offset++];
-                }
-              } else if (quantizationTableSpec >> 4 === 1) {
-                for (j = 0; j < 64; j++) {
-                  z = dctZigZag[j];
-                  tableData[z] = readUint16();
-                }
-              } else {
-                throw new JpegError('DQT - invalid table spec');
-              }
-              quantizationTables[quantizationTableSpec & 15] = tableData;
-            }
-            break;
-          case 0xFFC0:
-          case 0xFFC1:
-          case 0xFFC2:
-            if (frame) {
-              throw new JpegError('Only single frame JPEGs supported');
-            }
-            readUint16();
-            frame = {};
-            frame.extended = fileMarker === 0xFFC1;
-            frame.progressive = fileMarker === 0xFFC2;
-            frame.precision = data[offset++];
-            frame.scanLines = readUint16();
-            frame.samplesPerLine = readUint16();
-            frame.components = [];
-            frame.componentIds = {};
-            var componentsCount = data[offset++],
-                componentId;
-            var maxH = 0,
-                maxV = 0;
-            for (i = 0; i < componentsCount; i++) {
-              componentId = data[offset];
-              var h = data[offset + 1] >> 4;
-              var v = data[offset + 1] & 15;
-              if (maxH < h) {
-                maxH = h;
-              }
-              if (maxV < v) {
-                maxV = v;
-              }
-              var qId = data[offset + 2];
-              l = frame.components.push({
-                h,
-                v,
-                quantizationId: qId,
-                quantizationTable: null
-              });
-              frame.componentIds[componentId] = l - 1;
-              offset += 3;
-            }
-            frame.maxH = maxH;
-            frame.maxV = maxV;
-            prepareComponents(frame);
-            break;
-          case 0xFFC4:
-            var huffmanLength = readUint16();
-            for (i = 2; i < huffmanLength;) {
-              var huffmanTableSpec = data[offset++];
-              var codeLengths = new Uint8Array(16);
-              var codeLengthSum = 0;
-              for (j = 0; j < 16; j++, offset++) {
-                codeLengthSum += codeLengths[j] = data[offset];
-              }
-              var huffmanValues = new Uint8Array(codeLengthSum);
-              for (j = 0; j < codeLengthSum; j++, offset++) {
-                huffmanValues[j] = data[offset];
-              }
-              i += 17 + codeLengthSum;
-              (huffmanTableSpec >> 4 === 0 ? huffmanTablesDC : huffmanTablesAC)[huffmanTableSpec & 15] = buildHuffmanTable(codeLengths, huffmanValues);
-            }
-            break;
-          case 0xFFDD:
-            readUint16();
-            resetInterval = readUint16();
-            break;
-          case 0xFFDA:
-            readUint16();
-            var selectorsCount = data[offset++];
-            var components = [],
-                component;
-            for (i = 0; i < selectorsCount; i++) {
-              var componentIndex = frame.componentIds[data[offset++]];
-              component = frame.components[componentIndex];
-              var tableSpec = data[offset++];
-              component.huffmanTableDC = huffmanTablesDC[tableSpec >> 4];
-              component.huffmanTableAC = huffmanTablesAC[tableSpec & 15];
-              components.push(component);
-            }
-            var spectralStart = data[offset++];
-            var spectralEnd = data[offset++];
-            var successiveApproximation = data[offset++];
-            var processed = decodeScan(data, offset, frame, components, resetInterval, spectralStart, spectralEnd, successiveApproximation >> 4, successiveApproximation & 15);
-            offset += processed;
-            break;
-          case 0xFFFF:
-            if (data[offset] !== 0xFF) {
-              offset--;
-            }
-            break;
-          default:
-            if (data[offset - 3] === 0xFF && data[offset - 2] >= 0xC0 && data[offset - 2] <= 0xFE) {
-              offset -= 3;
-              break;
-            }
-            throw new JpegError('unknown marker ' + fileMarker.toString(16));
-        }
-        fileMarker = readUint16();
-      }
-      this.width = frame.samplesPerLine;
-      this.height = frame.scanLines;
-      this.jfif = jfif;
-      this.adobe = adobe;
-      this.components = [];
-      for (i = 0; i < frame.components.length; i++) {
-        component = frame.components[i];
-        var quantizationTable = quantizationTables[component.quantizationId];
-        if (quantizationTable) {
-          component.quantizationTable = quantizationTable;
-        }
-        this.components.push({
-          output: buildComponentData(frame, component),
-          scaleX: component.h / frame.maxH,
-          scaleY: component.v / frame.maxV,
-          blocksPerLine: component.blocksPerLine,
-          blocksPerColumn: component.blocksPerColumn
-        });
-      }
-      this.numComponents = this.components.length;
-    },
-    _getLinearizedBlockData: function getLinearizedBlockData(width, height) {
-      var scaleX = this.width / width,
-          scaleY = this.height / height;
-      var component, componentScaleX, componentScaleY, blocksPerScanline;
-      var x, y, i, j, k;
-      var index;
-      var offset = 0;
-      var output;
-      var numComponents = this.components.length;
-      var dataLength = width * height * numComponents;
-      var data = new Uint8ClampedArray(dataLength);
-      var xScaleBlockOffset = new Uint32Array(width);
-      var mask3LSB = 0xfffffff8;
-      for (i = 0; i < numComponents; i++) {
-        component = this.components[i];
-        componentScaleX = component.scaleX * scaleX;
-        componentScaleY = component.scaleY * scaleY;
-        offset = i;
-        output = component.output;
-        blocksPerScanline = component.blocksPerLine + 1 << 3;
-        for (x = 0; x < width; x++) {
-          j = 0 | x * componentScaleX;
-          xScaleBlockOffset[x] = (j & mask3LSB) << 3 | j & 7;
-        }
-        for (y = 0; y < height; y++) {
-          j = 0 | y * componentScaleY;
-          index = blocksPerScanline * (j & mask3LSB) | (j & 7) << 3;
-          for (x = 0; x < width; x++) {
-            data[offset] = output[index + xScaleBlockOffset[x]];
-            offset += numComponents;
-          }
-        }
-      }
-      var transform = this.decodeTransform;
-      if (transform) {
-        for (i = 0; i < dataLength;) {
-          for (j = 0, k = 0; j < numComponents; j++, i++, k += 2) {
-            data[i] = (data[i] * transform[k] >> 8) + transform[k + 1];
-          }
-        }
-      }
-      return data;
-    },
-    _isColorConversionNeeded() {
-      if (this.adobe) {
-        return !!this.adobe.transformCode;
-      }
-      if (this.numComponents === 3) {
-        if (this.colorTransform === 0) {
-          return false;
-        }
-        return true;
-      }
-      if (this.colorTransform === 1) {
-        return true;
-      }
-      return false;
-    },
-    _convertYccToRgb: function convertYccToRgb(data) {
-      var Y, Cb, Cr;
-      for (var i = 0, length = data.length; i < length; i += 3) {
-        Y = data[i];
-        Cb = data[i + 1];
-        Cr = data[i + 2];
-        data[i] = Y - 179.456 + 1.402 * Cr;
-        data[i + 1] = Y + 135.459 - 0.344 * Cb - 0.714 * Cr;
-        data[i + 2] = Y - 226.816 + 1.772 * Cb;
-      }
-      return data;
-    },
-    _convertYcckToRgb: function convertYcckToRgb(data) {
-      var Y, Cb, Cr, k;
-      var offset = 0;
-      for (var i = 0, length = data.length; i < length; i += 4) {
-        Y = data[i];
-        Cb = data[i + 1];
-        Cr = data[i + 2];
-        k = data[i + 3];
-        data[offset++] = -122.67195406894 + Cb * (-6.60635669420364e-5 * Cb + 0.000437130475926232 * Cr - 5.4080610064599e-5 * Y + 0.00048449797120281 * k - 0.154362151871126) + Cr * (-0.000957964378445773 * Cr + 0.000817076911346625 * Y - 0.00477271405408747 * k + 1.53380253221734) + Y * (0.000961250184130688 * Y - 0.00266257332283933 * k + 0.48357088451265) + k * (-0.000336197177618394 * k + 0.484791561490776);
-        data[offset++] = 107.268039397724 + Cb * (2.19927104525741e-5 * Cb - 0.000640992018297945 * Cr + 0.000659397001245577 * Y + 0.000426105652938837 * k - 0.176491792462875) + Cr * (-0.000778269941513683 * Cr + 0.00130872261408275 * Y + 0.000770482631801132 * k - 0.151051492775562) + Y * (0.00126935368114843 * Y - 0.00265090189010898 * k + 0.25802910206845) + k * (-0.000318913117588328 * k - 0.213742400323665);
-        data[offset++] = -20.810012546947 + Cb * (-0.000570115196973677 * Cb - 2.63409051004589e-5 * Cr + 0.0020741088115012 * Y - 0.00288260236853442 * k + 0.814272968359295) + Cr * (-1.53496057440975e-5 * Cr - 0.000132689043961446 * Y + 0.000560833691242812 * k - 0.195152027534049) + Y * (0.00174418132927582 * Y - 0.00255243321439347 * k + 0.116935020465145) + k * (-0.000343531996510555 * k + 0.24165260232407);
-      }
-      return data;
-    },
-    _convertYcckToCmyk: function convertYcckToCmyk(data) {
-      var Y, Cb, Cr;
-      for (var i = 0, length = data.length; i < length; i += 4) {
-        Y = data[i];
-        Cb = data[i + 1];
-        Cr = data[i + 2];
-        data[i] = 434.456 - Y - 1.402 * Cr;
-        data[i + 1] = 119.541 - Y + 0.344 * Cb + 0.714 * Cr;
-        data[i + 2] = 481.816 - Y - 1.772 * Cb;
-      }
-      return data;
-    },
-    _convertCmykToRgb: function convertCmykToRgb(data) {
-      var c, m, y, k;
-      var offset = 0;
-      var scale = 1 / 255;
-      for (var i = 0, length = data.length; i < length; i += 4) {
-        c = data[i] * scale;
-        m = data[i + 1] * scale;
-        y = data[i + 2] * scale;
-        k = data[i + 3] * scale;
-        data[offset++] = 255 + c * (-4.387332384609988 * c + 54.48615194189176 * m + 18.82290502165302 * y + 212.25662451639585 * k - 285.2331026137004) + m * (1.7149763477362134 * m - 5.6096736904047315 * y - 17.873870861415444 * k - 5.497006427196366) + y * (-2.5217340131683033 * y - 21.248923337353073 * k + 17.5119270841813) - k * (21.86122147463605 * k + 189.48180835922747);
-        data[offset++] = 255 + c * (8.841041422036149 * c + 60.118027045597366 * m + 6.871425592049007 * y + 31.159100130055922 * k - 79.2970844816548) + m * (-15.310361306967817 * m + 17.575251261109482 * y + 131.35250912493976 * k - 190.9453302588951) + y * (4.444339102852739 * y + 9.8632861493405 * k - 24.86741582555878) - k * (20.737325471181034 * k + 187.80453709719578);
-        data[offset++] = 255 + c * (0.8842522430003296 * c + 8.078677503112928 * m + 30.89978309703729 * y - 0.23883238689178934 * k - 14.183576799673286) + m * (10.49593273432072 * m + 63.02378494754052 * y + 50.606957656360734 * k - 112.23884253719248) + y * (0.03296041114873217 * y + 115.60384449646641 * k - 193.58209356861505) - k * (22.33816807309886 * k + 180.12613974708367);
-      }
-      return data;
-    },
-    getData: function getData(width, height, forceRGBoutput) {
-      if (this.numComponents > 4) {
-        throw new JpegError('Unsupported color mode');
-      }
-      var data = this._getLinearizedBlockData(width, height);
-      if (this.numComponents === 1 && forceRGBoutput) {
-        var dataLength = data.length;
-        var rgbData = new Uint8ClampedArray(dataLength * 3);
-        var offset = 0;
-        for (var i = 0; i < dataLength; i++) {
-          var grayColor = data[i];
-          rgbData[offset++] = grayColor;
-          rgbData[offset++] = grayColor;
-          rgbData[offset++] = grayColor;
-        }
-        return rgbData;
-      } else if (this.numComponents === 3 && this._isColorConversionNeeded()) {
-        return this._convertYccToRgb(data);
-      } else if (this.numComponents === 4) {
-        if (this._isColorConversionNeeded()) {
-          if (forceRGBoutput) {
-            return this._convertYcckToRgb(data);
-          }
-          return this._convertYcckToCmyk(data);
-        } else if (forceRGBoutput) {
-          return this._convertCmykToRgb(data);
-        }
-      }
-      return data;
-    }
-  };
-  return JpegImage;
-}();
-exports.JpegImage = JpegImage;
-
-/***/ }),
-/* 26 */
+/* 29 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -31061,7 +31148,7 @@ exports.IdentityCMap = IdentityCMap;
 exports.CMapFactory = CMapFactory;
 
 /***/ }),
-/* 27 */
+/* 30 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -31084,11 +31171,11 @@ var _standard_fonts = __w_pdfjs_require__(14);
 
 var _unicode = __w_pdfjs_require__(15);
 
-var _font_renderer = __w_pdfjs_require__(29);
+var _font_renderer = __w_pdfjs_require__(32);
 
 var _stream = __w_pdfjs_require__(2);
 
-var _type1_parser = __w_pdfjs_require__(30);
+var _type1_parser = __w_pdfjs_require__(33);
 
 var PRIVATE_USE_OFFSET_START = 0xE000;
 var PRIVATE_USE_OFFSET_END = 0xF8FF;
@@ -33531,7 +33618,7 @@ exports.ProblematicCharRanges = ProblematicCharRanges;
 exports.getFontType = getFontType;
 
 /***/ }),
-/* 28 */
+/* 31 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -33548,7 +33635,7 @@ exports.ExpertCharset = ExpertCharset;
 exports.ExpertSubsetCharset = ExpertSubsetCharset;
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -34288,7 +34375,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
 exports.FontRendererFactory = FontRendererFactory;
 
 /***/ }),
-/* 30 */
+/* 33 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -34851,7 +34938,7 @@ var Type1Parser = function Type1ParserClosure() {
 exports.Type1Parser = Type1Parser;
 
 /***/ }),
-/* 31 */
+/* 34 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -35641,7 +35728,7 @@ exports.Pattern = Pattern;
 exports.getTilingPatternIR = getTilingPatternIR;
 
 /***/ }),
-/* 32 */
+/* 35 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -35886,7 +35973,7 @@ function bidi(str, startLevel, vertical) {
 exports.bidi = bidi;
 
 /***/ }),
-/* 33 */
+/* 36 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -38840,7 +38927,7 @@ var getMetrics = (0, _util.getLookupTableFactory)(function (t) {
 exports.getMetrics = getMetrics;
 
 /***/ }),
-/* 34 */
+/* 37 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -39044,7 +39131,7 @@ exports.PostScriptLexer = PostScriptLexer;
 exports.PostScriptParser = PostScriptParser;
 
 /***/ }),
-/* 35 */
+/* 38 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -39158,7 +39245,7 @@ var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 36 */
+/* 39 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -39177,7 +39264,7 @@ var _primitives = __w_pdfjs_require__(1);
 
 var _colorspace = __w_pdfjs_require__(3);
 
-var _jpx = __w_pdfjs_require__(10);
+var _jpx = __w_pdfjs_require__(9);
 
 var PDFImage = function PDFImageClosure() {
   function handleImageData(image, nativeDecoder) {
@@ -39666,7 +39753,7 @@ var PDFImage = function PDFImageClosure() {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 37 */
+/* 40 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";

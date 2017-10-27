@@ -19,7 +19,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
-#include "gc/Marking.h"
 #include "js/Conversions.h"
 #include "js/GCAPI.h"
 #include "js/GCVector.h"

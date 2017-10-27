@@ -71,5 +71,19 @@ this.LightweightThemes = {
         });
       },
     },
+
+    compactLight: {
+      selectors: ["#navigator-toolbox"],
+      applyConfig() {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-light@mozilla.org");
+      },
+    },
+
+    compactDark: {
+      selectors: ["#navigator-toolbox"],
+      applyConfig() {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-dark@mozilla.org");
+      },
+    },
   },
 };

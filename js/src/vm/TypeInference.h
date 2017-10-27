@@ -18,7 +18,6 @@
 #include "ds/IdValuePair.h"
 #include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
-#include "gc/Marking.h"
 #include "jit/IonTypes.h"
 #include "js/UbiNode.h"
 #include "js/Utility.h"

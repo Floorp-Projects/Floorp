@@ -7,16 +7,6 @@
 #ifndef vm_PIC_h
 #define vm_PIC_h
 
-#include "jsapi.h"
-#include "jscntxt.h"
-#include "jsfriendapi.h"
-#include "jsobj.h"
-
-#include "gc/Barrier.h"
-#include "gc/Heap.h"
-#include "gc/Marking.h"
-
-#include "js/Value.h"
 #include "vm/GlobalObject.h"
 
 namespace js {

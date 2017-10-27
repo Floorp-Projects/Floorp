@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 
 var extendedButtonProto = Object.create(HTMLButtonElement.prototype);
 var buttonCallbackCalled = false;
-extendedButtonProto.createdCallback = function() {
+extendedButtonProto.connectedCallback = function() {
   is(buttonCallbackCalled, false, "created callback for x-button should only be called once.");
   is(this.tagName, "BUTTON", "Only the <button> element should be upgraded.");
   buttonCallbackCalled = true;
@@ -21,7 +21,7 @@ document.registerElement("x-button", { prototype: extendedButtonProto, extends: 
 
 var divProto = Object.create(HTMLDivElement.prototype);
 var divCallbackCalled = false;
-divProto.createdCallback = function() {
+divProto.connectedCallback = function() {
   is(divCallbackCalled, false, "created callback for x-div should only be called once.");
   is(buttonCallbackCalled, true, "crated callback should be called for x-button before x-div.");
   is(this.tagName, "X-DIV", "Only the <x-div> element should be upgraded.");

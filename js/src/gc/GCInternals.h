@@ -172,6 +172,68 @@ struct TenureCountCache
     }
 };
 
+struct MOZ_RAII AutoAssertNoNurseryAlloc
+{
+#ifdef DEBUG
+    AutoAssertNoNurseryAlloc();
+    ~AutoAssertNoNurseryAlloc();
+#else
+    AutoAssertNoNurseryAlloc() {}
+#endif
+};
+
+/*
+ * There are a couple of classes here that serve mostly as "tokens" indicating
+ * that a condition holds. Some functions force the caller to possess such a
+ * token because they would misbehave if the condition were false, and it is
+ * far more clear to make the condition visible at the point where it can be
+ * affected rather than just crashing in an assertion down in the place where
+ * it is relied upon.
+ */
+
+/*
+ * A class that serves as a token that the nursery in the current thread's zone
+ * group is empty.
+ */
+class MOZ_RAII AutoAssertEmptyNursery
+{
+  protected:
+    JSContext* cx;
+
+    mozilla::Maybe<AutoAssertNoNurseryAlloc> noAlloc;
+
+    // Check that the nursery is empty.
+    void checkCondition(JSContext* cx);
+
+    // For subclasses that need to empty the nursery in their constructors.
+    AutoAssertEmptyNursery() : cx(nullptr) {
+    }
+
+  public:
+    explicit AutoAssertEmptyNursery(JSContext* cx) : cx(nullptr) {
+        checkCondition(cx);
+    }
+
+    AutoAssertEmptyNursery(const AutoAssertEmptyNursery& other) : AutoAssertEmptyNursery(other.cx)
+    {
+    }
+};
+
+/*
+ * Evict the nursery upon construction. Serves as a token indicating that the
+ * nursery is empty. (See AutoAssertEmptyNursery, above.)
+ *
+ * Note that this is very improper subclass of AutoAssertHeapBusy, in that the
+ * heap is *not* busy within the scope of an AutoEmptyNursery. I will most
+ * likely fix this by removing AutoAssertHeapBusy, but that is currently
+ * waiting on jonco's review.
+ */
+class MOZ_RAII AutoEmptyNursery : public AutoAssertEmptyNursery
+{
+  public:
+    explicit AutoEmptyNursery(JSContext* cx);
+};
+
 } /* namespace gc */
 } /* namespace js */
 

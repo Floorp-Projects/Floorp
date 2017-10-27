@@ -14,7 +14,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsgc.h"
 #include "jshashutil.h"
 #include "jsobj.h"
 #include "jsprf.h"
