@@ -7,6 +7,7 @@ buildscript {
     ext.kotlin_version = '1.2.0'
 
     repositories {
+        google()
         jcenter()
     }
 
@@ -43,8 +44,8 @@ detekt {
 
 allprojects {
     repositories {
+        google()
         jcenter()
-        maven { url 'https://maven.google.com' }
     }
 }
 
