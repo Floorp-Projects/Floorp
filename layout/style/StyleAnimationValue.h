@@ -639,6 +639,9 @@ struct AnimationValue
 
   // Create an AnimationValue from an opacity value.
   static AnimationValue Opacity(StyleBackendType aBackendType, float aOpacity);
+  // Create an AnimationValue from a transform list.
+  static AnimationValue Transform(StyleBackendType aBackendType,
+                                  nsCSSValueSharedList& aList);
 
   // mGecko and mServo are mutually exclusive: only one or the other should
   // ever be set.
