@@ -4,22 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Build a mozilla application.
+# Defines main targets for driving the Firefox build system.
 #
-# To build a tree,
-#    1. hg clone ssh://hg.mozilla.org/mozilla-central mozilla
-#    2. cd mozilla
-#    3. create your .mozconfig file with
-#       ac_add_options --enable-application=browser
-#    4. gmake -f client.mk
-#
-# Other targets (gmake -f client.mk [targets...]),
-#    build
-#    clean (realclean is now the same as clean)
-#    distclean
-#
-# See http://developer.mozilla.org/en/docs/Build_Documentation for 
-# more information.
+# This make file should not be invoked directly. Instead, use
+# `mach` (likely `mach build`) for invoking the build system.
 #
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
