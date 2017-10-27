@@ -41,6 +41,7 @@ class ConsoleOutput extends Component {
       networkMessagesUpdate: PropTypes.object.isRequired,
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
+      onFirstMeaningfulPaint: PropTypes.func.isRequired,
     };
   }
 
@@ -50,12 +51,16 @@ class ConsoleOutput extends Component {
   }
 
   componentDidMount() {
-    // Do the scrolling in the nextTick since this could hit console startup performances.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1355869
-    setTimeout(() => {
-      scrollToBottom(this.outputNode);
-    }, 0);
+    scrollToBottom(this.outputNode);
     this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
+
+    // Waiting for the next paint.
+    new Promise(res => requestAnimationFrame(res))
+      .then(() => {
+        if (this.props.onFirstMeaningfulPaint) {
+          this.props.onFirstMeaningfulPaint();
+        }
+      });
   }
 
   componentWillUpdate(nextProps, nextState) {
