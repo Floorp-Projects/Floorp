@@ -7,54 +7,56 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  // ReactJS
   const React = require("devtools/client/shared/vendor/react");
-  const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+  const { Component, createFactory, PropTypes } = React;
+  const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+  const { tr } = React.DOM;
 
   // Tree
-  const TreeCell = React.createFactory(require("./TreeCell"));
-  const LabelCell = React.createFactory(require("./LabelCell"));
+  const TreeCell = createFactory(require("./TreeCell"));
+  const LabelCell = createFactory(require("./LabelCell"));
 
   // Scroll
   const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");
-
-  // Shortcuts
-  const { tr } = React.DOM;
-  const PropTypes = React.PropTypes;
 
   /**
    * This template represents a node in TreeView component. It's rendered
    * using <tr> element (the entire tree is one big <table>).
    */
-  let TreeRow = React.createClass({
-    displayName: "TreeRow",
-
+  class TreeRow extends Component {
     // See TreeView component for more details about the props and
     // the 'member' object.
-    propTypes: {
-      member: PropTypes.shape({
-        object: PropTypes.obSject,
-        name: PropTypes.sring,
-        type: PropTypes.string.isRequired,
-        rowClass: PropTypes.string.isRequired,
-        level: PropTypes.number.isRequired,
-        hasChildren: PropTypes.bool,
-        value: PropTypes.any,
-        open: PropTypes.bool.isRequired,
-        path: PropTypes.string.isRequired,
-        hidden: PropTypes.bool,
-        selected: PropTypes.bool,
-      }),
-      decorator: PropTypes.object,
-      renderCell: PropTypes.object,
-      renderLabelCell: PropTypes.object,
-      columns: PropTypes.array.isRequired,
-      id: PropTypes.string.isRequired,
-      provider: PropTypes.object.isRequired,
-      onClick: PropTypes.func.isRequired,
-      onMouseOver: PropTypes.func,
-      onMouseOut: PropTypes.func
-    },
+    static get propTypes() {
+      return {
+        member: PropTypes.shape({
+          object: PropTypes.obSject,
+          name: PropTypes.sring,
+          type: PropTypes.string.isRequired,
+          rowClass: PropTypes.string.isRequired,
+          level: PropTypes.number.isRequired,
+          hasChildren: PropTypes.bool,
+          value: PropTypes.any,
+          open: PropTypes.bool.isRequired,
+          path: PropTypes.string.isRequired,
+          hidden: PropTypes.bool,
+          selected: PropTypes.bool,
+        }),
+        decorator: PropTypes.object,
+        renderCell: PropTypes.object,
+        renderLabelCell: PropTypes.object,
+        columns: PropTypes.array.isRequired,
+        id: PropTypes.string.isRequired,
+        provider: PropTypes.object.isRequired,
+        onClick: PropTypes.func.isRequired,
+        onMouseOver: PropTypes.func,
+        onMouseOut: PropTypes.func
+      };
+    }
+
+    constructor(props) {
+      super(props);
+      this.getRowClass = this.getRowClass.bind(this);
+    }
 
     componentWillReceiveProps(nextProps) {
       // I don't like accessing the underlying DOM elements directly,
@@ -64,16 +66,16 @@ define(function (require, exports, module) {
       // The important part is that DOM elements don't need to be
       // re-created when they should appear again.
       if (nextProps.member.hidden != this.props.member.hidden) {
-        let row = ReactDOM.findDOMNode(this);
+        let row = findDOMNode(this);
         row.classList.toggle("hidden");
       }
-    },
+    }
 
     /**
      * Optimize row rendering. If props are the same do not render.
      * This makes the rendering a lot faster!
      */
-    shouldComponentUpdate: function (nextProps) {
+    shouldComponentUpdate(nextProps) {
       let props = ["name", "open", "value", "loading", "selected", "hasChildren"];
       for (let p in props) {
         if (nextProps.member[props[p]] != this.props.member[props[p]]) {
@@ -82,20 +84,20 @@ define(function (require, exports, module) {
       }
 
       return false;
-    },
+    }
 
-    componentDidUpdate: function () {
+    componentDidUpdate() {
       if (this.props.member.selected) {
-        let row = ReactDOM.findDOMNode(this);
+        let row = findDOMNode(this);
         // Because this is called asynchronously, context window might be
         // already gone.
         if (row.ownerDocument.defaultView) {
           scrollIntoViewIfNeeded(row);
         }
       }
-    },
+    }
 
-    getRowClass: function (object) {
+    getRowClass(object) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getRowClass) {
         return [];
@@ -112,9 +114,9 @@ define(function (require, exports, module) {
       }
 
       return classNames;
-    },
+    }
 
-    render: function () {
+    render() {
       let member = this.props.member;
       let decorator = this.props.decorator;
       let props = {
@@ -198,7 +200,7 @@ define(function (require, exports, module) {
         tr(props, cells)
       );
     }
-  });
+  }
 
   // Helpers
 
