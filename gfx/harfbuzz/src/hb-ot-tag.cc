@@ -1020,7 +1020,7 @@ hb_ot_tag_to_language (hb_tag_t tag)
   unsigned int i;
 
   if (tag == HB_OT_TAG_DEFAULT_LANGUAGE)
-    return NULL;
+    return nullptr;
 
   /* struct LangTag has only room for 3-letter language tags. */
   switch (tag) {

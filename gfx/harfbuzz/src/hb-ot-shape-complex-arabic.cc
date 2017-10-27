@@ -41,7 +41,7 @@
 /* See:
  * https://github.com/behdad/harfbuzz/commit/6e6f82b6f3dde0fc6c3c7d991d9ec6cfff57823d#commitcomment-14248516 */
 #define HB_ARABIC_GENERAL_CATEGORY_IS_WORD(gen_cat) \
-	(FLAG_SAFE (gen_cat) & \
+	(FLAG_UNSAFE (gen_cat) & \
 	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED) | \
 	  FLAG (HB_UNICODE_GENERAL_CATEGORY_PRIVATE_USE) | \
 	  /*FLAG (HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER) |*/ \
@@ -90,7 +90,7 @@ static unsigned int get_joining_type (hb_codepoint_t u, hb_unicode_general_categ
   if (likely (j_type != JOINING_TYPE_X))
     return j_type;
 
-  return (FLAG_SAFE(gen_cat) &
+  return (FLAG_UNSAFE(gen_cat) &
 	  (FLAG(HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) |
 	   FLAG(HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
 	   FLAG(HB_UNICODE_GENERAL_CATEGORY_FORMAT))
@@ -212,13 +212,13 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   map->add_global_bool_feature (HB_TAG('c','c','m','p'));
   map->add_global_bool_feature (HB_TAG('l','o','c','l'));
 
-  map->add_gsub_pause (NULL);
+  map->add_gsub_pause (nullptr);
 
   for (unsigned int i = 0; i < ARABIC_NUM_FEATURES; i++)
   {
     bool has_fallback = plan->props.script == HB_SCRIPT_ARABIC && !FEATURE_IS_SYRIAC (arabic_features[i]);
     map->add_feature (arabic_features[i], 1, has_fallback ? F_HAS_FALLBACK : F_NONE);
-    map->add_gsub_pause (NULL);
+    map->add_gsub_pause (nullptr);
   }
 
   map->add_feature (HB_TAG('r','l','i','g'), 1, F_GLOBAL|F_HAS_FALLBACK);
@@ -228,7 +228,7 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
   /* No pause after rclt.  See 98460779bae19e4d64d29461ff154b3527bf8420. */
   map->add_global_bool_feature (HB_TAG('r','c','l','t'));
   map->add_global_bool_feature (HB_TAG('c','a','l','t'));
-  map->add_gsub_pause (NULL);
+  map->add_gsub_pause (nullptr);
 
   /* The spec includes 'cswh'.  Earlier versions of Windows
    * used to enable this by default, but testing suggests
@@ -265,7 +265,7 @@ data_create_arabic (const hb_ot_shape_plan_t *plan)
 {
   arabic_shape_plan_t *arabic_plan = (arabic_shape_plan_t *) calloc (1, sizeof (arabic_shape_plan_t));
   if (unlikely (!arabic_plan))
-    return NULL;
+    return nullptr;
 
   arabic_plan->do_fallback = plan->props.script == HB_SCRIPT_ARABIC;
   arabic_plan->has_stch = !!plan->map.get_1_mask (HB_TAG ('s','t','c','h'));
@@ -412,7 +412,7 @@ retry:
   {
     /* This sucks.  We need a font to build the fallback plan... */
     fallback_plan = arabic_fallback_plan_create (plan, font);
-    if (unlikely (!hb_atomic_ptr_cmpexch (&(const_cast<arabic_shape_plan_t *> (arabic_plan))->fallback_plan, NULL, fallback_plan))) {
+    if (unlikely (!hb_atomic_ptr_cmpexch (&(const_cast<arabic_shape_plan_t *> (arabic_plan))->fallback_plan, nullptr, fallback_plan))) {
       arabic_fallback_plan_destroy (fallback_plan);
       goto retry;
     }
@@ -532,11 +532,11 @@ apply_stch (const hb_ot_shape_plan_t *plan,
       }
       i++; // Don't touch i again.
 
-      DEBUG_MSG (ARABIC, NULL, "%s stretch at (%d,%d,%d)",
+      DEBUG_MSG (ARABIC, nullptr, "%s stretch at (%d,%d,%d)",
 		 step == MEASURE ? "measuring" : "cutting", context, start, end);
-      DEBUG_MSG (ARABIC, NULL, "rest of word:    count=%d width %d", start - context, w_total);
-      DEBUG_MSG (ARABIC, NULL, "fixed tiles:     count=%d width=%d", n_fixed, w_fixed);
-      DEBUG_MSG (ARABIC, NULL, "repeating tiles: count=%d width=%d", n_repeating, w_repeating);
+      DEBUG_MSG (ARABIC, nullptr, "rest of word:    count=%d width %d", start - context, w_total);
+      DEBUG_MSG (ARABIC, nullptr, "fixed tiles:     count=%d width=%d", n_fixed, w_fixed);
+      DEBUG_MSG (ARABIC, nullptr, "repeating tiles: count=%d width=%d", n_repeating, w_repeating);
 
       /* Number of additional times to repeat each repeating tile. */
       int n_copies = 0;
@@ -559,7 +559,7 @@ apply_stch (const hb_ot_shape_plan_t *plan,
       if (step == MEASURE)
       {
 	extra_glyphs_needed += n_copies * n_repeating;
-	DEBUG_MSG (ARABIC, NULL, "will add extra %d copies of repeating tiles", n_copies);
+	DEBUG_MSG (ARABIC, nullptr, "will add extra %d copies of repeating tiles", n_copies);
       }
       else
       {
@@ -572,7 +572,7 @@ apply_stch (const hb_ot_shape_plan_t *plan,
 	  if (info[k - 1].arabic_shaping_action() == STCH_REPEATING)
 	    repeat += n_copies;
 
-	  DEBUG_MSG (ARABIC, NULL, "appending %d copies of glyph %d; j=%d",
+	  DEBUG_MSG (ARABIC, nullptr, "appending %d copies of glyph %d; j=%d",
 		     repeat, info[k - 1].codepoint, j);
 	  for (unsigned int n = 0; n < repeat; n++)
 	  {
@@ -691,16 +691,16 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
 {
   "arabic",
   collect_features_arabic,
-  NULL, /* override_features */
+  nullptr, /* override_features */
   data_create_arabic,
   data_destroy_arabic,
-  NULL, /* preprocess_text */
+  nullptr, /* preprocess_text */
   postprocess_glyphs_arabic,
   HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
-  NULL, /* decompose */
-  NULL, /* compose */
+  nullptr, /* decompose */
+  nullptr, /* compose */
   setup_masks_arabic,
-  NULL, /* disable_otl */
+  nullptr, /* disable_otl */
   reorder_marks_arabic,
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE,
   true, /* fallback_position */

@@ -1558,7 +1558,15 @@ class InstGS : public Instruction
 inline bool
 IsUnaligned(const wasm::MemoryAccessDesc& access)
 {
-    return access.align() && access.align() < access.byteSize();
+    if (!access.align())
+        return false;
+
+#ifdef JS_CODEGEN_MIPS32
+    if (access.type() == Scalar::Int64 && access.align() >= 4)
+        return false;
+#endif
+
+    return access.align() < access.byteSize();
 }
 
 } // namespace jit

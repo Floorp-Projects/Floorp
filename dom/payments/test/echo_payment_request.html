@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Payment Request Testing</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+</head>
+<body>
+  <script>
+    window.onmessage = (e) => {
+      const paymentArgs = [[{supportedMethods: 'basic-card'}], {total: {label: 'label', amount: {currency: 'USD', value: '5.00'}}}];
+
+    if (e.data === 'new PaymentRequest') {
+      try {
+        new PaymentRequest(...paymentArgs);
+        if (window.parent) {
+          window.parent.postMessage("successful", '*');
+        }
+      } catch(ex) {
+        if (window.parent) {
+          window.parent.postMessage(ex.name, '*');
+        }
+      }
+    } else if (e.data === 'new PaymentRequest in a new iframe') {
+      var ifrr = document.createElement('iframe');
+      ifrr.setAttribute('allowpaymentrequest', 'true');
+      ifrr.src = "https://example.com/tests/dom/payments/test/simple_payment_request.html";
+      document.body.appendChild(ifrr);
+    } else {
+      if (window.parent) {
+        window.parent.postMessage(e.data, '*');
+      }
+    }
+  }
+  </script>
+</body>
+</html>
