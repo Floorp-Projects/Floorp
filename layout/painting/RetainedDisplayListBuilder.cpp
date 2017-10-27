@@ -53,6 +53,9 @@ void MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
 
       if (invalidate) {
         i->FrameForInvalidation()->MarkNeedsDisplayItemRebuild();
+        if (i->GetDependentFrame()) {
+          i->GetDependentFrame()->MarkNeedsDisplayItemRebuild();
+        }
       }
     }
     if (i->GetChildren()) {
