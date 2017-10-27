@@ -50,6 +50,7 @@ extern crate log;
 extern crate thread_profiler;
 
 mod border;
+mod box_shadow;
 mod clip;
 mod clip_scroll_node;
 mod clip_scroll_tree;

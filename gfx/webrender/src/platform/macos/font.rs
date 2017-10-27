@@ -4,7 +4,7 @@
 
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
 use api::{FontInstance, FontVariation, NativeFontHandle};
-use api::GlyphKey;
+use api::{GlyphKey, SubpixelDirection};
 use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
@@ -22,6 +22,7 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{Color as ColorLut, GammaLut};
+use glyph_rasterizer::{GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::ptr;
@@ -36,28 +37,6 @@ pub struct FontContext {
 // core text is safe to use on multiple threads and non-shareable resources are
 // all hidden inside their font context.
 unsafe impl Send for FontContext {}
-
-pub struct RasterizedGlyph {
-    pub top: f32,
-    pub left: f32,
-    pub width: u32,
-    pub height: u32,
-    pub scale: f32,
-    pub bytes: Vec<u8>,
-}
-
-impl RasterizedGlyph {
-    pub fn blank() -> RasterizedGlyph {
-        RasterizedGlyph {
-            top: 0.0,
-            left: 0.0,
-            width: 0,
-            height: 0,
-            scale: 1.0,
-            bytes: vec![],
-        }
-    }
-}
 
 struct GlyphMetrics {
     rasterized_left: i32,
@@ -92,6 +71,14 @@ fn supports_subpixel_aa() -> bool {
     ct_font.draw_glyphs(&[glyph], &[point], cg_context.clone());
     let data = cg_context.data();
     data[0] != data[1] || data[1] != data[2]
+}
+
+fn should_use_white_on_black(color: ColorU) -> bool {
+    let r = color.r as f32 / 255.0;
+    let g = color.g as f32 / 255.0;
+    let b = color.b as f32 / 255.0;
+    // These thresholds were determined on 10.12 by observing what CG does.
+    r >= 0.333 && g >= 0.333 && b >= 0.333 && r + g + b >= 2.0
 }
 
 fn get_glyph_metrics(
@@ -434,8 +421,24 @@ impl FontContext {
         }
     }
 
-    pub fn has_gamma_correct_subpixel_aa() -> bool {
-        true
+    pub fn prepare_font(font: &mut FontInstance) {
+        match font.render_mode {
+            FontRenderMode::Mono | FontRenderMode::Bitmap => {
+                // In mono/bitmap modes the color of the font is irrelevant.
+                font.color = ColorU::new(255, 255, 255, 255);
+                // Subpixel positioning is disabled in mono and bitmap modes.
+                font.subpx_dir = SubpixelDirection::None;
+            }
+            FontRenderMode::Alpha => {
+                font.color = if font.platform_options.unwrap_or_default().font_smoothing &&
+                                should_use_white_on_black(font.color) {
+                    ColorU::new(255, 255, 255, 255)
+                } else {
+                    ColorU::new(0, 0, 0, 255)
+                };
+            }
+            FontRenderMode::Subpixel => {}
+        }
     }
 
     pub fn rasterize_glyph(
@@ -445,14 +448,14 @@ impl FontContext {
     ) -> Option<RasterizedGlyph> {
         let ct_font = match self.get_ct_font(font.font_key, font.size, &font.variations) {
             Some(font) => font,
-            None => return Some(RasterizedGlyph::blank()),
+            None => return None,
         };
 
         let glyph = key.index as CGGlyph;
         let (x_offset, y_offset) = font.get_subpx_offset(key);
         let metrics = get_glyph_metrics(&ct_font, glyph, x_offset, y_offset);
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
-            return Some(RasterizedGlyph::blank());
+            return None;
         }
 
         let context_flags = match font.render_mode {
@@ -497,13 +500,29 @@ impl FontContext {
         // At the end of all this, WR expects individual RGB channels and ignores alpha
         // for subpixel AA.
         // For alpha/mono, WR ignores all channels other than alpha.
-        // Also note that WR expects text to be black bg with white text, so invert
-        // when we draw the glyphs.
-        let (antialias, smooth, bg_color) = match font.render_mode {
-            FontRenderMode::Subpixel => (true, true, 1.0),
-            FontRenderMode::Alpha => (true, false, 1.0),
-            FontRenderMode::Bitmap => (true, false, 0.0),
-            FontRenderMode::Mono => (false, false, 1.0),
+        // Also note that WR expects text to be white text on black bg, so invert
+        // when we draw the glyphs as black on white.
+        //
+        // Unless platform_options.font_smoothing is false, the grayscale AA'd version
+        // of the glyph will actually be rasterized with subpixel AA. The color channels
+        // will be then converted to luminance in gamma_correct_pixels to produce the
+        // final grayscale AA. This ensures that the dilation of the glyph from grayscale
+        // AA more closely resembles the dilation from subpixel AA in the general case.
+        let use_white_on_black = should_use_white_on_black(font.color);
+        let use_font_smoothing = font.platform_options.unwrap_or_default().font_smoothing;
+        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) = match font.render_mode {
+            FontRenderMode::Subpixel => if use_white_on_black {
+                (true, true, 1.0, 0.0, 1.0, false)
+            } else {
+                (true, true, 0.0, 1.0, 1.0, true)
+            },
+            FontRenderMode::Alpha => if use_font_smoothing && use_white_on_black {
+                (true, use_font_smoothing, 1.0, 0.0, 1.0, false)
+            } else {
+                (true, use_font_smoothing, 0.0, 1.0, 1.0, true)
+            },
+            FontRenderMode::Bitmap => (true, false, 0.0, 0.0, 0.0, false),
+            FontRenderMode::Mono => (false, false, 0.0, 1.0, 1.0, true),
         };
 
         // These are always true in Gecko, even for non-AA fonts
@@ -527,7 +546,7 @@ impl FontContext {
 
         // Always draw black text on a white background
         // Fill the background
-        cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_color);
+        cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_alpha);
         let rect = CGRect {
             origin: CGPoint { x: 0.0, y: 0.0 },
             size: CGSize {
@@ -538,7 +557,7 @@ impl FontContext {
         cg_context.fill_rect(rect);
 
         // Set the text color
-        cg_context.set_rgb_fill_color(0.0, 0.0, 0.0, 1.0);
+        cg_context.set_rgb_fill_color(text_color, text_color, text_color, 1.0);
         cg_context.set_text_drawing_mode(CGTextDrawingMode::CGTextFill);
         ct_font.draw_glyphs(&[glyph], &[rasterization_origin], cg_context.clone());
 
@@ -547,7 +566,7 @@ impl FontContext {
         if font.render_mode != FontRenderMode::Bitmap {
             // Convert to linear space for subpixel AA.
             // We explicitly do not do this for grayscale AA
-            if font.render_mode == FontRenderMode::Subpixel {
+            if smooth {
                 self.gamma_lut.coregraphics_convert_to_linear_bgra(
                     &mut rasterized_pixels,
                     metrics.rasterized_width as usize,
@@ -555,16 +574,16 @@ impl FontContext {
                 );
             }
 
-            // We need to invert the pixels back since right now
-            // transparent pixels are actually opaque white.
             for i in 0 .. metrics.rasterized_height {
                 let current_height = (i * metrics.rasterized_width * 4) as usize;
                 let end_row = current_height + (metrics.rasterized_width as usize * 4);
 
                 for pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
-                    pixel[0] = 255 - pixel[0];
-                    pixel[1] = 255 - pixel[1];
-                    pixel[2] = 255 - pixel[2];
+                    if invert {
+                        pixel[0] = 255 - pixel[0];
+                        pixel[1] = 255 - pixel[1];
+                        pixel[2] = 255 - pixel[2];
+                    }
 
                     pixel[3] = match font.render_mode {
                         FontRenderMode::Subpixel => 255,
@@ -575,13 +594,15 @@ impl FontContext {
                 } // end row
             } // end height
 
-            self.gamma_correct_pixels(
-                &mut rasterized_pixels,
-                metrics.rasterized_width as usize,
-                metrics.rasterized_height as usize,
-                font.render_mode,
-                font.color,
-            );
+            if smooth {
+                self.gamma_correct_pixels(
+                    &mut rasterized_pixels,
+                    metrics.rasterized_width as usize,
+                    metrics.rasterized_height as usize,
+                    font.render_mode,
+                    font.color,
+                );
+            }
         }
 
         Some(RasterizedGlyph {
@@ -590,6 +611,7 @@ impl FontContext {
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
             scale: 1.0,
+            format: GlyphFormat::from(font.render_mode),
             bytes: rasterized_pixels,
         })
     }

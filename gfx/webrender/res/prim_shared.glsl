@@ -194,6 +194,47 @@ RenderTaskData fetch_render_task(int index) {
     return task;
 }
 
+/*
+ The dynamic picture that this brush exists on. Right now, it
+ contains minimal information. In the future, it will describe
+ the transform mode of primitives on this picture, among other things.
+ */
+struct PictureTask {
+    RectWithSize target_rect;
+    float render_target_layer_index;
+    vec2 content_origin;
+    vec4 color;
+};
+
+PictureTask fetch_picture_task(int address) {
+    RenderTaskData task_data = fetch_render_task(address);
+
+    return PictureTask(
+        RectWithSize(task_data.data0.xy, task_data.data0.zw),
+        task_data.data1.x,
+        task_data.data1.yz,
+        task_data.data2
+    );
+}
+
+struct BlurTask {
+    RectWithSize target_rect;
+    float render_target_layer_index;
+    float blur_radius;
+    vec4 color;
+};
+
+BlurTask fetch_blur_task(int address) {
+    RenderTaskData task_data = fetch_render_task(address);
+
+    return BlurTask(
+        RectWithSize(task_data.data0.xy, task_data.data0.zw),
+        task_data.data1.x,
+        task_data.data1.y,
+        task_data.data2
+    );
+}
+
 struct AlphaBatchTask {
     vec2 screen_space_origin;
     vec2 render_target_origin;
@@ -359,7 +400,11 @@ CompositeInstance fetch_composite_instance() {
 struct Primitive {
     Layer layer;
     ClipArea clip_area;
+#ifdef PRIMITIVE_HAS_PICTURE_TASK
+    PictureTask task;
+#else
     AlphaBatchTask task;
+#endif
     RectWithSize local_rect;
     RectWithSize local_clip_rect;
     int specific_prim_address;
@@ -387,7 +432,11 @@ Primitive load_primitive() {
 
     prim.layer = fetch_layer(pi.layer_index);
     prim.clip_area = fetch_clip_area(pi.clip_task_index);
+#ifdef PRIMITIVE_HAS_PICTURE_TASK
+    prim.task = fetch_picture_task(pi.render_task_index);
+#else
     prim.task = fetch_alpha_batch_task(pi.render_task_index);
+#endif
 
     PrimitiveGeometry geom = fetch_primitive_geometry(pi.prim_address);
     prim.local_rect = geom.local_rect;
@@ -657,17 +706,6 @@ struct Rectangle {
 Rectangle fetch_rectangle(int address) {
     vec4 data = fetch_from_resource_cache_1(address);
     return Rectangle(data);
-}
-
-struct Picture {
-    vec4 color;
-    vec2 offset;
-    float blur_radius;
-};
-
-Picture fetch_picture(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Picture(data[0], data[1].xy, data[1].z);
 }
 
 struct TextRun {

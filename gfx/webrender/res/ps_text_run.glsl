@@ -13,6 +13,12 @@ varying vec3 vLocalPos;
 #endif
 
 #ifdef WR_VERTEX_SHADER
+
+#define MODE_ALPHA          0
+#define MODE_SUBPX_PASS0    1
+#define MODE_SUBPX_PASS1    2
+#define MODE_COLOR_BITMAP   3
+
 void main(void) {
     Primitive prim = load_primitive();
     TextRun text = fetch_text_run(prim.specific_prim_address);
@@ -53,22 +59,27 @@ void main(void) {
 
     write_clip(vi.screen_pos, prim.clip_area);
 
+    switch (uMode) {
+        case MODE_ALPHA:
+        case MODE_SUBPX_PASS1:
+            vColor = text.color;
+            break;
+        case MODE_SUBPX_PASS0:
+        case MODE_COLOR_BITMAP:
+            vColor = vec4(text.color.a);
+            break;
+    }
+
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 st0 = res.uv_rect.xy / texture_size;
     vec2 st1 = res.uv_rect.zw / texture_size;
 
-    vColor = vec4(text.color.rgb * text.color.a, text.color.a);
     vUv = vec3(mix(st0, st1, f), res.layer);
     vUvBorder = (res.uv_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-
-#define MODE_ALPHA          0
-#define MODE_SUBPX_PASS0    1
-#define MODE_SUBPX_PASS1    2
-
 void main(void) {
     vec3 tc = vec3(clamp(vUv.xy, vUvBorder.xy, vUvBorder.zw), vUv.z);
     vec4 color = texture(sColor0, tc);
@@ -79,23 +90,6 @@ void main(void) {
 #endif
     alpha *= do_clip();
 
-    // TODO(gw): It would be worth profiling this and seeing
-    //           if we should instead handle the mode via
-    //           a combination of mix() etc. Branching on
-    //           a uniform is probably fast in most GPUs now though?
-    vec4 modulate_color = vec4(0.0);
-    switch (uMode) {
-        case MODE_ALPHA:
-            modulate_color = alpha * vColor;
-            break;
-        case MODE_SUBPX_PASS0:
-            modulate_color = vec4(alpha) * vColor.a;
-            break;
-        case MODE_SUBPX_PASS1:
-            modulate_color = alpha * vColor;
-            break;
-    }
-
-    oFragColor = color * modulate_color;
+    oFragColor = color * vColor * alpha;
 }
 #endif

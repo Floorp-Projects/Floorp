@@ -6,13 +6,13 @@ use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DebugCommand, DeviceIntPo
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
-use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
+use api::{HitTestResult, IdNamespace, LayerPoint, PipelineId, RenderNotifier};
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "debugger")]
 use debug_server;
-use frame::Frame;
-use frame_builder::FrameBuilderConfig;
+use frame::FrameContext;
+use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RendererFrame, ResultMsg};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
@@ -32,7 +32,8 @@ use time::precise_time_ns;
 
 struct Document {
     scene: Scene,
-    frame: Frame,
+    frame_ctx: FrameContext,
+    frame_builder: Option<FrameBuilder>,
     window_size: DeviceUintSize,
     inner_rect: DeviceUintRect,
     pan: DeviceIntPoint,
@@ -64,7 +65,8 @@ impl Document {
         };
         Document {
             scene: Scene::new(),
-            frame: Frame::new(config),
+            frame_ctx: FrameContext::new(config),
+            frame_builder: None,
             window_size: initial_size,
             inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), initial_size),
             pan: DeviceIntPoint::zero(),
@@ -84,7 +86,8 @@ impl Document {
 
     fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
         let accumulated_scale_factor = self.accumulated_scale_factor();
-        self.frame.create(
+        self.frame_builder = self.frame_ctx.create(
+            self.frame_builder.take(),
             &self.scene,
             resource_cache,
             self.window_size,
@@ -104,16 +107,24 @@ impl Document {
             self.pan.x as f32 / accumulated_scale_factor,
             self.pan.y as f32 / accumulated_scale_factor,
         );
-        self.frame.build_renderer_frame(
-            resource_cache,
-            gpu_cache,
-            &self.scene.pipelines,
-            accumulated_scale_factor,
-            pan,
-            &self.output_pipelines,
-            &mut resource_profile.texture_cache,
-            &mut resource_profile.gpu_cache,
-        )
+        match self.frame_builder {
+            Some(ref mut builder) => {
+                self.frame_ctx.build_renderer_frame(
+                    builder,
+                    resource_cache,
+                    gpu_cache,
+                    &self.scene.pipelines,
+                    accumulated_scale_factor,
+                    pan,
+                    &self.output_pipelines,
+                    &mut resource_profile.texture_cache,
+                    &mut resource_profile.gpu_cache,
+                )
+            }
+            None => {
+                self.frame_ctx.get_renderer_frame()
+            }
+        }
     }
 }
 
@@ -261,7 +272,7 @@ impl RenderBackend {
                     BuiltDisplayList::from_data(data.display_list_data, list_descriptor);
 
                 if !preserve_frame_state {
-                    doc.frame.discard_frame_state_for_pipeline(pipeline_id);
+                    doc.frame_ctx.discard_frame_state_for_pipeline(pipeline_id);
                 }
 
                 let display_list_len = built_display_list.data().len();
@@ -309,7 +320,7 @@ impl RenderBackend {
                     .update_resources(resources, &mut profile_counters.resources);
 
                 doc.scene.update_epoch(pipeline_id, epoch);
-                doc.frame.update_epoch(pipeline_id, epoch);
+                doc.frame_ctx.update_epoch(pipeline_id, epoch);
 
                 DocumentOp::Nop
             }
@@ -335,7 +346,7 @@ impl RenderBackend {
                 profile_scope!("Scroll");
                 let _timer = profile_counters.total_time.timer();
 
-                if doc.frame.scroll(delta, cursor, move_phase) && doc.render_on_scroll == Some(true)
+                if doc.frame_ctx.scroll(delta, cursor, move_phase) && doc.render_on_scroll == Some(true)
                 {
                     let frame = doc.render(
                         &mut self.resource_cache,
@@ -349,7 +360,13 @@ impl RenderBackend {
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
                 profile_scope!("HitTest");
-                let result = doc.frame.hit_test(pipeline_id, point, flags);
+                let result = match doc.frame_builder {
+                    Some(ref builder) => {
+                        let cst = doc.frame_ctx.get_clip_scroll_tree();
+                        builder.hit_test(cst, pipeline_id, point, flags)
+                    },
+                    None => HitTestResult::default(),
+                };
                 tx.send(result).unwrap();
                 DocumentOp::Nop
             }
@@ -357,7 +374,7 @@ impl RenderBackend {
                 profile_scope!("ScrollNodeWithScrollId");
                 let _timer = profile_counters.total_time.timer();
 
-                if doc.frame.scroll_node(origin, id, clamp) && doc.render_on_scroll == Some(true) {
+                if doc.frame_ctx.scroll_node(origin, id, clamp) && doc.render_on_scroll == Some(true) {
                     let frame = doc.render(
                         &mut self.resource_cache,
                         &mut self.gpu_cache,
@@ -372,7 +389,7 @@ impl RenderBackend {
                 profile_scope!("TickScrollingBounce");
                 let _timer = profile_counters.total_time.timer();
 
-                doc.frame.tick_scrolling_bounce_animations();
+                doc.frame_ctx.tick_scrolling_bounce_animations();
                 if doc.render_on_scroll == Some(true) {
                     let frame = doc.render(
                         &mut self.resource_cache,
@@ -386,7 +403,7 @@ impl RenderBackend {
             }
             DocumentMsg::GetScrollNodeState(tx) => {
                 profile_scope!("GetScrollNodeState");
-                tx.send(doc.frame.get_scroll_node_state()).unwrap();
+                tx.send(doc.frame_ctx.get_scroll_node_state()).unwrap();
                 DocumentOp::Nop
             }
             DocumentMsg::GenerateFrame(property_bindings) => {
@@ -664,12 +681,14 @@ impl RenderBackend {
         for (_, doc) in &self.documents {
             let debug_node = debug_server::TreeNode::new("document clip_scroll tree");
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
+
             // TODO(gw): Restructure the storage of clip-scroll tree, clip store
             //           etc so this isn't so untidy.
-            let clip_store = &doc.frame.frame_builder.as_ref().unwrap().clip_store;
-            doc.frame
-                .clip_scroll_tree
-                .print_with(clip_store, &mut builder);
+            if let Some(ref frame_builder) = doc.frame_builder {
+                doc.frame_ctx
+                    .get_clip_scroll_tree()
+                    .print_with(&frame_builder.clip_store, &mut builder);
+            }
 
             debug_root.add(builder.build());
         }
