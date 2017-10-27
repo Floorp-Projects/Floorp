@@ -302,6 +302,8 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 // Maximum number of dirty pages per arena.
 #define DIRTY_MAX_DEFAULT (1U << 8)
 
+static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
+
 // Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
 // so over-estimates are okay (up to a point), but under-estimates will
 // negatively affect performance.
@@ -957,8 +959,6 @@ public:
 
   arena_t();
 
-  static inline arena_t* GetById(arena_id_t aArenaId);
-
 private:
   void InitChunk(arena_chunk_t* aChunk, bool aZeroed);
 
@@ -1053,6 +1053,51 @@ struct ArenaTreeTrait
   }
 };
 
+// Bookkeeping for all the arenas used by the allocator.
+class ArenaCollection
+{
+public:
+  bool Init()
+  {
+    mArenas.Init();
+    mDefaultArena = mLock.Init() ? CreateArena() : nullptr;
+    if (mDefaultArena) {
+      // arena_t constructor sets this to a lower value for thread local
+      // arenas; Reset to the default value for the main arena.
+      mDefaultArena->mMaxDirty = opt_dirty_max;
+    }
+    return bool(mDefaultArena);
+  }
+
+  inline arena_t* GetById(arena_id_t aArenaId);
+
+  arena_t* CreateArena();
+
+  void DisposeArena(arena_t* aArena)
+  {
+    MutexAutoLock lock(mLock);
+    mArenas.Remove(aArena);
+    // The arena is leaked, and remaining allocations in it still are alive
+    // until they are freed. After that, the arena will be empty but still
+    // taking have at least a chunk taking address space. TODO: bug 1364359.
+  }
+
+  using Iterator = RedBlackTree<arena_t, ArenaTreeTrait>::Iterator;
+
+  Iterator iter() { return mArenas.iter(); }
+
+  inline arena_t* GetDefault() { return mDefaultArena; }
+
+  Mutex mLock;
+
+private:
+  arena_t* mDefaultArena;
+  arena_id_t mLastArenaId;
+  RedBlackTree<arena_t, ArenaTreeTrait> mArenas;
+};
+
+static ArenaCollection gArenas;
+
 // ******
 // Chunks.
 static AddressRadixTree<(sizeof(void*) << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
@@ -1096,13 +1141,6 @@ static size_t base_committed;
 // ******
 // Arenas.
 
-// A tree of all available arenas, arranged by id.
-// TODO: Move into arena_t as a static member when rb_tree doesn't depend on
-// the type being defined anymore.
-static RedBlackTree<arena_t, ArenaTreeTrait> gArenaTree;
-static unsigned narenas;
-static Mutex arenas_lock; // Protects arenas initialization.
-
 // The arena associated with the current thread (per jemalloc_thread_local_arena)
 // On OSX, __thread/thread_local circles back calling malloc to allocate storage
 // on first access on each thread, which leads to an infinite loop, but
@@ -1113,10 +1151,6 @@ static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 static detail::ThreadLocal<arena_t*, detail::ThreadLocalKeyStorage>
   thread_arena;
 #endif
-
-// The main arena, which all threads default to until jemalloc_thread_local_arena
-// is called.
-static arena_t* gMainArena;
 
 // *****************************
 // Runtime configuration options.
@@ -1132,8 +1166,6 @@ static const bool opt_junk = false;
 static const bool opt_zero = false;
 #endif
 
-static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
-
 // ***************************************************************************
 // Begin forward declarations.
 
@@ -1146,8 +1178,6 @@ static void
 chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType);
 static void
 chunk_ensure_zero(void* aPtr, size_t aSize, bool aZeroed);
-static arena_t*
-arenas_extend();
 static void*
 huge_malloc(size_t size, bool zero);
 static void*
@@ -2147,9 +2177,9 @@ thread_local_arena(bool enabled)
     // called with `false`, but it doesn't matter at the moment.
     // because in practice nothing actually calls this function
     // with `false`, except maybe at shutdown.
-    arena = arenas_extend();
+    arena = gArenas.CreateArena();
   } else {
-    arena = gMainArena;
+    arena = gArenas.GetDefault();
   }
   thread_arena.set(arena);
   return arena;
@@ -3812,38 +3842,28 @@ arena_t::arena_t()
 #endif
 }
 
-static inline arena_t*
-arenas_fallback()
+arena_t*
+ArenaCollection::CreateArena()
 {
-  // Only reached if there is an OOM error.
-
-  // OOM here is quite inconvenient to propagate, since dealing with it
-  // would require a check for failure in the fast path.  Instead, punt
-  // by using the first arena.
-  // In practice, this is an extremely unlikely failure.
-  _malloc_message(_getprogname(), ": (malloc) Error initializing arena\n");
-
-  return gMainArena;
-}
-
-// Create a new arena and return it.
-static arena_t*
-arenas_extend()
-{
-  arena_t* ret;
   fallible_t fallible;
-
-  ret = new (fallible) arena_t();
+  arena_t* ret = new (fallible) arena_t();
   if (!ret) {
-    return arenas_fallback();
+    // Only reached if there is an OOM error.
+
+    // OOM here is quite inconvenient to propagate, since dealing with it
+    // would require a check for failure in the fast path.  Instead, punt
+    // by using the first arena.
+    // In practice, this is an extremely unlikely failure.
+    _malloc_message(_getprogname(), ": (malloc) Error initializing arena\n");
+
+    return mDefaultArena;
   }
 
-  MutexAutoLock lock(arenas_lock);
+  MutexAutoLock lock(mLock);
 
   // TODO: Use random Ids.
-  ret->mId = narenas++;
-  gArenaTree.Insert(ret);
-
+  ret->mId = mLastArenaId++;
+  mArenas.Insert(ret);
   return ret;
 }
 
@@ -4223,21 +4243,13 @@ static
   base_nodes = nullptr;
   base_mtx.Init();
 
-  arenas_lock.Init();
-
-  // Initialize one arena here.
-  gArenaTree.Init();
-  arenas_extend();
-  gMainArena = gArenaTree.First();
-  if (!gMainArena) {
+  // Initialize arenas collection here.
+  if (!gArenas.Init()) {
     return false;
   }
-  // arena_t constructor sets this to a lower value for thread local arenas;
-  // reset to the default value for the main arena.
-  gMainArena->mMaxDirty = opt_dirty_max;
 
-  // Assign the initial arena to the initial thread.
-  thread_arena.set(gMainArena);
+  // Assign the default arena to the initial thread.
+  thread_arena.set(gArenas.GetDefault());
 
   if (!gChunkRTree.Init()) {
     return false;
@@ -4535,7 +4547,6 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
   // Gather runtime settings.
   aStats->opt_junk = opt_junk;
   aStats->opt_zero = opt_zero;
-  aStats->narenas = narenas;
   aStats->quantum = quantum;
   aStats->small_max = small_max;
   aStats->large_max = arena_maxclass;
@@ -4544,6 +4555,7 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
   aStats->dirty_max = opt_dirty_max;
 
   // Gather current memory usage statistics.
+  aStats->narenas = 0;
   aStats->mapped = 0;
   aStats->allocated = 0;
   aStats->waste = 0;
@@ -4569,16 +4581,12 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
     MOZ_ASSERT(base_mapped >= base_committed);
   }
 
-  arenas_lock.Lock();
+  gArenas.mLock.Lock();
   // Iterate over arenas.
-  for (auto arena : gArenaTree.iter()) {
+  for (auto arena : gArenas.iter()) {
     size_t arena_mapped, arena_allocated, arena_committed, arena_dirty, j,
       arena_unused, arena_headers;
     arena_run_t* run;
-
-    if (!arena) {
-      continue;
-    }
 
     arena_headers = 0;
     arena_unused = 0;
@@ -4626,8 +4634,9 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
                      arena_unused - arena_headers;
     aStats->bin_unused += arena_unused;
     aStats->bookkeeping += arena_headers;
+    aStats->narenas++;
   }
-  arenas_lock.Unlock();
+  gArenas.mLock.Unlock();
 
   // Account for arena chunk headers in bookkeeping rather than waste.
   chunk_header_size =
@@ -4691,8 +4700,8 @@ inline void
 MozJemalloc::jemalloc_purge_freed_pages()
 {
   if (malloc_initialized) {
-    MutexAutoLock lock(arenas_lock);
-    for (auto arena : gArenaTree.iter()) {
+    MutexAutoLock lock(gArenas.mLock);
+    for (auto arena : gArenas.iter()) {
       arena->HardPurge();
     }
   }
@@ -4714,8 +4723,8 @@ inline void
 MozJemalloc::jemalloc_free_dirty_pages(void)
 {
   if (malloc_initialized) {
-    MutexAutoLock lock(arenas_lock);
-    for (auto arena : gArenaTree.iter()) {
+    MutexAutoLock lock(gArenas.mLock);
+    for (auto arena : gArenas.iter()) {
       MutexAutoLock arena_lock(arena->mLock);
       arena->Purge(true);
     }
@@ -4723,7 +4732,7 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
 }
 
 inline arena_t*
-arena_t::GetById(arena_id_t aArenaId)
+ArenaCollection::GetById(arena_id_t aArenaId)
 {
   if (!malloc_initialized) {
     return nullptr;
@@ -4732,8 +4741,8 @@ arena_t::GetById(arena_id_t aArenaId)
   // we only need it as a placeholder for mId.
   mozilla::AlignedStorage2<arena_t> key;
   key.addr()->mId = aArenaId;
-  MutexAutoLock lock(arenas_lock);
-  arena_t* result = gArenaTree.Search(key.addr());
+  MutexAutoLock lock(mLock);
+  arena_t* result = mArenas.Search(key.addr());
   MOZ_RELEASE_ASSERT(result);
   return result;
 }
@@ -4744,7 +4753,7 @@ inline arena_id_t
 MozJemalloc::moz_create_arena()
 {
   if (malloc_init()) {
-    arena_t* arena = arenas_extend();
+    arena_t* arena = gArenas.CreateArena();
     return arena->mId;
   }
   return 0;
@@ -4754,13 +4763,9 @@ template<>
 inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
-  arena_t* arena = arena_t::GetById(aArenaId);
+  arena_t* arena = gArenas.GetById(aArenaId);
   if (arena) {
-    MutexAutoLock lock(arenas_lock);
-    gArenaTree.Remove(arena);
-    // The arena is leaked, and remaining allocations in it still are alive
-    // until they are freed. After that, the arena will be empty but still
-    // taking have at least a chunk taking address space. TODO: bug 1364359.
+    gArenas.DisposeArena(arena);
   }
 }
 
@@ -4769,7 +4774,7 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   inline return_type MozJemalloc::moz_arena_##name(                            \
     arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))               \
   {                                                                            \
-    BaseAllocator allocator(arena_t::GetById(aArenaId));                       \
+    BaseAllocator allocator(gArenas.GetById(aArenaId));           \
     return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));                   \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
@@ -4802,9 +4807,9 @@ static
   _malloc_prefork(void)
 {
   // Acquire all mutexes in a safe order.
-  arenas_lock.Lock();
+  gArenas.mLock.Lock();
 
-  for (auto arena : gArenaTree.iter()) {
+  for (auto arena : gArenas.iter()) {
     arena->mLock.Lock();
   }
 
@@ -4824,10 +4829,11 @@ static
 
   base_mtx.Unlock();
 
-  for (auto arena : gArenaTree.iter()) {
+  for (auto arena : gArenas.iter()) {
     arena->mLock.Unlock();
   }
-  arenas_lock.Unlock();
+
+  gArenas.mLock.Unlock();
 }
 
 #ifndef XP_DARWIN
@@ -4841,10 +4847,11 @@ static
 
   base_mtx.Init();
 
-  for (auto arena : gArenaTree.iter()) {
+  for (auto arena : gArenas.iter()) {
     arena->mLock.Init();
   }
-  arenas_lock.Init();
+
+  gArenas.mLock.Init();
 }
 
 // End library-private functions.
