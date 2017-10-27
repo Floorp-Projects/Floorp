@@ -5098,6 +5098,26 @@ public:
 
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) const override;
 
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
+  {
+    return mShouldFlatten;
+  }
+
+  void SetShouldFlattenAway(bool aShouldFlatten)
+  {
+    mShouldFlatten = aShouldFlatten;
+  }
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override
+  {
+    if (mShouldFlatten) {
+      return mozilla::LAYER_NONE;
+    }
+    return nsDisplayOwnLayer::GetLayerState(aBuilder, aManager, aParameters);
+  }
+
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) const override;
 
@@ -5109,6 +5129,7 @@ public:
 protected:
   ViewID mScrollParentId;
   bool mForceDispatchToContentRegion;
+  bool mShouldFlatten;
   nsSubDocumentFrame* mSubDocFrame;
 };
 
