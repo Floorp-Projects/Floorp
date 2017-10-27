@@ -284,10 +284,15 @@ TEST(ArenaAllocator, Clear)
 TEST(ArenaAllocator, Extensions)
 {
   ArenaAllocator<4096, 8> a;
-  const char* const kTestStr = "This is a test string.";
-  char* dup = mozilla::ArenaStrdup(kTestStr, a);
-  EXPECT_STREQ(dup, kTestStr);
 
+  // Test with raw strings.
+  const char* const kTestCStr = "This is a test string.";
+  char* c_dup = mozilla::ArenaStrdup(kTestCStr, a);
+  EXPECT_STREQ(c_dup, kTestCStr);
+
+  const char16_t* const kTestStr = u"This is a wide test string.";
+  char16_t* dup = mozilla::ArenaStrdup(kTestStr, a);
+  EXPECT_TRUE(nsString(dup).Equals(kTestStr));
   NS_NAMED_LITERAL_STRING(wideStr, "A wide string.");
   nsLiteralString::char_type* wide = mozilla::ArenaStrdup(wideStr, a);
   EXPECT_TRUE(wideStr.Equals(wide));

@@ -32,11 +32,11 @@ T* DuplicateString(const T* aSrc, const CheckedInt<size_t>& aLen,
  * @param aArena The arena to allocate the string copy out of.
  * @return An arena allocated null-terminated string.
  */
-template<size_t ArenaSize, size_t Alignment>
-char* ArenaStrdup(const char* aStr,
-                  ArenaAllocator<ArenaSize, Alignment>& aArena)
+template<typename T, size_t ArenaSize, size_t Alignment>
+T* ArenaStrdup(const T* aStr,
+               ArenaAllocator<ArenaSize, Alignment>& aArena)
 {
-  return detail::DuplicateString(aStr, strlen(aStr), aArena);
+  return detail::DuplicateString(aStr, nsCharTraits<T>::length(aStr), aArena);
 }
 
 /**
