@@ -35,7 +35,7 @@ const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
 const FLEXBOX_OPENED_PREF = "devtools.layout.flexbox.opened";
 const GRID_OPENED_PREF = "devtools.layout.grid.opened";
 
-class App extends PureComponent {
+class LayoutApp extends PureComponent {
   static get propTypes() {
     return {
       boxModel: PropTypes.shape(BoxModelTypes.boxModel).isRequired,
@@ -102,4 +102,4 @@ class App extends PureComponent {
   }
 }
 
-module.exports = connect(state => state)(App);
+module.exports = connect(state => state)(LayoutApp);

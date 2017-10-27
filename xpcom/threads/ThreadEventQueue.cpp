@@ -249,14 +249,14 @@ already_AddRefed<nsIThreadObserver>
 ThreadEventQueue<InnerQueueT>::GetObserver()
 {
   MutexAutoLock lock(mLock);
-  return do_AddRef(mObserver.get());
+  return do_AddRef(mObserver);
 }
 
 template<class InnerQueueT>
 already_AddRefed<nsIThreadObserver>
 ThreadEventQueue<InnerQueueT>::GetObserverOnThread()
 {
-  return do_AddRef(mObserver.get());
+  return do_AddRef(mObserver);
 }
 
 template<class InnerQueueT>

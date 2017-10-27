@@ -24,6 +24,7 @@
 #include "jsutil.h"
 
 #include "ds/BitArray.h"
+#include "gc/GCEnum.h"
 #include "gc/Memory.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
@@ -40,26 +41,13 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class FreeOp;
 
-extern bool
-RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone);
-
-#ifdef DEBUG
-
-// Barriers can't be triggered during backend Ion compilation, which may run on
-// a helper thread.
-extern bool
-CurrentThreadIsIonCompiling();
-#endif
-
-extern void
-TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const char* name);
-
 namespace gc {
 
 class Arena;
 class ArenaCellSet;
 class ArenaList;
 class SortedArenaList;
+class TenuredCell;
 struct Chunk;
 
 /*
@@ -67,7 +55,7 @@ struct Chunk;
  * estimated lifetime or lifetime requirements of objects allocated from that
  * site.
  */
-enum InitialHeap {
+enum InitialHeap : uint8_t {
     DefaultHeap,
     TenuredHeap
 };
@@ -241,103 +229,6 @@ FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
 static const size_t MAX_BACKGROUND_FINALIZE_KINDS =
     size_t(AllocKind::LIMIT) - size_t(AllocKind::OBJECT_LIMIT) / 2;
 
-/* Mark colors to pass to markIfUnmarked. */
-enum class MarkColor : uint32_t
-{
-    Black = 0,
-    Gray
-};
-
-class TenuredCell;
-
-// A GC cell is the base class for all GC things.
-struct Cell
-{
-  public:
-    MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
-    MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
-    MOZ_ALWAYS_INLINE TenuredCell& asTenured();
-
-    MOZ_ALWAYS_INLINE bool isMarkedAny() const;
-    MOZ_ALWAYS_INLINE bool isMarkedBlack() const;
-    MOZ_ALWAYS_INLINE bool isMarkedGray() const;
-
-    inline JSRuntime* runtimeFromActiveCooperatingThread() const;
-
-    // Note: Unrestricted access to the runtime of a GC thing from an arbitrary
-    // thread can easily lead to races. Use this method very carefully.
-    inline JSRuntime* runtimeFromAnyThread() const;
-
-    // May be overridden by GC thing kinds that have a compartment pointer.
-    inline JSCompartment* maybeCompartment() const { return nullptr; }
-
-    // The StoreBuffer used to record incoming pointers from the tenured heap.
-    // This will return nullptr for a tenured cell.
-    inline StoreBuffer* storeBuffer() const;
-
-    inline JS::TraceKind getTraceKind() const;
-
-    static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
-
-#ifdef DEBUG
-    inline bool isAligned() const;
-    void dump(js::GenericPrinter& out) const;
-    void dump() const;
-#endif
-
-  protected:
-    inline uintptr_t address() const;
-    inline Chunk* chunk() const;
-} JS_HAZ_GC_THING;
-
-// A GC TenuredCell gets behaviors that are valid for things in the Tenured
-// heap, such as access to the arena and mark bits.
-class TenuredCell : public Cell
-{
-  public:
-    // Construct a TenuredCell from a void*, making various sanity assertions.
-    static MOZ_ALWAYS_INLINE TenuredCell* fromPointer(void* ptr);
-    static MOZ_ALWAYS_INLINE const TenuredCell* fromPointer(const void* ptr);
-
-    // Mark bit management.
-    MOZ_ALWAYS_INLINE bool isMarkedAny() const;
-    MOZ_ALWAYS_INLINE bool isMarkedBlack() const;
-    MOZ_ALWAYS_INLINE bool isMarkedGray() const;
-
-    // The return value indicates if the cell went from unmarked to marked.
-    MOZ_ALWAYS_INLINE bool markIfUnmarked(MarkColor color = MarkColor::Black) const;
-    MOZ_ALWAYS_INLINE void markBlack() const;
-    MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell* src);
-
-    // Access to the arena.
-    inline Arena* arena() const;
-    inline AllocKind getAllocKind() const;
-    inline JS::TraceKind getTraceKind() const;
-    inline JS::Zone* zone() const;
-    inline JS::Zone* zoneFromAnyThread() const;
-    inline bool isInsideZone(JS::Zone* zone) const;
-
-    MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
-        return JS::shadow::Zone::asShadowZone(zone());
-    }
-    MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
-        return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
-    }
-
-    static MOZ_ALWAYS_INLINE void readBarrier(TenuredCell* thing);
-    static MOZ_ALWAYS_INLINE void writeBarrierPre(TenuredCell* thing);
-
-    static MOZ_ALWAYS_INLINE void writeBarrierPost(void* cellp, TenuredCell* prior,
-                                                   TenuredCell* next);
-
-    // Default implementation for kinds that don't require fixup.
-    void fixupAfterMovingGC() {}
-
-#ifdef DEBUG
-    inline bool isAligned() const;
-#endif
-};
-
 /* Cells are aligned to CellAlignShift, so the largest tagged null pointer is: */
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;
 
@@ -356,14 +247,6 @@ DivideAndRoundUp(size_t numerator, size_t divisor) {
 
 static_assert(ArenaSize % CellAlignBytes == 0,
               "Arena size must be a multiple of cell alignment");
-
-/*
- * We sometimes use an index to refer to a cell in an arena. The index for a
- * cell is found by dividing by the cell alignment so not all indicies refer to
- * valid cells.
- */
-const size_t ArenaCellIndexBytes = CellAlignBytes;
-const size_t MaxArenaCellIndex = ArenaSize / CellAlignBytes;
 
 /*
  * The mark bitmap has one bit per each possible cell start position. This
@@ -902,15 +785,6 @@ static_assert(ArenasPerChunk == 62, "Do not accidentally change our heap's densi
 static_assert(ArenasPerChunk == 252, "Do not accidentally change our heap's density.");
 #endif
 
-static inline void
-AssertValidColorBit(const TenuredCell* thing, ColorBit colorBit)
-{
-#ifdef DEBUG
-    Arena* arena = thing->arena();
-    MOZ_ASSERT(unsigned(colorBit) < arena->getThingSize() / CellBytesPerMarkBit);
-#endif
-}
-
 /* A chunk bitmap contains enough mark bits for all the cells in a chunk. */
 struct ChunkBitmap
 {
@@ -922,11 +796,11 @@ struct ChunkBitmap
     MOZ_ALWAYS_INLINE void getMarkWordAndMask(const TenuredCell* cell, ColorBit colorBit,
                                               uintptr_t** wordp, uintptr_t* maskp)
     {
+        MOZ_ASSERT(size_t(colorBit) < MarkBitsPerCell);
         detail::GetGCThingMarkWordAndMask(uintptr_t(cell), colorBit, wordp, maskp);
     }
 
     MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool markBit(const TenuredCell* cell, ColorBit colorBit) {
-        AssertValidColorBit(cell, colorBit);
         uintptr_t* word, mask;
         getMarkWordAndMask(cell, colorBit, &word, &mask);
         return *word & mask;
@@ -1175,82 +1049,6 @@ Arena::chunk() const
     return Chunk::fromAddress(address());
 }
 
-MOZ_ALWAYS_INLINE const TenuredCell&
-Cell::asTenured() const
-{
-    MOZ_ASSERT(isTenured());
-    return *static_cast<const TenuredCell*>(this);
-}
-
-MOZ_ALWAYS_INLINE TenuredCell&
-Cell::asTenured()
-{
-    MOZ_ASSERT(isTenured());
-    return *static_cast<TenuredCell*>(this);
-}
-
-MOZ_ALWAYS_INLINE bool
-Cell::isMarkedAny() const
-{
-    return !isTenured() || asTenured().isMarkedAny();
-}
-
-MOZ_ALWAYS_INLINE bool
-Cell::isMarkedBlack() const
-{
-    return !isTenured() || asTenured().isMarkedBlack();
-}
-
-MOZ_ALWAYS_INLINE bool
-Cell::isMarkedGray() const
-{
-    return isTenured() && asTenured().isMarkedGray();
-}
-
-inline JSRuntime*
-Cell::runtimeFromActiveCooperatingThread() const
-{
-    JSRuntime* rt = chunk()->trailer.runtime;
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    return rt;
-}
-
-inline JSRuntime*
-Cell::runtimeFromAnyThread() const
-{
-    return chunk()->trailer.runtime;
-}
-
-inline uintptr_t
-Cell::address() const
-{
-    uintptr_t addr = uintptr_t(this);
-    MOZ_ASSERT(addr % CellAlignBytes == 0);
-    MOZ_ASSERT(Chunk::withinValidRange(addr));
-    return addr;
-}
-
-Chunk*
-Cell::chunk() const
-{
-    uintptr_t addr = uintptr_t(this);
-    MOZ_ASSERT(addr % CellAlignBytes == 0);
-    addr &= ~ChunkMask;
-    return reinterpret_cast<Chunk*>(addr);
-}
-
-inline StoreBuffer*
-Cell::storeBuffer() const
-{
-    return chunk()->trailer.storeBuffer;
-}
-
-inline JS::TraceKind
-Cell::getTraceKind() const
-{
-    return isTenured() ? asTenured().getTraceKind() : JS::TraceKind::Object;
-}
-
 inline bool
 InFreeList(Arena* arena, void* thing)
 {
@@ -1258,202 +1056,6 @@ InFreeList(Arena* arena, void* thing)
     MOZ_ASSERT(Arena::isAligned(addr, arena->getThingSize()));
     return arena->inFreeList(addr);
 }
-
-/* static */ MOZ_ALWAYS_INLINE bool
-Cell::needWriteBarrierPre(JS::Zone* zone) {
-    return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
-}
-
-/* static */ MOZ_ALWAYS_INLINE TenuredCell*
-TenuredCell::fromPointer(void* ptr)
-{
-    MOZ_ASSERT(static_cast<TenuredCell*>(ptr)->isTenured());
-    return static_cast<TenuredCell*>(ptr);
-}
-
-/* static */ MOZ_ALWAYS_INLINE const TenuredCell*
-TenuredCell::fromPointer(const void* ptr)
-{
-    MOZ_ASSERT(static_cast<const TenuredCell*>(ptr)->isTenured());
-    return static_cast<const TenuredCell*>(ptr);
-}
-
-bool
-TenuredCell::isMarkedAny() const
-{
-    MOZ_ASSERT(arena()->allocated());
-    return chunk()->bitmap.isMarkedAny(this);
-}
-
-bool
-TenuredCell::isMarkedBlack() const
-{
-    MOZ_ASSERT(arena()->allocated());
-    return chunk()->bitmap.isMarkedBlack(this);
-}
-
-bool
-TenuredCell::isMarkedGray() const
-{
-    MOZ_ASSERT(arena()->allocated());
-    return chunk()->bitmap.isMarkedGray(this);
-}
-
-bool
-TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const
-{
-    return chunk()->bitmap.markIfUnmarked(this, color);
-}
-
-void
-TenuredCell::markBlack() const
-{
-    chunk()->bitmap.markBlack(this);
-}
-
-void
-TenuredCell::copyMarkBitsFrom(const TenuredCell* src)
-{
-    ChunkBitmap& bitmap = chunk()->bitmap;
-    bitmap.copyMarkBit(this, src, ColorBit::BlackBit);
-    bitmap.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
-}
-
-inline Arena*
-TenuredCell::arena() const
-{
-    MOZ_ASSERT(isTenured());
-    uintptr_t addr = address();
-    addr &= ~ArenaMask;
-    return reinterpret_cast<Arena*>(addr);
-}
-
-AllocKind
-TenuredCell::getAllocKind() const
-{
-    return arena()->getAllocKind();
-}
-
-JS::TraceKind
-TenuredCell::getTraceKind() const
-{
-    return MapAllocToTraceKind(getAllocKind());
-}
-
-JS::Zone*
-TenuredCell::zone() const
-{
-    JS::Zone* zone = arena()->zone;
-    MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
-    return zone;
-}
-
-JS::Zone*
-TenuredCell::zoneFromAnyThread() const
-{
-    return arena()->zone;
-}
-
-bool
-TenuredCell::isInsideZone(JS::Zone* zone) const
-{
-    return zone == arena()->zone;
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::readBarrier(TenuredCell* thing)
-{
-    MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    MOZ_ASSERT(thing);
-    MOZ_ASSERT(CurrentThreadCanAccessZone(thing->zoneFromAnyThread()));
-
-    // It would be good if barriers were never triggered during collection, but
-    // at the moment this can happen e.g. when rekeying tables containing
-    // read-barriered GC things after a moving GC.
-    //
-    // TODO: Fix this and assert we're not collecting if we're on the active
-    // thread.
-
-    JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
-    if (shadowZone->needsIncrementalBarrier()) {
-        // Barriers are only enabled on the active thread and are disabled while collecting.
-        MOZ_ASSERT(!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone));
-        Cell* tmp = thing;
-        TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "read barrier");
-        MOZ_ASSERT(tmp == thing);
-    }
-
-    if (thing->isMarkedGray()) {
-        // There shouldn't be anything marked grey unless we're on the active thread.
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
-        if (!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone))
-            JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(thing, thing->getTraceKind()));
-    }
-}
-
-void
-AssertSafeToSkipBarrier(TenuredCell* thing);
-
-/* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::writeBarrierPre(TenuredCell* thing)
-{
-    MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    if (!thing)
-        return;
-
-#ifdef JS_GC_ZEAL
-    // When verifying pre barriers we need to switch on all barriers, even
-    // those on the Atoms Zone. Normally, we never enter a parse task when
-    // collecting in the atoms zone, so will filter out atoms below.
-    // Unfortuantely, If we try that when verifying pre-barriers, we'd never be
-    // able to handle off thread parse tasks at all as we switch on the verifier any
-    // time we're not doing GC. This would cause us to deadlock, as off thread parsing
-    // is meant to resume after GC work completes. Instead we filter out any
-    // off thread barriers that reach us and assert that they would normally not be
-    // possible.
-    if (!CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread())) {
-        AssertSafeToSkipBarrier(thing);
-        return;
-    }
-#endif
-
-    JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
-    if (shadowZone->needsIncrementalBarrier()) {
-        MOZ_ASSERT(!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone));
-        Cell* tmp = thing;
-        TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "pre barrier");
-        MOZ_ASSERT(tmp == thing);
-    }
-}
-
-static MOZ_ALWAYS_INLINE void
-AssertValidToSkipBarrier(TenuredCell* thing)
-{
-    MOZ_ASSERT(!IsInsideNursery(thing));
-    MOZ_ASSERT_IF(thing, MapAllocToTraceKind(thing->getAllocKind()) != JS::TraceKind::Object);
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-TenuredCell::writeBarrierPost(void* cellp, TenuredCell* prior, TenuredCell* next)
-{
-    AssertValidToSkipBarrier(next);
-}
-
-#ifdef DEBUG
-bool
-Cell::isAligned() const
-{
-    if (!isTenured())
-        return true;
-    return asTenured().isAligned();
-}
-
-bool
-TenuredCell::isAligned() const
-{
-    return Arena::isAligned(address(), arena()->getThingSize());
-}
-#endif
 
 static const int32_t ChunkLocationOffsetFromLastByte =
     int32_t(gc::ChunkLocationOffset) - int32_t(gc::ChunkMask);

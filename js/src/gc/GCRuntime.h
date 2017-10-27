@@ -12,10 +12,12 @@
 #include "mozilla/Maybe.h"
 
 #include "jsfriendapi.h"
-#include "jsgc.h"
 
+#include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
-#include "gc/Heap.h"
+#include "gc/GCHelperState.h"
+#include "gc/GCMarker.h"
+#include "gc/GCParallelTask.h"
 #include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
@@ -40,6 +42,7 @@ class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
+enum class ShouldCheckThresholds;
 class SweepGroupsIter;
 class WeakCacheSweepIterator;
 
@@ -149,6 +152,13 @@ class GCSchedulingTunables
     UnprotectedData<size_t> gcMaxBytes_;
 
     /*
+     * JSGC_MAX_MALLOC_BYTES
+     *
+     * Initial malloc bytes threshold.
+     */
+    UnprotectedData<size_t> maxMallocBytes_;
+
+    /*
      * JSGC_MAX_NURSERY_BYTES
      *
      * Maximum nursery size for each zone group.
@@ -251,6 +261,7 @@ class GCSchedulingTunables
     GCSchedulingTunables();
 
     size_t gcMaxBytes() const { return gcMaxBytes_; }
+    size_t maxMallocBytes() const { return maxMallocBytes_; }
     size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
     size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
     float allocThresholdFactor() const { return allocThresholdFactor_; }
@@ -270,6 +281,8 @@ class GCSchedulingTunables
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
     void resetParameter(JSGCParamKey key, const AutoLockGC& lock);
+
+    void setMaxMallocBytes(size_t value);
 
 private:
     void setHighFrequencyLowLimit(uint64_t value);
@@ -653,7 +666,13 @@ typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy> R
 
 using AllocKinds = mozilla::EnumSet<AllocKind>;
 
-template <typename T>
+enum TriggerKind
+{
+    NoTrigger = 0,
+    IncrementalTrigger,
+    NonIncrementalTrigger
+};
+
 class MemoryCounter
 {
     // Bytes counter to measure memory pressure for GC scheduling. It counts
@@ -663,59 +682,76 @@ class MemoryCounter
     // GC trigger threshold for memory allocations.
     size_t maxBytes_;
 
-    // Initial GC trigger threshold.
-    GCLockData<size_t> initialMaxBytes_;
+    // The counter value at the start of a GC.
+    ActiveThreadData<size_t> bytesAtStartOfGC_;
 
-    // Whether a GC has been triggered as a result of bytes_ exceeding
-    // maxBytes_.
-    mozilla::Atomic<bool, mozilla::ReleaseAcquire> triggered_;
+    // Which kind of GC has been triggered if any.
+    mozilla::Atomic<TriggerKind, mozilla::ReleaseAcquire> triggered_;
 
   public:
-    MemoryCounter()
-      : bytes_(0),
-        maxBytes_(0),
-        initialMaxBytes_(0),
-        triggered_(false)
-    { }
-
-    void updateOnGC(const AutoLockGC& lock) {
-        if (isTooMuchMalloc())
-            maxBytes_ *= 2;
-        else
-            maxBytes_ = std::max(initialMaxBytes_.ref(), size_t(maxBytes_ * 0.9));
-        reset();
-    }
-
-    void setMax(size_t newMax, const AutoLockGC& lock) {
-        initialMaxBytes_ = newMax;
-        maxBytes_ = initialMaxBytes_;
-        reset();
-    }
-
-    bool update(T* owner, size_t bytes) {
-        bytes_ += bytes;
-        if (MOZ_UNLIKELY(isTooMuchMalloc())) {
-            if (!triggered_)
-                triggered_ = owner->triggerGCForTooMuchMalloc();
-        }
-        return triggered_;
-    }
-
-    void adopt(MemoryCounter<T>& other) {
-        bytes_ += other.bytes();
-        other.reset();
-    }
+    MemoryCounter();
 
     size_t bytes() const { return bytes_; }
     size_t maxBytes() const { return maxBytes_; }
-    size_t initialMaxBytes(const AutoLockGC& lock) const { return initialMaxBytes_; }
-    bool isTooMuchMalloc() const { return bytes_ >= maxBytes_; }
+    TriggerKind triggered() const { return triggered_; }
+
+    void setMax(size_t newMax, const AutoLockGC& lock);
+
+    void update(size_t bytes) {
+        bytes_ += bytes;
+    }
+
+    void adopt(MemoryCounter& other);
+
+    TriggerKind shouldTriggerGC(const GCSchedulingTunables& tunables) const {
+        if (MOZ_LIKELY(bytes_ < maxBytes_ * tunables.allocThresholdFactor()))
+            return NoTrigger;
+
+        if (bytes_ < maxBytes_)
+            return IncrementalTrigger;
+
+        return NonIncrementalTrigger;
+    }
+
+    bool shouldResetIncrementalGC(const GCSchedulingTunables& tunables) const {
+        return bytes_ > maxBytes_ * tunables.allocThresholdFactorAvoidInterrupt();
+    }
+
+    void recordTrigger(TriggerKind trigger);
+
+    void updateOnGCStart();
+    void updateOnGCEnd(const GCSchedulingTunables& tunables, const AutoLockGC& lock);
 
   private:
-    void reset() {
-        bytes_ = 0;
-        triggered_ = false;
-    }
+    void reset();
+};
+
+// A singly linked list of zones.
+class ZoneList
+{
+    static Zone * const End;
+
+    Zone* head;
+    Zone* tail;
+
+  public:
+    ZoneList();
+    ~ZoneList();
+
+    bool isEmpty() const;
+    Zone* front() const;
+
+    void append(Zone* zone);
+    void transferFrom(ZoneList& other);
+    void removeFront();
+    void clear();
+
+  private:
+    explicit ZoneList(Zone* singleZone);
+    void check() const;
+
+    ZoneList(const ZoneList& other) = delete;
+    ZoneList& operator=(const ZoneList& other) = delete;
 };
 
 class GCRuntime
@@ -740,7 +776,7 @@ class GCRuntime
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
     MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
-    void maybeAllocTriggerGC(Zone* zone, const AutoLockGC& lock);
+    void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
     // The return value indicates if we were able to do the GC.
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason,
                        size_t usedBytes, size_t thresholdBytes);
@@ -847,7 +883,16 @@ class GCRuntime
     MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
-    bool triggerGCForTooMuchMalloc() {
+    int32_t getMallocBytes() const { return mallocCounter.bytes(); }
+    size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
+    void setMaxMallocBytes(size_t value, const AutoLockGC& lock);
+
+    bool updateMallocCounter(size_t nbytes) {
+        mallocCounter.update(nbytes);
+        TriggerKind trigger = mallocCounter.shouldTriggerGC(tunables);
+        if (MOZ_LIKELY(trigger == NoTrigger) || trigger <= mallocCounter.triggered())
+            return false;
+
         if (!triggerGC(JS::gcreason::TOO_MUCH_MALLOC))
             return false;
 
@@ -855,15 +900,12 @@ class GCRuntime
         // to access mallocCounter here since triggerGC() will return false in
         // that case.
         stats().recordTrigger(mallocCounter.bytes(), mallocCounter.maxBytes());
+
+        mallocCounter.recordTrigger(trigger);
         return true;
     }
 
-    int32_t getMallocBytes() const { return mallocCounter.bytes(); }
-    size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
-    bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }
-    void setMaxMallocBytes(size_t value, const AutoLockGC& lock);
-    bool updateMallocCounter(size_t nbytes) { return mallocCounter.update(this, nbytes); }
-    void updateMallocCountersOnGC();
+    void updateMallocCountersOnGCStart();
 
     void setGCCallback(JSGCCallback callback, void* data);
     void callGCCallback(JSGCStatus status) const;
@@ -1422,7 +1464,7 @@ class GCRuntime
     CallbackVector<JSWeakPointerZonesCallback> updateWeakPointerZonesCallbacks;
     CallbackVector<JSWeakPointerCompartmentCallback> updateWeakPointerCompartmentCallbacks;
 
-    MemoryCounter<GCRuntime> mallocCounter;
+    MemoryCounter mallocCounter;
 
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
@@ -1448,7 +1490,7 @@ class GCRuntime
     BackgroundAllocTask allocTask;
     BackgroundDecommitTask decommitTask;
 
-    GCHelperState helperState;
+    js::GCHelperState helperState;
 
     /*
      * During incremental sweeping, this field temporarily holds the arenas of

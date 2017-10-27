@@ -11,7 +11,6 @@
 
 #include "vtune/jitprofiling.h"
 
-#include "jsgc.h"
 #include "jsscript.h"
 
 #include "jit/IonCode.h"

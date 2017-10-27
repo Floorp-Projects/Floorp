@@ -199,6 +199,8 @@ public:
 
   static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
 
+  static void InvalidateHandlers();
+
   bool DispatchTextChangeToHandler(bool aIsInsert, const nsString& aText,
                                    int32_t aStart, uint32_t aLen);
 

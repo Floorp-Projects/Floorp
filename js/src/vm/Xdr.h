@@ -12,8 +12,13 @@
 
 #include "jsatom.h"
 #include "jsfriendapi.h"
+#include "NamespaceImports.h"
+
+#include "js/TypeDecls.h"
 
 namespace js {
+
+class LifoAlloc;
 
 class XDRBufferBase
 {

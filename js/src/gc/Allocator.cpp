@@ -8,6 +8,7 @@
 
 #include "jscntxt.h"
 
+#include "gc/ArenaList.h"
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
@@ -297,7 +298,7 @@ GCRuntime::refillFreeListFromActiveCooperatingThread(JSContext* cx, AllocKind th
     Zone *zone = cx->zone();
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy(), "allocating while under GC");
 
-    return cx->arenas()->allocateFromArena(zone, thingKind, CheckThresholds);
+    return cx->arenas()->allocateFromArena(zone, thingKind, ShouldCheckThresholds::CheckThresholds);
 }
 
 /* static */ TenuredCell*
@@ -308,7 +309,7 @@ GCRuntime::refillFreeListFromHelperThread(JSContext* cx, AllocKind thingKind)
     Zone* zone = cx->zone();
     MOZ_ASSERT(!zone->wasGCStarted());
 
-    return cx->arenas()->allocateFromArena(zone, thingKind, CheckThresholds);
+    return cx->arenas()->allocateFromArena(zone, thingKind, ShouldCheckThresholds::CheckThresholds);
 }
 
 /* static */ TenuredCell*
@@ -323,7 +324,7 @@ GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind)
     MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
     MOZ_ASSERT_IF(!JS::CurrentThreadIsHeapMinorCollecting(), !rt->gc.isBackgroundSweeping());
 
-    return zone->arenas.allocateFromArena(zone, thingKind, DontCheckThresholds);
+    return zone->arenas.allocateFromArena(zone, thingKind, ShouldCheckThresholds::DontCheckThresholds);
 }
 
 TenuredCell*
@@ -415,15 +416,16 @@ GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind,
     MOZ_ASSERT(chunk->hasAvailableArenas());
 
     // Fail the allocation if we are over our heap size limits.
-    if (checkThresholds && usage.gcBytes() >= tunables.gcMaxBytes())
+    if ((checkThresholds != ShouldCheckThresholds::DontCheckThresholds) &&
+        (usage.gcBytes() >= tunables.gcMaxBytes()))
         return nullptr;
 
     Arena* arena = chunk->allocateArena(rt, zone, thingKind, lock);
     zone->usage.addGCArena();
 
     // Trigger an incremental slice if needed.
-    if (checkThresholds)
-        maybeAllocTriggerGC(zone, lock);
+    if (checkThresholds != ShouldCheckThresholds::DontCheckThresholds)
+        maybeAllocTriggerZoneGC(zone, lock);
 
     return arena;
 }

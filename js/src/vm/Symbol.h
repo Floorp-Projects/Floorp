@@ -15,7 +15,7 @@
 #include "jsapi.h"
 
 #include "gc/Barrier.h"
-#include "gc/Marking.h"
+#include "gc/Tracer.h"
 #include "js/GCHashTable.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

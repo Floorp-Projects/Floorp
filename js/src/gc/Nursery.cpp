@@ -14,7 +14,6 @@
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jsutil.h"
 
 #include "gc/GCInternals.h"
@@ -68,27 +67,43 @@ struct js::Nursery::Canary
 };
 #endif
 
+namespace js {
+struct NurseryChunk {
+    char data[Nursery::NurseryChunkUsableSize];
+    gc::ChunkTrailer trailer;
+    static NurseryChunk* fromChunk(gc::Chunk* chunk);
+    void init(JSRuntime* rt);
+    void poisonAndInit(JSRuntime* rt, uint8_t poison);
+    uintptr_t start() const { return uintptr_t(&data); }
+    uintptr_t end() const { return uintptr_t(&trailer); }
+    gc::Chunk* toChunk(JSRuntime* rt);
+};
+static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
+              "Nursery chunk size must match gc::Chunk size.");
+
+} /* namespace js */
+
 inline void
-js::Nursery::NurseryChunk::poisonAndInit(JSRuntime* rt, uint8_t poison)
+js::NurseryChunk::poisonAndInit(JSRuntime* rt, uint8_t poison)
 {
     JS_POISON(this, poison, ChunkSize);
     init(rt);
 }
 
 inline void
-js::Nursery::NurseryChunk::init(JSRuntime* rt)
+js::NurseryChunk::init(JSRuntime* rt)
 {
     new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
 
-/* static */ inline js::Nursery::NurseryChunk*
-js::Nursery::NurseryChunk::fromChunk(Chunk* chunk)
+/* static */ inline js::NurseryChunk*
+js::NurseryChunk::fromChunk(Chunk* chunk)
 {
     return reinterpret_cast<NurseryChunk*>(chunk);
 }
 
 inline Chunk*
-js::Nursery::NurseryChunk::toChunk(JSRuntime* rt)
+js::NurseryChunk::toChunk(JSRuntime* rt)
 {
     auto chunk = reinterpret_cast<Chunk*>(this);
     chunk->init(rt);
@@ -1070,6 +1085,13 @@ js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj)
 {
     MOZ_ASSERT(IsInsideNursery(obj));
     return dictionaryModeObjects_.append(obj);
+}
+
+uintptr_t
+js::Nursery::currentEnd() const
+{
+    MOZ_ASSERT(currentEnd_ == chunk(currentChunk_).end());
+    return currentEnd_;
 }
 
 void

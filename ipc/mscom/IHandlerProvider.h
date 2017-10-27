@@ -15,11 +15,13 @@
 namespace mozilla {
 namespace mscom {
 
+struct IInterceptor;
+
 struct HandlerProvider
 {
   virtual STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) = 0;
-  virtual STDMETHODIMP GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize) = 0;
-  virtual STDMETHODIMP WriteHandlerPayload(NotNull<IStream*> aStream) = 0;
+  virtual STDMETHODIMP GetHandlerPayloadSize(NotNull<IInterceptor*> aInterceptor, NotNull<DWORD*> aOutPayloadSize) = 0;
+  virtual STDMETHODIMP WriteHandlerPayload(NotNull<IInterceptor*> aInterceptor, NotNull<IStream*> aStream) = 0;
   virtual STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) = 0;
 };
 

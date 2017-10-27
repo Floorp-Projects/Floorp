@@ -18,7 +18,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscript.h"
