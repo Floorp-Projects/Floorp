@@ -152,7 +152,7 @@ this.takeshot = (function() {
       let enc = new TextEncoder("utf-8");
       body = enc.encode(body);
       body = concatBuffers(body.buffer, blobAsBuffer);
-      let tail = "\r\n" + "--" + boundary + "--";
+      let tail = `\r\n--${boundary}--`;
       tail = enc.encode(tail);
       body = concatBuffers(body, tail.buffer);
       return {
@@ -171,12 +171,12 @@ this.takeshot = (function() {
           {shot: JSON.stringify(shot.asJson())},
           "blob", "screenshot.png", blob
         );
-      } else {
-        return {
-          "content-type": "application/json",
-          body: JSON.stringify(shot.asJson())
-        };
       }
+      return {
+        "content-type": "application/json",
+        body: JSON.stringify(shot.asJson())
+      };
+
     }).then((submission) => {
       headers["content-type"] = submission["content-type"];
       sendEvent("upload", "started", {eventValue: Math.floor(submission.body.length / 1000)});
