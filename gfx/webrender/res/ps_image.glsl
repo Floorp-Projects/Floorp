@@ -99,7 +99,7 @@ void main(void) {
     vec2 upper_bound_mask = vec2(0.0);
 #endif
 
-    alpha = min(alpha, do_clip());
+    alpha *= do_clip();
 
     // We calculate the particular tile this fragment belongs to, taking into
     // account the spacing in between tiles. We only paint if our fragment does

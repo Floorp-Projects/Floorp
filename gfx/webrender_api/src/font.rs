@@ -243,14 +243,14 @@ impl Default for FontInstancePlatformOptions {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct FontInstancePlatformOptions {
-    pub unused: u32,
+    pub font_smoothing: bool,
 }
 
 #[cfg(target_os = "macos")]
 impl Default for FontInstancePlatformOptions {
     fn default() -> FontInstancePlatformOptions {
         FontInstancePlatformOptions {
-            unused: 0,
+            font_smoothing: true,
         }
     }
 }

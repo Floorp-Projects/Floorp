@@ -29,13 +29,13 @@ void main(void) {
     vec4 src_rect = src_task.data0;
     vec4 target_rect = task.data0;
 
-#if defined WR_FEATURE_COLOR
+#if defined WR_FEATURE_COLOR_TARGET
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
 #else
     vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
 #endif
     vUv.z = src_task.data1.x;
-    vBlurRadius = 3 * int(task.data1.y);
+    vBlurRadius = int(3.0 * task.data1.y);
     vSigma = task.data1.y;
 
     switch (aBlurDirection) {
@@ -69,7 +69,7 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 
-#if defined WR_FEATURE_COLOR
+#if defined WR_FEATURE_COLOR_TARGET
 #define SAMPLE_TYPE vec4
 #define SAMPLE_TEXTURE(uv)  texture(sCacheRGBA8, uv)
 #else
@@ -106,7 +106,7 @@ void main(void) {
     gauss_coefficient_sum += gauss_coefficient.x;
     gauss_coefficient.xy *= gauss_coefficient.yz;
 
-    for (int i=1 ; i <= vBlurRadius/2 ; ++i) {
+    for (int i=1 ; i <= vBlurRadius ; ++i) {
         vec2 offset = vOffsetScale * float(i);
 
         vec2 st0 = clamp(vUv.xy - offset, vUvRect.xy, vUvRect.zw);

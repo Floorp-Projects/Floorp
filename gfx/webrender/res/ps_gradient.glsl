@@ -107,7 +107,7 @@ void main(void) {
     vec2 local_pos = vPos;
 #endif
 
-    alpha = min(alpha, do_clip());
+    alpha *= do_clip();
     oFragColor = dither(vColor * alpha);
 }
 #endif
