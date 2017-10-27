@@ -210,7 +210,7 @@ this.PageActions = {
       // A non-built-in action, like a non-bundled extension potentially.
       // Keep this list sorted by title.
       let index = BinarySearch.insertionIndexOf((a1, a2) => {
-        return a1.title.localeCompare(a2.title);
+        return a1.getTitle().localeCompare(a2.getTitle());
       }, this._nonBuiltInActions, action);
       this._nonBuiltInActions.splice(index, 0, action);
     }
@@ -351,38 +351,6 @@ this.PageActions = {
   },
 
   /**
-   * Call this when an action's iconURL changes.
-   *
-   * @param  action (Action object, required)
-   *         The action whose iconURL property changed.
-   */
-  onActionSetIconURL(action) {
-    if (!this.actionForID(action.id)) {
-      // This may be called before the action has been added.
-      return;
-    }
-    for (let bpa of allBrowserPageActions()) {
-      bpa.updateActionIconURL(action);
-    }
-  },
-
-  /**
-   * Call this when an action's title changes.
-   *
-   * @param  action (Action object, required)
-   *         The action whose title property changed.
-   */
-  onActionSetTitle(action) {
-    if (!this.actionForID(action.id)) {
-      // This may be called before the action has been added.
-      return;
-    }
-    for (let bpa of allBrowserPageActions()) {
-      bpa.updateActionTitle(action);
-    }
-  },
-
-  /**
    * Call this when an action's shownInUrlbar property changes.
    *
    * @param  action (Action object, required)
@@ -477,93 +445,104 @@ this.PageActions = {
 /**
  * A single page action.
  *
- * @param  options (object, required)
- *         An object with the following properties:
- *         @param id (string, required)
- *                The action's ID.  Treat this like the ID of a DOM node.
- *         @param title (string, required)
- *                The action's title.
- *         @param anchorIDOverride (string, optional)
- *                Pass a string for this property if to override which element
- *                that the temporary panel is anchored to.
- *         @param iconURL (string, optional)
- *                The URL of the action's icon.  Usually you want to specify an
- *                icon in CSS, but this option is useful if that would be a pain
- *                for some reason -- like your code is in an embedded
- *                WebExtension.
- *         @param nodeAttributes (object, optional)
- *                An object of name-value pairs.  Each pair will be added as
- *                an attribute to DOM nodes created for this action.
- *         @param onBeforePlacedInWindow (function, optional)
- *                Called before the action is placed in the window:
- *                onBeforePlacedInWindow(window)
- *                * window: The window that the action will be placed in.
- *         @param onCommand (function, optional)
- *                Called when the action is clicked, but only if it has neither
- *                a subview nor an iframe:
- *                onCommand(event, buttonNode)
- *                * event: The triggering event.
- *                * buttonNode: The button node that was clicked.
- *         @param onIframeHiding (function, optional)
- *                Called when the action's iframe is hiding:
- *                onIframeHiding(iframeNode, parentPanelNode)
- *                * iframeNode: The iframe.
- *                * parentPanelNode: The panel node in which the iframe is
- *                  shown.
- *         @param onIframeHidden (function, optional)
- *                Called when the action's iframe is hidden:
- *                onIframeHidden(iframeNode, parentPanelNode)
- *                * iframeNode: The iframe.
- *                * parentPanelNode: The panel node in which the iframe is
- *                  shown.
- *         @param onIframeShown (function, optional)
- *                Called when the action's iframe is shown to the user:
- *                onIframeShown(iframeNode, parentPanelNode)
- *                * iframeNode: The iframe.
- *                * parentPanelNode: The panel node in which the iframe is
- *                  shown.
- *         @param onLocationChange (function, optional)
- *                Called after tab switch or when the current <browser>'s
- *                location changes:
- *                onLocationChange(browserWindow)
- *                * browserWindow: The browser window containing the tab switch
- *                  or changed <browser>.
- *         @param onPlacedInPanel (function, optional)
- *                Called when the action is added to the page action panel in
- *                a browser window:
- *                onPlacedInPanel(buttonNode)
- *                * buttonNode: The action's node in the page action panel.
- *         @param onPlacedInUrlbar (function, optional)
- *                Called when the action is added to the urlbar in a browser
- *                window:
- *                onPlacedInUrlbar(buttonNode)
- *                * buttonNode: The action's node in the urlbar.
- *         @param onShowingInPanel (function, optional)
- *                Called when a browser window's page action panel is showing:
- *                onShowingInPanel(buttonNode)
- *                * buttonNode: The action's node in the page action panel.
- *         @param shownInUrlbar (bool, optional)
- *                Pass true to show the action in the urlbar, false otherwise.
- *                False by default.
- *         @param subview (object, optional)
- *                An options object suitable for passing to the Subview
- *                constructor, if you'd like the action to have a subview.  See
- *                the subview constructor for info on this object's properties.
- *         @param tooltip (string, optional)
- *                The action's button tooltip text.
- *         @param urlbarIDOverride (string, optional)
- *                Usually the ID of the action's button in the urlbar will be
- *                generated automatically.  Pass a string for this property to
- *                override that with your own ID.
- *         @param wantsIframe (bool, optional)
- *                Pass true to make an action that shows an iframe in a panel
- *                when clicked.
+ * Each action can have both per-browser-window state and global state.
+ * Per-window state takes precedence over global state.  This is reflected in
+ * the title, tooltip, disabled, and icon properties.  Each of these properties
+ * has a getter method and setter method that takes a browser window.  Pass null
+ * to get the action's global state.  Pass a browser window to get the per-
+ * window state.  However, if you pass a window and the action has no state for
+ * that window, then the global state will be returned.
+ *
+ * `options` is a required object with the following properties.  Regarding the
+ * properties discussed in the previous paragraph, the values in `options` set
+ * global state.
+ *
+ * @param id (string, required)
+ *        The action's ID.  Treat this like the ID of a DOM node.
+ * @param title (string, required)
+ *        The action's title.
+ * @param anchorIDOverride (string, optional)
+ *        Pass a string to override the node to which the action's activated-
+ *        action panel is anchored.
+ * @param disabled (bool, optional)
+ *        Pass true to cause the action to be disabled initially in all browser
+ *        windows.  False by default.
+ * @param iconURL (string or object, optional)
+ *        The URL string of the action's icon.  Usually you want to specify an
+ *        icon in CSS, but this option is useful if that would be a pain for
+ *        some reason.  You can also pass an object that maps pixel sizes to
+ *        URLs, like { 16: url16, 32: url32 }.  The best size for the user's
+ *        screen will be used.
+ * @param nodeAttributes (object, optional)
+ *        An object of name-value pairs.  Each pair will be added as an
+ *        attribute to DOM nodes created for this action.
+ * @param onBeforePlacedInWindow (function, optional)
+ *        Called before the action is placed in the window:
+ *        onBeforePlacedInWindow(window)
+ *        * window: The window that the action will be placed in.
+ * @param onCommand (function, optional)
+ *        Called when the action is clicked, but only if it has neither a
+ *        subview nor an iframe:
+ *        onCommand(event, buttonNode)
+ *        * event: The triggering event.
+ *        * buttonNode: The button node that was clicked.
+ * @param onIframeHiding (function, optional)
+ *        Called when the action's iframe is hiding:
+ *        onIframeHiding(iframeNode, parentPanelNode)
+ *        * iframeNode: The iframe.
+ *        * parentPanelNode: The panel node in which the iframe is shown.
+ * @param onIframeHidden (function, optional)
+ *        Called when the action's iframe is hidden:
+ *        onIframeHidden(iframeNode, parentPanelNode)
+ *        * iframeNode: The iframe.
+ *        * parentPanelNode: The panel node in which the iframe is shown.
+ * @param onIframeShown (function, optional)
+ *        Called when the action's iframe is shown to the user:
+ *        onIframeShown(iframeNode, parentPanelNode)
+ *        * iframeNode: The iframe.
+ *        * parentPanelNode: The panel node in which the iframe is shown.
+ * @param onLocationChange (function, optional)
+ *        Called after tab switch or when the current <browser>'s location
+ *        changes:
+ *        onLocationChange(browserWindow)
+ *        * browserWindow: The browser window containing the tab switch or
+ *          changed <browser>.
+ * @param onPlacedInPanel (function, optional)
+ *        Called when the action is added to the page action panel in a browser
+ *        window:
+ *        onPlacedInPanel(buttonNode)
+ *        * buttonNode: The action's node in the page action panel.
+ * @param onPlacedInUrlbar (function, optional)
+ *        Called when the action is added to the urlbar in a browser window:
+ *        onPlacedInUrlbar(buttonNode)
+ *        * buttonNode: The action's node in the urlbar.
+ * @param onShowingInPanel (function, optional)
+ *        Called when a browser window's page action panel is showing:
+ *        onShowingInPanel(buttonNode)
+ *        * buttonNode: The action's node in the page action panel.
+ * @param shownInUrlbar (bool, optional)
+ *        Pass true to show the action in the urlbar, false otherwise.  False by
+ *        default.
+ * @param subview (object, optional)
+ *        An options object suitable for passing to the Subview constructor, if
+ *        you'd like the action to have a subview.  See the subview constructor
+ *        for info on this object's properties.
+ * @param tooltip (string, optional)
+ *        The action's button tooltip text.
+ * @param urlbarIDOverride (string, optional)
+ *        Usually the ID of the action's button in the urlbar will be generated
+ *        automatically.  Pass a string for this property to override that with
+ *        your own ID.
+ * @param wantsIframe (bool, optional)
+ *        Pass true to make an action that shows an iframe in a panel when
+ *        clicked.
  */
 function Action(options) {
   setProperties(this, options, {
     id: true,
     title: !options._isSeparator,
     anchorIDOverride: false,
+    disabled: false,
     iconURL: false,
     labelForHistogram: false,
     nodeAttributes: false,
@@ -609,18 +588,6 @@ function Action(options) {
 
 Action.prototype = {
   /**
-   * The action's icon URL (string, nullable)
-   */
-  get iconURL() {
-    return this._iconURL;
-  },
-  set iconURL(url) {
-    this._iconURL = url;
-    PageActions.onActionSetIconURL(this);
-    return this._iconURL;
-  },
-
-  /**
    * The action's ID (string, nonnull)
    */
   get id() {
@@ -650,26 +617,113 @@ Action.prototype = {
   },
 
   /**
+   * The action's disabled state (bool, nonnull)
+   */
+  getDisabled(browserWindow = null) {
+    return !!this._getProperty("disabled", browserWindow);
+  },
+  setDisabled(value, browserWindow = null) {
+    return this._setProperty("disabled", !!value, browserWindow);
+  },
+
+  /**
+   * The action's icon URL string, or an object mapping sizes to URL strings
+   * (string or object, nullable)
+   */
+  getIconURL(browserWindow = null) {
+    return this._getProperty("iconURL", browserWindow);
+  },
+  setIconURL(value, browserWindow = null) {
+    return this._setProperty("iconURL", value, browserWindow);
+  },
+
+  /**
    * The action's title (string, nonnull)
    */
-  get title() {
-    return this._title;
+  getTitle(browserWindow = null) {
+    return this._getProperty("title", browserWindow);
   },
-  set title(title) {
-    this._title = title || "";
-    PageActions.onActionSetTitle(this);
-    return this._title;
+  setTitle(value, browserWindow = null) {
+    return this._setProperty("title", value, browserWindow);
   },
 
   /**
    * The action's tooltip (string, nullable)
    */
-  get tooltip() {
-    return this._tooltip;
+  getTooltip(browserWindow = null) {
+    return this._getProperty("tooltip", browserWindow);
+  },
+  setTooltip(value, browserWindow = null) {
+    return this._setProperty("tooltip", value, browserWindow);
   },
 
   /**
-   * Override for the ID of the action's temporary panel anchor (string, nullable)
+   * Sets a property, optionally for a particular browser window.
+   *
+   * @param  name (string, required)
+   *         The (non-underscored) name of the property.
+   * @param  value
+   *         The value.
+   * @param  browserWindow (DOM window, optional)
+   *         If given, then the property will be set in this window's state, not
+   *         globally.
+   */
+  _setProperty(name, value, browserWindow) {
+    if (!browserWindow) {
+      // Set the global state.
+      this[`_${name}`] = value;
+    } else {
+      // Set the per-window state.
+      let props = this._propertiesByBrowserWindow.get(browserWindow);
+      if (!props) {
+        props = {};
+        this._propertiesByBrowserWindow.set(browserWindow, props);
+      }
+      props[name] = value;
+    }
+    // This may be called before the action has been added.
+    if (PageActions.actionForID(this.id)) {
+      for (let bpa of allBrowserPageActions(browserWindow)) {
+        bpa.updateAction(this, name);
+      }
+    }
+    return value;
+  },
+
+  /**
+   * Gets a property, optionally for a particular browser window.
+   *
+   * @param  name (string, required)
+   *         The (non-underscored) name of the property.
+   * @param  browserWindow (DOM window, optional)
+   *         If given, then the property will be fetched from this window's
+   *         state.  If the property does not exist in the window's state, or if
+   *         no window is given, then the global value is returned.
+   * @return The property value.
+   */
+  _getProperty(name, browserWindow) {
+    if (browserWindow) {
+      // Try the per-window state.
+      let props = this._propertiesByBrowserWindow.get(browserWindow);
+      if (props && name in props) {
+        return props[name];
+      }
+    }
+    // Fall back to the global state.
+    return this[`_${name}`];
+  },
+
+  // maps browser windows => object with properties for that window
+  get _propertiesByBrowserWindow() {
+    if (!this.__propertiesByBrowserWindow) {
+      this.__propertiesByBrowserWindow = new WeakMap();
+    }
+    return this.__propertiesByBrowserWindow;
+  },
+
+  /**
+   * Override for the ID of the action's activated-action panel anchor (string,
+   * nullable)
    */
   get anchorIDOverride() {
     return this._anchorIDOverride;
@@ -698,6 +752,43 @@ Action.prototype = {
 
   get labelForHistogram() {
     return this._labelForHistogram || this._id;
+  },
+
+  /**
+   * Returns the URL of the best icon to use given a preferred size.  The best
+   * icon is the one with the smallest size that's equal to or bigger than the
+   * preferred size.  Returns null if the action has no icon URL.
+   *
+   * @param  peferredSize (number, required)
+   *         The icon size you prefer.
+   * @return The URL of the best icon, or null.
+   */
+  iconURLForSize(preferredSize, browserWindow) {
+    let iconURL = this.getIconURL(browserWindow);
+    if (!iconURL) {
+      return null;
+    }
+    if (typeof(iconURL) == "string") {
+      return iconURL;
+    }
+    if (typeof(iconURL) == "object") {
+      // This case is copied from ExtensionParent.jsm so that our image logic is
+      // the same, so that WebExtensions page action tests that deal with icons
+      // pass.
+      let bestSize = null;
+      if (iconURL[preferredSize]) {
+        bestSize = preferredSize;
+      } else if (iconURL[2 * preferredSize]) {
+        bestSize = 2 * preferredSize;
+      } else {
+        let sizes = Object.keys(iconURL)
+                          .map(key => parseInt(key, 10))
+                          .sort((a, b) => a - b);
+        bestSize = sizes.find(candidate => candidate > preferredSize) || sizes.pop();
+      }
+      return iconURL[bestSize];
+    }
+    return null;
   },
 
   /**
@@ -846,25 +937,22 @@ this.PageActions.Action = Action;
 
 /**
  * A Subview represents a PanelUI panelview that your actions can show.
+ * `options` is a required object with the following properties.
  *
- * @param  options (object, required)
- *         An object with the following properties:
- *         @param buttons (array, optional)
- *                An array of buttons to show in the subview.  Each item in the
- *                array must be an options object suitable for passing to the
- *                Button constructor.  See the Button constructor for
- *                information on these objects' properties.
- *         @param onPlaced (function, optional)
- *                Called when the subview is added to its parent panel in a
- *                browser window:
- *                onPlaced(panelViewNode)
- *                * panelViewNode: The panelview node represented by this
- *                  Subview.
- *         @param onShowing (function, optional)
- *                Called when the subview is showing in a browser window:
- *                onShowing(panelViewNode)
- *                * panelViewNode: The panelview node represented by this
- *                  Subview.
+ * @param buttons (array, optional)
+ *        An array of buttons to show in the subview.  Each item in the array
+ *        must be an options object suitable for passing to the Button
+ *        constructor.  See the Button constructor for information on these
+ *        objects' properties.
+ * @param onPlaced (function, optional)
+ *        Called when the subview is added to its parent panel in a browser
+ *        window:
+ *        onPlaced(panelViewNode)
+ *        * panelViewNode: The panelview node represented by this Subview.
+ * @param onShowing (function, optional)
+ *        Called when the subview is showing in a browser window:
+ *        onShowing(panelViewNode)
+ *        * panelViewNode: The panelview node represented by this Subview.
  */
 function Subview(options) {
   setProperties(this, options, {
@@ -914,26 +1002,24 @@ this.PageActions.Subview = Subview;
 
 
 /**
- * A button that can be shown in a subview.
+ * A button that can be shown in a subview.  `options` is a required object with
+ * the following properties.
  *
- * @param  options (object, required)
- *         An object with the following properties:
- *         @param id (string, required)
- *                The button's ID.  This will not become the ID of a DOM node by
- *                itself, but it will be used to generate DOM node IDs.  But in
- *                terms of spaces and weird characters and such, do treat this
- *                like a DOM node ID.
- *         @param title (string, required)
- *                The button's title.
- *         @param disabled (bool, required)
- *                Pass true to disable the button.
- *         @param onCommand (function, optional)
- *                Called when the button is clicked:
- *                onCommand(event, buttonNode)
- *                * event: The triggering event.
- *                * buttonNode: The node that was clicked.
- *         @param shortcut (string, optional)
- *                The button's shortcut text.
+ * @param id (string, required)
+ *        The button's ID.  This will not become the ID of a DOM node by itself,
+ *        but it will be used to generate DOM node IDs.  But in terms of spaces
+ *        and weird characters and such, do treat this like a DOM node ID.
+ * @param title (string, required)
+ *        The button's title.
+ * @param disabled (bool, required)
+ *        Pass true to disable the button.
+ * @param onCommand (function, optional)
+ *        Called when the button is clicked:
+ *        onCommand(event, buttonNode)
+ *        * event: The triggering event.
+ *        * buttonNode: The node that was clicked.
+ * @param shortcut (string, optional)
+ *        The button's shortcut text.
  */
 function Button(options) {
   setProperties(this, options, {
@@ -1014,6 +1100,8 @@ var gBuiltInActions = [
     id: ACTION_ID_BOOKMARK,
     urlbarIDOverride: "star-button-box",
     _urlbarNodeInMarkup: true,
+    // The title is set in browser-pageActions.js by calling
+    // BookmarkingUI.updateBookmarkPageMenuItem().
     title: "",
     shownInUrlbar: true,
     nodeAttributes: {
@@ -1105,16 +1193,33 @@ function browserPageActions(obj) {
 
 /**
  * A generator function for all open browser windows.
+ *
+ * @param browserWindow (DOM window, optional)
+ *        If given, then only this window will be yielded.  That may sound
+ *        pointless, but it can make callers nicer to write since they don't
+ *        need two separate cases, one where a window is given and another where
+ *        it isn't.
  */
-function* allBrowserWindows() {
+function* allBrowserWindows(browserWindow = null) {
+  if (browserWindow) {
+    yield browserWindow;
+    return;
+  }
   let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     yield windows.getNext();
   }
 }
 
-function* allBrowserPageActions() {
-  for (let win of allBrowserWindows()) {
+/**
+ * A generator function for BrowserPageActions objects in all open windows.
+ *
+ * @param browserWindow (DOM window, optional)
+ *        If given, then the BrowserPageActions for only this window will be
+ *        yielded.
+ */
+function* allBrowserPageActions(browserWindow = null) {
+  for (let win of allBrowserWindows(browserWindow)) {
     yield browserPageActions(win);
   }
 }
