@@ -847,7 +847,7 @@ struct GetDoublyLinkedListElement<arena_chunk_t>
 
 struct arena_run_t
 {
-#if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   uint32_t magic;
 #define ARENA_RUN_MAGIC 0x384adf93
 #endif
@@ -899,7 +899,7 @@ struct arena_bin_t
 
 struct arena_t
 {
-#if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   uint32_t mMagic;
 #define ARENA_MAGIC 0x947d3d24
 #endif
@@ -2213,7 +2213,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
   void* ret;
   unsigned i, mask, bit, regind;
 
-  MOZ_ASSERT(run->magic == ARENA_RUN_MAGIC);
+  MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
   MOZ_ASSERT(run->regs_minelm < bin->regs_mask_nelms);
 
   // Move the first check outside the loop, so that run->regs_minelm can
@@ -2303,7 +2303,7 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
   // clang-format on
   unsigned diff, regind, elm, bit;
 
-  MOZ_ASSERT(run->magic == ARENA_RUN_MAGIC);
+  MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
   MOZ_ASSERT(((sizeof(size_invs)) / sizeof(unsigned)) + 3 >=
              (SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN));
 
@@ -2875,7 +2875,7 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   run->regs_minelm = 0;
 
   run->nfree = aBin->nregs;
-#if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   run->magic = ARENA_RUN_MAGIC;
 #endif
 
@@ -3314,7 +3314,7 @@ isalloc(const void* aPtr)
   auto chunk = GetChunkForPtr(aPtr);
   if (chunk != aPtr) {
     // Region.
-    MOZ_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
+    MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
 
     return arena_salloc(aPtr);
   }
@@ -3512,7 +3512,7 @@ arena_t::DallocSmall(arena_chunk_t* aChunk,
       MOZ_DIAGNOSTIC_ASSERT(bin->runs.Search(run_mapelm) == run_mapelm);
       bin->runs.Remove(run_mapelm);
     }
-#if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
     run->magic = 0;
 #endif
     DallocRun(run, true);
@@ -3837,7 +3837,7 @@ arena_t::Init()
     memset(&bin->stats, 0, sizeof(malloc_bin_stats_t));
   }
 
-#if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mMagic = ARENA_MAGIC;
 #endif
 
