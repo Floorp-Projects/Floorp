@@ -40,6 +40,14 @@
       }
     }
   },
+  "imageCroppedWarning": {
+    "message": "이 이미지는 $PIXELS$px로 잘렸습니다.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "문제가 발생했습니다."
   },
@@ -81,6 +89,12 @@
   },
   "tourBodyIntro": {
     "message": "Firefox를 떠나지 않은 채로 찍고, 저장하고, 공유하세요."
+  },
+  "tourHeaderPageAction": {
+    "message": "새로운 저장방법"
+  },
+  "tourBodyPageAction": {
+    "message": "스크린 샷을 찍고 싶을 때는 언제든지 주소창의 페이지 작업 메뉴를 열어주세요."
   },
   "tourHeaderClickAndDrag": {
     "message": "원하는 것을 캡춰하세요"
