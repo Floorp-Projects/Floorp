@@ -63,17 +63,6 @@ void main(void) {
                                  offset,
                                  vGradientRepeat);
 
-    // Un-premultiply the color from sampling the gradient.
-    if (color.a > 0.0) {
-        color.rgb /= color.a;
-
-        // Apply the clip mask
-        color.a = min(color.a, do_clip());
-
-        // Pre-multiply the result.
-        color.rgb *= color.a;
-    }
-
-    oFragColor = color;
+    oFragColor = color * do_clip();
 }
 #endif

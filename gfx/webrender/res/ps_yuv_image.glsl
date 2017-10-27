@@ -162,7 +162,7 @@ void main(void) {
     vec2 relative_pos_in_rect = vLocalPos;
 #endif
 
-    alpha = min(alpha, do_clip());
+    alpha *= do_clip();
 
     // We clamp the texture coordinates to the half-pixel offset from the borders
     // in order to avoid sampling outside of the texture area.

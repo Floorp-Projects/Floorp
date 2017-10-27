@@ -56,6 +56,6 @@ void main(void) {
         vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
     float clip_alpha = texture(sColor0, vec3(source_uv, vLayer)).r; //careful: texture has type A8
 
-    oFragColor = vec4(min(alpha, clip_alpha), 1.0, 1.0, 1.0);
+    oFragColor = vec4(alpha * clip_alpha, 1.0, 1.0, 1.0);
 }
 #endif

@@ -513,6 +513,7 @@ impl ClipScrollTree {
             NodeType::Clip(ref info) => {
                 pt.new_level("Clip".to_owned());
 
+                pt.add_item(format!("id: {:?}", id));
                 let clips = clip_store.get(&info.clip_sources).clips();
                 pt.new_level(format!("Clip Sources [{}]", clips.len()));
                 for source in clips {
@@ -522,14 +523,17 @@ impl ClipScrollTree {
             }
             NodeType::ReferenceFrame(ref info) => {
                 pt.new_level(format!("ReferenceFrame {:?}", info.transform));
+                pt.add_item(format!("id: {:?}", id));
             }
             NodeType::ScrollFrame(scrolling_info) => {
                 pt.new_level(format!("ScrollFrame"));
+                pt.add_item(format!("id: {:?}", id));
                 pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll.offset: {:?}", scrolling_info.offset));
             }
             NodeType::StickyFrame(sticky_frame_info, sticky_offset) => {
                 pt.new_level(format!("StickyFrame"));
+                pt.add_item(format!("id: {:?}", id));
                 pt.add_item(format!("sticky info: {:?}", sticky_frame_info));
                 pt.add_item(format!("sticky offset: {:?}", sticky_offset));
             }
