@@ -301,8 +301,29 @@ void PlatformThread::Run() {
 #if defined(WEBRTC_WIN)
 void PlatformUIThread::Run() {
   RTC_CHECK(InternalInit()); // always evaluates
-  PlatformThread::Run();
-  // Don't need to DestroyWindow(hwnd_) due to WM_CLOSE->WM_DESTROY handling
+  do {
+    // The interface contract of Start/Stop is that for a successful call to
+    // Start, there should be at least one call to the run function.  So we
+    // call the function before checking |stop_|.
+    if (!run_function_(obj_))
+      break;
+
+    // Alertable sleep to permit RaiseFlag to run and update |stop_|.
+    if (MsgWaitForMultipleObjectsEx(0, nullptr, INFINITE, QS_ALLINPUT,
+                                    MWMO_ALERTABLE | MWMO_INPUTAVAILABLE) ==
+        WAIT_OBJECT_0) {
+      MSG msg;
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+          stop_ = true;
+          break;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+
+  } while (!stop_);
 }
 
 void PlatformUIThread::NativeEventCallback() {
