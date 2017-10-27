@@ -69,7 +69,7 @@
 }
 
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  box-shadow: 0 calc(-1 * var(--tab-toolbar-navbar-overlap)) 0 var(--tabs-border);
+  box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
   /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
 }
