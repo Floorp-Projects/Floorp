@@ -61,8 +61,7 @@ CLOBBER:
 else
 CLOBBER: $(topsrcdir)/CLOBBER
 	@echo 'STOP!  The CLOBBER file has changed.'
-	@echo 'Please run the build through a sanctioned build wrapper, such as'
-	@echo '"mach build" or client.mk.'
+	@echo 'Please run the build through "mach build".'
 	@exit 1
 endif
 
