@@ -1521,11 +1521,14 @@ nsCString
 MediaDecoder::GetDebugInfo()
 {
   return nsPrintfCString(
-    "MediaDecoder State: channels=%u rate=%u hasAudio=%d hasVideo=%d "
-    "mPlayState=%s mdsm=%p",
-    mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
-    mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
-    PlayStateStr(), GetStateMachine());
+    "MediaDecoder=%p: channels=%u rate=%u hasAudio=%d hasVideo=%d "
+    "mPlayState=%s",
+    this,
+    mInfo ? mInfo->mAudio.mChannels : 0,
+    mInfo ? mInfo->mAudio.mRate : 0,
+    mInfo ? mInfo->HasAudio() : 0,
+    mInfo ? mInfo->HasVideo() : 0,
+    PlayStateStr());
 }
 
 void
