@@ -42,6 +42,9 @@ DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
     if (!d.readVarU32(&bodySize))
         return d.fail("expected number of function body bytes");
 
+    if (bodySize > MaxFunctionBytes)
+        return d.fail("function body too big");
+
     const size_t offsetInModule = d.currentOffset();
 
     // Skip over the function body; it will be validated by the compilation thread.
