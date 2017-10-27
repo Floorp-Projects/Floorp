@@ -9,3 +9,7 @@
   background: var(--chrome-background-color);
 }
 
+#TabsToolbar:-moz-lwtheme-darktext {
+  -moz-appearance: -moz-mac-vibrancy-light;
+  -moz-font-smoothing-background-color: -moz-mac-vibrancy-light;
+}
