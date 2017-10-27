@@ -12,9 +12,6 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "mozilla/ipc/DBusMessageRefPtr.h"
-#include "mozilla/ipc/DBusPendingCallRefPtr.h"
-
 #define FREEDESKTOP_SCREENSAVER_TARGET    "org.freedesktop.ScreenSaver"
 #define FREEDESKTOP_SCREENSAVER_OBJECT    "/ScreenSaver"
 #define FREEDESKTOP_SCREENSAVER_INTERFACE "org.freedesktop.ScreenSaver"

@@ -17,7 +17,7 @@
 #include "nsIDOMWakeLockListener.h"
 
 #ifdef MOZ_ENABLE_DBUS
-#include "mozilla/ipc/DBusConnectionRefPtr.h"
+#include "mozilla/DBusHelpers.h"
 #endif
 
 class WakeLockTopic;

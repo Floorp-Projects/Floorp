@@ -30,8 +30,56 @@ with Files("**"):
         'web-platform-tests-wdspec',
     ]
 
+with Files("README.md"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("wptrunner.ini"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
 with Files("meta/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("products/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("outbound/tests/placeholder"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/README"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/meta/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/tests/dom/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mozilla/tests/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mozilla/tests/focus/**"):
+    BUG_COMPONENT = ("Core", "Editor")
+
+with Files("mozilla/tests/html/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mozilla/tests/html/semantics/forms/**"):
+    BUG_COMPONENT = ("Core", "Layout: Form Controls")
+
+with Files("mozilla/tests/html/semantics/scripting-1/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mozilla/tests/placeholder"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mozilla/tests/wasm/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine: JIT")
 
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -72,6 +120,9 @@ with Files("tests/update-built-tests.sh"):
 with Files("tests/wpt"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/wpt.py"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
 
 with Files("tests/2dcontext/**"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
@@ -108,6 +159,9 @@ with Files("tests/annotation-vocab/**"):
 
 with Files("tests/apng/**"):
     BUG_COMPONENT = ("Core", "ImageLib")
+
+with Files("tests/audio-output/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 with Files("tests/background-fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
@@ -146,6 +200,9 @@ with Files("tests/content-security-policy/**"):
 with Files("tests/cookies/**"):
     BUG_COMPONENT = ("Core", "Networking: Cookies")
 
+with Files("tests/core-aam/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
 with Files("tests/cors/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
@@ -154,6 +211,9 @@ with Files("tests/credential-management/**"):
 
 with Files("tests/css/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("tests/css-backgrounds/**"):
+    BUG_COMPONENT = ("Core", "Layout: Text")
 
 with Files("tests/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
@@ -166,6 +226,9 @@ with Files("tests/css-fonts/**"):
 
 with Files("tests/css-paint-api/**"):
     BUG_COMPONENT = ("Core", "Layout: Web Painting")
+
+with Files("tests/css-scoping/**"):
+    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
 with Files("tests/css-timing/**"):
     BUG_COMPONENT = ("Core", "Layout")
@@ -365,6 +428,18 @@ with Files("tests/orientation-sensor/**"):
 with Files("tests/page-visibility/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
+# TODO: not sure what component to use here
+#with Files("tests/paint-timing/**"):
+#    BUG_COMPONENT = ("", "")
+
+# No tests in here
+with Files("tests/payment-handler/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+# No tests in here
+with Files("tests/payment-method-basic-card/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
 # No tests in here
 with Files("tests/payment-method-id/**"):
     BUG_COMPONENT = ("Core", "DOM: Web Payments")
@@ -399,6 +474,13 @@ with Files("tests/remote-playback/**"):
 with Files("tests/referrer-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("tests/requestidlecallback/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+# To be implemented in bug 1272409
+with Files("tests/resize-observer/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
 with Files("tests/resource-timing/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
@@ -428,6 +510,9 @@ with Files("tests/service-workers/**"):
 
 with Files("tests/shadow-dom/**"):
     BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/speech-api/**"):
+    BUG_COMPONENT = ("Core", "Web Speech")
 
 with Files("tests/staticrange/**"):
     BUG_COMPONENT = ("Core", "DOM")
@@ -521,6 +606,10 @@ with Files("tests/webvtt/**"):
 
 with Files("tests/workers/**"):
     BUG_COMPONENT = ("Core", "DOM: Workers")
+
+# to be implemented in bug 1315239
+with Files("tests/worklets/**"):
+    BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/x-frame-options/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")

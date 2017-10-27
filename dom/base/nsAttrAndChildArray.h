@@ -63,10 +63,6 @@ public:
   }
   nsIContent* GetSafeChildAt(uint32_t aPos) const;
   nsIContent * const * GetChildArray(uint32_t* aChildCount) const;
-  nsresult AppendChild(nsIContent* aChild)
-  {
-    return InsertChildAt(aChild, ChildCount());
-  }
   nsresult InsertChildAt(nsIContent* aChild, uint32_t aPos);
   void RemoveChildAt(uint32_t aPos);
   // Like RemoveChildAt but hands the reference to the child being

@@ -46,7 +46,7 @@
 int
 main (int argc, char **argv)
 {
-  hb_blob_t *blob = NULL;
+  hb_blob_t *blob = nullptr;
 
   if (argc != 2) {
     fprintf (stderr, "usage: %s font-file.ttf\n", argv[0]);
@@ -62,7 +62,7 @@ main (int argc, char **argv)
     hb_memory_mode_t mm;
 
 #ifdef HAVE_GLIB
-    GMappedFile *mf = g_mapped_file_new (argv[1], false, NULL);
+    GMappedFile *mf = g_mapped_file_new (argv[1], false, nullptr);
     font_data = g_mapped_file_get_contents (mf);
     len = g_mapped_file_get_length (mf);
     destroy = (hb_destroy_func_t) g_mapped_file_unref;
@@ -90,7 +90,7 @@ main (int argc, char **argv)
   /* Create the face */
   hb_face_t *face = hb_face_create (blob, 0 /* first face */);
   hb_blob_destroy (blob);
-  blob = NULL;
+  blob = nullptr;
   unsigned int upem = hb_face_get_upem (face);
 
   hb_font_t *font = hb_font_create (face);
@@ -105,11 +105,11 @@ main (int argc, char **argv)
   hb_buffer_add_utf8 (buffer, "\xe0\xa4\x95\xe0\xa5\x8d\xe0\xa4\xb0\xe0\xa5\x8d\xe0\xa4\x95", -1, 0, -1);
   hb_buffer_guess_segment_properties (buffer);
 
-  hb_shape (font, buffer, NULL, 0);
+  hb_shape (font, buffer, nullptr, 0);
 
   unsigned int count = hb_buffer_get_length (buffer);
-  hb_glyph_info_t *infos = hb_buffer_get_glyph_infos (buffer, NULL);
-  hb_glyph_position_t *positions = hb_buffer_get_glyph_positions (buffer, NULL);
+  hb_glyph_info_t *infos = hb_buffer_get_glyph_infos (buffer, nullptr);
+  hb_glyph_position_t *positions = hb_buffer_get_glyph_positions (buffer, nullptr);
 
   for (unsigned int i = 0; i < count; i++)
   {

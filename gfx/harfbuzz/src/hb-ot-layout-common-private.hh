@@ -214,7 +214,7 @@ struct LangSys
   }
 
   inline bool sanitize (hb_sanitize_context_t *c,
-			const Record<LangSys>::sanitize_closure_t * = NULL) const
+			const Record<LangSys>::sanitize_closure_t * = nullptr) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) && featureIndex.sanitize (c));
@@ -254,7 +254,7 @@ struct Script
   inline const LangSys& get_default_lang_sys (void) const { return this+defaultLangSys; }
 
   inline bool sanitize (hb_sanitize_context_t *c,
-			const Record<Script>::sanitize_closure_t * = NULL) const
+			const Record<Script>::sanitize_closure_t * = nullptr) const
   {
     TRACE_SANITIZE (this);
     return_trace (defaultLangSys.sanitize (c, this) && langSys.sanitize (c, this));
@@ -435,17 +435,17 @@ struct FeatureParamsCharacterVariants
 					 * specifies a string (or strings,
 					 * for multiple languages) for a
 					 * user-interface label for this
-					 * feature. (May be NULL.) */
+					 * feature. (May be nullptr.) */
   USHORT	featUITooltipTextNameID;/* The ‘name’ table name ID that
 					 * specifies a string (or strings,
 					 * for multiple languages) that an
 					 * application can use for tooltip
 					 * text for this feature. (May be
-					 * NULL.) */
+					 * nullptr.) */
   USHORT	sampleTextNameID;	/* The ‘name’ table name ID that
 					 * specifies sample text that
 					 * illustrates the effect of this
-					 * feature. (May be NULL.) */
+					 * feature. (May be nullptr.) */
   USHORT	numNamedParameters;	/* Number of named parameters. (May
 					 * be zero.) */
   USHORT	firstParamUILabelNameID;/* The first ‘name’ table name ID
@@ -507,7 +507,7 @@ struct Feature
   { return this+featureParams; }
 
   inline bool sanitize (hb_sanitize_context_t *c,
-			const Record<Feature>::sanitize_closure_t *closure = NULL) const
+			const Record<Feature>::sanitize_closure_t *closure = nullptr) const
   {
     TRACE_SANITIZE (this);
     if (unlikely (!(c->check_struct (this) && lookupIndex.sanitize (c))))
@@ -690,7 +690,7 @@ struct CoverageFormat1
   inline unsigned int get_coverage (hb_codepoint_t glyph_id) const
   {
     int i = glyphArray.bsearch (glyph_id);
-    ASSERT_STATIC (((unsigned int) -1) == NOT_COVERED);
+    static_assert ((((unsigned int) -1) == NOT_COVERED), "");
     return i;
   }
 
@@ -1458,7 +1458,7 @@ struct FeatureTableSubstitution
       if (record.featureIndex == feature_index)
 	return &(this+record.feature);
     }
-    return NULL;
+    return nullptr;
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const

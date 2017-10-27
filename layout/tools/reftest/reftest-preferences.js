@@ -87,6 +87,8 @@ user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // server in the middle of the tests.
 user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.unified", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("experiments.enabled", false);
 // Likewise for safebrowsing.
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);

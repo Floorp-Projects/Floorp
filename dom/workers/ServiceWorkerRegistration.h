@@ -92,7 +92,7 @@ public:
   GetScope(nsAString& aScope) const = 0;
 
   virtual ServiceWorkerUpdateViaCache
-  UpdateViaCache() const = 0;
+  GetUpdateViaCache(ErrorResult& aRv) const = 0;
 
   virtual already_AddRefed<Promise>
   Update(ErrorResult& aRv) = 0;

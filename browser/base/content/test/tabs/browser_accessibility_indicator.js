@@ -82,6 +82,9 @@ function forceGC() {
 }
 
 add_task(async function test_accessibility_indicator() {
+  info("Preff on accessibility indicator.");
+  Services.prefs.setBoolPref(A11Y_INDICATOR_ENABLED_PREF, true);
+
   info("Test default accessibility indicator state.");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   testIndicatorState(window, true, false);
