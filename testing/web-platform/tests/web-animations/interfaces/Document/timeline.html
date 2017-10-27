@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Document.timeline</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#dom-document-timeline">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../../testcommon.js"></script>
+<div id="log"></div>
+<iframe width="10" height="10" id="iframe"></iframe>
+<script>
+'use strict';
+
+test(function() {
+  assert_equals(document.timeline, document.timeline,
+    'document.timeline returns the same object every time');
+  const iframe = document.getElementById('iframe');
+  assert_not_equals(document.timeline, iframe.contentDocument.timeline,
+    'document.timeline returns a different object for each document');
+  assert_not_equals(iframe.contentDocument.timeline, null,
+    'document.timeline on an iframe is not null');
+}, 'document.timeline identity tests');
+
+</script>
