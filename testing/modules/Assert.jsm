@@ -25,14 +25,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
  * 1. The assert module provides functions that throw AssertionError's when
  * particular conditions are not met.
  *
- * To use the module you'll need to instantiate it first, which allows consumers
+ * To use the module you may instantiate it first, which allows consumers
  * to override certain behavior on the newly obtained instance. For examples,
  * see the javadoc comments for the `report` member function.
+ *
+ * The isDefault argument is used by test suites to set reporterFunc as the
+ * default used by the global instance, which is called for example by other
+ * test-only modules. This is false when the reporter is set by content scripts,
+ * because they may still run in the parent process.
  */
-var Assert = this.Assert = function(reporterFunc) {
+var Assert = this.Assert = function(reporterFunc, isDefault) {
   if (reporterFunc)
     this.setReporter(reporterFunc);
+  if (isDefault)
+    Assert.setReporter(reporterFunc);
 };
+
+// This allows using the Assert object as an additional global instance.
+Object.setPrototypeOf(Assert, Assert.prototype);
 
 function instanceOf(object, type) {
   return Object.prototype.toString.call(object) == "[object " + type + "]";
