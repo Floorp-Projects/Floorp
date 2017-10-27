@@ -39,6 +39,7 @@ class Element;
 } // namespace dom
 
 enum class CSSPseudoElementType : uint8_t;
+enum class StyleBackendType : uint8_t;
 struct PropertyStyleAnimationValuePair;
 
 /**
@@ -635,6 +636,9 @@ struct AnimationValue
   static AnimationValue FromString(nsCSSPropertyID aProperty,
                                    const nsAString& aValue,
                                    dom::Element* aElement);
+
+  // Create an AnimationValue from an opacity value.
+  static AnimationValue Opacity(StyleBackendType aBackendType, float aOpacity);
 
   // mGecko and mServo are mutually exclusive: only one or the other should
   // ever be set.

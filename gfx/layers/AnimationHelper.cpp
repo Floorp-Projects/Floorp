@@ -463,22 +463,23 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
   return new nsCSSValueSharedList(result.forget());
 }
 
-static StyleAnimationValue
-ToStyleAnimationValue(const Animatable& aAnimatable)
+static AnimationValue
+ToAnimationValue(const Animatable& aAnimatable)
 {
-  StyleAnimationValue result;
+  AnimationValue result;
 
   switch (aAnimatable.type()) {
     case Animatable::Tnull_t:
       break;
     case Animatable::TArrayOfTransformFunction: {
-      const InfallibleTArray<TransformFunction>& transforms =
-        aAnimatable.get_ArrayOfTransformFunction();
-      result.SetTransformValue(CreateCSSValueList(transforms));
+        const InfallibleTArray<TransformFunction>& transforms =
+          aAnimatable.get_ArrayOfTransformFunction();
+        result.mGecko.SetTransformValue(CreateCSSValueList(transforms));
+      }
       break;
-    }
     case Animatable::Tfloat:
-      result.SetFloatValue(aAnimatable.get_float());
+      result = AnimationValue::Opacity(StyleBackendType::Gecko,
+                                       aAnimatable.get_float());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
@@ -509,7 +510,7 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
     }
 
     if (animation.baseStyle().type() != Animatable::Tnull_t) {
-      aBaseAnimationStyle = ToStyleAnimationValue(animation.baseStyle());
+      aBaseAnimationStyle = ToAnimationValue(animation.baseStyle()).mGecko;
     }
 
     AnimData* data = aAnimData.AppendElement();
@@ -520,8 +521,8 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
 
     const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
-      startValues.AppendElement(ToStyleAnimationValue(segment.startState()));
-      endValues.AppendElement(ToStyleAnimationValue(segment.endState()));
+      startValues.AppendElement(ToAnimationValue(segment.startState()).mGecko);
+      endValues.AppendElement(ToAnimationValue(segment.endState()).mGecko);
 
       TimingFunction tf = segment.sampleFn();
       Maybe<ComputedTimingFunction> ctf =
