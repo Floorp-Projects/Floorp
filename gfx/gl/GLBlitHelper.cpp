@@ -173,10 +173,10 @@ SubRectMat3(const float x, const float y, const float w, const float h)
 Mat3
 SubRectMat3(const gfx::IntRect& subrect, const gfx::IntSize& size)
 {
-    return SubRectMat3(subrect.x / size.width,
-                       subrect.y / size.height,
-                       subrect.width / size.width,
-                       subrect.height / size.height);
+    return SubRectMat3(float(subrect.x) / size.width,
+                       float(subrect.y) / size.height,
+                       float(subrect.width) / size.width,
+                       float(subrect.height) / size.height);
 }
 
 Mat3
@@ -192,7 +192,6 @@ SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
                        w / smallSize.width,
                        h / smallSize.height);
 }
-
 
 // --
 
