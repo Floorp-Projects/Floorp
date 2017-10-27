@@ -813,7 +813,7 @@ VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr));
   if (!cmsMsg) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
+    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
   }
 
   if (!NSS_CMSMessage_IsSigned(cmsMsg.get())) {
