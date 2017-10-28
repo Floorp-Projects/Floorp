@@ -81,8 +81,9 @@ BufferRecycleBin::GetBuffer(uint32_t aSize)
 {
   MutexAutoLock lock(mLock);
 
-  if (mRecycledBuffers.IsEmpty() || mRecycledBufferSize != aSize)
-    return MakeUnique<uint8_t[]>(aSize);
+  if (mRecycledBuffers.IsEmpty() || mRecycledBufferSize != aSize) {
+    return UniquePtr<uint8_t[]>(new (fallible) uint8_t[aSize]);
+  }
 
   uint32_t last = mRecycledBuffers.Length() - 1;
   UniquePtr<uint8_t[]> result = Move(mRecycledBuffers[last]);

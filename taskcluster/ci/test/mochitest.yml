@@ -38,7 +38,7 @@ mochitest:
             android.*: 20
             linux.*/debug: 16
             linux64-asan/opt: 10
-            linux64-*cov/opt: 10
+            linux64-.*cov/opt: 10
             default: 5
     e10s:
         by-test-platform:
@@ -48,7 +48,6 @@ mochitest:
     max-run-time:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 7200
-            linux64-jsdcov/opt: 10800
             default: 5400
     allow-software-gl-layers: false
     tier:
@@ -96,7 +95,6 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*/debug: 16
             linux64-asan/opt: 16
-            linux64-jsdcov/opt: 35
             default: 7
     e10s:
         by-test-platform:

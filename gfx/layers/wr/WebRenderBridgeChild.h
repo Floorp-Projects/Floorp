@@ -136,6 +136,7 @@ public:
                   const wr::GlyphOptions* aGlyphOptions = nullptr);
 
   wr::FontInstanceKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
+  wr::FontKey GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaledFont);
 
   void RemoveExpiredFontKeys();
   void ClearReadLocks();

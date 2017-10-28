@@ -257,6 +257,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Bug 1407337, crashes with OpenSC < 0.16.0
   { "onepin-opensc-pkcs11.dll", MAKE_VERSION(0, 15, 0xffff, 0xffff) },
 
+  // Avecto Privilege Guard causes crashes, bug 1385542
+  { "pghook.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 

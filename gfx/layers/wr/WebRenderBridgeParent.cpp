@@ -782,6 +782,7 @@ WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aP
   }
 
   wrHost->SetWrBridge(this);
+  wrHost->EnableUseAsyncImagePipeline();
   mAsyncCompositables.Put(wr::AsUint64(aPipelineId), wrHost);
   mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 

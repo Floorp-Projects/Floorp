@@ -3624,6 +3624,10 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
 
   if (nsHttpChannel::WillRedirect(mResponseHead)) {
     mShouldInterceptSubsequentRedirect = true;
+    if (mInterceptListener) {
+      mInterceptListener->Cleanup();
+      mInterceptListener = nullptr;
+    }
     // Continue with the original cross-process request
     rv = ContinueAsyncOpen();
     return;
