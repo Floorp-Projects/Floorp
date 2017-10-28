@@ -8,6 +8,7 @@ add_task(async function test_memory_distribution() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
   let canRecordExtended = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);

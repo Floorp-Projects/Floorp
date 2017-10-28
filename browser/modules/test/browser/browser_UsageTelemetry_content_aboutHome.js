@@ -27,6 +27,9 @@ add_task(async function setup() {
   let engineOneOff = Services.search.getEngineByName("MozSearch2");
   Services.search.moveEngine(engineOneOff, 0);
 
+  // Enable Extended Telemetry.
+  await SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
+
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
