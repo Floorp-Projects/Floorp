@@ -15,6 +15,7 @@
 #include "SandboxOpenedFiles.h"
 #endif
 #include "mozilla/PodOperations.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 
 #include <errno.h>
@@ -105,6 +106,8 @@ protected:
 
   template<typename... Args>
   static intptr_t DoSyscall(long nr, Args... args) {
+    static_assert(tl::And<(sizeof(Args) <= sizeof(void*))...>::value,
+                  "each syscall arg is at most one word");
     return ConvertError(syscall(nr, args...));
   }
 
