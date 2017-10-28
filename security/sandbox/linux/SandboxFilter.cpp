@@ -819,7 +819,12 @@ public:
               If((flags & ~allowed_flags) == 0, Allow())
               .Else(InvalidSyscall()))
         .Case(F_DUPFD_CLOEXEC, Allow())
-        // Pulseaudio uses F_SETLKW.
+        // Nvidia GL and fontconfig (newer versions) use fcntl file locking.
+        .Case(F_SETLK, Allow())
+#ifdef F_SETLK64
+        .Case(F_SETLK64, Allow())
+#endif
+        // Pulseaudio uses F_SETLKW, as does fontconfig.
         .Case(F_SETLKW, Allow())
 #ifdef F_SETLKW64
         .Case(F_SETLKW64, Allow())
