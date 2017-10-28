@@ -47,6 +47,7 @@ struct FontTemplate {
   size_t mSize;
   int mIndex;
   const VecU8 *mVec;
+  RefPtr<UnscaledFont> mUnscaledFont;
 };
 
 // we need to do special things for linux so that we have fonts per backend
@@ -79,7 +80,10 @@ DeleteFontData(wr::FontKey aKey) {
 RefPtr<UnscaledFont>
 GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
   MOZ_ASSERT(sFontDataTable.find(key) != sFontDataTable.end());
-  auto data = sFontDataTable[key];
+  auto &data = sFontDataTable[key];
+  if (data.mUnscaledFont) {
+    return data.mUnscaledFont;
+  }
   FontType type =
 #ifdef XP_MACOSX
     FontType::MAC;
@@ -101,6 +105,7 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
     // support.
     unscaledFont = fontResource->CreateUnscaledFont(data.mIndex, nullptr, 0);
   }
+  data.mUnscaledFont = unscaledFont;
   return unscaledFont;
 }
 
