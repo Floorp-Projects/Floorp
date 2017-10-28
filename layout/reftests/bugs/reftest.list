@@ -290,7 +290,7 @@ fuzzy-if(skiaContent,1,5) == 262998-1.html 262998-1-ref.html
 == 269908-5.html 269908-5-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
-fails-if(stylo&&cocoaWidget) == 272646-1.xul 272646-1-ref.xul # bug 1410787
+== 272646-1.xul 272646-1-ref.xul
 == 272646-2a.xul 272646-2-ref.xul
 == 272646-2b.xul 272646-2-ref.xul
 == 272646-2c.xul 272646-2-ref.xul
