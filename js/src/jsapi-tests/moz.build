@@ -153,6 +153,9 @@ USE_LIBS += [
     'static:js',
 ]
 
+if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+    OS_LIBS += ['atomic']
+
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 if CONFIG['GNU_CXX']:
