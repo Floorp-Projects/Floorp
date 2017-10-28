@@ -366,9 +366,6 @@ public:
   PostTask(WorkerTask* aTask);
 };
 
-WorkerCrossThreadDispatcher*
-GetWorkerCrossThreadDispatcher(JSContext* aCx, const JS::Value& aWorker);
-
 // Random unique constant to facilitate JSPrincipal debugging
 const uint32_t kJSPrincipalsDebugToken = 0x7e2df9d2;
 
