@@ -1,0 +1,51 @@
+# Copyright 2017 The Fuchsia Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+group("clang_wrapper") {
+  deps = [
+    ":arm64_wrapper",
+    ":x64_wrapper",
+  ]
+}
+
+executable("clang_wrapper_bin") {
+  output_name = "rust_clang_wrapper"
+
+  sources = [
+    "clang_wrapper.cc",
+  ]
+
+  if (is_linux) {
+    ldflags = [
+      "-pthread",
+    ]
+  }
+}
+
+template("copy_wrapper") {
+
+  arch = invoker.arch
+
+  copy(target_name) {
+    sources = [
+      "$root_out_dir/rust_clang_wrapper",
+    ]
+
+    outputs = [
+      "$root_out_dir/$arch-unknown-fuchsia-cc",
+    ]
+
+    deps = [
+      ":clang_wrapper_bin",
+    ]
+  }
+}
+
+copy_wrapper("arm64_wrapper") {
+  arch = "aarch64"
+}
+
+copy_wrapper("x64_wrapper") {
+  arch = "x86_64"
+}
