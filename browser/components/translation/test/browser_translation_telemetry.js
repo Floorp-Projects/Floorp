@@ -153,6 +153,7 @@ add_task(async function setup() {
   };
 
   const prefs = [
+    "toolkit.telemetry.enabled",
     "browser.translation.detectLanguage",
     "browser.translation.ui.show"
   ];
