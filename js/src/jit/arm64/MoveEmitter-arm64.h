@@ -24,11 +24,10 @@ class MoveEmitterARM64
     // Original stack push value.
     uint32_t pushedAtStart_;
 
-    // These store stack offsets to spill locations, snapshotting
-    // codegen->framePushed_ at the time they were allocated. They are -1 if no
+    // This stores a stack offset to a spill location, snapshotting
+    // codegen->framePushed_ at the time it was allocated. It is -1 if no
     // stack space has been allocated for that particular spill.
     int32_t pushedAtCycle_;
-    int32_t pushedAtSpill_;
 
     void assertDone() {
         MOZ_ASSERT(!inCycle_);
@@ -65,8 +64,7 @@ class MoveEmitterARM64
       : inCycle_(false),
         masm(masm),
         pushedAtStart_(masm.framePushed()),
-        pushedAtCycle_(-1),
-        pushedAtSpill_(-1)
+        pushedAtCycle_(-1)
     { }
 
     ~MoveEmitterARM64() {

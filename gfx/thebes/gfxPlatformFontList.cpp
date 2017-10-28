@@ -615,17 +615,33 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
 
         familyName.AppendASCII(fallbackFamily);
         gfxFontFamily *fallback = FindFamilyByCanonicalName(familyName);
-        if (!fallback)
+        if (!fallback) {
             continue;
+        }
 
         gfxFontEntry *fontEntry;
         bool needsBold;  // ignored in the system fallback case
 
         // use first font in list that supports a given character
         fontEntry = fallback->FindFontForStyle(*aMatchStyle, needsBold);
-        if (fontEntry && fontEntry->HasCharacter(aCh)) {
-            *aMatchedFamily = fallback;
-            return fontEntry;
+        if (fontEntry) {
+            if (fontEntry->HasCharacter(aCh)) {
+                *aMatchedFamily = fallback;
+                return fontEntry;
+            }
+            // If we requested a styled font (bold and/or italic), and the char
+            // was not available, check other faces of the family.
+            if (!fontEntry->IsNormalStyle()) {
+                // If style/weight/stretch was not Normal, see if we can
+                // fall back to a next-best face (e.g. Arial Black -> Bold,
+                // or Arial Narrow -> Regular).
+                GlobalFontMatch data(aCh, aMatchStyle);
+                fallback->SearchAllFontsForChar(&data);
+                if (data.mBestMatch) {
+                    *aMatchedFamily = fallback;
+                    return data.mBestMatch;
+                }
+            }
         }
     }
 
@@ -652,7 +668,7 @@ gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     }
 
     // otherwise, try to find it among local fonts
-    GlobalFontMatch data(aCh, aRunScript, aMatchStyle);
+    GlobalFontMatch data(aCh, aMatchStyle);
 
     // iterate over all font families to find a font that support the character
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
