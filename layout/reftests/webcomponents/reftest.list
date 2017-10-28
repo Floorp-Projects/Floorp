@@ -15,3 +15,5 @@ pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-2.h
 pref(dom.webcomponents.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html
 pref(dom.webcomponents.enabled,true) == reframe-shadow-child-1.html reframe-shadow-child-ref.html
 pref(dom.webcomponents.enabled,true) == reframe-shadow-child-2.html reframe-shadow-child-ref.html
+pref(dom.webcomponents.enabled,true) == style-sharing.html style-sharing-ref.html
+pref(dom.webcomponents.enabled,true) skip-if(!stylo||styloVsGecko) == style-sharing-across-shadow.html style-sharing-ref.html # bug 1412400
