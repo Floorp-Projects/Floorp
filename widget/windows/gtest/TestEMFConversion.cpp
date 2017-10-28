@@ -12,6 +12,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsString.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 namespace mozilla {
@@ -85,7 +86,7 @@ GetFileContents(const nsAutoString& aFile, Vector<char>& aBuf)
     return 0;
   }
 
-  aBuf.initCapacity(size);
+  Unused << aBuf.initCapacity(size);
   uint32_t len = static_cast<uint32_t>(size);
   uint32_t read = 0;
   uint32_t haveRead = 0;

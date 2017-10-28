@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Animation-inspector specific theme variables */
+
+:root {
+  --animation-even-background-color: rgba(0,0,0,0.05);
+  --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+}
+
+:root.theme-dark {
+  --animation-even-background-color: rgba(255,255,255,0.05);
+}
+
+:root.theme-firebug {
+  --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
+}
+
+/* Settings for animations element */
+.animation-list {
+  list-style-type: none;
+  margin-top: 0;
+  padding: 0;
+}
+
+/* Settings for each animation element */
+.animation-item {
+  height: 30px;
+}
+
+.animation-item:nth-child(2n+1) {
+  background-color: var(--animation-even-background-color);
+}
+
+/* Settings for no animation message */
+.animation-error-message {
+  overflow: auto;
+}
+
+.animation-error-message > p {
+  white-space: pre;
+}
+
+.animation-element-picker::before {
+  background-image: var(--command-pick-image);
+}

@@ -59,9 +59,8 @@ def buildCommandLine(test):
 
     # build pageloader command from options
     url = ['-tp', test['tpmanifest']]
-    CLI_bool_options = ['tpchrome', 'tpmozafterpaint', 'tpdisable_e10s',
-                        'tpnoisy', 'tprender', 'tploadnocache',
-                        'tpscrolltest', 'fnbpaint']
+    CLI_bool_options = ['tpchrome', 'tpmozafterpaint', 'tpnoisy', 'tprender',
+                        'tploadnocache', 'tpscrolltest', 'fnbpaint']
     CLI_options = ['tpcycles', 'tppagecycles', 'tpdelay', 'tptimeout']
     for key in CLI_bool_options:
         if test.get(key):
@@ -191,9 +190,8 @@ def run_tests(config, browser_config):
     httpd = setup_webserver(browser_config['webserver'])
     httpd.start()
 
-    # if e10s add as extra results option
-    if config['e10s']:
-        talos_results.add_extra_option('e10s')
+    # legacy still required for perfherder data
+    talos_results.add_extra_option('e10s')
 
     # stylo is another option for testing
     if config['enable_stylo']:

@@ -1436,7 +1436,7 @@ public:
   bool HasTransformAnimation() const;
   bool HasOpacityAnimation() const;
 
-  StyleAnimationValue GetBaseAnimationStyle() const
+  AnimationValue GetBaseAnimationStyle() const
   {
     return mAnimationInfo.GetBaseAnimationStyle();
   }

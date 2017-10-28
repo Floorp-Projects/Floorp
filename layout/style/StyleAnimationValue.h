@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -38,6 +39,7 @@ class Element;
 } // namespace dom
 
 enum class CSSPseudoElementType : uint8_t;
+enum class StyleBackendType : uint8_t;
 struct PropertyStyleAnimationValuePair;
 
 /**
@@ -292,10 +294,6 @@ public:
     nsCSSPropertyID aProperty,
     mozilla::GeckoStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
-
-  static already_AddRefed<nsCSSValue::Array>
-    AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                            nsCSSValueList**& aListTail);
 
   /**
    * The types and values for the values that we extract and animate.
@@ -609,7 +607,10 @@ struct AnimationValue
 
   float GetOpacity() const;
 
-  // Returns the scale for mGecko or mServo, which are calculated with
+  // Return the transform list as a RefPtr.
+  already_AddRefed<const nsCSSValueSharedList> GetTransformList() const;
+
+  // Return the scale for mGecko or mServo, which are calculated with
   // reference to aFrame.
   gfxSize GetScaleValue(const nsIFrame* aFrame) const;
 
@@ -634,6 +635,16 @@ struct AnimationValue
   static AnimationValue FromString(nsCSSPropertyID aProperty,
                                    const nsAString& aValue,
                                    dom::Element* aElement);
+
+  // Create an AnimationValue from an opacity value.
+  static AnimationValue Opacity(StyleBackendType aBackendType, float aOpacity);
+  // Create an AnimationValue from a transform list.
+  static AnimationValue Transform(StyleBackendType aBackendType,
+                                  nsCSSValueSharedList& aList);
+
+  static already_AddRefed<nsCSSValue::Array>
+  AppendTransformFunction(nsCSSKeyword aTransformFunction,
+                          nsCSSValueList**& aListTail);
 
   // mGecko and mServo are mutually exclusive: only one or the other should
   // ever be set.

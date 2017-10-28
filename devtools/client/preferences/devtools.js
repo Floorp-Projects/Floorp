@@ -67,6 +67,9 @@ pref("devtools.eventsview.enabled", false);
 // Enable the Flexbox Inspector
 pref("devtools.flexboxinspector.enabled", false);
 
+// Enable the new Animation Inspector
+pref("devtools.new-animationinspector.enabled", false);
+
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
 pref("devtools.gridinspector.gridOutlineMaxRows", 50);

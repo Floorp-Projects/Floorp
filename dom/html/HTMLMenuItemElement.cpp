@@ -173,10 +173,10 @@ HTMLMenuItemElement::~HTMLMenuItemElement()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLMenuItemElement, nsGenericHTMLElement,
-                            nsIDOMHTMLMenuItemElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLMenuItemElement, nsGenericHTMLElement)
 
 //NS_IMPL_ELEMENT_CLONE(HTMLMenuItemElement)
+
 nsresult
 HTMLMenuItemElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                            bool aPreallocateArrays) const
@@ -205,25 +205,13 @@ HTMLMenuItemElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
   return rv;
 }
 
-
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMenuItemElement, Type, type,
-                                kMenuItemDefaultType->tag)
-// GetText returns a whitespace compressed .textContent value.
-NS_IMPL_STRING_ATTR_WITH_FALLBACK(HTMLMenuItemElement, Label, label, GetText)
-NS_IMPL_URI_ATTR(HTMLMenuItemElement, Icon, icon)
-NS_IMPL_BOOL_ATTR(HTMLMenuItemElement, Disabled, disabled)
-NS_IMPL_BOOL_ATTR(HTMLMenuItemElement, DefaultChecked, checked)
-//NS_IMPL_BOOL_ATTR(HTMLMenuItemElement, Checked, checked)
-NS_IMPL_STRING_ATTR(HTMLMenuItemElement, Radiogroup, radiogroup)
-
-NS_IMETHODIMP
-HTMLMenuItemElement::GetChecked(bool* aChecked)
+void
+HTMLMenuItemElement::GetType(DOMString& aValue)
 {
-  *aChecked = mChecked;
-  return NS_OK;
+  GetEnumAttr(nsGkAtoms::type, kMenuItemDefaultType->tag, aValue);
 }
 
-NS_IMETHODIMP
+void
 HTMLMenuItemElement::SetChecked(bool aChecked)
 {
   bool checkedChanged = mChecked != aChecked;
@@ -248,8 +236,6 @@ HTMLMenuItemElement::SetChecked(bool aChecked)
   } else {
     mCheckedDirty = true;
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -265,8 +251,9 @@ HTMLMenuItemElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         aVisitor.mItemFlags |= NS_CHECKED_IS_TOGGLED;
         break;
       case CMD_TYPE_RADIO:
-        nsCOMPtr<nsIDOMHTMLMenuItemElement> selectedRadio = GetSelectedRadio();
-        aVisitor.mItemData = selectedRadio;
+        // casting back to Element* here to resolve nsISupports ambiguity.
+        Element* supports = GetSelectedRadio();
+        aVisitor.mItemData = supports;
 
         originalCheckedValue = mChecked;
         if (!originalCheckedValue) {
@@ -298,8 +285,8 @@ HTMLMenuItemElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
     uint8_t oldType = NS_MENUITEM_TYPE(aVisitor.mItemFlags);
 
-    nsCOMPtr<nsIDOMHTMLMenuItemElement> selectedRadio =
-      do_QueryInterface(aVisitor.mItemData);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLMenuItemElement> selectedRadio = HTMLMenuItemElement::FromContentOrNull(content);
     if (selectedRadio) {
       selectedRadio->SetChecked(true);
       if (mType != CMD_TYPE_RADIO) {
@@ -481,8 +468,7 @@ HTMLMenuItemElement::AddedToRadioGroup()
 void
 HTMLMenuItemElement::InitChecked()
 {
-  bool defaultChecked;
-  GetDefaultChecked(&defaultChecked);
+  bool defaultChecked = DefaultChecked();
   mChecked = defaultChecked;
   if (mType == CMD_TYPE_RADIO) {
     ClearCheckedVisitor visitor(this);

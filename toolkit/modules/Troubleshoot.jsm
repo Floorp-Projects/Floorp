@@ -69,7 +69,7 @@ const PREFS_WHITELIST = [
   "keyword.",
   "layers.",
   "layout.css.dpi",
-  "layout.css.servo.enabled",
+  "layout.css.servo.",
   "layout.display-list.",
   "media.",
   "mousewheel.",
@@ -248,6 +248,16 @@ var dataProviders = {
         data.styloResult =
           Services.prefs.getBoolPref("layout.css.servo.enabled", false);
       }
+    }
+    data.styloChromeDefault =
+      Services.prefs.getDefaultBranch(null)
+              .getBoolPref("layout.css.servo.chrome.enabled", false);
+    data.styloChromeResult = false;
+    if (data.styloResult) {
+      let winUtils = Services.wm.getMostRecentWindow("").
+                     QueryInterface(Ci.nsIInterfaceRequestor).
+                     getInterface(Ci.nsIDOMWindowUtils);
+      data.styloChromeResult = winUtils.isStyledByServo;
     }
 
     const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
