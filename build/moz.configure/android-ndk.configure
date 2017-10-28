@@ -202,8 +202,7 @@ def extra_toolchain_flags(platform_dir, toolchain_dir):
     return ['-isystem',
             os.path.join(platform_dir, 'usr', 'include'),
             '-gcc-toolchain',
-            toolchain_dir,
-           ]
+            toolchain_dir]
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
