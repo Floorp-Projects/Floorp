@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
+                                  "resource://gre/modules/TelemetryUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
 
@@ -49,6 +51,8 @@ const PREF_LOGGING_LEVEL        = PREF_LOGGING + ".level"; // experiments.loggin
 const PREF_LOGGING_DUMP         = PREF_LOGGING + ".dump"; // experiments.logging.dump
 const PREF_MANIFEST_URI         = "manifest.uri"; // experiments.logging.manifest.uri
 const PREF_FORCE_SAMPLE         = "force-sample-value"; // experiments.force-sample-value
+
+const PREF_TELEMETRY_ENABLED      = "toolkit.telemetry.enabled";
 
 const URI_EXTENSION_STRINGS     = "chrome://mozapps/locale/extensions/extensions.properties";
 
@@ -382,6 +386,8 @@ Experiments.Experiments.prototype = {
           this.updateManifest();
         } else if (data == PREF_BRANCH + PREF_ENABLED) {
           this._toggleExperimentsEnabled(gPrefs.getBoolPref(PREF_ENABLED, false));
+        } else if (data == PREF_TELEMETRY_ENABLED) {
+          this._telemetryStatusChanged();
         }
         break;
     }
@@ -391,12 +397,14 @@ Experiments.Experiments.prototype = {
     this._shutdown = false;
     configureLogging();
 
-    gExperimentsEnabled = gPrefs.getBoolPref(PREF_ENABLED, false) && Services.telemetry.canRecordExtended;
+    gExperimentsEnabled = gPrefs.getBoolPref(PREF_ENABLED, false) && TelemetryUtils.isTelemetryEnabled;
     this._log.trace("enabled=" + gExperimentsEnabled + ", " + this.enabled);
 
     Services.prefs.addObserver(PREF_BRANCH + PREF_LOGGING, configureLogging);
     Services.prefs.addObserver(PREF_BRANCH + PREF_MANIFEST_URI, this, true);
     Services.prefs.addObserver(PREF_BRANCH + PREF_ENABLED, this, true);
+
+    Services.prefs.addObserver(PREF_TELEMETRY_ENABLED, this, true);
 
     AddonManager.shutdown.addBlocker("Experiments.jsm shutdown",
       this.uninit.bind(this),
@@ -444,6 +452,8 @@ Experiments.Experiments.prototype = {
       Services.prefs.removeObserver(PREF_BRANCH + PREF_LOGGING, configureLogging);
       Services.prefs.removeObserver(PREF_BRANCH + PREF_MANIFEST_URI, this);
       Services.prefs.removeObserver(PREF_BRANCH + PREF_ENABLED, this);
+
+      Services.prefs.removeObserver(PREF_TELEMETRY_ENABLED, this);
 
       if (this._timer) {
         this._timer.clear();
@@ -588,7 +598,7 @@ Experiments.Experiments.prototype = {
   async _toggleExperimentsEnabled(enabled) {
     this._log.trace("_toggleExperimentsEnabled(" + enabled + ")");
     let wasEnabled = gExperimentsEnabled;
-    gExperimentsEnabled = enabled && Services.telemetry.canRecordExtended;
+    gExperimentsEnabled = enabled && TelemetryUtils.isTelemetryEnabled;
 
     if (wasEnabled == gExperimentsEnabled) {
       return;
@@ -602,6 +612,10 @@ Experiments.Experiments.prototype = {
         this._timer.clear();
       }
     }
+  },
+
+  _telemetryStatusChanged() {
+    this._toggleExperimentsEnabled(gPrefs.getBoolPref(PREF_ENABLED, false));
   },
 
   /**

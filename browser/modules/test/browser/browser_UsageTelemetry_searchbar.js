@@ -90,6 +90,9 @@ add_task(async function setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
+  // Enable Extended Telemetry.
+  await SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
+
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
