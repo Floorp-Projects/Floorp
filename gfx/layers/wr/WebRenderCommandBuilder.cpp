@@ -25,6 +25,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace gfx;
+
 void WebRenderCommandBuilder::Destroy()
 {
   mLastCanvasDatas.Clear();
@@ -500,12 +502,20 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(clippedBounds);
 
-      RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+      RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>([&] (MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts) {
+          size_t count = aUnscaledFonts.size();
+          aStream.write((const char*)&count, sizeof(count));
+          for (auto unscaled : aUnscaledFonts) {
+            wr::FontKey key = mManager->WrBridge()->GetFontKeyForUnscaledFont(unscaled);
+            aStream.write((const char*)&key, sizeof(key));
+          }
+        });
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
       PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
                             fallbackData->mBasicLayerManager, mManager, scale);
+      recorder->FlushItem(IntRect());
       recorder->Finish();
 
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);

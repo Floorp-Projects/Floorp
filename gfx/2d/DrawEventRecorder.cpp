@@ -12,7 +12,7 @@ namespace gfx {
 
 using namespace std;
 
-DrawEventRecorderPrivate::DrawEventRecorderPrivate()
+DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false)
 {
 }
 
@@ -79,10 +79,41 @@ DrawEventRecorderMemory::DrawEventRecorderMemory()
   WriteHeader(mOutputStream);
 }
 
+DrawEventRecorderMemory::DrawEventRecorderMemory(const SerializeResourcesFn &aFn) :
+  mSerializeCallback(aFn)
+{
+  mExternalFonts = true;
+  WriteHeader(mOutputStream);
+}
+
+
 void
 DrawEventRecorderMemory::Flush()
 {
 }
+
+void
+DrawEventRecorderMemory::FlushItem(IntRect aRect)
+{
+  DetatchResources();
+  WriteElement(mIndex, mOutputStream.mLength);
+  mSerializeCallback(mOutputStream, mUnscaledFonts);
+  WriteElement(mIndex, mOutputStream.mLength);
+  ClearResources();
+}
+
+void
+DrawEventRecorderMemory::Finish()
+{
+  size_t indexOffset = mOutputStream.mLength;
+  // write out the index
+  mOutputStream.write(mIndex.mData, mIndex.mLength);
+  mIndex = MemStream();
+  // write out the offset of the Index to the end of the output stream
+  WriteElement(mOutputStream, indexOffset);
+  ClearResources();
+}
+
 
 size_t
 DrawEventRecorderMemory::RecordingSize()
@@ -94,6 +125,7 @@ void
 DrawEventRecorderMemory::WipeRecording()
 {
   mOutputStream = MemStream();
+  mIndex = MemStream();
 
   WriteHeader(mOutputStream);
 }
