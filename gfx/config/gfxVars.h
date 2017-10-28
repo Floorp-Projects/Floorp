@@ -44,6 +44,15 @@ class gfxVarReceiver;
 
   /* Add new entries above this line. */
 
+// Define the default animation backend on the compositor. Now we don't use
+// stylo on the compositor only on Android, and this is a fixed flag. If
+// we want to update this flag, please add a new gfxVars for it.
+#if defined(ANDROID)
+  #define USE_STYLO_ON_COMPOSITOR false
+#else
+  #define USE_STYLO_ON_COMPOSITOR true
+#endif
+
 // Some graphics settings are computed on the UI process and must be
 // communicated to content and GPU processes. gfxVars helps facilitate
 // this. Its function is similar to gfxPrefs, except rather than hold

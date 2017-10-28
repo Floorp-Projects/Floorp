@@ -35,6 +35,13 @@
 #define SM_SYSTEMDOCKED         0x00002004
 #endif
 
+/*
+ * Color constant inclusive bounds for GetSysColor
+ */
+#define SYS_COLOR_MIN 0
+#define SYS_COLOR_MAX 30
+#define SYS_COLOR_COUNT (SYS_COLOR_MAX - SYS_COLOR_MIN + 1)
+
 class nsLookAndFeel final : public nsXPLookAndFeel
 {
   static OperatingSystemVersion GetOperatingSystemVersion();
@@ -42,14 +49,14 @@ public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
+  void NativeInit() final;
+  void RefreshImpl() override;
   nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
-  void NativeInit() final {};
   nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
   nsresult GetFloatImpl(FloatID aID, float &aResult) override;
   bool GetFontImpl(FontID aID, nsString& aFontName,
                    gfxFontStyle& aFontStyle,
                    float aDevPixPerCSSPixel) override;
-  void RefreshImpl() override;
   char16_t GetPasswordCharacterImpl() override;
 
   nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
@@ -72,12 +79,32 @@ private:
    */
   nsresult GetAccentColorText(nscolor& aColor);
 
+  nscolor GetColorForSysColorIndex(int index);
+
   // Content process cached values that get shipped over from the browser
   // process.
   int32_t mUseAccessibilityTheme;
   int32_t mUseDefaultTheme; // is the current theme a known default?
   int32_t mNativeThemeId; // see LookAndFeel enum 'WindowsTheme'
   int32_t mCaretBlinkTime;
+
+  // Cached colors and flags indicating success in their retrieval.
+  nscolor mColorMenuHoverText;
+  bool mHasColorMenuHoverText;
+  nscolor mColorAccent;
+  bool mHasColorAccent;
+  nscolor mColorAccentText;
+  bool mHasColorAccentText;
+  nscolor mColorMediaText;
+  bool mHasColorMediaText;
+  nscolor mColorCommunicationsText;
+  bool mHasColorCommunicationsText;
+
+  nscolor mSysColorTable[SYS_COLOR_COUNT];
+
+  bool mInitialized;
+
+  void EnsureInit();
 
   struct CachedSystemFont {
     CachedSystemFont()

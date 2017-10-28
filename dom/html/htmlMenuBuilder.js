@@ -65,6 +65,11 @@ HTMLMenuBuilder.prototype =
   },
 
   addItemFor: function(aElement, aCanLoadIcon) {
+    // Since we no longer type check this at the IDL level, make sure we've got
+    // the right element type here.
+    if (ChromeUtils.getClassName(aElement) !== "HTMLMenuItemElement") {
+      return;
+    }
     if (!("children" in this.currentNode)) {
       return;
     }

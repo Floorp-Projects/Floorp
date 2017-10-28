@@ -5818,6 +5818,11 @@ pref("layout.css.servo.enabled", true);
 #else
 pref("layout.css.servo.enabled", false);
 #endif
+// Whether Stylo is enabled for chrome document?
+// If Stylo is not enabled, this pref doesn't take any effect.
+// Note that this pref is only read once when requested. Changing it
+// at runtime may have no effect.
+pref("layout.css.servo.chrome.enabled", false);
 #endif
 
 // HSTS Priming

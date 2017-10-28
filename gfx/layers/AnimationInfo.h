@@ -50,7 +50,7 @@ public:
   void TransferMutatedFlagToLayer(Layer* aLayer);
 
   uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
-  StyleAnimationValue GetBaseAnimationStyle() const { return mBaseAnimationStyle; }
+  AnimationValue GetBaseAnimationStyle() const { return mBaseAnimationStyle; }
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
   AnimationArray& GetAnimations() { return mAnimations; }
   bool ApplyPendingUpdatesForThisTransaction();
@@ -66,7 +66,7 @@ protected:
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   uint64_t mAnimationGeneration;
-  StyleAnimationValue mBaseAnimationStyle;
+  AnimationValue mBaseAnimationStyle;
   bool mMutated;
 };
 

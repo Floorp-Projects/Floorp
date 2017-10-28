@@ -20,15 +20,15 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
-    virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
     virtual void NativeInit() final;
+    virtual void RefreshImpl();
+    virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetFontImpl(FontID aID, nsString& aFontName,
                              gfxFontStyle& aFontStyle,
                              float aDevPixPerCSSPixel);
 
-    virtual void RefreshImpl();
     virtual char16_t GetPasswordCharacterImpl();
     virtual bool GetEchoPasswordImpl();
 
