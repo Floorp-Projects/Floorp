@@ -9,7 +9,10 @@ const {interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
-const {InvalidCookieDomainError} = Cu.import("chrome://marionette/content/error.js", {});
+const {
+  InvalidCookieDomainError,
+  UnableToSetCookieError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["cookie"];
@@ -34,14 +37,13 @@ this.cookie = {
  * produce the errors expected by WebDriver if the input is not valid.
  *
  * @param {Object.<string, (number|boolean|string)>} json
- *     Cookie to be deserialised.  <var>name</var> and <var>value</var>
- *     are required fields which must be strings.  The <var>path</var> and
+ *     Cookie to be deserialised. <var>name</var> and <var>value</var>
+ *     are required fields which must be strings. The <var>path</var> and
  *     <var>domain</var> fields are optional, but must be a string if
  *     provided.
- *     The <var>secure</var>, <var>httpOnly</var>, and
- *     <var>session</var>fields are similarly optional, but must be
- *     booleans.  Likewise, the <var>expiry</var> field is optional but
- *     must be unsigned integer.
+ *     The <var>secure</var>, and <var>httpOnly</var> are similarly
+ *     optional, but must be booleans. Likewise, the <var>expiry</var> field
+ *     is optional but must be unsigned integer.
  *
  * @return {Cookie}
  *     Valid cookie object.
@@ -57,20 +59,17 @@ cookie.fromJSON = function(json) {
   newCookie.name = assert.string(json.name, "Cookie name must be string");
   newCookie.value = assert.string(json.value, "Cookie value must be string");
 
-  if (typeof json.domain != "undefined") {
-    newCookie.domain = assert.string(json.domain, "Cookie domain must be string");
-  }
   if (typeof json.path != "undefined") {
     newCookie.path = assert.string(json.path, "Cookie path must be string");
+  }
+  if (typeof json.domain != "undefined") {
+    newCookie.domain = assert.string(json.domain, "Cookie domain must be string");
   }
   if (typeof json.secure != "undefined") {
     newCookie.secure = assert.boolean(json.secure, "Cookie secure flag must be boolean");
   }
   if (typeof json.httpOnly != "undefined") {
     newCookie.httpOnly = assert.boolean(json.httpOnly, "Cookie httpOnly flag must be boolean");
-  }
-  if (typeof json.session != "undefined") {
-    newCookie.session = assert.boolean(json.session, "Cookie session flag must be boolean");
   }
   if (typeof json.expiry != "undefined") {
     newCookie.expiry = assert.positiveInteger(json.expiry, "Cookie expiry must be a positive integer");
@@ -93,10 +92,16 @@ cookie.fromJSON = function(json) {
  * @throws {InvalidCookieDomainError}
  *     If <var>restrictToHost</var> is set and <var>newCookie</var>'s
  *     domain does not match.
+ * @throws {UnableToSetCookieError}
+ *     If an error occurred while trying to save the cookie.
  */
 cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
+
+  if (typeof newCookie.path == "undefined") {
+    newCookie.path = "/";
+  }
 
   let hostOnly = false;
   if (typeof newCookie.domain == "undefined") {
@@ -105,16 +110,18 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   }
   assert.string(newCookie.domain, "Cookie domain must be string");
 
-  if (typeof newCookie.path == "undefined") {
-    newCookie.path = "/";
+  if (typeof newCookie.secure == "undefined") {
+    newCookie.secure = false;
   }
-
+  if (typeof newCookie.httpOnly == "undefined") {
+    newCookie.httpOnly = false;
+  }
   if (typeof newCookie.expiry == "undefined") {
-    // twenty years into the future
-    let date = new Date();
-    let now = new Date(Date.now());
-    date.setYear(now.getFullYear() + 20);
-    newCookie.expiry = date.getTime() / 1000;
+    // The XPCOM interface requires the expiry field even for session cookies.
+    newCookie.expiry = Number.MAX_SAFE_INTEGER;
+    newCookie.session = true;
+  } else {
+    newCookie.session = false;
   }
 
   let isIpAddress = false;
@@ -150,16 +157,20 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   // TODO: Bug 814416
   newCookie.domain = newCookie.domain.replace(IPV4_PORT_EXPR, "");
 
-  cookie.manager.add(
-      newCookie.domain,
-      newCookie.path,
-      newCookie.name,
-      newCookie.value,
-      newCookie.secure,
-      newCookie.httpOnly,
-      newCookie.session,
-      newCookie.expiry,
-      {} /* origin attributes */);
+  try {
+    cookie.manager.add(
+        newCookie.domain,
+        newCookie.path,
+        newCookie.name,
+        newCookie.value,
+        newCookie.secure,
+        newCookie.httpOnly,
+        newCookie.session,
+        newCookie.expiry,
+        {} /* origin attributes */);
+  } catch (e) {
+    throw new UnableToSetCookieError(e);
+  }
 };
 
 /**
