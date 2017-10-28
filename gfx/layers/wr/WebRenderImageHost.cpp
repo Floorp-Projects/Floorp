@@ -29,6 +29,7 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
   , ImageComposite()
   , mWrBridge(nullptr)
   , mWrBridgeBindings(0)
+  , mUseAsyncImagePipeline(false)
 {}
 
 WebRenderImageHost::~WebRenderImageHost()
@@ -188,7 +189,7 @@ WebRenderImageHost::SetCurrentTextureHost(TextureHost* aTexture)
   }
 
   if (mWrBridge &&
-      !mAsyncRef &&
+      !mUseAsyncImagePipeline &&
       !!mCurrentTextureHost &&
       mCurrentTextureHost != aTexture &&
       mCurrentTextureHost->AsWebRenderTextureHost()) {

@@ -89,6 +89,7 @@ public:
   virtual GradientStops *LookupGradientStops(ReferencePtr aRefPtr) = 0;
   virtual ScaledFont *LookupScaledFont(ReferencePtr aRefPtr) = 0;
   virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
+  virtual UnscaledFont* LookupUnscaledFontByIndex(size_t aIndex) { return nullptr; }
   virtual NativeFontResource *LookupNativeFontResource(uint64_t aKey) = 0;
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
@@ -241,6 +242,7 @@ public:
     GRADIENTSTOPSDESTRUCTION,
     SNAPSHOT,
     SCALEDFONTCREATION,
+    SCALEDFONTCREATIONBYINDEX,
     SCALEDFONTDESTRUCTION,
     MASKSURFACE,
     FILTERNODECREATION,
@@ -311,6 +313,10 @@ protected:
   friend class DrawEventRecorderPrivate;
   friend class DrawEventRecorderFile;
   friend class DrawEventRecorderMemory;
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, std::ostream *aOutput);
+  static void RecordUnscaledFont(UnscaledFont *aUnscaledFont, MemStream &aOutput);
+  template<class S>
+  static void RecordUnscaledFontImpl(UnscaledFont *aUnscaledFont, S &aOutput);
 
   MOZ_IMPLICIT RecordedEvent(int32_t aType) : mType(aType)
   {}

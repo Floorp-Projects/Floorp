@@ -332,32 +332,34 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
   UserDataKey* userDataKey = reinterpret_cast<UserDataKey*>(mRecorder.get());
   if (!aFont->GetUserData(userDataKey)) {
     UnscaledFont* unscaledFont = aFont->GetUnscaledFont();
-    if (!mRecorder->HasStoredObject(unscaledFont)) {
-      RecordedFontData fontData(unscaledFont);
-      RecordedFontDetails fontDetails;
-      if (fontData.GetFontDetails(fontDetails)) {
-        // Try to serialise the whole font, just in case this is a web font that
-        // is not present on the system.
-        if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
-          mRecorder->RecordEvent(fontData);
-          mRecorder->AddStoredFontData(fontDetails.fontDataKey);
-        }
-        mRecorder->RecordEvent(RecordedUnscaledFontCreation(unscaledFont, fontDetails));
-      } else {
-        // If that fails, record just the font description and try to load it from
-        // the system on the other side.
-        RecordedFontDescriptor fontDesc(unscaledFont);
-        if (fontDesc.IsValid()) {
-          mRecorder->RecordEvent(fontDesc);
-        } else {
-          gfxWarning() << "DrawTargetRecording::FillGlyphs failed to serialise UnscaledFont";
-        }
+    if (mRecorder->WantsExternalFonts()) {
+      size_t index = mRecorder->GetUnscaledFontIndex(unscaledFont);
+      mRecorder->RecordEvent(RecordedScaledFontCreationByIndex(aFont, index));
+    } else {
+      if (!mRecorder->HasStoredObject(unscaledFont)) {
+	RecordedFontData fontData(unscaledFont);
+	RecordedFontDetails fontDetails;
+	if (fontData.GetFontDetails(fontDetails)) {
+	  // Try to serialise the whole font, just in case this is a web font that
+	  // is not present on the system.
+	  if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
+	    mRecorder->RecordEvent(fontData);
+	    mRecorder->AddStoredFontData(fontDetails.fontDataKey);
+	  }
+	  mRecorder->RecordEvent(RecordedUnscaledFontCreation(unscaledFont, fontDetails));
+	} else {
+	  // If that fails, record just the font description and try to load it from
+	  // the system on the other side.
+	  RecordedFontDescriptor fontDesc(unscaledFont);
+	  if (fontDesc.IsValid()) {
+	    mRecorder->RecordEvent(fontDesc);
+	  } else {
+	    gfxWarning() << "DrawTargetRecording::FillGlyphs failed to serialise UnscaledFont";
+	  }
+	}
+	mRecorder->AddStoredObject(unscaledFont);
       }
-      mRecorder->AddStoredObject(unscaledFont);
     }
-
-    mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
-
     RecordingFontUserData *userData = new RecordingFontUserData;
     userData->refPtr = aFont;
     userData->recorder = mRecorder;
