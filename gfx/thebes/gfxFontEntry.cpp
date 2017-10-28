@@ -1485,16 +1485,27 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
                         unicodeRange, int(script),
                         NS_ConvertUTF16toUTF8(fe->Name()).get()));
             }
-        }
 
-        aMatchData->mCmapsTested++;
-        if (rank == 0) {
+            // omitting from original windows code -- family name, lang group, pitch
+            // not available in current FontEntry implementation
+            rank += CalcStyleMatch(fe, aMatchData->mStyle);
+        } else if (!fe->IsNormalStyle()) {
+            // If style/weight/stretch was not Normal, see if we can
+            // fall back to a next-best face (e.g. Arial Black -> Bold,
+            // or Arial Narrow -> Regular).
+            GlobalFontMatch data(aMatchData->mCh, aMatchData->mStyle);
+            SearchAllFontsForChar(&data);
+            if (data.mMatchRank >= RANK_MATCHED_CMAP) {
+                fe = data.mBestMatch;
+                rank = data.mMatchRank;
+            } else {
+                return;
+            }
+        } else {
             return;
         }
 
-         // omitting from original windows code -- family name, lang group, pitch
-         // not available in current FontEntry implementation
-        rank += CalcStyleMatch(fe, aMatchData->mStyle);
+        aMatchData->mCmapsTested++;
 
         // xxx - add whether AAT font with morphing info for specific lang groups
 
