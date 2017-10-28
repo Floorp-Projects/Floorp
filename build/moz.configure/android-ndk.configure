@@ -203,7 +203,7 @@ def extra_toolchain_flags(platform_dir, toolchain_dir):
             os.path.join(platform_dir, 'usr', 'include'),
             '-gcc-toolchain',
             toolchain_dir,
-    ]
+           ]
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
@@ -274,6 +274,7 @@ def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
                             toolchain,
                             os.path.join(gcc_include, 'include'),
                             os.path.join(gcc_include, 'include-fixed'))
+
 
 @depends(host, ndk)
 @imports(_from='os.path', _import='exists')
