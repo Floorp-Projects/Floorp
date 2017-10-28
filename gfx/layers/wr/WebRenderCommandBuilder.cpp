@@ -40,7 +40,9 @@ WebRenderCommandBuilder::EmptyTransaction()
   for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
     WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
-    canvas->UpdateCompositableClient();
+    if (canvas) {
+      canvas->UpdateCompositableClient();
+    }
   }
 }
 

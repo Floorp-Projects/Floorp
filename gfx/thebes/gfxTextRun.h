@@ -1247,8 +1247,7 @@ protected:
     // search all faces in a family for a fallback in cases where it's unclear
     // whether the family might have a font for a given character
     gfxFont*
-    FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh,
-                            Script aRunScript);
+    FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh);
 
    // helper methods for looking up fonts
 
