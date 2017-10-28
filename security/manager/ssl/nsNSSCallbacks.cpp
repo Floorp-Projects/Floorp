@@ -1221,7 +1221,7 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
 
   SECOidTag evOidPolicy;
   CertificateTransparencyInfo certificateTransparencyInfo;
-  UniqueCERTCertList builtChain;
+  UniqueCERTCertList unusedBuiltChain;
   const bool saveIntermediates = false;
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
     cert,
@@ -1230,7 +1230,7 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
     mozilla::pkix::Now(),
     infoObject,
     infoObject->GetHostName(),
-    builtChain,
+    unusedBuiltChain,
     saveIntermediates,
     flags,
     infoObject->GetOriginAttributes(),
@@ -1255,7 +1255,6 @@ DetermineEVAndCTStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus,
 
   if (rv == Success) {
     sslStatus->SetCertificateTransparencyInfo(certificateTransparencyInfo);
-    sslStatus->SetSucceededCertChain(Move(builtChain));
   }
 }
 

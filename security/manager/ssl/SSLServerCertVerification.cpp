@@ -1468,19 +1468,19 @@ AuthCertificate(CertVerifier& certVerifier,
       infoObject->SetSSLStatus(status);
     }
 
-    EVStatus evStatus;
-    if (evOidPolicy == SEC_OID_UNKNOWN) {
-      evStatus = EVStatus::NotEV;
-    } else {
-      evStatus = EVStatus::EV;
+    if (!status->HasServerCert()) {
+      EVStatus evStatus;
+      if (evOidPolicy == SEC_OID_UNKNOWN) {
+        evStatus = EVStatus::NotEV;
+      } else {
+        evStatus = EVStatus::EV;
+      }
+
+      RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert.get());
+      status->SetServerCert(nsc, evStatus);
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("AuthCertificate setting NEW cert %p", nsc.get()));
     }
-
-    RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert.get());
-    status->SetServerCert(nsc, evStatus);
-
-    status->SetSucceededCertChain(Move(certList));
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-        ("AuthCertificate setting NEW cert %p", nsc.get()));
 
     status->SetCertificateTransparencyInfo(certificateTransparencyInfo);
   }
@@ -1488,7 +1488,7 @@ AuthCertificate(CertVerifier& certVerifier,
   if (rv != Success) {
     // Certificate validation failed; store the peer certificate chain on
     // infoObject so it can be used for error reporting.
-    infoObject->SetFailedCertChain(Move(certList));
+    infoObject->SetFailedCertChain(Move(peerCertChain));
     PR_SetError(MapResultToPRErrorCode(rv), 0);
   }
 
