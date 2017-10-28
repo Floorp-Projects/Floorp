@@ -7,13 +7,10 @@
 #include "nsISupports.idl"
 
 interface nsIX509Cert;
-interface nsIX509CertList;
 
 [scriptable, uuid(fa9ba95b-ca3b-498a-b889-7c79cf28fee8)]
 interface nsISSLStatus : nsISupports {
   readonly attribute nsIX509Cert serverCert;
-  readonly attribute nsIX509CertList failedCertChain;
-  readonly attribute nsIX509CertList succeededCertChain;
 
   [must_use]
   readonly attribute ACString cipherName;
