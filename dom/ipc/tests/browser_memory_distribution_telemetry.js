@@ -26,6 +26,7 @@ add_task(async function test_memory_distribution() {
     return;
   }
 
+  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
   Services.telemetry.canRecordExtended = true;
 
   let histogram = Services.telemetry.getKeyedHistogramById("MEMORY_DISTRIBUTION_AMONG_CONTENT");
