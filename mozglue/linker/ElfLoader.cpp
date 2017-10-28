@@ -20,6 +20,7 @@
 
 #if defined(ANDROID)
 #include <sys/syscall.h>
+#include <math.h>
 
 #include <android/api-level.h>
 #if __ANDROID_API__ < 8
@@ -331,25 +332,6 @@ void *
 SystemElf::GetSymbolPtr(const char *symbol) const
 {
   void *sym = dlsym(dlhandle, symbol);
-  // Various bits of Gecko use isnanf, which gcc is happy to compile into
-  // inlined code using floating-point comparisons.  clang, on the other hand,
-  // does not use inline code and generates full calls to isnanf.
-  //
-  // libm.so on Android defines isnanf as weak.  dlsym always returns null for
-  // weak symbols.  Which means that we'll never be able to resolve the symbol
-  // that clang generates here.  However, said weak symbol for isnanf is just
-  // an alias for __isnanf, which is the real definition.  So if we're asked
-  // for isnanf and we can't find it, try looking for __isnanf instead.  The
-  // actual system linker uses alternate resolution interfaces and therefore
-  // does not encounter this issue.
-  //
-  // See also https://bugs.chromium.org/p/chromium/issues/detail?id=376828,
-  // from which this comment and this fix are adapted.
-  if (!sym &&
-      !strcmp(symbol, "isnanf") &&
-      !strcmp(GetName(), "libm.so")) {
-    sym = dlsym(dlhandle, "__isnanf");
-  }
   DEBUG_LOG("dlsym(%p [\"%s\"], \"%s\") = %p", dlhandle, GetPath(), symbol, sym);
   ElfLoader::Singleton.lastError = dlerror();
   return sym;
@@ -576,6 +558,9 @@ ElfLoader::Init()
   if (dladdr(FunctionPtr(syscall), &info) != 0) {
     libc = LoadedElf::Create(info.dli_fname, info.dli_fbase);
   }
+  if (dladdr(FunctionPtr<int (*)(double)>(isnan), &info) != 0) {
+    libm = LoadedElf::Create(info.dli_fname, info.dli_fbase);
+  }
 #endif
 }
 
@@ -591,6 +576,7 @@ ElfLoader::~ElfLoader()
   self_elf = nullptr;
 #if defined(ANDROID)
   libc = nullptr;
+  libm = nullptr;
 #endif
 
   AutoLock lock(&handlesMutex);
