@@ -141,16 +141,13 @@ public:
         bool isRecycled;
         RefPtr<WebRenderCanvasData> canvasData =
           aManager->CommandBuilder().CreateOrRecycleWebRenderUserData<WebRenderCanvasData>(this, &isRecycled);
+        nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
+        if (!canvasFrame->UpdateWebRenderCanvasData(aDisplayListBuilder, canvasData)) {
+          return true;
+        }
         WebRenderCanvasRendererAsync* data =
           static_cast<WebRenderCanvasRendererAsync*>(canvasData->GetCanvasRenderer());
-
-        if (!isRecycled) {
-          nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
-          if (!canvasFrame->InitializeCanvasRenderer(aDisplayListBuilder, data)) {
-            return true;
-          }
-        }
-
+        MOZ_ASSERT(data);
         data->UpdateCompositableClient();
 
         // Push IFrame for async image pipeline.
@@ -461,11 +458,11 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsHTMLCanvasFrame::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                                            CanvasRenderer* aRenderer)
+nsHTMLCanvasFrame::UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                             WebRenderCanvasData* aCanvasData)
 {
   HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
-  return element->InitializeCanvasRenderer(aBuilder, aRenderer);
+  return element->UpdateWebRenderCanvasData(aBuilder, aCanvasData);
 }
 
 void
