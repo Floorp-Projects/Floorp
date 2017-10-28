@@ -121,6 +121,16 @@ function pemToBase64(pem) {
             .replace(/[\r\n]/g, "");
 }
 
+function build_cert_chain(certNames) {
+  let certList = Cc["@mozilla.org/security/x509certlist;1"]
+                   .createInstance(Ci.nsIX509CertList);
+  certNames.forEach(function(certName) {
+    let cert = constructCertFromFile("bad_certs/" + certName + ".pem");
+    certList.addCert(cert);
+  });
+  return certList;
+}
+
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);
@@ -702,6 +712,7 @@ function add_cert_override(aHost, aExpectedBits, aExpectedErrorRegexp,
     (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
     (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
     (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
+
   Assert.equal(bits, aExpectedBits,
                "Actual and expected override bits should match");
   let cert = sslstatus.serverCert;
@@ -717,7 +728,8 @@ function add_cert_override(aHost, aExpectedBits, aExpectedErrorRegexp,
 // with the expected errors and that adding an override results in a subsequent
 // connection succeeding.
 function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
-                                aExpectedErrorRegexp = undefined) {
+                                aExpectedErrorRegexp = undefined,
+                                aExpectedSSLStatus = undefined) {
   add_connection_test(aHost, aExpectedError, null,
                       add_cert_override.bind(this, aHost, aExpectedBits,
                                              aExpectedErrorRegexp));
@@ -725,6 +737,13 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
     Assert.ok(aSecurityInfo.securityState &
               Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
               "Cert override flag should be set on the security state");
+    if (aExpectedSSLStatus) {
+      let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                                  .SSLStatus;
+      if (aExpectedSSLStatus.failedCertChain) {
+        ok(aExpectedSSLStatus.failedCertChain.equals(sslstatus.failedCertChain));
+      }
+    }
   });
 }
 
