@@ -1096,7 +1096,6 @@ class BuildDriver(MozbuildObject):
                 # Try to call the default backend's build() method. This will
                 # run configure to determine BUILD_BACKENDS if it hasn't run
                 # yet.
-                config = None
                 try:
                     config = self.config_environment
                 except Exception:
@@ -1105,20 +1104,12 @@ class BuildDriver(MozbuildObject):
                     if config_rc != 0:
                         return config_rc
 
-                    # Even if configure runs successfully, we may have trouble
-                    # getting the config_environment for some builds, such as
-                    # OSX Universal builds. These have to go through client.mk
-                    # regardless.
-                    try:
-                        config = self.config_environment
-                    except Exception:
-                        pass
+                    config = self.config_environment
 
-                if config:
-                    active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
-                    if active_backend:
-                        backend_cls = get_backend_class(active_backend)(config)
-                        status = backend_cls.build(self, output, jobs, verbose)
+                active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
+                if active_backend:
+                    backend_cls = get_backend_class(active_backend)(config)
+                    status = backend_cls.build(self, output, jobs, verbose)
 
                 # If the backend doesn't specify a build() method, then just
                 # call client.mk directly.
