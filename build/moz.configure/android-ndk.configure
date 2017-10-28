@@ -147,14 +147,6 @@ def android_platform(target, android_version, ndk, _):
 add_old_configure_assignment('android_platform', android_platform)
 
 
-@depends(android_platform)
-def extra_toolchain_flags(platform_dir):
-    if not platform_dir:
-        return []
-    return ['-isystem',
-            os.path.join(platform_dir, 'usr', 'include')]
-
-
 @depends(target, host, ndk, '--with-android-toolchain', '--help')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
@@ -201,6 +193,17 @@ def android_toolchain_prefix_base(target):
         # in the first place.
         return 'i686-linux-android'
     return target.toolchain
+
+
+@depends(android_platform, android_toolchain)
+def extra_toolchain_flags(platform_dir, toolchain_dir):
+    if not platform_dir:
+        return []
+    return ['-isystem',
+            os.path.join(platform_dir, 'usr', 'include'),
+            '-gcc-toolchain',
+            toolchain_dir,
+    ]
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
