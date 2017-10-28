@@ -151,7 +151,7 @@ add_old_configure_assignment('android_platform', android_platform)
 def extra_toolchain_flags(platform_dir):
     if not platform_dir:
         return []
-    return ['-idirafter',
+    return ['-isystem',
             os.path.join(platform_dir, 'usr', 'include')]
 
 
