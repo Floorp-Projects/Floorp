@@ -83,18 +83,9 @@ var snapshotFormatters = {
 
     function getReasonStringName(resultValue, defaultValue) {
       if (resultValue != defaultValue) {
-        if (resultValue) {
-          return "enabledByUser";
-        } else {
-          return "disabledByUser";
-        }
-      } else {
-        if (resultValue) {
-          return "enabledByDefault";
-        } else {
-          return "disabledByDefault";
-        }
+        return resultValue ? "enabledByUser" : "disabledByUser";
       }
+      return resultValue ? "enabledByDefault" : "disabledByDefault";
     }
     let styloReason;
     let styloChromeReason;
