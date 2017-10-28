@@ -502,8 +502,11 @@ TextureClient::Lock(OpenMode aMode)
     return mOpenMode == aMode;
   }
 
-  if (aMode & OpenMode::OPEN_WRITE && !TryReadLock()) {
-    NS_WARNING("Attempt to Lock a texture that is being read by the compositor!");
+  if ((aMode & OpenMode::OPEN_WRITE || !mInfo.canConcurrentlyReadLock) && !TryReadLock()) {
+    // Only warn if attempting to write. Attempting to read is acceptable usage.
+    if (aMode & OpenMode::OPEN_WRITE) {
+      NS_WARNING("Attempt to Lock a texture that is being read by the compositor!");
+    }
     return false;
   }
 
@@ -594,6 +597,10 @@ TextureClient::EnableReadLock()
 bool
 TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 {
+  if (mData) {
+    mData->OnForwardedToHost();
+  }
+
   if (mReadLock && mUpdated) {
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
@@ -1121,6 +1128,12 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
 #ifdef XP_MACOSX
   if (!data && gfxPrefs::UseIOSurfaceTextures()) {
     data = MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
+  }
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (!data && gfxPrefs::UseSurfaceTextureTextures()) {
+    data = AndroidNativeWindowTextureData::Create(aSize, aFormat);
   }
 #endif
 

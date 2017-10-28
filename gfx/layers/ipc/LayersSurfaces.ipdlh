@@ -62,7 +62,9 @@ struct SurfaceDescriptorMacIOSurface {
 struct SurfaceTextureDescriptor {
   uint64_t handle;
   IntSize size;
+  SurfaceFormat format;
   bool continuous;
+  bool ignoreTransform;
 };
 
 struct EGLImageDescriptor {

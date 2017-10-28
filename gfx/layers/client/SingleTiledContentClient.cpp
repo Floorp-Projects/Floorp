@@ -151,6 +151,15 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                         extraPainted,
                         &backBufferOnWhite);
 
+  // Mark the area we need to paint in the back buffer as invalid in the
+  // front buffer as they will become out of sync.
+  mTile.mInvalidFront.OrWith(tileDirtyRegion);
+
+  // Add backbuffer's invalid region to the dirty region to be painted.
+  // This will be empty if we were able to copy from the front in to the back.
+  paintRegion.OrWith(mTile.mInvalidBack.MovedBy(mTilingOrigin));
+  tileDirtyRegion.OrWith(mTile.mInvalidBack);
+
   mTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
 
   extraPainted.MoveBy(mTilingOrigin);
@@ -198,26 +207,26 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
           const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
           discardedFrontBuffer->CopyToTextureClient(backBuffer, &rect, &dest);
         }
-      }
 
-      if (discardedFrontBufferOnWhite && backBufferOnWhite) {
-        TextureClientAutoLock frontOnWhiteLock(discardedFrontBufferOnWhite,
-                                               OpenMode::OPEN_READ);
-        if (frontOnWhiteLock.Succeeded()) {
-          for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
-            const gfx::IntRect rect = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
-            const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
+        if (discardedFrontBufferOnWhite && backBufferOnWhite) {
+          TextureClientAutoLock frontOnWhiteLock(discardedFrontBufferOnWhite,
+                                                OpenMode::OPEN_READ);
+          if (frontOnWhiteLock.Succeeded()) {
+            for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
+              const gfx::IntRect rect = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
+              const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
 
-            discardedFrontBufferOnWhite->CopyToTextureClient(backBufferOnWhite,
-                                                             &rect, &dest);
+              discardedFrontBufferOnWhite->CopyToTextureClient(backBufferOnWhite,
+                                                              &rect, &dest);
+            }
+
+            TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n", &mPaintedLayer, Stringify(copyableRegion).c_str());
+
+            // We don't need to repaint valid content that was just copied.
+            paintRegion.SubOut(copyableRegion);
           }
         }
       }
-
-      TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n", &mPaintedLayer, Stringify(copyableRegion).c_str());
-
-      // We don't need to repaint valid content that was just copied.
-      paintRegion.SubOut(copyableRegion);
     }
   }
 
@@ -236,10 +245,6 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
     aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
   }
-
-  // Mark the area we just drew into the back buffer as invalid in the front buffer as they're
-  // now out of sync.
-  mTile.mInvalidFront.OrWith(tileDirtyRegion);
 
   // The new buffer is now validated, remove the dirty region from it.
   mTile.mInvalidBack.SubOut(tileDirtyRegion);

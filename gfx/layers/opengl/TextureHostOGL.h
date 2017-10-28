@@ -347,7 +347,8 @@ public:
                        gfx::SurfaceFormat aFormat,
                        GLenum aTarget,
                        GLenum aWrapMode,
-                       gfx::IntSize aSize);
+                       gfx::IntSize aSize,
+                       bool aIgnoreTransform);
 
   virtual const char* Name() const override { return "SurfaceTextureSource"; }
 
@@ -383,6 +384,7 @@ protected:
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
   const gfx::IntSize mSize;
+  const bool mIgnoreTransform;
 };
 
 class SurfaceTextureHost : public TextureHost
@@ -391,7 +393,9 @@ public:
   SurfaceTextureHost(TextureFlags aFlags,
                      mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
                      gfx::IntSize aSize,
-                     bool aContinuousUpdate);
+                     gfx::SurfaceFormat aFormat,
+                     bool aContinuousUpdate,
+                     bool aIgnoreTransform);
 
   virtual ~SurfaceTextureHost();
 
@@ -427,7 +431,9 @@ public:
 protected:
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
   bool mContinuousUpdate;
+  const bool mIgnoreTransform;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
 };
