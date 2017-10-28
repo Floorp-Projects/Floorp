@@ -994,9 +994,7 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             new gfxFontconfigFontEntry(faceName, face, mContainsAppFonts);
         AddFontEntry(fontEntry);
 
-        if (fontEntry->IsUpright() &&
-            fontEntry->Weight() == NS_FONT_WEIGHT_NORMAL &&
-            fontEntry->Stretch() == NS_FONT_STRETCH_NORMAL) {
+        if (fontEntry->IsNormalStyle()) {
             numRegularFaces++;
         }
 
