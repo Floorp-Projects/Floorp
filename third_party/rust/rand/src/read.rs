@@ -30,6 +30,7 @@ use Rng;
 /// let mut rng = read::ReadRng::new(&data[..]);
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
+#[derive(Debug)]
 pub struct ReadRng<R> {
     reader: R
 }

@@ -46,7 +46,7 @@ use distributions::{Sample, IndependentSample};
 ///     println!("{}", sum);
 /// }
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Range<X> {
     low: X,
     range: X,
@@ -96,6 +96,7 @@ macro_rules! integer_impl {
             // "bit-equal", so casting between them is a no-op & a
             // bijection.
 
+            #[inline]
             fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
                 let unsigned_max: $unsigned = ::std::$unsigned::MAX;
@@ -112,6 +113,7 @@ macro_rules! integer_impl {
                     accept_zone: zone as $ty
                 }
             }
+
             #[inline]
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 loop {

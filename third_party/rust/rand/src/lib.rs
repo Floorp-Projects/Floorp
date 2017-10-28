@@ -239,9 +239,14 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://doc.rust-lang.org/rand/")]
+       html_root_url = "https://docs.rs/rand/0.3")]
+
+#![deny(missing_debug_implementations)]
+
+#![cfg_attr(feature = "i128_support", feature(i128_type))]
 
 #[cfg(test)] #[macro_use] extern crate log;
+
 
 use std::cell::RefCell;
 use std::marker;
@@ -277,6 +282,38 @@ type w64 = w<u64>;
 type w32 = w<u32>;
 
 /// A type that can be randomly generated using an `Rng`.
+///
+/// ## Built-in Implementations
+///
+/// This crate implements `Rand` for various primitive types.  Assuming the
+/// provided `Rng` is well-behaved, these implementations generate values with
+/// the following ranges and distributions:
+///
+/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
+///   over all values of the type.
+/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
+///   code points in the range `0...0x10_FFFF`, except for the range
+///   `0xD800...0xDFFF` (the surrogate code points).  This includes
+///   unassigned/reserved code points.
+/// * `bool`: Generates `false` or `true`, each with probability 0.5.
+/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
+///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
+///   [`StandardNormal`] wrapper types produce floating point numbers with
+///   alternative ranges or distributions.)
+///
+/// [`Open01`]: struct.Open01.html
+/// [`Closed01`]: struct.Closed01.html
+/// [`Exp1`]: struct.Exp1.html
+/// [`StandardNormal`]: struct.StandardNormal.html
+///
+/// The following aggregate types also implement `Rand` as long as their
+/// component types implement it:
+///
+/// * Tuples and arrays: Each element of the tuple or array is generated
+///   independently, using its own `Rand` implementation.
+/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
+///   random `T` and returns `Some(T)`.
+
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -289,7 +326,7 @@ pub trait Rng {
     ///
     /// This rarely needs to be called directly, prefer `r.gen()` to
     /// `r.next_u32()`.
-    // FIXME #7771: Should be implemented in terms of next_u64
+    // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
@@ -531,6 +568,9 @@ pub trait Rng {
 
     /// Shuffle a mutable slice in place.
     ///
+    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
+    /// which produces an unbiased permutation.
+    ///
     /// # Example
     ///
     /// ```rust
@@ -604,6 +644,7 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 ///
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
+#[derive(Debug)]
 pub struct Generator<'a, T, R:'a> {
     rng: &'a mut R,
     _marker: marker::PhantomData<fn() -> T>,
@@ -623,6 +664,7 @@ impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
 ///
 /// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
 /// [`Rng`]: trait.Rng.html
+#[derive(Debug)]
 pub struct AsciiGenerator<'a, R:'a> {
     rng: &'a mut R,
 }
@@ -682,7 +724,7 @@ pub trait SeedableRng<Seed>: Rng {
 /// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[allow(missing_copy_implementations)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct XorShiftRng {
     x: w32,
     y: w32,
@@ -772,6 +814,7 @@ impl Rand for XorShiftRng {
 /// let Open01(val) = random::<Open01<f32>>();
 /// println!("f32 from (0,1): {}", val);
 /// ```
+#[derive(Debug)]
 pub struct Open01<F>(pub F);
 
 /// A wrapper for generating floating point numbers uniformly in the
@@ -789,11 +832,12 @@ pub struct Open01<F>(pub F);
 /// let Closed01(val) = random::<Closed01<f32>>();
 /// println!("f32 from [0,1]: {}", val);
 /// ```
+#[derive(Debug)]
 pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
 }
@@ -856,6 +900,7 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[derive(Debug)]
 struct ThreadRngReseeder;
 
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
@@ -870,7 +915,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
 }
@@ -964,7 +1009,8 @@ pub fn random<T: Rand>() -> T {
     thread_rng().gen()
 }
 
-/// Randomly sample up to `amount` elements from an iterator.
+/// Randomly sample up to `amount` elements from a finite iterator.
+/// The order of elements in the sample is not random.
 ///
 /// # Example
 ///

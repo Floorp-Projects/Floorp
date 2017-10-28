@@ -53,6 +53,7 @@ pub trait IndependentSample<Support>: Sample<Support> {
 
 /// A wrapper for generating types that implement `Rand` via the
 /// `Sample` & `IndependentSample` traits.
+#[derive(Debug)]
 pub struct RandSample<Sup> {
     _marker: marker::PhantomData<fn() -> Sup>,
 }
@@ -79,8 +80,7 @@ impl<Sup> RandSample<Sup> {
 }
 
 /// A value with a particular weight for use with `WeightedChoice`.
-#[derive(Copy)]
-#[derive(Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Weighted<T> {
     /// The numerical weight of this item
     pub weight: u32,
@@ -113,6 +113,7 @@ pub struct Weighted<T> {
 ///      println!("{}", wc.ind_sample(&mut rng));
 /// }
 /// ```
+#[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
     weight_range: Range<u32>

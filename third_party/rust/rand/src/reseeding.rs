@@ -21,6 +21,7 @@ const DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
+#[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr> {
     rng: R,
     generation_threshold: u64,
@@ -132,7 +133,7 @@ pub trait Reseeder<R> {
 
 /// Reseed an RNG using a `Default` instance. This reseeds by
 /// replacing the RNG with the result of a `Default::default` call.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct ReseedWithDefault;
 
 impl<R: Rng + Default> Reseeder<R> for ReseedWithDefault {

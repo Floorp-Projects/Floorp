@@ -15,6 +15,7 @@
 use std::slice;
 use std::iter::repeat;
 use std::num::Wrapping as w;
+use std::fmt;
 
 use {Rng, SeedableRng, Rand, w32, w64};
 
@@ -257,6 +258,12 @@ impl Rand for IsaacRng {
 
         ret.init(true);
         return ret;
+    }
+}
+
+impl fmt::Debug for IsaacRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "IsaacRng {{}}")
     }
 }
 
@@ -503,6 +510,11 @@ impl Rand for Isaac64Rng {
     }
 }
 
+impl fmt::Debug for Isaac64Rng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Isaac64Rng {{}}")
+    }
+}
 
 #[cfg(test)]
 mod test {
