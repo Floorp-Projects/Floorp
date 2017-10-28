@@ -588,6 +588,7 @@ nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
     NSToCoordRound(aAppUnitsPerDevPixel *
                    aFontGroup->GetFirstValidFont()->
                    GetGlyphHAdvance(aDrawTarget, aGlyph.glyphID));
+  detailedGlyph.mXOffset = detailedGlyph.mYOffset = 0;
   gfxShapedText::CompressedGlyph g;
   g.SetComplex(true, true, 1);
   textRun->SetGlyphs(0, g, &detailedGlyph);

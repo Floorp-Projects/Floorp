@@ -339,16 +339,17 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
             for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
                 gfxShapedText::DetailedGlyph* d = details.AppendElement();
                 d->mGlyphID = gids[j];
-                d->mOffset.y = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits
-                                      : -yLocs[j] * dev2appUnits;
+                d->mYOffset = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits
+                                     : -yLocs[j] * dev2appUnits;
                 if (j == c.baseGlyph) {
+                    d->mXOffset = 0;
                     d->mAdvance = appAdvance;
                     clusterLoc = xLocs[j];
                 } else {
                     float dx = rtl ? (xLocs[j] - clusterLoc) :
                                      (xLocs[j] - clusterLoc - adv);
-                    d->mOffset.x = roundX ? NSToIntRound(dx) * dev2appUnits
-                                          : dx * dev2appUnits;
+                    d->mXOffset = roundX ? NSToIntRound(dx) * dev2appUnits
+                                         : dx * dev2appUnits;
                     d->mAdvance = 0;
                 }
             }
