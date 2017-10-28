@@ -333,6 +333,9 @@ pref("gfx.android.rgb16.force", false);
 // Allow GLContexts to be attached/detached from SurfaceTextures
 pref("gfx.SurfaceTexture.detach.enabled", true);
 
+// Use SurfaceTextures as preferred backend for TextureClient/Host
+pref("gfx.use-surfacetexture-textures", false);
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 

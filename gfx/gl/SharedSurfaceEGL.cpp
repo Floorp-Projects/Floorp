@@ -274,7 +274,12 @@ SharedSurface_SurfaceTexture::WaitForBufferOwnership()
 bool
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
-    *out_descriptor = layers::SurfaceTextureDescriptor(mSurface->GetHandle(), mSize, false /* NOT continuous */);
+    *out_descriptor =
+        layers::SurfaceTextureDescriptor(mSurface->GetHandle(),
+                                         mSize,
+                                         gfx::SurfaceFormat::R8G8B8A8,
+                                         false /* NOT continuous */,
+                                         false /* Do not ignore transform */);
     return true;
 }
 

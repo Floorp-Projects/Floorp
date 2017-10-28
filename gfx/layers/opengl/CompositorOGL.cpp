@@ -866,7 +866,10 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
     MOZ_ASSERT_IF(source->GetTextureTarget() == LOCAL_GL_TEXTURE_EXTERNAL,
                   source->GetFormat() == gfx::SurfaceFormat::R8G8B8A8 ||
-                  source->GetFormat() == gfx::SurfaceFormat::R8G8B8X8);
+                  source->GetFormat() == gfx::SurfaceFormat::R8G8B8X8 ||
+                  source->GetFormat() == gfx::SurfaceFormat::B8G8R8A8 ||
+                  source->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ||
+                  source->GetFormat() == gfx::SurfaceFormat::R5G6B5_UINT16);
     MOZ_ASSERT_IF(source->GetTextureTarget() == LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                   source->GetFormat() == gfx::SurfaceFormat::R8G8B8A8 ||
                   source->GetFormat() == gfx::SurfaceFormat::R8G8B8X8 ||
