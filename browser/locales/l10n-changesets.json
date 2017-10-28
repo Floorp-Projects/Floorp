@@ -317,7 +317,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "e4747aa9b16c"
+        "revision": "6f2229704483"
     }, 
     "fi": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "30fcb126e093"
+        "revision": "2ce84489d466"
     }, 
     "sl": {
         "platforms": [
@@ -862,7 +862,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "ed5a6094ae71"
+        "revision": "5b6a5812cc8c"
     }, 
     "tr": {
         "platforms": [
