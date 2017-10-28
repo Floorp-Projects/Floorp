@@ -412,8 +412,8 @@ public:
 protected:
   bool ValidateTile(TileClient& aTile,
                     const nsIntPoint& aTileRect,
-                    const nsIntRegion& dirtyRect);
-  
+                    nsIntRegion& aDirtyRegion);
+
   void Update(const nsIntRegion& aNewValidRegion,
               const nsIntRegion& aPaintRegion,
               const nsIntRegion& aDirtyRegion);

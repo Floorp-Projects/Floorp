@@ -236,6 +236,7 @@ public:
     bool hasSynchronization;
     bool supportsMoz2D;
     bool canExposeMappedData;
+    bool canConcurrentlyReadLock;
 
     Info()
     : format(gfx::SurfaceFormat::UNKNOWN)
@@ -243,6 +244,7 @@ public:
     , hasSynchronization(false)
     , supportsMoz2D(false)
     , canExposeMappedData(false)
+    , canConcurrentlyReadLock(true)
     {}
   };
 
@@ -269,6 +271,8 @@ public:
 
   virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
   virtual void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) { }
+
+  virtual void OnForwardedToHost() {}
 
   virtual TextureData*
   CreateSimilar(LayersIPCChannel* aAllocator,
