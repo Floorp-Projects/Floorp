@@ -78,6 +78,7 @@ function ServerWBO(id, initialPayload, modified) {
   }
   this.payload = initialPayload;
   this.modified = modified || new_timestamp();
+  this.sortindex = 0;
 }
 ServerWBO.prototype = {
 
@@ -93,11 +94,13 @@ ServerWBO.prototype = {
     input = JSON.parse(input);
     this.payload = input.payload;
     this.modified = new_timestamp();
+    this.sortindex = input.sortindex || 0;
   },
 
   delete() {
     delete this.payload;
     delete this.modified;
+    delete this.sortindex;
   },
 
   // This handler sets `newModified` on the response body if the collection
@@ -284,7 +287,8 @@ ServerCollection.prototype = {
   _inResultSet(wbo, options) {
     return wbo.payload
            && (!options.ids || (options.ids.indexOf(wbo.id) != -1))
-           && (!options.newer || (wbo.modified > options.newer));
+           && (!options.newer || (wbo.modified > options.newer))
+           && (!options.older || (wbo.modified < options.older));
   },
 
   count(options) {
@@ -299,15 +303,37 @@ ServerCollection.prototype = {
   },
 
   get(options, request) {
-    let result;
-    if (options.full) {
-      let data = [];
-      for (let wbo of Object.values(this._wbos)) {
-        // Drop deleted.
-        if (wbo.modified && this._inResultSet(wbo, options)) {
-          data.push(wbo.get());
-        }
+    let data = [];
+    for (let wbo of Object.values(this._wbos)) {
+      if (wbo.modified && this._inResultSet(wbo, options)) {
+        data.push(wbo);
       }
+    }
+    switch (options.sort) {
+      case "newest":
+        data.sort((a, b) => b.modified - a.modified);
+        break;
+
+      case "oldest":
+        data.sort((a, b) => a.modified - b.modified);
+        break;
+
+      case "index":
+        data.sort((a, b) => b.sortindex - a.sortindex);
+        break;
+
+      default:
+        if (options.sort) {
+          this._log.error("Error: client requesting unknown sort order",
+                          options.sort);
+          throw new Error("Unknown sort order");
+        }
+        // If the client didn't request a sort order, sort newest first,
+        // since `test_history_engine` currently depends on this.
+        data.sort((a, b) => b.modified - a.modified);
+    }
+    if (options.full) {
+      data = data.map(wbo => wbo.get());
       let start = options.offset || 0;
       if (options.limit) {
         let numItemsPastOffset = data.length - start;
@@ -323,19 +349,12 @@ ServerCollection.prototype = {
       if (request && request.getHeader("accept") == "application/newlines") {
         this._log.error("Error: client requesting application/newlines content");
         throw new Error("This server should not serve application/newlines content");
-      } else {
-        result = JSON.stringify(data);
       }
 
       // Use options as a backchannel to report count.
       options.recordCount = data.length;
     } else {
-      let data = [];
-      for (let [id, wbo] of Object.entries(this._wbos)) {
-        if (this._inResultSet(wbo, options)) {
-          data.push(id);
-        }
-      }
+      data = data.map(wbo => wbo.id);
       let start = options.offset || 0;
       if (options.limit) {
         data = data.slice(start, start + options.limit);
@@ -343,10 +362,9 @@ ServerCollection.prototype = {
       } else if (start) {
         data = data.slice(start);
       }
-      result = JSON.stringify(data);
       options.recordCount = data.length;
     }
-    return result;
+    return JSON.stringify(data);
   },
 
   post(input) {
@@ -368,6 +386,7 @@ ServerCollection.prototype = {
       if (wbo) {
         wbo.payload = record.payload;
         wbo.modified = new_timestamp();
+        wbo.sortindex = record.sortindex || 0;
         success.push(record.id);
       } else {
         failed[record.id] = "no wbo configured";
@@ -425,6 +444,9 @@ ServerCollection.prototype = {
       }
       if (options.newer) {
         options.newer = parseFloat(options.newer);
+      }
+      if (options.older) {
+        options.older = parseFloat(options.older);
       }
       if (options.limit) {
         options.limit = parseInt(options.limit, 10);
