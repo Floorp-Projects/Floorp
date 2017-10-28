@@ -434,6 +434,11 @@ public:
     already_AddRefed<Layer>
     GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager) override;
+
+    bool
+    UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                              WebRenderCanvasData* aCanvasData) override;
+
     bool
     InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                              CanvasRenderer* aRenderer) override;
