@@ -486,6 +486,11 @@ def readICUTimeZonesFromTimezoneTypes(icuTzDir):
     # Remove the ICU placeholder time zone "Etc/Unknown".
     zones.remove(Zone("Etc/Unknown"))
 
+    # tzdata2017c removed the link Canada/East-Saskatchewan -> America/Regina,
+    # but it is still present in ICU sources. Manually remove it to keep our
+    # tables consistent with IANA.
+    del links[Zone("Canada/East-Saskatchewan")]
+
     validateTimeZones(zones, links)
 
     return (zones, links)
@@ -516,6 +521,11 @@ def readICUTimeZonesFromZoneInfo(icuTzDir, ignoreFactory):
 
     # Remove the ICU placeholder time zone "Etc/Unknown".
     zones.remove(Zone("Etc/Unknown"))
+
+    # tzdata2017c removed the link Canada/East-Saskatchewan -> America/Regina,
+    # but it is still present in ICU sources. Manually remove it to keep our
+    # tables consistent with IANA.
+    del links[Zone("Canada/East-Saskatchewan")]
 
     # Remove the placeholder time zone "Factory".
     if ignoreFactory:
@@ -575,6 +585,11 @@ def readICULegacyZones(icuDir):
 
     # Remove the ICU placeholder time zone "Etc/Unknown".
     zones.remove(Zone("Etc/Unknown"))
+
+    # tzdata2017c removed the link Canada/East-Saskatchewan -> America/Regina,
+    # but it is still present in ICU sources. Manually tag it as a legacy time
+    # zone so our tables are kept consistent with IANA.
+    links[Zone("Canada/East-Saskatchewan")] = "America/Regina"
 
     return (zones, links)
 
