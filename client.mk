@@ -173,9 +173,6 @@ clobber clobber_all: clean
 # helper target for mobile
 build_and_deploy: build package install
 
-# Do everything from scratch
-everything: clean build
-
 ####################################
 # Profile-Guided Optimization
 #  This is up here so that this is usable in multi-pass builds, where you
@@ -352,7 +349,6 @@ echo-variable-%:
     clobber \
     clobber_all \
     pull_and_build_all \
-    everything \
     configure \
     preflight_all \
     postflight_all \
