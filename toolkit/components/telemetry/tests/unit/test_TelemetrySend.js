@@ -555,14 +555,10 @@ add_task(async function test_pref_observer() {
 
   await TelemetrySend.setup(true);
 
-  const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
-
   let origTelemetryEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled);
   let origFhrUploadEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled);
 
-  if (!IS_UNIFIED_TELEMETRY) {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
-  }
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   function waitAnnotateCrashReport(expectedValue, trigger) {
@@ -605,13 +601,17 @@ add_task(async function test_pref_observer() {
     });
   }
 
+  const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
+
+  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
+
+  await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true));
+
   await waitAnnotateCrashReport(!IS_UNIFIED_TELEMETRY, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
 
   await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true));
 
-  if (!IS_UNIFIED_TELEMETRY) {
-    Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, origTelemetryEnabled);
-  }
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, origTelemetryEnabled);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, origFhrUploadEnabled);
 });
 
