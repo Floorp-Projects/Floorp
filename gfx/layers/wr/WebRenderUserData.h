@@ -159,7 +159,9 @@ public:
   virtual UserDataType GetType() override { return UserDataType::eCanvas; }
   static UserDataType Type() { return UserDataType::eCanvas; }
 
+  void ClearCanvasRenderer();
   WebRenderCanvasRendererAsync* GetCanvasRenderer();
+  WebRenderCanvasRendererAsync* CreateCanvasRenderer();
   void ClearCachedResources() override;
 protected:
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
