@@ -50,6 +50,8 @@
 #include "ScopedGLHelpers.h"
 #include "VRManagerChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
+#include "mozilla/layers/WebRenderUserData.h"
+#include "mozilla/layers/WebRenderCanvasRenderer.h"
 
 // Local
 #include "CanvasUtils.h"
@@ -1348,6 +1350,28 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
     mResetLayer = false;
 
     return canvasLayer.forget();
+}
+
+bool
+WebGLContext::UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                        WebRenderCanvasData* aCanvasData)
+{
+  CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
+
+  if(!mResetLayer && renderer) {
+    return true;
+  }
+
+  renderer = aCanvasData->CreateCanvasRenderer();
+  if (!InitializeCanvasRenderer(aBuilder, renderer)) {
+    // Clear CanvasRenderer of WebRenderCanvasData
+    aCanvasData->ClearCanvasRenderer();
+    return false;
+  }
+
+  MOZ_ASSERT(renderer);
+  mResetLayer = false;
+  return true;
 }
 
 bool

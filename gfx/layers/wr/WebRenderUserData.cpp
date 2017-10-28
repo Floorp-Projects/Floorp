@@ -255,13 +255,22 @@ WebRenderCanvasData::ClearCachedResources()
   }
 }
 
+void
+WebRenderCanvasData::ClearCanvasRenderer()
+{
+  mCanvasRenderer = nullptr;
+}
+
 WebRenderCanvasRendererAsync*
 WebRenderCanvasData::GetCanvasRenderer()
 {
-  if (!mCanvasRenderer) {
-    mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
-  }
+  return mCanvasRenderer.get();
+}
 
+WebRenderCanvasRendererAsync*
+WebRenderCanvasData::CreateCanvasRenderer()
+{
+  mCanvasRenderer = MakeUnique<WebRenderCanvasRendererAsync>(mWRManager);
   return mCanvasRenderer.get();
 }
 
