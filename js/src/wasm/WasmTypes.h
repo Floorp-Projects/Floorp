@@ -1846,10 +1846,13 @@ class DebugFrame
         void* flagsWord_;
     };
 
+    // Avoid -Wunused-private-field warnings.
+  protected:
 #if JS_BITS_PER_WORD == 32
     uint32_t padding_;  // See alignmentStaticAsserts().
 #endif
 
+  private:
     // The Frame goes at the end since the stack grows down.
     Frame frame_;
 
