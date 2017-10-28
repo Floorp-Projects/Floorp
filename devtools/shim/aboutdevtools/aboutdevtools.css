@@ -25,8 +25,8 @@
 
 .left-pane {
   width: 360px;
-  background-image: url(images/otter.png);
-  background-size: 85%;
+  background-image: url(images/otter.svg);
+  background-size: 80%;
   background-position: 50%;
   background-repeat: no-repeat;
   height: 100%;
