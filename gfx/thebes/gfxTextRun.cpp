@@ -2758,6 +2758,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                             gfxTextRun::DetailedGlyph detailedGlyph;
                             detailedGlyph.mGlyphID = mainFont->GetSpaceGlyph();
                             detailedGlyph.mAdvance = advance;
+                            detailedGlyph.mXOffset = detailedGlyph.mYOffset = 0;
                             gfxShapedText::CompressedGlyph g;
                             g.SetComplex(true, true, 1);
                             aTextRun->SetGlyphs(aOffset + index,

@@ -161,6 +161,8 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
           gfxTextRun::DetailedGlyph details;
           details.mGlyphID = g.GetSimpleGlyph();
           details.mAdvance = g.GetSimpleAdvance();
+          details.mXOffset = 0;
+          details.mYOffset = 0;
           glyphs.AppendElement(details);
         }
       } else {
