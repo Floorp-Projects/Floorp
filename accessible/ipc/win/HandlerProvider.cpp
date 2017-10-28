@@ -187,10 +187,14 @@ HandlerProvider::BuildIA2Data(IA2Data* aOutIA2Data)
   MOZ_ASSERT(mTargetUnk);
   MOZ_ASSERT(IsTargetInterfaceCacheable());
 
-  RefPtr<NEWEST_IA2_INTERFACE>
-    target(static_cast<NEWEST_IA2_INTERFACE*>(mTargetUnk.get()));
+  RefPtr<NEWEST_IA2_INTERFACE> target;
+  HRESULT hr = mTargetUnk.get()->QueryInterface(NEWEST_IA2_IID,
+    getter_AddRefs(target));
+  if (FAILED(hr)) {
+    return;
+  }
 
-  HRESULT hr = E_UNEXPECTED;
+  hr = E_UNEXPECTED;
 
   auto hasFailed = [&hr]() -> bool {
     return FAILED(hr);
@@ -294,7 +298,8 @@ HandlerProvider::ClearIA2Data(IA2Data& aData)
 bool
 HandlerProvider::IsTargetInterfaceCacheable()
 {
-  return MarshalAs(mTargetUnkIid) == NEWEST_IA2_IID;
+  return MarshalAs(mTargetUnkIid) == NEWEST_IA2_IID ||
+         mTargetUnkIid == IID_IAccessibleHyperlink;
 }
 
 HRESULT
