@@ -47,10 +47,10 @@ class gfxVarReceiver;
 // Define the default animation backend on the compositor. Now we don't use
 // stylo on the compositor only on Android, and this is a fixed flag. If
 // we want to update this flag, please add a new gfxVars for it.
-#if defined(ANDROID)
-  #define USE_STYLO_ON_COMPOSITOR false
-#else
+#if defined(MOZ_STYLO) && !defined(ANDROID)
   #define USE_STYLO_ON_COMPOSITOR true
+#else
+  #define USE_STYLO_ON_COMPOSITOR false
 #endif
 
 // Some graphics settings are computed on the UI process and must be
