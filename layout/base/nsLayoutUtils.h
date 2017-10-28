@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2525,12 +2526,32 @@ public:
 #endif
   }
 
-  // Whether Stylo should be allowed to be enabled in this process.  This
-  // returns true for content processes and the non-e10s parent process.
+  // Whether Stylo should be allowed to be enabled in this process.
   static bool StyloSupportedInCurrentProcess() {
-     return XRE_IsContentProcess() ||
-            (XRE_IsParentProcess() && !XRE_IsE10sParentProcess());
+#ifdef MOZ_STYLO
+    if (XRE_IsContentProcess()) {
+      return true;
+    }
+    if (XRE_IsParentProcess()) {
+      // If Stylo is enabled for chrome document, we use it in all
+      // parent processes, regardless of whether it's e10s parent.
+      if (StyloChromeEnabled()) {
+        return true;
+      }
+      // Otherwise we only use stylo on non-e10s parent.
+      return !XRE_IsE10sParentProcess();
+    }
+#endif
+    // Stylo is not enabled for any other process.
+    MOZ_DIAGNOSTIC_ASSERT(false, "We should not be creating any document "
+                          "in processes other than content and parent");
+    return false;
   }
+
+#ifdef MOZ_STYLO
+  // Whether Stylo should be used on chrome documents.
+  static bool StyloChromeEnabled();
+#endif
 
   static uint32_t IdlePeriodDeadlineLimit() {
     return sIdlePeriodDeadlineLimit;

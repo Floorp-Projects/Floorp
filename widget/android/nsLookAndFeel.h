@@ -14,8 +14,9 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
+    virtual void NativeInit() final;
+    virtual void RefreshImpl();
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-    virtual void NativeInit() final {};
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle,
@@ -32,6 +33,9 @@ protected:
 
     nsresult GetSystemColors();
     nsresult CallRemoteGetSystemColors();
+
+    void EnsureInitSystemColors();
+    void EnsureInitShowPassword();
 };
 
 #endif

@@ -22,7 +22,7 @@ interface HTMLMenuItemElement : HTMLElement {
            attribute DOMString icon;
            [CEReactions, SetterThrows]
            attribute boolean disabled;
-           [CEReactions, SetterThrows]
+           [CEReactions]
            attribute boolean checked;
            [CEReactions, SetterThrows]
            attribute DOMString radiogroup;

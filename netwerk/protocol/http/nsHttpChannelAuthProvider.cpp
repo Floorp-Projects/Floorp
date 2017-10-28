@@ -835,7 +835,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     // Making the connection sticky will prevent its restart giving the user
     // a 'network reset' error every time.  Hence, we mark the connection
     // as restartable.
-    mAuthChannel->ConnectionRestartable(mConnectionBased && !authAtProgress);
+    mAuthChannel->ConnectionRestartable(!authAtProgress);
 
     if (identityInvalid) {
         if (entry) {

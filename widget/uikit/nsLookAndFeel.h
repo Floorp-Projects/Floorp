@@ -14,8 +14,9 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
+    virtual void NativeInit() final;
+    virtual void RefreshImpl();
     virtual nsresult NativeGetColor(const ColorID aID, nscolor &aResult);
-    virtual void NativeInit() final {};
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetFontImpl(FontID aID, nsString& aFontName,
@@ -31,6 +32,14 @@ public:
     {
         return true;
     }
+
+private:
+    nscolor mColorTextSelectForeground;
+    nscolor mColorDarkText;
+
+    bool mInitialized;
+
+    void EnsureInit();
 };
 
 #endif

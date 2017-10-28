@@ -53,12 +53,6 @@ nsLookAndFeel::nsLookAndFeel()
 {
 }
 
-void
-nsLookAndFeel::NativeInit()
-{
-    EnsureInit();
-}
-
 nsLookAndFeel::~nsLookAndFeel()
 {
 }
@@ -218,6 +212,26 @@ GetBorderColors(GtkStyleContext* aContext,
     *aLightColor = GDK_RGBA_TO_NS_RGBA(lightColor);
     *aDarkColor = GDK_RGBA_TO_NS_RGBA(darkColor);
     return ret;
+}
+
+void
+nsLookAndFeel::NativeInit()
+{
+    EnsureInit();
+}
+
+void
+nsLookAndFeel::RefreshImpl()
+{
+    nsXPLookAndFeel::RefreshImpl();
+    moz_gtk_refresh();
+
+    mDefaultFontCached = false;
+    mButtonFontCached = false;
+    mFieldFontCached = false;
+    mMenuFontCached = false;
+
+    mInitialized = false;
 }
 
 nsresult
@@ -1097,20 +1111,6 @@ nsLookAndFeel::GetPasswordCharacterImpl()
 {
     EnsureInit();
     return sInvisibleCharacter;
-}
-
-void
-nsLookAndFeel::RefreshImpl()
-{
-    nsXPLookAndFeel::RefreshImpl();
-    moz_gtk_refresh();
-
-    mDefaultFontCached = false;
-    mButtonFontCached = false;
-    mFieldFontCached = false;
-    mMenuFontCached = false;
-
-    mInitialized = false;
 }
 
 bool
