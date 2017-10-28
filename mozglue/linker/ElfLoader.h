@@ -473,6 +473,9 @@ private:
    * we wouldn't treat non-Android differently, but glibc uses versioned
    * symbols which this linker doesn't support. */
   RefPtr<LibHandle> libc;
+
+  /* And for libm. */
+  RefPtr<LibHandle> libm;
 #endif
 
   /* Bookkeeping */

@@ -35,6 +35,7 @@ class Image;
 class Layer;
 class LayerManager;
 class SharedSurfaceTextureClient;
+class WebRenderCanvasData;
 } // namespace layers
 namespace gfx {
 class SourceSurface;
@@ -127,6 +128,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::Layer Layer;
   typedef layers::LayerManager LayerManager;
+  typedef layers::WebRenderCanvasData WebRenderCanvasData;
 
 public:
   explicit HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -306,6 +308,8 @@ public:
   already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer *aOldLayer,
                                          LayerManager *aManager);
+  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData);
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 CanvasRenderer* aRenderer);
   // Should return true if the canvas layer should always be marked inactive.

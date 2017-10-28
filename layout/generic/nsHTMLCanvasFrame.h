@@ -18,6 +18,7 @@ namespace mozilla {
 namespace layers {
 class Layer;
 class LayerManager;
+class WebRenderCanvasData;
 } // namespace layers
 } // namespace mozilla
 
@@ -32,6 +33,7 @@ public:
   typedef mozilla::layers::CanvasRenderer CanvasRenderer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::WebRenderCanvasData WebRenderCanvasData;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
   NS_DECL_QUERYFRAME
@@ -53,8 +55,9 @@ public:
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem,
                                      const ContainerLayerParameters& aContainerParameters);
-  bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
-                                CanvasRenderer* aRenderer);
+
+  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
+                                 WebRenderCanvasData* aCanvasData);
 
   /* get the size of the canvas's image */
   nsIntSize GetCanvasSize();
