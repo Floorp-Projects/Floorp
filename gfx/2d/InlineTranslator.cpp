@@ -52,6 +52,7 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
   };
   MemReader reader(aData, aLen);
 
+
   uint32_t magicInt;
   ReadElement(reader, magicInt);
   if (magicInt != mozilla::gfx::kMagicInt) {

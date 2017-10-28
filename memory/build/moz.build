@@ -39,7 +39,7 @@ if CONFIG['OS_TARGET'] == 'Darwin' and (CONFIG['MOZ_REPLACE_MALLOC'] or
 Library('memory')
 
 if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CC_TYPE'] == 'clang':
-    CFLAGS += [
+    CXXFLAGS += [
         '-Wno-tautological-pointer-compare',
     ]
 

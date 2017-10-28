@@ -294,19 +294,12 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
     return instanceKey;
   }
 
-  RefPtr<gfx::UnscaledFont> unscaled = aScaledFont->GetUnscaledFont();
-  MOZ_ASSERT(unscaled);
-
   wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
 
-  wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
-  if (!mFontKeys.Get(unscaled, &fontKey)) {
-    FontFileDataSink sink = { &fontKey, this, &resources };
-    if (!unscaled->GetFontFileData(WriteFontFileData, &sink)) {
-      return instanceKey;
-    }
-
-    mFontKeys.Put(unscaled, fontKey);
+  wr::FontKey fontKey = GetFontKeyForUnscaledFont(aScaledFont->GetUnscaledFont());
+  wr::FontKey nullKey = { wr::IdNamespace { 0 }, 0};
+  if (fontKey == nullKey) {
+    return instanceKey;
   }
 
   instanceKey = GetNextFontInstanceKey();
@@ -324,6 +317,27 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
   mFontInstanceKeys.Put(aScaledFont, instanceKey);
 
   return instanceKey;
+
+}
+
+wr::FontKey
+WebRenderBridgeChild::GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaled)
+{
+  MOZ_ASSERT(!mDestroyed);
+
+  wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
+  if (!mFontKeys.Get(aUnscaled, &fontKey)) {
+    wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+    FontFileDataSink sink = { &fontKey, this, &resources };
+    if (!aUnscaled->GetFontFileData(WriteFontFileData, &sink)) {
+      return fontKey;
+    }
+    UpdateResources(resources);
+
+    mFontKeys.Put(aUnscaled, fontKey);
+  }
+
+  return fontKey;
 }
 
 void
