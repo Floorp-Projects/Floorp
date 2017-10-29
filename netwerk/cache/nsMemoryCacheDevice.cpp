@@ -563,20 +563,17 @@ NS_IMPL_ISUPPORTS(nsMemoryCacheDeviceInfo, nsICacheDeviceInfo)
 
 
 NS_IMETHODIMP
-nsMemoryCacheDeviceInfo::GetDescription(char ** result)
+nsMemoryCacheDeviceInfo::GetDescription(nsACString& aDescription)
 {
-    NS_ENSURE_ARG_POINTER(result);
-    *result = NS_strdup("Memory cache device");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+    aDescription.AssignLiteral("Memory cache device");
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
+nsMemoryCacheDeviceInfo::GetUsageReport(nsACString& aUsageReport)
 {
-    NS_ENSURE_ARG_POINTER(result);
-    nsCString  buffer;
+    nsCString buffer;
 
     buffer.AssignLiteral("  <tr>\n"
                          "    <th>Inactive storage:</th>\n"
@@ -585,8 +582,7 @@ nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
     buffer.AppendLiteral(" KiB</td>\n"
                          "  </tr>\n");
 
-    *result = ToNewCString(buffer);
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+    aUsageReport.Assign(buffer);
     return NS_OK;
 }
 
