@@ -193,8 +193,13 @@ class ResponsePanel extends Component {
       },
     };
 
+    let classList = ["panel-container"];
+    if (Filters.html(this.props.request)) {
+      classList.push("contains-html-preview");
+    }
+
     return (
-      div({ className: "panel-container" },
+      div({ className: classList.join(" ") },
         error && div({ className: "response-error-header", title: error },
           error
         ),
