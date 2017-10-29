@@ -70,18 +70,16 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
 
 NS_IMPL_ISUPPORTS(nsDiskCacheEntryInfo, nsICacheEntryInfo)
 
-NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(nsACString& aClientID)
 {
-    NS_ENSURE_ARG_POINTER(clientID);
-    return ClientIDFromCacheKey(nsDependentCString(mDiskEntry->Key()), clientID);
+    return ClientIDFromCacheKey(nsDependentCString(mDiskEntry->Key()), aClientID);
 }
 
 extern const char DISK_CACHE_DEVICE_ID[];
-NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(nsACString& aDeviceID)
 {
-    NS_ENSURE_ARG_POINTER(deviceID);
-    *deviceID = NS_strdup(mDeviceID);
-    return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aDeviceID.Assign(mDeviceID);
+    return NS_OK;
 }
 
 

@@ -100,6 +100,7 @@ protected:
     bool                          mWaitingForInputStreamReady;
     bool                          mCloseWhenDone;
     bool                          mRetargeting;
+    bool                          mAsyncStreamIsBuffered;
     // Protects state/member var accesses across multiple threads.
     mozilla::RecursiveMutex       mMutex;
 };
