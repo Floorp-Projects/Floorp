@@ -35,8 +35,8 @@ extern uint32_t  SecondsFromPRTime(PRTime prTime);
 extern PRTime    PRTimeFromSeconds(uint32_t seconds);
 
 
-extern nsresult  ClientIDFromCacheKey(const nsACString&  key, char ** result);
-extern nsresult  ClientKeyFromCacheKey(const nsCString& key, nsACString &result);
+extern nsresult  ClientIDFromCacheKey(const nsACString& key, nsACString& result);
+extern nsresult  ClientKeyFromCacheKey(const nsCString& key, nsACString& result);
 
 
 #endif // _nsCache_h
