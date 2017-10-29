@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
             .wrappedJSObject;
 });
 
+const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
+
 this.EXPORTED_SYMBOLS = [
   "DevToolsShim",
 ];
@@ -52,6 +54,15 @@ this.DevToolsShim = {
     return Services.io.getProtocolHandler("resource")
              .QueryInterface(Ci.nsIResProtocolHandler)
              .hasSubstitution("devtools");
+  },
+
+  /**
+   * Returns true if DevTools are enabled for the current profile. If devtools are not
+   * enabled, initializing DevTools will open the onboarding page. Some entry points
+   * should no-op in this case.
+   */
+  isEnabled: function () {
+    return Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
   },
 
   /**
@@ -134,15 +145,22 @@ this.DevToolsShim = {
   },
 
   /**
-   * Called from SessionStore.jsm in mozilla-central when restoring a state that contained
-   * opened scratchpad windows and browser console.
+   * Called from SessionStore.jsm in mozilla-central when restoring a previous session.
+   * Will always be called, even if the session does not contain DevTools related items.
    */
   restoreDevToolsSession: function (session) {
-    let devtoolsReady = this._maybeInitializeDevTools();
-    if (!devtoolsReady) {
+    if (!this.isEnabled()) {
       return;
     }
 
+    let {scratchpads, browserConsole} = session;
+    let hasDevToolsData = browserConsole || (scratchpads && scratchpads.length);
+    if (!hasDevToolsData) {
+      // Do not initialize DevTools unless there is DevTools specific data in the session.
+      return;
+    }
+
+    this.initDevTools();
     this._gDevTools.restoreDevToolsSession(session);
   },
 
@@ -160,16 +178,18 @@ this.DevToolsShim = {
    *         markup view or that resolves immediately if DevTools are not installed.
    */
   inspectNode: function (tab, selectors) {
+    if (!this.isEnabled()) {
+      DevtoolsStartup.openInstallPage("ContextMenu");
+      return Promise.resolve();
+    }
+
     // Record the timing at which this event started in order to compute later in
     // gDevTools.showToolbox, the complete time it takes to open the toolbox.
     // i.e. especially take `DevtoolsStartup.initDevTools` into account.
     let { performance } = Services.appShell.hiddenDOMWindow;
     let startTime = performance.now();
 
-    let devtoolsReady = this._maybeInitializeDevTools("ContextMenu");
-    if (!devtoolsReady) {
-      return Promise.resolve();
-    }
+    this.initDevTools("ContextMenu");
 
     return this._gDevTools.inspectNode(tab, selectors, startTime);
   },
@@ -184,27 +204,22 @@ this.DevToolsShim = {
   },
 
   /**
-   * Should be called if a shim method attempts to initialize devtools.
-   * - if DevTools are already initialized, returns true.
-   * - if DevTools are not initialized, call initDevTools from devtools-startup:
-   *   - if devtools.enabled is true, DevTools will synchronously initialize and the
-   *     method will return true.
-   *   - if devtools.enabled is false, DevTools installation flow will start and the
-   *     method will return false
+   * Initialize DevTools via DevToolsStartup if needed. This method throws if DevTools are
+   * not enabled.. If the entry point is supposed to trigger the onboarding, call it
+   * explicitly via DevtoolsStartup.openInstallPage().
    *
    * @param {String} reason
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
    *        in toolkit/components/telemetry/Histograms.json
    */
-  _maybeInitializeDevTools: function (reason) {
-    // Attempt to initialize DevTools, which should be synchronous.
+  initDevTools: function (reason) {
+    if (!this.isEnabled()) {
+      throw new Error("DevTools are not enabled and can not be initialized.");
+    }
+
     if (!this.isInitialized()) {
       DevtoolsStartup.initDevTools(reason);
     }
-
-    // The initialization process can lead to show the user installation screen, in this
-    // case this.isInitialized() will still be false after calling initDevTools().
-    return this.isInitialized();
   }
 };
 
@@ -224,11 +239,12 @@ let webExtensionsMethods = [
 
 for (let method of webExtensionsMethods) {
   this.DevToolsShim[method] = function () {
-    let devtoolsReady = this._maybeInitializeDevTools();
-    if (!devtoolsReady) {
+    if (!this.isEnabled()) {
       throw new Error("Could not call a DevToolsShim webextension method ('" + method +
         "'): DevTools are not initialized.");
     }
+
+    this.initDevTools();
     return this._gDevTools[method].apply(this._gDevTools, arguments);
   };
 }
