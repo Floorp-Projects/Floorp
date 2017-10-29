@@ -4989,8 +4989,6 @@ HTMLEditRules::AlignBlockContents(nsIDOMNode* aNode,
   NS_ENSURE_TRUE(node && alignType, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIContent> firstChild, lastChild;
 
-  bool useCSS = mHTMLEditor->IsCSSEnabled();
-
   NS_ENSURE_STATE(mHTMLEditor);
   firstChild = mHTMLEditor->GetFirstEditableChild(*node);
   NS_ENSURE_STATE(mHTMLEditor);
@@ -5002,21 +5000,12 @@ HTMLEditRules::AlignBlockContents(nsIDOMNode* aNode,
     // the cell already has a div containing all of its content: just
     // act on this div.
     RefPtr<Element> divElem = firstChild->AsElement();
-    if (useCSS) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult rv = mHTMLEditor->SetAttributeOrEquivalent(divElem,
-                                                          nsGkAtoms::align,
-                                                          *alignType, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult rv = mHTMLEditor->SetAttribute(divElem, nsGkAtoms::align,
-                                              *alignType);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    NS_ENSURE_STATE(mHTMLEditor);
+    nsresult rv = mHTMLEditor->SetAttributeOrEquivalent(divElem,
+                                                        nsGkAtoms::align,
+                                                        *alignType, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   } else {
     // else we need to put in a div, set the alignment, and toss in all the children
@@ -5025,21 +5014,12 @@ HTMLEditRules::AlignBlockContents(nsIDOMNode* aNode,
                                                       node->GetFirstChild());
     NS_ENSURE_STATE(divElem);
     // set up the alignment on the div
-    if (useCSS) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult rv =
-        mHTMLEditor->SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
-                                              *alignType, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult rv =
-        mHTMLEditor->SetAttribute(divElem, nsGkAtoms::align, *alignType);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    NS_ENSURE_STATE(mHTMLEditor);
+    nsresult rv =
+      mHTMLEditor->SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
+                                            *alignType, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
     // tuck the children into the end of the active div
     while (lastChild && (lastChild != divElem)) {
@@ -8747,18 +8727,19 @@ HTMLEditRules::AlignBlock(Element& aElement,
   if (htmlEditor->IsCSSEnabled()) {
     // Let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    rv = htmlEditor->SetAttributeOrEquivalent(
-                       &aElement, nsGkAtoms::align, aAlignType, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // HTML case; this code is supposed to be called ONLY if the element
-    // supports the align attribute but we'll never know...
-    if (HTMLEditUtils::SupportsAlignAttr(aElement)) {
-      rv = htmlEditor->SetAttribute(&aElement, nsGkAtoms::align, aAlignType);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    return htmlEditor->SetAttributeOrEquivalent(
+                         &aElement, nsGkAtoms::align, aAlignType, false);
   }
-  return NS_OK;
+
+  // HTML case; this code is supposed to be called ONLY if the element
+  // supports the align attribute but we'll never know...
+  if (NS_WARN_IF(!HTMLEditUtils::SupportsAlignAttr(aElement))) {
+    // XXX error?
+    return NS_OK;
+  }
+
+  return htmlEditor->SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
+                                              aAlignType, false);
 }
 
 nsresult
