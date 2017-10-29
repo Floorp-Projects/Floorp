@@ -1549,14 +1549,13 @@ MediaDecoder::DumpDebugInfo()
     return;
   }
 
-  RefPtr<MediaDecoder> self = this;
   GetStateMachine()->RequestDebugInfo()->Then(
     SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
-    [this, self, str] (const nsACString& aString) {
+    [str] (const nsACString& aString) {
       DUMP("%s", str.get());
       DUMP("%s", aString.Data());
     },
-    [this, self, str] () {
+    [str] () {
       DUMP("%s", str.get());
     });
 }
