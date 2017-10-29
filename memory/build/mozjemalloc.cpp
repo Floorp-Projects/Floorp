@@ -4365,13 +4365,14 @@ inline void*
 BaseAllocator::calloc(size_t aNum, size_t aSize)
 {
   void* ret;
+  size_t num_size;
 
   if (malloc_init()) {
     ret = nullptr;
     goto RETURN;
   }
 
-  size_t num_size = aNum * aSize;
+  num_size = aNum * aSize;
   if (num_size == 0) {
     num_size = 1;
 
