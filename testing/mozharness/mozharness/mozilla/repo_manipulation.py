@@ -160,5 +160,3 @@ the script (--clean-repos --pull --migrate).  The second run will be faster."""
                 self.warning("No changes for %s!" % cwd)
             elif status:
                 self.fatal(error_message)
-
-

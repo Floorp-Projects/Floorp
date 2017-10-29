@@ -7,11 +7,8 @@
 """Support for fetching secrets from the secrets API
 """
 
-import os
-import mozharness
 import urllib2
 import json
-from mozharness.base.log import ERROR
 
 
 class SecretsMixin(object):

@@ -24,7 +24,6 @@ class BalrogMixin(object):
             python = 'python2.7'
         return python
 
-
     def generate_balrog_props(self, props_path):
         self.set_buildbot_property(
             "hashType", self.config.get("hash_type", "sha512"), write_to_file=True
@@ -107,12 +106,16 @@ class BalrogMixin(object):
         product = self.buildbot_config["properties"]["product"]
         cmd = [
             self.query_python(),
-            os.path.join(os.path.join(dirs['abs_tools_dir'], "scripts/updates/balrog-release-pusher.py"))
+            os.path.join(os.path.join(dirs['abs_tools_dir'],
+                         "scripts/updates/balrog-release-pusher.py"))
         ]
-        cmd.extend(["--build-properties", os.path.join(dirs["base_work_dir"], "balrog_props.json")])
+        cmd.extend(["--build-properties",
+                   os.path.join(dirs["base_work_dir"], "balrog_props.json")])
         cmd.extend(["--buildbot-configs", "https://hg.mozilla.org/build/buildbot-configs"])
-        cmd.extend(["--release-config", os.path.join(dirs['build_dir'], self.config.get("release_config_file"))])
-        cmd.extend(["--credentials-file", os.path.join(dirs['base_work_dir'], self.config.get("balrog_credentials_file"))])
+        cmd.extend(["--release-config", os.path.join(dirs['build_dir'],
+                   self.config.get("release_config_file"))])
+        cmd.extend(["--credentials-file", os.path.join(dirs['base_work_dir'],
+                   self.config.get("balrog_credentials_file"))])
         cmd.extend(["--release-channel", self.query_release_config()['release_channel']])
 
         return_codes = []
