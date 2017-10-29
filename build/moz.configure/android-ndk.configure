@@ -259,13 +259,17 @@ add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 @depends(stlport_cppflags, android_platform, android_toolchain,
          android_toolchain_prefix_base, '--help')
+@imports(_from='os.path', _import='isdir')
 def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
                             toolchain_prefix, _):
     if not stlport_cppflags:
         return
 
     gcc_include = os.path.join(
-        toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
+        toolchain, 'lib', 'gcc', toolchain_prefix, '4.9.x')
+    if not isdir(gcc_include):
+        gcc_include = os.path.join(
+            toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
     cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
     return cflags_format % (stlport_cppflags,
