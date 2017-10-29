@@ -6,6 +6,7 @@
 #ifndef nsJARProtocolHandler_h__
 #define nsJARProtocolHandler_h__
 
+#include "mozilla/StaticPtr.h"
 #include "nsIJARProtocolHandler.h"
 #include "nsIProtocolHandler.h"
 #include "nsIJARURI.h"
@@ -39,7 +40,7 @@ protected:
     nsCOMPtr<nsIMIMEService> mMimeService;
 };
 
-extern nsJARProtocolHandler *gJarHandler;
+extern mozilla::StaticRefPtr<nsJARProtocolHandler> gJarHandler;
 
 #define NS_JARPROTOCOLHANDLER_CID                    \
 { /* 0xc7e410d4-0x85f2-11d3-9f63-006008a6efe9 */     \

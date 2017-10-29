@@ -2157,6 +2157,7 @@ History::~History()
 {
   UnregisterWeakMemoryReporter(this);
 
+  MOZ_ASSERT(gService == this);
   gService = nullptr;
 }
 
@@ -2658,9 +2659,10 @@ already_AddRefed<History>
 History::GetSingleton()
 {
   if (!gService) {
-    gService = new History();
-    NS_ENSURE_TRUE(gService, nullptr);
-    gService->InitMemoryReporter();
+    RefPtr<History> svc = new History();
+    MOZ_ASSERT(gService == svc.get());
+    svc->InitMemoryReporter();
+    return svc.forget();
   }
 
   return do_AddRef(gService);
