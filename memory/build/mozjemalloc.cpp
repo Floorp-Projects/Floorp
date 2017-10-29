@@ -115,6 +115,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 /*
  * On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
@@ -1026,7 +1027,7 @@ private:
 
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
-  void SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
+  MOZ_MUST_USE bool SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero);
 
   void TrimRunHead(arena_chunk_t* aChunk, arena_run_t* aRun, size_t aOldSize, size_t aNewSize);
 
@@ -1361,59 +1362,65 @@ _getprogname(void)
 /******************************************************************************/
 
 static inline void
-pages_decommit(void *addr, size_t size)
+pages_decommit(void* aAddr, size_t aSize)
 {
-
 #ifdef XP_WIN
-	/*
-	* The region starting at addr may have been allocated in multiple calls
-	* to VirtualAlloc and recycled, so decommitting the entire region in one
-	* go may not be valid. However, since we allocate at least a chunk at a
-	* time, we may touch any region in chunksized increments.
-	*/
-	size_t pages_size = std::min(size, chunksize -
-		GetChunkOffsetForPtr(addr));
-	while (size > 0) {
-		if (!VirtualFree(addr, pages_size, MEM_DECOMMIT))
-			MOZ_CRASH();
-		addr = (void *)((uintptr_t)addr + pages_size);
-		size -= pages_size;
-		pages_size = std::min(size, chunksize);
-	}
+  /*
+   * The region starting at addr may have been allocated in multiple calls
+   * to VirtualAlloc and recycled, so decommitting the entire region in one
+   * go may not be valid. However, since we allocate at least a chunk at a
+   * time, we may touch any region in chunksized increments.
+   */
+  size_t pages_size = std::min(aSize, chunksize - GetChunkOffsetForPtr(aAddr));
+  while (aSize > 0) {
+    if (!VirtualFree(aAddr, pages_size, MEM_DECOMMIT)) {
+      MOZ_CRASH();
+    }
+    aAddr = (void*)((uintptr_t)aAddr + pages_size);
+    aSize -= pages_size;
+    pages_size = std::min(aSize, chunksize);
+  }
 #else
-	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
-	    0) == MAP_FAILED)
-		MOZ_CRASH();
-	MozTagAnonymousMemory(addr, size, "jemalloc-decommitted");
+  if (mmap(aAddr, aSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) ==
+      MAP_FAILED) {
+    MOZ_CRASH();
+  }
+  MozTagAnonymousMemory(aAddr, aSize, "jemalloc-decommitted");
 #endif
 }
 
-static inline void
-pages_commit(void *addr, size_t size)
+/* Commit pages. Returns whether pages were committed. */
+MOZ_MUST_USE static inline bool
+pages_commit(void* aAddr, size_t aSize)
 {
-
-#  ifdef XP_WIN
-	/*
-	* The region starting at addr may have been allocated in multiple calls
-	* to VirtualAlloc and recycled, so committing the entire region in one
-	* go may not be valid. However, since we allocate at least a chunk at a
-	* time, we may touch any region in chunksized increments.
-	*/
-	size_t pages_size = std::min(size, chunksize -
-		GetChunkOffsetForPtr(addr));
-	while (size > 0) {
-		if (!VirtualAlloc(addr, pages_size, MEM_COMMIT, PAGE_READWRITE))
-			MOZ_CRASH();
-		addr = (void *)((uintptr_t)addr + pages_size);
-		size -= pages_size;
-		pages_size = std::min(size, chunksize);
-	}
-#  else
-	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
-	    MAP_ANON, -1, 0) == MAP_FAILED)
-		MOZ_CRASH();
-	MozTagAnonymousMemory(addr, size, "jemalloc");
-#  endif
+#ifdef XP_WIN
+  /*
+   * The region starting at addr may have been allocated in multiple calls
+   * to VirtualAlloc and recycled, so committing the entire region in one
+   * go may not be valid. However, since we allocate at least a chunk at a
+   * time, we may touch any region in chunksized increments.
+   */
+  size_t pages_size = std::min(aSize, chunksize - GetChunkOffsetForPtr(aAddr));
+  while (aSize > 0) {
+    if (!VirtualAlloc(aAddr, pages_size, MEM_COMMIT, PAGE_READWRITE)) {
+      return false;
+    }
+    aAddr = (void*)((uintptr_t)aAddr + pages_size);
+    aSize -= pages_size;
+    pages_size = std::min(aSize, chunksize);
+  }
+#else
+  if (mmap(aAddr,
+           aSize,
+           PROT_READ | PROT_WRITE,
+           MAP_FIXED | MAP_PRIVATE | MAP_ANON,
+           -1,
+           0) == MAP_FAILED) {
+    return false;
+  }
+  MozTagAnonymousMemory(aAddr, aSize, "jemalloc");
+#endif
+  return true;
 }
 
 static bool
@@ -1469,8 +1476,11 @@ base_alloc(size_t aSize)
     void* pbase_next_addr = (void*)(PAGE_CEILING((uintptr_t)base_next_addr));
 
 #  ifdef MALLOC_DECOMMIT
-    pages_commit(base_next_decommitted, (uintptr_t)pbase_next_addr -
-        (uintptr_t)base_next_decommitted);
+    if (!pages_commit(base_next_decommitted,
+                      (uintptr_t)pbase_next_addr -
+                        (uintptr_t)base_next_decommitted)) {
+      return nullptr;
+    }
 #  endif
     base_next_decommitted = pbase_next_addr;
     base_committed += (uintptr_t)pbase_next_addr -
@@ -1480,15 +1490,14 @@ base_alloc(size_t aSize)
   return ret;
 }
 
-static void *
-base_calloc(size_t number, size_t size)
+static void*
+base_calloc(size_t aNumber, size_t aSize)
 {
-	void *ret;
-
-	ret = base_alloc(number * size);
-	memset(ret, 0, number * size);
-
-	return (ret);
+  void* ret = base_alloc(aNumber * aSize);
+  if (ret) {
+    memset(ret, 0, aNumber * aSize);
+  }
+  return ret;
 }
 
 static extent_node_t *
@@ -1994,7 +2003,9 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
     base_node_dealloc(node);
   }
 #ifdef MALLOC_DECOMMIT
-  pages_commit(ret, aSize);
+  if (!pages_commit(ret, aSize)) {
+    return nullptr;
+  }
   // pages_commit is guaranteed to zero the chunk.
   if (aZeroed) {
     *aZeroed = true;
@@ -2409,7 +2420,7 @@ arena_run_reg_dalloc(arena_run_t *run, arena_bin_t *bin, void *ptr, size_t size)
 #undef SIZE_INV_SHIFT
 }
 
-void
+bool
 arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
 {
   arena_chunk_t* chunk;
@@ -2423,19 +2434,6 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   MOZ_ASSERT(need_pages > 0);
   MOZ_ASSERT(need_pages <= total_pages);
   rem_pages = total_pages - need_pages;
-
-  mRunsAvail.Remove(&chunk->map[run_ind]);
-
-  /* Keep track of trailing unused pages for later use. */
-  if (rem_pages > 0) {
-    chunk->map[run_ind+need_pages].bits = (rem_pages <<
-        pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
-        pagesize_mask);
-    chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
-        pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
-        pagesize_mask);
-    mRunsAvail.Insert(&chunk->map[run_ind+need_pages]);
-  }
 
   for (i = 0; i < need_pages; i++) {
     /*
@@ -2463,17 +2461,38 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
       }
 
 #  ifdef MALLOC_DECOMMIT
-      pages_commit((void*)(uintptr_t(chunk) + ((run_ind + i) << pagesize_2pow)),
-                   j << pagesize_2pow);
+      bool committed = pages_commit(
+        (void*)(uintptr_t(chunk) + ((run_ind + i) << pagesize_2pow)),
+        j << pagesize_2pow);
+      // pages_commit zeroes pages, so mark them as such if it succeeded.
+      // That's checked further below to avoid manually zeroing the pages.
+      for (size_t k = 0; k < j; k++) {
+        chunk->map[run_ind + i + k].bits |=
+          committed ? CHUNK_MAP_ZEROED : CHUNK_MAP_DECOMMITTED;
+      }
+      if (!committed) {
+        return false;
+      }
 #  endif
 
       mStats.committed += j;
-
     }
-#  ifdef MALLOC_DECOMMIT
-    else /* No need to zero since commit zeroes. */
-#  endif
+  }
 
+  mRunsAvail.Remove(&chunk->map[run_ind]);
+
+  /* Keep track of trailing unused pages for later use. */
+  if (rem_pages > 0) {
+    chunk->map[run_ind+need_pages].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+need_pages].bits &
+        pagesize_mask);
+    chunk->map[run_ind+total_pages-1].bits = (rem_pages <<
+        pagesize_2pow) | (chunk->map[run_ind+total_pages-1].bits &
+        pagesize_mask);
+    mRunsAvail.Insert(&chunk->map[run_ind+need_pages]);
+  }
+
+  for (i = 0; i < need_pages; i++) {
     /* Zero if necessary. */
     if (aZero) {
       if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED) == 0) {
@@ -2511,6 +2530,7 @@ arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge, bool aZero)
   if (chunk->ndirty == 0 && old_ndirty > 0) {
     mChunksDirty.Remove(chunk);
   }
+  return true;
 }
 
 void
@@ -2621,26 +2641,18 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
         sizeof(arena_chunk_map_t);
 
     run = (arena_run_t*)(uintptr_t(chunk) + (pageind << pagesize_2pow));
-    SplitRun(run, aSize, aLarge, aZero);
-    return run;
-  }
-
-  if (mSpare) {
+  } else if (mSpare) {
     /* Use the spare. */
     arena_chunk_t* chunk = mSpare;
     mSpare = nullptr;
     run = (arena_run_t*)(uintptr_t(chunk) + (arena_chunk_header_npages << pagesize_2pow));
     /* Insert the run into the tree of available runs. */
     mRunsAvail.Insert(&chunk->map[arena_chunk_header_npages]);
-    SplitRun(run, aSize, aLarge, aZero);
-    return run;
-  }
-
-  /*
-   * No usable runs.  Create a new chunk from which to allocate
-   * the run.
-   */
-  {
+  } else {
+    /*
+     * No usable runs.  Create a new chunk from which to allocate
+     * the run.
+     */
     bool zeroed;
     arena_chunk_t* chunk = (arena_chunk_t*)
         chunk_alloc(chunksize, chunksize, false, &zeroed);
@@ -2652,8 +2664,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
     run = (arena_run_t*)(uintptr_t(chunk) + (arena_chunk_header_npages << pagesize_2pow));
   }
   /* Update page map. */
-  SplitRun(run, aSize, aLarge, aZero);
-  return run;
+  return SplitRun(run, aSize, aLarge, aZero) ? run : nullptr;
 }
 
 void
@@ -3690,6 +3701,7 @@ arena_t::RallocShrinkLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
   mStats.allocated_large -= aOldSize - aSize;
 }
 
+/* Returns whether reallocation was successful. */
 bool
 arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
                          size_t aOldSize)
@@ -3710,9 +3722,13 @@ arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
      * following run, then merge the first part with the existing
      * allocation.
      */
-    SplitRun((arena_run_t *)(uintptr_t(aChunk) +
-        ((pageind+npages) << pagesize_2pow)), aSize - aOldSize, true,
-        false);
+    if (!SplitRun((arena_run_t*)(uintptr_t(aChunk) +
+                                 ((pageind + npages) << pagesize_2pow)),
+                  aSize - aOldSize,
+                  true,
+                  false)) {
+      return false;
+    }
 
     aChunk->map[pageind].bits = aSize | CHUNK_MAP_LARGE |
         CHUNK_MAP_ALLOCATED;
@@ -3720,52 +3736,50 @@ arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
         CHUNK_MAP_ALLOCATED;
 
     mStats.allocated_large += aSize - aOldSize;
-    return false;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 /*
  * Try to resize a large allocation, in order to avoid copying.  This will
  * always fail if growing an object, and the following run is already in use.
+ * Returns whether reallocation was successful.
  */
 static bool
-arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
+arena_ralloc_large(void* aPtr, size_t aSize, size_t aOldSize)
 {
-	size_t psize;
+  size_t psize;
 
-	psize = PAGE_CEILING(size);
-	if (psize == oldsize) {
-		/* Same size class. */
-		if (size < oldsize) {
-			memset((void *)((uintptr_t)ptr + size), kAllocPoison, oldsize -
-			    size);
-		}
-		return (false);
-	} else {
-		arena_chunk_t *chunk;
-		arena_t *arena;
+  psize = PAGE_CEILING(aSize);
+  if (psize == aOldSize) {
+    /* Same size class. */
+    if (aSize < aOldSize) {
+      memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
+    }
+    return true;
+  } else {
+    arena_chunk_t* chunk;
+    arena_t* arena;
 
-		chunk = GetChunkForPtr(ptr);
-		arena = chunk->arena;
-		MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
+    chunk = GetChunkForPtr(aPtr);
+    arena = chunk->arena;
+    MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
 
-		if (psize < oldsize) {
-			/* Fill before shrinking in order avoid a race. */
-			memset((void *)((uintptr_t)ptr + size), kAllocPoison,
-			    oldsize - size);
-			arena->RallocShrinkLarge(chunk, ptr, psize, oldsize);
-			return (false);
-		} else {
-			bool ret = arena->RallocGrowLarge(chunk, ptr, psize, oldsize);
-			if (ret == false && opt_zero) {
-				memset((void *)((uintptr_t)ptr + oldsize), 0,
-				    size - oldsize);
-			}
-			return (ret);
-		}
-	}
+    if (psize < aOldSize) {
+      /* Fill before shrinking in order avoid a race. */
+      memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
+      arena->RallocShrinkLarge(chunk, aPtr, psize, aOldSize);
+      return true;
+    } else {
+      bool ret = arena->RallocGrowLarge(chunk, aPtr, psize, aOldSize);
+      if (ret && opt_zero) {
+        memset((void*)((uintptr_t)aPtr + aOldSize), 0, aSize - aOldSize);
+      }
+      return ret;
+    }
+  }
 }
 
 static void*
@@ -3794,7 +3808,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     }
   } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
     MOZ_ASSERT(aSize > bin_maxclass);
-    if (arena_ralloc_large(aPtr, aSize, aOldSize) == false) {
+    if (arena_ralloc_large(aPtr, aSize, aOldSize)) {
       return aPtr;
     }
   }
@@ -4093,7 +4107,10 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
       /* No need to change huge_mapped, because we didn't (un)map anything. */
       node->size = psize;
     } else if (psize > aOldSize) {
-      pages_commit((void*)((uintptr_t)aPtr + aOldSize), psize - aOldSize);
+      if (!pages_commit((void*)((uintptr_t)aPtr + aOldSize),
+                        psize - aOldSize)) {
+        return nullptr;
+      }
     }
 #endif
 
@@ -4786,31 +4803,32 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
 
 /* Explicitly remove all of this chunk's MADV_FREE'd pages from memory. */
 static void
-hard_purge_chunk(arena_chunk_t *chunk)
+hard_purge_chunk(arena_chunk_t* aChunk)
 {
-	/* See similar logic in arena_t::Purge(). */
+  /* See similar logic in arena_t::Purge(). */
+  for (size_t i = arena_chunk_header_npages; i < chunk_npages; i++) {
+    /* Find all adjacent pages with CHUNK_MAP_MADVISED set. */
+    size_t npages;
+    for (npages = 0; aChunk->map[i + npages].bits & CHUNK_MAP_MADVISED &&
+                     i + npages < chunk_npages;
+         npages++) {
+      /* Turn off the chunk's MADV_FREED bit and turn on its
+       * DECOMMITTED bit. */
+      MOZ_DIAGNOSTIC_ASSERT(
+        !(aChunk->map[i + npages].bits & CHUNK_MAP_DECOMMITTED));
+      aChunk->map[i + npages].bits ^= CHUNK_MAP_MADVISED_OR_DECOMMITTED;
+    }
 
-	size_t i;
-	for (i = arena_chunk_header_npages; i < chunk_npages; i++) {
-		/* Find all adjacent pages with CHUNK_MAP_MADVISED set. */
-		size_t npages;
-		for (npages = 0;
-		     chunk->map[i + npages].bits & CHUNK_MAP_MADVISED && i + npages < chunk_npages;
-		     npages++) {
-			/* Turn off the chunk's MADV_FREED bit and turn on its
-			 * DECOMMITTED bit. */
-			MOZ_DIAGNOSTIC_ASSERT(!(chunk->map[i + npages].bits & CHUNK_MAP_DECOMMITTED));
-			chunk->map[i + npages].bits ^= CHUNK_MAP_MADVISED_OR_DECOMMITTED;
-		}
-
-		/* We could use mincore to find out which pages are actually
-		 * present, but it's not clear that's better. */
-		if (npages > 0) {
-			pages_decommit(((char*)chunk) + (i << pagesize_2pow), npages << pagesize_2pow);
-			pages_commit(((char*)chunk) + (i << pagesize_2pow), npages << pagesize_2pow);
-		}
-		i += npages;
-	}
+    /* We could use mincore to find out which pages are actually
+     * present, but it's not clear that's better. */
+    if (npages > 0) {
+      pages_decommit(((char*)aChunk) + (i << pagesize_2pow),
+                     npages << pagesize_2pow);
+      mozilla::Unused << pages_commit(((char*)aChunk) + (i << pagesize_2pow),
+                                      npages << pagesize_2pow);
+    }
+    i += npages;
+  }
 }
 
 /* Explicitly remove all of this arena's MADV_FREE'd pages from memory. */
