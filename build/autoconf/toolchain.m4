@@ -95,21 +95,31 @@ AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
     AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
         ac_cv_needs_atomic,
-        AC_TRY_LINK(
-            [#include <cstdint>
-             #include <atomic>],
-            [ std::atomic<uint64_t> foo; foo = 1; ],
-            ac_cv_needs_atomic=no,
-            _SAVE_LIBS="$LIBS"
-            LIBS="$LIBS -latomic"
+        dnl x86 with clang is a little peculiar.  std::atomic does not require
+        dnl linking with libatomic, but using atomic intrinsics does, so we
+        dnl force the setting on for such systems.  (This setting is probably
+        dnl applicable to all x86 systems using clang, but Android is currently
+        dnl the one we care most about, and nobody has reported problems on
+        dnl other platforms before this point.)
+        if test "$CC_TYPE" = "clang" -a "$CPU_ARCH" = "x86" -a "$OS_TARGET" = "Android"; then
+            ac_cv_needs_atomic=yes
+        else
             AC_TRY_LINK(
                 [#include <cstdint>
                  #include <atomic>],
                 [ std::atomic<uint64_t> foo; foo = 1; ],
-                ac_cv_needs_atomic=yes,
-                ac_cv_needs_atomic="do not know; assuming no")
-            LIBS="$_SAVE_LIBS"
-        )
+                ac_cv_needs_atomic=no,
+                _SAVE_LIBS="$LIBS"
+                LIBS="$LIBS -latomic"
+                AC_TRY_LINK(
+                    [#include <cstdint>
+                     #include <atomic>],
+                    [ std::atomic<uint64_t> foo; foo = 1; ],
+                    ac_cv_needs_atomic=yes,
+                    ac_cv_needs_atomic="do not know; assuming no")
+                LIBS="$_SAVE_LIBS"
+            )
+        fi
     )
     if test "$ac_cv_needs_atomic" = yes; then
       MOZ_NEEDS_LIBATOMIC=1

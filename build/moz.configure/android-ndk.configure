@@ -147,14 +147,6 @@ def android_platform(target, android_version, ndk, _):
 add_old_configure_assignment('android_platform', android_platform)
 
 
-@depends(android_platform)
-def extra_toolchain_flags(platform_dir):
-    if not platform_dir:
-        return []
-    return ['-idirafter',
-            os.path.join(platform_dir, 'usr', 'include')]
-
-
 @depends(target, host, ndk, '--with-android-toolchain', '--help')
 @checking('for the Android toolchain directory', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
@@ -201,6 +193,16 @@ def android_toolchain_prefix_base(target):
         # in the first place.
         return 'i686-linux-android'
     return target.toolchain
+
+
+@depends(android_platform, android_toolchain)
+def extra_toolchain_flags(platform_dir, toolchain_dir):
+    if not platform_dir:
+        return []
+    return ['-isystem',
+            os.path.join(platform_dir, 'usr', 'include'),
+            '-gcc-toolchain',
+            toolchain_dir]
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
@@ -257,13 +259,17 @@ add_old_configure_assignment('stlport_cppflags', stlport_cppflags)
 
 @depends(stlport_cppflags, android_platform, android_toolchain,
          android_toolchain_prefix_base, '--help')
+@imports(_from='os.path', _import='isdir')
 def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
                             toolchain_prefix, _):
     if not stlport_cppflags:
         return
 
     gcc_include = os.path.join(
-        toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
+        toolchain, 'lib', 'gcc', toolchain_prefix, '4.9.x')
+    if not isdir(gcc_include):
+        gcc_include = os.path.join(
+            toolchain, 'lib', 'gcc', toolchain_prefix, '4.9')
 
     cflags_format = "%s -isystem %s -gcc-toolchain %s -I%s -I%s"
     return cflags_format % (stlport_cppflags,
@@ -271,3 +277,26 @@ def bindgen_cflags_defaults(stlport_cppflags, android_platform, toolchain,
                             toolchain,
                             os.path.join(gcc_include, 'include'),
                             os.path.join(gcc_include, 'include-fixed'))
+
+
+@depends(host, ndk)
+@imports(_from='os.path', _import='exists')
+@imports(_from='os.path', _import='isdir')
+def android_clang_compiler(host, ndk):
+    if not ndk:
+        return
+
+    llvm_path = '%s/toolchains/llvm/prebuilt/%s-%s/bin' % (ndk,
+                                                           host.kernel.lower(),
+                                                           host.cpu)
+    if not isdir(llvm_path) and host.cpu == 'x86_64':
+        llvm_path = toolchain_format % (ndk, host.kernel.lower(), 'x86')
+
+    if not isdir(llvm_path):
+        die("Couldn't find path to LLVM toolchain at %s" % llvm_path)
+
+    clang = '%s/clang' % llvm_path
+    if not exists(clang):
+        die("Couln't find clang in LLVM toolchain at %s" % clang)
+
+    return clang
