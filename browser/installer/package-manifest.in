@@ -255,9 +255,7 @@
 @RESPATH@/browser/components/migration.xpt
 @RESPATH@/components/mimetype.xpt
 @RESPATH@/components/mozfind.xpt
-#ifdef ENABLE_INTL_API
 @RESPATH@/components/mozintl.xpt
-#endif
 @RESPATH@/components/necko_about.xpt
 @RESPATH@/components/necko_cache.xpt
 @RESPATH@/components/necko_cache2.xpt
@@ -547,10 +545,8 @@
 @RESPATH@/components/PresentationDataChannelSessionTransport.js
 @RESPATH@/components/PresentationDataChannelSessionTransport.manifest
 
-#ifdef ENABLE_INTL_API
 @RESPATH@/components/mozIntl.manifest
 @RESPATH@/components/mozIntl.js
-#endif
 
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @RESPATH@/components/TestInterfaceJS.js
