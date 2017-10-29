@@ -255,6 +255,27 @@
   max-height: 100px;
 }
 
+.network-monitor .tree-container .treeTable tr.response-preview-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.network-monitor .tree-container .treeTable tr.response-preview-container td {
+  display: block;
+  height: 100%;
+}
+
+.network-monitor .html-preview {
+  height: 100%;
+}
+
+.network-monitor .html-preview iframe {
+  background-color: #fff;
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+
 /* Timings tabpanel */
 
 .network-monitor .timings-container {
