@@ -96,7 +96,7 @@
     "bn-BD": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "ddg", "wikipedia-bn"
+          "google", "yahoo", "bing", "duckduckgo", "wikipedia-bn"
         ]
       }
     },

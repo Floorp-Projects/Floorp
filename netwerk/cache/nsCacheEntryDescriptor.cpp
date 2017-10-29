@@ -111,32 +111,29 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetClientID(char ** result)
+nsCacheEntryDescriptor::GetClientID(nsACString& aClientID)
 {
-    NS_ENSURE_ARG_POINTER(result);
-
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETCLIENTID));
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry) {
+        aClientID.Truncate();
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    return ClientIDFromCacheKey(*(mCacheEntry->Key()), result);
+    return ClientIDFromCacheKey(*(mCacheEntry->Key()), aClientID);
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetDeviceID(char ** aDeviceID)
+nsCacheEntryDescriptor::GetDeviceID(nsACString& aDeviceID)
 {
-    NS_ENSURE_ARG_POINTER(aDeviceID);
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDEVICEID));
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-
-    const char* deviceID = mCacheEntry->GetDeviceID();
-    if (!deviceID) {
-        *aDeviceID = nullptr;
-        return NS_OK;
+    if (!mCacheEntry) {
+        aDeviceID.Truncate();
+        return NS_ERROR_NOT_AVAILABLE;
     }
 
-    *aDeviceID = NS_strdup(deviceID);
-    return *aDeviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aDeviceID.Assign(mCacheEntry->GetDeviceID());
+    return NS_OK;
 }
 
 

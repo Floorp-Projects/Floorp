@@ -49,11 +49,8 @@ PRTimeFromSeconds(uint32_t seconds)
 
 
 nsresult
-ClientIDFromCacheKey(const nsACString&  key, char ** result)
+ClientIDFromCacheKey(const nsACString& key, nsACString& result)
 {
-    nsresult  rv = NS_OK;
-    *result = nullptr;
-
     nsReadingIterator<char> colon;
     key.BeginReading(colon);
 
@@ -64,21 +61,18 @@ ClientIDFromCacheKey(const nsACString&  key, char ** result)
     key.EndReading(end);
 
     if (FindCharInReadable(':', colon, end)) {
-        *result = ToNewCString( Substring(start, colon));
-        if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        NS_ASSERTION(false, "FindCharInRead failed to find ':'");
-        rv = NS_ERROR_UNEXPECTED;
+        result.Assign(Substring(start, colon));
+        return NS_OK;
     }
-    return rv;
+
+    NS_ASSERTION(false, "FindCharInRead failed to find ':'");
+    return NS_ERROR_UNEXPECTED;
 }
 
 
 nsresult
 ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
 {
-    nsresult  rv = NS_OK;
-
     nsReadingIterator<char> start;
     key.BeginReading(start);
 
@@ -88,10 +82,10 @@ ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
     if (FindCharInReadable(':', start, end)) {
         ++start;  // advance past clientID ':' delimiter
         result.Assign(Substring(start, end));
-    } else {
-        NS_ASSERTION(false, "FindCharInRead failed to find ':'");
-        rv = NS_ERROR_UNEXPECTED;
-        result.Truncate(0);
+        return NS_OK;
     }
-    return rv;
+
+    NS_ASSERTION(false, "FindCharInRead failed to find ':'");
+    result.Truncate(0);
+    return NS_ERROR_UNEXPECTED;
 }

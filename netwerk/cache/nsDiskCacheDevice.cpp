@@ -197,16 +197,14 @@ private:
 
 NS_IMPL_ISUPPORTS(nsDiskCacheDeviceInfo, nsICacheDeviceInfo)
 
-NS_IMETHODIMP nsDiskCacheDeviceInfo::GetDescription(char ** aDescription)
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetDescription(nsACString& aDescription)
 {
-    NS_ENSURE_ARG_POINTER(aDescription);
-    *aDescription = NS_strdup("Disk cache device");
-    return *aDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aDescription.AssignLiteral("Disk cache device");
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
+NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(nsACString& aUsageReport)
 {
-    NS_ENSURE_ARG_POINTER(usageReport);
     nsCString buffer;
 
     buffer.AssignLiteral("  <tr>\n"
@@ -224,9 +222,7 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
     buffer.AppendLiteral("</td>\n"
                          "  </tr>\n");
 
-    *usageReport = ToNewCString(buffer);
-    if (!*usageReport) return NS_ERROR_OUT_OF_MEMORY;
-
+    aUsageReport.Assign(buffer);
     return NS_OK;
 }
 
