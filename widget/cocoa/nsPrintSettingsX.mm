@@ -159,7 +159,7 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
     return NS_ERROR_NOT_INITIALIZED;
 
   NSData* data = nil;
-  OSStatus err = ::PMPageFormatCreateDataRepresentation(pageFormat, (CFDataRef*)&data, kPMDataFormatXMLDefault);
+  OSStatus err = ::PMPageFormatCreateDataRepresentation(pageFormat, (CFDataRef*)&data, kPMDataFormatXMLCompressed);
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
