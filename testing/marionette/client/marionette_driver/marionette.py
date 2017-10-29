@@ -1096,7 +1096,10 @@ class Marionette(object):
 
         cause = None
         if in_app:
-            if callable(callback):
+            if callback is not None:
+                if not callable(callback):
+                    raise ValueError("Specified callback '{}' is not callable".format(callback))
+
                 self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
@@ -1148,7 +1151,10 @@ class Marionette(object):
             if clean:
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
 
-            if callable(callback):
+            if callback is not None:
+                if not callable(callback):
+                    raise ValueError("Specified callback '{}' is not callable".format(callback))
+
                 self._send_message("acceptConnections", {"value": False})
                 callback()
             else:
