@@ -43,9 +43,9 @@ static MOZ_THREAD_LOCAL(FT_Library) sFTLibrary;
 #endif
 
 struct FontTemplate {
-  void *mData;
+  const uint8_t *mData;
   size_t mSize;
-  int mIndex;
+  uint32_t mIndex;
   const VecU8 *mVec;
   RefPtr<UnscaledFont> mUnscaledFont;
 };
@@ -55,7 +55,7 @@ std::unordered_map<FontKey, FontTemplate> sFontDataTable;
 
 extern "C" {
 void
-AddFontData(wr::FontKey aKey, void *aData, size_t aSize, int aIndex, ArcVecU8 *aVec) {
+AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
     FontTemplate font;
@@ -68,7 +68,7 @@ AddFontData(wr::FontKey aKey, void *aData, size_t aSize, int aIndex, ArcVecU8 *a
 }
 
 void
-DeleteFontData(wr::FontKey aKey) {
+DeleteFontData(WrFontKey aKey) {
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
     sFontDataTable.erase(i);

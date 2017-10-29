@@ -8,10 +8,19 @@ AC_DEFUN([MOZ_ANDROID_NDK],
 case "$target" in
 *-android*|*-linuxandroid*)
     dnl $android_platform will be set for us by Python configure.
-    CPPFLAGS="-idirafter $android_platform/usr/include $CPPFLAGS"
+    directory_include_args="-isystem $android_platform/usr/include"
+
+    # clang will do any number of interesting things with host tools unless we tell
+    # it to use the NDK tools.
+    extra_opts="-gcc-toolchain $(dirname $(dirname $TOOLCHAIN_PREFIX))"
+    CPPFLAGS="$extra_opts $CPPFLAGS"
+    ASFLAGS="$extra_opts $ASFLAGS"
+    LDFLAGS="$extra_opts $LDFLAGS"
+
+    CPPFLAGS="$directory_include_args $CPPFLAGS"
     CFLAGS="-fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS $stlport_cppflags"
-    ASFLAGS="-idirafter $android_platform/usr/include -DANDROID $ASFLAGS"
+    ASFLAGS="$directory_include_args -DANDROID $ASFLAGS"
 
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
     dnl undefined symbol (present on the hardware, just not in the

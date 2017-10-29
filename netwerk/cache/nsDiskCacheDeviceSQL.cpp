@@ -348,14 +348,14 @@ private:
 NS_IMPL_ISUPPORTS(nsOfflineCacheDeviceInfo, nsICacheDeviceInfo)
 
 NS_IMETHODIMP
-nsOfflineCacheDeviceInfo::GetDescription(char **aDescription)
+nsOfflineCacheDeviceInfo::GetDescription(nsACString& aDescription)
 {
-  *aDescription = NS_strdup("Offline cache device");
-  return *aDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aDescription.AssignLiteral("Offline cache device");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
+nsOfflineCacheDeviceInfo::GetUsageReport(nsACString& aUsageReport)
 {
   nsAutoCString buffer;
   buffer.AssignLiteral("  <tr>\n"
@@ -375,10 +375,7 @@ nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
   buffer.AppendLiteral("</td>\n"
                        "  </tr>\n");
 
-  *usageReport = ToNewCString(buffer);
-  if (!*usageReport)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  aUsageReport.Assign(buffer);
   return NS_OK;
 }
 
@@ -590,17 +587,17 @@ public:
 NS_IMPL_ISUPPORTS(nsOfflineCacheEntryInfo, nsICacheEntryInfo)
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetClientID(char **result)
+nsOfflineCacheEntryInfo::GetClientID(nsACString& aClientID)
 {
-  *result = NS_strdup(mRec->clientID);
-  return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aClientID.Assign(mRec->clientID);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCacheEntryInfo::GetDeviceID(char ** deviceID)
+nsOfflineCacheEntryInfo::GetDeviceID(nsACString& aDeviceID)
 {
-  *deviceID = NS_strdup(OFFLINE_CACHE_DEVICE_ID);
-  return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aDeviceID.Assign(OFFLINE_CACHE_DEVICE_ID);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

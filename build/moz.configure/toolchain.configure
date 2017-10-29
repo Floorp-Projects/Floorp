@@ -647,11 +647,16 @@ def default_c_compilers(host_or_target):
     '''
     assert host_or_target in (host, target)
 
-    @depends(host_or_target, target, toolchain_prefix)
-    def default_c_compilers(host_or_target, target, toolchain_prefix):
+    @depends(host_or_target, target, toolchain_prefix, android_clang_compiler)
+    def default_c_compilers(host_or_target, target, toolchain_prefix, android_clang_compiler):
         gcc = ('gcc',)
         if toolchain_prefix and host_or_target is target:
             gcc = tuple('%sgcc' % p for p in toolchain_prefix) + gcc
+        # Android sets toolchain_prefix and android_clang_compiler, but
+        # we want the latter to take precedence, because the latter can
+        # point at clang, which is what we want to use.
+        if android_clang_compiler and host_or_target is target:
+            gcc = (android_clang_compiler,) + gcc
 
         if host_or_target.kernel == 'WINNT':
             return ('cl', 'clang-cl') + gcc + ('clang',)
@@ -875,6 +880,10 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             raise FatalCheckError(
                 'Only GCC 4.9 or newer is supported (found version %s).'
                 % info.version)
+
+        if info.type == 'gcc' and host_or_target.os == 'Android':
+            raise FatalCheckError('GCC is not supported on Android.\n'
+                                  'Please use clang from the Android NDK instead.')
 
         # If you want to bump the version check here search for
         # cxx_alignof above, and see the associated comment.
