@@ -272,23 +272,27 @@ NS_IMPL_ISUPPORTS(nsCacheEntryInfo, nsICacheEntryInfo)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetClientID(char ** clientID)
+nsCacheEntryInfo::GetClientID(nsACString& aClientID)
 {
-    NS_ENSURE_ARG_POINTER(clientID);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry) {
+        aClientID.Truncate();
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    return ClientIDFromCacheKey(*mCacheEntry->Key(), clientID);
+    return ClientIDFromCacheKey(*mCacheEntry->Key(), aClientID);
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetDeviceID(char ** deviceID)
+nsCacheEntryInfo::GetDeviceID(nsACString& aDeviceID)
 {
-    NS_ENSURE_ARG_POINTER(deviceID);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!mCacheEntry) {
+        aDeviceID.Truncate();
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    *deviceID = NS_strdup(mCacheEntry->GetDeviceID());
-    return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aDeviceID.Assign(mCacheEntry->GetDeviceID());
+    return NS_OK;
 }
 
 
