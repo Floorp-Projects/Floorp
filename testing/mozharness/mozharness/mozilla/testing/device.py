@@ -10,11 +10,8 @@ This code is largely from
 https://hg.mozilla.org/build/tools/file/default/sut_tools
 '''
 
-import datetime
-import os
 import re
 import subprocess
-import sys
 import time
 
 from mozharness.base.errors import ADBErrorList
@@ -117,9 +114,11 @@ class ADBDeviceHandler(BaseDeviceHandler):
             devices = self._query_attached_devices()
             if not devices:
                 self.add_device_flag(DEVICE_NOT_CONNECTED)
-                self.fatal("No device connected via adb!\nUse 'adb connect' or specify a device_id or device_ip in config!")
+                self.fatal("No device connected via adb!\nUse 'adb connect' or specify a "
+                           "device_id or device_ip in config!")
             elif len(devices) > 1:
-                self.warning("""More than one device detected; specify 'device_id' or\n'device_ip' to target a specific device!""")
+                self.warning("""More than one device detected; specify 'device_id' "
+                             "or\n'device_ip' to target a specific device!""")
             device_id = devices[0]
             self.info("Found %s." % device_id)
         self.device_id = device_id
@@ -362,9 +361,8 @@ class ADBDeviceHandler(BaseDeviceHandler):
             retries = 0
             while retries < 6:
                 output = self.get_output_from_command([adb, "-s", device_id,
-                                                       "install", '-r',
-                                                       file_path],
-                                                       ignore_errors=True)
+                                                       "install", '-r', file_path],
+                                                      ignore_errors=True)
                 if output and output.lower().find("success") >= 0:
                     install_complete = True
                     break
@@ -479,7 +477,8 @@ class DeviceMixin(object):
         device_protocol = c.get('device_protocol')
         device_class = DEVICE_PROTOCOL_DICT.get(device_protocol)
         if not device_class:
-            self.fatal("Unknown device_protocol %s; set via --device-protocol!" % str(device_protocol))
+            self.fatal("Unknown device_protocol %s; set via --device-protocol!" %
+                       str(device_protocol))
         self.device_handler = device_class(
             log_obj=self.log_obj,
             config=self.config,
