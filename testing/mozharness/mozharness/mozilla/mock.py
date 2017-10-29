@@ -18,7 +18,6 @@ Nothing to remove.'
 }
 
 
-
 # MockMixin {{{1
 class MockMixin(object):
     """Provides methods to setup and interact with mock environments.

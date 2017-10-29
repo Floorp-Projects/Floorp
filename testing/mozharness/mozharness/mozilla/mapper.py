@@ -51,9 +51,11 @@ class MapperMixin:
                 j = json.loads(r.readline())
                 if j['%s_rev' % vcs] is None:
                     if require_answer:
-                        raise Exception("Mapper returned a revision of None; maybe it needs more time.")
+                        raise Exception("Mapper returned a revision of None; "
+                                        "maybe it needs more time.")
                     else:
-                        self.warning("Mapper returned a revision of None.  Accepting because require_answer is False.")
+                        self.warning("Mapper returned a revision of None. "
+                                     "Accepting because require_answer is False.")
                 return j['%s_rev' % vcs]
             except Exception, err:
                 self.warning('Error: %s' % str(err))

@@ -68,8 +68,8 @@ class PurgeMixin(object):
         }]
 
         retval = self.retry(self.run_command, attempts=3, good_statuses=(0,), args=[cmd],
-                 kwargs={'cwd':os.path.dirname(dirs['base_work_dir']),
-                         'error_list':error_list})
+                            kwargs={'cwd': os.path.dirname(dirs['base_work_dir']),
+                            'error_list': error_list})
         if retval != 0:
             self.fatal("failed to clobber build", exit_code=2)
 
