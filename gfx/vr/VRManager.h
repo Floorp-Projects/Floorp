@@ -14,8 +14,8 @@
 #include "gfxVR.h"
 
 namespace mozilla {
-namespace dom {
-class GamepadChangeEvent;
+namespace layers {
+class TextureHost;
 }
 namespace gfx {
 
@@ -51,7 +51,6 @@ public:
   void StopVibrateHaptic(uint32_t aControllerIdx);
   void NotifyVibrateHapticCompleted(uint32_t aPromiseID);
   void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
-  TimeStamp GetLastVRListenerThreadActiveTime();
 
 protected:
   VRManager();
@@ -64,8 +63,6 @@ private:
   void Shutdown();
 
   void DispatchVRDisplayInfoUpdate();
-  void NotifyGamepadChangeEventsToContent(const dom::GamepadChangeEvent& aEvent);
-  void NotifyVibrateHapticCompletedToContent(uint32_t aPromiseID);
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
@@ -83,7 +80,6 @@ private:
 
   TimeStamp mLastRefreshTime;
   TimeStamp mLastActiveTime;
-  TimeStamp mLastVRListenerThreadActiveTime;
   bool mVRTestSystemCreated;
 };
 
