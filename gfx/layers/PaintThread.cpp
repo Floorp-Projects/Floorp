@@ -8,6 +8,7 @@
 
 #include "base/task.h"
 #include "gfxPrefs.h"
+#include "GeckoProfiler.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/SyncObject.h"
@@ -201,6 +202,7 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
 
   if (!mInAsyncPaintGroup) {
     mInAsyncPaintGroup = true;
+    PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_START);
   }
 
   DrawTarget* target = aState->mTargetDual;
@@ -297,6 +299,7 @@ PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
   }
 
   mInAsyncPaintGroup = false;
+  PROFILER_TRACING("Paint", "Rasterize", TRACING_INTERVAL_END);
 
   if (aBridge) {
     aBridge->NotifyFinishedAsyncEndLayerTransaction();
