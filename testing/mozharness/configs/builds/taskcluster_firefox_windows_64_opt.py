@@ -46,7 +46,7 @@ config = {
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',

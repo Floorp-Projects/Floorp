@@ -55,7 +55,7 @@ config = {
     'env': {
         'HG_SHARE_BASE_DIR': 'C:/builds/hg-shared',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PATH': 'C:/mozilla-build/nsis-3.01;C:/mozilla-build/python27;'
                 'C:/mozilla-build/buildbotve/scripts;'
                 '%s' % (os.environ.get('path')),
