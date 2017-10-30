@@ -1890,11 +1890,11 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
   nsresult rv = NS_OK;
   if (runScript) {
     if (doc) {
-      doc->BeginEvaluatingExternalScript();
+      doc->IncrementIgnoreDestructiveWritesCounter();
     }
     rv = EvaluateScript(aRequest);
     if (doc) {
-      doc->EndEvaluatingExternalScript();
+      doc->DecrementIgnoreDestructiveWritesCounter();
     }
 
     nsContentUtils::DispatchTrustedEvent(scriptElem->OwnerDoc(),
