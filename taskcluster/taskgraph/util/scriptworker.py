@@ -414,6 +414,9 @@ def get_release_config(config, force=False):
     """
     release_config = {}
     if force or config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
+        next_version = str(os.environ.get("NEXT_VERSION", ""))
+        if next_version != "":
+            release_config['next_version'] = next_version
         build_number = str(os.environ.get("BUILD_NUMBER", 1))
         if not build_number.isdigit():
             raise ValueError("Release graphs must specify `BUILD_NUMBER` in the environment!")
