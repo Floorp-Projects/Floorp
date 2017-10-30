@@ -174,6 +174,7 @@ function clickLink(aId, aCallback) {
     aCallback();
   };
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   var link = browser.contentDocument.getElementById(aId);
   EventUtils.sendMouseEvent({type: "click"}, link);
 

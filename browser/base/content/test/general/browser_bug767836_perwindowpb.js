@@ -75,6 +75,7 @@ function openNewTab(aWindow, aCallback) {
   aWindow.BrowserOpenTab();
 
   let browser = aWindow.gBrowser.selectedBrowser;
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   if (browser.contentDocument.readyState === "complete") {
     executeSoon(aCallback);
     return;

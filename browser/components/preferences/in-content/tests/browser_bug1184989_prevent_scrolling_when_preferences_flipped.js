@@ -9,6 +9,7 @@ add_task(async function() {
   const tabURL = getRootDirectory(gTestPath) + "browser_bug1184989_prevent_scrolling_when_preferences_flipped.xul";
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, async function(browser) {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = browser.contentDocument;
     let container = doc.getElementById("container");
 
@@ -41,6 +42,7 @@ add_task(async function() {
   });
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences#search" }, async function(browser) {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = browser.contentDocument;
     let container = doc.getElementsByClassName("main-content")[0];
 

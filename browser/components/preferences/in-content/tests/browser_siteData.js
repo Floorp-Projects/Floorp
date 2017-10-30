@@ -102,6 +102,7 @@ add_task(async function() {
 
   // Open a test site which would save into quota manager
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
@@ -184,6 +185,7 @@ add_task(async function() {
   addPersistentStoragePerm(TEST_QUOTA_USAGE_ORIGIN);
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_QUOTA_USAGE_URL);
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 

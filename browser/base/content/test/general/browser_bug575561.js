@@ -74,6 +74,7 @@ async function testLink(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame
   let href;
   if (typeof aLinkIndexOrFunction === "function") {
     ok(!browser.isRemoteBrowser, "don't pass a function for a remote browser");
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let link = aLinkIndexOrFunction(browser.contentDocument);
     info("Clicking " + link.textContent);
     link.click();

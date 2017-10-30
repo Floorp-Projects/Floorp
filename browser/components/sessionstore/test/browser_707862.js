@@ -46,6 +46,7 @@ function test() {
       });
 
       // Create a dynamic subframe.
+      // eslint-disable-next-line mozilla/no-cpows-in-tests
       let doc = browser.contentDocument;
       let iframe = doc.createElement("iframe");
       doc.body.appendChild(iframe);

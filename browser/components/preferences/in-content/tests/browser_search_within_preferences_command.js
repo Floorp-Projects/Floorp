@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable mozilla/no-cpows-in-tests */
+
 /**
  * Test for "command" event on search input (when user clicks the x button)
  */
