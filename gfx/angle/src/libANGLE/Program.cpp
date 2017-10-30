@@ -817,6 +817,12 @@ Error Program::link(const gl::Context *context)
         cache->putProgram(programHash, context, this);
     }
 
+    // Because we do lazy init in ensureUniformBlocksInitialized,
+    // we must initialize them when linking shaders,
+    // otherwise, we will have no shaders for getting uniform blocks
+    // information from shaders when doing draw calls.
+    mProgram->ensureUniformBlocksInitialized();
+
     double delta = platform->currentTime(platform) - startTime;
     int us       = static_cast<int>(delta * 1000000.0);
     ANGLE_HISTOGRAM_COUNTS("GPU.ANGLE.ProgramCache.ProgramCacheMissTimeUS", us);
