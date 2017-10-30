@@ -19,12 +19,12 @@
 #include "nsFocusManager.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIControllers.h"
 #include "nsIController.h"
 #include "xpcpublic.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
@@ -234,8 +234,8 @@ nsWindowRoot::GetControllers(bool aForVisibleWindow,
     }
 #endif
 
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> htmlTextArea =
-      do_QueryInterface(focusedContent);
+    HTMLTextAreaElement* htmlTextArea =
+      HTMLTextAreaElement::FromContent(focusedContent);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 

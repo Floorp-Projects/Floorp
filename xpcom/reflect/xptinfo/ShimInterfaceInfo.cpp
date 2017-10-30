@@ -58,7 +58,6 @@
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLSourceElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMMouseEvent.h"
@@ -163,7 +162,6 @@
 #include "mozilla/dom/HTMLScriptElementBinding.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/HTMLSourceElementBinding.h"
-#include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/dom/KeyEventBinding.h"
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
@@ -319,7 +317,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLScriptElement),
   DEFINE_SHIM(HTMLSelectElement),
   DEFINE_SHIM(HTMLSourceElement),
-  DEFINE_SHIM(HTMLTextAreaElement),
   DEFINE_SHIM(KeyEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
   DEFINE_SHIM(MediaList),
