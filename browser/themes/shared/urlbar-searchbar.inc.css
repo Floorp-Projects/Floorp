@@ -210,14 +210,14 @@
   height: 30px;
 }
 
-.urlbar-icon:hover,
-.urlbar-icon-wrapper:hover {
+.urlbar-icon:not([disabled]):hover,
+.urlbar-icon-wrapper:not([disabled]):hover {
   background-color: hsla(0,0%,80%,.4);
 }
 
 .urlbar-icon[open],
 .urlbar-icon-wrapper[open],
-.urlbar-icon:hover:active,
+.urlbar-icon:not([disabled]):hover:active,
 .urlbar-icon-wrapper:hover:active {
   background-color: hsla(0,0%,80%,.6);
 }
