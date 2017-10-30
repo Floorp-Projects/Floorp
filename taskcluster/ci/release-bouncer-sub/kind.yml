@@ -23,10 +23,28 @@ jobs:
          routes:
             - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
-         notifications:
-            completed:
-               - releasetasks
-            failed:
-               - releasetasks
-            exception:
-               - releasetasks
+      notifications:
+         completed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         failed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         exception:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
