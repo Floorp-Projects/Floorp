@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1302667 - Test worker-src</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="worker-testframe"></iframe>
+<iframe style="width:100%;" id="child-testframe"></iframe>
+<iframe style="width:100%;" id="script-testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load a page inlcuding a worker, a shared worker as well as a
+ * service worker with a CSP of:
+ *   >> worker-src https://example.com; child-src 'none'; script-src 'nonce-foo'
+ * and make sure that worker-src governs these three kinds of workers correctly.
+ * In addition, we make sure that child-src as well as script-src is discarded
+ * in case worker-src is specified. Ideally we would use "script-src 'none'" but
+ * we have to whitelist the actual script that spawns the workers, hence the nonce.
+ */
+
+let testRuns = 0;
+let messageCounter = 0;
+let numberSubTests = 9; // 3 workers * 3 frames = 9
+
+function checkFinish() {
+  messageCounter = 0;
+  if (testRuns == 0) {
+  	testRuns++;
+   	runTests("https://test1.example.com/tests/dom/security/test/csp/")
+  	return;
+  }
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  let href = event.data.href;
+  let result = event.data.result;
+
+  if (href.startsWith("https://example.com")) {
+  	if (result == "worker-allowed" ||
+  		  result == "shared-worker-allowed" ||
+  		  result == "service-worker-allowed") {
+  	  ok(true, "allowing worker from https://example.com (" + result + ")");
+  	}
+  	else {
+  	  ok(false, "blocking worker from https://example.com (" + result + ")");
+  	}
+  }
+  else if (href.startsWith("https://test1.example.com")) {
+  	if (result == "worker-blocked" ||
+  		  result == "shared-worker-blocked" ||
+  		  result == "service-worker-blocked") {
+  	  ok(true, "blocking worker from https://test1.example.com (" + result + ")");
+  	}
+  	else {
+  	  ok(false, "allowing worker from https://test1.example.com (" + result + ")");
+  	}
+  }
+  else {
+    // sanity check, we should never enter that branch, bust just in case...
+  	ok(false, "unexpected result: " + result);
+  }
+  messageCounter++;
+  if (messageCounter < numberSubTests) {
+  	return;
+  }
+  checkFinish();
+}
+
+function runTests(aPath) {
+  document.getElementById("worker-testframe").src = aPath + "file_worker_src_worker_governs.html";
+  document.getElementById("child-testframe").src = aPath + "file_worker_src_child_governs.html";
+  document.getElementById("script-testframe").src = aPath + "file_worker_src_script_governs.html";
+}
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+]}, function() {
+  runTests("https://example.com/tests/dom/security/test/csp/");
+});
+
+</script>
+</body>
+</html>
