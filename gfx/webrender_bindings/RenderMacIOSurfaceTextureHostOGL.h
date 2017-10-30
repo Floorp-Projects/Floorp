@@ -23,8 +23,10 @@ class RenderMacIOSurfaceTextureHostOGL final : public RenderTextureHostOGL
 public:
   explicit RenderMacIOSurfaceTextureHostOGL(MacIOSurface* aSurface);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
-  void Unlock() override;
+  virtual bool Lock() override;
+  virtual void Unlock() override;
+
+  virtual void SetGLContext(gl::GLContext* aContext) override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const override;

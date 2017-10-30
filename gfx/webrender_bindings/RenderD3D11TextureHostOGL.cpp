@@ -59,6 +59,17 @@ RenderDXGITextureHostOGL::~RenderDXGITextureHostOGL()
   DeleteTextureHandle();
 }
 
+void
+RenderDXGITextureHostOGL::SetGLContext(gl::GLContext* aContext)
+{
+  if (mGL.get() != aContext) {
+    // Release the texture handle in the previous gl context.
+    DeleteTextureHandle();
+    mGL = aContext;
+    mGL->MakeCurrent();
+  }
+}
+
 bool
 RenderDXGITextureHostOGL::EnsureLockable()
 {
@@ -171,34 +182,27 @@ RenderDXGITextureHostOGL::EnsureLockable()
   return true;
 }
 
-wr::WrExternalImage
-RenderDXGITextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+bool
+RenderDXGITextureHostOGL::Lock()
 {
-  if (mGL.get() != aGL) {
-    // Release the texture handle in the previous gl context.
-    DeleteTextureHandle();
-    mGL = aGL;
-    mGL->MakeCurrent();
-  }
-
   if (!EnsureLockable()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return false;
   }
 
-  if (!mLocked) {
-    if (mKeyedMutex) {
-      HRESULT hr = mKeyedMutex->AcquireSync(0, 100);
-      if (hr != S_OK) {
-        gfxCriticalError() << "RenderDXGITextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
-        return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
-      }
+  if (mLocked) {
+    return true;
+  }
+
+  if (mKeyedMutex) {
+    HRESULT hr = mKeyedMutex->AcquireSync(0, 100);
+    if (hr != S_OK) {
+      gfxCriticalError() << "RenderDXGITextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
+      return false;
     }
-    mLocked = true;
   }
+  mLocked = true;
 
-  gfx::IntSize size = GetSize(aChannelIndex);
-  return NativeTextureToWrExternalImage(GetGLHandle(aChannelIndex), 0, 0,
-                                        size.width, size.height);
+  return true;
 }
 
 void
@@ -285,6 +289,17 @@ RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL()
   DeleteTextureHandle();
 }
 
+void
+RenderDXGIYCbCrTextureHostOGL::SetGLContext(gl::GLContext* aContext)
+{
+  if (mGL.get() != aContext) {
+    // Release the texture handle in the previous gl context.
+    DeleteTextureHandle();
+    mGL = aContext;
+    mGL->MakeCurrent();
+  }
+}
+
 bool
 RenderDXGIYCbCrTextureHostOGL::EnsureLockable()
 {
@@ -352,36 +367,29 @@ RenderDXGIYCbCrTextureHostOGL::EnsureLockable()
   return true;
 }
 
-wr::WrExternalImage
-RenderDXGIYCbCrTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+bool
+RenderDXGIYCbCrTextureHostOGL::Lock()
 {
-  if (mGL.get() != aGL) {
-    // Release the texture handle in the previous gl context.
-    DeleteTextureHandle();
-    mGL = aGL;
-    mGL->MakeCurrent();
-  }
-
   if (!EnsureLockable()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return false;
   }
 
-  if (!mLocked) {
-    if (mKeyedMutexs[0]) {
-      for (const auto& mutex : mKeyedMutexs) {
-        HRESULT hr = mutex->AcquireSync(0, 100);
-        if (hr != S_OK) {
-          gfxCriticalError() << "RenderDXGIYCbCrTextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
-          return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
-        }
+  if (mLocked) {
+    return true;
+  }
+
+  if (mKeyedMutexs[0]) {
+    for (const auto& mutex : mKeyedMutexs) {
+      HRESULT hr = mutex->AcquireSync(0, 100);
+      if (hr != S_OK) {
+        gfxCriticalError() << "RenderDXGIYCbCrTextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
+        return false;
       }
     }
-    mLocked = true;
   }
+  mLocked = true;
 
-  gfx::IntSize size = GetSize(aChannelIndex);
-  return NativeTextureToWrExternalImage(GetGLHandle(aChannelIndex), 0, 0,
-                                        size.width, size.height);
+  return true;
 }
 
 void

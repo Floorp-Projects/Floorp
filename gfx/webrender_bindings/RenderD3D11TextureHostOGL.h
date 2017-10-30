@@ -23,8 +23,10 @@ public:
                                     gfx::SurfaceFormat aFormat,
                                     gfx::IntSize aSize);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
-  void Unlock() override;
+  virtual void SetGLContext(gl::GLContext* aContext) override;
+
+  virtual bool Lock() override;
+  virtual void Unlock() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const;
@@ -61,7 +63,9 @@ public:
   explicit RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHandles)[3],
                                          gfx::IntSize aSize);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
+  virtual void SetGLContext(gl::GLContext* aContext) override;
+
+  virtual bool Lock() override;
   virtual void Unlock() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;
