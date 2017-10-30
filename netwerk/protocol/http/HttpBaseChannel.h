@@ -467,6 +467,9 @@ protected:
   static void CallTypeSniffers(void *aClosure, const uint8_t *aData,
                                uint32_t aCount);
 
+  nsresult
+  CheckRedirectLimit(uint32_t aRedirectFlags) const;
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
