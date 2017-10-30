@@ -69,6 +69,7 @@ for (let [key, val] of Object.entries({
     urlFilterRegex: {},
     contentGfxInfo: null,
     focusFilterMode: "all",
+    compareRetainedDisplayLists: false,
     compareStyloToGecko: false,
 
     browser: undefined,
