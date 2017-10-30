@@ -16,10 +16,15 @@ TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', }
 
 RELEASE_PROJECTS = {
     'mozilla-central',
-    'mozilla-aurora',
     'mozilla-beta',
     'mozilla-release',
 }
+
+RELEASE_PROMOTION_PROJECTS = {
+    'jamun',
+    'maple',
+    'try',
+} | RELEASE_PROJECTS
 
 _OPTIONAL_ATTRIBUTES = ('nightly', 'signed', 'l10n_chunk')
 
