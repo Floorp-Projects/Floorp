@@ -10,6 +10,7 @@ with Files('**'):
 EXPORTS.mozilla.webrender += [
     'RenderBufferTextureHost.h',
     'RendererOGL.h',
+    'RenderSharedSurfaceTextureHost.h',
     'RenderTextureHost.h',
     'RenderTextureHostOGL.h',
     'RenderThread.h',
@@ -23,6 +24,7 @@ UNIFIED_SOURCES += [
     'Moz2DImageRenderer.cpp',
     'RenderBufferTextureHost.cpp',
     'RendererOGL.cpp',
+    'RenderSharedSurfaceTextureHost.cpp',
     'RenderTextureHost.cpp',
     'RenderTextureHostOGL.cpp',
     'RenderThread.cpp',
