@@ -20,12 +20,9 @@ Login Manager test: XHR prompt
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: XHR prompts. **/
-var pwmgr, login1, login2;
+var login1, login2;
 
 function initLogins() {
-  pwmgr = Cc["@mozilla.org/login-manager;1"].
-          getService(Ci.nsILoginManager);
-
   login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
   login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -36,14 +33,14 @@ function initLogins() {
   login2.init("http://mochi.test:8888", null, "xhr2",
                "xhruser2", "xhrpass2", "", "");
 
-  pwmgr.addLogin(login1);
-  pwmgr.addLogin(login2);
+  SpecialPowers.Services.logins.addLogin(login1);
+  SpecialPowers.Services.logins.addLogin(login2);
 }
 
 function finishTest() {
   ok(true, "finishTest removing testing logins...");
-  pwmgr.removeLogin(login1);
-  pwmgr.removeLogin(login2);
+  SpecialPowers.Services.logins.removeLogin(login1);
+  SpecialPowers.Services.logins.removeLogin(login2);
 
   SimpleTest.finish();
 }

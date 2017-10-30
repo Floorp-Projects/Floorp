@@ -20,12 +20,9 @@ Login Manager test: XML prompt
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: XML prompts. **/
-var pwmgr, login1, login2;
+var login1, login2;
 
 function initLogins() {
-  pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
-                       .getService(Ci.nsILoginManager);
-
   login1 = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
                         .createInstance(Ci.nsILoginInfo);
   login2 = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
@@ -36,8 +33,8 @@ function initLogins() {
   login2.init("http://mochi.test:8888", null, "xml2",
                "xmluser2", "xmlpass2", "", "");
 
-  pwmgr.addLogin(login1);
-  pwmgr.addLogin(login2);
+  SpecialPowers.Services.logins.addLogin(login1);
+  SpecialPowers.Services.logins.addLogin(login2);
 }
 
 function handleDialog(doc, testNum) {
