@@ -730,9 +730,8 @@ Tester.prototype = {
         stack,
         allowFailure: currentTest.allowFailure,
       }));
-    });
+    }, true);
 
-    this.PromiseTestUtils.Assert = this.currentTest.scope.Assert;
     this.ContentTask.setTestScope(currentScope);
 
     // Allow Assert.jsm methods to be tacked to the current scope.

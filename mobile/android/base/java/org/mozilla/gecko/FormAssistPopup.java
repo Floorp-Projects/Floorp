@@ -398,7 +398,7 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
         });
     }
 
-    private class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
+    private static final class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
         private final LayoutInflater mInflater;
         private final int mTextViewResourceId;
 

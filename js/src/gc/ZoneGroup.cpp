@@ -95,6 +95,12 @@ ZoneGroup::leave()
 }
 
 bool
+ZoneGroup::canEnterWithoutYielding(JSContext* cx)
+{
+    return ownerContext().context() == cx || ownerContext().context() == nullptr;
+}
+
+bool
 ZoneGroup::ownedByCurrentThread()
 {
     MOZ_ASSERT(TlsContext.get());

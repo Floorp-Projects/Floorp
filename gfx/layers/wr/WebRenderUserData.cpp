@@ -11,6 +11,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
 #include "nsDisplayListInvalidation.h"
 #include "WebRenderCanvasRenderer.h"
 
@@ -50,6 +51,7 @@ WebRenderUserData::WrBridge() const
 
 WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
   : WebRenderUserData(aWRManager, aItem)
+  , mGeneration(0)
 {
 }
 
@@ -82,36 +84,55 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
                                    wr::IpcResourceUpdateQueue& aResources,
                                    bool aForceUpdate)
 {
-  CreateImageClientIfNeeded();
-  CreateExternalImageIfNeeded();
+  MOZ_ASSERT(aContainer);
 
   if (mContainer != aContainer) {
     mContainer = aContainer;
   }
 
-  if (!mImageClient || !mExternalImageId) {
-    return Nothing();
-  }
-
-  MOZ_ASSERT(mImageClient->AsImageClientSingle());
-  MOZ_ASSERT(aContainer);
-
-  ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
-  uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
-
-  bool ret = imageClient->UpdateImage(aContainer, /* unused */0);
-  if (!ret || imageClient->IsEmpty()) {
-    // Delete old key
-    if (mKey) {
-      mWRManager->AddImageKeyForDiscard(mKey.value());
-      mKey = Nothing();
+  wr::ExternalImageId externalId;
+  uint32_t generation;
+  nsresult rv = SharedSurfacesChild::Share(aContainer, externalId, generation);
+  if (NS_SUCCEEDED(rv)) {
+    if (mExternalImageId.isSome() && mExternalImageId.ref() == externalId) {
+      // The image container has the same surface as before, we can reuse the
+      // key if the generation matches and the caller allows us.
+      if (mKey && mGeneration == generation && !aForceUpdate) {
+        return mKey;
+      }
+    } else {
+      // The image container has a new surface, generate a new image key.
+      mExternalImageId = Some(externalId);
     }
-    return Nothing();
-  }
 
-  // Reuse old key if generation is not updated.
-  if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
-    return mKey;
+    mGeneration = generation;
+  } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+    CreateImageClientIfNeeded();
+    CreateExternalImageIfNeeded();
+
+    if (!mImageClient || !mExternalImageId) {
+      return Nothing();
+    }
+
+    MOZ_ASSERT(mImageClient->AsImageClientSingle());
+
+    ImageClientSingle* imageClient = mImageClient->AsImageClientSingle();
+    uint32_t oldCounter = imageClient->GetLastUpdateGenerationCounter();
+
+    bool ret = imageClient->UpdateImage(aContainer, /* unused */0);
+    if (!ret || imageClient->IsEmpty()) {
+      // Delete old key
+      if (mKey) {
+        mWRManager->AddImageKeyForDiscard(mKey.value());
+        mKey = Nothing();
+      }
+      return Nothing();
+    }
+
+    // Reuse old key if generation is not updated.
+    if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
+      return mKey;
+    }
   }
 
   // Delete old key, we are generating a new key.

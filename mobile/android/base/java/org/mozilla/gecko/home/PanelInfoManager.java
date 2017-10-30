@@ -25,7 +25,7 @@ import android.util.SparseArray;
 public class PanelInfoManager implements BundleEventListener {
     private static final String LOGTAG = "GeckoPanelInfoManager";
 
-    public class PanelInfo {
+    public static final class PanelInfo {
         private final String mId;
         private final String mTitle;
         private final GeckoBundle mBundleData;

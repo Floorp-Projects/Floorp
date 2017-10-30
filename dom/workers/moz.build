@@ -12,7 +12,9 @@ EXPORTS.mozilla.dom += [
     'FileReaderSync.h',
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
+    'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
+    'ServiceWorkerIPCUtils.h',
     'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
     'WorkerLocation.h',
@@ -60,6 +62,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerClient.cpp',
     'ServiceWorkerClients.cpp',
     'ServiceWorkerContainer.cpp',
+    'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerInfo.cpp',
     'ServiceWorkerJob.cpp',
@@ -91,6 +94,7 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'IPCServiceWorkerDescriptor.ipdlh',
     'PServiceWorkerManager.ipdl',
     'PServiceWorkerUpdater.ipdl',
     'ServiceWorkerRegistrarTypes.ipdlh',

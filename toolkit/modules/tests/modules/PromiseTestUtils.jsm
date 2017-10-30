@@ -6,9 +6,6 @@
  * will fail tests in this case, unless the test whitelists itself.
  */
 
-// For this test we allow the global Assert to be modified.
-/* global Assert:true */
-
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
@@ -18,12 +15,10 @@ this.EXPORTED_SYMBOLS = [
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://testing-common/Assert.jsm", this);
 
 // Keep "JSMPromise" separate so "Promise" still refers to DOM Promises.
 let JSMPromise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-
-// For now, we need test harnesses to provide a reference to Assert.jsm.
-let Assert = null;
 
 this.PromiseTestUtils = {
   /**
@@ -134,13 +129,6 @@ this.PromiseTestUtils = {
    */
   thisTestLeaksUncaughtRejectionsAndShouldBeFixed() {
     this.uninit();
-  },
-
-  /**
-   * Sets or updates the Assert object instance to be used for error reporting.
-   */
-  set Assert(assert) {
-    Assert = assert;
   },
 
   // UncaughtRejectionObserver

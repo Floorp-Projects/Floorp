@@ -35,7 +35,7 @@ import java.net.URISyntaxException;
  */
 public class SyncStorageRecordRequest extends SyncStorageRequest {
 
-  public class SyncStorageRecordResourceDelegate extends SyncStorageResourceDelegate {
+  public static final class SyncStorageRecordResourceDelegate extends SyncStorageResourceDelegate {
     SyncStorageRecordResourceDelegate(SyncStorageRequest request) {
       super(request);
     }

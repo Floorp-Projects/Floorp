@@ -2496,7 +2496,7 @@ public class BrowserDatabaseHelper extends SQLiteOpenHelper {
         public void updateForNewTable(ContentValues bookmark);
     }
 
-    private class BookmarkMigrator3to4 implements BookmarkMigrator {
+    private static final class BookmarkMigrator3to4 implements BookmarkMigrator {
         @Override
         public void updateForNewTable(ContentValues bookmark) {
             Integer isFolder = bookmark.getAsInteger("folder");

@@ -12,6 +12,7 @@ using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using gfxImageFormat from "gfxTypes.h";
 
 namespace mozilla {
@@ -129,6 +130,14 @@ struct SurfaceDescriptorBuffer {
   MemoryOrShmem data;
 };
 
+struct SurfaceDescriptorShared
+{
+  IntSize size;
+  int32_t stride;
+  SurfaceFormat format;
+  Handle handle;
+};
+
 union SurfaceDescriptor {
   SurfaceDescriptorBuffer;
   SurfaceDescriptorDIB;
@@ -141,6 +150,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorMacIOSurface;
   SurfaceDescriptorSharedGLTexture;
   SurfaceDescriptorGPUVideo;
+  SurfaceDescriptorShared;
   null_t;
 };
 

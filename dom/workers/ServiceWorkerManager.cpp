@@ -2542,9 +2542,11 @@ public:
   {
     AssertIsOnMainThread();
     NS_WARNING("Unexpected error while dispatching fetch event!");
-    DebugOnly<nsresult> rv = mChannel->ResetInterception();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to resume intercepted network request");
+    nsresult rv = mChannel->ResetInterception();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to resume intercepted network request");
+      mChannel->CancelInterception(rv);
+    }
   }
 
   NS_IMETHOD

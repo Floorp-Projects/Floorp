@@ -527,8 +527,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
             while (true) {
                 gfxTextRun::DetailedGlyph *details = detailedGlyphs.AppendElement();
                 details->mGlyphID = glyphs[glyphStart];
-                details->mXOffset = 0;
-                details->mYOffset = -positions[glyphStart].y * appUnitsPerDevUnit;
+                details->mOffset.y = -positions[glyphStart].y * appUnitsPerDevUnit;
                 details->mAdvance = advance;
                 if (++glyphStart >= glyphEnd) {
                    break;

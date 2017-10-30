@@ -13,6 +13,11 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+
+namespace gl {
+class GLContext;
+}
+
 namespace wr {
 
 class RenderBufferTextureHost;
@@ -25,11 +30,8 @@ class RenderTextureHost
 public:
   RenderTextureHost();
 
-  virtual bool Lock() = 0;
+  virtual wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) = 0;
   virtual void Unlock() = 0;
-
-  virtual RenderBufferTextureHost* AsBufferTextureHost() { return nullptr; }
-  virtual RenderTextureHostOGL* AsTextureHostOGL() { return nullptr; }
 
 protected:
   virtual ~RenderTextureHost();
