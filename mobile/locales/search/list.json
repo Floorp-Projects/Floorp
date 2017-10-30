@@ -386,7 +386,7 @@
     "it": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "twitter", "wikipedia-it"
+          "google", "yahoo-it", "bing", "duckduckgo", "twitter", "wikipedia-it"
         ]
       }
     },
