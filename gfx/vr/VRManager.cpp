@@ -226,7 +226,6 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   if (bHaveEventListener || bHaveControllerListener) {
     // We are using a VR device, keep it alive
     mLastActiveTime = TimeStamp::Now();
-    mLastVRListenerThreadActiveTime = mLastActiveTime;
   } else if (mLastActiveTime.IsNull()) {
     Shutdown();
   } else {
@@ -259,7 +258,7 @@ void
 VRManager::RefreshVRDisplays(bool aMustDispatch)
 {
   nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
-  mLastVRListenerThreadActiveTime = TimeStamp::Now();
+
   /** We don't wish to enumerate the same display from multiple managers,
    * so stop as soon as we get a display.
    * It is still possible to get multiple displays from a single manager,
@@ -308,20 +307,13 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
   }
 
   if (displayInfoChanged || displaySetChanged || aMustDispatch) {
-    // Due to PVRManager is at Compositor thread. We have to post tasks
-    // to Compositor thread when sending to them the content processes.
-    MessageLoop* loop = CompositorThreadHolder::Loop();
-    loop->PostTask(
-      NewRunnableMethod("gfx::VRManager::DispatchVRDisplayInfoUpdate",
-                        this,
-                        &VRManager::DispatchVRDisplayInfoUpdate));
+    DispatchVRDisplayInfoUpdate();
   }
 }
 
 void
 VRManager::DispatchVRDisplayInfoUpdate()
 {
-  MOZ_ASSERT(NS_IsInCompositorThread());
   nsTArray<VRDisplayInfo> update;
   GetVRDisplayInfo(update);
 
@@ -329,6 +321,7 @@ VRManager::DispatchVRDisplayInfoUpdate()
     Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(update);
   }
 }
+
 
 /**
  * Get any VR displays that have already been enumerated without
@@ -372,12 +365,6 @@ VRManager::GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo)
     gfx::VRControllerHost* controller = iter.UserData();
     aControllerInfo.AppendElement(VRControllerInfo(controller->GetControllerInfo()));
   }
-}
-
-TimeStamp
-VRManager::GetLastVRListenerThreadActiveTime()
-{
-  return mLastVRListenerThreadActiveTime;
 }
 
 void
@@ -454,22 +441,8 @@ VRManager::NotifyGamepadChange(uint32_t aIndex, const T& aInfo)
   dom::GamepadChangeEventBody body(aInfo);
   dom::GamepadChangeEvent e(aIndex, dom::GamepadServiceType::VR, body);
 
-  // Due to PVRManager is at Compositor thread. We have to post
-  // tasks to Compositor thread.
-  MessageLoop* loop = CompositorThreadHolder::Loop();
-  loop->PostTask(
-    NewRunnableMethod<dom::GamepadChangeEvent>(
-                      "gfx::VRManager::NotifyGamepadChangeEventsToContent",
-                      this,
-                      &VRManager::NotifyGamepadChangeEventsToContent, e));
-}
-
-void
-VRManager::NotifyGamepadChangeEventsToContent(const dom::GamepadChangeEvent& aEvent)
-{
-  MOZ_ASSERT(NS_IsInCompositorThread());
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendGamepadUpdate(aEvent);
+    Unused << iter.Get()->GetKey()->SendGamepadUpdate(e);
   }
 }
 
@@ -495,20 +468,6 @@ VRManager::StopVibrateHaptic(uint32_t aControllerIdx)
 void
 VRManager::NotifyVibrateHapticCompleted(uint32_t aPromiseID)
 {
-  // Due to PVRManager is at Compositor thread. We have to post
-  // tasks to Compositor thread.
-  MessageLoop* loop = CompositorThreadHolder::Loop();
-  loop->PostTask(
-    NewRunnableMethod<uint32_t>(
-                      "gfx::VRManager::NotifyVibrateHapticCompletedToContent",
-                      this,
-                      &VRManager::NotifyVibrateHapticCompletedToContent, aPromiseID));
-}
-
-void
-VRManager::NotifyVibrateHapticCompletedToContent(uint32_t aPromiseID)
-{
-  MOZ_ASSERT(NS_IsInCompositorThread());
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendReplyGamepadVibrateHaptic(aPromiseID);
   }
@@ -517,7 +476,6 @@ VRManager::NotifyVibrateHapticCompletedToContent(uint32_t aPromiseID)
 void
 VRManager::DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult)
 {
-  MOZ_ASSERT(NS_IsInCompositorThread());
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendDispatchSubmitFrameResult(aDisplayID, aResult);
   }
