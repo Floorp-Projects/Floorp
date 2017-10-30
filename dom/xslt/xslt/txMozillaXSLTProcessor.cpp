@@ -50,7 +50,7 @@ class txToDocHandlerFactory : public txAOutputHandlerFactory
 {
 public:
     txToDocHandlerFactory(txExecutionState* aEs,
-                          nsIDOMDocument* aSourceDocument,
+                          nsIDocument* aSourceDocument,
                           nsITransformObserver* aObserver,
                           bool aDocumentIsData)
         : mEs(aEs), mSourceDocument(aSourceDocument), mObserver(aObserver),
@@ -62,7 +62,7 @@ public:
 
 private:
     txExecutionState* mEs;
-    nsCOMPtr<nsIDOMDocument> mSourceDocument;
+    nsCOMPtr<nsIDocument> mSourceDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
     bool mDocumentIsData;
 };
@@ -664,14 +664,12 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument = do_QueryInterface(mSource->OwnerDoc());
-
     txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
     // If aResult is non-null, we're a data document
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, mObserver,
+    txToDocHandlerFactory handlerFactory(&es, mSource->OwnerDoc(), mObserver,
                                          aCreateDataDocument);
     es.mOutputHandlerFactory = &handlerFactory;
 
