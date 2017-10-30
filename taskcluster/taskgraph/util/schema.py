@@ -146,6 +146,7 @@ WHITELISTED_SCHEMA_IDENTIFIERS = [
     lambda path: "[u'upstream-artifacts']" in path,
     # bbb release promotion properties
     lambda path: path.endswith("[u'build_number']"),
+    lambda path: path.endswith("[u'tuxedo_server_url']"),
     lambda path: path.endswith("[u'release_promotion']"),
 ]
 

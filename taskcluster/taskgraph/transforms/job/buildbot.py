@@ -8,10 +8,11 @@ Support for running jobs via buildbot.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
+import copy
 import slugid
 from urlparse import urlparse
 
-from taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Optional, Required, Any
 
@@ -29,6 +30,7 @@ buildbot_run_schema = Schema({
 
     Optional('release-promotion'): bool,
     Optional('routes'): [basestring],
+    Optional('properties'): {basestring: optionally_keyed_by('project', basestring)},
 })
 
 
@@ -74,6 +76,13 @@ def bb_ci_worker(config, worker):
 
 @run_job_using('buildbot-bridge', 'buildbot', schema=buildbot_run_schema)
 def mozharness_on_buildbot_bridge(config, job, taskdesc):
+    # resolve by-* keys first
+    fields = [
+        "run.properties.tuxedo_server_url",
+    ]
+    job = copy.deepcopy(job)
+    for field in fields:
+        resolve_keyed_by(job, field, field, **config.params)
     run = job['run']
     worker = taskdesc['worker']
     branch = config.params['project']
@@ -93,6 +102,8 @@ def mozharness_on_buildbot_bridge(config, job, taskdesc):
             'product': product,
         },
     })
+    if run.get('properties'):
+        worker['properties'].update(run['properties'])
 
     if run.get('release-promotion'):
         bb_release_worker(config, worker, run)
