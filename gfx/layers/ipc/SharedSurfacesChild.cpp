@@ -155,6 +155,37 @@ SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface,
   return NS_OK;
 }
 
+/* static */ nsresult
+SharedSurfacesChild::Share(ImageContainer* aContainer,
+                           wr::ExternalImageId& aId,
+                           uint32_t& aGeneration)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+
+  if (aContainer->IsAsync()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  AutoTArray<ImageContainer::OwningImage,4> images;
+  aContainer->GetCurrentImages(&images, &aGeneration);
+  if (images.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = images[0].mImage->GetAsSourceSurface();
+  if (!surface) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (surface->GetType() != SurfaceType::DATA_SHARED) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
+  return Share(sharedSurface, aId);
+}
+
 /* static */ void
 SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId)
 {
