@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.beetmover_cdns:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   worker-type:
+      by-project:
+         mozilla-release: scriptworker-prov-v1/beetmoverworker-v1
+         mozilla-beta: scriptworker-prov-v1/beetmoverworker-v1
+         default: scriptworker-prov-v1/beetmoverworker-dev
+   run-on-projects: []
+
+jobs:
+   fennec-push-to-cdns:
+      name: fennec_push_to_cdns
+      product: fennec
+      run:
+         routes:
+            - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
+            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
+      treeherder-platform: Android/opt
+
+# We probably want a dummy task after the beetmover checksums, or the publish notify task?
+# kind-dependencies:
+#   - beetmover-checksums

@@ -33,7 +33,9 @@ RELEASE_PROMOTION_CONFIG = {
         'target_tasks_method': 'publish_fennec',
         'previous_graph_kinds': [
             'build', 'build-signing', 'repackage', 'repackage-signing',
-            'release-bouncer-sub',
+            'release-bouncer-sub', 'beetmover', 'beetmover-checksums',
+            'beetmover-l10n', 'beetmover-repackage',
+            'beetmover-repackage-signing', "checksums-signing",
         ],
         'do_not_optimize': [],
     },
