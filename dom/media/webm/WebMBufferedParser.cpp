@@ -275,6 +275,12 @@ WebMBufferedParser::EndSegmentOffset(int64_t aOffset)
   return mBlockEndOffset;
 }
 
+int64_t
+WebMBufferedParser::GetClusterOffset() const
+{
+  return mClusterOffset;
+}
+
 // SyncOffsetComparator and TimeComparator are slightly confusing, in that
 // the nsTArray they're used with (mTimeMapping) is sorted by mEndOffset and
 // these comparators are used on the other fields of WebMTimeDataOffset.
