@@ -464,6 +464,11 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
   // If we are already in the temporaryFile mode, we have to dispatch a
   // runnable.
   if (mStorageState == eInTemporaryFile) {
+    // If a previous operation failed, let's return that error now.
+    if (NS_FAILED(mErrorResult)) {
+      return mErrorResult;
+    }
+
     RefPtr<WriteRunnable> runnable =
       WriteRunnable::CopyBuffer(this, aData, aLength);
     if (NS_WARN_IF(!runnable)) {
@@ -590,6 +595,7 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
   }
 
   mFD = aFD;
+  MOZ_ASSERT(NS_SUCCEEDED(mErrorResult));
 
   // This runnable takes the ownership of mData and it will write this buffer
   // into the temporary file.
