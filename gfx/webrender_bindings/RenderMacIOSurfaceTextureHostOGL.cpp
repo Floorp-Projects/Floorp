@@ -71,18 +71,11 @@ RenderMacIOSurfaceTextureHostOGL::GetSize(uint8_t aChannelIndex) const
                       mSurface->GetDevicePixelHeight(aChannelIndex));
 }
 
-wr::WrExternalImage
-RenderMacIOSurfaceTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
+bool
+RenderMacIOSurfaceTextureHostOGL::Lock()
 {
-  if (mGL.get() != aGL) {
-    // release the texture handle in the previous gl context
-    DeleteTextureHandle();
-    mGL = aGL;
-    mGL->MakeCurrent();
-  }
-
   if (!mSurface || !mGL || !mGL->MakeCurrent()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return false;
   }
 
   if (!mTextureHandles[0]) {
@@ -96,15 +89,24 @@ RenderMacIOSurfaceTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL
     }
   }
 
-  gfx::IntSize size = GetSize(aChannelIndex);
-  return NativeTextureToWrExternalImage(GetGLHandle(aChannelIndex), 0, 0,
-                                        size.width, size.height);
+  return true;
 }
 
 void
 RenderMacIOSurfaceTextureHostOGL::Unlock()
 {
 
+}
+
+void
+RenderMacIOSurfaceTextureHostOGL::SetGLContext(gl::GLContext* aContext)
+{
+  if (mGL.get() != aContext) {
+    // release the texture handle in the previous gl context
+    DeleteTextureHandle();
+    mGL = aContext;
+    mGL->MakeCurrent();
+  }
 }
 
 void

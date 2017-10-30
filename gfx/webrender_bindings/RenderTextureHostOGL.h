@@ -21,8 +21,12 @@ class RenderTextureHostOGL : public RenderTextureHost
 public:
   RenderTextureHostOGL();
 
+  virtual void SetGLContext(gl::GLContext* aContext) = 0;
+
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const = 0;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const = 0;
+
+  virtual RenderTextureHostOGL* AsTextureHostOGL()  override { return this; }
 
 protected:
   virtual ~RenderTextureHostOGL();
