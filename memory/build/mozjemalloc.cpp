@@ -112,6 +112,7 @@
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -1320,24 +1321,6 @@ GetChunkOffsetForPtr(const void* aPtr)
 
 // Return the smallest pagesize multiple that is >= s.
 #define PAGE_CEILING(s) (((s) + pagesize_mask) & ~pagesize_mask)
-
-// Compute the smallest power of 2 that is >= x.
-static inline size_t
-pow2_ceil(size_t x)
-{
-
-  x--;
-  x |= x >> 1;
-  x |= x >> 2;
-  x |= x >> 4;
-  x |= x >> 8;
-  x |= x >> 16;
-#if (SIZEOF_PTR == 8)
-  x |= x >> 32;
-#endif
-  x++;
-  return x;
-}
 
 static inline const char*
 _getprogname(void)
@@ -2995,7 +2978,7 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
 
   if (aSize < small_min) {
     // Tiny.
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
     bin = &mBins[ffs((int)(aSize >> (TINY_MIN_2POW + 1)))];
 
     // Bin calculation is always correct, but we may need
@@ -3010,7 +2993,7 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
     bin = &mBins[ntbins + (aSize >> QUANTUM_2POW_MIN) - 1];
   } else {
     // Sub-page.
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
     bin = &mBins[ntbins + nqbins +
                  (ffs((int)(aSize >> SMALL_MAX_2POW_DEFAULT)) - 2)];
   }
@@ -3697,8 +3680,8 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // Try to avoid moving the allocation.
   if (aSize < small_min) {
     if (aOldSize < small_min &&
-        ffs((int)(pow2_ceil(aSize) >> (TINY_MIN_2POW + 1))) ==
-          ffs((int)(pow2_ceil(aOldSize) >> (TINY_MIN_2POW + 1)))) {
+        ffs((int)(RoundUpPow2(aSize) >> (TINY_MIN_2POW + 1))) ==
+          ffs((int)(RoundUpPow2(aOldSize) >> (TINY_MIN_2POW + 1)))) {
       goto IN_PLACE; // Same size class.
     }
   } else if (aSize <= small_max) {
@@ -3709,7 +3692,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     }
   } else if (aSize <= bin_maxclass) {
     if (aOldSize > small_max && aOldSize <= bin_maxclass &&
-        pow2_ceil(aSize) == pow2_ceil(aOldSize)) {
+        RoundUpPow2(aSize) == RoundUpPow2(aOldSize)) {
       goto IN_PLACE; // Same size class.
     }
   } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
@@ -4512,7 +4495,7 @@ MozJemalloc::malloc_good_size(size_t aSize)
   // arena_t::MallocSmall().
   if (aSize < small_min) {
     // Small (tiny).
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
 
     // We omit the #ifdefs from arena_t::MallocSmall() --
     // it can be inaccurate with its size in some cases, but this
@@ -4525,7 +4508,7 @@ MozJemalloc::malloc_good_size(size_t aSize)
     aSize = QUANTUM_CEILING(aSize);
   } else if (aSize <= bin_maxclass) {
     // Small (sub-page).
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
   } else if (aSize <= arena_maxclass) {
     // Large.
     aSize = PAGE_CEILING(aSize);
