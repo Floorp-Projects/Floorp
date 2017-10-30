@@ -607,7 +607,7 @@ def split_triplet(triplet, allow_unknown=False):
     elif cpu.startswith('hppa') or cpu == 'parisc':
         canonical_cpu = 'hppa'
         endianness = 'big'
-    elif cpu.startswith('sparc64'):
+    elif cpu.startswith('sparc64') or cpu.startswith('sparcv9'):
         canonical_cpu = 'sparc64'
         endianness = 'big'
     elif cpu.startswith('sparc') or cpu == 'sun4u':
