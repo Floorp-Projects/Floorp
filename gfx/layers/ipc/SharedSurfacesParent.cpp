@@ -7,6 +7,8 @@
 #include "SharedSurfacesParent.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webrender/RenderSharedSurfaceTextureHost.h"
+#include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {
 namespace layers {
@@ -105,6 +107,11 @@ SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
       }
 
       MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
+
+      RefPtr<wr::RenderSharedSurfaceTextureHost> texture =
+        new wr::RenderSharedSurfaceTextureHost(surface);
+      wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
+
       sInstance->mSurfaces.Put(id, surface);
     });
 
@@ -138,6 +145,7 @@ SharedSurfacesParent::DestroyProcess(base::ProcessId aPid)
   // lot of surfaces still bound that require unmapping.
   for (auto i = sInstance->mSurfaces.Iter(); !i.Done(); i.Next()) {
     if (i.Data()->GetCreatorPid() == aPid) {
+      wr::RenderThread::Get()->UnregisterExternalImage(i.Key());
       i.Remove();
     }
   }
@@ -165,6 +173,11 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
 
   uint64_t id = wr::AsUint64(aId);
   MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
+
+  RefPtr<wr::RenderSharedSurfaceTextureHost> texture =
+    new wr::RenderSharedSurfaceTextureHost(surface);
+  wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
+
   sInstance->mSurfaces.Put(id, surface.forget());
 }
 
