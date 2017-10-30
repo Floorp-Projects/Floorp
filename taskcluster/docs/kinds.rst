@@ -154,9 +154,6 @@ The task definition used to create the image-building tasks is given in
 ``image.yml`` in the kind directory, and is interpreted as a :doc:`YAML
 Template <yaml-templates>`.
 
-android-stuff
--------------
-
 balrog
 ------
 
@@ -217,12 +214,15 @@ PushApk publishes Android packages onto Google Play Store. Jobs of this kind tak
 all the signed multi-locales (aka "multi") APKs for a given release and upload them
 all at once. They also depend on the breakpoint.
 
+release-bouncer-sub
+-------------------
+Submits bouncer updates for releases.
+
 repackage
 ---------
 Repackage tasks take a signed output and package them up into something suitable
 for shipping to our users. For example, on OSX we return a tarball as the signed output
 and this task would package that up as an Apple Disk Image (.dmg)
-
 
 repackage-l10n
 --------------

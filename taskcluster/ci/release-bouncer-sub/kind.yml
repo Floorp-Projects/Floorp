@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+
+jobs:
+   fennec:
+      name: fennec_release_bouncer_sub
+      description: release bouncer submission job
+      worker-type: buildbot-bridge/buildbot-bridge
+      run-on-projects: []
+      run:
+         using: buildbot
+         product: fennec
+         buildername: release-{branch}-fennec_bncr_sub
+         release-promotion: true
+         routes:
+            - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
+            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
