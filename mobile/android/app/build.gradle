@@ -116,8 +116,6 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
-
             aidl {
                 srcDir "${topsrcdir}/mobile/android/base/aidl"
             }
@@ -177,6 +175,18 @@ android {
                 }
                 srcDir "${topsrcdir}/mobile/android/app/assets"
             }
+        }
+
+        // Every configuration needs the stub manifest at
+        // src/main/AndroidManifest.xml and the generated manifest.  We can't
+        // use the main sourceSet without losing the stub, so we cover all the
+        // configurations by enumerating the buildTypes here.
+        debug {
+            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
+        }
+
+        release {
+            manifest.srcFile "${project.buildDir}/generated/source/preprocessed_manifest/AndroidManifest.xml"
         }
 
         test {
@@ -354,45 +364,6 @@ android.applicationVariants.all { variant ->
 android.applicationVariants.all { variant ->
     configureVariantWithJNIWrappers(variant, "Fennec")
 }
-
-apply plugin: 'spoon'
-
-spoon {
-    // For now, let's be verbose.
-    debug = true
-    // It's not helpful to pass when we don't have a device connected.
-    failIfNoDeviceConnected = true
-
-    def spoonPackageName
-    if (gradle.startParameter.taskNames.contains('runBrowserTests')) {
-        spoonPackageName = 'org.mozilla.tests.browser.junit3'
-    }
-    if (gradle.startParameter.taskNames.contains('runBackgroundTests')) {
-        spoonPackageName = 'org.mozilla.gecko.background'
-    }
-    if (project.hasProperty('spoonPackageName')) {
-        // Command line overrides everything.
-        spoonPackageName = project.spoonPackageName
-    }
-    if (spoonPackageName) {
-        instrumentationArgs = ['-e', "package=${spoonPackageName}".toString()]
-    }
-}
-
-// // See discussion at https://github.com/stanfy/spoon-gradle-plugin/issues/9.
-// afterEvaluate {
-//     tasks["spoonLocal${android.testBuildType.capitalize()}AndroidTest"].outputs.upToDateWhen { false }
-
-//     // This is an awkward way to define different sets of instrumentation tests.
-//     // The task name itself is fished at runtime and the package name configured
-//     // in the spoon configuration.
-//     task runBrowserTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-//     task runBackgroundTests {
-//         dependsOn tasks["spoonLocalOldDebugAndroidTest"]
-//     }
-// }
 
 // Bug 1299015: Complain to treeherder if checkstyle, lint, or unittest fails.  It's not obvious
 // how to listen to individual errors in most cases, so we just link to the reports for now.

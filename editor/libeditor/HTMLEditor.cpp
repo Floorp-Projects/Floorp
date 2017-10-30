@@ -748,9 +748,19 @@ HTMLEditor::IsBlockNode(nsINode* aNode)
  * GetBlockNodeParent returns enclosing block level ancestor, if any.
  */
 Element*
-HTMLEditor::GetBlockNodeParent(nsINode* aNode)
+HTMLEditor::GetBlockNodeParent(nsINode* aNode,
+                               nsINode* aAncestorLimiter)
 {
   MOZ_ASSERT(aNode);
+  MOZ_ASSERT(!aAncestorLimiter ||
+             aNode == aAncestorLimiter ||
+             EditorUtils::IsDescendantOf(aNode, aAncestorLimiter),
+             "aNode isn't in aAncestorLimiter");
+
+  // The caller has already reached the limiter.
+  if (aNode == aAncestorLimiter) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsINode> p = aNode->GetParentNode();
 
@@ -758,31 +768,28 @@ HTMLEditor::GetBlockNodeParent(nsINode* aNode)
     if (NodeIsBlockStatic(p)) {
       return p->AsElement();
     }
+    // Now, we have reached the limiter, there is no block in its ancestors.
+    if (p == aAncestorLimiter) {
+      return nullptr;
+    }
     p = p->GetParentNode();
   }
 
   return nullptr;
 }
 
-nsIDOMNode*
-HTMLEditor::GetBlockNodeParent(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-
-  if (!node) {
-    NS_NOTREACHED("null node passed to GetBlockNodeParent()");
-    return nullptr;
-  }
-
-  return GetAsDOMNode(GetBlockNodeParent(node));
-}
-
 /**
  * Returns the node if it's a block, otherwise GetBlockNodeParent
  */
 Element*
-HTMLEditor::GetBlock(nsINode& aNode)
+HTMLEditor::GetBlock(nsINode& aNode,
+                     nsINode* aAncestorLimiter)
 {
+  MOZ_ASSERT(!aAncestorLimiter ||
+             &aNode == aAncestorLimiter ||
+             EditorUtils::IsDescendantOf(&aNode, aAncestorLimiter),
+             "aNode isn't in aAncestorLimiter");
+
   if (NodeIsBlockStatic(&aNode)) {
     return aNode.AsElement();
   }
@@ -3464,7 +3471,7 @@ HTMLEditor::EndOperation()
 
 bool
 HTMLEditor::TagCanContainTag(nsAtom& aParentTag,
-                             nsAtom& aChildTag)
+                             nsAtom& aChildTag) const
 {
   int32_t childTagEnum;
   // XXX Should this handle #cdata-section too?

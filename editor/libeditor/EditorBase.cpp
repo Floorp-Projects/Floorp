@@ -3543,7 +3543,7 @@ EditorBase::IsBlockNode(nsINode* aNode)
 
 bool
 EditorBase::CanContain(nsINode& aParent,
-                       nsIContent& aChild)
+                       nsIContent& aChild) const
 {
   switch (aParent.NodeType()) {
     case nsIDOMNode::ELEMENT_NODE:
@@ -3555,7 +3555,7 @@ EditorBase::CanContain(nsINode& aParent,
 
 bool
 EditorBase::CanContainTag(nsINode& aParent,
-                          nsAtom& aChildTag)
+                          nsAtom& aChildTag) const
 {
   switch (aParent.NodeType()) {
     case nsIDOMNode::ELEMENT_NODE:
@@ -3567,7 +3567,7 @@ EditorBase::CanContainTag(nsINode& aParent,
 
 bool
 EditorBase::TagCanContain(nsAtom& aParentTag,
-                          nsIContent& aChild)
+                          nsIContent& aChild) const
 {
   switch (aChild.NodeType()) {
     case nsIDOMNode::TEXT_NODE:
@@ -3580,7 +3580,7 @@ EditorBase::TagCanContain(nsAtom& aParentTag,
 
 bool
 EditorBase::TagCanContainTag(nsAtom& aParentTag,
-                             nsAtom& aChildTag)
+                             nsAtom& aChildTag) const
 {
   return true;
 }

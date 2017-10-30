@@ -1,11 +1,28 @@
 language: rust
+
 rust:
   - stable
   - beta
   - nightly
+
 sudo: false
+
+dist: trusty
+
+addons:
+  sources:
+    # Provides clang-3.9
+    - llvm-toolchain-trusty-3.9
+  apt:
+    packages:
+      # Required for `bindgen`, which is required by `findshlibs`, which is
+      # required by the `gimli` feature.
+      - clang-3.9
+
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+  - export LIBCLANG_PATH=/usr/lib/llvm-3.9/lib
+
 script:
   - cargo test
   - cargo test --no-default-features
@@ -19,15 +36,19 @@ script:
   - cargo test --no-default-features --features 'serialize-rustc'
   - cargo test --no-default-features --features 'serialize-rustc serialize-serde'
   - cargo test --no-default-features --features 'cpp_demangle'
+  - cargo test --no-default-features --features 'gimli-symbolize'
   - cd ./cpp_smoke_test && cargo test && cd ..
   - cargo clean && cargo build
   - rustdoc --test README.md -L target/debug/deps -L target/debug
   - cargo doc --no-deps
+
 notifications:
   email:
     on_success: never
+
 after_success:
   - travis-cargo --only nightly doc-upload
+
 env:
   global:
     # serde-codegen has historically needed a large stack to expand

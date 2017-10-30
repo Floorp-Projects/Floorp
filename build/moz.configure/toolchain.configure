@@ -1407,8 +1407,8 @@ def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_e
         targetDir = os.path.join(build_env.topobjdir, 'build', 'unix', 'gold')
 
         gold_detection_arg = '-print-prog-name=ld.gold'
-        gold = check_cmd_output(c_compiler.compiler,
-                                gold_detection_arg).strip()
+        detection_cmd = cmd_base + [gold_detection_arg]
+        gold = check_cmd_output(*detection_cmd).strip()
         if not gold:
             return
 

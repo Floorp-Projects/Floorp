@@ -3,15 +3,28 @@ from __future__ import absolute_import, print_function, unicode_literals
 import re
 import datetime
 
-# this will be overridden in tests
-utcnow = datetime.datetime.utcnow
-
 
 class DeleteMarker:
     pass
 
 
 class JSONTemplateError(Exception):
+    def __init__(self, message):
+        super(JSONTemplateError, self).__init__(message)
+        self.location = []
+
+    def add_location(self, loc):
+        self.location.insert(0, loc)
+
+    def __str__(self):
+        location = ' at template' + ''.join(self.location)
+        return "{}{}: {}".format(
+            self.__class__.__name__,
+            location if self.location else '',
+            self.args[0])
+
+
+class TemplateError(JSONTemplateError):
     pass
 
 
@@ -28,7 +41,7 @@ FROMNOW_RE = re.compile(''.join([
 ]))
 
 
-def fromNow(offset):
+def fromNow(offset, reference):
     # copied from taskcluster-client.py
     # We want to handle past dates as well as future
     future = True
@@ -72,10 +85,25 @@ def fromNow(offset):
         seconds=seconds,
     )
 
-    return stringDate(utcnow() + delta if future else utcnow() - delta)
+    if isinstance(reference, str):
+        reference = datetime.datetime.strptime(reference, '%Y-%m-%dT%H:%M:%S.%fZ')
+    elif reference is None:
+        reference = datetime.datetime.utcnow()
+    return stringDate(reference + delta if future else reference - delta)
 
 
 datefmt_re = re.compile(r'(\.[0-9]{3})[0-9]*(\+00:00)?')
+
+
+def to_str(v):
+    if isinstance(v, bool):
+        return {True: 'true', False: 'false'}[v]
+    elif isinstance(v, list):
+        return ','.join(to_str(e) for e in v)
+    elif v is None:
+        return 'null'
+    else:
+        return str(v)
 
 
 def stringDate(date):

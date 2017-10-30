@@ -93,7 +93,7 @@ With that in mind, the steps for adding a new API are:
 We have two automated tests running on [Travis](https://travis-ci.org/rust-lang/libc):
 
 1. [`libc-test`](https://github.com/alexcrichton/ctest)
-  - `cd libc-test && cargo run`
+  - `cd libc-test && cargo test`
   - Use the `skip_*()` functions in `build.rs` if you really need a workaround.
 2. Style checker
   - `rustc ci/style.rs && ./style src`
@@ -138,6 +138,9 @@ Tested:
   * [`x86_64-unknown-linux-musl`](https://doc.rust-lang.org/libc/x86_64-unknown-linux-musl/libc/)
     (Linux MUSL)
   * [`aarch64-unknown-linux-gnu`](https://doc.rust-lang.org/libc/aarch64-unknown-linux-gnu/libc/)
+    (Linux)
+  * [`aarch64-unknown-linux-musl`](https://doc.rust-lang.org/libc/aarch64-unknown-linux-musl/libc/)
+    (Linux MUSL)
   * [`mips-unknown-linux-gnu`](https://doc.rust-lang.org/libc/mips-unknown-linux-gnu/libc/)
   * [`arm-unknown-linux-gnueabihf`](https://doc.rust-lang.org/libc/arm-unknown-linux-gnueabihf/libc/)
   * [`arm-linux-androideabi`](https://doc.rust-lang.org/libc/arm-linux-androideabi/libc/)

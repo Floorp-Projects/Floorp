@@ -834,4 +834,30 @@ HTMLEditUtils::IsContainer(int32_t aTag)
   return kElements[aTag - 1].mIsContainer;
 }
 
+bool
+HTMLEditUtils::IsNonListSingleLineContainer(nsINode& aNode)
+{
+  return aNode.IsAnyOfHTMLElements(nsGkAtoms::address,
+                                   nsGkAtoms::div,
+                                   nsGkAtoms::h1,
+                                   nsGkAtoms::h2,
+                                   nsGkAtoms::h3,
+                                   nsGkAtoms::h4,
+                                   nsGkAtoms::h5,
+                                   nsGkAtoms::h6,
+                                   nsGkAtoms::listing,
+                                   nsGkAtoms::p,
+                                   nsGkAtoms::pre,
+                                   nsGkAtoms::xmp);
+}
+
+bool
+HTMLEditUtils::IsSingleLineContainer(nsINode& aNode)
+{
+  return IsNonListSingleLineContainer(aNode) ||
+         aNode.IsAnyOfHTMLElements(nsGkAtoms::li,
+                                   nsGkAtoms::dt,
+                                   nsGkAtoms::dd);
+}
+
 } // namespace mozilla

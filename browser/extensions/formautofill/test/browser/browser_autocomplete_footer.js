@@ -73,14 +73,14 @@ add_task(async function test_phishing_warning_complex_categories() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
     await openPopupOn(browser, "#street-address");
 
-    await expectWarningText(browser, "Also autofills company, email");
+    await expectWarningText(browser, "Also autofills organization, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await expectWarningText(browser, "Autofills address");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills company, email");
+    await expectWarningText(browser, "Also autofills organization, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills company, email");
+    await expectWarningText(browser, "Also autofills organization, email");
 
     await closePopup(browser);
   });

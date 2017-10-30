@@ -1,4 +1,4 @@
-// Copyright 2016 Amanieu d'Antras
+// Copyright 2017 Amanieu d'Antras
 //
 // Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
 // http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
@@ -70,9 +70,11 @@
 
 #![warn(missing_docs)]
 
-#[cfg(not(target_os = "emscripten"))]
-extern crate thread_id;
 extern crate unreachable;
+#[macro_use]
+extern crate lazy_static;
+
+mod thread_id;
 
 use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -147,21 +149,6 @@ impl<T: ?Sized + Send> Clone for TableEntry<T> {
     }
 }
 
-// Helper function to get a thread id
-#[cfg(not(target_os = "emscripten"))]
-fn get_thread_id() -> usize {
-    thread_id::get()
-}
-#[cfg(target_os = "emscripten")]
-fn get_thread_id() -> usize {
-    // pthread_self returns 0 on enscripten, but we use that as a
-    // reserved value to indicate an empty slot. We instead fall
-    // back to using the address of a thread-local variable, which
-    // is slightly slower but guaranteed to produce a non-zero value.
-    thread_local!(static KEY: u8 = unsafe { std::mem::uninitialized() });
-    KEY.with(|x| x as *const _ as usize)
-}
-
 // Hash function for the thread id
 #[cfg(target_pointer_width = "32")]
 #[inline]
@@ -195,25 +182,30 @@ impl<T: ?Sized + Send> ThreadLocal<T> {
 
     /// Returns the element for the current thread, if it exists.
     pub fn get(&self) -> Option<&T> {
-        let id = get_thread_id();
+        let id = thread_id::get();
         self.get_fast(id)
     }
 
     /// Returns the element for the current thread, or creates it if it doesn't
     /// exist.
     pub fn get_or<F>(&self, create: F) -> &T
-        where F: FnOnce() -> Box<T>
+    where
+        F: FnOnce() -> Box<T>,
     {
-        unsafe { self.get_or_try(|| Ok::<Box<T>, ()>(create())).unchecked_unwrap_ok() }
+        unsafe {
+            self.get_or_try(|| Ok::<Box<T>, ()>(create()))
+                .unchecked_unwrap_ok()
+        }
     }
 
     /// Returns the element for the current thread, or creates it if it doesn't
     /// exist. If `create` fails, that error is returned and no element is
     /// added.
     pub fn get_or_try<F, E>(&self, create: F) -> Result<&T, E>
-        where F: FnOnce() -> Result<Box<T>, E>
+    where
+        F: FnOnce() -> Result<Box<T>, E>,
     {
-        let id = get_thread_id();
+        let id = thread_id::get();
         match self.get_fast(id) {
             Some(x) => Ok(x),
             None => Ok(self.insert(id, try!(create()), true)),
@@ -423,7 +415,9 @@ impl<'a, T: ?Sized + Send + 'a> Iterator for IterMut<'a, T> {
     type Item = &'a mut Box<T>;
 
     fn next(&mut self) -> Option<&'a mut Box<T>> {
-        self.raw.next().map(|x| unsafe { (*x).as_mut().unchecked_unwrap() })
+        self.raw.next().map(|x| unsafe {
+            (*x).as_mut().unchecked_unwrap()
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -443,7 +437,9 @@ impl<T: ?Sized + Send> Iterator for IntoIter<T> {
     type Item = Box<T>;
 
     fn next(&mut self) -> Option<Box<T>> {
-        self.raw.next().map(|x| unsafe { (*x).take().unchecked_unwrap() })
+        self.raw.next().map(
+            |x| unsafe { (*x).take().unchecked_unwrap() },
+        )
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -485,7 +481,7 @@ impl<T: ?Sized + Send> CachedThreadLocal<T> {
 
     /// Returns the element for the current thread, if it exists.
     pub fn get(&self) -> Option<&T> {
-        let id = get_thread_id();
+        let id = thread_id::get();
         let owner = self.owner.load(Ordering::Relaxed);
         if owner == id {
             return unsafe { Some((*self.local.get()).as_ref().unchecked_unwrap()) };
@@ -500,18 +496,23 @@ impl<T: ?Sized + Send> CachedThreadLocal<T> {
     /// exist.
     #[inline(always)]
     pub fn get_or<F>(&self, create: F) -> &T
-        where F: FnOnce() -> Box<T>
+    where
+        F: FnOnce() -> Box<T>,
     {
-        unsafe { self.get_or_try(|| Ok::<Box<T>, ()>(create())).unchecked_unwrap_ok() }
+        unsafe {
+            self.get_or_try(|| Ok::<Box<T>, ()>(create()))
+                .unchecked_unwrap_ok()
+        }
     }
 
     /// Returns the element for the current thread, or creates it if it doesn't
     /// exist. If `create` fails, that error is returned and no element is
     /// added.
     pub fn get_or_try<F, E>(&self, create: F) -> Result<&T, E>
-        where F: FnOnce() -> Result<Box<T>, E>
+    where
+        F: FnOnce() -> Result<Box<T>, E>,
     {
-        let id = get_thread_id();
+        let id = thread_id::get();
         let owner = self.owner.load(Ordering::Relaxed);
         if owner == id {
             return Ok(unsafe { (*self.local.get()).as_ref().unchecked_unwrap() });
@@ -522,7 +523,8 @@ impl<T: ?Sized + Send> CachedThreadLocal<T> {
     #[cold]
     #[inline(never)]
     fn get_or_try_slow<F, E>(&self, id: usize, owner: usize, create: F) -> Result<&T, E>
-        where F: FnOnce() -> Result<Box<T>, E>
+    where
+        F: FnOnce() -> Result<Box<T>, E>,
     {
         if owner == 0 && self.owner.compare_and_swap(0, id, Ordering::Relaxed) == 0 {
             unsafe {
@@ -542,7 +544,12 @@ impl<T: ?Sized + Send> CachedThreadLocal<T> {
     /// be done safely---the mutable borrow statically guarantees no other
     /// threads are currently accessing their associated values.
     pub fn iter_mut(&mut self) -> CachedIterMut<T> {
-        unsafe { (*self.local.get()).as_mut().into_iter().chain(self.global.iter_mut()) }
+        unsafe {
+            (*self.local.get()).as_mut().into_iter().chain(
+                self.global
+                    .iter_mut(),
+            )
+        }
     }
 
     /// Removes all thread-specific values from the `ThreadLocal`, effectively
@@ -561,7 +568,12 @@ impl<T: ?Sized + Send> IntoIterator for CachedThreadLocal<T> {
     type IntoIter = CachedIntoIter<T>;
 
     fn into_iter(self) -> CachedIntoIter<T> {
-        unsafe { (*self.local.get()).take().into_iter().chain(self.global.into_iter()) }
+        unsafe {
+            (*self.local.get()).take().into_iter().chain(
+                self.global
+                    .into_iter(),
+            )
+        }
     }
 }
 
@@ -655,11 +667,10 @@ mod tests {
         let tls2 = tls.clone();
         let create2 = create.clone();
         thread::spawn(move || {
-                assert_eq!(None, tls2.get());
-                assert_eq!(1, *tls2.get_or(|| create2()));
-                assert_eq!(Some(&1), tls2.get());
-            })
-            .join()
+            assert_eq!(None, tls2.get());
+            assert_eq!(1, *tls2.get_or(|| create2()));
+            assert_eq!(Some(&1), tls2.get());
+        }).join()
             .unwrap();
 
         assert_eq!(Some(&0), tls.get());
@@ -677,11 +688,10 @@ mod tests {
         let tls2 = tls.clone();
         let create2 = create.clone();
         thread::spawn(move || {
-                assert_eq!(None, tls2.get());
-                assert_eq!(1, *tls2.get_or(|| create2()));
-                assert_eq!(Some(&1), tls2.get());
-            })
-            .join()
+            assert_eq!(None, tls2.get());
+            assert_eq!(1, *tls2.get_or(|| create2()));
+            assert_eq!(Some(&1), tls2.get());
+        }).join()
             .unwrap();
 
         assert_eq!(Some(&0), tls.get());
@@ -695,15 +705,12 @@ mod tests {
 
         let tls2 = tls.clone();
         thread::spawn(move || {
-                tls2.get_or(|| Box::new(2));
-                let tls3 = tls2.clone();
-                thread::spawn(move || {
-                        tls3.get_or(|| Box::new(3));
-                    })
-                    .join()
-                    .unwrap();
-            })
-            .join()
+            tls2.get_or(|| Box::new(2));
+            let tls3 = tls2.clone();
+            thread::spawn(move || { tls3.get_or(|| Box::new(3)); })
+                .join()
+                .unwrap();
+        }).join()
             .unwrap();
 
         let mut tls = Arc::try_unwrap(tls).unwrap();
@@ -722,15 +729,12 @@ mod tests {
 
         let tls2 = tls.clone();
         thread::spawn(move || {
-                tls2.get_or(|| Box::new(2));
-                let tls3 = tls2.clone();
-                thread::spawn(move || {
-                        tls3.get_or(|| Box::new(3));
-                    })
-                    .join()
-                    .unwrap();
-            })
-            .join()
+            tls2.get_or(|| Box::new(2));
+            let tls3 = tls2.clone();
+            thread::spawn(move || { tls3.get_or(|| Box::new(3)); })
+                .join()
+                .unwrap();
+        }).join()
             .unwrap();
 
         let mut tls = Arc::try_unwrap(tls).unwrap();

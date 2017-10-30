@@ -374,9 +374,7 @@ class BasePopup {
 BasePopup.instances = new DefaultWeakMap(() => new WeakMap());
 
 class PanelPopup extends BasePopup {
-  constructor(extension, imageNode, popupURL, browserStyle) {
-    let document = imageNode.ownerDocument;
-
+  constructor(extension, document, popupURL, browserStyle) {
     let panel = document.createElement("panel");
     panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
     panel.setAttribute("class", "browser-extension-panel");
@@ -389,17 +387,15 @@ class PanelPopup extends BasePopup {
 
     document.getElementById("mainPopupSet").appendChild(panel);
 
-    super(extension, panel, popupURL, browserStyle);
-
-    this.contentReady.then(() => {
-      panel.openPopup(imageNode, "bottomcenter topright", 0, 0, false, false);
-
+    panel.addEventListener("popupshowing", () => {
       let event = new this.window.CustomEvent("WebExtPopupLoaded", {
         bubbles: true,
         detail: {extension},
       });
       this.browser.dispatchEvent(event);
-    });
+    }, {once: true});
+
+    super(extension, panel, popupURL, browserStyle);
   }
 
   get DESTROY_EVENT() {

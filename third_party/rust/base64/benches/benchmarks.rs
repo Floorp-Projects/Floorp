@@ -4,7 +4,7 @@ extern crate base64;
 extern crate test;
 extern crate rand;
 
-use base64::{decode, decode_config_buf, encode, encode_config_buf, STANDARD};
+use base64::{decode, decode_config_buf, encode, encode_config_buf, Config, MIME, STANDARD};
 
 use test::Bencher;
 use rand::Rng;
@@ -16,7 +16,7 @@ fn encode_3b(b: &mut Bencher) {
 
 #[bench]
 fn encode_3b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3)
+    do_encode_bench_reuse_buf(b, 3, STANDARD)
 }
 
 #[bench]
@@ -26,7 +26,7 @@ fn encode_50b(b: &mut Bencher) {
 
 #[bench]
 fn encode_50b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 50)
+    do_encode_bench_reuse_buf(b, 50, STANDARD)
 }
 
 #[bench]
@@ -36,7 +36,7 @@ fn encode_100b(b: &mut Bencher) {
 
 #[bench]
 fn encode_100b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 100)
+    do_encode_bench_reuse_buf(b, 100, STANDARD)
 }
 
 #[bench]
@@ -46,7 +46,12 @@ fn encode_500b(b: &mut Bencher) {
 
 #[bench]
 fn encode_500b_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 500)
+    do_encode_bench_reuse_buf(b, 500, STANDARD)
+}
+
+#[bench]
+fn encode_500b_reuse_buf_mime(b: &mut Bencher) {
+    do_encode_bench_reuse_buf(b, 500, MIME)
 }
 
 #[bench]
@@ -56,7 +61,12 @@ fn encode_3kib(b: &mut Bencher) {
 
 #[bench]
 fn encode_3kib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3 * 1024)
+    do_encode_bench_reuse_buf(b, 3 * 1024, STANDARD)
+}
+
+#[bench]
+fn encode_3kib_reuse_buf_mime(b: &mut Bencher) {
+    do_encode_bench_reuse_buf(b, 3 * 1024, MIME)
 }
 
 #[bench]
@@ -66,7 +76,7 @@ fn encode_3mib(b: &mut Bencher) {
 
 #[bench]
 fn encode_3mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 3 * 1024 * 1024)
+    do_encode_bench_reuse_buf(b, 3 * 1024 * 1024, STANDARD)
 }
 
 #[bench]
@@ -76,7 +86,7 @@ fn encode_10mib(b: &mut Bencher) {
 
 #[bench]
 fn encode_10mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 10 * 1024 * 1024)
+    do_encode_bench_reuse_buf(b, 10 * 1024 * 1024, STANDARD)
 }
 
 #[bench]
@@ -86,7 +96,7 @@ fn encode_30mib(b: &mut Bencher) {
 
 #[bench]
 fn encode_30mib_reuse_buf(b: &mut Bencher) {
-    do_encode_bench_reuse_buf(b, 30 * 1024 * 1024)
+    do_encode_bench_reuse_buf(b, 30 * 1024 * 1024, STANDARD)
 }
 
 #[bench]
@@ -206,7 +216,7 @@ fn do_encode_bench(b: &mut Bencher, size: usize) {
     });
 }
 
-fn do_encode_bench_reuse_buf(b: &mut Bencher, size: usize) {
+fn do_encode_bench_reuse_buf(b: &mut Bencher, size: usize, config: Config) {
     let mut v: Vec<u8> = Vec::with_capacity(size);
     fill(&mut v);
 
@@ -214,8 +224,7 @@ fn do_encode_bench_reuse_buf(b: &mut Bencher, size: usize) {
 
     b.bytes = v.len() as u64;
     b.iter(|| {
-        let e = encode_config_buf(&v, STANDARD, &mut buf);
-        test::black_box(&e);
+        encode_config_buf(&v, config, &mut buf);
         buf.clear();
     });
 }
