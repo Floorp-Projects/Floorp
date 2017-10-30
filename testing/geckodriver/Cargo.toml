@@ -7,6 +7,7 @@ keywords = ["webdriver", "w3c", "httpd", "mozilla", "firefox"]
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
 readme = "README.md"
 license = "MPL-2.0"
+publish = false
 
 [dependencies]
 chrono = "^0.2"
