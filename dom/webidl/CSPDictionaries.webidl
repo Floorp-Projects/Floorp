@@ -30,6 +30,7 @@ dictionary CSP {
   sequence<DOMString> block-all-mixed-content;
   sequence<DOMString> require-sri-for;
   sequence<DOMString> sandbox;
+  sequence<DOMString> worker-src;
 };
 
 dictionary CSPPolicies {

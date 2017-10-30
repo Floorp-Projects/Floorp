@@ -94,7 +94,8 @@ static const char* CSPStrDirectives[] = {
   "child-src",                 // CHILD_SRC_DIRECTIVE
   "block-all-mixed-content",   // BLOCK_ALL_MIXED_CONTENT
   "require-sri-for",           // REQUIRE_SRI_FOR
-  "sandbox"                    // SANDBOX_DIRECTIVE
+  "sandbox",                   // SANDBOX_DIRECTIVE
+  "worker-src"                 // WORKER_SRC_DIRECTIVE
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
@@ -470,7 +471,7 @@ class nsCSPDirective {
 
     bool visitSrcs(nsCSPSrcVisitor* aVisitor) const;
 
-  private:
+  protected:
     CSPDirective            mDirective;
     nsTArray<nsCSPBaseSrc*> mSrcs;
 };
@@ -478,26 +479,52 @@ class nsCSPDirective {
 /* =============== nsCSPChildSrcDirective ============= */
 
 /*
- * In CSP 2, the child-src directive covers both workers and
- * subdocuments (i.e., frames and iframes). Workers were removed
- * from script-src, but frames can be controlled by either child-src
- * or frame-src directives, so child-src needs to know whether it should
- * also restrict frames. When both are present the frame-src directive
- * takes precedent.
+ * In CSP 3 child-src is deprecated. For backwards compatibility
+ * child-src needs to restrict:
+ *   (*) frames, in case frame-src is not expicitly specified
+ *   (*) workers, in case worker-src is not expicitly specified
  */
 class nsCSPChildSrcDirective : public nsCSPDirective {
   public:
     explicit nsCSPChildSrcDirective(CSPDirective aDirective);
     virtual ~nsCSPChildSrcDirective();
 
-    void setHandleFrameSrc();
+    void setRestrictFrames()
+      { mRestrictFrames = true; }
+
+    void setRestrictWorkers()
+      { mRestrictWorkers = true; }
 
     virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
 
     virtual bool equals(CSPDirective aDirective) const;
 
   private:
-    bool mHandleFrameSrc;
+    bool mRestrictFrames;
+    bool mRestrictWorkers;
+};
+
+/* =============== nsCSPScriptSrcDirective ============= */
+
+/*
+ * In CSP 3 worker-src restricts workers, for backwards compatibily
+ * script-src has to restrict workers as the ultimate fallback if
+ * neither worker-src nor child-src is present in a CSP.
+ */
+class nsCSPScriptSrcDirective : public nsCSPDirective {
+  public:
+    explicit nsCSPScriptSrcDirective(CSPDirective aDirective);
+    virtual ~nsCSPScriptSrcDirective();
+
+    void setRestrictWorkers()
+      { mRestrictWorkers = true; }
+
+    virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
+
+    virtual bool equals(CSPDirective aDirective) const;
+
+  private:
+    bool mRestrictWorkers;
 };
 
 /* =============== nsBlockAllMixedContentDirective === */
