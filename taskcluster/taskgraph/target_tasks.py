@@ -406,13 +406,16 @@ def target_tasks_publish_fennec(full_task_graph, parameters):
         # Include candidates build tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        # TODO: Include [beetmover] fennec mozilla-beta push to releases
         if task.task['payload'].get('properties', {}).get('product') == 'fennec':
             if task.kind in ('release-mark-as-shipped',
                              'release-bouncer-aliases',
                              'release-uptake-monitoring',
                              'release-version-bump',
                              ):
+                return True
+
+        if task.task['payload'].get('product') == 'fennec':
+            if task.kind in ('beetmover-cdns', ):
                 return True
 
         if task.kind in ('push-apk', 'push-apk-breakpoint'):

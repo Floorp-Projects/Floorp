@@ -468,6 +468,12 @@ task_description_schema = Schema({
             Required('locale'): basestring,
         }],
     }, {
+        Required('implementation'): 'beetmover-cdns',
+
+        # the maximum time to spend signing, in seconds
+        Required('max-run-time', default=600): int,
+        Required('product'): basestring,
+    }, {
         Required('implementation'): 'balrog',
 
         # list of artifact URLs for the artifacts that should be beetmoved
@@ -565,6 +571,7 @@ GROUP_NAMES = {
     'pub': 'APK publishing',
     'p': 'Partial generation',
     'ps': 'Partials signing',
+    'Rel': 'Release promotion',
 }
 
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
@@ -952,6 +959,19 @@ def build_beetmover_payload(config, task, task_def):
         task_def['payload']['locale'] = worker['locale']
     if release_config:
         task_def['payload'].update(release_config)
+
+
+@payload_builder('beetmover-cdns')
+def build_beetmover_cdns_payload(config, task, task_def):
+    worker = task['worker']
+    release_config = get_release_config(config, force=True)
+
+    task_def['payload'] = {
+        'maxRunTime': worker['max-run-time'],
+        'product': worker['product'],
+        'version': release_config['version'],
+        'build_number': release_config['build_number'],
+    }
 
 
 @payload_builder('balrog')
