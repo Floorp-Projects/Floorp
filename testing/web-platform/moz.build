@@ -273,6 +273,9 @@ with Files("tests/encoding/**"):
 with Files("tests/encrypted-media/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
+with Files("tests/entries-api/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
 with Files("tests/eventsource/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
@@ -428,9 +431,8 @@ with Files("tests/orientation-sensor/**"):
 with Files("tests/page-visibility/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-# TODO: not sure what component to use here
-#with Files("tests/paint-timing/**"):
-#    BUG_COMPONENT = ("", "")
+with Files("tests/paint-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM")
 
 # No tests in here
 with Files("tests/payment-handler/**"):
@@ -537,6 +539,9 @@ with Files("tests/touch-events/**"):
 
 with Files("tests/tools/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/trusted-types/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/uievents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
