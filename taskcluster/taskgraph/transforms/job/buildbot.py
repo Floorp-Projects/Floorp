@@ -17,6 +17,8 @@ from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.task import notification_schema
+
 
 buildbot_run_schema = Schema({
     Required('using'): 'buildbot',
@@ -31,7 +33,23 @@ buildbot_run_schema = Schema({
     Optional('release-promotion'): bool,
     Optional('routes'): [basestring],
     Optional('properties'): {basestring: optionally_keyed_by('project', basestring)},
+
+    Optional('notifications'): {
+        Optional('completed'): Any(notification_schema, [basestring]),
+        Optional('failed'): Any(notification_schema, [basestring]),
+        Optional('artifact'): Any(notification_schema, [basestring]),
+        Optional('exception'): Any(notification_schema, [basestring]),
+    },
 })
+
+
+FULL_TASK_NAME = (
+    "[{task[payload][properties][product]} "
+    "{task[payload][properties][version]} "
+    "build{task[payload][properties][build_number]}/"
+    "{task[payload][sourcestamp][branch]}] "
+    "{task[metadata][name]} task"
+)
 
 
 def bb_release_worker(config, worker, run):
@@ -65,6 +83,44 @@ def bb_release_worker(config, worker, run):
         for route in run['routes']:
             route = route.format(**repl_dict)
             worker['routes'].append(route)
+
+    notifications = run.get('notifications')
+    if notifications:
+
+        worker.setdefault('notifications', {})
+
+        completed = notifications.get('completed')
+        if completed:
+            if isinstance(completed, list):
+                worker['notifications']['task-completed'] = {
+                    "subject": "Completed: {}".format(FULL_TASK_NAME),
+                    "message": "{} has completed successfully! Yay!".format(FULL_TASK_NAME),
+                    "ids": completed,
+                }
+            else:
+                worker['notifications']['task-completed'] = completed
+
+        failed = notifications.get('failed')
+        if failed:
+            if isinstance(failed, list):
+                worker['notifications']['task-failed'] = {
+                    "subject": "Failed: {}".format(FULL_TASK_NAME),
+                    "message": "Uh-oh! {} failed.".format(FULL_TASK_NAME),
+                    "ids": failed,
+                }
+            else:
+                worker['notifications']['task-failed'] = failed
+
+        exception = notifications.get('exception')
+        if exception:
+            if isinstance(exception, list):
+                worker['notifications']['task-exception'] = {
+                    "subject": "Exception: {}".format(FULL_TASK_NAME),
+                    "message": "Uh-oh! {} resulted in an exception.".format(FULL_TASK_NAME),
+                    "ids": exception,
+                }
+            else:
+                worker['notifications']['task-exception'] = exception
 
 
 def bb_ci_worker(config, worker):
