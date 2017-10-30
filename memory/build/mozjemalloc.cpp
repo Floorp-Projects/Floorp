@@ -108,6 +108,7 @@
 #include "mozmemory_wrap.h"
 #include "mozjemalloc.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Likely.h"
@@ -159,7 +160,6 @@ using namespace mozilla;
 #include <windows.h>
 #include <intrin.h>
 
-#define SIZE_T_MAX SIZE_MAX
 #define STDERR_FILENO 2
 
 // Use MSVC intrinsics.
@@ -221,9 +221,6 @@ typedef long ssize_t;
 
 #include <errno.h>
 #include <limits.h>
-#ifndef SIZE_T_MAX
-#define SIZE_T_MAX SIZE_MAX
-#endif
 #include <pthread.h>
 #include <sched.h>
 #include <stdarg.h>
@@ -4371,30 +4368,22 @@ inline void*
 BaseAllocator::calloc(size_t aNum, size_t aSize)
 {
   void* ret;
-  size_t num_size;
 
-  if (!malloc_init()) {
+  if (malloc_init()) {
+    CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aNum) * aSize;
+    if (checkedSize.isValid()) {
+      size_t allocSize = checkedSize.value();
+      if (allocSize == 0) {
+        allocSize = 1;
+      }
+      ret = imalloc(allocSize, /* zero = */ true, mArena);
+    } else {
+      ret = nullptr;
+    }
+  } else {
     ret = nullptr;
-    goto RETURN;
   }
 
-  num_size = aNum * aSize;
-  if (num_size == 0) {
-    num_size = 1;
-
-    // Try to avoid division here.  We know that it isn't possible to
-    // overflow during multiplication if neither operand uses any of the
-    // most significant half of the bits in a size_t.
-  } else if (((aNum | aSize) & (SIZE_T_MAX << (sizeof(size_t) << 2))) &&
-             (num_size / aSize != aNum)) {
-    // size_t overflow.
-    ret = nullptr;
-    goto RETURN;
-  }
-
-  ret = imalloc(num_size, /* zero = */ true, mArena);
-
-RETURN:
   if (!ret) {
     errno = ENOMEM;
   }
@@ -5122,7 +5111,13 @@ void*
 _recalloc(void* aPtr, size_t aCount, size_t aSize)
 {
   size_t oldsize = aPtr ? isalloc(aPtr) : 0;
-  size_t newsize = aCount * aSize;
+  CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aCount) * aSize;
+
+  if (!checkedSize.isValid()) {
+    return nullptr;
+  }
+
+  size_t newsize = checkedSize.value();
 
   // In order for all trailing bytes to be zeroed, the caller needs to
   // use calloc(), followed by recalloc().  However, the current calloc()
