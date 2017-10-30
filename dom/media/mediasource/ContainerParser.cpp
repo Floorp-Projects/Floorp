@@ -133,28 +133,19 @@ public:
   MediaResult IsInitSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsInitSegmentPresent(aData);
-    // XXX: This is overly primitive, needs to collect data as it's appended
-    // to the SB and handle, rather than assuming everything is present in a
-    // single aData segment.
-    // 0x1a45dfa3 // EBML
-    // ...
-    // DocType == "webm"
-    // ...
-    // 0x18538067 // Segment (must be "unknown" size or contain a value large
-                  // enough to include the Segment Information and Tracks
-                  // elements that follow)
-    // 0x1549a966 // -> Segment Info
-    // 0x1654ae6b // -> One or more Tracks
-
-    // 0x1a45dfa3 // EBML
     if (aData->Length() < 4) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    if ((*aData)[0] == 0x1a && (*aData)[1] == 0x45 && (*aData)[2] == 0xdf &&
-        (*aData)[3] == 0xa3) {
-      return NS_OK;
+
+    WebMBufferedParser parser(0);
+    nsTArray<WebMTimeDataOffset> mapping;
+    ReentrantMonitor dummy("dummy");
+    bool result = parser.Append(aData->Elements(), aData->Length(), mapping,
+                                dummy);
+    if (!result) {
+      return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
     }
-    return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
+    return parser.mInitEndOffset > 0 ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
   MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
