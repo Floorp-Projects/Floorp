@@ -8167,8 +8167,8 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
     // assignExpr(), condExpr(), orExpr(), unaryExpr(), memberExpr(), and
     // primaryExpr().
 
-    TokenKind tt;
-    if (!tokenStream.getToken(&tt, TokenStream::Operand))
+    TokenKind firstToken;
+    if (!tokenStream.getToken(&firstToken, TokenStream::Operand))
         return null();
 
     TokenPos exprPos = pos();
@@ -8178,7 +8178,7 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
     // This only handles identifiers that *never* have special meaning anywhere
     // in the language.  Contextual keywords, reserved words in strict mode,
     // and other hard cases are handled outside this fast path.
-    if (tt == TOK_NAME) {
+    if (firstToken == TOK_NAME) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr) {
@@ -8190,25 +8190,25 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
         }
     }
 
-    if (tt == TOK_NUMBER) {
+    if (firstToken == TOK_NUMBER) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr)
             return newNumber(tokenStream.currentToken());
     }
 
-    if (tt == TOK_STRING) {
+    if (firstToken == TOK_STRING) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr)
             return stringLiteral();
     }
 
-    if (tt == TOK_YIELD && yieldExpressionsSupported())
+    if (firstToken == TOK_YIELD && yieldExpressionsSupported())
         return yieldExpression(inHandling);
 
     bool maybeAsyncArrow = false;
-    if (tt == TOK_ASYNC) {
+    if (firstToken == TOK_ASYNC) {
         TokenKind nextSameLine = TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
@@ -8226,24 +8226,25 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
 
     PossibleError possibleErrorInner(*this);
     Node lhs;
+    TokenKind tokenAfterLHS;
     if (maybeAsyncArrow) {
         tokenStream.consumeKnownToken(TOK_ASYNC, TokenStream::Operand);
 
-        TokenKind tt;
-        if (!tokenStream.getToken(&tt))
+        TokenKind tokenAfterAsync;
+        if (!tokenStream.getToken(&tokenAfterAsync))
             return null();
-        MOZ_ASSERT(TokenKindIsPossibleIdentifier(tt));
+        MOZ_ASSERT(TokenKindIsPossibleIdentifier(tokenAfterAsync));
 
         // Check yield validity here.
         RootedPropertyName name(context, bindingIdentifier(yieldHandling));
         if (!name)
             return null();
 
-        if (!tokenStream.getToken(&tt))
+        if (!tokenStream.getToken(&tokenAfterLHS))
             return null();
-        if (tt != TOK_ARROW) {
-            error(JSMSG_UNEXPECTED_TOKEN, "'=>' after argument list", TokenKindToDesc(tt));
-
+        if (tokenAfterLHS != TOK_ARROW) {
+            error(JSMSG_UNEXPECTED_TOKEN,
+                  "'=>' after argument list", TokenKindToDesc(tokenAfterLHS));
             return null();
         }
     } else {
@@ -8251,12 +8252,12 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
         if (!lhs)
             return null();
 
-        if (!tokenStream.getToken(&tt))
+        if (!tokenStream.getToken(&tokenAfterLHS))
             return null();
     }
 
     ParseNodeKind kind;
-    switch (tt) {
+    switch (tokenAfterLHS) {
       case TOK_ASSIGN:       kind = PNK_ASSIGN;       break;
       case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    break;
       case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    break;
