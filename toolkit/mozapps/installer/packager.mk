@@ -185,7 +185,6 @@ source-upload:
 
 
 ALL_LOCALES = $(if $(filter en-US,$(LOCALES)),$(LOCALES),$(LOCALES) en-US)
-LOCALE_LIST = $(foreach l,$(ALL_LOCALES),"$(l)")
 
 # Firefox uses @RESPATH@.
 # Fennec uses @BINPATH@ and doesn't have the @RESPATH@ variable defined.
@@ -201,18 +200,14 @@ endif
 # and places it in dist/bin/res - it should be used when packaging a build.
 multilocale.json: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
 multilocale.json:
-	@$(MKDIR) -p "$(MULTILOCALE_DIR)"
-	echo '{"locales": [$(subst $(SPACE),$(COMMA)$(SPACE),$(LOCALE_LIST))]}' \
-	  > $(MULTILOCALE_DIR)/multilocale.json
+	$(call py_action,file_generate,$(topsrcdir)/toolkit/locales/gen_multilocale.py main $(MULTILOCALE_DIR)/multilocale.json $(MDDEPDIR)/multilocale.json.pp $(ALL_LOCALES))
 
 # This version of the target uses AB_CD to build multilocale.json and places it
 # in the $(XPI_NAME)/res dir - it should be used when repackaging a build.
 multilocale.json-%: LOCALES?=$(AB_CD)
 multilocale.json-%: MULTILOCALE_DIR=$(DIST)/xpi-stage/$(XPI_NAME)/res
 multilocale.json-%:
-	@$(MKDIR) -p "$(MULTILOCALE_DIR)"
-	echo '{"locales": [$(subst $(SPACE),$(COMMA)$(SPACE),$(LOCALE_LIST))]}' \
-	  > $(MULTILOCALE_DIR)/multilocale.json
+	$(call py_action,file_generate,$(topsrcdir)/toolkit/locales/gen_multilocale.py main $(MULTILOCALE_DIR)/multilocale.json $(MDDEPDIR)/multilocale.json.pp $(ALL_LOCALES))
 
 locale-manifest.in: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
 locale-manifest.in: $(GLOBAL_DEPS) FORCE
