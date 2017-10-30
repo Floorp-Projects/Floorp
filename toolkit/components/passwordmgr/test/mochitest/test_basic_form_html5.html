@@ -14,9 +14,7 @@ runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-  let pwmgr = Cc["@mozilla.org/login-manager;1"].
-              getService(Ci.nsILoginManager);
-
+  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
   login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
            createInstance(Ci.nsILoginInfo);
   login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -35,10 +33,10 @@ runInParent(function setup() {
   login4.init("http://mochi.test:8888", "http://bug600551-4", null,
               "123456789", "testpass4", "", "");
 
-  pwmgr.addLogin(login1);
-  pwmgr.addLogin(login2);
-  pwmgr.addLogin(login3);
-  pwmgr.addLogin(login4);
+  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login2);
+  Services.logins.addLogin(login3);
+  Services.logins.addLogin(login4);
 });
 </script>
 

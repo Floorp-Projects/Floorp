@@ -77,14 +77,6 @@ LoginManagerStorage_mozStorage.prototype = {
     return this.__profileDir;
   },
 
-  __storageService: null, // Storage service for using mozStorage
-  get _storageService() {
-    if (!this.__storageService)
-      this.__storageService = Cc["@mozilla.org/storage/service;1"].
-                              getService(Ci.mozIStorageService);
-    return this.__storageService;
-  },
-
   __uuidService: null,
   get _uuidService() {
     if (!this.__uuidService)
@@ -832,7 +824,7 @@ LoginManagerStorage_mozStorage.prototype = {
     this.log("Initializing Database");
     let isFirstRun = false;
     try {
-      this._dbConnection = this._storageService.openDatabase(this._signonsFile);
+      this._dbConnection = Services.storage.openDatabase(this._signonsFile);
       // Get the version of the schema in the file. It will be 0 if the
       // database has not been created yet.
       let version = this._dbConnection.schemaVersion;
@@ -1243,7 +1235,7 @@ LoginManagerStorage_mozStorage.prototype = {
     // Create backup file
     if (backup) {
       let backupFile = this._signonsFile.leafName + ".corrupt";
-      this._storageService.backupDatabaseFile(this._signonsFile, backupFile);
+      Services.storage.backupDatabaseFile(this._signonsFile, backupFile);
     }
 
     this._dbClose();
