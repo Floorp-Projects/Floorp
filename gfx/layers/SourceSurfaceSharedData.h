@@ -13,6 +13,89 @@
 namespace mozilla {
 namespace gfx {
 
+class SourceSurfaceSharedData;
+
+class SourceSurfaceSharedDataWrapper final : public DataSourceSurface
+{
+  typedef mozilla::ipc::SharedMemoryBasic SharedMemoryBasic;
+
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceSharedDataWrapper, override)
+
+  SourceSurfaceSharedDataWrapper()
+    : mStride(0)
+    , mFormat(SurfaceFormat::UNKNOWN)
+  { }
+
+  bool Init(const IntSize& aSize,
+            int32_t aStride,
+            SurfaceFormat aFormat,
+            const SharedMemoryBasic::Handle& aHandle,
+            base::ProcessId aCreatorPid);
+
+  void Init(SourceSurfaceSharedData *aSurface);
+
+  base::ProcessId GetCreatorPid() const
+  {
+    return mCreatorPid;
+  }
+
+  int32_t Stride() override { return mStride; }
+
+  SurfaceType GetType() const override { return SurfaceType::DATA; }
+  IntSize GetSize() const override { return mSize; }
+  SurfaceFormat GetFormat() const override { return mFormat; }
+
+  uint8_t* GetData() override
+  {
+    return static_cast<uint8_t*>(mBuf->memory());
+  }
+
+  bool OnHeap() const override
+  {
+    return false;
+  }
+
+  bool Map(MapType, MappedSurface *aMappedSurface) override
+  {
+    aMappedSurface->mData = GetData();
+    aMappedSurface->mStride = mStride;
+    return true;
+  }
+
+  void Unmap() override
+  { }
+
+  bool AddConsumer()
+  {
+    return ++mConsumers == 1;
+  }
+
+  bool RemoveConsumer()
+  {
+    MOZ_ASSERT(mConsumers > 0);
+    return --mConsumers == 0;
+  }
+
+private:
+  size_t GetDataLength() const
+  {
+    return static_cast<size_t>(mStride) * mSize.height;
+  }
+
+  size_t GetAlignedDataLength() const
+  {
+    return mozilla::ipc::SharedMemory::PageAlignedSize(GetDataLength());
+  }
+
+  int32_t mStride;
+  uint32_t mConsumers;
+  IntSize mSize;
+  RefPtr<SharedMemoryBasic> mBuf;
+  SurfaceFormat mFormat;
+  base::ProcessId mCreatorPid;
+};
+
 /**
  * This class is used to wrap shared (as in process) data buffers used by a
  * source surface.
@@ -28,6 +111,7 @@ public:
     : mMutex("SourceSurfaceSharedData")
     , mStride(0)
     , mMapCount(0)
+    , mHandleCount(0)
     , mFormat(SurfaceFormat::UNKNOWN)
     , mClosed(false)
     , mFinalized(false)
@@ -35,7 +119,7 @@ public:
   {
   }
 
-  bool Init(const IntSize &aSize,
+  bool Init(const IntSize& aSize,
             int32_t aStride,
             SurfaceFormat aFormat);
 
@@ -133,15 +217,63 @@ public:
   bool ReallocHandle();
 
   /**
-   * Indicates we have finished writing to the buffer and it may be marked as
+   * Signals we have finished writing to the buffer and it may be marked as
    * read only. May release the handle if possible (see CloseHandleInternal).
    */
   void Finalize();
 
+  /**
+   * Indicates whether or not the buffer can change. If this returns true, it is
+   * guaranteed to continue to do so for the remainder of the surface's life.
+   */
+  bool IsFinalized() const
+  {
+    MutexAutoLock lock(mMutex);
+    return mFinalized;
+  }
+
+  /**
+   * While a HandleLock exists for the given surface, the shared memory handle
+   * cannot be released.
+   */
+  class MOZ_STACK_CLASS HandleLock final {
+  public:
+    explicit HandleLock(SourceSurfaceSharedData* aSurface)
+      : mSurface(aSurface)
+    {
+      mSurface->LockHandle();
+    }
+
+    ~HandleLock()
+    {
+      mSurface->UnlockHandle();
+    }
+
+  private:
+    RefPtr<SourceSurfaceSharedData> mSurface;
+  };
+
 private:
+  friend class SourceSurfaceSharedDataWrapper;
+
   ~SourceSurfaceSharedData() override
   {
     MOZ_ASSERT(mMapCount == 0);
+  }
+
+  void LockHandle()
+  {
+    MutexAutoLock lock(mMutex);
+    ++mHandleCount;
+  }
+
+  void UnlockHandle()
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mHandleCount > 0);
+    --mHandleCount;
+    mShared = true;
+    CloseHandleInternal();
   }
 
   uint8_t* GetDataInternal() const;
@@ -165,6 +297,7 @@ private:
   mutable Mutex mMutex;
   int32_t mStride;
   int32_t mMapCount;
+  int32_t mHandleCount;
   IntSize mSize;
   RefPtr<SharedMemoryBasic> mBuf;
   RefPtr<SharedMemoryBasic> mOldBuf;
