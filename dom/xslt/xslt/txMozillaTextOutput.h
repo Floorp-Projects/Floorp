@@ -11,7 +11,6 @@
 #include "nsWeakPtr.h"
 #include "txOutputFormat.h"
 
-class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsITransformObserver;
 class nsIDocument;
@@ -27,7 +26,7 @@ public:
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-    nsresult createResultDocument(nsIDOMDocument* aSourceDocument,
+    nsresult createResultDocument(nsIDocument* aSourceDocument,
                                   bool aLoadedAsData);
 
 private:
