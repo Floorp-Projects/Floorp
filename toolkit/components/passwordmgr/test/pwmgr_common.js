@@ -128,6 +128,7 @@ function doKey(aKey, modifier) {
  * notifications might be confused by this.
  */
 function commonInit(selfFilling) {
+  // eslint-disable-next-line mozilla/use-services
   var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
               getService(SpecialPowers.Ci.nsILoginManager);
   ok(pwmgr != null, "Access LoginManager");
