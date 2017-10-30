@@ -15,10 +15,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
-const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/data/content/activity-stream-prerendered.html";
-const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/data/content/activity-stream-prerendered-debug.html";
-const ACTIVITY_STREAM_URL = "resource://activity-stream/data/content/activity-stream.html";
-const ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/data/content/activity-stream-debug.html";
+const ACTIVITY_STREAM_PRERENDER_URL = "resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html";
+const ACTIVITY_STREAM_PRERENDER_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-prerendered-debug.html";
+const ACTIVITY_STREAM_URL = "resource://activity-stream/prerendered/en-US/activity-stream.html";
+const ACTIVITY_STREAM_DEBUG_URL = "resource://activity-stream/prerendered/static/activity-stream-debug.html";
 
 const DEFAULT_CHROME_URL = "chrome://browser/content/newtab/newTab.xhtml";
 const DOWNLOADS_URL = "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
