@@ -9,9 +9,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const CA = Cc["@mozilla.org/places/colorAnalyzer;1"].
            getService(Ci.mozIColorAnalyzer);
 
-const hiddenWindowDoc = Cc["@mozilla.org/appshell/appShellService;1"].
-                        getService(Ci.nsIAppShellService).
-                        hiddenDOMWindow.document;
+const hiddenWindowDoc = Services.appShell.hiddenDOMWindow.document;
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
