@@ -8041,10 +8041,10 @@ Precedence(ParseNodeKind pnk) {
 
 template <class ParseHandler, typename CharT>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-Parser<ParseHandler, CharT>::orExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                                     TripledotHandling tripledotHandling,
-                                     PossibleError* possibleError,
-                                     InvokedPrediction invoked /* = PredictUninvoked */)
+Parser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling yieldHandling,
+                                    TripledotHandling tripledotHandling,
+                                    PossibleError* possibleError,
+                                    InvokedPrediction invoked /* = PredictUninvoked */)
 {
     // Shift-reduce parser for the binary operator part of the JS expression
     // syntax.
@@ -8058,7 +8058,7 @@ Parser<ParseHandler, CharT>::orExpr1(InHandling inHandling, YieldHandling yieldH
     for (;;) {
         pn = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
         if (!pn)
-            return pn;
+            return null();
 
         // If a binary operator follows, consume it and compute the
         // corresponding operator.
@@ -8098,7 +8098,7 @@ Parser<ParseHandler, CharT>::orExpr1(InHandling inHandling, YieldHandling yieldH
             ParseNodeKind combiningPnk = kindStack[depth];
             pn = handler.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc);
             if (!pn)
-                return pn;
+                return null();
         }
 
         if (pnk == PNK_LIMIT)
@@ -8110,20 +8110,27 @@ Parser<ParseHandler, CharT>::orExpr1(InHandling inHandling, YieldHandling yieldH
         MOZ_ASSERT(depth <= PRECEDENCE_CLASSES);
     }
 
+    tokenStream.ungetToken();
+
     MOZ_ASSERT(depth == 0);
     return pn;
 }
 
 template <class ParseHandler, typename CharT>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
-Parser<ParseHandler, CharT>::condExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                                       TripledotHandling tripledotHandling,
-                                       PossibleError* possibleError,
-                                       InvokedPrediction invoked /* = PredictUninvoked */)
+Parser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandling yieldHandling,
+                                      TripledotHandling tripledotHandling,
+                                      PossibleError* possibleError,
+                                      InvokedPrediction invoked /* = PredictUninvoked */)
 {
-    Node condition = orExpr1(inHandling, yieldHandling, tripledotHandling, possibleError, invoked);
+    Node condition = orExpr(inHandling, yieldHandling, tripledotHandling, possibleError, invoked);
+    if (!condition)
+        return null();
 
-    if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
+    bool matched;
+    if (!tokenStream.matchToken(&matched, TOK_HOOK))
+        return null();
+    if (!matched)
         return condition;
 
     Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
@@ -8136,10 +8143,6 @@ Parser<ParseHandler, CharT>::condExpr1(InHandling inHandling, YieldHandling yiel
     if (!elseExpr)
         return null();
 
-    // Advance to the next token; the caller is responsible for interpreting it.
-    TokenKind ignored;
-    if (!tokenStream.getToken(&ignored))
-        return null();
     return handler.newConditional(condition, thenExpr, elseExpr);
 }
 
@@ -8161,7 +8164,7 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
     // numeric arrays, such as some Kraken benchmarks, it happens more often.)
     //
     // In such cases, we can avoid the full expression parsing route through
-    // assignExpr(), condExpr1(), orExpr1(), unaryExpr(), memberExpr(), and
+    // assignExpr(), condExpr(), orExpr(), unaryExpr(), memberExpr(), and
     // primaryExpr().
 
     TokenKind tt;
@@ -8244,14 +8247,16 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
             return null();
         }
     } else {
-        lhs = condExpr1(inHandling, yieldHandling, tripledotHandling, &possibleErrorInner, invoked);
-        if (!lhs) {
+        lhs = condExpr(inHandling, yieldHandling, tripledotHandling, &possibleErrorInner, invoked);
+        if (!lhs)
             return null();
-        }
+
+        if (!tokenStream.getToken(&tt))
+            return null();
     }
 
     ParseNodeKind kind;
-    switch (tokenStream.currentToken().type) {
+    switch (tt) {
       case TOK_ASSIGN:       kind = PNK_ASSIGN;       break;
       case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    break;
       case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    break;
