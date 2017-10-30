@@ -30,7 +30,6 @@ VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
  : mDeviceID(aDeviceID)
  , mTimestamp(TimeStamp::Now())
 {
-  memset(&mDisplayInfo, 0, sizeof(mDisplayInfo));
   mDisplayInfo.mDisplayName = aID;
   mDisplayInfo.mType = VRDeviceType::Puppet;
   mDisplayInfo.mIsConnected = true;
