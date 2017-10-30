@@ -76,6 +76,10 @@ public:
   // Note that this intentionally ignores the data in the temp file.
   size_t SizeOfCurrentMemoryBuffer() const;
 
+  PRFileDesc* GetFD() const;
+
+  void CloseFD();
+
 private:
   ~MutableBlobStorage();
 
