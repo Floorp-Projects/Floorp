@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Duyichin\'</string>
+  <string name="action_ok">ga\'ue</string>
+  <string name="urlbar_hint">Gachrun nuguan\' ruhuât nanà\'uìt</string>
+  <string name="teaser">Gache nu huì\' nanûn man\'an. Ni\'iaj. Nadure\'. yakaj da\'nga\' ñû.</string>
+  <string name="feedback_erase">Gisij ganare\' nej nuguan\' garajsunt nga gaché nunt.</string>
+  <string name="search_hint">Nana\'uì\' %1$s</string>
+  <string name="menu_share">Ga\'ninj gan\'an riña duguî\'t</string>
+  <string name="menu_open_with_default_browser">Na\'nïn ngà %1$s</string>
+  <string name="menu_open_with_a_browser">Na\'nïn ngà...</string>
+  <string name="menu_add_to_home_screen">Na\'nïn riña pantayâ nìko</string>
+  <string name="menu_settings">Nagi\'iaj</string>
+  <string name="menu_about">Doj rayi\'î</string>
+  <string name="menu_help">Sa ruguñu\'unj un</string>
+  <string name="menu_rights">Nej sa tna\'uej rayi\'ît</string>
+  <string name="menu_trackers_blocked_title">Gi\'iaj blokeandô Trackers</string>
+  <string name="share_dialog_title">Ga\'nïnj gan\'an ngà</string>
+  <string name="notification_erase_text">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="notification_action_open">Na\'nïn</string>
+  <string name="notification_action_erase_and_open">Nadure\' ni na\'nïnt</string>
+  <string name="shortcut_erase_short_label">Nadure\'</string>
+  <string name="shortcut_erase_long_label">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="text_selection_search_action">Nana\'uì\' riña hua huìi</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s narikij kontrol ri&#241;at.</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"garasun da\' gache nu hu&#236;t: "<ul>" "<li>Nana\'u&#236;\' ni gache nunt ne\' hu&#224;\'t ng&#224; app</li>" "<li>Narr&#224;n ri&#241;a blokeador (si nitaj ni guij nagi\'iaj da\' ga\'ue ga\'n&#239;nt gi\'iaj sun man)</li>" "<li>nadure\' da\' nar&#232;\' cookies danj nanj nej nuguan\' gachr&#251;nt nga gach&#233; nunt</li>" "</ul>" "</p>" "<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s Sa giri Mozilla huin.  Chrej nik&#242;\' &#241;&#251;nj huin sisi ga ni\'n&#239;nj ni dugumin internet s&#242;\'."<br/>" "<a href="%2$s">Gini\'in doj rayi\'&#238; nuguan\' na</a></p>]]></string>
+  <string name="preference_category_search">Nana\'uì\'</string>
+  <string name="preference_search_engine_default">Ngà hua niñanj</string>
+  <string name="preference_language">Nânj (nuguan\')</string>
+  <string name="preference_language_systemdefault">Sistema ngà hua niñaa</string>
+  <string name="preference_dialog_title_search_engine">Riña nana\'uì\' yitïnjt</string>
+  <string name="preference_category_privacy">Nitaj à\'go ni\'iaj sò\'</string>
+  <string name="preference_privacy_block_ads">Si gâ\'nïnjt nej anûnsio</string>
+  <string name="preference_privacy_block_analytics">Si gâ\'nïnjt nej blokeador analítiko</string>
+  <string name="preference_privacy_block_social">Si gâ\'nïnjt nej blokeador sosial</string>
+  <string name="preference_privacy_block_content">Si gâ\'nïnt a\'ngô nej sa ni\'iaj sa \'iát</string>
+  <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
+  <string name="preference_privacy_stealth_summary">Nagi\'iaj huì nej pâjina si ruhuât garasunt a\'ngô app</string>
+  <string name="preference_category_performance">suun</string>
+  <string name="preference_performance_block_webfonts">Nará riña nej yi\'nïn\' web</string>
+  <string name="preference_performance_block_webfonts_summary">Ga\'ue narugui\'ìj riña a\'ngô ikono</string>
+  <string name="preference_performance_block_images">Si ga\'nïnjt gahui imâjen</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry_summary">Gini\'in doj rayi\'î na</string>
+  <string name="preference_about">Rayi\'î %1$s</string>
+  <string name="content_description_clear_input">Nadure\' sa duguatujt</string>
+  <string name="content_description_dismiss_input">Dunaj man</string>
+  <string name="content_description_erase">Narè\' nej nuguan\' garajsunt nga ganana\'uî\'t</string>
+  <string name="content_description_lock">Koneksiôn hua hue\'ê</string>
+  <string name="accessibility_announcement_loading">Hìaj ayì\'ij</string>
+  <string name="accessibility_announcement_loading_finished">Gayi\'ìj \'iaj sunj</string>
+  <string name="content_description_menu">Doj sa ga\'ue nagi\'át</string>
+  <string name="content_description_forward">Gache nu gan\'anjt ne\' ñaa</string>
+  <string name="content_description_reload">Nayi\'ì nakà ñû riña sîtio</string>
+  <string name="content_description_back">Gache nu gan\'anj rukùt</string>
+  <string name="content_description_stop">Duyichin\' sa ayi\'ì sîtio</string>
+  <string name="content_description_customtab_exit">Nanikaj riña app garajsunt akuan\'</string>
+  <string name="content_description_blocking_switch">Nej rastreador gahuin blokeadô</string>
+  <string name="context_menu_paste_go">Gachrun &amp; guij</string>
+  <string name="your_rights">Nej sa tna\'uej rayi\'ît</string>
+  <string name="external_app_prompt_title">Na\'nïn link na riña a\'ngô app</string>
+  <string name="external_app_prompt">Ga\'ue gan\'anjt riña %1$s da\' na\'nïnt na link riña %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Nana\'uì\' \'ngo app ga\'ue na\'nïn nuguan\' nan</string>
+  <string name="external_app_prompt_no_app">À\' si \'ngo app nikajt a\'uej na\'nïn enlace nan. Ga\'ue gan\'anjt riña %1$s da\' nana\'uì\'t %2$s guendâ \'ngo app ga ni\'ñanj.</string>
+  <string name="external_multiple_apps_matched_exit">Gahui riña aché nu huìt</string>
+  <string name="download_snackbar_finished">%1$s Nga ganahui</string>
+  <string name="download_snackbar_open">Na\'nïn</string>
+  <string name="download_dialog_warning"><![CDATA["Nej sa nadunïnjt "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Se si nare\'&#232;j"</b>" nga nadurê\'t %1$s nej sa gi\'iát nga gaché nunt."]]></string>
+  <string name="download_dialog_title">Nadunïnj archîbo</string>
+  <string name="download_dialog_action_cancel">Duyichin\'</string>
+  <string name="download_dialog_action_download">Nadunïnj</string>
+  <string name="errorpage_title">Hua sa \'iaj chì\' guendâ gayi\'ìj</string>
+  <string name="errorpage_refresh">Ginùn huin ñûn</string>
+  <string name="error_connectionfailure_title">Na\'ue gayi\'ìj</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Ga\'ue sisi hua r&#225;n ri&#241;a siti&#244; nan \'ngo di&#251;. Gin&#249;n huin &#241;&#226;n nan&#226; doj.</li>"\n        "<li>sisi hu&#234; dan \'iaj daran\' chre nej p&#226;jina, ni\'aj sisi \'iaj sun hue\'&#234; si gaga\'t asi hua internet ri&#241;anj an.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Ganauij diû hua koneksiôn</string>
+  <string name="error_hostLookup_title">Nu narì\'ij serbidor</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Ni\'iaj si gachrun hue\'&#234;t direksi&#244;n\n          "<strong>ww</strong>".example.com lug&#226; gachrunt\n          "<strong>www</strong>.example.com</li>"\n        "<li>Sisi hu&#234; dan \'ia ng&#224; daran chre p&#226;jina, ni\'iaj si \'iaj sun hue\'&#234; si gag&#226;\'t asi si hua internet ri&#241;anj.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Hua a\'nan direksiôn na</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Hua da\'aj ni achr&#251;n\' \'ngo direksi&#244;n dananj "<strong>http://www.example.com/</strong></li>"\n  "<li>"Ni\'iaj hue\'&#234; sisi araj sunt huij chrun li nik&#239;n\' nit&#239;n dan &#226;n (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Nitaj si \'iaj redireksionando hue\'ê pajinâ nan</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" Sa&#241;un li nan ni ga\'ue si gurugui\' le\'ej dan guend&#226; nitaj si ni\'&#241;an siti&#244; asi rayi\'&#238; nej cookies "</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Nu nani\'in man direksiôn</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" Si guruhuaj ni da\'u&#238;t nadun&#239;njt a\'ng&#244; sa ga\'ue na\'n&#239;n ri&#241;a sa gachr&#251;nt nan."</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Gire\' koneksiôn</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Yi\'&#238; configurasi&#244;n \'iaj re\' nan si guruhuaj, asi hua \'ngo sa huin ruhu&#226; gatsin ri&#241;a man.</li>"\n  "<li>Sisi a\'n&#239;n atuj hue\'&#234;t ri&#241;a serbidor nej di&#251; gachin ni, man si \'iaj akuan\' man si guruhuaj, gin&#249;n huin &#241;&#251;n nana doj.</li>\n</ul>]]></string>
+  <string name="error_generic_title">\'uâ\'</string>
+  <string name="error_generic_message">Hua sa \'iaj na\'ue gayi\'ì pajinâ nan</string>
+  <string name="contextmenu_link_share">Duguachîn enlâse</string>
+  <string name="contextmenu_link_copy">Ga\'ne lînk da\' nachrunt a\'ngô hiuj u</string>
+  <string name="contextmenu_image_share">duguachîn asi dusîjt ñadu\'ua</string>
+  <string name="contextmenu_image_copy">Guxun\' dirección korreo da\' nachrun\' a\'ngô hiuj u</string>
+  <string name="contextmenu_image_save">Dunaj ñadu\'ua</string>
+  <string name="contextmenu_image_warning"><![CDATA["Nej ñadu\'ua nadunïnjt "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Se si nare\'&#232;j"</b>" nga nadurê\'t %1$s nej sa gi\'iát nga gaché nunt."]]></string>
+  <string name="firstrun_defaultbrowser_title">Nagi\'iaj nukuaj riña gache nun \'ngorïnt</string>
+  <string name="firstrun_close_button">Ngà nikà man an!</string>
+  <string name="firstrun_skip_button">Si gi\'iaj guendât</string>
+  <string name="firstrun_next_button">Ne\' ñaan</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">"Nachrun ma riña pantâya "</string>
+  <string name="dialog_addtohomescreen_action_add">Nutà\'</string>
+  <string name="dialog_addtohomescreen_action_cancel">Duyichin\'</string>
+</resources>

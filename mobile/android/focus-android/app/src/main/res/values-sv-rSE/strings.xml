@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Standardsökmotor</string>
   <string name="preference_category_privacy">Sekretess</string>
   <string name="preference_privacy_block_ads">Blockera annons-trackers</string>
+  <string name="preference_privacy_block_ads_summary">Vissa annonser spårar dina besök på webbplatsen, även om du inte klickar på annonserna</string>
   <string name="preference_privacy_block_analytics">Blockera analytiska trackers</string>
+  <string name="preference_privacy_block_analytics_summary">Används för att samla in, analysera och mäta aktiviteter som tryckningar och rullningar</string>
   <string name="preference_privacy_block_social">Blockera sociala trackers</string>
+  <string name="preference_privacy_block_social_summary">Inbäddad på webbplatser för att spåra dina besök och visa funktionalitet som dela-knappar</string>
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
+  <string name="preference_privacy_block_content_summary2">Aktivering kan leda till att vissa sidor uppträder oväntat</string>
   <string name="preference_privacy_secure_mode">Dolt läge</string>
   <string name="preference_privacy_stealth_summary">Dölj webbsidor när du byter appar</string>
   <string name="preference_category_performance">Prestanda</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerade sökmotorer</string>
   <string name="preference_search_restore">Återställ standardsökmotorer</string>
+  <string name="preference_search_add2">+ Lägg till en annan sökmotor</string>
   <string name="preference_search_remove_title">Ta bort sökmotorer</string>
   <string name="preference_search_remove">Ta bort</string>
   <string name="tutorial_search_manually_add">Lägg till manuellt</string>

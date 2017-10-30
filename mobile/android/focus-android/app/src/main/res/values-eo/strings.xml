@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Norma serĉilo</string>
   <string name="preference_category_privacy">Privateco</string>
   <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
+  <string name="preference_privacy_block_ads_summary">Kelkaj reklamoj spuras viajn vizitojn, eĉ se vi ne alklakas ilin</string>
   <string name="preference_privacy_block_analytics">Bloki analizajn spurilojn</string>
+  <string name="preference_privacy_block_analytics_summary">Ili estas uzataj por kolekti, analizi kaj mezuri agojn, kiel tuŝetojn kaj ŝovojn</string>
   <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
+  <string name="preference_privacy_block_social_summary">Inkluzivitaj en retejoj por spuri viajn vizitojn kaj montri funkciojn, kiel dividajn butonojn</string>
   <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
+  <string name="preference_privacy_block_content_summary2">Se vi ŝaltas tion ĉi, kelkaj paĝoj povus neatendite konduti</string>
   <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
   <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo</string>
   <string name="preference_category_performance">Efikeco</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Pri %1$s</string>
   <string name="preference_search_installed_search_engines">Instalitaj serĉiloj</string>
   <string name="preference_search_restore">Remeti normajn serĉilojn</string>
+  <string name="preference_search_add2">+ Aldoni alian serĉilon</string>
   <string name="preference_search_remove_title">Forigi serĉilojn</string>
   <string name="preference_search_remove">Forigi</string>
   <string name="tutorial_search_manually_add">Permane aldoni</string>

@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Deschide cu %1$s</string>
   <string name="menu_open_with_a_browser">Deschide cu…</string>
   <string name="menu_add_to_home_screen">Adaugă la ecranul principal</string>
+  <string name="menu_whats_new">Ce este nou</string>
   <string name="menu_settings">Setări</string>
   <string name="menu_about">Despre</string>
   <string name="menu_help">Ajutor</string>
@@ -46,6 +47,17 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla se străduieşte să colecteze doar ceea ce avem nevoie ca să oferim și să îmbunătățim %1$s pentru toată lumea.</string>
   <string name="preference_privacy_notice">Politica de confidențialitate</string>
   <string name="preference_about">Despre %1$s</string>
+  <string name="preference_search_installed_search_engines">Motoare de căutare instalate</string>
+  <string name="preference_search_restore">Restaurează motoarele de căutare implicite</string>
+  <string name="preference_search_add2">+ Adaugă un alt motor de căutare</string>
+  <string name="preference_search_remove_title">Elimină motoare de căutare</string>
+  <string name="preference_search_remove">Elimină</string>
+  <string name="tutorial_search_manually_add">Adaugă manual</string>
+  <string name="tutorial_search_title">Adaugă motor de căutare</string>
+  <string name="tutorial_search_finish">ÎNCEPE</string>
+  <string name="search_add_manually_save">Salvează</string>
+  <string name="accessibility_announcement_search">Adaugă motor de căutare</string>
+  <string name="search_add_confirmation">Motor nou de căutare adăugat.</string>
   <string name="content_description_clear_input">Șterge adresa introdusă</string>
   <string name="content_description_dismiss_input">Înlătură</string>
   <string name="content_description_erase">Șterge istoricul de navigare</string>

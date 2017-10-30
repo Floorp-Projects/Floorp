@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Peruuta</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Kirjoita osoite tai hakusana</string>
+  <string name="teaser">Automaattisesti yksityistä selaamista.\nSelaa. Tyhjennä. Toista.</string>
+  <string name="feedback_erase">Selaushistoria tyhjennetty.</string>
+  <string name="search_hint">Hae %1$s</string>
+  <string name="menu_share">Jaa…</string>
+  <string name="menu_open_with_default_browser">Avaa sovelluksella %1$s</string>
+  <string name="menu_open_with_a_browser">Avaa sovelluksella…</string>
+  <string name="menu_add_to_home_screen">Lisää linkki kotinäkymään</string>
+  <string name="menu_whats_new">Mitä uutta</string>
+  <string name="menu_settings">Asetukset</string>
+  <string name="menu_about">Tietoja</string>
+  <string name="menu_help">Ohje</string>
+  <string name="menu_rights">Oikeutesi</string>
+  <string name="menu_trackers_blocked_title">Seuraimia estetty</string>
+  <string name="share_dialog_title">Jaa palvelulla</string>
+  <string name="notification_erase_text">Tyhjennä selaushistoria</string>
+  <string name="notification_action_open">Avaa</string>
+  <string name="notification_action_erase_and_open">Tyhjennä ja avaa</string>
+  <string name="shortcut_erase_short_label">Tyhjennä</string>
+  <string name="shortcut_erase_long_label">Tyhjennä selaushistoria</string>
+  <string name="text_selection_search_action">Yksityinen haku</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s asettaa sinut ohjaimiin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"K&#228;yt&#228; sit&#228; yksityiseen selaamiseen:\n  "<ul>"\n    "<li>Hae ja selaa suoraan ohjelmassa</li>"\n    "<li>"Est&#228; seuranta (tai muokkaa  asetuksia salliaksesi sen)"</li>"\n    "<li>Poista ev&#228;steet, haku ja selaushistoria napin painalluksella</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s on Mozillan kehitt&#228;m&#228; ohjelmisto. Teht&#228;v&#228;mme on edesauttaa tervett&#228;, avointa Internetti&#228;.<br/>\n<a href="%2$s">Lue lis&#228;&#228;</a></p>]]></string>
+  <string name="preference_category_search">Haku</string>
+  <string name="preference_search_engine_default">Oletus</string>
+  <string name="preference_language">Kieli</string>
+  <string name="preference_language_systemdefault">Järjestelmän oletus</string>
+  <string name="preference_dialog_title_search_engine">Oletushakukone</string>
+  <string name="preference_category_privacy">Tietosuoja</string>
+  <string name="preference_privacy_block_ads">Estä mainosseuraimet</string>
+  <string name="preference_privacy_block_analytics">Estä analytiikkaseuraimet</string>
+  <string name="preference_privacy_block_social">Estä sosiaalisen median seuraimet</string>
+  <string name="preference_privacy_block_content">Estä muut sisältöseuraimet</string>
+  <string name="preference_privacy_secure_mode">Häivetila</string>
+  <string name="preference_privacy_stealth_summary">Piilota verkkosivut vaihdettaessa sovellusta</string>
+  <string name="preference_category_performance">Suorituskyky</string>
+  <string name="preference_performance_block_webfonts">Estä verkkosivun kirjasinlajit</string>
+  <string name="preference_performance_block_webfonts_summary">Saattaa aiheuttaa puuttuvia kuvakkeita tai kuvia</string>
+  <string name="preference_performance_block_images">Estä kuvat</string>
+  <string name="preference_default_browser2">Aseta %1$s oletusselaimeksi</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Lähetä käyttötilastoja</string>
+  <string name="preference_mozilla_telemetry_summary">Lisätietoja</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla pyrkii keräämään vain tietoja, jotka ovat tarpeellisia %1$sen jakelun ja kehittämisen kannalta.</string>
+  <string name="preference_privacy_notice">Tietosuojakäytäntö</string>
+  <string name="preference_about">Tietoja %1$sesta</string>
+  <string name="preference_search_installed_search_engines">Asennetut hakukoneet</string>
+  <string name="preference_search_restore">Palauta oletushakukoneet</string>
+  <string name="preference_search_remove_title">Poista hakukone</string>
+  <string name="preference_search_remove">Poista</string>
+  <string name="tutorial_search_manually_add">Lisää käsin</string>
+  <string name="tutorial_search_title">Lisää hakukone</string>
+  <string name="tutorial_search_step1">1. Avaa hakukoneen kotisivu.</string>
+  <string name="tutorial_search_step2">2. Valitse hakukoneen hakukenttä.</string>
+  <string name="tutorial_search_step2_alternative">2. Paina hakukoneen hakukenttää pitkään.</string>
+  <string name="tutorial_search_step3">3. Valitse näppäimistön yläpuolella oleva suurennuslasi lisätäksesi hakukoneen.</string>
+  <string name="action_option_add_search_engine">Lisää hakukone</string>
+  <string name="tutorial_search_step3_alternative">3. Valitse %1$s</string>
+  <string name="tutorial_search_step4">4. Jos et näe suurennuslasia, voit yrittää lisätä hakukonetta käsin.</string>
+  <string name="tutorial_search_step4_alternative">4. Jos et näe valintaa %1$s, yritä lisätä hakukone käsin.</string>
+  <string name="tutorial_search_finish">ALOITA ESITTELY</string>
+  <string name="search_add_hint">Lisää tämä hakukone valitsemalla suurennuslasi näppäimistön yläpuolelta.</string>
+  <string name="search_add_manually_name">Näytettävä nimi</string>
+  <string name="search_add_manually_name_hint">Hakukoneen nimi</string>
+  <string name="search_add_manually_string">Käytettävä hakulause</string>
+  <string name="search_add_manually_save">Tallenna</string>
+  <string name="search_add_manually_string_hint">Liitä tai kirjoita hakulause. Jos tarpeellista, käytä lauseen sijaan: %s.</string>
+  <string name="search_add_manually_example">Esimerkiksi: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Lisää hakukone</string>
+  <string name="search_add_confirmation">Lisättiin uusi hakukone.</string>
+  <string name="search_add_error">Tarkista hakulause ja yritä uudestaan</string>
+  <string name="content_description_clear_input">Tyhjennä teksti</string>
+  <string name="content_description_dismiss_input">Hylkää</string>
+  <string name="content_description_erase">Tyhjennä selaushistoria</string>
+  <string name="content_description_fab_expand">Laajenna</string>
+  <string name="content_description_tab_counter">Välilehtiä avoinna: %1$s</string>
+  <string name="content_description_open_tab">Avaa välilehti</string>
+  <string name="content_description_close_tab">Sulje välilehti</string>
+  <string name="content_description_lock">Suojattu yhteys</string>
+  <string name="accessibility_announcement_loading">Ladataan</string>
+  <string name="accessibility_announcement_loading_finished">Verkkosivu ladattu</string>
+  <string name="content_description_menu">Lisää asetuksia</string>
+  <string name="content_description_forward">Siirry eteenpäin</string>
+  <string name="content_description_reload">Lataa verkkosivu uudelleen</string>
+  <string name="content_description_back">Siirry taaksepäin</string>
+  <string name="content_description_stop">Keskeytä verkkosivun lataaminen</string>
+  <string name="content_description_customtab_exit">Palaa edelliseen sovellukseen</string>
+  <string name="content_description_blocking_switch">Estä seuraimet</string>
+  <string name="context_menu_paste_go">Liitä ja avaa</string>
+  <string name="your_rights">Oikeutesi</string>
+  <string name="external_app_prompt_title">Avaa linkki toisessa sovelluksessa</string>
+  <string name="external_app_prompt">Voit jättää %1$sin avataksesi tämän linkin sovelluksella %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Etsi sovellus, joka voi avata linkin</string>
+  <string name="external_app_prompt_no_app">Yksikään laitteesi sovelluksista ei voi avata tätä linkkiä. Voit jättää %1$sin etsiäksesi oikeaa sovellusta %2$ssta.</string>
+  <string name="external_multiple_apps_matched_exit">Poistu yksityisestä selauksesta?</string>
+  <string name="download_snackbar_finished">%1$s ladattiin</string>
+  <string name="download_snackbar_open">Avaa</string>
+  <string name="download_dialog_warning"><![CDATA["Ladattuja tiedostoja "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ei poisteta</b>" kun tyhjennät %1$sin historian."]]></string>
+  <string name="download_dialog_title">Lataa tiedosto</string>
+  <string name="download_dialog_action_cancel">Peruuta</string>
+  <string name="download_dialog_action_download">Lataa</string>
+  <string name="errorpage_title">Sivun lataamisvirhe</string>
+  <string name="errorpage_refresh">Yritä uudestaan</string>
+  <string name="error_connectionfailure_title">Yhteyden muodostaminen epäonnistui</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sivusto voi olla v&#228;liaikaisesti saavuttamattomissa tai kovan rasituksen alaisena. Yrit&#228; hetken kuluttua uudestaan.</li>"\n        "<li>Jos mitk&#228;&#228;n sivustot eiv&#228;t toimi, tarkista laitteen datayhteyden tai langattoman verkkoyhteyden tila.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Yhteys aikakatkaistiin</string>
+  <string name="error_hostLookup_title">Palvelinta ei löytynyt</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Tarkista osoite kirjoitusvirheiden varalta: esim.\n          "<strong>ww</strong>".mozilla.org oikean muodon,\n          "<strong>www</strong>.mozilla.org, sijaan.</li>"\n        "<li>"Jos muutkaan sivustot eiv&#228;t toimi, tarkista laitteen datayhteyden tai langattoman verkon tila. "</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Virheellinen osoite</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Verkkosivustojen osoitteet ovat yleens&#228; muotoa "<strong>http://www.example.com/</strong></li>"\n  "<li>"Tarkista, ett&#228; k&#228;yt&#228;t kenoviivoja (eli "<strong>/</strong>-merkkej&#228;).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Sivusto ei uudelleenohjaudu asianmukaisesti</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>T&#228;m&#228;n ongelman saattaa aiheuttaa ev&#228;steiden esto tai hyv&#228;ksym&#228;tt&#228; j&#228;tt&#228;minen.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Osoitetta ei ymmärretty</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Osoitteen avaaminen voi vaatia uuden ohjelman asentamista.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Suojatun yhteyden muodostaminen epäonnistui</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ongelma voi johtua palvelimen asetuksista tai jonkin toisen\npalvelimen vilpillisest&#228; yrityksest&#228; tekeyty&#228; palvelimeksi.</li>"\n  "<li>Jos yhteyden muodostuminen palvelimeen on aiemmin onnistunut, \nvika voi olla v&#228;liaikainen. Yrit&#228; t&#228;ll&#246;in my&#246;hemmin uudestaan.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hups</string>
+  <string name="error_generic_message">Verkkopyyntöä ei kyetä toteuttamaan.</string>
+  <string name="contextmenu_link_share">Jaa linkki</string>
+  <string name="contextmenu_link_copy">Kopioi linkin osoite</string>
+  <string name="contextmenu_image_share">Jaa kuva</string>
+  <string name="contextmenu_image_copy">Kopioi kuvan osoite</string>
+  <string name="contextmenu_image_save">Tallenna kuva</string>
+  <string name="contextmenu_open_in_new_tab">Avaa linkki uuteen välilehteen</string>
+  <string name="contextmenu_image_warning"><![CDATA["Tallennettuja ja jaettuja kuvia "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ei poisteta</b>" kun %1$sen selaushistoria tyhjennetään."]]></string>
+  <string name="firstrun_defaultbrowser_title">Tehosta yksityisyyttäsi</string>
+  <string name="firstrun_defaultbrowser_text2">Vie yksityinen selaus uudelle tasolle. Estä mainoksia ja muuta sisältöä, jotka voivat seurata sinua eri sivustoilla ja hidastaa sivujen latausaikoja.</string>
+  <string name="firstrun_search_title">Sinun haut, sinun ehdoilla</string>
+  <string name="firstrun_search_text">Haetko jotain erilaista? Valitse asetuksista toinen oletushakukone.</string>
+  <string name="firstrun_shortcut_title">Lisää linkki kotinäkymään</string>
+  <string name="firstrun_shortcut_text">Avaa suosikkisivusi nopeasti %1$sessa. Valitse vain \"Lisää linkki kotinäkymään\" %1$s valikosta.</string>
+  <string name="firstrun_privacy_title">Tee yksityisyydestä verkossa tapa</string>
+  <string name="firstrun_privacy_text">Aseta %1$s oletusselaimeksesi ja hyödy yksityisestä selaamisesta kun avaat verkkosivuja muista sovelluksista.</string>
+  <string name="firstrun_close_button">OK, selvä!</string>
+  <string name="firstrun_skip_button">Ohita</string>
+  <string name="firstrun_next_button">Seuraava</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Lisää linkki kotinäkymään</string>
+  <string name="dialog_addtohomescreen_action_add">Lisää</string>
+  <string name="dialog_addtohomescreen_action_cancel">Peruuta</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Pikakuvake aukeaa seurannanesto pois päältä</string>
+  <string name="dialog_opentab_title">Avaa linkki valitussa välilehdessä</string>
+  <string name="dialog_opentab_action_open">Avaa</string>
+  <string name="notification_browsing_session_channel_name">Yksityinen selausistunto</string>
+  <string name="notification_browsing_session_channel_description">Ilmoitusten avulla voit nollata %1$s istuntosi hipaisulla. Sinun ei tarvitse avata sovellusta nähdäksesi tiedot selaimestasi.</string>
+  <string name="tabs_tray_action_erase">Tyhjennä selaushistoria</string>
+  <string name="download_firefox">Lataa Firefox</string>
+  <string name="your_rights_content1">%1$s on ilmainen, avoimen lähdekoodin ohjelmisto Mozillalta ja muilta avustajilta.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s on käytettävissäsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ja muiden avoimen lähdekoodin lisenssien ehdoin."]]></string>
+  <string name="your_rights_content3"><![CDATA["Sinulle ei anneta minkään muotoisia tavaramerkki- tai lisenssioikeuksia Mozilla-säätiön tai muun tahon tavaramerkkeihin, joihin lukeutuu Mozilla, Firefox tai %1$s -nimi tai -logo. Voit lukea tarkempia lisätietoja tavaramerkeistä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">t&#228;&#228;lt&#228;</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Muita osia %1$sin lähdekoodista on saatavilla erinäisten vapaiden ja avointen lähdekoodin "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">lisenssien</a>" ehtojen mukaisesti."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s käyttää myös Disconnect, Inc.:n toimittamia estolistoja, jotka ovat erillisiä ja itsenäisiä "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>"-lisenssin mukaisia töitä ja ne ovat saatavilla "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">t&#228;&#228;lt&#228;</a>.]]></string>
+</resources>

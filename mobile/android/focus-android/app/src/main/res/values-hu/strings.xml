@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Alapértelmezett kereső</string>
   <string name="preference_category_privacy">Adatvédelem</string>
   <string name="preference_privacy_block_ads">Hirdetéskövetők blokkolása</string>
+  <string name="preference_privacy_block_ads_summary">Néhány hirdetés követi az oldallátogatásokat, még akkor is, ha nem kattint a hirdetésekre</string>
   <string name="preference_privacy_block_analytics">Analitikai követők blokkolása</string>
+  <string name="preference_privacy_block_analytics_summary">Arra használatosak, hogy begyűjtsék, elemezzék és mérjék az olyan tevékenységeket, mint az érintés vagy a görgetés</string>
   <string name="preference_privacy_block_social">Közösségi oldalak követőinek blokkolása</string>
+  <string name="preference_privacy_block_social_summary">Az oldalakba vannak ágyazva, hogy kövessék a látogatásait, és megosztás gombokat jelenítsenek meg</string>
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
+  <string name="preference_privacy_block_content_summary2">Az engedélyezés néhány oldalon váratlan működést okozhat</string>
   <string name="preference_privacy_secure_mode">Rejtőzködés</string>
   <string name="preference_privacy_stealth_summary">Weboldalak elrejtése alkalmazásváltáskor</string>
   <string name="preference_category_performance">Teljesítmény</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">A %1$s névjegye</string>
   <string name="preference_search_installed_search_engines">Telepített keresőszolgáltatások</string>
   <string name="preference_search_restore">Alapértelmezett keresőszolgáltatások visszaállítása</string>
+  <string name="preference_search_add2">+ További keresőszolgáltatás felvétele</string>
   <string name="preference_search_remove_title">Keresőszolgáltatások eltávolítása</string>
   <string name="preference_search_remove">Eltávolítás</string>
   <string name="tutorial_search_manually_add">Kézi hozzáadás</string>

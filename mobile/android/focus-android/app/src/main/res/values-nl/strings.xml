@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Standaardzoekmachine</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Advertentietrackers blokkeren</string>
+  <string name="preference_privacy_block_ads_summary">Sommige advertenties volgen websitebezoeken, zelfs als u niet op de advertenties klikt</string>
   <string name="preference_privacy_block_analytics">Analysetrackers blokkeren</string>
+  <string name="preference_privacy_block_analytics_summary">Gebruikt voor het verzamelen, analyseren en meten van activiteiten zoals tikken en scrollen</string>
   <string name="preference_privacy_block_social">Sociale trackers blokkeren</string>
+  <string name="preference_privacy_block_social_summary">Ingebed op websites om uw bezoeken te volgen en functionaliteiten zoals deelknoppen weer te geven</string>
   <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
+  <string name="preference_privacy_block_content_summary2">Inschakelen kan onverwacht gedrag van bepaalde pagina’s veroorzaken</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
   <string name="preference_privacy_stealth_summary">Webpagina’s verbergen bij wisselen van apps</string>
   <string name="preference_category_performance">Prestaties</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Over %1$s</string>
   <string name="preference_search_installed_search_engines">Geïnstalleerde zoekmachines</string>
   <string name="preference_search_restore">Standaardzoekmachines terugzetten</string>
+  <string name="preference_search_add2">+ Nog een zoekmachine toevoegen</string>
   <string name="preference_search_remove_title">Zoekmachines verwijderen</string>
   <string name="preference_search_remove">Verwijderen</string>
   <string name="tutorial_search_manually_add">Handmatig toevoegen</string>

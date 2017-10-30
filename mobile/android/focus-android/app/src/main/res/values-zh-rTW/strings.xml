@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
   <string name="preference_category_privacy">隱私權</string>
   <string name="preference_privacy_block_ads">封鎖廣告型追蹤器</string>
+  <string name="preference_privacy_block_ads_summary">某些廣告就算您不點擊，也會追蹤您造訪的網站</string>
   <string name="preference_privacy_block_analytics">封鎖分析型追蹤器</string>
+  <string name="preference_privacy_block_analytics_summary">用來收集、分析、測量點擊與滾動等行為</string>
   <string name="preference_privacy_block_social">封鎖社交追蹤器</string>
+  <string name="preference_privacy_block_social_summary">內嵌於網站，用來追蹤您的造訪紀錄，並提供分享按鈕等功能</string>
   <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
+  <string name="preference_privacy_block_content_summary2">開啟後，可能會造成某些頁面的行為不正常</string>
   <string name="preference_privacy_secure_mode">秘密行動</string>
   <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容</string>
   <string name="preference_category_performance">效能</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">關於 %1$s</string>
   <string name="preference_search_installed_search_engines">已安裝的搜尋引擎</string>
   <string name="preference_search_restore">還原預設搜尋引擎</string>
+  <string name="preference_search_add2">+ 新增其他搜尋引擎</string>
   <string name="preference_search_remove_title">移除搜尋引擎</string>
   <string name="preference_search_remove">移除</string>
   <string name="tutorial_search_manually_add">手動新增</string>

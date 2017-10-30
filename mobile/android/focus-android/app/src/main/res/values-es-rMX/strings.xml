@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
   <string name="preference_category_privacy">Privacidad</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
+  <string name="preference_privacy_block_ads_summary">Algunos anuncios rastrean tus visitas a sitios, aunque no hagas clic en ellos</string>
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
+  <string name="preference_privacy_block_analytics_summary">Utilizado para recolectar, analizar y medir actividades como pulsar y deslizar</string>
   <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
+  <string name="preference_privacy_block_social_summary">Incrustado en sitios para rastrear tus visitas y mostrar funcionalidades como botones de compartir</string>
   <string name="preference_privacy_block_content">Bloquear rastreadores de otros contenidos</string>
+  <string name="preference_privacy_block_content_summary2">Activar puede causar que algunas páginas se comporten inesperadamente</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Ocultar páginas web cuando se estén cambiando aplicaciones</string>
   <string name="preference_category_performance">Rendimiento</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Acerca de %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de navegación instalados</string>
   <string name="preference_search_restore">Restaurar motores predeterminados de búsqueda</string>
+  <string name="preference_search_add2">+ Agregar otro motor de búsqueda</string>
   <string name="preference_search_remove_title">Eliminar motores de búsqueda</string>
   <string name="preference_search_remove">Eliminar</string>
   <string name="tutorial_search_manually_add">Agregar manualmente</string>

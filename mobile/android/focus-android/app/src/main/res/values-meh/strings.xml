@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="preference_default_browser2">Sa´a %1$s navegador xinañu´u ya´a</string>
+  <string name="preference_category_mozilla">Mozila</string>
+  <string name="preference_mozilla_telemetry2">Chu´uichí datos a ni´í</string>
+  <string name="preference_mozilla_telemetry_summary">Ka´vi kue´eka</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla nake´e sani daa a íyo tiñu jee jia´a va´a %1$s nuu kuaiyo daa yo.</string>
+  <string name="preference_privacy_notice">Tutu xítu</string>
+  <string name="preference_about">Jiee ya´a %1$s</string>
+  <string name="content_description_clear_input">Xinó tu´u nchu´u</string>
+  <string name="content_description_dismiss_input">Chiyu´u</string>
+  <string name="content_description_erase">Xinó daa nnánuku noo´o</string>
+  <string name="content_description_fab_expand">Sa´a ka´nu</string>
+  <string name="content_description_tab_counter">Pestañas nune: %1$s</string>
+  <string name="content_description_open_tab">Síne pestaña</string>
+  <string name="content_description_close_tab">Nakasɨ pestaña</string>
+  <string name="content_description_lock">Conexión vatu</string>
+  <string name="accessibility_announcement_loading">Kunetu</string>
+  <string name="accessibility_announcement_loading_finished">Nuu web kuvi tuvi</string>
+  <string name="content_description_menu">Kue´e-ka nuu kají</string>
+  <string name="content_description_forward">Kaka ichí nuu</string>
+  <string name="content_description_reload">Na chisó tuku web</string>
+  <string name="content_description_back">Niko yata</string>
+  <string name="content_description_stop">Kunetu nee kutuvi web ya´a</string>
+  <string name="content_description_customtab_exit">Niko nuu ka̱a̱ a nee yata</string>
+  <string name="content_description_blocking_switch">Chiyu´u daa web nita noo´o</string>
+  <string name="context_menu_paste_go">Tee jee &amp; kuán´án</string>
+  <string name="your_rights">Tutu nichí noo´o</string>
+  <string name="external_app_prompt_title">Síne link nuu inka ka̱a̱</string>
+  <string name="external_app_prompt">Kuvi kenenu nuu %1$s jee síne link ya´a nuu %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Nánuku iin ka̱a̱ nuu kuvi síne link ya´a</string>
+  <string name="external_app_prompt_no_app">Ni´i daa ka̱a̱ nuu ka̱a̱ noo´o kuvi síne link ya´a. Kuvi kenenu nuu %1$s saa kuvi nánukunu iin ka̱a̱ kuvi koo inu jii %2$s.</string>
+  <string name="external_multiple_apps_matched_exit">Kene nuu nánuku daa yɨ´ɨ yu´u?</string>
+  <string name="download_snackbar_finished">%1$s nnɨ´ɨ</string>
+  <string name="download_snackbar_open">Síne</string>
+  <string name="download_dialog_warning"><![CDATA["Daa archivu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nn&#225;</b>" dee xita daa nnánukunu %1$s."]]></string>
+  <string name="download_dialog_title">Xinuu archivu</string>
+  <string name="download_dialog_action_cancel">Nkuvi-ka</string>
+  <string name="download_dialog_action_download">Xinuu</string>
+  <string name="errorpage_title">Ntu nkuvi síne página ya´a</string>
+  <string name="errorpage_refresh">Nakajie´e tuku</string>
+  <string name="error_connectionfailure_title">Ntu nkuvi kivɨ</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sitio ya&#180;a ntu kuvi s&#237;ne a xiin kue&#180;e &#241;&#616;v&#616; ni&#180;i ya&#180;a.</li>"\n        "<li>Dee ntu kuvi s&#237;ne iin p&#225;gina, kune&#180;y&#225; datos ka&#817;a&#817; noo&#180;o a xiin Wi-Fi.</li></ul>]]></string>
+  <string name="error_hostLookup_title">Ntu nani´í kaa servidor</string>
+</resources>

@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Standertsykmasine</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Advertinsjetrackers blokkearje</string>
+  <string name="preference_privacy_block_ads_summary">Guon advertinsjes folgje websitebesiten, sels as jo net op de advertinsjes klikke</string>
   <string name="preference_privacy_block_analytics">Analysetrackers blokkearje</string>
+  <string name="preference_privacy_block_analytics_summary">Brûkt foar it sammeljen, analysearjen en mjitten fan aktiviteiten lykas tikken en skowen</string>
   <string name="preference_privacy_block_social">Sosjale trackers blokkearje</string>
+  <string name="preference_privacy_block_social_summary">Ynboud op websites om jo besiken te folgjen en funksjonaliteit as dielknoppen te toanen</string>
   <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
+  <string name="preference_privacy_block_content_summary2">Ynskeakeljen kin feroarsaakje dat guon siden ûnferwachts wurkje</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
   <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps</string>
   <string name="preference_category_performance">Prestaasjes</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Oer %1$s</string>
   <string name="preference_search_installed_search_engines">Ynstallearre sykmasinen</string>
   <string name="preference_search_restore">Standert-sykmasinen opnij ynstelle</string>
+  <string name="preference_search_add2">+ In oare sykmasine tafoegje</string>
   <string name="preference_search_remove_title">Sykmasinen fuortsmite</string>
   <string name="preference_search_remove">Fuortsmite</string>
   <string name="tutorial_search_manually_add">Hânmjittich tafoegje</string>

@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
   <string name="menu_open_with_a_browser">Բացել այլ հավելվածով՝</string>
   <string name="menu_add_to_home_screen">Ավելացնել Տուն էկրանին</string>
+  <string name="menu_whats_new">Ինչն է նոր</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>
@@ -30,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Լռելյայն որոնում</string>
   <string name="preference_category_privacy">Գաղտնիություն</string>
   <string name="preference_privacy_block_ads">Արգելափակել գովազդային հետագծումները</string>
+  <string name="preference_privacy_block_ads_summary">Որոշ գովազդներ հետևում են կայքի այցելուներին, եթե անգամ չեք սեղմում գովազդին</string>
   <string name="preference_privacy_block_analytics">Արգելափակել վերլուծական հետագծումները</string>
+  <string name="preference_privacy_block_analytics_summary">Օգտագործվում է հավաքելու, վերլուծելու և ակտիվությունը չափելու համար, ինչպես օրինակ՝ հպումը և գլորումը:</string>
   <string name="preference_privacy_block_social">Արգելափակել սոցիալական հետագծումները</string>
+  <string name="preference_privacy_block_social_summary">Ներկառուցված կայքերում՝ հետևելուհ ամար ձեր այցելուներին և ցուցադրելու համար գործառությունը, ինչպես օրինակ՝ կոճակների համօգտագործում</string>
   <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
+  <string name="preference_privacy_block_content_summary2">Միացնելու դեպքում որոշ էջեր կարող են անսպասելի վարք ցուցադրել</string>
   <string name="preference_privacy_secure_mode">Թաքնված</string>
   <string name="preference_privacy_stealth_summary">Թաքցնել վեբ էջերը հավելվածները փոխանջատելիս</string>
   <string name="preference_category_performance">Արդյունավետություն</string>
@@ -46,6 +51,32 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla-ն ձգտում է հավաքել միայն այն, ինչ պետք է՝ %1$s-ը լավարկելու համար:</string>
   <string name="preference_privacy_notice">Գաղտնիության ծանուցում</string>
   <string name="preference_about">%1$s-ի մասին</string>
+  <string name="preference_search_installed_search_engines">Տեղադրված որոնիչներ</string>
+  <string name="preference_search_restore">Վերականգնել լռելյայն որոնիչները</string>
+  <string name="preference_search_add2">+ Ավելացնել այլ որոնիչ</string>
+  <string name="preference_search_remove_title">Հեռացնել որոնիչները</string>
+  <string name="preference_search_remove">Հեռացնել</string>
+  <string name="tutorial_search_manually_add">"Ձեռքով ավելացնել "</string>
+  <string name="tutorial_search_title">Ավելացնել որոնիչ</string>
+  <string name="tutorial_search_step1">1. Անցեք որոնիչների տնային էջ:</string>
+  <string name="tutorial_search_step2">2. Հպեք որոնիչի որոնման դաշտին:</string>
+  <string name="tutorial_search_step2_alternative">2. Երկար սեղմած պահեք որոնիչի որոնման դաշտին:</string>
+  <string name="tutorial_search_step3">3. Հպեք ստեղնաշարի ներքևի խոշորացնող ապակու պատկերակին՝ որոնիչը ավելացնելու համար:</string>
+  <string name="action_option_add_search_engine">Ավելացնել որոնիչ</string>
+  <string name="tutorial_search_step3_alternative">3. Հպեք %1$s</string>
+  <string name="tutorial_search_step4">4. Եթե չեք տեսնում խոշորացնող ապակին, փորձեք ձեռքով ավելացնել որոնիչ:</string>
+  <string name="tutorial_search_step4_alternative">4. Եթե չեք տեսնում %1$s-ը, ապա փորձեք ավելացնել որոնիչ:</string>
+  <string name="tutorial_search_finish">ՍԿՍԵԼ</string>
+  <string name="search_add_hint">Հպեք ստեղնաշարի ներքևի խոշորացնող ապակու պատկերակին՝ որոնիչը ավելացնելու համար:</string>
+  <string name="search_add_manually_name">Ցուցադրվող անունը</string>
+  <string name="search_add_manually_name_hint">Որոնել որոնիչ</string>
+  <string name="search_add_manually_string">Որոնել տողը՝ օգտագործելու համար</string>
+  <string name="search_add_manually_save">Պահպանել</string>
+  <string name="search_add_manually_string_hint">Տեղադրեք կամ մուտքագրեք որոնիչի տողը: Եթե անհրաժեշտ է՝ փոխարինեք որոնվող բառը հետևյալով՝ %s:</string>
+  <string name="search_add_manually_example">Օրինակ՝ example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Ավելացնել որոնիչ</string>
+  <string name="search_add_confirmation">Նոր որոնիչը ավելացվել է:</string>
+  <string name="search_add_error">Ստոգեք որոնման տողը և կրկին փորձեք</string>
   <string name="content_description_clear_input">Մաքրել ներածումը</string>
   <string name="content_description_dismiss_input">Բաց թողնել</string>
   <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>
@@ -124,4 +155,7 @@
   <string name="download_firefox">Ներբեռնել Firefox-ը</string>
   <string name="your_rights_content1">%1$s-ը անվճար և բաց կոդով ծրագիր է Mozilla-ի և այլ մասնակիցների կողմից:</string>
   <string name="your_rights_content2"><![CDATA["%1$s-ը հասանելի է "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>-ի պայմաններով և բաց կոդով այլ ծրագրերի արտոնագրերի համաձայն:]]></string>
+  <string name="your_rights_content3"><![CDATA["Դուք արտոնություն չունեք Mozilla Foundation-ի կողմից որևէ իրավունքի կամ արտոնագրի, ներառյալ՝ Mozilla, Firefox կամ %1$s անունների կամ պատկերանշանների: Լրացուցիչ տեղեկություններ կարող եք գտնել "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1377;&#1397;&#1405;&#1407;&#1381;&#1394;</a>:]]></string>
+  <string name="your_rights_content4"><![CDATA["Լրացուցիչ աղբյուր կոդը %1$s-ի համար մատչելի է այլ անվճար և բաց աղբյուրով "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1377;&#1408;&#1407;&#1400;&#1398;&#1377;&#1379;&#1408;&#1381;&#1408;&#1400;&#1406;</a>:]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s-ը նաև օգտագործում է արգելացուցակ՝ տրամադրված Disconnect-ի կողմից և անկախ աշխատանքներ "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">General Public License v3</a>"-ի ներքո և մատչելի է "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1377;&#1397;&#1405;&#1407;&#1381;&#1394;</a>:]]></string>
 </resources>

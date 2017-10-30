@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Systemowe pytanje</string>
   <string name="preference_category_privacy">Priwatnosć</string>
   <string name="preference_privacy_block_ads">Wabjenske přesćěhowaki blokować</string>
+  <string name="preference_privacy_block_ads_summary">Někotre wbajenje sydłowe wopyty slěduje, samo hdyž na wabjenje njekliknjeće</string>
   <string name="preference_privacy_block_analytics">Analyzowe přesćěhowaki blokować</string>
+  <string name="preference_privacy_block_analytics_summary">Z tym so aktiwity kaž dótkanje a kulenje přez strony hromadźa, analyzuja a měrja</string>
   <string name="preference_privacy_block_social">Socialne přesćěhowaki blokować</string>
+  <string name="preference_privacy_block_social_summary">Na sydłach zasadźene, zo bychu waše wopyty slědowali a funkcije kaž tłóčatka za dźělenje zwobraznili</string>
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
+  <string name="preference_privacy_block_content_summary2">To móže wjesć k tomu, zo so někotre strony njewšědnje zadźerža</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja</string>
   <string name="preference_category_performance">Wukon</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Wo %1$s</string>
   <string name="preference_search_installed_search_engines">Instalowane pytawy</string>
   <string name="preference_search_restore">Standardne pytawy wobnowić</string>
+  <string name="preference_search_add2">+ Dalšu pytawu přidać</string>
   <string name="preference_search_remove_title">Pytawy wotstronić</string>
   <string name="preference_search_remove">Wotstronić</string>
   <string name="tutorial_search_manually_add">Manuelnje přidać</string>

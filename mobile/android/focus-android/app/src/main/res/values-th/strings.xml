@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">การค้นหาเริ่มต้น</string>
   <string name="preference_category_privacy">ความเป็นส่วนตัว</string>
   <string name="preference_privacy_block_ads">ปิดกั้นตัวติดตามของโฆษณา</string>
+  <string name="preference_privacy_block_ads_summary">โฆษณาบางตัวติดตามการเยี่ยมชมไซต์ แม้ว่าคุณไม่ได้คลิกโฆษณา</string>
   <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
+  <string name="preference_privacy_block_analytics_summary">ใช้เพื่อเก็บรวบรวม วิเคราะห์ และวัดกิจกรรมอย่างการแตะและการเลื่อน</string>
   <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
+  <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันอย่างปุ่มแบ่งปัน</string>
   <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
+  <string name="preference_privacy_block_content_summary2">การเปิดใช้งานอาจส่งผลให้หน้าบางส่วนทำงานอย่างไม่คาดคิด</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
   <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอป</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">เกี่ยวกับ %1$s</string>
   <string name="preference_search_installed_search_engines">เครื่องมือค้นหาที่ติดตั้งไว้</string>
   <string name="preference_search_restore">เรียกคืนเครื่องมือค้นหาเริ่มต้น</string>
+  <string name="preference_search_add2">+ เพิ่มเครื่องมือค้นหาอื่น</string>
   <string name="preference_search_remove_title">เอาเครื่องมือค้นหาออก</string>
   <string name="preference_search_remove">เอาออก</string>
   <string name="tutorial_search_manually_add">เพิ่มด้วยตนเอง</string>
@@ -76,7 +81,7 @@
   <string name="content_description_dismiss_input">ยกเลิก</string>
   <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>
   <string name="content_description_fab_expand">ขยาย</string>
-  <string name="content_description_tab_counter">แท็บที่เปิด: %1$s</string>
+  <string name="content_description_tab_counter">แท็บที่เปิดอยู่: %1$s</string>
   <string name="content_description_open_tab">เปิดแท็บ</string>
   <string name="content_description_close_tab">ปิดแท็บ</string>
   <string name="content_description_lock">การเชื่อมต่อปลอดภัย</string>

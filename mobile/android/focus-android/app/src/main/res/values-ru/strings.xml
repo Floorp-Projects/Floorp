@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Поисковая система по умолчанию</string>
   <string name="preference_category_privacy">Приватность</string>
   <string name="preference_privacy_block_ads">Блокировать трекеры рекламы</string>
+  <string name="preference_privacy_block_ads_summary">Некоторая реклама отслеживает посещения сайтов, даже если вы на неё не нажимали</string>
   <string name="preference_privacy_block_analytics">Блокировать трекеры аналитики</string>
+  <string name="preference_privacy_block_analytics_summary">Используются для сбора, анализа и измерения активности, например, нажатий и скроллинга</string>
   <string name="preference_privacy_block_social">Блокировать социальные трекеры</string>
+  <string name="preference_privacy_block_social_summary">Вставляются на сайты, чтобы отслеживать ваши посещения и внедрять дополнительную функциональность, например, кнопку «Поделиться»</string>
   <string name="preference_privacy_block_content">Блокировать другие трекеры содержимого</string>
+  <string name="preference_privacy_block_content_summary2">Включение этой функции может вызвать непредсказуемое поведение некоторых страниц</string>
   <string name="preference_privacy_secure_mode">Невидимка</string>
   <string name="preference_privacy_stealth_summary">Скрыть веб-страницы при переключении приложений</string>
   <string name="preference_category_performance">Производительность</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">О %1$s</string>
   <string name="preference_search_installed_search_engines">Установленные поисковые системы</string>
   <string name="preference_search_restore">Восстановить набор поисковых систем по умолчанию</string>
+  <string name="preference_search_add2">+ Добавить другую поисковую систему</string>
   <string name="preference_search_remove_title">Удалить поисковые системы</string>
   <string name="preference_search_remove">Удалить</string>
   <string name="tutorial_search_manually_add">Добавить вручную</string>

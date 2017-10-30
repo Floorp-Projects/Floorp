@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Anadi amezwer</string>
   <string name="preference_category_privacy">Tabaḍnit</string>
   <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
+  <string name="preference_privacy_block_ads_summary">Kra n udellel iṭṭafaṛ tirza inek γer izmal web, Γas ur tsit ara γef udellel</string>
   <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
+  <string name="preference_privacy_block_analytics_summary">Ittwaseqdec i welqqaḍ , Aslaḍ d uktili n wamud am usekcem n isekillen akked usenned</string>
   <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
+  <string name="preference_privacy_block_social_summary">Ittwarna deg kra n ismal akken ad isfuγel tirziwin inek , akken daγen ad d-yesken timahaltin am tqefalt n beṭṭu</string>
   <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
+  <string name="preference_privacy_block_content_summary2">Armad n uγwwaṛèagi izmer ad yeglu s kra n wuguren di kra n isebtar</string>
   <string name="preference_privacy_secure_mode">Tusligt</string>
   <string name="preference_privacy_stealth_summary">Ffer isebtar web ticki tettbeddileḍ gar isnasen</string>
   <string name="preference_category_performance">Tamellit</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Γef %1$s</string>
   <string name="preference_search_installed_search_engines">Imseddayen n unadi ibedden</string>
   <string name="preference_search_restore">Err-d imseddayen n unadi imezwar</string>
+  <string name="preference_search_add2">+ Rnu amsedday nniḍen n unadi</string>
   <string name="preference_search_remove_title">Kkes imseddayen n unadi</string>
   <string name="preference_search_remove">Kkes</string>
   <string name="tutorial_search_manually_add">Rnu s ufus</string>

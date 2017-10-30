@@ -31,8 +31,11 @@
   <string name="preference_dialog_title_search_engine">Pencarian baku</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
+  <string name="preference_privacy_block_ads_summary">Beberapa iklan melacak kunjungan situs, meski Anda tidak mengklik iklan</string>
   <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
+  <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpulkan, menganalisis, dan mengukur kegiatan seperti mengetuk dan menggulir</string>
   <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
+  <string name="preference_privacy_block_social_summary">Disematkan pada situs untuk melacak kunjungan Anda dan menampilkan fungsi seperti tombol berbagi</string>
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
   <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi</string>
@@ -49,6 +52,7 @@
   <string name="preference_about">Tentang %1$s</string>
   <string name="preference_search_installed_search_engines">Mesin pencari terpasang</string>
   <string name="preference_search_restore">Pulihkan mesin pencari baku</string>
+  <string name="preference_search_add2">+ Tambahkan mesin pencari lainnya</string>
   <string name="preference_search_remove_title">Hapus mesin pencari</string>
   <string name="preference_search_remove">Hapus</string>
   <string name="tutorial_search_manually_add">Tambahkan secara manual</string>

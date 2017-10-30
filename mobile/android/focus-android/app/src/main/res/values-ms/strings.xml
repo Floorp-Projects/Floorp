@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Carian piawai</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Sekat penjejak iklan</string>
+  <string name="preference_privacy_block_ads_summary">Sesetengah iklan menjejaki lawatan anda dalam laman, walaupun anda tidak klik iklan</string>
   <string name="preference_privacy_block_analytics">Sekat penjejak analitik</string>
+  <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpul, menganalisis dan menilai aktiviti, seperti klik dan skrol</string>
   <string name="preference_privacy_block_social">Sekat penjejak sosial</string>
+  <string name="preference_privacy_block_social_summary">Disisipkan di dalam laman untuk menjejaki lawatan anda dan memaparkan fungsi seperti butang kongsi</string>
   <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
+  <string name="preference_privacy_block_content_summary2">Sesetengah halaman mungkin tidak berfungsi dengan sempurna jika ciri ini diaktifkan</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
   <string name="preference_privacy_stealth_summary">Sorok laman web apabila bertukar aplikasi</string>
   <string name="preference_category_performance">Prestasi</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Perihal %1$s</string>
   <string name="preference_search_installed_search_engines">Enjin carian dipasang</string>
   <string name="preference_search_restore">Pulih enjin carian piawai</string>
+  <string name="preference_search_add2">+ Tambah enjin carian lain</string>
   <string name="preference_search_remove_title">Buang enjin carian</string>
   <string name="preference_search_remove">Buang</string>
   <string name="tutorial_search_manually_add">Tambah secara manual</string>

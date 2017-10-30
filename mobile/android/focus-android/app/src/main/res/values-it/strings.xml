@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Blocca pubblicità traccianti</string>
+  <string name="preference_privacy_block_ads_summary">Alcuni annunci pubblicitari, senza bisogno di aprirli, sono in grado di tracciare i siti visitati</string>
   <string name="preference_privacy_block_analytics">Blocca traccianti analitici</string>
+  <string name="preference_privacy_block_analytics_summary">Utilizzati per raccogliere, analizzare e misurare attività come tocchi e scorrimenti</string>
   <string name="preference_privacy_block_social">Blocca traccianti social</string>
+  <string name="preference_privacy_block_social_summary">Inseriti nei siti per tenere traccia delle visite e fornire funzionalità come i pulsanti di condivisione</string>
   <string name="preference_privacy_block_content">Blocca altri contenuti traccianti</string>
+  <string name="preference_privacy_block_content_summary2">L’attivazione potrebbe causare problemi di funzionamento in alcune pagine</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
   <string name="preference_privacy_stealth_summary">Nascondi le pagine web nel passaggio tra le app</string>
   <string name="preference_category_performance">Prestazioni</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Informazioni su %1$s</string>
   <string name="preference_search_installed_search_engines">Motori di ricerca installati</string>
   <string name="preference_search_restore">Ripristina motori di ricerca predefiniti</string>
+  <string name="preference_search_add2">+ Aggiungi un altro motore di ricerca</string>
   <string name="preference_search_remove_title">Rimozione motori di ricerca</string>
   <string name="preference_search_remove">Rimuovi</string>
   <string name="tutorial_search_manually_add">Aggiungi manualmente</string>

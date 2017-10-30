@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Systemowy standard</string>
   <string name="preference_category_privacy">Priwatnosć</string>
   <string name="preference_privacy_block_ads">Wabjeńske pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_ads_summary">Někotare wabjeńske anonse woglědy sedłow slěduju, samo gaby wy na anonse njekliknuł</string>
   <string name="preference_privacy_block_analytics">Analyzowe pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_analytics_summary">Z tym se aktiwity ako pótuskowanje a kulanje pśez boki gromaźe, analyzěruju a měrje</string>
   <string name="preference_privacy_block_social">Socialne pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_social_summary">Na sedłach zasajźone, aby wóne waše woglědy slědowali a funkcije ako tłocaški za źělenje zwobraznili</string>
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_content_summary2">To móžo wjasć k tomu, až se někotare boki njewšednje zaźarže</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju</string>
   <string name="preference_category_performance">Wugbaśe</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Wó %1$s</string>
   <string name="preference_search_installed_search_engines">Zainstalěrowane pytnice</string>
   <string name="preference_search_restore">Standardne pytnice wótnowiś</string>
+  <string name="preference_search_add2">+ Dalšnu pytnicu pśidaś</string>
   <string name="preference_search_remove_title">Pytnice wótwónoźeś</string>
   <string name="preference_search_remove">Wótwónoźeś</string>
   <string name="tutorial_search_manually_add">Manuelnje pśidaś</string>

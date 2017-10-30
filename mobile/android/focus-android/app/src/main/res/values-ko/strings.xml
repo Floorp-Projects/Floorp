@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">기본 검색</string>
   <string name="preference_category_privacy">개인 정보</string>
   <string name="preference_privacy_block_ads">광고 추적기 차단</string>
+  <string name="preference_privacy_block_ads_summary">특정 광고의 경우, 광고를 클릭하지 않은 경우에도 방문 기록을 추적합니다</string>
   <string name="preference_privacy_block_analytics">분석용 추적기 차단</string>
+  <string name="preference_privacy_block_analytics_summary">탭한 기록이나 스크롤과 같은 사용자 활동 내역을 수집하고 분석하는데 사용됩니다</string>
   <string name="preference_privacy_block_social">소셜 추적기 차단</string>
+  <string name="preference_privacy_block_social_summary">사용자의 방문 기록을 추적하거나 공유 버튼과 같은 기능을 표시하기 위해 사이트에 내장되어 있습니다</string>
   <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
+  <string name="preference_privacy_block_content_summary2">설정 시 웹 페이지가 제대로 표시되지 않을 수 있습니다</string>
   <string name="preference_privacy_secure_mode">스텔스</string>
   <string name="preference_privacy_stealth_summary">앱 전환 시 현재 앱에서의 웹페이지 정보를 숨김</string>
   <string name="preference_category_performance">성능</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">%1$s에 대한 정보</string>
   <string name="preference_search_installed_search_engines">설치된 검색 엔진 모음</string>
   <string name="preference_search_restore">기본 검색 엔진 설정 초기화</string>
+  <string name="preference_search_add2">+ 또 다른 검색 엔진 추가</string>
   <string name="preference_search_remove_title">검색 엔진 삭제</string>
   <string name="preference_search_remove">삭제</string>
   <string name="tutorial_search_manually_add">직접 추가하기</string>

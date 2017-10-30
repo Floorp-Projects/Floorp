@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Kunchatu</string>
+  <string name="action_ok">Va\'a</string>
+  <string name="urlbar_hint">Ntukú a chaa ña kunu kuncheu</string>
+  <string name="teaser">Ndukù Sèè. Kunchee. Sto\'o. Ntakua.</string>
+  <string name="feedback_erase">Sto\'i ña ntsinu.</string>
+  <string name="search_hint">Ndukù %1$s</string>
+  <string name="menu_share">Stucha…</string>
+  <string name="menu_open_with_default_browser">Kuna tsi %1$s</string>
+  <string name="menu_open_with_a_browser">Kuna tsi…</string>
+  <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
+  <string name="menu_whats_new">Ña tsa\'a</string>
+  <string name="menu_settings">Nu samu</string>
+  <string name="menu_about">Tsaa ña</string>
+  <string name="menu_help">Chinchee</string>
+  <string name="menu_rights">Yee yu\'u</string>
+  <string name="menu_trackers_blocked_title">Ntasi nu kuu snuu kue ña\'a</string>
+  <string name="share_dialog_title">Kua’a nu\'u</string>
+  <string name="notification_erase_text">Stòo ña ntukuku sata</string>
+  <string name="notification_action_open">Kuna</string>
+  <string name="notification_action_erase_and_open">Stoo cha Kuna</string>
+  <string name="shortcut_erase_short_label">Stoo</string>
+  <string name="shortcut_erase_long_label">Stòo ña ndukuku sata</string>
+  <string name="text_selection_search_action">Nduku Sèè</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Kuu kuachu\'un&#241;a.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Kuu nduku seu &#241;a\'a:\n  "<ul>"\n    "<li>Nduku &#241;a kunu nu kaa ndusu\'ku</li>"\n    "<li>Kasi &#241;a kuni kunche\'e &#241;a sau)</li>"\n    "<li>Stoo cookies tsi &#241;a ndukuku sata</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla sai. Kunikue iin Internet nuna &#241;a kuu kuchu\'un ntina yivi.<br/>\n<a href="%2$s">kavi cha kutua</a></p>]]></string>
+  <string name="preference_category_search">Nduku</string>
+  <string name="preference_search_engine_default">Tsa sa\'an yee</string>
+  <string name="preference_language">Tu\'un</string>
+  <string name="preference_language_systemdefault">Nkoi ta xi’na</string>
+  <string name="preference_dialog_title_search_engine">Ntuku ta xi’na</string>
+  <string name="preference_category_privacy">Sèè</string>
+  <string name="preference_privacy_block_ads">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_analytics">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
+  <string name="preference_privacy_secure_mode">Sèè kivu</string>
+  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn</string>
+  <string name="preference_category_performance">Nixi sachu\'in</string>
+  <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
+  <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
+  <string name="preference_performance_block_images">Kasi tutu ndatavana</string>
+  <string name="preference_default_browser2">Saa %1$s navegador xinaa</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Chachu\'un tu\'un nchachu\'un</string>
+  <string name="preference_mozilla_telemetry_summary">Skua\'a kuakaa</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla ndaki\'an ña vaa tava na koo vaa %1$s ntio.</string>
+  <string name="preference_privacy_notice">Nixi inka vaa tutu\'ku</string>
+  <string name="preference_about">Tsaa ña\'a%1$s</string>
+  <string name="preference_search_installed_search_engines">Ndu tsaa ña nda nduku</string>
+  <string name="preference_search_restore">Ndu tsaa ña nda ntuku</string>
+  <string name="preference_search_remove_title">Xita ntuku</string>
+  <string name="preference_search_remove">Xitaá</string>
+  <string name="tutorial_search_manually_add">Chikai meu\'ña</string>
+  <string name="tutorial_search_title">Chika´a ñaa nda nduku</string>
+  <string name="tutorial_search_step1">1. Kunche\'e página nu ku nkitsau.</string>
+  <string name="tutorial_search_step2">2. Katavi nduku motor de busqueda.</string>
+  <string name="tutorial_search_step2_alternative">2. Katavi cha ma siau nduku motor de busqueda.</string>
+  <string name="tutorial_search_step3">3. Katavi ícono ña sa\'a kanu nu teclado tava chikau motor de búsqueda.</string>
+  <string name="action_option_add_search_engine">Chikaa tsi ña ndukuku</string>
+  <string name="tutorial_search_step3_alternative">3. Katavi %1$s</string>
+  <string name="tutorial_search_step4">4. Tatu kue tuù, ku chika meu nixi ndukuku.</string>
+  <string name="tutorial_search_step4_alternative">4. Tatu kue tuù %1$s, ku chika meu nixi ndukuku.</string>
+  <string name="tutorial_search_finish">KI\'TSA</string>
+  <string name="search_add_hint">Katavi ícono ña sa\'a kanu nu teclado tava chikau motor de búsqueda.</string>
+  <string name="search_add_manually_name">Sivi kunu snau</string>
+  <string name="search_add_manually_name_hint">SIvi ña nduku</string>
+  <string name="search_add_manually_string">Nduku tu\'un kunu kuachu\'un</string>
+  <string name="search_add_manually_save">Chika vaà</string>
+  <string name="search_add_manually_string_hint">Sti\'in a cha\'a ña kunu nuduku. A sama ña kunu ndukuku tsi %s.</string>
+  <string name="search_add_manually_example">Sa\'an chau\'ña: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Chikaa tsi ña ndukuku</string>
+  <string name="search_add_confirmation">Ntu tsa\'a tsi ña ndukuku.</string>
+  <string name="search_add_error">Revisa la cadena de búsqueda y vuelve a intentarlo</string>
+  <string name="content_description_clear_input">Stoo nu nikivu</string>
+  <string name="content_description_dismiss_input">Nkucha\'a su\'u</string>
+  <string name="content_description_erase">Stòo ña ntukuku sata</string>
+  <string name="content_description_fab_expand">Saa kanu</string>
+  <string name="content_description_tab_counter">Xikua nuna: %1$s</string>
+  <string name="content_description_open_tab">Kuna xikua</string>
+  <string name="content_description_close_tab">Kasi xikua</string>
+  <string name="content_description_lock">Kuu kivu</string>
+  <string name="accessibility_announcement_loading">Saa ki tsai</string>
+  <string name="accessibility_announcement_loading_finished">Kunchatu saa ku ki\'tsai</string>
+  <string name="content_description_menu">Kunchee nu ndasamu kue ñaa</string>
+  <string name="content_description_forward">Nduku chinuu</string>
+  <string name="content_description_reload">Ntu tsaa pagina web</string>
+  <string name="content_description_back">Nduku sata</string>
+  <string name="content_description_stop">Ma ntu tsaa pagina web</string>
+  <string name="content_description_customtab_exit">Nchiko sata</string>
+  <string name="content_description_blocking_switch">Kasi ña ndukuyo</string>
+  <string name="context_menu_paste_go">Stiin cha kua\'an</string>
+  <string name="your_rights">Yee yu\'u</string>
+  <string name="external_app_prompt_title">Kuna nu ndukuku inka tsio</string>
+  <string name="external_app_prompt">Kuu siau %1$s cha kuu kunu nu ndukuku yoo%2$s.</string>
+  <string name="external_app_prompt_no_app_title">Nduku inka nu kuu kuncheu ña kunu</string>
+  <string name="external_app_prompt_no_app">Ni iin nu sachuun kúú kunaku tsi enlace yó’o. Kuu ketu %1$s tatu kunu ndukukuv%2$s inka nu kuu sachuun.</string>
+  <string name="external_multiple_apps_matched_exit">A keu nu nduku seu ñaa?</string>
+  <string name="download_snackbar_finished">%1$s ntsinu</string>
+  <string name="download_snackbar_open">Kuna</string>
+  <string name="download_dialog_warning"><![CDATA["Tutu snuù "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ma ntoi</b>" ta kuu stuu ña\'a ntsinu nuu%1$s."]]></string>
+  <string name="download_dialog_title">Snuu Tutu</string>
+  <string name="download_dialog_action_cancel">Kunchatu</string>
+  <string name="download_dialog_action_download">Snuú</string>
+  <string name="errorpage_title">Makuu kuncheu pagina yoo</string>
+  <string name="errorpage_refresh">Kitsaa tuku</string>
+  <string name="error_connectionfailure_title">Kue kuu kitsai</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Makuu kuncheu &#241;a inka nu pagina yoo . Kunchatu loxo cha kitsa tuku.</li>"\n        "<li>tatu kueku kunu ni iin p&#225;gina, Kunche&#232; a kuu kuachu\'un datos &#241;a kaa ndusu a conexi&#243;n Wi-Fi.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Ntsinu conexión</string>
+  <string name="error_hostLookup_title">Kòo servidor ni ntanèe</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kunchee a va\'a nchau \n          "<strong>ww</strong>".example.com a\n          "<strong>www</strong>.example.com</li>"\n        "<li>Tatu kueku kuncheu ni iin pagina, kunchee a va\'a yee conexi&#243;n a Wi-Fi &#241;a kaa ndusuku.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Va\'a ni chau pagina</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Ta kunu chau iin pagina web tsini&#241;u\'u chau&#241;a sa\'an "<strong>http://www.example.com/</strong></li>"\n  "<li>"Kunchee an\'chau uvi raya (tana &#241;o\'o "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Página yoo kueku nuna vai</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#209;a &#241;oo yaa ta stoo a kue kunu cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Ma ni tsituninia direcciòn</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>"Tsini\'&#241;uu chik&#224;u inka programa tatu kunu kun&#250; direcci&#243;n y&#242;o. "</li>" \n "</ul>]]></string>
+  <string name="error_sslhandshake_title">Mani\'ku chitai\'ña</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Yee &#241;a V&#225;&#8217;&#224; nu inka pagina a inkana kuni sakue\'ena .</li>"\n  "<li>"Tatu va\'a nikitsau ta sata , chaa ntu\'u &#241;a V&#225;&#8217;&#224; yo kunchatu xoo cha kitsa tuku. "</li>\n</ul>]]></string>
+  <string name="error_generic_title">Kukanu inu</string>
+  <string name="error_generic_message">Ma ku kuncheu pagina yoo</string>
+  <string name="contextmenu_link_share">Kua’á direcciòn</string>
+  <string name="contextmenu_link_copy">Ntatava direcciòn</string>
+  <string name="contextmenu_image_share">Stucha tutu ntatavana</string>
+  <string name="contextmenu_image_copy">Ntatava direcciòn nu inka tutu ntatavana</string>
+  <string name="contextmenu_image_save">Chika va\'a tutu ntatavana</string>
+  <string name="contextmenu_open_in_new_tab">Kuna ña kunu kuncheu nu inka xikua</string>
+  <string name="contextmenu_image_warning"><![CDATA["Tutu ndatavana ña nchikavau tsi ña ndakuaku "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" ma ntoi"</b>ta kuu stuu ña\'a ntsinu sata %1$s.]]></string>
+  <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
+  <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
+  <string name="firstrun_search_title">Nduku ña kunu, nixi kunu</string>
+  <string name="firstrun_search_text">¿Nudukuku si\'in ña\'a? katsi inka tsiña ndukuku inka nu sama ntii ñaa yo.</string>
+  <string name="firstrun_shortcut_title">Chikaa nixi kitsau nu pantalla xinaa</string>
+  <string name="firstrun_shortcut_text">Nchiko nu inka pagina %1$s katavi. Nu xikua %1$s \" Chikaa nu pantalla xinaa \".</string>
+  <string name="firstrun_privacy_title">Ka\'un ña see</string>
+  <string name="firstrun_privacy_text">Chikaa %1$s nu ndukuku xina cha kunchee nixi nduku seu ta tsunaku pagina web inka tsio.</string>
+  <string name="firstrun_close_button">Va\'a, tsa ntakii ña!</string>
+  <string name="firstrun_skip_button">Kanta</string>
+  <string name="firstrun_next_button">Nuu</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Ntachika\'a nu pantalla xina</string>
+  <string name="dialog_addtohomescreen_action_add">Chikaa</string>
+  <string name="dialog_addtohomescreen_action_cancel">Kunchatu</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Nu ku nkivu ku nuni cha ku nkuu kunchena yo</string>
+  <string name="dialog_opentab_title">Kuna enlace nu xikua kunu</string>
+  <string name="dialog_opentab_action_open">Kuna</string>
+  <string name="notification_browsing_session_channel_name">Nikitsa seu</string>
+  <string name="notification_browsing_session_channel_description">Tu\'un kuu stoi nu nikitsau %1$s ta katavu. ke tsiniñu\'u kunakuña ni kuncheu ta sachuùn navegador.</string>
+  <string name="tabs_tray_action_erase">Stòo ña ntukuku sata</string>
+  <string name="download_firefox">Snuu Firefox</string>
+  <string name="your_rights_content1">%1$s software kuachu\'un ntiina ni kuu vaa saa Mozilla tsi nivi sachu\'un chi\'an.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s kuu kuachu\'uña tsi "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia p&#250;blica Mozilla</a>" tsi inka licencias ña código abierto."]]></string>
+  <string name="your_rights_content3"><![CDATA["Koo licencia kuachu\'na marca Fundación Mozilla ni Firefox a inkana, tsi logotipo a sivi Mozilla, Firefox a %1$s ku ndukuku tu\'un "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">yo\'o</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Inka "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencia</a>ña código abierto tsi gratuitassani inka código fuente kuachu\'un tsi %1$s.]]></string>
+</resources>

@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Domyślna wyszukiwarka</string>
   <string name="preference_category_privacy">Prywatność</string>
   <string name="preference_privacy_block_ads">Blokowanie śledzących reklam</string>
+  <string name="preference_privacy_block_ads_summary">Niektóre reklamy (nawet niekliknięte) śledzą odwiedziny zawierających je stron</string>
   <string name="preference_privacy_block_analytics">Blokowanie śledzących statystyk</string>
+  <string name="preference_privacy_block_analytics_summary">Używane do zbierania, analizowania i mierzenia działań użytkownika, takich jak kliknięcia i przewijanie</string>
   <string name="preference_privacy_block_social">Blokowanie śledzących społecznościowych</string>
+  <string name="preference_privacy_block_social_summary">Osadzane na stronach, aby śledzić ich odwiedziny i dodawać np. przyciski udostępniania</string>
   <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
+  <string name="preference_privacy_block_content_summary2">Włączenie może spowodować nieoczekiwane zachowanie niektórych stron</string>
   <string name="preference_privacy_secure_mode">Tryb ukryty</string>
   <string name="preference_privacy_stealth_summary">Ukrywanie stron podczas przełączania aplikacji</string>
   <string name="preference_category_performance">Wydajność</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">O programie %1$s</string>
   <string name="preference_search_installed_search_engines">Zainstalowane wyszukiwarki</string>
   <string name="preference_search_restore">Przywróć domyślne wyszukiwarki</string>
+  <string name="preference_search_add2">+ Dodaj inną wyszukiwarkę</string>
   <string name="preference_search_remove_title">Usuń wyszukiwarki</string>
   <string name="preference_search_remove">Usuń</string>
   <string name="tutorial_search_manually_add">Dodaj ręcznie</string>

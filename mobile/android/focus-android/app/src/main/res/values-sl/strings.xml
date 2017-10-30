@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Privzeti iskalnik</string>
   <string name="preference_category_privacy">Zasebnost</string>
   <string name="preference_privacy_block_ads">Zavračaj sledilce oglasov</string>
+  <string name="preference_privacy_block_ads_summary">Nekateri oglasi beležijo obiske strani, tudi če ne klikate nanje</string>
   <string name="preference_privacy_block_analytics">Zavračaj sledilce analitike</string>
+  <string name="preference_privacy_block_analytics_summary">V uporabi za zbiranje, analiziranje in merjenje dejanj, kot je pritiskanje in drsenje po strani</string>
   <string name="preference_privacy_block_social">Zavračaj sledilce družbenih omrežij</string>
+  <string name="preference_privacy_block_social_summary">Vgrajeni na straneh za sledenje vašim obiskom in za prikaz možnosti, kot so gumbi za deljenje</string>
   <string name="preference_privacy_block_content">Zavračaj druge vsebinske sledilce</string>
+  <string name="preference_privacy_block_content_summary2">Nastavitev lahko povzroči nepravilno delovanje nekaterih strani</string>
   <string name="preference_privacy_secure_mode">Skrivni način</string>
   <string name="preference_privacy_stealth_summary">Skrij strani pri preklapljanju med aplikacijami</string>
   <string name="preference_category_performance">Učinkovitost</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">O %1$su</string>
   <string name="preference_search_installed_search_engines">Nameščeni iskalniki</string>
   <string name="preference_search_restore">Ponastavi privzete iskalnike</string>
+  <string name="preference_search_add2">+ Dodaj drug iskalnik</string>
   <string name="preference_search_remove_title">Odstrani iskalnike</string>
   <string name="preference_search_remove">Odstrani</string>
   <string name="tutorial_search_manually_add">Dodaj ročno</string>

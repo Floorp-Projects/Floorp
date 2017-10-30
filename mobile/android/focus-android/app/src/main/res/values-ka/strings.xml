@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">ნაგულისხმევი საძიებო სისტემა</string>
   <string name="preference_category_privacy">პირადულობა</string>
   <string name="preference_privacy_block_ads">სარეკლამო ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_ads_summary">ზოგიერთი სარეკლამო ელემენტი, თვალს ადევნებს თქვენს გადაადგილებას საიტებზე, მაშინაც კი როცა მათზე არ აწკაპებთ</string>
   <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_analytics_summary">გამოიყენება აღრიცხვისთვის, დამუშავებისა და ისეთი მოქმედებების შესამოწმებლად, როგორიცაა თითის შეხება და გვერდის გადაადგილება</string>
   <string name="preference_privacy_block_social">სოციალური ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_social_summary">საიტებზე ჩაშენებულია, თქვენს გადაადგილებაზე თვალყურის მისადევნებლად და ისეთი ელემენტების გამოსაჩენად, როგორიცაა მოწონების, ან გაზიარების ღილაკები</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
   <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას</string>
   <string name="preference_category_performance">წარმადობა</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">%1$s-ის შესახებ</string>
   <string name="preference_search_installed_search_engines">დაყენებული საძიებო სისტემები</string>
   <string name="preference_search_restore">ნაგულისხმევი საძიებო სისტემების აღდგენა</string>
+  <string name="preference_search_add2">+ სხვა საძიებო სისტემის დამატება</string>
   <string name="preference_search_remove_title">საძიებო სისტემების ამოშლა</string>
   <string name="preference_search_remove">ამოღება</string>
   <string name="tutorial_search_manually_add">ხელით დამატება</string>

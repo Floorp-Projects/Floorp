@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">محرك البحث المبدئي</string>
   <string name="preference_category_privacy">الخصوصية</string>
   <string name="preference_privacy_block_ads">احجب متعقبات الإعلانات</string>
+  <string name="preference_privacy_block_ads_summary">تتعقّب بعض الإعلانات زياراتك إلى المواقع، حتى إن لم تنقرها</string>
   <string name="preference_privacy_block_analytics">احجب متعقبات التحليلات</string>
+  <string name="preference_privacy_block_analytics_summary">تُستخدم لجمع نشاطاتك وتحليلها وقياسها، مثل النقر وتمرير الصفحات</string>
   <string name="preference_privacy_block_social">احجب المتعقبات الاجتماعية</string>
+  <string name="preference_privacy_block_social_summary">تُضمّن في المواقع لتتعقب زياراتك ولعرض بعض الخصائص مثل أزرار المشاركة</string>
   <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
+  <string name="preference_privacy_block_content_summary2">تفعيل الخيار قد يتسبب بألا تعمل بعض الصفحات كما يجب</string>
   <string name="preference_privacy_secure_mode">التخفّي</string>
   <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات</string>
   <string name="preference_category_performance">الأداء</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">عن %1$s</string>
   <string name="preference_search_installed_search_engines">محركات البحث المثبتة</string>
   <string name="preference_search_restore">استعد محركات البحث المبدئية</string>
+  <string name="preference_search_add2">+ أضف محرك بحث آخر</string>
   <string name="preference_search_remove_title">أزِل محركات البحث</string>
   <string name="preference_search_remove">أزِل</string>
   <string name="tutorial_search_manually_add">أضِف يدويا</string>

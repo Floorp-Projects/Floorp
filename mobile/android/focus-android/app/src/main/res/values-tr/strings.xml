@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Varsayılan arama</string>
   <string name="preference_category_privacy">Gizlilik</string>
   <string name="preference_privacy_block_ads">Reklam takipçilerini engelle</string>
+  <string name="preference_privacy_block_ads_summary">Bazı reklamlar, siz onlara tıklamasanız bile ziyaret ettiğiniz siteleri takip eder</string>
   <string name="preference_privacy_block_analytics">Analitik takipçilerini engelle</string>
+  <string name="preference_privacy_block_analytics_summary">Dokunma ve kaydırma gibi etkinlikleri kaydetmek, çözümlemek ve ölçmek için kullanılır</string>
   <string name="preference_privacy_block_social">Sosyal takipçileri engelle</string>
+  <string name="preference_privacy_block_social_summary">Sosyal medyada paylaşım düğmeleri, ziyaret ettiğiniz siteleri de takip eder</string>
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
+  <string name="preference_privacy_block_content_summary2">Bunu açarsanız bazı sayfalar olması gerektiği gibi çalışmayabilir</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
   <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
   <string name="preference_category_performance">Performans</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">%1$s hakkında</string>
   <string name="preference_search_installed_search_engines">Yüklü arama motorları</string>
   <string name="preference_search_restore">Varsayılan arama motorlarını geri yükle</string>
+  <string name="preference_search_add2">+ Başka bir arama motoru ekle</string>
   <string name="preference_search_remove_title">Arama motorlarını sil</string>
   <string name="preference_search_remove">Sil</string>
   <string name="tutorial_search_manually_add">Elle ekle</string>

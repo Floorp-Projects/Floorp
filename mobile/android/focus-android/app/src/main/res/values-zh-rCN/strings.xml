@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">默认搜索</string>
   <string name="preference_category_privacy">隐私</string>
   <string name="preference_privacy_block_ads">拦截广告跟踪器</string>
+  <string name="preference_privacy_block_ads_summary">一些广告跟踪您的访问，即便您没有点击广告</string>
   <string name="preference_privacy_block_analytics">拦截分析跟踪器</string>
+  <string name="preference_privacy_block_analytics_summary">会收集、分析和测量您的活动，例如点击与滚动</string>
   <string name="preference_privacy_block_social">拦截社交跟踪器</string>
+  <string name="preference_privacy_block_social_summary">嵌入到网站上从而跟踪您的访问和显示分享按钮</string>
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
+  <string name="preference_privacy_block_content_summary2">启用可能导致部分网站工作异常</string>
   <string name="preference_privacy_secure_mode">隐形</string>
   <string name="preference_privacy_stealth_summary">切换应用时隐藏网页</string>
   <string name="preference_category_performance">性能</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">关于 %1$s</string>
   <string name="preference_search_installed_search_engines">已安装的搜索引擎</string>
   <string name="preference_search_restore">恢复默认搜索引擎</string>
+  <string name="preference_search_add2">添加更多搜索引擎</string>
   <string name="preference_search_remove_title">移除搜索引擎</string>
   <string name="preference_search_remove">移除</string>
   <string name="tutorial_search_manually_add">手动添加</string>

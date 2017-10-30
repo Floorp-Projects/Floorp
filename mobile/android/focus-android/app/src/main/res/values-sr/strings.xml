@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Подразумевани претраживач</string>
   <string name="preference_category_privacy">Приватност</string>
   <string name="preference_privacy_block_ads">Блокирај оглашиваче</string>
+  <string name="preference_privacy_block_ads_summary">Неке рекламе прате посете сајтова чак и када не кликнете на њих</string>
   <string name="preference_privacy_block_analytics">Блокирај аналитичке пратиоце</string>
+  <string name="preference_privacy_block_analytics_summary">Користи се за сакупљање, анализирање и мерење активности као што су кликтање и скроловање</string>
   <string name="preference_privacy_block_social">Блокирај друштвене пратиоце</string>
+  <string name="preference_privacy_block_social_summary">Уграђене у сајтове како би пратиле ваше посете и приказивале дугмиће за дељење</string>
   <string name="preference_privacy_block_content">Блокирај пратиоце осталог садржаја</string>
+  <string name="preference_privacy_block_content_summary2">Омогућавање може утицати лоше на неке странице</string>
   <string name="preference_privacy_secure_mode">Потајни режим</string>
   <string name="preference_privacy_stealth_summary">Сакриј веб странице приликом мењања између апликација</string>
   <string name="preference_category_performance">Перформансе</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">О %1$s</string>
   <string name="preference_search_installed_search_engines">Инсталирани претраживачи</string>
   <string name="preference_search_restore">Врати на подразумеване претраживаче</string>
+  <string name="preference_search_add2">+ Додај претраживач</string>
   <string name="preference_search_remove_title">Уклони претраживач</string>
   <string name="preference_search_remove">Уклони</string>
   <string name="tutorial_search_manually_add">Додај ручно</string>
