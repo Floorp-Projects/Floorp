@@ -1054,13 +1054,18 @@ struct ArenaTreeTrait
 };
 
 // Bookkeeping for all the arenas used by the allocator.
+// Arenas are separated in two categories:
+// - "private" arenas, used through the moz_arena_* API
+// - all the other arenas: the default arena, and thread-local arenas,
+//   used by the standard API.
 class ArenaCollection
 {
 public:
   bool Init()
   {
     mArenas.Init();
-    mDefaultArena = mLock.Init() ? CreateArena() : nullptr;
+    mPrivateArenas.Init();
+    mDefaultArena = mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
     if (mDefaultArena) {
       // arena_t constructor sets this to a lower value for thread local
       // arenas; Reset to the default value for the main arena.
@@ -1069,22 +1074,54 @@ public:
     return bool(mDefaultArena);
   }
 
-  inline arena_t* GetById(arena_id_t aArenaId);
+  inline arena_t* GetById(arena_id_t aArenaId, bool aIsPrivate);
 
-  arena_t* CreateArena();
+  arena_t* CreateArena(bool aIsPrivate);
 
   void DisposeArena(arena_t* aArena)
   {
     MutexAutoLock lock(mLock);
-    mArenas.Remove(aArena);
+    (mPrivateArenas.Search(aArena) ? mPrivateArenas : mArenas).Remove(aArena);
     // The arena is leaked, and remaining allocations in it still are alive
     // until they are freed. After that, the arena will be empty but still
     // taking have at least a chunk taking address space. TODO: bug 1364359.
   }
 
-  using Iterator = RedBlackTree<arena_t, ArenaTreeTrait>::Iterator;
+  using Tree = RedBlackTree<arena_t, ArenaTreeTrait>;
 
-  Iterator iter() { return mArenas.iter(); }
+  struct Iterator : Tree::Iterator
+  {
+    explicit Iterator(Tree* aTree, Tree* aSecondTree)
+      : Tree::Iterator(aTree)
+      , mNextTree(aSecondTree)
+    {
+    }
+
+    Item<Iterator> begin()
+    {
+      return Item<Iterator>(this, *Tree::Iterator::begin());
+    }
+
+    Item<Iterator> end()
+    {
+      return Item<Iterator>(this, nullptr);
+    }
+
+    Tree::TreeNode* Next()
+    {
+      Tree::TreeNode* result = Tree::Iterator::Next();
+      if (!result && mNextTree) {
+	new (this) Iterator(mNextTree, nullptr);
+	result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
+      }
+      return result;
+    }
+
+  private:
+    Tree* mNextTree;
+  };
+
+  Iterator iter() { return Iterator(&mArenas, &mPrivateArenas); }
 
   inline arena_t* GetDefault() { return mDefaultArena; }
 
@@ -1093,7 +1130,8 @@ public:
 private:
   arena_t* mDefaultArena;
   arena_id_t mLastArenaId;
-  RedBlackTree<arena_t, ArenaTreeTrait> mArenas;
+  Tree mArenas;
+  Tree mPrivateArenas;
 };
 
 static ArenaCollection gArenas;
@@ -2177,7 +2215,7 @@ thread_local_arena(bool enabled)
     // called with `false`, but it doesn't matter at the moment.
     // because in practice nothing actually calls this function
     // with `false`, except maybe at shutdown.
-    arena = gArenas.CreateArena();
+    arena = gArenas.CreateArena(/* IsPrivate = */ false);
   } else {
     arena = gArenas.GetDefault();
   }
@@ -3843,7 +3881,7 @@ arena_t::arena_t()
 }
 
 arena_t*
-ArenaCollection::CreateArena()
+ArenaCollection::CreateArena(bool aIsPrivate)
 {
   fallible_t fallible;
   arena_t* ret = new (fallible) arena_t();
@@ -3863,7 +3901,7 @@ ArenaCollection::CreateArena()
 
   // TODO: Use random Ids.
   ret->mId = mLastArenaId++;
-  mArenas.Insert(ret);
+  (aIsPrivate ? mPrivateArenas : mArenas).Insert(ret);
   return ret;
 }
 
@@ -4732,7 +4770,7 @@ MozJemalloc::jemalloc_free_dirty_pages(void)
 }
 
 inline arena_t*
-ArenaCollection::GetById(arena_id_t aArenaId)
+ArenaCollection::GetById(arena_id_t aArenaId, bool aIsPrivate)
 {
   if (!malloc_initialized) {
     return nullptr;
@@ -4742,7 +4780,7 @@ ArenaCollection::GetById(arena_id_t aArenaId)
   mozilla::AlignedStorage2<arena_t> key;
   key.addr()->mId = aArenaId;
   MutexAutoLock lock(mLock);
-  arena_t* result = mArenas.Search(key.addr());
+  arena_t* result = (aIsPrivate ? mPrivateArenas : mArenas).Search(key.addr());
   MOZ_RELEASE_ASSERT(result);
   return result;
 }
@@ -4753,7 +4791,7 @@ inline arena_id_t
 MozJemalloc::moz_create_arena()
 {
   if (malloc_init()) {
-    arena_t* arena = gArenas.CreateArena();
+    arena_t* arena = gArenas.CreateArena(/* IsPrivate = */ true);
     return arena->mId;
   }
   return 0;
@@ -4763,7 +4801,7 @@ template<>
 inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
-  arena_t* arena = gArenas.GetById(aArenaId);
+  arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
   if (arena) {
     gArenas.DisposeArena(arena);
   }
@@ -4774,7 +4812,7 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   inline return_type MozJemalloc::moz_arena_##name(                            \
     arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))               \
   {                                                                            \
-    BaseAllocator allocator(gArenas.GetById(aArenaId));           \
+    BaseAllocator allocator(gArenas.GetById(aArenaId, /* IsPrivate = */ true));\
     return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));                   \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
