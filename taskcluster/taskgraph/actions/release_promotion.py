@@ -53,6 +53,12 @@ RELEASE_PROMOTION_CONFIG = {
     },
 }
 
+VERSION_BUMP_FLAVORS = (
+    'publish_fennec',
+    'publish_firefox',
+    'publish_devedition',
+)
+
 
 def is_release_promotion_available(parameters):
     return parameters['project'] in RELEASE_PROMOTION_PROJECTS
@@ -122,6 +128,11 @@ def is_release_promotion_available(parameters):
                     'type': 'string',
                 },
             },
+            'next_version': {
+                'type': 'string',
+                'description': 'Next version.',
+                'default': '',
+            },
         },
         "required": ['release_promotion_flavor', 'build_number'],
     }
@@ -129,6 +140,14 @@ def is_release_promotion_available(parameters):
 def release_promotion_action(parameters, input, task_group_id, task_id, task):
     os.environ['BUILD_NUMBER'] = str(input['build_number'])
     release_promotion_flavor = input['release_promotion_flavor']
+    if release_promotion_flavor in VERSION_BUMP_FLAVORS:
+        next_version = str(input.get('next_version', ''))
+        if next_version == "":
+            raise Exception(
+                "`next_version` property needs to be provided for %s "
+                "targets." % ', '.join(VERSION_BUMP_FLAVORS)
+            )
+        os.environ['NEXT_VERSION'] = next_version
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
 
     target_tasks_method = input.get(

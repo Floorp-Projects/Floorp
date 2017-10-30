@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+# TODO:
+# kind-dependencies:
+#   - release-push-to-cdns (aka. push to releases)
+
+jobs:
+   fennec:
+      name: fennec version bump
+      description: version bump
+      worker-type: buildbot-bridge/buildbot-bridge
+      run-on-projects: []
+      run:
+         using: buildbot
+         product: fennec
+         buildername: release-{branch}-fennec_version_bump
+         release-promotion: true
+         routes:
+            - index.releases.v1.{branch}.latest.fennec.latest.version_bump
+            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
