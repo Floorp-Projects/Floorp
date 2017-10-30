@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-disable mozilla/no-cpows-in-tests */
+
 Services.prefs.setBoolPref("browser.preferences.instantApply", true);
 
 registerCleanupFunction(function() {

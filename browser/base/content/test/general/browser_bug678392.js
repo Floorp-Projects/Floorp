@@ -36,6 +36,7 @@ function test() {
 
 function load(aTab, aUrl, aCallback) {
   aTab.linkedBrowser.addEventListener("load", function(aEvent) {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     waitForFocus(aCallback, content);
   }, {capture: true, once: true});
   aTab.linkedBrowser.loadURI(aUrl);

@@ -1,20 +1,66 @@
 language: rust
-rust:
-  - stable
-  - beta
-  - nightly
-
+rust: stable
+dist: trusty
 sudo: false
 
-cache:
-  apt: true
-  directories:
-    - target/debug/deps
-    - target/debug/build
+cache: cargo
+
+install:
+  - if [ -z "$NO_ADD" ]; then rustup target add "$TARGET"; fi
 
 script:
-  - cargo build --verbose
-  - cargo test --verbose
+  - cargo build --verbose --target "$TARGET"
+  # Only run the targets if we are on the same OS.
+  - if [ "$RUN" == "1" ]; then cargo test --verbose --target "$TARGET"; fi
 
-notifications:
-  email: false
+env:
+  global:
+    # Travis CI servers make 2 cores available to processes via virtualization.
+    # See https://docs.travis-ci.com/user/reference/overview/
+    - NUM_CPUS_TEST_GET=2
+
+matrix:
+  include:
+    # Linux
+    # 32-bit requires multilib.
+    - env: TARGET=i686-unknown-linux-gnu RUN=1
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+    # 64-bit stable.
+    - env: TARGET=x86_64-unknown-linux-gnu RUN=1 NO_ADD=1
+      rust: stable
+    # 64-bit beta.
+    - env: TARGET=x86_64-unknown-linux-gnu RUN=1 NO_ADD=1
+      rust: beta
+    # 64-bit nightly.
+    - env: TARGET=x86_64-unknown-linux-gnu RUN=1 NO_ADD=1
+      rust: nightly
+    # Mac OS X
+    - os: osx
+      env: TARGET=i686-apple-darwin RUN=1
+    - os: osx
+      env: TARGET=x86_64-apple-darwin RUN=1 NO_ADD=1
+    # Android
+    # - for x86
+    - env: TARGET=i686-linux-android
+    - env: TARGET=x86_64-linux-android
+    # - for ARM
+    - env: TARGET=arm-linux-androideabi
+    - env: TARGET=aarch64-linux-android
+    # IOS
+    - os: osx
+      osx_image: xcode9
+      env: TARGET=i386-apple-ios
+    - os: osx
+      osx_image: xcode9
+      env: TARGET=x86_64-apple-ios
+    # FreeBSD
+    - env: TARGET=x86_64-unknown-freebsd
+    # Fuchsia
+    - env: TARGET=x86_64-unknown-fuchsia
+    # NetBSD
+    - env: TARGET=x86_64-unknown-netbsd
+    # Emscripten
+    - env: TARGET=asmjs-unknown-emscripten

@@ -9,19 +9,22 @@
 
 //! This module holds deprecated assets only.
 
+// Doesn't worth updating API here
+#![cfg_attr(feature="cargo-clippy", allow(needless_pass_by_value))]
+
 use super::*;
 
 /// Find the level runs within a line and return them in visual order.
 ///
 /// NOTE: This implementation is incomplete. The algorithm needs information about the text,
-/// including original BidiClass property of each character, to be able to perform correctly.
+/// including original `BidiClass` property of each character, to be able to perform correctly.
 /// Please see [`BidiInfo::visual_runs()`](../struct.BidiInfo.html#method.visual_runs) for the
 /// improved implementation.
 ///
 /// `line` is a range of bytes indices within `levels`.
 ///
-/// http://www.unicode.org/reports/tr9/#Reordering_Resolved_Levels
-#[deprecated(since="0.3.0", note="please use `BidiInfo::visual_runs()` instead.")]
+/// <http://www.unicode.org/reports/tr9/#Reordering_Resolved_Levels>
+#[deprecated(since = "0.3.0", note = "please use `BidiInfo::visual_runs()` instead.")]
 pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
     assert!(line.start <= levels.len());
     assert!(line.end <= levels.len());
@@ -30,20 +33,19 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
 
     // Find consecutive level runs.
     let mut start = line.start;
-    let mut level = levels[start];
-    let mut min_level = level;
-    let mut max_level = level;
+    let mut run_level = levels[start];
+    let mut min_level = run_level;
+    let mut max_level = run_level;
 
-    for i in (start + 1)..line.end {
-        let new_level = levels[i];
-        if new_level != level {
+    for (i, &new_level) in levels.iter().enumerate().take(line.end).skip(start + 1) {
+        if new_level != run_level {
             // End of the previous run, start of a new one.
             runs.push(start..i);
             start = i;
-            level = new_level;
+            run_level = new_level;
 
-            min_level = min(level, min_level);
-            max_level = max(level, max_level);
+            min_level = min(run_level, min_level);
+            max_level = max(run_level, max_level);
         }
     }
     runs.push(start..line.end);
@@ -51,7 +53,7 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
     let run_count = runs.len();
 
     // Re-order the odd runs.
-    // http://www.unicode.org/reports/tr9/#L2
+    // <http://www.unicode.org/reports/tr9/#L2>
 
     // Stop at the lowest *odd* level.
     min_level = min_level.new_lowest_ge_rtl().expect("Level error");
@@ -79,9 +81,9 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
 
             seq_start = seq_end;
         }
-        max_level
-            .lower(1)
-            .expect("Lowering embedding level below zero");
+        max_level.lower(1).expect(
+            "Lowering embedding level below zero",
+        );
     }
 
     runs

@@ -9,18 +9,29 @@ Test preset with no subcommand
   
   Pushed via `mach try syntax`
   preset saved, run with: --preset=foo
+
   $ ./mach try $testargs --preset foo
   Commit message:
   try: -b do -p linux -u mochitests -t none --tag foo
   
   Pushed via `mach try syntax`
+
   $ ./mach try syntax $testargs --preset foo
   Commit message:
   try: -b do -p linux -u mochitests -t none --tag foo
   
   Pushed via `mach try syntax`
+
   $ ./mach try $testargs --list-presets
   foo: -b do -p linux -u mochitests -t none --tag foo
+  $ unset EDITOR
+  $ ./mach try $testargs --edit-presets
+  error: must set the $EDITOR environment variable to use --edit-presets
+  $ export EDITOR=cat
+  $ ./mach try $testargs --edit-presets
+  [try]
+  foo = -b do -p linux -u mochitests -t none --tag foo
+  
 
 Test preset with syntax subcommand
 
@@ -30,19 +41,27 @@ Test preset with syntax subcommand
   
   Pushed via `mach try syntax`
   preset saved, run with: --preset=bar
+
   $ ./mach try syntax $testargs --preset bar
   Commit message:
   try: -b do -p win32 -u none -t all --tag bar
   
   Pushed via `mach try syntax`
+
   $ ./mach try $testargs --preset bar
   Commit message:
   try: -b do -p win32 -u none -t all --tag bar
   
   Pushed via `mach try syntax`
+
   $ ./mach try syntax $testargs --list-presets
   foo: -b do -p linux -u mochitests -t none --tag foo
   bar: -b do -p win32 -u none -t all --tag bar
+  $ ./mach try syntax $testargs --edit-presets
+  [try]
+  foo = -b do -p linux -u mochitests -t none --tag foo
+  bar = -b do -p win32 -u none -t all --tag bar
+  
 
 Test preset with fuzzy subcommand
 
@@ -85,3 +104,14 @@ Test preset with fuzzy subcommand
   
   $ ./mach try fuzzy $testargs --list-presets
   baz: 'baz
+
+  $ ./mach try fuzzy $testargs --list-presets
+  baz: 'baz
+  $ ./mach try fuzzy $testargs --edit-presets
+  [try]
+  foo = -b do -p linux -u mochitests -t none --tag foo
+  bar = -b do -p win32 -u none -t all --tag bar
+  
+  [fuzzy]
+  baz = 'baz
+  

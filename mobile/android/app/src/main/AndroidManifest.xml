@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is not the real manifest; it's a stub to satisfy the
+     Android-Gradle plugin.  The real manifest is generated from
+     mobile/android/base/AndroidManifest.xml.in. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.mozilla.gecko">
+</manifest>

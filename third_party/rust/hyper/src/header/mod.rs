@@ -91,6 +91,7 @@ use typeable::Typeable;
 use unicase::UniCase;
 
 use self::internals::{Item, VecMap, Entry};
+use self::sealed::Sealed;
 
 pub use self::shared::*;
 pub use self::common::*;
@@ -215,15 +216,29 @@ impl<'a, 'b> fmt::Write for NewlineReplacer<'a, 'b> {
     }
 }
 
-#[doc(hidden)]
-pub trait HeaderClone {
-    fn clone_box(&self) -> Box<HeaderFormat + Send + Sync>;
-}
+/// Internal implementation detail.
+///
+/// This trait is automatically implemented for all types that implement
+/// `HeaderFormat + Clone`. No methods are exposed, and so is not useful
+/// outside this crate.
+pub trait HeaderClone: Sealed {}
+impl<T: Sealed> HeaderClone for T {}
 
-impl<T: HeaderFormat + Clone> HeaderClone for T {
-    #[inline]
-    fn clone_box(&self) -> Box<HeaderFormat + Send + Sync> {
-        Box::new(self.clone())
+mod sealed {
+    use super::HeaderFormat;
+
+    #[doc(hidden)]
+    pub trait Sealed {
+        #[doc(hidden)]
+        fn clone_box(&self) -> Box<HeaderFormat + Send + Sync>;
+    }
+
+    #[doc(hidden)]
+    impl<T: HeaderFormat + Clone> Sealed for T {
+        #[inline]
+        fn clone_box(&self) -> Box<HeaderFormat + Send + Sync> {
+            Box::new(self.clone())
+        }
     }
 }
 
@@ -273,7 +288,7 @@ impl Headers {
         for header in raw {
             trace!("raw header: {:?}={:?}", header.name, &header.value[..]);
             let name = UniCase(CowStr(Cow::Owned(header.name.to_owned())));
-            let mut item = match headers.data.entry(name) {
+            let item = match headers.data.entry(name) {
                 Entry::Vacant(entry) => entry.insert(Item::new_raw(vec![])),
                 Entry::Occupied(entry) => entry.into_mut()
             };
@@ -525,14 +540,12 @@ impl<'a> FromIterator<HeaderView<'a>> for Headers {
     }
 }
 
-deprecated! {
-    #[deprecated(note="The semantics of formatting a HeaderFormat directly are not clear")]
-    impl<'a> fmt::Display for &'a (HeaderFormat + Send + Sync) {
-        #[inline]
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let mut multi = MultilineFormatter(Multi::Join(true, f));
-            self.fmt_multi_header(&mut multi)
-        }
+#[deprecated(note="The semantics of formatting a HeaderFormat directly are not clear")]
+impl<'a> fmt::Display for &'a (HeaderFormat + Send + Sync) {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut multi = MultilineFormatter(Multi::Join(true, f));
+        self.fmt_multi_header(&mut multi)
     }
 }
 
@@ -543,10 +556,8 @@ deprecated! {
 ///
 /// Note: This may not necessarily be the value written to stream, such
 /// as with the SetCookie header.
-deprecated! {
-    #[deprecated(note="The semantics of formatting a HeaderFormat directly are not clear")]
-    pub struct HeaderFormatter<'a, H: HeaderFormat>(pub &'a H);
-}
+#[deprecated(note="The semantics of formatting a HeaderFormat directly are not clear")]
+pub struct HeaderFormatter<'a, H: HeaderFormat>(pub &'a H);
 
 #[allow(deprecated)]
 impl<'a, H: HeaderFormat> fmt::Display for HeaderFormatter<'a, H> {

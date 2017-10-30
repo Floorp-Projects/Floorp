@@ -1,0 +1,21 @@
+[package]
+name = "base64"
+version = "0.5.2"
+authors = ["Alice Maz <alice@alicemaz.com>", "Marshall Pierce <marshall@mpierce.org>"]
+description = "encodes and decodes base64 as bytes or utf8"
+repository = "https://github.com/alicemaz/rust-base64"
+documentation = "https://github.com/alicemaz/rust-base64/blob/master/README.md"
+readme = "README.md"
+keywords = ["base64", "utf8", "encode", "decode"]
+categories = ["encoding"]
+license = "MIT"
+
+[dependencies]
+byteorder = "1.0.0"
+
+[dev-dependencies]
+rand = "=0.3.15"
+
+[profile.bench]
+# Uncomment when using `perf record`
+#debug = true

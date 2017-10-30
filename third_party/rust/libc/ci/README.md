@@ -39,7 +39,7 @@ running tests. The triples tested are:
   * `{i686,x86_64}-pc-windows-{msvc,gnu}`
 * Travis
   * `{i686,x86_64,mips,aarch64}-unknown-linux-gnu`
-  * `x86_64-unknown-linux-musl`
+  * `{x86_64,aarch64}-unknown-linux-musl`
   * `arm-unknown-linux-gnueabihf`
   * `arm-linux-androideabi`
   * `{i686,x86_64}-apple-{darwin,ios}`

@@ -52,6 +52,7 @@ add_task(async function() {
 
     // scroll the checkbox into the viewport and click checkbox
     checkbox.scrollIntoView();
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     EventUtils.synthesizeMouseAtCenter(checkbox, {}, gBrowser.selectedBrowser.contentWindow);
 
     // check that both settings are now turned on or off

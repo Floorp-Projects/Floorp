@@ -218,7 +218,7 @@ var PocketPageAction = {
     }
     let {BrowserPageActions} = browserWindow;
     let urlbarNode = browserWindow.document.getElementById(
-      BrowserPageActions._urlbarButtonNodeIDForActionID(this.pageAction.id)
+      BrowserPageActions.urlbarButtonNodeIDForActionID(this.pageAction.id)
     );
     if (!urlbarNode) {
       return;

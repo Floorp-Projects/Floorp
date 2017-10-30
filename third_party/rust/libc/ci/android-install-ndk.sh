@@ -11,8 +11,8 @@
 
 set -ex
 
-curl -O https://dl.google.com/android/repository/android-ndk-r13b-linux-x86_64.zip
-unzip -q android-ndk-r13b-linux-x86_64.zip
+curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
+unzip -q android-ndk-r15b-linux-x86_64.zip
 
 case "$1" in
   aarch64)
@@ -28,9 +28,10 @@ case "$1" in
     ;;
 esac;
 
-android-ndk-r13b/build/tools/make_standalone_toolchain.py \
+android-ndk-r15b/build/tools/make_standalone_toolchain.py \
+        --unified-headers \
         --install-dir /android/ndk-$1 \
         --arch $arch \
         --api 24
 
-rm -rf ./android-ndk-r13b-linux-x86_64.zip ./android-ndk-r13b
+rm -rf ./android-ndk-r15b-linux-x86_64.zip ./android-ndk-r15b

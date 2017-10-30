@@ -5,7 +5,6 @@ module.exports = {
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": "error",
     "mozilla/no-aArgs": "error",
-    "mozilla/no-cpows-in-tests": "error",
     "mozilla/var-only-at-top-level": "error",
 
     "valid-jsdoc": ["error", {

@@ -507,7 +507,7 @@ private:
 };
 
 // Set to true once the allocator has been initialized.
-static bool malloc_initialized = false;
+static mozilla::Atomic<bool> malloc_initialized(false);
 
 #if defined(XP_WIN)
 // No init lock for Windows.

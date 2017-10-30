@@ -23,7 +23,7 @@ const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards
 const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
 const MANAGE_ADDRESSES_KEYWORDS = ["manageAddressesTitle", "addNewAddressTitle"];
 const EDIT_ADDRESS_KEYWORDS = [
-  "givenName", "additionalName", "familyName", "organization", "streetAddress",
+  "givenName", "additionalName", "familyName", "organization2", "streetAddress",
   "state", "province", "city", "country", "zip", "postalCode", "email", "tel",
 ];
 const MANAGE_CREDITCARDS_KEYWORDS = ["manageCreditCardsTitle", "addNewCreditCardTitle", "showCreditCardsBtnLabel"];

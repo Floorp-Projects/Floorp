@@ -4,7 +4,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from ..cli import BaseTryParser
 from ..vcs import VCSHelper
+
+
+class SyntaxParser(BaseTryParser):
+    name = 'empty'
+    common_groups = ['push']
 
 
 def run_empty_try(message='{msg}', push=True, **kwargs):
