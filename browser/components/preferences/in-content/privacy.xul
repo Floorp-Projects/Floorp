@@ -150,9 +150,6 @@
   <preference id="browser.cache.disk.capacity"
               name="browser.cache.disk.capacity"
               type="int"/>
-  <preference id="browser.offline-apps.notify"
-              name="browser.offline-apps.notify"
-              type="bool"/>
 
   <preference id="browser.cache.disk.smart_size.enabled"
               name="browser.cache.disk.smart_size.enabled"
@@ -849,52 +846,6 @@
                                 &devmgr.button.load.label;
                                 &devmgr.button.unload.label;"/>
       </hbox>
-    </vbox>
-  </hbox>
-</groupbox>
-
-<!-- Offline apps -->
-<groupbox id="offlineGroup" data-category="panePrivacy" hidden="true" data-hidden-from-search="true">
-  <caption><label>&offlineStorage2.label;</label></caption>
-
-  <hbox align="center">
-    <label id="actualAppCacheSize" flex="1"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="clearOfflineAppCacheButton"
-              class="accessory-button"
-              icon="clear"
-              label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
-    </hbox>
-  </hbox>
-  <hbox align="center">
-    <checkbox id="offlineNotify"
-              label="&offlineStorageNotify.label;" accesskey="&offlineStorageNotify.accesskey;"
-              preference="browser.offline-apps.notify"
-              onsyncfrompreference="return gPrivacyPane.readOfflineNotify();"
-              flex="1" />
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="offlineNotifyExceptions"
-              class="accessory-button"
-              label="&offlineStorageNotifyExceptions.label;"
-              accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
-    </hbox>
-  </hbox>
-  <hbox>
-    <vbox flex="1">
-      <label id="offlineAppsListLabel">&offlineAppsList3.label;</label>
-      <listbox id="offlineAppsList"
-              flex="1"
-              aria-labelledby="offlineAppsListLabel">
-      </listbox>
-    </vbox>
-    <vbox pack="end">
-      <button id="offlineAppsListRemove"
-              class="accessory-button"
-              disabled="true"
-              label="&offlineAppsListRemove.label;"
-              accesskey="&offlineAppsListRemove.accesskey;"/>
     </vbox>
   </hbox>
 </groupbox>

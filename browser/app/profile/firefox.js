@@ -739,10 +739,6 @@ pref("browser.preferences.instantApply", true);
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
 
-// We prefer the storage manager (see browser.storageManager.enabled)
-// over the old offlineGroup UI. Removing the offline group UI is bug 1399808.
-pref("browser.preferences.offlineGroup.enabled", false);
-
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
 pref("browser.download.show_plugins_in_list", true);
