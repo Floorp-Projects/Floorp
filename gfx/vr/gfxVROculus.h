@@ -36,7 +36,7 @@ enum class OculusControllerAxisType : uint16_t {
 
 class VROculusSession
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VROculusSession);
+  NS_INLINE_DECL_REFCOUNTING(VROculusSession);
   friend class VRDisplayOculus;
 public:
   VROculusSession();
