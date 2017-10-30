@@ -1341,15 +1341,7 @@ var gMainPane = {
 
   // nsISupports
 
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIObserver) ||
-      aIID.equals(Ci.nsIDOMEventListener ||
-        aIID.equals(Ci.nsISupports)))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsIDOMEventListener]),
 
   // nsIObserver
 
