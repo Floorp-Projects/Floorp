@@ -43,13 +43,13 @@ RenderBufferTextureHost::~RenderBufferTextureHost()
   MOZ_COUNT_DTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);
 }
 
-bool
-RenderBufferTextureHost::Lock()
+wr::WrExternalImage
+RenderBufferTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
 {
   if (!mLocked) {
     if (!GetBuffer()) {
       // We hit some problems to get the shmem.
-      return false;
+      return RawDataToWrExternalImage(nullptr, 0);
     }
     if (mFormat != gfx::SurfaceFormat::YUV) {
       mSurface = gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
@@ -57,11 +57,11 @@ RenderBufferTextureHost::Lock()
                                                                mSize,
                                                                mFormat);
       if (NS_WARN_IF(!mSurface)) {
-        return false;
+        return RawDataToWrExternalImage(nullptr, 0);
       }
       if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mMap))) {
         mSurface = nullptr;
-        return false;
+        return RawDataToWrExternalImage(nullptr, 0);
       }
     } else {
       const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
@@ -80,19 +80,20 @@ RenderBufferTextureHost::Lock()
                                                                  gfx::SurfaceFormat::A8);
       if (NS_WARN_IF(!mYSurface || !mCbSurface || !mCrSurface)) {
         mYSurface = mCbSurface = mCrSurface = nullptr;
-        return false;
+        return RawDataToWrExternalImage(nullptr, 0);
       }
       if (NS_WARN_IF(!mYSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mYMap) ||
                      !mCbSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCbMap) ||
                      !mCrSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCrMap))) {
         mYSurface = mCbSurface = mCrSurface = nullptr;
-        return false;
+        return RawDataToWrExternalImage(nullptr, 0);
       }
     }
     mLocked = true;
   }
 
-  return true;
+  RenderBufferData data = GetBufferDataForRender(aChannelIndex);
+  return RawDataToWrExternalImage(data.mData, data.mBufferSize);
 }
 
 void
