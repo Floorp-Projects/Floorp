@@ -2542,11 +2542,11 @@ Parser<FullParseHandler, char16_t>::standaloneFunction(HandleFunction fun,
 
     // Skip prelude.
     TokenKind tt;
-    if (!tokenStream.getToken(&tt))
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
     if (asyncKind == AsyncFunction) {
         MOZ_ASSERT(tt == TOK_ASYNC);
-        if (!tokenStream.getToken(&tt))
+        if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
     }
     MOZ_ASSERT(tt == TOK_FUNCTION);
@@ -2863,10 +2863,10 @@ ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
  */
 template <class ParseHandler, typename CharT>
 bool
-Parser<ParseHandler, CharT>::matchOrInsertSemicolonHelper(TokenStream::Modifier modifier)
+Parser<ParseHandler, CharT>::matchOrInsertSemicolonHelper()
 {
     TokenKind tt = TOK_EOF;
-    if (!tokenStream.peekTokenSameLine(&tt, modifier))
+    if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
         /*
@@ -2891,30 +2891,26 @@ Parser<ParseHandler, CharT>::matchOrInsertSemicolonHelper(TokenStream::Modifier 
         }
 
         /* Advance the scanner for proper error location reporting. */
-        tokenStream.consumeKnownToken(tt, modifier);
+        tokenStream.consumeKnownToken(tt, TokenStream::Operand);
         error(JSMSG_SEMI_BEFORE_STMNT);
         return false;
     }
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_SEMI, modifier))
-        return false;
-    if (!matched && modifier == TokenStream::None)
-        tokenStream.addModifierException(TokenStream::OperandIsNone);
-    return true;
+    return tokenStream.matchToken(&matched, TOK_SEMI, TokenStream::Operand);
 }
 
 template <class ParseHandler, typename CharT>
 bool
 Parser<ParseHandler, CharT>::matchOrInsertSemicolonAfterExpression()
 {
-    return matchOrInsertSemicolonHelper(TokenStream::None);
+    return matchOrInsertSemicolonHelper();
 }
 
 template <class ParseHandler, typename CharT>
 bool
 Parser<ParseHandler, CharT>::matchOrInsertSemicolonAfterNonExpression()
 {
-    return matchOrInsertSemicolonHelper(TokenStream::Operand);
+    return matchOrInsertSemicolonHelper();
 }
 
 template <class ParseHandler, typename CharT>
@@ -3304,7 +3300,7 @@ Parser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling yieldH
     handler.addList(nodeList, pn);
 
     TokenKind tt;
-    if (!tokenStream.getToken(&tt))
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_RC) {
         error(JSMSG_TEMPLSTR_UNTERM_EXPR);
@@ -4191,10 +4187,12 @@ typename ParseHandler::Node
 Parser<ParseHandler, CharT>::condition(InHandling inHandling, YieldHandling yieldHandling)
 {
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
+
     Node pn = exprInParens(inHandling, yieldHandling, TripledotProhibited);
     if (!pn)
         return null();
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
+
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_COND);
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isUnparenthesizedAssignment(pn)) {
@@ -4580,7 +4578,6 @@ Parser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind, YieldHand
         return null();
 
      uint32_t index = 0;
-     TokenStream::Modifier modifier = TokenStream::Operand;
      for (; ; index++) {
          if (index >= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
              error(JSMSG_ARRAY_INIT_TOO_BIG);
@@ -4588,7 +4585,7 @@ Parser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind, YieldHand
          }
 
          TokenKind tt;
-         if (!tokenStream.getToken(&tt, TokenStream::Operand))
+         if (!tokenStream.getToken(&tt))
              return null();
 
          if (tt == TOK_RB) {
@@ -4603,7 +4600,7 @@ Parser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind, YieldHand
              uint32_t begin = pos().begin;
 
              TokenKind tt;
-             if (!tokenStream.getToken(&tt, TokenStream::Operand))
+             if (!tokenStream.getToken(&tt))
                  return null();
 
              Node inner = bindingIdentifierOrPattern(kind, yieldHandling, tt);
@@ -4635,10 +4632,9 @@ Parser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind, YieldHand
              bool matched;
              if (!tokenStream.matchToken(&matched, TOK_COMMA))
                  return null();
-             if (!matched) {
-                 modifier = TokenStream::None;
+             if (!matched)
                  break;
-             }
+
              if (tt == TOK_TRIPLEDOT) {
                  error(JSMSG_REST_WITH_COMMA);
                  return null();
@@ -4646,7 +4642,7 @@ Parser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind, YieldHand
          }
      }
 
-     MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, modifier,
+     MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, TokenStream::None,
                                       reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                            JSMSG_BRACKET_OPENED, begin));
 
@@ -4766,7 +4762,7 @@ Parser<ParseHandler, CharT>::declarationPattern(Node decl, DeclarationKind declK
         }
     }
 
-    MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
+    MUST_MATCH_TOKEN_MOD(TOK_ASSIGN, TokenStream::Operand, JSMSG_BAD_DESTRUCT_DECL);
 
     Node init = assignExpr(forHeadKind ? InProhibited : InAllowed,
                            yieldHandling, TripledotProhibited);
@@ -4774,21 +4770,6 @@ Parser<ParseHandler, CharT>::declarationPattern(Node decl, DeclarationKind declK
         return null();
 
     handler.checkAndSetIsDirectRHSAnonFunction(init);
-
-    if (forHeadKind) {
-        // For for(;;) declarations, consistency with |for (;| parsing requires
-        // that the ';' first be examined as Operand, even though absence of a
-        // binary operator (examined with modifier None) terminated |init|.
-        // For all other declarations, through ASI's infinite majesty, a next
-        // token on a new line would begin an expression.
-        // Similar to the case in initializerInNameDeclaration(), we need to
-        // peek at the next token when assignExpr() is a lazily parsed arrow
-        // function.
-        TokenKind ignored;
-        if (!tokenStream.peekToken(&ignored))
-            return null();
-        tokenStream.addModifierException(TokenStream::OperandIsNone);
-    }
 
     return handler.newAssignment(PNK_ASSIGN, pattern, init);
 }
@@ -4816,64 +4797,39 @@ Parser<ParseHandler, CharT>::initializerInNameDeclaration(Node decl, Node bindin
 
     handler.checkAndSetIsDirectRHSAnonFunction(initializer);
 
-    if (forHeadKind) {
-        if (initialDeclaration) {
-            bool isForIn, isForOf;
-            if (!matchInOrOf(&isForIn, &isForOf))
-                return false;
+    if (forHeadKind && initialDeclaration) {
+        bool isForIn, isForOf;
+        if (!matchInOrOf(&isForIn, &isForOf))
+            return false;
 
-            // An initialized declaration can't appear in a for-of:
-            //
-            //   for (var/let/const x = ... of ...); // BAD
-            if (isForOf) {
-                errorAt(initializerOffset, JSMSG_OF_AFTER_FOR_LOOP_DECL);
-                return false;
-            }
-
-            if (isForIn) {
-                // Lexical declarations in for-in loops can't be initialized:
-                //
-                //   for (let/const x = ... in ...); // BAD
-                if (DeclarationKindIsLexical(declKind)) {
-                    errorAt(initializerOffset, JSMSG_IN_AFTER_LEXICAL_FOR_DECL);
-                    return false;
-                }
-
-                // This leaves only initialized for-in |var| declarations.  ES6
-                // forbids these; later ES un-forbids in non-strict mode code.
-                *forHeadKind = PNK_FORIN;
-                if (!strictModeErrorAt(initializerOffset, JSMSG_INVALID_FOR_IN_DECL_WITH_INIT))
-                    return false;
-
-                *forInOrOfExpression = expressionAfterForInOrOf(PNK_FORIN, yieldHandling);
-                if (!*forInOrOfExpression)
-                    return false;
-            } else {
-                *forHeadKind = PNK_FORHEAD;
-            }
-        } else {
-            MOZ_ASSERT(*forHeadKind == PNK_FORHEAD);
-
-            // In the very rare case of Parser::assignExpr consuming an
-            // ArrowFunction with block body, when full-parsing with the arrow
-            // function being a skipped lazy inner function, we don't have
-            // lookahead for the next token.  Do a one-off peek here to be
-            // consistent with what Parser::matchForInOrOf does in the other
-            // arm of this |if|.
-            //
-            // If you think this all sounds pretty code-smelly, you're almost
-            // certainly correct.
-            TokenKind ignored;
-            if (!tokenStream.peekToken(&ignored))
-                return false;
+        // An initialized declaration can't appear in a for-of:
+        //
+        //   for (var/let/const x = ... of ...); // BAD
+        if (isForOf) {
+            errorAt(initializerOffset, JSMSG_OF_AFTER_FOR_LOOP_DECL);
+            return false;
         }
 
-        if (*forHeadKind == PNK_FORHEAD) {
-            // Per Parser::forHeadStart, the semicolon in |for (;| is
-            // ultimately gotten as Operand.  But initializer expressions
-            // terminate with the absence of an operator gotten as None,
-            // so we need an exception.
-            tokenStream.addModifierException(TokenStream::OperandIsNone);
+        if (isForIn) {
+            // Lexical declarations in for-in loops can't be initialized:
+            //
+            //   for (let/const x = ... in ...); // BAD
+            if (DeclarationKindIsLexical(declKind)) {
+                errorAt(initializerOffset, JSMSG_IN_AFTER_LEXICAL_FOR_DECL);
+                return false;
+            }
+
+            // This leaves only initialized for-in |var| declarations.  ES6
+            // forbids these; later ES un-forbids in non-strict mode code.
+            *forHeadKind = PNK_FORIN;
+            if (!strictModeErrorAt(initializerOffset, JSMSG_INVALID_FOR_IN_DECL_WITH_INIT))
+                return false;
+
+            *forInOrOfExpression = expressionAfterForInOrOf(PNK_FORIN, yieldHandling);
+            if (!*forInOrOfExpression)
+                return false;
+        } else {
+            *forHeadKind = PNK_FORHEAD;
         }
     }
 
@@ -4920,8 +4876,6 @@ Parser<ParseHandler, CharT>::declarationName(Node decl, DeclarationKind declKind
             return null();
         }
     } else {
-        tokenStream.addModifierException(TokenStream::NoneIsOperand);
-
         if (initialDeclaration && forHeadKind) {
             bool isForIn, isForOf;
             if (!matchInOrOf(&isForIn, &isForOf))
@@ -4990,7 +4944,7 @@ Parser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
     if (!decl)
         return null();
 
-    bool matched;
+    bool moreDeclarations;
     bool initialDeclaration = true;
     do {
         MOZ_ASSERT_IF(!initialDeclaration && forHeadKind,
@@ -5010,14 +4964,16 @@ Parser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
 
         handler.addList(decl, binding);
 
+        // If we have a for-in/of loop, the above call matches the entirety
+        // of the loop head (up to the closing parenthesis).
         if (forHeadKind && *forHeadKind != PNK_FORHEAD)
             break;
 
         initialDeclaration = false;
 
-        if (!tokenStream.matchToken(&matched, TOK_COMMA))
+        if (!tokenStream.matchToken(&moreDeclarations, TOK_COMMA, TokenStream::Operand))
             return null();
-    } while (matched);
+    } while (moreDeclarations);
 
     return decl;
 }
@@ -6050,7 +6006,7 @@ bool
 Parser<ParseHandler, CharT>::matchInOrOf(bool* isForInp, bool* isForOfp)
 {
     TokenKind tt;
-    if (!tokenStream.getToken(&tt))
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
 
     *isForInp = tt == TOK_IN;
@@ -6065,7 +6021,7 @@ Parser<ParseHandler, CharT>::matchInOrOf(bool* isForInp, bool* isForOfp)
 template <class ParseHandler, typename CharT>
 bool
 Parser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
-                                   IteratorKind iterKind,
+                                          IteratorKind iterKind,
                                           ParseNodeKind* forHeadKind,
                                           Node* forInitialPart,
                                           Maybe<ParseContext::Scope>& forLoopLexicalScope,
@@ -6157,14 +6113,12 @@ Parser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         return false;
 
     // If we don't encounter 'in'/'of', we have a for(;;) loop.  We've handled
-    // the init expression; the caller handles the rest.  Allow the Operand
-    // modifier when regetting: Operand must be used to examine the ';' in
-    // |for (;|, and our caller handles this case and that.
+    // the init expression; the caller handles the rest.
     if (!isForIn && !isForOf) {
         if (!possibleError.checkForExpressionError())
             return false;
+
         *forHeadKind = PNK_FORHEAD;
-        tokenStream.addModifierException(TokenStream::OperandIsNone);
         return true;
     }
 
@@ -6326,18 +6280,15 @@ Parser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
             return null();
 
         Node test;
-        TokenStream::Modifier mod;
         if (tt == TOK_SEMI) {
             test = null();
-            mod = TokenStream::Operand;
         } else {
             test = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!test)
                 return null();
-            mod = TokenStream::None;
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_SEMI, mod, JSMSG_SEMI_AFTER_FOR_COND);
+        MUST_MATCH_TOKEN_MOD(TOK_SEMI, TokenStream::Operand, JSMSG_SEMI_AFTER_FOR_COND);
 
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
@@ -6345,15 +6296,13 @@ Parser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         Node update;
         if (tt == TOK_RP) {
             update = null();
-            mod = TokenStream::Operand;
         } else {
             update = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!update)
                 return null();
-            mod = TokenStream::None;
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_RP, mod, JSMSG_PAREN_AFTER_FOR_CTRL);
+        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
 
         TokenPos headPos(begin, pos().end);
         forHead = handler.newForHead(init, test, update, headPos);
@@ -6376,9 +6325,9 @@ Parser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         }
 
         // Parser::declaration consumed everything up to the closing ')'.  That
-        // token follows an {Assignment,}Expression, so the next token must be
-        // consumed as if an operator continued the expression, i.e. as None.
-        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::None, JSMSG_PAREN_AFTER_FOR_CTRL);
+        // token follows an {Assignment,}Expression and so must be interpreted
+        // as an operand to be consistent with normal expression tokenizing.
+        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
 
         TokenPos headPos(begin, pos().end);
         forHead = handler.newForInOrOfHead(headKind, target, iteratedExpr, headPos);
@@ -6413,7 +6362,7 @@ Parser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
     if (!discriminant)
         return null();
 
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_SWITCH);
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_SWITCH);
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_SWITCH);
 
     ParseContext::Statement stmt(pc, StatementKind::Switch);
@@ -6456,7 +6405,7 @@ Parser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
             return null();
         }
 
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_AFTER_CASE);
+        MUST_MATCH_TOKEN_MOD(TOK_COLON, TokenStream::Operand, JSMSG_COLON_AFTER_CASE);
 
         Node body = handler.newStatementList(pos());
         if (!body)
@@ -6726,10 +6675,12 @@ Parser<ParseHandler, CharT>::withStatement(YieldHandling yieldHandling)
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
+
     Node objectExpr = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
     if (!objectExpr)
         return null();
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
+
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_WITH);
 
     Node innerBlock;
     {
@@ -6959,7 +6910,7 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
              * catchguard syntax.
              */
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_IF))
+            if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
                 return null();
             if (matched) {
                 catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
@@ -6967,7 +6918,7 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
                     return null();
             }
 #endif
-            MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
+            MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
 
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
 
@@ -7794,7 +7745,7 @@ Parser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yieldHand
         return null();
 
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_COMMA))
+    if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
         return null();
     if (!matched)
         return pn;
@@ -7824,7 +7775,6 @@ Parser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yieldHand
                 }
 
                 tokenStream.ungetToken();  // put back right paren
-                tokenStream.addModifierException(TokenStream::NoneIsOperand);
                 break;
             }
         }
@@ -7849,7 +7799,7 @@ Parser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yieldHand
 
         handler.addList(seq, pn);
 
-        if (!tokenStream.matchToken(&matched, TOK_COMMA))
+        if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
             return null();
         if (!matched)
             break;
@@ -7978,7 +7928,11 @@ Parser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling yieldHa
         MOZ_ASSERT(depth <= PRECEDENCE_CLASSES);
     }
 
+    // When the next token is no longer a binary operator, it's potentially the
+    // start of an expression.  Add a modifier exception so that the next token
+    // modifier can be Operand.
     tokenStream.ungetToken();
+    tokenStream.addModifierException(TokenStream::OperandIsNone);
 
     MOZ_ASSERT(depth == 0);
     return pn;
@@ -8153,13 +8107,6 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
             error(JSMSG_LINE_BREAK_BEFORE_ARROW);
             return null();
         }
-        tokenStream.consumeKnownToken(TOK_ARROW);
-
-        bool isBlock = false;
-        if (!tokenStream.peekToken(&next, TokenStream::Operand))
-            return null();
-        if (next == TOK_LC)
-            isBlock = true;
 
         tokenStream.seek(start);
 
@@ -8190,42 +8137,8 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
         if (!pn)
             return null();
 
-        Node arrowFunc = functionDefinition(pn, toStringStart, inHandling, yieldHandling, nullptr,
-                                            Arrow, NotGenerator, asyncKind);
-        if (!arrowFunc)
-            return null();
-
-        if (isBlock) {
-            // This arrow function could be a non-trailing member of a comma
-            // expression or a semicolon terminating a full expression.  If so,
-            // the next token is that comma/semicolon, gotten with None:
-            //
-            //   a => {}, b; // as if (a => {}), b;
-            //   a => {};
-            //
-            // But if this arrow function ends a statement, ASI permits the
-            // next token to start an expression statement.  In that case the
-            // next token must be gotten as Operand:
-            //
-            //   a => {} // complete expression statement
-            //   /x/g;   // regular expression as a statement, *not* division
-            //
-            // Getting the second case right requires the first token-peek
-            // after the arrow function use Operand, and that peek must occur
-            // before Parser::expr() looks for a comma.  Do so here, then
-            // immediately add the modifier exception needed for the first
-            // case.
-            //
-            // Note that the second case occurs *only* if the arrow function
-            // has block body.  An arrow function not ending in such, ends in
-            // another AssignmentExpression that we can inductively assume was
-            // peeked consistently.
-            TokenKind ignored;
-            if (!tokenStream.peekToken(&ignored, TokenStream::Operand))
-                return null();
-            tokenStream.addModifierException(TokenStream::NoneIsOperand);
-        }
-        return arrowFunc;
+        return functionDefinition(pn, toStringStart, inHandling, yieldHandling, nullptr,
+                                  Arrow, NotGenerator, asyncKind);
       }
 
       default:
@@ -8236,7 +8149,9 @@ Parser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandling yie
         } else {
             possibleErrorInner.transferErrorsTo(possibleError);
         }
+
         tokenStream.ungetToken();
+        tokenStream.addModifierException(TokenStream::OperandIsNone);
         return lhs;
     }
 
@@ -8536,7 +8451,7 @@ Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
     if (!comp)
         return null();
 
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_IN_PAREN);
 
     uint32_t end = pos().end;
     handler.setBeginPosition(comp, begin);
@@ -8605,7 +8520,7 @@ Parser<ParseHandler, CharT>::comprehensionFor(GeneratorKind comprehensionKind)
     if (!rhs)
         return null();
 
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_OF_ITERABLE);
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_OF_ITERABLE);
 
     TokenPos headPos(begin, pos().end);
 
@@ -8654,7 +8569,7 @@ Parser<ParseHandler, CharT>::comprehensionIf(GeneratorKind comprehensionKind)
     Node cond = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
     if (!cond)
         return null();
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
+    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_COND);
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isUnparenthesizedAssignment(cond)) {
@@ -8735,7 +8650,7 @@ Parser<ParseHandler, CharT>::arrayComprehension(uint32_t begin)
     if (!inner)
         return null();
 
-    MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
+    MUST_MATCH_TOKEN_MOD(TOK_RB, TokenStream::Operand, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
 
     Node comp = handler.newList(PNK_ARRAYCOMP, inner);
     if (!comp)
@@ -8945,7 +8860,7 @@ Parser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
             if (!propExpr)
                 return null();
 
-            MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
+            MUST_MATCH_TOKEN_MOD(TOK_RB, TokenStream::Operand, JSMSG_BRACKET_IN_INDEX);
 
             if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
                 error(JSMSG_BAD_SUPERPROP, "member");
@@ -9451,9 +9366,7 @@ Parser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
     } else {
         tokenStream.ungetToken();
 
-        uint32_t index = 0;
-        TokenStream::Modifier modifier = TokenStream::Operand;
-        for (; ; index++) {
+        for (uint32_t index = 0; ; index++) {
             if (index >= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
                 error(JSMSG_ARRAY_INIT_TOO_BIG);
                 return null();
@@ -9469,7 +9382,10 @@ Parser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
                 tokenStream.consumeKnownToken(TOK_COMMA, TokenStream::Operand);
                 if (!handler.addElision(literal, pos()))
                     return null();
-            } else if (tt == TOK_TRIPLEDOT) {
+                continue;
+            }
+
+            if (tt == TOK_TRIPLEDOT) {
                 tokenStream.consumeKnownToken(TOK_TRIPLEDOT, TokenStream::Operand);
                 uint32_t begin = pos().begin;
 
@@ -9510,24 +9426,21 @@ Parser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
                 handler.addArrayElement(literal, element);
             }
 
-            if (tt != TOK_COMMA) {
-                /* If we didn't already match TOK_COMMA in above case. */
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_COMMA))
-                    return null();
-                if (!matched) {
-                    modifier = TokenStream::None;
-                    break;
-                }
-                if (tt == TOK_TRIPLEDOT && possibleError)
-                    possibleError->setPendingDestructuringErrorAt(pos(), JSMSG_REST_WITH_COMMA);
-            }
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+                return null();
+            if (!matched)
+                break;
+
+            if (tt == TOK_TRIPLEDOT && possibleError)
+                possibleError->setPendingDestructuringErrorAt(pos(), JSMSG_REST_WITH_COMMA);
         }
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, modifier,
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                               JSMSG_BRACKET_OPENED, begin));
     }
+
     handler.setEndPosition(literal, pos().end);
     return literal;
 }
@@ -9738,6 +9651,8 @@ Parser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHandling,
                                                   const Maybe<DeclarationKind>& maybeDecl,
                                                   Node literal)
 {
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LB));
+
     uint32_t begin = pos().begin;
 
     if (maybeDecl) {
@@ -10117,7 +10032,7 @@ Parser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         if (next == TOK_RP) {
             // Not valid expression syntax, but this is valid in an arrow function
             // with no params: `() => body`.
-            tokenStream.consumeKnownToken(next, TokenStream::Operand);
+            tokenStream.consumeKnownToken(TOK_RP, TokenStream::Operand);
 
             if (!tokenStream.peekToken(&next))
                 return null();
@@ -10142,7 +10057,7 @@ Parser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed, possibleError);
         if (!expr)
             return null();
-        MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
+        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_IN_PAREN);
         return handler.parenthesize(expr);
       }
 
