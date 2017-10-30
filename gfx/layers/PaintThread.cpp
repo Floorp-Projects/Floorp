@@ -56,6 +56,11 @@ struct MOZ_STACK_CLASS AutoCapturedPaintSetup
   RefPtr<CompositorBridgeChild> mBridge;
 };
 
+PaintThread::PaintThread()
+  : mInAsyncPaintGroup(false)
+{
+}
+
 void
 PaintThread::Release()
 {
@@ -145,6 +150,14 @@ PaintThread::IsOnPaintThread()
 }
 
 void
+PaintThread::BeginLayerTransaction()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_ASSERT(!mInAsyncPaintGroup);
+}
+
+void
 PaintThread::PaintContents(CapturedPaintState* aState,
                            PrepDrawTargetForPaintingCallback aCallback)
 {
@@ -185,6 +198,10 @@ PaintThread::AsyncPaintContents(CompositorBridgeChild* aBridge,
 {
   MOZ_ASSERT(IsOnPaintThread());
   MOZ_ASSERT(aState);
+
+  if (!mInAsyncPaintGroup) {
+    mInAsyncPaintGroup = true;
+  }
 
   DrawTarget* target = aState->mTargetDual;
   DrawTargetCapture* capture = aState->mCapture;
@@ -273,10 +290,13 @@ PaintThread::AsyncEndLayerTransaction(CompositorBridgeChild* aBridge,
                                       SyncObjectClient* aSyncObject)
 {
   MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(mInAsyncPaintGroup);
 
   if (aSyncObject) {
     aSyncObject->Synchronize();
   }
+
+  mInAsyncPaintGroup = false;
 
   if (aBridge) {
     aBridge->NotifyFinishedAsyncEndLayerTransaction();
