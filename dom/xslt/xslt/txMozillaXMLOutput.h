@@ -73,7 +73,7 @@ public:
     nsresult closePrevious(bool aFlushText);
 
     nsresult createResultDocument(const nsAString& aName, int32_t aNsID,
-                                  nsIDOMDocument* aSourceDocument,
+                                  nsIDocument* aSourceDocument,
                                   bool aLoadedAsData);
 
 private:
