@@ -23,7 +23,7 @@ from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema, Schema, optionally_keyed_by
+from taskgraph.util.schema import validate_schema, Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO
@@ -44,14 +44,24 @@ def _run_task_suffix():
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,
-    {Required('task-reference'): basestring})
+    {Required('task-reference'): basestring},
+)
 
+notification_ids = optionally_keyed_by('project', Any(None, [basestring]))
 notification_schema = Schema({
     Required("subject"): basestring,
     Required("message"): basestring,
-    Required("ids"): [basestring],
+    Required("ids"): notification_ids,
 
 })
+
+FULL_TASK_NAME = (
+    "[{task[payload][properties][product]} "
+    "{task[payload][properties][version]} "
+    "build{task[payload][properties][build_number]}/"
+    "{task[payload][sourcestamp][branch]}] "
+    "{task[metadata][name]} task"
+)
 
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
@@ -209,6 +219,13 @@ task_description_schema = Schema({
 
     # Whether the job should use sccache compiler caching.
     Required('needs-sccache', default=False): bool,
+
+    # notifications
+    Optional('notifications'): {
+        Optional('completed'): Any(notification_schema, notification_ids),
+        Optional('failed'): Any(notification_schema, notification_ids),
+        Optional('exception'): Any(notification_schema, notification_ids),
+    },
 
     # information specific to the worker implementation that will run this task
     'worker': Any({
@@ -389,11 +406,6 @@ task_description_schema = Schema({
         },
         Optional('scopes'): [basestring],
         Optional('routes'): [basestring],
-        Optional('notifications'): {
-            Optional('task-completed'): notification_schema,
-            Optional('task-failed'): notification_schema,
-            Optional('task-exception'): notification_schema,
-        },
     }, {
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
@@ -1043,18 +1055,20 @@ def build_buildbot_bridge_payload(config, task, task_def):
     task_def['scopes'].extend(worker.get('scopes', []))
     task_def['routes'].extend(worker.get('routes', []))
 
-    notifications = worker.get('notifications')
-    if notifications:
-        task_def.setdefault('extra', {}).setdefault('notifications', {})
-        for k, v in notifications.items():
-            task_def['extra']['notifications'][k] = {
-                'subject': v['subject'].format(task=task_def),
-                'message': v['message'].format(task=task_def),
-                'ids': v['ids'],
-            }
-
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def task_name_from_label(config, tasks):
+    for task in tasks:
+        if 'label' not in task:
+            if 'name' not in task:
+                raise Exception("task has neither a name nor a label")
+            task['label'] = '{}-{}'.format(config.kind, task['name'])
+        if task.get('name'):
+            del task['name']
+        yield task
 
 
 @transforms.add
@@ -1311,6 +1325,48 @@ def build_task(config, tasks):
             if payload:
                 env = payload.setdefault('env', {})
                 env['MOZ_AUTOMATION'] = '1'
+
+        notifications = task.get('notifications')
+        if notifications:
+            task_def['extra'].setdefault('notifications', {})
+            for k, v in notifications.items():
+                if isinstance(v, dict) and len(v) == 1 and v.keys()[0].startswith('by-'):
+                    v = {'tmp': v}
+                    resolve_keyed_by(v, 'tmp', 'notifications', **config.params)
+                    v = v['tmp']
+                if isinstance(v, list):
+                    v = {'ids': v}
+                    if 'completed' == k:
+                        v.update({
+                            "subject": "Completed: {}".format(FULL_TASK_NAME),
+                            "message": "{} has completed successfully! Yay!".format(
+                                FULL_TASK_NAME),
+                        })
+                    elif k == 'failed':
+                        v.update({
+                            "subject": "Failed: {}".format(FULL_TASK_NAME),
+                            "message": "Uh-oh! {} failed.".format(FULL_TASK_NAME),
+                        })
+                    elif k == 'exception':
+                        v.update({
+                            "subject": "Exception: {}".format(FULL_TASK_NAME),
+                            "message": "Uh-oh! {} resulted in an exception.".format(
+                                FULL_TASK_NAME),
+                        })
+                else:
+                    resolve_keyed_by(v, 'ids', 'notifications', **config.params)
+                if v['ids'] is None:
+                    continue
+                notifications_kwargs = dict(
+                    task=task_def,
+                    config=config.__dict__,
+                    release_config=get_release_config(config, force=True),
+                )
+                task_def['extra']['notifications']['task-' + k] = {
+                    'subject': v['subject'].format(**notifications_kwargs),
+                    'message': v['message'].format(**notifications_kwargs),
+                    'ids': v['ids'],
+                }
 
         yield {
             'label': task['label'],
