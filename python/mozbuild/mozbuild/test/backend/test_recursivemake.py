@@ -328,14 +328,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'DEFFILE': [
                 'DEFFILE := baz.def',
             ],
-            'MOZBUILD_CFLAGS': [
-                'MOZBUILD_CFLAGS += -fno-exceptions',
-                'MOZBUILD_CFLAGS += -w',
-            ],
-            'MOZBUILD_CXXFLAGS': [
-                'MOZBUILD_CXXFLAGS += -fcxx-exceptions',
-                "MOZBUILD_CXXFLAGS += '-option with spaces'",
-            ],
             'MOZBUILD_LDFLAGS': [
                 "MOZBUILD_LDFLAGS += '-ld flag with spaces'",
                 'MOZBUILD_LDFLAGS += -x',

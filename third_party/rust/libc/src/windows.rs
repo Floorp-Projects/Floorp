@@ -43,6 +43,18 @@ s! {
         pub modtime: time64_t,
     }
 
+    pub struct tm {
+        tm_sec: ::c_int,
+        tm_min: ::c_int,
+        tm_hour: ::c_int,
+        tm_mday: ::c_int,
+        tm_mon: ::c_int,
+        tm_year: ::c_int,
+        tm_wday: ::c_int,
+        tm_yday: ::c_int,
+        tm_isdst: ::c_int,
+    }
+
     pub struct timeval {
         pub tv_sec: c_long,
         pub tv_usec: c_long,
@@ -146,7 +158,8 @@ pub const ENOTEMPTY: ::c_int = 41;
 pub const EILSEQ: ::c_int = 42;
 pub const STRUNCATE: ::c_int = 80;
 
-#[cfg(all(target_env = "msvc", stdbuild))] // " if " -- appease style checker
+// inline comment below appeases style checker
+#[cfg(all(target_env = "msvc", feature = "stdbuild"))] // " if "
 #[link(name = "msvcrt", cfg(not(target_feature = "crt-static")))]
 #[link(name = "libcmt", cfg(target_feature = "crt-static"))]
 extern {}

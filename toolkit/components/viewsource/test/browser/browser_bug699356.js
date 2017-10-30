@@ -10,6 +10,7 @@ function test() {
     let gBrowser = aWindow.gBrowser;
     let docEl = aWindow.document.documentElement;
 
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     is(gBrowser.contentDocument.title, source, "Correct document title");
     is(docEl.getAttribute("title"),
       "Source of: " + source + ("nsILocalFileMac" in Components.interfaces ? "" : " - " + docEl.getAttribute("titlemodifier")),

@@ -1,3 +1,32 @@
+/// Check if an expression matches a refutable pattern.
+///
+/// Syntax: `matches!(` *expression* `,` *pattern* `)`
+///
+/// Return a boolean, true if the expression matches the pattern, false otherwise.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate matches;
+///
+/// pub enum Foo<T> {
+///     A,
+///     B(T),
+/// }
+///
+/// impl<T> Foo<T> {
+///     pub fn is_a(&self) -> bool {
+///         matches!(*self, Foo::A)
+///     }
+///
+///     pub fn is_b(&self) -> bool {
+///         matches!(*self, Foo::B(_))
+///     }
+/// }
+///
+/// # fn main() { }
+/// ```
 #[macro_export]
 macro_rules! matches {
     ($expression:expr, $($pattern:tt)+) => {
@@ -11,11 +40,30 @@ macro_rules! matches {
 }
 
 /// Work around "error: unexpected token: `an interpolated tt`", whatever that means.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! _matches_tt_as_expr_hack {
     ($value:expr) => ($value)
 }
 
+/// Assert that an expression matches a refutable pattern.
+///
+/// Syntax: `assert_matches!(` *expression* `,` *pattern* `)`
+///
+/// Panic with a message that shows the expression if it does not match the
+/// pattern.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate matches;
+///
+/// fn main() {
+///     let data = [1, 2, 3];
+///     assert_matches!(data.get(1), Some(_));
+/// }
+/// ```
 #[macro_export]
 macro_rules! assert_matches {
     ($expression:expr, $($pattern:tt)+) => {
@@ -28,6 +76,26 @@ macro_rules! assert_matches {
     }
 }
 
+/// Assert that an expression matches a refutable pattern using debug assertions.
+///
+/// Syntax: `debug_assert_matches!(` *expression* `,` *pattern* `)`
+///
+/// If debug assertions are enabled, panic with a message that shows the
+/// expression if it does not match the pattern.
+///
+/// When debug assertions are not enabled, this macro does nothing.
+///
+/// # Examples
+///
+/// ```
+/// #[macro_use]
+/// extern crate matches;
+///
+/// fn main() {
+///     let data = [1, 2, 3];
+///     debug_assert_matches!(data.get(1), Some(_));
+/// }
+/// ```
 #[macro_export]
 macro_rules! debug_assert_matches {
     ($($arg:tt)*) => (if cfg!(debug_assertions) { assert_matches!($($arg)*); })

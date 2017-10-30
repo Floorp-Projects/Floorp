@@ -269,7 +269,7 @@ var parsers = [
 
 function reactGetListeners(node, boolOnEventFound) {
   function getProps() {
-    for (let key in node) {
+    for (let key of Object.keys(node)) {
       if (key.startsWith("__reactInternalInstance$")) {
         return node[key]._currentElement.props;
       }

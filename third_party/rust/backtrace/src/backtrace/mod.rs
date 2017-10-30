@@ -36,7 +36,7 @@ use std::os::raw::c_void;
 ///     });
 /// }
 /// ```
-#[inline(never)] // if this is never inlined then the first frame can be konwn
+#[inline(never)] // if this is never inlined then the first frame can be known
                  // to be skipped
 pub fn trace<F: FnMut(&Frame) -> bool>(mut cb: F) {
     trace_imp(&mut cb)
@@ -90,6 +90,7 @@ impl fmt::Debug for Frame {
 cfg_if! {
     if #[cfg(all(unix,
                  not(target_os = "emscripten"),
+                 not(all(target_os = "ios", target_arch = "arm")),
                  feature = "libunwind"))] {
         mod libunwind;
         use self::libunwind::trace as trace_imp;

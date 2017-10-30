@@ -14,6 +14,7 @@ function test() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   gBrowser.selectedBrowser.addEventListener("load", function() {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     var doc = gBrowser.contentDocument;
     var testImg = doc.getElementById("test-image");
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,

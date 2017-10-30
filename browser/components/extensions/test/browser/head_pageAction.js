@@ -105,7 +105,7 @@ async function runTests(options) {
   function checkDetails(details) {
     let image = currentWindow.document.getElementById(pageActionId);
     if (details == null) {
-      ok(image == null || image.hidden, "image is hidden");
+      ok(image == null || image.getAttribute("disabled") == "true", "image is disabled");
     } else {
       ok(image, "image exists");
 
@@ -123,7 +123,7 @@ async function runTests(options) {
   let awaitFinish = new Promise(resolve => {
     extension.onMessage("nextTest", async (expecting, testsRemaining) => {
       if (!pageActionId) {
-        pageActionId = `${makeWidgetId(extension.id)}-page-action`;
+        pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
       }
 
       await promiseAnimationFrame(currentWindow);

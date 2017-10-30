@@ -3,6 +3,7 @@
  */
 
 /* eslint max-nested-callbacks: ["warn", 12] */
+/* eslint-disable mozilla/no-cpows-in-tests */
 
 /**
  * Tests that history navigation works for the add-ons manager.

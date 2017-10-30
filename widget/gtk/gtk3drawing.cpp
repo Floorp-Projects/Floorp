@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "prinrval.h"
 #include "WidgetStyleCache.h"
+#include "nsDebug.h"
 
 #include <math.h>
 

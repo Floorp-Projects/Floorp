@@ -2,6 +2,7 @@
 add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("search", {leaveOpen: true});
   is(prefs.selectedPane, "paneSearch", "Search pane is selected by default");
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
 
   let tree = doc.querySelector("#engineList");
@@ -23,4 +24,3 @@ add_task(async function() {
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
-

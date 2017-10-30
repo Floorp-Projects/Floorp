@@ -42,23 +42,35 @@ protected:
   virtual RefPtr<FlushPromise> ProcessFlush();
   virtual void ProcessShutdown();
   virtual void InitCodecContext() { }
-  AVFrame*        PrepareFrame();
-  MediaResult     InitDecoder();
+  AVFrame* PrepareFrame();
+  MediaResult InitDecoder();
+  MediaResult DoDecode(MediaRawData* aSample,
+                       bool* aGotFrame,
+                       DecodedData& aOutResults);
 
   FFmpegLibWrapper* mLib;
 
   AVCodecContext* mCodecContext;
-  AVFrame*        mFrame;
+  AVCodecParserContext* mCodecParser;
+  AVFrame* mFrame;
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
 
 private:
-  virtual RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample) = 0;
-  virtual RefPtr<DecodePromise> ProcessDrain() = 0;
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
+  RefPtr<DecodePromise> ProcessDrain();
+  virtual MediaResult DoDecode(MediaRawData* aSample,
+                               uint8_t* aData,
+                               int aSize,
+                               bool* aGotFrame,
+                               MediaDataDecoder::DecodedData& aOutResults) = 0;
+  virtual bool NeedParser() const { return false; }
+  virtual int ParserFlags() const { return PARSER_FLAG_COMPLETE_FRAMES; }
 
   static StaticMutex sMonitor;
   const RefPtr<TaskQueue> mTaskQueue;
   MozPromiseHolder<DecodePromise> mPromise;
+  media::TimeUnit mLastInputDts;
 };
 
 } // namespace mozilla

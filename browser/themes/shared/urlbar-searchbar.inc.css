@@ -196,6 +196,10 @@
   color: inherit;
 }
 
+.urlbar-page-action[disabled] {
+  fill-opacity: 0.3;
+}
+
 :root[uidensity=compact] .urlbar-icon {
   width: 24px;
   height: 24px;

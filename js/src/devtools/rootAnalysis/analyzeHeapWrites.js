@@ -492,7 +492,6 @@ function ignoreContents(entry)
 
         // Need main thread assertions or other fixes.
         /EffectCompositor::GetServoAnimationRule/,
-        /Gecko_GetLookAndFeelSystemColor/,
     ];
     if (entry.matches(whitelist))
         return true;

@@ -37,6 +37,7 @@ add_task(async function test_clear_email() {
     await BrowserTestUtils.crashBrowser(browser,
                                         /* shouldShowTabCrashPage */ true,
                                         /* shouldClearMinidumps */ false);
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let doc = browser.contentDocument;
 
     // Since about:tabcrashed will run in the parent process, we can safely
@@ -48,6 +49,7 @@ add_task(async function test_clear_email() {
       Email: "",
     });
 
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let restoreTab = browser.contentDocument.getElementById("restoreTab");
     restoreTab.click();
     await BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
@@ -63,4 +65,3 @@ add_task(async function test_clear_email() {
     prefs.setCharPref("email", originalEmail);
   });
 });
-

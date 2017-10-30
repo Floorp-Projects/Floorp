@@ -12,6 +12,9 @@ static CORESYMBOLICATION: bool = cfg!(all(any(target_os = "macos", target_os = "
 static DLADDR: bool = cfg!(all(unix, feature = "dladdr"));
 static DBGHELP: bool = cfg!(all(windows, feature = "dbghelp"));
 static MSVC: bool = cfg!(target_env = "msvc");
+static GIMLI_SYMBOLIZE: bool = cfg!(all(feature = "gimli-symbolize",
+                                        unix,
+                                        target_os = "linux"));
 
 #[test]
 fn smoke_test_frames() {
@@ -71,7 +74,7 @@ fn smoke_test_frames() {
         }
 
         let mut resolved = 0;
-        let can_resolve = DLADDR || LIBBACKTRACE || CORESYMBOLICATION || DBGHELP;
+        let can_resolve = DLADDR || LIBBACKTRACE || CORESYMBOLICATION || DBGHELP || GIMLI_SYMBOLIZE;
 
         let mut name = None;
         let mut addr = None;

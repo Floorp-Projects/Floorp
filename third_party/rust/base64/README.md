@@ -6,7 +6,7 @@ It's base64. What more could anyone want?
 Example
 ---
 
-In Cargo.toml: `base64 = "~0.5.0"`
+In Cargo.toml: `base64 = "~0.6.0"`
 
 ```rust
 extern crate base64;
@@ -105,6 +105,20 @@ You'll see a bunch of interleaved rust source and assembly like this. The sectio
          :                  if morsel == decode_tables::INVALID_VALUE {
     0.00 :        106ab:       je     1090e <base64::decode_config_buf::hbf68a45fefa299c1+0x46e>
 ```
+
+
+Fuzzing
+---
+
+This uses [cargo-fuzz](https://github.com/rust-fuzz/cargo-fuzz). See `fuzz/fuzzers` for the available fuzzing scripts. To run, use an invocation like these:
+
+```
+rustup run nightly cargo fuzz run roundtrip
+rustup run nightly cargo fuzz run roundtrip_no_pad
+rustup run nightly cargo fuzz run roundtrip_mime -- -max_len=10240
+rustup run nightly cargo fuzz run roundtrip_random_config -- -max_len=10240
+```
+
 
 License
 ---

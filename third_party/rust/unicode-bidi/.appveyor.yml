@@ -1,0 +1,19 @@
+install:
+  - ps: Start-FileDownload 'https://static.rust-lang.org/dist/rust-nightly-i686-pc-windows-gnu.exe'
+  - rust-nightly-i686-pc-windows-gnu.exe /VERYSILENT /NORESTART /DIR="C:\Program Files (x86)\Rust"
+  - SET PATH=%PATH%;C:\Program Files (x86)\Rust\bin
+  - rustc -V
+  - cargo -V
+  - git submodule update --init --recursive
+
+build: false
+
+environment:
+    RUST_BACKTRACE: full
+
+test_script:
+  - cargo build --verbose --all
+  - cargo doc   --verbose --all --no-deps
+
+  - cargo test  --verbose --all
+  - cargo test  --verbose --all --features serde
