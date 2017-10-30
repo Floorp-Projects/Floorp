@@ -104,7 +104,6 @@
 ./libavcodec/error_resilience.h
 ./libavcodec/flac.c
 ./libavcodec/flac.h
-./libavcodec/flac_parser.c
 ./libavcodec/flacdec.c
 ./libavcodec/flacdsp.c
 ./libavcodec/flacdsp.h
