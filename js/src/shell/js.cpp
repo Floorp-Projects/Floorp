@@ -7853,7 +7853,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, const char16_t* begin,
     if (memory == MAP_FAILED)
         return JS::AsmJSCache_InternalError;
     MOZ_ASSERT(*(uint32_t*)memory == 0);
-    if (mprotect(memory, serializedSize, PROT_WRITE))
+    if (mprotect(memory, serializedSize, PROT_READ | PROT_WRITE))
         return JS::AsmJSCache_InternalError;
 #endif
 
