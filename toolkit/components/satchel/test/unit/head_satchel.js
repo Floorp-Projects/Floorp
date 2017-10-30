@@ -20,9 +20,6 @@ Cu.import("resource://gre/modules/FormHistory.jsm");
 
 do_get_profile();
 
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-             .getService(Ci.nsIProperties);
-
 // Send the profile-after-change notification to the form history component to ensure
 // that it has been initialized.
 var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"]
@@ -30,9 +27,7 @@ var formHistoryStartup = Cc["@mozilla.org/satchel/form-history-startup;1"]
 formHistoryStartup.observe(null, "profile-after-change", null);
 
 function getDBVersion(dbfile) {
-  let ss = Cc["@mozilla.org/storage/service;1"]
-             .getService(Ci.mozIStorageService);
-  let dbConnection = ss.openDatabase(dbfile);
+  let dbConnection = Services.storage.openDatabase(dbfile);
   let version = dbConnection.schemaVersion;
   dbConnection.close();
 

@@ -6,9 +6,7 @@ const URL_COPY = URL + "#copy";
 
 XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
   let tmp = {};
-  Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader)
-    .loadSubScript("chrome://browser/content/sanitize.js", tmp);
+  Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
   return tmp.Sanitizer;
 });
 

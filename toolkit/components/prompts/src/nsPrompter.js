@@ -311,9 +311,7 @@ var PromptUtilsTemp = {
 PromptUtils = PromptUtilsTemp;
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function() {
-    let bunService = Cc["@mozilla.org/intl/stringbundle;1"].
-                     getService(Ci.nsIStringBundleService);
-    let bundle = bunService.createBundle("chrome://global/locale/commonDialogs.properties");
+    let bundle = Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
     if (!bundle)
         throw "String bundle for Prompter not present!";
     return bundle;
