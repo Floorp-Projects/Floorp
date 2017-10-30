@@ -149,6 +149,8 @@
 #include <string.h>
 #include <algorithm>
 
+using namespace mozilla;
+
 #ifdef XP_WIN
 
 // Some defines from the CRT internal headers that we need here.
@@ -462,7 +464,7 @@ static size_t arena_maxclass; // Max size class for arenas.
 static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 
 // The current amount of recycled bytes, updated atomically.
-static mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gRecycledSize;
+static Atomic<size_t, ReleaseAcquire> gRecycledSize;
 
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
@@ -507,7 +509,7 @@ private:
 };
 
 // Set to true once the allocator has been initialized.
-static mozilla::Atomic<bool> malloc_initialized(false);
+static Atomic<bool> malloc_initialized(false);
 
 #if defined(XP_WIN)
 // No init lock for Windows.
@@ -806,7 +808,7 @@ struct arena_chunk_t
   //
   // We're currently lazy and don't remove a chunk from this list when
   // all its madvised pages are recommitted.
-  mozilla::DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
+  DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
 #endif
 
   // Number of dirty pages.
@@ -920,7 +922,7 @@ private:
 #ifdef MALLOC_DOUBLE_PURGE
   // Head of a linked list of MADV_FREE'd-page-containing chunks this
   // arena manages.
-  mozilla::DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
+  DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
 #endif
 
   // In order to avoid rapid chunk allocation/deallocation when an arena
@@ -1112,8 +1114,7 @@ static Mutex arenas_lock; // Protects arenas initialization.
 #if !defined(XP_DARWIN)
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
-static mozilla::detail::ThreadLocal<arena_t*,
-                                    mozilla::detail::ThreadLocalKeyStorage>
+static detail::ThreadLocal<arena_t*, detail::ThreadLocalKeyStorage>
   thread_arena;
 #endif
 
@@ -1517,7 +1518,7 @@ struct BaseNodeFreePolicy
   void operator()(extent_node_t* aPtr) { base_node_dealloc(aPtr); }
 };
 
-using UniqueBaseNode = mozilla::UniquePtr<extent_node_t, BaseNodeFreePolicy>;
+using UniqueBaseNode = UniquePtr<extent_node_t, BaseNodeFreePolicy>;
 
 // End Utility functions/macros.
 // ***************************************************************************
@@ -2521,8 +2522,7 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
   mRunsAvail.Insert(&aChunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
-  new (&aChunk->chunks_madvised_elem)
-    mozilla::DoublyLinkedListElement<arena_chunk_t>();
+  new (&aChunk->chunks_madvised_elem) DoublyLinkedListElement<arena_chunk_t>();
 #endif
 }
 
@@ -3784,7 +3784,7 @@ arena_t::Init()
   // Initialize chunks.
   mChunksDirty.Init();
 #ifdef MALLOC_DOUBLE_PURGE
-  new (&mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
+  new (&mChunksMAdvised) DoublyLinkedList<arena_chunk_t>();
 #endif
   mSpare = nullptr;
 
@@ -4706,8 +4706,8 @@ hard_purge_chunk(arena_chunk_t* aChunk)
     if (npages > 0) {
       pages_decommit(((char*)aChunk) + (i << pagesize_2pow),
                      npages << pagesize_2pow);
-      mozilla::Unused << pages_commit(((char*)aChunk) + (i << pagesize_2pow),
-                                      npages << pagesize_2pow);
+      Unused << pages_commit(((char*)aChunk) + (i << pagesize_2pow),
+                             npages << pagesize_2pow);
     }
     i += npages;
   }
