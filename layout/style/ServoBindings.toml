@@ -111,11 +111,81 @@ bitfield-enums = [
     "nsRestyleHint",
     "OriginFlags",
 ]
-constified-enums = [
-    "UpdateAnimationsTasks",
-    "ParsingMode",
-    "ThemeWidgetType",
-    "ServoTraversalFlags",
+# FIXME: use proper namespaces and such when
+# https://github.com/rust-lang-nursery/rust-bindgen/issues/1125
+# is fixed.
+rusty-enums = [
+    "nsCompatibility",
+    "EffectCompositor_CascadeLevel",
+    "SheetType",
+    "CallerType",
+    "IterationCompositeOperation",
+    "CompositeOperation",
+    "InheritTarget",
+    "SheetParsingMode",
+    "FontFamilyType",
+    "nsStyleContentType",
+    "nsStyleSVGOpacitySource",
+    "nsStyleUnit",
+    "nsCSSKeyword",
+    "nsIDocument_DocumentTheme",
+    "nsIDocument_Type",
+    "nsCSSUnit",
+    "nsCSSPropertyID",
+    "nsCSSCounterDesc",
+    "nsMediaExpression_Range",
+    "nsMediaFeature_RangeType",
+    "nsMediaFeature_ValueType",
+    "nsresult",
+    "nsAtom_AtomKind",
+    "nsStyleImageLayers_LayerType",
+    "nsStyleImageOrientation_Angles",
+    "nsTimingFunction_Type",
+    "ServoElementSnapshotFlags",
+    "Side",
+    "PlaybackDirection",
+    "FillMode",
+    "HalfCorner",
+    "URLMatchingFunction",
+    "StyleDisplay",
+    "StyleFloatEdge",
+    "StyleShapeRadius",
+    "StyleWindowDragging",
+    "StyleOrient",
+    "StyleBoxSizing",
+    "StyleClear",
+    "StyleFloat",
+    "StyleUserModify",
+    "StyleUserInput",
+    "StyleBoxDirection",
+    "StyleTextJustify",
+    "StyleHyphens",
+    "StyleGeometryBox",
+    "StyleFillRule",
+    "StyleShapeSourceType",
+    "StyleBasicShapeType",
+    "nsStyleImageLayers_Size_DimensionType",
+    "StyleStackSizing",
+    "StyleBoxPack",
+    "StyleBoxOrient",
+    "StyleBoxAlign",
+    "StyleUserFocus",
+    "StyleUserSelect",
+    "StyleImageLayerRepeat",
+    "StyleBoxDecorationBreak",
+    "StyleRuleInclusion",
+    "StyleGridTrackBreadth",
+    "nsStyleImageType",
+    "StyleWhiteSpace",
+    "nsStyleSVGPaintType",
+    "nsStyleSVGFallbackType",
+    # ".*Style.*",
+    "nsINode_BooleanFlag",
+    "CSSPseudoElementType",
+    "CSSPseudoClassType",
+    "LookAndFeel_ColorID",
+    "LookAndFeel_FontID",
+    "MatrixTransformOperator",
 ]
 constified-enum-variants = [
     { enum = "nsCSSPropertyID", variants = ["eCSSProperty_COUNT.*"] },
@@ -272,7 +342,6 @@ whitelist-types = [
     "nsStyleVariables",
     "nsStyleVisibility",
     "nsStyleXUL",
-    "nsTArray",
     "nsTArrayHeader",
     "Position",
     "PropertyValuePair",
@@ -311,7 +380,6 @@ opaque-types = [
     # We want everything but FontVariation and Float to be opaque but we don't
     # have negative regexes.
     "mozilla::gfx::(.{0,4}|.{6,12}|.{14,}|([^F][^o][^n][^t][^V][^a][^r][^i][^a][^t][^i][^o][^n])|([^F][^l][^o][^a][^t]))",
-    "FallibleTArray",
     "mozilla::dom::Sequence",
     "mozilla::dom::Optional",
     "mozilla::dom::OwningNodeOrString_Value",
@@ -361,8 +429,8 @@ mapped-generic-types = [
     { generic = false, gecko = "ServoStyleContextStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
 ]
 fixups = [
-    { pat = "\\broot::nsString\\b", rep = "::nsstring::nsStringRepr" },
-    { pat = "\\broot::nsTString<u16>", rep = "::nsstring::nsStringRepr" },
+    { pat = "\\broot\\s*::\\s*nsString\\b", rep = "::nsstring::nsStringRepr" },
+    { pat = "\\broot\\s*::\\s*nsTString\\s*<\\s*u16\\s*>", rep = "::nsstring::nsStringRepr" },
 ]
 
 [bindings]
@@ -568,7 +636,7 @@ servo-borrow-types = [
 ]
 fixups = [
     # Remap the templated string type to the helper type
-    { pat = "\\bnsTString<u16>", rep = "nsString" },
+    { pat = "\\bnsTString\\s*<\\s*u16\\s*>", rep = "nsString" },
     # hack for gecko-owned string
-    { pat = "\\b<nsString\\b", rep = "<nsStringRepr" },
+    { pat = "<\\s*nsString\\s*", rep = "<nsStringRepr" },
 ]
