@@ -290,7 +290,7 @@ waitForAllPaints(function() {
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
-      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+      { style: 'animation: background-color 100s; position: relative; top: 20px;' });
     parentElement.appendChild(div);
     var animation = div.getAnimations()[0];
 
@@ -343,7 +343,7 @@ waitForAllPaints(function() {
     var div = addDiv(null,
       { style: 'animation: background-color 100s; ' +
                'position: relative; ' +
-               'top: 60px;' }); // This element is in-view in the parent, but
+               'top: 20px;' }); // This element is in-view in the parent, but
                                 // out of view in the grandparent.
     grandParent.appendChild(parentElement);
     parentElement.appendChild(div);
