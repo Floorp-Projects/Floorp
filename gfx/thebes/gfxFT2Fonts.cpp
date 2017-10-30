@@ -151,8 +151,6 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
             NS_ASSERTION(details.mGlyphID == gid,
                          "Seriously weird glyph ID detected!");
             details.mAdvance = advance;
-            details.mXOffset = 0;
-            details.mYOffset = 0;
             gfxShapedText::CompressedGlyph g;
             g.SetComplex(charGlyphs[aOffset].IsClusterStart(), true, 1);
             aShapedText->SetGlyphs(aOffset, g, &details);
