@@ -68,7 +68,10 @@ add_task(async function test_actionContextMenus() {
   await extension.startup();
   const tabId = await extension.awaitMessage("ready");
 
-  for (const kind of ["page", "browser"]) {
+  // TODO bug 1412170: Allow WebExtensions to hook into the browser page action
+  // context menu.
+//   for (const kind of ["page", "browser"]) {
+  for (const kind of ["browser"]) {
     const menu = await openActionContextMenu(extension, kind);
     const [submenu, second, , , , last, separator] = menu.children;
 
@@ -89,7 +92,7 @@ add_task(async function test_actionContextMenus() {
     is(last.id, `${idPrefix}5`, "Last menu item id is correct");
     is(separator.tagName, "menuseparator", "Separator after last menu item");
 
-    await closeActionContextMenu(popup.firstChild, kind);
+    await closeActionContextMenu(popup.firstChild);
     const {info, tab} = await extension.awaitMessage("click");
     is(info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
     is(tab.id, tabId, "Click event tab ID is correct");
