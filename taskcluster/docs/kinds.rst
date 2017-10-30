@@ -222,6 +222,10 @@ release-mark-as-shipped
 -----------------------
 Marks releases as shipped in Ship-It.
 
+release-bouncer-aliases
+------------------------------
+Update Bouncers (download.mozilla.org) "latest" aliases.
+
 repackage
 ---------
 Repackage tasks take a signed output and package them up into something suitable
