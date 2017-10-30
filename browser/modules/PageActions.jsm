@@ -533,6 +533,10 @@ this.PageActions = {
  *        Called when the action is added to the urlbar in a browser window:
  *        onPlacedInUrlbar(buttonNode)
  *        * buttonNode: The action's node in the urlbar.
+ * @param onRemovedFromWindow (function, optional)
+ *        Called after the action is removed from a browser window:
+ *        onRemovedFromWindow(browserWindow)
+ *        * browserWindow: The browser window that the action was removed from.
  * @param onShowingInPanel (function, optional)
  *        Called when a browser window's page action panel is showing:
  *        onShowingInPanel(buttonNode)
@@ -571,6 +575,7 @@ function Action(options) {
     onLocationChange: false,
     onPlacedInPanel: false,
     onPlacedInUrlbar: false,
+    onRemovedFromWindow: false,
     onShowingInPanel: false,
     shownInUrlbar: false,
     subview: false,
@@ -921,6 +926,19 @@ Action.prototype = {
   onPlacedInUrlbar(buttonNode) {
     if (this._onPlacedInUrlbar) {
       this._onPlacedInUrlbar(buttonNode);
+    }
+  },
+
+  /**
+   * Call this when the DOM nodes for the action are removed from a browser
+   * window.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         The browser window the action was removed from.
+   */
+  onRemovedFromWindow(browserWindow) {
+    if (this._onRemovedFromWindow) {
+      this._onRemovedFromWindow(browserWindow);
     }
   },
 
