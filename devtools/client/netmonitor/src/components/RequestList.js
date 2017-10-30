@@ -21,11 +21,15 @@ const { div } = DOM;
 /**
  * Request panel component
  */
-function RequestList({ isEmpty }) {
+function RequestList({
+  connector,
+  isEmpty,
+}) {
   return (
     div({ className: "request-list-container" },
+      RequestListHeader(),
       isEmpty ? RequestListEmptyNotice({connector}) : RequestListContent({connector}),
-      StatusBar(),
+      StatusBar({connector}),
     )
   );
 }
@@ -33,6 +37,7 @@ function RequestList({ isEmpty }) {
 RequestList.displayName = "RequestList";
 
 RequestList.propTypes = {
+  connector: PropTypes.object.isRequired,
   isEmpty: PropTypes.bool.isRequired,
 };
 

@@ -104,49 +104,47 @@ class RequestListHeader extends Component {
     let { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
     return (
-      div({ className: "devtools-toolbar requests-list-headers-wrapper" },
-        div({ className: "devtools-toolbar requests-list-headers" },
-          HEADERS.filter((header) => columns.get(header.name)).map((header) => {
-            let name = header.name;
-            let boxName = header.boxName || name;
-            let label = header.noLocalization
-              ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
-            let sorted, sortedTitle;
-            let active = sort.type == name ? true : undefined;
+      div({ className: "devtools-toolbar requests-list-headers" },
+        HEADERS.filter((header) => columns.get(header.name)).map((header) => {
+          let name = header.name;
+          let boxName = header.boxName || name;
+          let label = header.noLocalization
+            ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
+          let sorted, sortedTitle;
+          let active = sort.type == name ? true : undefined;
 
-            if (active) {
-              sorted = sort.ascending ? "ascending" : "descending";
-              sortedTitle = L10N.getStr(sort.ascending
-                ? "networkMenu.sortedAsc"
-                : "networkMenu.sortedDesc");
-            }
+          if (active) {
+            sorted = sort.ascending ? "ascending" : "descending";
+            sortedTitle = L10N.getStr(sort.ascending
+              ? "networkMenu.sortedAsc"
+              : "networkMenu.sortedDesc");
+          }
 
-            return (
-              div({
-                id: `requests-list-${boxName}-header-box`,
-                className: `requests-list-column requests-list-${boxName}`,
-                key: name,
-                ref: `${name}Header`,
-                // Used to style the next column.
-                "data-active": active,
-                onContextMenu: this.onContextMenu,
+          return (
+            div({
+              id: `requests-list-${boxName}-header-box`,
+              className: `requests-list-column requests-list-${boxName}`,
+              key: name,
+              ref: `${name}Header`,
+              // Used to style the next column.
+              "data-active": active,
+              onContextMenu: this.onContextMenu,
+            },
+              button({
+                id: `requests-list-${name}-button`,
+                className: `requests-list-header-button`,
+                "data-sorted": sorted,
+                title: sortedTitle ? `${label} (${sortedTitle})` : label,
+                onClick: () => sortBy(name),
               },
-                button({
-                  id: `requests-list-${name}-button`,
-                  className: `requests-list-header-button`,
-                  "data-sorted": sorted,
-                  title: sortedTitle ? `${label} (${sortedTitle})` : label,
-                  onClick: () => sortBy(name),
-                },
-                  name === "waterfall"
-                    ? WaterfallLabel(waterfallWidth, scale, label)
-                    : div({ className: "button-text" }, label),
-                  div({ className: "button-icon" })
-                )
+                name === "waterfall"
+                  ? WaterfallLabel(waterfallWidth, scale, label)
+                  : div({ className: "button-text" }, label),
+                div({ className: "button-icon" })
               )
-            );
-          })
-        )
+            )
+          );
+        })
       )
     );
   }
