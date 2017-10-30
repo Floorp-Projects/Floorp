@@ -176,10 +176,7 @@ void
 ServoStyleRuleMap::FillTableFromStyleSheet(ServoStyleSheet* aSheet)
 {
   if (aSheet->IsComplete()) {
-    // XBL stylesheets are not expected to ever change, so it's a waste
-    // to make its inner unique.
-    FillTableFromRuleList(aSheet->GetCssRulesInternal(
-        /* aRequireUniqueInner = */ !mStyleSet->IsForXBL()));
+    FillTableFromRuleList(aSheet->GetCssRulesInternal());
   }
 }
 
