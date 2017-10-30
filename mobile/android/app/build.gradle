@@ -270,9 +270,23 @@ dependencies {
 
     // With a simple "compile", Gradle will always build these libraries in their default configuration
     // (i.e. release), so we need to explicitly forward our own build configuration here (bug 1385695).
-    debugCompile project(path: ':geckoview', configuration: "debug")
+    //
+    // Official builds compile a hacked up app:Official..Debug, but need the
+    // release versions of the dependencies, in order to not have debugging
+    // information.  It's not yet possible to specify just officialDebug, so we
+    // hack around it here.
+    if (mozconfig.substs.MOZILLA_OFFICIAL) {
+        debugCompile project(path: ':geckoview', configuration: "release")
+    } else {
+        debugCompile project(path: ':geckoview', configuration: "debug")
+    }
     releaseCompile project(path: ':geckoview', configuration: "release")
-    debugCompile project(path: ':thirdparty', configuration: "debug")
+
+    if (mozconfig.substs.MOZILLA_OFFICIAL) {
+        debugCompile project(path: ':thirdparty', configuration: "release")
+    } else {
+        debugCompile project(path: ':thirdparty', configuration: "debug")
+    }
     releaseCompile project(path: ':thirdparty', configuration: "release")
 
     testCompile 'junit:junit:4.12'

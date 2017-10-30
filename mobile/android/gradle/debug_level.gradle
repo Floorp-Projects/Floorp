@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Groovy; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,10 +8,13 @@ ext.configureVariantDebugLevel = { variant ->
     // Like 'debug', 'release', or 'withGeckoBinaries'.
     def buildType = variant.buildType.name
 
+    // For :app, like 'local', 'localOld', or 'official'.  For other projects, null.
+    def audienceDimension = variant.productFlavors[0]?.name
+
     // The default is 'lines,source,vars', which includes debugging information
     // that is quite large: roughly 500kb for Fennec.  Therefore we remove
     // 'vars' unless we're producing a debug build, where it is useful.
-    if (!buildType.equals('debug')) {
+    if (!'debug'.equals(buildType) || 'official'.equals(audienceDimension)) {
         variant.javaCompile.options.debugOptions.debugLevel = 'lines,source'
     }
 }
