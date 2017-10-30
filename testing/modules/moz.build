@@ -13,7 +13,6 @@ TESTING_JS_MODULES += [
     'AppInfo.jsm',
     'Assert.jsm',
     'CoverageUtils.jsm',
-    'FileTestUtils.jsm',
     'MockRegistrar.jsm',
     'sinon-2.3.2.js',
     'StructuredLog.jsm',
