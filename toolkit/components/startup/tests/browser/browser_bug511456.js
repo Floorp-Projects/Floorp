@@ -28,9 +28,7 @@ function test() {
         btnStay.click();
       });
 
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                         getService(Ci.nsIAppStartup);
-      appStartup.quit(Ci.nsIAppStartup.eAttemptQuit);
+      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
       ok(seenDialog, "Should have seen a prompt dialog");
       ok(!win2.closed, "Shouldn't have closed the additional window");
       win2.close();

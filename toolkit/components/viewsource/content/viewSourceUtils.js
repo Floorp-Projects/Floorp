@@ -60,9 +60,7 @@ var gViewSourceUtils = {
    *        The line number to focus on once the source is loaded.
    */
   viewSource(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber) {
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-    if (prefs.getBoolPref("view_source.editor.external")) {
+    if (Services.prefs.getBoolPref("view_source.editor.external")) {
       this.openInExternalEditor(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
     } else {
       this._openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
@@ -173,9 +171,7 @@ var gViewSourceUtils = {
     // We currently support a %LINE% placeholder which is set to the passed
     // line number (or to 0 if there's none)
     var editorArgs = [];
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-    var args = prefs.getCharPref("view_source.editor.args");
+    var args = Services.prefs.getCharPref("view_source.editor.args");
     if (args) {
       args = args.replace("%LINE%", aLineNumber || "0");
       // add the arguments to the array (keeping quoted strings intact)
@@ -271,10 +267,8 @@ var gViewSourceUtils = {
       }
 
       // make a uri
-      var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                          .getService(Components.interfaces.nsIIOService);
       var charset = data.doc ? data.doc.characterSet : null;
-      var uri = ios.newURI(data.url, charset);
+      var uri = Services.io.newURI(data.url, charset);
       data.uri = uri;
 
       var path;
@@ -362,10 +356,8 @@ var gViewSourceUtils = {
   getExternalViewSourceEditor() {
     try {
       let viewSourceAppPath =
-          Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch)
-                    .getComplexValue("view_source.editor.path",
-                                     Components.interfaces.nsIFile);
+        Services.prefs.getComplexValue("view_source.editor.path",
+                                       Components.interfaces.nsIFile);
       let editor = Components.classes["@mozilla.org/process/util;1"]
                              .createInstance(Components.interfaces.nsIProcess);
       editor.init(viewSourceAppPath);
@@ -493,15 +485,11 @@ var gViewSourceUtils = {
   getTemporaryFile(aURI, aDocument, aContentType) {
     // include contentAreaUtils.js in our own context when we first need it
     if (!this._caUtils) {
-      var scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                                   .getService(Components.interfaces.mozIJSSubScriptLoader);
       this._caUtils = {};
-      scriptLoader.loadSubScript("chrome://global/content/contentAreaUtils.js", this._caUtils);
+      Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this._caUtils);
     }
 
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                .getService(Components.interfaces.nsIProperties);
-    var tempFile = fileLocator.get("TmpD", Components.interfaces.nsIFile);
+    var tempFile = Services.dirsvc.get("TmpD", Components.interfaces.nsIFile);
     var fileName = this._caUtils.getDefaultFileName(null, aURI, aDocument, aContentType);
     var extension = this._caUtils.getDefaultExtension(fileName, aURI, aContentType);
     var leafName = this._caUtils.getNormalizedLeafName(fileName, extension);

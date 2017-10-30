@@ -61,9 +61,7 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 function getTempDir() {
-    return Cc["@mozilla.org/file/directory_service;1"]
-            .getService(Ci.nsIProperties)
-            .get("TmpD", Ci.nsIFile);
+    return SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
 }
 
 function getFileContents(aFile) {
@@ -94,10 +92,6 @@ function persistDocument(aDoc) {
     const encodingFlags =
                   nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
 
-    var ioService = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
-
-
     var file = getTempDir();
     file.append("bug293834-serialized.html");
 
@@ -108,7 +102,7 @@ function persistDocument(aDoc) {
     const kWrapColumn = 80;
     var folder = getTempDir();
     folder.append("bug293834-serialized");
-    persist.saveDocument(aDoc, ioService.newFileURI(file),
+    persist.saveDocument(aDoc, SpecialPowers.Services.io.newFileURI(file),
                          folder,
                          aDoc.contentType,
                          encodingFlags, kWrapColumn);

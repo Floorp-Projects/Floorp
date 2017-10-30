@@ -101,10 +101,9 @@ add_task(async function test_setup() {
 
 function check_telemetry(aShouldBlockCount,
                          aListCounts) {
-  let local = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_LOCAL")
-                .snapshot();
+  let local = Services.telemetry
+                      .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+                      .snapshot();
   do_check_eq(local.counts[ALLOW_LIST], aListCounts[ALLOW_LIST],
               "Allow list counts don't match");
   do_check_eq(local.counts[BLOCK_LIST], aListCounts[BLOCK_LIST],
@@ -112,23 +111,20 @@ function check_telemetry(aShouldBlockCount,
   do_check_eq(local.counts[NO_LIST], aListCounts[NO_LIST],
               "No list counts don't match");
 
-  let shouldBlock = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
-                .snapshot();
+  let shouldBlock = Services.telemetry
+                            .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+                            .snapshot();
   // SHOULD_BLOCK = true
   do_check_eq(shouldBlock.counts[1], aShouldBlockCount);
 }
 
 function get_telemetry_counts() {
-  let local = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_LOCAL")
-                .snapshot();
-  let shouldBlock = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
-                .snapshot();
+  let local = Services.telemetry
+                      .getHistogramById("APPLICATION_REPUTATION_LOCAL")
+                      .snapshot();
+  let shouldBlock = Services.telemetry
+                            .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
+                            .snapshot();
   return { shouldBlock: shouldBlock.counts[1],
            listCounts: local.counts };
 }

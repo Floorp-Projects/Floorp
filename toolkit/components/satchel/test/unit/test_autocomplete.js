@@ -5,7 +5,6 @@
 "use strict";
 
 var fac;
-var prefs;
 
 var numRecords, timeGroupingSize, now;
 
@@ -20,8 +19,8 @@ function padLeft(number, length) {
 }
 
 function getFormExpiryDays() {
-  if (prefs.prefHasUserValue("browser.formfill.expire_days")) {
-    return prefs.getIntPref("browser.formfill.expire_days");
+  if (Services.prefs.prefHasUserValue("browser.formfill.expire_days")) {
+    return Services.prefs.getIntPref("browser.formfill.expire_days");
   }
   return DEFAULT_EXPIRE_DAYS;
 }
@@ -29,7 +28,7 @@ function getFormExpiryDays() {
 function run_test() {
   // ===== test init =====
   let testfile = do_get_file("formhistory_autocomplete.sqlite");
-  let profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
   // Cleanup from any previous tests or failures.
   let destFile = profileDir.clone();
@@ -41,16 +40,15 @@ function run_test() {
   testfile.copyTo(profileDir, "formhistory.sqlite");
 
   fac = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  timeGroupingSize = prefs.getIntPref("browser.formfill.timeGroupingSize") * 1000 * 1000;
+  timeGroupingSize = Services.prefs.getIntPref("browser.formfill.timeGroupingSize") * 1000 * 1000;
 
   run_next_test();
 }
 
 add_test(function test0() {
-  let maxTimeGroupings = prefs.getIntPref("browser.formfill.maxTimeGroupings");
-  let bucketSize = prefs.getIntPref("browser.formfill.bucketSize");
+  let maxTimeGroupings = Services.prefs.getIntPref("browser.formfill.maxTimeGroupings");
+  let bucketSize = Services.prefs.getIntPref("browser.formfill.bucketSize");
 
   // ===== Tests with constant timesUsed and varying lastUsed date =====
   // insert 2 records per bucket to check alphabetical sort within

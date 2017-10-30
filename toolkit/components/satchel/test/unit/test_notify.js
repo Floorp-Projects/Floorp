@@ -74,8 +74,7 @@ function* run_test_steps() {
     });
 
     // Add the observer
-    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.addObserver(TestObserver, "satchel-storage-changed");
+    Services.obs.addObserver(TestObserver, "satchel-storage-changed");
 
     /* ========== 2 ========== */
     testnum++;
@@ -192,7 +191,7 @@ function* run_test_steps() {
 
     do_check_eq(expectedNotification, null);
 
-    os.removeObserver(TestObserver, "satchel-storage-changed");
+    Services.obs.removeObserver(TestObserver, "satchel-storage-changed");
 
     do_test_finished();
   } catch (e) {
