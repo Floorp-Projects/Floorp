@@ -137,7 +137,7 @@ def get_paths(os_name):
     sdk_path = os.environ.get('ANDROID_SDK_HOME',
                               os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name)))
     ndk_path = os.environ.get('ANDROID_NDK_HOME',
-                              os.path.join(mozbuild_path, 'android-ndk-r11c'))
+                              os.path.join(mozbuild_path, 'android-ndk-r15c'))
     return (mozbuild_path, sdk_path, ndk_path)
 
 
@@ -260,7 +260,7 @@ def suggest_mozconfig(os_name, artifact_mode=False):
         print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
 
 
-def android_ndk_url(os_name, ver='r11c'):
+def android_ndk_url(os_name, ver='r15c'):
     # Produce a URL like
     # 'https://dl.google.com/android/repository/android-ndk-$VER-linux-x86_64.zip
     base_url = 'https://dl.google.com/android/repository/android-ndk'
