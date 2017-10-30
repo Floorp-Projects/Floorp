@@ -233,6 +233,74 @@ class CheckTestCompleteParser(OutputParser):
 
         return self.tbpl_status
 
+class MozconfigPathError(Exception):
+    """
+    There was an error getting a mozconfig path from a mozharness config.
+    """
+
+def _get_mozconfig_path(script, config, dirs):
+    """
+    Get the path to the mozconfig file to use from a mozharness config.
+
+    :param script: The object to interact with the filesystem through.
+    :type script: ScriptMixin:
+
+    :param config: The mozharness config to inspect.
+    :type config: dict
+
+    :param dirs: The directories specified for this build.
+    :type dirs: dict
+    """
+    COMPOSITE_KEYS = {'mozconfig_variant', 'app_name', 'mozconfig_platform'}
+    have_composite_mozconfig = COMPOSITE_KEYS <= set(config.keys())
+    have_partial_composite_mozconfig = len(COMPOSITE_KEYS & set(config.keys())) > 0
+    have_src_mozconfig = 'src_mozconfig' in config
+    have_src_mozconfig_manifest = 'src_mozconfig_manifest' in config
+
+    # first determine the mozconfig path
+    if have_partial_composite_mozconfig and not have_composite_mozconfig:
+        raise MozconfigPathError(
+            "All or none of 'app_name', 'mozconfig_platform' and `mozconfig_variant' must be "
+            "in the config in order to determine the mozconfig.")
+    elif have_composite_mozconfig and have_src_mozconfig:
+        raise MozconfigPathError(
+            "'src_mozconfig' or 'mozconfig_variant' must be "
+            "in the config but not both in order to determine the mozconfig.")
+    elif have_composite_mozconfig and have_src_mozconfig_manifest:
+        raise MozconfigPathError(
+            "'src_mozconfig_manifest' or 'mozconfig_variant' must be "
+            "in the config but not both in order to determine the mozconfig.")
+    elif have_src_mozconfig and have_src_mozconfig_manifest:
+        raise MozconfigPathError(
+            "'src_mozconfig' or 'src_mozconfig_manifest' must be "
+            "in the config but not both in order to determine the mozconfig.")
+    elif have_composite_mozconfig:
+        src_mozconfig = '%(app_name)s/config/mozconfigs/%(platform)s/%(variant)s' % {
+            'app_name': config['app_name'],
+            'platform': config['mozconfig_platform'],
+            'variant': config['mozconfig_variant'],
+        }
+        abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], src_mozconfig)
+    elif have_src_mozconfig:
+        abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], config.get('src_mozconfig'))
+    elif have_src_mozconfig_manifest:
+        manifest = os.path.join(dirs['abs_work_dir'], config['src_mozconfig_manifest'])
+        if not os.path.exists(manifest):
+            raise MozconfigPathError(
+                'src_mozconfig_manifest: "%s" not found. Does it exist?' % (manifest,))
+        else:
+            with script.opened(manifest, error_level=ERROR) as (fh, err):
+                if err:
+                    raise MozconfigPathError("%s exists but coud not read properties" % manifest)
+                abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], json.load(fh)['gecko_path'])
+    else:
+        raise MozconfigPathError(
+            "Must provide 'app_name', 'mozconfig_platform' and 'mozconfig_variant'; "
+            "or one of 'src_mozconfig' or 'src_mozconfig_manifest' in the config "
+            "in order to determine the mozconfig.")
+
+    return abs_mozconfig_path
+
 
 class BuildingConfig(BaseConfig):
     # TODO add nosetests for this class
@@ -1059,26 +1127,15 @@ or run without that action (ie: --no-{action})"
 
     def _get_mozconfig(self):
         """assign mozconfig."""
-        c = self.config
         dirs = self.query_abs_dirs()
-        abs_mozconfig_path = ''
 
-        # first determine the mozconfig path
-        if c.get('src_mozconfig') and not c.get('src_mozconfig_manifest'):
-            self.info('Using in-tree mozconfig')
-            abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], c.get('src_mozconfig'))
-        elif c.get('src_mozconfig_manifest') and not c.get('src_mozconfig'):
-            self.info('Using mozconfig based on manifest contents')
-            manifest = os.path.join(dirs['abs_work_dir'], c['src_mozconfig_manifest'])
-            if not os.path.exists(manifest):
-                self.fatal('src_mozconfig_manifest: "%s" not found. Does it exist?' % (manifest,))
-            with self.opened(manifest, error_level=ERROR) as (fh, err):
-                if err:
-                    self.fatal("%s exists but coud not read properties" % manifest)
-                abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], json.load(fh)['gecko_path'])
-        else:
-            self.fatal("'src_mozconfig' or 'src_mozconfig_manifest' must be "
-                       "in the config but not both in order to determine the mozconfig.")
+        try:
+            abs_mozconfig_path = _get_mozconfig_path(
+                script=self, config=self.config, dirs=dirs)
+        except MozconfigPathError as e:
+            self.fatal(e.message)
+
+        self.info("Use mozconfig: {}".format(abs_mozconfig_path))
 
         # print its contents
         content = self.read_from_file(abs_mozconfig_path, error_level=FATAL)
