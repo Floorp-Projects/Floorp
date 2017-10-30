@@ -1,6 +1,6 @@
 //! Android-specific definitions for linux-like values
 
-use dox::mem;
+use dox::{mem, Option};
 
 pub type clock_t = ::c_long;
 pub type time_t = ::c_long;
@@ -12,6 +12,7 @@ pub type nlink_t = u32;
 pub type useconds_t = u32;
 pub type pthread_t = ::c_long;
 pub type pthread_mutexattr_t = ::c_long;
+pub type pthread_rwlockattr_t = ::c_long;
 pub type pthread_condattr_t = ::c_long;
 pub type fsfilcnt_t = ::c_ulong;
 pub type fsblkcnt_t = ::c_ulong;
@@ -21,6 +22,7 @@ pub type dev_t = ::c_ulong;
 pub type ino_t = ::c_ulong;
 pub type __CPU_BITTYPE = ::c_ulong;
 pub type idtype_t = ::c_int;
+pub type loff_t = ::c_longlong;
 
 s! {
     pub struct dirent {
@@ -145,11 +147,33 @@ s! {
         #[cfg(target_pointer_width = "64")]
         __f_reserved: [u32; 6],
     }
+
+    pub struct signalfd_siginfo {
+        pub ssi_signo: ::uint32_t,
+        pub ssi_errno: ::int32_t,
+        pub ssi_code: ::int32_t,
+        pub ssi_pid: ::uint32_t,
+        pub ssi_uid: ::uint32_t,
+        pub ssi_fd: ::int32_t,
+        pub ssi_tid: ::uint32_t,
+        pub ssi_band: ::uint32_t,
+        pub ssi_overrun: ::uint32_t,
+        pub ssi_trapno: ::uint32_t,
+        pub ssi_status: ::int32_t,
+        pub ssi_int: ::int32_t,
+        pub ssi_ptr: ::c_ulonglong,
+        pub ssi_utime: ::c_ulonglong,
+        pub ssi_stime: ::c_ulonglong,
+        pub ssi_addr: ::c_ulonglong,
+        pub ssi_addr_lsb: ::uint16_t,
+        _pad: [::uint8_t; 46],
+    }
 }
 
 pub const O_TRUNC: ::c_int = 512;
-
 pub const O_CLOEXEC: ::c_int = 0x80000;
+pub const O_PATH: ::c_int = 0o10000000;
+pub const O_NOATIME: ::c_int = 0o1000000;
 
 pub const EBFONT: ::c_int = 59;
 pub const ENOSTR: ::c_int = 60;
@@ -173,6 +197,8 @@ pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
 
 pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
 pub const EPOLLONESHOT: ::c_int = 0x40000000;
+pub const EPOLLRDHUP: ::c_int = 0x00002000;
+pub const EPOLLWAKEUP: ::c_int = 0x20000000;
 
 pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
@@ -191,9 +217,19 @@ pub const _PC_MAX_INPUT: ::c_int = 3;
 pub const _PC_NAME_MAX: ::c_int = 4;
 pub const _PC_PATH_MAX: ::c_int = 5;
 pub const _PC_PIPE_BUF: ::c_int = 6;
+pub const _PC_2_SYMLINKS: ::c_int = 7;
+pub const _PC_ALLOC_SIZE_MIN: ::c_int = 8;
+pub const _PC_REC_INCR_XFER_SIZE: ::c_int = 9;
+pub const _PC_REC_MAX_XFER_SIZE: ::c_int = 10;
+pub const _PC_REC_MIN_XFER_SIZE: ::c_int = 11;
+pub const _PC_REC_XFER_ALIGN: ::c_int = 12;
+pub const _PC_SYMLINK_MAX: ::c_int = 13;
 pub const _PC_CHOWN_RESTRICTED: ::c_int = 14;
 pub const _PC_NO_TRUNC: ::c_int = 15;
 pub const _PC_VDISABLE: ::c_int = 16;
+pub const _PC_ASYNC_IO: ::c_int = 17;
+pub const _PC_PRIO_IO: ::c_int = 18;
+pub const _PC_SYNC_IO: ::c_int = 19;
 
 pub const FIONBIO: ::c_int = 0x5421;
 
@@ -209,6 +245,7 @@ pub const _SC_EXPR_NEST_MAX: ::c_int = 8;
 pub const _SC_LINE_MAX: ::c_int = 9;
 pub const _SC_NGROUPS_MAX: ::c_int = 10;
 pub const _SC_OPEN_MAX: ::c_int = 11;
+pub const _SC_PASS_MAX: ::c_int = 12;
 pub const _SC_2_C_BIND: ::c_int = 13;
 pub const _SC_2_C_DEV: ::c_int = 14;
 pub const _SC_2_C_VERSION: ::c_int = 15;
@@ -238,7 +275,35 @@ pub const _SC_IOV_MAX: ::c_int = 38;
 pub const _SC_PAGESIZE: ::c_int = 39;
 pub const _SC_PAGE_SIZE: ::c_int = 40;
 pub const _SC_XOPEN_UNIX: ::c_int = 41;
+pub const _SC_XBS5_ILP32_OFF32: ::c_int = 42;
+pub const _SC_XBS5_ILP32_OFFBIG: ::c_int = 43;
+pub const _SC_XBS5_LP64_OFF64: ::c_int = 44;
+pub const _SC_XBS5_LPBIG_OFFBIG: ::c_int = 45;
+pub const _SC_AIO_LISTIO_MAX: ::c_int = 46;
+pub const _SC_AIO_MAX: ::c_int = 47;
+pub const _SC_AIO_PRIO_DELTA_MAX: ::c_int = 48;
+pub const _SC_DELAYTIMER_MAX: ::c_int = 49;
+pub const _SC_MQ_OPEN_MAX: ::c_int = 50;
 pub const _SC_MQ_PRIO_MAX: ::c_int = 51;
+pub const _SC_RTSIG_MAX: ::c_int = 52;
+pub const _SC_SEM_NSEMS_MAX: ::c_int = 53;
+pub const _SC_SEM_VALUE_MAX: ::c_int = 54;
+pub const _SC_SIGQUEUE_MAX: ::c_int = 55;
+pub const _SC_TIMER_MAX: ::c_int = 56;
+pub const _SC_ASYNCHRONOUS_IO: ::c_int = 57;
+pub const _SC_FSYNC: ::c_int = 58;
+pub const _SC_MAPPED_FILES: ::c_int = 59;
+pub const _SC_MEMLOCK: ::c_int = 60;
+pub const _SC_MEMLOCK_RANGE: ::c_int = 61;
+pub const _SC_MEMORY_PROTECTION: ::c_int = 62;
+pub const _SC_MESSAGE_PASSING: ::c_int = 63;
+pub const _SC_PRIORITIZED_IO: ::c_int = 64;
+pub const _SC_PRIORITY_SCHEDULING: ::c_int = 65;
+pub const _SC_REALTIME_SIGNALS: ::c_int = 66;
+pub const _SC_SEMAPHORES: ::c_int = 67;
+pub const _SC_SHARED_MEMORY_OBJECTS: ::c_int = 68;
+pub const _SC_SYNCHRONIZED_IO: ::c_int = 69;
+pub const _SC_TIMERS: ::c_int = 70;
 pub const _SC_GETGR_R_SIZE_MAX: ::c_int = 71;
 pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 72;
 pub const _SC_LOGIN_NAME_MAX: ::c_int = 73;
@@ -254,7 +319,11 @@ pub const _SC_THREAD_PRIORITY_SCHEDULING: ::c_int = 82;
 pub const _SC_THREAD_PRIO_INHERIT: ::c_int = 83;
 pub const _SC_THREAD_PRIO_PROTECT: ::c_int = 84;
 pub const _SC_THREAD_SAFE_FUNCTIONS: ::c_int = 85;
+pub const _SC_NPROCESSORS_CONF: ::c_int = 96;
 pub const _SC_NPROCESSORS_ONLN: ::c_int = 97;
+pub const _SC_PHYS_PAGES: ::c_int = 98;
+pub const _SC_AVPHYS_PAGES: ::c_int = 99;
+pub const _SC_MONOTONIC_CLOCK: ::c_int = 100;
 
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
@@ -418,7 +487,6 @@ pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_SEQPACKET: ::c_int = 5;
 
 pub const SOL_SOCKET: ::c_int = 1;
-pub const SOL_UDP: ::c_int = 17;
 pub const SOL_SCTP: ::c_int = 132;
 pub const SOL_IPX: ::c_int = 256;
 pub const SOL_AX25: ::c_int = 257;
@@ -427,7 +495,7 @@ pub const SOL_NETROM: ::c_int = 259;
 pub const SOL_ROSE: ::c_int = 260;
 
 #[doc(hidden)]
-pub const AF_MAX: ::c_int = 39;
+pub const AF_MAX: ::c_int = 43;
 #[doc(hidden)]
 pub const PF_MAX: ::c_int = AF_MAX;
 
@@ -440,13 +508,27 @@ pub const SO_SNDBUF: ::c_int = 7;
 pub const SO_RCVBUF: ::c_int = 8;
 pub const SO_KEEPALIVE: ::c_int = 9;
 pub const SO_OOBINLINE: ::c_int = 10;
+pub const SO_PRIORITY: ::c_int = 12;
 pub const SO_LINGER: ::c_int = 13;
+pub const SO_BSDCOMPAT: ::c_int = 14;
 pub const SO_REUSEPORT: ::c_int = 15;
+pub const SO_PASSCRED: ::c_int = 16;
+pub const SO_PEERCRED: ::c_int = 17;
 pub const SO_RCVLOWAT: ::c_int = 18;
 pub const SO_SNDLOWAT: ::c_int = 19;
 pub const SO_RCVTIMEO: ::c_int = 20;
 pub const SO_SNDTIMEO: ::c_int = 21;
+pub const SO_BINDTODEVICE: ::c_int = 25;
+pub const SO_TIMESTAMP: ::c_int = 29;
 pub const SO_ACCEPTCONN: ::c_int = 30;
+pub const SO_SNDBUFFORCE: ::c_int = 32;
+pub const SO_RCVBUFFORCE: ::c_int = 33;
+pub const SO_MARK: ::c_int = 36;
+pub const SO_PROTOCOL: ::c_int = 38;
+pub const SO_DOMAIN: ::c_int = 39;
+pub const SO_RXQ_OVFL: ::c_int = 40;
+pub const SO_PEEK_OFF: ::c_int = 42;
+pub const SO_BUSY_POLL: ::c_int = 46;
 
 pub const O_ACCMODE: ::c_int = 3;
 pub const O_APPEND: ::c_int = 1024;
@@ -457,6 +539,7 @@ pub const O_NONBLOCK: ::c_int = 2048;
 pub const O_SYNC: ::c_int = 0x101000;
 pub const O_ASYNC: ::c_int = 0x2000;
 pub const O_NDELAY: ::c_int = 0x800;
+pub const O_DSYNC: ::c_int = 4096;
 
 pub const NI_MAXHOST: ::size_t = 1025;
 
@@ -472,6 +555,7 @@ pub const VMIN: usize = 6;
 pub const IEXTEN: ::tcflag_t = 0x00008000;
 pub const TOSTOP: ::tcflag_t = 0x00000100;
 pub const FLUSHO: ::tcflag_t = 0x00001000;
+pub const EXTPROC: ::tcflag_t = 0o200000;
 
 pub const ADFS_SUPER_MAGIC: ::c_long = 0x0000adf5;
 pub const AFFS_SUPER_MAGIC: ::c_long = 0x0000adff;
@@ -500,8 +584,6 @@ pub const SMB_SUPER_MAGIC: ::c_long = 0x0000517b;
 pub const TMPFS_MAGIC: ::c_long = 0x01021994;
 pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
 
-pub const MADV_HUGEPAGE: ::c_int = 14;
-pub const MADV_NOHUGEPAGE: ::c_int = 15;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
 
 pub const PTRACE_TRACEME: ::c_int = 0;
@@ -584,8 +666,6 @@ pub const LINUX_REBOOT_CMD_KEXEC: ::c_int = 0x45584543;
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
-pub const SIGSTKSZ: ::size_t = 8192;
-pub const MINSIGSTKSZ: ::size_t = 2048;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;
@@ -626,6 +706,15 @@ pub const ISIG: ::tcflag_t = 0x00000001;
 pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
+pub const VSWTC: usize = 7;
+pub const OLCUC:  ::tcflag_t = 0o000002;
+pub const NLDLY:  ::tcflag_t = 0o000400;
+pub const CRDLY:  ::tcflag_t = 0o003000;
+pub const TABDLY: ::tcflag_t = 0o014000;
+pub const BSDLY:  ::tcflag_t = 0o020000;
+pub const FFDLY:  ::tcflag_t = 0o100000;
+pub const VTDLY:  ::tcflag_t = 0o040000;
+pub const XTABS:  ::tcflag_t = 0o014000;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;
@@ -724,6 +813,34 @@ pub const NLA_TYPE_MASK: ::c_int = !(NLA_F_NESTED | NLA_F_NET_BYTEORDER);
 
 pub const SIGEV_THREAD_ID: ::c_int = 4;
 
+pub const CIBAUD: ::tcflag_t = 0o02003600000;
+pub const CBAUDEX: ::tcflag_t = 0o010000;
+
+pub const TIOCM_LE: ::c_int = 0x001;
+pub const TIOCM_DTR: ::c_int = 0x002;
+pub const TIOCM_RTS: ::c_int = 0x004;
+pub const TIOCM_ST: ::c_int = 0x008;
+pub const TIOCM_SR: ::c_int = 0x010;
+pub const TIOCM_CTS: ::c_int = 0x020;
+pub const TIOCM_CAR: ::c_int = 0x040;
+pub const TIOCM_RNG: ::c_int = 0x080;
+pub const TIOCM_DSR: ::c_int = 0x100;
+pub const TIOCM_CD: ::c_int = TIOCM_CAR;
+pub const TIOCM_RI: ::c_int = TIOCM_RNG;
+
+pub const POLLWRNORM: ::c_short = 0x100;
+pub const POLLWRBAND: ::c_short = 0x200;
+
+pub const SFD_CLOEXEC: ::c_int = O_CLOEXEC;
+pub const SFD_NONBLOCK: ::c_int = O_NONBLOCK;
+
+pub const SOCK_NONBLOCK: ::c_int = O_NONBLOCK;
+
+pub const SO_ORIGINAL_DST: ::c_int = 80;
+pub const IUTF8: ::tcflag_t = 0x00004000;
+pub const CMSPAR: ::tcflag_t = 0o10000000000;
+pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
+
 f! {
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
         for slot in cpuset.__bits.iter_mut() {
@@ -803,6 +920,163 @@ extern {
 
     pub fn posix_fallocate(fd: ::c_int, offset: ::off_t,
                            len: ::off_t) -> ::c_int;
+    pub fn signalfd(fd: ::c_int, mask: *const ::sigset_t, flags: ::c_int)
+                    -> ::c_int;
+    pub fn syscall(num: ::c_long, ...) -> ::c_long;
+    pub fn sched_getaffinity(pid: ::pid_t,
+                             cpusetsize: ::size_t,
+                             cpuset: *mut cpu_set_t) -> ::c_int;
+    pub fn sched_setaffinity(pid: ::pid_t,
+                             cpusetsize: ::size_t,
+                             cpuset: *const cpu_set_t) -> ::c_int;
+    pub fn epoll_create(size: ::c_int) -> ::c_int;
+    pub fn epoll_create1(flags: ::c_int) -> ::c_int;
+    pub fn epoll_wait(epfd: ::c_int,
+                      events: *mut ::epoll_event,
+                      maxevents: ::c_int,
+                      timeout: ::c_int) -> ::c_int;
+    pub fn epoll_ctl(epfd: ::c_int,
+                     op: ::c_int,
+                     fd: ::c_int,
+                     event: *mut ::epoll_event) -> ::c_int;
+    pub fn pthread_getschedparam(native: ::pthread_t,
+                                 policy: *mut ::c_int,
+                                 param: *mut ::sched_param) -> ::c_int;
+    pub fn unshare(flags: ::c_int) -> ::c_int;
+    pub fn umount(target: *const ::c_char) -> ::c_int;
+    pub fn sched_get_priority_max(policy: ::c_int) -> ::c_int;
+    pub fn tee(fd_in: ::c_int,
+               fd_out: ::c_int,
+               len: ::size_t,
+               flags: ::c_uint) -> ::ssize_t;
+    pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
+    pub fn splice(fd_in: ::c_int,
+                  off_in: *mut ::loff_t,
+                  fd_out: ::c_int,
+                  off_out: *mut ::loff_t,
+                  len: ::size_t,
+                  flags: ::c_uint) -> ::ssize_t;
+    pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
+    pub fn sched_rr_get_interval(pid: ::pid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn sem_timedwait(sem: *mut sem_t,
+                         abstime: *const ::timespec) -> ::c_int;
+    pub fn sched_setparam(pid: ::pid_t, param: *const ::sched_param) -> ::c_int;
+    pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
+    pub fn swapoff(puath: *const ::c_char) -> ::c_int;
+    pub fn vmsplice(fd: ::c_int,
+                    iov: *const ::iovec,
+                    nr_segs: ::size_t,
+                    flags: ::c_uint) -> ::ssize_t;
+    pub fn mount(src: *const ::c_char,
+                 target: *const ::c_char,
+                 fstype: *const ::c_char,
+                 flags: ::c_ulong,
+                 data: *const ::c_void) -> ::c_int;
+    pub fn personality(persona: ::c_ulong) -> ::c_int;
+    pub fn prctl(option: ::c_int, ...) -> ::c_int;
+    pub fn sched_getparam(pid: ::pid_t, param: *mut ::sched_param) -> ::c_int;
+    pub fn ppoll(fds: *mut ::pollfd,
+                 nfds: nfds_t,
+                 timeout: *const ::timespec,
+                 sigmask: *const sigset_t) -> ::c_int;
+    pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
+                                   abstime: *const ::timespec) -> ::c_int;
+    pub fn clone(cb: extern fn(*mut ::c_void) -> ::c_int,
+                 child_stack: *mut ::c_void,
+                 flags: ::c_int,
+                 arg: *mut ::c_void, ...) -> ::c_int;
+    pub fn sched_getscheduler(pid: ::pid_t) -> ::c_int;
+    pub fn clock_nanosleep(clk_id: ::clockid_t,
+                           flags: ::c_int,
+                           rqtp: *const ::timespec,
+                           rmtp:  *mut ::timespec) -> ::c_int;
+    pub fn pthread_attr_getguardsize(attr: *const ::pthread_attr_t,
+                                     guardsize: *mut ::size_t) -> ::c_int;
+    pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
+    pub fn sched_get_priority_min(policy: ::c_int) -> ::c_int;
+    pub fn pthread_condattr_getpshared(attr: *const pthread_condattr_t,
+                                       pshared: *mut ::c_int) -> ::c_int;
+    pub fn sysinfo(info: *mut ::sysinfo) -> ::c_int;
+    pub fn umount2(target: *const ::c_char, flags: ::c_int) -> ::c_int;
+    pub fn pthread_setschedparam(native: ::pthread_t,
+                                 policy: ::c_int,
+                                 param: *const ::sched_param) -> ::c_int;
+    pub fn swapon(path: *const ::c_char, swapflags: ::c_int) -> ::c_int;
+    pub fn sched_setscheduler(pid: ::pid_t,
+                              policy: ::c_int,
+                              param: *const ::sched_param) -> ::c_int;
+    pub fn sendfile(out_fd: ::c_int,
+                    in_fd: ::c_int,
+                    offset: *mut off_t,
+                    count: ::size_t) -> ::ssize_t;
+    pub fn sigsuspend(mask: *const ::sigset_t) -> ::c_int;
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
+    pub fn getgrgid_r(uid: ::uid_t,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "sigaltstack$UNIX2003")]
+    #[cfg_attr(target_os = "netbsd", link_name = "__sigaltstack14")]
+    pub fn sigaltstack(ss: *const stack_t,
+                       oss: *mut stack_t) -> ::c_int;
+    pub fn sem_close(sem: *mut sem_t) -> ::c_int;
+    pub fn getdtablesize() -> ::c_int;
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrnam_r")]
+    pub fn getgrnam_r(name: *const ::c_char,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "pthread_sigmask$UNIX2003")]
+    pub fn pthread_sigmask(how: ::c_int, set: *const sigset_t,
+                           oldset: *mut sigset_t) -> ::c_int;
+    pub fn sem_open(name: *const ::c_char, oflag: ::c_int, ...) -> *mut sem_t;
+    pub fn getgrnam(name: *const ::c_char) -> *mut ::group;
+    pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
+    pub fn sem_unlink(name: *const ::c_char) -> ::c_int;
+    pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwnam_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwnam_r")]
+    pub fn getpwnam_r(name: *const ::c_char,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwuid_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwuid_r")]
+    pub fn getpwuid_r(uid: ::uid_t,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch ="x86"),
+               link_name = "sigwait$UNIX2003")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_sigwait")]
+    pub fn sigwait(set: *const sigset_t,
+                   sig: *mut ::c_int) -> ::c_int;
+    pub fn pthread_atfork(prepare: Option<unsafe extern fn()>,
+                          parent: Option<unsafe extern fn()>,
+                          child: Option<unsafe extern fn()>) -> ::c_int;
+    pub fn getgrgid(gid: ::gid_t) -> *mut ::group;
+    pub fn getgrouplist(user: *const ::c_char,
+                        group: ::gid_t,
+                        groups: *mut ::gid_t,
+                        ngroups: *mut ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
+                                        pshared: *mut ::c_int) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "popen$UNIX2003")]
+    pub fn popen(command: *const c_char,
+                 mode: *const c_char) -> *mut ::FILE;
+    pub fn faccessat(dirfd: ::c_int, pathname: *const ::c_char,
+                     mode: ::c_int, flags: ::c_int) -> ::c_int;
+    pub fn pthread_create(native: *mut ::pthread_t,
+                          attr: *const ::pthread_attr_t,
+                          f: extern fn(*mut ::c_void) -> *mut ::c_void,
+                          value: *mut ::c_void) -> ::c_int;
 }
 
 cfg_if! {

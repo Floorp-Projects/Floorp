@@ -1,4 +1,10 @@
 environment:
+  # When this was added there were revocation check failures when using the
+  # libcurl backend as libcurl checks by default, but rustup doesn't provide the
+  # switch to turn this off. Switch to Hyper which looks to not check for
+  # revocation by default like libcurl does.
+  RUSTUP_USE_HYPER: 1
+  CARGO_HTTP_CHECK_REVOKE: false
   matrix:
   - TARGET: x86_64-pc-windows-gnu
     MSYS2_BITS: 64
@@ -18,7 +24,7 @@ build: false
 
 test_script:
   - cargo test --target %TARGET%
-  - cargo run --manifest-path libc-test/Cargo.toml --target %TARGET%
+  - cargo test --manifest-path libc-test/Cargo.toml --target %TARGET%
 
 cache:
   - target

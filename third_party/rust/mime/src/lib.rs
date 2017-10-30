@@ -41,14 +41,6 @@ use std::fmt;
 use std::iter::Enumerate;
 use std::str::{FromStr, Chars};
 
-macro_rules! inspect(
-    ($s:expr, $t:expr) => ({
-        let t = $t;
-        trace!("inspect {}: {:?}", $s, t);
-        t
-    })
-);
-
 /// Mime, or Media Type. Encapsulates common registers types.
 ///
 /// Consider that a traditional mime type contains a "top level type",
@@ -84,6 +76,7 @@ impl<T: AsRef<[Param]> + heapsize::HeapSizeOf> heapsize::HeapSizeOf for Mime<T> 
 }
 
 impl<LHS: AsRef<[Param]>, RHS: AsRef<[Param]>> PartialEq<Mime<RHS>> for Mime<LHS> {
+    #[inline]
     fn eq(&self, other: &Mime<RHS>) -> bool {
         self.0 == other.0 && self.1 == other.1 && self.2.as_ref() == other.2.as_ref()
     }
@@ -158,11 +151,12 @@ macro_rules! enoom {
         }
 
         impl PartialEq for $en {
+            #[inline]
             fn eq(&self, other: &$en) -> bool {
                 match (self, other) {
                     $( (&$en::$ty, &$en::$ty) => true ),*,
                     (&$en::$ext(ref a), &$en::$ext(ref b)) => a == b,
-                    _ => self.as_str() == other.as_str()
+                    (_, _) => self.as_str() == other.as_str(),
                 }
             }
         }
@@ -218,7 +212,7 @@ macro_rules! enoom {
             fn from_str(s: &str) -> Result<$en, ()> {
                 Ok(match s {
                     $(_s if _s == $text => $en::$ty),*,
-                    s => $en::$ext(inspect!(stringify!($ext), s).to_string())
+                    s => $en::$ext(s.to_string())
                 })
             }
         }
@@ -302,6 +296,35 @@ pub type Param = (Attr, Value);
 impl<T: AsRef<[Param]>> fmt::Display for Mime<T> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // It's much faster to write a single string, as opposed to push
+        // several parts through f.write_str(). So, check for the most common
+        // mime types, and fast track them.
+        if let TopLevel::Text = self.0 {
+            if let SubLevel::Plain = self.1 {
+                let attrs = self.2.as_ref();
+                if attrs.len() == 0 {
+                    return f.write_str("text/plain");
+                } else if &[(Attr::Charset, Value::Utf8)] == attrs {
+                    return f.write_str("text/plain; charset=utf-8");
+                }
+            }
+        } else if let TopLevel::Application = self.0 {
+            if let SubLevel::Json = self.1 {
+                let attrs = self.2.as_ref();
+                if attrs.len() == 0 {
+                    return f.write_str("application/json");
+                }
+            }
+        } else if let TopLevel::Star = self.0 {
+            if let SubLevel::Star = self.1 {
+                let attrs = self.2.as_ref();
+                if attrs.len() == 0 {
+                    return f.write_str("*/*");
+                }
+            }
+        }
+
+        // slower general purpose fmt
         try!(fmt::Display::fmt(&self.0, f));
         try!(f.write_str("/"));
         try!(fmt::Display::fmt(&self.1, f));
@@ -336,7 +359,7 @@ impl FromStr for Mime {
         let mut start;
         let top;
         loop {
-            match inspect!("top iter", iter.next()) {
+            match iter.next() {
                 Some((0, c)) if is_restricted_name_first_char(c) => (),
                 Some((i, c)) if i > 0 && is_restricted_name_char(c) => (),
                 Some((i, '/')) if i > 0 => match FromStr::from_str(&ascii[..i]) {
@@ -356,7 +379,7 @@ impl FromStr for Mime {
         let sub;
         let mut sub_star = false;
         loop {
-            match inspect!("sub iter", iter.next()) {
+            match iter.next() {
                 Some((i, '*')) if i == start => {
                     sub_star = true;
                 },
@@ -381,7 +404,7 @@ impl FromStr for Mime {
         // params
         debug!("starting params, len={}", len);
         loop {
-            match inspect!("param", param_from_str(raw, &ascii, &mut iter, start)) {
+            match param_from_str(raw, &ascii, &mut iter, start) {
                 Some((p, end)) => {
                     params.push(p);
                     start = end;
@@ -424,13 +447,13 @@ fn param_from_str(raw: &str, ascii: &str, iter: &mut Enumerate<Chars>, mut start
     let attr;
     debug!("param_from_str, start={}", start);
     loop {
-        match inspect!("attr iter", iter.next()) {
+        match iter.next() {
             Some((i, ' ')) if i == start => start = i + 1,
             Some((i, c)) if i == start && is_restricted_name_first_char(c) => (),
             Some((i, c)) if i > start && is_restricted_name_char(c) => (),
             Some((i, '=')) if i > start => match FromStr::from_str(&ascii[start..i]) {
                 Ok(a) => {
-                    attr = inspect!("attr", a);
+                    attr = a;
                     start = i + 1;
                     break;
                 },
@@ -448,7 +471,7 @@ fn param_from_str(raw: &str, ascii: &str, iter: &mut Enumerate<Chars>, mut start
         let substr = |a,b| { if attr==Attr::Charset { &ascii[a..b] } else { &raw[a..b] } };
         let endstr = |a| { if attr==Attr::Charset { &ascii[a..] } else { &raw[a..] } };
         loop {
-            match inspect!("value iter", iter.next()) {
+            match iter.next() {
                 Some((i, '"')) if i == start => {
                     debug!("quoted");
                     is_quoted = true;
@@ -612,7 +635,7 @@ mod tests {
     #[bench]
     fn bench_fmt(b: &mut Bencher) {
         use std::fmt::Write;
-        let mime = mime!(Text/Plain; Charset=Utf8, ("foo")=("bar"));
+        let mime = mime!(Text/Plain; Charset=Utf8);
         b.bytes = mime.to_string().as_bytes().len() as u64;
         let mut s = String::with_capacity(64);
         b.iter(|| {

@@ -10,6 +10,7 @@ pub type ino_t = u32;
 pub type blkcnt_t = i32;
 pub type blksize_t = i32;
 pub type nlink_t = u32;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct aiocb {
@@ -73,6 +74,40 @@ s! {
         st_pad3: ::c_long,
         pub st_blocks: ::blkcnt64_t,
         st_pad5: [::c_long; 14],
+    }
+
+    pub struct statfs64 {
+        pub f_type: ::c_long,
+        pub f_bsize: ::c_long,
+        pub f_frsize: ::c_long,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_bavail: u64,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::c_long,
+        pub f_flags: ::c_long,
+        pub f_spare: [::c_long; 5],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        #[cfg(target_endian = "little")]
+        pub f_fsid: ::c_ulong,
+        __f_unused: ::c_int,
+        #[cfg(target_endian = "big")]
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct pthread_attr_t {
@@ -228,7 +263,14 @@ pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+
+pub const O_LARGEFILE: ::c_int = 0x2000;
 
 pub const RLIM_INFINITY: ::rlim_t = 0x7fffffff;
 
-pub const SYS_gettid: ::c_long = 4222;   // Valid for O32
+// Valid for O32
+pub const SYS_pivot_root: ::c_long = 4216;
+pub const SYS_gettid: ::c_long = 4222;
+pub const SYS_perf_event_open: ::c_long = 4333;
+pub const SYS_memfd_create: ::c_long = 4354;

@@ -180,17 +180,35 @@ pub const SIG_SETMASK: ::c_int = 3;
 pub const SIG_BLOCK: ::c_int = 0x1;
 pub const SIG_UNBLOCK: ::c_int = 0x2;
 
+pub const IP_MULTICAST_IF: ::c_int = 9;
+pub const IP_MULTICAST_TTL: ::c_int = 10;
+pub const IP_MULTICAST_LOOP: ::c_int = 11;
+
 pub const IPV6_MULTICAST_LOOP: ::c_int = 11;
 pub const IPV6_V6ONLY: ::c_int = 27;
 
 pub const ST_RDONLY: ::c_ulong = 1;
 
+pub const SCM_RIGHTS: ::c_int = 0x01;
+
 pub const NCCS: usize = 20;
 
+pub const O_ACCMODE: ::c_int = 0x3;
+pub const O_RDONLY: ::c_int = 0;
+pub const O_WRONLY: ::c_int = 1;
+pub const O_RDWR: ::c_int = 2;
+pub const O_APPEND: ::c_int = 8;
+pub const O_CREAT: ::c_int = 512;
+pub const O_TRUNC: ::c_int = 1024;
+pub const O_EXCL: ::c_int = 2048;
 pub const O_ASYNC: ::c_int = 0x40;
-pub const O_FSYNC: ::c_int = 0x80;
-pub const O_NDELAY: ::c_int = 0x4;
+pub const O_SYNC: ::c_int = 0x80;
+pub const O_NONBLOCK: ::c_int = 0x4;
 pub const O_NOFOLLOW: ::c_int = 0x100;
+pub const O_SHLOCK: ::c_int = 0x10;
+pub const O_EXLOCK: ::c_int = 0x20;
+pub const O_FSYNC: ::c_int = O_SYNC;
+pub const O_NDELAY: ::c_int = O_NONBLOCK;
 
 pub const F_GETOWN: ::c_int = 5;
 pub const F_SETOWN: ::c_int = 6;
@@ -221,12 +239,15 @@ pub const VREPRINT: usize = 6;
 pub const VINTR: usize = 8;
 pub const VQUIT: usize = 9;
 pub const VSUSP: usize = 10;
+pub const VDSUSP: usize = 11;
 pub const VSTART: usize = 12;
 pub const VSTOP: usize = 13;
 pub const VLNEXT: usize = 14;
 pub const VDISCARD: usize = 15;
 pub const VMIN: usize = 16;
 pub const VTIME: usize = 17;
+pub const VSTATUS: usize = 18;
+pub const _POSIX_VDISABLE: ::cc_t = 0xff;
 pub const IGNBRK: ::tcflag_t = 0x00000001;
 pub const BRKINT: ::tcflag_t = 0x00000002;
 pub const IGNPAR: ::tcflag_t = 0x00000004;
@@ -244,6 +265,7 @@ pub const OPOST: ::tcflag_t = 0x1;
 pub const ONLCR: ::tcflag_t = 0x2;
 pub const OXTABS: ::tcflag_t = 0x4;
 pub const ONOEOT: ::tcflag_t = 0x8;
+pub const CIGNORE: ::tcflag_t = 0x00000001;
 pub const CSIZE: ::tcflag_t = 0x00000300;
 pub const CS5: ::tcflag_t = 0x00000000;
 pub const CS6: ::tcflag_t = 0x00000100;
@@ -264,12 +286,15 @@ pub const ECHOPRT: ::tcflag_t = 0x00000020;
 pub const ECHOCTL: ::tcflag_t = 0x00000040;
 pub const ISIG: ::tcflag_t = 0x00000080;
 pub const ICANON: ::tcflag_t = 0x00000100;
+pub const ALTWERASE: ::tcflag_t = 0x00000200;
 pub const IEXTEN: ::tcflag_t = 0x00000400;
 pub const EXTPROC: ::tcflag_t = 0x00000800;
 pub const TOSTOP: ::tcflag_t = 0x00400000;
 pub const FLUSHO: ::tcflag_t = 0x00800000;
+pub const NOKERNINFO: ::tcflag_t = 0x02000000;
 pub const PENDIN: ::tcflag_t = 0x20000000;
 pub const NOFLSH: ::tcflag_t = 0x80000000;
+pub const MDMBUF: ::tcflag_t = 0x00100000;
 
 pub const WNOHANG: ::c_int = 0x00000001;
 pub const WUNTRACED: ::c_int = 0x00000002;
@@ -284,7 +309,14 @@ pub const LOG_AUTHPRIV: ::c_int = 10 << 3;
 pub const LOG_FTP: ::c_int = 11 << 3;
 pub const LOG_PERROR: ::c_int = 0x20;
 
+pub const TCP_MAXSEG: ::c_int = 2;
+
 pub const PIPE_BUF: usize = 512;
+
+pub const POLLRDNORM: ::c_short = 0x040;
+pub const POLLWRNORM: ::c_short = 0x004;
+pub const POLLRDBAND: ::c_short = 0x080;
+pub const POLLWRBAND: ::c_short = 0x100;
 
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
@@ -339,21 +371,10 @@ extern {
     pub fn kqueue() -> ::c_int;
     pub fn unmount(target: *const ::c_char, arg: ::c_int) -> ::c_int;
     pub fn syscall(num: ::c_int, ...) -> ::c_int;
-    #[cfg_attr(target_os = "netbsd", link_name = "__getpwnam_r50")]
-    pub fn getpwnam_r(name: *const ::c_char,
-                      pwd: *mut passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut passwd) -> ::c_int;
-    #[cfg_attr(target_os = "netbsd", link_name = "__getpwuid_r50")]
-    pub fn getpwuid_r(uid: ::uid_t,
-                      pwd: *mut passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut passwd) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__getpwent50")]
     pub fn getpwent() -> *mut passwd;
     pub fn setpwent();
+    pub fn endpwent();
     pub fn getprogname() -> *const ::c_char;
     pub fn setprogname(name: *const ::c_char);
     pub fn getloadavg(loadavg: *mut ::c_double, nelem: ::c_int) -> ::c_int;
@@ -434,6 +455,67 @@ extern {
                    -> ::ssize_t;
 
     pub fn sync();
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
+    pub fn getgrgid_r(uid: ::uid_t,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "sigaltstack$UNIX2003")]
+    #[cfg_attr(target_os = "netbsd", link_name = "__sigaltstack14")]
+    pub fn sigaltstack(ss: *const stack_t,
+                       oss: *mut stack_t) -> ::c_int;
+    pub fn sem_close(sem: *mut sem_t) -> ::c_int;
+    pub fn getdtablesize() -> ::c_int;
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrnam_r")]
+    pub fn getgrnam_r(name: *const ::c_char,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "pthread_sigmask$UNIX2003")]
+    pub fn pthread_sigmask(how: ::c_int, set: *const sigset_t,
+                           oldset: *mut sigset_t) -> ::c_int;
+    pub fn sem_open(name: *const ::c_char, oflag: ::c_int, ...) -> *mut sem_t;
+    pub fn getgrnam(name: *const ::c_char) -> *mut ::group;
+    pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
+    pub fn sem_unlink(name: *const ::c_char) -> ::c_int;
+    pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwnam_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwnam_r")]
+    pub fn getpwnam_r(name: *const ::c_char,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwuid_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwuid_r")]
+    pub fn getpwuid_r(uid: ::uid_t,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch ="x86"),
+               link_name = "sigwait$UNIX2003")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_sigwait")]
+    pub fn sigwait(set: *const sigset_t,
+                   sig: *mut ::c_int) -> ::c_int;
+    pub fn pthread_atfork(prepare: Option<unsafe extern fn()>,
+                          parent: Option<unsafe extern fn()>,
+                          child: Option<unsafe extern fn()>) -> ::c_int;
+    pub fn getgrgid(gid: ::gid_t) -> *mut ::group;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "popen$UNIX2003")]
+    pub fn popen(command: *const c_char,
+                 mode: *const c_char) -> *mut ::FILE;
+    pub fn faccessat(dirfd: ::c_int, pathname: *const ::c_char,
+                     mode: ::c_int, flags: ::c_int) -> ::c_int;
+    pub fn pthread_create(native: *mut ::pthread_t,
+                          attr: *const ::pthread_attr_t,
+                          f: extern fn(*mut ::c_void) -> *mut ::c_void,
+                          value: *mut ::c_void) -> ::c_int;
 }
 
 cfg_if! {

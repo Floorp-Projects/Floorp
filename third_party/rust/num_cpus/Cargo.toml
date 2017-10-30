@@ -12,7 +12,7 @@
 
 [package]
 name = "num_cpus"
-version = "1.6.0"
+version = "1.6.2"
 authors = ["Sean McArthur <sean.monstar@gmail.com>"]
 description = "Get the number of CPUs on a machine."
 documentation = "https://docs.rs/num_cpus"
