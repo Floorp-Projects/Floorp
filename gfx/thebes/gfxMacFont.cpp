@@ -519,19 +519,21 @@ gfxMacFont::InitMetricsFromPlatform()
 already_AddRefed<ScaledFont>
 gfxMacFont::GetScaledFont(DrawTarget *aTarget)
 {
-  if (!mAzureScaledFont) {
-    NativeFont nativeFont;
-    nativeFont.mType = NativeFontType::MAC_FONT_FACE;
-    nativeFont.mFont = GetCGFontRef();
-    mAzureScaledFont =
-      Factory::CreateScaledFontWithCairo(nativeFont,
-                                         GetUnscaledFont(),
-                                         GetAdjustedSize(),
-                                         mScaledFont);
-  }
+    if (!mAzureScaledFont) {
+        mAzureScaledFont =
+            Factory::CreateScaledFontForMacFont(GetCGFontRef(),
+                                                GetUnscaledFont(),
+                                                GetAdjustedSize(),
+                                                !mStyle.useGrayscaleAntialiasing);
+        if (!mAzureScaledFont) {
+            return nullptr;
+        }
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
+        mAzureScaledFont->SetCairoScaledFont(mScaledFont);
+    }
+
+    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    return scaledFont.forget();
 }
 
 already_AddRefed<GlyphRenderingOptions>
