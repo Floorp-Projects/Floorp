@@ -1,5 +1,6 @@
 job-defaults:
     platform: linux64/opt
+    always-target: true
     worker-type:
         by-platform:
             linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
@@ -52,6 +53,7 @@ mochitest-harness:
         - linux64/debug
         - linux64-asan/opt
     require-build: true
+    always-target: false
     treeherder:
         symbol: py(mch)
     worker:
@@ -149,6 +151,7 @@ reftest-harness:
         - linux64/debug
         - linux64-asan/opt
     require-build: true
+    always-target: false
     treeherder:
         symbol: py(ref)
     worker:
