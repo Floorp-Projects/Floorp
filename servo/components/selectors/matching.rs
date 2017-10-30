@@ -515,6 +515,32 @@ pub fn matches_complex_selector<E, F>(mut iter: SelectorIter<E::Impl>,
     }
 }
 
+#[inline(always)]
+fn next_element_for_combinator<E>(
+    element: &E,
+    combinator: Combinator,
+) -> Option<E>
+where
+    E: Element,
+{
+    match combinator {
+        Combinator::NextSibling |
+        Combinator::LaterSibling => {
+            element.prev_sibling_element()
+        }
+        Combinator::Child |
+        Combinator::Descendant => {
+            if element.blocks_ancestor_combinators() {
+                return None;
+            }
+            element.parent_element()
+        }
+        Combinator::PseudoElement => {
+            element.pseudo_element_originating_element()
+        }
+    }
+}
+
 fn matches_complex_selector_internal<E, F>(mut selector_iter: SelectorIter<E::Impl>,
                                            element: &E,
                                            context: &mut LocalMatchingContext<E::Impl>,
@@ -546,27 +572,22 @@ fn matches_complex_selector_internal<E, F>(mut selector_iter: SelectorIter<E::Im
     match combinator {
         None => SelectorMatchingResult::Matched,
         Some(c) => {
-            let (mut next_element, candidate_not_found) = match c {
+            let candidate_not_found= match c {
                 Combinator::NextSibling | Combinator::LaterSibling => {
                     // Only ancestor combinators are allowed while looking for
                     // relevant links, so switch to not looking.
                     *relevant_link = RelevantLinkStatus::NotLooking;
-                    (element.prev_sibling_element(),
-                     SelectorMatchingResult::NotMatchedAndRestartFromClosestDescendant)
+                     SelectorMatchingResult::NotMatchedAndRestartFromClosestDescendant
                 }
                 Combinator::Child | Combinator::Descendant => {
-                    if element.blocks_ancestor_combinators() {
-                        (None, SelectorMatchingResult::NotMatchedGlobally)
-                    } else {
-                        (element.parent_element(),
-                         SelectorMatchingResult::NotMatchedGlobally)
-                    }
+                     SelectorMatchingResult::NotMatchedGlobally
                 }
                 Combinator::PseudoElement => {
-                    (element.pseudo_element_originating_element(),
-                     SelectorMatchingResult::NotMatchedGlobally)
+                     SelectorMatchingResult::NotMatchedGlobally
                 }
             };
+
+            let mut next_element = next_element_for_combinator(element, c);
 
             loop {
                 let element = match next_element {
@@ -607,11 +628,7 @@ fn matches_complex_selector_internal<E, F>(mut selector_iter: SelectorIter<E::Im
                     // can continue to matching on the next candidate element.
                     _ => {},
                 }
-                next_element = if siblings {
-                    element.prev_sibling_element()
-                } else {
-                    element.parent_element()
-                };
+                next_element = next_element_for_combinator(&element, c);
             }
         }
     }
