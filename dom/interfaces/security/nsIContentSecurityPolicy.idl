@@ -63,6 +63,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short BLOCK_ALL_MIXED_CONTENT        = 19;
   const unsigned short REQUIRE_SRI_FOR                = 20;
   const unsigned short SANDBOX_DIRECTIVE              = 21;
+  const unsigned short WORKER_SRC_DIRECTIVE           = 22;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
