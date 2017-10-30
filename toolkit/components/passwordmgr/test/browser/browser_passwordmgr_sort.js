@@ -4,10 +4,7 @@
 
 add_task(async function test() {
   await new Promise(resolve => {
-
-    let pwmgr = Cc["@mozilla.org/login-manager;1"].
-                getService(Ci.nsILoginManager);
-    pwmgr.removeAllLogins();
+    Services.logins.removeAllLogins();
 
     // Add some initial logins
     let urls = [
@@ -49,8 +46,8 @@ add_task(async function test() {
     let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                                  Ci.nsILoginInfo, "init");
     for (let i = 0; i < 10; i++)
-        pwmgr.addLogin(new nsLoginInfo(urls[i], urls[i], null, users[i], pwds[i],
-                                       "u" + (i + 1), "p" + (i + 1)));
+      Services.logins.addLogin(new nsLoginInfo(urls[i], urls[i], null, users[i], pwds[i],
+                                               "u" + (i + 1), "p" + (i + 1)));
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
@@ -195,7 +192,7 @@ add_task(async function test() {
                     // unregister ourself
                     Services.ww.unregisterNotification(notification);
 
-                    pwmgr.removeAllLogins();
+                    Services.logins.removeAllLogins();
                     resolve();
                 });
                 pwmgrdlg.close();
