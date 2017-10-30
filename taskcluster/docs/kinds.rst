@@ -218,6 +218,10 @@ release-bouncer-sub
 -------------------
 Submits bouncer updates for releases.
 
+release-mark-as-shipped
+-----------------------
+Marks releases as shipped in Ship-It.
+
 repackage
 ---------
 Repackage tasks take a signed output and package them up into something suitable
