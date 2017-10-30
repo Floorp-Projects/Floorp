@@ -396,7 +396,7 @@ get_push_apk_rollout_percentage = functools.partial(
 
 
 # release_config {{{1
-def get_release_config(config):
+def get_release_config(config, force=False):
     """Get the build number and version for a release task.
 
     Currently only applies to beetmover tasks.
@@ -413,8 +413,8 @@ def get_release_config(config):
             update `task.payload`.
     """
     release_config = {}
-    if config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
-        build_number = str(os.environ.get("BUILD_NUMBER", ""))
+    if force or config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
+        build_number = str(os.environ.get("BUILD_NUMBER", 1))
         if not build_number.isdigit():
             raise ValueError("Release graphs must specify `BUILD_NUMBER` in the environment!")
         release_config['build_number'] = int(build_number)
