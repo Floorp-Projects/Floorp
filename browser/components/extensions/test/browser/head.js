@@ -393,21 +393,15 @@ async function openActionContextMenu(extension, kind, win = window) {
   // See comment from clickPageAction below.
   SetPageProxyState("valid");
   await promiseAnimationFrame(win);
-  let buttonID;
-  let menuID;
-  if (kind == "page") {
-    buttonID = "#" + BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
-    menuID = "pageActionContextMenu";
-  } else {
-    buttonID = `#${makeWidgetId(extension.id)}-${kind}-action`;
-    menuID = "toolbar-context-menu";
-  }
-  return openChromeContextMenu(menuID, buttonID, win);
+  const id =
+    kind == "page" ?
+    `#${BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id))}` :
+    `#${makeWidgetId(extension.id)}-${kind}-action`;
+  return openChromeContextMenu("toolbar-context-menu", id, win);
 }
 
-function closeActionContextMenu(itemToSelect, kind, win = window) {
-  let menuID = kind == "page" ? "pageActionContextMenu" : "toolbar-context-menu";
-  return closeChromeContextMenu(menuID, itemToSelect, win);
+function closeActionContextMenu(itemToSelect, win = window) {
+  return closeChromeContextMenu("toolbar-context-menu", itemToSelect, win);
 }
 
 function openTabContextMenu(win = window) {

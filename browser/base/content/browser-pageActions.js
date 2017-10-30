@@ -48,24 +48,6 @@ var BrowserPageActions = {
    */
   init() {
     this.placeAllActions();
-
-    // Add a click listener to #page-action-buttons for blocking clicks on
-    // disabled actions in the urlbar.  Normally we'd do this by setting
-    // `pointer-events: none` in the CSS, but that also blocks context menu
-    // events, and we want the context menu even on disabled actions so that
-    // they can be removed from the urlbar.
-    this.mainButtonNode.parentNode.addEventListener("click", event => {
-      if (event.button == 2) {
-        // Let context-clicks be handled normally.
-        return;
-      }
-      let node = event.originalTarget;
-      let action = this.actionForNode(node);
-      if (action && action.getDisabled(window)) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }, true);
   },
 
   /**
@@ -146,7 +128,6 @@ var BrowserPageActions = {
       "subviewbutton-iconic",
       "pageAction-panel-button"
     );
-    buttonNode.setAttribute("actionid", action.id);
     if (action.nodeAttributes) {
       for (let name in action.nodeAttributes) {
         buttonNode.setAttribute(name, action.nodeAttributes[name]);
@@ -410,8 +391,8 @@ var BrowserPageActions = {
   _makeUrlbarButtonNode(action) {
     let buttonNode = document.createElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
-    buttonNode.setAttribute("actionid", action.id);
     buttonNode.setAttribute("role", "button");
+    buttonNode.setAttribute("context", "pageActionPanelContextMenu");
     buttonNode.addEventListener("contextmenu", event => {
       BrowserPageActions.onContextMenu(event);
     });
