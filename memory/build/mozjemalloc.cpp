@@ -163,19 +163,6 @@ using namespace mozilla;
 
 #define STDERR_FILENO 2
 
-// Use MSVC intrinsics.
-#pragma intrinsic(_BitScanForward)
-static __forceinline int
-ffs(int x)
-{
-  unsigned long i;
-
-  if (_BitScanForward(&i, x) != 0) {
-    return i + 1;
-  }
-  return 0;
-}
-
 // Implement getenv without using malloc.
 static char mozillaMallocOptionsBuf[64];
 
@@ -230,9 +217,6 @@ typedef long ssize_t;
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef XP_DARWIN
-#include <strings.h>
-#endif
 #include <unistd.h>
 
 #ifdef XP_DARWIN
@@ -2204,7 +2188,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
   mask = run->regs_mask[i];
   if (mask != 0) {
     // Usable allocation found.
-    bit = ffs((int)mask) - 1;
+    bit = CountTrailingZeroes32(mask);
 
     regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
     MOZ_ASSERT(regind < bin->nregs);
@@ -2222,7 +2206,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
     mask = run->regs_mask[i];
     if (mask != 0) {
       // Usable allocation found.
-      bit = ffs((int)mask) - 1;
+      bit = CountTrailingZeroes32(mask);
 
       regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
       MOZ_ASSERT(regind < bin->nregs);
@@ -2979,14 +2963,10 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
   if (aSize < small_min) {
     // Tiny.
     aSize = RoundUpPow2(aSize);
-    bin = &mBins[ffs((int)(aSize >> (TINY_MIN_2POW + 1)))];
-
-    // Bin calculation is always correct, but we may need
-    // to fix size for the purposes of assertions and/or
-    // stats accuracy.
     if (aSize < (1U << TINY_MIN_2POW)) {
       aSize = 1U << TINY_MIN_2POW;
     }
+    bin = &mBins[FloorLog2(aSize >> TINY_MIN_2POW)];
   } else if (aSize <= small_max) {
     // Quantum-spaced.
     aSize = QUANTUM_CEILING(aSize);
@@ -2995,7 +2975,7 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
     // Sub-page.
     aSize = RoundUpPow2(aSize);
     bin = &mBins[ntbins + nqbins +
-                 (ffs((int)(aSize >> SMALL_MAX_2POW_DEFAULT)) - 2)];
+                 (FloorLog2(aSize >> SMALL_MAX_2POW_DEFAULT) - 1)];
   }
   MOZ_DIAGNOSTIC_ASSERT(aSize == bin->reg_size);
 
@@ -4120,7 +4100,9 @@ static
 #else
   pagesize = (size_t)result;
   pagesize_mask = (size_t)result - 1;
-  pagesize_2pow = ffs((int)result) - 1;
+  pagesize_2pow = FloorLog2(result);
+  MOZ_RELEASE_ASSERT(1ULL << pagesize_2pow == pagesize,
+                     "Page size is not a power of two");
 #endif
 
   // Get runtime configuration.
