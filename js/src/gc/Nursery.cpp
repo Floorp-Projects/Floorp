@@ -147,8 +147,12 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
     if (chunkCountLimit_ == 0)
         return true;
 
-    if (!allocateFirstChunk(lock))
+    maxChunkCount_ = 1;
+    if (!allocateNextChunk(0, lock)) {
+        maxChunkCount_ = 0;
         return false;
+    }
+    /* After this point the Nursery has been enabled */
 
     setCurrentChunk(0);
     setStartPosition();
@@ -197,8 +201,11 @@ js::Nursery::enable()
 
     {
         AutoLockGCBgAlloc lock(runtime());
-        if (!allocateFirstChunk(lock))
+        maxChunkCount_ = 1;
+        if (!allocateNextChunk(0, lock)) {
+            maxChunkCount_ = 0;
             return;
+        }
     }
 
     setCurrentChunk(0);
@@ -316,7 +323,8 @@ js::Nursery::allocate(size_t size)
         if (chunkno == maxChunkCount())
             return nullptr;
         if (MOZ_UNLIKELY(chunkno == allocatedChunkCount())) {
-            if (!allocateNextChunk(chunkno))
+            AutoLockGCBgAlloc lock(runtime());
+            if (!allocateNextChunk(chunkno, lock))
                 return nullptr;
             MOZ_ASSERT(chunkno < allocatedChunkCount());
         }
@@ -979,12 +987,13 @@ js::Nursery::setCurrentChunk(unsigned chunkno)
 }
 
 bool
-js::Nursery::allocateNextChunk(const unsigned chunkno)
+js::Nursery::allocateNextChunk(const unsigned chunkno,
+    AutoLockGCBgAlloc& lock)
 {
     const unsigned priorCount = allocatedChunkCount();
     const unsigned newCount = priorCount + 1;
 
-    MOZ_ASSERT(chunkno == currentChunk_ + 1);
+    MOZ_ASSERT((chunkno == currentChunk_ + 1) || (chunkno == 0 && allocatedChunkCount() == 0));
     MOZ_ASSERT(chunkno == allocatedChunkCount());
     MOZ_ASSERT(chunkno < chunkCountLimit());
     MOZ_ASSERT(chunkno < maxChunkCount());
@@ -993,10 +1002,7 @@ js::Nursery::allocateNextChunk(const unsigned chunkno)
         return false;
 
     Chunk* newChunk;
-    {
-        AutoLockGCBgAlloc lock(runtime());
-        newChunk = runtime()->gc.getOrAllocChunk(lock);
-    }
+    newChunk = runtime()->gc.getOrAllocChunk(lock);
     if (!newChunk) {
         chunks_.shrinkTo(priorCount);
         return false;
@@ -1108,31 +1114,6 @@ void
 js::Nursery::minimizeAllocableSpace()
 {
     shrinkAllocableSpace(1);
-}
-
-bool
-js::Nursery::allocateFirstChunk(AutoLockGCBgAlloc& lock)
-{
-    // These assertions aren't required for correctness, but we do assume this
-    // is only called to initialize or re-enable the nursery.
-    MOZ_ASSERT(allocatedChunkCount() == 0);
-    MOZ_ASSERT(maxChunkCount() == 0);
-
-    MOZ_ASSERT(chunkCountLimit() > 0);
-
-    if (!chunks_.resize(1))
-        return false;
-
-    auto chunk = runtime()->gc.getOrAllocChunk(lock);
-    if (!chunk) {
-        chunks_.shrinkTo(0);
-        return false;
-    }
-
-    chunks_[0] = NurseryChunk::fromChunk(chunk);
-    maxChunkCount_ = 1;
-
-    return true;
 }
 
 bool
