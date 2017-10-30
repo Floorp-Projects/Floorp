@@ -22,6 +22,7 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/dom/ChannelInfo.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 #define BEGIN_WORKERS_NAMESPACE \
@@ -245,12 +246,12 @@ struct WorkerLoadInfo
   nsString mOrigin; // Derived from mPrincipal; can be used on worker thread.
 
   nsString mServiceWorkerCacheName;
+  Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
 
   ChannelInfo mChannelInfo;
   nsLoadFlags mLoadFlags;
 
   uint64_t mWindowID;
-  uint64_t mServiceWorkerID;
 
   net::ReferrerPolicy mReferrerPolicy;
   bool mFromWindow;

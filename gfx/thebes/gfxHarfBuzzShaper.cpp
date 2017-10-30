@@ -1736,12 +1736,19 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
                     detailedGlyphs.AppendElement();
                 details->mGlyphID = ginfo[glyphStart].codepoint;
 
-                details->mXOffset = iOffset;
                 details->mAdvance = advance;
 
-                details->mYOffset = bPos -
-                    (roundB ? appUnitsPerDevUnit * FixedToIntRound(b_offset)
-                     : floor(hb2appUnits * b_offset + 0.5));
+                if (aVertical) {
+                    details->mOffset.x = bPos -
+                        (roundB ? appUnitsPerDevUnit * FixedToIntRound(b_offset)
+                         : floor(hb2appUnits * b_offset + 0.5));
+                    details->mOffset.y = iOffset;
+                } else {
+                    details->mOffset.x = iOffset;
+                    details->mOffset.y = bPos -
+                        (roundB ? appUnitsPerDevUnit * FixedToIntRound(b_offset)
+                         : floor(hb2appUnits * b_offset + 0.5));
+                }
 
                 if (b_advance != 0) {
                     bPos -=

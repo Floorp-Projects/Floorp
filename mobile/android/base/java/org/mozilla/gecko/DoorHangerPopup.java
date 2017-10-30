@@ -89,7 +89,7 @@ public class DoorHangerPopup extends AnchoredPopup
                               final EventCallback callback) {
         if (event.equals("Doorhanger:Add")) {
             final DoorhangerConfig config = makeConfigFromBundle(geckoObject);
-            addDoorHanger(config, callback);
+            addDoorHanger(config, callback, (Integer) geckoObject.get("defaultCallback"));
 
         } else if (event.equals("Doorhanger:Remove")) {
             final int tabId = geckoObject.getInt("tabID", -1);
@@ -166,7 +166,8 @@ public class DoorHangerPopup extends AnchoredPopup
      *
      * This method must be called on the UI thread.
      */
-    private void addDoorHanger(final DoorhangerConfig config, final EventCallback callback) {
+    private void addDoorHanger(final DoorhangerConfig config, final EventCallback callback,
+                               final Integer defaultCallback) {
         final int tabId = config.getTabId();
         // Don't add a doorhanger for a tab that doesn't exist
         if (isGeckoApp && Tabs.getInstance().getTab(tabId) == null) {
@@ -185,6 +186,7 @@ public class DoorHangerPopup extends AnchoredPopup
 
         final DoorHanger newDoorHanger = DoorHanger.Get(mContext, config);
         newDoorHanger.callback = callback;
+        newDoorHanger.defaultCallback = defaultCallback;
 
         mDoorHangers.add(newDoorHanger);
         mContent.addView(newDoorHanger);
@@ -206,6 +208,10 @@ public class DoorHangerPopup extends AnchoredPopup
         } else {
             doorhanger.callback.sendSuccess(response);
         }
+
+        // Don't call default callback because a button was clicked.
+        doorhanger.defaultCallback = null;
+
         removeDoorHanger(doorhanger);
         updatePopup();
     }
@@ -231,6 +237,17 @@ public class DoorHangerPopup extends AnchoredPopup
      * This method must be called on the UI thread.
      */
     private void removeDoorHanger(final DoorHanger doorHanger) {
+        // Call default callback if requested.
+        if (doorHanger.defaultCallback != null) {
+            final GeckoBundle response = new GeckoBundle(1);
+            response.putInt("callback", doorHanger.defaultCallback);
+            if (isGeckoApp) {
+                EventDispatcher.getInstance().dispatch("Doorhanger:Reply", response);
+            } else {
+                doorHanger.callback.sendSuccess(response);
+            }
+        }
+
         mDoorHangers.remove(doorHanger);
         mContent.removeView(doorHanger);
     }

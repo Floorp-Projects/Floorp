@@ -50,6 +50,7 @@ DIRS += [
     'browser-element',
     'cache',
     'canvas',
+    'clients',
     'commandhandler',
     'credentialmanagement',
     'crypto',

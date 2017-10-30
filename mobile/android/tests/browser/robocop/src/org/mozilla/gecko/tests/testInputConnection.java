@@ -316,13 +316,13 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.commitText("b", 1);
             // This test only works for input/textarea,
             if (mType.equals("input") || mType.equals("textarea")) {
-                assertTextAndSelectionAt("Can handle text replacement", ic, "abc", 2);
+                assertTextAndSelectionAt("Can handle text replacement", ic, "abc", 3);
             } else {
                 processGeckoEvents();
                 processInputConnectionEvents();
             }
 
-            ic.deleteSurroundingText(2, 1);
+            ic.deleteSurroundingText(3, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
             // Bug 1307816 - Don't end then start composition when setting

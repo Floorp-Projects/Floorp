@@ -33,7 +33,7 @@ public class PropertyAnimator implements Runnable {
         HEIGHT
     }
 
-    private class ElementHolder {
+    private static final class ElementHolder {
         View view;
         Property property;
         float from;
