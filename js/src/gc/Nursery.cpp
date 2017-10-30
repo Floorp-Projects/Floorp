@@ -147,8 +147,7 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
     if (maxNurseryChunks_ == 0)
         return true;
 
-    updateNumChunksLocked(1, lock);
-    if (numChunks() == 0)
+    if (!allocateFirstChunk(lock))
         return false;
 
     setCurrentChunk(0);
@@ -196,9 +195,11 @@ js::Nursery::enable()
     if (isEnabled() || !maxChunks())
         return;
 
-    updateNumChunks(1);
-    if (numChunks() == 0)
-        return;
+    {
+        AutoLockGCBgAlloc lock(runtime());
+        if (!allocateFirstChunk(lock))
+            return;
+    }
 
     setCurrentChunk(0);
     setStartPosition();
@@ -216,7 +217,8 @@ js::Nursery::disable()
     MOZ_ASSERT(isEmpty());
     if (!isEnabled())
         return;
-    updateNumChunks(0);
+
+    freeChunksFrom(0);
     currentEnd_ = 0;
     runtime()->gc.storeBuffer().disable();
 }
@@ -238,7 +240,7 @@ js::Nursery::isEmpty() const
 void
 js::Nursery::enterZealMode() {
     if (isEnabled())
-        updateNumChunks(maxNurseryChunks_);
+        growAllocableSpace(maxChunks());
 }
 
 void
@@ -991,93 +993,116 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
     if (newMaxNurseryChunks != maxNurseryChunks_) {
         maxNurseryChunks_ = newMaxNurseryChunks;
         /* The configured maximum nursery size is changing */
-        const int extraChunks = numChunks() - newMaxNurseryChunks;
-        if (extraChunks > 0) {
+        if (numChunks() > newMaxNurseryChunks) {
             /* We need to shrink the nursery */
-            shrinkAllocableSpace(extraChunks);
+            shrinkAllocableSpace(newMaxNurseryChunks);
 
             previousPromotionRate_ = promotionRate;
             return;
         }
     }
 
-    if (promotionRate > GrowThreshold)
+    if (promotionRate > GrowThreshold) {
+        // The GC nursery is an optimization and so if we fail to allocate
+        // nursery chunks we do not report an error.
         growAllocableSpace();
-    else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
-        shrinkAllocableSpace(1);
+    } else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold) {
+        shrinkAllocableSpace(numChunks() - 1);
+    }
 
     previousPromotionRate_ = promotionRate;
 }
 
-void
+bool
 js::Nursery::growAllocableSpace()
 {
-    updateNumChunks(Min(numChunks() * 2, maxNurseryChunks_));
+    return growAllocableSpace(Min(numChunks() * 2, maxChunks()));
 }
 
-void
-js::Nursery::shrinkAllocableSpace(unsigned removeNumChunks)
+bool
+js::Nursery::growAllocableSpace(unsigned newCount)
 {
-#ifdef JS_GC_ZEAL
-    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
-        return;
-#endif
-    updateNumChunks(Max(numChunks() - removeNumChunks, 1u));
-}
-
-void
-js::Nursery::minimizeAllocableSpace()
-{
-#ifdef JS_GC_ZEAL
-    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
-        return;
-#endif
-    updateNumChunks(1);
-}
-
-void
-js::Nursery::updateNumChunks(unsigned newCount)
-{
-    if (numChunks() != newCount) {
-        AutoLockGCBgAlloc lock(runtime());
-        updateNumChunksLocked(newCount, lock);
-    }
-}
-
-void
-js::Nursery::updateNumChunksLocked(unsigned newCount,
-                                   AutoLockGCBgAlloc& lock)
-{
-    // The GC nursery is an optimization and so if we fail to allocate nursery
-    // chunks we do not report an error.
-
-    MOZ_ASSERT(newCount <= maxChunks());
-
     unsigned priorCount = numChunks();
-    MOZ_ASSERT(priorCount != newCount);
 
-    if (newCount < priorCount) {
-        // Shrink the nursery and free unused chunks.
-        for (unsigned i = newCount; i < priorCount; i++)
-            runtime()->gc.recycleChunk(chunk(i).toChunk(runtime()), lock);
-        chunks_.shrinkTo(newCount);
-        return;
-    }
+    MOZ_ASSERT(newCount > priorCount);
+    MOZ_ASSERT(newCount <= maxChunks());
+    MOZ_ASSERT(priorCount >= 1);
 
-    // Grow the nursery and allocate new chunks.
     if (!chunks_.resize(newCount))
-        return;
+        return false;
 
+    AutoLockGCBgAlloc lock(runtime());
     for (unsigned i = priorCount; i < newCount; i++) {
         auto newChunk = runtime()->gc.getOrAllocChunk(lock);
         if (!newChunk) {
             chunks_.shrinkTo(i);
-            return;
+            return false;
         }
 
         chunks_[i] = NurseryChunk::fromChunk(newChunk);
         chunk(i).poisonAndInit(runtime(), JS_FRESH_NURSERY_PATTERN);
     }
+
+    return true;
+}
+
+void
+js::Nursery::freeChunksFrom(unsigned firstFreeChunk)
+{
+    MOZ_ASSERT(firstFreeChunk < chunks_.length());
+    {
+        AutoLockGC lock(runtime());
+        for (unsigned i = firstFreeChunk; i < chunks_.length(); i++)
+            runtime()->gc.recycleChunk(chunk(i).toChunk(runtime()), lock);
+    }
+    chunks_.shrinkTo(firstFreeChunk);
+}
+
+void
+js::Nursery::shrinkAllocableSpace(unsigned newCount)
+{
+#ifdef JS_GC_ZEAL
+    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
+        return;
+#endif
+
+    // Don't shrink the nursery to zero (use Nursery::disable() instead) and
+    // don't attempt to shrink it to the same size.
+    if ((newCount == 0) || (newCount == numChunks()))
+        return;
+
+    MOZ_ASSERT(newCount < numChunks());
+
+    freeChunksFrom(newCount);
+}
+
+void
+js::Nursery::minimizeAllocableSpace()
+{
+    shrinkAllocableSpace(1);
+}
+
+bool
+js::Nursery::allocateFirstChunk(AutoLockGCBgAlloc& lock)
+{
+    // This assertion isn't required for correctness, but we do assume this
+    // is only called to initialize or re-enable the nursery.
+    MOZ_ASSERT(numChunks() == 0);
+
+    MOZ_ASSERT(maxChunks() > 0);
+
+    if (!chunks_.resize(1))
+        return false;
+
+    auto chunk = runtime()->gc.getOrAllocChunk(lock);
+    if (!chunk) {
+        chunks_.shrinkTo(0);
+        return false;
+    }
+
+    chunks_[0] = NurseryChunk::fromChunk(chunk);
+
+    return true;
 }
 
 bool
