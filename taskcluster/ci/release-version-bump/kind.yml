@@ -14,8 +14,8 @@ transforms:
 
 jobs:
    fennec:
-      name: fennec version bump
-      description: version bump
+      name: fennec-version-bump
+      description: Release Promotion version bump
       worker-type: buildbot-bridge/buildbot-bridge
       run-on-projects: []
       run:
@@ -26,10 +26,28 @@ jobs:
          routes:
             - index.releases.v1.{branch}.latest.fennec.latest.version_bump
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
-         notifications:
-            completed:
-               - releasetasks
-            failed:
-               - releasetasks
-            exception:
-               - releasetasks
+      notifications:
+         completed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         failed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         exception:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"

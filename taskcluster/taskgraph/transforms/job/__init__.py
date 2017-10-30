@@ -56,6 +56,7 @@ job_description_schema = Schema({
     Optional('scopes'): task_description_schema['scopes'],
     Optional('tags'): task_description_schema['tags'],
     Optional('extra'): task_description_schema['extra'],
+    Optional('notifications'): task_description_schema['notifications'],
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('index'): task_description_schema['index'],
     Optional('run-on-projects'): task_description_schema['run-on-projects'],

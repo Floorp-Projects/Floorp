@@ -29,10 +29,28 @@ jobs:
                     mozilla-release: https://bounceradmin.mozilla.com/api
                     maple: https://bounceradmin.stage.allizom.org/api
                     default: http://localhost/api
-         notifications:
-            completed:
-               - releasetasks
-            failed:
-               - releasetasks
-            exception:
-               - releasetasks
+      notifications:
+         completed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         failed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         exception:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"

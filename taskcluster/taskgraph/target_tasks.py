@@ -389,8 +389,11 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
             if task.kind not in ('balrog', 'push-apk', 'push-apk-breakpoint'):
                 if task.attributes.get('nightly'):
                     return True
-        if task.task['payload'].get('properties', {}).get('product') == 'fennec':
-            if task.kind in ('release-bouncer-sub', ):
+        if task.task['payload'].get('properties', {}).get('product') == 'fennec' or \
+           task.label.endswith('-fennec'):
+            if task.kind in ('release-bouncer-sub',
+                             'release-notify-promote',
+                             ):
                 return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
@@ -406,11 +409,14 @@ def target_tasks_publish_fennec(full_task_graph, parameters):
         # Include candidates build tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        if task.task['payload'].get('properties', {}).get('product') == 'fennec':
+        # TODO: Include [beetmover] fennec mozilla-beta push to releases
+        if task.task['payload'].get('properties', {}).get('product') == 'fennec' or \
+           task.label.endswith('-fennec'):
             if task.kind in ('release-mark-as-shipped',
                              'release-bouncer-aliases',
                              'release-uptake-monitoring',
                              'release-version-bump',
+                             'release-notify-publish',
                              ):
                 return True
 
