@@ -19,6 +19,7 @@ const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const IS_CONTENT_PROCESS = (function() {
   // We cannot use Services.appinfo here because in telemetry xpcshell tests,
   // appinfo is initially unavailable, and becomes available only later on.
+  // eslint-disable-next-line mozilla/use-services
   let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   return runtime.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 })();

@@ -9,11 +9,9 @@ const Cu = Components.utils;
 this.EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
   "resource://gre/modules/Log.jsm");
-
-var Telemetry = Cc["@mozilla.org/base/telemetry;1"]
-                  .getService(Ci.nsITelemetry);
 
 // Weak map does not allow using null objects as keys. These objects are used
 // as 'null' placeholders.
@@ -404,9 +402,9 @@ this.TelemetryStopwatchImpl = {
 
     try {
       if (key) {
-        Telemetry.getKeyedHistogramById(histogram).add(key, delta);
+        Services.telemetry.getKeyedHistogramById(histogram).add(key, delta);
       } else {
-        Telemetry.getHistogramById(histogram).add(delta);
+        Services.telemetry.getHistogramById(histogram).add(delta);
       }
     } catch (e) {
       if (!this._suppressErrors) {
