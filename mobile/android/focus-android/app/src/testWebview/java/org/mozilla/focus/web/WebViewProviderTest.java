@@ -1,5 +1,6 @@
 package org.mozilla.focus.web;
 
+import android.content.Context;
 import android.os.Build;
 import android.webkit.WebSettings;
 
@@ -46,7 +47,10 @@ public class WebViewProviderTest {
     }
 
     @Test
-    public void buildUserAgentString() {
+    public void buildUserAgentString() throws Exception {
+        final Context context = RuntimeEnvironment.application;
+        final String versionName = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+
         // It's actually possible to get a normal webview instance with real settings and user
         // agent string, which buildUserAgentString() can successfully operate on. However we can't
         // easily test that the output is expected (without simply replicating what buildUserAgentString does),
@@ -55,8 +59,8 @@ public class WebViewProviderTest {
         WebSettings testSettings = mock(WebSettings.class);
         when(testSettings.getUserAgentString()).thenReturn("Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
 
-        assertEquals("Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + ") AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 fakeappname/null",
-                WebViewProvider.buildUserAgentString(RuntimeEnvironment.application, testSettings, "fakeappname"));
+        assertEquals("Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + ") AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30 fakeappname/" + versionName,
+                WebViewProvider.buildUserAgentString(context, testSettings, "fakeappname"));
     }
 
 }

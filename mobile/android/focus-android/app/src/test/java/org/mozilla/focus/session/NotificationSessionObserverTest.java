@@ -31,6 +31,7 @@ public class NotificationSessionObserverTest {
 
         verify(context).stopService(anyIntent());
         verify(context, never()).startService(anyIntent());
+        verify(context, never()).startForegroundService(anyIntent());
     }
 
     @Test
@@ -42,6 +43,7 @@ public class NotificationSessionObserverTest {
 
         verify(context, never()).stopService(anyIntent());
         verify(context, never()).startService(anyIntent());
+        verify(context, never()).startForegroundService(anyIntent());
     }
 
     @Test
@@ -54,7 +56,7 @@ public class NotificationSessionObserverTest {
         observer.onChanged(sessions);
 
         verify(context, never()).stopService(anyIntent());
-        verify(context).startService(anyIntent());
+        verify(context).startForegroundService(anyIntent());
     }
 
     @Test
@@ -70,7 +72,7 @@ public class NotificationSessionObserverTest {
         observer.onChanged(sessions);
 
         verify(context, never()).stopService(anyIntent());
-        verify(context).startService(anyIntent());
+        verify(context).startForegroundService(anyIntent());
     }
 
     private Intent anyIntent() {
