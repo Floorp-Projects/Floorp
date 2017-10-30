@@ -72,6 +72,9 @@ InterceptedHttpChannel::SetupReplacementChannel(nsIURI *aURI,
     return rv;
   }
 
+  rv = CheckRedirectLimit(aRedirectFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // While we can't resume an synthetic response, we can still propagate
   // the resume params across redirects for other channels to handle.
   if (mResumeStartPos > 0) {
@@ -181,10 +184,6 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
   nsAutoCString locationBuf;
   if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf)) {
     location = locationBuf;
-  }
-
-  if (NS_WARN_IF(mRedirectionLimit == 0)) {
-    return NS_ERROR_REDIRECT_LOOP;
   }
 
   nsCOMPtr<nsIURI> redirectURI;
