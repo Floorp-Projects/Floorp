@@ -32,6 +32,7 @@ function test() {
 
 async function middleClickTest(win) {
   let browser = win.gBrowser.selectedBrowser;
+  /* eslint-disable mozilla/no-cpows-in-tests */
   let tabsToggle = browser.contentDocument.getElementById("tabsToggle");
   EventUtils.synthesizeMouseAtCenter(tabsToggle, { button: 0 }, browser.contentWindow);
   let treeContainer = browser.contentDocument.querySelector(".tree-container");
@@ -39,6 +40,7 @@ async function middleClickTest(win) {
 
   let tree = browser.contentDocument.getElementById("tabList");
   is(tree.view.rowCount, 3, "There should be three items");
+  /* eslint-enable mozilla/no-cpows-in-tests */
 
   // click on the first tab item
   var rect = tree.treeBoxObject.getCoordsForCellItem(1, tree.columns[1], "text");

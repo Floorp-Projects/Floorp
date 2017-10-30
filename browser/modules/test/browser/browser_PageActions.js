@@ -40,8 +40,8 @@ add_task(async function simple() {
   let onShowingInPanelCallCount = 0;
   let onCommandExpectedButtonID;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let initialActions = PageActions.actions;
 
@@ -74,13 +74,13 @@ add_task(async function simple() {
     },
   }));
 
-  Assert.equal(action.iconURL, iconURL, "iconURL");
+  Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
   Assert.deepEqual(action.nodeAttributes, nodeAttributes, "nodeAttributes");
   Assert.equal(action.shownInUrlbar, false, "shownInUrlbar");
   Assert.equal(action.subview, null, "subview");
-  Assert.equal(action.title, title, "title");
-  Assert.equal(action.tooltip, tooltip, "tooltip");
+  Assert.equal(action.getTitle(), title, "title");
+  Assert.equal(action.getTooltip(), tooltip, "tooltip");
   Assert.equal(action.urlbarIDOverride, null, "urlbarIDOverride");
   Assert.equal(action.wantsIframe, false, "wantsIframe");
 
@@ -115,7 +115,8 @@ add_task(async function simple() {
   // The action's panel button should have been created.
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
-  Assert.equal(panelButtonNode.getAttribute("label"), action.title, "label");
+  Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
+               "label");
   for (let name in action.nodeAttributes) {
     Assert.ok(panelButtonNode.hasAttribute(name), "Has attribute: " + name);
     Assert.equal(panelButtonNode.getAttribute(name),
@@ -130,7 +131,7 @@ add_task(async function simple() {
   Assert.notEqual(panelButtonNode.previousSibling, null, "previousSibling");
   Assert.equal(
     panelButtonNode.previousSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
     "previousSibling.id"
@@ -178,9 +179,10 @@ add_task(async function simple() {
 
   // Set a new title.
   let newTitle = title + " new title";
-  action.title = newTitle;
-  Assert.equal(action.title, newTitle, "New title");
-  Assert.equal(panelButtonNode.getAttribute("label"), action.title, "New label");
+  action.setTitle(newTitle);
+  Assert.equal(action.getTitle(), newTitle, "New title");
+  Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
+               "New label");
 
   // Now that shownInUrlbar has been toggled, make sure that it sticks across
   // app restarts.  Simulate that by "unregistering" the action (not by removing
@@ -212,18 +214,10 @@ add_task(async function simple() {
   urlbarButtonNode = document.getElementById(urlbarButtonID);
   Assert.equal(urlbarButtonNode, null, "urlbarButtonNode");
 
-  Assert.deepEqual(PageActions.actions, initialActions,
-                   "Actions should go back to initial");
-  Assert.equal(PageActions.actionForID(action.id), null,
-               "actionForID should be null");
-
-  Assert.ok(!PageActions._persistedActions.ids.includes(action.id),
-            "PageActions should remove action from its list of seen actions");
-
   // The separator between the built-in actions and non-built-in actions should
   // be gone now, too.
   let separatorNode = document.getElementById(
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     )
   );
@@ -231,6 +225,17 @@ add_task(async function simple() {
   Assert.ok(!BrowserPageActions.mainViewBodyNode
             .lastChild.localName.includes("separator"),
             "Last child should not be separator");
+
+  Assert.deepEqual(PageActions.actions, initialActions,
+                   "Actions should go back to initial");
+  Assert.equal(PageActions.actionForID(action.id), null,
+               "actionForID should be null");
+
+  Assert.ok(PageActions._persistedActions.ids.includes(action.id),
+            "Action ID should remain in cache until purged");
+  PageActions._purgeUnregisteredPersistedActions();
+  Assert.ok(!PageActions._persistedActions.ids.includes(action.id),
+            "Action ID should be removed from cache after being purged");
 });
 
 
@@ -245,8 +250,8 @@ add_task(async function withSubview() {
   let onSubviewShowingCount = 0;
   let onButtonCommandCallCount = 0;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let panelViewIDPanel =
     BrowserPageActions._panelViewNodeIDForActionID(id, false);
@@ -433,8 +438,8 @@ add_task(async function withIframe() {
   let onPlacedInUrlbarCallCount = 0;
   let onIframeShownCount = 0;
 
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
-  let urlbarButtonID = BrowserPageActions._urlbarButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
+  let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
   let action = PageActions.addAction(new PageActions.Action({
     iconURL: "chrome://browser/skin/mail.svg",
@@ -557,7 +562,7 @@ add_task(async function withIframe() {
 // Tests an action with the _insertBeforeActionID option set.
 add_task(async function insertBeforeActionID() {
   let id = "test-insertBeforeActionID";
-  let panelButtonID = BrowserPageActions._panelButtonNodeIDForActionID(id);
+  let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
 
   let initialActions = PageActions.actions;
   let initialBuiltInActions = PageActions.builtInActions;
@@ -606,7 +611,7 @@ add_task(async function insertBeforeActionID() {
                   "panelButtonNode.nextSibling");
   Assert.equal(
     panelButtonNode.nextSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BOOKMARK_SEPARATOR
     ),
     "panelButtonNode.nextSibling.id"
@@ -616,7 +621,7 @@ add_task(async function insertBeforeActionID() {
   // been created.
   Assert.equal(
     document.getElementById(
-      BrowserPageActions._panelButtonNodeIDForActionID(
+      BrowserPageActions.panelButtonNodeIDForActionID(
         PageActions.ACTION_ID_BUILT_IN_SEPARATOR
       )
     ),
@@ -669,14 +674,14 @@ add_task(async function multipleNonBuiltInOrdering() {
   // Check the button nodes in the panel.
   let expectedIndex = 1;
   let buttonNode = document.getElementById(
-    BrowserPageActions._panelButtonNodeIDForActionID(idPrefix + expectedIndex)
+    BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex)
   );
   Assert.notEqual(buttonNode, null, "buttonNode");
   Assert.notEqual(buttonNode.previousSibling, null,
                   "buttonNode.previousSibling");
   Assert.equal(
     buttonNode.previousSibling.id,
-    BrowserPageActions._panelButtonNodeIDForActionID(
+    BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
     "buttonNode.previousSibling.id"
@@ -685,7 +690,7 @@ add_task(async function multipleNonBuiltInOrdering() {
     Assert.notEqual(buttonNode, null, "buttonNode at index: " + i);
     Assert.equal(
       buttonNode.id,
-      BrowserPageActions._panelButtonNodeIDForActionID(idPrefix + expectedIndex),
+      BrowserPageActions.panelButtonNodeIDForActionID(idPrefix + expectedIndex),
       "buttonNode.id at index: " + i
     );
     buttonNode = buttonNode.nextSibling;
@@ -700,7 +705,7 @@ add_task(async function multipleNonBuiltInOrdering() {
   // The separator between the built-in and non-built-in actions should be gone.
   Assert.equal(
     document.getElementById(
-      BrowserPageActions._panelButtonNodeIDForActionID(
+      BrowserPageActions.panelButtonNodeIDForActionID(
         PageActions.ACTION_ID_BUILT_IN_SEPARATOR
       )
     ),
@@ -750,7 +755,7 @@ add_task(async function nonBuiltFirst() {
   // Check the panel.
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    [BrowserPageActions._panelButtonNodeIDForActionID(action.id)],
+    [BrowserPageActions.panelButtonNodeIDForActionID(action.id)],
     "Action should be in panel"
   );
 
@@ -785,7 +790,7 @@ add_task(async function nonBuiltFirst() {
     initialActions.map(a => a.id).concat(
       [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
-    ).map(id => BrowserPageActions._panelButtonNodeIDForActionID(id)),
+    ).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
     "Panel should contain all actions"
   );
 
@@ -812,7 +817,7 @@ add_task(async function nonBuiltFirst() {
   // Check the panel.
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    initialActions.map(a => BrowserPageActions._panelButtonNodeIDForActionID(a.id)),
+    initialActions.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Action should no longer be in panel"
   );
 });
@@ -870,6 +875,12 @@ add_task(async function urlbarOrderNewWindow() {
     "PageActions._persistedActions.idsInUrlbar now has new actions at front"
   );
 
+  // _persistedActions will contain the IDs of test actions added and removed
+  // above (unless PageActions._purgeUnregisteredPersistedActions() was called
+  // for all of them, which it wasn't).  Filter them out because they should
+  // not appear in the new window (or any window at this point).
+  ids = ids.filter(id => PageActions.actionForID(id));
+
   // Open the new window.
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -884,7 +895,7 @@ add_task(async function urlbarOrderNewWindow() {
   // Now check that they're in the right order.
   Assert.deepEqual(
     actualUrlbarNodeIDs,
-    ids.map(id => win.BrowserPageActions._urlbarButtonNodeIDForActionID(id)),
+    ids.map(id => win.BrowserPageActions.urlbarButtonNodeIDForActionID(id)),
     "Expected actions in new window's urlbar"
   );
 
@@ -964,15 +975,184 @@ add_task(async function migrate1() {
   // Now check that they're in the right order.
   Assert.deepEqual(
     actualUrlbarNodeIDs,
-    orderedIDs.map(id => win.BrowserPageActions._urlbarButtonNodeIDForActionID(id)),
+    orderedIDs.map(id => win.BrowserPageActions.urlbarButtonNodeIDForActionID(id)),
     "Expected actions in new window's urlbar"
   );
 
   // Done, clean up.
   await BrowserTestUtils.closeWindow(win);
   Services.prefs.clearUserPref(PageActions.PREF_PERSISTED_ACTIONS);
-  PageActions.actionForID("copyURL")._shownInUrlbar = false;
+  PageActions.actionForID("copyURL").shownInUrlbar = false;
 });
+
+
+// Opens a new browser window and makes sure per-window state works right.
+add_task(async function perWindowState() {
+  // Add a test action.
+  let title = "Test perWindowState";
+  let action = PageActions.addAction(new PageActions.Action({
+    iconURL: "chrome://browser/skin/mail.svg",
+    id: "test-perWindowState",
+    shownInUrlbar: true,
+    title,
+  }));
+
+  // Open a new browser window and load an actionable page so that the action
+  // shows up in it.
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: newWindow.gBrowser,
+    url: "http://example.com/",
+  });
+
+  // Set a new title globally.
+  let newGlobalTitle = title + " new title";
+  action.setTitle(newGlobalTitle);
+  Assert.equal(action.getTitle(), newGlobalTitle,
+               "Title: global");
+  Assert.equal(action.getTitle(window), newGlobalTitle,
+               "Title: old window");
+  Assert.equal(action.getTitle(newWindow), newGlobalTitle,
+               "Title: new window");
+
+  // The action's panel button nodes should be updated in both windows.
+  let panelButtonID =
+    BrowserPageActions.panelButtonNodeIDForActionID(action.id);
+  for (let win of [window, newWindow]) {
+    let panelButtonNode = win.document.getElementById(panelButtonID);
+    Assert.equal(panelButtonNode.getAttribute("label"), newGlobalTitle,
+                 "Panel button label should be global title");
+  }
+
+  // Set a new title in the new window.
+  let newPerWinTitle = title + " new title in new window";
+  action.setTitle(newPerWinTitle, newWindow);
+  Assert.equal(action.getTitle(), newGlobalTitle,
+               "Title: global should remain same");
+  Assert.equal(action.getTitle(window), newGlobalTitle,
+               "Title: old window should remain same");
+  Assert.equal(action.getTitle(newWindow), newPerWinTitle,
+               "Title: new window should be new");
+
+  // The action's panel button node should be updated in the new window but the
+  // same in the old window.
+  let panelButtonNode1 = document.getElementById(panelButtonID);
+  Assert.equal(panelButtonNode1.getAttribute("label"), newGlobalTitle,
+               "Panel button label in old window");
+  let panelButtonNode2 = newWindow.document.getElementById(panelButtonID);
+  Assert.equal(panelButtonNode2.getAttribute("label"), newPerWinTitle,
+               "Panel button label in new window");
+
+  // Done, clean up.
+  await BrowserTestUtils.closeWindow(newWindow);
+  action.remove();
+});
+
+
+// Adds an action, changes its placement in the urlbar to something non-default,
+// removes the action, and then adds it back.  Since the action was removed and
+// re-added without restarting the app (or more accurately without calling
+// PageActions._purgeUnregisteredPersistedActions), the action should remain in
+// persisted state and retain its last placement in the urlbar.
+add_task(async function removeRetainState() {
+  // Get the list of actions initially in the urlbar.
+  let initialActionsInUrlbar = PageActions.actionsInUrlbar;
+  Assert.ok(initialActionsInUrlbar.length > 0,
+            "This test expects there to be at least one action in the urlbar initially (like the bookmark star)");
+
+  // Add a test action.
+  let id = "test-removeRetainState";
+  let testAction = PageActions.addAction(new PageActions.Action({
+    id,
+    title: "Test removeRetainState",
+  }));
+
+  // Show its button in the urlbar.
+  testAction.shownInUrlbar = true;
+
+  // "Move" the test action to the front of the urlbar by toggling shownInUrlbar
+  // for all the other actions in the urlbar.
+  for (let action of initialActionsInUrlbar) {
+    action.shownInUrlbar = false;
+    action.shownInUrlbar = true;
+  }
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    [testAction].concat(initialActionsInUrlbar).map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order: testAction followed by all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  let actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    [testAction].concat(initialActionsInUrlbar).map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order: testAction followed by all initial actions"
+  );
+
+  // Remove the test action.
+  testAction.remove();
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    initialActionsInUrlbar.map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order after removing test action: all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    initialActionsInUrlbar.map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order after removing test action: all initial actions"
+  );
+
+  // Add the test action again.
+  testAction = PageActions.addAction(new PageActions.Action({
+    id,
+    title: "Test removeRetainState",
+  }));
+
+  // Show its button in the urlbar again.
+  testAction.shownInUrlbar = true;
+
+  // Check the actions in PageActions.actionsInUrlbar.
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.map(a => a.id),
+    [testAction].concat(initialActionsInUrlbar).map(a => a.id),
+    "PageActions.actionsInUrlbar should be in expected order after re-adding test action: testAction followed by all initial actions"
+  );
+
+  // Check the nodes in the urlbar.
+  actualUrlbarNodeIDs = [];
+  for (let node = BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    [testAction].concat(initialActionsInUrlbar).map(a => BrowserPageActions.urlbarButtonNodeIDForActionID(a.id)),
+    "urlbar nodes should be in expected order after re-adding test action: testAction followed by all initial actions"
+  );
+
+  // Done, clean up.
+  testAction.remove();
+});
+
 
 function promisePageActionPanelOpen() {
   let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)

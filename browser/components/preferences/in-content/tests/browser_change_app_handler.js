@@ -19,6 +19,7 @@ add_task(async function() {
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   is(prefs.selectedPane, "paneGeneral", "General pane was selected");
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let win = gBrowser.selectedBrowser.contentWindow;
 
   let container = win.document.getElementById("handlersView");
@@ -98,4 +99,3 @@ registerCleanupFunction(function() {
   let infoToModify = gMimeSvc.getFromTypeAndExtension("text/x-test-handler", null);
   gHandlerSvc.remove(infoToModify);
 });
-

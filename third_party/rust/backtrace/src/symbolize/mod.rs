@@ -17,7 +17,7 @@ use rustc_demangle::{try_demangle, Demangle};
 /// also may be called more than once in the case of inlined functions.
 ///
 /// Symbols yielded represent the execution at the specified `addr`, returning
-/// file/line pairs for that addres (if available).
+/// file/line pairs for that address (if available).
 ///
 /// # Example
 ///
@@ -46,7 +46,7 @@ pub fn resolve<F: FnMut(&Symbol)>(addr: *mut c_void, mut cb: F) {
 /// `backtrace::resolve` function, and it is virtually dispatched as it's
 /// unknown which implementation is behind it.
 ///
-/// A symbol can give contextual information about a funciton, for example the
+/// A symbol can give contextual information about a function, for example the
 /// name, filename, line number, precise address, etc. Not all information is
 /// always available in a symbol, however, so all methods return an `Option`.
 pub struct Symbol {
@@ -255,6 +255,12 @@ cfg_if! {
         mod dbghelp;
         use self::dbghelp::resolve as resolve_imp;
         use self::dbghelp::Symbol as SymbolImp;
+    } else if #[cfg(all(feature = "gimli-symbolize",
+                        unix,
+                        target_os = "linux"))] {
+        mod gimli;
+        use self::gimli::resolve as resolve_imp;
+        use self::gimli::Symbol as SymbolImp;
     } else if #[cfg(all(feature = "libbacktrace",
                         unix,
                         not(target_os = "emscripten"),

@@ -1,4 +1,4 @@
-// Copyright 2014 The html5ever Project Developers. See the
+// Copyright 2017 The Servo Project Developers. See the
 // COPYRIGHT file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -9,7 +9,7 @@
 
 //! Directional Formatting Characters
 //!
-//! http://www.unicode.org/reports/tr9/#Directional_Formatting_Characters
+//! <http://www.unicode.org/reports/tr9/#Directional_Formatting_Characters>
 
 // == Implicit ==
 /// ARABIC LETTER MARK

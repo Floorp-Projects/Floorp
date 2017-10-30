@@ -189,7 +189,7 @@ class MozconfigLoader(object):
 
         return None
 
-    def read_mozconfig(self, path=None, moz_build_app=None):
+    def read_mozconfig(self, path=None):
         """Read the contents of a mozconfig into a data structure.
 
         This takes the path to a mozconfig to load. If the given path is
@@ -314,10 +314,6 @@ class MozconfigLoader(object):
 
         result['configure_args'] = [self._expand(o) for o in parsed['ac']]
 
-        if moz_build_app is not None:
-            result['configure_args'].extend(self._expand(o) for o in
-                parsed['ac_app'][moz_build_app])
-
         if 'MOZ_OBJDIR' in parsed['env_before']:
             result['topobjdir'] = parsed['env_before']['MOZ_OBJDIR']
 
@@ -347,7 +343,6 @@ class MozconfigLoader(object):
     def _parse_loader_output(self, output):
         mk_options = []
         ac_options = []
-        ac_app_options = defaultdict(list)
         before_source = {}
         after_source = {}
         env_before_source = {}
@@ -385,9 +380,6 @@ class MozconfigLoader(object):
                     ac_options.append('\n'.join(current))
                 elif current_type == 'MK_OPTION':
                     mk_options.append('\n'.join(current))
-                elif current_type == 'AC_APP_OPTION':
-                    app = current.pop(0)
-                    ac_app_options[app].append('\n'.join(current))
 
                 current = None
                 current_type = None
@@ -474,7 +466,6 @@ class MozconfigLoader(object):
         return {
             'mk': mk_options,
             'ac': ac_options,
-            'ac_app': ac_app_options,
             'vars_before': before_source,
             'vars_after': after_source,
             'env_before': env_before_source,

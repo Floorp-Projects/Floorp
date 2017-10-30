@@ -9,8 +9,6 @@ RESFILE = 'bar.res'
 RCINCLUDE = 'bar.rc'
 DEFFILE = 'baz.def'
 
-CFLAGS += ['-fno-exceptions', '-w']
-CXXFLAGS += ['-fcxx-exceptions', '-option with spaces']
 LDFLAGS += ['-ld flag with spaces', '-x']
 HOST_CFLAGS += ['-funroll-loops', '-wall']
 HOST_CXXFLAGS += ['-funroll-loops-harder', '-wall-day-everyday']

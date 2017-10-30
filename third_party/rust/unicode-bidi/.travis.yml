@@ -1,24 +1,38 @@
-sudo: false
 language: rust
+sudo: false
+os: linux
+dist: trusty
 
 rust:
   - nightly
   - beta
   - stable
-  - 1.15.0
+  - 1.17.0
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - rust: nightly
 
 notifications:
   webhooks: http://build.servo.org:54856/travis
+  email:
+    on_success: never
 
-before_script:
-    - pip install git+https://github.com/euclio/travis-cargo@kcov --user && export PATH=$HOME/.local/bin:$PATH
+env:
+  global:
+    - RUST_BACKTRACE=full
 
 script:
   - cargo build --verbose
-  - cargo test  --verbose
-  - cargo test  --verbose --features with_serde
   - cargo doc   --verbose --no-deps
-  - travis-cargo bench
+
+  - cargo test  --verbose
+  - cargo test  --verbose --features 'serde'
+  - cargo test  --verbose --features 'with_serde'
+
+  - test "$TRAVIS_RUST_VERSION" != "nightly" ||
+    cargo bench --verbose --features 'bench_it'
+
+  - test "$TRAVIS_RUST_VERSION" != "nightly" ||
+    cargo run   --verbose --features 'flame_it' --example 'flame_udhr'

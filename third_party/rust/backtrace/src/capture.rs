@@ -26,7 +26,7 @@ pub struct Backtrace {
 pub struct BacktraceFrame {
     ip: usize,
     symbol_address: usize,
-    symbols: Vec<BacktraceSymbol>,
+    symbols: Option<Vec<BacktraceSymbol>>,
 }
 
 /// Captured version of a symbol in a backtrace.
@@ -49,7 +49,7 @@ impl Backtrace {
     ///
     /// This function is useful for representing a backtrace as an object in
     /// Rust. This returned value can be sent across threads and printed
-    /// elsewhere, and thie purpose of this value is to be entirely self
+    /// elsewhere, and the purpose of this value is to be entirely self
     /// contained.
     ///
     /// # Examples
@@ -60,21 +60,36 @@ impl Backtrace {
     /// let current_backtrace = Backtrace::new();
     /// ```
     pub fn new() -> Backtrace {
+        let mut bt = Backtrace::new_unresolved();
+        bt.resolve();
+        return bt
+    }
+
+    /// Similar to `new` except that this does not resolve any symbols, this
+    /// simply captures the backtrace as a list of addresses.
+    ///
+    /// At a later time the `resolve` function can be called to resolve this
+    /// backtrace's symbols into readable names. This function exists because
+    /// the resolution process can sometimes take a significant amount of time
+    /// whereas any one backtrace may only be rarely printed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use backtrace::Backtrace;
+    ///
+    /// let mut current_backtrace = Backtrace::new_unresolved();
+    /// println!("{:?}", current_backtrace); // no symbol names
+    /// current_backtrace.resolve();
+    /// println!("{:?}", current_backtrace); // symbol names now present
+    /// ```
+    pub fn new_unresolved() -> Backtrace {
         let mut frames = Vec::new();
         trace(|frame| {
-            let mut symbols = Vec::new();
-            resolve(frame.ip(), |symbol| {
-                symbols.push(BacktraceSymbol {
-                    name: symbol.name().map(|m| m.as_bytes().to_vec()),
-                    addr: symbol.addr().map(|a| a as usize),
-                    filename: symbol.filename().map(|m| m.to_path_buf()),
-                    lineno: symbol.lineno(),
-                });
-            });
             frames.push(BacktraceFrame {
                 ip: frame.ip() as usize,
                 symbol_address: frame.symbol_address() as usize,
-                symbols: symbols,
+                symbols: None,
             });
             true
         });
@@ -89,6 +104,26 @@ impl Backtrace {
     /// function started.
     pub fn frames(&self) -> &[BacktraceFrame] {
         &self.frames
+    }
+
+    /// If this backtrace was created from `new_unresolved` then this function
+    /// will resolve all addresses in the backtrace to their symbolic names.
+    ///
+    /// If this backtrace has been previously resolved or was created through
+    /// `new`, this function does nothing.
+    pub fn resolve(&mut self) {
+        for frame in self.frames.iter_mut().filter(|f| f.symbols.is_none()) {
+            let mut symbols = Vec::new();
+            resolve(frame.ip as *mut _, |symbol| {
+                symbols.push(BacktraceSymbol {
+                    name: symbol.name().map(|m| m.as_bytes().to_vec()),
+                    addr: symbol.addr().map(|a| a as usize),
+                    filename: symbol.filename().map(|m| m.to_path_buf()),
+                    lineno: symbol.lineno(),
+                });
+            });
+            frame.symbols = Some(symbols);
+        }
     }
 }
 
@@ -116,17 +151,18 @@ impl BacktraceFrame {
     pub fn symbol_address(&self) -> *mut c_void {
         self.symbol_address as *mut c_void
     }
-}
 
-impl BacktraceFrame {
     /// Returns the list of symbols that this frame corresponds to.
     ///
     /// Normally there is only one symbol per frame, but sometimes if a number
     /// of functions are inlined into one frame then multiple symbols will be
     /// returned. The first symbol listed is the "innermost function", whereas
     /// the last symbol is the outermost (last caller).
+    ///
+    /// Note that if this frame came from an unresolved backtrace then this will
+    /// return an empty list.
     pub fn symbols(&self) -> &[BacktraceSymbol] {
-        &self.symbols
+        self.symbols.as_ref().map(|s| &s[..]).unwrap_or(&[])
     }
 }
 
@@ -162,11 +198,18 @@ impl fmt::Debug for Backtrace {
             let ip = frame.ip();
             try!(write!(fmt, "\n{:4}: {:2$?}", idx, ip, hex_width));
 
-            if frame.symbols.len() == 0 {
+            let symbols = match frame.symbols {
+                Some(ref s) => s,
+                None => {
+                    try!(write!(fmt, " - <unresolved>"));
+                    continue
+                }
+            };
+            if symbols.len() == 0 {
                 try!(write!(fmt, " - <no info>"));
             }
 
-            for (idx, symbol) in frame.symbols().iter().enumerate() {
+            for (idx, symbol) in symbols.iter().enumerate() {
                 if idx != 0 {
                     try!(write!(fmt, "\n      {:1$}", "", hex_width));
                 }

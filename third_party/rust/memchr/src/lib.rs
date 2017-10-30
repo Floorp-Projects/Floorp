@@ -12,9 +12,12 @@ to the corresponding functions in `libc`.
 #[macro_use]
 extern crate std;
 
+#[cfg(feature = "libc")]
 extern crate libc;
 
+#[cfg(feature = "libc")]
 use libc::c_void;
+#[cfg(feature = "libc")]
 use libc::{c_int, size_t};
 
 #[cfg(feature = "use_std")]
@@ -70,7 +73,6 @@ pub struct Memchr<'a> {
     haystack: &'a [u8],
     // The index
     position: usize,
-    rposition: usize,
 }
 
 impl<'a> Memchr<'a> {
@@ -80,7 +82,6 @@ impl<'a> Memchr<'a> {
             needle: needle,
             haystack: haystack,
             position: 0,
-            rposition: 0,
         }
     }
 }
@@ -109,13 +110,7 @@ impl<'a> DoubleEndedIterator for Memchr<'a> {
             Some(index) => {
                 // Move our internal position
                 self.haystack = self.haystack.split_at(index).0;
-                if self.rposition > 0{
-                    //memrchr has been used once already.
-                    self.rposition = self.rposition - index;
-                    return Some(self.rposition);
-                }else{
-                    return Some(self.position + index+1);
-                }
+                Some(self.position + index + 1)
             }
             None => None,
         }
@@ -144,9 +139,10 @@ impl<'a> DoubleEndedIterator for Memchr<'a> {
 #[inline(always)] // reduces constant overhead
 pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
     // libc memchr
-    #[cfg(any(not(target_os = "windows"),
-              not(any(target_pointer_width = "32",
-                      target_pointer_width = "64"))))]
+    #[cfg(all(feature = "libc",
+              any(not(target_os = "windows"),
+                  not(any(target_pointer_width = "32",
+                          target_pointer_width = "64")))))]
     #[inline(always)] // reduces constant overhead
     fn memchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
         use libc::memchr as libc_memchr;
@@ -164,11 +160,19 @@ pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
     }
 
     // use fallback on windows, since it's faster
-    #[cfg(all(target_os = "windows",
+    #[cfg(all(any(not(feature = "libc"), target_os = "windows"),
               any(target_pointer_width = "32",
                   target_pointer_width = "64")))]
     fn memchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
         fallback::memchr(needle, haystack)
+    }
+
+    // For the rare case of neither 32 bit nor 64-bit platform.
+    #[cfg(all(any(not(feature = "libc"), target_os = "windows"),
+              not(target_pointer_width = "32"),
+              not(target_pointer_width = "64")))]
+    fn memchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
+        haystack.iter().position(|&b| b == needle)
     }
 
     memchr_specific(needle, haystack)
@@ -192,7 +196,7 @@ pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
 #[inline(always)] // reduces constant overhead
 pub fn memrchr(needle: u8, haystack: &[u8]) -> Option<usize> {
 
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "libc", target_os = "linux"))]
     #[inline(always)] // reduces constant overhead
     fn memrchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
         // GNU's memrchr() will - unlike memchr() - error if haystack is empty.
@@ -211,14 +215,14 @@ pub fn memrchr(needle: u8, haystack: &[u8]) -> Option<usize> {
         }
     }
 
-    #[cfg(all(not(target_os = "linux"),
+    #[cfg(all(not(all(feature = "libc", target_os = "linux")),
               any(target_pointer_width = "32", target_pointer_width = "64")))]
     fn memrchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
         fallback::memrchr(needle, haystack)
     }
 
     // For the rare case of neither 32 bit nor 64-bit platform.
-    #[cfg(all(not(target_os = "linux"),
+    #[cfg(all(not(all(feature = "libc", target_os = "linux")),
               not(target_pointer_width = "32"),
               not(target_pointer_width = "64")))]
     fn memrchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
@@ -380,7 +384,7 @@ pub fn memchr3(needle1: u8, needle2: u8, needle3: u8, haystack: &[u8]) -> Option
 }
 
 #[allow(dead_code)]
-#[cfg(any(test, all(not(target_os = "linux"),
+#[cfg(any(test, not(feature = "libc"), all(not(target_os = "linux"),
           any(target_pointer_width = "32", target_pointer_width = "64"))))]
 mod fallback {
     #[cfg(feature = "use_std")]

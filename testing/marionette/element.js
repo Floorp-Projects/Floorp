@@ -26,6 +26,11 @@ this.EXPORTED_SYMBOLS = [
   "WebElement",
 ];
 
+const {
+  FIRST_ORDERED_NODE_TYPE,
+  ORDERED_NODE_ITERATOR_TYPE,
+} = Ci.nsIDOMXPathResult;
+
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
@@ -387,67 +392,82 @@ function find_(container, strategy, selector, searchFn,
 /**
  * Find a single element by XPath expression.
  *
- * @param {DOMElement} root
- *     Document root
- * @param {DOMElement} startNode
+ * @param {HTMLDocument} document
+ *     Document root.
+ * @param {Element} startNode
  *     Where in the DOM hiearchy to begin searching.
- * @param {string} expr
+ * @param {string} expression
  *     XPath search expression.
  *
- * @return {DOMElement}
- *     First element matching expression.
+ * @return {Node}
+ *     First element matching <var>expression</var>.
  */
-element.findByXPath = function(root, startNode, expr) {
-  let iter = root.evaluate(expr, startNode, null,
-      Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null);
+element.findByXPath = function(document, startNode, expression) {
+  let iter = document.evaluate(
+      expression, startNode, null, FIRST_ORDERED_NODE_TYPE, null);
   return iter.singleNodeValue;
 };
 
 /**
  * Find elements by XPath expression.
  *
- * @param {DOMElement} root
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement} startNode
+ * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
- * @param {string} expr
+ * @param {string} expression
  *     XPath search expression.
  *
- * @return {Array.<DOMElement>}
- *     Sequence of found elements matching expression.
+ * @return {Iterable.<Node>}
+ *     Iterator over elements matching <var>expression</var>.
  */
-element.findByXPathAll = function(root, startNode, expr) {
-  let rv = [];
-  let iter = root.evaluate(expr, startNode, null,
-      Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+element.findByXPathAll = function* (document, startNode, expression) {
+  let iter = document.evaluate(
+      expression, startNode, null, ORDERED_NODE_ITERATOR_TYPE, null);
   let el = iter.iterateNext();
   while (el) {
-    rv.push(el);
+    yield el;
     el = iter.iterateNext();
   }
-  return rv;
 };
 
 /**
- * Find all hyperlinks descendant of <var>node</var> which link text
- * is <var>s</var>.
+ * Find all hyperlinks descendant of <var>startNode</var> which
+ * link text is <var>linkText</var>.
  *
- * @param {DOMElement} node
+ * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
- * @param {string} s
+ * @param {string} linkText
  *     Link text to search for.
  *
- * @return {Array.<DOMAnchorElement>}
+ * @return {Iterable.<HTMLAnchorElement>}
  *     Sequence of link elements which text is <var>s</var>.
  */
-element.findByLinkText = function(node, s) {
-  return filterLinks(node, link => link.text.trim() === s);
+element.findByLinkText = function(startNode, linkText) {
+  return filterLinks(startNode, link => link.text.trim() === linkText);
+};
+
+/**
+ * Find all hyperlinks descendant of <var>startNode</var> which
+ * link text contains <var>linkText</var>.
+ *
+ * @param {Element} startNode
+ *     Where in the DOM hierachy to begin searching.
+ * @param {string} linkText
+ *     Link text to search for.
+ *
+ * @return {Iterable.<HTMLAnchorElement>}
+ *     Iterator of link elements which text containins
+ *     <var>linkText</var>.
+ */
+element.findByPartialLinkText = function(startNode, linkText) {
+  return filterLinks(startNode, link => link.text.includes(linkText));
 };
 
 /**
  * Find anonymous nodes of <var>node</var>.
  *
- * @param {XULElement} rootNode
+ * @param {XULDocument} document
  *     Root node of the document.
  * @param {XULElement} node
  *     Where in the DOM hierarchy to begin searching.
@@ -455,104 +475,86 @@ element.findByLinkText = function(node, s) {
  * @return {Iterable.<XULElement>}
  *     Iterator over anonymous elements.
  */
-element.findAnonymousNodes = function* (rootNode, node) {
-  let anons = rootNode.getAnonymousNodes(node) || [];
+element.findAnonymousNodes = function* (document, node) {
+  let anons = document.getAnonymousNodes(node) || [];
   for (let node of anons) {
     yield node;
   }
 };
 
 /**
- * Find all hyperlinks descendant of |node| which link text contains |s|.
+ * Filters all hyperlinks that are descendant of <var>startNode</var>
+ * by <var>predicate</var>.
  *
- * @param {DOMElement} node
- *     Where in the DOM hierachy to begin searching.
- * @param {string} s
- *     Link text to search for.
- *
- * @return {Array.<DOMAnchorElement>}
- *     Sequence of link elements which text containins |s|.
- */
-element.findByPartialLinkText = function(node, s) {
-  return filterLinks(node, link => link.text.indexOf(s) != -1);
-};
-
-/**
- * Filters all hyperlinks that are descendant of |node| by |predicate|.
- *
- * @param {DOMElement} node
+ * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
- * @param {function(DOMAnchorElement): boolean} predicate
+ * @param {function(HTMLAnchorElement): boolean} predicate
  *     Function that determines if given link should be included in
  *     return value or filtered away.
  *
- * @return {Array.<DOMAnchorElement>}
- *     Sequence of link elements matching |predicate|.
+ * @return {Iterable.<HTMLAnchorElement>}
+ *     Iterator of link elements matching <var>predicate</var>.
  */
-function filterLinks(node, predicate) {
-  let rv = [];
-  for (let link of node.getElementsByTagName("a")) {
+function* filterLinks(startNode, predicate) {
+  for (let link of startNode.getElementsByTagName("a")) {
     if (predicate(link)) {
-      rv.push(link);
+      yield link;
     }
   }
-  return rv;
 }
 
 /**
  * Finds a single element.
  *
- * @param {element.Strategy} using
+ * @param {element.Strategy} strategy
  *     Selector strategy to use.
- * @param {string} value
+ * @param {string} selector
  *     Selector expression.
- * @param {DOMElement} rootNode
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement=} startNode
+ * @param {Element=} startNode
  *     Optional node from which to start searching.
  *
- * @return {DOMElement}
+ * @return {Element}
  *     Found elements.
  *
  * @throws {InvalidSelectorError}
- *     If strategy |using| is not recognised.
+ *     If strategy <var>using</var> is not recognised.
  * @throws {Error}
- *     If selector expression |value| is malformed.
+ *     If selector expression <var>selector</var> is malformed.
  */
-function findElement(using, value, rootNode, startNode) {
-  switch (using) {
+function findElement(strategy, selector, document, startNode = undefined) {
+  switch (strategy) {
     case element.Strategy.ID:
       {
         if (startNode.getElementById) {
-          return startNode.getElementById(value);
+          return startNode.getElementById(selector);
         }
-        let expr = `.//*[@id="${value}"]`;
-        return element.findByXPath( rootNode, startNode, expr);
+        let expr = `.//*[@id="${selector}"]`;
+        return element.findByXPath(document, startNode, expr);
       }
 
     case element.Strategy.Name:
       {
         if (startNode.getElementsByName) {
-          return startNode.getElementsByName(value)[0];
+          return startNode.getElementsByName(selector)[0];
         }
-        let expr = `.//*[@name="${value}"]`;
-        return element.findByXPath(rootNode, startNode, expr);
+        let expr = `.//*[@name="${selector}"]`;
+        return element.findByXPath(document, startNode, expr);
       }
 
     case element.Strategy.ClassName:
-      // works for >= Firefox 3
-      return startNode.getElementsByClassName(value)[0];
+      return startNode.getElementsByClassName(selector)[0];
 
     case element.Strategy.TagName:
-      // works for all elements
-      return startNode.getElementsByTagName(value)[0];
+      return startNode.getElementsByTagName(selector)[0];
 
     case element.Strategy.XPath:
-      return element.findByXPath(rootNode, startNode, value);
+      return element.findByXPath(document, startNode, selector);
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (link.text.trim() === value) {
+        if (link.text.trim() === selector) {
           return link;
         }
       }
@@ -560,7 +562,7 @@ function findElement(using, value, rootNode, startNode) {
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (link.text.indexOf(value) != -1) {
+        if (link.text.includes(selector)) {
           return link;
         }
       }
@@ -568,88 +570,88 @@ function findElement(using, value, rootNode, startNode) {
 
     case element.Strategy.Selector:
       try {
-        return startNode.querySelector(value);
+        return startNode.querySelector(selector);
       } catch (e) {
-        throw new InvalidSelectorError(`${e.message}: "${value}"`);
+        throw new InvalidSelectorError(`${e.message}: "${selector}"`);
       }
 
     case element.Strategy.Anon:
-      return element.findAnonymousNodes(rootNode, startNode).next().value;
+      return element.findAnonymousNodes(document, startNode).next().value;
 
     case element.Strategy.AnonAttribute:
-      let attr = Object.keys(value)[0];
-      return rootNode.getAnonymousElementByAttribute(
-          startNode, attr, value[attr]);
+      let attr = Object.keys(selector)[0];
+      return document.getAnonymousElementByAttribute(
+          startNode, attr, selector[attr]);
   }
 
-  throw new InvalidSelectorError(`No such strategy: ${using}`);
+  throw new InvalidSelectorError(`No such strategy: ${strategy}`);
 }
 
 /**
  * Find multiple elements.
  *
- * @param {element.Strategy} using
+ * @param {element.Strategy} strategy
  *     Selector strategy to use.
- * @param {string} value
+ * @param {string} selector
  *     Selector expression.
- * @param {DOMElement} rootNode
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement=} startNode
+ * @param {Element=} startNode
  *     Optional node from which to start searching.
  *
- * @return {DOMElement}
+ * @return {Array.<Element>}
  *     Found elements.
  *
  * @throws {InvalidSelectorError}
- *     If strategy |using| is not recognised.
+ *     If strategy <var>strategy</var> is not recognised.
  * @throws {Error}
- *     If selector expression |value| is malformed.
+ *     If selector expression <var>selector</var> is malformed.
  */
-function findElements(using, value, rootNode, startNode) {
-  switch (using) {
+function findElements(strategy, selector, document, startNode = undefined) {
+  switch (strategy) {
     case element.Strategy.ID:
-      value = `.//*[@id="${value}"]`;
+      selector = `.//*[@id="${selector}"]`;
 
     // fall through
     case element.Strategy.XPath:
-      return element.findByXPathAll(rootNode, startNode, value);
+      return [...element.findByXPathAll(document, startNode, selector)];
 
     case element.Strategy.Name:
       if (startNode.getElementsByName) {
-        return startNode.getElementsByName(value);
+        return startNode.getElementsByName(selector);
       }
-      return element.findByXPathAll(
-          rootNode, startNode, `.//*[@name="${value}"]`);
+      return [...element.findByXPathAll(
+          document, startNode, `.//*[@name="${selector}"]`)];
 
     case element.Strategy.ClassName:
-      return startNode.getElementsByClassName(value);
+      return startNode.getElementsByClassName(selector);
 
     case element.Strategy.TagName:
-      return startNode.getElementsByTagName(value);
+      return startNode.getElementsByTagName(selector);
 
     case element.Strategy.LinkText:
-      return element.findByLinkText(startNode, value);
+      return [...element.findByLinkText(startNode, selector)];
 
     case element.Strategy.PartialLinkText:
-      return element.findByPartialLinkText(startNode, value);
+      return [...element.findByPartialLinkText(startNode, selector)];
 
     case element.Strategy.Selector:
-      return startNode.querySelectorAll(value);
+      return startNode.querySelectorAll(selector);
 
     case element.Strategy.Anon:
-      return [...element.findAnonymousNodes(rootNode, startNode)];
+      return [...element.findAnonymousNodes(document, startNode)];
 
     case element.Strategy.AnonAttribute:
-      let attr = Object.keys(value)[0];
-      let el = rootNode.getAnonymousElementByAttribute(
-          startNode, attr, value[attr]);
+      let attr = Object.keys(selector)[0];
+      let el = document.getAnonymousElementByAttribute(
+          startNode, attr, selector[attr]);
       if (el) {
         return [el];
       }
       return [];
 
     default:
-      throw new InvalidSelectorError(`No such strategy: ${using}`);
+      throw new InvalidSelectorError(`No such strategy: ${strategy}`);
   }
 }
 

@@ -574,8 +574,8 @@ class AutoTry(object):
         return kwargs["builds"], platforms, tests, talos, jobs, paths, tags, extra_args
 
     def run(self, **kwargs):
-        if kwargs["list_presets"]:
-            preset.list_presets(section='try')
+        if kwargs["mod_presets"]:
+            getattr(preset, kwargs["mod_presets"])(section='try')
             sys.exit()
 
         if kwargs["preset"]:

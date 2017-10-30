@@ -4124,7 +4124,6 @@ Tab.prototype = {
           metadata: this.metatags,
         });
 
-        // Reset isSearch so that the userRequested term will be erased on next page load
         this.metatags = null;
 
         if (docURI.startsWith("about:certerror") || docURI.startsWith("about:blocked")) {
@@ -4318,21 +4317,12 @@ Tab.prototype = {
         if (aEvent.originalTarget.defaultView != this.browser.contentWindow)
           return;
 
-        let target = aEvent.originalTarget;
-        let docURI = target.documentURI;
-        if (!docURI.startsWith("about:neterror") && !this.isSearch) {
-          // If this wasn't an error page and the user isn't search, don't retain the typed entry
-          this.userRequested = "";
-        }
-
         GlobalEventDispatcher.sendRequest({
           type: "Content:PageShow",
           tabID: this.id,
           userRequested: this.userRequested,
           fromCache: Tabs.useCache
         });
-
-        this.isSearch = false;
 
         if (!aEvent.persisted && Services.prefs.getBoolPref("browser.ui.linkify.phone")) {
           if (!this._linkifier)
@@ -4502,6 +4492,13 @@ Tab.prototype = {
       ExternalApps.updatePageActionUri(fixedURI);
     }
 
+    if (Components.isSuccessCode(aRequest.status) &&
+        !fixedURI.displaySpec.startsWith("about:neterror") && !this.isSearch) {
+      // If this won't end up in an error page and the user isn't searching,
+      // don't retain the typed entry.
+      this.userRequested = "";
+    }
+
     let message = {
       type: "Content:LocationChange",
       tabID: this.id,
@@ -4518,6 +4515,9 @@ Tab.prototype = {
     GlobalEventDispatcher.sendRequest(message);
 
     notifyManifestStatus(this);
+
+    // Reset isSearch so that the userRequested term will be erased on next location change.
+    this.isSearch = false;
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which

@@ -1,0 +1,20 @@
+[package]
+
+name = "httparse"
+version = "1.2.2"
+authors = ["Sean McArthur <sean.monstar@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "A tiny, safe, speedy, zero-copy HTTP/1.x parser."
+repository = "https://github.com/seanmonstar/httparse"
+
+[features]
+default = ["std"]
+std = []
+
+[dev-dependencies]
+pico-sys = "0.0"
+
+[profile.bench]
+lto = true
+codegen-units = 1
+opt-level = 3

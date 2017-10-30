@@ -70,8 +70,15 @@ pub fn resolve(addr: *mut c_void, cb: &mut FnMut(&super::Symbol)) {
         if ret != TRUE {
             return
         }
+
+        // If the symbol name is greater than MaxNameLen, SymFromAddrW will
+        // give a buffer of (MaxNameLen - 1) characters and set NameLen to
+        // the real value.
+        let name_len = ::std::cmp::min(info.NameLen as usize,
+                                       info.MaxNameLen as usize - 1);
+
         let name = slice::from_raw_parts(info.Name.as_ptr() as *const u16,
-                                         info.NameLen as usize);
+                                         name_len);
         let name = OsString::from_wide(name);
 
         let mut line = mem::zeroed::<IMAGEHLP_LINEW64>();

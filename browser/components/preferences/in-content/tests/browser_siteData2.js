@@ -2,6 +2,8 @@
 const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
+/* eslint-disable mozilla/no-cpows-in-tests */
+
 function promiseSettingsDialogClose() {
   return new Promise(resolve => {
     let win = gBrowser.selectedBrowser.contentWindow;

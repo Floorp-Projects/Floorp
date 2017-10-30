@@ -88,7 +88,6 @@ set_config('MOZ_AUTOMATION', depends_if('MOZ_AUTOMATION')(lambda x: True))
 
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
-option(env='MOZ_CURRENT_PROJECT', nargs=1, help='Current build project')
 option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 
 option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
@@ -111,11 +110,11 @@ add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
 # be called when --help is passed, and the mozconfig wouldn't be read.
 
 
-@depends('MOZ_CURRENT_PROJECT', 'MOZCONFIG', 'OLD_CONFIGURE',
+@depends('MOZCONFIG', 'OLD_CONFIGURE',
          check_build_environment, '--with-external-source-dir',
          '--help')
 @imports(_from='mozbuild.mozconfig', _import='MozconfigLoader')
-def mozconfig(current_project, mozconfig, old_configure, build_env,
+def mozconfig(mozconfig, old_configure, build_env,
               external_source_dir, help):
     if not old_configure:
         die('The OLD_CONFIGURE environment variable must be set')
@@ -143,10 +142,9 @@ def mozconfig(current_project, mozconfig, old_configure, build_env,
     if external_source_dir:
         topsrcdir = external_source_dir[0]
     loader = MozconfigLoader(topsrcdir)
-    current_project = current_project[0] if current_project else None
     mozconfig = mozconfig[0] if mozconfig else None
     mozconfig = loader.find_mozconfig(env={'MOZCONFIG': mozconfig})
-    mozconfig = loader.read_mozconfig(mozconfig, moz_build_app=current_project)
+    mozconfig = loader.read_mozconfig(mozconfig)
 
     return mozconfig
 
