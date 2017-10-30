@@ -16,7 +16,7 @@ namespaces = ["mozilla", "wr"]
 
 [parse]
 parse_deps = true
-include = ["webrender", "webrender_api"]
+include = ["log", "webrender", "webrender_api"]
 expand = ["euclid"]
 
 [fn]

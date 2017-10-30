@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.28 */
+/* Generated with cbindgen:0.1.29 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -128,6 +128,31 @@ enum class LineStyle : uint8_t {
   Dotted = 1,
   Dashed = 2,
   Wavy = 3,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+// An enum representing the available verbosity level filters of the logging
+// framework.
+//
+// A `LogLevelFilter` may be compared directly to a [`LogLevel`](enum.LogLevel.html).
+// Use this type to [`get()`](struct.MaxLogLevelFilter.html#method.get) and
+// [`set()`](struct.MaxLogLevelFilter.html#method.set) the
+// [`MaxLogLevelFilter`](struct.MaxLogLevelFilter.html), or to match with the getter
+// [`max_log_level()`](fn.max_log_level.html).
+enum class LogLevelFilter : uintptr_t {
+  // A level lower than all log levels.
+  Off = 0,
+  // Corresponds to the `Error` log level.
+  Error = 1,
+  // Corresponds to the `Warn` log level.
+  Warn = 2,
+  // Corresponds to the `Info` log level.
+  Info = 3,
+  // Corresponds to the `Debug` log level.
+  Debug = 4,
+  // Corresponds to the `Trace` log level.
+  Trace = 5,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -665,6 +690,8 @@ struct GlyphOptions {
 
 typedef YuvColorSpace WrYuvColorSpace;
 
+typedef LogLevelFilter WrLogLevelFilter;
+
 struct ByteSlice {
   const uint8_t *buffer;
   size_t len;
@@ -880,6 +907,10 @@ extern void AddFontData(WrFontKey aKey,
                         const ArcVecU8 *aVec);
 
 extern void DeleteFontData(WrFontKey aKey);
+
+extern void gecko_printf_stderr_output(const char *aMsg);
+
+extern void gfx_critical_error(const char *aMsg);
 
 extern void gfx_critical_note(const char *aMsg);
 
@@ -1262,6 +1293,10 @@ WR_INLINE
 void wr_dp_save(WrState *aState)
 WR_FUNC;
 
+WR_INLINE
+void wr_init_external_log_handler(WrLogLevelFilter aLogFilter)
+WR_FUNC;
+
 extern bool wr_moz2d_render_cb(ByteSlice aBlob,
                                uint32_t aWidth,
                                uint32_t aHeight,
@@ -1439,6 +1474,10 @@ void wr_scroll_layer_with_id(DocumentHandle *aDh,
                              WrPipelineId aPipelineId,
                              uint64_t aScrollId,
                              LayoutPoint aNewScrollOrigin)
+WR_FUNC;
+
+WR_INLINE
+void wr_shutdown_external_log_handler()
 WR_FUNC;
 
 WR_INLINE

@@ -457,7 +457,7 @@ def setup_talos(config, tests):
         # name is only required for try
         if config.params['project'] == 'try':
             extra_options.append('--branch-name')
-            extra_options.append('Try')
+            extra_options.append('try')
 
         yield test
 

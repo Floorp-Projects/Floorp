@@ -1020,7 +1020,7 @@ nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFra
 void
 nsDisplayListBuilder::MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
 {
-  mFramesMarkedForDisplay.AppendElement(aFrame);
+  mFramesMarkedForDisplayIfVisible.AppendElement(aFrame);
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->ForceDescendIntoIfVisible())
@@ -1181,17 +1181,23 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
 
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
-    if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) &&
-        !f->ForceDescendIntoIfVisible())
+    if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO))
       return;
     f->RemoveStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
-    f->SetForceDescendIntoIfVisible(false);
     if (f == aStopAtFrame) {
       // we've reached a frame that we know will be painted, so we can stop.
       break;
     }
   }
+}
 
+static void UnmarkFrameForDisplayIfVisible(nsIFrame* aFrame) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+    if (!f->ForceDescendIntoIfVisible())
+      return;
+    f->SetForceDescendIntoIfVisible(false);
+  }
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
@@ -1370,6 +1376,12 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* a
     mIsInChromePresContext = pc->IsChrome();
   } else {
     mCurrentAGR = mRootAGR;
+
+    for (uint32_t i = 0;
+       i < mFramesMarkedForDisplayIfVisible.Length(); ++i) {
+      UnmarkFrameForDisplayIfVisible(mFramesMarkedForDisplayIfVisible[i]);
+    }
+    mFramesMarkedForDisplayIfVisible.SetLength(0);
   }
 }
 

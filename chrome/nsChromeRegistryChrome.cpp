@@ -128,8 +128,8 @@ nsChromeRegistryChrome::Init()
   if (!prefs) {
     NS_WARNING("Could not get pref service!");
   } else {
-    nsCString provider;
-    rv = prefs->GetCharPref(SELECTED_SKIN_PREF, getter_Copies(provider));
+    nsAutoCString provider;
+    rv = prefs->GetCharPref(SELECTED_SKIN_PREF, provider);
     if (NS_SUCCEEDED(rv))
       mSelectedSkin = provider;
 
@@ -275,8 +275,8 @@ nsChromeRegistryChrome::Observe(nsISupports *aSubject, const char *aTopic,
     NS_ConvertUTF16toUTF8 pref(someData);
 
     if (pref.EqualsLiteral(SELECTED_SKIN_PREF)) {
-      nsCString provider;
-      rv = prefs->GetCharPref(pref.get(), getter_Copies(provider));
+      nsAutoCString provider;
+      rv = prefs->GetCharPref(pref.get(), provider);
       if (NS_FAILED(rv)) {
         NS_ERROR("Couldn't get new skin pref!");
         return rv;
