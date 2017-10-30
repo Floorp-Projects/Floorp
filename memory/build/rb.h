@@ -178,7 +178,6 @@ public:
     return Remove(reinterpret_cast<TreeNode*>(aNode));
   }
 
-private:
   /* Helper class to avoid having all the tree traversal code further below
    * have to use Trait::GetTreeNode, adding visual noise. */
   struct TreeNode : public T
@@ -224,6 +223,7 @@ private:
     }
   };
 
+private:
   TreeNode* mRoot;
 
   TreeNode* First(TreeNode* aStart)
@@ -733,6 +733,7 @@ public:
       }
     }
 
+    template<typename Iterator>
     class Item
     {
       Iterator* mIterator;
@@ -758,14 +759,14 @@ public:
       }
     };
 
-    Item begin()
+    Item<Iterator> begin()
     {
-      return Item(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
+      return Item<Iterator>(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
     }
 
-    Item end()
+    Item<Iterator> end()
     {
-      return Item(this, nullptr);
+      return Item<Iterator>(this, nullptr);
     }
 
     TreeNode* Next()
