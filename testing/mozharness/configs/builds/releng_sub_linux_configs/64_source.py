@@ -12,7 +12,7 @@ config = {
     'app_ini_path': 'FAKE',  # Not used, but required by the script
     'objdir': 'obj-firefox',
     'env': {
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'TINDERBOX_OUTPUT': '1',
         'LC_ALL': 'C',
     },

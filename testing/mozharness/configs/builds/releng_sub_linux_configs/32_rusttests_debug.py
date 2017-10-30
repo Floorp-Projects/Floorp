@@ -22,7 +22,7 @@ config = {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': MOZ_OBJDIR,
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'CCACHE_DIR': '/builds/ccache',
         'CCACHE_COMPRESS': '1',

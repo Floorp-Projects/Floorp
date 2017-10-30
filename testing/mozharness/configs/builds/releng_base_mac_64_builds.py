@@ -39,7 +39,7 @@ config = {
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
-        'MOZ_OBJDIR': 'obj-firefox',
+        'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'CHOWN_ROOT': '~/bin/chown_root',
         'CHOWN_REVERT': '~/bin/chown_revert',
         'TINDERBOX_OUTPUT': '1',
