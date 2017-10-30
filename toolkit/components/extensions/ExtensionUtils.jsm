@@ -25,6 +25,10 @@ function getConsole() {
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
+// It would be nicer to go through `Services.appinfo`, but some tests need to be
+// able to replace that field with a custom implementation before it is first
+// called.
+// eslint-disable-next-line mozilla/use-services
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 
 let nextId = 0;

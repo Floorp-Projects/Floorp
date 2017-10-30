@@ -6,16 +6,16 @@ var EXPORTED_SYMBOLS = [
   "AsyncRunner",
 ];
 
-const { interfaces: Ci, classes: Cc } = Components;
+const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 function AsyncRunner(callbacks) {
   this._callbacks = callbacks;
   this._iteratorQueue = [];
 
   // This catches errors reported to the console, e.g., via Cu.reportError.
-  Cc["@mozilla.org/consoleservice;1"].
-    getService(Ci.nsIConsoleService).
-    registerListener(this);
+  Services.console.registerListener(this);
 }
 
 AsyncRunner.prototype = {
@@ -52,9 +52,7 @@ AsyncRunner.prototype = {
   },
 
   destroy: function AR_destroy() {
-    Cc["@mozilla.org/consoleservice;1"].
-      getService(Ci.nsIConsoleService).
-      unregisterListener(this);
+    Services.console.unregisterListener(this);
     this.destroy = function AR_alreadyDestroyed() {};
   },
 
