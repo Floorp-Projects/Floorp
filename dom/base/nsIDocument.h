@@ -2446,14 +2446,14 @@ public:
   }
 
   /**
-   * Increment the number of external scripts being evaluated.
+   * Increment https://html.spec.whatwg.org/#ignore-destructive-writes-counter
    */
-  void BeginEvaluatingExternalScript() { ++mExternalScriptsBeingEvaluated; }
+  void IncrementIgnoreDestructiveWritesCounter() { ++mIgnoreDestructiveWritesCounter; }
 
   /**
-   * Decrement the number of external scripts being evaluated.
+   * Decrement https://html.spec.whatwg.org/#ignore-destructive-writes-counter
    */
-  void EndEvaluatingExternalScript() { --mExternalScriptsBeingEvaluated; }
+  void DecrementIgnoreDestructiveWritesCounter() { --mIgnoreDestructiveWritesCounter; }
 
   bool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
@@ -3670,10 +3670,9 @@ protected:
   uint32_t mEventsSuppressed;
 
   /**
-   * The number number of external scripts (ones with the src attribute) that
-   * have this document as their owner and that are being evaluated right now.
+   * https://html.spec.whatwg.org/#ignore-destructive-writes-counter
    */
-  uint32_t mExternalScriptsBeingEvaluated;
+  uint32_t mIgnoreDestructiveWritesCounter;
 
   /**
    * The current frame request callback handle
