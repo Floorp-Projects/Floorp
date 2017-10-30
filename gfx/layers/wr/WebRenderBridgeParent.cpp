@@ -78,6 +78,16 @@ void gfx_critical_note(const char* msg)
   gfxCriticalNote << msg;
 }
 
+void gfx_critical_error(const char* msg)
+{
+  gfxCriticalError() << msg;
+}
+
+void gecko_printf_stderr_output(const char* msg)
+{
+  printf_stderr("%s\n", msg);
+}
+
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 {
   MOZ_ASSERT(glcontext_ptr);
