@@ -3600,6 +3600,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     newTimedChannel->SetTimingEnabled(mTimingEnabled);
 
     if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+      newTimedChannel->SetRedirectCount(mRedirectCount);
       int8_t newCount = mInternalRedirectCount + 1;
       newTimedChannel->SetInternalRedirectCount(
         std::max(newCount, mInternalRedirectCount));
@@ -3607,6 +3608,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       int8_t newCount = mRedirectCount + 1;
       newTimedChannel->SetRedirectCount(
         std::max(newCount, mRedirectCount));
+      newTimedChannel->SetInternalRedirectCount(mInternalRedirectCount);
     }
 
     // If the RedirectStart is null, we will use the AsyncOpen value of the
