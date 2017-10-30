@@ -141,14 +141,22 @@ class Nursery
 
     MOZ_MUST_USE bool init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock);
 
-    unsigned maxChunks() const { return maxNurseryChunks_; }
-    unsigned numChunks() const { return chunks_.length(); }
+    unsigned chunkCountLimit() const { return chunkCountLimit_; }
 
-    bool exists() const { return maxChunks() != 0; }
+    // Number of allocated (ready to use) chunks.
+    unsigned allocatedChunkCount() const { return chunks_.length(); }
+
+    // Total number of chunks and the capacity of the nursery. Chunks will be
+    // lazilly allocated and added to the chunks array up to this limit, after
+    // that the nursery must be collected, this limit may be raised during
+    // collection.
+    unsigned maxChunkCount() const { return maxChunkCount_; }
+
+    bool exists() const { return chunkCountLimit() != 0; }
 
     void enable();
     void disable();
-    bool isEnabled() const { return numChunks() != 0; }
+    bool isEnabled() const { return maxChunkCount() != 0; }
 
     /* Return true if no allocations have been made since the last collection. */
     bool isEmpty() const;
@@ -233,7 +241,7 @@ class Nursery
     MOZ_MUST_USE bool queueDictionaryModeObjectToSweep(NativeObject* obj);
 
     size_t sizeOfHeapCommitted() const {
-        return numChunks() * gc::ChunkSize;
+        return allocatedChunkCount() * gc::ChunkSize;
     }
     size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
         if (!mallocedBuffers.initialized())
@@ -252,7 +260,7 @@ class Nursery
     MOZ_ALWAYS_INLINE size_t freeSpace() const {
         MOZ_ASSERT(currentEnd_ - position_ <= NurseryChunkUsableSize);
         return (currentEnd_ - position_) +
-               (numChunks() - currentChunk_ - 1) * NurseryChunkUsableSize;
+               (maxChunkCount() - currentChunk_ - 1) * NurseryChunkUsableSize;
     }
 
 #ifdef JS_GC_ZEAL
@@ -302,8 +310,18 @@ class Nursery
     /* The index of the chunk that is currently being allocated from. */
     unsigned currentChunk_;
 
-    /* Maximum number of chunks to allocate for the nursery. */
-    unsigned maxNurseryChunks_;
+    /*
+     * The nursery may grow the chunks_ vector up to this size without a
+     * collection.  This allows the nursery to grow lazilly.  This limit may
+     * change during maybeResizeNursery() each collection.
+     */
+    unsigned maxChunkCount_;
+
+    /*
+     * This limit is fixed by configuration.  It represents the maximum size
+     * the nursery is permitted to tune itself to in maybeResizeNursery();
+     */
+    unsigned chunkCountLimit_;
 
     /* Promotion rate for the previous minor collection. */
     float previousPromotionRate_;
@@ -423,6 +441,8 @@ class Nursery
      */
     MOZ_MUST_USE bool allocateFirstChunk(AutoLockGCBgAlloc& lock);
 
+    MOZ_MUST_USE bool allocateNextChunk(unsigned chunkno);
+
     MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 
     uintptr_t position() const { return position_; }
@@ -473,13 +493,12 @@ class Nursery
 
     /* Change the allocable space provided by the nursery. */
     void maybeResizeNursery(JS::gcreason::Reason reason);
-    bool growAllocableSpace();
-    bool growAllocableSpace(unsigned newSize);
+    void growAllocableSpace();
     void shrinkAllocableSpace(unsigned newCount);
     void minimizeAllocableSpace();
 
     // Free the chunks starting at firstFreeChunk until the end of the chunks
-    // vector. Shrinks the vector but does not update maxChunksAlloc().
+    // vector. Shrinks the vector but does not update maxChunkCount().
     void freeChunksFrom(unsigned firstFreeChunk);
 
     /* Profile recording and printing. */
