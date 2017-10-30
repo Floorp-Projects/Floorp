@@ -11,11 +11,9 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 #include "nsITransaction.h"
-#include "nsITransactionList.h"
 #include "nsITransactionListener.h"
 #include "nsIWeakReference.h"
 #include "nsTransactionItem.h"
-#include "nsTransactionList.h"
 #include "nsTransactionManager.h"
 #include "nsTransactionStack.h"
 
@@ -367,26 +365,6 @@ nsTransactionManager::PeekRedoStack()
     return nullptr;
   }
   return tx->GetTransaction();
-}
-
-NS_IMETHODIMP
-nsTransactionManager::GetUndoList(nsITransactionList **aTransactionList)
-{
-  NS_ENSURE_TRUE(aTransactionList, NS_ERROR_NULL_POINTER);
-
-  *aTransactionList = (nsITransactionList *)new nsTransactionList(this, &mUndoStack);
-  NS_IF_ADDREF(*aTransactionList);
-  return (! *aTransactionList) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-NS_IMETHODIMP
-nsTransactionManager::GetRedoList(nsITransactionList **aTransactionList)
-{
-  NS_ENSURE_TRUE(aTransactionList, NS_ERROR_NULL_POINTER);
-
-  *aTransactionList = (nsITransactionList *)new nsTransactionList(this, &mRedoStack);
-  NS_IF_ADDREF(*aTransactionList);
-  return (! *aTransactionList) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 nsresult
