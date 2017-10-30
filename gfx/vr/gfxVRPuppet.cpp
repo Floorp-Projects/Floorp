@@ -51,7 +51,6 @@ static const uint32_t kNumPuppetHaptcs = 1;
 VRDisplayPuppet::VRDisplayPuppet()
  : VRDisplayHost(VRDeviceType::Puppet)
  , mIsPresenting(false)
- , mSensorState{}
 {
   MOZ_COUNT_CTOR_INHERITED(VRDisplayPuppet, VRDisplayHost);
 

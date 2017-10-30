@@ -287,7 +287,7 @@ VRDisplayOSVR::GetSensorState()
   //this usually goes into app's mainloop
   osvr_ClientUpdate(*m_ctx);
 
-  VRHMDSensorState result{};
+  VRHMDSensorState result;
   OSVR_TimeValue timestamp;
 
   OSVR_OrientationState orientation;
