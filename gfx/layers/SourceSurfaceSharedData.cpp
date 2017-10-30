@@ -12,43 +12,6 @@ namespace mozilla {
 namespace gfx {
 
 bool
-SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize,
-                                     int32_t aStride,
-                                     SurfaceFormat aFormat,
-                                     const SharedMemoryBasic::Handle& aHandle,
-                                     base::ProcessId aCreatorPid)
-{
-  MOZ_ASSERT(!mBuf);
-  mSize = aSize;
-  mStride = aStride;
-  mFormat = aFormat;
-  mCreatorPid = aCreatorPid;
-
-  size_t len = GetAlignedDataLength();
-  mBuf = new SharedMemoryBasic();
-  if (NS_WARN_IF(!mBuf->SetHandle(aHandle, ipc::SharedMemory::RightsReadOnly)) ||
-      NS_WARN_IF(!mBuf->Map(len))) {
-    mBuf = nullptr;
-    return false;
-  }
-
-  mBuf->CloseHandle();
-  return true;
-}
-
-void
-SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface)
-{
-  MOZ_ASSERT(!mBuf);
-  MOZ_ASSERT(aSurface);
-  mSize = aSurface->mSize;
-  mStride = aSurface->mStride;
-  mFormat = aSurface->mFormat;
-  mCreatorPid = base::GetCurrentProcId();
-  mBuf = aSurface->mBuf;
-}
-
-bool
 SourceSurfaceSharedData::Init(const IntSize &aSize,
                               int32_t aStride,
                               SurfaceFormat aFormat)
@@ -104,7 +67,6 @@ SourceSurfaceSharedData::ShareToProcess(base::ProcessId aPid,
                                         SharedMemoryBasic::Handle& aHandle)
 {
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mHandleCount > 0);
 
   if (mClosed) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -124,9 +86,6 @@ SourceSurfaceSharedData::CloseHandleInternal()
   mMutex.AssertCurrentThreadOwns();
 
   if (mClosed) {
-    MOZ_ASSERT(mHandleCount == 0);
-    MOZ_ASSERT(mFinalized);
-    MOZ_ASSERT(mShared);
     return;
   }
 
@@ -140,7 +99,6 @@ bool
 SourceSurfaceSharedData::ReallocHandle()
 {
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mHandleCount > 0);
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(mFinalized);
 

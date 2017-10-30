@@ -24,7 +24,6 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
-#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/WebRenderImageHost.h"
@@ -359,41 +358,27 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
   if (keys[0].mNamespace != mIdNamespace) {
     return true;
   }
+  MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aExtId)).get());
 
-  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
-  if (dSurf) {
-    if (!gfxEnv::EnableWebRenderRecording()) {
-      wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                     dSurf->GetFormat());
-      aResources.AddExternalImage(aKey, descriptor, aExtId,
-                                  wr::WrExternalImageBufferType::ExternalBuffer,
-                                  0);
-      return true;
-    }
-  } else {
-    MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aExtId)).get());
-
-    RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(aExtId));
-    if (!host) {
-      NS_ERROR("CompositableHost does not exist");
+  RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(aExtId));
+  if (!host) {
+    NS_ERROR("CompositableHost does not exist");
+    return false;
+  }
+  if (!gfxEnv::EnableWebRenderRecording()) {
+    TextureHost* texture = host->GetAsTextureHostForComposite();
+    if (!texture) {
+      NS_ERROR("TextureHost does not exist");
       return false;
     }
-    if (!gfxEnv::EnableWebRenderRecording()) {
-      TextureHost* texture = host->GetAsTextureHostForComposite();
-      if (!texture) {
-        NS_ERROR("TextureHost does not exist");
-        return false;
-      }
-      WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
-      if (wrTexture) {
-        wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
-                                       wrTexture->GetExternalImageKey());
-        return true;
-      }
+    WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+    if (wrTexture) {
+      wrTexture->PushResourceUpdates(aResources, TextureHost::ADD_IMAGE, keys,
+                                     wrTexture->GetExternalImageKey());
+      return true;
     }
-    dSurf = host->GetAsSurface();
   }
-
+  RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
   if (!dSurf) {
     NS_ERROR("TextureHost does not return DataSourceSurface");
     return false;
@@ -859,11 +844,6 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId
   if (mDestroyed) {
     return IPC_OK();
   }
-
-  if (SharedSurfacesParent::Release(aImageId)) {
-    return IPC_OK();
-  }
-
   WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
   if (!wrHost) {
     return IPC_OK();

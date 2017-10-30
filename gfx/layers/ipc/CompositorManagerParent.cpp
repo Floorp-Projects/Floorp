@@ -9,7 +9,6 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CrossProcessCompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/layers/SharedSurfacesParent.h"
 #include "nsAutoPtr.h"
 #include "VsyncSource.h"
 
@@ -151,8 +150,6 @@ CompositorManagerParent::BindComplete()
 void
 CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  SharedSurfacesParent::DestroyProcess(OtherPid());
-
   StaticMutexAutoLock lock(sMutex);
   if (sInstance == this) {
     sInstance = nullptr;
@@ -274,21 +271,6 @@ CompositorManagerParent::DeallocPCompositorBridgeParent(PCompositorBridgeParent*
 {
   static_cast<CompositorBridgeParentBase*>(aActor)->Release();
   return true;
-}
-
-mozilla::ipc::IPCResult
-CompositorManagerParent::RecvAddSharedSurface(const wr::ExternalImageId& aId,
-                                              const SurfaceDescriptorShared& aDesc)
-{
-  SharedSurfacesParent::Add(aId, aDesc, OtherPid());
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-CompositorManagerParent::RecvRemoveSharedSurface(const wr::ExternalImageId& aId)
-{
-  SharedSurfacesParent::Remove(aId);
-  return IPC_OK();
 }
 
 } // namespace layers
