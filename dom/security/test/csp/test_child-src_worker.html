@@ -83,19 +83,19 @@
           id: "script-src-worker",
           file: WORKER_TEST_FILE,
           result : "blocked",
-          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+          policy : "default-src 'none'; script-src https://www.example.org 'unsafe-inline'"
         },
         'script-src-service_worker': {
           id: "script-src-service_worker",
           file: SERVICE_WORKER_TEST_FILE,
           result : "blocked",
-          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+          policy : "default-src 'none'; script-src https://www.example.org 'unsafe-inline'"
         },
         'script-src-self-shared_worker': {
           id: "script-src-self-shared_worker",
           file: SHARED_WORKER_TEST_FILE,
           result : "blocked",
-          policy : "default-src 'none'; script-src 'self' 'unsafe-inline'"
+          policy : "default-src 'none'; script-src https://www.example.org 'unsafe-inline'"
         },
       };
 
