@@ -444,12 +444,11 @@ class Nursery
     void setStartPosition();
 
     /*
-     * Ensure that the first chunk has been allocated. Callers will probably
-     * want to call setCurrentChunk(0) next.
+     * Allocate the next chunk, or the first chunk for initialization.
+     * Callers will probably want to call setCurrentChunk(0) next.
      */
-    MOZ_MUST_USE bool allocateFirstChunk(AutoLockGCBgAlloc& lock);
-
-    MOZ_MUST_USE bool allocateNextChunk(unsigned chunkno);
+    MOZ_MUST_USE bool allocateNextChunk(unsigned chunkno,
+        AutoLockGCBgAlloc& lock);
 
     MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 
