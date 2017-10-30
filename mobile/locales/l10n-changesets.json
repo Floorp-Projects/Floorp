@@ -164,7 +164,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "6f4c29485b08"
+        "revision": "e0aae3b5888d"
     }, 
     "es-AR": {
         "platforms": [
@@ -172,7 +172,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "8ba6bc52e2af"
+        "revision": "7824b625b50b"
     }, 
     "es-CL": {
         "platforms": [
@@ -188,7 +188,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "f0a828f609fb"
+        "revision": "e1cdcd38166b"
     }, 
     "es-MX": {
         "platforms": [
@@ -228,7 +228,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "aa128c4d8d41"
+        "revision": "527990c9f0d2"
     }, 
     "fi": {
         "platforms": [
@@ -268,7 +268,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "3a0534facc94"
+        "revision": "4e8d18d0ac28"
     }, 
     "gl": {
         "platforms": [
@@ -380,7 +380,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b192d6e13d2a"
+        "revision": "60a5234e95aa"
     }, 
     "kab": {
         "platforms": [
@@ -412,7 +412,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4a64459095e3"
+        "revision": "056bd92b9507"
     }, 
     "lo": {
         "platforms": [
@@ -563,7 +563,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b01bfc2876bd"
+        "revision": "911023d8b539"
     }, 
     "ru": {
         "platforms": [
@@ -579,7 +579,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "6be0ba5e6b96"
+        "revision": "4681d1a76647"
     }, 
     "sl": {
         "platforms": [
@@ -587,7 +587,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "1eecca49fb8d"
+        "revision": "512cb0e4c109"
     }, 
     "son": {
         "platforms": [
