@@ -133,6 +133,10 @@ struct VRFieldOfView {
 };
 
 struct VRHMDSensorState {
+  VRHMDSensorState()
+  {
+    Clear();
+  }
   int64_t inputFrameID;
   double timestamp;
   VRDisplayCapabilityFlags flags;
