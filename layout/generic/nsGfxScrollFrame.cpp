@@ -26,7 +26,6 @@
 #include "nsScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITextControlFrame.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsPresState.h"
@@ -40,6 +39,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
@@ -4502,7 +4502,8 @@ ScrollFrameHelper::CreateAnonymousContent(
   nsITextControlFrame* textFrame = do_QueryFrame(parent);
   if (textFrame) {
     // Make sure we are not a text area.
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
+    HTMLTextAreaElement* textAreaElement =
+      HTMLTextAreaElement::FromContent(parent->GetContent());
     if (!textAreaElement) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = true;
       return NS_OK;
