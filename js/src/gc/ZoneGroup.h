@@ -49,6 +49,7 @@ class ZoneGroup
 
     void enter(JSContext* cx);
     void leave();
+    bool canEnterWithoutYielding(JSContext* cx);
     bool ownedByCurrentThread();
 
     // All zones in the group.
