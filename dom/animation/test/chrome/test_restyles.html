@@ -274,7 +274,7 @@ waitForAllPaints(function() {
     await ensureElementRemoval(parentElement);
   });
 
-  add_task(async function no_restyling_main_thread_animations_in_scrolled_out_element() {
+  add_task(async function restyling_main_thread_animations_in_scrolled_out_element() {
     if (!offscreenThrottlingEnabled) {
       return;
     }
@@ -301,10 +301,29 @@ waitForAllPaints(function() {
        'Animations running on the main-thread for elements ' +
        'which are scrolled out should never cause restyles');
 
+    // Get the scrollable parent element position in this window coordinate
+    // system to send a wheel event to the element.
+    var parentRect = parentElement.getBoundingClientRect();
+    var centerX = parentRect.left + parentRect.width / 2;
+    var centerY = parentRect.top + parentRect.height / 2;
+
+    var markers = await observeStyling(1, function() {
+      // We can't use synthesizeWheel here since synthesizeWheel causes
+      // layout flush.
+      synthesizeWheelAtPoint(centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: parentRect.height });
+    });
+
+    is(markers.length, 1,
+       'Animations running on the main-thread which were in scrolled out ' +
+       'elements should update restyling soon after the element moved in ' +
+       'view by scrolling');
+
     await ensureElementRemoval(parentElement);
   });
 
-  add_task(async function no_restyling_main_thread_animations_in_nested_scrolled_out_element() {
+  add_task(async function restyling_main_thread_animations_in_nested_scrolled_out_element() {
     if (!offscreenThrottlingEnabled) {
       return;
     }
@@ -337,6 +356,26 @@ waitForAllPaints(function() {
        'Animations running on the main-thread which are in nested elements ' +
        'which are scrolled out should never cause restyles');
 
+    // Get the scrollable parent element position in this window coordinate
+    // system to send a wheel event to the element.
+    var parentRect = grandParent.getBoundingClientRect();
+    var centerX = parentRect.left + parentRect.width / 2;
+    var centerY = parentRect.top + parentRect.height / 2;
+
+    var markers = await observeStyling(1, function() {
+      // We can't use synthesizeWheel here since synthesizeWheel causes
+      // layout flush.
+      synthesizeWheelAtPoint(centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: parentRect.height });
+    });
+
+    // FIXME: We should reduce a redundant restyle here.
+    ok(markers.length >= 1,
+       'Animations running on the main-thread which were in nested scrolled ' +
+       'out elements should update restyle soon after the element moved ' +
+       'in view by scrolling');
+
     await ensureElementRemoval(grandParent);
   });
 
@@ -354,86 +393,6 @@ waitForAllPaints(function() {
             'Bug 1237454: Animations running on the compositor in ' +
             'visibility hidden element should never cause restyles');
     await ensureElementRemoval(div);
-  });
-
-  add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
-    /*
-     On Android throttled animations are left behind on the main thread in some
-     frames, We will fix this in bug 1247800.
-     */
-    if (isAndroid) {
-      return;
-    }
-
-    var parentElement = addDiv(null,
-      { style: 'overflow-y: scroll; height: 20px;' });
-    var div = addDiv(null,
-      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
-    parentElement.appendChild(div);
-    var animation = div.getAnimations()[0];
-
-    var parentRect = parentElement.getBoundingClientRect();
-    var centerX = parentRect.left + parentRect.width / 2;
-    var centerY = parentRect.top + parentRect.height / 2;
-
-    await animation.ready;
-
-    var markers = await observeStyling(1, function() {
-      // We can't use synthesizeWheel here since synthesizeWheel causes
-      // layout flush.
-      synthesizeWheelAtPoint(centerX, centerY,
-                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                               deltaY: 100 });
-    });
-
-    is(markers.length, 1,
-       'Animations running on the main-thread which were in scrolled out ' +
-       'elements should update restyling soon after the element moved in ' +
-       'view by scrolling');
-
-    await ensureElementRemoval(parentElement);
-  });
-
-  add_task(async function restyling_main_thread_animations_moved_in_view_by_scrolling() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
-    var grandParent = addDiv(null,
-      { style: 'overflow-y: scroll; height: 20px;' });
-    var parentElement = addDiv(null,
-      { style: 'overflow-y: scroll; height: 200px;' });
-    var div = addDiv(null,
-      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
-    grandParent.appendChild(parentElement);
-    parentElement.appendChild(div);
-    var animation = div.getAnimations()[0];
-
-    var parentRect = grandParent.getBoundingClientRect();
-    var centerX = parentRect.left + parentRect.width / 2;
-    var centerY = parentRect.top + parentRect.height / 2;
-
-    await animation.ready;
-
-    var markers = await observeStyling(1, function() {
-      // We can't use synthesizeWheel here since synthesizeWheel causes
-      // layout flush.
-      synthesizeWheelAtPoint(centerX, centerY,
-                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                               deltaY: 100 });
-    });
-
-    // FIXME: We should reduce a redundant restyle here.
-    ok(markers.length >= 1,
-       'Animations running on the main-thread which were in nested scrolled ' +
-       'out elements should update restyle soon after the element moved ' +
-       'in view by scrolling');
-
-    await ensureElementRemoval(grandParent);
   });
 
   add_task(async function restyling_main_thread_animations_move_out_of_view_by_scrolling() {
