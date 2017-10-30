@@ -101,7 +101,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
   , mNeedsComposite(false)
-  , mTextureSyncOnPaintThread(false)
+  , mQueuedAsyncPaints(false)
   , mPaintSequenceNumber(0)
   , mDeviceResetSequenceNumber(0)
   , mForwarder(new ShadowLayerForwarder(this))
@@ -360,7 +360,7 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   ClientLayer* root = ClientLayer::ToClientLayer(GetRoot());
 
   mTransactionIncomplete = false;
-  mTextureSyncOnPaintThread = false;
+  mQueuedAsyncPaints = false;
 
   // Apply pending tree updates before recomputing effective
   // properties.
@@ -467,6 +467,9 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following
     // EndTransaction will complete it.
+    if (PaintThread::Get() && mQueuedAsyncPaints) {
+      PaintThread::Get()->EndLayerTransaction(nullptr);
+    }
     return false;
   }
   if (mWidget) {
@@ -742,7 +745,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // that we finished queuing async paints so it can schedule a runnable after
   // all async painting is finished to do a texture sync and unblock the main
   // thread if it is waiting before doing a new layer transaction.
-  if (mTextureSyncOnPaintThread) {
+  if (mQueuedAsyncPaints) {
     MOZ_ASSERT(PaintThread::Get());
     PaintThread::Get()->EndLayerTransaction(syncObject);
   } else if (syncObject) {
