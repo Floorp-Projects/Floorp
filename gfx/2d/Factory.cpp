@@ -639,6 +639,17 @@ Factory::CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcP
 }
 #endif
 
+#ifdef XP_DARWIN
+already_AddRefed<ScaledFont>
+Factory::CreateScaledFontForMacFont(CGFontRef aCGFont,
+                                    const RefPtr<UnscaledFont>& aUnscaledFont,
+                                    Float aSize,
+                                    bool aUseFontSmoothing)
+{
+  return MakeAndAddRef<ScaledFontMac>(aCGFont, aUnscaledFont, aSize, aUseFontSmoothing);
+}
+#endif
+
 already_AddRefed<DrawTarget>
 Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 {
