@@ -7,6 +7,7 @@
  *  sendString
  *  sendKey
  *  sendWheelAndPaint
+ *  sendWheelAndPaintNoFlush
  *  synthesizeMouse
  *  synthesizeMouseAtCenter
  *  synthesizePointer
@@ -601,19 +602,15 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
                          aEvent, aWindow);
 }
 
-/**
- * This is a wrapper around synthesizeWheel that waits for the wheel event
- * to be dispatched and for the subsequent layout/paints to be flushed.
- *
- * This requires including paint_listener.js. Tests must call
- * DOMWindowUtils.restoreNormalRefresh() before finishing, if they use this
- * function.
- *
- * If no callback is provided, the caller is assumed to have its own method of
- * determining scroll completion and the refresh driver is not automatically
- * restored.
- */
-function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWindow = window) {
+const _FlushModes = {
+  FLUSH: 0,
+  NOFLUSH: 1
+};
+
+function _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
+                            aEvent, aCallback,
+                            aFlushMode = _FlushModes.FLUSH,
+                            aWindow = window) {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils)
     return;
@@ -624,7 +621,10 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
     // by APZ (or its scroll offset could be overridden). To avoid problems we
     // just wait for the paint to complete.
     aWindow.waitForAllPaintsFlushed(function() {
-      sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWindow);
+      _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
+                         aEvent, aCallback,
+                         aFlushMode,
+                         aWindow);
     });
     return;
   }
@@ -660,7 +660,46 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
   // Listen for the system wheel event, because it happens after all of
   // the other wheel events, including legacy events.
   SpecialPowers.addSystemEventListener(aWindow, "wheel", onwheel);
-  synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
+  if (aFlushMode === _FlushModes.FLUSH) {
+    synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
+  } else {
+    synthesizeWheelAtPoint(aOffsetX, aOffsetY, aEvent, aWindow);
+  }
+}
+
+/**
+ * This is a wrapper around synthesizeWheel that waits for the wheel event
+ * to be dispatched and for the subsequent layout/paints to be flushed.
+ *
+ * This requires including paint_listener.js. Tests must call
+ * DOMWindowUtils.restoreNormalRefresh() before finishing, if they use this
+ * function.
+ *
+ * If no callback is provided, the caller is assumed to have its own method of
+ * determining scroll completion and the refresh driver is not automatically
+ * restored.
+ */
+function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
+                           aEvent, aCallback,
+                           aWindow = window) {
+  _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
+                     aEvent, aCallback,
+                     _FlushModes.FLUSH,
+                     aWindow);
+}
+
+/**
+ * Similar to sendWheelAndPaint but without flushing layout for obtaining
+ * |aTarget| position in |aWindow| before sending the wheel event.
+ * |aOffsetX| and |aOffsetY| should be offsets against aWindow.
+ */
+function sendWheelAndPaintNoFlush(aTarget, aOffsetX, aOffsetY,
+                                  aEvent, aCallback,
+                                  aWindow = window) {
+  _sendWheelAndPaint(aTarget, aOffsetX, aOffsetY,
+                     aEvent, aCallback,
+                     _FlushModes.NOFLUSH,
+                     aWindow);
 }
 
 function synthesizeNativeTapAtCenter(aTarget, aLongTap = false, aCallback = null, aWindow = window) {
