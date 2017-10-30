@@ -19,7 +19,6 @@
 #include "nsTextControlFrame.h"
 #include "nsIControllers.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITransactionManager.h"
 #include "nsIControllerContext.h"
 #include "nsAttrValue.h"
@@ -43,6 +42,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 #include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
@@ -968,8 +968,8 @@ DoCommandCallback(Command aCommand, void* aData)
   if (input) {
     input->GetControllers(getter_AddRefs(controllers));
   } else {
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea =
-      do_QueryInterface(content);
+    HTMLTextAreaElement* textArea =
+      HTMLTextAreaElement::FromContent(content);
 
     if (textArea) {
       textArea->GetControllers(getter_AddRefs(controllers));
@@ -1512,8 +1512,9 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     if (inputElement) {
       rv = inputElement->GetControllers(getter_AddRefs(controllers));
     } else {
-      nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement =
-        do_QueryInterface(mTextCtrlElement);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+      HTMLTextAreaElement* textAreaElement =
+        HTMLTextAreaElement::FromContentOrNull(content);
 
       if (!textAreaElement)
         return NS_ERROR_FAILURE;
@@ -2176,8 +2177,9 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
       inputElement->GetControllers(getter_AddRefs(controllers));
     else
     {
-      nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement =
-        do_QueryInterface(mTextCtrlElement);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+      HTMLTextAreaElement* textAreaElement =
+        HTMLTextAreaElement::FromContentOrNull(content);
       if (textAreaElement) {
         textAreaElement->GetControllers(getter_AddRefs(controllers));
       }
