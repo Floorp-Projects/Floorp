@@ -162,8 +162,7 @@ ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
 endif
 
 # Windows equivalents
-build_all: build
-clobber clobber_all: clean
+clobber: clean
 
 # helper target for mobile
 build_and_deploy: build package install
@@ -321,9 +320,7 @@ echo-variable-%:
 
 .PHONY: \
     build \
-    build_all \
     clobber \
-    clobber_all \
     configure \
     preflight_all \
     postflight_all \
