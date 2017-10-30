@@ -23,7 +23,6 @@ SOURCES += [
     'decode.c',
     'dummy_funcs.c',
     'flac.c',
-    'flac_parser.c',
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',

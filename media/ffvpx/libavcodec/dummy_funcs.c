@@ -816,6 +816,7 @@ AVCodecParser ff_dvaudio_parser;
 AVCodecParser ff_dvbsub_parser;
 AVCodecParser ff_dvdsub_parser;
 AVCodecParser ff_dvd_nav_parser;
+AVCodecParser ff_flac_parser;
 AVCodecParser ff_g729_parser;
 AVCodecParser ff_gsm_parser;
 AVCodecParser ff_h261_parser;
