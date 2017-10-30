@@ -226,6 +226,10 @@ release-bouncer-aliases
 ------------------------------
 Update Bouncers (download.mozilla.org) "latest" aliases.
 
+release-uptake-monitoring
+-------------------------
+Run uptake monitoring for releases.
+
 repackage
 ---------
 Repackage tasks take a signed output and package them up into something suitable
