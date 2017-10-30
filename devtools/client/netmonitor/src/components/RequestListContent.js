@@ -20,7 +20,6 @@ const {
 } = require("../selectors/index");
 
 // Components
-const RequestListHeader = createFactory(require("./RequestListHeader"));
 const RequestListItem = createFactory(require("./RequestListItem"));
 const RequestListContextMenu = require("../request-list-context-menu");
 
@@ -259,7 +258,6 @@ class RequestListContent extends Component {
             tabIndex: 0,
             onKeyDown: this.onKeyDown,
           },
-            RequestListHeader(),
             displayedRequests.map((item, index) => RequestListItem({
               firstRequestStartedMillis,
               fromCache: item.status === "304" || item.fromCache,
