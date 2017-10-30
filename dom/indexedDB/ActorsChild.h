@@ -253,6 +253,20 @@ class BackgroundFactoryRequestChild final
   friend class PermissionRequestParent;
 
   RefPtr<IDBFactory> mFactory;
+
+  // Normally when opening of a database is successful, we receive a database
+  // actor in request response, so we can use it to call ReleaseDOMObject()
+  // which clears temporary strong reference to IDBDatabase.
+  // However, when there's an error, we don't receive a database actor and
+  // IDBRequest::mTransaction is already cleared (must be). So the only way how
+  // to call ReleaseDOMObject() is to have a back-reference to database actor.
+  // This creates a weak ref cycle between
+  // BackgroundFactoryRequestChild (using mDatabaseActor member) and
+  // BackgroundDatabaseChild actor (using mOpenRequestActor member).
+  // mDatabaseActor is set in EnsureDOMObject() and cleared in
+  // ReleaseDOMObject().
+  BackgroundDatabaseChild* mDatabaseActor;
+
   const uint64_t mRequestedVersion;
   const bool mIsDeleteOp;
 
@@ -269,6 +283,9 @@ private:
 
   // Only destroyed by BackgroundFactoryChild.
   ~BackgroundFactoryRequestChild();
+
+  void
+  SetDatabaseActor(BackgroundDatabaseChild* aActor);
 
   bool
   HandleResponse(nsresult aResponse);
