@@ -1303,9 +1303,14 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
                 // Finally replace the sequence itself to preserve new spans.
                 mText.currentReplace(actionStart, actionEnd, action.mSequence);
 
-                // Ignore the next selection change because the selection change is a
-                // side-effect of the replace-text event we sent.
-                mIgnoreSelectionChange = true;
+                // If one of the Java selection ends is not at the end of the replaced
+                // text, we want to preserve that selection, so we ignore the Gecko
+                // selection change notification. On the other hand, if the Java selection
+                // is normal, we want to try syncing the Java selection to the Gecko
+                // selection, because this text change could have changed the Gecko
+                // selection to elsewhere; so in that case, don't ignore the Gecko
+                // selection change notification.
+                mIgnoreSelectionChange = !resetSelStart || !resetSelEnd;
             }
 
         } else if (geckoIsSameText(start, oldEnd, text)) {

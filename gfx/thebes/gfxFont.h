@@ -957,15 +957,17 @@ public:
      * in SimpleGlyph format, we use an array of DetailedGlyphs instead.
      */
     struct DetailedGlyph {
-        /** The glyphID, or the Unicode character
-         * if this is a missing glyph */
+        // The glyphID, or the Unicode character if this is a missing glyph
         uint32_t mGlyphID;
-        /** The advance, x-offset and y-offset of the glyph, in appunits
-         *  mAdvance is in the text direction (RTL or LTR)
-         *  mXOffset is always from left to right
-         *  mYOffset is always from top to bottom */   
+        // The advance of the glyph, in appunits.
+        // mAdvance is in the text direction (RTL or LTR),
+        // and will normally be non-negative (although this is not guaranteed)
         int32_t  mAdvance;
-        float    mXOffset, mYOffset;
+        // The offset from the glyph's default position, in line-relative
+        // coordinates (so mOffset.x is an offset in the line-right direction,
+        // and mOffset.y is an offset in line-downwards direction).
+        // These values are in floating-point appUnits.
+        mozilla::gfx::Point mOffset;
     };
 
     void SetGlyphs(uint32_t aCharIndex, CompressedGlyph aGlyph,
@@ -1083,7 +1085,7 @@ protected:
             DetailedGlyph details = {
                 aGlyph.GetSimpleGlyph(),
                 (int32_t) aGlyph.GetSimpleAdvance(),
-                0, 0
+                mozilla::gfx::Point()
             };
             SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1),
                       &details);

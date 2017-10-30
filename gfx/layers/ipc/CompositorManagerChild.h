@@ -49,14 +49,40 @@ public:
   CreateSameProcessWidgetCompositorBridge(LayerManager* aLayerManager,
                                           uint32_t aNamespace);
 
+  static CompositorManagerChild* GetInstance()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return sInstance;
+  }
+
+  bool CanSend() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mCanSend;
+  }
+
   uint32_t GetNextResourceId()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     return ++mResourceId;
   }
 
   uint32_t GetNamespace() const
   {
     return mNamespace;
+  }
+
+  bool OwnsExternalImageId(const wr::ExternalImageId& aId) const
+  {
+    return mNamespace == static_cast<uint32_t>(wr::AsUint64(aId) >> 32);
+  }
+
+  wr::ExternalImageId GetNextExternalImageId()
+  {
+    uint64_t id = GetNextResourceId();
+    MOZ_RELEASE_ASSERT(id != 0);
+    id |= (static_cast<uint64_t>(mNamespace) << 32);
+    return wr::ToExternalImageId(id);
   }
 
   void ActorDestroy(ActorDestroyReason aReason) override;
@@ -84,12 +110,6 @@ private:
 
   ~CompositorManagerChild() override
   {
-  }
-
-  bool CanSend() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mCanSend;
   }
 
   void DeallocPCompositorManagerChild() override;

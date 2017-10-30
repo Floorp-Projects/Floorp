@@ -347,7 +347,7 @@ public abstract class GeckoApp extends GeckoActivity
     protected void openQueuedTabs() {};
 
     @SuppressWarnings("serial")
-    class SessionRestoreException extends Exception {
+    static final class SessionRestoreException extends Exception {
         public SessionRestoreException(Exception e) {
             super(e);
         }

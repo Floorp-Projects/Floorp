@@ -30,7 +30,7 @@ public class GeckoMenuInflater extends MenuInflater {
     private final Context mContext;
 
     // Private class to hold the parsed menu item.
-    private class ParsedItem {
+    private static final class ParsedItem {
         public int id;
         public int order;
         public CharSequence title;

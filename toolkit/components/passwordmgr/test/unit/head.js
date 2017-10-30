@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LoginRecipes.jsm");
 Cu.import("resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://testing-common/LoginTestUtils.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
@@ -25,10 +26,6 @@ const LoginInfo =
       Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                              "nsILoginInfo", "init");
 
-// Import LoginTestUtils.jsm as LoginTestUtils.
-XPCOMUtils.defineLazyModuleGetter(this, "LoginTestUtils",
-                                  "resource://testing-common/LoginTestUtils.jsm");
-LoginTestUtils.Assert = Assert;
 const TestData = LoginTestUtils.testData;
 const newPropertyBag = LoginHelper.newPropertyBag;
 

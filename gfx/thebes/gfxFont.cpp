@@ -685,8 +685,6 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
                                 mAppUnitsPerDevUnit)));
         details->mAdvance = uint32_t(width * mAppUnitsPerDevUnit);
     }
-    details->mXOffset = 0;
-    details->mYOffset = 0;
     GetCharacterGlyphs()[aIndex].SetMissing(1);
 }
 
@@ -707,8 +705,6 @@ gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh)
         DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
         details->mGlyphID = aCh;
         details->mAdvance = 0;
-        details->mXOffset = 0;
-        details->mYOffset = 0;
         GetCharacterGlyphs()[aIndex].SetMissing(1);
         return true;
     }
@@ -733,7 +729,7 @@ gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
                  // rare case, tested by making this the default
                  uint32_t glyphIndex = glyphData->GetSimpleGlyph();
                  glyphData->SetComplex(true, true, 1);
-                 DetailedGlyph detail = {glyphIndex, advance, 0, 0};
+                 DetailedGlyph detail = { glyphIndex, advance, gfx::Point() };
                  SetGlyphs(i, *glyphData, &detail);
              }
          } else {
@@ -1941,14 +1937,7 @@ gfxFont::DrawGlyphs(const gfxShapedText*     aShapedText,
                             return false;
                         }
                     } else {
-                        gfx::Point glyphPt(*aPt);
-                        if (aBuffer.mFontParams.isVerticalFont) {
-                            glyphPt.x += details->mYOffset;
-                            glyphPt.y += details->mXOffset;
-                        } else {
-                            glyphPt.x += details->mXOffset;
-                            glyphPt.y += details->mYOffset;
-                        }
+                        gfx::Point glyphPt(*aPt + details->mOffset);
                         DrawOneGlyph<FC>(details->mGlyphID, glyphPt, aBuffer,
                                          &emittedGlyphs);
                     }
@@ -2561,14 +2550,10 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                         glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
                             advance, metrics.mBoundingBox.Height());
                     }
-                    if (orientation == eVertical) {
-                        Swap(glyphRect.x, glyphRect.y);
-                        Swap(glyphRect.width, glyphRect.height);
-                    }
                     if (isRTL) {
-                        glyphRect -= gfxPoint(advance, 0);
+                        glyphRect.x -= advance;
                     }
-                    glyphRect += gfxPoint(x, 0);
+                    glyphRect.x += x;
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 }
             }
@@ -2584,7 +2569,6 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                 uint32_t j;
                 for (j = 0; j < glyphCount; ++j, ++details) {
                     uint32_t glyphIndex = details->mGlyphID;
-                    gfxPoint glyphPt(x + details->mXOffset, details->mYOffset);
                     double advance = details->mAdvance;
                     gfxRect glyphRect;
                     if (glyphData->IsMissing() || !extents ||
@@ -2595,14 +2579,11 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                         glyphRect = gfxRect(0, -metrics.mAscent,
                             advance, metrics.mAscent + metrics.mDescent);
                     }
-                    if (orientation == eVertical) {
-                        Swap(glyphRect.x, glyphRect.y);
-                        Swap(glyphRect.width, glyphRect.height);
-                    }
                     if (isRTL) {
-                        glyphRect -= gfxPoint(advance, 0);
+                        glyphRect.x -= advance;
                     }
-                    glyphRect += glyphPt;
+                    glyphRect.x += x + details->mOffset.x;
+                    glyphRect.y += details->mOffset.y;
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                     x += direction*advance;
                 }

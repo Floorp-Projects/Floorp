@@ -11,7 +11,7 @@ import org.mozilla.gecko.sync.Utils;
 public abstract class State {
   public static final long CURRENT_VERSION = 3L;
 
-  public class NotASessionTokenState extends Exception {
+  public static final class NotASessionTokenState extends Exception {
 
     private static final long serialVersionUID = 8628129091996684799L;
 

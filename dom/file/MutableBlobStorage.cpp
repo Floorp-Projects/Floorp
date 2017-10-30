@@ -100,17 +100,16 @@ private:
 };
 
 // This runnable moves a buffer to the IO thread and there, it writes it into
-// the temporary file.
+// the temporary file, if its File Descriptor has not been already closed.
 class WriteRunnable final : public Runnable
 {
 public:
   static WriteRunnable*
-  CopyBuffer(MutableBlobStorage* aBlobStorage, PRFileDesc* aFD,
+  CopyBuffer(MutableBlobStorage* aBlobStorage,
              const void* aData, uint32_t aLength)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aBlobStorage);
-    MOZ_ASSERT(aFD);
     MOZ_ASSERT(aData);
 
     // We have to take a copy of this buffer.
@@ -120,19 +119,17 @@ public:
     }
 
     memcpy((char*)data, aData, aLength);
-    return new WriteRunnable(aBlobStorage, aFD, data, aLength);
+    return new WriteRunnable(aBlobStorage, data, aLength);
   }
 
   static WriteRunnable*
-  AdoptBuffer(MutableBlobStorage* aBlobStorage, PRFileDesc* aFD,
-              void* aData, uint32_t aLength)
+  AdoptBuffer(MutableBlobStorage* aBlobStorage, void* aData, uint32_t aLength)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aBlobStorage);
-    MOZ_ASSERT(aFD);
     MOZ_ASSERT(aData);
 
-    return new WriteRunnable(aBlobStorage, aFD, aData, aLength);
+    return new WriteRunnable(aBlobStorage, aData, aLength);
   }
 
   NS_IMETHOD
@@ -141,8 +138,15 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mBlobStorage);
 
-    int32_t written = PR_Write(mFD, mData, mLength);
+    PRFileDesc* fd = mBlobStorage->GetFD();
+    if (!fd) {
+      // The file descriptor has been closed in the meantime.
+      return NS_OK;
+    }
+
+    int32_t written = PR_Write(fd, mData, mLength);
     if (NS_WARN_IF(written < 0 || uint32_t(written) != mLength)) {
+      mBlobStorage->CloseFD();
       return mBlobStorage->EventTarget()->Dispatch(
         new ErrorPropagationRunnable(mBlobStorage, NS_ERROR_FAILURE),
         NS_DISPATCH_NORMAL);
@@ -152,19 +156,14 @@ public:
   }
 
 private:
-  WriteRunnable(MutableBlobStorage* aBlobStorage,
-                PRFileDesc* aFD,
-                void* aData,
-                uint32_t aLength)
+  WriteRunnable(MutableBlobStorage* aBlobStorage, void* aData, uint32_t aLength)
     : Runnable("dom::WriteRunnable")
     , mBlobStorage(aBlobStorage)
-    , mFD(aFD)
     , mData(aData)
     , mLength(aLength)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mBlobStorage);
-    MOZ_ASSERT(aFD);
     MOZ_ASSERT(aData);
   }
 
@@ -174,7 +173,6 @@ private:
   }
 
   RefPtr<MutableBlobStorage> mBlobStorage;
-  PRFileDesc* mFD;
   void* mData;
   uint32_t mLength;
 };
@@ -285,13 +283,11 @@ class LastRunnable final : public Runnable
 {
 public:
   LastRunnable(MutableBlobStorage* aBlobStorage,
-               PRFileDesc* aFD,
                nsISupports* aParent,
                const nsACString& aContentType,
                MutableBlobStorageCallback* aCallback)
     : Runnable("dom::LastRunnable")
     , mBlobStorage(aBlobStorage)
-    , mFD(aFD)
     , mParent(aParent)
     , mContentType(aContentType)
     , mCallback(aCallback)
@@ -299,7 +295,6 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mBlobStorage);
     MOZ_ASSERT(aCallback);
-    MOZ_ASSERT(aFD);
   }
 
   NS_IMETHOD
@@ -307,8 +302,7 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    PR_Close(mFD);
-    mFD = nullptr;
+    mBlobStorage->CloseFD();
 
     RefPtr<Runnable> runnable =
       new CreateBlobRunnable(mBlobStorage, mParent.forget(),
@@ -331,7 +325,6 @@ private:
   }
 
   RefPtr<MutableBlobStorage> mBlobStorage;
-  PRFileDesc* mFD;
   nsCOMPtr<nsISupports> mParent;
   nsCString mContentType;
   RefPtr<MutableBlobStorageCallback> mCallback;
@@ -398,8 +391,6 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
   mStorageState = eClosed;
 
   if (previousState == eInTemporaryFile) {
-    MOZ_ASSERT(mFD);
-
     if (NS_FAILED(mErrorResult)) {
       MOZ_ASSERT(!mActor);
 
@@ -416,9 +407,8 @@ MutableBlobStorage::GetBlobWhenReady(nsISupports* aParent,
     // executed in order and this LastRunnable will be... the last one.
     // This Runnable will also close the FD on the I/O thread.
     RefPtr<Runnable> runnable =
-      new LastRunnable(this, mFD, aParent, aContentType, aCallback);
+      new LastRunnable(this, aParent, aContentType, aCallback);
     DispatchToIOThread(runnable.forget());
-    mFD = nullptr;
     return;
   }
 
@@ -474,10 +464,8 @@ MutableBlobStorage::Append(const void* aData, uint32_t aLength)
   // If we are already in the temporaryFile mode, we have to dispatch a
   // runnable.
   if (mStorageState == eInTemporaryFile) {
-    MOZ_ASSERT(mFD);
-
     RefPtr<WriteRunnable> runnable =
-      WriteRunnable::CopyBuffer(this, mFD, aData, aLength);
+      WriteRunnable::CopyBuffer(this, aData, aLength);
     if (NS_WARN_IF(!runnable)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -606,7 +594,7 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
   // This runnable takes the ownership of mData and it will write this buffer
   // into the temporary file.
   RefPtr<WriteRunnable> runnable =
-    WriteRunnable::AdoptBuffer(this, mFD, mData, mDataLen);
+    WriteRunnable::AdoptBuffer(this, mData, mDataLen);
   MOZ_ASSERT(runnable);
 
   mData = nullptr;
@@ -622,10 +610,9 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
     MOZ_ASSERT(mPendingCallback);
 
     RefPtr<Runnable> runnable =
-      new LastRunnable(this, mFD, mPendingParent, mPendingContentType,
+      new LastRunnable(this, mPendingParent, mPendingContentType,
                        mPendingCallback);
     DispatchToIOThread(runnable.forget());
-    mFD = nullptr;
 
     mPendingParent = nullptr;
     mPendingCallback = nullptr;
@@ -678,6 +665,23 @@ MutableBlobStorage::SizeOfCurrentMemoryBuffer() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mStorageState < eInTemporaryFile ? mDataLen : 0;
+}
+
+PRFileDesc*
+MutableBlobStorage::GetFD() const
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  return mFD;
+}
+
+void
+MutableBlobStorage::CloseFD()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(mFD);
+
+  PR_Close(mFD);
+  mFD = nullptr;
 }
 
 } // dom namespace

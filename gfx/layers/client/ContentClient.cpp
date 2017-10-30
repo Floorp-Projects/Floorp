@@ -435,12 +435,13 @@ ContentClient::CalculateBufferForPaint(PaintedLayer* aLayer,
 
     // If we have an existing buffer, but the content type has changed or we
     // have transitioned into/out of component alpha, then we need to recreate it.
-    if (canReuseBuffer &&
+    if (canKeepBufferContents &&
+        mBuffer &&
         (contentType != BufferContentType() ||
         (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) != mBuffer->HaveBufferOnWhite()))
     {
       // Restart the decision process; we won't re-enter since we guard on
-      // being able to re-use the buffer.
+      // being able to keep the buffer contents.
       canReuseBuffer = false;
       canKeepBufferContents = false;
       validRegion.SetEmpty();

@@ -354,21 +354,6 @@ const JNINativeMethod SurfaceTextureListener::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
-class GeckoSurfaceTexture::Natives : public mozilla::jni::NativeImpl<GeckoSurfaceTexture, Impl>
-{
-public:
-    static const JNINativeMethod methods[1];
-};
-
-template<class Impl>
-const JNINativeMethod GeckoSurfaceTexture::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<GeckoSurfaceTexture::NativeAcquireTexture_t>(
-            mozilla::jni::NativeStub<GeckoSurfaceTexture::NativeAcquireTexture_t, Impl>
-            ::template Wrap<&Impl::NativeAcquireTexture>)
-};
-
-template<class Impl>
 class LayerView::Compositor::Natives : public mozilla::jni::NativeImpl<Compositor, Impl>
 {
 public:

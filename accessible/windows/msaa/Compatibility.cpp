@@ -229,7 +229,8 @@ Compatibility::Init()
 
   // If we have a consumer who is not NVDA, we enable detection for the
   // InSendMessageEx compatibility hack. NVDA does not require this.
-  if ((sConsumers & (~NVDA)) &&
+  // We also skip UIA, as we see crashes there.
+  if ((sConsumers & (~(UIAUTOMATION | NVDA))) &&
       BrowserTabsRemoteAutostart()) {
     sUser32Interceptor.Init("user32.dll");
     if (!sInSendMessageExStub) {
