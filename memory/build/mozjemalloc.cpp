@@ -3680,8 +3680,8 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // Try to avoid moving the allocation.
   if (aSize < small_min) {
     if (aOldSize < small_min &&
-        ffs((int)(RoundUpPow2(aSize) >> (TINY_MIN_2POW + 1))) ==
-          ffs((int)(RoundUpPow2(aOldSize) >> (TINY_MIN_2POW + 1)))) {
+        (RoundUpPow2(aSize) >> (TINY_MIN_2POW + 1) ==
+         RoundUpPow2(aOldSize) >> (TINY_MIN_2POW + 1))) {
       goto IN_PLACE; // Same size class.
     }
   } else if (aSize <= small_max) {
