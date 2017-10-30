@@ -635,7 +635,7 @@ add_task(async function contextMenu() {
     // Open the panel and then open the context menu on the bookmark button.
     await promisePageActionPanelOpen();
     let bookmarkButton = document.getElementById("pageAction-panel-bookmark");
-    let contextMenuPromise = promisePanelShown("pageActionContextMenu");
+    let contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
       type: "contextmenu",
       button: 2,
@@ -643,12 +643,12 @@ add_task(async function contextMenu() {
     await contextMenuPromise;
 
     // The context menu should show "Remove from Address Bar".  Click it.
-    let contextMenuNode = document.getElementById("pageActionContextMenu");
+    let contextMenuNode = document.getElementById("pageActionPanelContextMenu");
     Assert.equal(contextMenuNode.childNodes.length, 1,
                  "Context menu has one child");
     Assert.equal(contextMenuNode.childNodes[0].label, "Remove from Address Bar",
                  "Context menu is in the 'remove' state");
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
     await contextMenuPromise;
 
@@ -661,7 +661,7 @@ add_task(async function contextMenu() {
 
     // Open the context menu again on the bookmark button.  (The page action
     // panel remains open.)
-    contextMenuPromise = promisePanelShown("pageActionContextMenu");
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
       type: "contextmenu",
       button: 2,
@@ -673,7 +673,7 @@ add_task(async function contextMenu() {
                  "Context menu has one child");
     Assert.equal(contextMenuNode.childNodes[0].label, "Add to Address Bar",
                  "Context menu is in the 'add' state");
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
     await contextMenuPromise;
 
@@ -683,7 +683,7 @@ add_task(async function contextMenu() {
     }, "Waiting for star button to become unhidden");
 
     // Open the context menu on the bookmark star in the urlbar.
-    contextMenuPromise = promisePanelShown("pageActionContextMenu");
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(starButtonBox, {
       type: "contextmenu",
       button: 2,
@@ -695,7 +695,7 @@ add_task(async function contextMenu() {
                  "Context menu has one child");
     Assert.equal(contextMenuNode.childNodes[0].label, "Remove from Address Bar",
                  "Context menu is in the 'remove' state");
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
     await contextMenuPromise;
 
@@ -707,7 +707,7 @@ add_task(async function contextMenu() {
     // Finally, add the bookmark star back to the urlbar so that other tests
     // that rely on it are OK.
     await promisePageActionPanelOpen();
-    contextMenuPromise = promisePanelShown("pageActionContextMenu");
+    contextMenuPromise = promisePanelShown("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(bookmarkButton, {
       type: "contextmenu",
       button: 2,
@@ -717,7 +717,7 @@ add_task(async function contextMenu() {
                  "Context menu has one child");
     Assert.equal(contextMenuNode.childNodes[0].label, "Add to Address Bar",
                  "Context menu is in the 'add' state");
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
+    contextMenuPromise = promisePanelHidden("pageActionPanelContextMenu");
     EventUtils.synthesizeMouseAtCenter(contextMenuNode.childNodes[0], {});
     await contextMenuPromise;
     await BrowserTestUtils.waitForCondition(() => {

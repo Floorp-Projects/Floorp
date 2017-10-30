@@ -73,12 +73,6 @@ this.pageAction = class extends ExtensionAPI {
         onCommand: (event, buttonNode) => {
           this.handleClick(event.target.ownerGlobal);
         },
-        onBeforePlacedInWindow: browserWindow => {
-          if (this.extension.hasPermission("menus") ||
-              this.extension.hasPermission("contextMenus")) {
-            browserWindow.document.addEventListener("popupshowing", this);
-          }
-        },
       }));
     }
   }
@@ -154,27 +148,6 @@ this.pageAction = class extends ExtensionAPI {
     let pageAction = pageActionMap.get(this.extension);
     if (pageAction.getProperty(window.gBrowser.selectedTab, "show")) {
       pageAction.handleClick(window);
-    }
-  }
-
-  handleEvent(event) {
-    const window = event.target.ownerGlobal;
-
-    switch (event.type) {
-      case "popupshowing":
-        const menu = event.target;
-        const trigger = menu.triggerNode;
-
-        if (menu.id === "pageActionContextMenu" &&
-            trigger &&
-            trigger.getAttribute("actionid") === this.browserPageAction.id) {
-          global.actionContextMenu({
-            extension: this.extension,
-            onPageAction: true,
-            menu: menu,
-          });
-        }
-        break;
     }
   }
 
