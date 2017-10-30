@@ -23,7 +23,7 @@ from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import validate_schema, Schema, optionally_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO
@@ -377,6 +377,7 @@ task_description_schema = Schema({
             'product': basestring,
             Optional('build_number'): int,
             Optional('release_promotion'): bool,
+            Optional('tuxedo_server_url'): optionally_keyed_by('project', basestring),
             Extra: taskref_or_string,  # additional properties are allowed
         },
         Optional('scopes'): [basestring],

@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+jobs:
+   fennec:
+      name: fennec_release_bouncer_aliases
+      description: Update bouncer aliases job
+      worker-type: buildbot-bridge/buildbot-bridge
+      run-on-projects: []
+      run:
+         using: buildbot
+         product: fennec
+         buildername: release-{branch}-fennec_bouncer_aliases
+         release-promotion: true
+         routes:
+            - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
+            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
+         properties:
+             tuxedo_server_url:
+                by-project:
+                    mozilla-beta: https://bounceradmin.mozilla.com/api
+                    mozilla-release: https://bounceradmin.mozilla.com/api
+                    maple: https://bounceradmin.stage.allizom.org/api
+                    default: http://localhost/api
