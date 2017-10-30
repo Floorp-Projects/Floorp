@@ -1042,6 +1042,7 @@ gfxPlatform::InitLayersIPC()
     }
 
     layers::CompositorThreadHolder::Start();
+    gfx::VRListenerThreadHolder::Start();
   }
 }
 
