@@ -1,0 +1,991 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Tests restyles caused by animations</title>
+<script>
+var ok = opener.ok.bind(opener);
+var is = opener.is.bind(opener);
+var todo = opener.todo.bind(opener);
+var todo_is = opener.todo_is.bind(opener);
+var info = opener.info.bind(opener);
+var original_finish = opener.SimpleTest.finish;
+var SimpleTest = opener.SimpleTest;
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+</script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="../testcommon.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+@keyframes opacity {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes background-color {
+  from { background-color: red; }
+  to { background-color: blue; }
+}
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+</head>
+<body>
+<script>
+'use strict';
+
+function observeStyling(frameCount, onFrame) {
+  var docShell =
+    SpecialPowers.wrap(window)
+                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                 .QueryInterface(SpecialPowers.Ci.nsIDocShell);
+
+  docShell.recordProfileTimelineMarkers = true;
+  docShell.popProfileTimelineMarkers();
+
+  return new Promise(function(resolve) {
+    return waitForAnimationFrames(frameCount, onFrame).then(function() {
+      var markers = docShell.popProfileTimelineMarkers();
+      docShell.recordProfileTimelineMarkers = false;
+      var stylingMarkers = markers.filter(function(marker, index) {
+        return marker.name == 'Styles' && marker.isAnimationOnly;
+      });
+      resolve(stylingMarkers);
+    });
+  });
+}
+
+function ensureElementRemoval(aElement) {
+  return new Promise(function(resolve) {
+    aElement.remove();
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+function waitForWheelEvent(aTarget) {
+  return new Promise(function(resolve, reject) {
+    // Get the scrollable target element position in this window coordinate
+    // system to send a wheel event to the element.
+    var targetRect = aTarget.getBoundingClientRect();
+    var centerX = targetRect.left + targetRect.width / 2;
+    var centerY = targetRect.top + targetRect.height / 2;
+
+    sendWheelAndPaintNoFlush(aTarget, centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: targetRect.height },
+                             resolve);
+  });
+}
+
+var omtaEnabled = isOMTAEnabled();
+
+var isAndroid = !!navigator.userAgent.includes("Android");
+var isServo = isStyledByServo();
+var offscreenThrottlingEnabled =
+  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
+
+function add_task_if_omta_enabled(test) {
+  if (!omtaEnabled) {
+    info(test.name + " is skipped because OMTA is disabled");
+    return;
+  }
+  add_task(test);
+}
+
+// We need to wait for all paints before running tests to avoid contaminations
+// from styling of this document itself.
+waitForAllPaints(function() {
+  add_task(async function restyling_for_main_thread_animations() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'CSS animations running on the main-thread should update style ' +
+       'on the main thread');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_for_compositor_animations() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'CSS animations running on the compositor should not update style ' +
+       'on the main thread');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_for_compositor_transitions() {
+    var div = addDiv(null, { style: 'transition: opacity 100s; opacity: 0' });
+    getComputedStyle(div).opacity;
+    div.style.opacity = 1;
+
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'CSS transitions running on the compositor should not update style ' +
+       'on the main thread');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_when_animation_duration_is_changed() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    div.animationDuration = '200s';
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Animations running on the compositor should not update style ' +
+       'on the main thread');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function only_one_restyling_after_finish_is_called() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    animation.finish();
+
+    var markers = await observeStyling(5);
+    is(markers.length, 1,
+       'Animations running on the compositor should only update style ' +
+       'once after finish() is called');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_restyling_mouse_movement_on_finished_transition() {
+    var div = addDiv(null, { style: 'transition: opacity 1ms; opacity: 0' });
+    getComputedStyle(div).opacity;
+    div.style.opacity = 1;
+
+    var animation = div.getAnimations()[0];
+    var initialRect = div.getBoundingClientRect();
+
+    await animation.finished;
+
+    var mouseX = initialRect.left + initialRect.width / 2;
+    var mouseY = initialRect.top + initialRect.height / 2;
+    var markers = await observeStyling(5, function() {
+      // We can't use synthesizeMouse here since synthesizeMouse causes
+      // layout flush.
+      synthesizeMouseAtPoint(mouseX++, mouseY++,
+                             { type: 'mousemove' }, window);
+    });
+
+    is(markers.length, 0,
+       'Bug 1219236: Finished transitions should never cause restyles ' +
+       'when mouse is moved on the animations');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_restyling_mouse_movement_on_finished_animation() {
+    var div = addDiv(null, { style: 'animation: opacity 1ms' });
+    var animation = div.getAnimations()[0];
+
+    var initialRect = div.getBoundingClientRect();
+
+    await animation.finished;
+
+    var mouseX = initialRect.left + initialRect.width / 2;
+    var mouseY = initialRect.top + initialRect.height / 2;
+    var markers = await observeStyling(5, function() {
+      // We can't use synthesizeMouse here since synthesizeMouse causes
+      // layout flush.
+      synthesizeMouseAtPoint(mouseX++, mouseY++,
+                             { type: 'mousemove' }, window);
+    });
+
+    is(markers.length, 0,
+       'Bug 1219236: Finished animations should never cause restyles ' +
+       'when mouse is moved on the animations');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_out_of_view_element() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    var div = addDiv(null,
+      { style: 'animation: opacity 100s; transform: translateY(-400px);' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the compositor in an out-of-view element ' +
+       'should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_restyling_main_thread_animations_out_of_view_element() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; transform: translateY(-400px);' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the main-thread in an out-of-view element ' +
+       'should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_scrolled_out_element() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android the opacity animation runs on the compositor even if it is
+     scrolled out of view.  We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: opacity 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the compositor for elements ' +
+       'which are scrolled out should never cause restyles');
+
+    await ensureElementRemoval(parentElement);
+  });
+
+  add_task(async function restyling_main_thread_animations_in_scrolled_out_element() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 20px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the main-thread for elements ' +
+       'which are scrolled out should never cause restyles');
+
+    await waitForWheelEvent(parentElement);
+
+    markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Animations running on the main-thread which were in scrolled out ' +
+       'elements should update restyling soon after the element moved in ' +
+       'view by scrolling');
+
+    await ensureElementRemoval(parentElement);
+  });
+
+  add_task(async function restyling_main_thread_animations_in_nested_scrolled_out_element() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var grandParent = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 100px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; ' +
+               'position: relative; ' +
+               'top: 20px;' }); // This element is in-view in the parent, but
+                                // out of view in the grandparent.
+    grandParent.appendChild(parentElement);
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the main-thread which are in nested elements ' +
+       'which are scrolled out should never cause restyles');
+
+    await waitForWheelEvent(grandParent);
+
+    markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Animations running on the main-thread which were in nested scrolled ' +
+       'out elements should update restyle soon after the element moved ' +
+       'in view by scrolling');
+
+    await ensureElementRemoval(grandParent);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_visiblily_hidden_element() {
+    var div = addDiv(null,
+     { style: 'animation: opacity 100s; visibility: hidden' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    var markers = await observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1237454: Animations running on the compositor in ' +
+            'visibility hidden element should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_main_thread_animations_move_out_of_view_by_scrolling() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 200px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s;' });
+    var pad = addDiv(null,
+      { style: 'height: 400px;' });
+    parentElement.appendChild(div);
+    parentElement.appendChild(pad);
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+
+    await waitForWheelEvent(parentElement);
+
+    var markers = await observeStyling(5);
+
+    // FIXME: We should reduce a redundant restyle here.
+    ok(markers.length >= 0,
+       'Animations running on the main-thread which are in scrolled out ' +
+       'elements should throttle restyling');
+
+    await ensureElementRemoval(parentElement);
+  });
+
+  add_task(async function restyling_main_thread_animations_moved_in_view_by_resizing() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+
+    var markers = await observeStyling(1, function() {
+      parentElement.style.height = '100px';
+    });
+
+    is(markers.length, 1,
+       'Animations running on the main-thread which was in scrolled out ' +
+       'elements should update restyling soon after the element moved in ' +
+       'view by resizing');
+
+    await ensureElementRemoval(parentElement);
+  });
+
+  add_task(async function no_restyling_main_thread_animations_in_visiblily_hidden_element() {
+    var div = addDiv(null,
+     { style: 'animation: background-color 100s; visibility: hidden' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1237454: Animations running on the main-thread in ' +
+            'visibility hidden element should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_compositor_animations_after_pause_is_called() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    animation.pause();
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Bug 1232563: Paused animations running on the compositor should ' +
+       'never cause restyles once after pause() is called');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_restyling_main_thread_animations_after_pause_is_called() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+
+    animation.pause();
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Bug 1232563: Paused animations running on the main-thread should ' +
+       'never cause restyles after pause() is called');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function only_one_restyling_when_current_time_is_set_to_middle_of_duration() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    await animation.ready;
+
+    animation.currentTime = 50 * MS_PER_SEC;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 1,
+       'Bug 1235478: Animations running on the compositor should only once ' +
+       'update style when currentTime is set to middle of duration time');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function change_duration_and_currenttime() {
+    var div = addDiv(null);
+    var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    // Set currentTime to a time longer than duration.
+    animation.currentTime = 500 * MS_PER_SEC;
+
+    // Now the animation immediately get back from compositor.
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    // Extend the duration.
+    animation.effect.timing.duration = 800 * MS_PER_SEC;
+    var markers = await observeStyling(5);
+    is(markers.length, 1,
+       'Animations running on the compositor should update style ' +
+       'when timing.duration is made longer than the current time');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function script_animation_on_display_none_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
+                                100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    div.style.display = 'none';
+
+    // We need to wait a frame to apply display:none style.
+    await waitForFrame();
+
+    is(animation.playState, 'running',
+       'Script animations keep running even when the target element has ' +
+       '"display: none" style');
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
+       'Script animations on "display:none" element should not run on the ' +
+       'compositor');
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Script animations on "display: none" element should not update styles');
+
+    div.style.display = '';
+
+    // We need to wait a frame to unapply display:none style.
+    await waitForFrame();
+
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Script animations restored from "display: none" state should update ' +
+       'styles');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function compositable_script_animation_on_display_none_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    div.style.display = 'none';
+
+    // We need to wait a frame to apply display:none style.
+    await waitForFrame();
+
+    is(animation.playState, 'running',
+       'Opacity script animations keep running even when the target element ' +
+       'has "display: none" style');
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
+       'Opacity script animations on "display:none" element should not ' +
+       'run on the compositor');
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Opacity script animations on "display: none" element should not ' +
+       'update styles');
+
+    div.style.display = '';
+
+    // We need to wait a frame to unapply display:none style.
+    await waitForFrame();
+
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
+       'Opacity script animations restored from "display: none" should be ' +
+       'run on the compositor');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_for_empty_keyframes() {
+    var div = addDiv(null);
+    var animation = div.animate({ }, 100 * MS_PER_SEC);
+
+    await animation.ready;
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations with no keyframes should not cause restyles');
+
+    animation.effect.setKeyframes({ backgroundColor: ['red', 'blue'] });
+    markers = await observeStyling(5);
+
+    is(markers.length, 5,
+       'Setting valid keyframes should cause regular animation restyles to ' +
+       'occur');
+
+    animation.effect.setKeyframes({ });
+    markers = await observeStyling(5);
+
+    is(markers.length, 1,
+       'Setting an empty set of keyframes should trigger a single restyle ' +
+       'to remove the previous animated style');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(async function no_restyling_when_animation_style_when_re_setting_same_animation_property() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+    await animation.ready;
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+    // Apply the same animation style
+    div.style.animation = 'opacity 100s';
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Applying same animation style '  +
+       'should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function necessary_update_should_be_invoked() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+    await animation.ready;
+    await waitForAnimationFrames(5);
+    // Apply another animation style
+    div.style.animation = 'background-color 110s';
+    var animation = div.getAnimations()[0];
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Applying animation style with different duration '  +
+       'should cause restyles on every frame.');
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(
+    async function changing_cascading_result_for_main_thread_animation() {
+      var div = addDiv(null, { style: 'background-color: blue' });
+      var animation = div.animate({ opacity: [0, 1],
+                                    backgroundColor: ['green', 'red'] },
+                                  100 * MS_PER_SEC);
+      await animation.ready;
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
+         'The opacity animation is running on the compositor');
+      // Make the background-color style as !important to cause an update
+      // to the cascade.
+      // Bug 1300982: The background-color animation should be no longer
+      // running on the main thread.
+      div.style.setProperty('background-color', '1', 'important');
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+         'Changing cascading result for the property running on the main ' +
+         'thread does not cause synchronization layer of opacity animation ' +
+         'running on the compositor');
+      await ensureElementRemoval(div);
+    }
+  );
+
+  add_task(async function restyling_for_animation_on_orphaned_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ marginLeft: [ '0px', '100px' ] },
+                                100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    div.remove();
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'Animation on orphaned element should not cause restyles');
+
+    document.body.appendChild(div);
+
+    markers = await observeStyling(1);
+    if (isServo) {
+      // In Servo, we explicitly set important_rules_change flag to the element
+      // in compute_style() during the initial normal traversal right after
+      // re-attaching which leads to invoking a SequentialTask for
+      // CascadeResults which ends up calling RequestRestyle(Standard). As a
+      // result, the animation is restyled during a second animation restyle in
+      // the first frame. If we fix the behavior when we attach an orphaned
+      // element with script animations to a document so that it requests a
+      // layer restyle (bug 1388557) before fixing important_rules_change in
+      // compute_style() so that it no longer dispatches a needless standard
+      // restyle (bug 1388560), we should add a test case that fails if we
+      // continue to unnecessarily request a standard restyle.
+      is(markers.length, 1,
+         'We should observe one restyle in the first frame right after ' +
+         're-attaching to the document');
+    } else {
+      // Bug 1388557: We should call RequestRestyle(Layer) when an element which
+      // has running script animations is attached to a document.
+      todo_is(markers.length, 1,
+              'Bug 1388557 We should observe one restyle in the first frame ' +
+              'right after re-attaching to the document');
+    }
+    markers = await observeStyling(5);
+    is(markers.length, 5,
+       'Animation on re-attached to the document begins to update style');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(
+    // Tests that if we remove an element from the document whose animation
+    // cascade needs recalculating, that it is correctly updated when it is
+    // re-attached to the document.
+    async function restyling_for_opacity_animation_on_re_attached_element() {
+      var div = addDiv(null, { style: 'opacity: 1 ! important' });
+      var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+      await animation.ready;
+      ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
+         'The opacity animation overridden by an !important rule is NOT ' +
+         'running on the compositor');
+
+      // Drop the !important rule to update the cascade.
+      div.style.setProperty('opacity', '1', '');
+
+      div.remove();
+
+      var markers = await observeStyling(5);
+      is(markers.length, 0,
+         'Opacity animation on orphaned element should not cause restyles');
+
+      document.body.appendChild(div);
+
+      // Need a frame to give the animation a chance to be sent to the
+      // compositor.
+      await waitForFrame();
+
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
+         'The opacity animation which is no longer overridden by the ' +
+         '!important rule begins running on the compositor even if the ' +
+         '!important rule had been dropped before the target element was ' +
+         'removed');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
+  // Tests that additive animations don't throttle at all.
+  add_task(async function no_throttling_animations_out_of_view_element() {
+    if (!offscreenThrottlingEnabled ||
+        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'transform: translateY(-400px);' });
+    var animation =
+      div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 5,
+       'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
+       'out-of-view element should not be throttled');
+    await ensureElementRemoval(div);
+  });
+
+  // Counter part of the above test.
+  add_task(async function no_restyling_discrete_animations_out_of_view_element() {
+    if (!offscreenThrottlingEnabled ||
+        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'transform: translateY(-400px);' });
+    var animation =
+      div.animate({ visibility: ['visible', 'hidden'] }, 100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Discrete animation running on the main-thread in an out-of-view ' +
+       'element should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_restyling_while_computed_timing_is_not_changed() {
+    var div = addDiv(null);
+    var animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
+                                { duration: 100 * MS_PER_SEC,
+                                  easing: 'step-end' });
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Animation running on the main-thread while computed timing is not ' +
+       'changed should never cause restyles');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_throttling_animations_in_view_svg() {
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'overflow: scroll;' +
+                                    'height: 100px; width: 100px;' });
+    var svg = addSVGElement(div, 'svg', { viewBox: '-10 -10 0.1 0.1',
+                                          width:   '50px',
+                                          height:  '50px' });
+    var rect = addSVGElement(svg, 'rect', { x:      '-10',
+                                            y:      '-10',
+                                            width:  '10',
+                                            height: '10',
+                                            fill:   'red' });
+    var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'CSS animations on an in-view svg element with post-transform should ' +
+       'not be throttled.');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function throttling_animations_out_of_view_svg() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var div = addDiv(null, { style: 'overflow: scroll;' +
+                                    'height: 100px; width: 100px;' });
+    var svg = addSVGElement(div, 'svg', { viewBox: '-10 -10 0.1 0.1',
+                                          width: '50px',
+                                          height: '50px' });
+    var rect = addSVGElement(svg, 'rect', { width: '10',
+                                            height: '10',
+                                            fill: 'red' });
+
+    var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'CSS animations on an out-of-view svg element with post-transform ' +
+       'should be throttled.');
+
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function no_throttling_animations_in_view_css_transform() {
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var scrollDiv = addDiv(null, { style: 'overflow: scroll; ' +
+                                          'height: 100px; width: 100px;' });
+    var targetDiv = addDiv(null,
+                           { style: 'animation: background-color 100s;' +
+                                    'transform: translate(-50px, -50px);' });
+    scrollDiv.appendChild(targetDiv);
+
+    var animation = targetDiv.getAnimations()[0];
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 5,
+       'CSS animation on an in-view element with pre-transform should not ' +
+       'be throttled.');
+
+    await ensureElementRemoval(scrollDiv);
+  });
+
+  add_task(async function throttling_animations_out_of_view_css_transform() {
+    if (!offscreenThrottlingEnabled) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var scrollDiv = addDiv(null, { style: 'overflow: scroll;' +
+                                          'height: 100px; width: 100px;' });
+    var targetDiv = addDiv(null,
+                           { style: 'animation: background-color 100s;' +
+                                    'transform: translate(100px, 100px);' });
+    scrollDiv.appendChild(targetDiv);
+
+    var animation = targetDiv.getAnimations()[0];
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+    is(markers.length, 0,
+       'CSS animation on an out-of-view element with pre-transform should be ' +
+       'throttled.');
+
+    await ensureElementRemoval(scrollDiv);
+  });
+
+  add_task_if_omta_enabled(
+    async function no_restyling_for_compositor_animation_on_unrelated_style_change() {
+      var div = addDiv(null);
+      var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+      await animation.ready;
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
+         'The opacity animation is running on the compositor');
+
+      div.style.setProperty('color', 'blue', '');
+      var markers = await observeStyling(5);
+      if (isServo) {
+        is(markers.length, 0,
+           'The opacity animation keeps running on the compositor when ' +
+           'color style is changed');
+      } else {
+        todo_is(markers.length, 0,
+                'Bug 1307341 The opacity animation keeps running on the ' +
+                'compositor when color style is changed');
+      }
+      await ensureElementRemoval(div);
+    }
+  );
+});
+
+</script>
+</body>

@@ -22,14 +22,17 @@ const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
 const ONBOARDING_MIN_WIDTH_PX = 960;
 const SPEECH_BUBBLE_MIN_WIDTH_PX = 1130;
+const SPEECH_BUBBLE_NEWTOUR_STRING_ID = "onboarding.overlay-icon-tooltip2";
+const SPEECH_BUBBLE_UPDATETOUR_STRING_ID = "onboarding.overlay-icon-tooltip-updated2";
 const ICON_STATE_WATERMARK = "watermark";
 const ICON_STATE_DEFAULT = "default";
-
 /**
  * Add any number of tours, key is the tourId, value should follow the format below
  * "tourId": { // The short tour id which could be saved in pref
  *   // The unique tour id
  *   id: "onboarding-tour-addons",
+ *   // (optional) mark tour as complete instantly when user enters the tour
+ *   instantComplete: false,
  *   // The string id of tour name which would be displayed on the navigation bar
  *   tourNameId: "onboarding.tour-addon",
  *   // The method returing strings used on tour notification
@@ -129,6 +132,7 @@ var onboardingTourset = {
   },
   "default": {
     id: "onboarding-tour-default-browser",
+    instantComplete: true,
     tourNameId: "onboarding.tour-default-browser",
     getNotificationStrings(bundle) {
       return {
@@ -167,6 +171,7 @@ var onboardingTourset = {
   },
   "sync": {
     id: "onboarding-tour-sync",
+    instantComplete: true,
     tourNameId: "onboarding.tour-sync2",
     getNotificationStrings(bundle) {
       return {
@@ -276,6 +281,7 @@ var onboardingTourset = {
   },
   "performance": {
     id: "onboarding-tour-performance",
+    instantComplete: true,
     tourNameId: "onboarding.tour-performance",
     getNotificationStrings(bundle) {
       return {
@@ -806,25 +812,21 @@ class Onboarding {
           tour_id: tourId,
           session_key: this._session_key,
         });
+
+        // some tours should completed instantly upon showing.
+        if (tab.getAttribute("data-instant-complete")) {
+          this.setToursCompleted([tourId]);
+          // also track auto completed tour so we can filter data with the same event
+          telemetry({
+            event: "overlay-cta-click",
+            tour_id: tourId,
+            session_key: this._session_key,
+          });
+        }
       } else {
         tab.classList.remove("onboarding-active");
         tab.setAttribute("aria-selected", false);
       }
-    }
-
-    switch (tourId) {
-      // These tours should tagged completed instantly upon showing.
-      case "onboarding-tour-default-browser":
-      case "onboarding-tour-sync":
-      case "onboarding-tour-performance":
-        this.setToursCompleted([tourId]);
-        // also track auto completed tour so we can filter data with the same event
-        telemetry({
-          event: "overlay-cta-click",
-          tour_id: tourId,
-          session_key: this._session_key,
-        });
-        break;
     }
   }
 
@@ -1138,20 +1140,24 @@ class Onboarding {
         <nav>
           <ul id="onboarding-tour-list" role="tablist"></ul>
         </nav>
-        <footer id="onboarding-footer">
-          <button id="onboarding-skip-tour-button" class="onboarding-action-button"></button>
-        </footer>
+        <footer id="onboarding-footer"></footer>
         <button id="onboarding-overlay-close-btn" class="onboarding-close-btn"></button>
       </div>
     `;
 
     this._dialog = div.querySelector(`[role="dialog"]`);
     this._dialog.id = ONBOARDING_DIALOG_ID;
-
-    div.querySelector("#onboarding-skip-tour-button").textContent =
-      this._bundle.GetStringFromName("onboarding.skip-tour-button-label");
     div.querySelector("#onboarding-header").textContent =
       this._bundle.GetStringFromName("onboarding.overlay-title2");
+    // support show/hide skip tour button via pref
+    if (!Services.prefs.getBoolPref("browser.onboarding.skip-tour-button.hide", false)) {
+      let footer = div.querySelector("#onboarding-footer");
+      let skipButton = this._window.document.createElement("button");
+      skipButton.id = "onboarding-skip-tour-button";
+      skipButton.classList.add("onboarding-action-button");
+      skipButton.textContent = this._bundle.GetStringFromName("onboarding.skip-tour-button-label");
+      footer.appendChild(skipButton);
+    }
     let closeBtn = div.querySelector("#onboarding-overlay-close-btn");
     closeBtn.setAttribute("title",
       this._bundle.GetStringFromName("onboarding.overlay-close-button-tooltip"));
@@ -1160,9 +1166,25 @@ class Onboarding {
 
   _renderOverlayButton() {
     let button = this._window.document.createElement("button");
-    let tooltipStringId = this._tourType === "new" ?
-      "onboarding.overlay-icon-tooltip2" : "onboarding.overlay-icon-tooltip-updated2";
-    let tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
+    // support customize speech bubble string via pref
+    let tooltipStringPrefId = "";
+    let defaultTourStringId = "";
+    if (this._tourType === "new") {
+      tooltipStringPrefId = "browser.onboarding.newtour.tooltip";
+      defaultTourStringId = SPEECH_BUBBLE_NEWTOUR_STRING_ID;
+    } else {
+      tooltipStringPrefId = "browser.onboarding.updatetour.tooltip";
+      defaultTourStringId = SPEECH_BUBBLE_UPDATETOUR_STRING_ID;
+    }
+    let tooltip = "";
+    try {
+      let tooltipStringId = Services.prefs.getStringPref(tooltipStringPrefId, defaultTourStringId);
+      tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
+    } catch (e) {
+      Cu.reportError(`the provided ${tooltipStringPrefId} string is in wrong format `, e);
+      // fallback to defaultTourStringId to proceed
+      tooltip = this._bundle.formatStringFromName(defaultTourStringId, [BRAND_SHORT_NAME], 1);
+    }
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";
     button.setAttribute("aria-haspopup", true);
@@ -1170,12 +1192,14 @@ class Onboarding {
     let defaultImg = this._window.document.createElement("img");
     defaultImg.id = "onboarding-overlay-button-icon";
     defaultImg.setAttribute("role", "presentation");
-    defaultImg.src = "chrome://branding/content/icon64.png";
+    defaultImg.src = Services.prefs.getStringPref("browser.onboarding.default-icon-src",
+      "chrome://branding/content/icon64.png");
     button.appendChild(defaultImg);
     let watermarkImg = this._window.document.createElement("img");
     watermarkImg.id = "onboarding-overlay-button-watermark-icon";
     watermarkImg.setAttribute("role", "presentation");
-    watermarkImg.src = "resource://onboarding/img/watermark.svg";
+    watermarkImg.src = Services.prefs.getStringPref("browser.onboarding.watermark-icon-src",
+      "resource://onboarding/img/watermark.svg");
     button.appendChild(watermarkImg);
     return button;
   }
@@ -1197,6 +1221,9 @@ class Onboarding {
       tab.id = tour.id;
       tab.textContent = this._bundle.GetStringFromName(tour.tourNameId);
       tab.className = "onboarding-tour-item";
+      if (tour.instantComplete) {
+        tab.dataset.instantComplete = true;
+      }
       tab.tabIndex = 0;
       tab.setAttribute("role", "tab");
 

@@ -138,7 +138,7 @@ public:
     return FromMilliseconds(aMicroseconds / 1000.0);
   }
 
-  static BaseTimeDuration Forever()
+  static constexpr BaseTimeDuration Forever()
   {
     return FromTicks(INT64_MAX);
   }

@@ -274,7 +274,9 @@ if (opener) {
                         "assert_class_string", "assert_throws",
                         "assert_unreached", "assert_regexp_match",
                         "promise_test", "test"]) {
-    window[funcName] = opener[funcName].bind(opener);
+    if (opener[funcName]) {
+      window[funcName] = opener[funcName].bind(opener);
+    }
   }
 
   window.EventWatcher = opener.EventWatcher;

@@ -133,7 +133,7 @@ struct TimingParams
     // Web Animations says that the active duration is zero. This is to
     // ensure that the result is defined when the other argument is Infinity.
     static const StickyTimeDuration zeroDuration;
-    if (!aDuration || *aDuration == zeroDuration || aIterations == 0.0) {
+    if (!aDuration || aDuration->IsZero() || aIterations == 0.0) {
       return zeroDuration;
     }
 
