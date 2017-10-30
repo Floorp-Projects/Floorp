@@ -18,6 +18,7 @@
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const DEBUG = false; /* set to true to enable debug messages */
 var debug;
@@ -124,10 +125,7 @@ nsFilePicker.prototype = {
     if (!this.mFilesEnumerator)
       return null;
 
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-
-    return this.mFileURL = ioService.newFileURI(this.file);
+    return this.mFileURL = Services.io.newFileURI(this.file);
   },
 
   /* attribute wstring defaultString; */
@@ -208,9 +206,7 @@ nsFilePicker.prototype = {
   },
 
   open(aFilePickerShownCallback) {
-    var tm = Components.classes["@mozilla.org/thread-manager;1"]
-                       .getService(Components.interfaces.nsIThreadManager);
-    tm.dispatchToMainThread(() => {
+    Services.tm.dispatchToMainThread(() => {
       let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
         result = this.show();

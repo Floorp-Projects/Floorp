@@ -6,8 +6,7 @@
 /* import-globals-from ext-toolkit.js */
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
-  const stringSvc = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-  return stringSvc.createBundle("chrome://global/locale/extensions.properties");
+  return Services.strings.createBundle("chrome://global/locale/extensions.properties");
 });
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");

@@ -26,17 +26,12 @@ BEGIN TRANSACTION;
 COMMIT;`;
 
 function prepareVersion3Schema(callback) {
-  var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                       getService(Ci.nsIProperties);
-
-  var dbFile = dirService.get("ProfD", Ci.nsIFile);
+  var dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   dbFile.append("content-prefs.sqlite");
 
-  var dbService = Cc["@mozilla.org/storage/service;1"].
-                  getService(Ci.mozIStorageService);
   ok(!dbFile.exists(), "Db should not exist yet.");
 
-  var dbConnection = dbService.openDatabase(dbFile);
+  var dbConnection = Services.storage.openDatabase(dbFile);
   equal(dbConnection.schemaVersion, 0);
 
   dbConnection.executeSimpleSQL(schema_version3);

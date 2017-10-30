@@ -1652,9 +1652,7 @@ function ignoreEvent(context, name) {
       scriptError.init(msg, frame.filename, null, frame.lineNumber,
                        frame.columnNumber, Ci.nsIScriptError.warningFlag,
                        "content javascript");
-      let consoleService = Cc["@mozilla.org/consoleservice;1"]
-        .getService(Ci.nsIConsoleService);
-      consoleService.logMessage(scriptError);
+      Services.console.logMessage(scriptError);
     },
     removeListener: function(callback) {},
     hasListener: function(callback) {},
