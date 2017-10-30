@@ -5,12 +5,12 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
-# TODO:
-# kind-dependencies:
-#   - release-push-to-cdns (aka. push to releases)
+kind-dependencies:
+   - beetmover-cdns
 
 jobs:
    fennec:

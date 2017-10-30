@@ -5,8 +5,12 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.beetmover_cdns:transforms
    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - beetmover-checksums
 
 job-defaults:
    worker-type:
@@ -25,7 +29,3 @@ jobs:
             - index.releases.v1.{branch}.latest.fennec.latest.beetmover_cdns
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.beetmover_cdns
       treeherder-platform: Android/opt
-
-# We probably want a dummy task after the beetmover checksums, or the publish notify task?
-# kind-dependencies:
-#   - beetmover-checksums

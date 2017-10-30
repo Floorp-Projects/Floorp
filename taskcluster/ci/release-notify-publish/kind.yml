@@ -5,10 +5,13 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
    - push-apk
+   - release-bouncer-aliases
+   - release-version-bump
 
 jobs:
    fennec:
@@ -37,3 +40,5 @@ jobs:
                      #- "{task[tags][createdForUser]}"
                   default:
                      - "release-drivers"
+      extra:
+         product: fennec

@@ -39,6 +39,7 @@ beetmover_cdns_description_schema = Schema({
         job_description_schema['worker-type'],
         {'by-project': {basestring: job_description_schema['worker-type']}},
     ),
+    Optional('dependencies'): {basestring: taskref_or_string},
 })
 
 
@@ -70,16 +71,13 @@ def make_beetmover_cdns_description(config, jobs):
         bucket_scope = get_beetmover_bucket_scope(config)
         action_scope = get_beetmover_action_scope(config)
 
-        # TODO
-        dependencies = {}
-
         task = {
             'label': label,
             'description': description,
             'worker-type': 'scriptworker-prov-v1/beetmoverworker-dev',
             'scopes': [bucket_scope, action_scope],
             'product': job['product'],
-            'dependencies': dependencies,
+            'dependencies': job['dependencies'],
             'attributes': job.get('attributes', {}),
             'run-on-projects': job.get('run-on-projects'),
             'treeherder': treeherder,
