@@ -23,3 +23,10 @@ jobs:
          routes:
             - index.releases.v1.{branch}.latest.fennec.latest.bouncer_submitter
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.bouncer_submitter
+         notifications:
+            completed:
+               - releasetasks
+            failed:
+               - releasetasks
+            exception:
+               - releasetasks
