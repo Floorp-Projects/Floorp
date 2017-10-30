@@ -81,7 +81,7 @@ assert.fennec = function(msg = "") {
 };
 
 /**
- * Asserts that the current <var>context</var> is content.
+ * Asserts that the current |context| is content.
  *
  * @param {string} context
  *     Context to test.
@@ -89,10 +89,10 @@ assert.fennec = function(msg = "") {
  *     Custom error message.
  *
  * @return {string}
- *     <var>context</var> is returned unaltered.
+ *     |context| is returned unaltered.
  *
  * @throws {UnsupportedOperationError}
- *     If <var>context</var> is not content.
+ *     If |context| is not content.
  */
 assert.content = function(context, msg = "") {
   msg = msg || "Only supported in content context";
@@ -108,10 +108,10 @@ assert.content = function(context, msg = "") {
  *     Custom error message.
  *
  * @return {ChromeWindow}
- *     <var>win</var> is returned unaltered.
+ *     |win| is returned unaltered.
  *
  * @throws {NoSuchWindowError}
- *     If <var>win</var> has been closed.
+ *     If |win| has been closed.
  */
 assert.window = function(win, msg = "") {
   msg = msg || "Unable to locate window";
@@ -161,7 +161,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is defined.
+ * Asserts that |obj| is defined.
  *
  * @param {?} obj
  *     Value to test.
@@ -169,10 +169,10 @@ assert.noUserPrompt = function(dialog, msg = "") {
  *     Custom error message.
  *
  * @return {?}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not defined.
+ *     If |obj| is not defined.
  */
 assert.defined = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be defined`;
@@ -180,7 +180,7 @@ assert.defined = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is a finite number.
+ * Asserts that |obj| is a finite number.
  *
  * @param {?} obj
  *     Value to test.
@@ -188,10 +188,10 @@ assert.defined = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {number}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not a number.
+ *     If |obj| is not a number.
  */
 assert.number = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be finite number`;
@@ -199,7 +199,7 @@ assert.number = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is callable.
+ * Asserts that |obj| is callable.
  *
  * @param {?} obj
  *     Value to test.
@@ -207,10 +207,10 @@ assert.number = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {Function}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not callable.
+ *     If |obj| is not callable.
  */
 assert.callable = function(obj, msg = "") {
   msg = msg || pprint`${obj} is not callable`;
@@ -218,7 +218,7 @@ assert.callable = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is an integer.
+ * Asserts that |obj| is an integer.
  *
  * @param {?} obj
  *     Value to test.
@@ -226,10 +226,10 @@ assert.callable = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {number}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not an integer.
+ *     If |obj| is not an integer.
  */
 assert.integer = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be an integer`;
@@ -237,7 +237,7 @@ assert.integer = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is a positive integer.
+ * Asserts that |obj| is a positive integer.
  *
  * @param {?} obj
  *     Value to test.
@@ -245,10 +245,10 @@ assert.integer = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {number}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not a positive integer.
+ *     If |obj| is not a positive integer.
  */
 assert.positiveInteger = function(obj, msg = "") {
   assert.integer(obj, msg);
@@ -257,7 +257,7 @@ assert.positiveInteger = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is a boolean.
+ * Asserts that |obj| is a boolean.
  *
  * @param {?} obj
  *     Value to test.
@@ -265,10 +265,10 @@ assert.positiveInteger = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {boolean}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not a boolean.
+ *     If |obj| is not a boolean.
  */
 assert.boolean = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be boolean`;
@@ -276,7 +276,7 @@ assert.boolean = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is a string.
+ * Asserts that |obj| is a string.
  *
  * @param {?} obj
  *     Value to test.
@@ -284,10 +284,10 @@ assert.boolean = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {string}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not a string.
+ *     If |obj| is not a string.
  */
 assert.string = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be a string`;
@@ -295,7 +295,7 @@ assert.string = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is an object.
+ * Asserts that |obj| is an object.
  *
  * @param {?} obj
  *     Value to test.
@@ -303,10 +303,10 @@ assert.string = function(obj, msg = "") {
  *     Custom error message.
  *
  * @return {Object}
- *     obj| is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not an object.
+ *     If |obj| is not an object.
  */
 assert.object = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be an object`;
@@ -319,21 +319,20 @@ assert.object = function(obj, msg = "") {
 };
 
 /**
- * Asserts that <var>prop</var> is in <var>obj</var>.
+ * Asserts that |prop| is in |obj|.
  *
  * @param {?} prop
- *     Own property to test if is in <var>obj</var>.
+ *     Own property to test if is in |obj|.
  * @param {?} obj
  *     Object.
  * @param {string=} msg
  *     Custom error message.
  *
  * @return {?}
- *     Value of <var>obj</var>'s own property <var>prop</var>.
+ *     Value of |obj|'s own property |prop|.
  *
  * @throws {InvalidArgumentError}
- *     If <var>prop</var> is not in <var>obj</var>, or <var>obj</var>
- *     is not an object.
+ *     If |prop| is not in |obj|, or |obj| is not an object.
  */
 assert.in = function(prop, obj, msg = "") {
   assert.object(obj, msg);
@@ -343,7 +342,7 @@ assert.in = function(prop, obj, msg = "") {
 };
 
 /**
- * Asserts that <var>obj</var> is an Array.
+ * Asserts that |obj| is an Array.
  *
  * @param {?} obj
  *     Value to test.
@@ -351,10 +350,10 @@ assert.in = function(prop, obj, msg = "") {
  *     Custom error message.
  *
  * @return {Object}
- *     <var>obj</var> is returned unaltered.
+ *     |obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
- *     If <var>obj</var> is not an Array.
+ *     If |obj| is not an Array.
  */
 assert.array = function(obj, msg = "") {
   msg = msg || pprint`Expected ${obj} to be an Array`;
@@ -366,17 +365,17 @@ assert.array = function(obj, msg = "") {
  *
  * @param {function(?): boolean} predicate
  *     Evaluated on calling the return value of this function.  If its
- *     return value of the inner function is false, <var>error</var>
- *     is thrown with <var>message</var>.
+ *     return value of the inner function is false, |error| is thrown
+ *     with |message|.
  * @param {string=} message
  *     Custom error message.
  * @param {Error=} error
  *     Custom error type by its class.
  *
  * @return {function(?): ?}
- *     Function that takes and returns the passed in value unaltered,
- *     and which may throw <var>error</var> with <var>message</var>
- *     if <var>predicate</var> evaluates to false.
+ *     Function that takes and returns the passed in value unaltered, and
+ *     which may throw |error| with |message| if |predicate| evaluates
+ *     to false.
  */
 assert.that = function(
     predicate, message = "", error = InvalidArgumentError) {
