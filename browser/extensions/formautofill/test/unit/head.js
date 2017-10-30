@@ -52,10 +52,8 @@ if (!extensionDir.exists()) {
 }
 Components.manager.addBootstrappedManifestLocation(extensionDir);
 
-/**
- * Returns a reference to a temporary file that is guaranteed not to exist and
- * is cleaned up later. See FileTestUtils.getTempFile for details.
- */
+// Returns a reference to a temporary file that is guaranteed not to exist and
+// is cleaned up later. See FileTestUtils.getTempFile for details.
 function getTempFile(leafName) {
   return FileTestUtils.getTempFile(leafName);
 }
