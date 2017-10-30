@@ -134,6 +134,8 @@ nsCSPParser::nsCSPParser(cspTokens& aTokens,
  , mUnsafeInlineKeywordSrc(nullptr)
  , mChildSrc(nullptr)
  , mFrameSrc(nullptr)
+ , mWorkerSrc(nullptr)
+ , mScriptSrc(nullptr)
  , mParsingFrameAncestorsDir(false)
  , mTokens(aTokens)
  , mSelfURI(aSelfURI)
@@ -1110,19 +1112,35 @@ nsCSPParser::directiveName()
     return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
   }
 
-  // child-src has it's own class to handle frame-src if necessary
+  // child-src by itself is deprecatd but will be enforced
+  //   * for workers (if worker-src is not explicitly specified)
+  //   * for frames  (if frame-src is not explicitly specified)
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE)) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag,
+                             "deprecatedChildSrcDirective",
+                             params, ArrayLength(params));
     mChildSrc = new nsCSPChildSrcDirective(CSP_StringToCSPDirective(mCurToken));
     return mChildSrc;
   }
 
-  // if we have a frame-src, cache it so we can decide whether to use child-src
+  // if we have a frame-src, cache it so we can discard child-src for frames
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE)) {
-    const char16_t* params[] = { mCurToken.get(), u"child-src" };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "deprecatedDirective",
-                             params, ArrayLength(params));
     mFrameSrc = new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
     return mFrameSrc;
+  }
+
+  // if we have a worker-src, cache it so we can discard child-src for workers
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE)) {
+    mWorkerSrc = new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
+    return mWorkerSrc;
+  }
+
+  // if we have a script-src, cache it as a fallback for worker-src
+  // in case child-src is not present
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE)) {
+    mScriptSrc = new nsCSPScriptSrcDirective(CSP_StringToCSPDirective(mCurToken));
+    return mScriptSrc;
   }
 
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::REQUIRE_SRI_FOR)) {
@@ -1301,9 +1319,22 @@ nsCSPParser::policy()
     directive();
   }
 
-  if (mChildSrc && !mFrameSrc) {
-    // if we have a child-src, it handles frame-src too, unless frame-src is set
-    mChildSrc->setHandleFrameSrc();
+  if (mChildSrc) {
+    if (!mFrameSrc) {
+      // if frame-src is specified explicitly for that policy than child-src should
+      // not restrict frames; if not, than child-src needs to restrict frames.
+      mChildSrc->setRestrictFrames();
+    }
+    if (!mWorkerSrc) {
+      // if worker-src is specified explicitly for that policy than child-src should
+      // not restrict workers; if not, than child-src needs to restrict workers.
+      mChildSrc->setRestrictWorkers();
+    }
+  }
+  // if script-src is specified, but not worker-src and also no child-src, then
+  // script-src has to govern workers.
+  if (mScriptSrc && !mWorkerSrc && !mChildSrc) {
+    mScriptSrc->setRestrictWorkers();
   }
 
   return mPolicy;

@@ -15,10 +15,6 @@
 #include "nsDeque.h"                    // for nsDeque
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "GeneratedJNINatives.h"
-#endif
-
 static const unsigned int TEXTURE_POOL_SIZE = 10;
 static const unsigned int TEXTURE_REFILL_THRESHOLD = TEXTURE_POOL_SIZE / 2;
 
@@ -41,19 +37,6 @@ enum class PoolState : uint8_t {
 static PoolState sPoolState = PoolState::NOT_INITIALIZE;
 
 static bool sHasPendingFillTask = false;
-
-#ifdef MOZ_WIDGET_ANDROID
-
-class GeckoSurfaceTextureSupport final
-    : public java::GeckoSurfaceTexture::Natives<GeckoSurfaceTextureSupport>
-{
-public:
-  static int32_t NativeAcquireTexture() {
-    return TexturePoolOGL::AcquireTexture();
-  }
-};
-
-#endif // MOZ_WIDGET_ANDROID
 
 void TexturePoolOGL::MaybeFillTextures()
 {
@@ -172,11 +155,6 @@ void TexturePoolOGL::Init()
   sMonitor = new Monitor("TexturePoolOGL.sMonitor");
   sTextures = new nsDeque();
 
-#ifdef MOZ_WIDGET_ANDROID
-  if (jni::IsAvailable()) {
-    GeckoSurfaceTextureSupport::Init();
-  }
-#endif
   sPoolState = PoolState::INITIALIZED;
 }
 

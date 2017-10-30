@@ -19,6 +19,7 @@
 #include "GPUVideoImage.h"
 
 #ifdef MOZ_WIDGET_ANDROID
+#include "GeneratedJNIWrappers.h"
 #include "AndroidSurfaceTexture.h"
 #include "GLImages.h"
 #include "GLLibraryEGL.h"
@@ -54,13 +55,14 @@ const char* const kFragHeader_Tex2DRect = "\
     #endif                                                                   \n\
 ";
 const char* const kFragHeader_TexExt = "\
-    #extension GL_OES_EGL_image_external : require                           \n\
-    #define SAMPLER samplerExternalOES                                       \n\
     #if __VERSION__ >= 130                                                   \n\
+        #extension GL_OES_EGL_image_external_essl3 : require                 \n\
         #define TEXTURE texture                                              \n\
     #else                                                                    \n\
+        #extension GL_OES_EGL_image_external : require                       \n\
         #define TEXTURE texture2D                                            \n\
     #endif                                                                   \n\
+    #define SAMPLER samplerExternalOES                                       \n\
 ";
 
 const char* const kFragBody_RGBA = "\
@@ -757,14 +759,71 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
 
 #ifdef MOZ_WIDGET_ANDROID
 bool
-GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage, const gfx::IntSize&,
-                        const OriginPos) const
+GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage, const gfx::IntSize& destSize,
+                        const OriginPos destOrigin) const
 {
-    // FIXME
+    AndroidSurfaceTextureHandle handle = srcImage->GetHandle();
+    const auto& surfaceTexture = java::GeckoSurfaceTexture::Lookup(handle);
+
+    if (!surfaceTexture) {
+        return false;
+    }
+
+    const ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
+
+    if (!surfaceTexture->IsAttachedToGLContext((int64_t)mGL)) {
+        GLuint tex;
+        mGL->MakeCurrent();
+        mGL->fGenTextures(1, &tex);
+
+        if (NS_FAILED(surfaceTexture->AttachToGLContext((int64_t)mGL, tex))) {
+            mGL->fDeleteTextures(1, &tex);
+            return false;
+        }
+    }
+
+    const ScopedBindTexture savedTex(mGL, surfaceTexture->GetTexName(), LOCAL_GL_TEXTURE_EXTERNAL);
+    surfaceTexture->UpdateTexImage();
+
+    gfx::Matrix4x4 transform4;
+    AndroidSurfaceTexture::GetTransformMatrix(java::sdk::SurfaceTexture::Ref::From(surfaceTexture),
+                                              &transform4);
+    Mat3 transform3;
+    transform3.at(0,0) = transform4._11;
+    transform3.at(0,1) = transform4._12;
+    transform3.at(0,2) = transform4._14;
+    transform3.at(1,0) = transform4._21;
+    transform3.at(1,1) = transform4._22;
+    transform3.at(1,2) = transform4._24;
+    transform3.at(2,0) = transform4._41;
+    transform3.at(2,1) = transform4._42;
+    transform3.at(2,2) = transform4._44;
+
+    // We don't do w-divison, so if these aren't what we expect, we're probably doing
+    // something wrong.
+    MOZ_ASSERT(transform3.at(0,2) == 0);
+    MOZ_ASSERT(transform3.at(1,2) == 0);
+    MOZ_ASSERT(transform3.at(2,2) == 1);
+
     const auto& srcOrigin = srcImage->GetOriginPos();
-    (void)srcOrigin;
-    gfxCriticalError() << "BlitImage(SurfaceTextureImage) not implemented.";
-    return false;
+
+    // I honestly have no idea why this logic is flipped, but changing the
+    // source origin would mean we'd have to flip it in the compositor
+    // which makes just as little sense as this.
+    const bool yFlip = (srcOrigin == destOrigin);
+
+    const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_RGBA});
+    MOZ_RELEASE_ASSERT(prog);
+
+    // There is no padding on these images, so we can use the GetTransformMatrix directly.
+    const DrawBlitProg::BaseArgs baseArgs = { transform3, yFlip, destSize, Nothing() };
+    prog->Draw(baseArgs, nullptr);
+
+    if (surfaceTexture->IsSingleBuffer()) {
+        surfaceTexture->ReleaseTexImage();
+    }
+
+    return true;
 }
 #endif
 

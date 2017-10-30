@@ -10,6 +10,8 @@
 
 BEGIN_WORKERS_NAMESPACE
 
+static_assert(nsIServiceWorkerInfo::STATE_PARSED == static_cast<uint16_t>(ServiceWorkerState::Parsed),
+              "ServiceWorkerState enumeration value should match state values from nsIServiceWorkerInfo.");
 static_assert(nsIServiceWorkerInfo::STATE_INSTALLING == static_cast<uint16_t>(ServiceWorkerState::Installing),
               "ServiceWorkerState enumeration value should match state values from nsIServiceWorkerInfo.");
 static_assert(nsIServiceWorkerInfo::STATE_INSTALLED == static_cast<uint16_t>(ServiceWorkerState::Installed),
@@ -46,7 +48,7 @@ ServiceWorkerInfo::GetState(uint16_t* aState)
 {
   MOZ_ASSERT(aState);
   AssertIsOnMainThread();
-  *aState = static_cast<uint16_t>(mState);
+  *aState = static_cast<uint16_t>(State());
   return NS_OK;
 }
 
@@ -182,25 +184,30 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   // Any state can directly transition to redundant, but everything else is
   // ordered.
   if (aState != ServiceWorkerState::Redundant) {
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::EndGuard_, aState == ServiceWorkerState::Installing);
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::Installing, aState == ServiceWorkerState::Installed);
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::Installed, aState == ServiceWorkerState::Activating);
-    MOZ_ASSERT_IF(mState == ServiceWorkerState::Activating, aState == ServiceWorkerState::Activated);
+    MOZ_ASSERT_IF(State() == ServiceWorkerState::EndGuard_,
+                  aState == ServiceWorkerState::Installing);
+    MOZ_ASSERT_IF(State() == ServiceWorkerState::Installing,
+                  aState == ServiceWorkerState::Installed);
+    MOZ_ASSERT_IF(State() == ServiceWorkerState::Installed,
+                  aState == ServiceWorkerState::Activating);
+    MOZ_ASSERT_IF(State() == ServiceWorkerState::Activating,
+                  aState == ServiceWorkerState::Activated);
   }
   // Activated can only go to redundant.
-  MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
+  MOZ_ASSERT_IF(State() == ServiceWorkerState::Activated,
+                aState == ServiceWorkerState::Redundant);
 #endif
   // Flush any pending functional events to the worker when it transitions to the
   // activated state.
   // TODO: Do we care that these events will race with the propagation of the
   //       state change?
-  if (aState == ServiceWorkerState::Activated && mState != aState) {
-    mServiceWorkerPrivate->Activated();
+  if (State() != aState) {
+    mServiceWorkerPrivate->UpdateState(aState);
   }
-  mState = aState;
-  nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, mState);
+  mDescriptor.SetState(aState);
+  nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, State());
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
-  if (mState == ServiceWorkerState::Redundant) {
+  if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
   }
 }
@@ -211,12 +218,9 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
-  , mScope(aScope)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
-  , mState(ServiceWorkerState::EndGuard_)
   , mImportsLoadFlags(aImportsLoadFlags)
-  , mServiceWorkerID(GetNextID())
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
   , mInstalledTime(0)
@@ -229,7 +233,6 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread
   mOriginAttributes = mPrincipal->OriginAttributesRef();
-  MOZ_ASSERT(!mScope.IsEmpty());
   MOZ_ASSERT(!mScriptSpec.IsEmpty());
   MOZ_ASSERT(!mCacheName.IsEmpty());
 
@@ -237,6 +240,12 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   // Otherwise, we might not be able to update a service worker correctly, if
   // there is a service worker generating the script.
   MOZ_DIAGNOSTIC_ASSERT(mImportsLoadFlags & nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
+
+  PrincipalInfo principalInfo;
+  MOZ_ALWAYS_SUCCEEDS(PrincipalToPrincipalInfo(aPrincipal, &principalInfo));
+
+  mDescriptor = ServiceWorkerDescriptor(GetNextID(), principalInfo, aScope,
+                                        ServiceWorkerState::Parsed);
 }
 
 ServiceWorkerInfo::~ServiceWorkerInfo()
@@ -279,7 +288,7 @@ ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
 void
 ServiceWorkerInfo::UpdateInstalledTime()
 {
-  MOZ_ASSERT(mState == ServiceWorkerState::Installed);
+  MOZ_ASSERT(State() == ServiceWorkerState::Installed);
   MOZ_ASSERT(mInstalledTime == 0);
 
   mInstalledTime =
@@ -290,7 +299,7 @@ ServiceWorkerInfo::UpdateInstalledTime()
 void
 ServiceWorkerInfo::UpdateActivatedTime()
 {
-  MOZ_ASSERT(mState == ServiceWorkerState::Activated);
+  MOZ_ASSERT(State() == ServiceWorkerState::Activated);
   MOZ_ASSERT(mActivatedTime == 0);
 
   mActivatedTime =
@@ -301,7 +310,7 @@ ServiceWorkerInfo::UpdateActivatedTime()
 void
 ServiceWorkerInfo::UpdateRedundantTime()
 {
-  MOZ_ASSERT(mState == ServiceWorkerState::Redundant);
+  MOZ_ASSERT(State() == ServiceWorkerState::Redundant);
   MOZ_ASSERT(mRedundantTime == 0);
 
   mRedundantTime =

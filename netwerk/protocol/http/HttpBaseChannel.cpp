@@ -3600,6 +3600,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     newTimedChannel->SetTimingEnabled(mTimingEnabled);
 
     if (redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+      newTimedChannel->SetRedirectCount(mRedirectCount);
       int8_t newCount = mInternalRedirectCount + 1;
       newTimedChannel->SetInternalRedirectCount(
         std::max(newCount, mInternalRedirectCount));
@@ -3607,6 +3608,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       int8_t newCount = mRedirectCount + 1;
       newTimedChannel->SetRedirectCount(
         std::max(newCount, mRedirectCount));
+      newTimedChannel->SetInternalRedirectCount(mInternalRedirectCount);
     }
 
     // If the RedirectStart is null, we will use the AsyncOpen value of the
@@ -4344,6 +4346,35 @@ NS_IMETHODIMP
 HttpBaseChannel::SetLastRedirectFlags(uint32_t aValue)
 {
   mLastRedirectFlags = aValue;
+  return NS_OK;
+}
+
+nsresult
+HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const
+{
+  if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+    // Some platform features, like Service Workers, depend on internal
+    // redirects.  We should allow some number of internal redirects above
+    // and beyond the normal redirect limit so these features continue
+    // to work.
+    static const int8_t kMinInternalRedirects = 5;
+
+    if (mInternalRedirectCount >= (mRedirectionLimit + kMinInternalRedirects)) {
+      LOG(("internal redirection limit reached!\n"));
+      return NS_ERROR_REDIRECT_LOOP;
+    }
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(aRedirectFlags & (nsIChannelEventSink::REDIRECT_TEMPORARY |
+                               nsIChannelEventSink::REDIRECT_PERMANENT |
+                               nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+
+  if (mRedirectCount >= mRedirectionLimit) {
+    LOG(("redirection limit reached!\n"));
+    return NS_ERROR_REDIRECT_LOOP;
+  }
+
   return NS_OK;
 }
 

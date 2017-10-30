@@ -61,7 +61,7 @@ public class MmaDelegate {
 
     private static final String TAG = "MmaDelegate";
 
-    private static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
+    public static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
     private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
 
     private static MmaInterface mmaHelper = MmaConstants.getMma();
@@ -72,7 +72,7 @@ public class MmaDelegate {
         // Since user attributes are gathered in Fennec, not in MMA implementation,
         // we gather the information here then pass to mmaHelper.init()
         // Note that generateUserAttribute always return a non null HashMap.
-        Map<String, Object> attributes = gatherUserAttributes(activity);
+        final Map<String, Object> attributes = gatherUserAttributes(activity);
         mmaHelper.setGcmSenderId(PushManager.getSenderIds());
         mmaHelper.setDeviceId(getDeviceId(activity));
         // above two config setup required to be invoked before mmaHelper.init.

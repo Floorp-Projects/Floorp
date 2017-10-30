@@ -6,12 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCompositorBridge;
+include LayersSurfaces;
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -67,6 +72,9 @@ parent:
    * See gfx/layers/ipc/PCompositorBridge.ipdl for more details.
    */
   async PCompositorBridge(CompositorBridgeOptions options);
+
+  async AddSharedSurface(ExternalImageId aId, SurfaceDescriptorShared aDesc);
+  async RemoveSharedSurface(ExternalImageId aId);
 };
 
 } // layers

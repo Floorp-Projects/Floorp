@@ -408,7 +408,6 @@ function SetupPrefTestEnvironment(which, additional_prefs) {
                 settings.use_hsts],
                ["security.mixed_content.send_hsts_priming",
                 settings.send_hsts_priming],
-               ["toolkit.telemetry.enabled", true],
   ];
 
   if (additional_prefs) {
