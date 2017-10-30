@@ -36,6 +36,7 @@ RELEASE_PROMOTION_CONFIG = {
             'release-bouncer-sub', 'beetmover', 'beetmover-checksums',
             'beetmover-l10n', 'beetmover-repackage',
             'beetmover-repackage-signing', "checksums-signing",
+            'release-notify-promote',
         ],
         'do_not_optimize': [],
     },
