@@ -454,6 +454,17 @@ StyleSheet::EnsureUniqueInner()
     // already unique
     return;
   }
+  // If this stylesheet is for XBL with Servo, don't bother cloning
+  // it, as it may break ServoStyleRuleMap. XBL stylesheets are not
+  // supposed to change anyway.
+  // The mDocument check is used as a fast reject path because no
+  // XBL stylesheets would have associated document, but in normal
+  // cases, content stylesheets should usually have one.
+  if (!mDocument && IsServo() &&
+      mStyleSets.Length() == 1 &&
+      mStyleSets[0]->AsServo()->IsForXBL()) {
+    return;
+  }
 
   StyleSheetInfo* clone = mInner->CloneFor(this);
   MOZ_ASSERT(clone);
