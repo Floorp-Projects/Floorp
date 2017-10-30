@@ -163,7 +163,7 @@ Signals that the output of this task contains signed artifacts.
 
 repackage_type
 ==============
-This is the type of repackage. Can be ``repackage`` or 
+This is the type of repackage. Can be ``repackage`` or
 ``repackage_signing``.
 
 toolchain-artifact
@@ -174,3 +174,15 @@ toolchain-alias
 ===============
 For toolchain jobs, this optionally gives an alias that can be used instead of the
 real toolchain job name in the toolchains list for build jobs.
+
+always_target
+=============
+
+Tasks with this attribute will be included in the ``target_task_graph`` regardless
+of any target task filtering that occurs. When a task is included in this manner
+(i.e it otherwise would have been filtered out), it will be considered for
+optimization even if the ``optimize_target_tasks`` parameter is False.
+
+This is meant to be used for tasks which a developer would almost always want to
+run. Typically these tasks will be short running and have a high risk of causing
+a backout. For example ``lint`` or ``python-unittest`` tasks.
