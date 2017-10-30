@@ -642,6 +642,8 @@ GetProgramPath(const string& exename)
 
 int main(int argc, char** argv)
 {
+  bool minidumpAllThreads = false;
+
   gArgc = argc;
   gArgv = argv;
 
@@ -653,7 +655,12 @@ int main(int argc, char** argv)
   if (!UIInit())
     return 0;
 
-  if (argc > 1) {
+  if (argc == 3) {
+    if (!strcmp(argv[1], "--full")) {
+      minidumpAllThreads = true;
+    }
+    gReporterDumpFile = argv[2];
+  } else if (argc == 2) {
     gReporterDumpFile = argv[1];
   }
 
@@ -664,6 +671,9 @@ int main(int argc, char** argv)
     // Start by running minidump analyzer to gather stack traces.
     string reporterDumpFile = gReporterDumpFile;
     vector<string> args = { reporterDumpFile };
+    if (minidumpAllThreads) {
+      args.insert(args.begin(), "--full");
+    }
     UIRunProgram(GetProgramPath(UI_MINIDUMP_ANALYZER_FILENAME),
                  args, /* wait */ true);
 
