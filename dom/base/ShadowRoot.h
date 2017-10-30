@@ -41,10 +41,18 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  ShadowRoot(Element* aElement,
+  ShadowRoot(Element* aElement, bool aClosed,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
              nsXBLPrototypeBinding* aProtoBinding);
 
+  // Shadow DOM v1
+  Element* Host();
+  ShadowRootMode Mode()
+  {
+    return mMode;
+  }
+
+  // [deprecated] Shadow DOM v0
   void AddToIdTable(Element* aElement, nsAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);
   void InsertSheet(StyleSheet* aSheet, nsIContent* aLinkingContent);
@@ -121,7 +129,6 @@ public:
     GetElementsByClassName(const nsAString& aClasses);
   void GetInnerHTML(nsAString& aInnerHTML);
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
-  Element* Host();
   void StyleSheetChanged();
 
   bool IsComposedDocParticipant() { return mIsComposedDocParticipant; }
@@ -132,6 +139,8 @@ public:
 
 protected:
   virtual ~ShadowRoot();
+
+  ShadowRootMode mMode;
 
   // An array of content insertion points that are a descendant of the ShadowRoot
   // sorted in tree order. Insertion points are responsible for notifying

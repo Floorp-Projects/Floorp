@@ -38,6 +38,7 @@ DIRS += [
     'lz4',
     'mediasniffer',
     'microformats',
+    'mozintl',
     'mozprotocol',
     'osfile',
     'parentalcontrols',
@@ -53,6 +54,7 @@ DIRS += [
     'reader',
     'remotebrowserutils',
     'reflect',
+    'reputationservice',
     'resistfingerprinting',
     'securityreporter',
     'startup',
@@ -71,9 +73,6 @@ DIRS += [
     'workerloader',
     'xulstore'
 ]
-
-if CONFIG['ENABLE_INTL_API']:
-    DIRS += ['mozintl']
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
     DIRS += ['narrate', 'viewsource'];

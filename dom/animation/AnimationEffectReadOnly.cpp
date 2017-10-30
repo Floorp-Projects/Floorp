@@ -95,7 +95,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
     const TimingParams& aTiming,
     double aPlaybackRate)
 {
-  const StickyTimeDuration zeroDuration;
+  static const StickyTimeDuration zeroDuration;
 
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
@@ -161,7 +161,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
       = std::max(StickyTimeDuration(localTime - aTiming.Delay()),
                  zeroDuration);
   } else {
-    MOZ_ASSERT(result.mActiveDuration != zeroDuration,
+    MOZ_ASSERT(result.mActiveDuration,
                "How can we be in the middle of a zero-duration interval?");
     result.mPhase = ComputedTiming::AnimationPhase::Active;
     result.mActiveTime = localTime - aTiming.Delay();
@@ -170,7 +170,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   // Convert active time to a multiple of iterations.
   // https://w3c.github.io/web-animations/#overall-progress
   double overallProgress;
-  if (result.mDuration == zeroDuration) {
+  if (!result.mDuration) {
     overallProgress = result.mPhase == ComputedTiming::AnimationPhase::Before
                       ? 0.0
                       : result.mIterations;
