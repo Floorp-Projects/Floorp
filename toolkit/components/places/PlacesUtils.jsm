@@ -2024,9 +2024,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {
   const PLACES_STRING_BUNDLE_URI = "chrome://places/locale/places.properties";
-  return Cc["@mozilla.org/intl/stringbundle;1"].
-         getService(Ci.nsIStringBundleService).
-         createBundle(PLACES_STRING_BUNDLE_URI);
+  return Services.strings.createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
 // This is just used as a reasonably-random value for copy & paste / drag operations.

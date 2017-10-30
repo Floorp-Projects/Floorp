@@ -420,9 +420,7 @@ function nsPlacesExpiration() {
                                      "@mozilla.org/widget/idleservice;1",
                                      "nsIIdleService");
 
-  this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefService).
-                     getBranch(PREF_BRANCH);
+  this._prefBranch = Services.prefs.getBranch(PREF_BRANCH);
 
   this._loadPrefsPromise = this._loadPrefs().then(() => {
     // Observe our preferences branch for changes.

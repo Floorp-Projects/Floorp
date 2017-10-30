@@ -10,16 +10,13 @@
  * Ensure that History (through category cache) notifies us just once.
  */
 
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-
 var gObserver = {
   notifications: 0,
   observe(aSubject, aTopic, aData) {
     this.notifications++;
   }
 };
-os.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+Services.obs.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
 function run_test() {
   // Set interval to a large value so we don't expire on it.
@@ -32,7 +29,7 @@ function run_test() {
 }
 
 function check_result() {
-  os.removeObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  Services.obs.removeObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   do_check_eq(gObserver.notifications, 1);
   do_test_finished();
 }
