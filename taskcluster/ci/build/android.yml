@@ -48,7 +48,7 @@ android-x86/opt:
             # long time to compile for x86 when using the current NDKs.  This
             # will eventually get fixed, but for now we have to live with this.
             # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: 1500
+            SCCACHE_IDLE_TIMEOUT: "1500"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -88,7 +88,7 @@ android-x86-nightly/opt:
             # long time to compile for x86 when using the current NDKs.  This
             # will eventually get fixed, but for now we have to live with this.
             # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: 1500
+            SCCACHE_IDLE_TIMEOUT: "1500"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -194,7 +194,7 @@ android-x86-old-id/opt:
             # long time to compile for x86 when using the current NDKs.  This
             # will eventually get fixed, but for now we have to live with this.
             # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: 1500
+            SCCACHE_IDLE_TIMEOUT: "1500"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -235,7 +235,7 @@ android-x86-old-id-nightly/opt:
             # long time to compile for x86 when using the current NDKs.  This
             # will eventually get fixed, but for now we have to live with this.
             # See https://github.com/android-ndk/ndk/issues/522 for more context.
-            SCCACHE_IDLE_TIMEOUT: 1500
+            SCCACHE_IDLE_TIMEOUT: "1500"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
