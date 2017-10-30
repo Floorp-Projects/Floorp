@@ -86,9 +86,13 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
 
 Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_number`
 """
-BEETMOVER_RELEASE_TARGET_TASKS = set([
+BEETMOVER_CANDIDATES_TARGET_TASKS = set([
     'candidates_fennec',
 ])
+BEETMOVER_PUBLISH_TARGET_TASKS = set([
+    'publish_fennec',
+])
+BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUBLISH_TARGET_TASKS
 
 """Map beetmover tasks aliases to sets of target task methods.
 
@@ -106,13 +110,18 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
         'mozilla_release_tasks',
     ])
 ], [
-    'all-release-tasks', BEETMOVER_RELEASE_TARGET_TASKS
+    'all-candidates-tasks', BEETMOVER_CANDIDATES_TARGET_TASKS
+], [
+    'all-publish-tasks', BEETMOVER_PUBLISH_TARGET_TASKS
 ]]
 
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-release-tasks': {
+    'all-candidates-tasks': {
+        'all-release-branches': 'project:releng:beetmover:bucket:release',
+    },
+    'all-publish-tasks': {
         'all-release-branches': 'project:releng:beetmover:bucket:release',
     },
     'all-nightly-tasks': {
@@ -124,7 +133,8 @@ BEETMOVER_BUCKET_SCOPES = {
 """Map the beetmover tasks aliases to the actual action scopes.
 """
 BEETMOVER_ACTION_SCOPES = {
-    'all-release-tasks': 'project:releng:beetmover:action:push-to-candidates',
+    'all-candidates-tasks': 'project:releng:beetmover:action:push-to-candidates',
+    'all-publish-tasks': 'project:releng:beetmover:action:push-to-releases',
     'all-nightly-tasks': 'project:releng:beetmover:action:push-to-nightly',
     'default': 'project:releng:beetmover:action:push-to-staging',
 }
