@@ -723,7 +723,7 @@ void ChannelMediaResource::Resume()
       if (totalLength < 0 || GetOffset() < totalLength) {
         // There is (or may be) data to read at mOffset, so start reading it.
         // Need to recreate the channel.
-        CacheClientSeek(GetOffset(), false);
+        Seek(GetOffset(), false);
         element->DownloadResumed();
       } else {
         // The channel remains dead. Do not notify DownloadResumed() which

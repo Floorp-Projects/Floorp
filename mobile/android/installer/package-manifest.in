@@ -172,9 +172,7 @@
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozfind.xpt
-#ifdef ENABLE_INTL_API
 @BINPATH@/components/mozintl.xpt
-#endif
 @BINPATH@/components/necko_about.xpt
 @BINPATH@/components/necko_cache.xpt
 @BINPATH@/components/necko_cache2.xpt
@@ -206,6 +204,7 @@
 @BINPATH@/components/profiler.xpt
 #endif
 @BINPATH@/components/rdf.xpt
+@BINPATH@/components/reputationservice.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/services-crypto-component.xpt
@@ -404,10 +403,8 @@
 @BINPATH@/components/TVSimulatorService.manifest
 #endif
 
-#ifdef ENABLE_INTL_API
 @BINPATH@/components/mozIntl.manifest
 @BINPATH@/components/mozIntl.js
-#endif
 
 ; Modules
 @BINPATH@/modules/*

@@ -268,15 +268,6 @@ public:
     uint32_t mNext;
   };
 
-  // Called during shutdown to clear sThread.
-  void operator=(std::nullptr_t)
-  {
-    nsCOMPtr<nsIThread> thread = sThread.forget();
-    if (thread) {
-      thread->Shutdown();
-    }
-  }
-
 protected:
   explicit MediaCache(MediaBlockCacheBase* aCache)
     : mNextResourceID(1)
@@ -726,10 +717,18 @@ MediaCache::GetMediaCache(int64_t aContentLength)
       return nullptr;
     }
     sThread = thread.forget();
-    // Note it is safe to pass an invalid pointer for operator=(std::nullptr_t)
-    // is non-virtual and it will not access |this|.
-    ClearOnShutdown(reinterpret_cast<MediaCache*>(0x1),
-                    ShutdownPhase::ShutdownThreads);
+
+    static struct ClearThread
+    {
+      // Called during shutdown to clear sThread.
+      void operator=(std::nullptr_t)
+      {
+        nsCOMPtr<nsIThread> thread = sThread.forget();
+        MOZ_ASSERT(thread);
+        thread->Shutdown();
+      }
+    } sClearThread;
+    ClearOnShutdown(&sClearThread, ShutdownPhase::ShutdownThreads);
   }
 
   if (!sThread) {
