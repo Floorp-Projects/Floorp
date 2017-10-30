@@ -327,7 +327,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "07009f0e67b8"
+        "revision": "f329ad8ddd70"
     }, 
     "fr": {
         "platforms": [
@@ -682,7 +682,7 @@
             "win32", 
             "win64"
         ], 
-        "revision": "438471cd7acd"
+        "revision": "d5c0e1e0d51e"
     }, 
     "or": {
         "platforms": [
