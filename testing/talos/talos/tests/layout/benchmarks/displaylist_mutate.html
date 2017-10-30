@@ -1,0 +1,68 @@
+<html>
+<head>
+<style>
+  div {
+    width:10px;
+    height:10px;
+    background-color:green;
+    display: inline-block;
+  }
+</style>
+</head>
+<body id="body">
+</body>
+<script>
+
+var start = null;
+var divCount = 10000;
+var maxIterations = 600;
+
+for (var i = 0; i < divCount; i++) {
+  var div = document.createElement("div");
+  div.id = i;
+  document.getElementById("body").appendChild(div);
+}
+
+var iteration = 0;
+function runFrame() {
+  if (document.getElementById(iteration).style.backgroundColor == "red") {
+    document.getElementById(iteration).style.backgroundColor = "green";
+  } else {
+    document.getElementById(iteration).style.backgroundColor = "red";
+  }
+  iteration++;
+  iteration = iteration % divCount;
+  if (--maxIterations == 0) {
+    var end = performance.now();
+    if (window.tpRecordTime) {
+      window.tpRecordTime(end - start, start);
+    }
+    if (parent.reportResults) {
+      parent.reportResults(end - start, start);
+    }
+    return;
+  }
+
+  window.requestAnimationFrame(runFrame);
+}
+
+addEventListener("load", function() {
+  try {
+    // Outside of talos, this throws a security exception which no-op this file.
+    // (It's not required nor allowed for addons since Firefox 17)
+    // It's used inside talos from non-privileged pages (like during tscroll),
+    // and it works because talos disables all/most security measures.
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  } catch (e) {}
+
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
+
+  TalosContentProfiler.resume("displaylist_mutate.html loaded", true).then(() => {
+    start = performance.now();
+    window.requestAnimationFrame(runFrame);
+  });
+});
+
+</script>
+</html>
