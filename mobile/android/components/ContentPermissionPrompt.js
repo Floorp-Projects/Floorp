@@ -157,6 +157,10 @@ ContentPermissionPrompt.prototype = {
       options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
     }
 
+    options.defaultCallback = () => {
+      callback(/* allow */ false);
+    };
+
     DoorHanger.show(request.window || request.element.ownerGlobal,
                     message, entityName + request.principal.URI.host,
                     buttons, options, entityName.toUpperCase());

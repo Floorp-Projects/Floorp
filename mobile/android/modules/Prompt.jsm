@@ -286,7 +286,13 @@ var DoorHanger = {
       buttons: aButtons,
       options: aOptions || {},
       category: aCategory,
+      defaultCallback: (aOptions && aOptions.defaultCallback) ? -1 : undefined,
     }).then(response => {
+      if (response.callback === -1) {
+        // Default case.
+        aOptions.defaultCallback(response.checked, response.inputs);
+        return;
+      }
       // Pass the value of the optional checkbox to the callback
       callbacks[response.callback](response.checked, response.inputs);
     });
