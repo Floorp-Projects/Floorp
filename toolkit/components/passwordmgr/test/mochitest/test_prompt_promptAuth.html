@@ -45,27 +45,26 @@ let prompterParent = runInParent(() => {
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
 
-  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   let channels = {};
-  channels.channel1 = ioService.newChannel2("http://example.com",
-                                            null,
-                                            null,
-                                            null, // aLoadingNode
-                                            Services.
-                                            scriptSecurityManager.getSystemPrincipal(),
-                                            null, // aTriggeringPrincipal
-                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                            Ci.nsIContentPolicy.TYPE_OTHER);
+  channels.channel1 = Services.io.newChannel2("http://example.com",
+                                              null,
+                                              null,
+                                              null, // aLoadingNode
+                                              Services.
+                                              scriptSecurityManager.getSystemPrincipal(),
+                                              null, // aTriggeringPrincipal
+                                              Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                              Ci.nsIContentPolicy.TYPE_OTHER);
 
-  channels.channel2 = ioService.newChannel2("http://example2.com",
-                                            null,
-                                            null,
-                                            null, // aLoadingNode
-                                            Services.
-                                            scriptSecurityManager.getSystemPrincipal(),
-                                            null, // aTriggeringPrincipal
-                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                            Ci.nsIContentPolicy.TYPE_OTHER);
+  channels.channel2 = Services.io.newChannel2("http://example2.com",
+                                              null,
+                                              null,
+                                              null, // aLoadingNode
+                                              Services.
+                                              scriptSecurityManager.getSystemPrincipal(),
+                                              null, // aTriggeringPrincipal
+                                              Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                              Ci.nsIContentPolicy.TYPE_OTHER);
 
   addMessageListener("proxyPrompter", function onMessage(msg) {
     let args = [...msg.args];
@@ -80,11 +79,6 @@ let prompterParent = runInParent(() => {
       args: msg.args,
     };
   });
-
-  Cu.import("resource://gre/modules/Services.jsm");
-
-  let pwmgr = Cc["@mozilla.org/login-manager;1"].
-              getService(Ci.nsILoginManager);
 
   let login1, login2A, login2B, login2C, login2D, login2E;
   login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -113,12 +107,12 @@ let prompterParent = runInParent(() => {
   login2E.init("http://example2.com", null, "http://example2.com",
                "100%beef", "user3pass", "", "");
 
-  pwmgr.addLogin(login1);
-  pwmgr.addLogin(login2A);
-  pwmgr.addLogin(login2B);
-  pwmgr.addLogin(login2C);
-  pwmgr.addLogin(login2D);
-  pwmgr.addLogin(login2E);
+  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login2A);
+  Services.logins.addLogin(login2B);
+  Services.logins.addLogin(login2C);
+  Services.logins.addLogin(login2D);
+  Services.logins.addLogin(login2E);
 });
 
 let prompter2 = new PrompterProxy(prompterParent);
