@@ -1787,7 +1787,6 @@ END_WORKERS_NAMESPACE
 WorkerLoadInfo::WorkerLoadInfo()
   : mLoadFlags(nsIRequest::LOAD_NORMAL)
   , mWindowID(UINT64_MAX)
-  , mServiceWorkerID(0)
   , mReferrerPolicy(net::RP_Unset)
   , mFromWindow(false)
   , mEvalAllowed(false)
@@ -1844,9 +1843,9 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mDomain = aOther.mDomain;
   mOrigin = aOther.mOrigin;
   mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
+  mServiceWorkerDescriptor = aOther.mServiceWorkerDescriptor;
   mLoadFlags = aOther.mLoadFlags;
   mWindowID = aOther.mWindowID;
-  mServiceWorkerID = aOther.mServiceWorkerID;
   mReferrerPolicy = aOther.mReferrerPolicy;
   mFromWindow = aOther.mFromWindow;
   mEvalAllowed = aOther.mEvalAllowed;
@@ -2827,7 +2826,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
   mParent(aParent), mScriptURL(aScriptURL),
-  mWorkerName(aWorkerName), mServiceWorkerScope(aServiceWorkerScope),
+  mWorkerName(aWorkerName),
   mLoadingWorkerScript(false), mBusyCount(0), mParentWindowPausedDepth(0),
   mParentStatus(Pending), mParentFrozen(false),
   mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),

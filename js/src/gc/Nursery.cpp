@@ -657,7 +657,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
             for (auto& entry : tenureCounts.entries) {
                 if (entry.count >= 3000) {
                     ObjectGroup* group = entry.group;
-                    if (group->canPreTenure()) {
+                    if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
                         AutoCompartment ac(cx, group);
                         group->setShouldPreTenure(cx);
                         pretenureCount++;

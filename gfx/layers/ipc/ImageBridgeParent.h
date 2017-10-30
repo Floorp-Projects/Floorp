@@ -115,7 +115,7 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  static RefPtr<ImageBridgeParent> GetInstance(ProcessId aId);
+  static already_AddRefed<ImageBridgeParent> GetInstance(ProcessId aId);
 
   static bool NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo>& aNotifications);
 
@@ -141,7 +141,8 @@ private:
   /**
    * Map of all living ImageBridgeParent instances
    */
-  static std::map<base::ProcessId, ImageBridgeParent*> sImageBridges;
+  typedef std::map<base::ProcessId, ImageBridgeParent*> ImageBridgeMap;
+  static ImageBridgeMap sImageBridges;
 
   RefPtr<CompositorThreadHolderDebug> mCompositorThreadHolder;
 };

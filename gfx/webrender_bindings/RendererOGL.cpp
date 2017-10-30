@@ -23,37 +23,8 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uin
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
-
-  if (texture->AsBufferTextureHost()) {
-    RenderBufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
-    MOZ_ASSERT(bufferTexture);
-
-    if (bufferTexture->Lock()) {
-      RenderBufferTextureHost::RenderBufferData data =
-          bufferTexture->GetBufferDataForRender(aChannelIndex);
-
-      return RawDataToWrExternalImage(data.mData, data.mBufferSize);
-    } else {
-      return RawDataToWrExternalImage(nullptr, 0);
-    }
-  } else {
-    // texture handle case
-    RenderTextureHostOGL* textureOGL = texture->AsTextureHostOGL();
-    MOZ_ASSERT(textureOGL);
-
-    textureOGL->SetGLContext(renderer->mGL);
-    gfx::IntSize size = textureOGL->GetSize(aChannelIndex);
-    if (textureOGL->Lock()) {
-      return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(aChannelIndex),
-                                            0, 0,
-                                            size.width, size.height);
-    } else {
-      // Just use 0 for the gl handle if the lock() was failed.
-      return NativeTextureToWrExternalImage(0,
-                                            0, 0,
-                                            size.width, size.height);
-    }
-  }
+  MOZ_ASSERT(texture);
+  return texture->Lock(aChannelIndex, renderer->mGL);
 }
 
 void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)

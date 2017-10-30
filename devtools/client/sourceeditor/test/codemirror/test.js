@@ -2218,6 +2218,21 @@ testCM("getTokenTypeAt", function(cm) {
   eq(cm.getTokenTypeAt(Pos(0, 6)), "string");
 }, {value: "1 + 'foo'", mode: "javascript"});
 
+testCM("addOverlay", function(cm) {
+  cm.addOverlay({
+    token: function(stream) {
+      var base = stream.baseToken()
+      if (!/comment/.test(base.type) && stream.match(/\d+/)) return "x"
+      stream.next()
+    }
+  })
+  var x = byClassName(cm.getWrapperElement(), "cm-x")
+  is(x.length, 1)
+  is(x[0].textContent, "233")
+  cm.replaceRange("", Pos(0, 4), Pos(0, 6))
+  is(byClassName(cm.getWrapperElement(), "cm-x").length, 2)
+}, {value: "foo /* 100 */\nbar + 233;\nbaz", mode: "javascript"})
+
 testCM("resizeLineWidget", function(cm) {
   addDoc(cm, 200, 3);
   var widget = document.createElement("pre");
@@ -2506,6 +2521,14 @@ testCM("delete_wrapped", function(cm) {
   cm.deleteH(-1, "char");
   eq(cm.getLine(0), "1245");
 }, {value: "12345", lineWrapping: true})
+
+testCM("issue_4878", function(cm) {
+  if (phantom) return
+  cm.setCursor(Pos(1, 12, "after"));
+  cm.moveH(-1, "char");
+  eqCursorPos(cm.getCursor(), Pos(0, 113, "before"));
+}, {value: "  في تطبيق السمات مرة واحدة https://github.com/codemirror/CodeMirror/issues/4878#issuecomment-330550964على سبيل المثال <code>\"foo bar\"</code>\n" +
+"  سيتم تعيين", direction: "rtl", lineWrapping: true});
 
 CodeMirror.defineMode("lookahead_mode", function() {
   // Colors text as atom if the line two lines down has an x in it

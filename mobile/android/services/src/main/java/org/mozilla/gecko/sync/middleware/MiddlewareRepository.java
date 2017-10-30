@@ -9,7 +9,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDe
 
 public abstract class MiddlewareRepository extends Repository {
 
-  public abstract class SessionCreationDelegate implements
+  public static abstract class SessionCreationDelegate implements
       RepositorySessionCreationDelegate {
 
     // We call through to our inner repository, so we don't need our own

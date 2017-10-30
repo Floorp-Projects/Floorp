@@ -31,12 +31,13 @@ interface nsIWorkerDebugger;
 interface nsIServiceWorkerInfo : nsISupports
 {
   // State values below should match the ServiceWorkerState enumeration.
-  const unsigned short STATE_INSTALLING = 0;
-  const unsigned short STATE_INSTALLED = 1;
-  const unsigned short STATE_ACTIVATING = 2;
-  const unsigned short STATE_ACTIVATED = 3;
-  const unsigned short STATE_REDUNDANT = 4;
-  const unsigned short STATE_UNKNOWN = 5;
+  const unsigned short STATE_PARSED = 0;
+  const unsigned short STATE_INSTALLING = 1;
+  const unsigned short STATE_INSTALLED = 2;
+  const unsigned short STATE_ACTIVATING = 3;
+  const unsigned short STATE_ACTIVATED = 4;
+  const unsigned short STATE_REDUNDANT = 5;
+  const unsigned short STATE_UNKNOWN = 6;
 
   readonly attribute DOMString scriptSpec;
   readonly attribute DOMString cacheName;

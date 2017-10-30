@@ -18,13 +18,8 @@ public:
   RenderBufferTextureHost(uint8_t* aBuffer,
                           const layers::BufferDescriptor& aDescriptor);
 
-  virtual bool Lock() override;
-  virtual void Unlock() override;
-
-  virtual RenderBufferTextureHost* AsBufferTextureHost() override
-  {
-    return this;
-  }
+  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
+  void Unlock() override;
 
   class RenderBufferData
   {

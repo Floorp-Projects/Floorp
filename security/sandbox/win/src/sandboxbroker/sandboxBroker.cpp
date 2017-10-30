@@ -32,11 +32,12 @@
 // This list of DLLs have been found to cause instability in sandboxed child
 // processes and so they will be unloaded if they attempt to load.
 const std::vector<std::wstring> kDllsToUnload = {
+  // Symantec Corporation (bug 1400637)
+  L"ffm64.dll",
+  L"ffm.dll",
+
   // HitmanPro - SurfRight now part of Sophos (bug 1400637)
   L"hmpalert.dll",
-
-  // K7 Computing (bug 1400637)
-  L"k7pswsen.dll",
 
   // Avast Antivirus (bug 1400637)
   L"snxhk64.dll",
@@ -240,6 +241,12 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                          "AddDllToUnload should never fail, what happened?");
     }
   }
+
+  // Add K7 Computing DLL to be blocked even if not loaded in the parent, as we
+  // are still getting crash reports for it.
+  result = mPolicy->AddDllToUnload(L"k7pswsen.dll");
+  MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                     "AddDllToUnload should never fail, what happened?");
 
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo = {0};

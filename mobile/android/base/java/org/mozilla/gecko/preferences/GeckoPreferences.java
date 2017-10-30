@@ -1184,7 +1184,7 @@ public class GeckoPreferences
         return layout;
     }
 
-    private class PasswordTextWatcher implements TextWatcher {
+    private static final class PasswordTextWatcher implements TextWatcher {
         EditText input1;
         EditText input2;
         AlertDialog dialog;
@@ -1212,7 +1212,7 @@ public class GeckoPreferences
         public void onTextChanged(CharSequence s, int start, int before, int count) { }
     }
 
-    private class EmptyTextWatcher implements TextWatcher {
+    private static final class EmptyTextWatcher implements TextWatcher {
         EditText input;
         AlertDialog dialog;
 

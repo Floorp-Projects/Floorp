@@ -393,6 +393,14 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         nsDisplayItem* old = nullptr;
         while ((old = aOldList->RemoveBottom()) && !IsSameItem(newItem, old)) {
           if (!IsAnyAncestorModified(old->FrameForInvalidation())) {
+            // Recurse into the child list (without a matching new list) to
+            // ensure that we find and remove any invalidated items.
+            if (old->GetChildren()) {
+              nsDisplayList empty(&mBuilder);
+              MergeDisplayLists(&empty, old->GetChildren(),
+                                old->GetChildren());
+              old->UpdateBounds(&mBuilder);
+            }
             ReuseItem(old);
           } else {
             oldListLookup.Remove({ old->Frame(), old->GetPerFrameKey() });

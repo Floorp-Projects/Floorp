@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceRDF",
                                    "@mozilla.org/uriloader/handler-service-rdf;1",
                                    "nsIHandlerService");
 
-HandlerServiceTestUtils.Assert = Assert;
-
 do_get_profile();
 
 let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");

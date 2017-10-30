@@ -82,7 +82,6 @@ add_task(async function initializeState() {
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("experiments.enabled");
-    Services.prefs.clearUserPref("toolkit.telemetry.enabled");
     if (gHttpServer) {
       gHttpServer.stop(() => {});
       if (gSavedManifestURI !== undefined) {
@@ -266,7 +265,7 @@ add_task(async function testActivateExperiment() {
   // We need to remove the cache file to help ensure consistent state.
   await OS.File.remove(gExperiments._cacheFilePath);
 
-  Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+  Services.telemetry.canRecordExtended = true;
   Services.prefs.setBoolPref("experiments.enabled", true);
 
   info("Initializing experiments service.");
@@ -608,8 +607,6 @@ add_task(async function testCleanup() {
     await OS.File.remove(gExperiments._cacheFilePath);
     await gExperiments.uninit();
     await gExperiments.init();
-
-    Services.prefs.clearUserPref("toolkit.telemetry.enabled");
   }
 
   // Check post-conditions.
