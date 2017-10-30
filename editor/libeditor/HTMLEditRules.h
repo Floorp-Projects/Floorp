@@ -378,6 +378,11 @@ protected:
   nsresult BustUpInlinesAtBRs(
              nsIContent& aNode,
              nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+  /**
+   * GetHiestInlineParent() returns the highest inline node parent between
+   * aNode and the editing host.  Even if the editing host is an inline
+   * element, this method never returns the editing host as the result.
+   */
   nsIContent* GetHighestInlineParent(nsINode& aNode);
   void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);

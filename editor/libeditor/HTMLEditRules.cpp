@@ -6361,12 +6361,37 @@ HTMLEditRules::GetHighestInlineParent(nsINode& aNode)
   if (!aNode.IsContent() || IsBlockNode(aNode)) {
     return nullptr;
   }
-  OwningNonNull<nsIContent> node = *aNode.AsContent();
 
-  while (node->GetParent() && IsInlineNode(*node->GetParent())) {
-    node = *node->GetParent();
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return nullptr;
   }
-  return node;
+
+  Element* host = mHTMLEditor->GetActiveEditingHost();
+  if (NS_WARN_IF(!host)) {
+    return nullptr;
+  }
+
+  // If aNode is the editing host itself, there is no modifiable inline parent.
+  if (&aNode == host) {
+    return nullptr;
+  }
+
+  // If aNode is outside of the <body> element, we don't support to edit
+  // such elements for now.
+  // XXX This should be MOZ_ASSERT after fixing bug 1413131 for avoiding
+  //     calling this expensive method.
+  if (NS_WARN_IF(!EditorUtils::IsDescendantOf(&aNode, host))) {
+    return nullptr;
+  }
+
+  // Looks for the highest inline parent in the editing host.
+  nsIContent* content = aNode.AsContent();
+  for (nsIContent* parent = content->GetParent();
+       parent && parent != host && IsInlineNode(*parent);
+       parent = parent->GetParent()) {
+    content = parent;
+  }
+  return content;
 }
 
 /**
