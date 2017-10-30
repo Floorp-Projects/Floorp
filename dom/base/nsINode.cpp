@@ -2936,7 +2936,9 @@ nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
       if (!aList) {
         return nullptr;
       }
-      return const_cast<Element*>(Servo_SelectorList_QueryFirst(this, aList));
+      const bool useInvalidation = false;
+      return const_cast<Element*>(
+          Servo_SelectorList_QueryFirst(this, aList, useInvalidation));
     },
     [&](nsCSSSelectorList* aList) -> Element* {
       if (!aList) {
@@ -2963,7 +2965,9 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
       if (!aList) {
         return;
       }
-      Servo_SelectorList_QueryAll(this, aList, contentList.get());
+      const bool useInvalidation = false;
+      Servo_SelectorList_QueryAll(
+        this, aList, contentList.get(), useInvalidation);
     },
     [&](nsCSSSelectorList* aList) {
       if (!aList) {
