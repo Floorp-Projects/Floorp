@@ -507,7 +507,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "39aacd6332d0"
+        "revision": "d5c0e1e0d51e"
     }, 
     "or": {
         "platforms": [
