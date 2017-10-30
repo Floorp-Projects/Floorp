@@ -425,9 +425,11 @@ class Nursery
     void setCurrentChunk(unsigned chunkno);
     void setStartPosition();
 
-    void updateNumChunks(unsigned newCount);
-    void updateNumChunksLocked(unsigned newCount,
-                               AutoLockGCBgAlloc& lock);
+    /*
+     * Ensure that the first chunk has been allocated. Callers will probably
+     * want to call setCurrentChunk(0) next.
+     */
+    MOZ_MUST_USE bool allocateFirstChunk(AutoLockGCBgAlloc& lock);
 
     MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 
@@ -479,9 +481,14 @@ class Nursery
 
     /* Change the allocable space provided by the nursery. */
     void maybeResizeNursery(JS::gcreason::Reason reason);
-    void growAllocableSpace();
-    void shrinkAllocableSpace(unsigned removeNumChunks);
+    bool growAllocableSpace();
+    bool growAllocableSpace(unsigned newSize);
+    void shrinkAllocableSpace(unsigned newCount);
     void minimizeAllocableSpace();
+
+    // Free the chunks starting at firstFreeChunk until the end of the chunks
+    // vector. Shrinks the vector but does not update maxChunksAlloc().
+    void freeChunksFrom(unsigned firstFreeChunk);
 
     /* Profile recording and printing. */
     void maybeClearProfileDurations();
