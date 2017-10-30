@@ -39,36 +39,11 @@ if [ "$QEMU" != "" ]; then
   rm -f $tmpdir/libc-test.img
   mkdir $tmpdir/mount
 
-  # If we have a cross compiler, then we just do the standard rigamarole of
-  # cross-compiling an executable and then the script to run just executes the
-  # binary.
-  #
-  # If we don't have a cross-compiler, however, then we need to do some crazy
-  # acrobatics to get this to work.  Generate all.{c,rs} on the host which will
-  # be compiled inside QEMU. Do this here because compiling syntex_syntax in
-  # QEMU would time out basically everywhere.
-  if [ "$CAN_CROSS" = "1" ]; then
-    cargo build --manifest-path libc-test/Cargo.toml --target $TARGET
-    cp $CARGO_TARGET_DIR/$TARGET/debug/libc-test $tmpdir/mount/
-    echo 'exec $1/libc-test' > $tmpdir/mount/run.sh
-  else
-    rm -rf $tmpdir/generated
-    mkdir -p $tmpdir/generated
-    cargo build --manifest-path libc-test/generate-files/Cargo.toml
-    (cd libc-test && TARGET=$TARGET OUT_DIR=$tmpdir/generated SKIP_COMPILE=1 \
-      $CARGO_TARGET_DIR/debug/generate-files)
-
-    # Copy this folder into the mounted image, the `run.sh` entry point, and
-    # overwrite the standard libc-test Cargo.toml with the overlay one which will
-    # assume the all.{c,rs} test files have already been generated
-    mkdir $tmpdir/mount/libc
-    cp -r Cargo.* libc-test src ci $tmpdir/mount/libc/
-    ln -s libc-test/target $tmpdir/mount/libc/target
-    cp ci/run-qemu.sh $tmpdir/mount/run.sh
-    echo $TARGET | tee -a $tmpdir/mount/TARGET
-    cp $tmpdir/generated/* $tmpdir/mount/libc/libc-test
-    cp libc-test/run-generated-Cargo.toml $tmpdir/mount/libc/libc-test/Cargo.toml
-  fi
+  # Do the standard rigamarole of cross-compiling an executable and then the
+  # script to run just executes the binary.
+  cargo build --manifest-path libc-test/Cargo.toml --target $TARGET
+  cp $CARGO_TARGET_DIR/$TARGET/debug/libc-test $tmpdir/mount/
+  echo 'exec $1/libc-test' > $tmpdir/mount/run.sh
 
   du -sh $tmpdir/mount
   genext2fs \
@@ -93,90 +68,4 @@ if [ "$QEMU" != "" ]; then
   exec grep "^PASSED .* tests" $CARGO_TARGET_DIR/out.log
 fi
 
-case "$TARGET" in
-  *-apple-ios)
-    cargo rustc --manifest-path libc-test/Cargo.toml --target $TARGET -- \
-        -C link-args=-mios-simulator-version-min=7.0
-    ;;
-
-  *)
-    cargo build --manifest-path libc-test/Cargo.toml --target $TARGET
-    ;;
-esac
-
-case "$TARGET" in
-  # Android emulator for x86_64 does not work on travis (missing hardware
-  # acceleration). Tests are run on case *). See ci/android-sysimage.sh for
-  # informations about how tests are run.
-  arm-linux-androideabi | aarch64-linux-android | i686-linux-android)
-    # set SHELL so android can detect a 64bits system, see
-    # http://stackoverflow.com/a/41789144
-    # https://issues.jenkins-ci.org/browse/JENKINS-26930?focusedCommentId=230791&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-230791
-    export SHELL=/bin/dash
-    arch=$(echo $TARGET | cut -d- -f1)
-    accel="-no-accel"
-    if emulator -accel-check; then
-      accel=""
-    fi
-    emulator @$arch -no-window $accel &
-    adb wait-for-device
-    adb push $CARGO_TARGET_DIR/$TARGET/debug/libc-test /data/local/tmp/libc-test
-    adb shell /data/local/tmp/libc-test 2>&1 | tee /tmp/out
-    grep "^PASSED .* tests" /tmp/out
-    ;;
-
-  i386-apple-ios)
-    rustc -O ./ci/ios/deploy_and_run_on_ios_simulator.rs
-    ./deploy_and_run_on_ios_simulator $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  x86_64-apple-ios)
-    rustc -O ./ci/ios/deploy_and_run_on_ios_simulator.rs
-    ./deploy_and_run_on_ios_simulator $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  arm-unknown-linux-gnueabihf)
-    qemu-arm -L /usr/arm-linux-gnueabihf $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  mips-unknown-linux-gnu)
-    qemu-mips -L /usr/mips-linux-gnu $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  mips64-unknown-linux-gnuabi64)
-    qemu-mips64 -L /usr/mips64-linux-gnuabi64 $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  mips-unknown-linux-musl)
-    qemu-mips -L /toolchain/staging_dir/toolchain-mips_34kc_gcc-5.3.0_musl-1.1.15 \
-              $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  mipsel-unknown-linux-musl)
-      qemu-mipsel -L /toolchain $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-      ;;
-
-  powerpc-unknown-linux-gnu)
-    qemu-ppc -L /usr/powerpc-linux-gnu $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  powerpc64-unknown-linux-gnu)
-    qemu-ppc64 -L /usr/powerpc64-linux-gnu $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  aarch64-unknown-linux-gnu)
-    qemu-aarch64 -L /usr/aarch64-linux-gnu/ $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-
-  *-rumprun-netbsd)
-    rumprun-bake hw_virtio /tmp/libc-test.img $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    qemu-system-x86_64 -nographic -vga none -m 64 \
-        -kernel /tmp/libc-test.img 2>&1 | tee /tmp/out &
-    sleep 5
-    grep "^PASSED .* tests" /tmp/out
-    ;;
-
-  *)
-    $CARGO_TARGET_DIR/$TARGET/debug/libc-test
-    ;;
-esac
+exec cargo test --manifest-path libc-test/Cargo.toml --target $TARGET

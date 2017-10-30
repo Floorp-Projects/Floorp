@@ -14,6 +14,7 @@ run() {
     docker run \
       --user `id -u`:`id -g` \
       --rm \
+      --init \
       --volume $HOME/.cargo:/cargo \
       $kvm \
       --env CARGO_HOME=/cargo \
@@ -22,7 +23,6 @@ run() {
       --volume `pwd`/target:/checkout/target \
       --env CARGO_TARGET_DIR=/checkout/target \
       --workdir /checkout \
-      --privileged \
       libc \
       ci/run.sh $1
 }

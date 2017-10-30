@@ -52,5 +52,12 @@ s! {
 pub const O_DIRECT: ::c_int = 0x10000;
 pub const O_DIRECTORY: ::c_int = 0x4000;
 pub const O_NOFOLLOW: ::c_int = 0x8000;
+pub const O_LARGEFILE: ::c_int = 0o400000;
 
+pub const SYS_pivot_root: ::c_long = 41;
 pub const SYS_gettid: ::c_long = 178;
+pub const SYS_perf_event_open: ::c_long = 241;
+pub const SYS_memfd_create: ::c_long = 279;
+
+pub const SIGSTKSZ: ::size_t = 16384;
+pub const MINSIGSTKSZ: ::size_t = 5120;

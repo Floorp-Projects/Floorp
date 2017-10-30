@@ -139,6 +139,9 @@ pub const SF_NODISKIO: ::c_int = 0x00000001;
 pub const SF_MNOWAIT: ::c_int = 0x00000002;
 pub const SF_SYNC: ::c_int = 0x00000004;
 pub const O_CLOEXEC: ::c_int = 0x00100000;
+pub const O_DIRECTORY: ::c_int = 0x00020000;
+pub const O_EXEC: ::c_int = 0x00040000;
+pub const O_TTY_INIT: ::c_int = 0x00080000;
 pub const F_GETLK: ::c_int = 11;
 pub const F_SETLK: ::c_int = 12;
 pub const F_SETLKW: ::c_int = 13;
@@ -156,6 +159,8 @@ pub const POSIX_FADV_SEQUENTIAL: ::c_int = 2;
 pub const POSIX_FADV_WILLNEED: ::c_int = 3;
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
+
+pub const POLLINIGNEOF: ::c_short = 0x2000;
 
 pub const EVFILT_READ: ::int16_t = -1;
 pub const EVFILT_WRITE: ::int16_t = -2;
@@ -213,20 +218,20 @@ pub const NOTE_NSECONDS: ::uint32_t = 0x00000008;
 pub const MADV_PROTECT: ::c_int = 10;
 pub const RUSAGE_THREAD: ::c_int = 1;
 
-pub const CLOCK_REALTIME: clockid_t = 0;
-pub const CLOCK_VIRTUAL: clockid_t = 1;
-pub const CLOCK_PROF: clockid_t = 2;
-pub const CLOCK_MONOTONIC: clockid_t = 4;
-pub const CLOCK_UPTIME: clockid_t = 5;
-pub const CLOCK_UPTIME_PRECISE: clockid_t = 7;
-pub const CLOCK_UPTIME_FAST: clockid_t = 8;
-pub const CLOCK_REALTIME_PRECISE: clockid_t = 9;
-pub const CLOCK_REALTIME_FAST: clockid_t = 10;
-pub const CLOCK_MONOTONIC_PRECISE: clockid_t = 11;
-pub const CLOCK_MONOTONIC_FAST: clockid_t = 12;
-pub const CLOCK_SECOND: clockid_t = 13;
-pub const CLOCK_THREAD_CPUTIME_ID: clockid_t = 14;
-pub const CLOCK_PROCESS_CPUTIME_ID: clockid_t = 15;
+pub const CLOCK_REALTIME: ::clockid_t = 0;
+pub const CLOCK_VIRTUAL: ::clockid_t = 1;
+pub const CLOCK_PROF: ::clockid_t = 2;
+pub const CLOCK_MONOTONIC: ::clockid_t = 4;
+pub const CLOCK_UPTIME: ::clockid_t = 5;
+pub const CLOCK_UPTIME_PRECISE: ::clockid_t = 7;
+pub const CLOCK_UPTIME_FAST: ::clockid_t = 8;
+pub const CLOCK_REALTIME_PRECISE: ::clockid_t = 9;
+pub const CLOCK_REALTIME_FAST: ::clockid_t = 10;
+pub const CLOCK_MONOTONIC_PRECISE: ::clockid_t = 11;
+pub const CLOCK_MONOTONIC_FAST: ::clockid_t = 12;
+pub const CLOCK_SECOND: ::clockid_t = 13;
+pub const CLOCK_THREAD_CPUTIME_ID: ::clockid_t = 14;
+pub const CLOCK_PROCESS_CPUTIME_ID: ::clockid_t = 15;
 
 pub const CTL_UNSPEC: ::c_int = 0;
 pub const CTL_KERN: ::c_int = 1;
@@ -508,15 +513,29 @@ pub const P_ALL: idtype_t = 7;
 pub const B460800: ::speed_t = 460800;
 pub const B921600: ::speed_t = 921600;
 
+pub const AT_FDCWD: ::c_int = -100;
+pub const AT_EACCESS: ::c_int = 0x100;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x200;
+pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
+pub const AT_REMOVEDIR: ::c_int = 0x800;
+
+pub const TABDLY: ::tcflag_t = 0x00000004;
+pub const TAB0: ::tcflag_t = 0x00000000;
+pub const TAB3: ::tcflag_t = 0x00000004;
+
+pub const _PC_ACL_NFS4: ::c_int = 64;
+
+pub const _SC_CPUSET_SIZE: ::c_int = 122;
+
 extern {
     pub fn __error() -> *mut ::c_int;
 
     pub fn mprotect(addr: *const ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
 
-    pub fn clock_getres(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_gettime(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
+    pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_settime(clk_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
 
     pub fn jail(jail: *mut ::jail) -> ::c_int;
     pub fn jail_attach(jid: ::c_int) -> ::c_int;
@@ -559,6 +578,7 @@ extern {
         msgtyp: ::c_long, msgflg: ::c_int) -> ::c_int;
     pub fn msgsnd(msqid: ::c_int, msgp: *const ::c_void, msgsz: ::size_t,
         msgflg: ::c_int) -> ::c_int;
+    pub fn cfmakesane(termios: *mut ::termios);
 }
 
 cfg_if! {

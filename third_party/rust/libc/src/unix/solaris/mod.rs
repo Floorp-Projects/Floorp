@@ -169,6 +169,10 @@ s! {
         __pthread_rwlock_writercv: ::pthread_cond_t
     }
 
+    pub struct pthread_rwlockattr_t {
+        __pthread_rwlockattrp: *mut ::c_void,
+    }
+
     pub struct dirent {
         pub d_ino: ::ino_t,
         pub d_off: ::off_t,
@@ -204,6 +208,8 @@ s! {
         pub ai_family: ::c_int,
         pub ai_socktype: ::c_int,
         pub ai_protocol: ::c_int,
+        #[cfg(target_arch = "sparc64")]
+        __sparcv9_pad: ::c_int,
         pub ai_addrlen: ::socklen_t,
         pub ai_canonname: *mut ::c_char,
         pub ai_addr: *mut ::sockaddr,
@@ -766,39 +772,10 @@ pub const POSIX_MADV_SEQUENTIAL: ::c_int = 2;
 pub const POSIX_MADV_WILLNEED: ::c_int = 3;
 pub const POSIX_MADV_DONTNEED: ::c_int = 4;
 
-pub const _SC_IOV_MAX: ::c_int = 77;
-pub const _SC_GETGR_R_SIZE_MAX: ::c_int = 569;
-pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 570;
-pub const _SC_LOGIN_NAME_MAX: ::c_int = 571;
-pub const _SC_MQ_PRIO_MAX: ::c_int = 30;
-pub const _SC_THREAD_ATTR_STACKADDR: ::c_int = 577;
-pub const _SC_THREAD_ATTR_STACKSIZE: ::c_int = 578;
-pub const _SC_THREAD_DESTRUCTOR_ITERATIONS: ::c_int = 568;
-pub const _SC_THREAD_KEYS_MAX: ::c_int = 572;
-pub const _SC_THREAD_PRIO_INHERIT: ::c_int = 580;
-pub const _SC_THREAD_PRIO_PROTECT: ::c_int = 581;
-pub const _SC_THREAD_PRIORITY_SCHEDULING: ::c_int = 579;
-pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 582;
-pub const _SC_THREAD_SAFE_FUNCTIONS: ::c_int = 583;
-pub const _SC_THREAD_STACK_MIN: ::c_int = 573;
-pub const _SC_THREAD_THREADS_MAX: ::c_int = 574;
-pub const _SC_THREADS: ::c_int = 576;
-pub const _SC_TTY_NAME_MAX: ::c_int = 575;
-pub const _SC_ATEXIT_MAX: ::c_int = 76;
-pub const _SC_XOPEN_CRYPT: ::c_int = 62;
-pub const _SC_XOPEN_ENH_I18N: ::c_int = 63;
-pub const _SC_XOPEN_LEGACY: ::c_int = 717;
-pub const _SC_XOPEN_REALTIME: ::c_int = 718;
-pub const _SC_XOPEN_REALTIME_THREADS: ::c_int = 719;
-pub const _SC_XOPEN_SHM: ::c_int = 64;
-pub const _SC_XOPEN_UNIX: ::c_int = 78;
-pub const _SC_XOPEN_VERSION: ::c_int = 12;
-pub const _SC_XOPEN_XCU_VERSION: ::c_int = 67;
-
 pub const PTHREAD_CREATE_JOINABLE: ::c_int = 0;
 pub const PTHREAD_CREATE_DETACHED: ::c_int = 0x40;
 pub const PTHREAD_PROCESS_SHARED: ::c_int = 1;
-pub const PTHREAD_PROCESS_PRIVATE: u16 = 0;
+pub const PTHREAD_PROCESS_PRIVATE: ::c_ushort = 0;
 pub const PTHREAD_STACK_MIN: ::size_t = 4096;
 
 pub const SIGSTKSZ: ::size_t = 8192;
@@ -813,8 +790,8 @@ pub const SIGSTKSZ: ::size_t = 8192;
 //   blob/HEAD/usr/src/uts/common/sys/time_impl.h
 // Confusing! CLOCK_HIGHRES==CLOCK_MONOTONIC==4
 // __CLOCK_REALTIME0==0 is an obsoleted version of CLOCK_REALTIME==3
-pub const CLOCK_REALTIME: clockid_t = 3;
-pub const CLOCK_MONOTONIC: clockid_t = 4;
+pub const CLOCK_REALTIME: ::clockid_t = 3;
+pub const CLOCK_MONOTONIC: ::clockid_t = 4;
 pub const TIMER_RELTIME: ::c_int = 0;
 pub const TIMER_ABSTIME: ::c_int = 1;
 
@@ -848,11 +825,6 @@ pub const SOCK_STREAM: ::c_int = 2;
 pub const SOCK_RAW: ::c_int = 4;
 pub const SOCK_RDM: ::c_int = 5;
 pub const SOCK_SEQPACKET: ::c_int = 6;
-pub const IPPROTO_ICMP: ::c_int = 1;
-pub const IPPROTO_ICMPV6: ::c_int = 58;
-pub const IPPROTO_TCP: ::c_int = 6;
-pub const IPPROTO_IP: ::c_int = 0;
-pub const IPPROTO_IPV6: ::c_int = 41;
 pub const IP_MULTICAST_TTL: ::c_int = 17;
 pub const IP_MULTICAST_LOOP: ::c_int = 18;
 pub const IP_TTL: ::c_int = 4;
@@ -905,6 +877,37 @@ pub const O_NONBLOCK: ::c_int = 128;
 
 pub const IPPROTO_RAW: ::c_int = 255;
 
+pub const _PC_LINK_MAX: ::c_int = 1;
+pub const _PC_MAX_CANON: ::c_int = 2;
+pub const _PC_MAX_INPUT: ::c_int = 3;
+pub const _PC_NAME_MAX: ::c_int = 4;
+pub const _PC_PATH_MAX: ::c_int = 5;
+pub const _PC_PIPE_BUF: ::c_int = 6;
+pub const _PC_NO_TRUNC: ::c_int = 7;
+pub const _PC_VDISABLE: ::c_int = 8;
+pub const _PC_CHOWN_RESTRICTED: ::c_int = 9;
+pub const _PC_ASYNC_IO: ::c_int = 10;
+pub const _PC_PRIO_IO: ::c_int = 11;
+pub const _PC_SYNC_IO: ::c_int = 12;
+pub const _PC_ALLOC_SIZE_MIN: ::c_int = 13;
+pub const _PC_REC_INCR_XFER_SIZE: ::c_int = 14;
+pub const _PC_REC_MAX_XFER_SIZE: ::c_int = 15;
+pub const _PC_REC_MIN_XFER_SIZE: ::c_int = 16;
+pub const _PC_REC_XFER_ALIGN: ::c_int = 17;
+pub const _PC_SYMLINK_MAX: ::c_int = 18;
+pub const _PC_2_SYMLINKS: ::c_int = 19;
+pub const _PC_ACL_ENABLED: ::c_int = 20;
+pub const _PC_MIN_HOLE_SIZE: ::c_int = 21;
+pub const _PC_CASE_BEHAVIOR: ::c_int = 22;
+pub const _PC_SATTR_ENABLED: ::c_int = 23;
+pub const _PC_SATTR_EXISTS: ::c_int = 24;
+pub const _PC_ACCESS_FILTERING: ::c_int = 25;
+pub const _PC_TIMESTAMP_RESOLUTION: ::c_int = 26;
+pub const _PC_FILESIZEBITS: ::c_int = 67;
+pub const _PC_XATTR_ENABLED: ::c_int = 100;
+pub const _PC_LAST: ::c_int = 101;
+pub const _PC_XATTR_EXISTS: ::c_int = 101;
+
 pub const _SC_ARG_MAX: ::c_int = 1;
 pub const _SC_CHILD_MAX: ::c_int = 2;
 pub const _SC_CLK_TCK: ::c_int = 3;
@@ -913,13 +916,51 @@ pub const _SC_OPEN_MAX: ::c_int = 5;
 pub const _SC_JOB_CONTROL: ::c_int = 6;
 pub const _SC_SAVED_IDS: ::c_int = 7;
 pub const _SC_VERSION: ::c_int = 8;
+pub const _SC_PASS_MAX: ::c_int = 9;
+pub const _SC_LOGNAME_MAX: ::c_int = 10;
 pub const _SC_PAGESIZE: ::c_int = 11;
 pub const _SC_PAGE_SIZE: ::c_int = _SC_PAGESIZE;
+pub const _SC_XOPEN_VERSION: ::c_int = 12;
+pub const _SC_NPROCESSORS_CONF: ::c_int = 14;
 pub const _SC_NPROCESSORS_ONLN: ::c_int = 15;
 pub const _SC_STREAM_MAX: ::c_int = 16;
 pub const _SC_TZNAME_MAX: ::c_int = 17;
 pub const _SC_AIO_LISTIO_MAX: ::c_int = 18;
 pub const _SC_AIO_MAX: ::c_int = 19;
+pub const _SC_AIO_PRIO_DELTA_MAX: ::c_int = 20;
+pub const _SC_ASYNCHRONOUS_IO: ::c_int = 21;
+pub const _SC_DELAYTIMER_MAX: ::c_int = 22;
+pub const _SC_FSYNC: ::c_int = 23;
+pub const _SC_MAPPED_FILES: ::c_int = 24;
+pub const _SC_MEMLOCK: ::c_int = 25;
+pub const _SC_MEMLOCK_RANGE: ::c_int = 26;
+pub const _SC_MEMORY_PROTECTION: ::c_int = 27;
+pub const _SC_MESSAGE_PASSING: ::c_int = 28;
+pub const _SC_MQ_OPEN_MAX: ::c_int = 29;
+pub const _SC_MQ_PRIO_MAX: ::c_int = 30;
+pub const _SC_PRIORITIZED_IO: ::c_int = 31;
+pub const _SC_PRIORITY_SCHEDULING: ::c_int = 32;
+pub const _SC_REALTIME_SIGNALS: ::c_int = 33;
+pub const _SC_RTSIG_MAX: ::c_int = 34;
+pub const _SC_SEMAPHORES: ::c_int = 35;
+pub const _SC_SEM_NSEMS_MAX: ::c_int = 36;
+pub const _SC_SEM_VALUE_MAX: ::c_int = 37;
+pub const _SC_SHARED_MEMORY_OBJECTS: ::c_int = 38;
+pub const _SC_SIGQUEUE_MAX: ::c_int = 39;
+pub const _SC_SIGRT_MIN: ::c_int = 40;
+pub const _SC_SIGRT_MAX: ::c_int = 41;
+pub const _SC_SYNCHRONIZED_IO: ::c_int = 42;
+pub const _SC_TIMERS: ::c_int = 43;
+pub const _SC_TIMER_MAX: ::c_int = 44;
+pub const _SC_2_C_BIND: ::c_int = 45;
+pub const _SC_2_C_DEV: ::c_int = 46;
+pub const _SC_2_C_VERSION: ::c_int = 47;
+pub const _SC_2_FORT_DEV: ::c_int = 48;
+pub const _SC_2_FORT_RUN: ::c_int = 49;
+pub const _SC_2_LOCALEDEF: ::c_int = 50;
+pub const _SC_2_SW_DEV: ::c_int = 51;
+pub const _SC_2_UPE: ::c_int = 52;
+pub const _SC_2_VERSION: ::c_int = 53;
 pub const _SC_BC_BASE_MAX: ::c_int = 54;
 pub const _SC_BC_DIM_MAX: ::c_int = 55;
 pub const _SC_BC_SCALE_MAX: ::c_int = 56;
@@ -928,37 +969,95 @@ pub const _SC_COLL_WEIGHTS_MAX: ::c_int = 58;
 pub const _SC_EXPR_NEST_MAX: ::c_int = 59;
 pub const _SC_LINE_MAX: ::c_int = 60;
 pub const _SC_RE_DUP_MAX: ::c_int = 61;
-pub const _SC_2_VERSION: ::c_int = 53;
-pub const _SC_2_C_BIND: ::c_int = 45;
-pub const _SC_2_C_DEV: ::c_int = 46;
+pub const _SC_XOPEN_CRYPT: ::c_int = 62;
+pub const _SC_XOPEN_ENH_I18N: ::c_int = 63;
+pub const _SC_XOPEN_SHM: ::c_int = 64;
 pub const _SC_2_CHAR_TERM: ::c_int = 66;
-pub const _SC_2_FORT_DEV: ::c_int = 48;
-pub const _SC_2_FORT_RUN: ::c_int = 49;
-pub const _SC_2_LOCALEDEF: ::c_int = 50;
-pub const _SC_2_SW_DEV: ::c_int = 51;
-pub const _SC_2_UPE: ::c_int = 52;
-pub const _SC_ASYNCHRONOUS_IO: ::c_int = 21;
-pub const _SC_MAPPED_FILES: ::c_int = 24;
-pub const _SC_MEMLOCK: ::c_int = 25;
-pub const _SC_MEMLOCK_RANGE: ::c_int = 26;
-pub const _SC_MEMORY_PROTECTION: ::c_int = 27;
-pub const _SC_MESSAGE_PASSING: ::c_int = 28;
-pub const _SC_PRIORITIZED_IO: ::c_int = 31;
-pub const _SC_PRIORITY_SCHEDULING: ::c_int = 32;
-pub const _SC_REALTIME_SIGNALS: ::c_int = 33;
-pub const _SC_SEMAPHORES: ::c_int = 35;
-pub const _SC_FSYNC: ::c_int = 23;
-pub const _SC_SHARED_MEMORY_OBJECTS: ::c_int = 38;
-pub const _SC_SYNCHRONIZED_IO: ::c_int = 42;
-pub const _SC_TIMERS: ::c_int = 43;
-pub const _SC_AIO_PRIO_DELTA_MAX: ::c_int = 20;
-pub const _SC_DELAYTIMER_MAX: ::c_int = 22;
-pub const _SC_MQ_OPEN_MAX: ::c_int = 29;
-pub const _SC_RTSIG_MAX: ::c_int = 34;
-pub const _SC_SEM_NSEMS_MAX: ::c_int = 36;
-pub const _SC_SEM_VALUE_MAX: ::c_int = 37;
-pub const _SC_SIGQUEUE_MAX: ::c_int = 39;
-pub const _SC_TIMER_MAX: ::c_int = 44;
+pub const _SC_XOPEN_XCU_VERSION: ::c_int = 67;
+pub const _SC_ATEXIT_MAX: ::c_int = 76;
+pub const _SC_IOV_MAX: ::c_int = 77;
+pub const _SC_XOPEN_UNIX: ::c_int = 78;
+pub const _SC_T_IOV_MAX: ::c_int = 79;
+pub const _SC_PHYS_PAGES: ::c_int = 500;
+pub const _SC_AVPHYS_PAGES: ::c_int = 501;
+pub const _SC_COHER_BLKSZ: ::c_int = 503;
+pub const _SC_SPLIT_CACHE: ::c_int = 504;
+pub const _SC_ICACHE_SZ: ::c_int = 505;
+pub const _SC_DCACHE_SZ: ::c_int = 506;
+pub const _SC_ICACHE_LINESZ: ::c_int = 507;
+pub const _SC_DCACHE_LINESZ: ::c_int = 508;
+pub const _SC_ICACHE_BLKSZ: ::c_int = 509;
+pub const _SC_DCACHE_BLKSZ: ::c_int = 510;
+pub const _SC_DCACHE_TBLKSZ: ::c_int = 511;
+pub const _SC_ICACHE_ASSOC: ::c_int = 512;
+pub const _SC_DCACHE_ASSOC: ::c_int = 513;
+pub const _SC_MAXPID: ::c_int = 514;
+pub const _SC_STACK_PROT: ::c_int = 515;
+pub const _SC_NPROCESSORS_MAX: ::c_int = 516;
+pub const _SC_CPUID_MAX: ::c_int = 517;
+pub const _SC_EPHID_MAX: ::c_int = 518;
+pub const _SC_THREAD_DESTRUCTOR_ITERATIONS: ::c_int = 568;
+pub const _SC_GETGR_R_SIZE_MAX: ::c_int = 569;
+pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 570;
+pub const _SC_LOGIN_NAME_MAX: ::c_int = 571;
+pub const _SC_THREAD_KEYS_MAX: ::c_int = 572;
+pub const _SC_THREAD_STACK_MIN: ::c_int = 573;
+pub const _SC_THREAD_THREADS_MAX: ::c_int = 574;
+pub const _SC_TTY_NAME_MAX: ::c_int = 575;
+pub const _SC_THREADS: ::c_int = 576;
+pub const _SC_THREAD_ATTR_STACKADDR: ::c_int = 577;
+pub const _SC_THREAD_ATTR_STACKSIZE: ::c_int = 578;
+pub const _SC_THREAD_PRIORITY_SCHEDULING: ::c_int = 579;
+pub const _SC_THREAD_PRIO_INHERIT: ::c_int = 580;
+pub const _SC_THREAD_PRIO_PROTECT: ::c_int = 581;
+pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 582;
+pub const _SC_THREAD_SAFE_FUNCTIONS: ::c_int = 583;
+pub const _SC_XOPEN_LEGACY: ::c_int = 717;
+pub const _SC_XOPEN_REALTIME: ::c_int = 718;
+pub const _SC_XOPEN_REALTIME_THREADS: ::c_int = 719;
+pub const _SC_XBS5_ILP32_OFF32: ::c_int = 720;
+pub const _SC_XBS5_ILP32_OFFBIG: ::c_int = 721;
+pub const _SC_XBS5_LP64_OFF64: ::c_int = 722;
+pub const _SC_XBS5_LPBIG_OFFBIG: ::c_int = 723;
+pub const _SC_2_PBS: ::c_int = 724;
+pub const _SC_2_PBS_ACCOUNTING: ::c_int = 725;
+pub const _SC_2_PBS_CHECKPOINT: ::c_int = 726;
+pub const _SC_2_PBS_LOCATE: ::c_int = 728;
+pub const _SC_2_PBS_MESSAGE: ::c_int = 729;
+pub const _SC_2_PBS_TRACK: ::c_int = 730;
+pub const _SC_ADVISORY_INFO: ::c_int = 731;
+pub const _SC_BARRIERS: ::c_int = 732;
+pub const _SC_CLOCK_SELECTION: ::c_int = 733;
+pub const _SC_CPUTIME: ::c_int = 734;
+pub const _SC_HOST_NAME_MAX: ::c_int = 735;
+pub const _SC_MONOTONIC_CLOCK: ::c_int = 736;
+pub const _SC_READER_WRITER_LOCKS: ::c_int = 737;
+pub const _SC_REGEXP: ::c_int = 738;
+pub const _SC_SHELL: ::c_int = 739;
+pub const _SC_SPAWN: ::c_int = 740;
+pub const _SC_SPIN_LOCKS: ::c_int = 741;
+pub const _SC_SPORADIC_SERVER: ::c_int = 742;
+pub const _SC_SS_REPL_MAX: ::c_int = 743;
+pub const _SC_SYMLOOP_MAX: ::c_int = 744;
+pub const _SC_THREAD_CPUTIME: ::c_int = 745;
+pub const _SC_THREAD_SPORADIC_SERVER: ::c_int = 746;
+pub const _SC_TIMEOUTS: ::c_int = 747;
+pub const _SC_TRACE: ::c_int = 748;
+pub const _SC_TRACE_EVENT_FILTER: ::c_int = 749;
+pub const _SC_TRACE_EVENT_NAME_MAX: ::c_int = 750;
+pub const _SC_TRACE_INHERIT: ::c_int = 751;
+pub const _SC_TRACE_LOG: ::c_int = 752;
+pub const _SC_TRACE_NAME_MAX: ::c_int = 753;
+pub const _SC_TRACE_SYS_MAX: ::c_int = 754;
+pub const _SC_TRACE_USER_EVENT_MAX: ::c_int = 755;
+pub const _SC_TYPED_MEMORY_OBJECTS: ::c_int = 756;
+pub const _SC_V6_ILP32_OFF32: ::c_int = 757;
+pub const _SC_V6_ILP32_OFFBIG: ::c_int = 758;
+pub const _SC_V6_LP64_OFF64: ::c_int = 759;
+pub const _SC_V6_LPBIG_OFFBIG: ::c_int = 760;
+pub const _SC_XOPEN_STREAMS: ::c_int = 761;
+pub const _SC_IPV6: ::c_int = 762;
+pub const _SC_RAW_SOCKETS: ::c_int = 763;
 
 pub const _MUTEX_MAGIC: u16 = 0x4d58; // MX
 pub const _COND_MAGIC: u16 = 0x4356;  // CV
@@ -1074,13 +1173,13 @@ extern {
     pub fn ioctl(fildes: ::c_int, request: ::c_int, ...) -> ::c_int;
     pub fn mprotect(addr: *const ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
-    pub fn clock_getres(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_gettime(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_nanosleep(clk_id: clockid_t,
+    pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_nanosleep(clk_id: ::clockid_t,
                            flags: ::c_int,
                            rqtp: *const ::timespec,
                            rmtp:  *mut ::timespec) -> ::c_int;
-    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
+    pub fn clock_settime(clk_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,
@@ -1088,20 +1187,8 @@ extern {
                        serv: *mut ::c_char,
                        sevlen: ::socklen_t,
                        flags: ::c_int) -> ::c_int;
-    #[link_name = "__posix_getpwnam_r"]
-    pub fn getpwnam_r(name: *const ::c_char,
-                      pwd: *mut passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut passwd) -> ::c_int;
-
-    #[link_name = "__posix_getpwuid_r"]
-    pub fn getpwuid_r(uid: ::uid_t,
-                      pwd: *mut passwd,
-                      buf: *mut ::c_char,
-                      buflen: ::size_t,
-                      result: *mut *mut passwd) -> ::c_int;
     pub fn setpwent();
+    pub fn endpwent();
     pub fn getpwent() -> *mut passwd;
     pub fn fdatasync(fd: ::c_int) -> ::c_int;
     pub fn nl_langinfo_l(item: ::nl_item, locale: ::locale_t) -> *mut ::c_char;
@@ -1129,7 +1216,7 @@ extern {
     pub fn pthread_condattr_getclock(attr: *const pthread_condattr_t,
                                      clock_id: *mut clockid_t) -> ::c_int;
     pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
-                                     clock_id: clockid_t) -> ::c_int;
+                                     clock_id: ::clockid_t) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
@@ -1191,4 +1278,62 @@ extern {
     pub fn port_getn(port: ::c_int, pe_list: *mut port_event, max: ::c_uint,
                      nget: *mut ::c_uint, timeout: *const ::timespec)
                      -> ::c_int;
+    pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
+                   envp: *const *const ::c_char)
+                   -> ::c_int;
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
+    pub fn getgrgid_r(uid: ::uid_t,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "sigaltstack$UNIX2003")]
+    #[cfg_attr(target_os = "netbsd", link_name = "__sigaltstack14")]
+    pub fn sigaltstack(ss: *const stack_t,
+                       oss: *mut stack_t) -> ::c_int;
+    pub fn sem_close(sem: *mut sem_t) -> ::c_int;
+    pub fn getdtablesize() -> ::c_int;
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrnam_r")]
+    pub fn getgrnam_r(name: *const ::c_char,
+                      grp: *mut ::group,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut ::group) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "pthread_sigmask$UNIX2003")]
+    pub fn pthread_sigmask(how: ::c_int, set: *const sigset_t,
+                           oldset: *mut sigset_t) -> ::c_int;
+    pub fn sem_open(name: *const ::c_char, oflag: ::c_int, ...) -> *mut sem_t;
+    pub fn getgrnam(name: *const ::c_char) -> *mut ::group;
+    pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
+    pub fn sem_unlink(name: *const ::c_char) -> ::c_int;
+    pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwnam_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwnam_r")]
+    pub fn getpwnam_r(name: *const ::c_char,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__getpwuid_r50")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_getpwuid_r")]
+    pub fn getpwuid_r(uid: ::uid_t,
+                      pwd: *mut passwd,
+                      buf: *mut ::c_char,
+                      buflen: ::size_t,
+                      result: *mut *mut passwd) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch ="x86"),
+               link_name = "sigwait$UNIX2003")]
+    #[cfg_attr(target_os = "solaris", link_name = "__posix_sigwait")]
+    pub fn sigwait(set: *const sigset_t,
+                   sig: *mut ::c_int) -> ::c_int;
+    pub fn pthread_atfork(prepare: Option<unsafe extern fn()>,
+                          parent: Option<unsafe extern fn()>,
+                          child: Option<unsafe extern fn()>) -> ::c_int;
+    pub fn getgrgid(gid: ::gid_t) -> *mut ::group;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "popen$UNIX2003")]
+    pub fn popen(command: *const c_char,
+                 mode: *const c_char) -> *mut ::FILE;
 }

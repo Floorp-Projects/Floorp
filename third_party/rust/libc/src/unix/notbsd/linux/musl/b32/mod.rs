@@ -1,6 +1,7 @@
 pub type c_long = i32;
 pub type c_ulong = u32;
 pub type nlink_t = u32;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct pthread_attr_t {
@@ -45,11 +46,6 @@ cfg_if! {
     } else if #[cfg(any(target_arch = "arm"))] {
         mod arm;
         pub use self::arm::*;
-    } else if #[cfg(any(target_arch = "asmjs", target_arch = "wasm32"))] {
-        // For the time being asmjs and wasm32 are the same, and both
-        // backed by identical emscripten runtimes
-        mod asmjs;
-        pub use self::asmjs::*;
     } else {
         // Unknown target_arch
     }

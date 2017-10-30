@@ -5,6 +5,7 @@ pub type wchar_t = i32;
 pub type nlink_t = u64;
 pub type blksize_t = i64;
 pub type suseconds_t = i64;
+pub type __u64 = ::c_ulong;
 
 s! {
     pub struct stat {
@@ -47,6 +48,36 @@ s! {
         pub st_ctime: ::time_t,
         pub st_ctime_nsec: ::c_long,
         __reserved: [::c_long; 3],
+    }
+
+    pub struct statfs64 {
+        pub f_type: ::__fsword_t,
+        pub f_bsize: ::__fsword_t,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::__fsword_t,
+        pub f_frsize: ::__fsword_t,
+        pub f_flags: ::__fsword_t,
+        pub f_spare: [::__fsword_t; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct pthread_attr_t {
@@ -95,6 +126,8 @@ pub const O_SYNC: ::c_int = 1052672;
 pub const O_RSYNC: ::c_int = 1052672;
 pub const O_DSYNC: ::c_int = 4096;
 pub const O_FSYNC: ::c_int = 0x101000;
+pub const O_NOATIME: ::c_int = 0o1000000;
+pub const O_PATH: ::c_int = 0o10000000;
 
 pub const MAP_GROWSDOWN: ::c_int = 0x0100;
 
@@ -210,7 +243,6 @@ pub const SO_DETACH_FILTER: ::c_int = 27;
 pub const SO_GET_FILTER: ::c_int = SO_ATTACH_FILTER;
 pub const SO_PEERNAME: ::c_int = 28;
 pub const SO_TIMESTAMP: ::c_int = 29;
-pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
 pub const SO_ACCEPTCONN: ::c_int = 30;
 pub const SO_PEERSEC: ::c_int = 31;
 pub const SO_PASSSEC: ::c_int = 34;
@@ -285,8 +317,6 @@ pub const TIOCMBIC: ::c_ulong = 0x5417;
 pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const TIOCCONS: ::c_ulong = 0x541D;
 
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
-
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
 pub const NCCS: usize = 32;
@@ -335,8 +365,10 @@ pub const EDEADLOCK: ::c_int = 58;
 pub const FIOCLEX: ::c_ulong = 0x20006601;
 pub const FIONBIO: ::c_ulong = 0x8004667e;
 
+pub const SYS_pivot_root: ::c_long = 203;
 pub const SYS_gettid: ::c_long = 207;
 pub const SYS_perf_event_open: ::c_long = 319;
+pub const SYS_memfd_create: ::c_long = 360;
 
 pub const MCL_CURRENT: ::c_int = 0x2000;
 pub const MCL_FUTURE: ::c_int = 0x4000;
@@ -383,6 +415,15 @@ pub const ISIG: ::tcflag_t = 0x80;
 pub const ICANON: ::tcflag_t = 0x100;
 pub const PENDIN: ::tcflag_t = 0x20000000;
 pub const NOFLSH: ::tcflag_t = 0x80000000;
+pub const VSWTC: usize = 9;
+pub const OLCUC:  ::tcflag_t = 0o000004;
+pub const NLDLY:  ::tcflag_t = 0o001400;
+pub const CRDLY:  ::tcflag_t = 0o030000;
+pub const TABDLY: ::tcflag_t = 0o006000;
+pub const BSDLY:  ::tcflag_t = 0o100000;
+pub const FFDLY:  ::tcflag_t = 0o040000;
+pub const VTDLY:  ::tcflag_t = 0o200000;
+pub const XTABS:  ::tcflag_t = 0o006000;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;

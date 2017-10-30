@@ -1,7 +1,6 @@
-FROM ubuntu:16.10
+FROM ubuntu:17.10
 
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc libc6-dev qemu-user ca-certificates qemu-system-mips curl \
         bzip2
 
@@ -14,4 +13,5 @@ RUN curl -L https://s3.amazonaws.com/rust-lang-ci/libc/OpenWrt-Toolchain-malta-l
 
 ENV PATH=$PATH:/rust/bin:/toolchain/bin \
     CC_mipsel_unknown_linux_musl=mipsel-openwrt-linux-gcc \
-    CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_LINKER=mipsel-openwrt-linux-gcc
+    CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_LINKER=mipsel-openwrt-linux-gcc \
+    CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_RUNNER="qemu-mipsel -L /toolchain"

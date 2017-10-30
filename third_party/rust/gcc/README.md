@@ -35,13 +35,17 @@ Next up, you'll want to write a build script like so:
 extern crate gcc;
 
 fn main() {
-    gcc::compile_library("libfoo.a", &["foo.c", "bar.c"]);
+    gcc::Build::new()
+        .file("foo.c")
+        .file("bar.c")
+        .compile("foo");
 }
 ```
 
 And that's it! Running `cargo build` should take care of the rest and your Rust
-application will now have the C files `foo.c` and `bar.c` compiled into it. You
-can call the functions in Rust by declaring functions in your Rust code like so:
+application will now have the C files `foo.c` and `bar.c` compiled into a file
+named libfoo.a. You can call the functions in Rust by declaring functions in
+your Rust code like so:
 
 ```
 extern {
@@ -137,13 +141,13 @@ required varies per platform, but there are three broad categories:
 ## C++ support
 
 `gcc-rs` supports C++ libraries compilation by using the `cpp` method on
-`Config`:
+`Build`:
 
 ```rust,no_run
 extern crate gcc;
 
 fn main() {
-    gcc::Config::new()
+    gcc::Build::new()
         .cpp(true) // Switch to C++ library compilation.
         .file("foo.cpp")
         .compile("libfoo.a");

@@ -27,15 +27,15 @@ s! {
     }
 }
 
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
-
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
 pub const NCCS: usize = 32;
 
 pub const O_TRUNC: ::c_int = 512;
 
+pub const O_NOATIME: ::c_int = 0o1000000;
 pub const O_CLOEXEC: ::c_int = 0x80000;
+pub const O_PATH: ::c_int = 0o10000000;
 
 pub const EBFONT: ::c_int = 59;
 pub const ENOSTR: ::c_int = 60;
@@ -67,7 +67,81 @@ pub const FOPEN_MAX: ::c_uint = 16;
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
 pub const POSIX_MADV_DONTNEED: ::c_int = 4;
+pub const _SC_EQUIV_CLASS_MAX: ::c_int = 41;
+pub const _SC_CHARCLASS_NAME_MAX: ::c_int = 45;
+pub const _SC_PII: ::c_int = 53;
+pub const _SC_PII_XTI: ::c_int = 54;
+pub const _SC_PII_SOCKET: ::c_int = 55;
+pub const _SC_PII_INTERNET: ::c_int = 56;
+pub const _SC_PII_OSI: ::c_int = 57;
+pub const _SC_POLL: ::c_int = 58;
+pub const _SC_SELECT: ::c_int = 59;
+pub const _SC_PII_INTERNET_STREAM: ::c_int = 61;
+pub const _SC_PII_INTERNET_DGRAM: ::c_int = 62;
+pub const _SC_PII_OSI_COTS: ::c_int = 63;
+pub const _SC_PII_OSI_CLTS: ::c_int = 64;
+pub const _SC_PII_OSI_M: ::c_int = 65;
+pub const _SC_T_IOV_MAX: ::c_int = 66;
 pub const _SC_2_C_VERSION: ::c_int = 96;
+pub const _SC_CHAR_BIT: ::c_int = 101;
+pub const _SC_CHAR_MAX: ::c_int = 102;
+pub const _SC_CHAR_MIN: ::c_int = 103;
+pub const _SC_INT_MAX: ::c_int = 104;
+pub const _SC_INT_MIN: ::c_int = 105;
+pub const _SC_LONG_BIT: ::c_int = 106;
+pub const _SC_WORD_BIT: ::c_int = 107;
+pub const _SC_MB_LEN_MAX: ::c_int = 108;
+pub const _SC_SSIZE_MAX: ::c_int = 110;
+pub const _SC_SCHAR_MAX: ::c_int = 111;
+pub const _SC_SCHAR_MIN: ::c_int = 112;
+pub const _SC_SHRT_MAX: ::c_int = 113;
+pub const _SC_SHRT_MIN: ::c_int = 114;
+pub const _SC_UCHAR_MAX: ::c_int = 115;
+pub const _SC_UINT_MAX: ::c_int = 116;
+pub const _SC_ULONG_MAX: ::c_int = 117;
+pub const _SC_USHRT_MAX: ::c_int = 118;
+pub const _SC_NL_ARGMAX: ::c_int = 119;
+pub const _SC_NL_LANGMAX: ::c_int = 120;
+pub const _SC_NL_MSGMAX: ::c_int = 121;
+pub const _SC_NL_NMAX: ::c_int = 122;
+pub const _SC_NL_SETMAX: ::c_int = 123;
+pub const _SC_NL_TEXTMAX: ::c_int = 124;
+pub const _SC_BASE: ::c_int = 134;
+pub const _SC_C_LANG_SUPPORT: ::c_int = 135;
+pub const _SC_C_LANG_SUPPORT_R: ::c_int = 136;
+pub const _SC_DEVICE_IO: ::c_int = 140;
+pub const _SC_DEVICE_SPECIFIC: ::c_int = 141;
+pub const _SC_DEVICE_SPECIFIC_R: ::c_int = 142;
+pub const _SC_FD_MGMT: ::c_int = 143;
+pub const _SC_FIFO: ::c_int = 144;
+pub const _SC_PIPE: ::c_int = 145;
+pub const _SC_FILE_ATTRIBUTES: ::c_int = 146;
+pub const _SC_FILE_LOCKING: ::c_int = 147;
+pub const _SC_FILE_SYSTEM: ::c_int = 148;
+pub const _SC_MULTI_PROCESS: ::c_int = 150;
+pub const _SC_SINGLE_PROCESS: ::c_int = 151;
+pub const _SC_NETWORKING: ::c_int = 152;
+pub const _SC_REGEX_VERSION: ::c_int = 156;
+pub const _SC_SIGNALS: ::c_int = 158;
+pub const _SC_SYSTEM_DATABASE: ::c_int = 162;
+pub const _SC_SYSTEM_DATABASE_R: ::c_int = 163;
+pub const _SC_USER_GROUPS: ::c_int = 166;
+pub const _SC_USER_GROUPS_R: ::c_int = 167;
+pub const _SC_LEVEL1_ICACHE_SIZE: ::c_int = 185;
+pub const _SC_LEVEL1_ICACHE_ASSOC: ::c_int = 186;
+pub const _SC_LEVEL1_ICACHE_LINESIZE: ::c_int = 187;
+pub const _SC_LEVEL1_DCACHE_SIZE: ::c_int = 188;
+pub const _SC_LEVEL1_DCACHE_ASSOC: ::c_int = 189;
+pub const _SC_LEVEL1_DCACHE_LINESIZE: ::c_int = 190;
+pub const _SC_LEVEL2_CACHE_SIZE: ::c_int = 191;
+pub const _SC_LEVEL2_CACHE_ASSOC: ::c_int = 192;
+pub const _SC_LEVEL2_CACHE_LINESIZE: ::c_int = 193;
+pub const _SC_LEVEL3_CACHE_SIZE: ::c_int = 194;
+pub const _SC_LEVEL3_CACHE_ASSOC: ::c_int = 195;
+pub const _SC_LEVEL3_CACHE_LINESIZE: ::c_int = 196;
+pub const _SC_LEVEL4_CACHE_SIZE: ::c_int = 197;
+pub const _SC_LEVEL4_CACHE_ASSOC: ::c_int = 198;
+pub const _SC_LEVEL4_CACHE_LINESIZE: ::c_int = 199;
 pub const O_ACCMODE: ::c_int = 3;
 pub const O_DIRECT: ::c_int = 0x8000;
 pub const O_DIRECTORY: ::c_int = 0x10000;
@@ -256,7 +330,6 @@ pub const SO_DETACH_FILTER: ::c_int = 27;
 pub const SO_GET_FILTER: ::c_int = SO_ATTACH_FILTER;
 pub const SO_PEERNAME: ::c_int = 28;
 pub const SO_TIMESTAMP: ::c_int = 29;
-pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
 pub const SO_PEERSEC: ::c_int = 30;
 pub const SO_SNDBUFFORCE: ::c_int = 31;
 pub const SO_RCVBUFFORCE: ::c_int = 33;
@@ -310,9 +383,7 @@ pub const SIG_SETMASK: ::c_int = 3;
 pub const SIG_BLOCK: ::c_int = 0x1;
 pub const SIG_UNBLOCK: ::c_int = 0x2;
 
-pub const POLLRDNORM: ::c_short = 0x040;
 pub const POLLWRNORM: ::c_short = 0x004;
-pub const POLLRDBAND: ::c_short = 0x080;
 pub const POLLWRBAND: ::c_short = 0x100;
 
 pub const PTHREAD_STACK_MIN: ::size_t = 131072;
@@ -490,6 +561,17 @@ pub const ISIG: ::tcflag_t = 0x00000001;
 pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
+pub const CIBAUD: ::tcflag_t = 0o02003600000;
+pub const CBAUDEX: ::tcflag_t = 0o010000;
+pub const VSWTC: usize = 7;
+pub const OLCUC:  ::tcflag_t = 0o000002;
+pub const NLDLY:  ::tcflag_t = 0o000400;
+pub const CRDLY:  ::tcflag_t = 0o003000;
+pub const TABDLY: ::tcflag_t = 0o014000;
+pub const BSDLY:  ::tcflag_t = 0o020000;
+pub const FFDLY:  ::tcflag_t = 0o100000;
+pub const VTDLY:  ::tcflag_t = 0o040000;
+pub const XTABS:  ::tcflag_t = 0o014000;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;
@@ -524,6 +606,22 @@ pub const B2500000: ::speed_t = 0o010014;
 pub const B3000000: ::speed_t = 0o010015;
 pub const B3500000: ::speed_t = 0o010016;
 pub const B4000000: ::speed_t = 0o010017;
+
+pub const TIOCM_LE: ::c_int = 0x001;
+pub const TIOCM_DTR: ::c_int = 0x002;
+pub const TIOCM_RTS: ::c_int = 0x004;
+pub const TIOCM_ST: ::c_int = 0x010;
+pub const TIOCM_SR: ::c_int = 0x020;
+pub const TIOCM_CTS: ::c_int = 0x040;
+pub const TIOCM_CAR: ::c_int = 0x100;
+pub const TIOCM_CD: ::c_int = TIOCM_CAR;
+pub const TIOCM_RNG: ::c_int = 0x200;
+pub const TIOCM_RI: ::c_int = TIOCM_RNG;
+pub const TIOCM_DSR: ::c_int = 0x400;
+
+pub const EHWPOISON: ::c_int = 168;
+pub const SIGEV_THREAD_ID: ::c_int = 4;
+pub const EPOLLWAKEUP: ::c_int = 0x20000000;
 
 #[link(name = "util")]
 extern {

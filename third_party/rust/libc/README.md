@@ -93,7 +93,7 @@ With that in mind, the steps for adding a new API are:
 We have two automated tests running on [Travis](https://travis-ci.org/rust-lang/libc):
 
 1. [`libc-test`](https://github.com/alexcrichton/ctest)
-  - `cd libc-test && cargo run`
+  - `cd libc-test && cargo test`
   - Use the `skip_*()` functions in `build.rs` if you really need a workaround.
 2. Style checker
   - `rustc ci/style.rs && ./style src`

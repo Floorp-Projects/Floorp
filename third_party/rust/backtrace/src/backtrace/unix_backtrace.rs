@@ -25,7 +25,7 @@ extern {
 }
 
 #[inline(always)]
-pub fn trace(mut cb: &mut FnMut(&super::Frame) -> bool) {
+pub fn trace(cb: &mut FnMut(&super::Frame) -> bool) {
     const SIZE: usize = 100;
 
     let mut buf: [*mut c_void; SIZE];

@@ -269,19 +269,87 @@ pub const SIGWINCH: ::c_int = 28;
 
 pub const SIGEV_THREAD_ID: ::c_int = 4;
 
-pub const POLLRDNORM: ::c_short = 0x040;
-pub const POLLRDBAND: ::c_short = 0x080;
-
-pub const FALLOC_FL_KEEP_SIZE: ::c_int = 0x01;
-pub const FALLOC_FL_PUNCH_HOLE: ::c_int = 0x02;
-
 pub const BUFSIZ: ::c_uint = 8192;
 pub const TMP_MAX: ::c_uint = 238328;
 pub const FOPEN_MAX: ::c_uint = 16;
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
 pub const POSIX_MADV_DONTNEED: ::c_int = 4;
+pub const _SC_EQUIV_CLASS_MAX: ::c_int = 41;
+pub const _SC_CHARCLASS_NAME_MAX: ::c_int = 45;
+pub const _SC_PII: ::c_int = 53;
+pub const _SC_PII_XTI: ::c_int = 54;
+pub const _SC_PII_SOCKET: ::c_int = 55;
+pub const _SC_PII_INTERNET: ::c_int = 56;
+pub const _SC_PII_OSI: ::c_int = 57;
+pub const _SC_POLL: ::c_int = 58;
+pub const _SC_SELECT: ::c_int = 59;
+pub const _SC_PII_INTERNET_STREAM: ::c_int = 61;
+pub const _SC_PII_INTERNET_DGRAM: ::c_int = 62;
+pub const _SC_PII_OSI_COTS: ::c_int = 63;
+pub const _SC_PII_OSI_CLTS: ::c_int = 64;
+pub const _SC_PII_OSI_M: ::c_int = 65;
+pub const _SC_T_IOV_MAX: ::c_int = 66;
 pub const _SC_2_C_VERSION: ::c_int = 96;
+pub const _SC_CHAR_BIT: ::c_int = 101;
+pub const _SC_CHAR_MAX: ::c_int = 102;
+pub const _SC_CHAR_MIN: ::c_int = 103;
+pub const _SC_INT_MAX: ::c_int = 104;
+pub const _SC_INT_MIN: ::c_int = 105;
+pub const _SC_LONG_BIT: ::c_int = 106;
+pub const _SC_WORD_BIT: ::c_int = 107;
+pub const _SC_MB_LEN_MAX: ::c_int = 108;
+pub const _SC_SSIZE_MAX: ::c_int = 110;
+pub const _SC_SCHAR_MAX: ::c_int = 111;
+pub const _SC_SCHAR_MIN: ::c_int = 112;
+pub const _SC_SHRT_MAX: ::c_int = 113;
+pub const _SC_SHRT_MIN: ::c_int = 114;
+pub const _SC_UCHAR_MAX: ::c_int = 115;
+pub const _SC_UINT_MAX: ::c_int = 116;
+pub const _SC_ULONG_MAX: ::c_int = 117;
+pub const _SC_USHRT_MAX: ::c_int = 118;
+pub const _SC_NL_ARGMAX: ::c_int = 119;
+pub const _SC_NL_LANGMAX: ::c_int = 120;
+pub const _SC_NL_MSGMAX: ::c_int = 121;
+pub const _SC_NL_NMAX: ::c_int = 122;
+pub const _SC_NL_SETMAX: ::c_int = 123;
+pub const _SC_NL_TEXTMAX: ::c_int = 124;
+pub const _SC_BASE: ::c_int = 134;
+pub const _SC_C_LANG_SUPPORT: ::c_int = 135;
+pub const _SC_C_LANG_SUPPORT_R: ::c_int = 136;
+pub const _SC_DEVICE_IO: ::c_int = 140;
+pub const _SC_DEVICE_SPECIFIC: ::c_int = 141;
+pub const _SC_DEVICE_SPECIFIC_R: ::c_int = 142;
+pub const _SC_FD_MGMT: ::c_int = 143;
+pub const _SC_FIFO: ::c_int = 144;
+pub const _SC_PIPE: ::c_int = 145;
+pub const _SC_FILE_ATTRIBUTES: ::c_int = 146;
+pub const _SC_FILE_LOCKING: ::c_int = 147;
+pub const _SC_FILE_SYSTEM: ::c_int = 148;
+pub const _SC_MULTI_PROCESS: ::c_int = 150;
+pub const _SC_SINGLE_PROCESS: ::c_int = 151;
+pub const _SC_NETWORKING: ::c_int = 152;
+pub const _SC_REGEX_VERSION: ::c_int = 156;
+pub const _SC_SIGNALS: ::c_int = 158;
+pub const _SC_SYSTEM_DATABASE: ::c_int = 162;
+pub const _SC_SYSTEM_DATABASE_R: ::c_int = 163;
+pub const _SC_USER_GROUPS: ::c_int = 166;
+pub const _SC_USER_GROUPS_R: ::c_int = 167;
+pub const _SC_LEVEL1_ICACHE_SIZE: ::c_int = 185;
+pub const _SC_LEVEL1_ICACHE_ASSOC: ::c_int = 186;
+pub const _SC_LEVEL1_ICACHE_LINESIZE: ::c_int = 187;
+pub const _SC_LEVEL1_DCACHE_SIZE: ::c_int = 188;
+pub const _SC_LEVEL1_DCACHE_ASSOC: ::c_int = 189;
+pub const _SC_LEVEL1_DCACHE_LINESIZE: ::c_int = 190;
+pub const _SC_LEVEL2_CACHE_SIZE: ::c_int = 191;
+pub const _SC_LEVEL2_CACHE_ASSOC: ::c_int = 192;
+pub const _SC_LEVEL2_CACHE_LINESIZE: ::c_int = 193;
+pub const _SC_LEVEL3_CACHE_SIZE: ::c_int = 194;
+pub const _SC_LEVEL3_CACHE_ASSOC: ::c_int = 195;
+pub const _SC_LEVEL3_CACHE_LINESIZE: ::c_int = 196;
+pub const _SC_LEVEL4_CACHE_SIZE: ::c_int = 197;
+pub const _SC_LEVEL4_CACHE_ASSOC: ::c_int = 198;
+pub const _SC_LEVEL4_CACHE_LINESIZE: ::c_int = 199;
 pub const O_ACCMODE: ::c_int = 3;
 pub const ST_RELATIME: ::c_ulong = 4096;
 pub const NI_MAXHOST: ::socklen_t = 1025;
@@ -342,13 +410,8 @@ pub const PTRACE_INTERRUPT: ::c_uint = 0x4207;
 pub const PTRACE_LISTEN: ::c_uint = 0x4208;
 pub const PTRACE_PEEKSIGINFO: ::c_uint = 0x4209;
 
-pub const MADV_DODUMP: ::c_int = 17;
-pub const MADV_DONTDUMP: ::c_int = 16;
-
 pub const EPOLLWAKEUP: ::c_int = 0x20000000;
 
-pub const MADV_HUGEPAGE: ::c_int = 14;
-pub const MADV_NOHUGEPAGE: ::c_int = 15;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
 
 pub const SEEK_DATA: ::c_int = 3;
@@ -443,6 +506,18 @@ pub const NLA_F_NESTED: ::c_int = 1 << 15;
 pub const NLA_F_NET_BYTEORDER: ::c_int = 1 << 14;
 pub const NLA_TYPE_MASK: ::c_int = !(NLA_F_NESTED | NLA_F_NET_BYTEORDER);
 
+pub const TIOCM_LE: ::c_int = 0x001;
+pub const TIOCM_DTR: ::c_int = 0x002;
+pub const TIOCM_RTS: ::c_int = 0x004;
+pub const TIOCM_ST: ::c_int = 0x008;
+pub const TIOCM_SR: ::c_int = 0x010;
+pub const TIOCM_CTS: ::c_int = 0x020;
+pub const TIOCM_CAR: ::c_int = 0x040;
+pub const TIOCM_RNG: ::c_int = 0x080;
+pub const TIOCM_DSR: ::c_int = 0x100;
+pub const TIOCM_CD: ::c_int = TIOCM_CAR;
+pub const TIOCM_RI: ::c_int = TIOCM_RNG;
+
 cfg_if! {
     if #[cfg(any(target_arch = "arm", target_arch = "x86",
                  target_arch = "x86_64"))] {
@@ -500,6 +575,10 @@ extern {
     pub fn pthread_setaffinity_np(thread: ::pthread_t,
                                   cpusetsize: ::size_t,
                                   cpuset: *const ::cpu_set_t) -> ::c_int;
+    pub fn pthread_rwlockattr_getkind_np(attr: *const ::pthread_rwlockattr_t,
+                                         val: *mut ::c_int) -> ::c_int;
+    pub fn pthread_rwlockattr_setkind_np(attr: *mut ::pthread_rwlockattr_t,
+                                         val: ::c_int) -> ::c_int;
     pub fn sched_getcpu() -> ::c_int;
 }
 
