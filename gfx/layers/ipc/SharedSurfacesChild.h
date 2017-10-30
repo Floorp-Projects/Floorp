@@ -26,6 +26,7 @@ class SharedSurfacesChild final
 {
 public:
   static nsresult Share(gfx::SourceSurfaceSharedData* aSurface, wr::ExternalImageId& aId);
+  static nsresult Share(ImageContainer* aContainer, wr::ExternalImageId& aId, uint32_t& aGeneration);
 
 private:
   SharedSurfacesChild() = delete;
