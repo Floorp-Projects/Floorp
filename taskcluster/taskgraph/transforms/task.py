@@ -439,7 +439,7 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'scriptworker-signing',
 
-        # the maximum time to spend signing, in seconds
+        # the maximum time to run, in seconds
         Required('max-run-time', default=600): int,
 
         # list of artifact URLs for the artifacts that should be signed
@@ -459,7 +459,7 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'beetmover',
 
-        # the maximum time to spend signing, in seconds
+        # the maximum time to run, in seconds
         Required('max-run-time', default=600): int,
 
         # locale key, if this is a locale beetmover job
@@ -482,7 +482,7 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'beetmover-cdns',
 
-        # the maximum time to spend signing, in seconds
+        # the maximum time to run, in seconds
         Required('max-run-time', default=600): int,
         Required('product'): basestring,
     }, {

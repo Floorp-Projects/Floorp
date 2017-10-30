@@ -302,7 +302,8 @@ def target_tasks_mozilla_release(full_task_graph, parameters):
 
 
 @_target_task('maple_desktop_promotion')
-@_target_task('mozilla_beta_desktop_promotion')
+@_target_task('mozilla-beta_desktop_promotion')
+@_target_task('mozilla-release_desktop_promotion')
 def target_tasks_mozilla_beta_desktop_promotion(full_task_graph, parameters):
     """Select the superset of tasks required to promote a beta or release build
     of desktop. This should include all non-android mozilla_beta tasks, plus
