@@ -232,7 +232,7 @@ CSP_ContentTypeToDirective(nsContentPolicyType aType)
     case nsIContentPolicy::TYPE_INTERNAL_WORKER:
     case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
     case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
-      return nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE;
+      return nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
       return nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE;
@@ -1190,11 +1190,6 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mSandbox.Value() = mozilla::Move(srcs);
       return;
 
-    case nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE:
-      outCSP.mWorker_src.Construct();
-      outCSP.mWorker_src.Value() = mozilla::Move(srcs);
-      return;
-
     // REFERRER_DIRECTIVE and REQUIRE_SRI_FOR are handled in nsCSPPolicy::toDomCSPStruct()
 
     default:
@@ -1247,8 +1242,7 @@ bool nsCSPDirective::equals(CSPDirective aDirective) const
 
 nsCSPChildSrcDirective::nsCSPChildSrcDirective(CSPDirective aDirective)
   : nsCSPDirective(aDirective)
-  , mRestrictFrames(false)
-  , mRestrictWorkers(false)
+  , mHandleFrameSrc(false)
 {
 }
 
@@ -1256,58 +1250,30 @@ nsCSPChildSrcDirective::~nsCSPChildSrcDirective()
 {
 }
 
+void nsCSPChildSrcDirective::setHandleFrameSrc()
+{
+  mHandleFrameSrc = true;
+}
+
 bool nsCSPChildSrcDirective::restrictsContentType(nsContentPolicyType aContentType) const
 {
   if (aContentType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    return mRestrictFrames;
+    return mHandleFrameSrc;
   }
-  if (aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER) {
-    return mRestrictWorkers;
-  }
-  return false;
+
+  return (aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER
+      || aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
+      || aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER
+      );
 }
 
 bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const
 {
   if (aDirective == nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE) {
-    return mRestrictFrames;
+    return mHandleFrameSrc;
   }
-  if (aDirective == nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE) {
-    return mRestrictWorkers;
-  }
-  return (mDirective == aDirective);
-}
 
-/* =============== nsCSPScriptSrcDirective ============= */
-
-nsCSPScriptSrcDirective::nsCSPScriptSrcDirective(CSPDirective aDirective)
-  : nsCSPDirective(aDirective)
-  , mRestrictWorkers(false)
-{
-}
-
-nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective()
-{
-}
-
-bool nsCSPScriptSrcDirective::restrictsContentType(nsContentPolicyType aContentType) const
-{
-  if (aContentType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER ||
-      aContentType == nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER) {
-    return mRestrictWorkers;
-  }
-  return mDirective == CSP_ContentTypeToDirective(aContentType);
-}
-
-bool nsCSPScriptSrcDirective::equals(CSPDirective aDirective) const
-{
-  if (aDirective == nsIContentSecurityPolicy::WORKER_SRC_DIRECTIVE) {
-    return mRestrictWorkers;
-  }
-  return (mDirective == aDirective);
+  return (aDirective == nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE);
 }
 
 /* =============== nsBlockAllMixedContentDirective ============= */
