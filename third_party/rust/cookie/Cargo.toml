@@ -12,18 +12,16 @@
 
 [package]
 name = "cookie"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Alex Crichton <alex@alexcrichton.com>", "Sergio Benitez <sb@sergio.bz>"]
 description = "Crate for parsing HTTP cookie headers and managing a cookie jar. Supports signed\nand private (encrypted + signed) jars.\n"
 documentation = "https://docs.rs/cookie"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/cookie-rs"
+[package.metadata.docs.rs]
+all-features = true
 [dependencies.url]
 version = "1.0"
-optional = true
-
-[dependencies.ring]
-version = "0.11.0"
 optional = true
 
 [dependencies.base64]
@@ -33,6 +31,10 @@ optional = true
 [dependencies.time]
 version = "0.1"
 
+[dependencies.ring]
+version = "0.11.0"
+optional = true
+
 [features]
-percent-encode = ["url"]
 secure = ["ring", "base64"]
+percent-encode = ["url"]

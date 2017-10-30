@@ -1,4 +1,4 @@
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 use std::ffi::OsString;
@@ -14,7 +14,7 @@ macro_rules! t {
     })
 }
 
-fn try_tool(compiler: &gcc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: &str)
+fn try_tool(compiler: &cc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: &str)
             -> Option<PathBuf> {
     if !cc.ends_with(compiler_suffix) {
         return None
@@ -28,7 +28,7 @@ fn try_tool(compiler: &gcc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: 
     }
 }
 
-fn find_tool(compiler: &gcc::Tool, cc: &str, tool: &str) -> PathBuf {
+fn find_tool(compiler: &cc::Tool, cc: &str, tool: &str) -> PathBuf {
     // Allow overrides via env var
     if let Some(s) = env::var_os(tool.to_uppercase()) {
         return s.into()
@@ -87,7 +87,7 @@ fn main() {
         OsString::from_wide(&chars)
     };
 
-    let cfg = gcc::Config::new();
+    let cfg = cc::Build::new();
     let compiler = cfg.get_compiler();
     let cc = compiler.path().file_name().unwrap().to_str().unwrap();
     let mut flags = OsString::new();
@@ -98,11 +98,13 @@ fn main() {
         flags.push(flag);
     }
     let ar = find_tool(&compiler, cc, "ar");
+    let ranlib = find_tool(&compiler, cc, "ranlib");
     let mut cmd = Command::new("sh");
 
     cmd.arg(configure)
        .current_dir(&dst)
        .env("AR", &ar)
+       .env("RANLIB", &ranlib)
        .env("CC", compiler.path())
        .env("CFLAGS", flags)
        .arg("--with-pic")
@@ -117,11 +119,16 @@ fn main() {
     }
 
     run(&mut cmd, "sh");
-    run(Command::new(make)
-                .current_dir(&dst)
-                .arg(format!("INCDIR={}",
-                             src.join("src/libbacktrace").display())),
+    let mut cmd = Command::new(make);
+    if let Some(makeflags) = env::var_os("CARGO_MAKEFLAGS") {
+        cmd.env("MAKEFLAGS", makeflags);
+    }
+
+    run(cmd.current_dir(&dst)
+           .arg(format!("INCDIR={}",
+                        src.join("src/libbacktrace").display())),
         "make");
+
     println!("cargo:rustc-link-search=native={}/.libs", dst.display());
     println!("cargo:rustc-link-lib=static=backtrace");
 

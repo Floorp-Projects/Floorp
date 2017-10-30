@@ -84,6 +84,17 @@ s! {
         pub c_cc: [::cc_t; ::NCCS],
     }
 
+    pub struct termios2 {
+        pub c_iflag: ::tcflag_t,
+        pub c_oflag: ::tcflag_t,
+        pub c_cflag: ::tcflag_t,
+        pub c_lflag: ::tcflag_t,
+        pub c_line: ::cc_t,
+        pub c_cc: [::cc_t; 19],
+        pub c_ispeed: ::speed_t,
+        pub c_ospeed: ::speed_t,
+    }
+
     pub struct flock {
         pub l_type: ::c_short,
         pub l_whence: ::c_short,
@@ -167,6 +178,12 @@ s! {
         pub ssi_addr: ::c_ulonglong,
         pub ssi_addr_lsb: ::uint16_t,
         _pad: [::uint8_t; 46],
+    }
+
+    pub struct ucred {
+        pub pid: ::pid_t,
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
     }
 }
 
@@ -485,6 +502,8 @@ pub const ENOTRECOVERABLE: ::c_int = 131;
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_SEQPACKET: ::c_int = 5;
+pub const SOCK_DCCP: ::c_int = 6;
+pub const SOCK_PACKET: ::c_int = 10;
 
 pub const SOL_SOCKET: ::c_int = 1;
 pub const SOL_SCTP: ::c_int = 132;
@@ -498,6 +517,27 @@ pub const SOL_ROSE: ::c_int = 260;
 pub const AF_MAX: ::c_int = 43;
 #[doc(hidden)]
 pub const PF_MAX: ::c_int = AF_MAX;
+
+/* DCCP socket options */
+pub const DCCP_SOCKOPT_PACKET_SIZE: ::c_int = 1;
+pub const DCCP_SOCKOPT_SERVICE: ::c_int = 2;
+pub const DCCP_SOCKOPT_CHANGE_L: ::c_int = 3;
+pub const DCCP_SOCKOPT_CHANGE_R: ::c_int = 4;
+pub const DCCP_SOCKOPT_GET_CUR_MPS: ::c_int = 5;
+pub const DCCP_SOCKOPT_SERVER_TIMEWAIT: ::c_int = 6;
+pub const DCCP_SOCKOPT_SEND_CSCOV: ::c_int = 10;
+pub const DCCP_SOCKOPT_RECV_CSCOV: ::c_int = 11;
+pub const DCCP_SOCKOPT_AVAILABLE_CCIDS: ::c_int = 12;
+pub const DCCP_SOCKOPT_CCID: ::c_int = 13;
+pub const DCCP_SOCKOPT_TX_CCID: ::c_int = 14;
+pub const DCCP_SOCKOPT_RX_CCID: ::c_int = 15;
+pub const DCCP_SOCKOPT_QPOLICY_ID: ::c_int = 16;
+pub const DCCP_SOCKOPT_QPOLICY_TXQLEN: ::c_int = 17;
+pub const DCCP_SOCKOPT_CCID_RX_INFO: ::c_int = 128;
+pub const DCCP_SOCKOPT_CCID_TX_INFO: ::c_int = 192;
+
+/// maximum number of services provided on the same listening port
+pub const DCCP_SERVICE_LIST_MAX_LEN: ::c_int = 32;
 
 pub const SO_REUSEADDR: ::c_int = 2;
 pub const SO_TYPE: ::c_int = 3;
@@ -734,6 +774,7 @@ pub const B19200: ::speed_t = 0o000016;
 pub const B38400: ::speed_t = 0o000017;
 pub const EXTA: ::speed_t = B19200;
 pub const EXTB: ::speed_t = B38400;
+pub const BOTHER: ::speed_t = 0o010000;
 pub const B57600: ::speed_t = 0o010001;
 pub const B115200: ::speed_t = 0o010002;
 pub const B230400: ::speed_t = 0o010003;
@@ -1009,6 +1050,8 @@ extern {
                     in_fd: ::c_int,
                     offset: *mut off_t,
                     count: ::size_t) -> ::ssize_t;
+    pub fn setfsgid(gid: ::gid_t) -> ::c_int;
+    pub fn setfsuid(uid: ::uid_t) -> ::c_int;
     pub fn sigsuspend(mask: *const ::sigset_t) -> ::c_int;
     #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
     pub fn getgrgid_r(uid: ::uid_t,
@@ -1065,6 +1108,7 @@ extern {
                         group: ::gid_t,
                         groups: *mut ::gid_t,
                         ngroups: *mut ::c_int) -> ::c_int;
+    pub fn initgroups(user: *const ::c_char, group: ::gid_t) -> ::c_int;
     pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
                                         pshared: *mut ::c_int) -> ::c_int;
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),

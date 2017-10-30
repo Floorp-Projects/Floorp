@@ -435,6 +435,15 @@ pub const O_NONBLOCK: ::c_int = 16384;
 pub const O_ACCMODE: ::c_int = 3;
 pub const O_CLOEXEC: ::c_int = 0x80000;
 
+pub const POLLIN: ::c_short = 0x1;
+pub const POLLPRI: ::c_short = 0x2;
+pub const POLLOUT: ::c_short = 0x4;
+pub const POLLERR: ::c_short = 0x8;
+pub const POLLHUP: ::c_short = 0x10;
+pub const POLLNVAL: ::c_short = 0x20;
+
+pub const RTLD_LAZY: ::c_int = 0x1;
+
 pub const STDIN_FILENO: ::c_int = 0;
 pub const STDOUT_FILENO: ::c_int = 1;
 pub const STDERR_FILENO: ::c_int = 2;
