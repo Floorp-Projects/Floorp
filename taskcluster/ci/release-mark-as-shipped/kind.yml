@@ -26,3 +26,10 @@ jobs:
          routes:
             - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+         notifications:
+            completed:
+               - releasetasks
+            failed:
+               - releasetasks
+            exception:
+               - releasetasks

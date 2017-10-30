@@ -46,6 +46,13 @@ taskref_or_string = Any(
     basestring,
     {Required('task-reference'): basestring})
 
+notification_schema = Schema({
+    Required("subject"): basestring,
+    Required("message"): basestring,
+    Required("ids"): [basestring],
+
+})
+
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
     # the label for this task
@@ -382,6 +389,11 @@ task_description_schema = Schema({
         },
         Optional('scopes'): [basestring],
         Optional('routes'): [basestring],
+        Optional('notifications'): {
+            Optional('task-completed'): notification_schema,
+            Optional('task-failed'): notification_schema,
+            Optional('task-exception'): notification_schema,
+        },
     }, {
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
@@ -1010,6 +1022,16 @@ def build_buildbot_bridge_payload(config, task, task_def):
     }
     task_def['scopes'].extend(worker.get('scopes', []))
     task_def['routes'].extend(worker.get('routes', []))
+
+    notifications = worker.get('notifications')
+    if notifications:
+        task_def.setdefault('extra', {}).setdefault('notifications', {})
+        for k, v in notifications.items():
+            task_def['extra']['notifications'][k] = {
+                'subject': v['subject'].format(task=task_def),
+                'message': v['message'].format(task=task_def),
+                'ids': v['ids'],
+            }
 
 
 transforms = TransformSequence()

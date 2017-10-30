@@ -26,3 +26,10 @@ jobs:
          routes:
             - index.releases.v1.{branch}.latest.fennec.latest.version_bump
             - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.version_bump
+         notifications:
+            completed:
+               - releasetasks
+            failed:
+               - releasetasks
+            exception:
+               - releasetasks

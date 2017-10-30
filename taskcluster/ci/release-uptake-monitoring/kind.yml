@@ -35,3 +35,10 @@ jobs:
                     mozilla-release: https://bounceradmin.mozilla.com/api
                     maple: https://bounceradmin.stage.allizom.org/api
                     default: http://localhost/api
+         notifications:
+            completed:
+               - releasetasks
+            failed:
+               - releasetasks
+            exception:
+               - releasetasks
