@@ -60,6 +60,21 @@ function ensureElementRemoval(aElement) {
   });
 }
 
+function waitForWheelEvent(aTarget) {
+  return new Promise(function(resolve, reject) {
+    // Get the scrollable target element position in this window coordinate
+    // system to send a wheel event to the element.
+    var targetRect = aTarget.getBoundingClientRect();
+    var centerX = targetRect.left + targetRect.width / 2;
+    var centerY = targetRect.top + targetRect.height / 2;
+
+    sendWheelAndPaintNoFlush(aTarget, centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: targetRect.height },
+                             resolve);
+  });
+}
+
 SimpleTest.expectAssertions(0, 1); // bug 1332970
 SimpleTest.waitForExplicitFinish();
 
@@ -301,21 +316,10 @@ waitForAllPaints(function() {
        'Animations running on the main-thread for elements ' +
        'which are scrolled out should never cause restyles');
 
-    // Get the scrollable parent element position in this window coordinate
-    // system to send a wheel event to the element.
-    var parentRect = parentElement.getBoundingClientRect();
-    var centerX = parentRect.left + parentRect.width / 2;
-    var centerY = parentRect.top + parentRect.height / 2;
+    await waitForWheelEvent(parentElement);
 
-    var markers = await observeStyling(1, function() {
-      // We can't use synthesizeWheel here since synthesizeWheel causes
-      // layout flush.
-      synthesizeWheelAtPoint(centerX, centerY,
-                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                               deltaY: parentRect.height });
-    });
-
-    is(markers.length, 1,
+    markers = await observeStyling(5);
+    is(markers.length, 5,
        'Animations running on the main-thread which were in scrolled out ' +
        'elements should update restyling soon after the element moved in ' +
        'view by scrolling');
@@ -356,22 +360,10 @@ waitForAllPaints(function() {
        'Animations running on the main-thread which are in nested elements ' +
        'which are scrolled out should never cause restyles');
 
-    // Get the scrollable parent element position in this window coordinate
-    // system to send a wheel event to the element.
-    var parentRect = grandParent.getBoundingClientRect();
-    var centerX = parentRect.left + parentRect.width / 2;
-    var centerY = parentRect.top + parentRect.height / 2;
+    await waitForWheelEvent(grandParent);
 
-    var markers = await observeStyling(1, function() {
-      // We can't use synthesizeWheel here since synthesizeWheel causes
-      // layout flush.
-      synthesizeWheelAtPoint(centerX, centerY,
-                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                               deltaY: parentRect.height });
-    });
-
-    // FIXME: We should reduce a redundant restyle here.
-    ok(markers.length >= 1,
+    markers = await observeStyling(5);
+    is(markers.length, 5,
        'Animations running on the main-thread which were in nested scrolled ' +
        'out elements should update restyle soon after the element moved ' +
        'in view by scrolling');
@@ -418,17 +410,9 @@ waitForAllPaints(function() {
     parentElement.appendChild(pad);
     var animation = div.getAnimations()[0];
 
-    var parentRect = parentElement.getBoundingClientRect();
-    var centerX = parentRect.left + parentRect.width / 2;
-    var centerY = parentRect.top + parentRect.height / 2;
-
     await animation.ready;
 
-    // We can't use synthesizeWheel here since synthesizeWheel causes
-    // layout flush.
-    synthesizeWheelAtPoint(centerX, centerY,
-                           { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-                             deltaY: 200 });
+    await waitForWheelEvent(parentElement);
 
     var markers = await observeStyling(5);
 
