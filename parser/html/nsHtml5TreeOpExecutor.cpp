@@ -156,24 +156,12 @@ nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
 {
-  if (!aTerminated) {
-    // This is needed to avoid unblocking loads too many times on one hand
-    // and on the other hand to avoid destroying the frame constructor from
-    // within an update batch. See bug 537683.
-    EndDocUpdate();
-    
-    // If the above caused a call to nsIParser::Terminate(), let that call
-    // win.
-    if (!mParser) {
-      return NS_OK;
-    }
-  }
-  
   if (mRunsToCompletion) {
     return NS_OK;
   }
 
-  GetParser()->DropStreamParser();
+  MOZ_RELEASE_ASSERT(!IsInDocUpdate(),
+    "DidBuildModel from inside a doc update.");
 
   // This comes from nsXMLContentSink and nsHTMLContentSink
   // If this parser has been marked as broken, treat the end of parse as
@@ -211,6 +199,8 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
   if (mStarted) {
     mDocument->EndLoad();
   }
+
+  GetParser()->DropStreamParser();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
@@ -482,6 +472,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 
     nsIContent* scriptElement = nullptr;
     bool interrupted = false;
+    bool streamEnded = false;
 
     {
       // autoFlush clears mOpQueue in its destructor unless
@@ -498,7 +489,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
         }
         MOZ_ASSERT(IsInDocUpdate(),
                    "Tried to perform tree op outside update batch.");
-        nsresult rv = iter->Perform(this, &scriptElement, &interrupted);
+        nsresult rv = iter->Perform(this, &scriptElement, &interrupted, &streamEnded);
         if (NS_FAILED(rv)) {
           MarkAsBroken(rv);
           break;
@@ -525,7 +516,18 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       return;
     }
 
-    if (scriptElement) {
+    if (streamEnded) {
+      DidBuildModel(false);
+#ifdef DEBUG
+      if (scriptElement) {
+        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(scriptElement);
+        if (!sele) {
+          MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+        }
+        MOZ_ASSERT(sele->IsMalformed(), "Script wasn't marked as malformed.");
+      }
+#endif
+    } else if (scriptElement) {
       // must be tail call when mFlushState is eNotFlushing
       RunScript(scriptElement);
       
@@ -578,6 +580,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   
   nsIContent* scriptElement = nullptr;
   bool interrupted = false;
+  bool streamEnded = false;
 
   {
     // autoFlush clears mOpQueue in its destructor.
@@ -595,7 +598,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
       }
       NS_ASSERTION(IsInDocUpdate(),
                    "Tried to perform tree op outside update batch.");
-      rv = iter->Perform(this, &scriptElement, &interrupted);
+      rv = iter->Perform(this, &scriptElement, &interrupted, &streamEnded);
       if (NS_FAILED(rv)) {
         MarkAsBroken(rv);
         break;
@@ -609,7 +612,18 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     return rv;
   }
 
-  if (scriptElement) {
+  if (streamEnded) {
+    DidBuildModel(false);
+#ifdef DEBUG
+    if (scriptElement) {
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(scriptElement);
+      if (!sele) {
+        MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+      }
+      MOZ_ASSERT(sele->IsMalformed(), "Script wasn't marked as malformed.");
+    }
+#endif
+  } else if (scriptElement) {
     // must be tail call when mFlushState is eNotFlushing
     RunScript(scriptElement);
   }
@@ -687,18 +701,11 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     return;
   }
 
-  NS_ASSERTION(aScriptElement, "No script to run");
+  MOZ_ASSERT(mParser, "Trying to run script with a terminated parser.");
+  MOZ_ASSERT(aScriptElement, "No script to run");
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aScriptElement);
   if (!sele) {
     MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
-    return;
-  }
-  
-  if (!mParser) {
-    NS_ASSERTION(sele->IsMalformed(), "Script wasn't marked as malformed.");
-    // We got here not because of an end tag but because the tree builder
-    // popped an incomplete script element on EOF. Returning here to avoid
-    // calling back into mParser anymore.
     return;
   }
   
