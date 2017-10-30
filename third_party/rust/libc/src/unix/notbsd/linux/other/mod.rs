@@ -1,6 +1,3 @@
-pub type fsblkcnt_t = ::c_ulong;
-pub type fsfilcnt_t = ::c_ulong;
-pub type rlim_t = c_ulong;
 pub type __priority_which_t = ::c_uint;
 
 s! {
@@ -17,7 +14,7 @@ s! {
         __error_code: ::c_int,
         __return_value: ::ssize_t,
         pub aio_offset: off_t,
-        #[cfg(target_pointer_width = "32")]
+        #[cfg(all(not(target_arch = "x86_64"), target_pointer_width = "32"))]
         __unused1: [::c_char; 4],
         __glibc_reserved: [::c_char; 32]
     }
@@ -44,20 +41,24 @@ s! {
 
         #[cfg(any(target_arch = "aarch64",
                   target_arch = "sparc64",
-                  target_pointer_width = "32"))]
+                  all(target_pointer_width = "32",
+                      not(target_arch = "x86_64"))))]
         pub ut_session: ::c_long,
         #[cfg(any(target_arch = "aarch64",
                   target_arch = "sparc64",
-                  target_pointer_width = "32"))]
+                  all(target_pointer_width = "32",
+                      not(target_arch = "x86_64"))))]
         pub ut_tv: ::timeval,
 
         #[cfg(not(any(target_arch = "aarch64",
                       target_arch = "sparc64",
-                      target_pointer_width = "32")))]
+                      all(target_pointer_width = "32",
+                          not(target_arch = "x86_64")))))]
         pub ut_session: ::int32_t,
         #[cfg(not(any(target_arch = "aarch64",
                       target_arch = "sparc64",
-                      target_pointer_width = "32")))]
+                      all(target_pointer_width = "32",
+                          not(target_arch = "x86_64")))))]
         pub ut_tv: __timeval,
 
         pub ut_addr_v6: [::int32_t; 4],
@@ -84,6 +85,9 @@ s! {
         pub si_errno: ::c_int,
         pub si_code: ::c_int,
         pub _pad: [::c_int; 29],
+        #[cfg(target_arch = "x86_64")]
+        _align: [u64; 0],
+        #[cfg(not(target_arch = "x86_64"))]
         _align: [usize; 0],
     }
 
@@ -247,6 +251,8 @@ pub const EREMOTEIO: ::c_int = 121;
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_SEQPACKET: ::c_int = 5;
+pub const SOCK_DCCP: ::c_int = 6;
+pub const SOCK_PACKET: ::c_int = 10;
 
 pub const TCP_COOKIE_TRANSACTIONS: ::c_int = 15;
 pub const TCP_THIN_LINEAR_TIMEOUTS: ::c_int = 16;
@@ -258,6 +264,27 @@ pub const TCP_QUEUE_SEQ: ::c_int = 21;
 pub const TCP_REPAIR_OPTIONS: ::c_int = 22;
 pub const TCP_FASTOPEN: ::c_int = 23;
 pub const TCP_TIMESTAMP: ::c_int = 24;
+
+/* DCCP socket options */
+pub const DCCP_SOCKOPT_PACKET_SIZE: ::c_int = 1;
+pub const DCCP_SOCKOPT_SERVICE: ::c_int = 2;
+pub const DCCP_SOCKOPT_CHANGE_L: ::c_int = 3;
+pub const DCCP_SOCKOPT_CHANGE_R: ::c_int = 4;
+pub const DCCP_SOCKOPT_GET_CUR_MPS: ::c_int = 5;
+pub const DCCP_SOCKOPT_SERVER_TIMEWAIT: ::c_int = 6;
+pub const DCCP_SOCKOPT_SEND_CSCOV: ::c_int = 10;
+pub const DCCP_SOCKOPT_RECV_CSCOV: ::c_int = 11;
+pub const DCCP_SOCKOPT_AVAILABLE_CCIDS: ::c_int = 12;
+pub const DCCP_SOCKOPT_CCID: ::c_int = 13;
+pub const DCCP_SOCKOPT_TX_CCID: ::c_int = 14;
+pub const DCCP_SOCKOPT_RX_CCID: ::c_int = 15;
+pub const DCCP_SOCKOPT_QPOLICY_ID: ::c_int = 16;
+pub const DCCP_SOCKOPT_QPOLICY_TXQLEN: ::c_int = 17;
+pub const DCCP_SOCKOPT_CCID_RX_INFO: ::c_int = 128;
+pub const DCCP_SOCKOPT_CCID_TX_INFO: ::c_int = 192;
+
+/// maximum number of services provided on the same listening port
+pub const DCCP_SERVICE_LIST_MAX_LEN: ::c_int = 32;
 
 pub const SIGTTIN: ::c_int = 21;
 pub const SIGTTOU: ::c_int = 22;
@@ -384,8 +411,6 @@ pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
 pub const VEOF: usize = 4;
 
 pub const CPU_SETSIZE: ::c_int = 0x400;
-
-pub const QFMT_VFS_V1: ::c_int = 4;
 
 pub const PTRACE_TRACEME: ::c_uint = 0;
 pub const PTRACE_PEEKTEXT: ::c_uint = 1;
@@ -518,6 +543,11 @@ pub const TIOCM_DSR: ::c_int = 0x100;
 pub const TIOCM_CD: ::c_int = TIOCM_CAR;
 pub const TIOCM_RI: ::c_int = TIOCM_RNG;
 
+#[doc(hidden)]
+pub const AF_MAX: ::c_int = 42;
+#[doc(hidden)]
+pub const PF_MAX: ::c_int = AF_MAX;
+
 cfg_if! {
     if #[cfg(any(target_arch = "arm", target_arch = "x86",
                  target_arch = "x86_64"))] {
@@ -542,13 +572,6 @@ extern {
 
 #[link(name = "util")]
 extern {
-    pub fn sysctl(name: *mut ::c_int,
-                  namelen: ::c_int,
-                  oldp: *mut ::c_void,
-                  oldlenp: *mut ::size_t,
-                  newp: *mut ::c_void,
-                  newlen: ::size_t)
-                  -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
     pub fn backtrace(buf: *mut *mut ::c_void,
                      sz: ::c_int) -> ::c_int;

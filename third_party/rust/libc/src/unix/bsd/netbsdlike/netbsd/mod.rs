@@ -346,6 +346,85 @@ pub const SO_TIMESTAMP: ::c_int = 0x2000;
 pub const SO_OVERFLOWED: ::c_int = 0x1009;
 pub const SO_NOHEADER: ::c_int = 0x100a;
 
+// sys/netinet/in.h
+// Protocols (RFC 1700)
+// NOTE: These are in addition to the constants defined in src/unix/mod.rs
+
+// IPPROTO_IP defined in src/unix/mod.rs
+/// Hop-by-hop option header
+pub const IPPROTO_HOPOPTS: ::c_int = 0;
+// IPPROTO_ICMP defined in src/unix/mod.rs
+/// group mgmt protocol
+pub const IPPROTO_IGMP: ::c_int = 2;
+/// gateway^2 (deprecated)
+pub const IPPROTO_GGP: ::c_int = 3;
+/// for compatibility
+pub const IPPROTO_IPIP: ::c_int = 4;
+// IPPROTO_TCP defined in src/unix/mod.rs
+/// exterior gateway protocol
+pub const IPPROTO_EGP: ::c_int = 8;
+/// pup
+pub const IPPROTO_PUP: ::c_int = 12;
+// IPPROTO_UDP defined in src/unix/mod.rs
+/// xns idp
+pub const IPPROTO_IDP: ::c_int = 22;
+/// tp-4 w/ class negotiation
+pub const IPPROTO_TP: ::c_int = 29;
+/// DCCP
+pub const IPPROTO_DCCP: ::c_int = 33;
+// IPPROTO_IPV6 defined in src/unix/mod.rs
+/// IP6 routing header
+pub const IPPROTO_ROUTING: ::c_int = 43;
+/// IP6 fragmentation header
+pub const IPPROTO_FRAGMENT: ::c_int = 44;
+/// resource reservation
+pub const IPPROTO_RSVP: ::c_int = 46;
+/// General Routing Encap.
+pub const IPPROTO_GRE: ::c_int = 47;
+/// IP6 Encap Sec. Payload
+pub const IPPROTO_ESP: ::c_int = 50;
+/// IP6 Auth Header
+pub const IPPROTO_AH: ::c_int = 51;
+/// IP Mobility RFC 2004
+pub const IPPROTO_MOBILE: ::c_int = 55;
+/// IPv6 ICMP
+pub const IPPROTO_IPV6_ICMP: ::c_int = 58;
+// IPPROTO_ICMPV6 defined in src/unix/mod.rs
+/// IP6 no next header
+pub const IPPROTO_NONE: ::c_int = 59;
+/// IP6 destination option
+pub const IPPROTO_DSTOPTS: ::c_int = 60;
+/// ISO cnlp
+pub const IPPROTO_EON: ::c_int = 80;
+/// Ethernet-in-IP
+pub const IPPROTO_ETHERIP: ::c_int = 97;
+/// encapsulation header
+pub const IPPROTO_ENCAP: ::c_int = 98;
+/// Protocol indep. multicast
+pub const IPPROTO_PIM: ::c_int = 103;
+/// IP Payload Comp. Protocol
+pub const IPPROTO_IPCOMP: ::c_int = 108;
+/// VRRP RFC 2338
+pub const IPPROTO_VRRP: ::c_int = 112;
+/// Common Address Resolution Protocol
+pub const IPPROTO_CARP: ::c_int = 112;
+/// L2TPv3
+// TEMP: Disabled for now; this constant was added to NetBSD on 2017-02-16,
+// but isn't yet supported by the NetBSD rumprun kernel image used for
+// libc testing.
+//pub const IPPROTO_L2TP: ::c_int = 115;
+/// SCTP
+pub const IPPROTO_SCTP: ::c_int = 132;
+/// PFSYNC
+pub const IPPROTO_PFSYNC: ::c_int = 240;
+pub const IPPROTO_MAX: ::c_int = 256;
+
+/// last return value of *_input(), meaning "all job for this pkt is done".
+pub const IPPROTO_DONE: ::c_int = 257;
+
+/// sysctl placeholder for (FAST_)IPSEC
+pub const CTL_IPPROTO_IPSEC: ::c_int = 258;
+
 pub const AF_OROUTE: ::c_int = 17;
 pub const AF_ARP: ::c_int = 28;
 pub const pseudo_AF_KEY: ::c_int = 29;
@@ -385,6 +464,65 @@ pub const MAP_RENAME : ::c_int = 0x20;
 pub const MAP_NORESERVE : ::c_int = 0x40;
 pub const MAP_HASSEMAPHORE : ::c_int = 0x200;
 pub const MAP_WIRED: ::c_int = 0x800;
+
+pub const DCCP_TYPE_REQUEST: ::c_int = 0;
+pub const DCCP_TYPE_RESPONSE: ::c_int = 1;
+pub const DCCP_TYPE_DATA: ::c_int = 2;
+pub const DCCP_TYPE_ACK: ::c_int = 3;
+pub const DCCP_TYPE_DATAACK: ::c_int =  4;
+pub const DCCP_TYPE_CLOSEREQ: ::c_int = 5;
+pub const DCCP_TYPE_CLOSE: ::c_int = 6;
+pub const DCCP_TYPE_RESET: ::c_int = 7;
+pub const DCCP_TYPE_MOVE: ::c_int = 8;
+
+pub const DCCP_FEATURE_CC: ::c_int = 1;
+pub const DCCP_FEATURE_ECN: ::c_int = 2;
+pub const DCCP_FEATURE_ACKRATIO: ::c_int =  3;
+pub const DCCP_FEATURE_ACKVECTOR: ::c_int = 4;
+pub const DCCP_FEATURE_MOBILITY: ::c_int =  5;
+pub const DCCP_FEATURE_LOSSWINDOW: ::c_int = 6;
+pub const DCCP_FEATURE_CONN_NONCE: ::c_int = 8;
+pub const DCCP_FEATURE_IDENTREG: ::c_int =  7;
+
+pub const DCCP_OPT_PADDING: ::c_int = 0;
+pub const DCCP_OPT_DATA_DISCARD: ::c_int = 1;
+pub const DCCP_OPT_SLOW_RECV: ::c_int = 2;
+pub const DCCP_OPT_BUF_CLOSED: ::c_int = 3;
+pub const DCCP_OPT_CHANGE_L: ::c_int = 32;
+pub const DCCP_OPT_CONFIRM_L: ::c_int = 33;
+pub const DCCP_OPT_CHANGE_R: ::c_int = 34;
+pub const DCCP_OPT_CONFIRM_R: ::c_int = 35;
+pub const DCCP_OPT_INIT_COOKIE: ::c_int = 36;
+pub const DCCP_OPT_NDP_COUNT: ::c_int = 37;
+pub const DCCP_OPT_ACK_VECTOR0: ::c_int = 38;
+pub const DCCP_OPT_ACK_VECTOR1: ::c_int = 39;
+pub const DCCP_OPT_RECV_BUF_DROPS: ::c_int = 40;
+pub const DCCP_OPT_TIMESTAMP: ::c_int = 41;
+pub const DCCP_OPT_TIMESTAMP_ECHO: ::c_int = 42;
+pub const DCCP_OPT_ELAPSEDTIME: ::c_int = 43;
+pub const DCCP_OPT_DATACHECKSUM: ::c_int = 44;
+
+pub const DCCP_REASON_UNSPEC: ::c_int = 0;
+pub const DCCP_REASON_CLOSED: ::c_int = 1;
+pub const DCCP_REASON_INVALID: ::c_int = 2;
+pub const DCCP_REASON_OPTION_ERR: ::c_int = 3;
+pub const DCCP_REASON_FEA_ERR: ::c_int = 4;
+pub const DCCP_REASON_CONN_REF: ::c_int = 5;
+pub const DCCP_REASON_BAD_SNAME: ::c_int = 6;
+pub const DCCP_REASON_BAD_COOKIE: ::c_int = 7;
+pub const DCCP_REASON_INV_MOVE: ::c_int = 8;
+pub const DCCP_REASON_UNANSW_CH: ::c_int = 10;
+pub const DCCP_REASON_FRUITLESS_NEG: ::c_int = 11;
+
+pub const DCCP_CCID: ::c_int = 1;
+pub const DCCP_CSLEN: ::c_int = 2;
+pub const DCCP_MAXSEG: ::c_int = 4;
+pub const DCCP_SERVICE: ::c_int = 8;
+
+pub const DCCP_NDP_LIMIT: ::c_int = 16;
+pub const DCCP_SEQ_NUM_LIMIT: ::c_int = 16777216;
+pub const DCCP_MAX_OPTIONS: ::c_int = 32;
+pub const DCCP_MAX_PKTS: ::c_int = 100;
 
 pub const _PC_LINK_MAX : ::c_int = 1;
 pub const _PC_MAX_CANON : ::c_int = 2;
@@ -511,13 +649,13 @@ pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 1;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 2;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_NORMAL;
 
-pub const EVFILT_AIO: ::int32_t = 2;
-pub const EVFILT_PROC: ::int32_t = 4;
-pub const EVFILT_READ: ::int32_t = 0;
-pub const EVFILT_SIGNAL: ::int32_t = 5;
-pub const EVFILT_TIMER: ::int32_t = 6;
-pub const EVFILT_VNODE: ::int32_t = 3;
-pub const EVFILT_WRITE: ::int32_t = 1;
+pub const EVFILT_AIO: ::uint32_t = 2;
+pub const EVFILT_PROC: ::uint32_t = 4;
+pub const EVFILT_READ: ::uint32_t = 0;
+pub const EVFILT_SIGNAL: ::uint32_t = 5;
+pub const EVFILT_TIMER: ::uint32_t = 6;
+pub const EVFILT_VNODE: ::uint32_t = 3;
+pub const EVFILT_WRITE: ::uint32_t = 1;
 
 pub const EV_ADD: ::uint32_t = 0x1;
 pub const EV_DELETE: ::uint32_t = 0x2;
@@ -700,6 +838,11 @@ pub const KERN_PROC_UID: ::c_int = 5;
 pub const KERN_PROC_RUID: ::c_int = 6;
 pub const KERN_PROC_GID: ::c_int = 7;
 pub const KERN_PROC_RGID: ::c_int = 8;
+pub const KERN_PROC_ARGV: ::c_int = 1;
+pub const KERN_PROC_NARGV: ::c_int = 2;
+pub const KERN_PROC_ENV: ::c_int = 3;
+pub const KERN_PROC_NENV: ::c_int = 4;
+pub const KERN_PROC_PATHNAME: ::c_int = 5;
 
 pub const EAI_SYSTEM: ::c_int = 11;
 
