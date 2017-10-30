@@ -6,6 +6,7 @@ pub type nlink_t = u64;
 pub type blksize_t = i64;
 pub type greg_t = i64;
 pub type suseconds_t = i64;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct stat {
@@ -21,12 +22,12 @@ s! {
         pub st_blksize: ::blksize_t,
         pub st_blocks: ::blkcnt_t,
         pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_long,
+        pub st_atime_nsec: i64,
         pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_long,
+        pub st_mtime_nsec: i64,
         pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_long,
-        __unused: [::c_long; 3],
+        pub st_ctime_nsec: i64,
+        __unused: [i64; 3],
     }
 
     pub struct stat64 {
@@ -42,15 +43,48 @@ s! {
         pub st_blksize: ::blksize_t,
         pub st_blocks: ::blkcnt64_t,
         pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_long,
+        pub st_atime_nsec: i64,
         pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_long,
+        pub st_mtime_nsec: i64,
         pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_long,
-        __reserved: [::c_long; 3],
+        pub st_ctime_nsec: i64,
+        __reserved: [i64; 3],
+    }
+
+    pub struct statfs64 {
+        pub f_type: ::__fsword_t,
+        pub f_bsize: ::__fsword_t,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::__fsword_t,
+        pub f_frsize: ::__fsword_t,
+        pub f_flags: ::__fsword_t,
+        pub f_spare: [::__fsword_t; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct pthread_attr_t {
+        #[cfg(target_pointer_width = "32")]
+        __size: [u32; 8],
+        #[cfg(target_pointer_width = "64")]
         __size: [u64; 7]
     }
 
@@ -133,7 +167,11 @@ s! {
         pub start_stack: ::c_ulonglong,
         pub signal: ::c_longlong,
         __reserved: ::c_int,
+        #[cfg(target_pointer_width = "32")]
+        __pad1: u32,
         pub u_ar0: *mut user_regs_struct,
+        #[cfg(target_pointer_width = "32")]
+        __pad2: u32,
         pub u_fpstate: *mut user_fpregs_struct,
         pub magic: ::c_ulonglong,
         pub u_comm: [::c_char; 32],
@@ -165,8 +203,8 @@ s! {
         __pad1: ::c_ushort,
         pub __seq: ::c_ushort,
         __pad2: ::c_ushort,
-        __unused1: ::c_ulong,
-        __unused2: ::c_ulong
+        __unused1: u64,
+        __unused2: u64
     }
 
     pub struct shmid_ds {
@@ -178,8 +216,19 @@ s! {
         pub shm_cpid: ::pid_t,
         pub shm_lpid: ::pid_t,
         pub shm_nattch: ::shmatt_t,
-        __unused4: ::c_ulong,
-        __unused5: ::c_ulong
+        __unused4: u64,
+        __unused5: u64
+    }
+
+    pub struct termios2 {
+        pub c_iflag: ::tcflag_t,
+        pub c_oflag: ::tcflag_t,
+        pub c_cflag: ::tcflag_t,
+        pub c_lflag: ::tcflag_t,
+        pub c_line: ::cc_t,
+        pub c_cc: [::cc_t; 19],
+        pub c_ispeed: ::speed_t,
+        pub c_ospeed: ::speed_t,
     }
 }
 
@@ -198,6 +247,8 @@ pub const O_SYNC: ::c_int = 1052672;
 pub const O_RSYNC: ::c_int = 1052672;
 pub const O_DSYNC: ::c_int = 4096;
 pub const O_FSYNC: ::c_int = 0x101000;
+pub const O_NOATIME: ::c_int = 0o1000000;
+pub const O_PATH: ::c_int = 0o10000000;
 
 pub const MAP_GROWSDOWN: ::c_int = 0x0100;
 
@@ -313,7 +364,6 @@ pub const SO_DETACH_FILTER: ::c_int = 27;
 pub const SO_GET_FILTER: ::c_int = SO_ATTACH_FILTER;
 pub const SO_PEERNAME: ::c_int = 28;
 pub const SO_TIMESTAMP: ::c_int = 29;
-pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
 pub const SO_ACCEPTCONN: ::c_int = 30;
 pub const SO_PEERSEC: ::c_int = 31;
 pub const SO_PASSSEC: ::c_int = 34;
@@ -388,8 +438,6 @@ pub const TIOCMBIC: ::c_ulong = 0x5417;
 pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const TIOCCONS: ::c_ulong = 0x541D;
 
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
-
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
 pub const NCCS: usize = 32;
@@ -423,7 +471,6 @@ pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
 pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
-pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 
 pub const O_DIRECT: ::c_int = 0x4000;
@@ -445,20 +492,7 @@ pub const PTRACE_GETFPXREGS: ::c_uint = 18;
 pub const PTRACE_SETFPXREGS: ::c_uint = 19;
 pub const PTRACE_GETREGS: ::c_uint = 12;
 pub const PTRACE_SETREGS: ::c_uint = 13;
-pub const PTRACE_O_EXITKILL: ::c_uint = 1048576;
-pub const PTRACE_O_TRACECLONE: ::c_uint = 8;
-pub const PTRACE_O_TRACEEXEC: ::c_uint = 16;
-pub const PTRACE_O_TRACEEXIT: ::c_uint = 64;
-pub const PTRACE_O_TRACEFORK: ::c_uint = 2;
-pub const PTRACE_O_TRACESYSGOOD: ::c_uint = 1;
-pub const PTRACE_O_TRACEVFORK: ::c_uint = 4;
-pub const PTRACE_O_TRACEVFORKDONE: ::c_uint = 32;
-pub const PTRACE_O_TRACESECCOMP: ::c_uint = 128;
-pub const PTRACE_O_SUSPEND_SECCOMP: ::c_uint = 2097152;
 pub const PTRACE_PEEKSIGINFO_SHARED: ::c_uint = 1;
-
-pub const SYS_gettid: ::c_long = 186;
-pub const SYS_perf_event_open: ::c_long = 298;
 
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
@@ -505,6 +539,17 @@ pub const ISIG: ::tcflag_t = 0x00000001;
 pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
+pub const CIBAUD: ::tcflag_t = 0o02003600000;
+pub const CBAUDEX: ::tcflag_t = 0o010000;
+pub const VSWTC: usize = 7;
+pub const OLCUC:  ::tcflag_t = 0o000002;
+pub const NLDLY:  ::tcflag_t = 0o000400;
+pub const CRDLY:  ::tcflag_t = 0o003000;
+pub const TABDLY: ::tcflag_t = 0o014000;
+pub const BSDLY:  ::tcflag_t = 0o020000;
+pub const FFDLY:  ::tcflag_t = 0o100000;
+pub const VTDLY:  ::tcflag_t = 0o040000;
+pub const XTABS:  ::tcflag_t = 0o014000;
 
 pub const B0: ::speed_t = 0o000000;
 pub const B50: ::speed_t = 0o000001;
@@ -524,6 +569,7 @@ pub const B19200: ::speed_t = 0o000016;
 pub const B38400: ::speed_t = 0o000017;
 pub const EXTA: ::speed_t = B19200;
 pub const EXTB: ::speed_t = B38400;
+pub const BOTHER: ::speed_t = 0o010000;
 pub const B57600: ::speed_t = 0o010001;
 pub const B115200: ::speed_t = 0o010002;
 pub const B230400: ::speed_t = 0o010003;
@@ -565,6 +611,35 @@ pub const TIOCOUTQ: ::c_ulong = 0x5411;
 pub const TIOCGWINSZ: ::c_ulong = 0x5413;
 pub const TIOCSWINSZ: ::c_ulong = 0x5414;
 pub const FIONREAD: ::c_ulong = 0x541B;
+
+// offsets in user_regs_structs, from sys/reg.h
+pub const R15: ::c_int = 0;
+pub const R14: ::c_int = 1;
+pub const R13: ::c_int = 2;
+pub const R12: ::c_int = 3;
+pub const RBP: ::c_int = 4;
+pub const RBX: ::c_int = 5;
+pub const R11: ::c_int = 6;
+pub const R10: ::c_int = 7;
+pub const R9: ::c_int = 8;
+pub const R8: ::c_int = 9;
+pub const RAX: ::c_int = 10;
+pub const RCX: ::c_int = 11;
+pub const RDX: ::c_int = 12;
+pub const RSI: ::c_int = 13;
+pub const RDI: ::c_int = 14;
+pub const ORIG_RAX: ::c_int = 15;
+pub const RIP: ::c_int = 16;
+pub const CS: ::c_int = 17;
+pub const EFLAGS: ::c_int = 18;
+pub const RSP: ::c_int = 19;
+pub const SS: ::c_int = 20;
+pub const FS_BASE: ::c_int = 21;
+pub const GS_BASE: ::c_int = 22;
+pub const DS: ::c_int = 23;
+pub const ES: ::c_int = 24;
+pub const FS: ::c_int = 25;
+pub const GS: ::c_int = 26;
 
 extern {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;

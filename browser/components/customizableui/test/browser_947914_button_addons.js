@@ -24,6 +24,7 @@ add_task(async function() {
   await waitForCondition(() => gBrowser.currentURI &&
                                gBrowser.currentURI.spec == "about:addons");
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let addonsPage = gBrowser.selectedBrowser.contentWindow.document.
                             getElementById("addons-page");
   ok(addonsPage, "Add-ons page was opened");

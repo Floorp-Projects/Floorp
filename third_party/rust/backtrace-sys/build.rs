@@ -1,4 +1,4 @@
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 use std::ffi::OsString;
@@ -14,7 +14,7 @@ macro_rules! t {
     })
 }
 
-fn try_tool(compiler: &gcc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: &str)
+fn try_tool(compiler: &cc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: &str)
             -> Option<PathBuf> {
     if !cc.ends_with(compiler_suffix) {
         return None
@@ -28,13 +28,14 @@ fn try_tool(compiler: &gcc::Tool, cc: &str, compiler_suffix: &str, tool_suffix: 
     }
 }
 
-fn find_tool(compiler: &gcc::Tool, cc: &str, tool: &str) -> PathBuf {
+fn find_tool(compiler: &cc::Tool, cc: &str, tool: &str) -> PathBuf {
     // Allow overrides via env var
     if let Some(s) = env::var_os(tool.to_uppercase()) {
         return s.into()
     }
     let tool_suffix = format!("-{}", tool);
     try_tool(compiler, cc, "-gcc", &tool_suffix)
+        .or_else(|| try_tool(compiler, cc, "-clang", &tool_suffix))
         .or_else(|| try_tool(compiler, cc, "-cc", &tool_suffix))
         .unwrap_or_else(|| PathBuf::from(tool))
 }
@@ -60,7 +61,33 @@ fn main() {
         return
     }
 
-    let cfg = gcc::Config::new();
+    let mut make = "make";
+
+    // host BSDs has GNU-make as gmake
+    if host.contains("bitrig") || host.contains("dragonfly") ||
+        host.contains("freebsd") || host.contains("netbsd") ||
+        host.contains("openbsd") {
+
+        make = "gmake"
+    }
+
+    let configure = src.join("src/libbacktrace/configure").into_os_string();
+
+    // When cross-compiling on Windows, this path will contain backslashes,
+    // but configure doesn't like that. Replace them with forward slashes.
+    #[cfg(windows)]
+    let configure = {
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        let mut chars: Vec<u16> = configure.encode_wide().collect();
+        for c in chars.iter_mut() {
+            if *c == '\\' as u16 {
+                *c = '/' as u16;
+            }
+        }
+        OsString::from_wide(&chars)
+    };
+
+    let cfg = cc::Build::new();
     let compiler = cfg.get_compiler();
     let cc = compiler.path().file_name().unwrap().to_str().unwrap();
     let mut flags = OsString::new();
@@ -71,22 +98,37 @@ fn main() {
         flags.push(flag);
     }
     let ar = find_tool(&compiler, cc, "ar");
-    run(Command::new(src.join("src/libbacktrace/configure"))
-                .current_dir(&dst)
-                .env("CC", compiler.path())
-                .env("CFLAGS", flags)
-                .arg("--with-pic")
-                .arg("--disable-multilib")
-                .arg("--disable-shared")
-                .arg("--disable-host-shared")
-                .arg(format!("--target={}", target))
-                .arg(format!("--host={}", host)),
-        "sh");
-    run(Command::new("make")
-                .current_dir(&dst)
-                .arg(format!("INCDIR={}",
-                             src.join("src/libbacktrace").display())),
+    let ranlib = find_tool(&compiler, cc, "ranlib");
+    let mut cmd = Command::new("sh");
+
+    cmd.arg(configure)
+       .current_dir(&dst)
+       .env("AR", &ar)
+       .env("RANLIB", &ranlib)
+       .env("CC", compiler.path())
+       .env("CFLAGS", flags)
+       .arg("--with-pic")
+       .arg("--disable-multilib")
+       .arg("--disable-shared")
+       .arg("--disable-host-shared")
+       .arg(format!("--host={}", target));
+
+    // Apparently passing this flag causes problems on Windows
+    if !host.contains("windows") {
+       cmd.arg(format!("--build={}", host));
+    }
+
+    run(&mut cmd, "sh");
+    let mut cmd = Command::new(make);
+    if let Some(makeflags) = env::var_os("CARGO_MAKEFLAGS") {
+        cmd.env("MAKEFLAGS", makeflags);
+    }
+
+    run(cmd.current_dir(&dst)
+           .arg(format!("INCDIR={}",
+                        src.join("src/libbacktrace").display())),
         "make");
+
     println!("cargo:rustc-link-search=native={}/.libs", dst.display());
     println!("cargo:rustc-link-lib=static=backtrace");
 

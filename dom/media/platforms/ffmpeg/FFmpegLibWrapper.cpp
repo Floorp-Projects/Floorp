@@ -11,6 +11,7 @@
 #include "prlink.h"
 
 #define AV_LOG_DEBUG    48
+#define AV_LOG_INFO     32
 
 namespace mozilla
 {
@@ -141,10 +142,13 @@ FFmpegLibWrapper::Link()
 #undef AV_FUNC_OPTION
 
   avcodec_register_all();
-#ifdef DEBUG
-  av_log_set_level(AV_LOG_DEBUG);
-#endif
-
+  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+    av_log_set_level(AV_LOG_DEBUG);
+  } else if (MOZ_LOG_TEST(sPDMLog, LogLevel::Info)) {
+    av_log_set_level(AV_LOG_INFO);
+  } else {
+    av_log_set_level(0);
+  }
   return LinkResult::Success;
 }
 

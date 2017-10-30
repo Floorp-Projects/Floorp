@@ -1,7 +1,8 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextureHostOGL.h"
 
@@ -61,7 +62,9 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       result = new SurfaceTextureHost(aFlags,
                                       surfaceTexture,
                                       desc.size(),
-                                      desc.continuous());
+                                      desc.format(),
+                                      desc.continuous(),
+                                      desc.ignoreTransform());
       break;
     }
 #endif
@@ -342,13 +345,15 @@ SurfaceTextureSource::SurfaceTextureSource(TextureSourceProvider* aProvider,
                                            gfx::SurfaceFormat aFormat,
                                            GLenum aTarget,
                                            GLenum aWrapMode,
-                                           gfx::IntSize aSize)
+                                           gfx::IntSize aSize,
+                                           bool aIgnoreTransform)
   : mGL(aProvider->GetGLContext())
   , mSurfTex(aSurfTex)
   , mFormat(aFormat)
   , mTextureTarget(aTarget)
   , mWrapMode(aWrapMode)
   , mSize(aSize)
+  , mIgnoreTransform(aIgnoreTransform)
 {
 }
 
@@ -394,8 +399,14 @@ SurfaceTextureSource::GetTextureTransform()
 
   gfx::Matrix4x4 ret;
 
-  const auto& surf = java::sdk::SurfaceTexture::LocalRef(java::sdk::SurfaceTexture::Ref::From(mSurfTex));
-  AndroidSurfaceTexture::GetTransformMatrix(surf, ret);
+  // GetTransformMatrix() returns the transform set by the producer side of
+  // the SurfaceTexture. We should ignore this if we know the transform should
+  // be identity but the producer couldn't set it correctly, like is the
+  // case for AndroidNativeWindowTextureData.
+  if (!mIgnoreTransform) {
+    const auto& surf = java::sdk::SurfaceTexture::LocalRef(java::sdk::SurfaceTexture::Ref::From(mSurfTex));
+    AndroidSurfaceTexture::GetTransformMatrix(surf, ret);
+  }
 
   return ret;
 }
@@ -411,11 +422,15 @@ SurfaceTextureSource::DeallocateDeviceData()
 SurfaceTextureHost::SurfaceTextureHost(TextureFlags aFlags,
                                        mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
                                        gfx::IntSize aSize,
-                                       bool aContinuousUpdate)
+                                       gfx::SurfaceFormat aFormat,
+                                       bool aContinuousUpdate,
+                                       bool aIgnoreTransform)
   : TextureHost(aFlags)
   , mSurfTex(aSurfTex)
   , mSize(aSize)
+  , mFormat(aFormat)
   , mContinuousUpdate(aContinuousUpdate)
+  , mIgnoreTransform(aIgnoreTransform)
 {
   if (!mSurfTex) {
     return;
@@ -475,15 +490,15 @@ SurfaceTextureHost::Lock()
   }
 
   if (!mTextureSource) {
-    gfx::SurfaceFormat format = gfx::SurfaceFormat::R8G8B8A8;
     GLenum target = LOCAL_GL_TEXTURE_EXTERNAL; // This is required by SurfaceTexture
     GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
     mTextureSource = new SurfaceTextureSource(mProvider,
                                               mSurfTex,
-                                              format,
+                                              mFormat,
                                               target,
                                               wrapMode,
-                                              mSize);
+                                              mSize,
+                                              mIgnoreTransform);
   }
 
   return true;
@@ -518,7 +533,7 @@ SurfaceTextureHost::NotifyNotUsed()
 gfx::SurfaceFormat
 SurfaceTextureHost::GetFormat() const
 {
-  return mTextureSource ? mTextureSource->GetFormat() : gfx::SurfaceFormat::UNKNOWN;
+  return mFormat;
 }
 
 void

@@ -13,3 +13,6 @@ def DisableStlWrapping():
     COMPILE_FLAGS['STL'] = []
 
 UNIFIED_SOURCES += ['test1.c']
+
+CXXFLAGS += ['-funroll-loops', '-Wall']
+CFLAGS += ['-Wall', '-funroll-loops']

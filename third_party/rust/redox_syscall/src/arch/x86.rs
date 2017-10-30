@@ -1,4 +1,4 @@
-use error::{Error, Result};
+use super::error::{Error, Result};
 
 pub unsafe fn syscall0(mut a: usize) -> Result<usize> {
     asm!("int 0x80"
@@ -61,7 +61,8 @@ pub unsafe fn syscall4(mut a: usize, b: usize, c: usize, d: usize, e: usize) -> 
     Error::demux(a)
 }
 
-pub unsafe fn syscall5(mut a: usize, b: usize, c: usize, d: usize, e: usize, f: usize) -> Result<usize> {
+pub unsafe fn syscall5(mut a: usize, b: usize, c: usize, d: usize, e: usize, f: usize)
+                       -> Result<usize> {
     asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b), "{ecx}"(c), "{edx}"(d), "{esi}"(e), "{edi}"(f)

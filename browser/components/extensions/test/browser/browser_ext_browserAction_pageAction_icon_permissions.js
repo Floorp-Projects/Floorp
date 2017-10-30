@@ -102,7 +102,7 @@ add_task(async function testDefaultDetails() {
     await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
     let browserActionId = makeWidgetId(extension.id) + "-browser-action";
-    let pageActionId = makeWidgetId(extension.id) + "-page-action";
+    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
 
     await promiseAnimationFrame();
 

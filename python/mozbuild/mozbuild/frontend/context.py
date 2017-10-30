@@ -335,8 +335,7 @@ class CompileFlags(ContextDerivedValue, dict):
              ('CFLAGS', 'C_LDFLAGS')),
             ('OS_CXXFLAGS', context.config.substs.get('OS_CXXFLAGS'),
              ('CXXFLAGS', 'CXX_LDFLAGS')),
-            ('DEBUG', (context.config.substs['MOZ_DEBUG_FLAGS'].split() if
-                       'MOZ_DEBUG_FLAGS' in context.config.substs else []),
+            ('DEBUG', self._debug_flags(),
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('CLANG_PLUGIN', context.config.substs.get('CLANG_PLUGIN_FLAGS'),
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
@@ -346,6 +345,8 @@ class CompileFlags(ContextDerivedValue, dict):
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
              ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
+            ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
         )
         self._known_keys = set(k for k, v, _ in self.flag_variables)
 
@@ -359,6 +360,12 @@ class CompileFlags(ContextDerivedValue, dict):
                                  for k, v, _ in self.flag_variables))
         else:
             dict.__init__(self)
+
+    def _debug_flags(self):
+        if (self._context.config.substs.get('MOZ_DEBUG') or
+            self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
+            return self._context.config.substs.get('MOZ_DEBUG_FLAGS', '').split()
+        return []
 
     def _warnings_as_errors(self):
         warnings_as_errors = self._context.config.substs.get('WARNINGS_AS_ERRORS')
