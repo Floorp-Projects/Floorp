@@ -239,12 +239,14 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
     'central': 'aws-provisioner-v1/taskcluster-generic',
     'beta': 'null-provisioner/human-breakpoint',
     'release': 'null-provisioner/human-breakpoint',
+    'maple': 'aws-provisioner-v1/taskcluster-generic',
     'default': 'invalid/invalid',
 }
 
 PUSH_APK_DRY_RUN_OPTION = {
     'central': False,
     'beta': False,
+    'maple': True,
     'release': False,
     'default': True,
 }
