@@ -36,6 +36,7 @@
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
+#include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
 #include "WrapperFactory.h"
@@ -388,11 +389,29 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     jsapi.Init();
     JSContext* cx = jsapi.cx();
 
+    bool isCriticalModule = StringEndsWith(spec, NS_LITERAL_CSTRING("/nsAsyncShutdown.js"));
+
     nsAutoPtr<ModuleEntry> entry(new ModuleEntry(RootingContext::get(cx)));
-    RootedValue dummy(cx);
+    RootedValue exn(cx);
     rv = ObjectForLocation(info, file, &entry->obj, &entry->thisObjectKey,
-                           &entry->location, false, &dummy);
+                           &entry->location, isCriticalModule, &exn);
     if (NS_FAILED(rv)) {
+        // Temporary debugging assertion for bug 1403348:
+        if (isCriticalModule && !exn.isUndefined()) {
+            JSAutoCompartment ac(cx, xpc::PrivilegedJunkScope());
+            JS_WrapValue(cx, &exn);
+
+            nsAutoCString file;
+            uint32_t line;
+            uint32_t column;
+            nsAutoString msg;
+            nsContentUtils::ExtractErrorValues(cx, exn, file, &line, &column, msg);
+
+            NS_ConvertUTF16toUTF8 cMsg(msg);
+            MOZ_CRASH_UNSAFE_PRINTF("Failed to load module \"%s\": "
+                                    "[\"%s\" {file: \"%s\", line: %u}]",
+                                    spec.get(), cMsg.get(), file.get(), line);
+        }
         return nullptr;
     }
 
