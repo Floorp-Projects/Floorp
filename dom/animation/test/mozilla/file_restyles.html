@@ -2,12 +2,24 @@
 <head>
 <meta charset=utf-8>
 <title>Tests restyles caused by animations</title>
-<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-<script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-<script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+<script>
+var ok = opener.ok.bind(opener);
+var is = opener.is.bind(opener);
+var todo = opener.todo.bind(opener);
+var todo_is = opener.todo_is.bind(opener);
+var info = opener.info.bind(opener);
+var original_finish = opener.SimpleTest.finish;
+var SimpleTest = opener.SimpleTest;
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+</script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
 <script src="../testcommon.js"></script>
-<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
 <style>
 @keyframes opacity {
   from { opacity: 1; }
@@ -34,9 +46,11 @@ div {
 'use strict';
 
 function observeStyling(frameCount, onFrame) {
-  var docShell = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                       .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-                       .QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  var docShell =
+    SpecialPowers.wrap(window)
+                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                 .QueryInterface(SpecialPowers.Ci.nsIDocShell);
 
   docShell.recordProfileTimelineMarkers = true;
   docShell.popProfileTimelineMarkers();
@@ -75,9 +89,6 @@ function waitForWheelEvent(aTarget) {
   });
 }
 
-SimpleTest.expectAssertions(0, 1); // bug 1332970
-SimpleTest.waitForExplicitFinish();
-
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
@@ -101,7 +112,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(!animation.isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
     is(markers.length, 5,
@@ -115,7 +126,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -132,7 +143,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -146,7 +157,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     div.animationDuration = '200s';
 
@@ -162,7 +173,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     animation.finish();
 
@@ -231,7 +242,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(!animation.isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
 
@@ -377,7 +388,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(!animation.isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
 
@@ -469,7 +480,7 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     animation.pause();
 
@@ -519,13 +530,13 @@ waitForAllPaints(function() {
     var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     // Set currentTime to a time longer than duration.
     animation.currentTime = 500 * MS_PER_SEC;
 
     // Now the animation immediately get back from compositor.
-    ok(!animation.isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     // Extend the duration.
     animation.effect.timing.duration = 800 * MS_PER_SEC;
@@ -553,7 +564,7 @@ waitForAllPaints(function() {
        'Script animations keep running even when the target element has ' +
        '"display: none" style');
 
-    ok(!animation.isRunningOnCompositor,
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Script animations on "display:none" element should not run on the ' +
        'compositor');
 
@@ -589,7 +600,7 @@ waitForAllPaints(function() {
        'Opacity script animations keep running even when the target element ' +
        'has "display: none" style');
 
-    ok(!animation.isRunningOnCompositor,
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Opacity script animations on "display:none" element should not ' +
        'run on the compositor');
 
@@ -603,7 +614,7 @@ waitForAllPaints(function() {
     // We need to wait a frame to unapply display:none style.
     await waitForFrame();
 
-    ok(animation.isRunningOnCompositor,
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
        'Opacity script animations restored from "display: none" should be ' +
        'run on the compositor');
 
@@ -641,7 +652,7 @@ waitForAllPaints(function() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
     await animation.ready;
-    ok(animation.isRunningOnCompositor);
+    ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
     // Apply the same animation style
     div.style.animation = 'opacity 100s';
     var markers = await observeStyling(5);
@@ -673,7 +684,7 @@ waitForAllPaints(function() {
                                     backgroundColor: ['green', 'red'] },
                                   100 * MS_PER_SEC);
       await animation.ready;
-      ok(animation.isRunningOnCompositor,
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation is running on the compositor');
       // Make the background-color style as !important to cause an update
       // to the cascade.
@@ -743,7 +754,7 @@ waitForAllPaints(function() {
       var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
       await animation.ready;
-      ok(!animation.isRunningOnCompositor,
+      ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation overridden by an !important rule is NOT ' +
          'running on the compositor');
 
@@ -762,7 +773,7 @@ waitForAllPaints(function() {
       // compositor.
       await waitForFrame();
 
-      ok(animation.isRunningOnCompositor,
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation which is no longer overridden by the ' +
          '!important rule begins running on the compositor even if the ' +
          '!important rule had been dropped before the target element was ' +
@@ -957,7 +968,7 @@ waitForAllPaints(function() {
       var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
       await animation.ready;
-      ok(animation.isRunningOnCompositor,
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation is running on the compositor');
 
       div.style.setProperty('color', 'blue', '');
