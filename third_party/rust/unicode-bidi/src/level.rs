@@ -11,7 +11,7 @@
 //!
 //! See [`Level`](struct.Level.html) for more details.
 //!
-//! http://www.unicode.org/reports/tr9/#BD2
+//! <http://www.unicode.org/reports/tr9/#BD2>
 
 use std::convert::{From, Into};
 
@@ -26,9 +26,9 @@ use super::char_data::BidiClass;
 /// mutating an existing level, with the value smaller than `0` (before conversion to `u8`) or
 /// larger than 125 results in an `Error`.
 ///
-/// http://www.unicode.org/reports/tr9/#BD2
+/// <http://www.unicode.org/reports/tr9/#BD2>
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "with_serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Level(u8);
 
 pub const LTR_LEVEL: Level = Level(0);
@@ -163,7 +163,7 @@ impl Level {
     /// The next LTR (even) level greater than this, or fail if number is larger than `max_depth`.
     #[inline]
     pub fn new_explicit_next_ltr(&self) -> Result<Level, Error> {
-        Level::new_explicit(self.0 + 2 & !1)
+        Level::new_explicit((self.0 + 2) & !1)
     }
 
     /// The next RTL (odd) level greater than this, or fail if number is larger than `max_depth`.
@@ -354,7 +354,7 @@ mod tests {
     }
 }
 
-#[cfg(all(feature = "with_serde", test))]
+#[cfg(all(feature = "serde", test))]
 mod serde_tests {
     use serde_test::{Token, assert_tokens};
     use super::*;

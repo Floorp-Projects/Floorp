@@ -7,6 +7,7 @@ pub type pthread_mutexattr_t = *mut ::c_void;
 pub type pthread_cond_t = *mut ::c_void;
 pub type pthread_condattr_t = *mut ::c_void;
 pub type pthread_rwlock_t = *mut ::c_void;
+pub type pthread_rwlockattr_t = *mut ::c_void;
 pub type pthread_key_t = ::c_int;
 pub type tcflag_t = ::c_uint;
 pub type speed_t = ::c_uint;
@@ -263,6 +264,8 @@ pub const EOF: ::c_int = -1;
 pub const SEEK_SET: ::c_int = 0;
 pub const SEEK_CUR: ::c_int = 1;
 pub const SEEK_END: ::c_int = 2;
+pub const SEEK_DATA: ::c_int = 3;
+pub const SEEK_HOLE: ::c_int = 4;
 pub const _IOFBF: ::c_int = 0;
 pub const _IONBF: ::c_int = 2;
 pub const _IOLBF: ::c_int = 1;
@@ -272,15 +275,9 @@ pub const FILENAME_MAX: ::c_uint = 1024;
 pub const L_tmpnam: ::c_uint = 1024;
 pub const TMP_MAX: ::c_uint = 308915776;
 
-pub const O_RDONLY: ::c_int = 0;
-pub const O_WRONLY: ::c_int = 1;
-pub const O_RDWR: ::c_int = 2;
-pub const O_ACCMODE: ::c_int = 3;
-pub const O_APPEND: ::c_int = 8;
-pub const O_CREAT: ::c_int = 512;
-pub const O_EXCL: ::c_int = 2048;
 pub const O_NOCTTY: ::c_int = 32768;
-pub const O_TRUNC: ::c_int = 1024;
+pub const O_DIRECT: ::c_int = 0x00010000;
+
 pub const S_IFIFO: mode_t = 4096;
 pub const S_IFCHR: mode_t = 8192;
 pub const S_IFBLK: mode_t = 24576;
@@ -339,6 +336,7 @@ pub const MAP_SHARED: ::c_int = 0x0001;
 pub const MAP_PRIVATE: ::c_int = 0x0002;
 pub const MAP_FIXED: ::c_int = 0x0010;
 pub const MAP_ANON: ::c_int = 0x1000;
+pub const MAP_ANONYMOUS: ::c_int = MAP_ANON;
 
 pub const MAP_FAILED: *mut ::c_void = !0 as *mut ::c_void;
 
@@ -444,6 +442,10 @@ pub const EMULTIHOP: ::c_int = 90;
 pub const ENOLINK: ::c_int = 91;
 pub const EPROTO: ::c_int = 92;
 
+pub const POLLSTANDARD: ::c_short = ::POLLIN | ::POLLPRI | ::POLLOUT |
+    ::POLLRDNORM | ::POLLRDBAND | ::POLLWRBAND | ::POLLERR |
+    ::POLLHUP | ::POLLNVAL;
+
 pub const EAI_SYSTEM: ::c_int = 11;
 
 pub const F_DUPFD: ::c_int = 0;
@@ -451,11 +453,6 @@ pub const F_GETFD: ::c_int = 1;
 pub const F_SETFD: ::c_int = 2;
 pub const F_GETFL: ::c_int = 3;
 pub const F_SETFL: ::c_int = 4;
-
-pub const AT_EACCESS: ::c_int = 0x100;
-pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x200;
-pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
-pub const AT_REMOVEDIR: ::c_int = 0x800;
 
 pub const SIGTRAP: ::c_int = 5;
 
@@ -477,36 +474,8 @@ pub const POSIX_MADV_SEQUENTIAL: ::c_int = 2;
 pub const POSIX_MADV_WILLNEED: ::c_int = 3;
 pub const POSIX_MADV_DONTNEED: ::c_int = 4;
 
-pub const _SC_IOV_MAX: ::c_int = 56;
-pub const _SC_GETGR_R_SIZE_MAX: ::c_int = 70;
-pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 71;
-pub const _SC_LOGIN_NAME_MAX: ::c_int = 73;
-pub const _SC_MQ_PRIO_MAX: ::c_int = 75;
-pub const _SC_NPROCESSORS_ONLN: ::c_int = 58;
-pub const _SC_THREAD_ATTR_STACKADDR: ::c_int = 82;
-pub const _SC_THREAD_ATTR_STACKSIZE: ::c_int = 83;
-pub const _SC_THREAD_DESTRUCTOR_ITERATIONS: ::c_int = 85;
-pub const _SC_THREAD_KEYS_MAX: ::c_int = 86;
-pub const _SC_THREAD_PRIO_INHERIT: ::c_int = 87;
-pub const _SC_THREAD_PRIO_PROTECT: ::c_int = 88;
-pub const _SC_THREAD_PRIORITY_SCHEDULING: ::c_int = 89;
-pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 90;
-pub const _SC_THREAD_SAFE_FUNCTIONS: ::c_int = 91;
-pub const _SC_THREAD_STACK_MIN: ::c_int = 93;
-pub const _SC_THREAD_THREADS_MAX: ::c_int = 94;
-pub const _SC_THREADS: ::c_int = 96;
-pub const _SC_TTY_NAME_MAX: ::c_int = 101;
-pub const _SC_ATEXIT_MAX: ::c_int = 107;
-pub const _SC_XOPEN_CRYPT: ::c_int = 108;
-pub const _SC_XOPEN_ENH_I18N: ::c_int = 109;
-pub const _SC_XOPEN_LEGACY: ::c_int = 110;
-pub const _SC_XOPEN_REALTIME: ::c_int = 111;
-pub const _SC_XOPEN_REALTIME_THREADS: ::c_int = 112;
-pub const _SC_XOPEN_SHM: ::c_int = 113;
-pub const _SC_XOPEN_UNIX: ::c_int = 115;
-pub const _SC_XOPEN_VERSION: ::c_int = 116;
-pub const _SC_XOPEN_XCU_VERSION: ::c_int = 117;
-
+pub const PTHREAD_PROCESS_PRIVATE: ::c_int = 0;
+pub const PTHREAD_PROCESS_SHARED: ::c_int = 1;
 pub const PTHREAD_CREATE_JOINABLE: ::c_int = 0;
 pub const PTHREAD_CREATE_DETACHED: ::c_int = 1;
 
@@ -629,6 +598,8 @@ pub const MSG_WAITALL: ::c_int = 0x00000040;
 pub const MSG_DONTWAIT: ::c_int = 0x00000080;
 pub const MSG_EOF: ::c_int = 0x00000100;
 
+pub const SCM_TIMESTAMP: ::c_int = 0x02;
+
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_RAW: ::c_int = 3;
@@ -637,13 +608,6 @@ pub const SOCK_SEQPACKET: ::c_int = 5;
 pub const SOCK_CLOEXEC: ::c_int = 0x10000000;
 pub const SOCK_NONBLOCK: ::c_int = 0x20000000;
 pub const SOCK_MAXADDRLEN: ::c_int = 255;
-pub const IPPROTO_ICMP: ::c_int = 1;
-pub const IPPROTO_ICMPV6: ::c_int = 58;
-pub const IPPROTO_TCP: ::c_int = 6;
-pub const IPPROTO_IP: ::c_int = 0;
-pub const IPPROTO_IPV6: ::c_int = 41;
-pub const IP_MULTICAST_TTL: ::c_int = 10;
-pub const IP_MULTICAST_LOOP: ::c_int = 11;
 pub const IP_TTL: ::c_int = 4;
 pub const IP_HDRINCL: ::c_int = 2;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
@@ -687,9 +651,6 @@ pub const LOCK_EX: ::c_int = 2;
 pub const LOCK_NB: ::c_int = 4;
 pub const LOCK_UN: ::c_int = 8;
 
-pub const O_SYNC: ::c_int = 128;
-pub const O_NONBLOCK: ::c_int = 4;
-
 pub const MAP_COPY: ::c_int = 0x0002;
 pub const MAP_RENAME: ::c_int = 0x0020;
 pub const MAP_NORESERVE: ::c_int = 0x0040;
@@ -699,6 +660,32 @@ pub const MAP_NOSYNC: ::c_int = 0x0800;
 pub const MAP_NOCORE: ::c_int = 0x020000;
 
 pub const IPPROTO_RAW: ::c_int = 255;
+
+pub const _PC_LINK_MAX: ::c_int = 1;
+pub const _PC_MAX_CANON: ::c_int = 2;
+pub const _PC_MAX_INPUT: ::c_int = 3;
+pub const _PC_NAME_MAX: ::c_int = 4;
+pub const _PC_PATH_MAX: ::c_int = 5;
+pub const _PC_PIPE_BUF: ::c_int = 6;
+pub const _PC_CHOWN_RESTRICTED: ::c_int = 7;
+pub const _PC_NO_TRUNC: ::c_int = 8;
+pub const _PC_VDISABLE: ::c_int = 9;
+pub const _PC_ALLOC_SIZE_MIN: ::c_int = 10;
+pub const _PC_FILESIZEBITS: ::c_int = 12;
+pub const _PC_REC_INCR_XFER_SIZE: ::c_int = 14;
+pub const _PC_REC_MAX_XFER_SIZE: ::c_int = 15;
+pub const _PC_REC_MIN_XFER_SIZE: ::c_int = 16;
+pub const _PC_REC_XFER_ALIGN: ::c_int = 17;
+pub const _PC_SYMLINK_MAX: ::c_int = 18;
+pub const _PC_MIN_HOLE_SIZE: ::c_int = 21;
+pub const _PC_ASYNC_IO: ::c_int = 53;
+pub const _PC_PRIO_IO: ::c_int = 54;
+pub const _PC_SYNC_IO: ::c_int = 55;
+pub const _PC_ACL_EXTENDED: ::c_int = 59;
+pub const _PC_ACL_PATH_MAX: ::c_int = 60;
+pub const _PC_CAP_PRESENT: ::c_int = 61;
+pub const _PC_INF_PRESENT: ::c_int = 62;
+pub const _PC_MAC_PRESENT: ::c_int = 63;
 
 pub const _SC_ARG_MAX: ::c_int = 1;
 pub const _SC_CHILD_MAX: ::c_int = 2;
@@ -753,7 +740,71 @@ pub const _SC_SEM_NSEMS_MAX: ::c_int = 49;
 pub const _SC_SEM_VALUE_MAX: ::c_int = 50;
 pub const _SC_SIGQUEUE_MAX: ::c_int = 51;
 pub const _SC_TIMER_MAX: ::c_int = 52;
+pub const _SC_IOV_MAX: ::c_int = 56;
+pub const _SC_NPROCESSORS_CONF: ::c_int = 57;
+pub const _SC_2_PBS: ::c_int = 59;
+pub const _SC_2_PBS_ACCOUNTING: ::c_int = 60;
+pub const _SC_2_PBS_CHECKPOINT: ::c_int = 61;
+pub const _SC_2_PBS_LOCATE: ::c_int = 62;
+pub const _SC_2_PBS_MESSAGE: ::c_int = 63;
+pub const _SC_2_PBS_TRACK: ::c_int = 64;
+pub const _SC_ADVISORY_INFO: ::c_int = 65;
+pub const _SC_BARRIERS: ::c_int = 66;
+pub const _SC_CLOCK_SELECTION: ::c_int = 67;
+pub const _SC_CPUTIME: ::c_int = 68;
+pub const _SC_FILE_LOCKING: ::c_int = 69;
+pub const _SC_NPROCESSORS_ONLN: ::c_int = 58;
+pub const _SC_GETGR_R_SIZE_MAX: ::c_int = 70;
+pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 71;
 pub const _SC_HOST_NAME_MAX: ::c_int = 72;
+pub const _SC_LOGIN_NAME_MAX: ::c_int = 73;
+pub const _SC_MONOTONIC_CLOCK: ::c_int = 74;
+pub const _SC_MQ_PRIO_MAX: ::c_int = 75;
+pub const _SC_READER_WRITER_LOCKS: ::c_int = 76;
+pub const _SC_REGEXP: ::c_int = 77;
+pub const _SC_SHELL: ::c_int = 78;
+pub const _SC_SPAWN: ::c_int = 79;
+pub const _SC_SPIN_LOCKS: ::c_int = 80;
+pub const _SC_SPORADIC_SERVER: ::c_int = 81;
+pub const _SC_THREAD_ATTR_STACKADDR: ::c_int = 82;
+pub const _SC_THREAD_ATTR_STACKSIZE: ::c_int = 83;
+pub const _SC_THREAD_DESTRUCTOR_ITERATIONS: ::c_int = 85;
+pub const _SC_THREAD_KEYS_MAX: ::c_int = 86;
+pub const _SC_THREAD_PRIO_INHERIT: ::c_int = 87;
+pub const _SC_THREAD_PRIO_PROTECT: ::c_int = 88;
+pub const _SC_THREAD_PRIORITY_SCHEDULING: ::c_int = 89;
+pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 90;
+pub const _SC_THREAD_SAFE_FUNCTIONS: ::c_int = 91;
+pub const _SC_THREAD_SPORADIC_SERVER: ::c_int = 92;
+pub const _SC_THREAD_STACK_MIN: ::c_int = 93;
+pub const _SC_THREAD_THREADS_MAX: ::c_int = 94;
+pub const _SC_TIMEOUTS: ::c_int = 95;
+pub const _SC_THREADS: ::c_int = 96;
+pub const _SC_TRACE: ::c_int = 97;
+pub const _SC_TRACE_EVENT_FILTER: ::c_int = 98;
+pub const _SC_TRACE_INHERIT: ::c_int = 99;
+pub const _SC_TRACE_LOG: ::c_int = 100;
+pub const _SC_TTY_NAME_MAX: ::c_int = 101;
+pub const _SC_TYPED_MEMORY_OBJECTS: ::c_int = 102;
+pub const _SC_V6_ILP32_OFF32: ::c_int = 103;
+pub const _SC_V6_ILP32_OFFBIG: ::c_int = 104;
+pub const _SC_V6_LP64_OFF64: ::c_int = 105;
+pub const _SC_V6_LPBIG_OFFBIG: ::c_int = 106;
+pub const _SC_ATEXIT_MAX: ::c_int = 107;
+pub const _SC_XOPEN_CRYPT: ::c_int = 108;
+pub const _SC_XOPEN_ENH_I18N: ::c_int = 109;
+pub const _SC_XOPEN_LEGACY: ::c_int = 110;
+pub const _SC_XOPEN_REALTIME: ::c_int = 111;
+pub const _SC_XOPEN_REALTIME_THREADS: ::c_int = 112;
+pub const _SC_XOPEN_SHM: ::c_int = 113;
+pub const _SC_XOPEN_STREAMS: ::c_int = 114;
+pub const _SC_XOPEN_UNIX: ::c_int = 115;
+pub const _SC_XOPEN_VERSION: ::c_int = 116;
+pub const _SC_XOPEN_XCU_VERSION: ::c_int = 117;
+pub const _SC_IPV6: ::c_int = 118;
+pub const _SC_RAW_SOCKETS: ::c_int = 119;
+pub const _SC_SYMLOOP_MAX: ::c_int = 120;
+pub const _SC_PHYS_PAGES: ::c_int = 121;
 
 pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = 0 as *mut _;
 pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = 0 as *mut _;
@@ -875,8 +926,15 @@ pub const EXTB: speed_t = 38400;
 pub const SEM_FAILED: *mut sem_t = 0 as *mut sem_t;
 
 pub const CRTSCTS: ::tcflag_t = 0x00030000;
-
-pub const AT_FDCWD: ::c_int = -100;
+pub const CCTS_OFLOW: ::tcflag_t = 0x00010000;
+pub const CRTS_IFLOW: ::tcflag_t = 0x00020000;
+pub const CDTR_IFLOW: ::tcflag_t = 0x00040000;
+pub const CDSR_OFLOW: ::tcflag_t = 0x00080000;
+pub const CCAR_OFLOW: ::tcflag_t = 0x00100000;
+pub const VERASE2: usize = 7;
+pub const OCRNL: ::tcflag_t = 0x10;
+pub const ONOCR: ::tcflag_t = 0x20;
+pub const ONLRET: ::tcflag_t = 0x40;
 
 f! {
     pub fn WIFCONTINUED(status: ::c_int) -> bool {
@@ -904,6 +962,13 @@ extern {
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
     pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
     pub fn setutxent();
+    pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
+    pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
+    pub fn getgrouplist(name: *const ::c_char,
+                        basegid: ::gid_t,
+                        groups: *mut ::gid_t,
+                        ngroups: *mut ::c_int) -> ::c_int;
+    pub fn initgroups(name: *const ::c_char, basegid: ::gid_t) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -934,6 +999,14 @@ extern {
                   timeout: *const ::timespec) -> ::c_int;
     pub fn mincore(addr: *const ::c_void, len: ::size_t,
                    vec: *mut ::c_char) -> ::c_int;
+    pub fn pwritev(fd: ::c_int,
+                   iov: *const ::iovec,
+                   iovcnt: ::c_int,
+                   offset: ::off_t) -> ::ssize_t;
+    pub fn preadv(fd: ::c_int,
+                  iov: *const ::iovec,
+                  iovcnt: ::c_int,
+                  offset: ::off_t) -> ::ssize_t;
     pub fn sysctlnametomib(name: *const ::c_char,
                            mibp: *mut ::c_int,
                            sizep: *mut ::size_t)
@@ -955,7 +1028,7 @@ extern {
                         -> ::c_int;
     pub fn sched_setscheduler(pid: ::pid_t,
                               policy: ::c_int,
-                              param: *const sched_param) -> ::c_int;
+                              param: *const ::sched_param) -> ::c_int;
     pub fn sched_getscheduler(pid: ::pid_t) -> ::c_int;
     pub fn memrchr(cx: *const ::c_void,
                    c: ::c_int,
@@ -1006,6 +1079,10 @@ extern {
                                         pshared: ::c_int) -> ::c_int;
     pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
                                         pshared: *mut ::c_int) -> ::c_int;
+    pub fn pthread_rwlockattr_getpshared(attr: *const pthread_rwlockattr_t,
+                                         val: *mut ::c_int) -> ::c_int;
+    pub fn pthread_rwlockattr_setpshared(attr: *mut pthread_rwlockattr_t,
+                                         val: ::c_int) -> ::c_int;
     pub fn getpriority(which: ::c_int, who: ::c_int) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::c_int, prio: ::c_int) -> ::c_int;
 
@@ -1018,7 +1095,7 @@ extern {
     pub fn pthread_condattr_getclock(attr: *const pthread_condattr_t,
                                      clock_id: *mut clockid_t) -> ::c_int;
     pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
-                                     clock_id: clockid_t) -> ::c_int;
+                                     clock_id: ::clockid_t) -> ::c_int;
     pub fn sethostname(name: *const ::c_char, len: ::c_int) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
@@ -1030,6 +1107,9 @@ extern {
                  timeout: *const ::timespec,
                  sigmask: *const sigset_t) -> ::c_int;
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
+    pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
+                   envp: *const *const ::c_char)
+                   -> ::c_int;
 }
 
 cfg_if! {

@@ -66,6 +66,35 @@ s! {
         pub st_ino: ::c_ulonglong,
     }
 
+    pub struct statfs64 {
+        pub f_type: u32,
+        pub f_bsize: u32,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        f_fsid: [u32; 2],
+        pub f_namelen: u32,
+        pub f_frsize: u32,
+        pub f_flags: u32,
+        pub f_spare: [u32; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: ::c_ulong,
+        pub f_bfree: ::c_ulong,
+        pub f_bavail: ::c_ulong,
+        pub f_files: ::c_ulong,
+        pub f_ffree: ::c_ulong,
+        pub f_favail: ::c_ulong,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+    }
+
     pub struct pthread_attr_t {
         pub flags: ::uint32_t,
         pub stack_base: *mut ::c_void,
@@ -141,7 +170,6 @@ pub const PTRACE_SETFPREGS: ::c_int = 15;
 pub const PTRACE_GETREGS: ::c_int = 12;
 pub const PTRACE_SETREGS: ::c_int = 13;
 
-pub const SYS_gettid: ::c_long = 224;
 pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
     value: 0,
 };
@@ -165,6 +193,9 @@ pub const __CPU_BITS: ::size_t = 32;
 pub const UT_LINESIZE: usize = 8;
 pub const UT_NAMESIZE: usize = 8;
 pub const UT_HOSTSIZE: usize = 16;
+
+pub const SIGSTKSZ: ::size_t = 8192;
+pub const MINSIGSTKSZ: ::size_t = 2048;
 
 extern {
     pub fn bind(socket: ::c_int, address: *const ::sockaddr,

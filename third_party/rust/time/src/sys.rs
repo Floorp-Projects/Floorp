@@ -209,6 +209,12 @@ mod inner {
     #[cfg(all(not(target_os = "macos"), not(target_os = "ios")))]
     pub use self::unix::*;
 
+    #[cfg(target_os = "solaris")]
+    extern {
+        static timezone: time_t;
+        static altzone: time_t;
+    }
+
     fn rust_tm_to_tm(rust_tm: &Tm, tm: &mut libc::tm) {
         tm.tm_sec = rust_tm.tm_sec;
         tm.tm_min = rust_tm.tm_min;
@@ -277,14 +283,29 @@ mod inner {
             if libc::localtime_r(&sec, &mut out).is_null() {
                 panic!("localtime_r failed: {}", io::Error::last_os_error());
             }
-            tm_to_rust_tm(&out, out.tm_gmtoff as i32, tm);
+            #[cfg(target_os = "solaris")]
+            let gmtoff = {
+                ::tzset();
+                // < 0 means we don't know; assume we're not in DST.
+                if out.tm_isdst == 0 {
+                    // timezone is seconds west of UTC, tm_gmtoff is seconds east
+                    -timezone
+                } else if out.tm_isdst > 0 {
+                    -altzone
+                } else {
+                    -timezone
+                }
+            };
+            #[cfg(not(target_os = "solaris"))]
+            let gmtoff = out.tm_gmtoff;
+            tm_to_rust_tm(&out, gmtoff as i32, tm);
         }
     }
 
     pub fn utc_tm_to_time(rust_tm: &Tm) -> i64 {
-        #[cfg(all(target_os = "android", not(target_arch = "aarch64")))]
+        #[cfg(all(target_os = "android", target_pointer_width = "32"))]
         use libc::timegm64 as timegm;
-        #[cfg(not(all(target_os = "android", not(target_arch = "aarch64"))))]
+        #[cfg(not(all(target_os = "android", target_pointer_width = "32")))]
         use libc::timegm;
 
         let mut tm = unsafe { mem::zeroed() };

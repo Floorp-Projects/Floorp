@@ -92,6 +92,9 @@ pub fn demangle(s: &str) -> Demangle {
         // On Windows, dbghelp strips leading underscores, so we accept "ZN...E"
         // form too.
         inner = &s[2..s.len() - 1];
+    } else if s.len() > 5 && s.starts_with("__ZN") && s.ends_with('E') {
+        // On OSX, symbols are prefixed with an extra _
+        inner = &s[4..s.len() - 1];
     } else {
         valid = false;
     }
@@ -301,6 +304,14 @@ mod tests {
     fn demangle_many_dollars() {
         t!("_ZN13test$u20$test4foobE", "test test::foob");
         t!("_ZN12test$BP$test4foobE", "test*test::foob");
+    }
+
+
+    #[test]
+    fn demangle_osx() {
+        t!("__ZN5alloc9allocator6Layout9for_value17h02a996811f781011E", "alloc::allocator::Layout::for_value::h02a996811f781011");
+        t!("__ZN38_$LT$core..option..Option$LT$T$GT$$GT$6unwrap18_MSG_FILE_LINE_COL17haf7cb8d5824ee659E", "<core::option::Option<T>>::unwrap::_MSG_FILE_LINE_COL::haf7cb8d5824ee659");
+        t!("__ZN4core5slice89_$LT$impl$u20$core..iter..traits..IntoIterator$u20$for$u20$$RF$$u27$a$u20$$u5b$T$u5d$$GT$9into_iter17h450e234d27262170E", "core::slice::<impl core::iter::traits::IntoIterator for &'a [T]>::into_iter::h450e234d27262170");
     }
 
     #[test]

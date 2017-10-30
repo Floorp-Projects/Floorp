@@ -28,3 +28,5 @@ s! {
         pub st_birthtime_nsec: ::c_long,
     }
 }
+
+pub const MAP_32BIT: ::c_int = 0x00080000;

@@ -43,6 +43,18 @@ s! {
         pub modtime: time64_t,
     }
 
+    pub struct tm {
+        tm_sec: ::c_int,
+        tm_min: ::c_int,
+        tm_hour: ::c_int,
+        tm_mday: ::c_int,
+        tm_mon: ::c_int,
+        tm_year: ::c_int,
+        tm_wday: ::c_int,
+        tm_yday: ::c_int,
+        tm_isdst: ::c_int,
+    }
+
     pub struct timeval {
         pub tv_sec: c_long,
         pub tv_usec: c_long,

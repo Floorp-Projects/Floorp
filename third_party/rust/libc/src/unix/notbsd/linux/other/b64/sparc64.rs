@@ -5,6 +5,7 @@ pub type wchar_t = i32;
 pub type nlink_t = u32;
 pub type blksize_t = i64;
 pub type suseconds_t = i32;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct stat {
@@ -97,6 +98,8 @@ pub const O_SYNC: ::c_int = 0x802000;
 pub const O_RSYNC: ::c_int = 0x802000;
 pub const O_DSYNC: ::c_int = 0x2000;
 pub const O_FSYNC: ::c_int = 0x802000;
+pub const O_NOATIME: ::c_int = 0x200000;
+pub const O_PATH: ::c_int = 0x1000000;
 
 pub const MAP_GROWSDOWN: ::c_int = 0x0200;
 
@@ -182,12 +185,19 @@ pub const ERFKILL: ::c_int = 134;
 pub const SOL_SOCKET: ::c_int = 0xffff;
 
 pub const SO_REUSEADDR: ::c_int = 4;
+pub const SO_BINDTODEVICE: ::c_int = 0x000d;
+pub const SO_TIMESTAMP: ::c_int = 0x001d;
+pub const SO_MARK: ::c_int = 0x0022;
+pub const SO_RXQ_OVFL: ::c_int = 0x0024;
+pub const SO_PEEK_OFF: ::c_int = 0x0026;
+pub const SO_BUSY_POLL: ::c_int = 0x0030;
 pub const SO_TYPE: ::c_int = 0x1008;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_DONTROUTE: ::c_int = 16;
 pub const SO_BROADCAST: ::c_int = 32;
 pub const SO_SNDBUF: ::c_int = 0x1001;
 pub const SO_RCVBUF: ::c_int = 0x1002;
+pub const SO_DOMAIN: ::c_int = 0x1029;
 pub const SO_KEEPALIVE: ::c_int = 8;
 pub const SO_OOBINLINE: ::c_int = 0x100;
 pub const SO_LINGER: ::c_int = 128;
@@ -342,6 +352,17 @@ pub const ISIG: ::tcflag_t = 0x1;
 pub const ICANON: ::tcflag_t = 0x2;
 pub const PENDIN: ::tcflag_t = 0x4000;
 pub const NOFLSH: ::tcflag_t = 0x80;
+pub const CIBAUD: ::tcflag_t = 0o02003600000;
+pub const CBAUDEX: ::tcflag_t = 0x00001000;
+pub const VSWTC: usize = 7;
+pub const OLCUC:  ::tcflag_t = 0o000002;
+pub const NLDLY:  ::tcflag_t = 0o000400;
+pub const CRDLY:  ::tcflag_t = 0o003000;
+pub const TABDLY: ::tcflag_t = 0o014000;
+pub const BSDLY:  ::tcflag_t = 0o020000;
+pub const FFDLY:  ::tcflag_t = 0o100000;
+pub const VTDLY:  ::tcflag_t = 0o040000;
+pub const XTABS:  ::tcflag_t = 0o014000;
 
 pub const VEOL: usize = 5;
 pub const VEOL2: usize = 6;

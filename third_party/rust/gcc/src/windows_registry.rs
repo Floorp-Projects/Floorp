@@ -87,6 +87,7 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
 }
 
 /// A version of Visual Studio
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum VsVers {
     /// Visual Studio 12 (2013)
     Vs12,

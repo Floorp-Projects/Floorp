@@ -6,7 +6,7 @@ rust:
 matrix:
   include:
     # Minimum version supported
-    - rust: 1.6.0
+    - rust: 1.13.0
       install:
       script: cargo build
 

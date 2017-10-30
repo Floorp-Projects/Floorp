@@ -146,6 +146,11 @@ s! {
         __opaque: [u8; __PTHREAD_RWLOCK_SIZE__],
     }
 
+    pub struct pthread_rwlockattr_t {
+        __sig: ::c_long,
+        __opaque: [u8; __PTHREAD_RWLOCKATTR_SIZE__],
+    }
+
     pub struct siginfo_t {
         pub si_signo: ::c_int,
         pub si_errno: ::c_int,
@@ -263,6 +268,16 @@ s! {
         pub dqb_spare: [::uint32_t; 4],
     }
 
+    pub struct if_msghdr {
+        pub ifm_msglen: ::c_ushort,
+        pub ifm_version: ::c_uchar,
+        pub ifm_type: ::c_uchar,
+        pub ifm_addrs: ::c_int,
+        pub ifm_flags: ::c_int,
+        pub ifm_index: ::c_ushort,
+        pub ifm_data: if_data,
+    }
+
     pub struct termios {
         pub c_iflag: ::tcflag_t,
         pub c_oflag: ::tcflag_t,
@@ -321,6 +336,79 @@ s! {
         pub sigev_value: ::sigval,
         __unused1: *mut ::c_void,       //actually a function pointer
         pub sigev_notify_attributes: *mut ::pthread_attr_t
+    }
+
+    pub struct proc_taskinfo {
+        pub pti_virtual_size: u64,
+        pub pti_resident_size: u64,
+        pub pti_total_user: u64,
+        pub pti_total_system: u64,
+        pub pti_threads_user: u64,
+        pub pti_threads_system: u64,
+        pub pti_policy: i32,
+        pub pti_faults: i32,
+        pub pti_pageins: i32,
+        pub pti_cow_faults: i32,
+        pub pti_messages_sent: i32,
+        pub pti_messages_received: i32,
+        pub pti_syscalls_mach: i32,
+        pub pti_syscalls_unix: i32,
+        pub pti_csw: i32,
+        pub pti_threadnum: i32,
+        pub pti_numrunning: i32,
+        pub pti_priority: i32,
+    }
+
+    pub struct proc_bsdinfo {
+        pub pbi_flags: u32,
+        pub pbi_status: u32,
+        pub pbi_xstatus: u32,
+        pub pbi_pid: u32,
+        pub pbi_ppid: u32,
+        pub pbi_uid: ::uid_t,
+        pub pbi_gid: ::gid_t,
+        pub pbi_ruid: ::uid_t,
+        pub pbi_rgid: ::gid_t,
+        pub pbi_svuid: ::uid_t,
+        pub pbi_svgid: ::gid_t,
+        pub rfu_1: u32,
+        pub pbi_comm: [::c_char; MAXCOMLEN],
+        pub pbi_name: [::c_char; 32], // MAXCOMLEN * 2, but macro isn't happy...
+        pub pbi_nfiles: u32,
+        pub pbi_pgid: u32,
+        pub pbi_pjobc: u32,
+        pub e_tdev: u32,
+        pub e_tpgid: u32,
+        pub pbi_nice: i32,
+        pub pbi_start_tvsec: u64,
+        pub pbi_start_tvusec: u64,
+    }
+
+    pub struct proc_taskallinfo {
+        pub pbsd: proc_bsdinfo,
+        pub ptinfo: proc_taskinfo,
+    }
+
+    pub struct proc_threadinfo {
+        pub pth_user_time: u64,
+        pub pth_system_time: u64,
+        pub pth_cpu_usage: i32,
+        pub pth_policy: i32,
+        pub pth_run_state: i32,
+        pub pth_flags: i32,
+        pub pth_sleep_time: i32,
+        pub pth_curpri: i32,
+        pub pth_priority: i32,
+        pub pth_maxpriority: i32,
+        pub pth_name: [::c_char; MAXTHREADNAMESIZE],
+    }
+
+    pub struct xsw_usage {
+        pub xsu_total: u64,
+        pub xsu_avail: u64,
+        pub xsu_used: u64,
+        pub xsu_pagesize: u32,
+        pub xsu_encrypted: ::boolean_t,
     }
 }
 
@@ -448,14 +536,8 @@ pub const _PC_PIPE_BUF: ::c_int = 6;
 pub const _PC_CHOWN_RESTRICTED: ::c_int = 7;
 pub const _PC_NO_TRUNC: ::c_int = 8;
 pub const _PC_VDISABLE: ::c_int = 9;
-pub const O_RDONLY: ::c_int = 0;
-pub const O_WRONLY: ::c_int = 1;
-pub const O_RDWR: ::c_int = 2;
-pub const O_APPEND: ::c_int = 8;
-pub const O_CREAT: ::c_int = 512;
-pub const O_EXCL: ::c_int = 2048;
-pub const O_NOCTTY: ::c_int = 131072;
-pub const O_TRUNC: ::c_int = 1024;
+pub const O_DSYNC: ::c_int = 0x400000;
+pub const O_NOCTTY: ::c_int = 0x20000;
 pub const O_CLOEXEC: ::c_int = 0x1000000;
 pub const O_DIRECTORY: ::c_int = 0x100000;
 pub const S_IFIFO: mode_t = 4096;
@@ -671,8 +753,6 @@ pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x0020;
 pub const AT_SYMLINK_FOLLOW: ::c_int = 0x0040;
 pub const AT_REMOVEDIR: ::c_int = 0x0080;
 
-pub const O_ACCMODE: ::c_int = 3;
-
 pub const TIOCMODG: ::c_ulong = 0x40047403;
 pub const TIOCMODS: ::c_ulong = 0x80047404;
 pub const TIOCM_LE: ::c_int = 0x1;
@@ -812,6 +892,8 @@ pub const _SC_XOPEN_UNIX: ::c_int = 115;
 pub const _SC_XOPEN_VERSION: ::c_int = 116;
 pub const _SC_XOPEN_XCU_VERSION: ::c_int = 121;
 
+pub const PTHREAD_PROCESS_PRIVATE: ::c_int = 2;
+pub const PTHREAD_PROCESS_SHARED: ::c_int = 1;
 pub const PTHREAD_CREATE_JOINABLE: ::c_int = 1;
 pub const PTHREAD_CREATE_DETACHED: ::c_int = 2;
 pub const PTHREAD_STACK_MIN: ::size_t = 8192;
@@ -890,6 +972,10 @@ pub const AF_PPP: ::c_int = 34;
 pub const pseudo_AF_HDRCMPLT: ::c_int = 35;
 #[doc(hidden)]
 pub const AF_MAX: ::c_int = 40;
+pub const AF_SYS_CONTROL: ::c_int = 2;
+
+pub const SYSPROTO_EVENT: ::c_int = 1;
+pub const SYSPROTO_CONTROL: ::c_int = 2;
 
 pub const PF_UNSPEC: ::c_int = AF_UNSPEC;
 pub const PF_LOCAL: ::c_int = AF_LOCAL;
@@ -947,13 +1033,6 @@ pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_RAW: ::c_int = 3;
 pub const SOCK_RDM: ::c_int = 4;
 pub const SOCK_SEQPACKET: ::c_int = 5;
-pub const IPPROTO_ICMP: ::c_int = 1;
-pub const IPPROTO_ICMPV6: ::c_int = 58;
-pub const IPPROTO_TCP: ::c_int = 6;
-pub const IPPROTO_IP: ::c_int = 0;
-pub const IPPROTO_IPV6: ::c_int = 41;
-pub const IP_MULTICAST_TTL: ::c_int = 10;
-pub const IP_MULTICAST_LOOP: ::c_int = 11;
 pub const IP_TTL: ::c_int = 4;
 pub const IP_HDRINCL: ::c_int = 2;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
@@ -976,6 +1055,7 @@ pub const SO_LINGER: ::c_int = 0x0080;
 pub const SO_OOBINLINE: ::c_int = 0x0100;
 pub const SO_REUSEPORT: ::c_int = 0x0200;
 pub const SO_TIMESTAMP: ::c_int = 0x0400;
+pub const SO_TIMESTAMP_MONOTONIC: ::c_int = 0x0800;
 pub const SO_DONTTRUNC: ::c_int = 0x2000;
 pub const SO_WANTMORE: ::c_int = 0x4000;
 pub const SO_WANTOOBFLAG: ::c_int = 0x8000;
@@ -987,11 +1067,17 @@ pub const SO_SNDTIMEO: ::c_int = 0x1005;
 pub const SO_RCVTIMEO: ::c_int = 0x1006;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_TYPE: ::c_int = 0x1008;
+pub const SO_LABEL: ::c_int = 0x1010;
+pub const SO_PEERLABEL: ::c_int = 0x1011;
 pub const SO_NREAD: ::c_int = 0x1020;
 pub const SO_NKE: ::c_int = 0x1021;
 pub const SO_NOSIGPIPE: ::c_int = 0x1022;
 pub const SO_NOADDRERR: ::c_int = 0x1023;
 pub const SO_NWRITE: ::c_int = 0x1024;
+pub const SO_REUSESHAREUID: ::c_int = 0x1025;
+pub const SO_NOTIFYCONFLICT: ::c_int = 0x1026;
+pub const SO_RANDOMPORT: ::c_int = 0x1082;
+pub const SO_NP_EXTENSIONS: ::c_int = 0x1083;
 
 pub const MSG_OOB: ::c_int =  0x1;
 pub const MSG_PEEK: ::c_int = 0x2;
@@ -1009,7 +1095,6 @@ pub const MSG_HAVEMORE: ::c_int = 0x2000;
 pub const MSG_RCVMORE: ::c_int = 0x4000;
 // pub const MSG_COMPAT: ::c_int = 0x8000;
 
-pub const SCM_RIGHTS: ::c_int = 0x01;
 pub const SCM_TIMESTAMP: ::c_int = 0x02;
 pub const SCM_CREDS: ::c_int = 0x03;
 
@@ -1023,10 +1108,6 @@ pub const LOCK_SH: ::c_int = 1;
 pub const LOCK_EX: ::c_int = 2;
 pub const LOCK_NB: ::c_int = 4;
 pub const LOCK_UN: ::c_int = 8;
-
-pub const O_DSYNC: ::c_int = 4194304;
-pub const O_SYNC: ::c_int = 128;
-pub const O_NONBLOCK: ::c_int = 4;
 
 pub const MAP_COPY: ::c_int = 0x0002;
 pub const MAP_RENAME: ::c_int = 0x0020;
@@ -1237,6 +1318,18 @@ pub const NOTE_BACKGROUND: ::uint32_t = 0x00000040;
 pub const NOTE_TRACK: ::uint32_t = 0x00000001;
 pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
 pub const NOTE_CHILD: ::uint32_t = 0x00000004;
+
+pub const OCRNL: ::c_int = 0x00000010;
+pub const ONOCR: ::c_int = 0x00000020;
+pub const ONLRET: ::c_int = 0x00000040;
+pub const OFILL: ::c_int = 0x00000080;
+pub const NLDLY: ::c_int = 0x00000300;
+pub const TABDLY: ::c_int = 0x00000c04;
+pub const CRDLY: ::c_int = 0x00003000;
+pub const FFDLY: ::c_int = 0x00004000;
+pub const BSDLY: ::c_int = 0x00008000;
+pub const VTDLY: ::c_int = 0x00010000;
+pub const OFDEL: ::c_int = 0x00020000;
 
 pub const NL0: ::c_int  = 0x00000000;
 pub const NL1: ::c_int  = 0x00000100;
@@ -1481,11 +1574,6 @@ pub const CTL_DEBUG_NAME: ::c_int = 0;
 pub const CTL_DEBUG_VALUE: ::c_int = 1;
 pub const CTL_DEBUG_MAXID: ::c_int = 20;
 
-pub const POLLRDNORM: ::c_short = 0x040;
-pub const POLLWRNORM: ::c_short = 0x004;
-pub const POLLRDBAND: ::c_short = 0x080;
-pub const POLLWRBAND: ::c_short = 0x100;
-
 pub const PRIO_DARWIN_THREAD: ::c_int = 3;
 pub const PRIO_DARWIN_PROCESS: ::c_int = 4;
 pub const PRIO_DARWIN_BG: ::c_int = 0x1000;
@@ -1522,6 +1610,17 @@ pub const XATTR_REPLACE: ::c_int = 0x0004;
 pub const XATTR_NOSECURITY: ::c_int = 0x0008;
 pub const XATTR_NODEFAULT: ::c_int = 0x0010;
 pub const XATTR_SHOWCOMPRESSION: ::c_int = 0x0020;
+
+pub const NET_RT_IFLIST2: ::c_int = 0x0006;
+pub const RTM_IFINFO2: ::c_int = 0x0012;
+
+pub const KERN_PROCARGS2: ::c_int = 49;
+
+pub const PROC_PIDTASKALLINFO: ::c_int = 2;
+pub const PROC_PIDTASKINFO: ::c_int = 4;
+pub const PROC_PIDTHREADINFO: ::c_int = 5;
+pub const MAXCOMLEN: usize = 16;
+pub const MAXTHREADNAMESIZE: usize = 64;
 
 f! {
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
@@ -1615,6 +1714,10 @@ extern {
                                         pshared: ::c_int) -> ::c_int;
     pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
                                         pshared: *mut ::c_int) -> ::c_int;
+    pub fn pthread_rwlockattr_getpshared(attr: *const pthread_rwlockattr_t,
+                                         val: *mut ::c_int) -> ::c_int;
+    pub fn pthread_rwlockattr_setpshared(attr: *mut pthread_rwlockattr_t,
+                                         val: ::c_int) -> ::c_int;
     pub fn __error() -> *mut ::c_int;
     pub fn backtrace(buf: *mut *mut ::c_void,
                      sz: ::c_int) -> ::c_int;
@@ -1639,7 +1742,7 @@ extern {
                  target: *const ::c_char,
                  flags: ::c_int,
                  data: *mut ::c_void) -> ::c_int;
-    pub fn ptrace(requeset: ::c_int,
+    pub fn ptrace(request: ::c_int,
                   pid: ::pid_t,
                   addr: *mut ::c_char,
                   data: ::c_int) -> ::c_int;
@@ -1695,6 +1798,10 @@ extern {
     pub fn fremovexattr(filedes: ::c_int, name: *const ::c_char,
                         flags: ::c_int) -> ::c_int;
 
+    pub fn getgrouplist(name: *const ::c_char,
+                        basegid: ::c_int,
+                        groups: *mut ::c_int,
+                        ngroups: *mut ::c_int) -> ::c_int;
     pub fn initgroups(user: *const ::c_char, basegroup: ::c_int) -> ::c_int;
 
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),

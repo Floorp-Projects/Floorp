@@ -94,6 +94,36 @@ s! {
         pub mem_unit: ::c_uint,
         pub _f: [::c_char; 0],
     }
+
+    pub struct statfs64 {
+        pub f_type: u64,
+        pub f_bsize: u64,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        f_fsid: [u32; 2],
+        pub f_namelen: u64,
+        pub f_frsize: u64,
+        pub f_flags: u64,
+        pub f_spare: [u64; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
+    }
 }
 
 pub const RTLD_GLOBAL: ::c_int = 0x00100;

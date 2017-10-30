@@ -1,4 +1,5 @@
 language: rust
+rust: stable
 sudo: required
 dist: trusty
 services:
@@ -22,111 +23,72 @@ env:
 matrix:
   include:
     # 1.0.0 compat
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: 1.0.0
       script: cargo build
       install:
 
     # build documentation
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: nightly
       script: sh ci/dox.sh
 
     # stable compat
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
-      rust: stable
-    - os: linux
-      env: TARGET=i686-unknown-linux-gnu
-      rust: stable
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=i686-unknown-linux-gnu
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
-      rust: stable
     - os: osx
       env: TARGET=i686-apple-darwin
-      rust: stable
-    - os: linux
-      env: TARGET=arm-linux-androideabi
-      rust: stable
-    - os: linux
-      env: TARGET=aarch64-linux-android
-      rust: stable
-    - os: linux
-      env: TARGET=i686-linux-android
-      rust: stable
-    # as of 2017/05/03 x86_64-linux-android are not on stable
-    - os: linux
-      env: TARGET=x86_64-linux-android
-      rust: beta
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl
-      rust: stable
-    - os: linux
-      env: TARGET=i686-unknown-linux-musl
-      rust: stable
-    - os: linux
-      env: TARGET=arm-unknown-linux-gnueabihf
-      rust: stable
-    - os: linux
-      env: TARGET=aarch64-unknown-linux-gnu
-      rust: stable
+    - env: TARGET=arm-linux-androideabi
+    - env: TARGET=aarch64-linux-android
+    - env: TARGET=i686-linux-android
+    - env: TARGET=x86_64-linux-android
+    - env: TARGET=x86_64-unknown-linux-musl
+    - env: TARGET=i686-unknown-linux-musl
+    - env: TARGET=arm-unknown-linux-gnueabihf
+    - env: TARGET=aarch64-unknown-linux-gnu
     - os: osx
       osx_image: xcode8.2
       env: TARGET=i386-apple-ios
-      rust: stable
+           CARGO_TARGET_I386_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+      before_install:
+        rustc ./ci/ios/deploy_and_run_on_ios_simulator.rs -o $HOME/runtest
     - os: osx
       osx_image: xcode8.2
       env: TARGET=x86_64-apple-ios
-      rust: stable
-    - os: linux
-      env: TARGET=x86_64-rumprun-netbsd
-      rust: stable
-    - os: linux
-      env: TARGET=powerpc-unknown-linux-gnu
-      rust: stable
-    - os: linux
-      env: TARGET=powerpc64-unknown-linux-gnu
-      rust: beta
-    - os: linux
-      env: TARGET=mips-unknown-linux-musl
-      rust: stable
-    - os: linux
-      env: TARGET=mipsel-unknown-linux-musl
-      rust: stable
-    - os: linux
-      env: TARGET=mips64-unknown-linux-gnuabi64
-      rust: beta
-    - os: linux
-      env: TARGET=mips-unknown-linux-gnu
-      rust: beta
+           CARGO_TARGET_X86_64_APPLE_IOS_RUNNER=$HOME/runtest
+           RUSTFLAGS=-Clink-arg=-mios-simulator-version-min=7.0
+      before_install:
+        rustc ./ci/ios/deploy_and_run_on_ios_simulator.rs -o $HOME/runtest
+    - env: TARGET=x86_64-rumprun-netbsd
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=mips-unknown-linux-musl
+    - env: TARGET=mipsel-unknown-linux-musl
+    - env: TARGET=mips64-unknown-linux-gnuabi64
+    - env: TARGET=mips-unknown-linux-gnu
+    - env: TARGET=s390x-unknown-linux-gnu
+    - env: TARGET=asmjs-unknown-emscripten
+    - env: TARGET=wasm32-unknown-emscripten
 
     # beta
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: beta
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
       rust: beta
 
     # nightly
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: nightly
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
       rust: nightly
 
     # QEMU based targets that compile in an emulator
-    - os: linux
-      env: TARGET=x86_64-unknown-freebsd
-      rust: stable
-    - os: linux
-      env: TARGET=x86_64-unknown-openbsd QEMU=openbsd.qcow2
-      rust: stable
-      script: sh ci/run-docker.sh $TARGET
-      install:
+    - env: TARGET=x86_64-unknown-freebsd
 
 cache: cargo
 

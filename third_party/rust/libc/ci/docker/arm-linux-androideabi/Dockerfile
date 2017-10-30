@@ -29,4 +29,17 @@ RUN chmod 755 /android/sdk/tools/* /android/sdk/tools/qemu/linux-x86_64/*
 
 ENV PATH=$PATH:/rust/bin \
     CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc \
+    CARGO_TARGET_ARM_LINUX_ANDROIDEABI_RUNNER=/tmp/runtest \
     HOME=/tmp
+
+ADD runtest-android.rs /tmp/runtest.rs
+ENTRYPOINT [ \
+  "bash", \
+  "-c", \
+  # set SHELL so android can detect a 64bits system, see
+  # http://stackoverflow.com/a/41789144
+  "SHELL=/bin/dash emulator @arm -no-window & \
+   rustc /tmp/runtest.rs -o /tmp/runtest && \
+   exec \"$@\"", \
+  "--" \
+]

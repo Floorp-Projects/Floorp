@@ -25,7 +25,7 @@
 //!
 //! # API Principles
 //!
-//! This library attempts to be as flexible as possible to accomodate different
+//! This library attempts to be as flexible as possible to accommodate different
 //! backend implementations of acquiring a backtrace. Consequently the currently
 //! exported functions are closure-based as opposed to the likely expected
 //! iterator-based versions. This is done due to limitations of the underlying
@@ -69,13 +69,11 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
+#[cfg(unix)]
 extern crate libc;
 #[cfg(all(windows, feature = "kernel32-sys"))] extern crate kernel32;
 #[cfg(all(windows, feature = "winapi"))] extern crate winapi;
 #[cfg(all(windows, feature = "dbghelp"))] extern crate dbghelp;
-
-#[cfg(feature = "serde")]
-extern crate serde;
 
 #[cfg(feature = "serde_derive")]
 #[cfg_attr(feature = "serde_derive", macro_use)]
@@ -91,6 +89,15 @@ extern crate rustc_demangle;
 
 #[cfg(feature = "cpp_demangle")]
 extern crate cpp_demangle;
+
+#[cfg(all(feature = "gimli-symbolize",
+          unix,
+          target_os = "linux"))]
+extern crate addr2line;
+#[cfg(all(feature = "gimli-symbolize",
+          unix,
+          target_os = "linux"))]
+extern crate findshlibs;
 
 #[allow(dead_code)] // not used everywhere
 #[cfg(unix)]

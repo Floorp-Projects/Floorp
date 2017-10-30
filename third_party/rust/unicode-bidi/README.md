@@ -6,6 +6,7 @@ compatible with the current stable release.
 
 [Documentation](http://doc.servo.org/unicode_bidi/)
 
-[![Build Status](https://travis-ci.org/servo/unicode-bidi.svg?branch=master)](https://travis-ci.org/servo/unicode-bidi)
+[![Travis-CI](https://travis-ci.org/servo/unicode-bidi.svg?branch=master)](https://travis-ci.org/servo/unicode-bidi)
+[![AppVeyor](https://img.shields.io/appveyor/ci/servo/unicode-bidi/master.svg)](https://ci.appveyor.com/project/servo/unicode-bidi)
 
 [tr9]: http://www.unicode.org/reports/tr9/

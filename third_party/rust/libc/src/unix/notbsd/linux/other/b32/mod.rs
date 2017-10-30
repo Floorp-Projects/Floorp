@@ -12,6 +12,7 @@ pub type __fsword_t = i32;
 
 pub type blksize_t = i32;
 pub type nlink_t = u32;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct stat {
@@ -78,6 +79,8 @@ pub const O_SYNC: ::c_int = 1052672;
 pub const O_RSYNC: ::c_int = 1052672;
 pub const O_DSYNC: ::c_int = 4096;
 pub const O_FSYNC: ::c_int = 0x101000;
+pub const O_NOATIME: ::c_int = 0o1000000;
+pub const O_PATH: ::c_int = 0o10000000;
 
 pub const MAP_GROWSDOWN: ::c_int = 0x0100;
 
@@ -171,9 +174,19 @@ pub const SO_SNDBUF: ::c_int = 7;
 pub const SO_RCVBUF: ::c_int = 8;
 pub const SO_KEEPALIVE: ::c_int = 9;
 pub const SO_OOBINLINE: ::c_int = 10;
+pub const SO_PRIORITY: ::c_int = 12;
 pub const SO_LINGER: ::c_int = 13;
+pub const SO_BSDCOMPAT: ::c_int = 14;
 pub const SO_REUSEPORT: ::c_int = 15;
+pub const SO_BINDTODEVICE: ::c_int = 25;
+pub const SO_TIMESTAMP: ::c_int = 29;
 pub const SO_ACCEPTCONN: ::c_int = 30;
+pub const SO_MARK: ::c_int = 36;
+pub const SO_PROTOCOL: ::c_int = 38;
+pub const SO_DOMAIN: ::c_int = 39;
+pub const SO_RXQ_OVFL: ::c_int = 40;
+pub const SO_PEEK_OFF: ::c_int = 42;
+pub const SO_BUSY_POLL: ::c_int = 46;
 
 pub const SA_ONSTACK: ::c_int = 0x08000000;
 pub const SA_SIGINFO: ::c_int = 0x00000004;
@@ -224,7 +237,6 @@ pub const TIOCMBIS: ::c_ulong = 0x5416;
 pub const TIOCMBIC: ::c_ulong = 0x5417;
 pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const TIOCCONS: ::c_ulong = 0x541D;
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
 
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
@@ -262,6 +274,7 @@ pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
 
 pub const PTRACE_GETFPREGS: ::c_uint = 14;
 pub const PTRACE_SETFPREGS: ::c_uint = 15;

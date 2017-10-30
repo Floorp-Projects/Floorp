@@ -18,12 +18,24 @@ pub trait Scheme {
             SYS_FEVENT => self.fevent(packet.b, packet.c),
             SYS_FMAP => self.fmap(packet.b, packet.c, packet.d),
             SYS_FPATH => self.fpath(packet.b, unsafe { slice::from_raw_parts_mut(packet.c as *mut u8, packet.d) }),
-            SYS_FSTAT => if packet.d >= mem::size_of::<Stat>() { self.fstat(packet.b, unsafe { &mut *(packet.c as *mut Stat) }) } else { Err(Error::new(EFAULT)) },
-            SYS_FSTATVFS => if packet.d >= mem::size_of::<StatVfs>() { self.fstatvfs(packet.b, unsafe { &mut *(packet.c as *mut StatVfs) }) } else { Err(Error::new(EFAULT)) },
+            SYS_FSTAT => if packet.d >= mem::size_of::<Stat>() {
+                self.fstat(packet.b, unsafe { &mut *(packet.c as *mut Stat) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
+            SYS_FSTATVFS => if packet.d >= mem::size_of::<StatVfs>() {
+                self.fstatvfs(packet.b, unsafe { &mut *(packet.c as *mut StatVfs) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
             SYS_FSYNC => self.fsync(packet.b),
             SYS_FTRUNCATE => self.ftruncate(packet.b, packet.c),
+            SYS_FUTIMENS => if packet.d >= mem::size_of::<TimeSpec>() {
+                self.futimens(packet.b, unsafe { slice::from_raw_parts(packet.c as *const TimeSpec, packet.d / mem::size_of::<TimeSpec>()) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
             SYS_CLOSE => self.close(packet.b),
-
             _ => Err(Error::new(ENOSYS))
         });
     }
@@ -112,6 +124,11 @@ pub trait Scheme {
     }
 
     #[allow(unused_variables)]
+    fn futimens(&self, id: usize, times: &[TimeSpec]) -> Result<usize> {
+        Err(Error::new(EBADF))
+    }
+
+    #[allow(unused_variables)]
     fn close(&self, id: usize) -> Result<usize> {
         Err(Error::new(EBADF))
     }
@@ -133,12 +150,24 @@ pub trait SchemeMut {
             SYS_FEVENT => self.fevent(packet.b, packet.c),
             SYS_FMAP => self.fmap(packet.b, packet.c, packet.d),
             SYS_FPATH => self.fpath(packet.b, unsafe { slice::from_raw_parts_mut(packet.c as *mut u8, packet.d) }),
-            SYS_FSTAT => if packet.d >= mem::size_of::<Stat>() { self.fstat(packet.b, unsafe { &mut *(packet.c as *mut Stat) }) } else { Err(Error::new(EFAULT)) },
-            SYS_FSTATVFS => if packet.d >= mem::size_of::<StatVfs>() { self.fstatvfs(packet.b, unsafe { &mut *(packet.c as *mut StatVfs) }) } else { Err(Error::new(EFAULT)) },
+            SYS_FSTAT => if packet.d >= mem::size_of::<Stat>() {
+                self.fstat(packet.b, unsafe { &mut *(packet.c as *mut Stat) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
+            SYS_FSTATVFS => if packet.d >= mem::size_of::<StatVfs>() {
+                self.fstatvfs(packet.b, unsafe { &mut *(packet.c as *mut StatVfs) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
             SYS_FSYNC => self.fsync(packet.b),
             SYS_FTRUNCATE => self.ftruncate(packet.b, packet.c),
+            SYS_FUTIMENS => if packet.d >= mem::size_of::<TimeSpec>() {
+                self.futimens(packet.b, unsafe { slice::from_raw_parts(packet.c as *const TimeSpec, packet.d / mem::size_of::<TimeSpec>()) })
+            } else {
+                Err(Error::new(EFAULT))
+            },
             SYS_CLOSE => self.close(packet.b),
-
             _ => Err(Error::new(ENOSYS))
         });
     }
@@ -150,7 +179,7 @@ pub trait SchemeMut {
     }
 
     #[allow(unused_variables)]
-    fn chmod(&self, path: &[u8], mode: u16, uid: u32, gid: u32) -> Result<usize> {
+    fn chmod(&mut self, path: &[u8], mode: u16, uid: u32, gid: u32) -> Result<usize> {
         Err(Error::new(ENOENT))
     }
 
@@ -222,6 +251,11 @@ pub trait SchemeMut {
 
     #[allow(unused_variables)]
     fn ftruncate(&mut self, id: usize, len: usize) -> Result<usize> {
+        Err(Error::new(EBADF))
+    }
+
+    #[allow(unused_variables)]
+    fn futimens(&mut self, id: usize, times: &[TimeSpec]) -> Result<usize> {
         Err(Error::new(EBADF))
     }
 

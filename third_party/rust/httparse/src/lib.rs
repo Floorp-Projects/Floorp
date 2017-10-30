@@ -10,10 +10,7 @@
 //! parsing internals use an `Iterator` instead of direct indexing, while
 //! skipping bounds checks.
 //!
-//! The speed is comparable to the fast picohttpparser, currently being around
-//! 1.6 times slower than pico. Improvements can be made as a `likely`
-//! intrinsic, and simd, are stabilized in rustc.
-
+//! The speed is faster than picohttpparser, when SIMD is not available.
 #[cfg(feature = "std")] extern crate std as core;
 
 use core::{fmt, result, str, slice};
@@ -73,6 +70,61 @@ fn shrink<T>(slice: &mut &mut [T], len: usize) {
 fn is_token(b: u8) -> bool {
     b > 0x1F && b < 0x7F
 }
+macro_rules! byte_map {
+    ($($flag:expr,)*) => ([
+        $($flag != 0,)*
+    ])
+}
+
+static HEADER_NAME_MAP: [bool; 256] = byte_map![
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+#[inline]
+fn is_header_name_token(b: u8) -> bool {
+    HEADER_NAME_MAP[b as usize]
+}
+
+static HEADER_VALUE_MAP: [bool; 256] = byte_map![
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+];
+
+
+#[inline]
+fn is_header_value_token(b: u8) -> bool {
+    HEADER_VALUE_MAP[b as usize]
+}
+
 
 macro_rules! space {
     ($bytes:ident or $err:expr) => ({
@@ -229,6 +281,7 @@ impl<T> Status<T> {
 ///     }
 /// }
 /// ```
+#[derive(Debug, PartialEq)]
 pub struct Request<'headers, 'buf: 'headers> {
     /// The request method, such as `GET`.
     pub method: Option<&'buf str>,
@@ -293,6 +346,7 @@ fn skip_empty_lines(bytes: &mut Bytes) -> Result<()> {
 /// A parsed Response.
 ///
 /// See `Request` docs for explanation of optional values.
+#[derive(Debug, PartialEq)]
 pub struct Response<'headers, 'buf: 'headers> {
     /// The response version, such as `HTTP/1.1`.
     pub version: Option<u8>,
@@ -510,7 +564,7 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
             } else if b == b'\n' {
                 result = Ok(Status::Complete(count + bytes.pos()));
                 break;
-            } else if b == b':' || !is_token(b) {
+            } else if !is_header_name_token(b) {
                 return Err(Error::HeaderName);
             }
 
@@ -521,15 +575,15 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
 
             num_headers += 1;
             // parse header name until colon
-            loop {
+            'name: loop {
                 let b = next!(bytes);
                 if b == b':' {
                     count += bytes.pos();
                     header.name = unsafe {
                         str::from_utf8_unchecked(bytes.slice_skip(1))
                     };
-                    break;
-                } else if !is_token(b) {
+                    break 'name;
+                } else if !is_header_name_token(b) {
                     return Err(Error::HeaderName);
                 }
             }
@@ -539,19 +593,17 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
             'value: loop {
 
                 // eat white space between colon and value
-                loop {
+                'whitespace: loop {
                     b = next!(bytes);
                     if b == b' ' || b == b'\t' {
                         count += bytes.pos();
                         bytes.slice();
-                        continue;
+                        continue 'whitespace;
                     } else {
-                        if !is_token(b) {
-                            if (b < 0o40 && b != 0o11) || b == 0o177 {
-                                break 'value;
-                            }
+                        if !is_header_value_token(b) {
+                            break 'value;
                         }
-                        break;
+                        break 'whitespace;
                     }
                 }
 
@@ -562,10 +614,8 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
                 macro_rules! check {
                     ($bytes:ident, $i:ident) => ({
                         b = $bytes.$i();
-                        if !is_token(b) {
-                            if (b < 0o40 && b != 0o11) || b == 0o177 {
-                                break 'value;
-                            }
+                        if !is_header_value_token(b) {
+                            break 'value;
                         }
                     });
                     ($bytes:ident) => ({
@@ -584,10 +634,8 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
                 }
                 loop {
                     b = next!(bytes);
-                    if !is_token(b) {
-                        if (b < 0o40 && b != 0o11) || b == 0o177 {
-                            break 'value;
-                        }
+                    if !is_header_value_token(b) {
+                        break 'value;
                     }
                 }
             }

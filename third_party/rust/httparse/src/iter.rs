@@ -56,7 +56,7 @@ impl<'a> Bytes<'a> {
     #[inline]
     pub fn next_8<'b>(&'b mut self) -> Option<Bytes8<'b, 'a>> {
         if self.slice.len() > self.pos + 8 {
-            Some(Bytes8 { bytes: self, pos: 0 })
+            Some(Bytes8::new(self))
         } else {
             None
         }
@@ -80,6 +80,7 @@ impl<'a> Iterator for Bytes<'a> {
 
 pub struct Bytes8<'a, 'b: 'a> {
     bytes: &'a mut Bytes<'b>,
+    #[cfg(debug_assertions)]
     pos: usize
 }
 
@@ -87,7 +88,7 @@ macro_rules! bytes8_methods {
     ($f:ident, $pos:expr) => {
         #[inline]
         pub fn $f(&mut self) -> u8 {
-            debug_assert!(self.assert_pos($pos));
+            self.assert_pos($pos);
             let b = unsafe { *self.bytes.slice.get_unchecked(self.bytes.pos) };
             self.bytes.pos += 1;
             b
@@ -108,9 +109,32 @@ macro_rules! bytes8_methods {
 impl<'a, 'b: 'a> Bytes8<'a, 'b> {
     bytes8_methods! {}
 
-    fn assert_pos(&mut self, pos: usize) -> bool {
-        let ret = self.pos == pos;
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    fn new(bytes: &'a mut Bytes<'b>) -> Bytes8<'a, 'b> {
+        Bytes8 {
+            bytes: bytes,
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    #[inline]
+    fn new(bytes: &'a mut Bytes<'b>) -> Bytes8<'a, 'b> {
+        Bytes8 {
+            bytes: bytes,
+            pos: 0,
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    fn assert_pos(&mut self, _pos: usize) {
+    }
+
+    #[cfg(debug_assertions)]
+    #[inline]
+    fn assert_pos(&mut self, pos: usize) {
+        assert!(self.pos == pos);
         self.pos += 1;
-        ret
     }
 }
