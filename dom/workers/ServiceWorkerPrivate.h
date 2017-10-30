@@ -145,7 +145,7 @@ public:
   NoteStoppedControllingDocuments();
 
   void
-  Activated();
+  UpdateState(ServiceWorkerState aState);
 
   nsresult
   GetDebugger(nsIWorkerDebugger** aResult);
