@@ -14,6 +14,7 @@ function withAboutStudies(testFunc) {
 decorate_task(
   withAboutStudies,
   async function testAboutStudiesWorks(browser) {
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     ok(browser.contentDocument.getElementById("app"), "App element was found");
   }
 );
@@ -50,11 +51,13 @@ decorate_task(
       });
     });
 
+    /* eslint-disable mozilla/no-cpows-in-tests */
     if (gBrowser.contentDocument.readyState !== "complete") {
       await BrowserTestUtils.waitForEvent(gBrowser.contentWindow, "load");
     }
 
     const location = gBrowser.contentWindow.location.href;
+    /* eslint-enable mozilla/no-cpows-in-tests */
     is(
       location,
       "about:preferences#privacy",

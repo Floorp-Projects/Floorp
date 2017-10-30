@@ -67,7 +67,7 @@ function promiseNoMuteNotificationOnFirstSession() {
  * Wait for the onboarding tour notification opens
  */
 function promiseTourNotificationOpened(browser) {
-  function isOpened() {
+  return ContentTask.spawn(browser, {}, function() {
     let doc = content && content.document;
     let notification = doc.querySelector("#onboarding-notification-bar");
     if (notification && notification.classList.contains("onboarding-opened")) {
@@ -88,6 +88,5 @@ function promiseTourNotificationOpened(browser) {
       });
       observer.observe(doc.body, { childList: true });
     });
-  }
-  return ContentTask.spawn(browser, {}, isOpened);
+  });
 }

@@ -7,6 +7,7 @@ add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   is(prefs.selectedPane, "paneGeneral", "General pane was selected");
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
   let checkbox = doc.querySelector("#allowHWAccel");
   is(!checkbox.checked,
