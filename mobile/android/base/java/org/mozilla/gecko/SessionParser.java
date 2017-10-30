@@ -20,7 +20,7 @@ import android.util.Log;
 public abstract class SessionParser {
     private static final String LOGTAG = "GeckoSessionParser";
 
-    public class SessionTab {
+    public static final class SessionTab {
         final private String mTitle;
         final private String mUrl;
         final private JSONObject mTabObject;

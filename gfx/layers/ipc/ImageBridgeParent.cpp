@@ -42,7 +42,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 using namespace mozilla::media;
 
-std::map<base::ProcessId, ImageBridgeParent*> ImageBridgeParent::sImageBridges;
+ImageBridgeParent::ImageBridgeMap ImageBridgeParent::sImageBridges;
 
 StaticAutoPtr<mozilla::Monitor> sImageBridgesLock;
 
@@ -369,8 +369,9 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo
       notifications.AppendElement(aNotifications[end].mNotification);
       ++end;
     }
-    GetInstance(pid)->SendPendingAsyncMessages();
-    if (!GetInstance(pid)->SendDidComposite(notifications)) {
+    RefPtr<ImageBridgeParent> bridge = GetInstance(pid);
+    bridge->SendPendingAsyncMessages();
+    if (!bridge->SendDidComposite(notifications)) {
       ok = false;
     }
     i = end;
@@ -385,13 +386,18 @@ ImageBridgeParent::DeferredDestroy()
   mSelfRef = nullptr; // "this" ImageBridge may get deleted here.
 }
 
-RefPtr<ImageBridgeParent>
+already_AddRefed<ImageBridgeParent>
 ImageBridgeParent::GetInstance(ProcessId aId)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MonitorAutoLock lock(*sImageBridgesLock);
-  NS_ASSERTION(sImageBridges.count(aId) == 1, "ImageBridgeParent for the process");
-  return sImageBridges[aId];
+  ImageBridgeMap::const_iterator i = sImageBridges.find(aId);
+  if (i == sImageBridges.end()) {
+    NS_ASSERTION(false, "Cannot find image bridge for process!");
+    return nullptr;
+  }
+  RefPtr<ImageBridgeParent> bridge = i->second;
+  return bridge.forget();
 }
 
 bool

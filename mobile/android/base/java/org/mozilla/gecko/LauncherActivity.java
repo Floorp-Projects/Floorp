@@ -15,6 +15,7 @@ import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
 import org.mozilla.gecko.home.HomeConfig;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
@@ -190,9 +191,16 @@ public class LauncherActivity extends Activity {
         if (intent == null || intent.getData() == null || intent.getData().getHost() == null) {
             return;
         }
-        final String host = intent.getData().getHost();
+        final String deepLink = intent.getData().getHost();
+        final String uid = intent.getData().getQueryParameter("uid");
+        final String localUid = getSharedPreferences(BrowserApp.class.getName(), MODE_PRIVATE).getString(MmaDelegate.KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+        final boolean isMmaDeepLink = uid != null && localUid != null && uid.equals(localUid);
 
-        switch (host) {
+        if (!validateMmaDeepLink(deepLink, isMmaDeepLink)) {
+            return;
+        }
+
+        switch (deepLink) {
             case LINK_DEFAULT_BROWSER:
                 GeckoSharedPrefs.forApp(this).edit().putBoolean(GeckoPreferences.PREFS_DEFAULT_BROWSER, true).apply();
 
@@ -234,7 +242,7 @@ public class LauncherActivity extends Activity {
             case LINK_PREFERENCES_NOTIFICATIONS:
             case LINK_PREFERENCES_ACCESSIBILITY:
                 settingsIntent = new Intent(this, GeckoPreferences.class);
-                GeckoPreferences.setResourceToOpen(settingsIntent, host);
+                GeckoPreferences.setResourceToOpen(settingsIntent, deepLink);
                 startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
                 break;
             case LINK_FXA_SIGNIN:
@@ -242,6 +250,15 @@ public class LauncherActivity extends Activity {
                 break;
             default:
                 Log.w(TAG, "Unrecognized deep link");
+        }
+    }
+
+    private boolean validateMmaDeepLink(@NonNull final String deepLink, boolean isMmaDeepLink) {
+        // LINK_FXA_SIGNING is skipped here because it doesn't come from leanplum/mma
+        if (deepLink.contains(LINK_FXA_SIGNIN) && !isMmaDeepLink) {
+            return true;
+        } else {
+            return isMmaDeepLink;
         }
     }
 

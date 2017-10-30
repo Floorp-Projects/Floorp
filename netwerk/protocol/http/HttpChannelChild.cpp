@@ -3623,6 +3623,15 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   }
 
   if (nsHttpChannel::WillRedirect(mResponseHead)) {
+    // Normally we handle redirect limits in the parent process.  The way
+    // e10s synthesized redirects work, however, the parent process does not
+    // get an accurate redirect count.  Therefore we need to enforce it here.
+    rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_TEMPORARY);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Cancel(rv);
+      return;
+    }
+
     mShouldInterceptSubsequentRedirect = true;
     if (mInterceptListener) {
       mInterceptListener->Cleanup();

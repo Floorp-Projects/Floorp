@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include PBackgroundSharedTypes;
+
+using ServiceWorkerState from "mozilla/dom/ServiceWorkerIPCUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+// IPC type with enough information to create a ServiceWorker DOM object
+// in a child process.  Note that the state may be slightly out-of-sync
+// with the parent and should be updated dynamically if necessary.
+struct IPCServiceWorkerDescriptor
+{
+  uint64_t id;
+  PrincipalInfo principalInfo;
+  nsCString scope;
+  ServiceWorkerState state;
+};
+
+} // namespace dom
+} // namespace mozilla

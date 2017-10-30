@@ -5556,6 +5556,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (NS_FAILED(rv))
         return rv;
 
+    rv = CheckRedirectLimit(redirectFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (!httpChannel)
         return NS_OK; // no other options to set
@@ -5595,11 +5598,6 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
     nsAutoCString locationBuf;
     if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf))
         location = locationBuf;
-
-    if (mRedirectCount >= mRedirectionLimit || mInternalRedirectCount >= mRedirectionLimit) {
-        LOG(("redirection limit reached!\n"));
-        return NS_ERROR_REDIRECT_LOOP;
-    }
 
     mRedirectType = redirectType;
 

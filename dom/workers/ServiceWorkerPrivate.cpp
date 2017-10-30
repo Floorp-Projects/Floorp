@@ -1556,8 +1556,10 @@ private:
       mChannel->SaveTimeStamps();
 
       nsresult rv = mChannel->ResetInterception();
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "Failed to resume intercepted network request");
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to resume intercepted network request");
+        mChannel->CancelInterception(rv);
+      }
       return rv;
     }
   };
@@ -1684,7 +1686,11 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   // condition we handle the reset here instead of returning an error which
   // would in turn trigger a console report.
   if (!registration) {
-    aChannel->ResetInterception();
+    nsresult rv = aChannel->ResetInterception();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to resume intercepted network request");
+      aChannel->CancelInterception(rv);
+    }
     return NS_OK;
   }
 
@@ -1692,7 +1698,11 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   // any fetch event handlers, then abort the interception and maybe trigger
   // the soft update algorithm.
   if (!mInfo->HandlesFetch()) {
-    aChannel->ResetInterception();
+    nsresult rv = aChannel->ResetInterception();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to resume intercepted network request");
+      aChannel->CancelInterception(rv);
+    }
 
     // Trigger soft updates if necessary.
     registration->MaybeScheduleTimeCheckAndUpdate();
@@ -1807,7 +1817,16 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mResolvedScriptURI = info.mBaseURI;
   MOZ_ASSERT(!mInfo->CacheName().IsEmpty());
   info.mServiceWorkerCacheName = mInfo->CacheName();
-  info.mServiceWorkerID = mInfo->ID();
+
+  PrincipalInfo principalInfo;
+  rv = PrincipalToPrincipalInfo(mInfo->Principal(), &principalInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  info.mServiceWorkerDescriptor.emplace(ServiceWorkerDescriptor(mInfo->ID(),
+                                                                principalInfo,
+                                                                mInfo->Scope(),
+                                                                mInfo->State()));
+
   info.mLoadGroup = aLoadGroup;
   info.mLoadFailedAsyncRunnable = aLoadFailedRunnable;
 
@@ -1945,15 +1964,48 @@ ServiceWorkerPrivate::NoteDeadServiceWorkerInfo()
   TerminateWorker();
 }
 
+namespace {
+
+class UpdateStateControlRunnable final : public MainThreadWorkerControlRunnable
+{
+  const ServiceWorkerState mState;
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->UpdateServiceWorkerState(mState);
+    return true;
+  }
+
+public:
+  UpdateStateControlRunnable(WorkerPrivate* aWorkerPrivate,
+                             ServiceWorkerState aState)
+    : MainThreadWorkerControlRunnable(aWorkerPrivate)
+    , mState(aState)
+  {
+  }
+};
+
+} // anonymous namespace
+
 void
-ServiceWorkerPrivate::Activated()
+ServiceWorkerPrivate::UpdateState(ServiceWorkerState aState)
 {
   AssertIsOnMainThread();
 
-  // If we had to queue up events due to the worker activating, that means
-  // the worker must be currently running.  We should be called synchronously
-  // when the worker becomes activated.
-  MOZ_ASSERT_IF(!mPendingFunctionalEvents.IsEmpty(), mWorkerPrivate);
+  if (!mWorkerPrivate) {
+    MOZ_DIAGNOSTIC_ASSERT(mPendingFunctionalEvents.IsEmpty());
+    return;
+  }
+
+  RefPtr<WorkerRunnable> r =
+    new UpdateStateControlRunnable(mWorkerPrivate, aState);
+  Unused << r->Dispatch();
+
+  if (aState != ServiceWorkerState::Activated) {
+    return;
+  }
 
   nsTArray<RefPtr<WorkerRunnable>> pendingEvents;
   mPendingFunctionalEvents.SwapElements(pendingEvents);
