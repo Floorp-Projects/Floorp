@@ -75,6 +75,7 @@ struct WebMBufferedParser
     , mSkipBytes(0)
     , mTimecodeScale(1000000)
     , mGotTimecodeScale(false)
+    , mGotClusterTimecode(false)
   {
     if (mStartOffset != 0) {
       mState = FIND_CLUSTER_SYNC;
@@ -260,6 +261,9 @@ private:
   // True if we read the timecode scale from the segment info or have
   // confirmed that the default value is to be used.
   bool mGotTimecodeScale;
+
+  // True if we've read the cluster time code.
+  bool mGotClusterTimecode;
 };
 
 class WebMBufferedState final

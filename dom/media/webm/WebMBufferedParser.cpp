@@ -113,6 +113,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         } else {
           mClusterEndOffset = -1;
         }
+        mGotClusterTimecode = false;
         mState = READ_ELEMENT_ID;
         break;
       case BLOCKGROUP_ID:
@@ -121,6 +122,11 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       case SIMPLEBLOCK_ID:
         /* FALLTHROUGH */
       case BLOCK_ID:
+        if (!mGotClusterTimecode) {
+          WEBM_DEBUG("The Timecode element must appear before any Block or "
+                     "SimpleBlock elements in a Cluster");
+          return false;
+        }
         mBlockSize = mElement.mSize.mValue;
         mBlockTimecode = 0;
         mBlockTimecodeLength = BLOCK_TIMECODE_LENGTH;
@@ -164,6 +170,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       break;
     case READ_TIMECODESCALE:
       if (!mGotTimecodeScale) {
+        WEBM_DEBUG("Should get the SegmentInfo first");
         return false;
       }
       mTimecodeScale = mVInt.mValue;
@@ -171,6 +178,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       break;
     case READ_CLUSTER_TIMECODE:
       mClusterTimecode = mVInt.mValue;
+      mGotClusterTimecode = true;
       mState = READ_ELEMENT_ID;
       break;
     case READ_BLOCK_TIMECODE:
@@ -190,6 +198,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
             // Don't insert invalid negative timecodes.
             if (mBlockTimecode >= 0 || mClusterTimecode >= uint16_t(abs(mBlockTimecode))) {
               if (!mGotTimecodeScale) {
+                WEBM_DEBUG("Should get the TimecodeScale first");
                 return false;
               }
               uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
