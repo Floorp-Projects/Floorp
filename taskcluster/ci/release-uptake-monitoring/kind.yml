@@ -33,7 +33,7 @@ jobs:
                 by-project:
                     mozilla-beta: https://bounceradmin.mozilla.com/api
                     mozilla-release: https://bounceradmin.mozilla.com/api
-                    maple: https://bounceradmin.stage.allizom.org/api
+                    maple: https://admin-bouncer.stage.mozaws.net/api/
                     default: http://localhost/api
       notifications:
          completed:
