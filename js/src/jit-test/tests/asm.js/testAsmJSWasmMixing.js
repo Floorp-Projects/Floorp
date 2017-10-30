@@ -23,3 +23,27 @@ if (!getBuildConfiguration().x64 && isSimdAvailable() && this["SIMD"]) {
     asmLink(simdJS, this, null, simdJSBuf);  // multiple SIMD.js instantiations succeed
     assertAsmLinkFail(asmJS, this, null, simdJSBuf);  // but not asm.js
 }
+
+setJitCompilerOption('asmjs.atomics.enable', 1);
+
+var sharedAsmJS = asmCompile('stdlib', 'ffis', 'buf',
+			     USE_ASM +
+			     'var i32 = new stdlib.Int32Array(buf);' +
+			     'var aload = stdlib.Atomics.load;' + // Declare shared memory
+			     'return {}');
+
+// A growable memory cannot be used for asm.js (nor would you think that is a
+// reasonable thing to do).
+
+{
+    let sharedWasmMem = new WebAssembly.Memory({initial:2, maximum:3, shared:true});
+    assertAsmLinkFail(sharedAsmJS, this, null, sharedWasmMem.buffer);
+}
+
+// A fixed-length shared memory cannot be used for asm.js, even though you might
+// think that ought to be possible.
+
+{
+    let sharedWasmMem = new WebAssembly.Memory({initial:2, maximum:2, shared:true});
+    assertAsmLinkFail(sharedAsmJS, this, null, sharedWasmMem.buffer);
+}
