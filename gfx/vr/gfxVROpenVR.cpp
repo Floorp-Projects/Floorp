@@ -253,7 +253,7 @@ VRDisplayOpenVR::GetSensorState()
   gfx::Matrix4x4 headToEyeTransforms[2];
   UpdateEyeParameters(headToEyeTransforms);
 
-  VRHMDSensorState result;
+  VRHMDSensorState result{};
 
   ::vr::Compositor_FrameTiming timing;
   timing.m_nSize = sizeof(::vr::Compositor_FrameTiming);
