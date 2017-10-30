@@ -55,7 +55,8 @@ fn bench_pico(b: &mut test::Bencher) {
             )
         };
         assert_eq!(ret, REQ.len() as i32);
-    })
+    });
+    b.bytes = REQ.len() as u64;
 }
 
 #[bench]
@@ -64,5 +65,6 @@ fn bench_httparse(b: &mut test::Bencher) {
     let mut req = httparse::Request::new(&mut headers);
     b.iter(|| {
         assert_eq!(req.parse(REQ).unwrap(), httparse::Status::Complete(REQ.len()));
-    })
+    });
+    b.bytes = REQ.len() as u64;
 }

@@ -13,6 +13,7 @@ add_task(async function test_onboarding_default_new_tourset() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
   is(doms.length, TOUR_IDs.length, "has exact tour numbers");
@@ -43,6 +44,7 @@ add_task(async function test_onboarding_custom_new_tourset() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
   is(doms.length, CUSTOM_NEW_TOURs.length, "has exact tour numbers");
@@ -72,6 +74,7 @@ add_task(async function test_onboarding_custom_update_tourset() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
   is(doms.length, CUSTOM_UPDATE_TOURs.length, "has exact tour numbers");

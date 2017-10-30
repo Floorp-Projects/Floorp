@@ -6,15 +6,13 @@
 /* import-globals-from ext-browserAction.js */
 /* import-globals-from ext-browser.js */
 
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource:///modules/PageActions.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
                                   "resource:///modules/ExtensionPopups.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
 
-
-var {
-  DefaultWeakMap,
-} = ExtensionUtils;
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
@@ -37,9 +35,8 @@ this.pageAction = class extends ExtensionAPI {
     let {extension} = this;
     let options = extension.manifest.page_action;
 
-    this.iconData = new DefaultWeakMap(icons => this.getIconData(icons));
-
-    this.id = makeWidgetId(extension.id) + "-page-action";
+    let widgetId = makeWidgetId(extension.id);
+    this.id = widgetId + "-page-action";
 
     this.tabManager = extension.tabManager;
 
@@ -60,20 +57,24 @@ this.pageAction = class extends ExtensionAPI {
 
     this.tabContext.on("location-change", this.handleLocationChange.bind(this)); // eslint-disable-line mozilla/balanced-listeners
 
-    // WeakMap[ChromeWindow -> <xul:image>]
-    this.buttons = new WeakMap();
-
     pageActionMap.set(extension, this);
 
     this.defaults.icon = await StartupCache.get(
       extension, ["pageAction", "default_icon"],
       () => IconDetails.normalize({path: options.default_icon}, extension));
 
-    this.iconData.set(
-      this.defaults.icon,
-      await StartupCache.get(
-        extension, ["pageAction", "default_icon_data"],
-        () => this.getIconData(this.defaults.icon)));
+    if (!this.browserPageAction) {
+      this.browserPageAction = PageActions.addAction(new PageActions.Action({
+        id: widgetId,
+        title: this.defaults.title,
+        iconURL: this.defaults.icon,
+        shownInUrlbar: true,
+        disabled: true,
+        onCommand: (event, buttonNode) => {
+          this.handleClick(event.target.ownerGlobal);
+        },
+      }));
+    }
   }
 
   onShutdown(reason) {
@@ -81,11 +82,9 @@ this.pageAction = class extends ExtensionAPI {
 
     this.tabContext.shutdown();
 
-    for (let window of windowTracker.browserWindows()) {
-      if (this.buttons.has(window)) {
-        this.buttons.get(window).remove();
-        window.document.removeEventListener("popupshowing", this);
-      }
+    if (this.browserPageAction) {
+      this.browserPageAction.remove();
+      this.browserPageAction = null;
     }
   }
 
@@ -117,81 +116,24 @@ this.pageAction = class extends ExtensionAPI {
   //
   // Updates "tooltiptext" and "aria-label" to match "title" property.
   // Updates "image" to match the "icon" property.
-  // Shows or hides the icon, based on the "show" property.
+  // Enables or disables the icon, based on the "show" property.
   updateButton(window) {
     let tabData = this.tabContext.get(window.gBrowser.selectedTab);
+    let title = tabData.title || this.extension.name;
+    this.browserPageAction.setTitle(title, window);
+    this.browserPageAction.setTooltip(title, window);
+    this.browserPageAction.setDisabled(!tabData.show, window);
 
-    if (!(tabData.show || this.buttons.has(window))) {
-      // Don't bother creating a button for a window until it actually
-      // needs to be shown.
-      return;
+    let iconURL;
+    if (typeof(tabData.icon) == "string") {
+      iconURL = IconDetails.escapeUrl(tabData.icon);
+    } else {
+      iconURL = Object.entries(tabData.icon).reduce((memo, [size, url]) => {
+        memo[size] = IconDetails.escapeUrl(url);
+        return memo;
+      }, {});
     }
-
-    window.requestAnimationFrame(() => {
-      let button = this.getButton(window);
-
-      if (tabData.show) {
-        // Update the title and icon only if the button is visible.
-
-        let title = tabData.title || this.extension.name;
-        button.setAttribute("tooltiptext", title);
-        button.setAttribute("aria-label", title);
-        button.classList.add("webextension-page-action");
-
-        let {style} = this.iconData.get(tabData.icon);
-
-        button.setAttribute("style", style);
-      }
-
-      button.hidden = !tabData.show;
-    });
-  }
-
-  getIconData(icons) {
-    let getIcon = size => {
-      let {icon} = IconDetails.getPreferredIcon(icons, this.extension, size);
-      // TODO: implement theme based icon for pageAction (Bug 1398156)
-      return IconDetails.escapeUrl(icon);
-    };
-
-    let style = `
-      --webextension-urlbar-image: url("${getIcon(16)}");
-      --webextension-urlbar-image-2x: url("${getIcon(32)}");
-    `;
-
-    return {style};
-  }
-
-  // Create an |image| node and add it to the |page-action-buttons|
-  // container in the given window.
-  addButton(window) {
-    let document = window.document;
-
-    let button = document.createElement("image");
-    button.id = this.id;
-    button.setAttribute("class", "urlbar-icon");
-
-    button.addEventListener("click", this); // eslint-disable-line mozilla/balanced-listeners
-
-    if (this.extension.hasPermission("menus") ||
-        this.extension.hasPermission("contextMenus")) {
-      document.addEventListener("popupshowing", this);
-    }
-
-    document.getElementById("page-action-buttons").appendChild(button);
-
-    return button;
-  }
-
-  // Returns the page action button for the given window, creating it if
-  // it doesn't already exist.
-  getButton(window) {
-    if (!this.buttons.has(window)) {
-      let button = this.addButton(window);
-      this.buttons.set(window, button);
-    }
-
-    return this.buttons.get(window);
+    this.browserPageAction.setIconURL(iconURL, window);
   }
 
   /**
@@ -206,31 +148,6 @@ this.pageAction = class extends ExtensionAPI {
     let pageAction = pageActionMap.get(this.extension);
     if (pageAction.getProperty(window.gBrowser.selectedTab, "show")) {
       pageAction.handleClick(window);
-    }
-  }
-
-  handleEvent(event) {
-    const window = event.target.ownerGlobal;
-
-    switch (event.type) {
-      case "click":
-        if (event.button === 0) {
-          this.handleClick(window);
-        }
-        break;
-
-      case "popupshowing":
-        const menu = event.target;
-        const trigger = menu.triggerNode;
-
-        if (menu.id === "toolbar-context-menu" && trigger && trigger.id === this.id) {
-          global.actionContextMenu({
-            extension: this.extension,
-            onPageAction: true,
-            menu: menu,
-          });
-        }
-        break;
     }
   }
 
@@ -251,9 +168,11 @@ this.pageAction = class extends ExtensionAPI {
     // If it has no popup URL defined, we dispatch a click event, but do not
     // open a popup.
     if (popupURL) {
-      let popup = new PanelPopup(this.extension, this.getButton(window),
-                                 popupURL, this.browserStyle);
+      let popup = new PanelPopup(this.extension, window.document, popupURL,
+                                 this.browserStyle);
       await popup.contentReady;
+      window.BrowserPageActions.togglePanelForAction(this.browserPageAction,
+                                                     popup.panel);
       TelemetryStopwatch.finish(popupOpenTimingHistogram, this);
     } else {
       TelemetryStopwatch.cancel(popupOpenTimingHistogram, this);

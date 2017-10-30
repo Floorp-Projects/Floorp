@@ -26,6 +26,7 @@ function promiseDelayedStartupFinished(win) {
 function promiseBrowserHasURL(browser, url) {
   let promise = Promise.resolve();
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   if (browser.contentDocument.readyState === "complete" &&
       browser.currentURI.spec === url) {
     return promise;

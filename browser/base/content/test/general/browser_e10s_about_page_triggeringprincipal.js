@@ -16,6 +16,7 @@ add_task(async function test_principal_click() {
   await kAboutPagesRegistered;
   await BrowserTestUtils.withNewTab("about:test-about-principal-parent", async function(browser) {
     let loadPromise = BrowserTestUtils.browserLoaded(browser, false, "about:test-about-principal-child");
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     let myLink = browser.contentDocument.getElementById("aboutchildprincipal");
     myLink.click();
     await loadPromise;

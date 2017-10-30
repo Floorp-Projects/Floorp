@@ -1,9 +1,9 @@
-FROM alexcrichton/rust-slave-linux-cross:2016-04-15
-USER root
+FROM alexcrichton/port-prebuilt-freebsd:2017-09-16
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
   qemu genext2fs
+RUN apt-get install -y curl ca-certificates gcc
 
 ENTRYPOINT ["sh"]
 

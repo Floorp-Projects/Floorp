@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -346,7 +347,8 @@ public:
                        gfx::SurfaceFormat aFormat,
                        GLenum aTarget,
                        GLenum aWrapMode,
-                       gfx::IntSize aSize);
+                       gfx::IntSize aSize,
+                       bool aIgnoreTransform);
 
   virtual const char* Name() const override { return "SurfaceTextureSource"; }
 
@@ -382,6 +384,7 @@ protected:
   const GLenum mTextureTarget;
   const GLenum mWrapMode;
   const gfx::IntSize mSize;
+  const bool mIgnoreTransform;
 };
 
 class SurfaceTextureHost : public TextureHost
@@ -390,7 +393,9 @@ public:
   SurfaceTextureHost(TextureFlags aFlags,
                      mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
                      gfx::IntSize aSize,
-                     bool aContinuousUpdate);
+                     gfx::SurfaceFormat aFormat,
+                     bool aContinuousUpdate,
+                     bool aIgnoreTransform);
 
   virtual ~SurfaceTextureHost();
 
@@ -426,7 +431,9 @@ public:
 protected:
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
+  const gfx::SurfaceFormat mFormat;
   bool mContinuousUpdate;
+  const bool mIgnoreTransform;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
 };

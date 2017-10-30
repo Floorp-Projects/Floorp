@@ -71,8 +71,7 @@ class CompileDBBackend(CommonBackend):
                                     obj.canonical_suffix)
 
         elif isinstance(obj, VariablePassthru):
-            for var in ('MOZBUILD_CFLAGS', 'MOZBUILD_CXXFLAGS',
-                        'MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS'):
+            for var in ('MOZBUILD_CMFLAGS', 'MOZBUILD_CMMFLAGS'):
                 if var in obj.variables:
                     self._local_flags[obj.objdir][var] = obj.variables[var]
 
@@ -187,7 +186,6 @@ class CompileDBBackend(CommonBackend):
             db.extend(value)
 
         db.append('$(COMPUTED_%s)' % self.CFLAGS[canonical_suffix])
-        db.append('$(MOZBUILD_%s)' % self.CFLAGS[canonical_suffix])
         if canonical_suffix == '.m':
             append_var('OS_COMPILE_CMFLAGS')
             db.append('$(MOZBUILD_CMFLAGS)')

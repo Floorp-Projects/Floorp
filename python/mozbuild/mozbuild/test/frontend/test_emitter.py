@@ -188,8 +188,6 @@ class TestEmitterBasic(unittest.TestCase):
             'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
             'DEFFILE': 'baz.def',
-            'MOZBUILD_CFLAGS': ['-fno-exceptions', '-w'],
-            'MOZBUILD_CXXFLAGS': ['-fcxx-exceptions', '-include foo.h'],
             'MOZBUILD_LDFLAGS': ['-framework Foo', '-x', '-DELAYLOAD:foo.dll',
                                  '-DELAYLOAD:bar.dll'],
             'MOZBUILD_HOST_CFLAGS': ['-funroll-loops', '-wall'],
@@ -213,6 +211,26 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(flags.flags['STL'], reader.config.substs['STL_FLAGS'])
         self.assertEqual(flags.flags['VISIBILITY'], reader.config.substs['VISIBILITY_FLAGS'])
         self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], ['-Werror'])
+        self.assertEqual(flags.flags['MOZBUILD_CFLAGS'], ['-Wall', '-funroll-loops'])
+        self.assertEqual(flags.flags['MOZBUILD_CXXFLAGS'], ['-funroll-loops', '-Wall'])
+
+    def test_debug_flags(self):
+        reader = self.reader('compile-flags', extra_substs={
+            'MOZ_DEBUG_FLAGS': '-g',
+            'MOZ_DEBUG_SYMBOLS': '1',
+        })
+        sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['DEBUG'], ['-g'])
+
+    def test_disable_debug_flags(self):
+        reader = self.reader('compile-flags', extra_substs={
+            'MOZ_DEBUG_FLAGS': '-g',
+            'MOZ_DEBUG_SYMBOLS': '',
+        })
+        sources, lib, flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(flags, ComputedFlags)
+        self.assertEqual(flags.flags['DEBUG'], [])
 
     def test_compile_flags_validation(self):
         reader = self.reader('compile-flags-field-validation')

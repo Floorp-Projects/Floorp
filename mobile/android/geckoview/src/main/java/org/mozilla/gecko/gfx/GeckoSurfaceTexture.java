@@ -80,9 +80,13 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
             return;
         }
 
-        super.releaseTexImage();
-        if (mListener != null) {
-            mListener.onReleaseTexImage();
+        try {
+            super.releaseTexImage();
+            if (mListener != null) {
+                mListener.onReleaseTexImage();
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "releaseTexImage() failed", e);
         }
     }
 

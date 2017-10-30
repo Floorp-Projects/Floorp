@@ -1,5 +1,3 @@
-import java.util.regex.Pattern
-
 def tryInt = { string ->
     if (string == null) {
         return string
@@ -55,47 +53,39 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath('com.stanfy.spoon:spoon-gradle-plugin:1.0.4') {
-            // Without these, we get errors linting.
-            exclude module: 'guava'
-        }
         // Provided in tree.
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
     }
 }
 
-task generateCodeAndResources(type:Exec) {
-    workingDir "${topobjdir}"
+if ('multi' == System.env.AB_CD) {
+    // Multi-l10n builds set `AB_CD=multi`, which isn't a valid locale.  This
+    // causes the
+    //
+    // |mach build| > |mach gradle| > |make gradle-targets| > AndroidManifest.xml > strings.xml > multi/brand.dtd
+    //
+    // dependency chain to fail, since multi isn't a real locale.  To avoid
+    // this, if Gradle is invoked with AB_CD=multi, we don't invoke Make at all.
+    task generateCodeAndResources()
+} else {
+    task generateCodeAndResources(type:Exec) {
+        workingDir "${topobjdir}"
 
-    commandLine mozconfig.substs.GMAKE
-    args '-C'
-    args "${topobjdir}/mobile/android/base"
-    args 'gradle-targets'
+        commandLine mozconfig.substs.GMAKE
+        args '-C'
+        args "${topobjdir}/mobile/android/base"
+        args 'gradle-targets'
 
-    // Only show the output if something went wrong.
-    ignoreExitValue = true
-    standardOutput = new ByteArrayOutputStream()
-    errorOutput = standardOutput
-    doLast {
-        if (execResult.exitValue != 0) {
-            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+        // Only show the output if something went wrong.
+        ignoreExitValue = true
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = standardOutput
+        doLast {
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
+            }
         }
     }
-}
-
-// Skip unit test for all build variants, unless if it was specifically requested by user.
-// The enabled property for the unit test tasks is reset based on the command line task names just before the task execution.
-// I bet there is a easier/cleaner way to do this, but this gets the job done for now.
-Pattern pattern = Pattern.compile('.*test(.+UnitTest)?.*')
-boolean startTasksIncludeTest = gradle.startParameter.taskNames.any {
-    taskName ->
-        taskName.matches(pattern)
-}
-gradle.taskGraph.beforeTask {
-    Task task ->
-        if (task.name.matches(pattern)) {
-            task.enabled = startTasksIncludeTest
-        }
 }
 
 afterEvaluate {

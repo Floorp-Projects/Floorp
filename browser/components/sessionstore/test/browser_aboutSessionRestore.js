@@ -29,6 +29,7 @@ add_task(async function() {
 
   ok(gBrowser.tabs.length > 1, "we have more than one tab");
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let view = browser.contentDocument.getElementById("tabList").view;
   ok(view.isContainer(0), "first entry is the window");
   is(view.getCellProperties(1, { id: "title" }), "icon",

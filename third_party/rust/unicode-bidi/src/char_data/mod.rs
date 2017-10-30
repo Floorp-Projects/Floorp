@@ -19,7 +19,7 @@ use std::char;
 use self::tables::bidi_class_table;
 use BidiClass::*;
 
-/// Find the BidiClass of a single char.
+/// Find the `BidiClass` of a single char.
 pub fn bidi_class(c: char) -> BidiClass {
     bsearch_range_value_table(c, bidi_class_table)
 }
@@ -32,15 +32,13 @@ pub fn is_rtl(bidi_class: BidiClass) -> bool {
 }
 
 fn bsearch_range_value_table(c: char, r: &'static [(char, char, BidiClass)]) -> BidiClass {
-    match r.binary_search_by(
-        |&(lo, hi, _)| if lo <= c && c <= hi {
-            Equal
-        } else if hi < c {
-            Less
-        } else {
-            Greater
-        }
-    ) {
+    match r.binary_search_by(|&(lo, hi, _)| if lo <= c && c <= hi {
+        Equal
+    } else if hi < c {
+        Less
+    } else {
+        Greater
+    }) {
         Ok(idx) => {
             let (_, _, cat) = r[idx];
             cat
@@ -56,61 +54,83 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_bidi_class() {
-        for (input, expected) in
-            vec![
-                (0x0000, BN),
-                (0x0040, ON),
-                (0x0041, L),
-                (0x0062, L),
-                (0x007F, BN),
+    fn test_ascii() {
+        assert_eq!(bidi_class('\u{0000}'), BN);
+        assert_eq!(bidi_class('\u{0040}'), ON);
+        assert_eq!(bidi_class('\u{0041}'), L);
+        assert_eq!(bidi_class('\u{0062}'), L);
+        assert_eq!(bidi_class('\u{007F}'), BN);
+    }
 
-                // Hebrew
-                (0x0590, R),
-                (0x05D0, R),
-                (0x05D1, R),
-                (0x05FF, R),
+    #[test]
+    fn test_bmp() {
+        // Hebrew
+        assert_eq!(bidi_class('\u{0590}'), R);
+        assert_eq!(bidi_class('\u{05D0}'), R);
+        assert_eq!(bidi_class('\u{05D1}'), R);
+        assert_eq!(bidi_class('\u{05FF}'), R);
 
-                // Arabic
-                (0x0600, AN),
-                (0x0627, AL),
-                (0x07BF, AL),
+        // Arabic
+        assert_eq!(bidi_class('\u{0600}'), AN);
+        assert_eq!(bidi_class('\u{0627}'), AL);
+        assert_eq!(bidi_class('\u{07BF}'), AL);
 
-                // Default R + Arabic Extras
-                (0x07C0, R),
-                (0x085F, R),
-                (0x0860, R),
-                (0x089F, R),
-                (0x08A0, AL),
-                (0x089F, R),
-                (0x08FF, NSM),
+        // Default R + Arabic Extras
+        assert_eq!(bidi_class('\u{07C0}'), R);
+        assert_eq!(bidi_class('\u{085F}'), R);
+        assert_eq!(bidi_class('\u{0860}'), AL);
+        assert_eq!(bidi_class('\u{0870}'), R);
+        assert_eq!(bidi_class('\u{089F}'), R);
+        assert_eq!(bidi_class('\u{08A0}'), AL);
+        assert_eq!(bidi_class('\u{089F}'), R);
+        assert_eq!(bidi_class('\u{08FF}'), NSM);
 
-                // Default ET
-                (0x20A0, ET),
-                (0x20CF, ET),
+        // Default ET
+        assert_eq!(bidi_class('\u{20A0}'), ET);
+        assert_eq!(bidi_class('\u{20CF}'), ET);
 
-                // Arabic Presentation Forms
-                (0xFB1D, R),
-                (0xFB4F, R),
-                (0xFB50, AL),
-                (0xFDCF, AL),
-                (0xFDF0, AL),
-                (0xFDFF, AL),
-                (0xFE70, AL),
-                (0xFEFE, AL),
-                (0xFEFF, BN),
+        // Arabic Presentation Forms
+        assert_eq!(bidi_class('\u{FB1D}'), R);
+        assert_eq!(bidi_class('\u{FB4F}'), R);
+        assert_eq!(bidi_class('\u{FB50}'), AL);
+        assert_eq!(bidi_class('\u{FDCF}'), AL);
+        assert_eq!(bidi_class('\u{FDF0}'), AL);
+        assert_eq!(bidi_class('\u{FDFF}'), AL);
+        assert_eq!(bidi_class('\u{FE70}'), AL);
+        assert_eq!(bidi_class('\u{FEFE}'), AL);
+        assert_eq!(bidi_class('\u{FEFF}'), BN);
 
-                // Default AL + R
-                (0x10800, R),
-                (0x10FFF, R),
-                (0x1E800, R),
-                (0x1EDFF, R),
-                (0x1EE00, AL),
-                (0x1EEFF, AL),
-                (0x1EF00, R),
-                (0x1EFFF, R),
-            ] {
-            assert_eq!(bidi_class(char::from_u32(input).unwrap()), expected);
-        }
+        // noncharacters
+        assert_eq!(bidi_class('\u{FDD0}'), L);
+        assert_eq!(bidi_class('\u{FDD1}'), L);
+        assert_eq!(bidi_class('\u{FDEE}'), L);
+        assert_eq!(bidi_class('\u{FDEF}'), L);
+        assert_eq!(bidi_class('\u{FFFE}'), L);
+        assert_eq!(bidi_class('\u{FFFF}'), L);
+    }
+
+    #[test]
+    fn test_smp() {
+        // Default AL + R
+        assert_eq!(bidi_class('\u{10800}'), R);
+        assert_eq!(bidi_class('\u{10FFF}'), R);
+        assert_eq!(bidi_class('\u{1E800}'), R);
+        assert_eq!(bidi_class('\u{1EDFF}'), R);
+        assert_eq!(bidi_class('\u{1EE00}'), AL);
+        assert_eq!(bidi_class('\u{1EEFF}'), AL);
+        assert_eq!(bidi_class('\u{1EF00}'), R);
+        assert_eq!(bidi_class('\u{1EFFF}'), R);
+    }
+
+    #[test]
+    fn test_unassigned_planes() {
+        assert_eq!(bidi_class('\u{30000}'), L);
+        assert_eq!(bidi_class('\u{40000}'), L);
+        assert_eq!(bidi_class('\u{50000}'), L);
+        assert_eq!(bidi_class('\u{60000}'), L);
+        assert_eq!(bidi_class('\u{70000}'), L);
+        assert_eq!(bidi_class('\u{80000}'), L);
+        assert_eq!(bidi_class('\u{90000}'), L);
+        assert_eq!(bidi_class('\u{a0000}'), L);
     }
 }

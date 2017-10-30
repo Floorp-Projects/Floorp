@@ -16,6 +16,7 @@ add_task(async function() {
   let browser = tab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");
 
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocument;
 
   // Click on the "Close" button after about:sessionrestore is loaded.
@@ -35,6 +36,7 @@ add_task(async function() {
 
   browser.loadURI("about:sessionrestore");
   await BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   doc = browser.contentDocument;
 
   // Click on the "Close" button after about:sessionrestore is loaded.

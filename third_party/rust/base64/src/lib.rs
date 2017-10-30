@@ -6,6 +6,9 @@ use byteorder::{BigEndian, ByteOrder};
 
 mod tables;
 
+mod line_wrap;
+use line_wrap::{line_wrap_parameters, line_wrap};
+
 /// Available encoding character sets
 #[derive(Clone, Copy, Debug)]
 pub enum CharacterSet {
@@ -15,15 +18,41 @@ pub enum CharacterSet {
     UrlSafe
 }
 
+impl CharacterSet {
+    fn encode_table(&self) -> &'static [u8; 64] {
+        match *self {
+            CharacterSet::Standard => tables::STANDARD_ENCODE,
+            CharacterSet::UrlSafe => tables::URL_SAFE_ENCODE
+        }
+    }
+
+    fn decode_table(&self) -> &'static [u8; 256] {
+        match *self {
+            CharacterSet::Standard => tables::STANDARD_DECODE,
+            CharacterSet::UrlSafe => tables::URL_SAFE_DECODE
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum LineEnding {
     LF,
     CRLF,
 }
 
+impl LineEnding {
+    fn len(&self) -> usize {
+        match *self {
+            LineEnding::LF => 1,
+            LineEnding::CRLF => 2
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum LineWrap {
     NoWrap,
+    // wrap length is always > 0
     Wrap(usize, LineEnding)
 }
 
@@ -86,7 +115,6 @@ pub static URL_SAFE_NO_PAD: Config = Config {
     strip_whitespace: false,
     line_wrap: LineWrap::NoWrap,
 };
-
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum DecodeError {
@@ -171,7 +199,7 @@ pub fn decode<T: ?Sized + AsRef<[u8]>>(input: &T) -> Result<Vec<u8>, DecodeError
 ///}
 ///```
 pub fn encode_config<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config) -> String {
-    let mut buf = match encoded_size(input.as_ref().len(), config) {
+    let mut buf = match encoded_size(input.as_ref().len(), &config) {
         Some(n) => String::with_capacity(n),
         None => panic!("integer overflow when calculating buffer size")
     };
@@ -182,25 +210,35 @@ pub fn encode_config<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config) -> Stri
 }
 
 /// calculate the base64 encoded string size, including padding
-fn encoded_size(bytes_len: usize, config: Config) -> Option<usize> {
-    let printing_output_chars = bytes_len
-        .checked_add(2)
-        .map(|x| x / 3)
-        .and_then(|x| x.checked_mul(4));
+fn encoded_size(bytes_len: usize, config: &Config) -> Option<usize> {
+    let rem = bytes_len % 3;
 
-    //TODO this is subtly wrong but in a not dangerous way
-    //pushing patch with identical to previous behavior, then fixing
-    let line_ending_output_chars = match config.line_wrap {
-        LineWrap::NoWrap => Some(0),
-        LineWrap::Wrap(n, LineEnding::CRLF) =>
-            printing_output_chars.map(|y| y / n).and_then(|y| y.checked_mul(2)),
-        LineWrap::Wrap(n, LineEnding::LF) =>
-            printing_output_chars.map(|y| y / n),
+    let complete_input_chunks = bytes_len / 3;
+    let complete_chunk_output = complete_input_chunks.checked_mul(4);
+
+    let encoded_len_no_wrap = if rem > 0 {
+        if config.pad {
+            complete_chunk_output.and_then(|c| c.checked_add(4))
+        } else {
+            let encoded_rem = match rem {
+                1 => 2,
+                2 => 3,
+                _ => panic!("Impossible remainder")
+            };
+            complete_chunk_output.and_then(|c| c.checked_add(encoded_rem))
+        }
+    } else {
+        complete_chunk_output
     };
 
-    printing_output_chars.and_then(|x|
-        line_ending_output_chars.and_then(|y| x.checked_add(y))
-    )
+    encoded_len_no_wrap.map(|e| {
+        match config.line_wrap {
+            LineWrap::NoWrap => e,
+            LineWrap::Wrap(line_len, line_ending) => {
+                line_wrap_parameters(e, line_len, line_ending).total_len
+            }
+        }
+    })
 }
 
 ///Encode arbitrary octets as base64.
@@ -223,109 +261,173 @@ fn encoded_size(bytes_len: usize, config: Config) -> Option<usize> {
 ///```
 pub fn encode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T, config: Config, buf: &mut String) {
     let input_bytes = input.as_ref();
-    let ref charset = match config.char_set {
-        CharacterSet::Standard => tables::STANDARD_ENCODE,
-        CharacterSet::UrlSafe => tables::URL_SAFE_ENCODE,
-    };
 
-    // reserve to make sure the memory we'll be writing to with unsafe is allocated
-    let resv_size = match encoded_size(input_bytes.len(), config) {
-        Some(n) => n,
-        None => panic!("integer overflow when calculating buffer size"),
-    };
-    buf.reserve(resv_size);
+    let encoded_size = encoded_size(input_bytes.len(), &config)
+        .expect("usize overflow when calculating buffer size");
 
     let orig_buf_len = buf.len();
-    let mut fast_loop_output_buf_len = orig_buf_len;
-
-    let input_chunk_len = 6;
-
-    let last_fast_index = input_bytes.len().saturating_sub(8);
 
     // we're only going to insert valid utf8
-    let mut raw = unsafe { buf.as_mut_vec() };
-    // start at the first free part of the output buf
-    let mut output_ptr = unsafe { raw.as_mut_ptr().offset(orig_buf_len as isize) };
+    let mut buf_bytes;
+    unsafe {
+        buf_bytes = buf.as_mut_vec();
+    }
+
+    buf_bytes.resize(orig_buf_len.checked_add(encoded_size)
+                         .expect("usize overflow when calculating expanded buffer size"), 0);
+
+    let mut b64_output = &mut buf_bytes[orig_buf_len..];
+
+    let encoded_bytes = encode_with_padding(input_bytes, b64_output, config.char_set.encode_table(),
+                                            config.pad);
+
+    if let LineWrap::Wrap(line_len, line_end) = config.line_wrap {
+        line_wrap(b64_output, encoded_bytes, line_len, line_end);
+    }
+}
+
+/// Encode input bytes and pad if configured.
+/// `output` must be long enough to hold the encoded `input` with padding.
+/// Returns the number of bytes written.
+fn encode_with_padding(input: &[u8], output: &mut [u8], encode_table: &[u8; 64], pad: bool) -> usize {
+    let b64_bytes_written = encode_to_slice(input, output, encode_table);
+
+    let padding_bytes = if pad {
+        add_padding(input.len(), &mut output[b64_bytes_written..])
+    } else {
+        0
+    };
+
+    b64_bytes_written.checked_add(padding_bytes)
+        .expect("usize overflow when calculating b64 length")
+}
+
+/// Encode input bytes to utf8 base64 bytes. Does not pad or line wrap.
+/// `output` must be long enough to hold the encoded `input` without padding or line wrapping.
+/// Returns the number of bytes written.
+#[inline]
+fn encode_to_slice(input: &[u8], output: &mut [u8], encode_table: &[u8; 64]) -> usize {
     let mut input_index: usize = 0;
-    if input_bytes.len() >= 8 {
+
+    const BLOCKS_PER_FAST_LOOP: usize = 4;
+    const LOW_SIX_BITS: u64 = 0x3F;
+
+    // we read 8 bytes at a time (u64) but only actually consume 6 of those bytes. Thus, we need
+    // 2 trailing bytes to be available to read..
+    let last_fast_index = input.len().saturating_sub(BLOCKS_PER_FAST_LOOP * 6 + 2);
+    let mut output_index = 0;
+
+    if last_fast_index > 0 {
         while input_index <= last_fast_index {
-            let input_chunk = BigEndian::read_u64(&input_bytes[input_index..(input_index + 8)]);
+            // Major performance wins from letting the optimizer do the bounds check once, mostly
+            // on the output side
+            let input_chunk = &input[input_index..(input_index + (BLOCKS_PER_FAST_LOOP * 6 + 2))];
+            let mut output_chunk = &mut output[output_index..(output_index + BLOCKS_PER_FAST_LOOP * 8)];
 
-            // strip off 6 bits at a time for the first 6 bytes
-            unsafe {
-                std::ptr::write(output_ptr, charset[((input_chunk >> 58) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(1), charset[((input_chunk >> 52) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(2), charset[((input_chunk >> 46) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(3), charset[((input_chunk >> 40) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(4), charset[((input_chunk >> 34) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(5), charset[((input_chunk >> 28) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(6), charset[((input_chunk >> 22) & 0x3F) as usize]);
-                std::ptr::write(output_ptr.offset(7), charset[((input_chunk >> 16) & 0x3F) as usize]);
-                output_ptr = output_ptr.offset(8);
-            }
+            // Hand-unrolling for 32 vs 16 or 8 bytes produces yields performance about equivalent
+            // to unsafe pointer code on a Xeon E5-1650v3. 64 byte unrolling was slightly better for
+            // large inputs but significantly worse for 50-byte input, unsurprisingly. I suspect
+            // that it's a not uncommon use case to encode smallish chunks of data (e.g. a 64-byte
+            // SHA-512 digest), so it would be nice if that fit in the unrolled loop at least once.
+            // Plus, single-digit percentage performance differences might well be quite different
+            // on different hardware.
 
-            input_index += input_chunk_len;
-            fast_loop_output_buf_len += 8;
+            let input_u64 = BigEndian::read_u64(&input_chunk[0..]);
+
+            output_chunk[0] = encode_table[((input_u64 >> 58) & LOW_SIX_BITS) as usize];
+            output_chunk[1] = encode_table[((input_u64 >> 52) & LOW_SIX_BITS) as usize];
+            output_chunk[2] = encode_table[((input_u64 >> 46) & LOW_SIX_BITS) as usize];
+            output_chunk[3] = encode_table[((input_u64 >> 40) & LOW_SIX_BITS) as usize];
+            output_chunk[4] = encode_table[((input_u64 >> 34) & LOW_SIX_BITS) as usize];
+            output_chunk[5] = encode_table[((input_u64 >> 28) & LOW_SIX_BITS) as usize];
+            output_chunk[6] = encode_table[((input_u64 >> 22) & LOW_SIX_BITS) as usize];
+            output_chunk[7] = encode_table[((input_u64 >> 16) & LOW_SIX_BITS) as usize];
+
+            let input_u64 = BigEndian::read_u64(&input_chunk[6..]);
+
+            output_chunk[8] = encode_table[((input_u64 >> 58) & LOW_SIX_BITS) as usize];
+            output_chunk[9] = encode_table[((input_u64 >> 52) & LOW_SIX_BITS) as usize];
+            output_chunk[10] = encode_table[((input_u64 >> 46) & LOW_SIX_BITS) as usize];
+            output_chunk[11] = encode_table[((input_u64 >> 40) & LOW_SIX_BITS) as usize];
+            output_chunk[12] = encode_table[((input_u64 >> 34) & LOW_SIX_BITS) as usize];
+            output_chunk[13] = encode_table[((input_u64 >> 28) & LOW_SIX_BITS) as usize];
+            output_chunk[14] = encode_table[((input_u64 >> 22) & LOW_SIX_BITS) as usize];
+            output_chunk[15] = encode_table[((input_u64 >> 16) & LOW_SIX_BITS) as usize];
+
+            let input_u64 = BigEndian::read_u64(&input_chunk[12..]);
+
+            output_chunk[16] = encode_table[((input_u64 >> 58) & LOW_SIX_BITS) as usize];
+            output_chunk[17] = encode_table[((input_u64 >> 52) & LOW_SIX_BITS) as usize];
+            output_chunk[18] = encode_table[((input_u64 >> 46) & LOW_SIX_BITS) as usize];
+            output_chunk[19] = encode_table[((input_u64 >> 40) & LOW_SIX_BITS) as usize];
+            output_chunk[20] = encode_table[((input_u64 >> 34) & LOW_SIX_BITS) as usize];
+            output_chunk[21] = encode_table[((input_u64 >> 28) & LOW_SIX_BITS) as usize];
+            output_chunk[22] = encode_table[((input_u64 >> 22) & LOW_SIX_BITS) as usize];
+            output_chunk[23] = encode_table[((input_u64 >> 16) & LOW_SIX_BITS) as usize];
+
+            let input_u64 = BigEndian::read_u64(&input_chunk[18..]);
+
+            output_chunk[24] = encode_table[((input_u64 >> 58) & LOW_SIX_BITS) as usize];
+            output_chunk[25] = encode_table[((input_u64 >> 52) & LOW_SIX_BITS) as usize];
+            output_chunk[26] = encode_table[((input_u64 >> 46) & LOW_SIX_BITS) as usize];
+            output_chunk[27] = encode_table[((input_u64 >> 40) & LOW_SIX_BITS) as usize];
+            output_chunk[28] = encode_table[((input_u64 >> 34) & LOW_SIX_BITS) as usize];
+            output_chunk[29] = encode_table[((input_u64 >> 28) & LOW_SIX_BITS) as usize];
+            output_chunk[30] = encode_table[((input_u64 >> 22) & LOW_SIX_BITS) as usize];
+            output_chunk[31] = encode_table[((input_u64 >> 16) & LOW_SIX_BITS) as usize];
+
+            output_index += BLOCKS_PER_FAST_LOOP * 8;
+            input_index += BLOCKS_PER_FAST_LOOP * 6;
         }
     }
 
-    unsafe {
-        // expand len to include the bytes we just wrote
-        raw.set_len(fast_loop_output_buf_len);
-    }
+    // Encode what's left after the fast loop.
 
-    // encode the 0 to 7 bytes left after the fast loop
+    const LOW_SIX_BITS_U8: u8 = 0x3F;
 
-    let rem = input_bytes.len() % 3;
-    let start_of_rem = input_bytes.len() - rem;
+    let rem = input.len() % 3;
+    let start_of_rem = input.len() - rem;
 
     // start at the first index not handled by fast loop, which may be 0.
-    let mut leftover_index = input_index;
 
-    while leftover_index < start_of_rem {
-        raw.push(charset[(input_bytes[leftover_index] >> 2) as usize]);
-        raw.push(charset[((input_bytes[leftover_index] << 4 | input_bytes[leftover_index + 1] >> 4) & 0x3f) as usize]);
-        raw.push(charset[((input_bytes[leftover_index + 1] << 2 | input_bytes[leftover_index + 2] >> 6) & 0x3f) as usize]);
-        raw.push(charset[(input_bytes[leftover_index + 2] & 0x3f) as usize]);
+    while input_index < start_of_rem {
+        let input_chunk = &input[input_index..(input_index + 3)];
+        let mut output_chunk = &mut output[output_index..(output_index + 4)];
 
-        leftover_index += 3;
+        output_chunk[0] = encode_table[(input_chunk[0] >> 2) as usize];
+        output_chunk[1] = encode_table[((input_chunk[0] << 4 | input_chunk[1] >> 4) & LOW_SIX_BITS_U8) as usize];
+        output_chunk[2] = encode_table[((input_chunk[1] << 2 | input_chunk[2] >> 6) & LOW_SIX_BITS_U8) as usize];
+        output_chunk[3] = encode_table[(input_chunk[2] & LOW_SIX_BITS_U8) as usize];
+
+        input_index += 3;
+        output_index += 4;
     }
 
     if rem == 2 {
-        raw.push(charset[(input_bytes[start_of_rem] >> 2) as usize]);
-        raw.push(charset[((input_bytes[start_of_rem] << 4 | input_bytes[start_of_rem + 1] >> 4) & 0x3f) as usize]);
-        raw.push(charset[(input_bytes[start_of_rem + 1] << 2 & 0x3f) as usize]);
+        output[output_index] = encode_table[(input[start_of_rem] >> 2) as usize];
+        output[output_index + 1] = encode_table[((input[start_of_rem] << 4 | input[start_of_rem + 1] >> 4) & LOW_SIX_BITS_U8) as usize];
+        output[output_index + 2] = encode_table[((input[start_of_rem + 1] << 2) & LOW_SIX_BITS_U8) as usize];
+        output_index += 3;
     } else if rem == 1 {
-        raw.push(charset[(input_bytes[start_of_rem] >> 2) as usize]);
-        raw.push(charset[(input_bytes[start_of_rem] << 4 & 0x3f) as usize]);
+        output[output_index] = encode_table[(input[start_of_rem] >> 2) as usize];
+        output[output_index + 1] = encode_table[((input[start_of_rem] << 4) & LOW_SIX_BITS_U8) as usize];
+        output_index += 2;
     }
 
-    if config.pad {
-        for _ in 0..((3 - rem) % 3) {
-            raw.push(0x3d);
-        }
+    output_index
+}
+
+/// Write padding characters.
+/// `output` is the slice where padding should be written, of length at least 2.
+fn add_padding(input_len: usize, output: &mut[u8]) -> usize {
+    let rem = input_len % 3;
+    let mut bytes_written = 0;
+    for _ in 0..((3 - rem) % 3) {
+        output[bytes_written] = b'=';
+        bytes_written += 1;
     }
 
-    //TODO FIXME this does the wrong thing for nonempty buffers
-    if orig_buf_len == 0 {
-        if let LineWrap::Wrap(line_size, line_end) = config.line_wrap {
-            let len = raw.len();
-            let mut i = 0;
-            let mut j = 0;
-
-            while i < len {
-                if i > 0 && i % line_size == 0 {
-                    match line_end {
-                        LineEnding::LF => { raw.insert(j, b'\n'); j += 1; }
-                        LineEnding::CRLF => { raw.insert(j, b'\r'); raw.insert(j + 1, b'\n'); j += 2; }
-                    }
-                }
-
-                i += 1;
-                j += 1;
-            }
-        }
-    }
+    bytes_written
 }
 
 ///Decode from string reference as octets.
@@ -384,20 +486,21 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T,
         input.as_ref()
     };
 
-    let ref decode_table = match config.char_set {
-        CharacterSet::Standard => tables::STANDARD_DECODE,
-        CharacterSet::UrlSafe => tables::URL_SAFE_DECODE,
-    };
+    let decode_table = &config.char_set.decode_table();
 
-    buffer.reserve(input_bytes.len() * 3 / 4);
+    // decode logic operates on chunks of 8 input bytes without padding
+    const INPUT_CHUNK_LEN: usize = 8;
+    const DECODED_CHUNK_LEN: usize = 6;
+    // we read a u64 and write a u64, but a u64 of input only yields 6 bytes of output, so the last
+    // 2 bytes of any output u64 should not be counted as written to (but must be available in a
+    // slice).
+    const DECODED_CHUNK_SUFFIX: usize = 2;
 
-    // the fast loop only handles complete chunks of 8 input bytes without padding
-    let chunk_len = 8;
-    let decoded_chunk_len = 6;
-    let remainder_len = input_bytes.len() % chunk_len;
+    let remainder_len = input_bytes.len() % INPUT_CHUNK_LEN;
     let trailing_bytes_to_skip = if remainder_len == 0 {
-        // if input is a multiple of the chunk size, ignore the last chunk as it may have padding
-        chunk_len
+        // if input is a multiple of the chunk size, ignore the last chunk as it may have padding,
+        // and the fast decode logic cannot handle padding
+        INPUT_CHUNK_LEN
     } else {
         remainder_len
     };
@@ -406,105 +509,63 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T,
 
     let starting_output_index = buffer.len();
     // Resize to hold decoded output from fast loop. Need the extra two bytes because
-    // we write a full 8 bytes for the last 6-byte decoded chunk and then truncate off two
+    // we write a full 8 bytes for the last 6-byte decoded chunk and then truncate off the last two.
     let new_size = starting_output_index
-        + length_of_full_chunks / chunk_len * decoded_chunk_len
-        + (chunk_len - decoded_chunk_len);
+        .checked_add(length_of_full_chunks / INPUT_CHUNK_LEN * DECODED_CHUNK_LEN)
+        .and_then(|l| l.checked_add(DECODED_CHUNK_SUFFIX))
+        .expect("Overflow when calculating output buffer length");
+
     buffer.resize(new_size, 0);
 
-    let mut output_index = starting_output_index;
-
     {
-        let buffer_slice = buffer.as_mut_slice();
-
+        let mut output_index = 0;
         let mut input_index = 0;
-        // initial value is never used; always set if fast loop breaks
-        let mut bad_byte_index: usize = 0;
-        // a non-invalid value means it's not an error if fast loop never runs
-        let mut morsel: u8 = 0;
+        let buffer_slice = &mut buffer.as_mut_slice()[starting_output_index..];
 
-        // fast loop of 8 bytes at a time
+        // how many u64's of input to handle at a time
+        const CHUNKS_PER_FAST_LOOP_BLOCK: usize = 4;
+        const INPUT_BLOCK_LEN: usize = CHUNKS_PER_FAST_LOOP_BLOCK * INPUT_CHUNK_LEN;
+        // includes the trailing 2 bytes for the final u64 write
+        const DECODED_BLOCK_LEN: usize = CHUNKS_PER_FAST_LOOP_BLOCK * DECODED_CHUNK_LEN +
+            DECODED_CHUNK_SUFFIX;
+        // the start index of the last block of data that is big enough to use the unrolled loop
+        let last_block_start_index = length_of_full_chunks
+            .saturating_sub(INPUT_CHUNK_LEN * CHUNKS_PER_FAST_LOOP_BLOCK);
+
+        // manual unroll to CHUNKS_PER_FAST_LOOP_BLOCK of u64s to amortize slice bounds checks
+        if last_block_start_index > 0 {
+            while input_index <= last_block_start_index {
+                let input_slice = &input_bytes[input_index..(input_index + INPUT_BLOCK_LEN)];
+                let output_slice = &mut buffer_slice[output_index..(output_index + DECODED_BLOCK_LEN)];
+
+                decode_chunk(&input_slice[0..], input_index, decode_table, &mut output_slice[0..])?;
+                decode_chunk(&input_slice[8..], input_index + 8, decode_table, &mut output_slice[6..])?;
+                decode_chunk(&input_slice[16..], input_index + 16, decode_table, &mut output_slice[12..])?;
+                decode_chunk(&input_slice[24..], input_index + 24, decode_table, &mut output_slice[18..])?;
+
+                input_index += INPUT_BLOCK_LEN;
+                output_index += DECODED_BLOCK_LEN - DECODED_CHUNK_SUFFIX;
+            }
+        }
+
+        // still pretty fast loop: 8 bytes at a time for whatever we didn't do in the faster loop.
         while input_index < length_of_full_chunks {
-            let mut accum: u64;
+            decode_chunk(&input_bytes[input_index..(input_index + 8)], input_index, decode_table,
+                         &mut buffer_slice[output_index..(output_index + 8)])?;
 
-            let input_chunk = BigEndian::read_u64(&input_bytes[input_index..(input_index + 8)]);
-            morsel = decode_table[(input_chunk >> 56) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index;
-                break;
-            };
-            accum = (morsel as u64) << 58;
-
-            morsel = decode_table[(input_chunk >> 48 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 1;
-                break;
-            };
-            accum |= (morsel as u64) << 52;
-
-            morsel = decode_table[(input_chunk >> 40 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 2;
-                break;
-            };
-            accum |= (morsel as u64) << 46;
-
-            morsel = decode_table[(input_chunk >> 32 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 3;
-                break;
-            };
-            accum |= (morsel as u64) << 40;
-
-            morsel = decode_table[(input_chunk >> 24 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 4;
-                break;
-            };
-            accum |= (morsel as u64) << 34;
-
-            morsel = decode_table[(input_chunk >> 16 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 5;
-                break;
-            };
-            accum |= (morsel as u64) << 28;
-
-            morsel = decode_table[(input_chunk >> 8 & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 6;
-                break;
-            };
-            accum |= (morsel as u64) << 22;
-
-            morsel = decode_table[(input_chunk & 0xFF) as usize];
-            if morsel == tables::INVALID_VALUE {
-                bad_byte_index = input_index + 7;
-                break;
-            };
-            accum |= (morsel as u64) << 16;
-
-            BigEndian::write_u64(&mut buffer_slice[(output_index)..(output_index + 8)],
-                                 accum);
-
-            output_index += 6;
-            input_index += chunk_len;
-        };
-
-        if morsel == tables::INVALID_VALUE {
-            // we got here from a break
-            return Err(DecodeError::InvalidByte(bad_byte_index, input_bytes[bad_byte_index]));
+            output_index += DECODED_CHUNK_LEN;
+            input_index += INPUT_CHUNK_LEN;
         }
     }
 
     // Truncate off the last two bytes from writing the last u64.
     // Unconditional because we added on the extra 2 bytes in the resize before the loop,
     // so it will never underflow.
-    let new_len = buffer.len() - (chunk_len - decoded_chunk_len);
+    let new_len = buffer.len() - DECODED_CHUNK_SUFFIX;
     buffer.truncate(new_len);
 
     // handle leftovers (at most 8 bytes, decoded to 6).
-    // Use a u64 as a stack-resident 8 bytes buffer.
+    // Use a u64 as a stack-resident 8 byte buffer.
     let mut leftover_bits: u64 = 0;
     let mut morsels_in_leftover = 0;
     let mut padding_bytes = 0;
@@ -523,17 +584,26 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T,
 
             if i % 4 < 2 {
                 // Check for case #2.
-                // TODO InvalidPadding error
-                return Err(DecodeError::InvalidByte(length_of_full_chunks + i, *b));
-            };
+                let bad_padding_index = length_of_full_chunks + if padding_bytes > 0 {
+                    // If we've already seen padding, report the first padding index.
+                    // This is to be consistent with the faster logic above: it will report an error
+                    // on the first padding character (since it doesn't expect to see anything but
+                    // actual encoded data).
+                    first_padding_index
+                } else {
+                    // haven't seen padding before, just use where we are now
+                    i
+                };
+                return Err(DecodeError::InvalidByte(bad_padding_index, *b));
+            }
 
             if padding_bytes == 0 {
                 first_padding_index = i;
-            };
+            }
 
             padding_bytes += 1;
             continue;
-        };
+        }
 
         // Check for case #1.
         // To make '=' handling consistent with the main loop, don't allow
@@ -542,20 +612,20 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T,
         if padding_bytes > 0 {
             return Err(DecodeError::InvalidByte(
                 length_of_full_chunks + first_padding_index, 0x3D));
-        };
+        }
 
         // can use up to 8 * 6 = 48 bits of the u64, if last chunk has no padding.
         // To minimize shifts, pack the leftovers from left to right.
         let shift = 64 - (morsels_in_leftover + 1) * 6;
-        // tables are all 256 elements, cannot overflow from a u8 index
+        // tables are all 256 elements, lookup with a u8 index always succeeds
         let morsel = decode_table[*b as usize];
         if morsel == tables::INVALID_VALUE {
             return Err(DecodeError::InvalidByte(length_of_full_chunks + i, *b));
-        };
+        }
 
         leftover_bits |= (morsel as u64) << shift;
         morsels_in_leftover += 1;
-    };
+    }
 
     let leftover_bits_ready_to_append = match morsels_in_leftover {
         0 => 0,
@@ -582,94 +652,64 @@ pub fn decode_config_buf<T: ?Sized + AsRef<[u8]>>(input: &T,
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// yes, really inline (worth 30-50% speedup)
+#[inline(always)]
+fn decode_chunk(input: &[u8], index_at_start_of_input: usize, decode_table: &[u8; 256],
+                output: &mut [u8]) -> Result<(), DecodeError> {
+    let mut accum: u64;
 
-    #[test]
-    fn encoded_size_correct() {
-        assert_eq!(Some(0), encoded_size(0, STANDARD));
-
-        assert_eq!(Some(4), encoded_size(1, STANDARD));
-        assert_eq!(Some(4), encoded_size(2, STANDARD));
-        assert_eq!(Some(4), encoded_size(3, STANDARD));
-
-        assert_eq!(Some(8), encoded_size(4, STANDARD));
-        assert_eq!(Some(8), encoded_size(5, STANDARD));
-        assert_eq!(Some(8), encoded_size(6, STANDARD));
-
-        assert_eq!(Some(12), encoded_size(7, STANDARD));
-        assert_eq!(Some(12), encoded_size(8, STANDARD));
-        assert_eq!(Some(12), encoded_size(9, STANDARD));
-
-        assert_eq!(Some(72), encoded_size(54, STANDARD));
-
-        assert_eq!(Some(76), encoded_size(55, STANDARD));
-        assert_eq!(Some(76), encoded_size(56, STANDARD));
-        assert_eq!(Some(76), encoded_size(57, STANDARD));
-
-        assert_eq!(Some(80), encoded_size(58, STANDARD));
+    let morsel = decode_table[input[0] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input, input[0]));
     }
+    accum = (morsel as u64) << 58;
 
-    #[test]
-    fn encoded_size_correct_mime() {
-        assert_eq!(Some(0), encoded_size(0, MIME));
-
-        assert_eq!(Some(4), encoded_size(1, MIME));
-        assert_eq!(Some(4), encoded_size(2, MIME));
-        assert_eq!(Some(4), encoded_size(3, MIME));
-
-        assert_eq!(Some(8), encoded_size(4, MIME));
-        assert_eq!(Some(8), encoded_size(5, MIME));
-        assert_eq!(Some(8), encoded_size(6, MIME));
-
-        assert_eq!(Some(12), encoded_size(7, MIME));
-        assert_eq!(Some(12), encoded_size(8, MIME));
-        assert_eq!(Some(12), encoded_size(9, MIME));
-
-        assert_eq!(Some(72), encoded_size(54, MIME));
-
-        assert_eq!(Some(78), encoded_size(55, MIME));
-        assert_eq!(Some(78), encoded_size(56, MIME));
-        assert_eq!(Some(78), encoded_size(57, MIME));
-
-        assert_eq!(Some(82), encoded_size(58, MIME));
+    let morsel = decode_table[input[1] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 1, input[1]));
     }
+    accum |= (morsel as u64) << 52;
 
-    #[test]
-    fn encoded_size_correct_lf() {
-        let config = Config::new(
-            CharacterSet::Standard,
-            true,
-            false,
-            LineWrap::Wrap(76, LineEnding::LF)
-        );
-
-        assert_eq!(Some(0), encoded_size(0, config));
-
-        assert_eq!(Some(4), encoded_size(1, config));
-        assert_eq!(Some(4), encoded_size(2, config));
-        assert_eq!(Some(4), encoded_size(3, config));
-
-        assert_eq!(Some(8), encoded_size(4, config));
-        assert_eq!(Some(8), encoded_size(5, config));
-        assert_eq!(Some(8), encoded_size(6, config));
-
-        assert_eq!(Some(12), encoded_size(7, config));
-        assert_eq!(Some(12), encoded_size(8, config));
-        assert_eq!(Some(12), encoded_size(9, config));
-
-        assert_eq!(Some(72), encoded_size(54, config));
-
-        assert_eq!(Some(77), encoded_size(55, config));
-        assert_eq!(Some(77), encoded_size(56, config));
-        assert_eq!(Some(77), encoded_size(57, config));
-
-        assert_eq!(Some(81), encoded_size(58, config));
+    let morsel = decode_table[input[2] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 2, input[2]));
     }
+    accum |= (morsel as u64) << 46;
 
-    #[test]
-    fn encoded_size_overflow() {
-        assert_eq!(None, encoded_size(std::usize::MAX, STANDARD));
+    let morsel = decode_table[input[3] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 3, input[3]));
     }
+    accum |= (morsel as u64) << 40;
+
+    let morsel = decode_table[input[4] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 4, input[4]));
+    }
+    accum |= (morsel as u64) << 34;
+
+    let morsel = decode_table[input[5] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 5, input[5]));
+    }
+    accum |= (morsel as u64) << 28;
+
+    let morsel = decode_table[input[6] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 6, input[6]));
+    }
+    accum |= (morsel as u64) << 22;
+
+    let morsel = decode_table[input[7] as usize];
+    if morsel == tables::INVALID_VALUE {
+        return Err(DecodeError::InvalidByte(index_at_start_of_input + 7, input[7]));
+    }
+    accum |= (morsel as u64) << 16;
+
+    BigEndian::write_u64(output, accum);
+
+    Ok(())
 }
+
+#[cfg(test)]
+mod tests;

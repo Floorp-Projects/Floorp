@@ -198,10 +198,10 @@ def format_header():
 
 
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
-                  save=False, preset=None, list_presets=False, push=True, message='{msg}',
+                  save=False, preset=None, mod_presets=False, push=True, message='{msg}',
                   **kwargs):
-    if list_presets:
-        return pset.list_presets(section='fuzzy')
+    if mod_presets:
+        return getattr(pset, mod_presets)(section='fuzzy')
 
     fzf = fzf_bootstrap(update)
 

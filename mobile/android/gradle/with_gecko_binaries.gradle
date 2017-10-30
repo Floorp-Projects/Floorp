@@ -127,14 +127,13 @@ ext.configureVariantWithGeckoBinaries = { variant ->
 }
 
 ext.configureVariantWithJNIWrappers = { variant, module ->
+    def jarTask
+    if (module == 'Generated') {
+        jarTask = tasks["package${variant.name.capitalize()}JarArtifact"]
+    } else {
+        jarTask = tasks["jar${variant.name.capitalize()}Classes"]
+    }
 
-    def jarTask = tasks.findByName("jar${variant.name.capitalize()}Classes")
-    if (jarTask == null) {
-        jarTask = tasks.findByName("package${variant.name.capitalize()}JarArtifact")
-    }
-    if (jarTask == null) {
-        throw new GradleException("Jar task not found: \"jar${variant.name.capitalize()}Classes\"\t\"package${variant.name.capitalize()}JarArtifact\"" )
-    }
     if (jarTask.outputs.files.size() != 1) {
         throw new GradleException("Jar task output multiple files other than one single jar")
     }
@@ -174,5 +173,9 @@ ext.configureVariantWithJNIWrappers = { variant, module ->
         dependsOn prepareDependenciesTask
     }
 
-    variant.assemble.dependsOn wrapperTask
+    if (module == 'Generated') {
+        tasks["bundle${variant.name.capitalize()}"].dependsOn wrapperTask
+    } else {
+        tasks["assemble${variant.name.capitalize()}"].dependsOn wrapperTask
+    }
 }

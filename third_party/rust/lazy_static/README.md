@@ -24,7 +24,7 @@ Add the following dependency to your Cargo manifest...
 lazy_static = "0.2"
 ```
 
-...and see the [docs](http://rust-lang-nursery.github.io/lazy-static.rs/lazy_static/index.html) for how to use it.
+...and see the [docs](https://docs.rs/lazy_static) for how to use it.
 
 # Example
 

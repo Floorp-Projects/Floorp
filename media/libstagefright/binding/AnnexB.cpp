@@ -4,8 +4,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/Unused.h"
 #include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/ByteReader.h"
+#include "mp4_demuxer/BufferReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "MediaData.h"
 #include "nsAutoPtr.h"
@@ -17,49 +19,48 @@ namespace mp4_demuxer
 
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
-bool
+Result<Ok, nsresult>
 AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
 {
   MOZ_ASSERT(aSample);
 
   if (!IsAVCC(aSample)) {
-    return true;
+    return Ok();
   }
   MOZ_ASSERT(aSample->Data());
 
-  if (!ConvertSampleTo4BytesAVCC(aSample)) {
-    return false;
-  }
+  MOZ_TRY(ConvertSampleTo4BytesAVCC(aSample));
 
   if (aSample->Size() < 4) {
     // Nothing to do, it's corrupted anyway.
-    return true;
+    return Ok();
   }
 
-  ByteReader reader(aSample->Data(), aSample->Size());
+  BufferReader reader(aSample->Data(), aSample->Size());
 
   nsTArray<uint8_t> tmp;
   ByteWriter writer(tmp);
 
   while (reader.Remaining() >= 4) {
-    uint32_t nalLen = reader.ReadU32();
+    uint32_t nalLen;
+    MOZ_TRY_VAR(nalLen, reader.ReadU32());
     const uint8_t* p = reader.Read(nalLen);
 
     if (!writer.Write(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter))) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
     if (!p) {
       break;
     }
     if (!writer.Write(p, nalLen)) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
   }
 
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
 
   if (!samplewriter->Replace(tmp.Elements(), tmp.Length())) {
-    return false;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
@@ -67,7 +68,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     RefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
 
     // Prepending the NAL with SPS/PPS will mess up the encryption subsample
@@ -80,7 +81,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     }
   }
 
-  return true;
+  return Ok();
 }
 
 already_AddRefed<mozilla::MediaByteBuffer>
@@ -103,119 +104,125 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
 
   RefPtr<mozilla::MediaByteBuffer> annexB = new mozilla::MediaByteBuffer;
 
-  ByteReader reader(*aExtraData);
+  BufferReader reader(*aExtraData);
   const uint8_t* ptr = reader.Read(5);
   if (ptr && ptr[0] == 1) {
     // Append SPS then PPS
-    ConvertSPSOrPPS(reader, reader.ReadU8() & 31, annexB);
-    ConvertSPSOrPPS(reader, reader.ReadU8(), annexB);
-
+    Unused << reader.ReadU8().map([&] (uint8_t x) { return ConvertSPSOrPPS(reader, x & 31, annexB); });
+    Unused << reader.ReadU8().map([&] (uint8_t x) { return ConvertSPSOrPPS(reader, x, annexB); });
     // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
 
   return annexB.forget();
 }
 
-void
-AnnexB::ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
+Result<mozilla::Ok, nsresult>
+AnnexB::ConvertSPSOrPPS(BufferReader& aReader, uint8_t aCount,
                         mozilla::MediaByteBuffer* aAnnexB)
 {
   for (int i = 0; i < aCount; i++) {
-    uint16_t length = aReader.ReadU16();
+    uint16_t length;
+    MOZ_TRY_VAR(length, aReader.ReadU16());
 
     const uint8_t* ptr = aReader.Read(length);
     if (!ptr) {
-      MOZ_ASSERT(false);
-      return;
+      return Err(NS_ERROR_FAILURE);
     }
     aAnnexB->AppendElements(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter));
     aAnnexB->AppendElements(ptr, length);
   }
+  return Ok();
 }
 
-static bool
-FindStartCodeInternal(ByteReader& aBr) {
+static Result<Ok, nsresult>
+FindStartCodeInternal(BufferReader& aBr) {
   size_t offset = aBr.Offset();
 
   for (uint32_t i = 0; i < aBr.Align() && aBr.Remaining() >= 3; i++) {
-    if (aBr.PeekU24() == 0x000001) {
-      return true;
+    auto res = aBr.PeekU24();
+    if (res.isOk() && (res.unwrap() == 0x000001)) {
+      return Ok();
     }
-    aBr.Read(1);
+    mozilla::Unused << aBr.Read(1);
   }
 
   while (aBr.Remaining() >= 6) {
-    uint32_t x32 = aBr.PeekU32();
+    uint32_t x32;
+    MOZ_TRY_VAR(x32, aBr.PeekU32());
     if ((x32 - 0x01010101) & (~x32) & 0x80808080) {
       if ((x32 >> 8) == 0x000001) {
-        return true;
+        return Ok();
       }
       if (x32 == 0x000001) {
-        aBr.Read(1);
-        return true;
+        mozilla::Unused << aBr.Read(1);
+        return Ok();
       }
       if ((x32 & 0xff) == 0) {
         const uint8_t* p = aBr.Peek(1);
         if ((x32 & 0xff00) == 0 && p[4] == 1) {
-          aBr.Read(2);
-          return true;
+          mozilla::Unused << aBr.Read(2);
+          return Ok();
         }
         if (p[4] == 0 && p[5] == 1) {
-          aBr.Read(3);
-          return true;
+          mozilla::Unused << aBr.Read(3);
+          return Ok();
         }
       }
     }
-    aBr.Read(4);
+    mozilla::Unused << aBr.Read(4);
   }
 
   while (aBr.Remaining() >= 3) {
-    if (aBr.PeekU24() == 0x000001) {
-      return true;
+    uint32_t data;
+    MOZ_TRY_VAR(data, aBr.PeekU24());
+    if (data == 0x000001) {
+      return Ok();
     }
-    aBr.Read(1);
+    mozilla::Unused << aBr.Read(1);
   }
 
   // No start code were found; Go back to the beginning.
-  aBr.Seek(offset);
-  return false;
+  mozilla::Unused << aBr.Seek(offset);
+  return Err(NS_ERROR_FAILURE);
 }
 
-static bool
-FindStartCode(ByteReader& aBr, size_t& aStartSize)
+static Result<Ok, nsresult>
+FindStartCode(BufferReader& aBr, size_t& aStartSize)
 {
-  if (!FindStartCodeInternal(aBr)) {
+  if (FindStartCodeInternal(aBr).isErr()) {
     aStartSize = 0;
-    return false;
+    return Err(NS_ERROR_FAILURE);
   }
 
   aStartSize = 3;
   if (aBr.Offset()) {
     // Check if it's 4-bytes start code
     aBr.Rewind(1);
-    if (aBr.ReadU8() == 0) {
+    uint8_t data;
+    MOZ_TRY_VAR(data, aBr.ReadU8());
+    if (data == 0) {
       aStartSize = 4;
     }
   }
-  aBr.Read(3);
-  return true;
+  mozilla::Unused << aBr.Read(3);
+  return Ok();
 }
 
-static bool
-ParseNALUnits(ByteWriter& aBw, ByteReader& aBr)
+static Result<mozilla::Ok, nsresult>
+ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
 {
   size_t startSize;
 
-  bool rv = FindStartCode(aBr, startSize);
-  if (rv) {
+  auto rv = FindStartCode(aBr, startSize);
+  if (rv.isOk()) {
     size_t startOffset = aBr.Offset();
-    while (FindStartCode(aBr, startSize)) {
+    while (FindStartCode(aBr, startSize).isOk()) {
       size_t offset = aBr.Offset();
       size_t sizeNAL = offset - startOffset - startSize;
       aBr.Seek(startOffset);
       if (!aBw.WriteU32(sizeNAL)
           || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
-        return false;
+        return Err(NS_ERROR_FAILURE);
       }
       aBr.Read(startSize);
       startOffset = offset;
@@ -225,17 +232,17 @@ ParseNALUnits(ByteWriter& aBw, ByteReader& aBr)
   if (sizeNAL) {
     if (!aBw.WriteU32(sizeNAL)
         || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
   }
-  return true;
+  return Ok();
 }
 
 bool
 AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 {
   if (IsAVCC(aSample)) {
-    return ConvertSampleTo4BytesAVCC(aSample);
+    return ConvertSampleTo4BytesAVCC(aSample).isOk();
   }
   if (!IsAnnexB(aSample)) {
     // Not AnnexB, nothing to convert.
@@ -244,9 +251,9 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 
   nsTArray<uint8_t> nalu;
   ByteWriter writer(nalu);
-  ByteReader reader(aSample->Data(), aSample->Size());
+  BufferReader reader(aSample->Data(), aSample->Size());
 
-  if (!ParseNALUnits(writer, reader)) {
+  if (ParseNALUnits(writer, reader).isErr()) {
     return false;
   }
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
@@ -271,7 +278,7 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
   return true;
 }
 
-bool
+Result<mozilla::Ok, nsresult>
 AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
 {
   MOZ_ASSERT(IsAVCC(aSample));
@@ -279,30 +286,33 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
 
   if (nalLenSize == 4) {
-    return true;
+    return Ok();
   }
   nsTArray<uint8_t> dest;
   ByteWriter writer(dest);
-  ByteReader reader(aSample->Data(), aSample->Size());
+  BufferReader reader(aSample->Data(), aSample->Size());
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
     switch (nalLenSize) {
-      case 1: nalLen = reader.ReadU8();  break;
-      case 2: nalLen = reader.ReadU16(); break;
-      case 3: nalLen = reader.ReadU24(); break;
-      case 4: nalLen = reader.ReadU32(); break;
+      case 1: MOZ_TRY_VAR(nalLen, reader.ReadU8()); break;
+      case 2: MOZ_TRY_VAR(nalLen, reader.ReadU16()); break;
+      case 3: MOZ_TRY_VAR(nalLen, reader.ReadU24()); break;
+      case 4: MOZ_TRY_VAR(nalLen, reader.ReadU32()); break;
     }
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
-      return true;
+      return Ok();
     }
     if (!writer.WriteU32(nalLen)
         || !writer.Write(p, nalLen)) {
-      return false;
+      return Err(NS_ERROR_FAILURE);
     }
   }
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
-  return samplewriter->Replace(dest.Elements(), dest.Length());
+  if (!samplewriter->Replace(dest.Elements(), dest.Length())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  return Ok();
 }
 
 bool

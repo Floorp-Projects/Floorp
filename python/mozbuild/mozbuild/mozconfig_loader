@@ -24,15 +24,6 @@ ac_add_options() {
   done
 }
 
-ac_add_app_options() {
-  _mozconfig_app=$1
-  shift
-  echo "------BEGIN_AC_APP_OPTION"
-  echo $_mozconfig_app
-  echo "$*"
-  echo "------END_AC_APP_OPTION"
-}
-
 mk_add_options() {
   for _mozconfig_opt; do
     echo "------BEGIN_MK_OPTION"
