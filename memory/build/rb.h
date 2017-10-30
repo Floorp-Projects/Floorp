@@ -38,14 +38,6 @@
  *
  * C++ template implementation of left-leaning red-black trees.
  *
- * Usage:
- *
- *   #define SIZEOF_PTR ...
- *   #define SIZEOF_PTR_2POW ...
- *
- *   #include <rb.h>
- *   ...
- *
  * All operations are done non-recursively.  Parent pointers are not used, and
  * color bits are stored in the least significant bit of right-child pointers,
  * thus making node linkage as compact as is possible for red-black trees.
@@ -74,6 +66,8 @@
 
 #ifndef RB_H_
 #define RB_H_
+
+#include "Utils.h"
 
 enum NodeColor
 {
@@ -704,12 +698,12 @@ private:
    * tree consumes all of memory.  Since each node must contain a minimum of
    * two pointers, there can never be more nodes than:
    *
-   *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
+   *   1 << ((sizeof(void*)<<3) - (log2(sizeof(void*))+1))
    *
    * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
    * is:
    *
-   *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
+   *   (3 * ((sizeof(void*)<<3) - (log2(sizeof(void*))+1)))
    *
    * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
    * systems, respectively (approximately 348 and 1440 bytes, respectively).
@@ -717,7 +711,7 @@ private:
 public:
   class Iterator
   {
-    TreeNode* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
+    TreeNode* mPath[3 * ((sizeof(void*) << 3) - (LOG2(sizeof(void*)) + 1))];
     unsigned mDepth;
 
   public:
