@@ -591,12 +591,23 @@ pub struct Server {
     conns: Slab<ServerConn>
 }
 
+impl Drop for Server {
+    fn drop(&mut self) {
+        // ServerConns rely on the cubeb context, so we must free them
+        // explicitly before the context is dropped.
+        if !self.conns.is_empty() {
+            debug!("dropping Server with {} live ServerConns", self.conns.len());
+            self.conns.clear();
+        }
+    }
+}
+
 impl Server {
     pub fn new(socket: UnixListener) -> Server {
         Server {
             socket: socket,
             context: None,
-            conns: Slab::with_capacity(SERVER_CONN_CHUNK_SIZE)
+            conns: slab::Slab::with_capacity(SERVER_CONN_CHUNK_SIZE)
         }
     }
 

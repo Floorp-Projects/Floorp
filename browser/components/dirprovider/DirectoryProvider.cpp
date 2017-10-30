@@ -109,9 +109,9 @@ AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
 
     localePlugins->AppendNative(NS_LITERAL_CSTRING("locale"));
 
-    nsCString defLocale;
+    nsAutoCString defLocale;
     rv = prefs->GetCharPref("distribution.searchplugins.defaultLocale",
-                            getter_Copies(defLocale));
+                            defLocale);
     if (NS_SUCCEEDED(rv)) {
 
       nsCOMPtr<nsIFile> defLocalePlugins;

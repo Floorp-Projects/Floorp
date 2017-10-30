@@ -5,6 +5,7 @@
 
 #include "ScaledFontMac.h"
 #include "UnscaledFontMac.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #ifdef USE_SKIA
 #include "PathSkia.h"
 #include "skia/include/core/SkPaint.h"
@@ -105,9 +106,11 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
 ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              Float aSize,
+                             bool aUseFontSmoothing,
                              bool aOwnsFont)
   : ScaledFontBase(aUnscaledFont, aSize)
   , mFont(aFont)
+  , mUseFontSmoothing(aUseFontSmoothing)
 {
   if (!sSymbolLookupDone) {
     CTFontDrawGlyphsPtr =
@@ -363,9 +366,11 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
                                         Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
                                         std::vector<FontVariation>* aOutVariations)
 {
-    if (!GetVariationsForCTFont(mCTFont, aOutVariations)) {
-      return false;
-    }
+    GetVariationsForCTFont(mCTFont, aOutVariations);
+
+    wr::FontInstancePlatformOptions platformOptions;
+    platformOptions.font_smoothing = mUseFontSmoothing;
+    *aOutPlatformOptions = Some(platformOptions);
     return true;
 }
 
@@ -505,7 +510,7 @@ UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
   }
 
   RefPtr<ScaledFontMac> scaledFont =
-    new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont);
+    new ScaledFontMac(fontRef, this, aGlyphSize, true, fontRef != mFont);
 
   if (!scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";

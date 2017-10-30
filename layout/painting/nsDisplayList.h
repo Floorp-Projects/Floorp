@@ -1711,6 +1711,7 @@ private:
   nsCOMPtr<nsISelection>         mBoundingSelection;
   AutoTArray<PresShellState,8> mPresShellStates;
   AutoTArray<nsIFrame*,400>    mFramesMarkedForDisplay;
+  AutoTArray<nsIFrame*,40>       mFramesMarkedForDisplayIfVisible;
   nsClassHashtable<nsPtrHashKey<nsDisplayItem>, nsTArray<ThemeGeometry>> mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   DisplayListClipState           mClipState;

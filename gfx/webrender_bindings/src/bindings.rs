@@ -17,6 +17,7 @@ use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
 use bincode;
+use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadata, LogRecord};
 
 extern crate webrender_api;
 
@@ -43,6 +44,8 @@ pub type WrFontKey = FontKey;
 type WrFontInstanceKey = FontInstanceKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrYuvColorSpace = YuvColorSpace;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrLogLevelFilter = LogLevelFilter;
 
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
@@ -400,7 +403,13 @@ extern "C" {
     // by commenting out the path that adds an external image ID
     fn gfx_use_wrench() -> bool;
     fn gfx_wr_resource_path_override() -> *const c_char;
+    // TODO: make gfx_critical_error() work.
+    // We still have problem to pass the error message from render/render_backend
+    // thread to main thread now.
+    #[allow(dead_code)]
+    fn gfx_critical_error(msg: *const c_char);
     fn gfx_critical_note(msg: *const c_char);
+    fn gecko_printf_stderr_output(msg: *const c_char);
 }
 
 struct CppNotifier {
@@ -477,7 +486,7 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                 let msg = CString::new(format!("wr_renderer_render: {:?}", e)).unwrap();
                 unsafe {
                     gfx_critical_note(msg.as_ptr());
-               }
+                }
             }
             false
         },
@@ -1813,4 +1822,65 @@ extern "C" {
                                tile_offset: *const TileOffset,
                                output: MutByteSlice)
                                -> bool;
+}
+
+type ExternalMessageHandler = unsafe extern "C" fn(msg: *const c_char);
+
+struct WrExternalLogHandler {
+    error_msg: ExternalMessageHandler,
+    warn_msg: ExternalMessageHandler,
+    info_msg: ExternalMessageHandler,
+    debug_msg: ExternalMessageHandler,
+    trace_msg: ExternalMessageHandler,
+    log_level: LogLevel,
+}
+
+impl WrExternalLogHandler {
+    fn new(log_level: LogLevel) -> WrExternalLogHandler {
+        WrExternalLogHandler {
+            error_msg: gfx_critical_note,
+            warn_msg: gfx_critical_note,
+            info_msg: gecko_printf_stderr_output,
+            debug_msg: gecko_printf_stderr_output,
+            trace_msg: gecko_printf_stderr_output,
+            log_level: log_level,
+        }
+    }
+}
+
+impl Log for WrExternalLogHandler {
+    fn enabled(&self, metadata : &LogMetadata) -> bool {
+        metadata.level() <= self.log_level
+    }
+
+    fn log(&self, record: &LogRecord) {
+        if self.enabled(record.metadata()) {
+            // For file path and line, please check the record.location().
+            let msg = CString::new(format!("WR: {}",
+                                           record.args())).unwrap();
+            unsafe {
+                match record.level() {
+                    LogLevel::Error => (self.error_msg)(msg.as_ptr()),
+                    LogLevel::Warn => (self.warn_msg)(msg.as_ptr()),
+                    LogLevel::Info => (self.info_msg)(msg.as_ptr()),
+                    LogLevel::Debug => (self.debug_msg)(msg.as_ptr()),
+                    LogLevel::Trace => (self.trace_msg)(msg.as_ptr()),
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_init_external_log_handler(log_filter: WrLogLevelFilter) {
+    let _ = set_logger(|max_log_level| {
+        max_log_level.set(log_filter);
+        Box::new(WrExternalLogHandler::new(log_filter.to_log_level()
+                                                     .unwrap_or(LogLevel::Error)))
+    });
+}
+
+#[no_mangle]
+pub extern "C" fn wr_shutdown_external_log_handler() {
+    let _ = shutdown_logger();
 }

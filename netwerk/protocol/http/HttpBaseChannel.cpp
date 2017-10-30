@@ -4132,6 +4132,14 @@ HttpBaseChannel::GetPerformance()
     return nullptr;
   }
 
+  // We only add to the document's performance object if it has the same
+  // principal as the one triggering the load. This is to prevent navigations
+  // triggered _by_ the iframe from showing up in the parent document's
+  // performance entries if they have different origins.
+  if (!mLoadInfo->TriggeringPrincipal()->Equals(loadingDocument->NodePrincipal())) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsPIDOMWindowInner> innerWindow = loadingDocument->GetInnerWindow();
   if (!innerWindow) {
     return nullptr;

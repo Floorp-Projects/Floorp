@@ -924,7 +924,7 @@ nsGIOProtocolHandler::InitSupportedProtocolsPref(nsIPrefBranch *prefs)
   // irrelevant to process by browser. By default accept only smb and sftp
   // protocols so far.
   nsresult rv = prefs->GetCharPref(MOZ_GIO_SUPPORTED_PROTOCOLS,
-                                   getter_Copies(mSupportedProtocols));
+                                   mSupportedProtocols);
   if (NS_SUCCEEDED(rv)) {
     mSupportedProtocols.StripWhitespace();
     ToLowerCase(mSupportedProtocols);

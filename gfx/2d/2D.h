@@ -67,6 +67,9 @@ struct gfxFontStyle;
 struct CGContext;
 typedef struct CGContext *CGContextRef;
 
+struct CGFont;
+typedef CGFont* CGFontRef;
+
 namespace mozilla {
 
 class Mutex;
@@ -1531,6 +1534,12 @@ public:
   static already_AddRefed<ScaledFont>
     CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
                                       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
+#endif
+
+#ifdef XP_DARWIN
+  static already_AddRefed<ScaledFont>
+    CreateScaledFontForMacFont(CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                               bool aUseFontSmoothing = true);
 #endif
 
   /**
