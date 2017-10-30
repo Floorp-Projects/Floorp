@@ -811,7 +811,8 @@ nsHtml5TreeOperation::MarkMalformedIfScript(nsIContent* aNode)
 nsresult
 nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               nsIContent** aScriptElement,
-                              bool* aInterrupted)
+                              bool* aInterrupted,
+                              bool* aStreamEnded)
 {
   switch(mOpCode) {
     case eTreeOpUninitialized: {
@@ -1034,7 +1035,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
     case eTreeOpStreamEnded: {
-      aBuilder->DidBuildModel(false); // this causes a notifications flush anyway
+      *aStreamEnded = true;
       return NS_OK;
     }
     case eTreeOpSetStyleLineNumber: {
