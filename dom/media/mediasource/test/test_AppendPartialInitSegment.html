@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: split init segment and append them separately </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", async function (arrayBuffer) {
+      // init segment is total 236 bytes.
+      info("- append partial init segment -");
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 100));
+
+      info("- wait for updateend -");
+      await once(sb, "updateend");
+
+      info("- append remaining init segment -");
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 100, 136));
+
+      info("- wait for metadata -");
+      await once(v, "loadedmetadata");
+      is(v.videoWidth, 320, "videoWidth has correct initial value");
+      is(v.videoHeight, 240, "videoHeight has correct initial value");
+
+      info("- wait for updateend -");
+      await once(sb, "updateend");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
