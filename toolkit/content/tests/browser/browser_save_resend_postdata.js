@@ -27,6 +27,7 @@ function test() {
     // Submit the form in the outer page, then wait for both the outer
     // document and the inner frame to be loaded again.
     gBrowser.addEventListener("DOMContentLoaded", handleOuterSubmit);
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     gBrowser.contentDocument.getElementById("postForm").submit();
   });
 
@@ -39,6 +40,7 @@ function test() {
 
     gBrowser.removeEventListener("DOMContentLoaded", handleOuterSubmit);
 
+    // eslint-disable-next-line mozilla/no-cpows-in-tests
     innerFrame = gBrowser.contentDocument.getElementById("innerFrame");
 
     // Submit the form in the inner page.

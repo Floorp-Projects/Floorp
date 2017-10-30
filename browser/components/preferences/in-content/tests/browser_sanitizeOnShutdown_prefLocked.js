@@ -8,6 +8,7 @@ function switchToCustomHistoryMode(doc) {
 }
 
 function testPrefStateMatchesLockedState() {
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let win = gBrowser.contentWindow;
   let doc = win.document;
   switchToCustomHistoryMode(doc);

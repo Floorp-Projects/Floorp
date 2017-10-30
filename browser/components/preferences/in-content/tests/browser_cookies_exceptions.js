@@ -328,6 +328,7 @@ var testRunner = {
       });
 
       openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true}).then(function() {
+        // eslint-disable-next-line mozilla/no-cpows-in-tests
         let doc = gBrowser.contentDocument;
         let historyMode = doc.getElementById("historyMode");
         historyMode.value = "custom";

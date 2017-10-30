@@ -84,6 +84,7 @@ function test2Setup() {
 }
 
 function testOpenFrameInTab() {
+  /* eslint-disable mozilla/no-cpows-in-tests */
   if (gBrowser.contentDocument.location.href == "about:blank")
     // Wait another cycle
     return;
@@ -92,6 +93,7 @@ function testOpenFrameInTab() {
 
   // We should now have the error page in a new, active tab.
   is(gBrowser.contentDocument.location.href, invalidPage, "New tab should have page url, not about:neterror");
+  /* eslint-enable mozilla/no-cpows-in-tests */
 
   // Clear up the new tab, and punt to test 3
   gBrowser.removeCurrentTab();
