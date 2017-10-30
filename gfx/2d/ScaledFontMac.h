@@ -41,7 +41,7 @@ class ScaledFontMac : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
-  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize, bool aOwnsFont = false);
+  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize, bool aUseFontSmoothing = true, bool aOwnsFont = false);
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
@@ -66,6 +66,7 @@ private:
   friend class DrawTargetSkia;
   CGFontRef mFont;
   CTFontRef mCTFont; // only created if CTFontDrawGlyphs is available, otherwise null
+  bool mUseFontSmoothing;
 
   typedef void (CTFontDrawGlyphsFuncT)(CTFontRef,
                                        const CGGlyph[], const CGPoint[],

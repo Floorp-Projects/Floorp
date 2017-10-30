@@ -247,6 +247,7 @@ static nsCString* crashEventAPIData = nullptr;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
 static uint32_t eventloopNestingLevel = 0;
+static bool minidumpAnalysisAllThreads = false;
 
 // Avoid a race during application termination.
 static Mutex* dumpSafetyLock;
@@ -818,7 +819,8 @@ WriteGlobalMemoryStatus(PlatformWriter* apiData, PlatformWriter* eventFile)
  *        to the launched program
  */
 static bool
-LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
+LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath,
+              bool aAllThreads)
 {
 #ifdef XP_WIN
   XP_CHAR cmdLine[CMDLINE_SIZE];
@@ -827,7 +829,11 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
   size_t size = CMDLINE_SIZE;
   p = Concat(cmdLine, L"\"", &size);
   p = Concat(p, aProgramPath, &size);
-  p = Concat(p, L"\" \"", &size);
+  p = Concat(p, L"\" ", &size);
+  if (aAllThreads) {
+    p = Concat(p, L"--full ", &size);
+  }
+  p = Concat(p, L"\"", &size);
   p = Concat(p, aMinidumpPath, &size);
   Concat(p, L"\"", &size);
 
@@ -847,11 +853,19 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
   setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
 
   pid_t pid = 0;
-  char* const my_argv[] = {
+  char* my_argv[] = {
     const_cast<char*>(aProgramPath),
     const_cast<char*>(aMinidumpPath),
+    nullptr,
     nullptr
   };
+
+  char fullArg[] = "--full";
+
+  if (aAllThreads) {
+    my_argv[2] = my_argv[1];
+    my_argv[1] = fullArg;
+  }
 
   char **env = nullptr;
   char ***nsEnv = _NSGetEnviron();
@@ -873,8 +887,14 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
-    Unused << execl(aProgramPath,
-                    aProgramPath, aMinidumpPath, (char*)0);
+
+    if (aAllThreads) {
+      Unused << execl(aProgramPath,
+                      aProgramPath, "--full", aMinidumpPath, (char*)0);
+    } else {
+      Unused << execl(aProgramPath,
+                      aProgramPath, aMinidumpPath, (char*)0);
+    }
     _exit(1);
   }
 #endif // XP_MACOSX
@@ -1224,7 +1244,8 @@ bool MinidumpCallback(
   returnValue = LaunchCrashReporterActivity(crashReporterPath, minidumpPath,
                                             succeeded);
 #else // Windows, Mac, Linux, etc...
-  returnValue = LaunchProgram(crashReporterPath, minidumpPath);
+  returnValue = LaunchProgram(crashReporterPath, minidumpPath,
+                              minidumpAnalysisAllThreads);
 #ifdef XP_WIN
   TerminateProcess(GetCurrentProcess(), 1);
 #endif
@@ -2371,6 +2392,11 @@ nsresult SetGarbageCollecting(bool collecting)
 void SetEventloopNestingLevel(uint32_t level)
 {
   eventloopNestingLevel = level;
+}
+
+void SetMinidumpAnalysisAllThreads()
+{
+  minidumpAnalysisAllThreads = true;
 }
 
 nsresult AppendAppNotesToCrashReport(const nsACString& data)
