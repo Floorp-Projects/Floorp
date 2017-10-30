@@ -5939,5 +5939,5 @@ pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);
 #endif
-pref("layers.omtp.release-capture-on-main-thread", true);
+pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.force-sync", false);
