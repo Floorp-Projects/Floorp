@@ -25,9 +25,6 @@ var isOk;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
 var proxyChannel;
 var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 
@@ -56,8 +53,7 @@ ok(promptFac != null, "promptFac getService()");
 var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
 
 function initLogins(pi) {
-  pwmgr = Cc["@mozilla.org/login-manager;1"].
-          getService(Ci.nsILoginManager);
+  pwmgr = SpecialPowers.Services.logins;
 
   mozproxy = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
               SpecialPowers.wrap(pi).port;
@@ -102,33 +98,30 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
     // The proxyChannel needs to move to at least on-modify-request to
     // have valid ProxyInfo, but we use OnStartRequest during startup()
     // for simplicity.
-    proxyChannel = ioService.newChannel2(proxiedHost,
-                                         null,
-                                         null,
-                                         null, // aLoadingNode
-                                         systemPrincipal,
-                                         null, // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER);
+    proxyChannel = SpecialPowers.Services.io.newChannel2(proxiedHost,
+                                                         null,
+                                                         null,
+                                                         null, // aLoadingNode
+                                                         systemPrincipal,
+                                                         null, // aTriggeringPrincipal
+                                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                         Ci.nsIContentPolicy.TYPE_OTHER);
     proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
   }
 });
 
 function startup() {
   // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
-    getService(SpecialPowers.Ci.nsIIOService);
-
   var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-  var channel = ios.newChannel2("http://example.com",
-                                null,
-                                null,
-                                null, // aLoadingNode
-                                systemPrincipal,
-                                null, // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                Ci.nsIContentPolicy.TYPE_OTHER);
+  var channel = SpecialPowers.Services.io.newChannel2("http://example.com",
+                                                      null,
+                                                      null,
+                                                      null, // aLoadingNode
+                                                      systemPrincipal,
+                                                      null, // aTriggeringPrincipal
+                                                      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                                      Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }
 
@@ -180,7 +173,7 @@ add_task(async function test_autologin() {
   // test proxy login (with autologin)
 
   // Enable the autologin pref.
-  prefs.setBoolPref("signon.autologin.proxy", true);
+  SpecialPowers.Services.prefs.setBoolPref("signon.autologin.proxy", true);
 
   proxyAuthinfo.username = "";
   proxyAuthinfo.password = "";
@@ -252,7 +245,7 @@ add_task(async function test_autologin_private() {
   proxyAuthinfo.realm    = "Proxy Realm";
   proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
 
-  prefs.clearUserPref("signon.autologin.proxy");
+  SpecialPowers.Services.prefs.clearUserPref("signon.autologin.proxy");
 
   // XXX check for and kill popup notification??
   // XXX check for checkbox / checkstate on old prompts?
