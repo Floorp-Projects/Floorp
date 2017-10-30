@@ -67,7 +67,7 @@ struct WebMBufferedParser
     , mVIntLeft(0)
     , mBlockSize(0)
     , mClusterTimecode(0)
-    , mClusterOffset(0)
+    , mClusterOffset(-1)
     , mClusterEndOffset(-1)
     , mBlockOffset(0)
     , mBlockTimecode(0)
@@ -85,6 +85,12 @@ struct WebMBufferedParser
   uint32_t GetTimecodeScale() {
     MOZ_ASSERT(mGotTimecodeScale);
     return mTimecodeScale;
+  }
+
+  // Use this function when we would only feed media segment for the parser.
+  void AppendMediaSegmentOnly()
+  {
+    mGotTimecodeScale = true;
   }
 
   // If this parser is not expected to parse a segment info, it must be told
@@ -114,6 +120,9 @@ struct WebMBufferedParser
   // following the aOffset position. If none were found, returns mBlockEndOffset.
   // This allows to determine the end of the interval containg aOffset.
   int64_t EndSegmentOffset(int64_t aOffset);
+
+  // Return the Cluster offset, return -1 if we can't find the Cluster.
+  int64_t GetClusterOffset() const;
 
   // The offset at which this parser started parsing.  Used to merge
   // adjacent parsers, in which case the later parser adopts the earlier
@@ -232,7 +241,7 @@ private:
 
   // Start offset of the cluster currently being parsed.  Used as the sync
   // point offset for the offset-to-time mapping as each block timecode is
-  // been parsed.
+  // been parsed. -1 if unknown.
   int64_t mClusterOffset;
 
   // End offset of the cluster currently being parsed. -1 if unknown.

@@ -160,31 +160,20 @@ public:
   MediaResult IsMediaSegmentPresent(MediaByteBuffer* aData) override
   {
     ContainerParser::IsMediaSegmentPresent(aData);
-    // XXX: This is overly primitive, needs to collect data as it's appended
-    // to the SB and handle, rather than assuming everything is present in a
-    // single aData segment.
-    // 0x1a45dfa3 // EBML
-    // ...
-    // DocType == "webm"
-    // ...
-    // 0x18538067 // Segment (must be "unknown" size)
-    // 0x1549a966 // -> Segment Info
-    // 0x1654ae6b // -> One or more Tracks
-
-    // 0x1f43b675 // Cluster
     if (aData->Length() < 4) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    if ((*aData)[0] == 0x1f && (*aData)[1] == 0x43 && (*aData)[2] == 0xb6 &&
-        (*aData)[3] == 0x75) {
-      return NS_OK;
+
+    WebMBufferedParser parser(0);
+    nsTArray<WebMTimeDataOffset> mapping;
+    ReentrantMonitor dummy("dummy");
+    parser.AppendMediaSegmentOnly();
+    bool result = parser.Append(aData->Elements(), aData->Length(), mapping,
+                                dummy);
+    if (!result) {
+      return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
     }
-    // 0x1c53bb6b // Cues
-    if ((*aData)[0] == 0x1c && (*aData)[1] == 0x53 && (*aData)[2] == 0xbb &&
-        (*aData)[3] == 0x6b) {
-      return NS_OK;
-    }
-    return MediaResult(NS_ERROR_FAILURE, RESULT_DETAIL("Invalid webm content"));
+    return parser.GetClusterOffset() >= 0 ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 
   MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
