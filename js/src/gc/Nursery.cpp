@@ -147,7 +147,8 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock)
     if (maxNurseryChunks_ == 0)
         return true;
 
-    if (!allocateFirstChunk(lock))
+    updateNumChunksLocked(1, lock);
+    if (numChunks() == 0)
         return false;
 
     setCurrentChunk(0);
@@ -195,11 +196,9 @@ js::Nursery::enable()
     if (isEnabled() || !maxChunks())
         return;
 
-    {
-        AutoLockGCBgAlloc lock(runtime());
-        if (!allocateFirstChunk(lock))
-            return;
-    }
+    updateNumChunks(1);
+    if (numChunks() == 0)
+        return;
 
     setCurrentChunk(0);
     setStartPosition();
@@ -217,8 +216,7 @@ js::Nursery::disable()
     MOZ_ASSERT(isEmpty());
     if (!isEnabled())
         return;
-
-    freeChunksFrom(0);
+    updateNumChunks(0);
     currentEnd_ = 0;
     runtime()->gc.storeBuffer().disable();
 }
@@ -240,7 +238,7 @@ js::Nursery::isEmpty() const
 void
 js::Nursery::enterZealMode() {
     if (isEnabled())
-        growAllocableSpace(maxChunks());
+        updateNumChunks(maxNurseryChunks_);
 }
 
 void
@@ -993,116 +991,93 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
     if (newMaxNurseryChunks != maxNurseryChunks_) {
         maxNurseryChunks_ = newMaxNurseryChunks;
         /* The configured maximum nursery size is changing */
-        if (numChunks() > newMaxNurseryChunks) {
+        const int extraChunks = numChunks() - newMaxNurseryChunks;
+        if (extraChunks > 0) {
             /* We need to shrink the nursery */
-            shrinkAllocableSpace(newMaxNurseryChunks);
+            shrinkAllocableSpace(extraChunks);
 
             previousPromotionRate_ = promotionRate;
             return;
         }
     }
 
-    if (promotionRate > GrowThreshold) {
-        // The GC nursery is an optimization and so if we fail to allocate
-        // nursery chunks we do not report an error.
+    if (promotionRate > GrowThreshold)
         growAllocableSpace();
-    } else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold) {
-        shrinkAllocableSpace(numChunks() - 1);
-    }
+    else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
+        shrinkAllocableSpace(1);
 
     previousPromotionRate_ = promotionRate;
 }
 
-bool
+void
 js::Nursery::growAllocableSpace()
 {
-    return growAllocableSpace(Min(numChunks() * 2, maxChunks()));
-}
-
-bool
-js::Nursery::growAllocableSpace(unsigned newCount)
-{
-    unsigned priorCount = numChunks();
-
-    MOZ_ASSERT(newCount > priorCount);
-    MOZ_ASSERT(newCount <= maxChunks());
-    MOZ_ASSERT(priorCount >= 1);
-
-    if (!chunks_.resize(newCount))
-        return false;
-
-    AutoLockGCBgAlloc lock(runtime());
-    for (unsigned i = priorCount; i < newCount; i++) {
-        auto newChunk = runtime()->gc.getOrAllocChunk(lock);
-        if (!newChunk) {
-            chunks_.shrinkTo(i);
-            return false;
-        }
-
-        chunks_[i] = NurseryChunk::fromChunk(newChunk);
-        chunk(i).poisonAndInit(runtime(), JS_FRESH_NURSERY_PATTERN);
-    }
-
-    return true;
+    updateNumChunks(Min(numChunks() * 2, maxNurseryChunks_));
 }
 
 void
-js::Nursery::freeChunksFrom(unsigned firstFreeChunk)
-{
-    MOZ_ASSERT(firstFreeChunk < chunks_.length());
-    {
-        AutoLockGC lock(runtime());
-        for (unsigned i = firstFreeChunk; i < chunks_.length(); i++)
-            runtime()->gc.recycleChunk(chunk(i).toChunk(runtime()), lock);
-    }
-    chunks_.shrinkTo(firstFreeChunk);
-}
-
-void
-js::Nursery::shrinkAllocableSpace(unsigned newCount)
+js::Nursery::shrinkAllocableSpace(unsigned removeNumChunks)
 {
 #ifdef JS_GC_ZEAL
     if (runtime()->hasZealMode(ZealMode::GenerationalGC))
         return;
 #endif
-
-    // Don't shrink the nursery to zero (use Nursery::disable() instead) and
-    // don't attempt to shrink it to the same size.
-    if ((newCount == 0) || (newCount == numChunks()))
-        return;
-
-    MOZ_ASSERT(newCount < numChunks());
-
-    freeChunksFrom(newCount);
+    updateNumChunks(Max(numChunks() - removeNumChunks, 1u));
 }
 
 void
 js::Nursery::minimizeAllocableSpace()
 {
-    shrinkAllocableSpace(1);
+#ifdef JS_GC_ZEAL
+    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
+        return;
+#endif
+    updateNumChunks(1);
 }
 
-bool
-js::Nursery::allocateFirstChunk(AutoLockGCBgAlloc& lock)
+void
+js::Nursery::updateNumChunks(unsigned newCount)
 {
-    // This assertion isn't required for correctness, but we do assume this
-    // is only called to initialize or re-enable the nursery.
-    MOZ_ASSERT(numChunks() == 0);
+    if (numChunks() != newCount) {
+        AutoLockGCBgAlloc lock(runtime());
+        updateNumChunksLocked(newCount, lock);
+    }
+}
 
-    MOZ_ASSERT(maxChunks() > 0);
+void
+js::Nursery::updateNumChunksLocked(unsigned newCount,
+                                   AutoLockGCBgAlloc& lock)
+{
+    // The GC nursery is an optimization and so if we fail to allocate nursery
+    // chunks we do not report an error.
 
-    if (!chunks_.resize(1))
-        return false;
+    MOZ_ASSERT(newCount <= maxChunks());
 
-    auto chunk = runtime()->gc.getOrAllocChunk(lock);
-    if (!chunk) {
-        chunks_.shrinkTo(0);
-        return false;
+    unsigned priorCount = numChunks();
+    MOZ_ASSERT(priorCount != newCount);
+
+    if (newCount < priorCount) {
+        // Shrink the nursery and free unused chunks.
+        for (unsigned i = newCount; i < priorCount; i++)
+            runtime()->gc.recycleChunk(chunk(i).toChunk(runtime()), lock);
+        chunks_.shrinkTo(newCount);
+        return;
     }
 
-    chunks_[0] = NurseryChunk::fromChunk(chunk);
+    // Grow the nursery and allocate new chunks.
+    if (!chunks_.resize(newCount))
+        return;
 
-    return true;
+    for (unsigned i = priorCount; i < newCount; i++) {
+        auto newChunk = runtime()->gc.getOrAllocChunk(lock);
+        if (!newChunk) {
+            chunks_.shrinkTo(i);
+            return;
+        }
+
+        chunks_[i] = NurseryChunk::fromChunk(newChunk);
+        chunk(i).poisonAndInit(runtime(), JS_FRESH_NURSERY_PATTERN);
+    }
 }
 
 bool
