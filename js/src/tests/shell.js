@@ -625,10 +625,6 @@ function optionsInit() {
   // options to their initial values
   options.initvalues  = {};
 
-  // record values in a stack to support pushing
-  // and popping options
-  options.stackvalues = [];
-
   var optionNames = options().split(',');
 
   for (var i = 0; i < optionNames.length; i++)
@@ -653,39 +649,6 @@ function optionsClear() {
       options(optionName);
     }
   }
-}
-
-function optionsPush()
-{
-  var optionsframe = {};
-
-  options.stackvalues.push(optionsframe);
-
-  var optionNames = options().split(',');
-
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName)
-    {
-      optionsframe[optionName] = '';
-    }
-  }
-
-  optionsClear();
-}
-
-function optionsPop()
-{
-  var optionsframe = options.stackvalues.pop();
-
-  optionsClear();
-
-  for (var optionName in optionsframe)
-  {
-    options(optionName);
-  }
-
 }
 
 function optionsReset() {
