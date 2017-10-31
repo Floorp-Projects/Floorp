@@ -5385,8 +5385,6 @@ static mozilla::Module::ContractIDEntry kPrefContracts[] = {
   { NS_PREFSERVICE_CONTRACTID, &kPrefServiceCID },
   { NS_PREFLOCALIZEDSTRING_CONTRACTID, &kPrefLocalizedStringCID },
   { NS_RELATIVEFILEPREF_CONTRACTID, &kRelativeFilePrefCID },
-  // compatibility for extension that uses old service
-  { "@mozilla.org/preferences;1", &kPrefServiceCID },
   { nullptr }
 };
 
