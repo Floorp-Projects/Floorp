@@ -23,6 +23,7 @@ import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
@@ -82,9 +83,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
             final Intent intent = new Intent(getActivity(), SettingsActivity.class);
-            intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, R.xml.search_engine_settings);
+            intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings);
             intent.putExtra(TITLE_RESID_INTENT_EXTRA, R.string.preference_search_installed_search_engines);
             startActivity(intent);
+        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
+            // TODO: Show add search engine page
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
