@@ -34,7 +34,6 @@ const {
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
-const XHTMLNS = "http://www.w3.org/1999/xhtml";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /** XUL elements that support checked property. */
@@ -1084,7 +1083,7 @@ element.isDOMElement = function(node) {
   return typeof node == "object" &&
       node !== null &&
       node.nodeType === node.ELEMENT_NODE &&
-      node.namespaceURI === XHTMLNS;
+      !element.isXULElement(node);
 };
 
 /**
