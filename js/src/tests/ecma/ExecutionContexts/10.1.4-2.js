@@ -44,33 +44,23 @@ startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-new TestCase( "SECTION", "with MyObject, eval should return square of " );
+addTestCase();
 
 test();
 
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
+function addTestCase() {
+   var MYOBJECT = new MyObject();
+   var INPUT = 2;
 
-    var MYOBJECT = new MyObject();
-    var INPUT = 2;
-    gTestcases[gTc].description += "( "+INPUT +" )" ;
-
-    with ( this ) {
+   var actual, expect = Math.pow(INPUT,2);
+   with ( this ) {
       with ( MYOBJECT ) {
-	gTestcases[gTc].actual = eval( INPUT );
-	gTestcases[gTc].expect = Math.pow(INPUT,2);
+         actual = eval( INPUT );
       }
-    }
+   }
 
-    gTestcases[gTc].passed = writeTestCaseResult(
-      gTestcases[gTc].expect,
-      gTestcases[gTc].actual,
-      gTestcases[gTc].description +" = "+
-      gTestcases[gTc].actual );
-
-    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
-  }
-  return ( gTestcases );
+   new TestCase("SECTION", "with MyObject, eval should return square of ( " + INPUT + " )",
+                expect, actual);
 }
 
 function MyObject() {

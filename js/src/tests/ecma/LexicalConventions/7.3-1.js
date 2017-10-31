@@ -41,17 +41,3 @@ var x = "// test \n testcase.actual = 'pass'";
 testcase.actual = eval(x);
 
 test();
-
-// XXX bc replace test()
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
-    gTestcases[gTc].passed = writeTestCaseResult(
-      gTestcases[gTc].expect,
-      gTestcases[gTc].actual,
-      gTestcases[gTc].description +":  "+
-      gTestcases[gTc].actual );
-
-    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
-  }
-  return ( gTestcases );
-}
