@@ -18,11 +18,8 @@ bugzilla-components:
     run:
         using: run-task
         command: >
-            mkdir -p /builds/worker/artifacts
-            && cd /builds/worker/checkouts/gecko
-            && ./mach file-info bugzilla-component --format json '**' > /builds/worker/artifacts/components.json
-            && ./mach file-info missing-bugzilla --format json '**' | tee /builds/worker/artifacts/missing.json
-            && gzip --keep /builds/worker/artifacts/*.json
+            cd /builds/worker/checkouts/gecko
+            && ./mach file-info bugzilla-automation /builds/worker/artifacts
     worker:
         artifacts:
             - type: directory
