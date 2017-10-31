@@ -15,40 +15,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
-
-let gFileCounter = Math.floor(Math.random() * 1000000);
+XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
+                                  "resource://testing-common/FileTestUtils.jsm");
 
 /**
- * Returns a reference to a temporary file, that is guaranteed not to exist, and
- * to have never been created before.
- *
- * @param aLeafName
- *        Suggested leaf name for the file to be created.
- *
- * @return nsIFile pointing to a non-existent file in a temporary directory.
- *
- * @note It is not enough to delete the file if it exists, or to delete the file
- *       after calling nsIFile.createUnique, because on Windows the delete
- *       operation in the file system may still be pending, preventing a new
- *       file with the same name to be created.
+ * Returns a reference to a temporary file that is guaranteed not to exist and
+ * is cleaned up later. See FileTestUtils.getTempFile for details.
  */
-function getTempFile(aLeafName) {
-  // Prepend a serial number to the extension in the suggested leaf name.
-  let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
-  let leafName = base + "-" + gFileCounter + ext;
-  gFileCounter++;
-
-  // Get a file reference under the temporary directory for this test file.
-  let file = FileUtils.getFile("TmpD", [leafName]);
-  do_check_false(file.exists());
-
-  do_register_cleanup(function() {
-    if (file.exists()) {
-      file.remove(false);
-    }
-  });
-
-  return file;
+function getTempFile(leafName) {
+  return FileTestUtils.getTempFile(leafName);
 }
 
 const TEST_STORE_FILE_NAME = "test-store.json";

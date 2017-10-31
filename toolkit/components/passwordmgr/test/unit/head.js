@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LoginRecipes.jsm");
 Cu.import("resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://testing-common/FileTestUtils.jsm");
 Cu.import("resource://testing-common/LoginTestUtils.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
 
@@ -40,47 +41,12 @@ function run_test()
 
 // Global helpers
 
-// Some of these functions are already implemented in other parts of the source
-// tree, see bug 946708 about sharing more code.
-
-// While the previous test file should have deleted all the temporary files it
-// used, on Windows these might still be pending deletion on the physical file
-// system.  Thus, start from a new base number every time, to make a collision
-// with a file that is still pending deletion highly unlikely.
-let gFileCounter = Math.floor(Math.random() * 1000000);
-
 /**
- * Returns a reference to a temporary file, that is guaranteed not to exist, and
- * to have never been created before.
- *
- * @param aLeafName
- *        Suggested leaf name for the file to be created.
- *
- * @return nsIFile pointing to a non-existent file in a temporary directory.
- *
- * @note It is not enough to delete the file if it exists, or to delete the file
- *       after calling nsIFile.createUnique, because on Windows the delete
- *       operation in the file system may still be pending, preventing a new
- *       file with the same name to be created.
+ * Returns a reference to a temporary file that is guaranteed not to exist and
+ * is cleaned up later. See FileTestUtils.getTempFile for details.
  */
-function getTempFile(aLeafName)
-{
-  // Prepend a serial number to the extension in the suggested leaf name.
-  let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
-  let leafName = base + "-" + gFileCounter + ext;
-  gFileCounter++;
-
-  // Get a file reference under the temporary directory for this test file.
-  let file = FileUtils.getFile("TmpD", [leafName]);
-  do_check_false(file.exists());
-
-  do_register_cleanup(function() {
-    if (file.exists()) {
-      file.remove(false);
-    }
-  });
-
-  return file;
+function getTempFile(leafName) {
+  return FileTestUtils.getTempFile(leafName);
 }
 
 const RecipeHelpers = {
