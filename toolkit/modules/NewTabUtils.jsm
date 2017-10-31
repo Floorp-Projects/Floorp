@@ -1268,8 +1268,7 @@ var ActivityStreamLinks = {
    * @param {String} aBookmarkGuid
    *          The bookmark guid associated with the bookmark to remove
    *
-   * @returns {Promise} Returns a promise set to an object representing the
-   *            removed bookmark
+   * @returns {Promise} Returns a promise at completion.
    */
   deleteBookmark(aBookmarkGuid) {
     return PlacesUtils.bookmarks.remove(aBookmarkGuid);

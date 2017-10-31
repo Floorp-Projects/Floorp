@@ -4,6 +4,9 @@
 
 %include downloads/indicator.inc.css
 
+%filter substitution
+%define navbarTabsShadowSize 1px
+
 :root {
   /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
   --space-above-tabbar: 0px;

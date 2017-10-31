@@ -11,7 +11,6 @@ extern crate app_units;
 extern crate gleam;
 extern crate rayon;
 extern crate thread_profiler;
-extern crate bincode;
 extern crate log;
 
 #[allow(non_snake_case)]

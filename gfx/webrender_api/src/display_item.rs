@@ -5,7 +5,7 @@
 use {ColorF, FontInstanceKey, ImageKey, LayerPixel, LayoutPixel, LayoutPoint, LayoutRect,
      LayoutSize, LayoutTransform};
 use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
-use euclid::{SideOffsets2D, TypedRect, TypedSideOffsets2D};
+use euclid::{SideOffsets2D, TypedRect};
 use std::ops::Not;
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
@@ -91,6 +91,7 @@ pub enum SpecificDisplayItem {
     ScrollFrame(ScrollFrameDisplayItem),
     StickyFrame(StickyFrameDisplayItem),
     Rectangle(RectangleDisplayItem),
+    ClearRectangle,
     Line(LineDisplayItem),
     Text(TextDisplayItem),
     Image(ImageDisplayItem),
@@ -113,19 +114,47 @@ pub struct ClipDisplayItem {
     pub image_mask: Option<ImageMask>,
 }
 
+/// The minimum and maximum allowable offset for a sticky frame in a single dimension.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct StickyOffsetBounds {
+    /// The minimum offset for this frame, typically a negative value, which specifies how
+    /// far in the negative direction the sticky frame can offset its contents in this
+    /// dimension.
+    pub min: f32,
+
+    /// The maximum offset for this frame, typically a positive value, which specifies how
+    /// far in the positive direction the sticky frame can offset its contents in this
+    /// dimension.
+    pub max: f32,
+}
+
+impl StickyOffsetBounds {
+    pub fn new(min: f32, max: f32) -> StickyOffsetBounds {
+        StickyOffsetBounds { min, max }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StickyFrameDisplayItem {
     pub id: ClipId,
-    pub sticky_frame_info: StickyFrameInfo,
-}
 
-pub type StickyFrameInfo = TypedSideOffsets2D<Option<StickySideConstraint>, LayoutPoint>;
+    /// The margins that should be maintained between the edge of the parent viewport and this
+    /// sticky frame. A margin of None indicates that the sticky frame should not stick at all
+    /// to that particular edge of the viewport.
+    pub margins: SideOffsets2D<Option<f32>>,
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct StickySideConstraint {
-    pub margin: f32,
-    pub max_offset: f32,
+    /// The minimum and maximum vertical offsets for this sticky frame. Ignoring these constraints,
+    /// the sticky frame will continue to stick to the edge of the viewport as its original
+    /// position is scrolled out of view. Constraints specify a maximum and minimum offset from the
+    /// original position relative to non-sticky content within the same scrolling frame.
+    pub vertical_offset_bounds: StickyOffsetBounds,
+
+    /// The minimum and maximum horizontal offsets for this sticky frame. Ignoring these constraints,
+    /// the sticky frame will continue to stick to the edge of the viewport as its original
+    /// position is scrolled out of view. Constraints specify a maximum and minimum offset from the
+    /// original position relative to non-sticky content within the same scrolling frame.
+    pub horizontal_offset_bounds: StickyOffsetBounds,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -239,6 +268,13 @@ pub enum BorderDetails {
 pub struct BorderDisplayItem {
     pub widths: BorderWidths,
     pub details: BorderDetails,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum BorderRadiusKind {
+    Uniform,
+    NonUniform,
 }
 
 #[repr(C)]
@@ -653,19 +689,15 @@ pub enum ClipId {
 }
 
 impl ClipId {
-    pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {
-        ClipId::Clip(0, pipeline_id)
-    }
-
     pub fn root_reference_frame(pipeline_id: PipelineId) -> ClipId {
         ClipId::DynamicallyAddedNode(0, pipeline_id)
     }
 
     pub fn new(id: u64, pipeline_id: PipelineId) -> ClipId {
-        // We do this because it is very easy to create accidentally create something that
-        // seems like a root scroll node, but isn't one.
+        // We do this because it is very easy to accidentally create something that
+        // seems like the root node, but isn't one.
         if id == 0 {
-            return ClipId::root_scroll_node(pipeline_id);
+            return ClipId::root_reference_frame(pipeline_id);
         }
 
         ClipId::ClipExternalId(id, pipeline_id)
@@ -686,9 +718,9 @@ impl ClipId {
         }
     }
 
-    pub fn is_root_scroll_node(&self) -> bool {
+    pub fn is_root(&self) -> bool {
         match *self {
-            ClipId::Clip(0, _) => true,
+            ClipId::DynamicallyAddedNode(0, _) => true,
             _ => false,
         }
     }

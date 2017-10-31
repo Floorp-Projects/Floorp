@@ -4495,10 +4495,16 @@ Tab.prototype = {
       try {
         originHost = Services.io.newURI(appOrigin).host;
       } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
-        // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host - in this case
-        // we just act as if we have an empty host.
+        // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host -
+        // in this case we just act as if we have an empty host.
       }
-      if (originHost != aLocationURI.host) {
+      let locationHost = "";
+      try {
+        locationHost = aLocationURI.host;
+      } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
+        // Ditto.
+      }
+      if (originHost != locationHost || originHost == "") {
         // Note: going 'back' will not make this tab pinned again
         ss.deleteTabValue(this, "appOrigin");
       }

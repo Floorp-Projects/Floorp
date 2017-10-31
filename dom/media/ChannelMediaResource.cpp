@@ -50,6 +50,7 @@ ChannelMediaResource::ChannelMediaResource(
 
 ChannelMediaResource::~ChannelMediaResource()
 {
+  MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mChannel);
   MOZ_ASSERT(!mListener);
 }
@@ -161,6 +162,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
                                      int64_t aRequestOffset)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
@@ -371,6 +373,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
   NS_ASSERTION(!mSuspendAgent.IsSuspended(),
                "How can OnStopRequest fire while we're suspended?");
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   mChannelStatistics.Stop();
 
@@ -503,6 +506,7 @@ nsresult
 ChannelMediaResource::OpenChannel(int64_t aOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
@@ -528,6 +532,8 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
 nsresult
 ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+
   // Always use a byte range request even if we're reading from the start
   // of the resource.
   // This enables us to detect if the stream supports byte range
@@ -559,8 +565,11 @@ nsresult ChannelMediaResource::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  CloseChannel();
-  mCacheStream.Close();
+  if (!mClosed) {
+    CloseChannel();
+    mCacheStream.Close();
+    mClosed = true;
+  }
   return NS_OK;
 }
 
@@ -662,9 +671,15 @@ nsresult ChannelMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
   return mCacheStream.GetCachedRanges(aRanges);
 }
 
-void ChannelMediaResource::Suspend(bool aCloseImmediately)
+void
+ChannelMediaResource::Suspend(bool aCloseImmediately)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+
+  if (mClosed) {
+    // Nothing to do when we are closed.
+    return;
+  }
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
@@ -690,9 +705,15 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
   }
 }
 
-void ChannelMediaResource::Resume()
+void
+ChannelMediaResource::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
+
+  if (mClosed) {
+    // Nothing to do when we are closed.
+    return;
+  }
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
@@ -736,6 +757,8 @@ void ChannelMediaResource::Resume()
 nsresult
 ChannelMediaResource::RecreateChannel()
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
+
   nsLoadFlags loadFlags =
     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
     nsIChannel::LOAD_CLASSIFY_URI |
@@ -859,6 +882,12 @@ nsresult
 ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mClosed) {
+    // Nothing to do when we are closed.
+    return NS_OK;
+  }
+
   LOG("Seek requested for aOffset [%" PRId64 "]", aOffset);
 
   CloseChannel();

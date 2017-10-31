@@ -209,12 +209,19 @@ struct PictureTask {
 PictureTask fetch_picture_task(int address) {
     RenderTaskData task_data = fetch_render_task(address);
 
-    return PictureTask(
-        RectWithSize(task_data.data0.xy, task_data.data0.zw),
+    RectWithSize target_rect = RectWithSize(
+        task_data.data0.xy,
+        task_data.data0.zw
+    );
+
+    PictureTask task = PictureTask(
+        target_rect,
         task_data.data1.x,
         task_data.data1.yz,
         task_data.data2
     );
+
+    return task;
 }
 
 struct BlurTask {
