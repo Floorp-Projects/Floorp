@@ -52,6 +52,8 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
     private EditText nameText;
     private TextInputLayout locationLayout;
     private EditText locationText;
+    private TextInputLayout keywordLayout;
+    private EditText keywordText;
     private EditText folderText;
 
     public interface Callbacks {
@@ -117,6 +119,8 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         nameText = (EditText) view.findViewById(R.id.edit_bookmark_name);
         locationLayout = (TextInputLayout) view.findViewById(R.id.edit_bookmark_location_layout);
         locationText = (EditText) view.findViewById(R.id.edit_bookmark_location);
+        keywordLayout = (TextInputLayout) view.findViewById(R.id.edit_bookmark_keyword_layout);
+        keywordText = (EditText) view.findViewById(R.id.edit_bookmark_keyword);
         folderText = (EditText) view.findViewById(R.id.edit_parent_folder);
 
         toolbar.inflateMenu(R.menu.bookmark_edit_menu);
@@ -127,9 +131,11 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                     case R.id.done:
                         final String newUrl = locationText.getText().toString().trim();
                         final String newTitle = nameText.getText().toString();
+                        final String newKeyword = keywordText.getText().toString().trim();
                         if (callbacks != null) {
                             if (TextUtils.equals(newTitle, bookmark.originalTitle) &&
                                 TextUtils.equals(newUrl, bookmark.originalUrl) &&
+                                TextUtils.equals(newKeyword, bookmark.originalKeyword) &&
                                 bookmark.parentId == bookmark.originalParentId) {
                                 // Nothing changed, skip callback.
                                 break;
@@ -139,7 +145,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                             bundle.putLong(Bookmarks._ID, bookmark.id);
                             bundle.putString(Bookmarks.TITLE, newTitle);
                             bundle.putString(Bookmarks.URL, newUrl);
-                            bundle.putString(Bookmarks.KEYWORD, bookmark.keyword);
+                            bundle.putString(Bookmarks.KEYWORD, newKeyword);
                             if (bookmark.parentId != bookmark.originalParentId) {
                                 bundle.putLong(Bookmarks.PARENT, bookmark.parentId);
                                 bundle.putLong(BrowserContract.PARAM_OLD_BOOKMARK_PARENT, bookmark.originalParentId);
@@ -207,6 +213,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         if (bookmark != null) {
             bookmark.url = locationText.getText().toString().trim();
             bookmark.title = nameText.getText().toString();
+            bookmark.keyword = keywordText.getText().toString();
             bookmark.folder = folderText.getText().toString();
             outState.putParcelable(ARG_BOOKMARK, bookmark);
         }
@@ -234,11 +241,14 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         if (bookmark.type == Bookmarks.TYPE_FOLDER) {
             toolbar.setTitle(R.string.bookmark_edit_folder_title);
             locationLayout.setVisibility(View.GONE);
+            keywordLayout.setVisibility(View.GONE);
         } else {
             toolbar.setTitle(R.string.bookmark_edit_title);
             locationLayout.setVisibility(View.VISIBLE);
+            keywordLayout.setVisibility(View.VISIBLE);
         }
         locationText.setText(bookmark.url);
+        keywordText.setText(bookmark.keyword);
 
         if (Bookmarks.MOBILE_FOLDER_GUID.equals(bookmark.guid)) {
             folderText.setText(R.string.bookmarks_folder_mobile);
@@ -250,14 +260,20 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         final MenuItem doneItem = toolbar.getMenu().findItem(R.id.done);
         doneItem.setEnabled(true);
 
-        // Add a TextWatcher to prevent invalid input(e.g. empty string).
+        // Add a TextWatcher to prevent invalid input (e.g. an empty string).
+        LocationTextWatcher locationTextWatcher = new LocationTextWatcher(doneItem);
+        KeywordTextWatcher keywordTextWatcher = new KeywordTextWatcher(doneItem);
+
+        // Cross reference the TextWatchers
+        locationTextWatcher.setPairedTextWatcher(keywordTextWatcher);
+        keywordTextWatcher.setPairedTextWatcher(locationTextWatcher);
+
         if (bookmark.type == Bookmarks.TYPE_FOLDER) {
-            BookmarkTextWatcher nameTextWatcher = new BookmarkTextWatcher(doneItem);
-            nameText.addTextChangedListener(nameTextWatcher);
+            nameText.addTextChangedListener(locationTextWatcher);
         } else {
-            BookmarkTextWatcher locationTextWatcher = new BookmarkTextWatcher(doneItem);
             locationText.addTextChangedListener(locationTextWatcher);
         }
+        keywordText.addTextChangedListener(keywordTextWatcher);
     }
 
     /**
@@ -266,32 +282,34 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
     private static class Bookmark implements Parcelable {
         // Cannot be modified in this fragment.
         final long id;
-        final String keyword;
         final int type; // folder or bookmark
         final String guid;
         final String originalTitle;
         final String originalUrl;
+        final String originalKeyword;
         final long originalParentId;
         final String originalFolder;
 
         // Can be modified in this fragment.
         String title;
         String url;
+        String keyword;
         long parentId;
         String folder;
 
         public Bookmark(long id, String url, String title, String keyword, long parentId,
                         String folder, int type, String guid) {
-            this(id, url, title, keyword, parentId, folder, type, guid, url, title, parentId, folder);
+            this(id, url, title, keyword, parentId, folder, type, guid, url, title, keyword, parentId, folder);
         }
 
-        private Bookmark(long id, String originalUrl, String originalTitle, String keyword,
+        private Bookmark(long id, String originalUrl, String originalTitle, String originalKeyword,
                          long originalParentId, String originalFolder, int type, String guid,
-                         String modifiedUrl, String modifiedTitle, long modifiedParentId, String modifiedFolder) {
+                         String modifiedUrl, String modifiedTitle, String modifiedKeyword,
+                         long modifiedParentId, String modifiedFolder) {
             this.id = id;
             this.originalUrl = originalUrl;
             this.originalTitle = originalTitle;
-            this.keyword = keyword;
+            this.originalKeyword = originalKeyword;
             this.originalParentId = originalParentId;
             this.originalFolder = originalFolder;
             this.type = type;
@@ -299,6 +317,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
 
             this.url = modifiedUrl;
             this.title = modifiedTitle;
+            this.keyword = modifiedKeyword;
             this.parentId = modifiedParentId;
             this.folder = modifiedFolder;
         }
@@ -320,6 +339,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
             parcel.writeString(guid);
             parcel.writeString(originalUrl);
             parcel.writeString(originalTitle);
+            parcel.writeString(originalKeyword);
             parcel.writeLong(originalParentId);
             parcel.writeString(originalFolder);
         }
@@ -330,7 +350,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                 final long id = source.readLong();
                 final String modifiedUrl = source.readString();
                 final String modifiedTitle = source.readString();
-                final String keyword = source.readString();
+                final String modifiedKeyword = source.readString();
                 final long modifiedParentId = source.readLong();
                 final String modifiedFolder = source.readString();
                 final int type = source.readInt();
@@ -338,11 +358,12 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
 
                 final String originalUrl = source.readString();
                 final String originalTitle = source.readString();
+                final String originalKeyword = source.readString();
                 final long originalParentId = source.readLong();
                 final String originalFolder = source.readString();
 
-                return new Bookmark(id, originalUrl, originalTitle, keyword, originalParentId, originalFolder,
-                                    type, guid, modifiedUrl, modifiedTitle, modifiedParentId, modifiedFolder);
+                return new Bookmark(id, originalUrl, originalTitle, originalKeyword, originalParentId, originalFolder,
+                                    type, guid, modifiedUrl, modifiedTitle, modifiedKeyword, modifiedParentId, modifiedFolder);
             }
 
             @Override
@@ -494,17 +515,29 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
     }
 
     /**
-     * This text watcher enables the menu item if the dialog contains valid information, or disables otherwise.
+     * This text watcher watches to enable or disable the Save button if the dialog contains
+     * valid information. This class is overridden to do data checking on different fields.
+     * By itself, it always enables the button.
+     *
+     * Callers can also assign a paired partner to the TextWatcher, and callers will check
+     * that both are enabled before enabling the Save button.
      */
-    private static final class BookmarkTextWatcher implements TextWatcher {
-        // A stored reference to the dialog containing the text field being watched.
+    private static class EditBookmarkTextWatcher implements TextWatcher {
+        // A stored reference to the menu that should be disabled/enabled in response to the text
+        // being watched.
         private final WeakReference<MenuItem> doneItemWeakReference;
 
-        // Whether or not the menu item should be enabled.
-        private boolean enabled = true;
+        private EditBookmarkTextWatcher pairedTextWatcher;
 
-        private BookmarkTextWatcher(MenuItem doneItem) {
+        // Whether or not the menu item should be enabled.
+        protected boolean enabled = true;
+
+        private EditBookmarkTextWatcher(MenuItem doneItem) {
             doneItemWeakReference = new WeakReference<>(doneItem);
+        }
+
+        public void setPairedTextWatcher(EditBookmarkTextWatcher textWatcher) {
+            pairedTextWatcher = textWatcher;
         }
 
         public boolean isEnabled() {
@@ -513,8 +546,8 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-            // Disables the menu item if the input field is empty.
-            final boolean enabled = (s.toString().trim().length() > 0);
+            // Disable if we're disabled or the paired partner is disabled.
+            boolean enabled = this.enabled && (pairedTextWatcher == null || pairedTextWatcher.isEnabled());
 
             final MenuItem doneItem = doneItemWeakReference.get();
             if (doneItem != null) {
@@ -526,5 +559,39 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         public void afterTextChanged(Editable s) {}
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    }
+
+    /**
+     * A version of the EditBookmarkTextWatcher for the URL field of the dialog.
+     * Only checks if the field is empty or not.
+     */
+    private static final class LocationTextWatcher extends EditBookmarkTextWatcher {
+        private LocationTextWatcher(MenuItem doneItem) {
+            super(doneItem);
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            // Disables the menu item if the input field is empty.
+            enabled = (s.toString().trim().length() > 0);
+            super.onTextChanged(s, start, before, count);
+        }
+    }
+
+    /**
+     * A version of the EditBookmarkTextWatcher for the keyword field of the dialog.
+     * Checks if the field has any (non leading or trailing) spaces.
+     */
+    private static final class KeywordTextWatcher extends EditBookmarkTextWatcher {
+        private KeywordTextWatcher(MenuItem doneItem) {
+            super(doneItem);
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            // Disable if the keyword contains spaces.
+            enabled = (s.toString().trim().indexOf(' ') == -1);
+            super.onTextChanged(s, start, before, count);
+        }
     }
 }

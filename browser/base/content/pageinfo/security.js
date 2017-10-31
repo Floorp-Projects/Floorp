@@ -334,7 +334,7 @@ function viewCertHelper(parent, cert) {
  */
 function hostHasCookies(uri) {
   var cookieManager = Components.classes["@mozilla.org/cookiemanager;1"]
-                                .getService(Components.interfaces.nsICookieManager2);
+                                .getService(Components.interfaces.nsICookieManager);
 
   return cookieManager.countCookiesFromHost(uri.asciiHost) > 0;
 }

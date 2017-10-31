@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
                                    "nsICookieService");
 XPCOMUtils.defineLazyServiceGetter(Services, "cookiemgr",
                                    "@mozilla.org/cookiemanager;1",
-                                   "nsICookieManager2");
+                                   "nsICookieManager");
 
 XPCOMUtils.defineLazyServiceGetter(Services, "etld",
                                    "@mozilla.org/network/effective-tld-service;1",

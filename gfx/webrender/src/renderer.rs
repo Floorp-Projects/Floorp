@@ -636,6 +636,7 @@ pub enum BlendMode {
     None,
     Alpha,
     PremultipliedAlpha,
+    PremultipliedDestOut,
     Subpixel,
 }
 
@@ -1007,6 +1008,7 @@ impl BrushShader {
             }
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
+            BlendMode::PremultipliedDestOut |
             BlendMode::Subpixel => {
                 self.alpha.bind(device, projection, mode, renderer_errors)
             }
@@ -1188,7 +1190,8 @@ pub struct Renderer {
     cs_blur_rgba8: LazilyCompiledShader,
 
     // Brush shaders
-    brush_mask: LazilyCompiledShader,
+    brush_mask_corner: LazilyCompiledShader,
+    brush_mask_rounded_rect: LazilyCompiledShader,
     brush_image_rgba8: BrushShader,
     brush_image_a8: BrushShader,
 
@@ -1380,9 +1383,17 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
-        let brush_mask = try!{
+        let brush_mask_corner = try!{
             LazilyCompiledShader::new(ShaderKind::Brush,
-                                      "brush_mask",
+                                      "brush_mask_corner",
+                                      &[],
+                                      &mut device,
+                                      options.precache_shaders)
+        };
+
+        let brush_mask_rounded_rect = try!{
+            LazilyCompiledShader::new(ShaderKind::Brush,
+                                      "brush_mask_rounded_rect",
                                       &[],
                                       &mut device,
                                       options.precache_shaders)
@@ -1803,7 +1814,8 @@ impl Renderer {
             cs_line,
             cs_blur_a8,
             cs_blur_rgba8,
-            brush_mask,
+            brush_mask_corner,
+            brush_mask_rounded_rect,
             brush_image_rgba8,
             brush_image_a8,
             cs_clip_rectangle,
@@ -2005,8 +2017,13 @@ impl Renderer {
                     );
                     debug_target.add(
                         debug_server::BatchKind::Cache,
-                        "Rectangle Brush",
-                        target.rect_cache_prims.len(),
+                        "Rectangle Brush (Corner)",
+                        target.brush_mask_corners.len(),
+                    );
+                    debug_target.add(
+                        debug_server::BatchKind::Cache,
+                        "Rectangle Brush (Rounded Rect)",
+                        target.brush_mask_rounded_rects.len(),
                     );
                     for (_, items) in target.clip_batcher.images.iter() {
                         debug_target.add(debug_server::BatchKind::Clip, "Image mask", items.len());
@@ -2460,6 +2477,7 @@ impl Renderer {
                         !needs_clipping || match key.blend_mode {
                             BlendMode::Alpha |
                             BlendMode::PremultipliedAlpha |
+                            BlendMode::PremultipliedDestOut |
                             BlendMode::Subpixel => true,
                             BlendMode::None => false,
                         }
@@ -2802,6 +2820,7 @@ impl Renderer {
                         BlendMode::None => ColorF::new(0.3, 0.3, 0.3, 1.0),
                         BlendMode::Alpha => ColorF::new(0.0, 0.9, 0.1, 1.0),
                         BlendMode::PremultipliedAlpha => ColorF::new(0.0, 0.3, 0.7, 1.0),
+                        BlendMode::PremultipliedDestOut => ColorF::new(0.6, 0.2, 0.0, 1.0),
                         BlendMode::Subpixel => ColorF::new(0.5, 0.0, 0.4, 1.0),
                     }.into();
                     for item_rect in &batch.item_rects {
@@ -2878,7 +2897,7 @@ impl Renderer {
                                 self.device
                                     .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
                             }
-                            BlendMode::Alpha | BlendMode::None => {
+                            BlendMode::Alpha | BlendMode::PremultipliedDestOut | BlendMode::None => {
                                 unreachable!("bug: bad blend mode for text");
                             }
                         }
@@ -2899,6 +2918,10 @@ impl Renderer {
                                 BlendMode::PremultipliedAlpha => {
                                     self.device.set_blend(true);
                                     self.device.set_blend_mode_premultiplied_alpha();
+                                }
+                                BlendMode::PremultipliedDestOut => {
+                                    self.device.set_blend(true);
+                                    self.device.set_blend_mode_premultiplied_dest_out();
                                 }
                                 BlendMode::Subpixel => {
                                     unreachable!("bug: subpx text handled earlier");
@@ -3023,14 +3046,27 @@ impl Renderer {
             }
         }
 
-        if !target.rect_cache_prims.is_empty() {
+        if !target.brush_mask_corners.is_empty() {
             self.device.set_blend(false);
 
             let _gm = self.gpu_profile.add_marker(GPU_TAG_BRUSH_MASK);
-            self.brush_mask
+            self.brush_mask_corner
                 .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
             self.draw_instanced_batch(
-                &target.rect_cache_prims,
+                &target.brush_mask_corners,
+                VertexArrayKind::Primitive,
+                &BatchTextures::no_texture(),
+            );
+        }
+
+        if !target.brush_mask_rounded_rects.is_empty() {
+            self.device.set_blend(false);
+
+            let _gm = self.gpu_profile.add_marker(GPU_TAG_BRUSH_MASK);
+            self.brush_mask_rounded_rect
+                .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
+            self.draw_instanced_batch(
+                &target.brush_mask_rounded_rects,
                 VertexArrayKind::Primitive,
                 &BatchTextures::no_texture(),
             );
@@ -3583,7 +3619,8 @@ impl Renderer {
         self.cs_line.deinit(&mut self.device);
         self.cs_blur_a8.deinit(&mut self.device);
         self.cs_blur_rgba8.deinit(&mut self.device);
-        self.brush_mask.deinit(&mut self.device);
+        self.brush_mask_rounded_rect.deinit(&mut self.device);
+        self.brush_mask_corner.deinit(&mut self.device);
         self.brush_image_rgba8.deinit(&mut self.device);
         self.brush_image_a8.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);

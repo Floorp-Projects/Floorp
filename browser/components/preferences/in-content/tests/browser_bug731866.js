@@ -5,7 +5,6 @@ Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 const storageManagerDisabled = !SpecialPowers.getBoolPref("browser.storageManager.enabled");
-const offlineGroupDisabled = !SpecialPowers.getBoolPref("browser.preferences.offlineGroup.enabled");
 const browserContainersGroupDisabled = !SpecialPowers.getBoolPref("privacy.userContext.ui.enabled");
 
 function test() {
@@ -30,13 +29,6 @@ function checkElements(expectedPane) {
     // However, this checking is necessary to make sure we don't leak the siteDataGroup into beta/release build
     if (element.id == "siteDataGroup" && storageManagerDisabled) {
       is_element_hidden(element, "Disabled siteDataGroup should be hidden");
-      continue;
-    }
-    // The siteDataGroup in the Storage Management project will replace the offlineGroup eventually,
-    // so during the transition period, we have to check the pref to see if the offlineGroup
-    // should be hidden always. See the bug 1354530 for the details.
-    if (element.id == "offlineGroup" && offlineGroupDisabled) {
-      is_element_hidden(element, "Disabled offlineGroup should be hidden");
       continue;
     }
     // The browserContainersGroup is still only pref-on on Nightly

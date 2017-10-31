@@ -244,6 +244,8 @@ protected:
                                      uint32_t* aWriteCount);
 
   // Main thread access only
+  // True if Close() has been called.
+  bool mClosed = false;
   RefPtr<Listener> mListener;
   // A mono-increasing integer to uniquely identify the channel we are loading.
   uint32_t mLoadID = 0;

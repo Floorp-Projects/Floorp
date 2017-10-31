@@ -64,6 +64,8 @@ mod ellipse;
 mod frame;
 mod frame_builder;
 mod freelist;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+mod gamma_lut;
 mod geometry;
 mod glyph_cache;
 mod glyph_rasterizer;
@@ -145,9 +147,6 @@ extern crate time;
 #[cfg(feature = "debugger")]
 extern crate ws;
 pub extern crate webrender_api;
-
-#[cfg(any(target_os = "macos", target_os = "windows"))]
-extern crate gamma_lut;
 
 #[doc(hidden)]
 pub use device::build_shader_strings;
