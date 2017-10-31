@@ -425,6 +425,9 @@
   }
   global.AddTestCase = AddTestCase;
 
+  var testCasesCounter = 0;
+  var testCasesArray = [];
+
   function TestCase(n, d, e, a) {
     this.name = n;
     this.description = d;
@@ -435,8 +438,8 @@
     this.bugnumber = typeof BUGNUMER !== 'undefined' ? BUGNUMBER : '';
     this.type = runningInShell ? 'shell' : 'browser';
     ObjectDefineProperty(
-      gTestcases,
-      gTc++,
+      testCasesArray,
+      testCasesCounter++,
       {
         __proto__: null,
         value: this,
@@ -468,7 +471,7 @@
   TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
 
   function getTestCases() {
-    return gTestcases;
+    return testCasesArray;
   }
   global.getTestCases = getTestCases;
 
@@ -659,20 +662,21 @@
   }
 
   function test() {
-    for (gTc = 0; gTc < gTestcases.length; gTc++) {
+    var testCases = getTestCases();
+    for (var i = 0; i < testCases.length; i++) {
       // temporary hack to work around some unknown issue in 1.7
       try {
-        var testCase = gTestcases[gTc];
+        var testCase = testCases[i];
         testCase.passed = writeTestCaseResult(
           testCase.expect,
           testCase.actual,
           testCase.description + " = " + testCase.actual);
         testCase.reason += testCase.passed ? "" : "wrong value ";
       } catch(e) {
-        print('test(): empty testcase for gTc = ' + gTc + ' ' + e);
+        print('test(): empty testcase at index = ' + i + ' ' + e);
       }
     }
-    return gTestcases;
+    return testCases;
   }
   global.test = test;
 
@@ -689,7 +693,6 @@
     }
     return passed;
   }
-  global.writeTestCaseResult = writeTestCaseResult;
 
   // Note: browser.js overrides this function.
   function writeHeaderToLog(string) {
@@ -718,8 +721,9 @@
       dump('jsTestDriverEnd ' + ex);
     }
 
-    for (var i = 0; i < gTestcases.length; i++) {
-      gTestcases[i].dump();
+    var testCases = getTestCases();
+    for (var i = 0; i < testCases.length; i++) {
+      testCases[i].dump();
     }
   }
   global.jsTestDriverEnd = jsTestDriverEnd;
@@ -759,9 +763,6 @@ var STATUS = "STATUS: ";
 
 var gDelayTestDriverEnd = false;
 var gFailureExpected = false;
-
-var gTestcases = new Array();
-var gTc = gTestcases.length;
 
 /*
  * constant strings
