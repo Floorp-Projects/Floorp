@@ -19,6 +19,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 #include "nsCocoaFeatures.h"
+#include "mozilla/gfx/Logging.h"
 
 #ifdef MOZ_WIDGET_COCOA
 // prototype for private API

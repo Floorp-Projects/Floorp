@@ -14,14 +14,6 @@ namespace gfx {
 
 DrawTargetCaptureImpl::~DrawTargetCaptureImpl()
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-
-  uint8_t* current = start;
-
-  while (current < start + mDrawCommandStorage.size()) {
-    reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t))->~DrawingCommand();
-    current += *(uint32_t*)current;
-  }
 }
 
 DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
@@ -316,13 +308,9 @@ DrawTargetCaptureImpl::Blur(const AlphaBoxBlur& aBlur)
 void
 DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform)
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-
-  uint8_t* current = start;
-
-  while (current < start + mDrawCommandStorage.size()) {
-    reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t))->ExecuteOnDT(aDT, &aTransform);
-    current += *(uint32_t*)current;
+  for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
+    DrawingCommand* cmd = iter.Get();
+    cmd->ExecuteOnDT(aDT, &aTransform);
   }
 }
 
@@ -331,14 +319,10 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
                                                  Color& aColor,
                                                  std::vector<Glyph>& aGlyphs)
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-  uint8_t* current = start;
   bool result = false;
 
-  while (current < start + mDrawCommandStorage.size()) {
-    DrawingCommand* command =
-      reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t));
-    current += *(uint32_t*)current;
+  for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
+    DrawingCommand* command = iter.Get();
 
     if (command->GetType() != CommandType::FILLGLYPHS &&
         command->GetType() != CommandType::SETTRANSFORM) {
