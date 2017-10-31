@@ -128,6 +128,8 @@ public:
 
   virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
+  virtual RefPtr<DrawTarget>
+    CreateSimilarRasterTarget(const IntSize& aSize, SurfaceFormat aFormat) const override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override
   {

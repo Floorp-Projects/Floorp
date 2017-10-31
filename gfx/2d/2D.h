@@ -1274,6 +1274,18 @@ public:
   }
 
   /**
+   * Create a similar draw target, but if the draw target is not backed by a
+   * raster backend (for example, it is capturing or recording), force it to
+   * create a raster target instead. This is intended for code that wants to
+   * cache pixels, and would have no effect if it were caching a recording.
+   */
+  virtual RefPtr<DrawTarget>
+  CreateSimilarRasterTarget(const IntSize& aSize, SurfaceFormat aFormat) const
+  {
+    return CreateSimilarDrawTarget(aSize, aFormat);
+  }
+
+  /**
    * Create a path builder with the specified fillmode.
    *
    * We need the fill mode up front because of Direct2D.
