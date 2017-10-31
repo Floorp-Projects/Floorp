@@ -33,7 +33,6 @@
   var ReflectApply = global.Reflect.apply;
   var RegExpPrototypeExec = global.RegExp.prototype.exec;
   var StringPrototypeCharCodeAt = global.String.prototype.charCodeAt;
-  var StringPrototypeEndsWith = global.String.prototype.endsWith;
   var StringPrototypeIndexOf = global.String.prototype.indexOf;
   var StringPrototypeSubstring = global.String.prototype.substring;
 
@@ -84,10 +83,6 @@
 
   function StringCharCodeAt(str, index) {
     return ReflectApply(StringPrototypeCharCodeAt, str, [index]);
-  }
-
-  function StringEndsWith(str, needle) {
-    return ReflectApply(StringPrototypeEndsWith, str, [needle]);
   }
 
   function StringSplit(str, delimiter) {
@@ -351,9 +346,6 @@
     assertEq(typeof funcName, "string",
              "enterFunc must be given a string funcName");
 
-    if (!StringEndsWith(funcName, "()"))
-      funcName += "()";
-
     ArrayPush(callStack, funcName);
   }
   global.enterFunc = enterFunc;
@@ -370,13 +362,8 @@
     var lastFunc = ArrayPop(callStack);
     assertEq(typeof lastFunc, "string", "exitFunc called too many times");
 
-    if (funcName) {
-      if (!StringEndsWith(funcName, "()"))
-        funcName += "()";
-
-      if (lastFunc !== funcName) {
-        reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
-      }
+    if (typeof funcName === "string" && lastFunc !== funcName) {
+      reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
     }
   }
   global.exitFunc = exitFunc;
@@ -386,7 +373,8 @@
     if (callStack.length == 0)
       return "top level script";
 
-    return callStack[callStack.length - 1];
+    // Add parentheses for output string.
+    return callStack[callStack.length - 1] + "()";
   }
 
   /*
@@ -511,8 +499,7 @@
   function reportFailure(msg) {
     msg = String(msg);
     var lines = StringSplit(msg, "\n");
-    var funcName = currentFunc();
-    var prefix = funcName ? "[reported from " + funcName + "] ": "";
+    var prefix = "[reported from " + currentFunc() + "] ";
 
     for (var i = 0; i < lines.length; i++)
       print(FAILED + prefix + lines[i]);
