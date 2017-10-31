@@ -1438,8 +1438,13 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                                                       desc.attributes(), 0);
         }
     } else {
-        shape = NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                          SHAPE_INVALID_SLOT, desc.attributes(), 0);
+        if (Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter())) {
+            shape = NativeObject::putDataProperty(cx, obj, id, SHAPE_INVALID_SLOT,
+                                                  desc.attributes(), 0);
+        } else {
+            shape = NativeObject::putAccessorProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                                      desc.attributes(), 0);
+        }
     }
     if (!shape)
         return false;
