@@ -694,7 +694,7 @@ static const char* const kMainThreadName = "GeckoMain";
 class Registers
 {
 public:
-  Registers() {}
+  Registers() : mPC{nullptr}, mSP{nullptr}, mFP{nullptr}, mLR{nullptr} {}
 
 #if defined(HAVE_NATIVE_UNWIND)
   // Fills in mPC, mSP, mFP, mLR, and mContext for a synchronous sample.
@@ -731,7 +731,7 @@ struct NativeStack
   size_t mCount;  // Number of entries filled.
 
   NativeStack()
-    : mCount(0)
+    : mPCs(), mSPs(), mCount(0)
   {}
 };
 
@@ -2499,6 +2499,10 @@ profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
 
 AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
   MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+  : mSetEntries()
+  , mSetInterval()
+  , mSetFeaturesBitfield()
+  , mSetFilters()
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
