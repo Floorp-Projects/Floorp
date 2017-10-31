@@ -25,7 +25,7 @@ class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc
 public:
   friend class SpliceableJSONWriter;
 
-  ChunkedJSONWriteFunc() {
+  ChunkedJSONWriteFunc() : mChunkPtr{nullptr}, mChunkEnd{nullptr} {
     AllocChunk(kChunkSize);
   }
 

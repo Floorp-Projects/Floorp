@@ -74,6 +74,12 @@ public:
   // Helper for asserts.
   static bool IsOnPaintThread();
 
+  // Must be called on the main thread. Signifies that a new layer transaction
+  // is beginning. This must be called immediately after FlushAsyncPaints, and
+  // before any new painting occurs, as there can't be any async paints queued
+  // or running while this is executing.
+  void BeginLayerTransaction();
+
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
 
@@ -98,6 +104,8 @@ public:
   void AddRef();
 
 private:
+  PaintThread();
+
   bool Init();
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
@@ -112,6 +120,8 @@ private:
   static StaticAutoPtr<PaintThread> sSingleton;
   static StaticRefPtr<nsIThread> sThread;
   static PlatformThreadId sThreadId;
+
+  bool mInAsyncPaintGroup;
 
   // This shouldn't be very many elements, so a list should be fine.
   // Should only be accessed on the paint thread.

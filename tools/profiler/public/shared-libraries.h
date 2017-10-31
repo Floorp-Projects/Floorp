@@ -109,7 +109,7 @@ public:
   const std::string &GetArch() const { return mArch; }
 
 private:
-  SharedLibrary() {}
+  SharedLibrary() : mStart{0}, mEnd{0}, mOffset{0} {}
 
   uintptr_t mStart;
   uintptr_t mEnd;

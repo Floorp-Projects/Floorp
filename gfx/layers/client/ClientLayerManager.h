@@ -160,7 +160,7 @@ public:
   bool IsRepeatTransaction() { return mIsRepeatTransaction; }
 
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
-  void SetNeedTextureSyncOnPaintThread() { mTextureSyncOnPaintThread = true; }
+  void SetQueuedAsyncPaints() { mQueuedAsyncPaints = true; }
 
   bool HasShadowTarget() { return !!mShadowTarget; }
 
@@ -351,7 +351,7 @@ private:
   bool mTransactionIncomplete;
   bool mCompositorMightResample;
   bool mNeedsComposite;
-  bool mTextureSyncOnPaintThread;
+  bool mQueuedAsyncPaints;
 
   // An incrementing sequence number for paints.
   // Incremented in BeginTransaction(), but not for repeat transactions.
