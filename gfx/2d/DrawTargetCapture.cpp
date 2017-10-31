@@ -399,5 +399,11 @@ DrawTargetCaptureImpl::MarkChanged()
   mSnapshot = nullptr;
 }
 
+already_AddRefed<DrawTarget>
+DrawTargetCaptureImpl::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  return MakeAndAddRef<DrawTargetCaptureImpl>(GetBackendType(), aSize, aFormat);
+}
+
 } // namespace gfx
 } // namespace mozilla
