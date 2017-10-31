@@ -128,8 +128,7 @@
   if (typeof assertEq !== "function") {
     assertEq = function assertEq(actual, expected, message) {
       if (!SameValue(actual, expected)) {
-        throw new TypeError('Assertion failed: got "' + actual + '", ' +
-                            'expected "' + expected + '"' +
+        throw new TypeError(`Assertion failed: got "${actual}", expected "${expected}"` +
                             (message ? ": " + message : ""));
       }
     };
@@ -145,7 +144,7 @@
       for (; i < len; i++)
         assertEq(actual[i], expected[i], "mismatch at element " + i);
     } catch (e) {
-      throw new Error("Exception thrown at index " + i + ": " + e);
+      throw new Error(`Exception thrown at index ${i}: ${e}`);
     }
   }
   global.assertEqArray = assertEqArray;
@@ -158,7 +157,7 @@
       ok = true;
     }
     if (!ok)
-      throw new Error("Assertion failed: " + f + " did not throw as expected");
+      throw new Error(`Assertion failed: ${f} did not throw as expected`);
   }
   global.assertThrows = assertThrows;
 
@@ -169,15 +168,11 @@
     } catch (exc) {
       if (exc instanceof ctor)
         return;
-      fullmsg =
-        "Assertion failed: expected exception " + ctor.name + ", got " + exc;
+      fullmsg = `Assertion failed: expected exception ${ctor.name}, got ${exc}`;
     }
 
-    if (fullmsg === undefined) {
-      fullmsg =
-        "Assertion failed: expected exception " + ctor.name + ", " +
-        "no exception thrown";
-    }
+    if (fullmsg === undefined)
+      fullmsg = `Assertion failed: expected exception ${ctor.name}, no exception thrown`;
     if (msg !== undefined)
       fullmsg += " - " + msg;
 
@@ -433,14 +428,14 @@
     // let reftest handle error reporting, otherwise
     // output a summary line.
     if (!runningInBrowser) {
-      dump('\njstest: ' + this.path + ' ' +
-          'bug: '         + this.bugnumber + ' ' +
-          'result: '      + (this.passed ? 'PASSED' : 'FAILED') + ' ' +
-          'type: '        + this.type + ' ' +
-          'description: ' + toPrinted(this.description) + ' ' +
-  //       'expected: '    + toPrinted(this.expect) + ' ' +
-  //       'actual: '      + toPrinted(this.actual) + ' ' +
-          'reason: '      + toPrinted(this.reason) + '\n');
+      dump(`\njstest: ${this.path} ` +
+          `bug: ${this.bugnumber} ` +
+          `result: ${this.passed ? 'PASSED' : 'FAILED'} ` +
+          `type: ${this.type} ` +
+          `description: ${toPrinted(this.description)} ` +
+  //      `expected: ${toPrinted(this.expect)} ` +
+  //      `actual: ${toPrinted(this.actual)} ` +
+          `reason: ${toPrinted(this.reason)}\n`);
     }
   };
 
@@ -473,6 +468,19 @@
     // the Date functions in SpiderMonkey specified in terms of WeekDay
     // often don't.  This seems unimportant.
     return true;
+  }
+
+  function reportTestCaseResult(description, expected, actual, output) {
+    var testcase = new TestCase("unknown-test-name", description, expected, actual, output);
+
+    // if running under reftest, let it handle result reporting.
+    if (!runningInBrowser) {
+      if (testcase.passed) {
+        print(PASSED + description);
+      } else {
+        reportFailure(description + " : " + output);
+      }
+    }
   }
 
   function getTestCases() {
@@ -543,28 +551,15 @@
     var output = "";
 
     if (typeof description === "undefined")
-      description = '';
+      description = "";
 
-    if (expected_t !== actual_t) {
-      output += "Type mismatch, expected type " + expected_t +
-        ", actual type " + actual_t + " ";
-    }
+    if (expected_t !== actual_t)
+      output += `Type mismatch, expected type ${expected_t}, actual type ${actual_t} `;
 
-    if (expected != actual) {
-      output += "Expected value '" + toPrinted(expected) +
-        "', Actual value '" + toPrinted(actual) + "' ";
-    }
+    if (expected != actual)
+      output += `Expected value '${toPrinted(expected)}', Actual value '${toPrinted(actual)}' `;
 
-    var testcase = new TestCase("unknown-test-name", description, expected, actual, output);
-
-    // if running under reftest, let it handle result reporting.
-    if (!runningInBrowser) {
-      if (testcase.passed) {
-        print(PASSED + description);
-      } else {
-        reportFailure(description + " : " + output);
-      }
-    }
+    reportTestCaseResult(description, expected, actual, output);
   }
   global.reportCompare = reportCompare;
 
@@ -580,29 +575,18 @@
     var output = "";
 
     if (typeof description === "undefined")
-      description = '';
+      description = "";
 
-    if (expected_t !== actual_t) {
-      output += "Type mismatch, expected type " + expected_t +
-        ", actual type " + actual_t + " ";
-    }
+    if (expected_t !== actual_t)
+      output += `Type mismatch, expected type ${expected_t}, actual type ${actual_t} `;
 
     var matches = ReflectApply(RegExpPrototypeExec, expectedRegExp, [actual]) !== null;
     if (!matches) {
-      output += "Expected match to '" + toPrinted(expectedRegExp) +
-        "', Actual value '" + toPrinted(actual) + "' ";
+      output +=
+        `Expected match to '${toPrinted(expectedRegExp)}', Actual value '${toPrinted(actual)}' `;
     }
 
-    var testcase = new TestCase("unknown-test-name", description, true, matches, output);
-
-    // if running under reftest, let it handle result reporting.
-    if (!runningInBrowser) {
-      if (testcase.passed) {
-        print(PASSED + description);
-      } else {
-        reportFailure(description + " : " + output);
-      }
-    }
+    reportTestCaseResult(description, true, matches, output);
   }
   global.reportMatch = reportMatch;
 
