@@ -710,6 +710,7 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::YuvImage(..) => String::from("yuv_image"),
             SpecificDisplayItem::Text(..) => String::from("text"),
             SpecificDisplayItem::Rectangle(..) => String::from("rectangle"),
+            SpecificDisplayItem::ClearRectangle => String::from("clear_rectangle"),
             SpecificDisplayItem::Line(..) => String::from("line"),
             SpecificDisplayItem::Gradient(..) => String::from("gradient"),
             SpecificDisplayItem::RadialGradient(..) => String::from("radial_gradient"),

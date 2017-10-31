@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
@@ -10,6 +11,7 @@ extern crate webrender;
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
+use euclid::SideOffsets2D;
 use webrender::api::*;
 
 struct App {
@@ -107,19 +109,11 @@ impl Example for App {
             let sticky_id = builder.define_sticky_frame(
                 None,
                 (50, 350).by(50, 50),
-                StickyFrameInfo::new(
-                    Some(StickySideConstraint {
-                        margin: 10.0,
-                        max_offset: 60.0,
-                    }),
-                    None,
-                    Some(StickySideConstraint {
-                        margin: 10.0,
-                        max_offset: -40.0,
-                    }),
-                    None,
-                ),
+                SideOffsets2D::new(Some(10.0), None, Some(10.0), None),
+                StickyOffsetBounds::new(-40.0, 60.0),
+                StickyOffsetBounds::new(0.0, 0.0)
             );
+
             builder.push_clip_id(sticky_id);
             let info = LayoutPrimitiveInfo::new((50, 350).by(50, 50));
             builder.push_rect(&info, ColorF::new(0.5, 0.5, 1.0, 1.0));
