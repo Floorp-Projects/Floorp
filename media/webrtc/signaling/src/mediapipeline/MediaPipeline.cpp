@@ -2125,7 +2125,7 @@ public:
       if (source->AppendToTrack(track_->GetInputTrackId(), &segment)) {
         played_ticks_ += frames;
         if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
-          if (played_ticks_ > last_log_ + graph->GraphRate()) { // ~ 1 second
+          if (played_ticks_ > last_log_ + rate) { // ~ 1 second
             MOZ_LOG(AudioLogModule(), LogLevel::Debug,
                     ("%p: Inserting %zu samples into track %d, total = %" PRIu64,
                      (void*) this, frames, track_->GetInputTrackId(),
