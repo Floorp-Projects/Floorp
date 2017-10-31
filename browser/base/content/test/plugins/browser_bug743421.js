@@ -61,7 +61,7 @@ add_task(async function() {
 
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  PopupNotifications.panel.firstChild.button.click();
 
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementsByTagName("embed")[0];

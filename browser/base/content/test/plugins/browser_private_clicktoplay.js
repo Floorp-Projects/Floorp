@@ -67,10 +67,7 @@ add_task(async function test1b() {
   popupNotification.reshow();
 
   await promiseShown;
-  let button1 = gPrivateWindow.PopupNotifications.panel.firstChild._primaryButton;
-  let button2 = gPrivateWindow.PopupNotifications.panel.firstChild._secondaryButton;
-  is(button1.getAttribute("action"), "_singleActivateNow", "Test 1b, Blocked plugin in private window should have a activate now button");
-  ok(button2.hidden, "Test 1b, Blocked plugin in a private window should not have a secondary button");
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.checkbox.hidden, true, "'Remember' checkbox should be hidden in private windows")
 
   gPrivateWindow.close();
   BrowserTestUtils.loadURI(gTestBrowser, gHttpTestRoot + "plugin_test.html");
@@ -94,7 +91,7 @@ add_task(async function test2a() {
   popupNotification.reshow();
   await promiseShown;
 
-  PopupNotifications.panel.firstChild._secondaryButton.click();
+  PopupNotifications.panel.firstChild.button.click();
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
@@ -123,8 +120,10 @@ add_task(async function test2c() {
                                                    "Shown");
   popupNotification.reshow();
   await promiseShown;
-  let buttonContainer = gPrivateWindow.PopupNotifications.panel.firstChild._buttonContainer;
-  ok(buttonContainer.hidden, "Test 2c, Activated plugin in a private window should not have visible buttons");
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.secondaryButton.hidden, true,
+     "Test 2c, Activated plugin in a private window should not have visible 'Block' button.");
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.checkbox.hidden, true,
+     "Test 2c, Activated plugin in a private window should not have visible 'Remember' checkbox.");
 
   clearAllPluginPermissions();
   gPrivateWindow.close();
@@ -144,12 +143,12 @@ add_task(async function test3a() {
     ok(!objLoadingContent.activated, "Test 3a, Plugin should not be activated");
   });
 
-  // Simulate clicking the "Allow Always" button.
+  // Simulate clicking the "Allow" button.
   let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                    "Shown");
   popupNotification.reshow();
   await promiseShown;
-  PopupNotifications.panel.firstChild._secondaryButton.click();
+  PopupNotifications.panel.firstChild.button.click();
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
@@ -172,8 +171,10 @@ add_task(async function test3c() {
                                                    "Shown");
   popupNotification.reshow();
   await promiseShown;
-  let buttonContainer = gPrivateWindow.PopupNotifications.panel.firstChild._buttonContainer;
-  ok(buttonContainer.hidden, "Test 3c, Activated plugin in a private window should not have visible buttons");
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.secondaryButton.hidden, true,
+     "Test 2c, Activated plugin in a private window should not have visible 'Block' button.");
+  is(gPrivateWindow.PopupNotifications.panel.firstChild.checkbox.hidden, true,
+     "Test 2c, Activated plugin in a private window should not have visible 'Remember' checkbox.");
 
   BrowserTestUtils.loadURI(gPrivateBrowser, gHttpTestRoot + "plugin_two_types.html");
   await BrowserTestUtils.browserLoaded(gPrivateBrowser);

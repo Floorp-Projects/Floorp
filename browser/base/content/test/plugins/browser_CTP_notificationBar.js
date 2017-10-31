@@ -82,7 +82,7 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+    Assert.ok(!overlay || !overlay.classList.contains("visible"),
       "Test 3b, overlay should be hidden.");
   });
 });
@@ -109,7 +109,7 @@ add_task(async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+    Assert.ok(!overlay || !overlay.classList.contains("visible"),
       "Test 4b, overlay should be hidden.");
   });
 });
@@ -142,7 +142,7 @@ add_task(async function() {
   // simulate "always allow"
   await promiseForNotificationShown(notification);
 
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  PopupNotifications.panel.firstChild.button.click();
 
   let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   await promiseForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null);
