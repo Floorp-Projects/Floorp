@@ -628,7 +628,6 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
     mInClose(false),
     mHavePendingClose(false),
     mHadOriginalOpener(false),
-    mOriginalOpenerWasSecureContext(false),
     mIsPopupSpam(false),
     mBlockScriptedClosingFlag(false),
     mWasOffline(false),
@@ -1561,15 +1560,7 @@ nsGlobalWindowOuter::ComputeIsSecureContext(nsIDocument* aDocument, SecureContex
     MOZ_ASSERT(parentWin ==
                nsGlobalWindowInner::Cast(parentOuterWin->GetCurrentInnerWindow()),
                "Creator window mismatch while setting Secure Context state");
-    if (aFlags != SecureContextFlags::eIgnoreOpener) {
-      hadNonSecureContextCreator = !parentWin->IsSecureContext();
-    } else {
-      hadNonSecureContextCreator = !parentWin->IsSecureContextIfOpenerIgnored();
-    }
-  } else if (mHadOriginalOpener) {
-    if (aFlags != SecureContextFlags::eIgnoreOpener) {
-      hadNonSecureContextCreator = !mOriginalOpenerWasSecureContext;
-    }
+    hadNonSecureContextCreator = !parentWin->IsSecureContext();
   }
 
   if (hadNonSecureContextCreator) {
@@ -1781,8 +1772,6 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
       NS_ASSERTION(NS_SUCCEEDED(rv) && newInnerGlobal &&
                    newInnerWindow->GetWrapperPreserveColor() == newInnerGlobal,
                    "Failed to get script global");
-      newInnerWindow->mIsSecureContextIfOpenerIgnored =
-        ComputeIsSecureContext(aDocument, SecureContextFlags::eIgnoreOpener);
 
       mCreatingInnerWindow = false;
       createdInnerWindow = true;
@@ -2243,8 +2232,6 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
     MOZ_ASSERT(!mHadOriginalOpener,
                "Probably too late to call ComputeIsSecureContext again");
     mHadOriginalOpener = true;
-    mOriginalOpenerWasSecureContext =
-      aOpener->GetCurrentInnerWindow()->IsSecureContext();
   }
 
 #ifdef DEBUG
