@@ -1,3 +1,4 @@
+// |reftest| skip-if(xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,23 +19,16 @@ function test()
 {
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  if (typeof window != 'undefined')
-  {
-    gDelayTestDriverEnd = true;
-    document.write('<span id="r"> </span>' +
-                   '<script>' +
-                   'f = function(){};' +
-                   'f.prototype = document.getElementById("r").childNodes;' +
-                   'j = new f();' +
-                   'j[0] = null;' +
-                   '</script>');
-    window.addEventListener('load', crash, false);
-  }
-  else
-  {
-    reportCompare(expect, actual, summary);
-  }
+
+  gDelayTestDriverEnd = true;
+  document.write('<span id="r"> </span>' +
+                 '<script>' +
+                 'f = function(){};' +
+                 'f.prototype = document.getElementById("r").childNodes;' +
+                 'j = new f();' +
+                 'j[0] = null;' +
+                 '</script>');
+  window.addEventListener('load', crash, false);
 }
 
 function crash()
