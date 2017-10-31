@@ -123,6 +123,7 @@ protected:
   float mEyeHeight;
 
   bool UpdateConstantBuffers();
+  void UpdateEyeParameters(gfx::Matrix4x4* aHeadToEyeTransforms = nullptr);
 
   struct Vertex
   {

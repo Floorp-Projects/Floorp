@@ -14462,6 +14462,12 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     aTriggeringPrincipal ? aTriggeringPrincipal
                          : aContent->NodePrincipal();
 
+  // Link click (or form submission) can be triggered inside an onload handler,
+  // and we don't want to add history entry in this case.
+  bool inOnLoadHandler = false;
+  GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+  uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
+
   nsresult rv = InternalLoad(clonedURI,                 // New URI
                              nullptr,                   // Original URI
                              Nothing(),                 // Let the protocol handler assign it
@@ -14477,7 +14483,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              aPostDataStream,           // Post data stream
                              aPostDataStreamLength,     // Post data stream length
                              aHeadersDataStream,        // Headers stream
-                             LOAD_LINK,                 // Load type
+                             loadType,                  // Load type
                              nullptr,                   // No SHEntry
                              true,                      // first party site
                              VoidString(),              // No srcdoc

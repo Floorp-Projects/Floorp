@@ -145,6 +145,8 @@ struct VRHMDSensorState {
   // These members will only change with inputFrameID:
   float orientation[4];
   float position[3];
+  float leftViewMatrix[16];
+  float rightViewMatrix[16];
   float angularVelocity[3];
   float angularAcceleration[3];
   float linearVelocity[3];
@@ -162,6 +164,7 @@ struct VRHMDSensorState {
   bool operator!=(const VRHMDSensorState& other) const {
     return !(*this == other);
   }
+  void CalcViewMatrices(const gfx::Matrix4x4* aHeadToEyeTransforms);
 };
 
 // The maximum number of frames of latency that we would expect before we

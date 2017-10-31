@@ -69,6 +69,7 @@ protected:
   bool mIsHmdPresent;
 
   void UpdateStageParameters();
+  void UpdateEyeParameters(gfx::Matrix4x4* aHeadToEyeTransforms = nullptr);
   void PollEvents();
   bool SubmitFrame(void* aTextureHandle,
                    ::vr::ETextureType aTextureType,

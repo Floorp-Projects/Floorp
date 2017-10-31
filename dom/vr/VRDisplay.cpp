@@ -903,29 +903,6 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
   }
   mVRState.timestamp = aState.timestamp + mTimeStampOffset;
 
-  gfx::Quaternion qt;
-  if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
-    qt.x = mVRState.orientation[0];
-    qt.y = mVRState.orientation[1];
-    qt.z = mVRState.orientation[2];
-    qt.w = mVRState.orientation[3];
-  }
-  gfx::Point3D pos;
-  if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
-    pos.x = -mVRState.position[0];
-    pos.y = -mVRState.position[1];
-    pos.z = -mVRState.position[2];
-  }
-  gfx::Matrix4x4 matHead;
-  matHead.SetRotationFromQuaternion(qt);
-  matHead.PreTranslate(pos);
-
-  mLeftView = matHead;
-  mLeftView.PostTranslate(-aInfo.mEyeTranslation[gfx::VRDisplayInfo::Eye_Left]);
-
-  mRightView = matHead;
-  mRightView.PostTranslate(-aInfo.mEyeTranslation[gfx::VRDisplayInfo::Eye_Right]);
-
   // Avoid division by zero within ConstructProjectionMatrix
   const float kEpsilon = 0.00001f;
   if (fabs(aDepthFar - aDepthNear) < kEpsilon) {
@@ -936,6 +913,8 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
   mLeftProjection = leftFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
   const gfx::VRFieldOfView rightFOV = aInfo.mEyeFOV[gfx::VRDisplayInfo::Eye_Right];
   mRightProjection = rightFOV.ConstructProjectionMatrix(aDepthNear, aDepthFar, true);
+  memcpy(mLeftView.components, aState.leftViewMatrix, sizeof(aState.leftViewMatrix));
+  memcpy(mRightView.components, aState.rightViewMatrix, sizeof(aState.rightViewMatrix));
 }
 
 VRFrameInfo::VRFrameInfo()

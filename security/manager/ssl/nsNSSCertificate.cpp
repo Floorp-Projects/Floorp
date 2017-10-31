@@ -1467,12 +1467,12 @@ nsNSSCertList::SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
   nsresult rv = ForEachCertificateInChain(
     [&aRoot, &aIntermediates, &aEndEntity] (nsCOMPtr<nsIX509Cert> aCert,
                                             bool hasMore, bool& aContinue) {
-      if (!aRoot) {
-        // This is the root
-        aRoot = aCert;
-      } else if (!hasMore) {
+      if (!aEndEntity) {
         // This is the end entity
         aEndEntity = aCert;
+      } else if (!hasMore) {
+        // This is the root
+        aRoot = aCert;
       } else {
         // One of (potentially many) intermediates
         if (NS_FAILED(aIntermediates->AddCert(aCert))) {

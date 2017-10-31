@@ -421,7 +421,7 @@
                             mainViewId="pageActionPanelMainView"
                             viewCacheId="appMenu-viewCache">
         <panelview id="pageActionPanelMainView"
-                   context="pageActionPanelContextMenu"
+                   context="pageActionContextMenu"
                    oncontextmenu="BrowserPageActions.onContextMenu(event);"
                    class="PanelUI-subView">
           <vbox class="panel-subview-body"/>
@@ -444,9 +444,9 @@
       <label id="pageActionFeedbackMessage"/>
     </panel>
 
-    <menupopup id="pageActionPanelContextMenu"
+    <menupopup id="pageActionContextMenu"
                onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
-      <menuitem id="pageActionPanelContextMenu-toggleUrlbar"
+      <menuitem id="pageActionContextMenu-toggleUrlbar"
                 add-label="&pageAction.addToUrlbar.label;"
                 remove-label="&pageAction.removeFromUrlbar.label;"
                 label="&pageAction.addToUrlbar.label;"
@@ -859,7 +859,9 @@
                 <label id="switchtab" class="urlbar-display urlbar-display-switchtab" value="&urlbar.switchToTab.label;"/>
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
-              <hbox id="page-action-buttons">
+              <hbox id="page-action-buttons"
+                    context="pageActionContextMenu"
+                    oncontextmenu="BrowserPageActions.onContextMenu(event);">
                 <hbox id="userContext-icons" hidden="true">
                   <label id="userContext-label"/>
                   <image id="userContext-indicator"/>
@@ -882,8 +884,6 @@
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
-                      context="pageActionPanelContextMenu"
-                      oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('bookmark'), event, this);">
                   <image id="star-button"
                          class="urlbar-icon"

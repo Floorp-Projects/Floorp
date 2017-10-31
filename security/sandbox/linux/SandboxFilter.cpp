@@ -539,6 +539,40 @@ private:
     return ConvertError(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));
   }
 
+  static intptr_t StatFsTrap(ArgsRef aArgs, void* aux) {
+    // Warning: the kernel interface is not the C interface.  The
+    // structs are different (<asm/statfs.h> vs. <sys/statfs.h>), and
+    // the statfs64 version takes an additional size parameter.
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    int fd = open(path, O_RDONLY | O_LARGEFILE);
+    if (fd < 0) {
+      return -errno;
+    }
+
+    intptr_t rv;
+    switch (aArgs.nr) {
+    case __NR_statfs: {
+      auto buf = reinterpret_cast<void*>(aArgs.args[1]);
+      rv = DoSyscall(__NR_fstatfs, fd, buf);
+      break;
+    }
+#ifdef __NR_statfs64
+    case __NR_statfs64: {
+      auto sz = static_cast<size_t>(aArgs.args[1]);
+      auto buf = reinterpret_cast<void*>(aArgs.args[2]);
+      rv = DoSyscall(__NR_fstatfs64, fd, sz, buf);
+      break;
+    }
+#endif
+    default:
+      MOZ_ASSERT(false);
+      rv = -ENOSYS;
+    }
+
+    close(fd);
+    return rv;
+  }
+
 public:
   explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                                 const std::vector<int>& aSyscallWhitelist)
@@ -691,12 +725,13 @@ public:
     case __NR_getppid:
       return Trap(GetPPidTrap, nullptr);
 
+    CASES_FOR_statfs:
+      return Trap(StatFsTrap, nullptr);
+
       // Filesystem syscalls that need more work to determine who's
       // using them, if they need to be, and what we intend to about it.
     case __NR_getcwd:
-    CASES_FOR_statfs:
     CASES_FOR_fstatfs:
-    case __NR_quotactl:
     CASES_FOR_fchown:
     case __NR_fchmod:
     case __NR_flock:
@@ -784,7 +819,12 @@ public:
               If((flags & ~allowed_flags) == 0, Allow())
               .Else(InvalidSyscall()))
         .Case(F_DUPFD_CLOEXEC, Allow())
-        // Pulseaudio uses F_SETLKW.
+        // Nvidia GL and fontconfig (newer versions) use fcntl file locking.
+        .Case(F_SETLK, Allow())
+#ifdef F_SETLK64
+        .Case(F_SETLK64, Allow())
+#endif
+        // Pulseaudio uses F_SETLKW, as does fontconfig.
         .Case(F_SETLKW, Allow())
 #ifdef F_SETLKW64
         .Case(F_SETLKW64, Allow())

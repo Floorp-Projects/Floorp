@@ -59,14 +59,24 @@ def make_beetmover_checksums_description(config, jobs):
         treeherder.setdefault('kind', 'build')
 
         label = job['label']
+        build_platform = attributes.get('build_platform')
+
         description = (
             "Beetmover submission of checksums for locale '{locale}' for build '"
             "{build_platform}/{build_type}'".format(
                 locale=attributes.get('locale', 'en-US'),
-                build_platform=attributes.get('build_platform'),
+                build_platform=build_platform,
                 build_type=attributes.get('build_type')
             )
         )
+
+        extra = {}
+        if build_platform.startswith("android"):
+            extra['product'] = 'fennec'
+        elif 'devedition' in build_platform:
+            extra['product'] = 'devedition'
+        else:
+            extra['product'] = 'firefox'
 
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
@@ -92,6 +102,7 @@ def make_beetmover_checksums_description(config, jobs):
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
+            'extra': extra,
         }
 
         yield task

@@ -684,10 +684,6 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "inconsistent property flags");
 
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  MOZ_ASSERT(effects);
-
-  bool sentAnimations = false;
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
     dom::Animation* anim = compositorAnimations[animIdx];
@@ -711,7 +707,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     // !important rules, we don't want to send them to the compositor.
     MOZ_ASSERT(anim->CascadeLevel() !=
                  EffectCompositor::CascadeLevel::Animations ||
-               !effects->PropertiesWithImportantRules()
+               !EffectSet::GetEffectSet(aFrame)->PropertiesWithImportantRules()
                   .HasProperty(aProperty),
                "GetEffectiveAnimationOfProperty already tested the property "
                "is not overridden by !important rules");
@@ -734,12 +730,6 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
 
     AddAnimationForProperty(aFrame, *property, anim, aAnimationInfo, data, aPending);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
-    sentAnimations = true;
-  }
-
-  if (sentAnimations && aProperty == eCSSProperty_transform) {
-    TimeStamp now = aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
-    effects->UpdateLastTransformSyncTime(now);
   }
 }
 

@@ -37,7 +37,7 @@ const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
 const asyncStorage = require("devtools/shared/async-storage");
-const { addDevice, removeDevice } = require("devtools/client/shared/devices");
+const { addDevice, removeDevice, removeLocalDevices } = require("devtools/client/shared/devices");
 
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
@@ -52,12 +52,12 @@ Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref("devtools.devices.url",
   TEST_URI_ROOT + "devices.json");
 
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   flags.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-  asyncStorage.removeItem("devtools.devices.url_cache");
-  asyncStorage.removeItem("devtools.devices.local");
+  await asyncStorage.removeItem("devtools.devices.url_cache");
+  await removeLocalDevices();
 });
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);

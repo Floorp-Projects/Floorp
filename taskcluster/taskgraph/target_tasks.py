@@ -42,6 +42,50 @@ def filter_upload_symbols(task, parameters):
         parameters.get('project') in ('mozilla-beta', 'mozilla-release')
 
 
+def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=False):
+    if not standard_filter(task, parameters):
+        return False
+    if ignore_kinds is None:
+        ignore_kinds = [
+            'balrog',
+            'beetmover', 'beetmover-checksums', 'beetmover-l10n',
+            'beetmover-repackage', 'beetmover-repackage-signing',
+            'checksums-signing',
+            'nightly-l10n', 'nightly-l10n-signing',
+            'push-apk', 'push-apk-breakpoint',
+            'repackage-l10n',
+        ]
+    platform = task.attributes.get('build_platform')
+    if platform in (
+            # On beta, Nightly builds are already PGOs
+            'linux-pgo', 'linux64-pgo',
+            'win32-pgo', 'win64-pgo',
+            ):
+        return False
+    if str(platform).startswith('android') and 'nightly' in str(platform):
+        return False
+
+    if platform in (
+            'linux', 'linux64',
+            'macosx64',
+            'win32', 'win64',
+            ):
+        if task.attributes['build_type'] == 'opt' and \
+           task.attributes.get('unittest_suite') != 'talos':
+            return False
+
+    # skip l10n, beetmover, balrog
+    if task.kind in ignore_kinds:
+        return False
+
+    # No l10n repacks per push. They may be triggered by kinds which depend
+    # on l10n builds/repacks. For instance: "repackage-signing"
+    if not allow_l10n and task.attributes.get('locale', '') != '':
+        return False
+
+    return True
+
+
 def standard_filter(task, parameters):
     return all(
         filter_func(task, parameters) for filter_func in
@@ -240,58 +284,94 @@ def target_tasks_nightly_linux(full_task_graph, parameters):
 @_target_task('mozilla_beta_tasks')
 def target_tasks_mozilla_beta(full_task_graph, parameters):
     """Select the set of tasks required for a promotable beta or release build
-    of linux, plus android CI. The candidates build process involves a pipeline
+    of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
 
-    def filter(task):
-        if not standard_filter(task, parameters):
-            return False
-        platform = task.attributes.get('build_platform')
-        if platform in (
-                # On beta, Nightly builds are already PGOs
-                'linux-pgo', 'linux64-pgo',
-                'win32-pgo', 'win64-pgo',
-                'android-api-16-nightly', 'android-x86-nightly'
-                ):
-            return False
-
-        if platform in (
-                'linux', 'linux64',
-                'macosx64',
-                'win32', 'win64',
-                ):
-            if task.attributes['build_type'] == 'opt' and \
-               task.attributes.get('unittest_suite') != 'talos':
-                return False
-
-        # skip l10n, beetmover, balrog
-        if task.kind in [
-            'balrog',
-            'beetmover', 'beetmover-checksums', 'beetmover-l10n',
-            'beetmover-repackage', 'beetmover-repackage-signing',
-            'checksums-signing',
-            'nightly-l10n', 'nightly-l10n-signing',
-            'push-apk', 'push-apk-breakpoint',
-            'repackage-l10n',
-        ]:
-            return False
-
-        # No l10n repacks per push. They may be triggered by kinds which depend
-        # on l10n builds/repacks. For instance: "repackage-signing"
-        if task.attributes.get('locale', '') != '':
-            return False
-
-        return True
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+    return [l for l, t in full_task_graph.tasks.iteritems() if
+            filter_beta_release_tasks(t, parameters)]
 
 
 @_target_task('mozilla_release_tasks')
 def target_tasks_mozilla_release(full_task_graph, parameters):
     """Select the set of tasks required for a promotable beta or release build
-    of linux, plus android CI. The candidates build process involves a pipeline
+    of desktop, plus android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
-    return target_tasks_mozilla_beta(full_task_graph, parameters)
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if
+            filter_beta_release_tasks(t, parameters)]
+
+
+@_target_task('maple_desktop_promotion')
+@_target_task('mozilla-beta_desktop_promotion')
+@_target_task('mozilla-release_desktop_promotion')
+def target_tasks_mozilla_beta_desktop_promotion(full_task_graph, parameters):
+    """Select the superset of tasks required to promote a beta or release build
+    of desktop. This should include all non-android mozilla_beta tasks, plus
+    l10n, beetmover, balrog, etc."""
+
+    beta_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
+                  filter_beta_release_tasks(t, parameters,
+                                            ignore_kinds=[],
+                                            allow_l10n=True)]
+    allow_kinds = [
+        'build', 'build-signing', 'repackage', 'repackage-signing',
+        'nightly-l10n', 'nightly-l10n-signing', 'repackage-l10n',
+    ]
+
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+
+        # Android has its own promotion.
+        if platform and 'android' in platform:
+            return False
+
+        if task.kind not in allow_kinds:
+            return False
+
+        # Allow for beta_tasks; these will get optimized out to point to
+        # the previous graph using ``previous_graph_ids`` and
+        # ``previous_graph_kinds``.
+        if task.label in beta_tasks:
+            return True
+
+        # TODO: partner repacks
+        # TODO: source task
+        # TODO: funsize, all but balrog submission
+        # TODO: bbb update verify
+        # TODO: tc update verify
+        # TODO: beetmover push-to-candidates
+        # TODO: binary transparency
+        # TODO: bouncer sub
+        # TODO: snap
+        # TODO: recompression tasks
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('publish_firefox')
+def target_tasks_publish_firefox(full_task_graph, parameters):
+    """Select the set of tasks required to publish a candidates build of firefox.
+    Previous build deps will be optimized out via action task."""
+    filtered_for_candidates = target_tasks_mozilla_beta_desktop_promotion(
+        full_task_graph, parameters
+    )
+
+    def filter(task):
+        # Include promotion tasks; these will be optimized out
+        if task.label in filtered_for_candidates:
+            return True
+        # TODO: add beetmover push-to-releases
+        # TODO: tagging / version bumping
+        # TODO: publish to balrog
+        # TODO: funsize balrog submission
+        # TODO: recompression push-to-releases + balrog
+        # TODO: final verify
+        # TODO: uptake monitoring
+        # TODO: bouncer aliases
+        # TODO: checksums
+        # TODO: shipit mark as shipped
+
+    return [l for l, t in full_task_graph.iteritems() if filter(t)]
 
 
 @_target_task('candidates_fennec')
@@ -306,10 +386,52 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
         # Don't ship single locale fennec anymore - Bug 1408083
         if attr("locale") or attr("chunk_locales"):
             return False
-        if task.kind not in ['balrog']:
-            return task.attributes.get('nightly', False)
+        if task.label in filtered_for_project:
+            if task.kind not in ('balrog', 'push-apk', 'push-apk-breakpoint'):
+                if task.attributes.get('nightly'):
+                    return True
+        if task.task['payload'].get('properties', {}).get('product') == 'fennec':
+            if task.kind in ('release-bouncer-sub',
+                             ):
+                return True
+        if task.task.get('extra', {}).get('product') == 'fennec':
+            if task.kind in ('release-notify-promote',
+                             ):
+                return True
 
-    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
+
+
+@_target_task('publish_fennec')
+def target_tasks_publish_fennec(full_task_graph, parameters):
+    """Select the set of tasks required to publish a candidates build of fennec.
+    Previous build deps will be optimized out via action task."""
+    filtered_for_candidates = target_tasks_candidates_fennec(full_task_graph, parameters)
+
+    def filter(task):
+        # Include candidates build tasks; these will be optimized out
+        if task.label in filtered_for_candidates:
+            return True
+        if task.task['payload'].get('properties', {}).get('product') == 'fennec':
+            if task.kind in ('release-mark-as-shipped',
+                             'release-bouncer-aliases',
+                             'release-uptake-monitoring',
+                             'release-version-bump',
+                             ):
+                return True
+        if task.task.get('extra', {}).get('product') == 'fennec':
+            if task.kind in ('release-notify-publish',
+                             ):
+                return True
+
+        if task.task['payload'].get('product') == 'fennec':
+            if task.kind in ('beetmover-cdns', ):
+                return True
+
+        if task.kind in ('push-apk', 'push-apk-breakpoint'):
+            return True
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
 
 
 @_target_task('pine_tasks')
