@@ -26,20 +26,21 @@ var TITLE   = "Math.random()";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 for ( var item = 0; item < 100; item++ ) {
+  var actual = "pass";
+
+  var result = Math.random();
+  if ( ! ( result >= 0) ) {
+    actual = "fail";
+  }
+  if ( ! (result < 1) ) {
+    actual = "fail";
+  }
+
   var testcase = new TestCase( SECTION, 
 			       "Math.random()",   
 			       "pass",   
-			       null );
-  testcase.reason = Math.random();
-  testcase.actual = "pass";
-
-  if ( ! ( testcase.reason >= 0) ) {
-    testcase.actual = "fail";
-  }
-
-  if ( ! (testcase.reason < 1) ) {
-    testcase.actual = "fail";
-  }
+			       actual );
+  testcase.reason = result;
 }
 
 test();
