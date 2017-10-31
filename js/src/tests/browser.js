@@ -318,7 +318,7 @@ window.onerror = function (msg, page, line, column, error) {
 
   reportFailure(msg);
 
-  optionsReset();
+  optionsClear();
 };
 
 function gc()
@@ -384,10 +384,6 @@ function optionsInit() {
     strict_mode: true
   };
 
-  // record initial values to support resetting
-  // options to their initial values
-  options.initvalues = {};
-
   for (var optionName in options.currvalues)
   {
     var propName = optionName;
@@ -399,10 +395,6 @@ function optionsInit() {
     if (!SpecialPowers.Cu[propName])
     {
       delete options.currvalues[optionName];
-    }
-    else
-    {
-      options.initvalues[optionName] = true;
     }
   }
 }
@@ -622,12 +614,9 @@ function jsTestDriverEnd()
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
 
-  try
-  {
-    optionsReset();
-  }
-  catch(ex)
-  {
+  try {
+    optionsClear();
+  } catch(ex) {
     dump('jsTestDriverEnd ' + ex);
   }
 

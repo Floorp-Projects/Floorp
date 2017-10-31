@@ -570,7 +570,7 @@
     }
 
     try {
-      optionsReset();
+      optionsClear();
     } catch(ex) {
       dump('jsTestDriverEnd ' + ex);
     }
@@ -619,24 +619,6 @@ var gFailureExpected = false;
 var DESCRIPTION;
 var EXPECTED;
 
-function optionsInit() {
-
-  // record initial values to support resetting
-  // options to their initial values
-  options.initvalues  = {};
-
-  var optionNames = options().split(',');
-
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName)
-    {
-      options.initvalues[optionName] = '';
-    }
-  }
-}
-
 function optionsClear() {
 
   // turn off current settings
@@ -651,29 +633,7 @@ function optionsClear() {
   }
 }
 
-function optionsReset() {
-
-  try
-  {
-    optionsClear();
-
-    // turn on initial settings
-    for (var optionName in options.initvalues)
-    {
-      if (!options.hasOwnProperty(optionName))
-        continue;
-      options(optionName);
-    }
-  }
-  catch(ex)
-  {
-    print('optionsReset: caught ' + ex);
-  }
-
-}
-
 if (typeof options == 'function')
 {
-  optionsInit();
   optionsClear();
 }
