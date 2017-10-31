@@ -111,12 +111,14 @@ class PrattParser(with_metaclass(PrattParserMeta, object)):
             mo = self.token_re.match(remainder)
             if not mo:
                 if remainder:
-                    raise SyntaxError("Unexpected input: '{}'".format(remainder))
+                    raise SyntaxError(
+                        "Unexpected input: '{}'".format(remainder))
                 break
             offset += mo.end()
 
             # figure out which token matched (note that idx is 0-based)
-            indexes = list(filter(lambda x: x[1] is not None, enumerate(mo.groups())))
+            indexes = list(
+                filter(lambda x: x[1] is not None, enumerate(mo.groups())))
             if indexes:
                 idx = indexes[0][0]
                 yield Token(
