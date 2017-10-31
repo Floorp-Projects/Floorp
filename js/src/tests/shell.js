@@ -616,11 +616,6 @@
 var gDelayTestDriverEnd = false;
 var gFailureExpected = false;
 
-/*
- * constant strings
- */
-var GLOBAL = this + '';
-
 var DESCRIPTION;
 var EXPECTED;
 

@@ -275,7 +275,6 @@
 
 
 var gPageCompleted;
-var GLOBAL = this + '';
 
 // Variables local to jstests harness.
 var jstestsOptions;
