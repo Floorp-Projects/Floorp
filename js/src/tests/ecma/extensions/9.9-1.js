@@ -23,7 +23,6 @@
 */
 
 var VERSION = "ECMA_1";
-startTest();
 var SECTION = "9.9-1";
 
 writeHeaderToLog( SECTION + " Type Conversion: ToObject" );

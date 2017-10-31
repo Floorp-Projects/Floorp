@@ -23,7 +23,6 @@
 */
 var SECTION = "9.2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "ToBoolean";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

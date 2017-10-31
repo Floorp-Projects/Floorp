@@ -43,7 +43,6 @@ var SECTION = "String/match-002.js";
 var VERSION = "ECMA_2";
 var TITLE   = "String.prototype.match( regexp )";
 
-startTest();
 
 // the regexp argument is not a RegExp object
 // this is not a string object

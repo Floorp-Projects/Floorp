@@ -18,7 +18,6 @@
 
 var SECTION = "JS_1.2";
 var VERSION = "JS_1.2";
-startTest();
 var TITLE   = "The variable statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

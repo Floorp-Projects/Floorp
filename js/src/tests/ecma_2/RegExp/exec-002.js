@@ -18,7 +18,6 @@ var SECTION = "RegExp/exec-002";
 var VERSION = "ECMA_2";
 var TITLE   = "RegExp.prototype.exec(string)";
 
-startTest();
 
 /*
  * for each test case, verify:

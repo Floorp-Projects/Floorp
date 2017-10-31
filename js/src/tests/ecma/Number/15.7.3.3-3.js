@@ -17,7 +17,6 @@
 */
 var SECTION = "15.7.3.3-3";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Number.MIN_VALUE:  ReadOnly Attribute";
 
 writeHeaderToLog( SECTION + " "+TITLE );

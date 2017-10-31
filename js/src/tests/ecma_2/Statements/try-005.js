@@ -20,7 +20,6 @@ var SECTION = "try-005";
 var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 TryToCatch( "Math.PI", Math.PI );

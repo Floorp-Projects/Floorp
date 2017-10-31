@@ -17,7 +17,6 @@
 
 var SECTION = "11.4.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The delete operator";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -16,7 +16,6 @@ var SECTION = "expression-011";
 var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var BOOLEAN  = true;

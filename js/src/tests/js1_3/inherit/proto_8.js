@@ -25,7 +25,6 @@ var SECTION = "proto_8";
 var VERSION = "JS1_3";
 var TITLE   = "Adding Properties to the Prototype Object";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {

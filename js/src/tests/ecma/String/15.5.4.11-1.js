@@ -27,7 +27,6 @@
 
 var SECTION = "15.5.4.11-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.toLowerCase()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

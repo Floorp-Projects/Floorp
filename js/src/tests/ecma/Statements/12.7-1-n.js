@@ -14,7 +14,6 @@
 */
 var SECTION = "12.7.1-n";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The continue statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

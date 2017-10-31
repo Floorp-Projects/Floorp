@@ -19,7 +19,6 @@ var SECTION = "label-003";
 var VERSION = "ECMA_2";
 var TITLE   = "Labeled statements";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 LabelTest(0, 0);

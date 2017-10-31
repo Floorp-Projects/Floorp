@@ -20,7 +20,6 @@ var VERSION = "JS1_4";
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 
-startTest();
 
 // go through all Native Function objects, methods, and properties and get their typeof.
 

@@ -21,7 +21,6 @@
 */
 var SECTION = "15.8.2.3";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.asin()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

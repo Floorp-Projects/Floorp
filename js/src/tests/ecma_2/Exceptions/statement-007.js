@@ -17,7 +17,6 @@ var SECTION = "statement-007";
 var VERSION = "JS1_4";
 var TITLE   = "The continue statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

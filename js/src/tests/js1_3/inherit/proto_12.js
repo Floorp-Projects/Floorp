@@ -24,7 +24,6 @@ var SECTION = "proto_12";
 var VERSION = "JS1_3";
 var TITLE   = "No Multiple Inheritance";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {

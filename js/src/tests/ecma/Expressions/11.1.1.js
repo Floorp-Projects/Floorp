@@ -16,7 +16,6 @@
 */
 var SECTION = "11.1.1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The this keyword");
 

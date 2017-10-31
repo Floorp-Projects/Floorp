@@ -25,7 +25,6 @@
 */
 var SECTION = "15.4-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Array Objects";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

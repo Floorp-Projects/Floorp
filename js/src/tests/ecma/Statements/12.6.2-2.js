@@ -18,7 +18,6 @@
 */
 var SECTION = "12.6.2-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

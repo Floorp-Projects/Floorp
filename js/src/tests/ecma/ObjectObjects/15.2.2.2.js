@@ -28,7 +28,6 @@
 */
 var SECTION = "15.2.2.2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "new Object()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

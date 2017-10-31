@@ -19,7 +19,6 @@ var SECTION = "try-007";
 var VERSION = "ECMA_2";
 var TITLE   = "The try statement:  for-in";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /**

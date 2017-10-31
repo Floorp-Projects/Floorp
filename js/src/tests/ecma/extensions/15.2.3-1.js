@@ -21,7 +21,6 @@
 */
 var SECTION = "15.2.3";
 var VERSION = "ECMA_2";
-startTest();
 
 writeHeaderToLog( SECTION + " Properties of the Object Constructor");
 

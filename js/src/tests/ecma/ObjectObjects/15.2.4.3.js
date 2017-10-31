@@ -22,7 +22,6 @@
 */
 var SECTION = "15.2.4.3";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Object.prototype.valueOf()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

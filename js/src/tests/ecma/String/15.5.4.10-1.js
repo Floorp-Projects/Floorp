@@ -46,7 +46,6 @@
 
 var SECTION = "15.5.4.10-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.substring( start, end )";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

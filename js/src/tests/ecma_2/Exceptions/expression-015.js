@@ -16,7 +16,6 @@ var SECTION = "expression-015";
 var VERSION = "JS1_4";
 var TITLE   = "Function Calls";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

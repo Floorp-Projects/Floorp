@@ -27,7 +27,6 @@ var SECTION = "lexical-012";
 var VERSION = "JS1_4";
 var TITLE   = "Future Reserved Words";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

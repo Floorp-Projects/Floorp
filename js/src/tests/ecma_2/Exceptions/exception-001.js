@@ -18,7 +18,6 @@ var SECTION = "exception-001";
 var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions:  CallError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 Call_1();

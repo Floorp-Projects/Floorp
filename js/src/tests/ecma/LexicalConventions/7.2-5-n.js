@@ -26,7 +26,6 @@
 */
 var SECTION = "7.2-5";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

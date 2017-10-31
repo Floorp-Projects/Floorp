@@ -47,7 +47,6 @@
 */
 var SECTION = "11.6.1-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The Addition operator ( + )");
 

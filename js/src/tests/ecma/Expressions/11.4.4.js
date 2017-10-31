@@ -24,7 +24,6 @@
 */
 var SECTION = "11.4.4";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Prefix increment operator");
 

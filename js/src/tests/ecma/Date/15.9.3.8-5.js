@@ -35,7 +35,6 @@
 */
 
 var VERSION = "ECMA_1";
-startTest();
 var SECTION = "15.9.3.8";
 var TYPEOF  = "object";
 
@@ -62,7 +61,6 @@ var MS          = 16;
 var TITLE = "Date constructor:  new Date( value )";
 var SECTION = "15.9.3.8";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION +" " + TITLE );
 

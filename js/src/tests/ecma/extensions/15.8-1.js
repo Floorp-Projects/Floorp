@@ -32,7 +32,6 @@
 
 var SECTION = "15.8-1";
 var VERSION = "ECMA_2";
-startTest();
 var TITLE   = "The Math Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

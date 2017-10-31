@@ -18,7 +18,6 @@ var SECTION = "lexical-003.js";
 var VERSION = "JS1_4";
 var TITLE   = "Comments";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

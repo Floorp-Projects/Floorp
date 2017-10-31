@@ -18,7 +18,6 @@ var SECTION = "";
 var VERSION = "ECMA_2";
 var TITLE   = "The Call Constructor";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var b = new Boolean();

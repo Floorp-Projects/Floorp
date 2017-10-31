@@ -16,7 +16,6 @@ var SECTION = "lexical-049";
 var VERSION = "JS1_4";
 var TITLE   = "The Rules of Automatic Semicolon Insertion";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

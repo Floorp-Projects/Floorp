@@ -26,7 +26,6 @@
 */
 var SECTION = "15.9.5.27-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Date.prototype.setUTCSeconds(sec [,ms] )");
 

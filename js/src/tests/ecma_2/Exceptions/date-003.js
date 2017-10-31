@@ -23,7 +23,6 @@ var SECTION = "date-003";
 var VERSION = "JS1_4";
 var TITLE   = "Date.prototype.valueOf";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

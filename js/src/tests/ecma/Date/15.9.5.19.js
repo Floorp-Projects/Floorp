@@ -19,7 +19,6 @@
 
 var SECTION = "15.9.5.19";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Date.prototype.getUTCSeconds()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

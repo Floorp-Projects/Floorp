@@ -14,7 +14,6 @@
 */
 var SECTION = "11.8.1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The less-than-or-equal operator ( <= )");
 

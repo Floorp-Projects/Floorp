@@ -30,7 +30,6 @@ var SECTION = "instanceof-002";
 var VERSION = "ECMA_2";
 var TITLE   = "Determining Instance Relationships";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object, constructor ) {

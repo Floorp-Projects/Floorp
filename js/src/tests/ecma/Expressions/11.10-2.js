@@ -28,7 +28,6 @@
 */
 var SECTION = "11.10-2";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Binary Bitwise Operators:  |");
 

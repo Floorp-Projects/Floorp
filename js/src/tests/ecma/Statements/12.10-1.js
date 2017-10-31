@@ -38,7 +38,6 @@
 
 var SECTION = "12.10-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The with statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

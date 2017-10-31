@@ -66,7 +66,6 @@
 
 var SECTION = "9.8.1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " ToString applied to the Number type");
 

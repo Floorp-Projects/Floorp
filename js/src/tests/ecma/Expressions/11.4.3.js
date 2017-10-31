@@ -25,7 +25,6 @@
 var SECTION = "11.4.3";
 
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = " The typeof operator";
 writeHeaderToLog( SECTION + " "+ TITLE);
 

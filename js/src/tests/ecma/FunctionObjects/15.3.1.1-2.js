@@ -23,7 +23,6 @@
 */
 var SECTION = "15.3.1.1-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The Function Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
