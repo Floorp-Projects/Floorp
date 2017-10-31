@@ -414,6 +414,7 @@
   <string name="pref_compact_tabs_summary">&pref_compact_tabs_summary2;</string>
 
   <string name="page_removed">&page_removed;</string>
+  <string name="folder_removed">&folder_removed;</string>
 
   <string name="bookmark_edit_title">&bookmark_edit_title;</string>
   <string name="bookmark_edit_folder_title">&bookmark_edit_folder_title;</string>

@@ -539,6 +539,7 @@
      any page is removed frome about:home. This includes pages that are in history,
      bookmarks, or reading list. -->
 <!ENTITY page_removed "Page removed">
+<!ENTITY folder_removed "Folder removed">
 
 <!ENTITY bookmark_edit_title "Edit Bookmark">
 <!ENTITY bookmark_edit_folder_title "Edit Folder">
