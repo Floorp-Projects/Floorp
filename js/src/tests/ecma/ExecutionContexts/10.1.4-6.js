@@ -44,19 +44,15 @@ startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-
-var testcase = new TestCase( "SECTION",
-			     "with MyObject, eval should be [object Global].eval " );
-
 var MYOBJECT = new MyObject();
 var INPUT = 2;
-testcase.description += ( INPUT +"" );
 
 with ( MYOBJECT ) {
   ;
 }
-testcase.actual = eval( INPUT );
-testcase.expect = INPUT;
+
+new TestCase("SECTION", "with MyObject, eval should be [object Global].eval (" + INPUT + ")",
+             INPUT, eval( INPUT ));
 
 test();
 
