@@ -646,12 +646,6 @@ function jsTestDriverEnd()
   }
   else
   {
-    var testCases = getTestCases();
-    for (var i = 0; i < testCases.length; i++)
-    {
-      testCases[i].dump();
-    }
-
     // tell reftest the test is complete.
     document.documentElement.className = '';
     // tell Spider page is complete
