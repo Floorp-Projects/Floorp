@@ -37,7 +37,6 @@ class EventTarget;
 
 class nsWebBrowser;
 class ChromeTooltipListener;
-class ChromeContextMenuListener;
 
 // {6D10C180-6888-11d4-952B-0020183BF181}
 #define NS_ICDOCSHELLTREEOWNER_IID \
@@ -120,7 +119,6 @@ protected:
   // They are separate objects to avoid circular references between |this|
   // and the DOM.
   RefPtr<ChromeTooltipListener> mChromeTooltipListener;
-  RefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
 
   RefPtr<nsDocShellTreeOwner> mContentTreeOwner;
 
@@ -201,39 +199,6 @@ private:
   // The timer must either fire or be cancelled (or possibly released?), and we
   // release this reference in each of those cases. So we don't leak.
   nsCOMPtr<nsIDOMNode> mPossibleTooltipNode;
-};
-
-// The class that listens to the chrome events and tells the embedding chrome to
-// show context menus, as appropriate. Handles registering itself with the DOM
-// with AddChromeListeners() and removing itself with RemoveChromeListeners().
-class ChromeContextMenuListener : public nsIDOMEventListener
-{
-protected:
-  virtual ~ChromeContextMenuListener();
-
-public:
-  NS_DECL_ISUPPORTS
-
-  ChromeContextMenuListener(nsWebBrowser* aInBrowser,
-                            nsIWebBrowserChrome* aInChrome);
-
-  // nsIDOMContextMenuListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
-
-  // Add/remove the relevant listeners, based on what interfaces
-  // the embedding chrome implements.
-  NS_IMETHOD AddChromeListeners();
-  NS_IMETHOD RemoveChromeListeners();
-
-private:
-  NS_IMETHOD AddContextMenuListener();
-  NS_IMETHOD RemoveContextMenuListener();
-
-  bool mContextMenuListenerInstalled;
-
-  nsWebBrowser* mWebBrowser;
-  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
-  nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
 };
 
 #endif /* nsDocShellTreeOwner_h__ */
