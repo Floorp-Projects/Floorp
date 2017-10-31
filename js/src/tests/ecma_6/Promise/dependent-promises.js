@@ -1,10 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell) -- needs Debugger
 
-if (!this.Promise) {
-    this.reportCompare && reportCompare(true,true);
-    quit(0);
-}
-
 var g = newGlobal();
 var dbg = new Debugger(g);
 var gw = dbg.addDebuggee(g);
