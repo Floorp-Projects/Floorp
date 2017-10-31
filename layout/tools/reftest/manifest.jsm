@@ -68,6 +68,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
     var lineNo = 0;
     var urlprefix = "";
     var defaultTestPrefSettings = [], defaultRefPrefSettings = [];
+    if (g.compareRetainedDisplayLists) {
+        AddRetainedDisplayListTestPrefs(sandbox, defaultTestPrefSettings,
+                                        defaultRefPrefSettings);
+    }
     if (g.compareStyloToGecko) {
         AddStyloTestPrefs(sandbox, defaultTestPrefSettings,
                           defaultRefPrefSettings);
@@ -105,6 +109,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 if (!AddPrefSettings(m[1], m[2], m[3], sandbox, defaultTestPrefSettings, defaultRefPrefSettings)) {
                     throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
                 }
+            }
+            if (g.compareRetainedDisplayLists) {
+                AddRetainedDisplayListTestPrefs(sandbox, defaultTestPrefSettings,
+                                                defaultRefPrefSettings);
             }
             if (g.compareStyloToGecko) {
                 AddStyloTestPrefs(sandbox, defaultTestPrefSettings,
@@ -351,7 +359,7 @@ function ReadManifest(aURL, inherited_status, aFilter)
             secMan.checkLoadURIWithPrincipal(principal, refURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             var type = items[0];
-            if (g.compareStyloToGecko) {
+            if (g.compareStyloToGecko || g.compareRetainedDisplayLists) {
                 type = TYPE_REFTEST_EQUAL;
                 refURI = testURI;
 
@@ -510,6 +518,10 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
+let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
+sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
+sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
+
 #ifdef MOZ_STYLO
     let styloEnabled = false;
     // Perhaps a bit redundant in places, but this is easier to compare with the
@@ -597,6 +609,14 @@ function BuildConditionSandbox(aURL) {
     return sandbox;
 }
 
+function AddRetainedDisplayListTestPrefs(aSandbox, aTestPrefSettings,
+                                         aRefPrefSettings) {
+    AddPrefSettings("test-", "layout.display-list.retain", "true", aSandbox,
+                    aTestPrefSettings, aRefPrefSettings);
+    AddPrefSettings("ref-", "layout.display-list.retain", "false", aSandbox,
+                    aTestPrefSettings, aRefPrefSettings);
+}
+
 function AddStyloTestPrefs(aSandbox, aTestPrefSettings, aRefPrefSettings) {
     AddPrefSettings("test-", "layout.css.servo.enabled", "true", aSandbox,
                     aTestPrefSettings, aRefPrefSettings);
@@ -621,7 +641,8 @@ function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestP
                     type: prefType,
                     value: prefVal };
 
-    if (g.compareStyloToGecko && aPrefName != "layout.css.servo.enabled") {
+    if ((g.compareStyloToGecko && aPrefName != "layout.css.servo.enabled") ||
+        (g.compareRetainedDisplayLists && aPrefName != "layout.display-list.retain")) {
         // ref-pref() is ignored, test-pref() and pref() are added to both
         if (aWhere != "ref-") {
             aTestPrefSettings.push(setting);
