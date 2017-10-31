@@ -147,18 +147,14 @@ function setupTestData(datas) {
 
 function runTest() {
   return new Promise(resolve => {
-    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                getService(Ci.nsIScriptSecurityManager);
-    let ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
     function runNextTest() {
       if (!testDatas.length) {
         resolve();
         return;
       }
       let test = testDatas.shift();
-      let uri = ios.newURI(test.url);
-      let prin = ssm.createCodebasePrincipal(uri, {});
+      let uri = SpecialPowers.Services.io.newURI(test.url);
+      let prin = SpecialPowers.Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
       SpecialPowers.doUrlClassify(prin, null, false, function(errorCode, table, provider, fullhash) {
         is(errorCode, test.expect.error, `Test url ${test.url} correct error`);
         is(table, test.expect.table, `Test url ${test.url} correct table`);
