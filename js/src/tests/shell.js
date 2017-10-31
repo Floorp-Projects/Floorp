@@ -18,7 +18,6 @@
 
   var undefined; // sigh
 
-  var document = global.document;
   var Error = global.Error;
   var Function = global.Function;
   var Number = global.Number;
@@ -46,10 +45,6 @@
     var SpecialPowersSetGCZeal =
       global.SpecialPowers ? global.SpecialPowers.setGCZeal : undefined;
   }
-
-  var runningInShell = typeof window === "undefined";
-
-  var isReftest = typeof document === "object" && /jsreftest.html/.test(document.location.href);
 
   var evaluate = global.evaluate;
 
@@ -428,7 +423,7 @@
     this.passed = getTestCaseResult(e, a);
     this.reason = '';
     this.bugnumber = typeof BUGNUMER !== 'undefined' ? BUGNUMBER : '';
-    this.type = runningInShell ? 'shell' : 'browser';
+    this.type = runningInBrowser ? 'browser' : 'shell';
     ObjectDefineProperty(
       testCasesArray,
       testCasesCounter++,
@@ -446,7 +441,7 @@
   TestCase.prototype.dump = function () {
     // let reftest handle error reporting, otherwise
     // output a summary line.
-    if (!isReftest) {
+    if (!runningInBrowser) {
       dump('\njstest: ' + this.path + ' ' +
           'bug: '         + this.bugnumber + ' ' +
           'result: '      + (this.passed ? 'PASSED' : 'FAILED') + ' ' +
@@ -546,7 +541,7 @@
     testcase.reason = output;
 
     // if running under reftest, let it handle result reporting.
-    if (!isReftest) {
+    if (!runningInBrowser) {
       if (testcase.passed) {
         print(PASSED + description);
       } else {
@@ -586,7 +581,7 @@
     testcase.reason = output;
 
     // if running under reftest, let it handle result reporting.
-    if (!isReftest) {
+    if (!runningInBrowser) {
       if (testcase.passed) {
         print(PASSED + description);
       } else {
@@ -680,7 +675,7 @@
   function writeTestCaseResult(expect, actual, string) {
     var passed = getTestCaseResult(expect, actual);
     // if running under reftest, let it handle result reporting.
-    if (!isReftest) {
+    if (!runningInBrowser) {
       print((passed ? PASSED : FAILED) + string + ' expected: ' + expect);
     }
     return passed;
