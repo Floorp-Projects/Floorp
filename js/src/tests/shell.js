@@ -353,7 +353,7 @@
   /** Set up test environment. */
   function startTest() {
     if (global.BUGNUMBER)
-      global.print("BUGNUMBER: " + global.BUGNUMBER);
+      print("BUGNUMBER: " + global.BUGNUMBER);
   }
   global.startTest = startTest;
 
@@ -407,14 +407,6 @@
     return callStack[callStack.length - 1];
   }
   global.currentFunc = currentFunc;
-
-  // XXX This function is *only* used in harness functions and really shouldn't
-  //     be exported.
-  var writeFormattedResult =
-    function writeFormattedResult(expect, actual, string, passed) {
-      print((passed ? PASSED : FAILED) + string + ' expected: ' + expect);
-    };
-  global.writeFormattedResult = writeFormattedResult;
 
   /*
    * wrapper for test case constructor that doesn't require the SECTION
@@ -689,7 +681,7 @@
     var passed = getTestCaseResult(expect, actual);
     // if running under reftest, let it handle result reporting.
     if (!isReftest) {
-      writeFormattedResult(expect, actual, string, passed);
+      print((passed ? PASSED : FAILED) + string + ' expected: ' + expect);
     }
     return passed;
   }
