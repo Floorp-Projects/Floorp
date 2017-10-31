@@ -2,22 +2,19 @@
 
 use super::helpers;
 
-use aster::struct_field::StructFieldBuilder;
-
 use ir::comp::CompInfo;
 use ir::context::BindgenContext;
 use ir::layout::Layout;
 use ir::ty::{Type, TypeKind};
+use quote;
 use std::cmp;
 use std::mem;
 
-use syntax::ast;
-
 /// Trace the layout of struct.
 #[derive(Debug)]
-pub struct StructLayoutTracker<'a, 'ctx: 'a> {
+pub struct StructLayoutTracker<'a> {
     name: &'a str,
-    ctx: &'a BindgenContext<'ctx>,
+    ctx: &'a BindgenContext,
     comp: &'a CompInfo,
     latest_offset: usize,
     padding_count: usize,
@@ -80,9 +77,9 @@ fn test_bytes_from_bits_pow2() {
     }
 }
 
-impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
+impl<'a> StructLayoutTracker<'a> {
     pub fn new(
-        ctx: &'a BindgenContext<'ctx>,
+        ctx: &'a BindgenContext,
         comp: &'a CompInfo,
         name: &'a str,
     ) -> Self {
@@ -154,7 +151,7 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         field_name: &str,
         field_ty: &Type,
         field_offset: Option<usize>,
-    ) -> Option<ast::StructField> {
+    ) -> Option<quote::Tokens> {
         let mut field_layout = match field_ty.layout(self.ctx) {
             Some(l) => l,
             None => return None,
@@ -241,7 +238,7 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         padding_layout.map(|layout| self.padding_field(layout))
     }
 
-    pub fn pad_struct(&mut self, layout: Layout) -> Option<ast::StructField> {
+    pub fn pad_struct(&mut self, layout: Layout) -> Option<quote::Tokens> {
         debug!(
             "pad_struct:\n\tself = {:#?}\n\tlayout = {:#?}",
             self,
@@ -291,39 +288,28 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         }
     }
 
-    pub fn align_struct(&self, layout: Layout) -> Option<ast::StructField> {
-        if self.max_field_align < layout.align &&
+    pub fn requires_explicit_align(&self, layout: Layout) -> bool {
+        self.max_field_align < layout.align &&
             layout.align <= mem::size_of::<*mut ()>()
-        {
-            let ty = helpers::blob(Layout::new(0, layout.align));
-
-            Some(
-                StructFieldBuilder::named("__bindgen_align")
-                    .pub_()
-                    .build_ty(ty),
-            )
-        } else {
-            None
-        }
     }
 
     fn padding_bytes(&self, layout: Layout) -> usize {
         align_to(self.latest_offset, layout.align) - self.latest_offset
     }
 
-    fn padding_field(&mut self, layout: Layout) -> ast::StructField {
+    fn padding_field(&mut self, layout: Layout) -> quote::Tokens {
         let ty = helpers::blob(layout);
         let padding_count = self.padding_count;
 
         self.padding_count += 1;
 
-        let padding_field_name = format!("__bindgen_padding_{}", padding_count);
+        let padding_field_name = quote::Ident::new(format!("__bindgen_padding_{}", padding_count));
 
         self.max_field_align = cmp::max(self.max_field_align, layout.align);
 
-        StructFieldBuilder::named(padding_field_name)
-            .pub_()
-            .build_ty(ty)
+        quote! {
+            pub #padding_field_name : #ty ,
+        }
     }
 
     /// Returns whether the new field is known to merge with a bitfield.

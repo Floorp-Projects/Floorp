@@ -4,7 +4,6 @@ extern crate env_logger;
 #[macro_use]
 #[cfg(feature = "logging")]
 extern crate log;
-extern crate clang_sys;
 extern crate clap;
 
 use bindgen::clang_version;
