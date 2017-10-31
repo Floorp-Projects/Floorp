@@ -39,12 +39,12 @@ for ( var i = 0x0530; i <= 0x058F; i++ ) {
 
   var U = new Unicode( i );
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
   String.fromCharCode(U.upper),
   eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()") );
 */
-  new TestCase(   SECTION,
+  new TestCase(
 		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
 		  U.upper,
 		  eval("var s = new String( String.fromCharCode(i) ); s.toUpperCase().charCodeAt(0)") );

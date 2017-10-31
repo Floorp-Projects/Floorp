@@ -51,7 +51,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "object is not defined";
 
-new TestCase( SECTION,
+new TestCase(
 	      "object is not defined",
 	      "error",
 	      eval("var o = new MyObject(); var result = 0; for ( var o in foo) { result += this[o]; } ") );

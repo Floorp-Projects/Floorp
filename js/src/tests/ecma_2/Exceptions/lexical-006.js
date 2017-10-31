@@ -47,7 +47,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "break = new Object()" +
   " (threw " + exception +")",
   expect,

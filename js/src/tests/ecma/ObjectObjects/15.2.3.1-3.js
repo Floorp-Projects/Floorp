@@ -27,8 +27,7 @@ var TITLE   = "Object.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "Object.prototype = null; Object.prototype",
+new TestCase( "Object.prototype = null; Object.prototype",
 	      Object.prototype,
 	      eval("Object.prototype = null; Object.prototype"));
 

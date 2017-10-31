@@ -57,7 +57,7 @@ var BOOLEAN = new Boolean();
 
 DESCRIPTION = "var BOOLEAN = new Boolean(); var b = new BOOLEAN()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "var BOOLEAN = new Boolean(); var b = new BOOLEAN()",
 	      "error",
 	      eval("b = new BOOLEAN()") );

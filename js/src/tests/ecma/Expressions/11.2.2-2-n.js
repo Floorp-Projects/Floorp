@@ -57,7 +57,7 @@ var UNDEFINED = void 0;
 
 DESCRIPTION = "UNDEFINED = void 0; var o = new UNDEFINED()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "UNDEFINED = void 0; var o = new UNDEFINED()",
 	      "error",
 	      eval("o = new UNDEFINED()") );

@@ -28,8 +28,7 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Simple Assignment ( = )");
 
-new TestCase( SECTION,   
-              "SOMEVAR = true",    
+new TestCase( "SOMEVAR = true",    
               true,  
               SOMEVAR = true );
 

@@ -29,7 +29,6 @@ function Integer( value, exception ) {
   }
 
   new TestCase(
-    SECTION,
     "Integer( " + value +" )",
     (exception ? INVALID_INTEGER_VALUE +": " + value : this.value),
     this.value );

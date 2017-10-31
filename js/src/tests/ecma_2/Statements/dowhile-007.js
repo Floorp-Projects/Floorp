@@ -71,25 +71,21 @@ outie:
   } while ( false );
 
   new TestCase(
-    SECTION,
     "break one: ",
     (object.breakOutOne) ? false : true,
     result1 );
 
   new TestCase(
-    SECTION,
     "break two: ",
     (object.breakOutOne||object.breakOutTwo) ? false : true,
     result2 );
 
   new TestCase(
-    SECTION,
     "break three: ",
     (object.breakOutOne||object.breakOutTwo||object.breakIn) ? false : true,
     result3 );
 
   new TestCase(
-    SECTION,
     "break four: ",
     (object.breakOutOne||object.breakOutTwo||object.breakOutThree) ? false: true,
     result4 );

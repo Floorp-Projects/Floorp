@@ -22,8 +22,7 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.MIN_VALUE:  DontEnum Attribute");
 
-new TestCase( SECTION,
-	      "var string = ''; for ( prop in Number ) { string += ( prop == 'MIN_VALUE' ) ? prop : '' } string;",
+new TestCase( "var string = ''; for ( prop in Number ) { string += ( prop == 'MIN_VALUE' ) ? prop : '' } string;",
 	      "",
 	      eval("var string = ''; for ( prop in Number ) { string += ( prop == 'MIN_VALUE' ) ? prop : '' } string;")
   );

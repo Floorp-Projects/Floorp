@@ -31,13 +31,11 @@ addTestCase( TIME_2000 );
 addTestCase( UTC_FEB_29_2000 );
 addTestCase( UTC_JAN_1_2005 );
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getUTCSeconds()",
+new TestCase( "(new Date(NaN)).getUTCSeconds()",
 	      NaN,
 	      (new Date(NaN)).getUTCSeconds() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getUTCSeconds.length",
+new TestCase( "Date.prototype.getUTCSeconds.length",
 	      0,
 	      Date.prototype.getUTCSeconds.length );
 test();
@@ -45,8 +43,7 @@ test();
 function addTestCase( t ) {
   for ( m = 0; m <= 60; m+=10 ) {
     t += 1000;
-    new TestCase( SECTION,
-		  "(new Date("+t+")).getUTCSeconds()",
+    new TestCase( "(new Date("+t+")).getUTCSeconds()",
 		  SecFromTime(t),
 		  (new Date(t)).getUTCSeconds() );
   }

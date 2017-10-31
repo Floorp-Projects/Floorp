@@ -30,16 +30,16 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Global Object");
 
-new TestCase( "SECTION", "Global Code check: Object", false, Object == null);
-new TestCase( "SECTION", "Global Code check: Function", false, Function == null);
-new TestCase( "SECTION", "Global Code check: String", false, String == null);
-new TestCase( "SECTION", "Global Code check: Array", false, Array == null);
-new TestCase( "SECTION", "Global Code check: Number", false, Number == null);
-new TestCase( "SECTION", "Global Code check: Math", false, Math == null);
-new TestCase( "SECTION", "Global Code check: Boolean", false, Boolean == null);
-new TestCase( "SECTION", "Global Code check: Date", false, Date == null);
-new TestCase( "SECTION", "Global Code check: eval", false, eval == null);
-new TestCase( "SECTION", "Global Code check: parseInt", false, parseInt == null);
+new TestCase( "Global Code check: Object", false, Object == null);
+new TestCase( "Global Code check: Function", false, Function == null);
+new TestCase( "Global Code check: String", false, String == null);
+new TestCase( "Global Code check: Array", false, Array == null);
+new TestCase( "Global Code check: Number", false, Number == null);
+new TestCase( "Global Code check: Math", false, Math == null);
+new TestCase( "Global Code check: Boolean", false, Boolean == null);
+new TestCase( "Global Code check: Date", false, Date == null);
+new TestCase( "Global Code check: eval", false, eval == null);
+new TestCase( "Global Code check: parseInt", false, parseInt == null);
 
 test();
 

@@ -58,7 +58,6 @@ function EvalTest()
     EXPECT = 1;  //The base e to the power (-1 + 1),  i.e. the power 0,  equals 1 ....
 
     new TestCase(
-      SECTION,
       "Call eval indirectly",
       EXPECT,
       RESULT );

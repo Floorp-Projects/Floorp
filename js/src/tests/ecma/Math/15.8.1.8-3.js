@@ -20,8 +20,7 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Math.SQRT2:  DontDelete");
 
-new TestCase( SECTION,
-	      "delete Math.SQRT2",
+new TestCase( "delete Math.SQRT2",
 	      false,    
 	      eval("delete Math.SQRT2") );
 

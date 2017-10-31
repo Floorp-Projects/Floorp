@@ -23,8 +23,7 @@ var TITLE   = "Number.NaN";
 
 writeHeaderToLog( SECTION + " "+ TITLE );
 
-new TestCase(SECTION,
-	     "NaN",       
+new TestCase("NaN",       
 	     NaN,       
 	     Number.NaN );
 

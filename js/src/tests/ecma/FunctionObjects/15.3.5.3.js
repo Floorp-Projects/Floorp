@@ -32,6 +32,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MYFUNCTION = new Function( "return this.arguments" );
 
-new TestCase( SECTION,  "var MYFUNCTION = new Function( 'return this.arguments' ); MYFUNCTION.arguments",   null,   MYFUNCTION.arguments );
+new TestCase( "var MYFUNCTION = new Function( 'return this.arguments' ); MYFUNCTION.arguments",   null,   MYFUNCTION.arguments );
 
 test();

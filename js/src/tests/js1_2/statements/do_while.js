@@ -26,7 +26,7 @@ do
   if (x++ == 3) done = true;
 } while (!done);
 
-new TestCase( SECTION, "do_while ",
+new TestCase( "do_while ",
 	      4, x);
 
 //load('d:/javascript/tests/output/statements/do_while.js')

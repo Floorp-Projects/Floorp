@@ -18,6 +18,6 @@ var TITLE   = "Boolean.prototype"
 
   writeHeaderToLog( SECTION + " " + TITLE );
 
-new TestCase( SECTION,  "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
+new TestCase( "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
 
 test();

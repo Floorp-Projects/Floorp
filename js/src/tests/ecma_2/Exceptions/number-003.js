@@ -39,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "Assigning Number.prototype.valueOf as the valueOf of a String object " +
   " (threw " + exception +")",
   expect,

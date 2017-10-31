@@ -43,7 +43,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "object = new Object(); object.toString = Number.prototype.toString; object.toString()" +
   " (threw " + exception +")",
   expect,

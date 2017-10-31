@@ -65,13 +65,11 @@ PROPERTY[p++] = new Property(  new Boolean(true),        true,      "true",    1
 PROPERTY[p++] = new Property(  new Boolean(false),       false,      "false",    0 );
 
 for ( var i = 0, RESULT; i < PROPERTY.length; i++ ) {
-  new TestCase( SECTION,
-                PROPERTY[i].object + ".valueOf()",
+  new TestCase( PROPERTY[i].object + ".valueOf()",
                 PROPERTY[i].value,
                 eval( "PROPERTY[i].object.valueOf()" ) );
 
-  new TestCase( SECTION,
-                PROPERTY[i].object + ".toString()",
+  new TestCase( PROPERTY[i].object + ".toString()",
                 PROPERTY[i].string,
                 eval( "PROPERTY[i].object.toString()" ) );
 

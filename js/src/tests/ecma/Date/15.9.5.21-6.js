@@ -28,8 +28,7 @@ addTestCase( UTC_FEB_29_2000 );
 test();
 
 function addTestCase( t ) {
-  new TestCase( SECTION,
-		"(new Date("+t+")).getUTCMilliseconds()",
+  new TestCase( "(new Date("+t+")).getUTCMilliseconds()",
 		msFromTime(t),
 		(new Date(t)).getUTCMilliseconds() );
 }

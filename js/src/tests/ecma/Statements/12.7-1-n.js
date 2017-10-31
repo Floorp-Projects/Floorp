@@ -20,8 +20,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "continue";
 
-new TestCase(   SECTION,
-		"continue",
+new TestCase(   "continue",
 		"error",
 		eval("continue") );
 

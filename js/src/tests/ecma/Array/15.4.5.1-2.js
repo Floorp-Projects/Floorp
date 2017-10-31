@@ -59,48 +59,40 @@ AddCase( "37xyz", "thirty-five" );
 AddCase("5000000000", 5)
   AddCase( "-2", -3 );
 
-new TestCase( SECTION,
-	      "a[10]",
+new TestCase( "a[10]",
 	      void 0,
 	      a[10] );
 
-new TestCase( SECTION,
-	      "a[3]",
+new TestCase( "a[3]",
 	      void 0,
 	      a[3] );
 
 a[4] = "four";
 
-new TestCase( SECTION,
-	      "a[4] = \"four\"; a[4]",
+new TestCase( "a[4] = \"four\"; a[4]",
 	      "four",
 	      a[4] );
 
-new TestCase( SECTION,
-	      "a[\"4\"]",
+new TestCase( "a[\"4\"]",
 	      "four",
 	      a["4"] );
 
-new TestCase( SECTION,
-	      "a[\"4.00\"]",
+new TestCase( "a[\"4.00\"]",
 	      void 0,
 	      a["4.00"] );
 
-new TestCase( SECTION,
-	      "a.length",
+new TestCase( "a.length",
 	      5,
 	      a.length );
 
 
 a["5000000000"] = 5;
 
-new TestCase( SECTION,
-	      "a[\"5000000000\"] = 5; a.length",
+new TestCase( "a[\"5000000000\"] = 5; a.length",
 	      5,
 	      a.length );
 
-new TestCase( SECTION,
-	      "a[\"-2\"] = -3; a.length",
+new TestCase( "a[\"-2\"] = -3; a.length",
 	      5,
 	      a.length );
 
@@ -110,8 +102,7 @@ function AddCase ( arg, value ) {
 
   a[arg] = value;
 
-  new TestCase( SECTION,
-		"a[\"" + arg + "\"] =  "+ value +"; a.length",
+  new TestCase( "a[\"" + arg + "\"] =  "+ value +"; a.length",
 		0,
 		a.length );
 }

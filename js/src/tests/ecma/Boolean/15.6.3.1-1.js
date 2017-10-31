@@ -30,8 +30,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var array = new Array();
 var item = 0;
 
-new TestCase( SECTION,
-	      "var str='';for ( p in Boolean ) { str += p } str;",
+new TestCase( "var str='';for ( p in Boolean ) { str += p } str;",
 	      "",
 	      eval("var str='';for ( p in Boolean ) { str += p } str;") );
 test();

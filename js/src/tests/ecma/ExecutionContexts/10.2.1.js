@@ -28,8 +28,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var THIS = this;
 
-new TestCase( SECTION,
-	      "this +''",
+new TestCase( "this +''",
 	      GLOBAL,
 	      THIS + "" );
 
@@ -41,8 +40,7 @@ for ( p in this ) {
 }
 
 for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
-  new TestCase( SECTION,
-		GLOBAL_PROPERTIES[i] +" == void 0",
+  new TestCase( GLOBAL_PROPERTIES[i] +" == void 0",
 		false,
 		eval("GLOBAL_PROPERTIES["+i+"] == void 0"));
 }

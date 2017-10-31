@@ -21,6 +21,6 @@ var TITLE   = "Function.prototype.constructor";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "Function.prototype.constructor",   Function,   Function.prototype.constructor );
+new TestCase( "Function.prototype.constructor",   Function,   Function.prototype.constructor );
 
 test();

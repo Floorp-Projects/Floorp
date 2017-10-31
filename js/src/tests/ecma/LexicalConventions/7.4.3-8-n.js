@@ -30,6 +30,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var switch = true";
 
-new TestCase( SECTION,  "var switch = true",     "error",    eval("var switch = true") );
+new TestCase( "var switch = true",     "error",    eval("var switch = true") );
 
 test();

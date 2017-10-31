@@ -27,8 +27,7 @@ var TITLE   = "Function.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase(   SECTION,
-		"Function.prototype = null; Function.prototype",
+new TestCase(   "Function.prototype = null; Function.prototype",
 		Function.prototype,
 		eval("Function.prototype = null; Function.prototype")
   );

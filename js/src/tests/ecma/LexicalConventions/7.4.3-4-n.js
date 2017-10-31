@@ -47,8 +47,7 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION, 
-              "var super = true",    
+new TestCase( "var super = true",    
               "error",   
               actual );
 test();

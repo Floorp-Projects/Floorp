@@ -36,6 +36,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var delete = true";
 
-new TestCase( SECTION,  "var delete = true",     "error",    eval("var delete = true") );
+new TestCase( "var delete = true",     "error",    eval("var delete = true") );
 
 test();

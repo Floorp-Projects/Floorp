@@ -25,8 +25,7 @@ writeHeaderToLog( SECTION +" "+ TITLE );
 
 DESCRIPTION = "tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()";
 
-new TestCase(   SECTION,
-		"tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()",
+new TestCase(   "tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()",
 		"error",
 		eval("tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()") );
 

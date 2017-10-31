@@ -24,8 +24,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var MY_GLOBAL = this()";
 
-new TestCase(   SECTION,
-		"var MY_GLOBAL = this()",
+new TestCase(   "var MY_GLOBAL = this()",
 		"error",
 		eval("var MY_GLOBAL = this()") );
 test();

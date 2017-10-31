@@ -64,7 +64,6 @@ function StrictEquality( x, y, expect ) {
   result = ( x === y );
 
   new TestCase(
-    SECTION,
     x +" === " + y,
     expect,
     result );

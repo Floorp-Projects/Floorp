@@ -35,6 +35,6 @@ writeHeaderToLog( SECTION + " Keywords");
 
 DESCRIPTION = "var void = true";
 
-new TestCase( SECTION,  "var void = true",     "error",    eval("var void = true") );
+new TestCase( "var void = true",     "error",    eval("var void = true") );
 
 test();

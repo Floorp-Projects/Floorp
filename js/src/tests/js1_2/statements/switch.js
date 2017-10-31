@@ -40,13 +40,13 @@ case "bad string 2":
   match3 = true;
 }
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       true, match1);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       true, match2);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       false, match3);
 
 var var2 = 3;
@@ -78,19 +78,19 @@ case 3:
   match5 = true;
   break;
 }
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       false, match1);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       false, match2);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       false, match3);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       false, match4);
 
-new TestCase ( SECTION, 'switch statement',
+new TestCase ( 'switch statement',
 	       true, match5);
 
 test();

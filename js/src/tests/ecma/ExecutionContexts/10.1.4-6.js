@@ -50,7 +50,7 @@ with ( MYOBJECT ) {
   ;
 }
 
-new TestCase("SECTION", "with MyObject, eval should be [object Global].eval (" + INPUT + ")",
+new TestCase("with MyObject, eval should be [object Global].eval (" + INPUT + ")",
              INPUT, eval( INPUT ));
 
 test();

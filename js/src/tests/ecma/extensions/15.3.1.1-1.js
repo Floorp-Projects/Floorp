@@ -33,12 +33,11 @@ var myfunc = Function();
 myfunc.toString = Object.prototype.toString;
 
 //    not going to test toString here since it is implementation dependent.
-//    new TestCase( SECTION,  "myfunc.toString()",     "function anonymous() { }",    myfunc.toString() );
+//    new TestCase( "myfunc.toString()",     "function anonymous() { }",    myfunc.toString() );
 
 myfunc.toString = Object.prototype.toString;
 
-new TestCase( SECTION, 
-	      "MyObject.__proto__ == Function.prototype",    
+new TestCase( "MyObject.__proto__ == Function.prototype",    
 	      true,  
 	      MyObject.__proto__ == Function.prototype );
 

@@ -30,7 +30,7 @@ for (i = 0; i < 200; i++)
 }
 
 // '"continue" in a "for" loop'
-new TestCase ( SECTION, '"continue" in "for" loop',
+new TestCase ( '"continue" in "for" loop',
 	       199, j);
 
 
@@ -51,7 +51,7 @@ for (i = 0; i < 1000; i++)
 }
 
 // '"continue" in a "for" loop with a "label"'
-new TestCase ( SECTION, '"continue" in "for" loop with a "label"',
+new TestCase ( '"continue" in "for" loop with a "label"',
 	       999, j);
 
 i = 0;
@@ -65,7 +65,7 @@ while (i != j)
 }
 
 // '"continue" in a "while" loop'
-new TestCase ( SECTION, '"continue" in a "while" loop',
+new TestCase ( '"continue" in a "while" loop',
 	       100, j );
 
 j = 0;
@@ -93,7 +93,7 @@ while (i < 1000)
 }
 
 // '"continue" in a "while" loop with a "label"'
-new TestCase ( SECTION, '"continue" in a "while" loop with a "label"',
+new TestCase ( '"continue" in a "while" loop with a "label"',
 	       999, j);
 
 i = 0;
@@ -108,7 +108,7 @@ do
 
 
 // '"continue" in a "do" loop'
-new TestCase ( SECTION, '"continue" in a "do" loop',
+new TestCase ( '"continue" in a "do" loop',
 	       100, j );
 
 j = 0;
@@ -136,7 +136,7 @@ do
 }while (i < 1000);
 
 // '"continue" in a "do" loop with a "label"'
-new TestCase ( SECTION, '"continue" in a "do" loop with a "label"',
+new TestCase ( '"continue" in a "do" loop with a "label"',
 	       999, j);
 
 test();

@@ -67,13 +67,11 @@ function TryNewJavaInteger( value, expect ) {
     finalTest = true;
   }
   new TestCase(
-    SECTION,
     "newJavaValue( " + value +" )",
     expect,
     result);
 
   new TestCase(
-    SECTION,
     "newJavaValue( " + value +" ) hit finally block",
     true,
     finalTest);

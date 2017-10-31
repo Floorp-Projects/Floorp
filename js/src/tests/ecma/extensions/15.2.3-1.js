@@ -24,6 +24,6 @@ var VERSION = "ECMA_2";
 
 writeHeaderToLog( SECTION + " Properties of the Object Constructor");
 
-new TestCase( SECTION,  "Object.__proto__",     Function.prototype,     Object.__proto__ );
+new TestCase( "Object.__proto__",     Function.prototype,     Object.__proto__ );
 
 test();

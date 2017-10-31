@@ -37,7 +37,6 @@ function Target_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "string = new String(\"hi\");"+
       "string.toString = Boolean.prototype.toString" +
       "string.toString() [ exception is " + exception +" ]",

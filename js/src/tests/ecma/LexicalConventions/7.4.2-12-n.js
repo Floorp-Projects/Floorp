@@ -36,6 +36,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var while = true";
 
-new TestCase( SECTION,  "var while = true",     "error",    eval("var while = true") );
+new TestCase( "var while = true",     "error",    eval("var while = true") );
 
 test();

@@ -57,8 +57,7 @@ for ( MyObject in o ) {
   result += o[MyObject];
 }
 
-new TestCase( SECTION,
-	      "for ( MyObject in o ) { result += o[MyObject] }",
+new TestCase( "for ( MyObject in o ) { result += o[MyObject] }",
 	      6,
 	      result );
 
@@ -68,8 +67,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "for ( value in o ) { result += o[value]",
+new TestCase( "for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -79,8 +77,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "value = \"value\"; for ( value in o ) { result += o[value]",
+new TestCase( "value = \"value\"; for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -90,8 +87,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( value in o ) { result += o[value]",
+new TestCase( "value = 0; for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -103,8 +99,7 @@ for ( ob[0] in o ) {
   result += o[ob[0]];
 }
 
-new TestCase( SECTION,
-	      "ob = { 0:\"hello\" }; for ( ob[0] in o ) { result += o[ob[0]]",
+new TestCase( "ob = { 0:\"hello\" }; for ( ob[0] in o ) { result += o[ob[0]]",
 	      6,
 	      result );
 
@@ -113,8 +108,7 @@ for ( ob["0"] in o ) {
   result += o[ob["0"]];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob[\"0\"] in o ) { result += o[o[\"0\"]]",
+new TestCase( "value = 0; for ( ob[\"0\"] in o ) { result += o[o[\"0\"]]",
 	      6,
 	      result );
 
@@ -124,8 +118,7 @@ for ( ob[value] in o ) {
   result += o[ob[value]];
 }
 
-new TestCase( SECTION,
-	      "ob = { 0:\"hello\" }; for ( ob[value] in o ) { result += o[ob[value]]",
+new TestCase( "ob = { 0:\"hello\" }; for ( ob[value] in o ) { result += o[ob[value]]",
 	      6,
 	      result );
 
@@ -134,8 +127,7 @@ for ( ob["value"] in o ) {
   result += o[ob["value"]];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob[\"value\"] in o ) { result += o[ob[\"value\"]]",
+new TestCase( "value = 0; for ( ob[\"value\"] in o ) { result += o[ob[\"value\"]]",
 	      6,
 	      result );
 
@@ -144,8 +136,7 @@ for ( ob.value in o ) {
   result += o[ob.value];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob.value in o ) { result += o[ob.value]",
+new TestCase( "value = 0; for ( ob.value in o ) { result += o[ob.value]",
 	      6,
 	      result );
 

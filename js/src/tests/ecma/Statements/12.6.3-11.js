@@ -54,7 +54,7 @@ var result = "";
 
 for ( p in Number ) { result += String(p) };
 
-new TestCase( SECTION,
+new TestCase(
 	      "result = \"\"; for ( p in Number ) { result += String(p) };",
 	      "",
 	      result );

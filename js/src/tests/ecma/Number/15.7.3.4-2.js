@@ -23,13 +23,11 @@ var TITLE   = "Number.NaN";
 
 writeHeaderToLog( SECTION + " "+ TITLE );
 
-new TestCase(SECTION,
-	     "delete( Number.NaN ); Number.NaN",      
+new TestCase("delete( Number.NaN ); Number.NaN",      
 	     NaN,       
 	     eval("delete( Number.NaN );Number.NaN" ));
 
-new TestCase( SECTION,
-	      "delete( Number.NaN )",  
+new TestCase( "delete( Number.NaN )",  
 	      false, 
 	      eval("delete( Number.NaN )") );
 

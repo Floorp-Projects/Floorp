@@ -41,7 +41,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "switch = true" +
   " (threw " + exception +")",
   expect,

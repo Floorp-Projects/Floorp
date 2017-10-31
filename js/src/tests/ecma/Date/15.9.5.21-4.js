@@ -28,8 +28,7 @@ addTestCase( TIME_1900 );
 test();
 
 function addTestCase( t ) {
-  new TestCase( SECTION,
-		"(new Date("+t+")).getUTCMilliseconds()",
+  new TestCase( "(new Date("+t+")).getUTCMilliseconds()",
 		msFromTime(t),
 		(new Date(t)).getUTCMilliseconds() );
 }

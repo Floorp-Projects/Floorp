@@ -34,7 +34,6 @@ function BooleanTest( string, object, expect ) {
   }
 
   new TestCase(
-    SECTION,
     string,
     expect,
     result );

@@ -55,8 +55,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var m = new Math()";
 
-new TestCase( SECTION,
-              "var m = new Math()",
+new TestCase( "var m = new Math()",
               "error",
               eval("m = new Math()") );
 test();

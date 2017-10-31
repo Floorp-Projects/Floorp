@@ -24,6 +24,6 @@ var VERSION = "ECMA_2";
 
 writeHeaderToLog( SECTION + " Properties of the Object Constructor");
 
-new TestCase( SECTION,  "Object.length",        1,                      Object.length );
+new TestCase( "Object.length",        1,                      Object.length );
 
 test();

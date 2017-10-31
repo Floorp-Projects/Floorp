@@ -38,19 +38,19 @@ function f0(i) {
   }
   return "";
 }
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f0("a"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f0("b"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f0("*"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f0("c"), "c");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f0("d"), "d");
 
 function f1(i) {
@@ -67,19 +67,19 @@ function f1(i) {
   return "";
 }
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f1("a"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f1("b"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f1("*"), "ab*");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f1("c"), "c");
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f1("d"), "d");
 
 // Switch on integer; will use TABLESWITCH opcode in C engine
@@ -95,23 +95,23 @@ function f2(i) {
   return 3;
 }
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f2(0), 1);
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f2(1), 1);
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f2(2), 2);
 
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     f2(3), 3);
 
 // empty switch: make sure expression is evaluated
 var se = 0;
 switch (se = 1) {
 }
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     se, 1);
 
 // only default
@@ -120,7 +120,7 @@ switch (se) {
 default:
   se = 1;
 }
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     se, 1);
 
 // in loop, break should only break out of switch
@@ -133,7 +133,7 @@ for (var i=0; i < 2; i++) {
   }
   se = 1;
 }
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     se, 1);
 
 // test "fall through"
@@ -147,7 +147,7 @@ case 1:
   se++;
   break;
 }
-new TestCase(SECTION, 'switch statement',
+new TestCase('switch statement',
 	     se, 2);
 print("hi");
 

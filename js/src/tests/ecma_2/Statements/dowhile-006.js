@@ -75,13 +75,11 @@ outie: {
   }
 
   new TestCase(
-    SECTION,
     "hit code after loop in inner loop",
     ( object.breakIn || object.breakOut ) ? false : true ,
     result1 );
 
   new TestCase(
-    SECTION,
     "hit code after loop in outer loop",
     ( object.breakOut ) ? false : true,
     result2 );

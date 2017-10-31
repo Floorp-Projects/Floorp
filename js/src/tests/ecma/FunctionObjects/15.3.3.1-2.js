@@ -27,8 +27,7 @@ var TITLE   = "Function.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase(   SECTION,
-		"var str='';for (prop in Function ) str += prop; str;",
+new TestCase(   "var str='';for (prop in Function ) str += prop; str;",
 		"",
 		eval("var str='';for (prop in Function) str += prop; str;")
   );

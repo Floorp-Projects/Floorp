@@ -57,7 +57,7 @@ var STRING = new String("hi");
 
 DESCRIPTION = "var STRING = new String('hi'); var s = new STRING()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "var STRING = new String('hi'); var s = new STRING()",
 	      "error",
 	      eval("s = new STRING()") );

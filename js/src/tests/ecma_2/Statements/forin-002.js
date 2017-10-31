@@ -48,7 +48,6 @@ function ForIn_1( object) {
   with ( object ) {
     for ( property in object ) {
       new TestCase(
-	SECTION,
 	"with loop in a for...in loop.  ("+object+")["+property +"] == "+
 	"eval ( " + property +" )",
 	true,
@@ -65,7 +64,6 @@ function ForIn_2(object) {
   for ( property in object ) {
     with ( object ) {
       new TestCase(
-	SECTION,
 	"with loop in a for...in loop.  ("+object+")["+property +"] == "+
 	"eval ( " + property +" )",
 	true,

@@ -35,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "result = this()" +
   " (threw " + exception +")",
   expect,

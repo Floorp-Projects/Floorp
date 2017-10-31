@@ -54,8 +54,7 @@ test();
 function addCase( object, old_len, set_len, new_len, checkitems ) {
   object.length = set_len;
 
-  new TestCase( SECTION,
-		"array = new Array("+ old_len+"); array.length = " + set_len +
+  new TestCase( "array = new Array("+ old_len+"); array.length = " + set_len +
 		"; array.length",
 		new_len,
 		object.length );
@@ -69,8 +68,7 @@ function addCase( object, old_len, set_len, new_len, checkitems ) {
 	  passed = false;
 	}
       }
-      new TestCase( SECTION,
-		    "verify that array items have been deleted",
+      new TestCase( "verify that array items have been deleted",
 		    true,
 		    passed );
     }
@@ -81,8 +79,7 @@ function addCase( object, old_len, set_len, new_len, checkitems ) {
 	  passed = false;
 	}
       }
-      new TestCase( SECTION,
-		    "verify that new items are undefined",
+      new TestCase( "verify that new items are undefined",
 		    true,
 		    passed );
     }

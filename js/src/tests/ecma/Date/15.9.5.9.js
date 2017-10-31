@@ -32,13 +32,11 @@ addTestCase( TIME_2000 );
 addTestCase( UTC_FEB_29_2000 );
 addTestCase( UTC_JAN_1_2005 );
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getUTCMonth()",
+new TestCase( "(new Date(NaN)).getUTCMonth()",
 	      NaN,
 	      (new Date(NaN)).getUTCMonth() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getUTCMonth.length",
+new TestCase( "Date.prototype.getUTCMonth.length",
 	      0,
 	      Date.prototype.getUTCMonth.length );
 test();
@@ -50,28 +48,23 @@ function addTestCase( t ) {
 
     t += TimeInMonth(m, leap);
 
-    new TestCase( SECTION,
-		  "(new Date("+t+")).getUTCMonth()",
+    new TestCase( "(new Date("+t+")).getUTCMonth()",
 		  MonthFromTime(t),
 		  (new Date(t)).getUTCMonth() );
 
-    new TestCase( SECTION,
-		  "(new Date("+(t+1)+")).getUTCMonth()",
+    new TestCase( "(new Date("+(t+1)+")).getUTCMonth()",
 		  MonthFromTime(t+1),
 		  (new Date(t+1)).getUTCMonth() );
 
-    new TestCase( SECTION,
-		  "(new Date("+(t-1)+")).getUTCMonth()",
+    new TestCase( "(new Date("+(t-1)+")).getUTCMonth()",
 		  MonthFromTime(t-1),
 		  (new Date(t-1)).getUTCMonth() );
 
-    new TestCase( SECTION,
-		  "(new Date("+(t-TZ_ADJUST)+")).getUTCMonth()",
+    new TestCase( "(new Date("+(t-TZ_ADJUST)+")).getUTCMonth()",
 		  MonthFromTime(t-TZ_ADJUST),
 		  (new Date(t-TZ_ADJUST)).getUTCMonth() );
 
-    new TestCase( SECTION,
-		  "(new Date("+(t+TZ_ADJUST)+")).getUTCMonth()",
+    new TestCase( "(new Date("+(t+TZ_ADJUST)+")).getUTCMonth()",
 		  MonthFromTime(t+TZ_ADJUST),
 		  (new Date(t+TZ_ADJUST)).getUTCMonth() );
 

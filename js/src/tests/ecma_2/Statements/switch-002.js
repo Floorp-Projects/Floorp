@@ -55,7 +55,6 @@ function SwitchTest( input, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "switch with no breaks:  input is " + input,
     expect,
     result );

@@ -27,7 +27,7 @@ for (i = 0; i < 1000; i++)
 }
 
 // 'breaking out of "for" loop'
-new TestCase ( SECTION, 'breaking out of "for" loop',
+new TestCase ( 'breaking out of "for" loop',
 	       100, i);
 
 j = 2000;
@@ -48,7 +48,7 @@ for (i = 0; i < 1000; i++)
 }
 
 // 'breaking out of a "for" loop with a "label"'
-new TestCase ( SECTION, 'breaking out of a "for" loop with a "label"',
+new TestCase ( 'breaking out of a "for" loop with a "label"',
 	       500, j);
 
 i = 0;
@@ -60,7 +60,7 @@ while (i < 1000)
 }
 
 // 'breaking out of a "while" loop'
-new TestCase ( SECTION, 'breaking out of a "while" loop',
+new TestCase ( 'breaking out of a "while" loop',
 	       100, i );
 
 
@@ -86,7 +86,7 @@ while (i < 1000)
 }
 
 // 'breaking out of a "while" loop with a "label"'
-new TestCase ( SECTION, 'breaking out of a "while" loop with a "label"',
+new TestCase ( 'breaking out of a "while" loop with a "label"',
 	       500, j);
 
 i = 0;
@@ -98,7 +98,7 @@ do
 } while (i < 1000);
 
 // 'breaking out of a "do" loop'
-new TestCase ( SECTION, 'breaking out of a "do" loop',
+new TestCase ( 'breaking out of a "do" loop',
 	       100, i );
 
 j = 2000;
@@ -123,7 +123,7 @@ do
 }while (i < 1000);
 
 // 'breaking out of a "do" loop with a "label"'
-new TestCase ( SECTION, 'breaking out of a "do" loop with a "label"',
+new TestCase ( 'breaking out of a "do" loop with a "label"',
 	       500, j);
 
 test();

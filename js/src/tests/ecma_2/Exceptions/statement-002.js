@@ -59,7 +59,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "more than one member expression" +
   " (threw " + exception +")",
   expect,

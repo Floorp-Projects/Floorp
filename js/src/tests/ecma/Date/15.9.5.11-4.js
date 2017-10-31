@@ -33,8 +33,7 @@ function addTestCase( t ) {
 
   for (var d = start; d < stop; d += msPerDay)
   {
-    new TestCase( SECTION,
-                  "(new Date("+d+")).getUTCDate()",
+    new TestCase( "(new Date("+d+")).getUTCDate()",
                   DateFromTime(d),
                   (new Date(d)).getUTCDate() );
   }

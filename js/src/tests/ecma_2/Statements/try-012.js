@@ -78,17 +78,14 @@ function TrySomething( expression, throwing ) {
 
 
   new TestCase(
-    SECTION,
     "eval( " + expression +" ): evaluated inner finally block",
     "PASS",
     innerFinally );
   new TestCase(
-    SECTION,
     "eval( " + expression +" ): evaluated outer catch block ",
     "PASS",
     outerCatch );
   new TestCase(
-    SECTION,
     "eval( " + expression +" ):  evaluated outer finally block",
     "PASS",
     outerFinally );

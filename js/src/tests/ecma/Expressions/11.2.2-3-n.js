@@ -56,7 +56,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var DESCRIPTION = "NULL = null; var o = new NULL()";
 var NULL = null;
 
-new TestCase( SECTION,
+new TestCase(
 	      "NULL = null; var o = new NULL()",
 	      "error",
 	      eval("o = new NULL()") );

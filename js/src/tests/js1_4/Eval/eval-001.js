@@ -48,7 +48,6 @@ var EXPECT = "abcdefg";
 MY_EVAL( "RESULT = EXPECT" );
 
 new TestCase(
-  SECTION,
   "Call eval indirectly",
   EXPECT,
   RESULT );

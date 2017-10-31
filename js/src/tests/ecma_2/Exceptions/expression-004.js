@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "Get the toString value of an object whose value is null "+
   "(threw " + exception +")",
   expect,

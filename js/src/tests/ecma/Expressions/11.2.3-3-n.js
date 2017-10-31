@@ -47,8 +47,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "(void 0).valueOf()";
 
-new TestCase( SECTION,
-              "(void 0).valueOf()",
+new TestCase( "(void 0).valueOf()",
               "error",
               eval("(void 0).valueOf()") );
 test();

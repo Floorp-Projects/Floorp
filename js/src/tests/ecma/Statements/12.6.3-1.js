@@ -19,8 +19,7 @@ var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "var x; Number.prototype.foo = 34; for ( j in 7 ) x = j; x",
+new TestCase( "var x; Number.prototype.foo = 34; for ( j in 7 ) x = j; x",
 	      "foo",
 	      eval("var x; Number.prototype.foo = 34; for ( j in 7 ){x = j;} x") );
 

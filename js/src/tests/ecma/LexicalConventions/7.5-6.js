@@ -21,6 +21,6 @@ var TITLE   = "Identifiers";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,    "var _0abc = 5",   5,    eval("var _0abc = 5; _0abc") );
+new TestCase( "var _0abc = 5",   5,    eval("var _0abc = 5; _0abc") );
 
 test();

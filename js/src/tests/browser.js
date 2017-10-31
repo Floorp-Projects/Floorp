@@ -292,7 +292,8 @@ window.onerror = function (msg, page, line, column, error) {
     EXPECTED = 'Unknown';
   }
 
-  var testcase = new TestCase("unknown-test-name", DESCRIPTION, EXPECTED, "error");
+  var reason = page + ':' + line + ': ' + msg;
+  var testcase = new TestCase(DESCRIPTION, EXPECTED, "error", reason);
 
   var href = document.location.href;
   if (href.indexOf('-n.js') !== -1) {
@@ -313,8 +314,6 @@ window.onerror = function (msg, page, line, column, error) {
       testcase.passed = true;
     }
   }
-
-  testcase.reason = page + ':' + line + ': ' + msg;
 
   reportFailure(msg);
 
