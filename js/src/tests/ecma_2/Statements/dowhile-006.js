@@ -15,7 +15,6 @@
  *  Date:               26 August 1998
  */
 var SECTION = "dowhile-006";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

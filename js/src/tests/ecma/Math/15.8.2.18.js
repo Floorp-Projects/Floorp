@@ -19,7 +19,6 @@
 */
 
 var SECTION = "15.8.2.18";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.tan(x)";
 var EXCLUDE = "true";
 

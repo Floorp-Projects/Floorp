@@ -34,7 +34,6 @@
  *
  */
 var SECTION = "eval-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Calling eval indirectly should NOT fail in version 140";
 var BUGNUMBER="38512";
 

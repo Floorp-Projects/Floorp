@@ -31,7 +31,6 @@
 */
 
 var SECTION = "15.8-2-n";
-var VERSION = "ECMA_1";
 var TITLE   = "The Math Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

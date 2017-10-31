@@ -46,7 +46,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.6.1-2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " The Addition operator ( + )");
 

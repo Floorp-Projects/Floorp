@@ -35,7 +35,6 @@
    Date:               17 july 1997
 */
 var SECTION = "9.5-2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " ToInt32");
 

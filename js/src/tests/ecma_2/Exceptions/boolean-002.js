@@ -20,7 +20,6 @@
    Date:               09 september 1998
 */
 var SECTION = "boolean-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Boolean.prototype.valueOf()";
 writeHeaderToLog( SECTION +" "+ TITLE );
 

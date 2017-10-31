@@ -17,7 +17,6 @@
 */
 
 var SECTION = "15.8.1.2-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.LN10";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

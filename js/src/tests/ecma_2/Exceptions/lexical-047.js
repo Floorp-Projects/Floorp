@@ -14,7 +14,6 @@
 */
 
 var SECTION = "lexical-047";
-var VERSION = "JS1_4";
 var TITLE   = "for loops";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -24,7 +24,6 @@
    Date:               16 september 1997
 */
 var SECTION = "number-001";
-var VERSION = "JS1_4";
 var TITLE   = "Exceptions for Number.toString()";
 
 writeHeaderToLog( SECTION + " Number.prototype.toString()");

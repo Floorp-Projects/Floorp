@@ -17,7 +17,6 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-009";
-var VERSION = "JS1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: SyntaxError";
 var BUGNUMBER= "312964";
 

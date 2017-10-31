@@ -18,7 +18,6 @@
    Date:               june 27, 1997
 */
 var SECTION = "15.6.4.3-4-n";
-var VERSION = "ECMA_1";
 var TITLE   = "Boolean.prototype.valueOf()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -18,7 +18,6 @@
 */
 
 var SECTION = "7.6";
-var VERSION = "ECMA_1";
 var TITLE   = "Punctuators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

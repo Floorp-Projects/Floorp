@@ -17,7 +17,6 @@
 */
 
 var SECTION = "15.8.1.8-1";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.SQRT2";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

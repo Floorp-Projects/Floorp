@@ -19,7 +19,6 @@
 */
 var TITLE = "Date.prototype.setTime"
   var SECTION = "15.9.5.24-1";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Date.prototype.setMilliseconds(ms)");
 

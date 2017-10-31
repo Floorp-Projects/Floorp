@@ -31,7 +31,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.7.2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + "  The signed right shift operator ( >> )");
 

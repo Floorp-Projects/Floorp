@@ -18,7 +18,6 @@
    Date:               12 november 1997
 */
 var SECTION = "global-002";
-var VERSION = "JS1_4";
 var TITLE   = "The Global Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -45,7 +45,6 @@
    *
    */
 var SECTION = "15.5.4.7-2";
-var VERSION = "ECMA_1";
 var TITLE   = "String.protoype.lastIndexOf";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

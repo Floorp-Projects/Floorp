@@ -32,7 +32,6 @@
  *
  */
 var SECTION = "function-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Regression test case for 325843";
 var BUGNUMBER="330462";
 

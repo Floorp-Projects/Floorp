@@ -16,7 +16,6 @@
  *  Date:               28 August 1998
  */
 var SECTION = "for-001";
-var VERSION = "ECMA_2";
 var TITLE   = "The if  statement";
 var BUGNUMBER="148822";
 

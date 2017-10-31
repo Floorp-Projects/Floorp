@@ -13,7 +13,6 @@
    Date:               15 september 1997
 */
 var SECTION = "lexical-049";
-var VERSION = "JS1_4";
 var TITLE   = "The Rules of Automatic Semicolon Insertion";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

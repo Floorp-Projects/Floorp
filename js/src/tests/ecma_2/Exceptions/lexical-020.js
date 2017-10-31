@@ -24,7 +24,6 @@
    Date:               12 november 1997
 */
 var SECTION = "lexical-020";
-var VERSION = "JS1_4";
 var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

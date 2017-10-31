@@ -44,7 +44,6 @@
 */
 
 var SECTION = "15.1.2.3-1";
-var VERSION = "ECMA_1";
 var TITLE   = "parseFloat(string)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

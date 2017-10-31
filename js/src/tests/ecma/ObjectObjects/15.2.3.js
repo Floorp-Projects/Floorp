@@ -21,7 +21,6 @@
 */
 
 var SECTION = "15.2.3";
-var VERSION = "ECMA_1";
 var TITLE   = "Properties of the Object Constructor";
 
 writeHeaderToLog( SECTION + " " + TITLE);

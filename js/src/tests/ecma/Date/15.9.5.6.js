@@ -17,7 +17,6 @@
 */
 
 var SECTION = "15.9.5.6";
-var VERSION = "ECMA_1";
 var TITLE   = "Date.prototype.getFullYear()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -23,7 +23,6 @@
    Date:               12 november 1997
 */
 var SECTION = "7.4.3-1-n";
-var VERSION = "ECMA_1";
 var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

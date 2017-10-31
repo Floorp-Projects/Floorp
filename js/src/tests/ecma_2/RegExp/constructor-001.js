@@ -13,7 +13,6 @@
  *  Date:               19 February 1999
  */
 var SECTION = "RegExp/constructor-001";
-var VERSION = "ECMA_2";
 var TITLE   = "new RegExp()";
 
 

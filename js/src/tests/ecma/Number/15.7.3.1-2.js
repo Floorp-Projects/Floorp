@@ -18,7 +18,6 @@
 
 
 var SECTION = "15.7.3.1-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Number.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

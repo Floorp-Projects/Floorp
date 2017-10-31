@@ -41,7 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-4";
-var VERSION = "ECMA_1";
 var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

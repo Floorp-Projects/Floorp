@@ -28,7 +28,6 @@
 */
 
 var SECTION = "15.9.5";
-var VERSION = "ECMA_1";
 var TITLE   = "Properties of the Date Prototype Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

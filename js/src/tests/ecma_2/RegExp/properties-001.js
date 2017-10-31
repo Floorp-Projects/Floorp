@@ -13,7 +13,6 @@
  *  Date:               19 February 1999
  */
 var SECTION = "RegExp/properties-001.js";
-var VERSION = "ECMA_2";
 var TITLE   = "Properties of RegExp Instances";
 
 AddRegExpCases( new RegExp, "(?:)",   false, false, false, 0 );

@@ -19,7 +19,6 @@
 */
 
 var SECTION = "15.9.5.22";
-var VERSION = "ECMA_1";
 var TITLE   = "Date.prototype.getTimezoneOffset()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

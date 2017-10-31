@@ -40,7 +40,6 @@
 */
 
 var SECTION = "11.2.3-2-n.js";
-var VERSION = "ECMA_1";
 var TITLE   = "Function Calls";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

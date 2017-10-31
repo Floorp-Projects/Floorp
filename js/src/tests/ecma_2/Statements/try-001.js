@@ -17,7 +17,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

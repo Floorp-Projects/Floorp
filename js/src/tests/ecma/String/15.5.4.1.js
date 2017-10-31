@@ -14,7 +14,6 @@
 
 */
 var SECTION = "15.5.4.1";
-var VERSION = "ECMA_1";
 var TITLE   = "String.prototype.constructor";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

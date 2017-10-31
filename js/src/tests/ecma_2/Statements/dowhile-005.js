@@ -19,7 +19,6 @@
  *  Date:               26 August 1998
  */
 var SECTION = "dowhile-005";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 var BUGNUMBER = "316293";
 

@@ -25,7 +25,6 @@
        Date:               12 november 1997
 */
 var SECTION = "15.9.5.26-1";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Date.prototype.setSeconds(sec [,ms] )");
 

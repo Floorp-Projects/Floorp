@@ -29,7 +29,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.13.2-4";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Compound Assignment: +=");
 

@@ -14,7 +14,6 @@
 
 
 var SECTION = "15.7.4-1";
-var VERSION = "ECMA_1";
 writeHeaderToLog( SECTION + "Properties of the Number prototype object");
 
 new TestCase("Number.prototype.valueOf()",      0,                  Number.prototype.valueOf() );

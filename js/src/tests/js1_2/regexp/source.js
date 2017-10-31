@@ -13,7 +13,6 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
 var TITLE = 'RegExp: source';
 
 writeHeaderToLog('Executing script: source.js');

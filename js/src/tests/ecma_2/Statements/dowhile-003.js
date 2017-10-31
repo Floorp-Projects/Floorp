@@ -16,7 +16,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "dowhile-003";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

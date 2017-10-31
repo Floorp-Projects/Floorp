@@ -14,7 +14,6 @@
 */
 
 var SECTION = "function/definition-1.js";
-var VERSION = "JS_12";
 var TITLE   = "Regression test for 111284";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

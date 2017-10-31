@@ -14,7 +14,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "";
-var VERSION = "ECMA_2";
 var TITLE   = "Keywords";
 
 

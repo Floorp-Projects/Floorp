@@ -26,7 +26,6 @@
    E_RETURN    Expected return value of Boolean( VALUE )
 */
 var SECTION = "15.6.1";
-var VERSION = "ECMA_1";
 var TITLE   = "The Boolean constructor called as a function: Boolean( value ) and Boolean()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -16,7 +16,6 @@
  *  Date:               28 August 1998
  */
 var SECTION = "forin-001";
-var VERSION = "ECMA_2";
 var TITLE   = "The for...in  statement";
 var BUGNUMBER="330890";
 var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=344855";

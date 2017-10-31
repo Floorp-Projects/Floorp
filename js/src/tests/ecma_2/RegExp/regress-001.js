@@ -15,7 +15,6 @@
  *  Date:               19 February 1999
  */
 var SECTION = "RegExp/hex-001.js";
-var VERSION = "ECMA_2";
 var TITLE   = "JS regexp anchoring on empty match bug";
 var BUGNUMBER = "2157";
 
