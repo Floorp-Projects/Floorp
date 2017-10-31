@@ -51,21 +51,6 @@
    * GENERAL HELPER FUNCTIONS *
    ****************************/
 
-  // We could use Array.prototype.pop, but we don't so it's clear exactly what
-  // dependencies this function has on test-modifiable behavior (i.e. none).
-  function ArrayPop(arr) {
-    assertEq(ArrayIsArray(arr), true,
-             "ArrayPop must only be used on actual arrays");
-
-    var len = arr.length;
-    if (len === 0)
-      return undefined;
-
-    var v = arr[len - 1];
-    arr.length--;
-    return v;
-  }
-
   // We *cannot* use Array.prototype.push for this, because that function sets
   // the new trailing element, which could invoke a setter (left by a test) on
   // Array.prototype or Object.prototype.
@@ -329,47 +314,6 @@
   var PASSED = " PASSED! ";
   var FAILED = " FAILED! ";
 
-  var callStack = [];
-
-  /**
-   * Puts funcName at the top of the call stack.  This stack is used to show
-   * a function-reported-from field when reporting failures.
-   */
-  function enterFunc(funcName) {
-    assertEq(typeof funcName, "string",
-             "enterFunc must be given a string funcName");
-
-    ArrayPush(callStack, funcName);
-  }
-  global.enterFunc = enterFunc;
-
-  /**
-   * Pops the top funcName off the call stack.  funcName, if provided, is used
-   * to check push-pop balance.
-   */
-  function exitFunc(funcName) {
-    assertEq(typeof funcName === "string" || typeof funcName === "undefined",
-             true,
-             "exitFunc must be given no arguments or a string");
-
-    var lastFunc = ArrayPop(callStack);
-    assertEq(typeof lastFunc, "string", "exitFunc called too many times");
-
-    if (typeof funcName === "string" && lastFunc !== funcName) {
-      reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
-    }
-  }
-  global.exitFunc = exitFunc;
-
-  /** Peeks at the top of the call stack. */
-  function currentFunc() {
-    if (callStack.length == 0)
-      return "top level script";
-
-    // Add parentheses for output string.
-    return callStack[callStack.length - 1] + "()";
-  }
-
   /*
    * wrapper for test case constructor that doesn't require the SECTION
    * argument.
@@ -492,10 +436,9 @@
   function reportFailure(msg) {
     msg = String(msg);
     var lines = StringSplit(msg, "\n");
-    var prefix = "[reported from " + currentFunc() + "] ";
 
     for (var i = 0; i < lines.length; i++)
-      print(FAILED + prefix + lines[i]);
+      print(FAILED + " " + lines[i]);
   }
   global.reportFailure = reportFailure;
 
