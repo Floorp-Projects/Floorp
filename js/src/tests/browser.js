@@ -391,12 +391,6 @@ function optionsInit() {
 
 function jsTestDriverBrowserInit()
 {
-
-  if (typeof dump != 'function')
-  {
-    dump = print;
-  }
-
   optionsInit();
   optionsClear();
 
