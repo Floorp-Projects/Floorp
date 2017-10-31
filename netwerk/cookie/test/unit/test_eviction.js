@@ -6,7 +6,7 @@ const BASE_HOSTNAMES = ["example.org", "example.co.uk"];
 const SUBDOMAINS = ["", "pub.", "www.", "other."];
 
 const cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-const cm = cs.QueryInterface(Ci.nsICookieManager2);
+const cm = cs.QueryInterface(Ci.nsICookieManager);
 
 function run_test() {
     var tests = [];

@@ -5,7 +5,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 
   // Test our handling of host names with a single character at the beginning

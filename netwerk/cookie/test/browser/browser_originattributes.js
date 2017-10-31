@@ -10,7 +10,7 @@ const COOKIE_NAMES = ["cookie0", "cookie1", "cookie2"];
 const TEST_URL =
   "http://example.com/browser/netwerk/cookie/test/browser/file_empty.html";
 
-let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
