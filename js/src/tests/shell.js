@@ -634,11 +634,12 @@
    * RUN ONCE CODE TO SETUP ADDITIONAL STATE *
    *******************************************/
 
-  if (typeof options === 'function')
+  // Clear all options before running any tests. browser.js performs this
+  // set-up as part of its jsTestDriverBrowserInit function.
+  if (!runningInBrowser)
     optionsClear();
 })(this);
 
 var gDelayTestDriverEnd = false;
-var gFailureExpected = false;
 
 var DESCRIPTION;
