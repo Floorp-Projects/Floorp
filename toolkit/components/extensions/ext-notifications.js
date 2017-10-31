@@ -142,7 +142,7 @@ this.notifications = class extends ExtensionAPI {
 
         onClosed: new EventManager(context, "notifications.onClosed", fire => {
           let listener = (event, notificationId) => {
-            // FIXME: Support the byUser argument.
+            // FIXME: Support the byUser argument (bug 1413188).
             fire.async(notificationId, true);
           };
 
