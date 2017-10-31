@@ -554,13 +554,11 @@
 
   // Note: browser.js overrides this function.
   function jsTestDriverEnd() {
-    // gDelayTestDriverEnd is used to
-    // delay collection of the test result and
-    // signal to Spider so that tests can continue
-    // to run after page load has fired. They are
-    // responsible for setting gDelayTestDriverEnd = true
-    // then when completed, setting gDelayTestDriverEnd = false
-    // then calling jsTestDriverEnd()
+    // gDelayTestDriverEnd is used to delay collection of the test result and
+    // signal to Spider so that tests can continue to run after page load has
+    // fired. They are responsible for setting gDelayTestDriverEnd = true then
+    // when completed, setting gDelayTestDriverEnd = false then calling
+    // jsTestDriverEnd()
 
     if (gDelayTestDriverEnd) {
       return;
@@ -590,7 +588,7 @@
       return;
 
     // Turn off current settings.
-    var optionNames = currentOptions.split(',');
+    var optionNames = StringSplit(currentOptions, ",");
     for (var i = 0; i < optionNames.length; i++) {
       var optionName = optionNames[i];
       if (optionName) {
