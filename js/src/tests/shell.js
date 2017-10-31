@@ -329,13 +329,6 @@
   var PASSED = " PASSED! ";
   var FAILED = " FAILED! ";
 
-  /** Set up test environment. */
-  function startTest() {
-    if (global.BUGNUMBER)
-      print("BUGNUMBER: " + global.BUGNUMBER);
-  }
-  global.startTest = startTest;
-
   var callStack = [];
 
   /**
