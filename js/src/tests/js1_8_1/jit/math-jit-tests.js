@@ -18,70 +18,23 @@ const RUNLOOP = RECORDLOOP + 1;
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
-var fails = [], passes=[];
 
 function test(f)
 {
-  if (!testName || testName == f.name) {
-    check(f.name, f(), f.expected);
+  if (!testName || testName == f.testname) {
+    check(f.testname, f(), f.expected);
   }
 }
 
-// Use this function to compare expected and actual test results.
-// Types must match.
-// For numbers, treat NaN as matching NaN, distinguish 0 and -0, and
-// tolerate a certain degree of error for other values.
-//
-// These are the same criteria used by the tests in js/tests, except that
-// we distinguish 0 and -0.
-function close_enough(expected, actual)
+function check(desc, actual, expected)
 {
-  if (typeof expected != typeof actual)
-    return false;
-  if (typeof expected != 'number')
-    return actual == expected;
-
-  // Distinguish NaN from other values.  Using x != x comparisons here
-  // works even if tests redefine isNaN.
-  if (actual != actual)
-    return expected != expected
-      if (expected != expected)
-        return false;
-
-  // Tolerate a certain degree of error.
-  if (actual != expected)
-    return Math.abs(actual - expected) <= 1E-10;
-
   // Distinguish 0 and -0.
-  if (actual == 0)
-    return (1 / actual > 0) == (1 / expected > 0);
-
-  return true;
-}
-
-function check(desc, actual, expected,  expectedJITstats)
-{
-  if (close_enough(expected, actual)) {
-    reportCompare(expected, actual, desc);
-    passes.push(desc);
-    return print(desc, ": passed");
-  }
-
-  if (expected instanceof RegExp) {
-    if (reportMatch(expected, actual + '', desc)) {
-      passes.push(desc);
-      return print(desc, ": passed");
-    }
+  if (actual === 0 && expected === 0) {
+    actual = (1 / actual > 0) ? "+0" : "-0";
+    expected = (1 / expected > 0) ? "+0" : "-0";
   }
 
   reportCompare(expected, actual, desc);
-
-  fails.push(desc);
-
-  print(desc, ": FAILED: expected", typeof(expected), 
-        "(", uneval(expected), ")",
-        "!= actual",
-        typeof(actual), "(", uneval(actual), ")");
 }
 
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
@@ -131,7 +84,7 @@ function testmath(funcname, args, expected) {
         mapfunc(dummies_and_input);
         return dummies_and_input[RUNLOOP];
     }
-    testfunc.name = funcname + "(" + args + ")";
+    testfunc.testname = funcname + "(" + args + ")";
     testfunc.expected = expected;
 
     test(testfunc);
@@ -580,10 +533,3 @@ testmath("Math.tan", "Math.PI", -0)
 testmath("Math.tan", "5*Math.PI/4", 1)
 testmath("Math.tan", "7*Math.PI/4", -1)
 testmath("Infinity/Math.tan", "-0", -Infinity)
-
-
-/* Keep these at the end so that we can see the summary after the trace-debug spew. */
-if (0) {
-  print("\npassed:", passes.length && passes.join(","));
-  print("\nFAILED:", fails.length && fails.join(","));
-}
