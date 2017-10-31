@@ -569,7 +569,6 @@
         reportFailure(description + " : " + output);
       }
     }
-    return testcase.passed;
   }
   global.reportCompare = reportCompare;
 
@@ -608,7 +607,6 @@
         reportFailure(description + " : " + output);
       }
     }
-    return testcase.passed;
   }
   global.reportMatch = reportMatch;
 
