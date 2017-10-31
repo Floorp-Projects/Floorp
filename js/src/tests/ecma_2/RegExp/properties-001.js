@@ -15,9 +15,6 @@
 var SECTION = "RegExp/properties-001.js";
 var VERSION = "ECMA_2";
 var TITLE   = "Properties of RegExp Instances";
-var BUGNUMBER ="";
-
-startTest();
 
 AddRegExpCases( new RegExp, "(?:)",   false, false, false, 0 );
 AddRegExpCases( /.*/,       ".*", false, false, false, 0 );

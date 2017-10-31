@@ -18,9 +18,6 @@
 var SECTION = "15.1.2.6";
 var VERSION = "ECMA_1";
 var TITLE   = "isNaN( x )";
-var BUGNUMBER = "none";
-
-startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

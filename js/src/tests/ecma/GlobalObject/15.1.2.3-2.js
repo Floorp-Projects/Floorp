@@ -45,8 +45,6 @@
 var SECTION = "15.1.2.3-2";
 var VERSION = "ECMA_1";
 
-var BUGNUMBER="none";
-
 new TestCase( SECTION, "parseFloat(true)",      Number.NaN,     parseFloat(true) );
 new TestCase( SECTION, "parseFloat(false)",     Number.NaN,     parseFloat(false) );
 new TestCase( SECTION, "parseFloat('string')",  Number.NaN,     parseFloat("string") );
