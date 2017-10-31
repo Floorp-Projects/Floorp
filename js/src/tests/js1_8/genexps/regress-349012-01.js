@@ -14,6 +14,7 @@ var expect = '';
 test();
 //-----------------------------------------------------------------------------
 
+// Calls shell quit() function per https://bugzilla.mozilla.org/show_bug.cgi?id=349012#c78
 if (typeof quit != 'undefined')
 {
   quit(0);
