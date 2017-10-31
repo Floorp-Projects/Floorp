@@ -11,13 +11,13 @@
 #include "nsISupports.h"
 
 #include "ia2AccessibleText.h"
-#include "AccessibleHypertext2.h"
+#include "AccessibleHypertext.h"
 
 namespace mozilla {
 namespace a11y {
 
 class ia2AccessibleHypertext : public ia2AccessibleText,
-                               public IAccessibleHypertext2
+                               public IAccessibleHypertext
 {
 public:
 
@@ -35,11 +35,6 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
       /* [in] */ long charIndex,
       /* [retval][out] */ long* hyperlinkIndex);
-
-  // IAccessibleHypertext2
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinks(
-      /* [out, size_is(,*nHyperlinks)] */ IAccessibleHyperlink*** hyperlinks,
-      /* [out, retval] */ long* nHyperlinks);
 };
 
 } // namespace a11y
