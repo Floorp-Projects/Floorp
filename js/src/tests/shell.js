@@ -452,6 +452,33 @@
   TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
   TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
 
+  function getTestCaseResult(expected, actual) {
+    if (typeof expected !== typeof actual)
+      return false;
+    if (typeof expected !== 'number')
+      // Note that many tests depend on the use of '==' here, not '==='.
+      return actual == expected;
+
+    // Distinguish NaN from other values.  Using x !== x comparisons here
+    // works even if tests redefine isNaN.
+    if (actual !== actual)
+      return expected !== expected;
+    if (expected !== expected)
+      return false;
+
+    // Tolerate a certain degree of error.
+    if (actual !== expected)
+      return MathAbs(actual - expected) <= 1E-10;
+
+    // Here would be a good place to distinguish 0 and -0, if we wanted
+    // to.  However, doing so would introduce a number of failures in
+    // areas where they don't seem important.  For example, the WeekDay
+    // function in ECMA-262 returns -0 for Sundays before the epoch, but
+    // the Date functions in SpiderMonkey specified in terms of WeekDay
+    // often don't.  This seems unimportant.
+    return true;
+  }
+
   function getTestCases() {
     return testCasesArray;
   }
@@ -616,38 +643,10 @@
   }
   global.compareSource = compareSource;
 
-  function getTestCaseResult(expected, actual) {
-    if (typeof expected !== typeof actual)
-      return false;
-    if (typeof expected !== 'number')
-      // Note that many tests depend on the use of '==' here, not '==='.
-      return actual == expected;
-
-    // Distinguish NaN from other values.  Using x !== x comparisons here
-    // works even if tests redefine isNaN.
-    if (actual !== actual)
-      return expected !== expected;
-    if (expected !== expected)
-      return false;
-
-    // Tolerate a certain degree of error.
-    if (actual !== expected)
-      return MathAbs(actual - expected) <= 1E-10;
-
-    // Here would be a good place to distinguish 0 and -0, if we wanted
-    // to.  However, doing so would introduce a number of failures in
-    // areas where they don't seem important.  For example, the WeekDay
-    // function in ECMA-262 returns -0 for Sundays before the epoch, but
-    // the Date functions in SpiderMonkey specified in terms of WeekDay
-    // often don't.  This seems unimportant.
-    return true;
-  }
-
   function test() {
     var testCases = getTestCases();
     for (var i = 0; i < testCases.length; i++) {
       var testCase = testCases[i];
-      testCase.passed = getTestCaseResult(testCase.expect, testCase.actual);
       testCase.reason += testCase.passed ? "" : "wrong value ";
 
       // if running under reftest, let it handle result reporting.
