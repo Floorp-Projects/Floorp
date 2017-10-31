@@ -8295,14 +8295,14 @@
     "bug_numbers": [902075, 1345894],
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
-  "PLUGINS_NOTIFICATION_USER_ACTION": {
+  "PLUGINS_NOTIFICATION_USER_ACTION_2": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "enumerated",
-    "n_values": 3,
-    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block",
-    "bug_numbers": [902075, 1345894],
+    "n_values": 8,
+    "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block 3: blockalways",
+    "bug_numbers": [902075, 1345894, 1398972],
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_SHOWN": {

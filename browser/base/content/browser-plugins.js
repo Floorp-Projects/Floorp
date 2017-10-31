@@ -147,7 +147,7 @@ var gPluginHandler = {
     let expireType;
     let expireTime;
     let histogram =
-      Services.telemetry.getHistogramById("PLUGINS_NOTIFICATION_USER_ACTION");
+      Services.telemetry.getHistogramById("PLUGINS_NOTIFICATION_USER_ACTION_2");
 
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
 
