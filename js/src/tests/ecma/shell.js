@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+var GLOBAL = this + '';
+
 /*
  * Date functions used by tests in Date suite
  *

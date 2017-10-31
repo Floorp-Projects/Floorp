@@ -19,6 +19,8 @@ var TITLE   = "Function.prototype.call";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+var GLOBAL = this + '';
+
 new TestCase( SECTION,
 	      "ConvertToString.call(this, this)",
 	      GLOBAL,
