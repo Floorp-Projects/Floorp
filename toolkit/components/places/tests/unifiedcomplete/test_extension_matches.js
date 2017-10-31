@@ -195,7 +195,10 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
           {content: "bar", description: "second suggestion"},
           {content: "baz", description: "third suggestion"},
         ]);
-        controller.stopSearch();
+        // The API doesn't have a way to notify when addition is complete.
+        do_timeout(1000, () => {
+          controller.stopSearch();
+        });
       }
     }
   };
@@ -302,8 +305,11 @@ add_task(async function test_setting_the_default_suggestion() {
     emit(message, text, id) {
       if (message === ExtensionSearchHandler.MSG_INPUT_CHANGED) {
         ExtensionSearchHandler.addSuggestions(keyword, id, []);
+        // The API doesn't have a way to notify when addition is complete.
+        do_timeout(1000, () => {
+          controller.stopSearch();
+        });
       }
-      controller.stopSearch();
     }
   };
 
@@ -358,7 +364,10 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
           {content: "i", description: "ninth suggestion"},
           {content: "j", description: "tenth suggestion"},
         ]);
-        controller.stopSearch();
+        // The API doesn't have a way to notify when addition is complete.
+        do_timeout(1000, () => {
+          controller.stopSearch();
+        });
       }
     }
   };

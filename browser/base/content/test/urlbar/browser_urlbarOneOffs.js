@@ -36,6 +36,7 @@ add_task(async function history() {
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_DOWN", {});
   await promisePopupShown(gURLBar.popup);
+  await waitForAutocompleteResultAt(gMaxResults - 1)
 
   assertState(-1, -1, "");
 
@@ -106,7 +107,7 @@ add_task(async function() {
   // trigger autofill since that would complicate the test.
   let typedValue = "browser_urlbarOneOffs";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-
+  await waitForAutocompleteResultAt(gMaxResults - 1);
   assertState(0, -1, typedValue);
 
   // Key down through each result.  The first result is already selected, which
@@ -158,7 +159,7 @@ add_task(async function() {
 add_task(async function searchWith() {
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue);
-
+  await waitForAutocompleteResultAt(0);
   assertState(0, -1, typedValue);
 
   let item = gURLBar.popup.richlistbox.firstChild;
@@ -190,7 +191,7 @@ add_task(async function oneOffClick() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
   await promiseAutocompleteResultPopup(typedValue);
-
+  await waitForAutocompleteResultAt(1);
   assertState(0, -1, typedValue);
 
   let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
@@ -211,7 +212,7 @@ add_task(async function oneOffReturn() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-
+  await waitForAutocompleteResultAt(1);
   assertState(0, -1, typedValue);
 
   // Alt+Down to select the first one-off.

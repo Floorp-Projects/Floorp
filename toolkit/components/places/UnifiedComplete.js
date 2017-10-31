@@ -82,7 +82,7 @@ const FRECENCY_DEFAULT = 1000;
 const MAXIMUM_ALLOWED_EXTENSION_MATCHES = 6;
 
 // After this time, we'll give up waiting for the extension to return matches.
-const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 5000;
+const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
 
 // A regex that matches "single word" hostnames for whitelisting purposes.
 // The hostname will already have been checked for general validity, so we
@@ -94,6 +94,9 @@ const REGEXP_USER_CONTEXT_ID = /(?:^| )user-context-id:(\d+)/;
 
 // Regex used to match one or more whitespace.
 const REGEXP_SPACES = /\s+/;
+
+// The result is notified on a delay, to avoid rebuilding the panel at every match.
+const NOTIFYRESULT_DELAY_MS = 16;
 
 // Sqlite result row index constants.
 const QUERYINDEX_QUERYTYPE     = 0;
@@ -330,6 +333,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
 function setTimeout(callback, ms) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
+  return timer;
 }
 
 function convertBucketsCharPrefToArray(str) {
@@ -992,6 +996,9 @@ Search.prototype = {
     // Avoid multiple calls or re-entrance.
     if (!this.pending)
       return;
+    if (this._notifyTimer)
+      this._notifyTimer.cancel();
+    this._notifyDelaysCount = 0;
     if (this._sleepTimer)
       this._sleepTimer.cancel();
     if (this._sleepResolve) {
@@ -1127,7 +1134,6 @@ Search.prototype = {
           // We're done if we're restricting to search suggestions.
           // Notify the result completion then stop the search.
           this._autocompleteSearch.finishSearch(true);
-          this.stop();
           return;
         }
       }
@@ -1667,9 +1673,8 @@ Search.prototype = {
 
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
-    let timeoutPromise = new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error("timeout waiting for the extension to add its results to the location bar")),
-                 MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
+    let timeoutPromise = new Promise(resolve => {
+      setTimeout(resolve, MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
     });
     return Promise.race([timeoutPromise, promise]).catch(Cu.reportError);
   },
@@ -1909,7 +1914,7 @@ Search.prototype = {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     if (this._currentMatchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
-    this.notifyResults(true);
+    this.notifyResult(true, match.type == MATCHTYPE.HEURISTIC);
   },
 
   _getInsertIndexForMatch(match) {
@@ -2009,7 +2014,7 @@ Search.prototype = {
       }
     }
     if (changed && notify) {
-      this.notifyResults(true);
+      this.notifyResult(true);
     }
   },
 
@@ -2364,24 +2369,47 @@ Search.prototype = {
     return query;
   },
 
- /**
-   * Notifies the listener about results.
+  // The result is notified to the search listener on a timer, to chunk multiple
+  // match updates together and avoid rebuilding the popup at every new match.
+  _notifyTimer: null,
+
+  /**
+   * Notifies the current result to the listener.
    *
    * @param searchOngoing
-   *        Indicates whether the search is ongoing.
+   *        Indicates whether the search result should be marked as ongoing.
+   * @param skipDelay
+   *        Whether to notify immediately.
    */
-  notifyResults(searchOngoing) {
-    let result = this._result;
-    let resultCode = this._currentMatchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
-    if (searchOngoing) {
-      resultCode += "_ONGOING";
+  _notifyDelaysCount: 0,
+  notifyResult(searchOngoing, skipDelay = false) {
+    let notify = () => {
+      this._notifyDelaysCount = 0;
+      let resultCode = this._currentMatchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
+      if (searchOngoing) {
+        resultCode += "_ONGOING";
+      }
+      let result = this._result;
+      result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
+      this._listener.onSearchResult(this._autocompleteSearch, result);
+      if (!searchOngoing) {
+        // Break possible cycles.
+        this._listener = null;
+        this._autocompleteSearch = null;
+        this.stop();
+      }
+    };
+    if (this._notifyTimer) {
+      this._notifyTimer.cancel();
     }
-    result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
-    this._listener.onSearchResult(this._autocompleteSearch, result);
-    if (!searchOngoing) {
-      // Break possible cycles.
-      this._listener = null;
-      this._autocompleteSearch = null;
+    // In the worst case, we may get evenly spaced matches that would end up
+    // delaying the UI by N_MATCHES * NOTIFYRESULT_DELAY_MS. Thus, we clamp the
+    // number of times we may delay matches.
+    if (skipDelay || this._notifyDelaysCount > 3) {
+      notify();
+    } else {
+      this._notifyDelaysCount++;
+      this._notifyTimer = setTimeout(notify, NOTIFYRESULT_DELAY_MS);
     }
   },
 };
@@ -2579,7 +2607,6 @@ UnifiedComplete.prototype = {
     if (!notify || !search.pending)
       return;
 
-
     // If we are in restrict mode and we reused the previous search results,
     // it's possible we didn't go through all the cleanup methods due to early
     // bailouts. Thus we could still have nonmatching results to remove.
@@ -2591,10 +2618,10 @@ UnifiedComplete.prototype = {
     // onSearchComplete.
     // If onSearchComplete immediately starts a new search it will set a new
     // _currentSearch, and on return the execution will continue here, after
-    // notifyResults.
-    // Thus, ensure that notifyResults is the last call in this method,
+    // notifyResult.
+    // Thus, ensure that notifyResult is the last call in this method,
     // otherwise you might be touching the wrong search.
-    search.notifyResults(false);
+    search.notifyResult(false);
   },
 
   // nsIAutoCompleteSearchDescriptor
