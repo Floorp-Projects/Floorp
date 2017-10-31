@@ -451,6 +451,30 @@ GetBaseShapeForNewShape(JSContext* cx, HandleShape last, HandleId id)
     return BaseShape::getUnowned(cx, base);
 }
 
+namespace js {
+
+class MOZ_RAII AutoCheckShapeConsistency
+{
+#ifdef DEBUG
+    HandleNativeObject obj_;
+#endif
+
+  public:
+    explicit AutoCheckShapeConsistency(HandleNativeObject obj)
+#ifdef DEBUG
+      : obj_(obj)
+#endif
+    {}
+
+#ifdef DEBUG
+    ~AutoCheckShapeConsistency() {
+        obj_->checkShapeConsistency();
+    }
+#endif
+};
+
+} // namespace js
+
 /* static */ Shape*
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
@@ -460,6 +484,7 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 {
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
 
+    AutoCheckShapeConsistency check(obj);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     /*
@@ -499,10 +524,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
         Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, flags));
         child.updateGetterSetter(getter, setter);
         shape = getChildProperty(cx, obj, last, &child);
-        if (!shape) {
-            obj->checkShapeConsistency();
+        if (!shape)
             return nullptr;
-        }
     }
 
     MOZ_ASSERT(shape == obj->lastProperty());
@@ -517,7 +540,6 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
         shape->parent->handoffTableTo(shape);
     }
 
-    obj->checkShapeConsistency();
     return shape;
 }
 
@@ -530,10 +552,11 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 {
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
 
+    AutoCheckShapeConsistency check(obj);
+
     /*
      * The code below deals with either converting obj to dictionary mode or
-     * growing an object that's already in dictionary mode. Either way,
-     * dictionray operations are safe if thread local.
+     * growing an object that's already in dictionary mode.
      */
     ShapeTable* table = nullptr;
     if (!obj->inDictionaryMode()) {
@@ -574,10 +597,8 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, flags));
         shape = getChildProperty(cx, obj, last, &child);
-        if (!shape) {
-            obj->checkShapeConsistency();
+        if (!shape)
             return nullptr;
-        }
     }
 
     MOZ_ASSERT(shape == obj->lastProperty());
@@ -592,7 +613,6 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
         shape->parent->handoffTableTo(shape);
     }
 
-    obj->checkShapeConsistency();
     return shape;
 }
 
@@ -603,6 +623,7 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
     // new enumerable data property.
 
     AutoKeepShapeTables keep(cx);
+    AutoCheckShapeConsistency check(obj);
 
     ShapeTable* table = nullptr;
     ShapeTable::Entry* entry = nullptr;
@@ -665,10 +686,8 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
         shape = cx->zone()->propertyTree().inlinedGetChild(cx, last, child);
         if (!shape)
             return nullptr;
-        if (!obj->setLastProperty(cx, shape)) {
-            obj->checkShapeConsistency();
+        if (!obj->setLastProperty(cx, shape))
             return nullptr;
-        }
     }
 
     MOZ_ASSERT(shape == obj->lastProperty());
@@ -683,7 +702,6 @@ NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, H
         shape->parent->handoffTableTo(shape);
     }
 
-    obj->checkShapeConsistency();
     return shape;
 }
 
@@ -770,6 +788,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
 
+    AutoCheckShapeConsistency check(obj);
     AssertValidArrayIndex(obj, id);
 
     /*
@@ -895,19 +914,12 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         /* Find or create a property tree node labeled by our arguments. */
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, flags));
         RootedShape parent(cx, shape->parent);
-        Shape* newShape = getChildProperty(cx, obj, parent, &child);
-
-        if (!newShape) {
-            obj->checkShapeConsistency();
+        shape = getChildProperty(cx, obj, parent, &child);
+        if (!shape)
             return nullptr;
-        }
-
-        shape = newShape;
     }
 
     MOZ_ASSERT(shape->isDataProperty());
-    obj->checkShapeConsistency();
-
     return shape;
 }
 
@@ -917,6 +929,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
 
+    AutoCheckShapeConsistency check(obj);
     AssertValidArrayIndex(obj, id);
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
@@ -1033,14 +1046,9 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, flags));
         child.updateGetterSetter(getter, setter);
         RootedShape parent(cx, shape->parent);
-        Shape* newShape = getChildProperty(cx, obj, parent, &child);
-
-        if (!newShape) {
-            obj->checkShapeConsistency();
+        shape = getChildProperty(cx, obj, parent, &child);
+        if (!shape)
             return nullptr;
-        }
-
-        shape = newShape;
     }
 
     /*
@@ -1053,8 +1061,6 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         obj->freeSlot(cx, oldSlot);
 
     MOZ_ASSERT(!shape->isDataProperty());
-    obj->checkShapeConsistency();
-
     return shape;
 }
 
@@ -1063,6 +1069,8 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
                              unsigned attrs, GetterOp getter, SetterOp setter)
 {
     MOZ_ASSERT(obj->containsPure(shape));
+
+    AutoCheckShapeConsistency check(obj);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
 #ifdef DEBUG
@@ -1084,10 +1092,7 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
      * putProperty won't re-allocate it.
      */
     RootedId propid(cx, shape->propid());
-    Shape* newShape = putAccessorProperty(cx, obj, propid, getter, setter, attrs, shape->flags);
-
-    obj->checkShapeConsistency();
-    return newShape;
+    return putAccessorProperty(cx, obj, propid, getter, setter, attrs, shape->flags);
 }
 
 /* static */ bool
