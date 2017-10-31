@@ -2271,6 +2271,10 @@ GK_ATOM(windows_glass, "windows-glass")
 GK_ATOM(touch_enabled, "touch-enabled")
 GK_ATOM(menubar_drag, "menubar-drag")
 GK_ATOM(swipe_animation_enabled, "swipe-animation-enabled")
+GK_ATOM(gtk_csd_available, "gtk-csd-available")
+GK_ATOM(gtk_csd_minimize_button, "gtk-csd-minimize-button")
+GK_ATOM(gtk_csd_maximize_button, "gtk-csd-maximize-button")
+GK_ATOM(gtk_csd_close_button, "gtk-csd-close-button")
 
 // windows theme selector metrics
 GK_ATOM(windows_classic, "windows-classic")
@@ -2305,6 +2309,10 @@ GK_ATOM(_moz_device_pixel_ratio, "-moz-device-pixel-ratio")
 GK_ATOM(_moz_device_orientation, "-moz-device-orientation")
 GK_ATOM(_moz_is_resource_document, "-moz-is-resource-document")
 GK_ATOM(_moz_swipe_animation_enabled, "-moz-swipe-animation-enabled")
+GK_ATOM(_moz_gtk_csd_available, "-moz-gtk-csd-available")
+GK_ATOM(_moz_gtk_csd_minimize_button, "-moz-gtk-csd-minimize-button")
+GK_ATOM(_moz_gtk_csd_maximize_button, "-moz-gtk-csd-maximize-button")
+GK_ATOM(_moz_gtk_csd_close_button, "-moz-gtk-csd-close-button")
 
 // application commands
 GK_ATOM(Back, "Back")
