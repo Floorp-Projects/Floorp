@@ -14,7 +14,8 @@ def build(context):
     def builtin(name, variadic=None, argument_tests=None, minArgs=None):
         def wrap(fn):
             def bad(reason=None):
-                raise BuiltinError((reason or 'invalid arguments to {}').format(name))
+                raise BuiltinError(
+                    (reason or 'invalid arguments to builtin: {}').format(name))
             if variadic:
                 def invoke(*args):
                     if minArgs:
@@ -51,6 +52,9 @@ def build(context):
     def is_string_or_array(v):
         return isinstance(v, (string, list))
 
+    def anything_except_array(v):
+        return isinstance(v, (string, int, float, bool)) or v is None
+
     def anything(v):
         return isinstance(v, (string, int, float, list, dict)) or v is None or callable(v)
 
@@ -78,7 +82,7 @@ def build(context):
         return v.upper()
 
     builtin('len', argument_tests=[is_string_or_array])(len)
-    builtin('str', argument_tests=[anything])(to_str)
+    builtin('str', argument_tests=[anything_except_array])(to_str)
 
     @builtin('strip', argument_tests=[is_string])
     def strip(s):
