@@ -2517,8 +2517,6 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  if (mClosed)
-    return NS_ERROR_FAILURE;
 
   // Cache the offset in case it is changed again when we are waiting for the
   // monitor to be notified to avoid reading at the wrong position.
@@ -2527,10 +2525,16 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   uint32_t count = 0;
   // Read one block (or part of a block) at a time
   while (count < aCount) {
+    if (mClosed) {
+      return NS_ERROR_ABORT;
+    }
+
     int32_t streamBlock = OffsetToBlockIndex(streamOffset);
     if (streamBlock < 0) {
-      break;
+      LOGE("Stream %p invalid offset=%" PRId64, this, streamOffset);
+      return NS_ERROR_ILLEGAL_VALUE;
     }
+
     uint32_t offsetInStreamBlock = uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
     int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
@@ -2598,11 +2602,6 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 
       // No data has been read yet, so block
       mon.Wait();
-      if (mClosed) {
-        // We may have successfully read some data, but let's just throw
-        // that out.
-        return NS_ERROR_FAILURE;
-      }
       continue;
     }
 
@@ -2615,10 +2614,10 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     nsresult rv = mMediaCache->ReadCacheFile(
       offset, aBuffer + count, int32_t(size), &bytes);
     if (NS_FAILED(rv)) {
-      if (count == 0)
-        return rv;
-      // If we did successfully read some data, may as well return it
-      break;
+      nsCString name;
+      GetErrorName(rv, name);
+      LOGE("Stream %p ReadCacheFile failed, rv=%s", this, name.Data());
+      return rv;
     }
     streamOffset += bytes;
     count += bytes;
