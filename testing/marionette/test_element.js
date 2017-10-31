@@ -138,7 +138,7 @@ add_test(function test_isElement() {
 
 add_test(function test_isDOMElement() {
   ok(element.isDOMElement(domEl));
-  ok(!element.isDOMElement(svgEl));
+  ok(element.isDOMElement(svgEl));
   ok(!element.isDOMElement(xulEl));
   ok(!element.isDOMElement(domWin));
   ok(!element.isDOMElement(domFrame));
