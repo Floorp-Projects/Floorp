@@ -8,7 +8,6 @@ TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
     'nsITransaction.idl',
-    'nsITransactionList.idl',
     'nsITransactionListener.idl',
     'nsITransactionManager.idl',
 ]
@@ -21,7 +20,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsTransactionItem.cpp',
-    'nsTransactionList.cpp',
     'nsTransactionManager.cpp',
     'nsTransactionManagerFactory.cpp',
     'nsTransactionStack.cpp',

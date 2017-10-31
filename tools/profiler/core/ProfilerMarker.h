@@ -27,8 +27,10 @@ public:
                           double aTime = 0)
     : mMarkerName(strdup(aMarkerName))
     , mPayload(Move(aPayload))
+    , mNext{nullptr}
     , mTime(aTime)
-  {}
+    , mGenID{0}
+    {}
 
   void SetGeneration(uint32_t aGenID) { mGenID = aGenID; }
 
