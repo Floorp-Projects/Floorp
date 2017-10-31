@@ -1,3 +1,4 @@
+// |reftest| skip-if(xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,17 +14,10 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (typeof window != 'undefined')
-{
-  // delay test driver end
-  gDelayTestDriverEnd = true;
+// delay test driver end
+gDelayTestDriverEnd = true;
 
-  window.addEventListener("load", boom, false);
-}
-else
-{
-  reportCompare(expect, actual, summary);
-}
+window.addEventListener("load", boom, false);
 
 function boom()
 {
