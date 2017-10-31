@@ -10,7 +10,6 @@ readme = "README.md"
 license = "MPL-2.0"
 
 [dependencies]
-backtrace = "0.3"
 cookie = { version = "0.9", default-features = false }
 hyper = "0.10"
 log = "0.3"
