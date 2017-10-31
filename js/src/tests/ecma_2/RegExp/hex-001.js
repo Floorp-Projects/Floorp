@@ -16,7 +16,6 @@ var SECTION = "RegExp/hex-001";
 var VERSION = "ECMA_2";
 var TITLE   = "RegExp patterns that contain HexicdecimalEscapeSequences";
 
-startTest();
 
 // These examples come from 15.7.1, HexidecimalEscapeSequence
 

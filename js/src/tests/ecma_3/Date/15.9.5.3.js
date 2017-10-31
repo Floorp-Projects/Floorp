@@ -30,7 +30,6 @@ var actual = '';
 var expect = '';
 
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // first, some generic tests -

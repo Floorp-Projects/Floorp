@@ -19,7 +19,6 @@ var SECTION = "dowhile-003";
 var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile( new DoWhileObject( 1, 1, 0 ));

@@ -18,7 +18,6 @@
 
 var SECTION = "15.8.1.4-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.LOG2E";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -30,7 +30,6 @@
 */
 var SECTION = "11.13.2-5";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Compound Assignment: -=");
 

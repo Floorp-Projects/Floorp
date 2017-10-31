@@ -30,7 +30,6 @@
 */
 var SECTION = "7.4.2-7";
 var VERSION = "ECMA_1";
-startTest();
 writeHeaderToLog( SECTION + " Keywords");
 
 DESCRIPTION = "var return = true";

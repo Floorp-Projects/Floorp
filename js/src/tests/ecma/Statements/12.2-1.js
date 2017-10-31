@@ -26,7 +26,6 @@
 
 var SECTION = "12.2-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The variable statement";
 
 writeHeaderToLog( SECTION +" "+ TITLE);

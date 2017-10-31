@@ -24,7 +24,6 @@
 var SECTION = "expression-001";
 var VERSION = "JS1_4";
 var TITLE   = "Conditional operator ( ? : )"
-  startTest();
 writeHeaderToLog( SECTION + " " + TITLE );
 
 // the following expression should be an error in JS.

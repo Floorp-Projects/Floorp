@@ -19,7 +19,6 @@ var SECTION = "while-002";
 var VERSION = "ECMA_2";
 var TITLE   = "while statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile( new DoWhileObject(

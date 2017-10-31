@@ -41,7 +41,6 @@ var reducedDateString = '';
 var hopeThisIsLocaleTimeString = '';
 var cnERR ='OOPS! FATAL ERROR: no regexp match in extractLocaleTimeString()';
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // first, a couple generic tests -

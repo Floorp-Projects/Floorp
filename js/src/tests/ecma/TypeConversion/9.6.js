@@ -35,7 +35,6 @@
 
 var SECTION = "9.6";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Type Conversion:  ToUint32");
 

@@ -18,7 +18,6 @@
 
 var SECTION = "8.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The undefined type";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

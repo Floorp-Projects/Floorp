@@ -40,7 +40,6 @@
 
 var SECTION = "15.9.3.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "new Date( year, month, date, hours, minutes, seconds, ms )";
 
 var TIME        = 0;

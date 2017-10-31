@@ -41,7 +41,6 @@
 
 var SECTION = "15.3.5-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Properties of Function Instances";
 
 writeHeaderToLog( SECTION + " "+TITLE);

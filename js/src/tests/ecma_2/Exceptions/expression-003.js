@@ -20,7 +20,6 @@ var VERSION = "JS1_4";
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 
-startTest();
 
 // try to access properties of primitive types
 

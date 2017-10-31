@@ -24,7 +24,6 @@
 */
 var SECTION = "lexical-023.js";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Future Reserved Words";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

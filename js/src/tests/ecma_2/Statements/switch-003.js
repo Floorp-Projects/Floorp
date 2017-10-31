@@ -19,7 +19,6 @@ var SECTION = "switch-003";
 var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 SwitchTest( "a", "abc" );

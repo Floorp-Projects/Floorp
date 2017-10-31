@@ -23,7 +23,6 @@
 */
 var SECTION = "15-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Native ECMAScript Objects";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

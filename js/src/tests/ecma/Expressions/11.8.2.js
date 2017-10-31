@@ -15,7 +15,6 @@
 */
 var SECTION = "11.8.2";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The greater-than operator ( > )");
 

@@ -14,7 +14,6 @@ function f ()
 
 var SECTION = "apply-001-n";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "f.apply(2,2) doesn't crash";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

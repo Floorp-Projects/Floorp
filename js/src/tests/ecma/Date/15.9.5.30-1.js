@@ -31,7 +31,6 @@
 */
 var SECTION = "15.9.5.30-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Date.prototype.setHours( hour [, min, sec, ms] )");
 

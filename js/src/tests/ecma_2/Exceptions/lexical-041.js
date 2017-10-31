@@ -20,9 +20,7 @@ var SECTION = "lexical-041";
 var VERSION = "ECMA_1";
 var TITLE   = "Identifiers";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

@@ -20,7 +20,6 @@ var SECTION = "JS1_2";
 var VERSION = "JS1_2";
 var TITLE   = "The variable statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // delete all properties of the global object

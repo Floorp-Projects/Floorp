@@ -57,7 +57,6 @@
 
 var SECTION = "15.4.4.4-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Array.prototype.reverse()");
 

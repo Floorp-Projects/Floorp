@@ -17,7 +17,6 @@
 */
 
 var VERSION = "ECMA_1";
-startTest();
 var SECTION = "15.7.3.1-3";
 var TITLE   = "Number.prototype";
 

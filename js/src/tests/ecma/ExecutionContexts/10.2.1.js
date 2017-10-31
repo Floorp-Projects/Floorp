@@ -22,7 +22,6 @@
 
 var SECTION = "10.2.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Global Code";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

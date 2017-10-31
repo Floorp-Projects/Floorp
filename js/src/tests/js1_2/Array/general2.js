@@ -14,7 +14,6 @@
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 var VERSION = 'no version';
-startTest();
 var TITLE = 'String:push,splice,concat,unshift,sort';
 
 writeHeaderToLog('Executing script: general2.js');

@@ -19,7 +19,6 @@
 
 var SECTION = "7.6";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Punctuators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

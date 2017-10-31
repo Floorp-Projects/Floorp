@@ -16,7 +16,6 @@ var SECTION = "RegExp/function-001";
 var VERSION = "ECMA_2";
 var TITLE   = "RegExp( pattern, flags )";
 
-startTest();
 
 /*
  * for each test case, verify:

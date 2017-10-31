@@ -26,7 +26,6 @@
 
 var SECTION = "7.1-3";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "White Space";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

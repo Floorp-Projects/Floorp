@@ -20,7 +20,6 @@ var SECTION = "";
 var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var INVALID_JAVA_INTEGER_VALUE = "Invalid value for java.lang.Integer constructor";

@@ -17,7 +17,6 @@ var SECTION = "expression-004";
 var VERSION = "JS1_4";
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
-startTest();
 
 var OBJECT = new Property( "null", null, "null", 0 );
 

@@ -14,7 +14,6 @@
 */
 var SECTION = "15.9.5.35-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Date.prototype.setUTCMonth(mon [,date] ) ");
 addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCMonth(0);TDATE",
