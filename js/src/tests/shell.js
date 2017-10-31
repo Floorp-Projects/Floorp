@@ -643,4 +643,3 @@ var gDelayTestDriverEnd = false;
 var gFailureExpected = false;
 
 var DESCRIPTION;
-var EXPECTED;
