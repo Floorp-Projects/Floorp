@@ -82,8 +82,6 @@ function exhaustiveSliceTest(testname, a)
 	passed = false;
       }
     }
-  var testCase = new TestCase(SECTION, testname, true, passed);
-  if (passed == false)
-    testCase.reason = reason;
-  return testCase;
+
+  new TestCase(SECTION, testname, true, passed, reason);
 }
