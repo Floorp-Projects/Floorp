@@ -36,11 +36,11 @@ for ( var item = 0; item < 100; item++ ) {
     actual = "fail";
   }
 
-  var testcase = new TestCase( SECTION, 
+  new TestCase( SECTION,
 			       "Math.random()",   
 			       "pass",   
-			       actual );
-  testcase.reason = result;
+			       actual,
+                result );
 }
 
 test();

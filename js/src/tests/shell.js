@@ -410,13 +410,13 @@
   var testCasesCounter = 0;
   var testCasesArray = [];
 
-  function TestCase(n, d, e, a) {
+  function TestCase(n, d, e, a, r) {
     this.name = n;
     this.description = d;
     this.expect = e;
     this.actual = a;
     this.passed = getTestCaseResult(e, a);
-    this.reason = '';
+    this.reason = typeof r !== 'undefined' ? String(r) : '';
     this.bugnumber = typeof BUGNUMER !== 'undefined' ? BUGNUMBER : '';
     this.type = runningInBrowser ? 'browser' : 'shell';
     ObjectDefineProperty(
@@ -559,8 +559,7 @@
         "', Actual value '" + toPrinted(actual) + "' ";
     }
 
-    var testcase = new TestCase("unknown-test-name", description, expected, actual);
-    testcase.reason = output;
+    var testcase = new TestCase("unknown-test-name", description, expected, actual, output);
 
     // if running under reftest, let it handle result reporting.
     if (!runningInBrowser) {
@@ -599,8 +598,7 @@
         "', Actual value '" + toPrinted(actual) + "' ";
     }
 
-    var testcase = new TestCase("unknown-test-name", description, true, matches);
-    testcase.reason = output;
+    var testcase = new TestCase("unknown-test-name", description, true, matches, output);
 
     // if running under reftest, let it handle result reporting.
     if (!runningInBrowser) {
