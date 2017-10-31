@@ -667,7 +667,8 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aBorderArea,
                                      nsStyleContext* aStyleContext,
-                                     Sides aSkipSides)
+                                     Sides aSkipSides,
+                                     bool* aOutBorderIsEmpty)
 {
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
@@ -677,7 +678,8 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
     return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                                aForFrame, aDirtyRect,
                                                aBorderArea, *styleBorder,
-                                               aStyleContext, aSkipSides);
+                                               aStyleContext, aSkipSides,
+                                               aOutBorderIsEmpty);
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
@@ -690,7 +692,7 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
   return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                              aForFrame, aDirtyRect, aBorderArea,
                                              newStyleBorder, aStyleContext,
-                                             aSkipSides);
+                                             aSkipSides, aOutBorderIsEmpty);
 }
 
 
@@ -982,7 +984,8 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                     const nsRect& aBorderArea,
                                                     const nsStyleBorder& aStyleBorder,
                                                     nsStyleContext* aStyleContext,
-                                                    Sides aSkipSides)
+                                                    Sides aSkipSides,
+                                                    bool* aOutBorderIsEmpty)
 {
   const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
   if (displayData->mAppearance) {
@@ -1002,6 +1005,9 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
   if (0 == border.left && 0 == border.right &&
       0 == border.top  && 0 == border.bottom) {
     // Empty border area
+    if (aOutBorderIsEmpty) {
+      *aOutBorderIsEmpty = true;
+    }
     return Nothing();
   }
 
