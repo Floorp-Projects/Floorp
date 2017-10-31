@@ -1113,19 +1113,18 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             // To enter a monitoring chain, we load the top stack value into R0
             JitSpew(JitSpew_BaselineBailouts, "      Popping top stack value into R0.");
             builder.popValueInto(PCMappingSlotInfo::SlotInR0);
+            frameSize -= sizeof(Value);
 
             if (JSOp(*pc) == JSOP_GETELEM_SUPER) {
                 // Push a fake value so that the stack stays balanced.
-                if (!builder.writeValue(UndefinedValue(), "GETELEM_SUPER stack blance"))
+                if (!builder.writeValue(UndefinedValue(), "GETELEM_SUPER stack balance"))
                     return false;
+                frameSize += sizeof(Value);
             }
 
-            // Need to adjust the frameSize for the frame to match the values popped
-            // into registers.
-            frameSize -= sizeof(Value);
+            // Update the frame's frame size.
             blFrame->setFrameSize(frameSize);
-            JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
-                            (int) sizeof(Value), (int) frameSize);
+            JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize: %u", unsigned(frameSize));
 
             // If resuming into a JSOP_CALL, baseline keeps the arguments on the
             // stack and pops them only after returning from the call IC.
