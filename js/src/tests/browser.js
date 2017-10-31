@@ -320,8 +320,6 @@ window.onerror = function (msg, page, line, column, error) {
   new TestCase(DESCRIPTION, expected, actual, reason);
 
   reportFailure(msg);
-
-  optionsClear();
 };
 
 function gc()
@@ -374,28 +372,24 @@ function options(aOptionName) {
 // variables.
 jstestsOptions = options;
 
-function optionsInit() {
-  // Hash containing the set options.
-  options.currvalues = {
-    __proto__: null,
-    strict: true,
-    werror: true,
-    strict_mode: true,
-  };
-
-  for (var optionName in options.currvalues) {
-    var propName = optionName;
-    if (!(propName in SpecialPowers.Cu))
-      throw "options.currvalues is out of sync with Components.utils";
-    if (!SpecialPowers.Cu[propName])
-      delete options.currvalues[optionName];
-  }
-}
-
 function jsTestDriverBrowserInit()
 {
-  optionsInit();
-  optionsClear();
+  // Unset all options before running any test code, cf. the call to
+  // |optionsClear| in shell.js' set-up code.
+  for (var optionName of ["strict", "werror", "strict_mode"]) {
+    if (!(optionName in SpecialPowers.Cu))
+      throw "options is out of sync with Components.utils";
+
+    // Option is set, toggle it to unset. (Reading an option is a cheap
+    // operation, but setting is relatively expensive, so only assign if
+    // necessary.)
+    if (SpecialPowers.Cu[optionName])
+      SpecialPowers.Cu[optionName] = false;
+  }
+
+  // Hash containing the set options, initially empty because we just turned
+  // off all options.
+  options.currvalues = Object.create(null);
 
   if (document.location.search.indexOf('?') != 0)
   {
