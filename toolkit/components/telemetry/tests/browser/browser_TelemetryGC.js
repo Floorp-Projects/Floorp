@@ -41,16 +41,18 @@ function check(entries) {
 
       foundGCs++;
 
-      ok(Object.keys(gc).length <= 25, "number of keys in GC is not too large");
+      ok(Object.keys(gc).length <= 30, "number of keys in GC is not too large");
 
       // Sanity check the GC data.
+      ok("status" in gc, "status field present");
+      is(gc.status, "completed", "status field correct");
       ok("total_time" in gc, "total_time field present");
       ok("max_pause" in gc, "max_pause field present");
 
-      ok("slices" in gc, "slices field present");
-      ok(Array.isArray(gc.slices), "slices is an array");
-      ok(gc.slices.length > 0, "slices array non-empty");
-      ok(gc.slices.length <= 4, "slices array is not too long");
+      ok("slices_list" in gc, "slices_list field present");
+      ok(Array.isArray(gc.slices_list), "slices_list is an array");
+      ok(gc.slices_list.length > 0, "slices_list array non-empty");
+      ok(gc.slices_list.length <= 4, "slices_list array is not too long");
 
       ok("totals" in gc, "totals field present");
       ok(typeof(gc.totals) == "object", "totals is an object");
@@ -58,14 +60,14 @@ function check(entries) {
 
       // Make sure we don't skip any big objects.
       for (let key in gc) {
-        if (key != "slices" && key != "totals") {
+        if (key != "slices_list" && key != "totals") {
           ok(typeof(gc[key]) != "object", `${key} property should be primitive`);
         }
       }
 
       let phases = new Set();
 
-      for (let slice of gc.slices) {
+      for (let slice of gc.slices_list) {
         ok(Object.keys(slice).length <= 15, "slice is not too large");
 
         ok("pause" in slice, "pause field present in slice");
