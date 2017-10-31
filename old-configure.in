@@ -3221,6 +3221,9 @@ case "$CPU_ARCH" in
   x86_64)
       MOZ_FFVPX=1
   ;;
+  arm*)
+      MOZ_FFVPX=1
+  ;;
 esac
 
 dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.

@@ -28,6 +28,8 @@
 #endif
 #elif defined(XP_DARWIN)
 #include "config_darwin64.h"
+#elif defined(MOZ_WIDGET_ANDROID)
+#include "config_android.h"
 #elif defined(XP_UNIX)
 #if defined(HAVE_64BIT_BUILD)
 #include "config_unix64.h"

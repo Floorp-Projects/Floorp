@@ -19,8 +19,9 @@ replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
 
 config_unix32.h:
 add to configure command: --disable-asm --disable-yasm --cc='clang -m32'
-replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0/ and s/HAVE_MEMALIGN 1/HAVE_MEMALIGN 0/ and s/HAVE_POSIX_MEMALIGN 1/HAVE_POSIX_MEMALIGN 0/
 
+config_android.h:
+./configure --disable-everything --disable-protocols --disable-demuxers --disable-muxers --disable-filters --disable-programs --disable-doc --disable-parsers --disable-static --enable-shared --disable-debug --disable-sdl2 --disable-libxcb --disable-securetransport --disable-iconv --disable-swresample --disable-swscale --disable-avdevice --disable-avfilter --disable-avformat --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vda --disable-vdpau --disable-videotoolbox --enable-decoder=flac --disable-asm --cross-prefix=~/.mozbuild/android-ndk-r15c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi- --target-os=linux --arch=arm --enable-cross-compile --sysroot=~/.mozbuild/android-ndk-r15c/platforms/android-24/arch-arm
 
 config_unix64.h/config_unix64.asm:
 replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
