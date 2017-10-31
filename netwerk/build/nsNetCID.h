@@ -902,7 +902,7 @@
  * netwerk/cookie classes
  */
 
-// service implementing nsICookieManager and nsICookieManager2.
+// service implementing nsICookieManager
 #define NS_COOKIEMANAGER_CONTRACTID \
     "@mozilla.org/cookiemanager;1"
 #define NS_COOKIEMANAGER_CID                           \

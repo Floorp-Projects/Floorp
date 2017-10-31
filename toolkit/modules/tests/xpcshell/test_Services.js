@@ -33,7 +33,7 @@ function run_test() {
   checkService("cache2", Ci.nsICacheStorageService);
   checkService("clipboard", Ci.nsIClipboard);
   checkService("console", Ci.nsIConsoleService);
-  checkService("cookies", Ci.nsICookieManager2);
+  checkService("cookies", Ci.nsICookieManager);
   checkService("dirsvc", Ci.nsIDirectoryService);
   checkService("dirsvc", Ci.nsIProperties);
   checkService("DOMRequest", Ci.nsIDOMRequestService);
