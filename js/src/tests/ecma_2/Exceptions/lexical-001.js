@@ -42,7 +42,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJECT = new Object; result = new OBJECT()" +
   " (threw " + exception +")",
   expect,

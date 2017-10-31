@@ -27,6 +27,6 @@ var TITLE   = "Function.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "Function.prototype == Function.__proto__",    true, Function.__proto__ == Function.prototype );
+new TestCase( "Function.prototype == Function.__proto__",    true, Function.__proto__ == Function.prototype );
 
 test();

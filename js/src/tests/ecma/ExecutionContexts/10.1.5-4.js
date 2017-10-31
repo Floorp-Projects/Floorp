@@ -31,16 +31,16 @@ var VERSION = "ECMA_1";
 writeHeaderToLog( SECTION + " Global Object");
 
 var EVAL_STRING =
-  'new TestCase( "SECTION", "Anonymous Code check: Object", false, Object == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Function", false, Function == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: String", false, String == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Array", false, Array == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Number", false, Number == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Math", false, Math == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Boolean", false, Boolean == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: Date", false, Date == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: eval", false, eval == null);' +
-  'new TestCase( "SECTION", "Anonymous Code check: parseInt", false, parseInt == null);';
+  'new TestCase( "Anonymous Code check: Object", false, Object == null);' +
+  'new TestCase( "Anonymous Code check: Function", false, Function == null);' +
+  'new TestCase( "Anonymous Code check: String", false, String == null);' +
+  'new TestCase( "Anonymous Code check: Array", false, Array == null);' +
+  'new TestCase( "Anonymous Code check: Number", false, Number == null);' +
+  'new TestCase( "Anonymous Code check: Math", false, Math == null);' +
+  'new TestCase( "Anonymous Code check: Boolean", false, Boolean == null);' +
+  'new TestCase( "Anonymous Code check: Date", false, Date == null);' +
+  'new TestCase( "Anonymous Code check: eval", false, eval == null);' +
+  'new TestCase( "Anonymous Code check: parseInt", false, parseInt == null);';
 
 var NEW_FUNCTION = new Function( EVAL_STRING );
 

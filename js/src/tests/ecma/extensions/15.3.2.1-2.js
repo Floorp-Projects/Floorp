@@ -30,8 +30,8 @@ myfunc2.toString = Object.prototype.toString;
 myfunc3.toString = Object.prototype.toString;
 
 
-new TestCase( SECTION,  "myfunc2.__proto__",                         Function.prototype,     myfunc2.__proto__ );
+new TestCase( "myfunc2.__proto__",                         Function.prototype,     myfunc2.__proto__ );
 
-new TestCase( SECTION,  "myfunc3.__proto__",                         Function.prototype,     myfunc3.__proto__ );
+new TestCase( "myfunc3.__proto__",                         Function.prototype,     myfunc3.__proto__ );
 
 test();

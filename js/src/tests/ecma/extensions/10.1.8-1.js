@@ -48,7 +48,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var ARG_STRING = "value of the argument property";
 
-new TestCase( SECTION,
+new TestCase(
 	      "GetCallee()",
 	      GetCallee,
 	      GetCallee() );
@@ -62,7 +62,7 @@ for ( var i = 0, args = "" ; i < LIMIT; i++ ) {
 
 var LENGTH = eval( "GetLength("+ args +")" );
 
-new TestCase( SECTION,
+new TestCase(
 	      "GetLength("+args+")",
 	      100,
 	      LENGTH );
@@ -70,7 +70,7 @@ new TestCase( SECTION,
 var ARGUMENTS = eval( "GetArguments( " +args+")" );
 
 for ( var i = 0; i < 100; i++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"GetArguments("+args+")["+i+"]",
 		i,
 		ARGUMENTS[i] );

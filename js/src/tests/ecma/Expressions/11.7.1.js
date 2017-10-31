@@ -38,7 +38,7 @@ for ( power = 0; power < 33; power++ ) {
   shiftexp = Math.pow( 2, power );
 
   for ( addexp = 0; addexp < 33; addexp++ ) {
-    new TestCase( SECTION,
+    new TestCase(
 		  shiftexp + " << " + addexp,
 		  LeftShift( shiftexp, addexp ),
 		  shiftexp << addexp );

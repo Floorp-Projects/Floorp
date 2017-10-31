@@ -46,20 +46,17 @@ foo: {
   }
 
   new TestCase(
-    SECTION,
     "do while ( " + i +" < " + limit +" )",
     expect,
     i );
 
   new TestCase(
-    SECTION,
     "breaking out of a do... while loop",
     "pass",
     result1 );
 
 
   new TestCase(
-    SECTION,
     "breaking out of a labeled do...while loop",
     "pass",
     result2 );

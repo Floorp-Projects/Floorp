@@ -36,6 +36,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var in = true";
 
-new TestCase( SECTION,  "var in = true",     "error",    eval("var in = true") );
+new TestCase( "var in = true",     "error",    eval("var in = true") );
 
 test();

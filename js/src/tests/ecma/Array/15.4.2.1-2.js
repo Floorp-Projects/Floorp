@@ -52,14 +52,12 @@ TEST_STRING += ARGUMENTS + ")";
 TEST_ARRAY = eval( TEST_STRING );
 
 for ( var item = 0; item < TEST_LENGTH; item++ ) {
-  new TestCase( SECTION,
-		"["+item+"]",    
+  new TestCase( "["+item+"]",    
 		item,   
 		TEST_ARRAY[item] );
 }
 
-new TestCase( SECTION,
-	      "new Array( ["+TEST_LENGTH+" arguments] ) +''",   
+new TestCase( "new Array( ["+TEST_LENGTH+" arguments] ) +''",   
 	      ARGUMENTS,
 	      TEST_ARRAY +"" );
 

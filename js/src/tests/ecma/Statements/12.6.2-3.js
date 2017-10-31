@@ -22,7 +22,7 @@ var TITLE   = "The for statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "for statement",  100,     testprogram() );
+new TestCase( "for statement",  100,     testprogram() );
 
 test();
 

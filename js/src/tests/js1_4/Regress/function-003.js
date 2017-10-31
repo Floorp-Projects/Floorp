@@ -23,7 +23,6 @@ printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase(
-  SECTION,
   "StripSpaces(Array.prototype.concat.toString()).substring(0,17)",
   "functionconcat(){",
   StripSpaces(Array.prototype.concat.toString()).substring(0,17));

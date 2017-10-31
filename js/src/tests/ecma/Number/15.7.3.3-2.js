@@ -25,13 +25,11 @@ writeHeaderToLog( SECTION + " "+ TITLE );
 
 var MIN_VAL = 5e-324;
 
-new TestCase(  SECTION,
-	       "delete( Number.MIN_VALUE )",   
+new TestCase(  "delete( Number.MIN_VALUE )",   
 	       false,
 	       eval("delete( Number.MIN_VALUE )") );
 
-new TestCase(  SECTION,
-	       "delete( Number.MIN_VALUE ); Number.MIN_VALUE",
+new TestCase(  "delete( Number.MIN_VALUE ); Number.MIN_VALUE",
 	       MIN_VAL,
 	       eval("delete( Number.MIN_VALUE );Number.MIN_VALUE") );
 

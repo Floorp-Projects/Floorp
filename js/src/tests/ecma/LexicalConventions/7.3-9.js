@@ -24,8 +24,7 @@ var actual = "fail";
 
 /*/*/actual="pass";
 
-new TestCase( SECTION,
-			     "code following multiline comment",
+new TestCase( "code following multiline comment",
 			     "pass",
 			     actual);
 

@@ -14,7 +14,7 @@ print("BUGNUMBER: 21799");
 
 DESCRIPTION = "throw null";
 
-new TestCase( SECTION,  "throw null",     "error",    eval("throw null" ));
+new TestCase( "throw null",     "error",    eval("throw null" ));
 
 test();
 

@@ -30,7 +30,6 @@ eval("function f1 (a){ var a,b; }");
 function f2( a ) { var a, b; };
 
 new TestCase(
-  SECTION,
   "eval(\"function f1 (a){ var a,b; }\"); "+
   "function f2( a ) { var a, b; }; typeof f1",
   "function",
@@ -39,13 +38,11 @@ new TestCase(
 // force a function decompilation
 
 new TestCase(
-  SECTION,
   "typeof f1.toString()",
   "string",
   typeof f1.toString() );
 
 new TestCase(
-  SECTION,
   "typeof f2",
   "function",
   typeof f2 );
@@ -53,7 +50,6 @@ new TestCase(
 // force a function decompilation
 
 new TestCase(
-  SECTION,
   "typeof f2.toString()",
   "string",
   typeof f2.toString() );

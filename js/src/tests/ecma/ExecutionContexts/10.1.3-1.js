@@ -46,25 +46,21 @@ function myfun3(a, b, a) {
 
 
 new TestCase(
-  SECTION,
   String(myfun2) +"; myfun2(2,4,8)",
   8,
   myfun2(2,4,8) );
 
 new TestCase(
-  SECTION,
   "myfun2(2,4)",
   void 0,
   myfun2(2,4));
 
 new TestCase(
-  SECTION,
   String(myfun3) +"; myfun3(2,4,8)",
   8,
   myfun3(2,4,8) );
 
 new TestCase(
-  SECTION,
   "myfun3(2,4)",
   void 0,
   myfun3(2,4) );

@@ -34,14 +34,14 @@ addTestCase();
 test();
 
 function addTestCase() {
-  new TestCase( "SECTION", "Function Code check: Object", false, Object == null);
-  new TestCase( "SECTION", "Function Code check: Function", false, Function == null);
-  new TestCase( "SECTION", "Function Code check: String", false, String == null);
-  new TestCase( "SECTION", "Function Code check: Array", false, Array == null);
-  new TestCase( "SECTION", "Function Code check: Number", false, Number == null);
-  new TestCase( "SECTION", "Function Code check: Math", false, Math == null);
-  new TestCase( "SECTION", "Function Code check: Boolean", false, Boolean == null);
-  new TestCase( "SECTION", "Function Code check: Date", false, Date == null);
-  new TestCase( "SECTION", "Function Code check: eval", false, eval == null);
-  new TestCase( "SECTION", "Function Code check: parseInt", false, parseInt == null);
+  new TestCase( "Function Code check: Object", false, Object == null);
+  new TestCase( "Function Code check: Function", false, Function == null);
+  new TestCase( "Function Code check: String", false, String == null);
+  new TestCase( "Function Code check: Array", false, Array == null);
+  new TestCase( "Function Code check: Number", false, Number == null);
+  new TestCase( "Function Code check: Math", false, Math == null);
+  new TestCase( "Function Code check: Boolean", false, Boolean == null);
+  new TestCase( "Function Code check: Date", false, Date == null);
+  new TestCase( "Function Code check: eval", false, eval == null);
+  new TestCase( "Function Code check: parseInt", false, parseInt == null);
 }

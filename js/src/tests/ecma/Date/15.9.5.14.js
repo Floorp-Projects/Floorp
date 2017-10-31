@@ -31,13 +31,11 @@ addTestCase( TIME_2000 );
 addTestCase( UTC_FEB_29_2000 );
 addTestCase( UTC_JAN_1_2005 );
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getHours()",
+new TestCase( "(new Date(NaN)).getHours()",
 	      NaN,
 	      (new Date(NaN)).getHours() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getHours.length",
+new TestCase( "Date.prototype.getHours.length",
 	      0,
 	      Date.prototype.getHours.length );
 test();
@@ -45,8 +43,7 @@ test();
 function addTestCase( t ) {
   for ( h = 0; h < 24; h+=4 ) {
     t += msPerHour;
-    new TestCase( SECTION,
-		  "(new Date("+t+")).getHours()",
+    new TestCase( "(new Date("+t+")).getHours()",
 		  HourFromTime((LocalTime(t))),
 		  (new Date(t)).getHours() );
   }

@@ -38,7 +38,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJ = new MyObject( new Date(0)); OBJ.valueOf()" +
   " (threw " + exception +")",
   expect,

@@ -28,7 +28,6 @@ o.call = Function.prototype.call;
 DESCRIPTION = "var o = {}; o.call = Function.prototype.call; o.call()";
 
 new TestCase(
-  SECTION,
   "var o = {}; o.call = Function.prototype.call; o.call()",
   "error",
   o.call() );

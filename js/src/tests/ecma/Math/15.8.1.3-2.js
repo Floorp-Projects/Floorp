@@ -24,13 +24,11 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MATH_LN2 = 0.6931471805599453;
 
-new TestCase( SECTION,
-	      "delete(Math.LN2)",             
+new TestCase( "delete(Math.LN2)",             
 	      false,         
 	      eval("delete(Math.LN2)") );
 
-new TestCase( SECTION,
-	      "delete(Math.LN2); Math.LN2",   
+new TestCase( "delete(Math.LN2); Math.LN2",   
 	      MATH_LN2,      
 	      eval("delete(Math.LN2); Math.LN2") );
 

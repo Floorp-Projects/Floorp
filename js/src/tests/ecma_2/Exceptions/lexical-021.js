@@ -41,7 +41,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "enum = true" +
   " (threw " + exception +")",
   expect,

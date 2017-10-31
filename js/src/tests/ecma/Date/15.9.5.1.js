@@ -21,8 +21,7 @@ var TITLE   = "Date.prototype.constructor";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "Date.prototype.constructor == Date",
+new TestCase( "Date.prototype.constructor == Date",
 	      true,
 	      Date.prototype.constructor == Date );
 test();

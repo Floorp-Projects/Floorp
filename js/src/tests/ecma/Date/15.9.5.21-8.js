@@ -23,13 +23,11 @@ var TITLE   = "Date.prototype.getUTCMilliseconds()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getUTCMilliseconds()",
+new TestCase( "(new Date(NaN)).getUTCMilliseconds()",
 	      NaN,
 	      (new Date(NaN)).getUTCMilliseconds() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getUTCMilliseconds.length",
+new TestCase( "Date.prototype.getUTCMilliseconds.length",
 	      0,
 	      Date.prototype.getUTCMilliseconds.length );
 test();

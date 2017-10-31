@@ -24,6 +24,6 @@ var TITLE   = "Null Literals";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "null",     null,        null);
+new TestCase( "null",     null,        null);
 
 test();

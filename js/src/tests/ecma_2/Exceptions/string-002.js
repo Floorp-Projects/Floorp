@@ -39,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJECT = new Object; OBJECT.valueOf = String.prototype.valueOf;"+
   "result = OBJECT.valueOf();" +
   " (threw " + exception +")",

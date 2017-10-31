@@ -34,7 +34,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "var STRING = new String(\"hi\"); result = new STRING();" +
   " (threw " + exception + ")",
   expect,

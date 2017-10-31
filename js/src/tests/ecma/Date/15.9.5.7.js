@@ -30,41 +30,34 @@ addTestCase( TIME_2000 );
 addTestCase( UTC_FEB_29_2000 );
 addTestCase( UTC_JAN_1_2005 );
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getUTCFullYear()",
+new TestCase( "(new Date(NaN)).getUTCFullYear()",
 	      NaN,
 	      (new Date(NaN)).getUTCFullYear() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getUTCFullYear.length",
+new TestCase( "Date.prototype.getUTCFullYear.length",
 	      0,
 	      Date.prototype.getUTCFullYear.length );
 
 test();
 
 function addTestCase( t ) {
-  new TestCase( SECTION,
-		"(new Date("+t+")).getUTCFullYear()",
+  new TestCase( "(new Date("+t+")).getUTCFullYear()",
 		YearFromTime(t),
 		(new Date(t)).getUTCFullYear() );
 
-  new TestCase( SECTION,
-		"(new Date("+(t+1)+")).getUTCFullYear()",
+  new TestCase( "(new Date("+(t+1)+")).getUTCFullYear()",
 		YearFromTime(t+1),
 		(new Date(t+1)).getUTCFullYear() );
 
-  new TestCase( SECTION,
-		"(new Date("+(t-1)+")).getUTCFullYear()",
+  new TestCase( "(new Date("+(t-1)+")).getUTCFullYear()",
 		YearFromTime(t-1),
 		(new Date(t-1)).getUTCFullYear() );
 
-  new TestCase( SECTION,
-		"(new Date("+(t-TZ_ADJUST)+")).getUTCFullYear()",
+  new TestCase( "(new Date("+(t-TZ_ADJUST)+")).getUTCFullYear()",
 		YearFromTime(t-TZ_ADJUST),
 		(new Date(t-TZ_ADJUST)).getUTCFullYear() );
 
-  new TestCase( SECTION,
-		"(new Date("+(t+TZ_ADJUST)+")).getUTCFullYear()",
+  new TestCase( "(new Date("+(t+TZ_ADJUST)+")).getUTCFullYear()",
 		YearFromTime(t+TZ_ADJUST),
 		(new Date(t+TZ_ADJUST)).getUTCFullYear() );
 }

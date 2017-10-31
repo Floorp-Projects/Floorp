@@ -19,8 +19,7 @@ var TITLE   = "Array.length";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "Array.length",     
+new TestCase( "Array.length",     
 	      1,       
 	      Array.length );
 

@@ -22,8 +22,7 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
-new TestCase(SECTION,
-	     "v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()",
+new TestCase("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()",
 	     3, 
 	     eval("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()") );
 

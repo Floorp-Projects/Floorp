@@ -21,8 +21,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "break";
 
-new TestCase(   SECTION,
-		"break",
+new TestCase(   "break",
 		"error",
 		eval("break") );
 

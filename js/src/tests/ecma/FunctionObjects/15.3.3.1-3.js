@@ -30,14 +30,12 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var FUN_PROTO = Function.prototype;
 
-new TestCase(   SECTION,
-		"delete Function.prototype",
+new TestCase(   "delete Function.prototype",
 		false,
 		delete Function.prototype
   );
 
-new TestCase(   SECTION,
-		"delete Function.prototype; Function.prototype",
+new TestCase(   "delete Function.prototype; Function.prototype",
 		FUN_PROTO,
 		eval("delete Function.prototype; Function.prototype")
   );

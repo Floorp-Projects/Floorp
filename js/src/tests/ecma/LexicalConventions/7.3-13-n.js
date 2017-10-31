@@ -22,7 +22,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "nested comment";
 
-var testcase = new TestCase( SECTION,
+var testcase = new TestCase(
 			     "nested comment",
 			     "error",
 			     eval("/*/*\"fail\";*/*/"));

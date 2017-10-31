@@ -35,7 +35,6 @@ function LabelTest( object, expect1, expect2 ) {
 yoohoo:  { for ( property in object ) { result += object[property]; }; break yoohoo };
 
   new TestCase(
-    SECTION,
     "yoohoo: for ( property in object ) { result += object[property]; } break yoohoo }",
     true,
     result == expect1 || result == expect2 );
@@ -47,7 +46,6 @@ function LabelTest2( object, expect1, expect2 ) {
 yoohoo:  { for ( property in object ) { result += object[property]; break yoohoo } }; ;
 
   new TestCase(
-    SECTION,
     "yoohoo: for ( property in object ) { result += object[property]; break yoohoo }}",
     true,
     result == expect1 || result == expect2 );

@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "/*/*nested comment*/ */" +
   " (threw " + exception +")",
   expect,

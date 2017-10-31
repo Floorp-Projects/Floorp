@@ -36,7 +36,6 @@ woohoo:
   } while ( i < limit );
 
   new TestCase(
-    SECTION,
     "do while ( " + i +" < " + limit +" )",
     expect,
     i );

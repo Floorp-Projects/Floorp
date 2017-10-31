@@ -43,26 +43,22 @@ printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase(
-  SECTION,
   "return function.arguments",
   "P",
   TestFunction_2("P", "A","S","S")[0] +"");
 
 
 new TestCase(
-  SECTION,
   "return arguments",
   "P",
   TestFunction_1( "P", "A", "S", "S" )[0] +"");
 
 new TestCase(
-  SECTION,
   "return arguments when function contains an arguments property",
   "PASS",
   TestFunction_3( "P", "A", "S", "S" ) +"");
 
 new TestCase(
-  SECTION,
   "return function.arguments when function contains an arguments property",
   "[object Arguments]",
   TestFunction_4( "F", "A", "I", "L" ) +"");

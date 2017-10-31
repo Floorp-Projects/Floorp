@@ -51,7 +51,6 @@ function ForIn_1( object ) {
 
   for ( var i = 0; i < PropertyArray.length; i++ ) {
     new TestCase(
-      SECTION,
       "object[" + PropertyArray[i] +"]",
       object[PropertyArray[i]],
       ValueArray[i]
@@ -59,7 +58,6 @@ function ForIn_1( object ) {
   }
 
   new TestCase(
-    SECTION,
     "object.length",
     PropertyArray.length,
     object.length );
@@ -81,7 +79,6 @@ function ForIn_2( object ) {
 
   for ( i = 0; i < PropertyArray.length; i++ ) {
     new TestCase(
-      SECTION,
       "object[" + PropertyArray[i] +"]",
       object[PropertyArray[i]],
       ValueArray[i]
@@ -89,7 +86,6 @@ function ForIn_2( object ) {
   }
 
   new TestCase(
-    SECTION,
     "object.length",
     PropertyArray.length,
     object.length );
@@ -112,19 +108,16 @@ function ForIn_3( object ) {
   }
 
   new TestCase(
-    SECTION,
     "check break out of for...in",
     "pass",
     checkBreak );
 
   new TestCase(
-    SECTION,
     "properties.length",
     1,
     properties.length );
 
   new TestCase(
-    SECTION,
     "object["+properties[0]+"]",
     values[0],
     object[properties[0]] );
@@ -153,25 +146,21 @@ butterbean: {
   }
 
   new TestCase(
-    SECTION,
     "verify labeled statement is only executed once",
     true,
     result1 == 1 );
 
   new TestCase(
-    SECTION,
     "verify statements in for loop are evaluated",
     true,
     result2 == i );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled for...in loop",
     true,
     result4 == 0 );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled block",
     true,
     result3 == 0 );
@@ -199,25 +188,21 @@ bigredbird: {
   }
 
   new TestCase(
-    SECTION,
     "verify labeled statement is only executed once",
     true,
     result1 == 1 );
 
   new TestCase(
-    SECTION,
     "verify statements in for loop are evaluated",
     true,
     result2 == i );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled for...in loop",
     true,
     result4 == 0 );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled block",
     true,
     result3 == 0 );
@@ -242,19 +227,16 @@ bigredbird:
   }
 
   new TestCase(
-    SECTION,
     "verify statements in for loop are evaluated",
     true,
     result2 == i );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled for...in loop",
     true,
     result4 == 0 );
 
   new TestCase(
-    SECTION,
     "verify break out of labeled block",
     true,
     result3 == 1 );
@@ -277,19 +259,16 @@ function ForIn_8( object ) {
   }
 
   new TestCase(
-    SECTION,
     "check break out of for...in",
     "pass",
     checkBreak );
 
   new TestCase(
-    SECTION,
     "properties.length",
     1,
     properties.length );
 
   new TestCase(
-    SECTION,
     "object["+properties[0]+"]",
     values[0],
     object[properties[0]] );

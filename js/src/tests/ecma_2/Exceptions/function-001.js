@@ -44,7 +44,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "eval(\"function f(){}function g(){}\") (threw "+exception,
   "pass",
   result );

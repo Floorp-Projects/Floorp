@@ -35,7 +35,6 @@ function ToObject_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "foo[\"bar\"] [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

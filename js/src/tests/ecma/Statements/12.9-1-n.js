@@ -19,8 +19,7 @@ writeHeaderToLog( SECTION + " The return statement");
 
 DESCRIPTION = "return";
 
-new TestCase(   SECTION,
-		"return",
+new TestCase(   "return",
 		"error",
 		eval("return") );
 

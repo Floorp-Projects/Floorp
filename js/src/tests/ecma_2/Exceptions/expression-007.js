@@ -33,7 +33,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "UNDEFINED = void 0; result = new UNDEFINED()" +
   " (threw " + exception +")",
   expect,

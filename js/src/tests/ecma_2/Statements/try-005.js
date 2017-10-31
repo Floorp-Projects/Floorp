@@ -49,7 +49,6 @@ function TryToCatch( value, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "eval( " + value +" )",
     expect,
     result );

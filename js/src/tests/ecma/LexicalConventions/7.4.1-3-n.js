@@ -28,6 +28,6 @@ var TITLE   = "Keywords";
 
 DESCRIPTION = "var false = true";
 
-new TestCase( SECTION,  "var false = true",     "error",    eval("var false = true") );
+new TestCase( "var false = true",     "error",    eval("var false = true") );
 
 test();

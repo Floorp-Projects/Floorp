@@ -35,7 +35,6 @@ function Syntax_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "eval(\"continue\") [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

@@ -56,7 +56,7 @@ function addTestCase() {
      actual = eval( INPUT );
    }
 
-   new TestCase("SECTION", "with MyObject, eval should return square of ( " + INPUT + " )",
+   new TestCase("with MyObject, eval should return square of ( " + INPUT + " )",
                 expect, actual);
 }
 

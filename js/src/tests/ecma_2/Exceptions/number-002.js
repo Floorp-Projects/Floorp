@@ -38,7 +38,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "object = new Object(); object.valueOf = Number.prototype.valueOf; object.valueOf()" +
   " (threw " + exception +")",
   expect,

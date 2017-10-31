@@ -55,13 +55,11 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var FUNCTION = new Function();
 
-new TestCase( SECTION,
-              "var FUNCTION = new Function(); f = new FUNCTION(); typeof f",
+new TestCase( "var FUNCTION = new Function(); f = new FUNCTION(); typeof f",
               "object",
               eval("var FUNCTION = new Function(); f = new FUNCTION(); typeof f") );
 
-new TestCase( SECTION,
-              "var FUNCTION = new Function('return this'); f = new FUNCTION(); typeof f",
+new TestCase( "var FUNCTION = new Function('return this'); f = new FUNCTION(); typeof f",
               "object",
               eval("var FUNCTION = new Function('return this'); f = new FUNCTION(); typeof f") );
 

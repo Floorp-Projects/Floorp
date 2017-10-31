@@ -22,8 +22,7 @@ var TITLE   = "Math.LN2";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "Math.LN2=0; Math.LN2",    
+new TestCase( "Math.LN2=0; Math.LN2",    
 	      0.6931471805599453,    
 	      eval("Math.LN2=0; Math.LN2") );
 

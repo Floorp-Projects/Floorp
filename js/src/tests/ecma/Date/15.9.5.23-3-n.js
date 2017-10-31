@@ -29,7 +29,7 @@ var MYDATE = new MyDate(TIME_1970);
 
 DESCRIPTION = "MYDATE.setTime(TIME_2000)";
 
-new TestCase( SECTION,
+new TestCase(
 	      "MYDATE.setTime(TIME_2000)",
 	      "error",
 	      eval("MYDATE.setTime(TIME_2000)") );

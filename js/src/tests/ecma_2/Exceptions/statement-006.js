@@ -35,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "object is not defined" +
   " (threw " + exception +")",
   expect,

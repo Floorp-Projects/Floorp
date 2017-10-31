@@ -55,8 +55,7 @@ var t = new TestRegExp();
 
 for ( p in r ) { e[e.length] = { property:p, value:r[p] }; t.addProperty( p, r[p]) };
 
-new TestCase( SECTION,
-	      "r = new RegExp(); e = new Array(); "+
+new TestCase( "r = new RegExp(); e = new Array(); "+
 	      "for ( p in r ) { e[e.length] = { property:p, value:r[p] }; e.length",
 	      0,
 	      e.length );
@@ -75,8 +74,7 @@ function addProperty(name, value) {
     eval( "this."+ name+" = "+ false );
   }
 
-  new TestCase( SECTION,
-		"Property: " + name +" already enumerated?",
+  new TestCase( "Property: " + name +" already enumerated?",
 		false,
 		pass );
 }

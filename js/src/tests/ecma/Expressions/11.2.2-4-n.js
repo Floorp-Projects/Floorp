@@ -57,7 +57,7 @@ var STRING = "";
 
 DESCRIPTION = "STRING = '', var s = new STRING()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "STRING = '', var s = new STRING()",
 	      "error",
 	      eval("s = new STRING()") );

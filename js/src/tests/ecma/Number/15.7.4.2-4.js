@@ -27,7 +27,7 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.prototype.toString()");
 
-new TestCase(SECTION, 
+new TestCase(
 	     "o = 3; o.toString = Number.prototype.toString; o.toString()",            
 	     "3",   
 	     eval("o = 3; o.toString = Number.prototype.toString; o.toString()") );

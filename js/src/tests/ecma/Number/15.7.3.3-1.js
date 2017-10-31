@@ -25,8 +25,7 @@ writeHeaderToLog( SECTION + " "+ TITLE );
 
 var MIN_VAL = 5e-324;
 
-new TestCase(  SECTION,
-	       "Number.MIN_VALUE",    
+new TestCase(  "Number.MIN_VALUE",    
 	       MIN_VAL,   
 	       Number.MIN_VALUE );
 

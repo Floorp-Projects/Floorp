@@ -14,7 +14,7 @@ print("Undefined throw test.");
 
 DESCRIPTION = "throw undefined";
 
-new TestCase( SECTION,  "throw undefined",  "error", eval("throw (void 0)") );
+new TestCase( "throw undefined",  "error", eval("throw (void 0)") );
 
 test();
 

@@ -56,7 +56,6 @@ function TryInWhile( object ) {
   }
 
   new TestCase(
-    SECTION,
     "( "+ object  +".thrower() )",
     (object.result
      ? EXCEPTION_STRING + object.value :

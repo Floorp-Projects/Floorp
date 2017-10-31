@@ -24,41 +24,35 @@ var non_whitespace = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~`!@#
 var whitespace     = "\f\n\r\t\v ";
 
 // be sure all whitespace is matched by \s
-new TestCase ( SECTION,
-	       "'" + whitespace + "'.match(new RegExp('\\s+'))",
+new TestCase ( "'" + whitespace + "'.match(new RegExp('\\s+'))",
 	       String([whitespace]), String(whitespace.match(new RegExp('\\s+'))));
 
 // be sure all non-whitespace is matched by \S
-new TestCase ( SECTION,
-	       "'" + non_whitespace + "'.match(new RegExp('\\S+'))",
+new TestCase ( "'" + non_whitespace + "'.match(new RegExp('\\S+'))",
 	       String([non_whitespace]), String(non_whitespace.match(new RegExp('\\S+'))));
 
 // be sure all non-whitespace is not matched by \s
-new TestCase ( SECTION,
-	       "'" + non_whitespace + "'.match(new RegExp('\\s'))",
+new TestCase ( "'" + non_whitespace + "'.match(new RegExp('\\s'))",
 	       null, non_whitespace.match(new RegExp('\\s')));
 
 // be sure all whitespace is not matched by \S
-new TestCase ( SECTION,
-	       "'" + whitespace + "'.match(new RegExp('\\S'))",
+new TestCase ( "'" + whitespace + "'.match(new RegExp('\\S'))",
 	       null, whitespace.match(new RegExp('\\S')));
 
 var s = non_whitespace + whitespace;
 
 // be sure all digits are matched by \s
-new TestCase ( SECTION,
-	       "'" + s + "'.match(new RegExp('\\s+'))",
+new TestCase ( "'" + s + "'.match(new RegExp('\\s+'))",
 	       String([whitespace]), String(s.match(new RegExp('\\s+'))));
 
 s = whitespace + non_whitespace;
 
 // be sure all non-whitespace are matched by \S
-new TestCase ( SECTION,
-	       "'" + s + "'.match(new RegExp('\\S+'))",
+new TestCase ( "'" + s + "'.match(new RegExp('\\S+'))",
 	       String([non_whitespace]), String(s.match(new RegExp('\\S+'))));
 
 // '1233345find me345'.match(new RegExp('[a-z\\s][a-z\\s]+'))
-new TestCase ( SECTION, "'1233345find me345'.match(new RegExp('[a-z\\s][a-z\\s]+'))",
+new TestCase ( "'1233345find me345'.match(new RegExp('[a-z\\s][a-z\\s]+'))",
 	       String(["find me"]), String('1233345find me345'.match(new RegExp('[a-z\\s][a-z\\s]+'))));
 
 var i;
@@ -67,22 +61,18 @@ var i;
 for (i = 0; i < whitespace.length; ++i)
 {
   s = 'ab' + whitespace[i] + 'cd';
-  new TestCase ( SECTION,
-		 "'" + s + "'.match(new RegExp('\\\\s'))",
+  new TestCase ( "'" + s + "'.match(new RegExp('\\\\s'))",
 		 String([whitespace[i]]), String(s.match(new RegExp('\\s'))));
-  new TestCase ( SECTION,
-		 "'" + s + "'.match(/\s/)",
+  new TestCase ( "'" + s + "'.match(/\s/)",
 		 String([whitespace[i]]), String(s.match(/\s/)));
 }
 // be sure all non_whitespace characters match individually
 for (i = 0; i < non_whitespace.length; ++i)
 {
   s = '  ' + non_whitespace[i] + '  ';
-  new TestCase ( SECTION,
-		 "'" + s + "'.match(new RegExp('\\\\S'))",
+  new TestCase ( "'" + s + "'.match(new RegExp('\\\\S'))",
 		 String([non_whitespace[i]]), String(s.match(new RegExp('\\S'))));
-  new TestCase ( SECTION,
-		 "'" + s + "'.match(/\S/)",
+  new TestCase ( "'" + s + "'.match(/\S/)",
 		 String([non_whitespace[i]]), String(s.match(/\S/)));
 }
 

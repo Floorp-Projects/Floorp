@@ -24,7 +24,7 @@ var actual = "pass";
 
 // "\u000A" actual = "fail";
 
-new TestCase( SECTION,
+new TestCase(
 			 "a comment with a line terminator string, and text following",
 			 "pass",
 			 actual);
@@ -35,7 +35,7 @@ actual = "";
 var x = "// test \n actual = 'pass'";
 actual = eval(x);
 
-new TestCase( SECTION,
+new TestCase(
 			 "// test \\n actual = \"pass\"",
 			 "pass",
 			 actual );

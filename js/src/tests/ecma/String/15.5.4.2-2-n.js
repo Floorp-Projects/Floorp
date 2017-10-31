@@ -29,8 +29,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var tostr=String.prototype.toString; astring=new Number(); astring.toString = tostr; astring.toString()";
 
-new TestCase( SECTION,
-	      "var tostr=String.prototype.toString; astring=new Number(); astring.toString = tostr; astring.toString()",
+new TestCase( "var tostr=String.prototype.toString; astring=new Number(); astring.toString = tostr; astring.toString()",
 	      "error",
 	      eval("var tostr=String.prototype.toString; astring=new Number(); astring.toString = tostr; astring.toString()") );
 

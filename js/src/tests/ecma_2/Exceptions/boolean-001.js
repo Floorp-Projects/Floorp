@@ -36,7 +36,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "Assigning Boolean.prototype.toString to a String object "+
   "(threw " +exception +")",
   "Passed!",

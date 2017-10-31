@@ -212,15 +212,13 @@ PROPERTY[p++] = new Property( "Date.prototype",   "toGMTString",    "function" )
 for ( var i = 0, RESULT; i < PROPERTY.length; i++ ) {
   RESULT = eval("typeof " + PROPERTY[i].object + "." + PROPERTY[i].name );
 
-  new TestCase( SECTION,
-                "typeof " + PROPERTY[i].object + "." + PROPERTY[i].name,
+  new TestCase( "typeof " + PROPERTY[i].object + "." + PROPERTY[i].name,
                 PROPERTY[i].type,
                 RESULT );
 
   RESULT = eval("typeof " + PROPERTY[i].object + "['" + PROPERTY[i].name +"']");
 
-  new TestCase( SECTION,
-                "typeof " + PROPERTY[i].object + "['" + PROPERTY[i].name +"']",
+  new TestCase( "typeof " + PROPERTY[i].object + "['" + PROPERTY[i].name +"']",
                 PROPERTY[i].type,
                 RESULT );
 }

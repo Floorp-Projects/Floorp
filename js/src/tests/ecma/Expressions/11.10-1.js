@@ -41,7 +41,7 @@ for ( shiftpow = 0; shiftpow < 1; shiftpow++ ) {
   for ( addpow = 0; addpow < 33; addpow++ ) {
     addexp += Math.pow(2, addpow);
 
-    new TestCase( SECTION,
+    new TestCase(
 		  shiftexp + " & " + addexp,
 		  And( shiftexp, addexp ),
 		  shiftexp & addexp );

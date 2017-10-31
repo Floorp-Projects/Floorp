@@ -32,5 +32,5 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "error";
 
-new TestCase( SECTION,    "\rb",     "error",    eval("\rb"));
+new TestCase( "\rb",     "error",    eval("\rb"));
 test();

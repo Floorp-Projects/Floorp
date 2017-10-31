@@ -25,7 +25,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "valof=Boolean.prototype.valueOf; x=new String( 'hello' ); x.valueOf=valof;x.valueOf()"
 
-new TestCase(   SECTION,
+new TestCase(
 		"valof=Boolean.prototype.valueOf; x=new String( 'hello' ); x.valueOf=valof;x.valueOf()",
 		"error",
 		eval("valof=Boolean.prototype.valueOf; x=new String( 'hello' ); x.valueOf=valof;x.valueOf()") );

@@ -26,8 +26,7 @@ var TITLE   = "Object.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "var str = '';for ( p in Object ) { str += p; }; str",
+new TestCase( "var str = '';for ( p in Object ) { str += p; }; str",
 	      "",
 	      eval( "var str = ''; for ( p in Object ) { str += p; }; str" ) );
 

@@ -36,7 +36,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "BOOLEAN = new Boolean(); result = new BOOLEAN()" +
   " (threw " + exception +")",
   expect,

@@ -27,8 +27,7 @@ var TITLE   = "Object.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, 
-	      "delete( Object.prototype )",
+new TestCase( "delete( Object.prototype )",
 	      false,
 	      eval("delete( Object.prototype )") );
 

@@ -31,16 +31,16 @@ var VERSION = "ECMA_1";
 writeHeaderToLog( SECTION + " Global Object");
 
 var EVAL_STRING =
-  'new TestCase( "SECTION", "Eval Code check: Object", false, Object == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Function", false, Function == null);' +
-  'new TestCase( "SECTION", "Eval Code check: String", false, String == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Array", false, Array == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Number", false, Number == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Math", false, Math == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Boolean", false, Boolean == null);' +
-  'new TestCase( "SECTION", "Eval Code check: Date", false, Date == null);' +
-  'new TestCase( "SECTION", "Eval Code check: eval", false, eval == null);' +
-  'new TestCase( "SECTION", "Eval Code check: parseInt", false, parseInt == null);';
+  'new TestCase( "Eval Code check: Object", false, Object == null);' +
+  'new TestCase( "Eval Code check: Function", false, Function == null);' +
+  'new TestCase( "Eval Code check: String", false, String == null);' +
+  'new TestCase( "Eval Code check: Array", false, Array == null);' +
+  'new TestCase( "Eval Code check: Number", false, Number == null);' +
+  'new TestCase( "Eval Code check: Math", false, Math == null);' +
+  'new TestCase( "Eval Code check: Boolean", false, Boolean == null);' +
+  'new TestCase( "Eval Code check: Date", false, Date == null);' +
+  'new TestCase( "Eval Code check: eval", false, eval == null);' +
+  'new TestCase( "Eval Code check: parseInt", false, parseInt == null);';
 
 eval( EVAL_STRING );
 

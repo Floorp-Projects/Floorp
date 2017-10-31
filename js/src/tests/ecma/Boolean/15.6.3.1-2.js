@@ -28,8 +28,7 @@ var TITLE   = "Boolean.prototype"
 var array = new Array();
 var item = 0;
 
-new TestCase( SECTION,
-	      "delete( Boolean.prototype)",
+new TestCase( "delete( Boolean.prototype)",
 	      false,
 	      delete( Boolean.prototype) );
 

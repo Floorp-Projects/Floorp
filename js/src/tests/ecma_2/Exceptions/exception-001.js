@@ -35,7 +35,6 @@ function Call_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "Math() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

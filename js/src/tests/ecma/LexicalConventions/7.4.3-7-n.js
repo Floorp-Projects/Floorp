@@ -47,8 +47,7 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION, 
-              "var extends = true",    
+new TestCase( "var extends = true",    
               "error",   
               actual);
 

@@ -310,15 +310,14 @@
    * argument.
    */
   function AddTestCase(description, expect, actual) {
-    new TestCase(SECTION, description, expect, actual);
+    new TestCase(description, expect, actual);
   }
   global.AddTestCase = AddTestCase;
 
   var testCasesCounter = 0;
   var testCasesArray = [];
 
-  function TestCase(n, d, e, a, r) {
-    this.name = n;
+  function TestCase(d, e, a, r) {
     this.description = d;
     this.expect = e;
     this.actual = a;
@@ -387,7 +386,7 @@
   }
 
   function reportTestCaseResult(description, expected, actual, output) {
-    var testcase = new TestCase("unknown-test-name", description, expected, actual, output);
+    var testcase = new TestCase(description, expected, actual, output);
 
     // if running under reftest, let it handle result reporting.
     if (!runningInBrowser) {

@@ -24,8 +24,7 @@ var actual = "fail";
 /*
 ***/actual="pass";
 
-new TestCase( SECTION,
-			     "comment with multiple asterisks",
+new TestCase( "comment with multiple asterisks",
 			     "pass",
 			     actual);
 

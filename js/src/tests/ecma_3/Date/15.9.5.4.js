@@ -88,7 +88,6 @@ test();
 function addTestCase()
 {
   new TestCase(
-    SECTION,
     status,
     expect,
     actual);

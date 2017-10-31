@@ -46,14 +46,12 @@ function DoWhile( object ) {
   } while( object.value );
 
   new TestCase(
-    SECTION,
     "loop iterations",
     object.iterations,
     i
     );
 
   new TestCase(
-    SECTION,
     "object.value",
     object.endvalue,
     Number( object.value )

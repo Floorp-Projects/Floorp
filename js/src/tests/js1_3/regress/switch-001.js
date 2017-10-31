@@ -41,7 +41,6 @@ default:
 }
 
 new TestCase(
-  SECTION,
   "switch / case should use strict equality in version of JS < 1.4",
   "pass",
   result );

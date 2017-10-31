@@ -63,17 +63,14 @@ function TrySomething( expression, throwing ) {
 
 
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     innerFinally );
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     outerCatch );
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     outerFinally );

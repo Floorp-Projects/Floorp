@@ -45,6 +45,6 @@ var TITLE   = "Function Calls";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "true.valueOf()", true, true.valueOf() );
+new TestCase( "true.valueOf()", true, true.valueOf() );
 test();
 

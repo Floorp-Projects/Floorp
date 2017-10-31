@@ -58,7 +58,6 @@ for ( aVar in this ) {
 };
 
 new TestCase(
-  SECTION,
   "var result=''; for ( aVar in this ) { " +
   "if (aVar == 'aVar') {return a failure}; result",
   "PASSED",

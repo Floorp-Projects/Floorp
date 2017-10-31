@@ -47,8 +47,7 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION, 
-              "var import = true",    
+new TestCase( "var import = true",    
               "error",   
               actual );
 

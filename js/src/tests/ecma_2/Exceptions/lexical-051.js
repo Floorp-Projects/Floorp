@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "for (a; b\n)" +
   " (threw " + exception +")",
   expect,

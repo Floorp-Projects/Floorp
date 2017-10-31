@@ -37,12 +37,12 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 for ( var i = 0x3040; i <= 0x309F; i++ ) {
   var U = new Unicode( i );
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()",
   String.fromCharCode(U.lower),
   eval("var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()") );
 */
-  new TestCase(   SECTION,
+  new TestCase(
 		  "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase().charCodeAt(0)",
 		  U.lower,
 		  eval("var s = new String( String.fromCharCode(i) ); s.toLowerCase().charCodeAt(0)") );

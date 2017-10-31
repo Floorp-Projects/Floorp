@@ -55,15 +55,13 @@ function f() {     count++; return new Array("h","e","l","l","o"); }
 var result = "";
 for ( p in f() ) { result += f()[p] };
 
-new TestCase( SECTION,
-	      "count = 0; result = \"\"; "+
+new TestCase( "count = 0; result = \"\"; "+
 	      "function f() { count++; return new Array(\"h\",\"e\",\"l\",\"l\",\"o\"); }"+
 	      "for ( p in f() ) { result += f()[p] }; count",
 	      6,
 	      count );
 
-new TestCase( SECTION,
-	      "result",
+new TestCase( "result",
 	      "hello",
 	      result );
 

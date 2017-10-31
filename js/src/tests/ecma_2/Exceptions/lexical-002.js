@@ -42,7 +42,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "result=eval(\"\r\nexpect\")" +
   " (threw " + exception +")",
   expect,

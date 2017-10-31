@@ -56,5 +56,5 @@ function addTestCase() {
      actual = toString();
    }
 
-   new TestCase("SECTION", "MYOBJECT.toString()", expect, actual);
+   new TestCase("MYOBJECT.toString()", expect, actual);
 }

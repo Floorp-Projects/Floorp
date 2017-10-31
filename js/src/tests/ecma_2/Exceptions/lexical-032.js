@@ -47,7 +47,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "delete = true" +
   " (threw " + exception +")",
   expect,
