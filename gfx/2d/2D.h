@@ -87,6 +87,7 @@ class ScaledFont;
 
 namespace gfx {
 
+class AlphaBoxBlur;
 class ScaledFont;
 class SourceSurface;
 class DataSourceSurface;
@@ -1213,6 +1214,14 @@ public:
    * onto the target in device space using POINT sampling and operator over.
    */
   virtual void PopLayer() { MOZ_CRASH("GFX: PopLayer"); }
+
+  /**
+   * Perform an in-place blur operation. This is only supported on data draw
+   * targets.
+   */
+  virtual void Blur(const AlphaBoxBlur& aBlur) {
+    MOZ_CRASH("GFX: DoBlur");
+  }
 
   /**
    * Create a SourceSurface optimized for use with this DrawTarget from
