@@ -1558,6 +1558,13 @@ WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta, JSContext*
     return oldNumPages;
 }
 
+bool
+js::wasm::IsSharedWasmMemoryObject(JSObject* obj)
+{
+    obj = CheckedUnwrap(obj);
+    return obj && obj->is<WasmMemoryObject>() && obj->as<WasmMemoryObject>().isShared();
+}
+
 // ============================================================================
 // WebAssembly.Table class and methods
 
