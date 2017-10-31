@@ -587,7 +587,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "1851ff4e452a"
+        "revision": "cb6eb7e6ba4a"
     }, 
     "son": {
         "platforms": [
