@@ -12,12 +12,14 @@ from mozharness.base.script import PostScriptRun
 
 blobupload_config_options = [
     [["--blob-upload-branch"],
-     {"dest": "blob_upload_branch",
-      "help": "Branch for blob server's metadata", }],
+    {"dest": "blob_upload_branch",
+     "help": "Branch for blob server's metadata",
+    }],
     [["--blob-upload-server"],
-     {"dest": "blob_upload_servers",
-      "action": "extend",
-      "help": "Blob servers's location", }]
+    {"dest": "blob_upload_servers",
+     "action": "extend",
+     "help": "Blob servers's location",
+    }]
     ]
 
 
@@ -44,7 +46,7 @@ class BlobUploadMixin(VirtualenvMixin):
         if self.config.get('blob_upload_branch') and \
             (self.config.get('blob_upload_servers') or
              self.config.get('default_blob_upload_servers')) and \
-            self.config.get('blob_uploader_auth_file'):
+                 self.config.get('blob_uploader_auth_file'):
 
             self.info("Blob upload gear active.")
             upload = [self.query_python_path(), self.query_python_path("blobberc.py")]
@@ -73,7 +75,7 @@ class BlobUploadMixin(VirtualenvMixin):
                 return
             blob_branch = self.config.get('blob_upload_branch')
             blob_servers_list = self.config.get('blob_upload_servers',
-                                                self.config.get('default_blob_upload_servers'))
+                               self.config.get('default_blob_upload_servers'))
 
             servers = []
             for server in blob_servers_list:
@@ -85,12 +87,11 @@ class BlobUploadMixin(VirtualenvMixin):
             manifest_path = os.path.join(dirs['abs_work_dir'], 'uploaded_files.json')
             record_uploaded_files = ['--output-manifest', manifest_path]
             self.info("Files from %s are to be uploaded with <%s> branch at "
-                      "the following location(s): %s" %
-                      (blob_dir, blob_branch, ", ".join(["%s" % s for s in blob_servers_list])))
+                      "the following location(s): %s" % (blob_dir, blob_branch,
+                      ", ".join(["%s" % s for s in blob_servers_list])))
 
             # call blob client to upload files to server
-            self.run_command(upload + servers + auth + branch +
-                             dir_to_upload + record_uploaded_files)
+            self.run_command(upload + servers + auth + branch + dir_to_upload + record_uploaded_files)
 
             uploaded_files = '{}'
             if os.path.isfile(manifest_path):
@@ -99,7 +100,7 @@ class BlobUploadMixin(VirtualenvMixin):
                 self.rmtree(manifest_path)
 
             self.set_buildbot_property(prop_name='blobber_files',
-                                       prop_value=uploaded_files, write_to_file=True)
+                    prop_value=uploaded_files, write_to_file=True)
         else:
             self.warning("Blob upload gear skipped. Missing cmdline options.")
 

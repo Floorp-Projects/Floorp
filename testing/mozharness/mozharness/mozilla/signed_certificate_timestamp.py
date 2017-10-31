@@ -3,7 +3,6 @@
 import struct
 import base64
 
-
 class SignedCertificateTimestamp:
     """
     Represents a Signed Certificate Timestamp from a Certificate Transparency
@@ -76,6 +75,7 @@ class SignedCertificateTimestamp:
             if 'extensions' in response_json:
                 self.extensions = base64.b64decode(response_json['extensions'])
 
+
     @staticmethod
     def from_rfc6962(serialized):
         start = 0
@@ -120,10 +120,11 @@ class SignedCertificateTimestamp:
         sct.signature = struct.pack('!HH', alg, sig_len) + sig
         return sct
 
+
     def to_rfc6962(self):
         version = struct.pack("B", self.version)
         timestamp = struct.pack("!Q", self.timestamp)
         ext_len = struct.pack("!H", len(self.extensions))
 
         return version + self.id + timestamp + \
-            ext_len + self.extensions + self.signature
+               ext_len + self.extensions + self.signature

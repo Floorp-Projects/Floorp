@@ -4,6 +4,7 @@
 import os
 from datetime import datetime, timedelta
 from urlparse import urljoin
+from mozharness.base.log import INFO
 
 from mozharness.base.log import LogMixin
 
@@ -250,8 +251,7 @@ class TaskClusterArtifactFinderMixin(object):
                 self.set_artifacts(
                     self.url_to_artifact(parent_id, installer_path),
                     self.url_to_artifact(parent_id, 'public/build/target.test_packages.json'),
-                    self.url_to_artifact(parent_id,
-                                         'public/build/target.crashreporter-symbols.zip')
+                    self.url_to_artifact(parent_id, 'public/build/target.crashreporter-symbols.zip')
                 )
             else:
                 # Case 2: The parent task has an associated BBB task
@@ -272,6 +272,5 @@ class TaskClusterArtifactFinderMixin(object):
         # Use the signed installer if it's set
         if 'signed_installer_url' in properties:
             signed_installer_url = properties['signed_installer_url']
-            self.info('Overriding installer_url with signed_installer_url: %s' %
-                      signed_installer_url)
+            self.info('Overriding installer_url with signed_installer_url: %s' % signed_installer_url)
             self.installer_url = signed_installer_url

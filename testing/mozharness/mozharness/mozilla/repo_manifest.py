@@ -24,8 +24,7 @@ def load_manifest(filename):
         if node.nodeType in (node.TEXT_NODE, node.COMMENT_NODE):
             continue
 
-        if node.tagName not in ('include', 'project', 'remote', 'default', 'manifest', 'copyfile',
-                                'remove-project'):
+        if node.tagName not in ('include', 'project', 'remote', 'default', 'manifest', 'copyfile', 'remove-project'):
             raise ValueError("Unsupported tag: %s" % node.tagName)
         to_visit.extend(node.childNodes)
 

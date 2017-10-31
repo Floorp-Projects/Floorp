@@ -17,7 +17,6 @@ class HazardError(Exception):
     def splitlines(self):
         return str(self).splitlines()
 
-
 class HazardAnalysis(object):
     def clobber_shell(self, builder):
         """Clobber the specially-built JS shell used to run the analysis"""
@@ -33,9 +32,9 @@ class HazardAnalysis(object):
 
         js_src_dir = os.path.join(dirs['gecko_src'], 'js', 'src')
         rc = builder.run_command(['autoconf-2.13'],
-                                 cwd=js_src_dir,
-                                 env=builder.env,
-                                 error_list=MakefileErrorList)
+                              cwd=js_src_dir,
+                              env=builder.env,
+                              error_list=MakefileErrorList)
         if rc != 0:
             rc = builder.run_command(['autoconf2.13'],
                                      cwd=js_src_dir,
@@ -45,14 +44,14 @@ class HazardAnalysis(object):
                 raise HazardError("autoconf failed, can't continue.")
 
         rc = builder.run_command([os.path.join(js_src_dir, 'configure'),
-                                  '--enable-optimize',
-                                  '--disable-debug',
-                                  '--enable-ctypes',
-                                  '--with-system-nspr',
-                                  '--without-intl-api'],
-                                 cwd=dirs['shell_objdir'],
-                                 env=builder.env,
-                                 error_list=MakefileErrorList)
+                               '--enable-optimize',
+                               '--disable-debug',
+                               '--enable-ctypes',
+                               '--with-system-nspr',
+                               '--without-intl-api'],
+                              cwd=dirs['shell_objdir'],
+                              env=builder.env,
+                              error_list=MakefileErrorList)
         if rc != 0:
             raise HazardError("Configure failed, can't continue.")
 
@@ -61,9 +60,9 @@ class HazardAnalysis(object):
         dirs = builder.query_abs_dirs()
 
         rc = builder.run_command(['make', '-j', str(builder.config.get('concurrency', 4)), '-s'],
-                                 cwd=dirs['shell_objdir'],
-                                 env=builder.env,
-                                 error_list=MakefileErrorList)
+                              cwd=dirs['shell_objdir'],
+                              env=builder.env,
+                              error_list=MakefileErrorList)
         if rc != 0:
             raise HazardError("Build failed, can't continue.")
 
@@ -110,8 +109,9 @@ jobs = 4
 
         build_script = builder.config['build_command']
         builder.copyfile(os.path.join(dirs['mozharness_scriptdir'],
-                                      os.path.join('spidermonkey', build_script)),
-                         os.path.join(analysis_dir, build_script), copystat=True)
+                                   os.path.join('spidermonkey', build_script)),
+                      os.path.join(analysis_dir, build_script),
+                      copystat=True)
 
     def run(self, builder, env, error_list):
         """Execute the analysis, which consists of building all analyzed
@@ -132,9 +132,9 @@ jobs = 4
             "--buildcommand", build_script,
         ]
         retval = builder.run_command(cmd,
-                                     cwd=analysis_dir,
-                                     env=env,
-                                     error_list=error_list)
+                                  cwd=analysis_dir,
+                                  env=env,
+                                  error_list=error_list)
         if retval != 0:
             raise HazardError("failed to build")
 
@@ -171,8 +171,7 @@ jobs = 4
                                        long_desc=long,
                                        compress=False,  # blobber will compress
                                        upload_dir=upload_dir)
-        print("== Hazards (temporarily inline here, beware weirdly interleaved "
-              "output, see bug 1211402) ==")
+        print("== Hazards (temporarily inline here, beware weirdly interleaved output, see bug 1211402) ==")
         print(file(os.path.join(analysis_dir, "hazards.txt")).read())
 
     def upload_results(self, builder):
@@ -187,8 +186,7 @@ jobs = 4
 
         dirs = builder.query_abs_dirs()
         analysis_dir = dirs['abs_analysis_dir']
-        analysis_scriptdir = os.path.join(dirs['gecko_src'], 'js', 'src',
-                                          'devtools', 'rootAnalysis')
+        analysis_scriptdir = os.path.join(dirs['gecko_src'], 'js', 'src', 'devtools', 'rootAnalysis')
         expect_file = os.path.join(analysis_scriptdir, builder.config['expect_file'])
         expect = builder.read_from_file(expect_file)
         if expect is None:
@@ -218,13 +216,12 @@ jobs = 4
 
         if expect_hazards is not None and expect_hazards != num_hazards:
             if expect_hazards < num_hazards:
-                builder.warning("TEST-UNEXPECTED-FAIL %d more hazards than expected "
-                                "(expected %d, saw %d)" %
-                                (num_hazards - expect_hazards, expect_hazards, num_hazards))
+                builder.warning("TEST-UNEXPECTED-FAIL %d more hazards than expected (expected %d, saw %d)" %
+                             (num_hazards - expect_hazards, expect_hazards, num_hazards))
                 builder.buildbot_status(TBPL_WARNING)
             else:
                 builder.info("%d fewer hazards than expected! (expected %d, saw %d)" %
-                             (expect_hazards - num_hazards, expect_hazards, num_hazards))
+                          (expect_hazards - num_hazards, expect_hazards, num_hazards))
 
         expect_refs = data.get('expect-refs')
         if expect_refs is None:
@@ -234,12 +231,11 @@ jobs = 4
 
         if expect_refs is not None and expect_refs != num_refs:
             if expect_refs < num_refs:
-                builder.warning("TEST-UNEXPECTED-FAIL %d more unsafe refs than expected "
-                                "(expected %d, saw %d)" %
-                                (num_refs - expect_refs, expect_refs, num_refs))
+                builder.warning("TEST-UNEXPECTED-FAIL %d more unsafe refs than expected (expected %d, saw %d)" %
+                             (num_refs - expect_refs, expect_refs, num_refs))
                 builder.buildbot_status(TBPL_WARNING)
             else:
                 builder.info("%d fewer unsafe refs than expected! (expected %d, saw %d)" %
-                             (expect_refs - num_refs, expect_refs, num_refs))
+                          (expect_refs - num_refs, expect_refs, num_refs))
 
         builder.info("TinderboxPrint: " + ", ".join(status))

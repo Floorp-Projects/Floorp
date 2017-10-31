@@ -5,6 +5,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
+import argparse
 import os
 import posixpath
 import re
@@ -42,7 +43,7 @@ class VerifyToolsMixin(object):
            been downloaded and extracted.
         """
 
-        if not self.config.get('verify'):
+        if self.config.get('verify') != True:
             return
 
         repository = os.environ.get("GECKO_HEAD_REPOSITORY")
@@ -61,8 +62,7 @@ class VerifyToolsMixin(object):
         manifests = [
             (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),
             (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'chrome'),
-            (os.path.join(dirs['abs_mochitest_dir'], 'browser',
-                          'browser-chrome.ini'), 'browser-chrome'),
+            (os.path.join(dirs['abs_mochitest_dir'], 'browser', 'browser-chrome.ini'), 'browser-chrome'),
             (os.path.join(dirs['abs_mochitest_dir'], 'a11y', 'a11y.ini'), 'a11y'),
             (os.path.join(dirs['abs_xpcshell_dir'], 'tests', 'xpcshell.ini'), 'xpcshell'),
         ]
@@ -71,16 +71,13 @@ class VerifyToolsMixin(object):
             if os.path.exists(path):
                 man = TestManifest([path], strict=False)
                 active = man.active_tests(exists=False, disabled=False, filters=[], **mozinfo.info)
-                tests_by_path.update({t['relpath']: (suite, t.get('subsuite')) for t in active})
+                tests_by_path.update({t['relpath']:(suite,t.get('subsuite')) for t in active})
                 self.info("Verification updated with manifest %s" % path)
 
         ref_manifests = [
-            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout', 'reftests',
-                          'reftest.list'), 'reftest'),
-            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'testing', 'crashtest',
-                          'crashtests.list'), 'crashtest'),
-            # TODO (os.path.join(dirs['abs_test_install_dir'], 'jsreftest', 'tests',
-            #                    'jstests.list'), 'jstestbrowser'),
+            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout', 'reftests', 'reftest.list'), 'reftest'),
+            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'testing', 'crashtest', 'crashtests.list'), 'crashtest'),
+            # TODO (os.path.join(dirs['abs_test_install_dir'], 'jsreftest', 'tests', 'jstests.list'), 'jstestbrowser'),
         ]
         sys.path.append(dirs['abs_reftest_dir'])
         import manifest
@@ -89,8 +86,7 @@ class VerifyToolsMixin(object):
             if os.path.exists(path):
                 man = manifest.ReftestManifest()
                 man.load(path)
-                tests_by_path.update({os.path.relpath(t, self.reftest_test_dir): (suite, None)
-                                     for t in man.files})
+                tests_by_path.update({os.path.relpath(t,self.reftest_test_dir):(suite,None) for t in man.files})
                 self.info("Verification updated with manifest %s" % path)
 
         # determine which files were changed on this push
@@ -112,15 +108,15 @@ class VerifyToolsMixin(object):
             if entry:
                 self.info("Verification found test %s" % file)
                 subsuite_mapping = {
-                    ('browser-chrome', 'clipboard'): 'browser-chrome-clipboard',
-                    ('chrome', 'clipboard'): 'chrome-clipboard',
-                    ('plain', 'clipboard'): 'plain-clipboard',
-                    ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
-                    ('browser-chrome', 'gpu'): 'browser-chrome-gpu',
-                    ('chrome', 'gpu'): 'chrome-gpu',
-                    ('plain', 'gpu'): 'plain-gpu',
-                    ('plain', 'media'): 'mochitest-media',
-                    ('plain', 'webgl'): 'mochitest-gl',
+                    ('browser-chrome', 'clipboard') : 'browser-chrome-clipboard',
+                    ('chrome', 'clipboard') : 'chrome-clipboard',
+                    ('plain', 'clipboard') : 'plain-clipboard',
+                    ('browser-chrome', 'devtools') : 'mochitest-devtools-chrome',
+                    ('browser-chrome', 'gpu') : 'browser-chrome-gpu',
+                    ('chrome', 'gpu') : 'chrome-gpu',
+                    ('plain', 'gpu') : 'plain-gpu',
+                    ('plain', 'media') : 'mochitest-media',
+                    ('plain', 'webgl') : 'mochitest-gl',
                 }
                 if entry in subsuite_mapping:
                     suite = subsuite_mapping[entry]
@@ -146,7 +142,7 @@ class VerifyToolsMixin(object):
         # when verifying long-running tests.
         MAX_TIME_PER_TEST = 900
 
-        if self.config.get('verify'):
+        if self.config.get('verify') != True:
             # not in verify mode: run once, with no additional args
             args = [[]]
         else:
@@ -178,10 +174,10 @@ class VerifyToolsMixin(object):
            suite category.
         """
         suites = None
-        if self.config.get('verify'):
+        if self.config.get('verify') == True:
             if all_suites and self.verify_downloaded:
                 suites = dict((key, all_suites.get(key)) for key in
-                              self.verify_suites if key in all_suites.keys())
+                    self.verify_suites if key in all_suites.keys())
             else:
                 # Until test zips are downloaded, manifests are not available,
                 # so it is not possible to determine which suites are active/
@@ -212,3 +208,4 @@ class VerifyToolsMixin(object):
             test_name = test_name.rstrip(os.path.sep)
         self.log("TinderboxPrint: Verification of %s<br/>: %s" %
                  (test_name, tbpl_status), level=log_level)
+

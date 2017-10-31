@@ -34,6 +34,7 @@ from mozharness.mozilla.buildbot import (
     BuildbotMixin,
     EXIT_STATUS_DICT,
     TBPL_STATUS_DICT,
+    TBPL_EXCEPTION,
     TBPL_FAILURE,
     TBPL_RETRY,
     TBPL_WARNING,
@@ -72,7 +73,7 @@ Skipping run_tooltool...',
 ERROR_MSGS.update(MOCK_ERROR_MSGS)
 
 
-# Output Parsers
+### Output Parsers
 
 TBPL_UPLOAD_ERRORS = [
     {
@@ -140,8 +141,7 @@ class MakeUploadOutputParser(OutputParser):
                             self.info("Skipping wrong packageUrl: %s" % m)
                         else:
                             if 'completeMarUrl' in self.matches:
-                                self.fatal("Found multiple package URLs. "
-                                           "Please update buildbase.py")
+                                self.fatal("Found multiple package URLs. Please update buildbase.py")
                             self.info("Using package as mar file: %s" % m)
                             self.matches['completeMarUrl'] = m
                             u, self.package_filename = os.path.split(m)
@@ -155,8 +155,7 @@ class MakeUploadOutputParser(OutputParser):
             if m:
                 self.matches['completeMarHash'] = m.group(1)
                 self.matches['completeMarSize'] = m.group(2)
-                self.info("Using package as mar file and found package hash=%s size=%s" %
-                          (m.group(1), m.group(2)))
+                self.info("Using package as mar file and found package hash=%s size=%s" % (m.group(1), m.group(2)))
 
         # now let's check for retry errors which will give log levels:
         # tbpl status as RETRY and mozharness status as WARNING
@@ -260,20 +259,21 @@ class BuildingConfig(BaseConfig):
         # not matter. ie: you can supply --branch before --build-pool
         # or vice versa and the hierarchy will not be different
 
-        # The order from highest precedence to lowest is:
-        # There can only be one of these...
+        #### The order from highest precedence to lowest is:
+        ## There can only be one of these...
         # 1) build_pool: this can be either staging, pre-prod, and prod cfgs
         # 2) branch: eg: mozilla-central, cedar, cypress, etc
         # 3) build_variant: these could be known like asan and debug
         #                   or a custom config
-        #
-        # There can be many of these:
+        ##
+        ## There can be many of these
         # 4) all other configs: these are any configs that are passed with
         #                       --cfg and --opt-cfg. There order is kept in
         #                       which they were passed on the cmd line. This
         #                       behaviour is maintains what happens by default
         #                       in mozharness
-        #
+        ##
+        ####
 
         # so, let's first assign the configs that hold a known position of
         # importance (1 through 3)
@@ -360,8 +360,7 @@ class BuildOptionParser(object):
         'code-coverage': 'builds/releng_sub_%s_configs/%s_code_coverage.py',
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
         'noopt-debug': 'builds/releng_sub_%s_configs/%s_noopt_debug.py',
-        'api-16-gradle-dependencies':
-            'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
+        'api-16-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
         'api-16': 'builds/releng_sub_%s_configs/%s_api_16.py',
         'api-16-old-id': 'builds/releng_sub_%s_configs/%s_api_16_old_id.py',
         'api-16-artifact': 'builds/releng_sub_%s_configs/%s_api_16_artifact.py',
@@ -380,7 +379,7 @@ class BuildOptionParser(object):
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
         'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
-        'valgrind': 'builds/releng_sub_%s_configs/%s_valgrind.py',
+        'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py',
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
         'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
         'devedition': 'builds/releng_sub_%s_configs/%s_devedition.py',
@@ -762,7 +761,8 @@ or run without that action (ie: --no-{action})"
             # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
             # mac, and that confuses mach.
             del env['MOZ_OBJDIR']
-            return self.get_output_from_command_m(cmd, cwd=dirs['abs_obj_dir'], env=env)
+            return self.get_output_from_command_m(cmd,
+                cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
 
@@ -1165,7 +1165,7 @@ or run without that action (ie: --no-{action})"
         if 'revision' in self.buildbot_properties:
             revision = self.buildbot_properties['revision']
         elif (self.buildbot_config and
-              self.buildbot_config.get('sourcestamp', {}).get('revision')):
+                  self.buildbot_config.get('sourcestamp', {}).get('revision')):
             revision = self.buildbot_config['sourcestamp']['revision']
         elif self.buildbot_config and self.buildbot_config.get('revision'):
             revision = self.buildbot_config['revision']
@@ -1331,7 +1331,7 @@ or run without that action (ie: --no-{action})"
                 'buildid from application.ini: "%s". buildid from buildbot '
                 'properties: "%s"' % (app_ini_buildid, buildbot_buildid)
             )
-            if (app_ini_buildid == buildbot_buildid) is not None:
+            if app_ini_buildid == buildbot_buildid != None:
                 self.info('buildids match.')
             else:
                 self.error(
@@ -1409,7 +1409,7 @@ or run without that action (ie: --no-{action})"
         taskid = self.buildbot_config['properties'].get('upload_to_task_id')
         tc = Taskcluster(
             branch=self.branch,
-            rank=pushinfo.pushdate,  # Use pushdate as the rank
+            rank=pushinfo.pushdate, # Use pushdate as the rank
             client_id=self.client_id,
             access_token=self.access_token,
             log_obj=self.log_obj,
@@ -1480,8 +1480,7 @@ or run without that action (ie: --no-{action})"
         # which means we should have uploadFiles.
         files = self.query_buildbot_property('uploadFiles') or []
         if not files:
-            self.warning('No files from the build system to upload to S3: uploadFiles'
-                         'property is missing or empty.')
+            self.warning('No files from the build system to upload to S3: uploadFiles property is missing or empty.')
 
         packageName = self.query_buildbot_property('packageFilename')
         self.info('packageFilename is: %s' % packageName)
@@ -1507,7 +1506,7 @@ or run without that action (ie: --no-{action})"
         property_conditions = [
             # key: property name, value: condition
             ('symbolsUrl', lambda m: m.endswith('crashreporter-symbols.zip') or
-                m.endswith('crashreporter-symbols-full.zip')),
+                           m.endswith('crashreporter-symbols-full.zip')),
             ('testsUrl', lambda m: m.endswith(('tests.tar.bz2', 'tests.zip'))),
             ('robocopApkUrl', lambda m: m.endswith('apk') and 'robocop' in m),
             ('jsshellUrl', lambda m: 'jsshell-' in m and m.endswith('.zip')),
@@ -1524,8 +1523,7 @@ or run without that action (ie: --no-{action})"
         ]
 
         # Also upload our mozharness log files
-        files.extend([os.path.join(self.log_obj.abs_log_dir, x)
-                     for x in self.log_obj.log_files.values()])
+        files.extend([os.path.join(self.log_obj.abs_log_dir, x) for x in self.log_obj.log_files.values()])
 
         # Also upload our buildprops.json file.
         files.extend([os.path.join(dirs['base_work_dir'], 'buildprops.json')])
@@ -1631,8 +1629,8 @@ or run without that action (ie: --no-{action})"
                 os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
         if 'MOZILLABUILD' in os.environ:
-            # We found many issues with intermittent build failures when not invoking
-            # mach via bash. See bug 1364651 before considering changing.
+            # We found many issues with intermittent build failures when not invoking mach via bash.
+            # See bug 1364651 before considering changing.
             mach = [
                 os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
                 os.path.join(dirs['abs_src_dir'], 'mach')
@@ -1717,8 +1715,7 @@ or run without that action (ie: --no-{action})"
             cwd=objdir,
         )
         if not package_filename:
-            self.fatal("Unable to determine the package filename for the multi-l10n build."
-                       "Was trying to run: %s" % package_cmd)
+            self.fatal("Unable to determine the package filename for the multi-l10n build. Was trying to run: %s" % package_cmd)
 
         self.info('Multi-l10n package filename is: %s' % package_filename)
 
@@ -1921,6 +1918,7 @@ or run without that action (ie: --no-{action})"
 
         return data
 
+
     def _load_sccache_stats(self):
         stats_file = os.path.join(
             self.query_abs_dirs()['abs_obj_dir'], 'sccache-stats.json'
@@ -2036,7 +2034,7 @@ or run without that action (ie: --no-{action})"
 
             return alert
 
-        if installer.endswith('.apk'):  # Android
+        if installer.endswith('.apk'): # Android
             yield filter_alert({
                 "name": "installer size",
                 "value": installer_size,
@@ -2187,9 +2185,9 @@ or run without that action (ie: --no-{action})"
                                            build_type,
                                            'talos')
             self.invoke_sendchange(downloadables=[installer_url],
-                                   branch=talos_branch,
-                                   username='sendchange',
-                                   sendchange_props=sendchange_props)
+                            branch=talos_branch,
+                            username='sendchange',
+                            sendchange_props=sendchange_props)
         elif test_type == 'unittest':
             # do unittest sendchange
             if c.get('debug_build'):
@@ -2239,9 +2237,10 @@ or run without that action (ie: --no-{action})"
         if self.config.get('taskcluster_nightly'):
             env = self.query_mach_build_env(multiLocale=False)
             props_path = os.path.join(env["UPLOAD_PATH"],
-                                      'balrog_props.json')
+                    'balrog_props.json')
             self.generate_balrog_props(props_path)
             return
+
 
     def valgrind_test(self):
         '''Execute mach's valgrind-test for memory leaks'''
@@ -2260,6 +2259,8 @@ or run without that action (ie: --no-{action})"
             )
             self.fatal("'mach valgrind-test' did not run successfully. Please check "
                        "log for errors.")
+
+
 
     def _post_fatal(self, message=None, exit_code=None):
         if not self.return_code:  # only overwrite return_code if it's 0
