@@ -116,6 +116,7 @@ class RemoteAutomation(Automation):
 
         topActivity = self._devicemanager.getTopActivity()
         if topActivity == proc.procName:
+            print "Browser unexpectedly found running. Killing..."
             proc.kill(True)
         if status == 1:
             if maxTime:
@@ -406,6 +407,9 @@ class RemoteAutomation(Automation):
                     break
                 if not hasOutput:
                     top = self.dm.getTopActivity()
+                    if top == "":
+                        print "Failed to get top activity, retrying, once..."
+                        top = self.dm.getTopActivity()
             # Flush anything added to stdout during the sleep
             self.read_stdout()
             return status
