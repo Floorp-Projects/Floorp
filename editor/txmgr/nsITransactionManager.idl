@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 #include "nsITransaction.idl"
-#include "nsITransactionList.idl"
 #include "nsITransactionListener.idl"
 
 %{ C++
@@ -68,7 +67,7 @@ interface nsITransactionManager : nsISupports
    * application to execute and group together several independent transactions
    * so they can be undone with a single call to undoTransaction().
    * @param aData An arbitrary nsISupports object that is associated with the
-   * batch. Can be retrieved from nsITransactionList.
+   * batch. Can be retrieved from the undo or redo stacks.
    */
   void beginBatch(in nsISupports aData);
 
@@ -133,20 +132,6 @@ interface nsITransactionManager : nsISupports
    * of the redo stack.
    */
   nsITransaction peekRedoStack();
-
-  /**
-   * Returns the list of transactions on the undo stack. Note that the
-   * transaction at the top of the undo stack will actually be at the
-   * index 'n-1' in the list, where 'n' is the number of items in the list.
-   */
-  nsITransactionList getUndoList();
-
-  /**
-   * Returns the list of transactions on the redo stack. Note that the
-   * transaction at the top of the redo stack will actually be at the
-   * index 'n-1' in the list, where 'n' is the number of items in the list.
-   */
-  nsITransactionList getRedoList();
 
   /**
    * Adds a listener to the transaction manager's notification list. Listeners

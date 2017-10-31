@@ -1710,10 +1710,13 @@ MacroAssemblerMIPSCompat::pushValue(const Address& addr)
 {
     // Allocate stack slots for type and payload. One for each.
     ma_subu(StackPointer, StackPointer, Imm32(sizeof(Value)));
+    // If address is based on StackPointer its offset needs to be adjusted
+    // to accommodate for previous stack allocation.
+    int32_t offset = addr.base != StackPointer ? addr.offset : addr.offset + sizeof(Value);
     // Store type and payload.
-    ma_lw(ScratchRegister, Address(addr.base, addr.offset + TAG_OFFSET));
+    ma_lw(ScratchRegister, Address(addr.base, offset + TAG_OFFSET));
     ma_sw(ScratchRegister, Address(StackPointer, TAG_OFFSET));
-    ma_lw(ScratchRegister, Address(addr.base, addr.offset + PAYLOAD_OFFSET));
+    ma_lw(ScratchRegister, Address(addr.base, offset + PAYLOAD_OFFSET));
     ma_sw(ScratchRegister, Address(StackPointer, PAYLOAD_OFFSET));
 }
 
