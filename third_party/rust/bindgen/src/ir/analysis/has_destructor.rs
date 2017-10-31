@@ -23,11 +23,8 @@ use std::collections::HashSet;
 /// * If T is the type of a field, that field has a destructor if it's not a bitfield,
 ///   and if T has a destructor.
 #[derive(Debug, Clone)]
-pub struct HasDestructorAnalysis<'ctx, 'gen>
-where
-    'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct HasDestructorAnalysis<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
     // set definitely has a destructor.
@@ -43,7 +40,7 @@ where
     dependencies: HashMap<ItemId, Vec<ItemId>>,
 }
 
-impl<'ctx, 'gen> HasDestructorAnalysis<'ctx, 'gen> {
+impl<'ctx> HasDestructorAnalysis<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             // These are the only edges that can affect whether a type has a
@@ -57,7 +54,8 @@ impl<'ctx, 'gen> HasDestructorAnalysis<'ctx, 'gen> {
         }
     }
 
-    fn insert(&mut self, id: ItemId) -> ConstrainResult {
+    fn insert<Id: Into<ItemId>>(&mut self, id: Id) -> ConstrainResult {
+        let id = id.into();
         let was_not_already_in_set = self.have_destructor.insert(id);
         assert!(
             was_not_already_in_set,
@@ -69,12 +67,12 @@ impl<'ctx, 'gen> HasDestructorAnalysis<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for HasDestructorAnalysis<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for HasDestructorAnalysis<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashSet<ItemId>;
 
-    fn new(ctx: &'ctx BindgenContext<'gen>) -> Self {
+    fn new(ctx: &'ctx BindgenContext) -> Self {
         let have_destructor = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
@@ -106,7 +104,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasDestructorAnalysis<'ctx, 'gen> {
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) |
             TypeKind::ResolvedTypeRef(t) => {
-                if self.have_destructor.contains(&t) {
+                if self.have_destructor.contains(&t.into()) {
                     self.insert(id)
                 } else {
                     ConstrainResult::Same
@@ -123,12 +121,12 @@ impl<'ctx, 'gen> MonotoneFramework for HasDestructorAnalysis<'ctx, 'gen> {
                     CompKind::Struct => {
                         let base_or_field_destructor =
                             info.base_members().iter().any(|base| {
-                                self.have_destructor.contains(&base.ty)
+                                self.have_destructor.contains(&base.ty.into())
                             }) ||
                             info.fields().iter().any(|field| {
                                 match *field {
                                     Field::DataMember(ref data) =>
-                                        self.have_destructor.contains(&data.ty()),
+                                        self.have_destructor.contains(&data.ty().into()),
                                     Field::Bitfields(_) => false
                                 }
                             });
@@ -143,10 +141,10 @@ impl<'ctx, 'gen> MonotoneFramework for HasDestructorAnalysis<'ctx, 'gen> {
 
             TypeKind::TemplateInstantiation(ref inst) => {
                 let definition_or_arg_destructor =
-                    self.have_destructor.contains(&inst.template_definition())
+                    self.have_destructor.contains(&inst.template_definition().into())
                     ||
                     inst.template_arguments().iter().any(|arg| {
-                        self.have_destructor.contains(arg)
+                        self.have_destructor.contains(&arg.into())
                     });
                 if definition_or_arg_destructor {
                     self.insert(id)
@@ -172,8 +170,8 @@ impl<'ctx, 'gen> MonotoneFramework for HasDestructorAnalysis<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<HasDestructorAnalysis<'ctx, 'gen>> for HashSet<ItemId> {
-    fn from(analysis: HasDestructorAnalysis<'ctx, 'gen>) -> Self {
+impl<'ctx> From<HasDestructorAnalysis<'ctx>> for HashSet<ItemId> {
+    fn from(analysis: HasDestructorAnalysis<'ctx>) -> Self {
         analysis.have_destructor
     }
 }

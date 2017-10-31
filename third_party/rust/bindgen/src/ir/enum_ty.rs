@@ -1,6 +1,6 @@
 //! Intermediate representation for C/C++ enumerations.
 
-use super::context::{BindgenContext, ItemId};
+use super::context::{BindgenContext, TypeId};
 use super::item::Item;
 use super::ty::TypeKind;
 use clang;
@@ -27,7 +27,7 @@ pub struct Enum {
     ///
     /// It's `None` if the enum is a forward declaration and isn't defined
     /// anywhere else, see `tests/headers/func_ptr_in_struct.h`.
-    repr: Option<ItemId>,
+    repr: Option<TypeId>,
 
     /// The different variants, with explicit values.
     variants: Vec<EnumVariant>,
@@ -35,15 +35,15 @@ pub struct Enum {
 
 impl Enum {
     /// Construct a new `Enum` with the given representation and variants.
-    pub fn new(repr: Option<ItemId>, variants: Vec<EnumVariant>) -> Self {
+    pub fn new(repr: Option<TypeId>, variants: Vec<EnumVariant>) -> Self {
         Enum {
-            repr: repr,
-            variants: variants,
+            repr,
+            variants,
         }
     }
 
     /// Get this enumeration's representation.
-    pub fn repr(&self) -> Option<ItemId> {
+    pub fn repr(&self) -> Option<TypeId> {
         self.repr
     }
 
@@ -128,6 +128,18 @@ impl Enum {
         Ok(Enum::new(repr, variants))
     }
 
+    /// Whether the enum should be a bitfield
+    pub fn is_bitfield(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        let name = item.canonical_name(ctx);
+        let enum_ty = item.expect_type();
+
+        ctx.options().bitfield_enums.matches(&name) ||
+            (enum_ty.name().is_none() &&
+                    self.variants().iter().any(|v| {
+                    ctx.options().bitfield_enums.matches(&v.name())
+                }))
+    }
+
     /// Whether the enum should be an constified enum module
     pub fn is_constified_enum_module(
         &self,
@@ -142,6 +154,18 @@ impl Enum {
                  self.variants().iter().any(|v| {
                     ctx.options().constified_enum_modules.matches(&v.name())
                 }))
+    }
+
+    /// Whether the enum should be a Rust enum
+    pub fn is_rustified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        let name = item.canonical_name(ctx);
+        let enum_ty = item.expect_type();
+
+        ctx.options().rustified_enums.matches(&name) ||
+            (enum_ty.name().is_none() &&
+                self.variants().iter().any(|v| {
+                    ctx.options().rustified_enums.matches(&v.name())
+            }))
     }
 }
 
@@ -180,10 +204,10 @@ impl EnumVariant {
         custom_behavior: Option<EnumVariantCustomBehavior>,
     ) -> Self {
         EnumVariant {
-            name: name,
-            comment: comment,
-            val: val,
-            custom_behavior: custom_behavior,
+            name,
+            comment,
+            val,
+            custom_behavior,
         }
     }
 

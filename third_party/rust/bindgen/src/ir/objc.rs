@@ -12,6 +12,7 @@ use clang_sys::CXCursor_ObjCClassRef;
 use clang_sys::CXCursor_ObjCInstanceMethodDecl;
 use clang_sys::CXCursor_ObjCProtocolDecl;
 use clang_sys::CXCursor_ObjCProtocolRef;
+use quote;
 
 /// Objective C interface as used in TypeKind
 ///
@@ -211,13 +212,19 @@ impl ObjCMethod {
     }
 
     /// Formats the method call
-    pub fn format_method_call(&self, args: &[String]) -> String {
-        let split_name: Vec<&str> =
-            self.name.split(':').filter(|p| !p.is_empty()).collect();
+    pub fn format_method_call(&self, args: &[quote::Tokens]) -> quote::Tokens {
+        let split_name: Vec<_> = self.name
+            .split(':')
+            .filter(|p| !p.is_empty())
+            .map(quote::Ident::new)
+            .collect();
 
         // No arguments
         if args.len() == 0 && split_name.len() == 1 {
-            return split_name[0].to_string();
+            let name = &split_name[0];
+            return quote! {
+                #name
+            };
         }
 
         // Check right amount of arguments
@@ -229,12 +236,22 @@ impl ObjCMethod {
             );
         }
 
-        split_name
-            .iter()
-            .zip(args.iter())
-            .map(|parts| format!("{}:{} ", parts.0, parts.1))
-            .collect::<Vec<_>>()
-            .join("")
+        // Get arguments without type signatures to pass to `msg_send!`
+        let mut args_without_types = vec![];
+        for arg in args.iter() {
+            let name_and_sig: Vec<&str> = arg.as_str().split(' ').collect();
+            let name = name_and_sig[0];
+            args_without_types.push(quote::Ident::new(name))
+        };
+
+        let args = split_name
+            .into_iter()
+            .zip(args_without_types)
+            .map(|(arg, arg_val)| quote! { #arg : #arg_val });
+
+        quote! {
+            #( #args )*
+        }
     }
 }
 

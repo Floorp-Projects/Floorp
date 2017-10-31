@@ -146,11 +146,8 @@ use std::collections::{HashMap, HashSet};
 /// specially; see `constrain_instantiation_of_blacklisted_template` and its
 /// documentation for details.
 #[derive(Debug, Clone)]
-pub struct UsedTemplateParameters<'ctx, 'gen>
-where
-    'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct UsedTemplateParameters<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The Option is only there for temporary moves out of the hash map. See the
     // comments in `UsedTemplateParameters::constrain` below.
@@ -164,7 +161,7 @@ where
     whitelisted_items: HashSet<ItemId>,
 }
 
-impl<'ctx, 'gen> UsedTemplateParameters<'ctx, 'gen> {
+impl<'ctx> UsedTemplateParameters<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             // For each of these kinds of edges, if the referent uses a template
@@ -206,7 +203,8 @@ impl<'ctx, 'gen> UsedTemplateParameters<'ctx, 'gen> {
         }
     }
 
-    fn take_this_id_usage_set(&mut self, this_id: ItemId) -> ItemSet {
+    fn take_this_id_usage_set<Id: Into<ItemId>>(&mut self, this_id: Id) -> ItemSet {
+        let this_id = this_id.into();
         self.used
             .get_mut(&this_id)
             .expect(
@@ -281,7 +279,7 @@ impl<'ctx, 'gen> UsedTemplateParameters<'ctx, 'gen> {
 
         debug_assert!(this_id != instantiation.template_definition());
         let used_by_def = self.used
-            .get(&instantiation.template_definition())
+            .get(&instantiation.template_definition().into())
             .expect("Should have a used entry for instantiation's template definition")
             .as_ref()
             .expect("And it should be Some because only this_id's set is None, and an \
@@ -296,7 +294,7 @@ impl<'ctx, 'gen> UsedTemplateParameters<'ctx, 'gen> {
                 param
             );
 
-            if used_by_def.contains(param) {
+            if used_by_def.contains(&param.into()) {
                 trace!("        param is used by template definition");
 
                 let arg = arg.into_resolver()
@@ -367,14 +365,14 @@ impl<'ctx, 'gen> UsedTemplateParameters<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for UsedTemplateParameters<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashMap<ItemId, ItemSet>;
 
     fn new(
-        ctx: &'ctx BindgenContext<'gen>,
-    ) -> UsedTemplateParameters<'ctx, 'gen> {
+        ctx: &'ctx BindgenContext,
+    ) -> UsedTemplateParameters<'ctx> {
         let mut used = HashMap::new();
         let mut dependencies = HashMap::new();
         let whitelisted_items: HashSet<_> =
@@ -523,7 +521,7 @@ impl<'ctx, 'gen> MonotoneFramework for UsedTemplateParameters<'ctx, 'gen> {
             // template definition uses the corresponding template parameter.
             Some(&TypeKind::TemplateInstantiation(ref inst)) => {
                 if self.whitelisted_items.contains(
-                    &inst.template_definition(),
+                    &inst.template_definition().into(),
                 )
                 {
                     self.constrain_instantiation(
@@ -578,9 +576,9 @@ impl<'ctx, 'gen> MonotoneFramework for UsedTemplateParameters<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<UsedTemplateParameters<'ctx, 'gen>>
+impl<'ctx> From<UsedTemplateParameters<'ctx>>
     for HashMap<ItemId, ItemSet> {
-    fn from(used_templ_params: UsedTemplateParameters<'ctx, 'gen>) -> Self {
+    fn from(used_templ_params: UsedTemplateParameters<'ctx>) -> Self {
         used_templ_params
             .used
             .into_iter()

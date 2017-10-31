@@ -23,11 +23,8 @@ use std::collections::HashSet;
 ///   type parameter in array if any of the template arguments or template definition
 ///   has.
 #[derive(Debug, Clone)]
-pub struct HasTypeParameterInArray<'ctx, 'gen>
-where
-    'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct HasTypeParameterInArray<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
     // set has array.
@@ -43,7 +40,7 @@ where
     dependencies: HashMap<ItemId, Vec<ItemId>>,
 }
 
-impl<'ctx, 'gen> HasTypeParameterInArray<'ctx, 'gen> {
+impl<'ctx> HasTypeParameterInArray<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             // These are the only edges that can affect whether a type has type parameter
@@ -67,7 +64,8 @@ impl<'ctx, 'gen> HasTypeParameterInArray<'ctx, 'gen> {
         }
     }
 
-    fn insert(&mut self, id: ItemId) -> ConstrainResult {
+    fn insert<Id: Into<ItemId>>(&mut self, id: Id) -> ConstrainResult {
+        let id = id.into();
         trace!(
             "inserting {:?} into the has_type_parameter_in_array set",
             id
@@ -86,14 +84,14 @@ impl<'ctx, 'gen> HasTypeParameterInArray<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for HasTypeParameterInArray<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashSet<ItemId>;
 
     fn new(
-        ctx: &'ctx BindgenContext<'gen>,
-    ) -> HasTypeParameterInArray<'ctx, 'gen> {
+        ctx: &'ctx BindgenContext,
+    ) -> HasTypeParameterInArray<'ctx> {
         let has_type_parameter_in_array = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
@@ -168,7 +166,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) => {
-                if self.has_type_parameter_in_array.contains(&t) {
+                if self.has_type_parameter_in_array.contains(&t.into()) {
                     trace!(
                         "    aliases and type refs to T which have array \
                             also have array"
@@ -185,7 +183,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
 
             TypeKind::Comp(ref info) => {
                 let bases_have = info.base_members().iter().any(|base| {
-                    self.has_type_parameter_in_array.contains(&base.ty)
+                    self.has_type_parameter_in_array.contains(&base.ty.into())
                 });
                 if bases_have {
                     trace!("    bases have array, so we also have");
@@ -193,7 +191,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
                 }
                 let fields_have = info.fields().iter().any(|f| match *f {
                     Field::DataMember(ref data) => {
-                        self.has_type_parameter_in_array.contains(&data.ty())
+                        self.has_type_parameter_in_array.contains(&data.ty().into())
                     }
                     Field::Bitfields(..) => false,
                 });
@@ -209,7 +207,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
             TypeKind::TemplateInstantiation(ref template) => {
                 let args_have =
                     template.template_arguments().iter().any(|arg| {
-                        self.has_type_parameter_in_array.contains(&arg)
+                        self.has_type_parameter_in_array.contains(&arg.into())
                     });
                 if args_have {
                     trace!(
@@ -220,7 +218,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
                 }
 
                 let def_has = self.has_type_parameter_in_array.contains(
-                    &template.template_definition(),
+                    &template.template_definition().into(),
                 );
                 if def_has {
                     trace!(
@@ -249,8 +247,8 @@ impl<'ctx, 'gen> MonotoneFramework for HasTypeParameterInArray<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<HasTypeParameterInArray<'ctx, 'gen>> for HashSet<ItemId> {
-    fn from(analysis: HasTypeParameterInArray<'ctx, 'gen>) -> Self {
+impl<'ctx> From<HasTypeParameterInArray<'ctx>> for HashSet<ItemId> {
+    fn from(analysis: HasTypeParameterInArray<'ctx>) -> Self {
         analysis.has_type_parameter_in_array
     }
 }

@@ -1,0 +1,16 @@
+language: rust
+
+os:
+  - linux
+
+rust:
+  - stable
+
+cache:
+  directories:
+    - $HOME/.cargo
+
+script:
+  - cargo build --all
+  - cargo test
+  - cargo doc --all --no-deps
