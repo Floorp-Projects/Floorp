@@ -14,7 +14,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>a
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.css"  type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools-shim/content/aboutdevtools/subscribe.css"  type="text/css"/>
   <script type="application/javascript" src="chrome://devtools-shim/content/aboutdevtools/aboutdevtools.js"></script>
+  <script type="application/javascript" src="chrome://devtools-shim/content/aboutdevtools/subscribe.js"></script>
 </head>
 <body>
   <div id="install-page" class="wrapper" hidden="true">
@@ -48,6 +50,33 @@
       <div class="right-pane">
         <h1 class="title" >&aboutDevtools.welcome.title;</h1>
         <p id="welcome-message">&aboutDevtools.welcome.message;</p>
+
+        <!-- Form dedicated to the newsletter subscription -->
+        <div class="newsletter">
+          <h2 class="newsletter-title">&aboutDevtools.newsletter.title;</h2>
+          <p>&aboutDevtools.newsletter.message;</p>
+
+          <form id="newsletter-form" name="newsletter-form" action="https://www.mozilla.org/en-US/newsletter/" method="post">
+            <!-- "H" stands for the HTML format (->fmt). Alternative is T for text. -->
+            <input type="hidden" id="fmt" name="fmt" value="H" />
+            <!-- "app-dev" is the id of the Mozilla Developper newsletter -->
+            <input type="hidden" id="newsletters" name="newsletters" value="app-dev" />
+            <div id="newsletter-errors"></div>
+            <section id="newsletter-email" class="newsletter-form-section">
+              <input type="email" id="email" name="email" required="true" placeholder="&aboutDevtools.newsletter.email.placeholder;" />
+            </section>
+
+            <section id="newsletter-privacy" class="newsletter-form-section">
+              <input type="checkbox" id="privacy" name="privacy" required="true" />
+              <label for="privacy">&aboutDevtools.newsletter.privacy.label;</label>
+            </section>
+            <button type="submit" id="newsletter-submit" class="primary-button">&aboutDevtools.newsletter.subscribe.label;</button>
+          </form>
+          <div id="newsletter-thanks">
+            <h2>&aboutDevtools.newsletter.thanks.title;</h2>
+            <p>&aboutDevtools.newsletter.thanks.message;</p>
+          </div>
+        </div>
       </div>
     </div>
 
