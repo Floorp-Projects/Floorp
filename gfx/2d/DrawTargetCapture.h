@@ -164,7 +164,9 @@ private:
   // guarantees on the alignments of DrawingCommands allocated in this array.
   template<typename T>
   T* AppendToCommandList() {
-    MarkChanged();
+    if (T::AffectsSnapshot) {
+      MarkChanged();
+    }
     return mCommands.Append<T>();
   }
 
