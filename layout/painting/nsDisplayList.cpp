@@ -5594,28 +5594,6 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
     return false;
   }
 
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
-  nsRect frameRect =
-      nsCSSRendering::GetShadowRect(borderRect, nativeTheme, mFrame);
-
-  if (hasBorderRadius) {
-    nscoord twipsRadii[8];
-    nsSize sz = frameRect.Size();
-    hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
-  }
-
-  if (hasBorderRadius) {
-    RectCornerRadii borderRadii;
-    nsCSSRendering::GetBorderRadii(frameRect,
-                                   borderRect,
-                                   mFrame,
-                                   borderRadii);
-    if (!borderRadii.AreRadiiSame()) {
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -5785,18 +5763,6 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
   // We don't support native themed things yet like box shadows around
   // input buttons.
   if (nativeTheme) {
-    return false;
-  }
-
-  nsRect borderRect = nsRect(aReferenceOffset, aFrame->GetSize());
-  RectCornerRadii innerRadii;
-
-  if (hasBorderRadius) {
-    hasBorderRadius =
-      nsCSSRendering::GetShadowInnerRadii(aFrame, borderRect, innerRadii);
-  }
-
-  if (hasBorderRadius && !innerRadii.AreRadiiSame()) {
     return false;
   }
 
