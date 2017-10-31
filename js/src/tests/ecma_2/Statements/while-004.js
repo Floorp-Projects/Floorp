@@ -13,7 +13,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "while-004";
-var VERSION = "ECMA_2";
 var TITLE   = "while statement";
 var BUGNUMBER="316725";
 

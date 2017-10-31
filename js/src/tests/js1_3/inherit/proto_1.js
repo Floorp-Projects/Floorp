@@ -22,7 +22,6 @@
 */
 
 var SECTION = "proto_1";
-var VERSION = "JS1_3";
 var TITLE   = "new PrototypeObject";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -14,7 +14,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "toString-001.js";
-var VERSION = "JS1_4";
 var TITLE   = "Regression test case for 310514";
 var BUGNUMBER="310514";
 

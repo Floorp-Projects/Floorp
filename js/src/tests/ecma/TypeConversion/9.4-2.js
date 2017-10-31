@@ -37,7 +37,6 @@
 
 */
 var SECTION = "9.4-1";
-var VERSION = "ECMA_1";
 var TITLE   = "ToInteger";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

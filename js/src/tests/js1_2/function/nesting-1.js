@@ -14,7 +14,6 @@
 */
 
 var SECTION = "function/nesting-1.js";
-var VERSION = "JS_12";
 var TITLE   = "Regression test for 122040";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

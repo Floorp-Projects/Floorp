@@ -17,7 +17,6 @@
    Version:            9706
 
 */
-var VERSION = 9706;
 var SECTION = "15.9.2.2";
 var TOLERANCE = 100;
 var TITLE = "The Date Constructor Called as a Function";

@@ -17,7 +17,6 @@
    Date:               11 september 1997
 */
 var SECTION = "lexical-041";
-var VERSION = "ECMA_1";
 var TITLE   = "Identifiers";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

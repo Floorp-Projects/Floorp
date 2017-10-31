@@ -40,7 +40,6 @@
    Date:               2 october 1997
 */
 var SECTION = "15.5.4.7-1";
-var VERSION = "ECMA_1";
 var TITLE   = "String.protoype.lastIndexOf";
 
 var TEST_STRING = new String( " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" );

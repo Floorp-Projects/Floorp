@@ -24,7 +24,6 @@
 */
 
 var SECTION = "proto_6";
-var VERSION = "JS1_3";
 var TITLE   = "Logical OR || in constructors";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

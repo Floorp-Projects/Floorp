@@ -16,7 +16,6 @@
  *
  */
 var SECTION = "switch-002";
-var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

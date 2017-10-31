@@ -20,7 +20,6 @@
 
 
 var SECTION = "15.6.4.2-3";
-var VERSION = "ECMA_1";
 var TITLE   = "Boolean.prototype.toString()"
   writeHeaderToLog( SECTION + TITLE );
 

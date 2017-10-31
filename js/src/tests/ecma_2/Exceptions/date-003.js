@@ -20,7 +20,6 @@
    Date:               12 november 1997
 */
 var SECTION = "date-003";
-var VERSION = "JS1_4";
 var TITLE   = "Date.prototype.valueOf";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

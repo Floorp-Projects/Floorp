@@ -22,7 +22,6 @@
    Date:               17 july 1997
 */
 
-var VERSION = "ECMA_1";
 var SECTION = "9.9-1";
 
 writeHeaderToLog( SECTION + " Type Conversion: ToObject" );

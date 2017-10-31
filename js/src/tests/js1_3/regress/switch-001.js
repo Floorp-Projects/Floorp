@@ -20,7 +20,6 @@
    Date:               12 november 1997
 */
 var SECTION = "switch-001";
-var VERSION = "JS1_3";
 var TITLE   = "switch-001";
 var BUGNUMBER="315767";
 

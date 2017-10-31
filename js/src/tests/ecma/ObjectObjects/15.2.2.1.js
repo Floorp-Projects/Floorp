@@ -27,7 +27,6 @@
 */
 
 var SECTION = "15.2.2.1";
-var VERSION = "ECMA_1";
 var TITLE   = "new Object( value )";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

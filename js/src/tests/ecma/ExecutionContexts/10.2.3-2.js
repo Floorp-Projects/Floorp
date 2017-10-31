@@ -22,7 +22,6 @@
 */
 
 var SECTION = "10.2.3-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Function and Anonymous Code";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

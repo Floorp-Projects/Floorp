@@ -14,7 +14,6 @@
 */
 
 var SECTION = "lexical-048";
-var VERSION = "JS1_4";
 var TITLE   = "The Rules of Automatic Semicolon Insertion";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

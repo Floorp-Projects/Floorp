@@ -18,7 +18,6 @@
 */
 
 var SECTION = "15.9.5.20";
-var VERSION = "ECMA_1";
 var TITLE   = "Date.prototype.getMilliseconds()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -15,7 +15,6 @@
 */
 
 var SECTION = "15.8.2.13";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.pow(x, y)";
 var BUGNUMBER="77141";
 

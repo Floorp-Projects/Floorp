@@ -15,7 +15,6 @@
 */
 
 var SECTION = "15.8.2.7";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.cos(x)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

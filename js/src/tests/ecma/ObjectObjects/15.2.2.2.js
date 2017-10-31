@@ -27,7 +27,6 @@
    Date:               7 october 1997
 */
 var SECTION = "15.2.2.2";
-var VERSION = "ECMA_1";
 var TITLE   = "new Object()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

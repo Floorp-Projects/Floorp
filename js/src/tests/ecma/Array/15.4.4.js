@@ -20,7 +20,6 @@
 */
 
 var SECTION = "15.4.4";
-var VERSION = "ECMA_1";
 var TITLE   = "Properties of the Array Prototype Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -27,7 +27,6 @@
 
 */
 var SECTION = "7.7.3-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Numeric Literals";
 var BUGNUMBER="122884";
 

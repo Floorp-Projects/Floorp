@@ -74,7 +74,6 @@
 
 */
 var SECTION = "15.1.2.2-1";
-var VERSION = "ECMA_1";
 var TITLE   = "parseInt(string, radix)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

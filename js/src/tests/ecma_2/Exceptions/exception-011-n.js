@@ -5,7 +5,6 @@
 
 
 var SECTION = "exception-011";
-var VERSION = "ECMA_2";
 var TITLE   = "Don't Crash throwing undefined";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

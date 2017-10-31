@@ -21,8 +21,7 @@
 
 */
 var SECTION = "15.8.1"
-  var VERSION = "ECMA_1";
-var TITLE   = "Value Properties of the Math Object";
+  var TITLE   = "Value Properties of the Math Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

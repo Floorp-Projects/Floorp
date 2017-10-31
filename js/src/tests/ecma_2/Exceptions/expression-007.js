@@ -15,7 +15,6 @@
    Date:               12 november 1997
 */
 var SECTION = "expression-007";
-var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

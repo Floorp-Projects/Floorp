@@ -19,7 +19,6 @@
    Date:               21 october 1997
 */
 var SECTION = "7.7.1";
-var VERSION = "ECMA_1";
 var TITLE   = "Null Literals";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

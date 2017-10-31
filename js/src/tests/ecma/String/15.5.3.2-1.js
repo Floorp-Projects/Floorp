@@ -24,7 +24,6 @@
 */
 
 var SECTION = "15.5.3.2-1";
-var VERSION = "ECMA_1";
 var TITLE   = "String.fromCharCode()";
 
 new TestCase( "typeof String.fromCharCode",      "function", typeof String.fromCharCode );

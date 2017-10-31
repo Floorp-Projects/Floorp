@@ -16,7 +16,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-007";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement:  for-in";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -27,7 +27,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.10-2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Binary Bitwise Operators:  |");
 

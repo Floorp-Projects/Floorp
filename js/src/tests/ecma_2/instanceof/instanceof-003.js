@@ -27,7 +27,6 @@
    https://bugzilla.mozilla.org/show_bug.cgi?id=281606
 */
 var SECTION = "instanceof-003";
-var VERSION = "ECMA_2";
 var TITLE   = "instanceof operator";
 var BUGNUMBER ="7635";
 

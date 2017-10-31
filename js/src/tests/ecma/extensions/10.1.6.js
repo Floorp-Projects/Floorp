@@ -29,7 +29,6 @@
 */
 
 var SECTION = "10.1.6";
-var VERSION = "ECMA_1";
 var TITLE   = "Activation Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

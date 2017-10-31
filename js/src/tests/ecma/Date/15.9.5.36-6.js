@@ -32,7 +32,6 @@
 
 */
 var SECTION = "15.9.5.36-1";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Date.prototype.setFullYear(year [, mon [, date ]] )");
 

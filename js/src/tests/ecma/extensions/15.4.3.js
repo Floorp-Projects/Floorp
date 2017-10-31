@@ -15,7 +15,6 @@
 */
 
 var SECTION = "15.4.3";
-var VERSION = "ECMA_2";
 var TITLE   = "Properties of the Array Constructor";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

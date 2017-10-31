@@ -21,7 +21,6 @@
 */
 
 var SECTION = "15.5.1";
-var VERSION = "ECMA_1";
 var TITLE   = "The String Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

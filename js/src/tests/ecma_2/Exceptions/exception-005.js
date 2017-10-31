@@ -15,7 +15,6 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-005";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: ToObjectError";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

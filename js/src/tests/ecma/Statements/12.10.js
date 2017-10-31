@@ -13,7 +13,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.10-1";
-var VERSION = "ECMA_1";
 var TITLE   = "The with statement";
 
 writeHeaderToLog( SECTION +" "+ TITLE);

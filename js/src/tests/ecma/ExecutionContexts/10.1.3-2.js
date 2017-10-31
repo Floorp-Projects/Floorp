@@ -14,7 +14,6 @@
 */
 
 var SECTION = "10.1.3-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Variable Instantiation:  Function Declarations";
 var BUGNUMBER="299639";
 printBugNumber(BUGNUMBER);

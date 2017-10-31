@@ -15,7 +15,6 @@
 
 */
 var SECTION = "15.1.1.2";
-var VERSION = "ECMA_1";
 var TITLE   = "Infinity";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

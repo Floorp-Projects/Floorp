@@ -17,7 +17,6 @@
    Date:               june 27, 1997
 */
 var SECTION = "boolean-001.js";
-var VERSION = "JS1_4";
 var TITLE   = "Boolean.prototype.toString()";
 writeHeaderToLog( SECTION +" "+ TITLE );
 

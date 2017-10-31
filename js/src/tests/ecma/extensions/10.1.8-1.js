@@ -41,7 +41,6 @@
 */
 
 var SECTION = "10.1.8";
-var VERSION = "ECMA_1";
 var TITLE   = "Arguments Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -25,7 +25,6 @@
 */
 
 var SECTION = "12.2-1";
-var VERSION = "ECMA_1";
 var TITLE   = "The variable statement";
 
 writeHeaderToLog( SECTION +" "+ TITLE);

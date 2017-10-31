@@ -50,7 +50,6 @@
    *
    */
 var SECTION = "15.5.4.6-2";
-var VERSION = "ECMA_1";
 var TITLE   = "String.protoype.indexOf";
 var BUGNUMBER="105721";
 

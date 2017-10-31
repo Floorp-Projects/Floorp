@@ -16,7 +16,6 @@
    Date:               11 september 1997
 */
 var SECTION = "7.5-1";
-var VERSION = "ECMA_1";
 var TITLE   = "Identifiers";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

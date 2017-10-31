@@ -22,7 +22,6 @@
    Date:               1 october 1997
 */
 var SECTION = "string-001";
-var VERSION = "JS1_4";
 var TITLE   = "String.prototype.toString";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

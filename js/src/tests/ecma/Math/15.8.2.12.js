@@ -22,7 +22,6 @@
 
 
 var SECTION = "15.8.2.12";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.min(x, y)";
 var BUGNUMBER="76439";
 

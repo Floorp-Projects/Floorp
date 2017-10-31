@@ -18,7 +18,6 @@
 
 
 var SECTION = "15.7.3.3-4";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.MIN_VALUE:  DontEnum Attribute");
 

@@ -31,7 +31,6 @@
    Date:               2 october 1997
 */
 var SECTION = "15.5.4.4-2";
-var VERSION = "ECMA_1";
 var TITLE   = "String.prototype.charAt";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
