@@ -5255,11 +5255,6 @@ nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
 
 NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive) {
-  // We disallow setting active on chrome docshells.
-  if (mItemType == nsIDocShellTreeItem::typeChrome) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Keep track ourselves.
   mIsActive = aIsActive;
 
