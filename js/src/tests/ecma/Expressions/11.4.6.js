@@ -16,7 +16,7 @@ var SECTION = "11.4.6";
 var VERSION = "ECMA_1";
 var BUGNUMBER="77391";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " Unary + operator");
 

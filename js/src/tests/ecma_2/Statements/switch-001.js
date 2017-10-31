@@ -21,7 +21,7 @@ var TITLE   = "The switch statement";
 
 var BUGNUMBER="315767";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 SwitchTest( 0, 126 );

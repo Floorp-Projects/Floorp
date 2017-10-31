@@ -24,7 +24,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Math.log(x)";
 var BUGNUMBER = "77391";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

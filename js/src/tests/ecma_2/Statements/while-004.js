@@ -17,7 +17,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "while statement";
 var BUGNUMBER="316725";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile_1();

@@ -23,7 +23,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 var BUGNUMBER = "316293";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 NestedLabel();

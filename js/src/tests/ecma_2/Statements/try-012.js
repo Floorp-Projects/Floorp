@@ -20,7 +20,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 var BUGNUMBER="336872";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // Tests start here.

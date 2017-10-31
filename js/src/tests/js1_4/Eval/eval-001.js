@@ -38,7 +38,7 @@ var VERSION = "JS1_4";
 var TITLE   = "Calling eval indirectly should NOT fail in version 140";
 var BUGNUMBER="38512";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MY_EVAL = eval;

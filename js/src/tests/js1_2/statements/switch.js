@@ -19,7 +19,7 @@ var VERSION = 'no version';
 var TITLE   = 'statements: switch';
 var BUGNUMBER="323696";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog("Executing script: switch.js");
 writeHeaderToLog( SECTION + " "+ TITLE);
 

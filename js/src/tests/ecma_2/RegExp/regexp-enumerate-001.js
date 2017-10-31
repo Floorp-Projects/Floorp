@@ -35,7 +35,7 @@ var TITLE   = "Regression Test for Enumerating Properties";
 
 var BUGNUMBER="339403";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /*

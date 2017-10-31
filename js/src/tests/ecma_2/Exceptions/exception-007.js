@@ -19,7 +19,7 @@ var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions:  TypeError";
 var BUGNUMBER="318250";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DefaultValue_1();
