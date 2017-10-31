@@ -1,5 +1,4 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 // These tables have a different update URL (for v4).
 const TEST_TABLE_DATA_V4 = {
@@ -56,10 +55,10 @@ let gHttpServV4 = null;
 const NEW_CLIENT_STATE = "sta\0te";
 const CHECKSUM = "\x30\x67\xc7\x2c\x5e\x50\x1c\x31\xe3\xfe\xca\x73\xf0\x47\xdc\x34\x1a\x95\x63\x99\xec\x70\x5e\x0a\xee\x9e\xfb\x17\xa1\x55\x35\x78";
 
-prefBranch.setBoolPref("browser.safebrowsing.debug", true);
+Services.prefs.setBoolPref("browser.safebrowsing.debug", true);
 
 // The "\xFF\xFF" is to generate a base64 string with "/".
-prefBranch.setCharPref("browser.safebrowsing.id", "Firefox\xFF\xFF");
+Services.prefs.setCharPref("browser.safebrowsing.id", "Firefox\xFF\xFF");
 
 // Register tables.
 gListManager.registerTable(TEST_TABLE_DATA_V4.tableName,
@@ -76,7 +75,7 @@ add_test(function test_update_v4() {
   gListManager.enableUpdate(TEST_TABLE_DATA_V4.tableName);
 
   // Force table update.
-  prefBranch.setCharPref(PREF_NEXTUPDATETIME_V4, "1");
+  Services.prefs.setCharPref(PREF_NEXTUPDATETIME_V4, "1");
   gListManager.maybeToggleUpdateChecking();
 });
 

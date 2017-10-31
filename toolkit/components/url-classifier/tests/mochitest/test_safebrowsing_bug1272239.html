@@ -28,13 +28,10 @@ const prefs = [
   "urlclassifier.blockedTable"
 ];
 
-var prefService = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Ci.nsIPrefService);
-
 // Get providers
 var providers = {};
 
-var branch = prefService.getBranch("browser.safebrowsing.provider.");
+var branch = SpecialPowers.Services.prefs.getBranch("browser.safebrowsing.provider.");
 var children = branch.getChildList("", {});
 
 for (var child of children) {
