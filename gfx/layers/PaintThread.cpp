@@ -174,11 +174,10 @@ PaintThread::PaintContents(CapturedPaintState* aState,
     cbc->NotifyBeginAsyncPaint(aState);
   }
   RefPtr<CapturedPaintState> state(aState);
-  RefPtr<DrawTargetCapture> capture(aState->mCapture);
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
-    [self, cbc, capture, state, aCallback]() -> void
+    [self, cbc, state, aCallback]() -> void
   {
     self->AsyncPaintContents(cbc,
                              state,
