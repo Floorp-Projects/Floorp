@@ -78,7 +78,9 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   await stepIn(dbg);
+  // await waitForMappedScopes(dbg);
   assertPausedLocation(dbg);
+
   await stepOver(dbg);
   assertPausedLocation(dbg);
 

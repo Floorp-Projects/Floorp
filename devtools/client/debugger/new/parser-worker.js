@@ -32030,10 +32030,6 @@ function WorkerDispatcher() {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const mark = typeof window == "object" && window.performance && window.performance.mark ? window.performance.mark.bind(window.performance) : () => {};
-
-const measure = typeof window == "object" && window.performance && window.performance.measure ? window.performance.measure.bind(window.performance) : () => {};
-
 WorkerDispatcher.prototype = {
   start(url) {
     this.worker = new Worker(url);
@@ -32055,9 +32051,6 @@ WorkerDispatcher.prototype = {
     return (...args) => {
       return new Promise((resolve, reject) => {
         const id = this.msgId++;
-
-        mark(`${method}_start`);
-
         this.worker.postMessage({ id, method, args });
 
         const listener = ({ data: result }) => {
@@ -32070,10 +32063,6 @@ WorkerDispatcher.prototype = {
             return;
           }
           this.worker.removeEventListener("message", listener);
-
-          mark(`${method}_end`);
-          measure(`${method}`, `${method}_start`, `${method}_end`);
-
           if (result.error) {
             reject(result.error);
           } else {
@@ -32542,11 +32531,24 @@ Object.defineProperty(exports, "__esModule", {
 exports.containsPosition = containsPosition;
 exports.containsLocation = containsLocation;
 exports.nodeContainsPosition = nodeContainsPosition;
-function containsPosition(a, b) {
-  const startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
-  const endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
+function startsBefore(a, b) {
+  let before = a.start.line < b.line;
+  if (a.start.line === b.line) {
+    before = a.start.column >= 0 && b.column >= 0 ? a.start.column <= b.column : true;
+  }
+  return before;
+}
 
-  return startsBefore && endsAfter;
+function endsAfter(a, b) {
+  let after = a.end.line > b.line;
+  if (a.end.line === b.line) {
+    after = a.end.column >= 0 && b.column >= 0 ? a.end.column >= b.column : true;
+  }
+  return after;
+}
+
+function containsPosition(a, b) {
+  return startsBefore(a, b) && endsAfter(a, b);
 }
 
 function containsLocation(a, b) {
@@ -32596,6 +32598,12 @@ function getFunctionParameterNames(path) {
 
 function getVariableNames(path) {
   if (t.isObjectProperty(path) && !(0, _helpers.isFunction)(path.node.value)) {
+    if (path.node.key.type === "StringLiteral") {
+      return [{
+        name: path.node.key.value,
+        location: path.node.loc
+      }];
+    }
     return [{
       name: path.node.key.name,
       location: path.node.loc
@@ -32625,6 +32633,14 @@ function getComments(ast) {
   }));
 }
 
+function getSpecifiers(specifiers) {
+  if (!specifiers) {
+    return;
+  }
+
+  return specifiers.map(specifier => specifier.local && specifier.local.name);
+}
+
 function extractSymbols(source) {
   const functions = [];
   const variables = [];
@@ -32632,6 +32648,8 @@ function extractSymbols(source) {
   const callExpressions = [];
   const objectProperties = [];
   const identifiers = [];
+  const classes = [];
+  const imports = [];
 
   const ast = (0, _ast.traverseAst)(source, {
     enter(path) {
@@ -32650,9 +32668,18 @@ function extractSymbols(source) {
       }
 
       if (t.isClassDeclaration(path)) {
-        variables.push({
+        classes.push({
           name: path.node.id.name,
+          parent: path.node.superClass,
           location: path.node.loc
+        });
+      }
+
+      if (t.isImportDeclaration(path)) {
+        imports.push({
+          source: path.node.source.value,
+          location: path.node.loc,
+          specifiers: getSpecifiers(path.node.specifiers)
         });
       }
 
@@ -32671,7 +32698,8 @@ function extractSymbols(source) {
           name: path.node.property.name,
           location: { start, end },
           expressionLocation: path.node.loc,
-          expression: getSnippet(path)
+          expression: getSnippet(path),
+          computed: path.node.computed
         });
       }
 
@@ -32729,7 +32757,9 @@ function extractSymbols(source) {
     memberExpressions,
     objectProperties,
     comments,
-    identifiers
+    identifiers,
+    classes,
+    imports
   };
 }
 
@@ -33720,8 +33750,6 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.getNextStep = getNextStep;
 
-var _debuggerHtml = __webpack_require__(1626);
-
 var _types = __webpack_require__(1627);
 
 var _closest = __webpack_require__(1455);
@@ -33763,13 +33791,7 @@ function _getNextStep(statement, position) {
 }
 
 /***/ }),
-/* 1626 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/***/ }),
+/* 1626 */,
 /* 1627 */
 /***/ (function(module, exports, __webpack_require__) {
 

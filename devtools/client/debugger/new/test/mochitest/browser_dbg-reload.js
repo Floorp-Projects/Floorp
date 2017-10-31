@@ -17,7 +17,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "sjs_code_reload", 2);
 
   const sync = waitForDispatch(dbg, "SYNC_BREAKPOINT");
-  await reload(dbg,  "sjs_code_reload");
+  await reload(dbg, "sjs_code_reload");
   await sync;
 
   const breakpoints = dbg.selectors.getBreakpoints(dbg.getState());
