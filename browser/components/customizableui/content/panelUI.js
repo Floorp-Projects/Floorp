@@ -580,6 +580,10 @@ const PanelUI = {
     if (event.button > 1 || !button._highlight) {
       return;
     }
+    if (event.button == 1) {
+      // Bug 1402849, close library panel on mid mouse click
+      CustomizableUI.hidePanelForNode(button);
+    }
     window.openUILink(button._highlight.url, event);
   },
 
