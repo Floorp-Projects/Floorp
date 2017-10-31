@@ -251,16 +251,6 @@ elif platform.system() == 'Windows':
                          ['PATH', 'INCLUDE', 'LIB', 'LIBPATH', 'CC', 'CXX',
                           'WINDOWSSDKDIR'])
 
-# Compiler flags, based on word length
-if word_bits == 32:
-    if compiler == 'clang':
-        env['CC'] = '{CC} -arch i386'.format(**env)
-        env['CXX'] = '{CXX} -arch i386'.format(**env)
-    elif compiler == 'gcc':
-        env['CC'] = '{CC} -m32'.format(**env)
-        env['CXX'] = '{CXX} -m32'.format(**env)
-        env['AR'] = 'ar'
-
 # Configure flags, based on word length and cross-compilation
 if word_bits == 32:
     if platform.system() == 'Windows':

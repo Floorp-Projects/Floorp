@@ -755,8 +755,7 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(
 
 #else
 
-    NS_RUNTIMEABORT("shouldn't be called on non-ATK platforms");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("shouldn't be called on non-ATK platforms");
 
 #endif
 }
@@ -1075,8 +1074,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
                                                      const uint32_t &surfaceid,
                                                      int16_t* handled)
 {
-    NS_RUNTIMEABORT("NPP_HandleEvent_IOSurface is a OSX-only message");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("NPP_HandleEvent_IOSurface is a OSX-only message");
 }
 #endif
 
@@ -1090,8 +1088,7 @@ PluginInstanceChild::RecvWindowPosChanged(const NPRemoteEvent& event)
     int16_t dontcare;
     return AnswerNPP_HandleEvent(event, &dontcare);
 #else
-    NS_RUNTIMEABORT("WindowPosChanged is a windows-only message");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("WindowPosChanged is a windows-only message");
 #endif
 }
 
@@ -1110,8 +1107,7 @@ PluginInstanceChild::RecvContentsScaleFactorChanged(const double& aContentsScale
 #endif
     return IPC_OK();
 #else
-    NS_RUNTIMEABORT("ContentsScaleFactorChanged is an Windows or OSX only message");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("ContentsScaleFactorChanged is an Windows or OSX only message");
 #endif
 }
 

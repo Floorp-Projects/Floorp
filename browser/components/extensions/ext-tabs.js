@@ -268,6 +268,8 @@ this.tabs = class extends ExtensionAPI {
             } else if (event.type == "TabBrowserInserted" &&
                        !event.detail.insertedOnTabCreation) {
               needed.push("discarded");
+            } else if (event.type == "TabBrowserDiscarded") {
+              needed.push("discarded");
             }
 
             let tab = tabManager.getWrapper(event.originalTarget);
@@ -307,6 +309,7 @@ this.tabs = class extends ExtensionAPI {
           windowTracker.addListener("TabPinned", listener);
           windowTracker.addListener("TabUnpinned", listener);
           windowTracker.addListener("TabBrowserInserted", listener);
+          windowTracker.addListener("TabBrowserDiscarded", listener);
 
           tabTracker.on("tab-isarticle", isArticleChangeListener);
 
@@ -316,6 +319,7 @@ this.tabs = class extends ExtensionAPI {
             windowTracker.removeListener("TabPinned", listener);
             windowTracker.removeListener("TabUnpinned", listener);
             windowTracker.removeListener("TabBrowserInserted", listener);
+            windowTracker.removeListener("TabBrowserDiscarded", listener);
             tabTracker.off("tab-isarticle", isArticleChangeListener);
           };
         }).api(),
@@ -443,6 +447,17 @@ this.tabs = class extends ExtensionAPI {
           for (let tabId of tabs) {
             let nativeTab = tabTracker.getTab(tabId);
             nativeTab.ownerGlobal.gBrowser.removeTab(nativeTab);
+          }
+        },
+
+        async discard(tabIds) {
+          if (!Array.isArray(tabIds)) {
+            tabIds = [tabIds];
+          }
+          let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
+
+          for (let tab of tabs) {
+            tab.ownerGlobal.gBrowser.discardBrowser(tab.linkedBrowser);
           }
         },
 

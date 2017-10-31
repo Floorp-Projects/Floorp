@@ -189,7 +189,7 @@ GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(GLuint aTexture)
         // your texture is not texture complete -- that is, you
         // allocated a texture name, but didn't actually define its
         // size via a call to TexImage2D.
-        NS_RUNTIMEABORT(msg.get());
+        MOZ_CRASH_UNSAFE_OOL(msg.get());
     }
 }
 

@@ -577,8 +577,7 @@ PresentationConnection::DoReceiveMessage(const nsACString& aData, bool aIsBinary
       }
       jsData.setObject(*arrayBuf);
     } else {
-      NS_RUNTIMEABORT("Unknown binary type!");
-      return NS_ERROR_UNEXPECTED;
+      MOZ_CRASH("Unknown binary type!");
     }
   } else {
     NS_ConvertUTF8toUTF16 utf16Data(aData);

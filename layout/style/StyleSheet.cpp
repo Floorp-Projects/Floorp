@@ -243,7 +243,7 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
 #endif
 {
   if (!mPrincipal) {
-    NS_RUNTIMEABORT("NullPrincipal::Init failed");
+    MOZ_CRASH("NullPrincipal::Init failed");
   }
 }
 

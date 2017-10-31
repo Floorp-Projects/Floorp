@@ -728,8 +728,7 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
                                            const nsString& aIconPath)
 {
 #if !defined XP_WIN
-    NS_RUNTIMEABORT("Not Reached!");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("Not Reached!");
 #else
     nsresult rv = mozilla::widget::RecvAudioSessionData(aId, aDisplayName, aIconPath);
     NS_ENSURE_SUCCESS(rv, IPC_OK()); // Bail early if this fails
@@ -2616,7 +2615,7 @@ PluginModuleChild::RecvProcessNativeEventsInInterruptCall()
     ProcessNativeEventsInInterruptCall();
     return IPC_OK();
 #else
-    NS_RUNTIMEABORT(
+    MOZ_CRASH(
         "PluginModuleChild::RecvProcessNativeEventsInInterruptCall not implemented!");
     return IPC_FAIL_NO_REASON(this);
 #endif
@@ -2663,8 +2662,7 @@ PluginModuleChild::PluginRequiresAudioDeviceChanges(
     }
     return rv;
 #else
-    NS_RUNTIMEABORT("PluginRequiresAudioDeviceChanges is not available on this platform.");
-    return NPERR_GENERIC_ERROR;
+    MOZ_CRASH("PluginRequiresAudioDeviceChanges is not available on this platform.");
 #endif // XP_WIN
 }
 
@@ -2683,7 +2681,6 @@ PluginModuleChild::RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
     }
     return IPC_OK();
 #else
-    NS_RUNTIMEABORT("NPP_SetValue_NPNVaudioDeviceChangeDetails is a Windows-only message");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("NPP_SetValue_NPNVaudioDeviceChangeDetails is a Windows-only message");
 #endif
 }

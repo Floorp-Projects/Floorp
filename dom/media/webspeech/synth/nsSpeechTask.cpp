@@ -61,18 +61,35 @@ public:
     switch (event) {
       case MediaStreamGraphEvent::EVENT_FINISHED:
         {
+          RefPtr<SynthStreamListener> self = this;
           if (!mStarted) {
             mStarted = true;
             aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-              NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
-                                this,
-                                &SynthStreamListener::DoNotifyStarted));
+              NS_NewRunnableFunction(
+                "dom::SynthStreamListener::NotifyEvent",
+                [self] {
+                  // "start" event will be fired in DoNotifyStarted() which is
+                  // not allowed in stable state, so we do it asynchronously in
+                  // next run.
+                  NS_DispatchToMainThread(NewRunnableMethod(
+                    "dom::SynthStreamListener::DoNotifyStarted",
+                    self,
+                    &SynthStreamListener::DoNotifyStarted));
+                }));
           }
 
           aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-            NewRunnableMethod("dom::SynthStreamListener::DoNotifyFinished",
-                              this,
-                              &SynthStreamListener::DoNotifyFinished));
+            NS_NewRunnableFunction(
+              "dom::SynthStreamListener::NotifyEvent",
+              [self] {
+                // "end" event will be fired in DoNotifyFinished() which is
+                // not allowed in stable state, so we do it asynchronously in
+                // next run.
+                NS_DispatchToMainThread(NewRunnableMethod(
+                  "dom::SynthStreamListener::DoNotifyFinished",
+                  self,
+                  &SynthStreamListener::DoNotifyFinished));
+              }));
         }
         break;
       case MediaStreamGraphEvent::EVENT_REMOVED:
@@ -89,10 +106,19 @@ public:
   {
     if (aBlocked == MediaStreamListener::UNBLOCKED && !mStarted) {
       mStarted = true;
+      RefPtr<SynthStreamListener> self = this;
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-        NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
-                          this,
-                          &SynthStreamListener::DoNotifyStarted));
+        NS_NewRunnableFunction(
+          "dom::SynthStreamListener::NotifyBlockingChanged",
+          [self] {
+            // "start" event will be fired in DoNotifyStarted() which is
+            // not allowed in stable state, so we do it asynchronously in
+            // next run.
+            NS_DispatchToMainThread(NewRunnableMethod(
+              "dom::SynthStreamListener::DoNotifyStarted",
+              self,
+              &SynthStreamListener::DoNotifyStarted));
+          }));
     }
   }
 

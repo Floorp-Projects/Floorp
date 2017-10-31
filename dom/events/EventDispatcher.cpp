@@ -601,6 +601,10 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   NS_ENSURE_TRUE(aEvent->mMessage || !aDOMEvent || aTargets,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
 
+  // Events shall not be fired while we are in stable state to prevent anything
+  // visible from the scripts.
+  MOZ_ASSERT(!nsContentUtils::IsInStableOrMetaStableState());
+
 #ifdef MOZ_TASK_TRACER
   if (MOZ_UNLIKELY(mozilla::tasktracer::IsStartLogging())) {
     nsAutoCString eventType;
