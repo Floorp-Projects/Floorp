@@ -159,13 +159,9 @@ staging ground for pushing builds to Travis.
 Tag the release
 ---------------
 
-Run the following command:
+Run the following command to tag the release:
 
-	% git tag -a 'vX.Y.Z'
-
-Write the following in the annotation:
-
-	Tagging release vX.Y.Z
+	% git tag 'vX.Y.Z'
 
 
 Make the release
