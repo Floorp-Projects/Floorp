@@ -38,13 +38,6 @@ e.g.::
 
     mk_add_options AUTOCLOBBER=1
 
-ac_add_options
-^^^^^^^^^^^^^^
-
-This is a variant of ac_add_options() which only adds configure options
-for a specified application. This is only used when building multiple
-applications through client.mk. This function is typically not needed.
-
 Special mk_add_options Variables
 --------------------------------
 

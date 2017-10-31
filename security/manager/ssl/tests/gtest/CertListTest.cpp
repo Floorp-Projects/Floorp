@@ -189,9 +189,9 @@ TEST_F(psm_CertList, TestValidSegmenting)
 {
   RefPtr<nsNSSCertList> certList = new nsNSSCertList();
 
-  nsresult rv = AddCertFromStringToList(kCaPem, certList);
+  nsresult rv = AddCertFromStringToList(kEePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
-  rv = AddCertFromStringToList(kCaIntermediatePem, certList);
+  rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   nsCOMPtr<nsIX509Cert> rootCert;
@@ -206,13 +206,13 @@ TEST_F(psm_CertList, TestValidSegmenting)
 
   bool selfSigned;
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned))) << "Getters should work.";
-  ASSERT_TRUE(selfSigned) << "Roots are self signed.";
+  ASSERT_FALSE(selfSigned) << "Roots are self signed, but this was ca-second-intermediate";
 
   nsAutoString rootCn;
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn))) << "Getters should work.";
-  ASSERT_TRUE(rootCn.EqualsLiteral("ca")) << "Root CN should match";
+  ASSERT_TRUE(rootCn.EqualsLiteral("ca-second-intermediate")) << "Second Intermediate CN should match";
 
-  rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
+  rv = AddCertFromStringToList(kCaIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   intCerts = nullptr;
@@ -225,7 +225,7 @@ TEST_F(psm_CertList, TestValidSegmenting)
   ASSERT_TRUE(eeCert) << "End entity cert should be filled in";
   ASSERT_EQ(CountCertsInList(intCerts), 1) << "There should be one intermediate";
 
-  rv = AddCertFromStringToList(kEePem, certList);
+  rv = AddCertFromStringToList(kCaPem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   intCerts = nullptr;
@@ -237,6 +237,9 @@ TEST_F(psm_CertList, TestValidSegmenting)
   ASSERT_TRUE(rootCert) << "Root cert should be filled in";
   ASSERT_TRUE(eeCert) << "End entity cert should be filled in";
   ASSERT_EQ(CountCertsInList(intCerts), 2) << "There should be two intermediates";
+
+  ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned))) << "Getters should work.";
+  ASSERT_TRUE(selfSigned) << "Roots are self signed";
 
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn))) << "Getters should work.";
   ASSERT_TRUE(rootCn.EqualsLiteral("ca")) << "Root CN should match";
@@ -254,11 +257,11 @@ TEST_F(psm_CertList, TestValidSegmenting)
       }
 
       if (aHasMore) {
-        if (!cn.EqualsLiteral("ca-intermediate")) {
+        if (!cn.EqualsLiteral("ca-second-intermediate")) {
           return NS_ERROR_FAILURE;
         }
       } else {
-        if (!cn.EqualsLiteral("ca-second-intermediate")) {
+        if (!cn.EqualsLiteral("ca-intermediate")) {
           return NS_ERROR_FAILURE;
         }
       }

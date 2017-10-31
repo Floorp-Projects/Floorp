@@ -16,7 +16,7 @@ from taskgraph.util.scriptworker import get_push_apk_scope, get_push_apk_track, 
 from taskgraph.util.push_apk import fill_labels_tranform, validate_jobs_schema_transform_partial, \
     validate_dependent_tasks_transform, delete_non_required_fields_transform, generate_dependencies
 
-from voluptuous import Required
+from voluptuous import Optional, Required
 
 
 transforms = TransformSequence()
@@ -35,6 +35,7 @@ push_apk_description_schema = Schema({
     Required('worker'): object,
     Required('scopes'): None,
     Required('deadline-after'): basestring,
+    Optional('extra'): object,
 })
 
 validate_jobs_schema_transform = functools.partial(

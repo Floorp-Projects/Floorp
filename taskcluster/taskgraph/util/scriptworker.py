@@ -86,9 +86,13 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
 
 Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_number`
 """
-BEETMOVER_RELEASE_TARGET_TASKS = set([
+BEETMOVER_CANDIDATES_TARGET_TASKS = set([
     'candidates_fennec',
 ])
+BEETMOVER_PUBLISH_TARGET_TASKS = set([
+    'publish_fennec',
+])
+BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUBLISH_TARGET_TASKS
 
 """Map beetmover tasks aliases to sets of target task methods.
 
@@ -106,13 +110,18 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
         'mozilla_release_tasks',
     ])
 ], [
-    'all-release-tasks', BEETMOVER_RELEASE_TARGET_TASKS
+    'all-candidates-tasks', BEETMOVER_CANDIDATES_TARGET_TASKS
+], [
+    'all-publish-tasks', BEETMOVER_PUBLISH_TARGET_TASKS
 ]]
 
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-release-tasks': {
+    'all-candidates-tasks': {
+        'all-release-branches': 'project:releng:beetmover:bucket:release',
+    },
+    'all-publish-tasks': {
         'all-release-branches': 'project:releng:beetmover:bucket:release',
     },
     'all-nightly-tasks': {
@@ -124,7 +133,8 @@ BEETMOVER_BUCKET_SCOPES = {
 """Map the beetmover tasks aliases to the actual action scopes.
 """
 BEETMOVER_ACTION_SCOPES = {
-    'all-release-tasks': 'project:releng:beetmover:action:push-to-candidates',
+    'all-candidates-tasks': 'project:releng:beetmover:action:push-to-candidates',
+    'all-publish-tasks': 'project:releng:beetmover:action:push-to-releases',
     'all-nightly-tasks': 'project:releng:beetmover:action:push-to-nightly',
     'default': 'project:releng:beetmover:action:push-to-staging',
 }
@@ -239,12 +249,14 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
     'central': 'aws-provisioner-v1/taskcluster-generic',
     'beta': 'null-provisioner/human-breakpoint',
     'release': 'null-provisioner/human-breakpoint',
+    'maple': 'aws-provisioner-v1/taskcluster-generic',
     'default': 'invalid/invalid',
 }
 
 PUSH_APK_DRY_RUN_OPTION = {
     'central': False,
     'beta': False,
+    'maple': True,
     'release': False,
     'default': True,
 }
@@ -394,7 +406,7 @@ get_push_apk_rollout_percentage = functools.partial(
 
 
 # release_config {{{1
-def get_release_config(config):
+def get_release_config(config, force=False):
     """Get the build number and version for a release task.
 
     Currently only applies to beetmover tasks.
@@ -411,8 +423,11 @@ def get_release_config(config):
             update `task.payload`.
     """
     release_config = {}
-    if config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
-        build_number = str(os.environ.get("BUILD_NUMBER", ""))
+    if force or config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
+        next_version = str(os.environ.get("NEXT_VERSION", ""))
+        if next_version != "":
+            release_config['next_version'] = next_version
+        build_number = str(os.environ.get("BUILD_NUMBER", 1))
         if not build_number.isdigit():
             raise ValueError("Release graphs must specify `BUILD_NUMBER` in the environment!")
         release_config['build_number'] = int(build_number)
