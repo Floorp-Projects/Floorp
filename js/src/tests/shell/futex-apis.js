@@ -46,7 +46,7 @@ let sab = new SharedArrayBuffer(16);
 		  new Set(),
 		  new WeakMap(),
 		  new WeakSet(),
-		  this.Promise ? new Promise(() => "done") : null,
+		  new Promise(() => "done"),
 		  Symbol("halleluja"),
 		  // TODO: Proxy?
 		  Object,

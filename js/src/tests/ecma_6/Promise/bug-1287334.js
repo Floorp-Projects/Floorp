@@ -1,8 +1,3 @@
-if (!this.Promise) {
-    this.reportCompare && reportCompare(true, true);
-    quit(0);
-}
-
 var promise = Promise.resolve(1);
 var FakeCtor = function(exec){ exec(function(){}, function(){}); };
 Object.defineProperty(Promise, Symbol.species, {value: FakeCtor});
