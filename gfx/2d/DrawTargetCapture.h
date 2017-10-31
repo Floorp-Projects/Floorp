@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_DRAWTARGETCAPTURE_H_
 
 #include "2D.h"
-#include <vector>
+#include "CaptureCommandList.h"
 
 #include "Filters.h"
 
@@ -162,14 +162,10 @@ private:
   // that are required while recording. It should be noted there's no
   // guarantees on the alignments of DrawingCommands allocated in this array.
   template<typename T>
-  T* AppendToCommandList()
-  {
-    size_t oldSize = mDrawCommandStorage.size();
-    mDrawCommandStorage.resize(mDrawCommandStorage.size() + sizeof(T) + sizeof(uint32_t));
-    uint8_t* nextDrawLocation = &mDrawCommandStorage.front() + oldSize;
-    *(uint32_t*)(nextDrawLocation) = sizeof(T) + sizeof(uint32_t);
-    return reinterpret_cast<T*>(nextDrawLocation + sizeof(uint32_t));
+  T* AppendToCommandList() {
+    return mCommands.Append<T>();
   }
+
   RefPtr<DrawTarget> mRefDT;
   IntSize mSize;
 
@@ -185,12 +181,11 @@ private:
     bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
-  std::vector<uint8_t> mDrawCommandStorage;
+
+  CaptureCommandList mCommands;
 };
 
 } // namespace gfx
-
 } // namespace mozilla
-
 
 #endif /* MOZILLA_GFX_DRAWTARGETCAPTURE_H_ */
