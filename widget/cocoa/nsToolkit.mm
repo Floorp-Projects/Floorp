@@ -45,6 +45,7 @@ nsToolkit* nsToolkit::gToolkit = nullptr;
 
 nsToolkit::nsToolkit()
 : mSleepWakeNotificationRLS(nullptr)
+, mPowerNotifier{0}
 , mEventTapPort(nullptr)
 , mEventTapRLS(nullptr)
 {
@@ -79,7 +80,7 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       nsToolkit::PostSleepWakeNotification(NS_WIDGET_SLEEP_OBSERVER_TOPIC);
       ::IOAllowPowerChange(gRootPort, (long)messageArgument);
       break;
-      
+
     case kIOMessageCanSystemSleep:
       // In this case, the computer has been idle for several minutes
       // and will sleep soon so you must either allow or cancel
@@ -88,7 +89,7 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       // In Mozilla's case, we always allow sleep.
       ::IOAllowPowerChange(gRootPort,(long)messageArgument);
       break;
-      
+
     case kIOMessageSystemHasPoweredOn:
       // Handle wakeup.
       nsToolkit::PostSleepWakeNotification(NS_WIDGET_WAKE_OBSERVER_TOPIC);
