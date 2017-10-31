@@ -128,6 +128,18 @@ DrawTargetCaptureImpl::DrawSurface(SourceSurface *aSurface,
 }
 
 void
+DrawTargetCaptureImpl::DrawSurfaceWithShadow(SourceSurface *aSurface,
+                                             const Point &aDest,
+                                             const Color &aColor,
+                                             const Point &aOffset,
+                                             Float aSigma,
+                                             CompositionOp aOperator)
+{
+  aSurface->GuaranteePersistance();
+  AppendCommand(DrawSurfaceWithShadowCommand)(aSurface, aDest, aColor, aOffset, aSigma, aOperator);
+}
+
+void
 DrawTargetCaptureImpl::DrawFilter(FilterNode *aNode,
                                   const Rect &aSourceRect,
                                   const Point &aDestPoint,
