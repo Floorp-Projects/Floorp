@@ -150,9 +150,6 @@ ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))
 	$(foreach line,$(MOZCONFIG_OUT_FILTERED),$(info $(NULL) $(NULL) $(NULL) $(NULL) $(subst ||, ,$(line))))
 endif
 
-# Windows equivalents
-clobber: clean
-
 # helper target for mobile
 build_and_deploy: build package install
 
@@ -309,7 +306,6 @@ echo-variable-%:
 
 .PHONY: \
     build \
-    clobber \
     configure \
     preflight_all \
     postflight_all \
