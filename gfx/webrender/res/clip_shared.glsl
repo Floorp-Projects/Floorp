@@ -96,7 +96,8 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     vLocalBounds = vec4(clipped_local_rect.p0, clipped_local_rect.p0 + clipped_local_rect.size);
 
-    return ClipVertexInfo(layer_pos.xyw, actual_pos, clipped_local_rect);
+    ClipVertexInfo vi = ClipVertexInfo(layer_pos.xyw, actual_pos, clipped_local_rect);
+    return vi;
 }
 
 #endif //WR_VERTEX_SHADER

@@ -180,3 +180,13 @@ impl From<BrushInstance> for PrimitiveInstance {
         }
     }
 }
+
+// Defines how a brush image is stretched onto the primitive.
+// In the future, we may draw with segments for each portion
+// of the primitive, in which case this will be redundant.
+#[repr(C)]
+pub enum BrushImageKind {
+    Simple = 0,     // A normal rect
+    NinePatch = 1,  // A nine-patch image (stretch inside segments)
+    Mirror = 2,     // A top left corner only (mirror across x/y axes)
+}

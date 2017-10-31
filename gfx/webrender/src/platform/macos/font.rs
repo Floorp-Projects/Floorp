@@ -11,7 +11,7 @@ use core_foundation::base::TCFType;
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::string::{CFString, CFStringRef};
-use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst, kCGImageAlphaPremultipliedLast};
+use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst};
 use core_graphics::base::kCGBitmapByteOrder32Little;
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::{CGContext, CGTextDrawingMode};
@@ -21,7 +21,7 @@ use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
-use gamma_lut::{Color as ColorLut, GammaLut};
+use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
@@ -74,11 +74,9 @@ fn supports_subpixel_aa() -> bool {
 }
 
 fn should_use_white_on_black(color: ColorU) -> bool {
-    let r = color.r as f32 / 255.0;
-    let g = color.g as f32 / 255.0;
-    let b = color.b as f32 / 255.0;
+    let (r, g, b) = (color.r as u32, color.g as u32, color.b as u32);
     // These thresholds were determined on 10.12 by observing what CG does.
-    r >= 0.333 && g >= 0.333 && b >= 0.333 && r + g + b >= 2.0
+    r >= 85 && g >= 85 && b >= 85 && r + g + b >= 2 * 255
 }
 
 fn get_glyph_metrics(
@@ -379,15 +377,14 @@ impl FontContext {
         color: ColorU,
     ) {
         // Then convert back to gamma corrected values.
-        let color_lut = ColorLut::new(color.r, color.g, color.b, color.a);
         match render_mode {
             FontRenderMode::Alpha => {
                 self.gamma_lut
-                    .preblend_grayscale_bgra(pixels, width, height, color_lut);
+                    .preblend_grayscale_bgra(pixels, width, height, color);
             }
             FontRenderMode::Subpixel => {
                 self.gamma_lut
-                    .preblend_bgra(pixels, width, height, color_lut);
+                    .preblend_bgra(pixels, width, height, color);
             }
             _ => {} // Again, give mono untouched since only the alpha matters.
         }
@@ -430,14 +427,25 @@ impl FontContext {
                 font.subpx_dir = SubpixelDirection::None;
             }
             FontRenderMode::Alpha => {
-                font.color = if font.platform_options.unwrap_or_default().font_smoothing &&
-                                should_use_white_on_black(font.color) {
-                    ColorU::new(255, 255, 255, 255)
+                font.color = if font.platform_options.unwrap_or_default().font_smoothing {
+                    // Only the G channel is used to index grayscale tables,
+                    // so use R and B to preserve light/dark determination.
+                    let ColorU { g, a, .. } = font.color.luminance_color().quantized_ceil();
+                    let rb = if should_use_white_on_black(font.color) { 255 } else { 0 };
+                    ColorU::new(rb, g, rb, a)
                 } else {
-                    ColorU::new(0, 0, 0, 255)
+                    ColorU::new(255, 255, 255, 255)
                 };
             }
-            FontRenderMode::Subpixel => {}
+            FontRenderMode::Subpixel => {
+                // Quantization may change the light/dark determination, so quantize in the
+                // direction necessary to respect the threshold.
+                font.color = if should_use_white_on_black(font.color) {
+                    font.color.quantized_ceil()
+                } else {
+                    font.color.quantized_floor()
+                };
+            }
         }
     }
 
@@ -458,12 +466,32 @@ impl FontContext {
             return None;
         }
 
+        // The result of this function, in all render modes, is going to be a
+        // BGRA surface with white text on transparency using premultiplied
+        // alpha. For subpixel text, the RGB values will be the mask value for
+        // the individual components. For bitmap glyphs, the RGB values will be
+        // the (premultiplied) color of the pixel. For Alpha and Mono, each
+        // pixel will have R==G==B==A at the end of this function.
+        // We access the color channels in little-endian order.
+        // The CGContext will create and own our pixel buffer.
+        // In the non-Bitmap cases, we will ask CoreGraphics to draw text onto
+        // an opaque background. In order to hit the most efficient path in CG
+        // for this, we will tell CG that the CGContext is opaque, by passing
+        // an "[...]AlphaNone[...]" context flag. This creates a slight
+        // contradiction to the way we use the buffer after CG is done with it,
+        // because we will convert it into text-on-transparency. But that's ok;
+        // we still get four bytes per pixel and CG won't mess with the alpha
+        // channel after we've stopped calling CG functions. We just need to
+        // make sure that we don't look at the alpha values of the pixels that
+        // we get from CG, and compute our own alpha value only from RGB.
+        // Note that CG requires kCGBitmapByteOrder32Little in order to do
+        // subpixel AA at all (which we need it to do in both Subpixel and
+        // Alpha+smoothing mode). But little-endian is what we want anyway, so
+        // this works out nicely.
         let context_flags = match font.render_mode {
-            FontRenderMode::Subpixel => {
+            FontRenderMode::Subpixel | FontRenderMode::Alpha |
+            FontRenderMode::Mono => {
                 kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst
-            }
-            FontRenderMode::Alpha | FontRenderMode::Mono => {
-                kCGImageAlphaPremultipliedLast
             }
             FontRenderMode::Bitmap => {
                 kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst
@@ -480,50 +508,43 @@ impl FontContext {
             context_flags,
         );
 
-
-        // Tested on mac OS Sierra, 10.12
-        // For Mono + alpha, the only values that matter are the alpha values.
-        // For subpixel, we need each individual rgb channel.
-        // CG has two individual glyphs for subpixel AA (pre-10.11, this is not true):
-        // 1) black text on white opaque background
-        // 2) white text on black opaque background
-        // Gecko does (1). Note, the BG must be opaque for subpixel AA to work.
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1230366#c35
+        // If the font render mode is Alpha, we support two different ways to
+        // compute the grayscale mask, depending on the value of the platform
+        // options' font_smoothing flag:
+        //  - Alpha + smoothing:
+        //    We will recover a grayscale mask from a subpixel rasterization, in
+        //    such a way that the result looks as close to subpixel text
+        //    blending as we can make it. This involves gamma correction,
+        //    luminance computations and preblending based on the text color,
+        //    just like with the Subpixel render mode.
+        //  - Alpha without smoothing:
+        //    We will ask CoreGraphics to rasterize the text with font_smoothing
+        //    off. This will cause it to use grayscale anti-aliasing with
+        //    comparatively thin text. This method of text rendering is not
+        //    gamma-aware.
         //
-        // For grayscale / mono, CG still produces two glyphs, but it doesn't matter
-        // 1) black text on transparent white - only alpha values filled
-        // 2) white text on transparent black - channels == alpha
-        //
-        // If we draw grayscale/mono on an opaque background
-        // the RGB channels are the alpha values from transparent backgrounds
-        // with the alpha set as opaque.
-        // At the end of all this, WR expects individual RGB channels and ignores alpha
-        // for subpixel AA.
-        // For alpha/mono, WR ignores all channels other than alpha.
-        // Also note that WR expects text to be white text on black bg, so invert
-        // when we draw the glyphs as black on white.
-        //
-        // Unless platform_options.font_smoothing is false, the grayscale AA'd version
-        // of the glyph will actually be rasterized with subpixel AA. The color channels
-        // will be then converted to luminance in gamma_correct_pixels to produce the
-        // final grayscale AA. This ensures that the dilation of the glyph from grayscale
-        // AA more closely resembles the dilation from subpixel AA in the general case.
+        // For subpixel rasterization, starting with macOS 10.11, CoreGraphics
+        // uses different glyph dilation based on the text color. Bright text
+        // uses less font dilation (looks thinner) than dark text.
+        // As a consequence, when we ask CG to rasterize with subpixel AA, we
+        // will render white-on-black text as opposed to black-on-white text if
+        // the text color brightness exceeds a certain threshold. This applies
+        // to both the Subpixel and the "Alpha + smoothing" modes, but not to
+        // the "Alpha without smoothing" and Mono modes.
         let use_white_on_black = should_use_white_on_black(font.color);
         let use_font_smoothing = font.platform_options.unwrap_or_default().font_smoothing;
-        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) = match font.render_mode {
-            FontRenderMode::Subpixel => if use_white_on_black {
-                (true, true, 1.0, 0.0, 1.0, false)
-            } else {
-                (true, true, 0.0, 1.0, 1.0, true)
-            },
-            FontRenderMode::Alpha => if use_font_smoothing && use_white_on_black {
-                (true, use_font_smoothing, 1.0, 0.0, 1.0, false)
-            } else {
-                (true, use_font_smoothing, 0.0, 1.0, 1.0, true)
-            },
-            FontRenderMode::Bitmap => (true, false, 0.0, 0.0, 0.0, false),
-            FontRenderMode::Mono => (false, false, 0.0, 1.0, 1.0, true),
-        };
+        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) =
+            match (font.render_mode, use_font_smoothing) {
+                (FontRenderMode::Subpixel, _) |
+                (FontRenderMode::Alpha, true) => if use_white_on_black {
+                    (true, true, 1.0, 0.0, 1.0, false)
+                } else {
+                    (true, true, 0.0, 1.0, 1.0, true)
+                },
+                (FontRenderMode::Alpha, false) => (true, false, 0.0, 1.0, 1.0, true),
+                (FontRenderMode::Mono, _) => (false, false, 0.0, 1.0, 1.0, true),
+                (FontRenderMode::Bitmap, _) => (true, false, 0.0, 0.0, 0.0, false),
+            };
 
         // These are always true in Gecko, even for non-AA fonts
         cg_context.set_allows_font_subpixel_positioning(true);
@@ -544,8 +565,8 @@ impl FontContext {
             y: metrics.rasterized_descent as f64 - y_offset,
         };
 
-        // Always draw black text on a white background
-        // Fill the background
+        // Fill the background. This could be opaque white, opaque black, or
+        // transparency.
         cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_alpha);
         let rect = CGRect {
             origin: CGPoint { x: 0.0, y: 0.0 },
@@ -556,7 +577,7 @@ impl FontContext {
         };
         cg_context.fill_rect(rect);
 
-        // Set the text color
+        // Set the text color and draw the glyphs.
         cg_context.set_rgb_fill_color(text_color, text_color, text_color, 1.0);
         cg_context.set_text_drawing_mode(CGTextDrawingMode::CGTextFill);
         ct_font.draw_glyphs(&[glyph], &[rasterization_origin], cg_context.clone());
@@ -564,9 +585,16 @@ impl FontContext {
         let mut rasterized_pixels = cg_context.data().to_vec();
 
         if font.render_mode != FontRenderMode::Bitmap {
-            // Convert to linear space for subpixel AA.
-            // We explicitly do not do this for grayscale AA
+            // We rendered text into an opaque surface. The code below needs to
+            // ignore the current value of each pixel's alpha channel. But it's
+            // allowed to write to the alpha channel, because we're done calling
+            // CG functions now.
+
             if smooth {
+                // Convert to linear space for subpixel AA.
+                // We explicitly do not do this for grayscale AA ("Alpha without
+                // smoothing" or Mono) because those rendering modes are not
+                // gamma-aware in CoreGraphics.
                 self.gamma_lut.coregraphics_convert_to_linear_bgra(
                     &mut rasterized_pixels,
                     metrics.rasterized_width as usize,
@@ -585,16 +613,23 @@ impl FontContext {
                         pixel[2] = 255 - pixel[2];
                     }
 
-                    pixel[3] = match font.render_mode {
-                        FontRenderMode::Subpixel => 255,
-                        _ => {
-                            pixel[0]
-                        }
-                    }; // end match
+                    // Set alpha to the value of the green channel. For grayscale
+                    // text, all three channels have the same value anyway.
+                    // For subpixel text, the mask's alpha only makes a difference
+                    // when computing the destination alpha on destination pixels
+                    // that are not completely opaque. Picking an alpha value
+                    // that's somehow based on the mask at least ensures that text
+                    // blending doesn't modify the destination alpha on pixels where
+                    // the mask is entirely zero.
+                    pixel[3] = pixel[1];
                 } // end row
             } // end height
 
             if smooth {
+                // Convert back from linear space into device space, and perform
+                // some "preblending" based on the text color.
+                // In Alpha + smoothing mode, this will also convert subpixel AA
+                // into grayscale AA.
                 self.gamma_correct_pixels(
                     &mut rasterized_pixels,
                     metrics.rasterized_width as usize,

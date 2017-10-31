@@ -45,10 +45,8 @@ freetype = { version = "0.3", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4"
-gamma-lut = "0.2.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.4"
 core-graphics = "0.9"
 core-text = { version = "7.0", default-features = false }
-gamma-lut = "0.2.1"
