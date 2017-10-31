@@ -337,8 +337,6 @@
     this.actual = a;
     this.passed = getTestCaseResult(e, a);
     this.reason = typeof r !== 'undefined' ? String(r) : '';
-    this.bugnumber = typeof BUGNUMER !== 'undefined' ? BUGNUMBER : '';
-    this.type = runningInBrowser ? 'browser' : 'shell';
     ObjectDefineProperty(
       testCasesArray,
       testCasesCounter++,
@@ -352,21 +350,6 @@
     );
   }
   global.TestCase = TestCase;
-
-  TestCase.prototype.dump = function () {
-    // let reftest handle error reporting, otherwise
-    // output a summary line.
-    if (!runningInBrowser) {
-      dump(`\njstest: ${this.path} ` +
-          `bug: ${this.bugnumber} ` +
-          `result: ${this.passed ? 'PASSED' : 'FAILED'} ` +
-          `type: ${this.type} ` +
-          `description: ${toPrinted(this.description)} ` +
-  //      `expected: ${toPrinted(this.expect)} ` +
-  //      `actual: ${toPrinted(this.actual)} ` +
-          `reason: ${toPrinted(this.reason)}\n`);
-    }
-  };
 
   TestCase.prototype.testPassed = (function TestCase_testPassed() { return this.passed; });
   TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
@@ -568,28 +551,6 @@
   }
   global.writeHeaderToLog = writeHeaderToLog;
 
-  // Note: browser.js overrides this function.
-  function jsTestDriverEnd() {
-    // gDelayTestDriverEnd is used to delay collection of the test result and
-    // signal to Spider so that tests can continue to run after page load has
-    // fired. They are responsible for setting gDelayTestDriverEnd = true then
-    // when completed, setting gDelayTestDriverEnd = false then calling
-    // jsTestDriverEnd()
-
-    if (gDelayTestDriverEnd) {
-      return;
-    }
-
-    // Unset all options when the test has finished.
-    shellOptionsClear();
-
-    var testCases = getTestCases();
-    for (var i = 0; i < testCases.length; i++) {
-      testCases[i].dump();
-    }
-  }
-  global.jsTestDriverEnd = jsTestDriverEnd;
-
   /************************************
    * PROMISE TESTING FUNCTION EXPORTS *
    ************************************/
@@ -629,7 +590,5 @@
   if (!runningInBrowser)
     shellOptionsClear();
 })(this);
-
-var gDelayTestDriverEnd = false;
 
 var DESCRIPTION;
