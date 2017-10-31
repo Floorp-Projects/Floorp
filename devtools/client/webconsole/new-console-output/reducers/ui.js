@@ -7,9 +7,10 @@
 
 const {
   FILTER_BAR_TOGGLE,
+  INITIALIZE,
   PERSIST_TOGGLE,
-  TIMESTAMPS_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
+  TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const Immutable = require("devtools/client/shared/vendor/immutable");
 
@@ -19,9 +20,10 @@ const {
 
 const UiState = Immutable.Record({
   filterBarVisible: false,
+  initialized: false,
+  networkMessageActiveTabId: PANELS.HEADERS,
   persistLogs: false,
   timestampsVisible: true,
-  networkMessageActiveTabId: PANELS.HEADERS,
 });
 
 function ui(state = new UiState(), action) {
@@ -34,6 +36,8 @@ function ui(state = new UiState(), action) {
       return state.set("timestampsVisible", action.visible);
     case SELECT_NETWORK_MESSAGE_TAB:
       return state.set("networkMessageActiveTabId", action.id);
+    case INITIALIZE:
+      return state.set("initialized", true);
   }
 
   return state;

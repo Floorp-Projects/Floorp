@@ -16,7 +16,6 @@ use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
-use bincode;
 use log::{set_logger, shutdown_logger, LogLevelFilter, Log, LogLevel, LogMetadata, LogRecord};
 
 extern crate webrender_api;
@@ -1039,22 +1038,6 @@ pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_resource_updates_serialize(resources: &mut ResourceUpdates, into: &mut VecU8) {
-    let mut data = Vec::new();
-    bincode::serialize_into(&mut data, &resources.updates, bincode::Infinite).unwrap();
-    resources.updates.clear();
-    *into = data;
-}
-
-#[no_mangle]
-pub extern "C" fn wr_resource_updates_deserialize(data: ByteSlice) -> *mut ResourceUpdates {
-    let resources: Box<ResourceUpdates> = Box::new(
-        bincode::deserialize_from(&mut data.as_slice(), bincode::Infinite).expect("Invalid wr::ResourceUpdate serialization?")
-    );
-    Box::into_raw(resources)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNamespace {
     dh.api.get_namespace_id()
 }
@@ -1287,18 +1270,22 @@ pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
                                             content_rect: LayoutRect,
-                                            top_range: *const StickySideConstraint,
-                                            right_range: *const StickySideConstraint,
-                                            bottom_range: *const StickySideConstraint,
-                                            left_range: *const StickySideConstraint)
+                                            top_margin: *const f32,
+                                            right_margin: *const f32,
+                                            bottom_margin: *const f32,
+                                            left_margin: *const f32,
+                                            vertical_bounds: StickyOffsetBounds,
+                                            horizontal_bounds: StickyOffsetBounds)
                                             -> u64 {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
-        None, content_rect, StickyFrameInfo::new(
-            unsafe { top_range.as_ref() }.cloned(),
-            unsafe { right_range.as_ref() }.cloned(),
-            unsafe { bottom_range.as_ref() }.cloned(),
-            unsafe { left_range.as_ref() }.cloned()));
+        None, content_rect, SideOffsets2D::new(
+            unsafe { top_margin.as_ref() }.cloned(),
+            unsafe { right_margin.as_ref() }.cloned(),
+            unsafe { bottom_margin.as_ref() }.cloned(),
+            unsafe { left_margin.as_ref() }.cloned()
+        ),
+        vertical_bounds, horizontal_bounds);
     match clip_id {
         ClipId::Clip(id, pipeline_id) => {
             assert!(pipeline_id == state.pipeline_id);

@@ -62,7 +62,9 @@ VRDisplayHost::AutoRestoreRenderState::IsSuccess()
 }
 
 VRDisplayHost::VRDisplayHost(VRDeviceType aType)
- : mFrameStarted(false)
+ : mDisplayInfo{}
+ , mLastUpdateDisplayInfo{}
+ , mFrameStarted(false)
 {
   MOZ_COUNT_CTOR(VRDisplayHost);
   mDisplayInfo.mType = aType;

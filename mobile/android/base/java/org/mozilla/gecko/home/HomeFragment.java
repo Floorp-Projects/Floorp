@@ -553,9 +553,14 @@ public abstract class HomeFragment extends Fragment {
             if (activity == null || activity.isFinishing()) {
                 return;
             }
-
+            final int message;
+            if (info.isFolder) {
+                message = R.string.folder_removed;
+            } else {
+                message = R.string.page_removed;
+            }
             SnackbarBuilder.builder(activity)
-                    .message(R.string.page_removed)
+                    .message(message)
                     .duration(Snackbar.LENGTH_LONG)
                     .buildAndShow();
         }

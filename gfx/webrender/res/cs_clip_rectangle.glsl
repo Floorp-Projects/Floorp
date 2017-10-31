@@ -96,11 +96,14 @@ void main(void) {
     float alpha = 1.f;
     vec2 local_pos = init_transform_fs(vPos, alpha);
 
+    float aa_range = compute_aa_range(local_pos);
+
     float clip_alpha = rounded_rect(local_pos,
                                     vClipCenter_Radius_TL,
                                     vClipCenter_Radius_TR,
                                     vClipCenter_Radius_BR,
-                                    vClipCenter_Radius_BL);
+                                    vClipCenter_Radius_BL,
+                                    aa_range);
 
     float combined_alpha = alpha * clip_alpha;
 

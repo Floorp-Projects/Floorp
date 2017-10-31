@@ -4774,10 +4774,18 @@ pref_InitInitialObjects()
 #else
   // For platforms with Unified Telemetry (here meaning not-Android),
   // toolkit.telemetry.enabled determines whether we send "extended" data.
-  // We only want extended data from pre-release channels due to size.
+  // We only want extended data from pre-release channels due to size. We
+  // also want it to be recorded for local developer builds (non-official builds
+  // on the "default" channel).
+  bool developerBuild = false;
+#ifndef MOZILLA_OFFICIAL
+  developerBuild = !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "default");
+#endif
+
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") ||
+      developerBuild) {
     PREF_SetBoolPref(kTelemetryPref, true, true);
   } else {
     PREF_SetBoolPref(kTelemetryPref, false, true);

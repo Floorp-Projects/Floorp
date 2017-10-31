@@ -76,29 +76,21 @@ NewWebConsoleFrame.prototype = {
    * @return object
    *         A promise object that resolves once the frame is ready to use.
    */
-  init() {
+  async init() {
     this._initUI();
     let connectionInited = this._initConnection();
-
     // Don't reject if the history fails to load for some reason.
     // This would be fine, the panel will just start with empty history.
-    let allReady = this.jsterm.historyLoaded.catch(() => {}).then(() => {
-      return connectionInited;
-    });
+    let onJsTermHistoryLoaded = this.jsterm.historyLoaded
+      .catch(() => {});
 
-    // This notification is only used in tests. Don't chain it onto
-    // the returned promise because the console panel needs to be attached
-    // to the toolbox before the web-console-created event is receieved.
-    let notifyObservers = () => {
-      let id = WebConsoleUtils.supportsString(this.hudId);
-      if (Services.obs) {
-        Services.obs.notifyObservers(id, "web-console-created");
-      }
-    };
-    allReady.then(notifyObservers, notifyObservers)
-            .then(this.newConsoleOutput.init);
+    await Promise.all([connectionInited, onJsTermHistoryLoaded]);
+    await this.newConsoleOutput.init();
 
-    return allReady;
+    let id = WebConsoleUtils.supportsString(this.hudId);
+    if (Services.obs) {
+      Services.obs.notifyObservers(id, "web-console-created");
+    }
   },
   destroy() {
     if (this._destroyer) {

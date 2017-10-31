@@ -8,7 +8,6 @@
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
-#include "nsICookieManager2.h"
 #include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
@@ -610,11 +609,11 @@ TEST(TestCookie,TestCookieMain)
     GetACookieNoHttp(cookieService, "http://www.security.test/", cookie);
     EXPECT_TRUE(CheckResult(cookie.get(), MUST_CONTAIN, "test=non-security2"));
 
-    // *** nsICookieManager{2} interface tests
+    // *** nsICookieManager interface tests
     nsCOMPtr<nsICookieManager> cookieMgr = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv0);
     ASSERT_TRUE(NS_SUCCEEDED(rv0));
 
-    nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
+    nsCOMPtr<nsICookieManager> cookieMgr2 = cookieMgr;
     ASSERT_TRUE(cookieMgr2);
 
     mozilla::OriginAttributes attrs;

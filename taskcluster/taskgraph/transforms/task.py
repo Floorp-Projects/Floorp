@@ -1343,7 +1343,9 @@ def build_task(config, tasks):
                     v = {'tmp': v}
                     resolve_keyed_by(v, 'tmp', 'notifications', **config.params)
                     v = v['tmp']
-                if isinstance(v, list):
+                if v is None:
+                    continue
+                elif isinstance(v, list):
                     v = {'ids': v}
                     if 'completed' == k:
                         v.update({

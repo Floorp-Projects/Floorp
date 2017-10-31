@@ -96,7 +96,7 @@ setCookies(aHost, aNumber, aExpiry)
 }
 
 // count how many cookies are within domain 'aBaseDomain', using three
-// independent interface methods on nsICookieManager2:
+// independent interface methods on nsICookieManager:
 // 1) 'enumerator', an enumerator of all cookies;
 // 2) 'countCookiesFromHost', which returns the number of cookies within the
 //    base domain of 'aHost',

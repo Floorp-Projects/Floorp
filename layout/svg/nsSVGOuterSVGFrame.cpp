@@ -783,10 +783,11 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        NS_SVGDisplayListHitTestingEnabled()) ||
       (!aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListPaintingEnabled())) {
-    nsDisplayList *contentList = aLists.Content();
-    nsDisplayListSet set(contentList, contentList, contentList,
-                         contentList, contentList, contentList);
+    nsDisplayList newList(aBuilder);
+    nsDisplayListSet set(&newList, &newList, &newList,
+                         &newList, &newList, &newList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
+    aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplaySVGWrapper(aBuilder, this, &newList));
   } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
     aLists.Content()->AppendNewToTop(
       new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
