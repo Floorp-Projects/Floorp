@@ -582,6 +582,27 @@
   }
   global.jsTestDriverEnd = jsTestDriverEnd;
 
+  // Harness internal function, only exported for browser.js.
+  // XXX: This function is only exported for the window.onerror handler in
+  // browser.js. If the handler doesn't actually need to clear the options, we
+  // can remove this export.
+  function optionsClear() {
+    // Return early if no options are set.
+    var currentOptions = options();
+    if (currentOptions === "")
+      return;
+
+    // Turn off current settings.
+    var optionNames = currentOptions.split(',');
+    for (var i = 0; i < optionNames.length; i++) {
+      var optionName = optionNames[i];
+      if (optionName) {
+        options(optionName);
+      }
+    }
+  }
+  global.optionsClear = optionsClear;
+
   /************************************
    * PROMISE TESTING FUNCTION EXPORTS *
    ************************************/
@@ -611,6 +632,13 @@
     assertDeepEq(getPromiseResult(promise), expected);
   };
   global.assertEventuallyDeepEq = assertEventuallyDeepEq;
+
+  /*******************************************
+   * RUN ONCE CODE TO SETUP ADDITIONAL STATE *
+   *******************************************/
+
+  if (typeof options === 'function')
+    optionsClear();
 })(this);
 
 var gDelayTestDriverEnd = false;
@@ -618,22 +646,3 @@ var gFailureExpected = false;
 
 var DESCRIPTION;
 var EXPECTED;
-
-function optionsClear() {
-
-  // turn off current settings
-  // except jit.
-  var optionNames = options().split(',');
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName && optionName !== "ion") {
-      options(optionName);
-    }
-  }
-}
-
-if (typeof options == 'function')
-{
-  optionsClear();
-}
