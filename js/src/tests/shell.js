@@ -264,8 +264,6 @@
     global.evaluateScript = evaluateScript;
   }
 
-  // XXX: This function is only exported for a single test file, we should
-  // consider to remove its use in that file.
   function toPrinted(value) {
     value = String(value);
 
@@ -284,7 +282,7 @@
         } else {
           result += "\\";
         }
-      } else if (c === 0x0A) {
+      } else if (ch === 0x0A) {
         result += "NL";
       } else if (ch < 0x20 || ch > 0x7E) {
         var a = digits[ch & 0xf];
@@ -308,7 +306,6 @@
 
     return result;
   }
-  global.toPrinted = toPrinted;
 
   /*
    * An xorshift pseudo-random number generator see:
