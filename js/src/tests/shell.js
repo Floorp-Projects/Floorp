@@ -294,7 +294,6 @@
    * TEST METADATA EXPORTS (these are of dubious value) *
    ******************************************************/
 
-  global.SECTION = "";
   global.VERSION = "";
   global.BUGNUMBER = "";
 
@@ -306,8 +305,8 @@
   var FAILED = " FAILED! ";
 
   /*
-   * wrapper for test case constructor that doesn't require the SECTION
-   * argument.
+   * Same as `new TestCase(description, expect, actual)`, except it doesn't
+   * return the newly created test case object.
    */
   function AddTestCase(description, expect, actual) {
     new TestCase(description, expect, actual);
