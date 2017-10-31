@@ -926,6 +926,14 @@ DisplayListBuilder::PushRect(const wr::LayoutRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushClearRect(const wr::LayoutRect& aBounds)
+{
+  WRDL_LOG("PushClearRect b=%s\n", mWrState,
+      Stringify(aBounds).c_str());
+  wr_dp_push_clear_rect(mWrState, aBounds);
+}
+
+void
 DisplayListBuilder::PushLinearGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutRect& aClip,
                                        bool aIsBackfaceVisible,
