@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "STRING = ''; result = new STRING()" +
   " (threw " + exception +")",
   expect,

@@ -35,24 +35,20 @@ printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "9",
+new TestCase( "9",
 	      9,
 	      9 );
 
-new TestCase( SECTION,
-	      "09",
+new TestCase( "09",
 	      9,
 	      09 );
 
-new TestCase( SECTION,
-	      "099",
+new TestCase( "099",
 	      99,
 	      099 );
 
 
-new TestCase( SECTION,
-	      "077",
+new TestCase( "077",
 	      63,
 	      077 );
 

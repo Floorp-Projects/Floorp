@@ -24,7 +24,7 @@ var TITLE   = "Properties of the Boolean Constructor"
   writeHeaderToLog( SECTION + TITLE );
 
 
-new TestCase( SECTION,  "Boolean.__proto__ == Function.prototype",  true,   Boolean.__proto__ == Function.prototype );
-new TestCase( SECTION,  "Boolean.length",          1,                   Boolean.length );
+new TestCase( "Boolean.__proto__ == Function.prototype",  true,   Boolean.__proto__ == Function.prototype );
+new TestCase( "Boolean.length",          1,                   Boolean.length );
 
 test();

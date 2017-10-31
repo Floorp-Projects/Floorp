@@ -31,7 +31,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "continue outside of an iteration statement" +
   " (threw " + exception +")",
   expect,

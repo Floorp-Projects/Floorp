@@ -30,7 +30,6 @@ function f(g)
 }
 
 new TestCase(
-  SECTION,
   "typeof f(\"parameter\")",
   "function",
   typeof f("parameter") );

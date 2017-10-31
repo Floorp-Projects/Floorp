@@ -27,8 +27,7 @@ var MYDATE = new MyDate( TIME_2000 );
 
 DESCRIPTION = "MYDATE.getTime()";
 
-new TestCase( SECTION,
-	      "MYDATE.getTime()",
+new TestCase( "MYDATE.getTime()",
 	      "error",
 	      eval("MYDATE.getTime()") );
 

@@ -35,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "calling return indirectly" +
   " (threw " + exception +")",
   expect,

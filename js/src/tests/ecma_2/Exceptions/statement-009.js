@@ -30,7 +30,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "return outside of a function" +
   " (threw " + exception +")",
   expect,

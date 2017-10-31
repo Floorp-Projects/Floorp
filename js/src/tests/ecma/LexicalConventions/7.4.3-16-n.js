@@ -43,7 +43,6 @@ var expect = "Passed";
 DESCRIPTION = "try = true";
 
 new TestCase(
-  SECTION,
   "try = true" +
   " (threw " + exception +")",
   "error",

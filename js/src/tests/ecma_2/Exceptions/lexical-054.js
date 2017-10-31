@@ -36,7 +36,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "if (a > b)\nelse c = d" +
   " (threw " + exception +")",
   expect,

@@ -93,7 +93,6 @@ test();
 function addTestCase()
 {
   new TestCase(
-    "unknown-test-name",
     status,
     expect,
     actual);

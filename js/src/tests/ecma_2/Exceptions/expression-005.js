@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "result= new Math() (threw " + exception + ")",
   expect,
   result );

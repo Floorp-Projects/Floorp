@@ -39,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "comma expression in a conditional statement "+
   "(threw "+ exception +")",
   "Passed",

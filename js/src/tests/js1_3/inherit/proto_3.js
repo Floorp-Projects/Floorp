@@ -59,14 +59,12 @@ var pat = new Employee();
 
 jim.bonus = 300;
 
-new TestCase( SECTION,
-	      "jim = new Employee(); jim.bonus = 300; jim.bonus",
+new TestCase( "jim = new Employee(); jim.bonus = 300; jim.bonus",
 	      300,
 	      jim.bonus );
 
 
-new TestCase( SECTION,
-	      "pat = new Employee(); pat.bonus",
+new TestCase( "pat = new Employee(); pat.bonus",
 	      void 0,
 	      pat.bonus );
 test();

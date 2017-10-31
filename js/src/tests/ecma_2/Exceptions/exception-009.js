@@ -32,7 +32,6 @@ try {
   result = "failed: threw " + e;
 } finally {
   new TestCase(
-    SECTION,
     "nested try",
     expect,
     result );

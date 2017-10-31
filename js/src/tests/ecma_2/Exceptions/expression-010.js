@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "NUMBER=0, result = new NUMBER()" +
   " (threw " + exception +")",
   expect,

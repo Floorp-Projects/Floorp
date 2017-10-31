@@ -48,12 +48,12 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 /*  this.eval() is no longer legal syntax.
 // MemberExpression : this
 
-new TestCase( SECTION,
+new TestCase(
 "this.eval()",
 void 0,
 this.eval() );
 
-new TestCase( SECTION,
+new TestCase(
 "this.eval('NaN')",
 NaN,
 this.eval("NaN") );
@@ -62,27 +62,23 @@ this.eval("NaN") );
 
 var OBJECT = true;
 
-new TestCase( SECTION,
-              "OBJECT.toString()",
+new TestCase( "OBJECT.toString()",
               "true",
               OBJECT.toString() );
 
 // MemberExpression[ Expression]
 
-new TestCase( SECTION,
-              "(new Array())['length'].valueOf()",
+new TestCase( "(new Array())['length'].valueOf()",
               0,
               (new Array())["length"].valueOf() );
 
 // MemberExpression . Identifier
-new TestCase( SECTION,
-              "(new Array()).length.valueOf()",
+new TestCase( "(new Array()).length.valueOf()",
               0,
               (new Array()).length.valueOf() );
 // new MemberExpression Arguments
 
-new TestCase( SECTION,
-              "(new Array(20))['length'].valueOf()",
+new TestCase( "(new Array(20))['length'].valueOf()",
               20,
               (new Array(20))["length"].valueOf() );
 

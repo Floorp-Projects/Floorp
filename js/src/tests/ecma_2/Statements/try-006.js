@@ -79,7 +79,6 @@ function TryWith( object ) {
   }
 
   new TestCase(
-    SECTION,
     "TryWith( " + object.value +" )",
     (object.exception ? EXCEPTION_STRING +": " + object.valueOf() : object.valueOf()),
     result );

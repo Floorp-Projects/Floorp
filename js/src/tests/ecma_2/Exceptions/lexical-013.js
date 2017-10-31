@@ -41,7 +41,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "default = true" +
   " (threw " + exception +")",
   expect,

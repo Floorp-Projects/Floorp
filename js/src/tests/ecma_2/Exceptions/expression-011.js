@@ -32,7 +32,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "BOOLEAN = true; result = new BOOLEAN()" +
   " (threw " + exception +")",
   expect,

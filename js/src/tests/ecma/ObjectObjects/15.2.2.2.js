@@ -32,8 +32,8 @@ var TITLE   = "new Object()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "typeof new Object()",   "object",       typeof new Object() );
-new TestCase( SECTION, "Object.prototype.toString()",   "[object Object]",  Object.prototype.toString() );
-new TestCase( SECTION, "(new Object()).toString()",  "[object Object]",   (new Object()).toString() );
+new TestCase( "typeof new Object()",   "object",       typeof new Object() );
+new TestCase( "Object.prototype.toString()",   "[object Object]",  Object.prototype.toString() );
+new TestCase( "(new Object()).toString()",  "[object Object]",   (new Object()).toString() );
 
 test();

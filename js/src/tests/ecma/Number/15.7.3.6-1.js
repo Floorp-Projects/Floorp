@@ -22,8 +22,7 @@ var TITLE   = "Number.POSITIVE_INFINITY";
 
 writeHeaderToLog( SECTION + " "+TITLE);
 
-new TestCase( SECTION,
-	      "Number.POSITIVE_INFINITY",     
+new TestCase( "Number.POSITIVE_INFINITY",     
 	      Infinity,  
 	      Number.POSITIVE_INFINITY );
 

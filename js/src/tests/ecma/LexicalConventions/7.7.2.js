@@ -30,7 +30,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 // StringLiteral:: "" and ''
 
-new TestCase( SECTION, "true",     Boolean(true),     true );
-new TestCase( SECTION, "false",    Boolean(false),    false );
+new TestCase( "true",     Boolean(true),     true );
+new TestCase( "false",    Boolean(false),    false );
 
 test();

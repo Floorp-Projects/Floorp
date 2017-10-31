@@ -57,7 +57,7 @@ function addTestCase() {
    var actual = NEW_PROPERTY;
    var expect = RESULT;
 
-   new TestCase( SECTION, "NEW_PROPERTY =  " + actual, expect, actual );
+   new TestCase( "NEW_PROPERTY =  " + actual, expect, actual );
 }
 function MyObject( n ) {
   this.__proto__ = Number.prototype;

@@ -20,7 +20,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "f.apply(2,2) doesn't crash";
 
-new TestCase( SECTION,  "f.apply(2,2) doesn't crash",     "error",    eval("f.apply(2,2)") );
+new TestCase( "f.apply(2,2) doesn't crash",     "error",    eval("f.apply(2,2)") );
 
 test();
 

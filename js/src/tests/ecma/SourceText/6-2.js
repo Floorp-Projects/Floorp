@@ -53,39 +53,33 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 // encoded quotes should not end a quote
 
-new TestCase(  SECTION,
-	       "var s = 'PAS\\u0022SED'; s",
+new TestCase(  "var s = 'PAS\\u0022SED'; s",
 	       "PAS\"SED",
 	       eval("var s = 'PAS\\u0022SED'; s") );
 
-new TestCase(  SECTION,
-	       'var s = "PAS\\u0022SED"; s',
+new TestCase(  'var s = "PAS\\u0022SED"; s',
 	       "PAS\"SED",
 	       eval('var s = "PAS\\u0022SED"; s') );
 
 
-new TestCase(  SECTION,
-	       "var s = 'PAS\\u0027SED'; s",
+new TestCase(  "var s = 'PAS\\u0027SED'; s",
 	       "PAS\'SED",
 	       eval("var s = 'PAS\\u0027SED'; s") );
 
 
-new TestCase(  SECTION,
-	       'var s = "PAS\\u0027SED"; s',
+new TestCase(  'var s = "PAS\\u0027SED"; s',
 	       "PAS\'SED",
 	       eval('var s = "PAS\\u0027SED"; s') );
 
 var s = "PAS\u0027SED";
 
-new TestCase( SECTION,
-	      'var s="PAS\\u0027SED"; s',
+new TestCase( 'var s="PAS\\u0027SED"; s',
 	      "PAS\'SED",
 	      s );
 
 var s = "PAS\u0022SED";
 
-new TestCase( SECTION,
-	      'var s = "PAS\\u0022SED"; s',
+new TestCase( 'var s = "PAS\\u0022SED"; s',
 	      "PAS\"SED",
 	      s );
 

@@ -29,8 +29,7 @@ writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
 
 DESCRIPTION = "var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR";
 
-new TestCase( SECTION,
-              "var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR",
+new TestCase( "var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR",
               "error",
               eval("var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR") );
 

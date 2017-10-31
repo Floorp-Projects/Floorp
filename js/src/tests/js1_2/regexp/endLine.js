@@ -21,23 +21,23 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 
 // 'abcde'.match(new RegExp('de$'))
-new TestCase ( SECTION, "'abcde'.match(new RegExp('de$'))",
+new TestCase ( "'abcde'.match(new RegExp('de$'))",
 	       String(["de"]), String('abcde'.match(new RegExp('de$'))));
 
 // 'ab\ncde'.match(new RegExp('..$e$'))
-new TestCase ( SECTION, "'ab\ncde'.match(new RegExp('..$e$'))",
+new TestCase ( "'ab\ncde'.match(new RegExp('..$e$'))",
 	       null, 'ab\ncde'.match(new RegExp('..$e$')));
 
 // 'yyyyy'.match(new RegExp('xxx$'))
-new TestCase ( SECTION, "'yyyyy'.match(new RegExp('xxx$'))",
+new TestCase ( "'yyyyy'.match(new RegExp('xxx$'))",
 	       null, 'yyyyy'.match(new RegExp('xxx$')));
 
 // 'a$$$'.match(new RegExp('\\$+$'))
-new TestCase ( SECTION, "'a$$$'.match(new RegExp('\\$+$'))",
+new TestCase ( "'a$$$'.match(new RegExp('\\$+$'))",
 	       String(['$$$']), String('a$$$'.match(new RegExp('\\$+$'))));
 
 // 'a$$$'.match(/\$+$/)
-new TestCase ( SECTION, "'a$$$'.match(/\\$+$/)",
+new TestCase ( "'a$$$'.match(/\\$+$/)",
 	       String(['$$$']), String('a$$$'.match(/\$+$/)));
 
 test();

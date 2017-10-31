@@ -65,7 +65,6 @@ function NestedTry( object ) {
   }
 
   new TestCase(
-    SECTION,
     object.description,
     object.result,
     result );

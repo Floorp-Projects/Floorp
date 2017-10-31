@@ -30,6 +30,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var const = true";
 
-new TestCase( SECTION,  "var const = true",     "error",    eval("var const = true") );
+new TestCase( "var const = true",     "error",    eval("var const = true") );
 
 test();

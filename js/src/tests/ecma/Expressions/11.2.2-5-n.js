@@ -57,7 +57,7 @@ var NUMBER = 0;
 
 DESCRIPTION = "NUMBER=0, var n = new NUMBER()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "NUMBER=0, var n = new NUMBER()",
 	      "error",
 	      eval("n = new NUMBER()") );

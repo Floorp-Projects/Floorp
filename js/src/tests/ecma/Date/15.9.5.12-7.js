@@ -34,8 +34,7 @@ function addTestCase( t ) {
 
   for (var d = start; d < stop; d += msPerDay)
   {
-    new TestCase( SECTION,
-                  "(new Date("+d+")).getDay()",
+    new TestCase( "(new Date("+d+")).getDay()",
                   WeekDay((LocalTime(d))),
                   (new Date(d)).getDay() );
   }

@@ -29,8 +29,7 @@ var OBJ = new MyObject( new Date(0) );
 
 DESCRIPTION = "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()";
 
-new TestCase( SECTION,
-	      "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()",
+new TestCase( "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()",
 	      "error",
 	      eval("OBJ.valueOf()") );
 test();

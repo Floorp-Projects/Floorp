@@ -27,7 +27,6 @@ o = {};
 o.foo = 'sil';
 
 new TestCase(
-  SECTION,
   "\"foo\" in o",
   true,
   "foo" in o );

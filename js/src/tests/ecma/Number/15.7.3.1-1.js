@@ -23,13 +23,11 @@ var TITLE   = "Number.prototype";
 
 writeHeaderToLog( SECTION +" "+ TITLE);
 
-new TestCase(SECTION,
-	     "var NUM_PROT = Number.prototype; delete( Number.prototype ); NUM_PROT == Number.prototype",   
+new TestCase("var NUM_PROT = Number.prototype; delete( Number.prototype ); NUM_PROT == Number.prototype",   
 	     true, 
 	     eval("var NUM_PROT = Number.prototype; delete( Number.prototype ); NUM_PROT == Number.prototype") );
 
-new TestCase(SECTION,
-	     "delete( Number.prototype )",         
+new TestCase("delete( Number.prototype )",         
 	     false,      
 	     eval("delete( Number.prototype )") );
 

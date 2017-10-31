@@ -23,6 +23,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var 123=\"hi\"";
 
-new TestCase( SECTION,    "var 123=\"hi\"",   "error",    eval("123 = \"hi\"; array[item] = 123;") );
+new TestCase( "var 123=\"hi\"",   "error",    eval("123 = \"hi\"; array[item] = 123;") );
 
 test();

@@ -42,8 +42,7 @@ for ( power = 0; power <= 32; power++ ) {
   shiftexp = Math.pow( 2, power );
 
   for ( addexp = 0; addexp <= 32; addexp++ ) {
-    new TestCase( SECTION,
-		  shiftexp + " >> " + addexp,
+    new TestCase( shiftexp + " >> " + addexp,
 		  SignedRightShift( shiftexp, addexp ),
 		  shiftexp >> addexp );
   }
@@ -53,8 +52,7 @@ for ( power = 0; power <= 32; power++ ) {
   shiftexp = -Math.pow( 2, power );
 
   for ( addexp = 0; addexp <= 32; addexp++ ) {
-    new TestCase( SECTION,
-		  shiftexp + " >> " + addexp,
+    new TestCase( shiftexp + " >> " + addexp,
 		  SignedRightShift( shiftexp, addexp ),
 		  shiftexp >> addexp );
   }

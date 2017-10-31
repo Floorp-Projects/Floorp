@@ -22,12 +22,10 @@ var TITLE   = "Math.E";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MATH_E = 2.7182818284590452354
-  new TestCase( SECTION,
-		"delete(Math.E)",               
+  new TestCase( "delete(Math.E)",               
 		false,   
 		eval("delete Math.E") );
-new TestCase( SECTION,
-	      "delete(Math.E); Math.E",       
+new TestCase( "delete(Math.E); Math.E",       
 	      MATH_E,  
 	      eval("delete Math.E; Math.E") );
 

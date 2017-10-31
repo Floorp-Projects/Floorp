@@ -28,8 +28,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()";
 
-new TestCase( SECTION,
-	      "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()",
+new TestCase( "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()",
 	      "error",
 	      eval("var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valueOf()") );
 

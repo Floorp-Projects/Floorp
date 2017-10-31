@@ -28,7 +28,6 @@ o.toString = Function.prototype.toString;
 DESCRIPTION = "var o = {}; o.toString = Function.prototype.toString; o.toString();";
 
 new TestCase(
-  SECTION,
   "var o = {}; o.toString = Function.prototype.toString; o.toString();",
   "error",
   o.toString() );

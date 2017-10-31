@@ -71,7 +71,6 @@ stringarr.sort( stringsort );
 
 for ( var i = 0; i < array.length; i++) {
   new TestCase(
-    SECTION,
     "testarr1["+i+"]",
     realarr[i],
     testarr1[i] );
@@ -79,7 +78,6 @@ for ( var i = 0; i < array.length; i++) {
 
 for ( var i=0; i < array.length; i++) {
   new TestCase(
-    SECTION,
     "testarr2["+i+"]",
     realarr[i],
     testarr2[i] );
@@ -87,7 +85,6 @@ for ( var i=0; i < array.length; i++) {
 
 for ( var i=0; i < array.length; i++) {
   new TestCase(
-    SECTION,
     "testarr3["+i+"]",
     realarr[i],
     testarr3[i] );
@@ -95,7 +92,6 @@ for ( var i=0; i < array.length; i++) {
 
 for ( var i=0; i < array.length; i++) {
   new TestCase(
-    SECTION,
     "testarr4["+i+"]",
     stringarr[i].toString(),
     testarr4[i].toString() );

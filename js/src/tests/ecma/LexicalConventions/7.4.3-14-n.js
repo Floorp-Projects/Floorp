@@ -47,8 +47,7 @@ if (actual == 'error')
   throw actual;
 }
 
-new TestCase( SECTION, 
-              "var enum = true",    
+new TestCase( "var enum = true",    
               "error",   
               actual );
 

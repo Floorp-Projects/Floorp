@@ -36,7 +36,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 result = "passed";
 
 new TestCase(
-  SECTION,
   "eval(\"function f(){}function g(){}\")",
   void 0,
   eval("function f(){}function g(){}") );

@@ -40,8 +40,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var NULL_OBJECT = Object(null);
 
-new TestCase( SECTION, "Object(null).__proto__",    Object.prototype,       (Object(null)).__proto__ );
+new TestCase( "Object(null).__proto__",    Object.prototype,       (Object(null)).__proto__ );
 
-new TestCase( SECTION, "Object(void 0).__proto__",    Object.prototype,       (Object(void 0)).__proto__ );
+new TestCase( "Object(void 0).__proto__",    Object.prototype,       (Object(void 0)).__proto__ );
 
 test();

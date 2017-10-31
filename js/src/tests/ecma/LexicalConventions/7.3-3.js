@@ -25,8 +25,7 @@ var actual = "fail";
 // a comment string
 actual = "pass";
 
-new TestCase( SECTION,
-			     "source text directly following a single-line comment",
+new TestCase( "source text directly following a single-line comment",
 			     "pass",
 			     actual);
 

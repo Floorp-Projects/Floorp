@@ -20,13 +20,11 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 var b = new Boolean();
 
-new TestCase( SECTION,
-              "var b = new Boolean(); b instanceof Boolean",
+new TestCase( "var b = new Boolean(); b instanceof Boolean",
               true,
               b instanceof Boolean );
 
-new TestCase( SECTION,
-              "b instanceof Object",
+new TestCase( "b instanceof Object",
               true,
               b instanceof Object );
 

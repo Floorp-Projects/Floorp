@@ -62,28 +62,23 @@ Engineer.prototype = new WorkerBee();
 
 var pat = new Engineer();
 
-new TestCase( SECTION,
-              "InstanceOf( pat, Engineer )",
+new TestCase( "InstanceOf( pat, Engineer )",
               true,
               InstanceOf( pat, Engineer ) );
 
-new TestCase( SECTION,
-              "InstanceOf( pat, WorkerBee )",
+new TestCase( "InstanceOf( pat, WorkerBee )",
               true,
               InstanceOf( pat, WorkerBee ) );
 
-new TestCase( SECTION,
-              "InstanceOf( pat, Employee )",
+new TestCase( "InstanceOf( pat, Employee )",
               true,
               InstanceOf( pat, Employee ) );
 
-new TestCase( SECTION,
-              "InstanceOf( pat, Object )",
+new TestCase( "InstanceOf( pat, Object )",
               true,
               InstanceOf( pat, Object ) );
 
-new TestCase( SECTION,
-              "InstanceOf( pat, SalesPerson )",
+new TestCase( "InstanceOf( pat, SalesPerson )",
               false,
               InstanceOf ( pat, SalesPerson ) );
 test();

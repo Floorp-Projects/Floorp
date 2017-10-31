@@ -35,8 +35,7 @@ for ( var item = 0; item < 100; item++ ) {
     actual = "fail";
   }
 
-  new TestCase( SECTION,
-			       "Math.random()",   
+  new TestCase( "Math.random()",   
 			       "pass",   
 			       actual,
                 result );

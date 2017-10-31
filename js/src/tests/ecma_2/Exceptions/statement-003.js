@@ -64,7 +64,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "bad left-hand side expression" +
   " (threw " + exception +")",
   expect,

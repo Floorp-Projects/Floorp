@@ -32,13 +32,11 @@ var TITLE   = "Properties of the Boolean Prototype Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "Boolean.prototype == false",
+new TestCase( "Boolean.prototype == false",
 	      true,
 	      Boolean.prototype == false );
 
-new TestCase( SECTION,
-	      "Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()",
+new TestCase( "Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()",
 	      "[object Boolean]",
 	      eval("Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()") );
 

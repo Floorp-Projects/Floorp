@@ -54,19 +54,16 @@ outer: {
   result3 = "fail: did not break out of outer label";
 
   new TestCase(
-    SECTION,
     "number of loop iterations",
     0,
     i );
 
   new TestCase(
-    SECTION,
     "break out of inner loop",
     "pass",
     result1 );
 
   new TestCase(
-    SECTION,
     "break out of outer loop",
     "pass",
     result2 );

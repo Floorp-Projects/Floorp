@@ -43,7 +43,6 @@ try {
 
 
 new TestCase(
-  SECTION,
   "Get the value of an object whose value is undefined "+
   "(threw " + exception +")",
   expect,

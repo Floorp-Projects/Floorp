@@ -36,33 +36,27 @@ for ( var j = 0; j < test_times.length; j++ ) {
 test();
 
 function addTestCase( d, t ) {
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+t+")",
+  new TestCase( "( "+d+" ).setTime("+t+")",
 		t,
 		d.setTime(t) );
 
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+(t+1.1)+")",
+  new TestCase( "( "+d+" ).setTime("+(t+1.1)+")",
 		TimeClip(t+1.1),
 		d.setTime(t+1.1) );
 
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+(t+1)+")",
+  new TestCase( "( "+d+" ).setTime("+(t+1)+")",
 		t+1,
 		d.setTime(t+1) );
 
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+(t-1)+")",
+  new TestCase( "( "+d+" ).setTime("+(t-1)+")",
 		t-1,
 		d.setTime(t-1) );
 
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+(t-TZ_ADJUST)+")",
+  new TestCase( "( "+d+" ).setTime("+(t-TZ_ADJUST)+")",
 		t-TZ_ADJUST,
 		d.setTime(t-TZ_ADJUST) );
 
-  new TestCase( SECTION,
-		"( "+d+" ).setTime("+(t+TZ_ADJUST)+")",
+  new TestCase( "( "+d+" ).setTime("+(t+TZ_ADJUST)+")",
 		t+TZ_ADJUST,
 		d.setTime(t+TZ_ADJUST) );
 }

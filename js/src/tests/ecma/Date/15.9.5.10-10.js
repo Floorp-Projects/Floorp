@@ -29,13 +29,11 @@ var DST_START_1998 = GetDSTStart(TimeFromYear(1998));
 
 addTestCase( DST_START_1998+1 );
 
-new TestCase( SECTION,
-	      "(new Date(NaN)).getDate()",
+new TestCase( "(new Date(NaN)).getDate()",
 	      NaN,
 	      (new Date(NaN)).getDate() );
 
-new TestCase( SECTION,
-	      "Date.prototype.getDate.length",
+new TestCase( "Date.prototype.getDate.length",
 	      0,
 	      Date.prototype.getDate.length );
 test();
@@ -46,8 +44,7 @@ function addTestCase( t ) {
 
   for (var d = start; d < stop; d += msPerDay)
   {
-    new TestCase( SECTION,
-                  "(new Date("+d+")).getDate()",
+    new TestCase( "(new Date("+d+")).getDate()",
                   DateFromTime(LocalTime(d)),
                   (new Date(d)).getDate() );
   }

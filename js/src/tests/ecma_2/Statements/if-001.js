@@ -32,7 +32,6 @@ if ( a = b ) {
 }
 
 new TestCase(
-  SECTION,
   "if ( a = b ), where a and b are both equal to 0",
   "passed",
   result );

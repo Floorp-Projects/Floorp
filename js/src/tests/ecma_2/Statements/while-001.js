@@ -33,7 +33,6 @@ function DoWhile() {
   }
 
   new TestCase(
-    SECTION,
     "while statement: don't evaluate statement is expression is false",
     "pass",
     result );

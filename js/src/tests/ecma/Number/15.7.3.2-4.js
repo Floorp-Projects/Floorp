@@ -20,8 +20,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Number.MAX_VALUE:  DontEnum Attribute";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "var string = ''; for ( prop in Number ) { string += ( prop == 'MAX_VALUE' ) ? prop : '' } string;",
+new TestCase( "var string = ''; for ( prop in Number ) { string += ( prop == 'MAX_VALUE' ) ? prop : '' } string;",
 	      "",
 	      eval("var string = ''; for ( prop in Number ) { string += ( prop == 'MAX_VALUE' ) ? prop : '' } string;")
   );

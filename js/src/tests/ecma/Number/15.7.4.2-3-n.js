@@ -29,7 +29,7 @@ writeHeaderToLog( SECTION + " Number.prototype.toString()");
 
 DESCRIPTION = "o = new String(); o.toString = Number.prototype.toString; o.toString()";
 
-new TestCase(SECTION, 
+new TestCase(
 	     "o = new String(); o.toString = Number.prototype.toString; o.toString()", 
 	     "error",   
 	     eval("o = new String(); o.toString = Number.prototype.toString; o.toString()") );

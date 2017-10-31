@@ -35,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "var @abc" +
   " (threw " + exception +")",
   expect,

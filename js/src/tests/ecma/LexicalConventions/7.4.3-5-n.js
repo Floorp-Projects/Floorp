@@ -30,6 +30,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
    
 DESCRIPTION = "var catch = true";
 
-new TestCase( SECTION,  "var catch = true",     "error",    eval("var catch = true") );
+new TestCase( "var catch = true",     "error",    eval("var catch = true") );
 
 test();

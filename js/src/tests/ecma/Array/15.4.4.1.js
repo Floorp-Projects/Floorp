@@ -20,8 +20,7 @@ var TITLE   = "Array.prototype.constructor";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 
-new TestCase( SECTION,
-	      "Array.prototype.constructor == Array",
+new TestCase( "Array.prototype.constructor == Array",
 	      true,  
 	      Array.prototype.constructor == Array);
 

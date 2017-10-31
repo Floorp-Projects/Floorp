@@ -30,6 +30,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var default = true";
 
-new TestCase( SECTION,  "var default = true",     "error",    eval("var default = true") );
+new TestCase( "var default = true",     "error",    eval("var default = true") );
 
 test();

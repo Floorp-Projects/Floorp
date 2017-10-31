@@ -22,15 +22,14 @@ var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
-//    new TestCase("15.7.4.1", "v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()", "error",  eval("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()") );
+//    new TestCase("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()", "error",  eval("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()") );
 
 DESCRIPTION = "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()";
 
-new TestCase("15.7.4.1",
-	     "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()",
+new TestCase("v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()",
 	     "error", 
 	     eval("v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()") );
 
-//    new TestCase("15.7.4.1", "v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()", "error",  eval("v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()") );
+//    new TestCase("v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()", "error",  eval("v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()") );
 
 test();

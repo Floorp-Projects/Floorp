@@ -37,7 +37,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "for(i) {}" +
   " (threw " + exception +")",
   expect,

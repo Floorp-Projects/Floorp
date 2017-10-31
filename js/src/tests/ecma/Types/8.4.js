@@ -27,13 +27,11 @@ var TITLE   = "The String type";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "var s = ''; s.length",
+new TestCase( "var s = ''; s.length",
 	      0,
 	      eval("var s = ''; s.length") );
 
-new TestCase( SECTION,
-	      "var s = ''; s.charAt(0)",
+new TestCase( "var s = ''; s.charAt(0)",
 	      "",
 	      eval("var s = ''; s.charAt(0)") );
 
@@ -43,13 +41,11 @@ for ( var i = 0x0041, TEST_STRING = "", EXPECT_STRING = ""; i < 0x007B; i++ ) {
   EXPECT_STRING += String.fromCharCode(i);
 }
 
-new TestCase( SECTION,
-	      "var s = '" + TEST_STRING+ "'; s",
+new TestCase( "var s = '" + TEST_STRING+ "'; s",
 	      EXPECT_STRING,
 	      eval("var s = '" + TEST_STRING+ "'; s") );
 
-new TestCase( SECTION,
-	      "var s = '" + TEST_STRING+ "'; s.length",
+new TestCase( "var s = '" + TEST_STRING+ "'; s.length",
 	      0x007B-0x0041,
 	      eval("var s = '" + TEST_STRING+ "'; s.length") );
 

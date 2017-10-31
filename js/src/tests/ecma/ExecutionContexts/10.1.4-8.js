@@ -58,7 +58,7 @@ function addTestCase() {
       actual = eval( INPUT );
    }
 
-   new TestCase("SECTION", "with MyObject, eval should cube INPUT:  (" + INPUT + ")",
+   new TestCase("with MyObject, eval should cube INPUT:  (" + INPUT + ")",
                 expect, actual);
 }
 

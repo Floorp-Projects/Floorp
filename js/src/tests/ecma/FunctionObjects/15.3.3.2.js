@@ -22,6 +22,6 @@ var TITLE   = "Function.length";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase(   SECTION,    "Function.length",  1, Function.length );
+new TestCase( "Function.length",  1, Function.length );
 
 test();

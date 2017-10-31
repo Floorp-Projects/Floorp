@@ -111,5 +111,5 @@ function exhaustiveSpliceTestWithArgs(testname, testArray)
     }
   }
 
-  new TestCase(SECTION, testname, true, passed, reason);
+  new TestCase(testname, true, passed, reason);
 }

@@ -38,7 +38,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "MYMATH = new Math()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "MYMATH = new Math()",
 	      "error",
 	      eval("MYMATH = new Math()") );

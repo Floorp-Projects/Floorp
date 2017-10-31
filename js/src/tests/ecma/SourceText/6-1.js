@@ -56,8 +56,7 @@ var actual;
 actual = "PASSED";
 // \u000A actual = "FAILED!";
 
-new TestCase( SECTION,
-	      "// the following character should not be interpreted as a line terminator in a comment: \u000A",
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \u000A",
 	      'PASSED',
 	      actual );
 
@@ -65,8 +64,7 @@ new TestCase( SECTION,
 actual = 'PASSED';
 // the following character should noy be interpreted as a line terminator: \\n actual = "FAILED"
 
-new TestCase( SECTION,
-	      "// the following character should not be interpreted as a line terminator in a comment: \\n 'FAILED'",
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \\n 'FAILED'",
 	      'PASSED',
 	      actual );
 
@@ -74,8 +72,7 @@ new TestCase( SECTION,
 actual = 'PASSED';
 // the following character should not be interpreted as a line terminator:   \u000A actual = "FAILED"
 
-new TestCase( SECTION,
-	      "// the following character should not be interpreted as a line terminator in a comment: \\u000A 'FAILED'",
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \\u000A 'FAILED'",
 	      'PASSED',
 	      actual );
 
@@ -83,8 +80,7 @@ new TestCase( SECTION,
 actual = 'PASSED';
 // the following character should not be interpreted as a line terminator: \n actual = 'FAILED'
 
-new TestCase( SECTION,
-	      "// the following character should not be interpreted as a line terminator in a comment: \n 'PASSED'",
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \n 'PASSED'",
 	      'PASSED',
 	      actual );
 
@@ -92,8 +88,7 @@ new TestCase( SECTION,
 actual = 'PASSED';
 // the following character should not be interpreted as a line terminator:   \u000D actual = "FAILED"
 
-new TestCase( SECTION,
-	      "// the following character should not be interpreted as a line terminator in a comment: u000D",
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: u000D",
 	      'PASSED',
 	      actual );
 

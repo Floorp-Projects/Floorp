@@ -46,7 +46,7 @@ for ( var i = 0; i < 0x007A; i++ ) {
 // characters that break the driver
 var isEqual = EXPECT_STRING == (new String( TEST_STRING )).toUpperCase();
 
-new TestCase( SECTION,
+new TestCase(
 	      "isEqual",
 	      true,
 	      isEqual);

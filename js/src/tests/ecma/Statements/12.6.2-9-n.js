@@ -26,8 +26,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "for (i)";
 
-new TestCase( SECTION,
-	      "for (i)",
+new TestCase( "for (i)",
 	      "error",
 	      eval("for (i) { }") );
 

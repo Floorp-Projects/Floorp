@@ -57,7 +57,7 @@ function addTestCase() {
       actual = eval( INPUT );
    }
 
-   new TestCase("SECTION", "with MyObject, eval should be [object Global].eval (" + INPUT + ")",
+   new TestCase("with MyObject, eval should be [object Global].eval (" + INPUT + ")",
                 expect, actual);
 }
 

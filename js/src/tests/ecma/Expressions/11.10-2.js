@@ -40,7 +40,7 @@ for ( shiftpow = 0; shiftpow < 33; shiftpow++ ) {
   for ( addpow = 0; addpow < 33; addpow++ ) {
     addexp += Math.pow(2, addpow);
 
-    new TestCase( SECTION,
+    new TestCase(
 		  shiftexp + " | " + addexp,
 		  Or( shiftexp, addexp ),
 		  shiftexp | addexp );

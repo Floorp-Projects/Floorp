@@ -48,7 +48,6 @@ function DefaultValue_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "new MyObject() + new MyObject() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

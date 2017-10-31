@@ -19,6 +19,6 @@ var TITLE   = "String.prototype.tostring";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "String.prototype.toString.__proto__",  Function.prototype, String.prototype.toString.__proto__ );
+new TestCase( "String.prototype.toString.__proto__",  Function.prototype, String.prototype.toString.__proto__ );
 
 test();

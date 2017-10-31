@@ -47,8 +47,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "null.valueOf()";
 
-new TestCase( SECTION,
-              "null.valueOf()",
+new TestCase( "null.valueOf()",
               "error",
               eval("null.valueOf()") );
 test();

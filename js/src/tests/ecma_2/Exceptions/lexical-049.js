@@ -37,7 +37,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "line breaks within a for expression" +
   " (threw " + exception +")",
   expect,

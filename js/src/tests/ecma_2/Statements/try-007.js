@@ -83,7 +83,6 @@ function TryForIn( object ) {
   }
 
   new TestCase(
-    SECTION,
     "TryForIn( " + object+ " )",
     (object.exception ? EXCEPTION_STRING +": " + object.value : object.value),
     result );

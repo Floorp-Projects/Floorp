@@ -30,6 +30,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var debugger = true";
 
-new TestCase( SECTION,  "var debugger = true",     "error",    eval("var debugger = true") );
+new TestCase( "var debugger = true",     "error",    eval("var debugger = true") );
 
 test();

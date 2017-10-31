@@ -22,8 +22,7 @@ var TITLE   = "eval(x)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase(    SECTION,
-		 "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x",
+new TestCase(    "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x",
 		 "0/1/1970",
 		 eval( "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x" ));
 

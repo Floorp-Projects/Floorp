@@ -51,7 +51,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "bad left-hand side expression";
 
-new TestCase( SECTION,
+new TestCase(
 	      "bad left-hand side expression",
 	      "error",
 	      eval("var o = new MyObject(); var result = 0; for ( this in o) { result += this[p]; }") );

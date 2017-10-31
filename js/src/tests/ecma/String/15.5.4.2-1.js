@@ -27,11 +27,11 @@ var TITLE   = "String.prototype.toString";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,   "String.prototype.toString()",        "",     String.prototype.toString() );
-new TestCase( SECTION,   "(new String()).toString()",          "",     (new String()).toString() );
-new TestCase( SECTION,   "(new String(\"\")).toString()",      "",     (new String("")).toString() );
-new TestCase( SECTION,   "(new String( String() )).toString()","",    (new String(String())).toString() );
-new TestCase( SECTION,  "(new String( \"h e l l o\" )).toString()",       "h e l l o",    (new String("h e l l o")).toString() );
-new TestCase( SECTION,   "(new String( 0 )).toString()",       "0",    (new String(0)).toString() );
+new TestCase( "String.prototype.toString()",        "",     String.prototype.toString() );
+new TestCase( "(new String()).toString()",          "",     (new String()).toString() );
+new TestCase( "(new String(\"\")).toString()",      "",     (new String("")).toString() );
+new TestCase( "(new String( String() )).toString()","",    (new String(String())).toString() );
+new TestCase( "(new String( \"h e l l o\" )).toString()",       "h e l l o",    (new String("h e l l o")).toString() );
+new TestCase( "(new String( 0 )).toString()",       "0",    (new String(0)).toString() );
 
 test();

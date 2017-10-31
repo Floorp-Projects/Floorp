@@ -36,6 +36,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var typeof = true";
 
-new TestCase( SECTION,  "var typeof = true",     "error",    eval("var typeof = true") );
+new TestCase( "var typeof = true",     "error",    eval("var typeof = true") );
 
 test();

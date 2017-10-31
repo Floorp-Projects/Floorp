@@ -41,7 +41,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJECT = new Object; "+
   " OBJECT.toString = String.prototype.toString; OBJECT.toString()" +
   " (threw " + exception +")",

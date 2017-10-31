@@ -23,7 +23,7 @@ var TITLE   = "The for statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( "12.6.2-1", "for statement",  99,     testprogram() );
+new TestCase( "for statement",  99,     testprogram() );
 
 test();
 

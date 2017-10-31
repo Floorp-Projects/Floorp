@@ -24,8 +24,7 @@ var TITLE   = "Boolean.prototype.valueOf()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "x=true; x.valueOf=Boolean.prototype.valueOf;x.valueOf()",
+new TestCase( "x=true; x.valueOf=Boolean.prototype.valueOf;x.valueOf()",
 	      true,
 	      eval("x=true; x.valueOf=Boolean.prototype.valueOf;x.valueOf()") );
 test();

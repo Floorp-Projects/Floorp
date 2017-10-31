@@ -31,7 +31,7 @@ test();
 function addTestCase( t ) {
   for ( m = 0; m <= 1000; m+=100 ) {
     t++;
-    new TestCase( SECTION,
+    new TestCase(
 		  "(new Date("+t+")).getTimezoneOffset()",
 		  (t - LocalTime(t)) / msPerMinute,
 		  (new Date(t)).getTimezoneOffset() );

@@ -30,7 +30,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "null.valueOf()" +
   " (threw " + exception +")",
   expect,

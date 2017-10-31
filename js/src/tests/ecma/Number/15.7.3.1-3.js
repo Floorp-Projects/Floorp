@@ -23,7 +23,6 @@ var TITLE   = "Number.prototype";
 writeHeaderToLog( SECTION + " Number.prototype:  DontEnum Attribute");
 
 new TestCase(
-  SECTION,
   "var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop: '' } string;",
   "",
   eval("var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop : '' } string;")

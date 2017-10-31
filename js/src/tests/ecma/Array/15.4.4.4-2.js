@@ -62,10 +62,10 @@ writeHeaderToLog( SECTION + " Array.prototype.reverse()");
 
 var ARR_PROTOTYPE = Array.prototype;
 
-new TestCase( SECTION, "Array.prototype.reverse.length",           0,      Array.prototype.reverse.length );
+new TestCase( "Array.prototype.reverse.length",           0,      Array.prototype.reverse.length );
 
 // length of array is 0
-new TestCase(   SECTION,
+new TestCase(
 		"var A = new Array();   A.reverse(); A.length",
 		0,
 		eval("var A = new Array();   A.reverse(); A.length") );
@@ -75,7 +75,6 @@ test();
 function CheckItems( R, A ) {
   for ( var i = 0; i < R.length; i++ ) {
     new TestCase(
-      SECTION,
       "A["+i+ "]",
       R[i],
       A[i] );

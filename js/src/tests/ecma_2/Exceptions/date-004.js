@@ -35,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "MYDATE = new MyDate(); MYDATE.getTime()" +
   " (threw " + exception +")",
   expect,

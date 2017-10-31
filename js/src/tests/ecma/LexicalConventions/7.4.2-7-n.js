@@ -34,6 +34,6 @@ writeHeaderToLog( SECTION + " Keywords");
 
 DESCRIPTION = "var return = true";
 
-new TestCase( SECTION,  "var return = true",     "error",    eval("var return = true") );
+new TestCase( "var return = true",     "error",    eval("var return = true") );
 
 test();

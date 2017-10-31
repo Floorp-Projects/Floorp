@@ -57,7 +57,7 @@ var OBJECT = new Object();
 
 DESCRIPTION = "OBJECT = new Object; var o = new OBJECT()";
 
-new TestCase( SECTION,
+new TestCase(
 	      "OBJECT = new Object; var o = new OBJECT()",
 	      "error",
 	      eval("o = new OBJECT()") );

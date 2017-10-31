@@ -51,7 +51,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "more than one member expression";
 
-new TestCase( SECTION,
+new TestCase(
 	      "more than one member expression",
 	      "error",
 	      eval("var o = new MyObject(); var result = 0; for ( var i, p in this) { result += this[p]; }") );
