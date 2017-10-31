@@ -16,10 +16,13 @@ namespace mozilla {
 namespace gfx {
 
 class DrawingCommand;
+class SourceSurfaceCapture;
 class AlphaBoxBlur;
 
 class DrawTargetCaptureImpl : public DrawTargetCapture
 {
+  friend class SourceSurfaceCapture;
+
 public:
   DrawTargetCaptureImpl(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat);
 
@@ -115,10 +118,7 @@ public:
   {
     return mRefDT->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
   }
-  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override
-  {
-    return mRefDT->OptimizeSourceSurface(aSurface);
-  }
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
 
   virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override
@@ -156,18 +156,21 @@ public:
 protected:
   virtual ~DrawTargetCaptureImpl();
 
-private:
+  void MarkChanged();
 
+private:
   // This storage system was used to minimize the amount of heap allocations
   // that are required while recording. It should be noted there's no
   // guarantees on the alignments of DrawingCommands allocated in this array.
   template<typename T>
   T* AppendToCommandList() {
+    MarkChanged();
     return mCommands.Append<T>();
   }
 
   RefPtr<DrawTarget> mRefDT;
   IntSize mSize;
+  RefPtr<SourceSurfaceCapture> mSnapshot;
 
   // These are set if the draw target must be explicitly backed by data.
   int32_t mStride;
