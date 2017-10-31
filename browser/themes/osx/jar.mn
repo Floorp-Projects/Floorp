@@ -11,12 +11,6 @@ browser.jar:
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
   skin/classic/browser/subtle-pattern.png
-  skin/classic/browser/menuPanel-customize.png
-  skin/classic/browser/menuPanel-customize@2x.png
-  skin/classic/browser/menuPanel-exit.png
-  skin/classic/browser/menuPanel-exit@2x.png
-  skin/classic/browser/menuPanel-help.png
-  skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/panel-expander-closed.png
   skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png
@@ -70,12 +64,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/yosemite/menuPanel-customize.png                (menuPanel-customize-yosemite.png)
-  skin/classic/browser/yosemite/menuPanel-customize@2x.png             (menuPanel-customize-yosemite@2x.png)
-  skin/classic/browser/yosemite/menuPanel-exit.png                     (menuPanel-exit-yosemite.png)
-  skin/classic/browser/yosemite/menuPanel-exit@2x.png                  (menuPanel-exit-yosemite@2x.png)
-  skin/classic/browser/yosemite/menuPanel-help.png                     (menuPanel-help-yosemite.png)
-  skin/classic/browser/yosemite/menuPanel-help@2x.png                  (menuPanel-help-yosemite@2x.png)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)
 
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
@@ -84,10 +72,3 @@ browser.jar:
 % override chrome://browser/skin/feeds/videoFeedIcon.png                   chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/videoFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/notification-icons/geo-detailed.svg       chrome://browser/skin/notification-icons/geo.svg
-
-% override chrome://browser/skin/menuPanel-customize.png                   chrome://browser/skin/yosemite/menuPanel-customize.png                  os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-customize@2x.png                chrome://browser/skin/yosemite/menuPanel-customize@2x.png               os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-exit.png                        chrome://browser/skin/yosemite/menuPanel-exit.png                       os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-exit@2x.png                     chrome://browser/skin/yosemite/menuPanel-exit@2x.png                    os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-help.png                        chrome://browser/skin/yosemite/menuPanel-help.png                       os=Darwin osversion>=10.10
-% override chrome://browser/skin/menuPanel-help@2x.png                     chrome://browser/skin/yosemite/menuPanel-help@2x.png                    os=Darwin osversion>=10.10

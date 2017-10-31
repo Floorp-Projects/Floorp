@@ -24,8 +24,7 @@
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-non-lwt-bgcolor) 45px);
 }
 
-#customization-palette,
-#customization-empty {
+#customization-palette {
   padding: 5px 20px 20px;
 }
 
