@@ -1585,7 +1585,7 @@ nsIDocument::nsIDocument()
     mPresShell(nullptr),
     mSubtreeModifiedDepth(0),
     mEventsSuppressed(0),
-    mExternalScriptsBeingEvaluated(0),
+    mIgnoreDestructiveWritesCounter(0),
     mFrameRequestCallbackCounter(0),
     mStaticCloneCount(0),
     mWindow(nullptr),

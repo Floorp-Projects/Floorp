@@ -873,16 +873,22 @@ PlacesController.prototype = {
    *          An array of transactions.
    * @param   [optional] removedFolders
    *          An array of folder nodes that have already been removed.
+   * @return {Integer} The total number of items affected.
    */
   async _removeRange(range, transactions, removedFolders) {
     NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
     if (!removedFolders)
       removedFolders = [];
 
+    let bmGuidsToRemove = [];
+    let totalItems = 0;
+
     for (var i = 0; i < range.length; ++i) {
       var node = range[i];
       if (this._shouldSkipNode(node, removedFolders))
         continue;
+
+      totalItems++;
 
       if (PlacesUtils.nodeIsTagQuery(node.parent)) {
         // This is a uri node inside a tag container.  It needs a special
@@ -942,14 +948,17 @@ PlacesController.prototype = {
           removedFolders.push(node);
         }
         if (PlacesUIUtils.useAsyncTransactions) {
-          transactions.push(
-            PlacesTransactions.Remove({ guid: node.bookmarkGuid }));
+          bmGuidsToRemove.push(node.bookmarkGuid);
         } else {
           let txn = new PlacesRemoveItemTransaction(node.itemId);
           transactions.push(txn);
         }
       }
     }
+    if (bmGuidsToRemove.length) {
+      transactions.push(PlacesTransactions.Remove({ guids: bmGuidsToRemove }));
+    }
+    return totalItems;
   },
 
   /**
@@ -958,17 +967,18 @@ PlacesController.prototype = {
    *          See |remove|.
    */
   async _removeRowsFromBookmarks(txnName) {
-    var ranges = this._view.removableSelectionRanges;
-    var transactions = [];
-    var removedFolders = [];
+    let ranges = this._view.removableSelectionRanges;
+    let transactions = [];
+    let removedFolders = [];
+    let totalItems = 0;
 
     for (let range of ranges) {
-      await this._removeRange(range, transactions, removedFolders);
+      totalItems += await this._removeRange(range, transactions, removedFolders);
     }
 
     if (transactions.length > 0) {
       if (PlacesUIUtils.useAsyncTransactions) {
-        await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactions.length, async () => {
+        await PlacesUIUtils.batchUpdatesForNode(this._view.result, totalItems, async () => {
           await PlacesTransactions.batch(transactions);
         });
       } else {

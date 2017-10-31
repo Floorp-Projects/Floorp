@@ -38,7 +38,7 @@
   }));
 
   testCases.push(() => new Promise(resolve => {
-    const errorType = "errorSrcNotSupported";
+    const errorType = "errorNoSource";
 
     ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
     is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);

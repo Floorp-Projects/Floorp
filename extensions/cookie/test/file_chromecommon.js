@@ -1,7 +1,7 @@
 let { classes: Cc, utils: Cu, interfaces: Ci } = Components;
 
 let cs = Cc["@mozilla.org/cookiemanager;1"]
-           .getService(Ci.nsICookieManager2);
+           .getService(Ci.nsICookieManager);
 
 addMessageListener("getCookieCountAndClear", () => {
   let count = 0;

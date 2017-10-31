@@ -28,6 +28,8 @@ NS_IMPL_RELEASE_INHERITED(VRMockDisplay, DOMEventTargetHelper)
 
 VRMockDisplay::VRMockDisplay(const nsCString& aID, uint32_t aDeviceID)
  : mDeviceID(aDeviceID)
+ , mDisplayInfo{}
+ , mSensorState{}
  , mTimestamp(TimeStamp::Now())
 {
   mDisplayInfo.mDisplayName = aID;

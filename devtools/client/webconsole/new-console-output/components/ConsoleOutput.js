@@ -10,6 +10,7 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {initialize} = require("devtools/client/webconsole/new-console-output/actions/ui");
 
 const {
   getAllMessagesById,
@@ -23,10 +24,14 @@ const MessageContainer = createFactory(require("devtools/client/webconsole/new-c
 const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/new-console-output/constants");
+const {
+  getInitialMessageCountForViewport
+} = require("devtools/client/webconsole/new-console-output/utils/messages.js");
 
 class ConsoleOutput extends Component {
   static get propTypes() {
     return {
+      initialized: PropTypes.bool.isRequired,
       messages: PropTypes.object.isRequired,
       messagesUi: PropTypes.object.isRequired,
       serviceContainer: PropTypes.shape({
@@ -41,6 +46,7 @@ class ConsoleOutput extends Component {
       networkMessagesUpdate: PropTypes.object.isRequired,
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
+      onFirstMeaningfulPaint: PropTypes.func.isRequired,
     };
   }
 
@@ -50,12 +56,21 @@ class ConsoleOutput extends Component {
   }
 
   componentDidMount() {
-    // Do the scrolling in the nextTick since this could hit console startup performances.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1355869
-    setTimeout(() => {
-      scrollToBottom(this.outputNode);
-    }, 0);
+    scrollToBottom(this.outputNode);
     this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
+
+    // Waiting for the next paint.
+    new Promise(res => requestAnimationFrame(res))
+      .then(() => {
+        if (this.props.onFirstMeaningfulPaint) {
+          this.props.onFirstMeaningfulPaint();
+        }
+
+        // Dispatching on next tick so we don't block on action execution.
+        setTimeout(() => {
+          this.props.dispatch(initialize());
+        }, 0);
+      });
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -75,11 +90,18 @@ class ConsoleOutput extends Component {
       nextProps.messages.size - this.props.messages.size;
 
     // We need to scroll to the bottom if:
+    // - we are reacting to the "initialize" action,
+    //   and we are already scrolled to the bottom
     // - the number of messages displayed changed
     //   and we are already scrolled to the bottom
     // - the number of messages in the store changed
     //   and the new message is an evaluation result.
     this.shouldScrollBottom =
+      (
+        !this.props.initialized &&
+        nextProps.initialized &&
+        isScrolledToBottom(lastChild, outputNode)
+      ) ||
       (messagesDelta > 0 && nextProps.messages.last().type === MESSAGE_TYPE.RESULT) ||
       (visibleMessagesDelta > 0 && isScrolledToBottom(lastChild, outputNode));
   }
@@ -108,7 +130,16 @@ class ConsoleOutput extends Component {
       networkMessageActiveTabId,
       serviceContainer,
       timestampsVisible,
+      initialized,
     } = this.props;
+
+    if (!initialized) {
+      const numberMessagesFitViewport = getInitialMessageCountForViewport(window);
+      if (numberMessagesFitViewport < visibleMessages.length) {
+        visibleMessages = visibleMessages.slice(
+          visibleMessages.length - numberMessagesFitViewport);
+      }
+    }
 
     let messageNodes = visibleMessages.map((messageId) => MessageContainer({
       dispatch,
@@ -150,6 +181,7 @@ function isScrolledToBottom(outputNode, scrollNode) {
 
 function mapStateToProps(state, props) {
   return {
+    initialized: state.ui.initialized,
     messages: getAllMessagesById(state),
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),

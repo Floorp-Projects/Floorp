@@ -8,7 +8,6 @@
 
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
-#include "nsICookieManager2.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -235,7 +234,7 @@ struct nsCookieAttributes
 };
 
 class nsCookieService final : public nsICookieService
-                            , public nsICookieManager2
+                            , public nsICookieManager
                             , public nsIObserver
                             , public nsSupportsWeakReference
                             , public nsIMemoryReporter
@@ -248,7 +247,6 @@ class nsCookieService final : public nsICookieService
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICOOKIESERVICE
     NS_DECL_NSICOOKIEMANAGER
-    NS_DECL_NSICOOKIEMANAGER2
     NS_DECL_NSIMEMORYREPORTER
 
     nsCookieService();

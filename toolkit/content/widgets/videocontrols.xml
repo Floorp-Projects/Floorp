@@ -766,7 +766,9 @@
               error = "errorDecode";
               break;
             case v.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-              error = "errorSrcNotSupported";
+              error = v.networkState == v.NETWORK_NO_SOURCE ?
+                "errorNoSource" :
+                "errorSrcNotSupported";
               break;
             default:
               error = "errorGeneric";

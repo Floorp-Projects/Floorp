@@ -95,7 +95,8 @@ class ExpressionEvaluator(PrattParser):
         try:
             return self.context[token.value]
         except KeyError:
-            raise TemplateError('no context value named "{}"'.format(token.value))
+            raise TemplateError(
+                'no context value named "{}"'.format(token.value))
 
     @prefix("null")
     def null(self, token, pc):
@@ -179,7 +180,8 @@ class ExpressionEvaluator(PrattParser):
         try:
             return left[k]
         except KeyError:
-            raise TemplateError('{} not found in {}'.format(k, json.dumps(left)))
+            raise TemplateError(
+                '{} not found in {}'.format(k, json.dumps(left)))
 
     @infix("(")
     def function_call(self, left, token, pc):
@@ -213,7 +215,8 @@ class ExpressionEvaluator(PrattParser):
             if not isinstance(left, string):
                 raise expectationError('in-string', 'string on left side')
         elif not isinstance(right, list):
-            raise expectationError('in', 'Array, string, or object on right side')
+            raise expectationError(
+                'in', 'Array, string, or object on right side')
         try:
             return left in right
         except TypeError:
@@ -283,4 +286,3 @@ def accessProperty(value, a, b, is_interval):
         return value[a]
     except KeyError:
         return None
-        #raise TemplateError('{} not found in {}'.format(a, json.dumps(value)))
