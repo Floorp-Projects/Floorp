@@ -2538,20 +2538,7 @@ nsPrefBranch::GetComplexValue(const char* aPrefName,
     if (NS_SUCCEEDED(rv)) {
       // Debugging to see why we end up with very long strings here with
       // some addons, see bug 836263.
-      nsAutoString wdata;
-      if (!AppendUTF8toUTF16(utf8String, wdata, mozilla::fallible)) {
-#ifdef MOZ_CRASHREPORTER
-        nsCOMPtr<nsICrashReporter> cr =
-          do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-        if (cr) {
-          cr->AnnotateCrashReport(NS_LITERAL_CSTRING("bug836263-size"),
-                                  nsPrintfCString("%x", utf8String.Length()));
-          cr->RegisterAppMemory(uint64_t(utf8String.BeginReading()),
-                                std::min(0x1000U, utf8String.Length()));
-        }
-#endif
-        MOZ_CRASH("bug836263");
-      }
+      NS_ConvertUTF8toUTF16 wdata(utf8String);
       theString->SetData(wdata);
       theString.forget(reinterpret_cast<nsISupportsString**>(aRetVal));
     }
@@ -3855,7 +3842,6 @@ Preferences::Init()
   observerService->AddObserver(this, "profile-before-change-telemetry", true);
   rv = observerService->AddObserver(this, "profile-before-change", true);
 
-  observerService->AddObserver(this, "load-extension-defaults", true);
   observerService->AddObserver(this, "suspend_process_notification", true);
 
   if (NS_FAILED(rv)) {
@@ -3918,9 +3904,6 @@ Preferences::Observe(nsISupports* aSubject,
     SavePrefFileBlocking();
     MOZ_ASSERT(!mDirty, "Preferences should not be dirty");
     mProfileShutdown = true;
-
-  } else if (!strcmp(aTopic, "load-extension-defaults")) {
-    pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
 
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
@@ -4025,54 +4008,6 @@ Preferences::SavePrefFile(nsIFile* aFile)
 {
   // This is the method accessible from service API. Make it off main thread.
   return SavePrefFileInternal(aFile, SaveMethod::Asynchronous);
-}
-
-static nsresult
-ReadExtensionPrefs(nsIFile* aFile)
-{
-  nsresult rv;
-  nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = reader->Open(aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUTF8StringEnumerator> files;
-  rv = reader->FindEntries(
-    nsDependentCString("defaults/preferences/*.(J|j)(S|s)$"),
-    getter_AddRefs(files));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char buffer[4096];
-
-  bool more;
-  while (NS_SUCCEEDED(rv = files->HasMore(&more)) && more) {
-    nsAutoCString entry;
-    rv = files->GetNext(entry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIInputStream> stream;
-    rv = reader->GetInputStream(entry, getter_AddRefs(stream));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint64_t avail;
-    uint32_t read;
-
-    PrefParseState ps;
-    PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
-    while (NS_SUCCEEDED(rv = stream->Available(&avail)) && avail) {
-      rv = stream->Read(buffer, 4096, &read);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Pref stream read failed");
-        break;
-      }
-
-      PREF_ParseBuf(&ps, buffer, read);
-    }
-    PREF_FinalizeParseState(&ps);
-  }
-
-  return rv;
 }
 
 void
@@ -4549,15 +4484,8 @@ pref_LoadPrefsInDirList(const char* aListId)
       continue;
     }
 
-    nsAutoCString leaf;
-    path->GetNativeLeafName(leaf);
-
     // Do we care if a file provided by this process fails to load?
-    if (Substring(leaf, leaf.Length() - 4).EqualsLiteral(".xpi")) {
-      ReadExtensionPrefs(path);
-    } else {
-      pref_LoadPrefsInDir(path, nullptr, 0);
-    }
+    pref_LoadPrefsInDir(path, nullptr, 0);
   }
 
   return NS_OK;
@@ -4772,10 +4700,6 @@ pref_InitInitialObjects()
 
   observerService->NotifyObservers(
     nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr);
-
-  rv = pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
-  NS_ENSURE_SUCCESS(
-    rv, Err("pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST) failed"));
 
   return Ok();
 }
