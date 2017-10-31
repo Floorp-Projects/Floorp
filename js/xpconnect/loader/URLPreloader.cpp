@@ -376,6 +376,11 @@ URLPreloader::BackgroundReadFiles()
             }
 
             RefPtr<nsZipArchive> zip = entry->Archive();
+            if (!zip) {
+                MOZ_CRASH_UNSAFE_PRINTF(
+                    "Failed to get Omnijar %s archive for entry (path: \"%s\")",
+                    entry->TypeString(), entry->mPath.get());
+            }
 
             auto item = zip->GetItem(entry->mPath.get());
             if (!item) {

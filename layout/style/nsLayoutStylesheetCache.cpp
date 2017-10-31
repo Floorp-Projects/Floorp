@@ -773,7 +773,8 @@ ErrorLoadingSheet(nsIURI* aURI, const char* aMsg, FailureAction aFailureAction)
 #ifdef MOZ_CRASHREPORTER
   AnnotateCrashReport(aURI);
 #endif
-  NS_RUNTIMEABORT(errorMessage.get());
+
+  MOZ_CRASH_UNSAFE_OOL(errorMessage.get());
 }
 
 void

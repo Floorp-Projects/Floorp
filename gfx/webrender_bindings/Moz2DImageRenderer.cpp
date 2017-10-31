@@ -71,8 +71,8 @@ void
 DeleteFontData(WrFontKey aKey) {
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
-    sFontDataTable.erase(i);
     wr_dec_ref_arc(i->second.mVec);
+    sFontDataTable.erase(i);
   }
 }
 }

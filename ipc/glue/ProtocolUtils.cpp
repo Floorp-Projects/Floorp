@@ -303,14 +303,14 @@ FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
     MOZ_CRASH("IPC FatalError in the parent process!");
   } else {
     formattedMessage.AppendLiteral("\". abort()ing as a result.");
-    NS_RUNTIMEABORT(formattedMessage.get());
+    MOZ_CRASH_UNSAFE_OOL(formattedMessage.get());
   }
 }
 
 void
 LogicError(const char* aMsg)
 {
-  NS_RUNTIMEABORT(aMsg);
+  MOZ_CRASH_UNSAFE_OOL(aMsg);
 }
 
 void
