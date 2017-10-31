@@ -20,8 +20,9 @@ using namespace mozilla::a11y;
 class RuleCache
 {
 public:
-  explicit RuleCache(nsIAccessibleTraversalRule* aRule) : mRule(aRule),
-                                                          mAcceptRoles(nullptr) { }
+  explicit RuleCache(nsIAccessibleTraversalRule* aRule) :
+    mRule(aRule), mAcceptRoles(nullptr),
+    mAcceptRolesLength{0}, mPreFilter{0} { }
   ~RuleCache () {
     if (mAcceptRoles)
       free(mAcceptRoles);
