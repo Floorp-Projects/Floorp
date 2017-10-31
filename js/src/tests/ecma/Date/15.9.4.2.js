@@ -68,7 +68,6 @@ var SECONDS     = 15;
 var MS          = 16;
 var TYPEOF  = "object";
 
-//  for TCMS, the gTestcases array must be global.
 writeHeaderToLog("15.9.4.2 Date.parse()" );
 
 // Dates around 1970
