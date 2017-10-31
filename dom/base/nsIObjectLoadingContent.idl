@@ -59,13 +59,22 @@ interface nsIObjectLoadingContent : nsISupports
   /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
   ///    would be replaced by a real plugin if activated (playPlugin())
   /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and
-  ///    <= PLUGIN_VULNERABLE_NO_UPDATE are click-to-play types.
+  ///    <= PLUGIN_CLICK_TO_PLAY_QUIET are click-to-play types.
   // The plugin is disabled until the user clicks on it
   const unsigned long PLUGIN_CLICK_TO_PLAY        = 8;
   // The plugin is vulnerable (update available)
   const unsigned long PLUGIN_VULNERABLE_UPDATABLE = 9;
   // The plugin is vulnerable (no update available)
   const unsigned long PLUGIN_VULNERABLE_NO_UPDATE = 10;
+  // The plugin is click-to-play, but the user won't see overlays
+  const unsigned long PLUGIN_CLICK_TO_PLAY_QUIET  = 11;
+
+  // Plugins-specific permission indicating that we want to prompt the user
+  // to decide whether they want to allow a plugin, but to do so in a less
+  // intrusive way than PROMPT_ACTION would entail. At the time of writing,
+  // this means hiding all in-content plugin overlays, but still showing the
+  // plugin badge in the URL bar.
+  const unsigned long PLUGIN_PERMISSION_PROMPT_ACTION_QUIET = 8;
 
   /**
    * The actual mime type (the one we got back from the network

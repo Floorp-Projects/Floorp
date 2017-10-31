@@ -1002,15 +1002,6 @@ html|*#fullscreen-exit-button {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addon-progress-notification");
 }
 
-#click-to-play-plugins-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#click-to-play-plugins-notification");
-}
-
-
-.plugin-popupnotification-centeritem {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#plugin-popupnotification-center-item");
-}
-
 browser[tabmodalPromptShowing] {
   -moz-user-focus: none !important;
 }
