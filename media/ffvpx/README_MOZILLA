@@ -17,9 +17,6 @@ configuration files were generated as follow using the configure script:
 config*:
 replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
 
-config_darwin32.h:
-add to configure command: --disable-asm --disable-yasm --cc='clang -m32'
-
 config_unix32.h:
 add to configure command: --disable-asm --disable-yasm --cc='clang -m32'
 replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0/ and s/HAVE_MEMALIGN 1/HAVE_MEMALIGN 0/ and s/HAVE_POSIX_MEMALIGN 1/HAVE_POSIX_MEMALIGN 0/
