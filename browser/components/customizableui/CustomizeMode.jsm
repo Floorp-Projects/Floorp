@@ -107,7 +107,6 @@ function CustomizeMode(aWindow) {
   // user. Then there's the visible palette, which gets populated and displayed
   // to the user when in customizing mode.
   this.visiblePalette = this.document.getElementById(kPaletteId);
-  this.paletteEmptyNotice = this.document.getElementById("customization-empty");
   this.pongArena = this.document.getElementById("customization-pong-arena");
   if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
@@ -410,7 +409,6 @@ CustomizeMode.prototype = {
     let document = this.document;
 
     this.togglePong(false);
-    this.paletteEmptyNotice.hidden = true;
 
     // Disable the reset and undo reset buttons while transitioning:
     let resetButton = this.document.getElementById("customization-reset-button");
@@ -1536,7 +1534,6 @@ CustomizeMode.prototype = {
 
   _updateEmptyPaletteNotice() {
     let paletteItems = this.visiblePalette.getElementsByTagName("toolbarpaletteitem");
-    this.paletteEmptyNotice.hidden = !!paletteItems.length;
     let whimsyButton = this.document.getElementById("whimsy-button");
 
     if (paletteItems.length == 1 &&
@@ -2731,7 +2728,7 @@ CustomizeMode.prototype = {
         elements.score.textContent = score;
         elements.lives && elements.lives.setAttribute("lives", lives);
         elements.arena.setAttribute("score", score);
-        elements.arena.setAttribute("lives", "0");
+        elements.arena.setAttribute("lives", lives);
       } else {
         rAFHandle = window.requestAnimationFrame(animate);
       }
