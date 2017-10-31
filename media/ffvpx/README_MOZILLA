@@ -32,8 +32,8 @@ config_win32/64.h/asm:
 add to configure command: --toolchain=msvc
 
 Regenerate defaults_disabled.{h,asm} with:
-$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.h > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.h
-$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS) 0" config.asm > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.asm
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS|BSF) 0" config.h > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.h
+$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS|BSF) 0" config.asm > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.asm
 
 All new decoders/muxers/encoders/... should be added in the list of dummy functions found in libavcodec/dummy_funcs.c
 otherwise linkage will fail on Windows. On other platforms they are optimised out and aren't necessary.
