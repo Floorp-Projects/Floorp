@@ -16,7 +16,6 @@
 use encoding::EncodingOverride;
 use percent_encoding::{percent_encode_byte, percent_decode};
 use std::borrow::{Borrow, Cow};
-use std::fmt;
 use std::str;
 
 
@@ -217,15 +216,6 @@ pub struct Serializer<T: Target> {
     target: Option<T>,
     start_position: usize,
     encoding: EncodingOverride,
-    custom_encoding: Option<SilentDebug<Box<FnMut(&str) -> Cow<[u8]>>>>,
-}
-
-struct SilentDebug<T>(T);
-
-impl<T> fmt::Debug for SilentDebug<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("…")
-    }
 }
 
 pub trait Target {
@@ -282,7 +272,6 @@ impl<T: Target> Serializer<T> {
             target: Some(target),
             start_position: start_position,
             encoding: EncodingOverride::utf8(),
-            custom_encoding: None,
         }
     }
 
@@ -301,20 +290,11 @@ impl<T: Target> Serializer<T> {
         self
     }
 
-    /// Set the character encoding to be used for names and values before percent-encoding.
-    pub fn custom_encoding_override<F>(&mut self, encode: F) -> &mut Self
-        where F: FnMut(&str) -> Cow<[u8]> + 'static
-    {
-        self.custom_encoding = Some(SilentDebug(Box::new(encode)));
-        self
-    }
-
     /// Serialize and append a name/value pair.
     ///
     /// Panics if called after `.finish()`.
     pub fn append_pair(&mut self, name: &str, value: &str) -> &mut Self {
-        append_pair(string(&mut self.target), self.start_position, self.encoding,
-                    &mut self.custom_encoding, name, value);
+        append_pair(string(&mut self.target), self.start_position, self.encoding, name, value);
         self
     }
 
@@ -331,8 +311,7 @@ impl<T: Target> Serializer<T> {
             let string = string(&mut self.target);
             for pair in iter {
                 let &(ref k, ref v) = pair.borrow();
-                append_pair(string, self.start_position, self.encoding,
-                            &mut self.custom_encoding, k.as_ref(), v.as_ref());
+                append_pair(string, self.start_position, self.encoding, k.as_ref(), v.as_ref());
             }
         }
         self
@@ -345,8 +324,6 @@ impl<T: Target> Serializer<T> {
     /// Panics if called after `.finish()`.
     #[cfg(feature = "query_encoding")]
     pub fn append_charset(&mut self) -> &mut Self {
-        assert!(self.custom_encoding.is_none(),
-                "Cannot use both custom_encoding_override() and append_charset()");
         {
             let string = string(&mut self.target);
             append_separator_if_needed(string, self.start_position);
@@ -384,20 +361,9 @@ fn string<T: Target>(target: &mut Option<T>) -> &mut String {
 }
 
 fn append_pair(string: &mut String, start_position: usize, encoding: EncodingOverride,
-               custom_encoding: &mut Option<SilentDebug<Box<FnMut(&str) -> Cow<[u8]>>>>,
                name: &str, value: &str) {
     append_separator_if_needed(string, start_position);
-    append_encoded(name, string, encoding, custom_encoding);
+    string.extend(byte_serialize(&encoding.encode(name.into())));
     string.push('=');
-    append_encoded(value, string, encoding, custom_encoding);
-}
-
-fn append_encoded(s: &str, string: &mut String, encoding: EncodingOverride,
-               custom_encoding: &mut Option<SilentDebug<Box<FnMut(&str) -> Cow<[u8]>>>>) {
-    let bytes = if let Some(SilentDebug(ref mut custom)) = *custom_encoding {
-        custom(s)
-    } else {
-        encoding.encode(s.into())
-    };
-    string.extend(byte_serialize(&bytes));
+    string.extend(byte_serialize(&encoding.encode(value.into())));
 }
