@@ -1030,8 +1030,7 @@ static void StartTrack(MediaStream* aSource,
         segment_(aSegment) {}
 
     void Run() override {
-      TrackRate track_rate = segment_->GetType() == MediaSegment::AUDIO ?
-        WEBRTC_DEFAULT_SAMPLE_RATE : mStream->GraphRate();
+      TrackRate track_rate = mStream->GraphRate();
       StreamTime current_end = mStream->GetTracksEnd();
       MOZ_MTLOG(ML_DEBUG, "current_end = " << current_end);
       TrackTicks current_ticks =
@@ -1053,7 +1052,7 @@ static void StartTrack(MediaStream* aSource,
         MOZ_MTLOG(ML_DEBUG, "Calling AddAudioTrack");
         mStream->AsSourceStream()->AddAudioTrack(
             kAudioTrack,
-            WEBRTC_DEFAULT_SAMPLE_RATE,
+            track_rate,
             0,
             static_cast<AudioSegment*>(segment_.forget()));
       } else {
