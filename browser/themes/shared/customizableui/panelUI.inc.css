@@ -33,65 +33,6 @@
   height: 128px;
 }
 
-#PanelUI-popup #PanelUI-contents:empty::before {
-  content: "";
-  background-image: url(chrome://browser/skin/customizableui/whimsy.png);
-  background-size: 64px 64px;
-  display: block;
-  width: 64px;
-  height: 64px;
-  position: absolute;
-  transition: transform 1s ease-out;
-  animation: whimsyMoveX 3.05s linear 0s infinite alternate,
-             whimsyMoveY 3.4s linear 0s infinite alternate;
-}
-
-#PanelUI-popup #PanelUI-contents:not(:hover):empty::before {
-  filter: grayscale(100%);
-}
-
-#PanelUI-popup #PanelUI-contents:active:empty::before {
-  animation: whimsyMoveX 3.05s linear 0s infinite alternate,
-             whimsyMoveY 3.4s linear 0s infinite alternate,
-             whimsyRotate 1s linear 0s infinite normal;
-}
-
-#PanelUI-popup #PanelUI-contents:-moz-locale-dir(rtl):empty::before {
-  animation: whimsyMoveXRTL 3.05s linear 0s infinite alternate,
-             whimsyMoveY 3.4s linear 0s infinite alternate;
-}
-
-#PanelUI-popup #PanelUI-contents:-moz-locale-dir(rtl):active:empty::before {
-  animation: whimsyMoveXRTL 3.05s linear 0s infinite alternate,
-             whimsyMoveY 3.4s linear 0s infinite alternate,
-             whimsyRotate 1s linear 0s infinite normal;
-}
-
-@media (min-resolution: 2dppx) {
-  #PanelUI-popup #PanelUI-contents:empty::before {
-    background-image: url(chrome://browser/skin/customizableui/whimsy@2x.png);
-  }
-}
-
-@keyframes whimsyMoveX {
-  /* These values are adjusted for the padding on the panel. */
-  from { margin-left: -15px; } to { margin-left: calc(100% - 49px); }
-}
-
-@keyframes whimsyMoveXRTL {
-  /* These values are adjusted for the padding on the panel. */
-  from { margin-right: -15px; } to { margin-right: calc(100% - 49px); }
-}
-
-@keyframes whimsyMoveY {
-  /* These values are adjusted for the padding and height of the panel. */
-  from { margin-top: -.5em; } to { margin-top: calc(64px - .5em); }
-}
-
-@keyframes whimsyRotate {
-  to { transform: perspective(5000px) rotateY(360deg); }
-}
-
 :root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
