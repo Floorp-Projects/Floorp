@@ -23,6 +23,7 @@ public:
   DrawTargetCaptureImpl(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat);
 
   bool Init(const IntSize& aSize, DrawTarget* aRefDT);
+  void InitForData(int32_t aStride, size_t aSurfaceAllocationSize);
 
   virtual BackendType GetBackendType() const override { return mRefDT->GetBackendType(); }
   virtual DrawTargetType GetType() const override { return mRefDT->GetType(); }
@@ -170,6 +171,10 @@ private:
   }
   RefPtr<DrawTarget> mRefDT;
   IntSize mSize;
+
+  // These are set if the draw target must be explicitly backed by data.
+  int32_t mStride;
+  size_t mSurfaceAllocationSize;
 
   struct PushedLayer
   {
