@@ -109,6 +109,7 @@ class Digest
 {
 public:
   Digest()
+  : mItemBuf()
   {
     mItem.type = siBuffer;
     mItem.data = mItemBuf;
