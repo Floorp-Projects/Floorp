@@ -186,6 +186,7 @@ class MozbuildFileCommands(MachCommandBase):
         import gzip
 
         missing_component = set()
+        seen_components = set()
         component_by_path = {}
 
         # TODO operate in VCS space. This requires teaching the VCS reader
@@ -198,9 +199,28 @@ class MozbuildFileCommands(MachCommandBase):
                 continue
 
             c = m['BUG_COMPONENT']
+            seen_components.add(c)
             component_by_path[p] = [c.product, c.component]
 
         print('Examined %d files' % len(component_by_path))
+
+        # We also have a normalized versions of the file to components mapping
+        # that requires far less storage space by eliminating redundant strings.
+        indexed_components = {i: [c.product, c.component]
+                              for i, c in enumerate(sorted(seen_components))}
+        components_index = {tuple(v): k for k, v in indexed_components.items()}
+        normalized_component = {
+            'components': indexed_components,
+            'paths': {}
+        }
+
+        for p, c in component_by_path.items():
+            d = normalized_component['paths']
+            while '/' in p:
+                base, p = p.split('/', 1)
+                d = d.setdefault(base, {})
+
+            d[p] = components_index[tuple(c)]
 
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -215,8 +235,15 @@ class MozbuildFileCommands(MachCommandBase):
         with open(missing_json, 'wb') as fh:
             json.dump({'missing': sorted(missing_component)}, fh, indent=2)
 
+        indexed_components_json = os.path.join(out_dir,
+                                               'components-normalized.json')
+        print('Writing %s' % indexed_components_json)
+        with open(indexed_components_json, 'wb') as fh:
+            # Don't indent so file is as small as possible.
+            json.dump(normalized_component, fh, sort_keys=True)
+
         # Write compressed versions of JSON files.
-        for p in (components_json, missing_json):
+        for p in (components_json, indexed_components_json, missing_json):
             gzip_path = '%s.gz' % p
             print('Writing %s' % gzip_path)
             with open(p, 'rb') as ifh, gzip.open(gzip_path, 'wb') as ofh:
