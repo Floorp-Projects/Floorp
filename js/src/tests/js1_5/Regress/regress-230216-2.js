@@ -11,7 +11,6 @@ var expect = '';
 var status = '';
 
 DESCRIPTION = summary;
-EXPECTED = 'error';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
