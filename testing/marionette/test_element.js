@@ -149,19 +149,6 @@ add_test(function test_isDOMElement() {
   run_next_test();
 });
 
-add_test(function test_isSVGElement() {
-  ok(element.isSVGElement(svgEl));
-  ok(!element.isSVGElement(domEl));
-  ok(!element.isSVGElement(xulEl));
-  ok(!element.isSVGElement(domWin));
-  ok(!element.isSVGElement(domFrame));
-  for (let typ of [true, 42, {}, [], undefined, null]) {
-    ok(!element.isSVGElement(typ));
-  }
-
-  run_next_test();
-});
-
 add_test(function test_isXULElement() {
   ok(element.isXULElement(xulEl));
   ok(element.isXULElement(xblEl));
