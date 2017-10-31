@@ -13,8 +13,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var EXCEPTION_DATA = "String exception";
   var e;
 
@@ -34,6 +32,4 @@ function test()
   }
 
   reportCompare(expect, actual, DESCRIPTION);
-
-  exitFunc ("test");
 }

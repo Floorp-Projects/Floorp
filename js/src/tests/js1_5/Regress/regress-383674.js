@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -53,6 +52,4 @@ function test()
   {
     reportCompare("No Error", ex + "", summary + ': 2');
   }
-
-  exitFunc ('test');
 }

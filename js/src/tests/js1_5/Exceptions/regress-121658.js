@@ -111,7 +111,6 @@ function formatThis(bool)
 
 function test()
 {
-  enterFunc('test');
   printBugNumber(BUGNUMBER);
   printStatus(msg);
 
@@ -119,6 +118,4 @@ function test()
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
   }
-
-  exitFunc ('test');
 }

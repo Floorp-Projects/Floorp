@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printStatus (summary);
 
   var a = [];
@@ -53,6 +52,4 @@ function test()
     actual = ex + '';
   }
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

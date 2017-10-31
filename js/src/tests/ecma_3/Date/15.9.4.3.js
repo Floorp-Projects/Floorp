@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -195,6 +194,4 @@ function test()
   expect = true;
   actual = isNaN(new Date(Date.UTC(2006, 0, 0, 0, 0, 0, NaN)).getUTCMilliseconds());
   reportCompare(expect, actual, summary + ': milliseconds NaN');
-
-  exitFunc ('test');
 }

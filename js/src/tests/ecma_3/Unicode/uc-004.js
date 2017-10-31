@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   printStatus ("Unicode Characters 1C-1F with regexps test.");
   printBugNumber (23612);
    
@@ -24,6 +22,4 @@ function test()
 		   "Unicode characters 1C-1F in regexps, ary[" +
 		   i + "] matched \\s test (it should not.)");
   }
-
-  exitFunc ("test");
 }

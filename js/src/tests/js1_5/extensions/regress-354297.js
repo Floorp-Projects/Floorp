@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -25,6 +24,4 @@ function test()
   var o = {}; o.__defineGetter__(1, Math.sin); gc()
 
 						 reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

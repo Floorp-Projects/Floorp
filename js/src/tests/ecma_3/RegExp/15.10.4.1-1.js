@@ -63,7 +63,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -76,8 +75,6 @@ function test()
  
     reportCompare (obj1 + '', obj2 + '', status);
   }
-
-  exitFunc ('test');
 }
 
 

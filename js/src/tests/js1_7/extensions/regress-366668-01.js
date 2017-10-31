@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -26,6 +25,4 @@ function test()
   expect = 'function() { for(let x in x.p) { } }';
   actual = f + '';
   compareSource(expect, actual, summary);
-
-  exitFunc ('test');
 }

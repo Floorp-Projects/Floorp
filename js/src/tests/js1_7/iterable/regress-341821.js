@@ -18,7 +18,6 @@ var ialert = 0;
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -51,8 +50,6 @@ function test()
 
   print('done');
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 
 function init()

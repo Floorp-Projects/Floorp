@@ -17,7 +17,6 @@ var ialert = 0;
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -49,8 +48,6 @@ function test()
   print('done');
 
   setTimeout('checkTest()', 10000);
-
-  exitFunc ('test');
 }
 
 function init()

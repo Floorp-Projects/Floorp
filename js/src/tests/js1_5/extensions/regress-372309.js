@@ -11,7 +11,6 @@ var expect = 'No Crash';
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -29,8 +28,6 @@ function test()
   reportCompare(expect, actual, summary);
   gDelayTestDriverEnd = false;
   jsTestDriverEnd();
-
-  exitFunc ('test');
 }
 
 if (typeof window != 'undefined')

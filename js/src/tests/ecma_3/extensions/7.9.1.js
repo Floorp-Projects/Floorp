@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -41,7 +40,5 @@ function test()
   try { uneval(eval(code)); } catch(ex) { actual = ex + ''; };
 //  compareSource(expect, actual, summary + ': ' + code);
   reportCompare(expect, actual, summary + ': ' + code);
-
-  exitFunc ('test');
 }
 

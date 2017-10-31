@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -31,8 +30,6 @@ function test()
     gDelayTestDriverEnd = true;
     window.onload = boom;
   }
-
-  exitFunc ('test');
 }
 
 function boom()

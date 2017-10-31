@@ -23,7 +23,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -57,6 +56,4 @@ function test()
     }
     compareSource(normalizeSource(expect), normalizeSource(actual), summary);
   }
-
-  exitFunc ('test');
 }

@@ -21,12 +21,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
   tryThis();
   reportCompare('No Crash', 'No Crash', 'Should not crash');
-  exitFunc ('test');
 }
 
 

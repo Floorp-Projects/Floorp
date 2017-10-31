@@ -17,12 +17,9 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   for each (let a in [2, 2, 2]) { a %= a; a %= a; }
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

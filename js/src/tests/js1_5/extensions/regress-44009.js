@@ -25,7 +25,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -38,8 +37,6 @@ function test()
   testThis(obj2);
 
   reportCompare('No Crash', 'No Crash', '');
-
-  exitFunc ('test');
 }
 
 
