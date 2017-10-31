@@ -2047,3 +2047,4 @@ needs-focus != 1377447-1.html 1377447-2.html
 != 1404057.html 1404057-noref.html
 == 1406183-1.html 1406183-1-ref.html
 == 1410028.html 1410028-ref.html
+test-pref(font.size.systemFontScale,200) skip-if(isDebugBuild) == 1412743.html 1412743-ref.html # bug 1413143
