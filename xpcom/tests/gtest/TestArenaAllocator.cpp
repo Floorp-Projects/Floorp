@@ -284,10 +284,17 @@ TEST(ArenaAllocator, Clear)
 TEST(ArenaAllocator, Extensions)
 {
   ArenaAllocator<4096, 8> a;
-  const char* const kTestStr = "This is a test string.";
-  char* dup = mozilla::ArenaStrdup(kTestStr, a);
-  EXPECT_STREQ(dup, kTestStr);
 
+  // Test with raw strings.
+  const char* const kTestCStr = "This is a test string.";
+  char* c_dup = mozilla::ArenaStrdup(kTestCStr, a);
+  EXPECT_STREQ(c_dup, kTestCStr);
+
+  const char16_t* const kTestStr = u"This is a wide test string.";
+  char16_t* dup = mozilla::ArenaStrdup(kTestStr, a);
+  EXPECT_TRUE(nsString(dup).Equals(kTestStr));
+
+  // Make sure it works with literal strings.
   NS_NAMED_LITERAL_STRING(wideStr, "A wide string.");
   nsLiteralString::char_type* wide = mozilla::ArenaStrdup(wideStr, a);
   EXPECT_TRUE(wideStr.Equals(wide));
@@ -295,4 +302,13 @@ TEST(ArenaAllocator, Extensions)
   NS_NAMED_LITERAL_CSTRING(cStr, "A c-string.");
   nsLiteralCString::char_type* cstr = mozilla::ArenaStrdup(cStr, a);
   EXPECT_TRUE(cStr.Equals(cstr));
+
+  // Make sure it works with normal strings.
+  nsAutoString x(u"testing wide");
+  nsAutoString::char_type* x_copy = mozilla::ArenaStrdup(x, a);
+  EXPECT_TRUE(x.Equals(x_copy));
+
+  nsAutoCString y("testing c-string");
+  nsAutoCString::char_type* y_copy = mozilla::ArenaStrdup(y, a);
+  EXPECT_TRUE(y.Equals(y_copy));
 }

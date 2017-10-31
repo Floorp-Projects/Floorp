@@ -25,15 +25,9 @@
 namespace mozilla {
 namespace gl {
 
-struct GLContextSymbols
+struct GLContextSymbols final
 {
-    GLContextSymbols() {
-        Zero();
-    }
-
-    void Zero() {
-        memset(this, 0, sizeof(GLContextSymbols));
-    }
+    GLContextSymbols() = delete; // Initialize with {}.
 
     void (GLAPIENTRY * fActiveTexture)(GLenum);
     void (GLAPIENTRY * fAttachShader)(GLuint, GLuint);

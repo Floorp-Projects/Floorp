@@ -685,6 +685,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_res_dir = self.query_abs_res_dir()
 
         max_verify_time = timedelta(minutes=60)
+        max_verify_tests = 10
+        verified_tests = 0
 
         if suites:
             self.info('#### Running %s suites' % suite_category)
@@ -782,6 +784,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         # Signal verify time exceeded, to break out of suites and
                         # suite categories loops also.
                         return False
+                    if verified_tests >= max_verify_tests:
+                        # When changesets are merged between trees or many tests are
+                        # otherwise updated at once, there probably is not enough time
+                        # to verify all tests, and attempting to do so may cause other
+                        # problems, such as generating too much log output.
+                        self.info("TinderboxPrint: Too many modified tests: Not all tests "
+                                  "were verified.<br/>")
+                        return False
+                    verified_tests = verified_tests + 1
 
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(verify_args)

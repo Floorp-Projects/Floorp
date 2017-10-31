@@ -75,4 +75,3 @@
     COMPONENT(IOUTIL, nsIOUtilConstructor)
     COMPONENT(CYCLE_COLLECTOR_LOGGER, nsCycleCollectorLoggerConstructor)
     COMPONENT(MESSAGE_LOOP, nsMessageLoopConstructor)
-    COMPONENT(STATUS_REPORTER_MANAGER, nsStatusReporterManagerConstructor)

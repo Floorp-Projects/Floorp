@@ -1845,9 +1845,7 @@ PluginModuleChromeParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChange
     }
     return IPC_OK();
 #else
-    NS_RUNTIMEABORT("NPPVpluginRequiresAudioDeviceChanges is not valid on this platform.");
-    *result = NPERR_GENERIC_ERROR;
-    return IPC_OK();
+    MOZ_CRASH("NPPVpluginRequiresAudioDeviceChanges is not valid on this platform.");
 #endif
 }
 
@@ -2582,8 +2580,7 @@ PluginModuleParent::AnswerProcessSomeEvents()
 mozilla::ipc::IPCResult
 PluginModuleParent::AnswerProcessSomeEvents()
 {
-    NS_RUNTIMEABORT("unreached");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("unreached");
 }
 
 #else
@@ -2812,10 +2809,8 @@ mozilla::ipc::IPCResult
 PluginModuleParent::AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
                                         const bool& shouldRegister,
                                         NPError* result) {
-    NS_RUNTIMEABORT("SetValue_NPPVpluginRequiresAudioDeviceChanges is only valid "
-      "with PluginModuleChromeParent");
-    *result = NPERR_GENERIC_ERROR;
-    return IPC_OK();
+    MOZ_CRASH("SetValue_NPPVpluginRequiresAudioDeviceChanges is only valid "
+              "with PluginModuleChromeParent");
 }
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR

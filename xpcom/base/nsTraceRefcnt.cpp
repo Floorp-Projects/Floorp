@@ -166,7 +166,7 @@ AssertActivityIsLegal()
 {
   if (gActivityTLS == BAD_TLS_INDEX || PR_GetThreadPrivate(gActivityTLS)) {
     if (PR_GetEnv("MOZ_FATAL_STATIC_XPCOM_CTORS_DTORS")) {
-      NS_RUNTIMEABORT(kStaticCtorDtorWarning);
+      MOZ_CRASH_UNSAFE_OOL(kStaticCtorDtorWarning);
     } else {
       NS_WARNING(kStaticCtorDtorWarning);
     }
