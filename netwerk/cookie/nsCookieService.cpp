@@ -499,7 +499,7 @@ public:
 
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    nsCOMPtr<nsICookieManager2> cookieManager
+    nsCOMPtr<nsICookieManager> cookieManager
       = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
     MOZ_ASSERT(cookieManager);
 
@@ -593,7 +593,6 @@ nsCookieService::AppClearDataObserverInit()
 NS_IMPL_ISUPPORTS(nsCookieService,
                   nsICookieService,
                   nsICookieManager,
-                  nsICookieManager2,
                   nsIObserver,
                   nsISupportsWeakReference,
                   nsIMemoryReporter)
@@ -2546,7 +2545,7 @@ nsCookieService::Add(const nsACString &aHost,
                                            aOriginAttributes,
                                            aCx,
                                            aArgc,
-                                           u"nsICookieManager2.add()",
+                                           u"nsICookieManager.add()",
                                            u"2");
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4532,7 +4531,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 }
 
 // find whether a given cookie has been previously set. this is provided by the
-// nsICookieManager2 interface.
+// nsICookieManager interface.
 NS_IMETHODIMP
 nsCookieService::CookieExists(nsICookie2* aCookie,
                               JS::HandleValue aOriginAttributes,
@@ -4550,7 +4549,7 @@ nsCookieService::CookieExists(nsICookie2* aCookie,
                                            aOriginAttributes,
                                            aCx,
                                            aArgc,
-                                           u"nsICookieManager2.cookieExists()",
+                                           u"nsICookieManager.cookieExists()",
                                            u"2");
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4704,7 +4703,7 @@ nsCookieService::TelemetryForEvictingStaleCookie(nsCookie *aEvicted,
 }
 
 // count the number of cookies stored by a particular host. this is provided by the
-// nsICookieManager2 interface.
+// nsICookieManager interface.
 NS_IMETHODIMP
 nsCookieService::CountCookiesFromHost(const nsACString &aHost,
                                       uint32_t         *aCountFromHost)
@@ -4734,7 +4733,7 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
 }
 
 // get an enumerator of cookies stored by a particular host. this is provided by the
-// nsICookieManager2 interface.
+// nsICookieManager interface.
 NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                     JS::HandleValue       aOriginAttributes,
@@ -4765,7 +4764,7 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                   aOriginAttributes,
                                   aCx,
                                   aArgc,
-                                  u"nsICookieManager2.getCookiesFromHost()",
+                                  u"nsICookieManager.getCookiesFromHost()",
                                   u"2");
   NS_ENSURE_SUCCESS(rv, rv);
 

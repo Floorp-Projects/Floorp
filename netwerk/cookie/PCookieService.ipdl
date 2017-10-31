@@ -20,7 +20,7 @@ namespace net {
  * Provides IPDL methods for setting and getting cookies. These are stored on
  * and managed by the parent; the child process goes through the parent for
  * all cookie operations. Lower-level programmatic operations (i.e. those
- * provided by the nsICookieManager and nsICookieManager2 interfaces) are not
+ * provided by the nsICookieManager interface) are not
  * currently implemented and requesting these interfaces in the child will fail.
  *
  * @see nsICookieService

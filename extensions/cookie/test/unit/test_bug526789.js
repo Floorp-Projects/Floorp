@@ -3,7 +3,7 @@
 
 function run_test() {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 
   cm.removeAll();
@@ -184,7 +184,7 @@ function run_test() {
 
 function getCookieCount() {
   var count = 0;
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var enumerator = cm.enumerator;
   while (enumerator.hasMoreElements()) {
     if (!(enumerator.getNext() instanceof Ci.nsICookie2))
@@ -196,7 +196,7 @@ function getCookieCount() {
 
 function testDomainCookie(uriString, domain) {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();
 
@@ -216,7 +216,7 @@ function testDomainCookie(uriString, domain) {
 
 function testTrailingDotCookie(uriString, domain) {
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 
   cm.removeAll();
 
