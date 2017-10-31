@@ -94,7 +94,7 @@ DocAccessible::
   mDocumentNode(aDocument),
   mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mDocFlags(0), mLoadEventType(0),
-  mVirtualCursor(nullptr),
+  mARIAAttrOldValue{nullptr}, mVirtualCursor(nullptr),
   mPresShell(aPresShell), mIPCDoc(nullptr)
 {
   mGenericTypes |= eDocument;
