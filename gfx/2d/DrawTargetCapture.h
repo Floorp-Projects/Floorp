@@ -51,7 +51,7 @@ public:
                                      const Color &aColor,
                                      const Point &aOffset,
                                      Float aSigma,
-                                     CompositionOp aOperator) override { /* Not implemented */ }
+                                     CompositionOp aOperator) override;
 
   virtual void ClearRect(const Rect &aRect) override;
   virtual void MaskSurface(const Pattern &aSource,

@@ -188,6 +188,43 @@ private:
   DrawOptions mOptions;
 };
 
+class DrawSurfaceWithShadowCommand : public DrawingCommand
+{
+public:
+  DrawSurfaceWithShadowCommand(SourceSurface *aSurface,
+                               const Point &aDest,
+                               const Color &aColor,
+                               const Point &aOffset,
+                               Float aSigma,
+                               CompositionOp aOperator)
+    : DrawingCommand(CommandType::DRAWSURFACEWITHSHADOW),
+      mSurface(aSurface),
+      mDest(aDest),
+      mColor(aColor),
+      mOffset(aOffset),
+      mSigma(aSigma),
+      mOperator(aOperator)
+  {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawSurfaceWithShadowCommand)(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
+  }
+
+private:
+  RefPtr<SourceSurface> mSurface;
+  Point mDest;
+  Color mColor;
+  Point mOffset;
+  Float mSigma;
+  CompositionOp mOperator;
+};
+
 class DrawFilterCommand : public DrawingCommand
 {
 public:
