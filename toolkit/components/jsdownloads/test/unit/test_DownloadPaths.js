@@ -7,21 +7,6 @@
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-/**
- * Provides a temporary save directory.
- *
- * @returns nsIFile pointing to the new or existing directory.
- */
-function createTemporarySaveDirectory() {
-  var saveDir = Cc["@mozilla.org/file/directory_service;1"].
-                getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-  saveDir.append("testsavedir");
-  if (!saveDir.exists()) {
-    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  }
-  return saveDir;
-}
-
 function testSanitize(leafName, expectedLeafName) {
   do_check_eq(DownloadPaths.sanitize(leafName), expectedLeafName);
 }
@@ -131,39 +116,36 @@ add_task(async function test_splitBaseNameAndExtension() {
 });
 
 add_task(async function test_createNiceUniqueFile() {
-  var destDir = createTemporarySaveDirectory();
+  var destDir = FileTestUtils.getTempFile("destdir");
+  destDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  // Single extension.
+  var tempFile = destDir.clone();
+  tempFile.append("test.txt");
+  testCreateNiceUniqueFile(tempFile, "test.txt");
+  testCreateNiceUniqueFile(tempFile, "test(1).txt");
+  testCreateNiceUniqueFile(tempFile, "test(2).txt");
+
+  // Double extension.
+  tempFile.leafName = "test.tar.gz";
+  testCreateNiceUniqueFile(tempFile, "test.tar.gz");
+  testCreateNiceUniqueFile(tempFile, "test(1).tar.gz");
+  testCreateNiceUniqueFile(tempFile, "test(2).tar.gz");
+
+  // Test automatic shortening of long file names. We don't know exactly how
+  // many characters are removed, because it depends on the name of the folder
+  // where the file is located.
+  tempFile.leafName = new Array(256).join("T") + ".txt";
+  var newFile = DownloadPaths.createNiceUniqueFile(tempFile);
+  do_check_true(newFile.leafName.length < tempFile.leafName.length);
+  do_check_eq(newFile.leafName.slice(-4), ".txt");
+
+  // Creating a valid file name from an invalid one is not always possible.
+  tempFile.append("file-under-long-directory.txt");
   try {
-    // Single extension.
-    var tempFile = destDir.clone();
-    tempFile.append("test.txt");
-    testCreateNiceUniqueFile(tempFile, "test.txt");
-    testCreateNiceUniqueFile(tempFile, "test(1).txt");
-    testCreateNiceUniqueFile(tempFile, "test(2).txt");
-
-    // Double extension.
-    tempFile.leafName = "test.tar.gz";
-    testCreateNiceUniqueFile(tempFile, "test.tar.gz");
-    testCreateNiceUniqueFile(tempFile, "test(1).tar.gz");
-    testCreateNiceUniqueFile(tempFile, "test(2).tar.gz");
-
-    // Test automatic shortening of long file names. We don't know exactly how
-    // many characters are removed, because it depends on the name of the folder
-    // where the file is located.
-    tempFile.leafName = new Array(256).join("T") + ".txt";
-    var newFile = DownloadPaths.createNiceUniqueFile(tempFile);
-    do_check_true(newFile.leafName.length < tempFile.leafName.length);
-    do_check_eq(newFile.leafName.slice(-4), ".txt");
-
-    // Creating a valid file name from an invalid one is not always possible.
-    tempFile.append("file-under-long-directory.txt");
-    try {
-      DownloadPaths.createNiceUniqueFile(tempFile);
-      do_throw("Exception expected with a long parent directory name.");
-    } catch (e) {
-      // An exception is expected, but we don't know which one exactly.
-    }
-  } finally {
-    // Clean up the temporary directory.
-    destDir.remove(true);
+    DownloadPaths.createNiceUniqueFile(tempFile);
+    do_throw("Exception expected with a long parent directory name.");
+  } catch (e) {
+    // An exception is expected, but we don't know which one exactly.
   }
 });
