@@ -1097,6 +1097,7 @@ element.isDOMElement = function(node) {
 element.isXULElement = function(node) {
   return typeof node == "object" &&
       node !== null &&
+      "nodeType" in node &&
       node.nodeType === node.ELEMENT_NODE &&
       [XBLNS, XULNS].includes(node.namespaceURI);
 };
