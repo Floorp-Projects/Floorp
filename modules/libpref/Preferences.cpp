@@ -526,33 +526,6 @@ SetPrefValue(const char* aPrefName,
   }
 }
 
-static nsresult
-pref_SetPref(const dom::PrefSetting& aPref)
-{
-  const char* prefName = aPref.name().get();
-  const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
-  const dom::MaybePrefValue& userValue = aPref.userValue();
-
-  nsresult rv;
-  if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
-    rv = SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
-    rv = SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
-  } else {
-    rv = PREF_ClearUserPref(prefName);
-  }
-
-  // NB: we should never try to clear a default value, that doesn't
-  // make sense
-
-  return rv;
-}
-
 static PrefSaveData
 pref_savePrefs()
 {
@@ -4122,7 +4095,26 @@ ReadExtensionPrefs(nsIFile* aFile)
 void
 Preferences::SetPreference(const PrefSetting& aPref)
 {
-  pref_SetPref(aPref);
+  const char* prefName = aPref.name().get();
+  const dom::MaybePrefValue& defaultValue = aPref.defaultValue();
+  const dom::MaybePrefValue& userValue = aPref.userValue();
+
+  if (defaultValue.type() == dom::MaybePrefValue::TPrefValue) {
+    nsresult rv =
+      SetPrefValue(prefName, defaultValue.get_PrefValue(), DEFAULT_VALUE);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+  }
+
+  if (userValue.type() == dom::MaybePrefValue::TPrefValue) {
+    SetPrefValue(prefName, userValue.get_PrefValue(), USER_VALUE);
+  } else {
+    PREF_ClearUserPref(prefName);
+  }
+
+  // NB: we should never try to clear a default value, that doesn't
+  // make sense
 }
 
 void
