@@ -738,12 +738,11 @@ var Bookmarks = Object.freeze({
   },
 
   /**
-   * Removes one or more bookmark-items.
+   * Removes a bookmark-item.
    *
-   * @param guidOrInfo This may be:
-   *        - The globally unique identifier of the item to remove
-   *        - an object representing the item, as defined above
-   *        - an array of objects representing the items to be removed
+   * @param guidOrInfo
+   *        The globally unique identifier of the item to remove, or an
+   *        object representing it, as defined above.
    * @param {Object} [options={}]
    *        Additional options that can be passed to the function.
    *        Currently supports the following properties:
@@ -752,76 +751,61 @@ var Bookmarks = Object.freeze({
    *         - source: The change source, forwarded to all bookmark observers.
    *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
    *
-   * @return {Promise}
-   * @resolves when the removal is complete
+   * @return {Promise} resolved when the removal is complete.
+   * @resolves to an object representing the removed bookmark.
    * @rejects if the provided guid doesn't match any existing bookmark.
    * @throws if the arguments are invalid.
    */
   remove(guidOrInfo, options = {}) {
-    let infos = guidOrInfo;
-    if (!infos)
+    let info = guidOrInfo;
+    if (!info)
       throw new Error("Input should be a valid object");
-    if (!Array.isArray(guidOrInfo)) {
-      if (typeof(guidOrInfo) != "object") {
-        infos = [{ guid: guidOrInfo }];
-      } else {
-        infos = [guidOrInfo];
-      }
+    if (typeof(guidOrInfo) != "object")
+      info = { guid: guidOrInfo };
+
+    // Disallow removing the root folders.
+    if ([this.rootGuid, this.menuGuid, this.toolbarGuid, this.unfiledGuid,
+         this.tagsGuid, this.mobileGuid].includes(info.guid)) {
+      throw new Error("It's not possible to remove Places root folders.");
     }
 
     if (!("source" in options)) {
       options.source = Bookmarks.SOURCES.DEFAULT;
     }
 
-    let removeInfos = [];
-    for (let info of infos) {
-      // Disallow removing the root folders.
-      if ([
-        Bookmarks.rootGuid, Bookmarks.menuGuid, Bookmarks.toolbarGuid,
-        Bookmarks.unfiledGuid, Bookmarks.tagsGuid, Bookmarks.mobileGuid
-      ].includes(info.guid)) {
-        throw new Error("It's not possible to remove Places root folders.");
-      }
-
-      // Even if we ignore any other unneeded property, we still validate any
-      // known property to reduce likelihood of hidden bugs.
-      let removeInfo = validateBookmarkObject("Bookmarks.jsm: remove", info);
-      removeInfos.push(removeInfo);
-    }
+    // Even if we ignore any other unneeded property, we still validate any
+    // known property to reduce likelihood of hidden bugs.
+    let removeInfo = validateBookmarkObject("Bookmarks.jsm: remove", info);
 
     return (async function() {
-      let removeItems = [];
-      for (let info of removeInfos) {
-        let item = await fetchBookmark(info);
-        if (!item)
-          throw new Error("No bookmarks found for the provided GUID.");
+      let item = await fetchBookmark(removeInfo);
+      if (!item)
+        throw new Error("No bookmarks found for the provided GUID.");
 
-        removeItems.push(item);
-      }
-
-      await removeBookmarks(removeItems, options);
+      item = await removeBookmark(item, options);
 
       // Notify onItemRemoved to listeners.
-      for (let item of removeItems) {
-        let observers = PlacesUtils.bookmarks.getObservers();
-        let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
-        let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
-        notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
-                                             item.type, uri, item.guid,
-                                             item.parentGuid,
-                                             options.source ],
-                                           { isTagging: isUntagging });
+      let observers = PlacesUtils.bookmarks.getObservers();
+      let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
+      let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
+      notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
+                                           item.type, uri, item.guid,
+                                           item.parentGuid,
+                                           options.source ],
+                                         { isTagging: isUntagging });
 
-        if (isUntagging) {
-          for (let entry of (await fetchBookmarksByURL(item, true))) {
-            notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                                 PlacesUtils.toPRTime(entry.lastModified),
-                                                 entry.type, entry._parentId,
-                                                 entry.guid, entry.parentGuid,
-                                                 "", options.source ]);
-          }
+      if (isUntagging) {
+        for (let entry of (await fetchBookmarksByURL(item, true))) {
+          notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
+                                               PlacesUtils.toPRTime(entry.lastModified),
+                                               entry.type, entry._parentId,
+                                               entry.guid, entry.parentGuid,
+                                               "", options.source ]);
         }
       }
+
+      // Remove non-enumerable properties.
+      return Object.assign({}, item);
     })();
   },
 
@@ -1526,7 +1510,7 @@ async function insertLivemarkData(item) {
   // livemark item at the right place.
   let placeholder = await Bookmarks.fetch(item.guid);
   let index = placeholder.index;
-  await removeBookmarks([item], {source: item.source});
+  await removeBookmark(item, {source: item.source});
 
   let feedURI = null;
   let siteURI = null;
@@ -1803,83 +1787,70 @@ async function fetchBookmarksByParent(db, info) {
 
 // Remove implementation.
 
-function removeBookmarks(items, options) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmarks",
+function removeBookmark(item, options) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmark",
     async function(db) {
-    let urls = [];
+    let urls;
+    let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
 
     await db.executeTransaction(async function transaction() {
-      let parentGuids = new Set();
-      let syncChangeDelta =
-        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
-
-      for (let item of items) {
-        parentGuids.add(item.parentGuid);
-
-        // If it's a folder, remove its contents first.
-        if (item.type == Bookmarks.TYPE_FOLDER) {
-          if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
-            throw new Error("Cannot remove a non-empty folder.");
-          }
-          urls = urls.concat(await removeFoldersContents(db, [item.guid], options));
+      // If it's a folder, remove its contents first.
+      if (item.type == Bookmarks.TYPE_FOLDER) {
+        if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
+          throw new Error("Cannot remove a non-empty folder.");
         }
+        urls = await removeFoldersContents(db, [item.guid], options);
       }
 
-      for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
+      // Remove annotations first.  If it's a tag, we can avoid paying that cost.
+      if (!isUntagging) {
         // We don't go through the annotations service for this cause otherwise
         // we'd get a pointless onItemChanged notification and it would also
         // set lastModified to an unexpected value.
-        await removeAnnotationsForItems(db, chunk);
-
-        // Remove the bookmarks.
-        await db.executeCached(
-          `DELETE FROM moz_bookmarks WHERE guid IN (${
-            new Array(chunk.length).fill("?").join(",")})`,
-          chunk.map(item => item.guid)
-        );
+        await removeAnnotationsForItem(db, item._id);
       }
 
-      for (let item of items) {
-        // Fix indices in the parent.
-        await db.executeCached(
-          `UPDATE moz_bookmarks SET position = position - 1 WHERE
-           parent = :parentId AND position > :index
-          `, { parentId: item._parentId, index: item.index });
+      // Remove the bookmark from the database.
+      await db.executeCached(
+        `DELETE FROM moz_bookmarks WHERE guid = :guid`, { guid: item.guid });
 
-        if (item._grandParentId == PlacesUtils.tagsFolderId) {
-          // If we're removing a tag entry, increment the change counter for all
-          // bookmarks with the tagged URL.
-          await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
-            db, item.url, syncChangeDelta);
-        }
+      // Fix indices in the parent.
+      await db.executeCached(
+        `UPDATE moz_bookmarks SET position = position - 1 WHERE
+         parent = :parentId AND position > :index
+        `, { parentId: item._parentId, index: item.index });
 
-        await adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
-      }
+      let syncChangeDelta =
+        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
 
-      for (let guid of parentGuids) {
-        // Mark all affected parents as changed.
-        await setAncestorsLastModified(db, guid, new Date(), syncChangeDelta);
+      // Mark all affected separators as changed
+      await adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
+
+      if (isUntagging) {
+        // If we're removing a tag entry, increment the change counter for all
+        // bookmarks with the tagged URL.
+        await PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+          db, item.url, syncChangeDelta);
       }
 
       // Write a tombstone for the removed item.
-      await insertTombstones(db, items, syncChangeDelta);
+      await insertTombstone(db, item, syncChangeDelta);
+
+      await setAncestorsLastModified(db, item.parentGuid, new Date(),
+                                     syncChangeDelta);
     });
 
-    // Update the frecencies outside of the transaction, so that the updates
-    // can progress in the background.
-    for (let item of items) {
-      let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
-
-      // If not a tag recalculate frecency...
-      if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
-        // ...though we don't wait for the calculation.
-        updateFrecency(db, [item.url]).catch(Cu.reportError);
-      }
+    // If not a tag recalculate frecency...
+    if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
+      // ...though we don't wait for the calculation.
+      updateFrecency(db, [item.url]).catch(Cu.reportError);
     }
 
-    if (urls.length) {
+    if (urls && urls.length && item.type == Bookmarks.TYPE_FOLDER) {
       updateFrecency(db, urls, true).catch(Cu.reportError);
     }
+
+    return item;
   });
 }
 
@@ -2182,15 +2153,14 @@ var removeOrphanAnnotations = async function(db) {
  *
  * @param db
  *        the Sqlite.jsm connection handle.
- * @param items
- *        The items for which to remove annotations.
+ * @param itemId
+ *        internal id of the item for which to remove annotations.
  */
-var removeAnnotationsForItems = async function(db, items) {
-  // Remove the annotations.
-  let ids = sqlList(items.map(item => item._id));
+var removeAnnotationsForItem = async function(db, itemId) {
   await db.executeCached(
-    `DELETE FROM moz_items_annos WHERE item_id IN (${ids})`,
-  );
+    `DELETE FROM moz_items_annos
+     WHERE item_id = :id
+    `, { id: itemId });
   await db.executeCached(
     `DELETE FROM moz_anno_attributes
      WHERE id IN (SELECT n.id from moz_anno_attributes n
@@ -2481,12 +2451,4 @@ function* chunkArray(array, chunkLength) {
   while (startIndex < array.length) {
     yield array.slice(startIndex, startIndex += chunkLength);
   }
-}
-
-/**
- * Convert a list of strings or numbers to its SQL
- * representation as a string.
- */
-function sqlList(list) {
-  return list.map(JSON.stringify).join();
 }

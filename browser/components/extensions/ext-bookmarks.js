@@ -318,7 +318,7 @@ this.bookmarks = class extends ExtensionAPI {
 
           // The API doesn't give you the old bookmark at the moment
           try {
-            return PlacesUtils.bookmarks.remove(info, {preventRemovalOfNonEmptyFolders: true})
+            return PlacesUtils.bookmarks.remove(info, {preventRemovalOfNonEmptyFolders: true}).then(result => {})
               .catch(error => Promise.reject({message: error.message}));
           } catch (e) {
             return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
@@ -331,7 +331,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
 
           try {
-            return PlacesUtils.bookmarks.remove(info)
+            return PlacesUtils.bookmarks.remove(info).then(result => {})
               .catch(error => Promise.reject({message: error.message}));
           } catch (e) {
             return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
