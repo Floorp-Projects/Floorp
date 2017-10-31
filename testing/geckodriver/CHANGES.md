@@ -3,6 +3,15 @@ Change log
 
 All notable changes to this program is documented in this file.
 
+Unreleased
+----------
+
+### Changed
+
+- Backtraces from geckodriver no longer substitute for missing
+  Marionette stacktraces
+
+
 0.19.1 (2017-10-30)
 -------------------
 
@@ -28,7 +37,7 @@ All notable changes to this program is documented in this file.
 0.19.0 (2017-09-16)
 -------------------
 
-Note that with geckodriver v0.19.0 the following versions are recommended:
+Note that with geckodriver 0.19.0 the following versions are recommended:
 - Firefox 55.0 (and greater)
 - Selenium 3.5 (and greater)
 

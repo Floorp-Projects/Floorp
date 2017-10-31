@@ -1,4 +1,3 @@
-use backtrace::Backtrace;
 use hyper::status::StatusCode;
 use rustc_serialize::base64::FromBase64Error;
 use rustc_serialize::json::{DecoderError, Json, ParserError, ToJson};
@@ -269,7 +268,7 @@ impl WebDriverError {
         WebDriverError {
             error: error,
             message: message.into(),
-            stack: format!("{:?}", Backtrace::new()).into(),
+            stack: "".into(),
             delete_session: false,
         }
     }
