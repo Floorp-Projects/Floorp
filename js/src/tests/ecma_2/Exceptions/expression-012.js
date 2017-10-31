@@ -18,7 +18,7 @@ var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 var BUGNUMBER= "327765";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var STRING = new String("hi");

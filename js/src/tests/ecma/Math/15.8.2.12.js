@@ -26,7 +26,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Math.min(x, y)";
 var BUGNUMBER="76439";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

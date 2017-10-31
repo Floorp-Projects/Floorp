@@ -19,7 +19,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Math.pow(x, y)";
 var BUGNUMBER="77141";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

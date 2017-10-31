@@ -21,7 +21,7 @@ var VERSION = "JS1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: SyntaxError";
 var BUGNUMBER= "312964";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 try {

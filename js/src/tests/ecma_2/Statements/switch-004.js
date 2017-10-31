@@ -25,7 +25,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 var BUGNUMBER= "315988";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 ONE = new Number(1);

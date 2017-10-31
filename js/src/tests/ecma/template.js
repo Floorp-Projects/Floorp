@@ -18,7 +18,7 @@ var VERSION = "ECMA";   // Version of JavaScript or ECMA
 var TITLE   = "";       // Provide ECMA section title or a description
 var BUGNUMBER = "";     // Provide URL to bugsplat or bugzilla report
 
-startTest();               // leave this alone
+printBugNumber(BUGNUMBER);               // leave this alone
 
 /*
  * Calls to AddTestCase here. AddTestCase is a function that is defined

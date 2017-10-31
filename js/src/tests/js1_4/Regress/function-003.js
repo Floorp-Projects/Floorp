@@ -18,7 +18,7 @@ var VERSION = "JS1_4";
 var TITLE   = "Regression test case for 104766";
 var BUGNUMBER="310514";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

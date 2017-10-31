@@ -22,7 +22,7 @@ var VERSION = "JS1_3";
 var TITLE   = "switch-001";
 var BUGNUMBER="315767";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 result = "fail:  did not enter switch";

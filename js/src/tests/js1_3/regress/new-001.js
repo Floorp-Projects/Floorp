@@ -19,7 +19,7 @@ var VERSION = "JS1_3";
 var TITLE   = "new-001";
 var BUGNUMBER="31567";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Test_One (x) {

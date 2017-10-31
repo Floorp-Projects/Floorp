@@ -26,7 +26,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Numeric Literals";
 var BUGNUMBER="122877";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

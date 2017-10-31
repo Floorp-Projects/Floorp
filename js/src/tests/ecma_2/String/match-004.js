@@ -46,7 +46,7 @@ var TITLE   = "String.prototype.match( regexp )";
 
 var BUGNUMBER="http://scopus/bugsplat/show_bug.cgi?id=345818";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 // set the value of lastIndex
 re = /0./;

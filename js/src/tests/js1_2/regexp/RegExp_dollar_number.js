@@ -17,7 +17,7 @@ var VERSION = 'no version';
 var TITLE   = 'RegExp: $1, ..., $9';
 var BUGNUMBER="123802";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog('Executing script: RegExp_dollar_number.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 

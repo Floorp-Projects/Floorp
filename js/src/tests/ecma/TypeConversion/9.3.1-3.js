@@ -32,7 +32,7 @@ var BUGNUMBER="129087";
 
 var TITLE   = "Number To String, String To Number";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
