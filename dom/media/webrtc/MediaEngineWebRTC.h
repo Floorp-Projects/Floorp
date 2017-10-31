@@ -513,9 +513,10 @@ private:
   // Note: shared across all microphone sources
   static int sChannelsOpen;
 
+  const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
 
   // accessed from the GraphDriver thread except for deletion
-  nsAutoPtr<AudioPacketizer<AudioDataValue, int16_t>> mPacketizer;
+  nsAutoPtr<AudioPacketizer<AudioDataValue, AudioDataValue>> mPacketizer;
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERenderListener;
 
   // mMonitor protects mSources[] and mPrinicpalIds[] access/changes, and
@@ -539,8 +540,6 @@ private:
   uint64_t mTotalFrames;
   uint64_t mLastLogFrames;
 
-  NullTransport *mNullTransport;
-
   // mSkipProcessing is true if none of the processing passes are enabled,
   // because of prefs or constraints. This allows simply copying the audio into
   // the MSG, skipping resampling and the whole webrtc.org code.
@@ -549,7 +548,8 @@ private:
   // To only update microphone when needed, we keep track of previous settings.
   MediaEnginePrefs mLastPrefs;
 
-  AlignedShortBuffer mInputDownmixBuffer;
+  AlignedFloatBuffer mInputBuffer;
+  AlignedFloatBuffer mInputDownmixBuffer;
 };
 
 class MediaEngineWebRTC : public MediaEngine
