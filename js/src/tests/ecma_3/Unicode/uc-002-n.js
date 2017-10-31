@@ -5,7 +5,6 @@
 
 
 DESCRIPTION = "Non-character escapes in identifiers negative test.";
-EXPECTED = "error";
 
 enterFunc ("test");
 

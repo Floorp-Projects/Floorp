@@ -14,7 +14,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 print("Undefined throw test.");
 
 DESCRIPTION = "throw undefined";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "throw undefined",  "error", eval("throw (void 0)") );
 

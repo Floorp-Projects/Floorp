@@ -82,7 +82,6 @@ GenB.name = "B"
 // Identifier is a function, prototype of Identifier is not an object
 
 DESCRIPTION = "Identifier is a function, prototype of Identifier is not an object";
-EXPECTED = "error";
 
 InstanceOf( new GenB(), GenB, "error" );
 

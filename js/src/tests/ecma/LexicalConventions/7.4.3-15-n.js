@@ -47,7 +47,6 @@ catch(e)
 }
 
 DESCRIPTION = "var import = true";
-EXPECTED = "error";
 
 // force exception since this is a negative test
 if (actual == 'error')

@@ -28,7 +28,6 @@ var TITLE   = "String.prototype.valueOf";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()",

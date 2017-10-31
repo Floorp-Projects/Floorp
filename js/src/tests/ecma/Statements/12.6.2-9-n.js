@@ -26,7 +26,6 @@ var TITLE   = "The for statement";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "for (i)";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "for (i)",

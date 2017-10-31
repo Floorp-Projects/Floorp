@@ -19,7 +19,6 @@ startTest();
 writeHeaderToLog( SECTION + " The return statement");
 
 DESCRIPTION = "return";
-EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"return",

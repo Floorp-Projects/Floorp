@@ -30,7 +30,6 @@ var TITLE   = "Future Reserved Words";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var debugger = true";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "var debugger = true",     "error",    eval("var debugger = true") );
 
