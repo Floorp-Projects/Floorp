@@ -56,9 +56,14 @@ NSSDialogs.prototype = {
                                             escapedArgList.length);
   },
 
-  getPrompt: function(aTitle, aText, aButtons, aWindow) {
+  getPrompt: function(aTitle, aText, aButtons, aCtx) {
+    let win = null;
+    try {
+      win = aCtx.getInterface(Ci.nsIDOMWindow);
+    } catch (e) {
+    }
     return new Prompt({
-      window: aWindow,
+      window: win,
       title: aTitle,
       text: aText,
       buttons: aButtons,
@@ -203,10 +208,10 @@ NSSDialogs.prototype = {
     return detailLines.join("<br/>");
   },
 
-  viewCertDetails: function(details, window) {
+  viewCertDetails: function(details, ctx) {
     let p = this.getPrompt(this.getString("clientAuthAsk.message3"),
                     "",
-                    [ this.getString("nssdialogs.ok.label") ], window);
+                    [ this.getString("nssdialogs.ok.label") ], ctx);
     p.addLabel({ label: details });
     this.showPrompt(p);
   },

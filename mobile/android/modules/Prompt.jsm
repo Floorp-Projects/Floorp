@@ -20,21 +20,13 @@ function log(msg) {
   Services.console.logStringMessage(msg);
 }
 
-function getRootWindow(win) {
-  // Get the root xul window.
-  return win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
-            .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindow);
-}
-
 function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
 
   this.msg = { async: true };
 
   if (this.window) {
-    let window = getRootWindow(this.window);
+    let window = GeckoViewUtils.getChromeWindow(this.window);
     var tab = window &&
               window.BrowserApp &&
               window.BrowserApp.getTabForWindow(this.window);
@@ -258,7 +250,7 @@ var DoorHanger = {
   },
 
   show: function(aWindow, aMessage, aValue, aButtons, aOptions, aCategory) {
-    let chromeWin = getRootWindow(aWindow);
+    let chromeWin = GeckoViewUtils.getChromeWindow(aWindow);
     if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.show(
@@ -291,7 +283,7 @@ var DoorHanger = {
   },
 
   hide: function(aWindow, aValue) {
-    let chromeWin = getRootWindow(aWindow);
+    let chromeWin = GeckoViewUtils.getChromeWindow(aWindow);
     if (chromeWin.NativeWindow && chromeWin.NativeWindow.doorhanger) {
       // We're dealing with browser.js.
       return chromeWin.NativeWindow.doorhanger.hide(
