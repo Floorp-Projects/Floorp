@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var bug = 355569;
+var BUGNUMBER = 355569;
 var actual = '';
 var expect = '';
 var summary = '';
 
-printBugNumber (bug);
+printBugNumber (BUGNUMBER);
 printStatus (summary);
 
 var targetAddress = 0x12030010;
