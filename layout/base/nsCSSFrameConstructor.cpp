@@ -7229,7 +7229,8 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
   // subtree.
   //
   // Also, it's fine if one of the nodes without primary frame is a display:
-  // contents node.
+  // contents node except if it's the direct ancestor of the children we're
+  // recreating frames for.
   bool noPrimaryFrame = false;
   bool needsFrameBitSet = false;
   nsIContent* content = aParent;
@@ -7274,8 +7275,11 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
                                             nsIContent* aChild)
 {
+  // XXXmats no lazy frames for display:contents direct descendants yet
+  // (bug 979782).
   if (mPresShell->GetPresContext()->IsChrome() || !aContainer ||
-      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXULElement()) {
+      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXULElement() ||
+      GetDisplayContentsStyleFor(aContainer)) {
     return false;
   }
 
