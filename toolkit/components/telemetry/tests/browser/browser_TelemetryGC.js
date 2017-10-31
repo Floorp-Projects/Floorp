@@ -37,7 +37,7 @@ function check(entries) {
     ok(entries[f].length <= 2, "not too many GCs");
 
     for (let gc of entries[f]) {
-      ok(gc !== null, "GC is non-null");
+      isnot(gc, null, "GC is non-null");
 
       foundGCs++;
 
@@ -55,13 +55,13 @@ function check(entries) {
       ok(gc.slices_list.length <= 4, "slices_list array is not too long");
 
       ok("totals" in gc, "totals field present");
-      ok(typeof(gc.totals) == "object", "totals is an object");
+      is(typeof(gc.totals), "object", "totals is an object");
       ok(Object.keys(gc.totals).length <= 65, "totals array is not too long");
 
       // Make sure we don't skip any big objects.
       for (let key in gc) {
         if (key != "slices_list" && key != "totals") {
-          ok(typeof(gc[key]) != "object", `${key} property should be primitive`);
+          isnot(typeof(gc[key]), "object", `${key} property should be primitive`);
         }
       }
 
@@ -77,7 +77,7 @@ function check(entries) {
         // Make sure we don't skip any big objects.
         for (let key in slice) {
           if (key != "times") {
-            ok(typeof(slice[key]) != "object", `${key} property should be primitive`);
+            isnot(typeof(slice[key]), "object", `${key} property should be primitive`);
           }
         }
 
@@ -85,14 +85,14 @@ function check(entries) {
 
         for (let phase in slice.times) {
           phases.add(phase);
-          ok(typeof(slice.times[phase]) == "number", `${phase} property should be a number`);
+          is(typeof(slice.times[phase]), "number", `${phase} property should be a number`);
         }
       }
 
       let totals = gc.totals;
       // Make sure we don't skip any big objects.
       for (let phase in totals) {
-        ok(typeof(totals[phase]) == "number", `${phase} property should be a number`);
+        is(typeof(totals[phase]), "number", `${phase} property should be a number`);
       }
 
       for (let phase of phases) {
