@@ -55,7 +55,7 @@ add_task(async function() {
   let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
   await promiseForCondition(condition);
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  PopupNotifications.panel.firstChild.button.click();
 
   // check plugin state
   pluginInfo = await promiseForPluginInfo("plugin");
