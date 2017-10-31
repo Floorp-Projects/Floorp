@@ -13,6 +13,7 @@
 #include "Blur.h"
 #include "Filters.h"
 #include <vector>
+#include "CaptureCommandList.h"
 
 namespace mozilla {
 namespace gfx {
@@ -50,8 +51,8 @@ public:
   virtual ~DrawingCommand() {}
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) const = 0;
-
   virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
+  virtual void CloneInto(CaptureCommandList* aList) = 0;
 
   CommandType GetType() { return mType; }
 
@@ -64,6 +65,8 @@ protected:
 private:
   CommandType mType;
 };
+
+#define CLONE_INTO(Type) new (aList->Append<Type>()) Type
 
 class StrokeOptionsCommand : public DrawingCommand
 {
@@ -168,6 +171,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawSurfaceCommand)(mSurface, mDest, mSource, mSurfOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
@@ -192,6 +199,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawFilterCommand)(mFilter, mSourceRect, mDestPoint, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
@@ -211,6 +222,10 @@ public:
     : DrawingCommand(CommandType::CLEARRECT)
     , mRect(aRect)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(ClearRectCommand)(mRect);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -233,6 +248,10 @@ public:
     , mSourceRect(aSourceRect)
     , mDestination(aDestination)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(CopySurfaceCommand)(mSurface, mSourceRect, mDestination);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const
@@ -262,6 +281,10 @@ public:
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FillRectCommand)(mRect, mPattern, mOptions);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -295,6 +318,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeRectCommand)(mRect, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
@@ -322,6 +349,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeLineCommand)(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
@@ -345,6 +376,10 @@ public:
     , mPattern(aPattern)
     , mOptions(aOptions)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FillCommand)(mPath, mPattern, mOptions);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -419,6 +454,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeCommand)(mPath, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
@@ -453,6 +492,14 @@ public:
   {
     mGlyphs.resize(aBuffer.mNumGlyphs);
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    GlyphBuffer glyphs = {
+      mGlyphs.data(),
+      (uint32_t)mGlyphs.size(),
+    };
+    CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions, mRenderingOptions);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -491,6 +538,14 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    GlyphBuffer glyphs = {
+      mGlyphs.data(),
+      (uint32_t)mGlyphs.size(),
+    };
+    CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     GlyphBuffer buf;
@@ -520,6 +575,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(MaskCommand)(mSource, mMask, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Mask(mSource, mMask, mOptions);
@@ -546,6 +605,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(MaskSurfaceCommand)(mSource, mMask, mOffset, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
@@ -567,6 +630,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushClipCommand)(mPath);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClip(mPath);
@@ -583,6 +650,10 @@ public:
     : DrawingCommand(CommandType::PUSHCLIPRECT)
     , mRect(aRect)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushClipRectCommand)(mRect);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -613,6 +684,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushLayerCommand)(mOpaque, mOpacity, mMask, mMaskTransform, mBounds, mCopyBackground);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushLayer(mOpaque, mOpacity, mMask,
@@ -636,6 +711,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PopClipCommand)();
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopClip();
@@ -648,6 +727,10 @@ public:
   PopLayerCommand()
     : DrawingCommand(CommandType::POPLAYER)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PopLayerCommand)();
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -664,6 +747,10 @@ public:
     : DrawingCommand(CommandType::SETTRANSFORM)
     , mTransform(aTransform)
   {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(SetTransformCommand)(mTransform);
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
@@ -689,6 +776,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(SetPermitSubpixelAACommand)(mPermitSubpixelAA);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
   {
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
@@ -706,6 +797,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FlushCommand)();
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Flush();
@@ -720,6 +815,10 @@ public:
    , mBlur(aBlur)
   {}
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(BlurCommand)(mBlur);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const {
     aDT->Blur(mBlur);
   }
@@ -727,6 +826,8 @@ public:
 private:
   AlphaBoxBlur mBlur;
 };
+
+#undef CLONE_INTO
 
 } // namespace gfx
 } // namespace mozilla
