@@ -22,7 +22,6 @@
 */
 
 var SECTION = "11.4.8";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Bitwise Not operator");
 

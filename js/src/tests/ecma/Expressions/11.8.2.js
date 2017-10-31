@@ -14,7 +14,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.8.2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " The greater-than operator ( > )");
 

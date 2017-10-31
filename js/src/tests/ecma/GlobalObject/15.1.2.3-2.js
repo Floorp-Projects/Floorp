@@ -43,7 +43,6 @@
 
 */
 var SECTION = "15.1.2.3-2";
-var VERSION = "ECMA_1";
 
 new TestCase( "parseFloat(true)",      Number.NaN,     parseFloat(true) );
 new TestCase( "parseFloat(false)",     Number.NaN,     parseFloat(false) );

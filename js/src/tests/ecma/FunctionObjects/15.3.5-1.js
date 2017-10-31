@@ -40,7 +40,6 @@
 */
 
 var SECTION = "15.3.5-1";
-var VERSION = "ECMA_1";
 var TITLE   = "Properties of Function Instances";
 
 writeHeaderToLog( SECTION + " "+TITLE);

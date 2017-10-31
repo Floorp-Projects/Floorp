@@ -22,7 +22,6 @@
 
 */
 var SECTION = "15.6.2";
-var VERSION = "ECMA_1";
 var TITLE   = "15.6.2 The Boolean Constructor; 15.6.2.1 new Boolean( value ); 15.6.2.2 new Boolean()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

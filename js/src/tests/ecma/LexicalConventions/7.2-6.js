@@ -22,7 +22,6 @@
    Date:               11 september 1997
 */
 var SECTION = "7.2-6";
-var VERSION = "ECMA_1";
 var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

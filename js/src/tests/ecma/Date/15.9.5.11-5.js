@@ -18,7 +18,6 @@
 */
 
 var SECTION = "15.9.5.11";
-var VERSION = "ECMA_1";
 var TITLE   = "Date.prototype.getUTCDate()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

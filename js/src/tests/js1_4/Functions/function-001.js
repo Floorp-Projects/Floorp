@@ -36,7 +36,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "function-001.js";
-var VERSION = "JS1_4";
 var TITLE   = "Accessing the arguments property of a function object";
 var BUGNUMBER="324455";
 printBugNumber(BUGNUMBER);

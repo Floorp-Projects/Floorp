@@ -18,7 +18,6 @@
    Date:               7 july 1997
 */
 var SECTION = "15.8.2.2";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.acos()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

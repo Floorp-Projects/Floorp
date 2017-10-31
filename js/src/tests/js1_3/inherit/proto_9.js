@@ -24,7 +24,6 @@
 */
 
 var SECTION = "proto_9";
-var VERSION = "JS1_3";
 var TITLE   = "Local versus Inherited Values";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

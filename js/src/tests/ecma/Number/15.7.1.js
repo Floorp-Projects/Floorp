@@ -24,7 +24,6 @@
 */
 
 var SECTION = "15.7.1";
-var VERSION = "ECMA_1";
 var TITLE   = "The Number Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

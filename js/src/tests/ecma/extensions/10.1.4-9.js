@@ -39,7 +39,6 @@
    Date:               12 november 1997
 */
 var SECTION = "10.1.4-9";
-var VERSION = "ECMA_2";
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 

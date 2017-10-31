@@ -15,7 +15,6 @@
  *  Date:               2 September 1998
  */
 var SECTION = "instanceof-003-n";
-var VERSION = "ECMA_2";
 var TITLE   = "instanceof"
 
 writeHeaderToLog( SECTION + " "+ TITLE);

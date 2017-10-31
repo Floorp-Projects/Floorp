@@ -19,7 +19,6 @@
 */
 
 var SECTION = "15.8.2.14";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.random()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

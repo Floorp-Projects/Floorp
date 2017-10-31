@@ -23,7 +23,6 @@
 
 */
 var SECTION = "7.4.1-3-n";
-var VERSION = "ECMA_1";
 var TITLE   = "Keywords";
 
 DESCRIPTION = "var false = true";

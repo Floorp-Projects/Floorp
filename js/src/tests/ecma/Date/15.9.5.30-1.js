@@ -30,7 +30,6 @@
    Date:               12 november 1997
 */
 var SECTION = "15.9.5.30-1";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Date.prototype.setHours( hour [, min, sec, ms] )");
 

@@ -22,7 +22,6 @@
 */
 
 var SECTION = "11.12-4";
-var VERSION = "ECMA_1";
 writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
 
 // the following expression should NOT be an error in JS.

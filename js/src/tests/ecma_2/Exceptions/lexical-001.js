@@ -26,7 +26,6 @@
    Date:               11 september 1997
 */
 var SECTION = "lexical-001";
-var VERSION = "JS1_4";
 var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

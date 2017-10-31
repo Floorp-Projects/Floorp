@@ -15,7 +15,6 @@
 
 */
 var SECTION = "7.3-13-n";
-var VERSION = "ECMA_1";
 var TITLE   = "Comments";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

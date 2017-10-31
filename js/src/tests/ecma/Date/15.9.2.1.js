@@ -16,7 +16,6 @@
    Date:               28 october 1997
 
 */
-var VERSION =   "ECMA_1";
 var SECTION =   "15.9.2.1";
 var TITLE =     "Date Constructor used as a function";
 var TYPEOF  =   "string";

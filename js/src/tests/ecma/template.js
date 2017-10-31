@@ -14,7 +14,6 @@
  */
 
 var SECTION = "";       // provide a document reference (ie, ECMA section)
-var VERSION = "ECMA";   // Version of JavaScript or ECMA
 var TITLE   = "";       // Provide ECMA section title or a description
 var BUGNUMBER = "";     // Provide URL to bugsplat or bugzilla report
 

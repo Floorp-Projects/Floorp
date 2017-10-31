@@ -11,7 +11,6 @@
  */
 
 var SECTION = "11.4.7";
-var VERSION = "ECMA";
 var TITLE   = "Unary - Operator";
 var BUGNUMBER = "432881";
 

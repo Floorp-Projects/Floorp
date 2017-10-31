@@ -29,7 +29,6 @@
 
 */
 var SECTION = "7.4.2-8";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Keywords");
 

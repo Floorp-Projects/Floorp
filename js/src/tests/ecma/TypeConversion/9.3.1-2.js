@@ -25,7 +25,6 @@
 
 */
 var SECTION = "9.3.1-2";
-var VERSION = "ECMA_1";
 var TITLE   = "ToNumber applied to the String type";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

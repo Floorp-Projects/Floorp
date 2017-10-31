@@ -12,7 +12,6 @@
  */
 
 var SECTION = "js1_2";       // provide a document reference (ie, ECMA section)
-var VERSION = "JS1_2"; // Version of JavaScript or ECMA
 var TITLE   = "Regression test for bugzilla # 7703";       // Provide ECMA section title or a description
 var BUGNUMBER = "http://bugzilla.mozilla.org/show_bug.cgi?id=7703";     // Provide URL to bugsplat or bugzilla report
 

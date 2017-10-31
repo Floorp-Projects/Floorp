@@ -27,7 +27,6 @@
 */
 
 var SECTION = "9.3.1-3";
-var VERSION = "ECMA_1";
 var BUGNUMBER="129087";
 
 var TITLE   = "Number To String, String To Number";

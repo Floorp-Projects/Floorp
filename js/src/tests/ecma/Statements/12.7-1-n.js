@@ -13,7 +13,6 @@
    Date:               12 november 1997
 */
 var SECTION = "12.7.1-n";
-var VERSION = "ECMA_1";
 var TITLE   = "The continue statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

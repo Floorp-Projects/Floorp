@@ -17,7 +17,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-010";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement: try in a tryblock";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

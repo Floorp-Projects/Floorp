@@ -22,7 +22,6 @@
 */
 
 var SECTION = "proto_11";
-var VERSION = "JS1_3";
 var TITLE   = "Global Information in Constructors";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

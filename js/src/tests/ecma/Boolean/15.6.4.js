@@ -27,7 +27,6 @@
 */
 
 var SECTION = "15.6.4";
-var VERSION = "ECMA_1";
 var TITLE   = "Properties of the Boolean Prototype Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

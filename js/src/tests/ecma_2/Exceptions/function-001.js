@@ -26,7 +26,6 @@
  *  Date:               11 August 1998
  */
 var SECTION = "function-001.js";
-var VERSION = "JS_12";
 var TITLE   = "functions not separated by semicolons are errors in version 120 and higher";
 var BUGNUMBER="10278";
 

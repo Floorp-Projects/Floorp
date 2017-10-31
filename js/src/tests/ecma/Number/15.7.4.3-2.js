@@ -18,7 +18,6 @@
    Date:               16 september 1997
 */
 var SECTION = "15.7.4.3-2";
-var VERSION = "ECMA_1";
 
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 

@@ -18,7 +18,6 @@
    Date:               12 november 1997
 */
 var SECTION = "global-001";
-var VERSION = "ECMA_1";
 var TITLE   = "The Global Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

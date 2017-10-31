@@ -22,7 +22,6 @@
 
 */
 var SECTION = "15-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Native ECMAScript Objects";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

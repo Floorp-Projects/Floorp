@@ -30,7 +30,6 @@
 
 */
 var SECTION = "lexical-035";
-var VERSION = "JS1_4";
 var TITLE   = "Keywords";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

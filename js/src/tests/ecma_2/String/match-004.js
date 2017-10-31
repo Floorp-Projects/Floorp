@@ -41,7 +41,6 @@
  */
 
 var SECTION = "String/match-004.js";
-var VERSION = "ECMA_2";
 var TITLE   = "String.prototype.match( regexp )";
 
 var BUGNUMBER="http://scopus/bugsplat/show_bug.cgi?id=345818";

@@ -25,7 +25,6 @@
 */
 
 var SECTION = "15.3.5.1";
-var VERSION = "ECMA_1";
 var TITLE   = "Function.length";
 var BUGNUMBER="104204";
 printBugNumber(BUGNUMBER);

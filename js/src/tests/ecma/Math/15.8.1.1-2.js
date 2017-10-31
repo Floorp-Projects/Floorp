@@ -16,7 +16,6 @@
    Date:               16 september 1997
 */
 var SECTION = "15.8.1.1-2";
-var VERSION = "ECMA_1";
 var TITLE   = "Math.E";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

@@ -18,7 +18,6 @@
 */
 
 var SECTION = "7.7.4";
-var VERSION = "ECMA_1";
 var TITLE   = "String Literals";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

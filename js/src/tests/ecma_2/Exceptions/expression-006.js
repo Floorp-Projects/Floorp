@@ -16,7 +16,6 @@
    Date:               12 november 1997
 */
 var SECTION = "expression-006.js";
-var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 var BUGNUMBER="327765";
 
