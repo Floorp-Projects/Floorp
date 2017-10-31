@@ -275,11 +275,18 @@ class MediaRecorder::Session: public PrincipalChangeObserver<MediaStreamTrack>,
     NS_IMETHOD
     Run() override
     {
+      MOZ_ASSERT(NS_IsMainThread());
       mSession->MaybeCreateMutableBlobStorage();
       for (uint32_t i = 0; i < mBuffer.Length(); i++) {
-        if (!mBuffer[i].IsEmpty()) {
-          mSession->mMutableBlobStorage->Append(mBuffer[i].Elements(),
-                                                mBuffer[i].Length());
+        if (mBuffer[i].IsEmpty()) {
+          continue;
+        }
+
+        nsresult rv = mSession->mMutableBlobStorage->Append(mBuffer[i].Elements(),
+                                                            mBuffer[i].Length());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          mSession->DoSessionEndTask(rv);
+          break;
         }
       }
 
