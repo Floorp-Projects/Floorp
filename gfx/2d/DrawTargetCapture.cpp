@@ -27,7 +27,9 @@ DrawTargetCaptureImpl::~DrawTargetCaptureImpl()
 DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
                                              const IntSize& aSize,
                                              SurfaceFormat aFormat)
-  : mSize(aSize)
+  : mSize(aSize),
+    mStride(0),
+    mSurfaceAllocationSize(0)
 {
   RefPtr<DrawTarget> screenRefDT =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -36,10 +38,16 @@ DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
   if (aBackend == screenRefDT->GetBackendType()) {
     mRefDT = screenRefDT;
   } else {
-    // If you got here, we have to create a new ref DT to create
-    // backend specific assets like paths / gradients. Try to
-    // create the same backend type as the screen ref dt.
-    gfxWarning() << "Creating a RefDT in DrawTargetCapture.";
+    // This situation can happen if a blur operation decides to
+    // use an unaccelerated path even if the system backend is
+    // Direct2D.
+    //
+    // We don't really want to encounter the reverse scenario:
+    // we shouldn't pick an accelerated backend if the system
+    // backend is skia.
+    if (aBackend == BackendType::DIRECT2D1_1) {
+      gfxWarning() << "Creating a RefDT in DrawTargetCapture.";
+    }
 
     // Create a 1x1 size ref dt to create assets
     // If we have to snapshot, we'll just create the real DT
@@ -62,10 +70,36 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
   return true;
 }
 
+void
+DrawTargetCaptureImpl::InitForData(int32_t aStride, size_t aSurfaceAllocationSize)
+{
+  mStride = aStride;
+  mSurfaceAllocationSize = aSurfaceAllocationSize;
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetCaptureImpl::Snapshot()
 {
-  RefPtr<DrawTarget> dt = mRefDT->CreateSimilarDrawTarget(mSize, mFormat);
+  RefPtr<DrawTarget> dt;
+  if (!mSurfaceAllocationSize) {
+    dt = mRefDT->CreateSimilarDrawTarget(mSize, mFormat);
+  } else {
+    uint8_t* data = static_cast<uint8_t*>(calloc(1, mSurfaceAllocationSize));
+    if (!data) {
+      return nullptr;
+    }
+    BackendType type = mRefDT->GetBackendType();
+    if (!Factory::DoesBackendSupportDataDrawtarget(type)) {
+      type = BackendType::SKIA;
+    }
+    dt = Factory::CreateDrawTargetForData(type, data, mSize, mStride, mFormat);
+    if (!dt) {
+      return nullptr;
+    }
+    dt->AddUserData(reinterpret_cast<UserDataKey*>(dt.get()),
+                    data,
+                    free);
+  }
 
   ReplayToDrawTarget(dt, Matrix());
 
