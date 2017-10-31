@@ -15,11 +15,6 @@ for platform in all_platforms:
         'mk_add_options CLIENT_PY_ARGS="--hg-options=\'--verbose --time\' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --tinderbox-print"'
     ]
 
-for platform in ['linux32', 'linux64', 'macosx64']:
-    whitelist['nightly'][platform] += [
-        'mk_add_options MOZ_MAKE_FLAGS="-j4"',
-    ]
-
 whitelist['nightly']['linux32'] += [
     'CXX=$REAL_CXX',
     'CXX="ccache $REAL_CXX"',
@@ -45,7 +40,6 @@ whitelist['nightly']['macosx64'] += [
     'if test "${MOZ_UPDATE_CHANNEL}" = "nightly-try"; then',
     'ac_add_options --with-macbundlename-prefix=Firefox',
     'fi',
-    'mk_add_options MOZ_MAKE_FLAGS="-j12"',
     'ac_add_options --with-ccache',
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
@@ -55,7 +49,6 @@ whitelist['nightly']['macosx64'] += [
 
 whitelist['nightly']['win32'] += [
     '. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
-    'mk_add_options MOZ_MAKE_FLAGS=-j1',
     'if test "$IS_NIGHTLY" != ""; then',
     'ac_add_options --disable-auto-deps',
     'fi',
@@ -68,7 +61,6 @@ for platform in all_platforms:
     whitelist['release'][platform] = [
         'ac_add_options --enable-update-channel=release',
         'ac_add_options --enable-official-branding',
-        'mk_add_options MOZ_MAKE_FLAGS="-j4"',
         'export BUILDING_RELEASE=1',
         'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
         'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
