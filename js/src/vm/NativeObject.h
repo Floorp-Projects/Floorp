@@ -868,15 +868,13 @@ class NativeObject : public ShapedObject
 
     /* Add or overwrite a property for id in this scope. */
     static Shape*
-    putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                JSGetterOp getter, JSSetterOp setter,
-                uint32_t slot, unsigned attrs,
-                unsigned flags);
-    static inline Shape*
-    putProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                JSGetterOp getter, JSSetterOp setter,
-                uint32_t slot, unsigned attrs,
-                unsigned flags);
+    putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                    uint32_t slot, unsigned attrs, unsigned flags);
+
+    static Shape*
+    putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                        JSGetterOp getter, JSSetterOp setter,
+                        unsigned attrs, unsigned flags);
 
     /* Change the given property into a sibling with the same id in this scope. */
     static Shape*
