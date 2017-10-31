@@ -65,8 +65,6 @@
 
     <color name="photon_url_bar_blocked">#D70022</color>
     <color name="photon_url_bar_blocked_private">#D70022</color>
-    <color name="photon_url_bar_certificate_owner">#05A700</color>
-    <color name="photon_url_bar_certificate_owner_private">#16DA00</color>
     <color name="photon_url_bar_domain">@color/photon_text_main</color>
     <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
     <color name="photon_url_bar_bg">#B3FFFFFF</color>
@@ -230,8 +228,6 @@
     <color name="url_bar_domaintext_private">@color/photon_url_bar_domain_private</color>
     <color name="url_bar_blockedtext">@color/photon_url_bar_blocked</color>
     <color name="url_bar_blockedtext_private">@color/photon_url_bar_blocked_private</color>
-    <color name="url_bar_certificate_owner">@color/photon_url_bar_certificate_owner</color>
-    <color name="url_bar_certificate_owner_private">@color/photon_url_bar_certificate_owner_private</color>
     <color name="url_bar_shadow">#12000000</color>
 
     <color name="panel_image_item_background">#D1D9E1</color>
