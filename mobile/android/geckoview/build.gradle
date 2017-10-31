@@ -55,13 +55,15 @@ android {
         // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,
         // either by diffing the processed files or by generating the output from a single source.
         buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
-        buildConfigField 'String', "MOZ_APP_ABI", "\"${mozconfig.substs.MOZ_APP_ABI}\"";
+        buildConfigField 'String', "MOZ_APP_ABI", "\"${mozconfig.substs.TARGET_XPCOM_ABI}\"";
         buildConfigField 'String', "MOZ_APP_BASENAME", "\"${mozconfig.substs.MOZ_APP_BASENAME}\"";
 
         // For the benefit of future archaeologists:
         // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
         // on XULRunner, which is never the case on Android.
-        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${mozconfig.substs.MOZ_BUILDID}\"";
+        // 
+        // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${file("${topobjdir}/buildid.h").getText('utf-8').split()[2]}\"";
         buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
         buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
         buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
