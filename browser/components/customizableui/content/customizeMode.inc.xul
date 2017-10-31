@@ -8,15 +8,6 @@
       <label id="customization-header">
         &customizeMode.menuAndToolbars.header3;
       </label>
-      <hbox id="customization-empty" hidden="true">
-        <label>&customizeMode.menuAndToolbars.empty;</label>
-        <label onclick="BrowserOpenAddonsMgr('addons://discover/');"
-               onkeypress="BrowserOpenAddonsMgr('addons://discover/');"
-               id="customization-more-tools"
-               class="text-link">
-          &customizeMode.menuAndToolbars.emptyLink;
-        </label>
-      </hbox>
       <vbox id="customization-palette" class="customization-palette" hidden="true"/>
       <vbox id="customization-pong-arena" hidden="true"/>
       <spacer id="customization-spacer"/>

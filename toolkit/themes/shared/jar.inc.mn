@@ -58,8 +58,6 @@ toolkit.jar:
   skin/classic/global/narrate/slow.svg                     (../../shared/narrate/slow.svg)
   skin/classic/global/narrate/start.svg                    (../../shared/narrate/start.svg)
   skin/classic/global/narrate/stop.svg                     (../../shared/narrate/stop.svg)
-  skin/classic/global/menu/shared-menu-check@2x.png        (../../shared/menu-check@2x.png)
-  skin/classic/global/menu/shared-menu-check.png           (../../shared/menu-check.png)
   skin/classic/global/menu/shared-menu-check-active.svg    (../../shared/menu-check-active.svg)
   skin/classic/global/menu/shared-menu-check-black.svg     (../../shared/menu-check-black.svg)
   skin/classic/global/menu/shared-menu-check-hover.svg     (../../shared/menu-check-hover.svg)
