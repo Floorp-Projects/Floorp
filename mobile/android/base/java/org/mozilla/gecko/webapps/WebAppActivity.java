@@ -299,32 +299,39 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public boolean onLoadUri(final GeckoView view, final String urlStr,
                              final TargetWindow where) {
-        final Uri url = Uri.parse(urlStr);
-        if (url == null) {
+        final Uri uri = Uri.parse(urlStr);
+        if (uri == null) {
             // We can't really handle this, so deny it?
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
             return true;
         }
 
-        if (mManifest.isInScope(url) && where != TargetWindow.NEW) {
+        if (mManifest.isInScope(uri) && where != TargetWindow.NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
             return false;
         }
 
-        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()
-            .addDefaultShareMenuItem()
-            .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
-            .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right);
+        if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+            final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()
+                .addDefaultShareMenuItem()
+                .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
+                .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right);
 
-        final Integer themeColor = mManifest.getThemeColor();
-        if (themeColor != null) {
-            builder.setToolbarColor(themeColor);
+            final Integer themeColor = mManifest.getThemeColor();
+            if (themeColor != null) {
+                builder.setToolbarColor(themeColor);
+            }
+
+            final CustomTabsIntent tab = builder.build();
+            tab.intent.setClass(this, CustomTabsActivity.class);
+            tab.launchUrl(this, uri);
+        } else {
+            final Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            startActivity(intent);
         }
-
-        final CustomTabsIntent tab = builder.build();
-        tab.intent.setClass(this, CustomTabsActivity.class);
-        tab.launchUrl(this, url);
         return true;
     }
 

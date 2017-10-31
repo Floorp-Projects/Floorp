@@ -8189,8 +8189,8 @@ AsmJSModuleFunctionToModule(JSFunction* fun)
 }
 
 // Implements the semantics of an asm.js module function that has been successfully validated.
-static bool
-InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
+bool
+js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

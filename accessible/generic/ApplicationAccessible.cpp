@@ -18,6 +18,7 @@
 #include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
+#include "nsGlobalWindow.h"
 #include "nsIStringBundle.h"
 
 using namespace mozilla::a11y;
@@ -164,28 +165,23 @@ ApplicationAccessible::Init()
   // that all root accessibles are stored in application accessible children
   // array.
 
-  nsCOMPtr<nsIWindowMediator> windowMediator =
-    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+  nsGlobalWindow::WindowByIdTable* windowsById =
+    nsGlobalWindow::GetWindowsTable();
 
-  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-  nsresult rv = windowMediator->GetEnumerator(nullptr,
-                                              getter_AddRefs(windowEnumerator));
-  if (NS_FAILED(rv))
+  if (!windowsById) {
     return;
+  }
 
-  bool hasMore = false;
-  windowEnumerator->HasMoreElements(&hasMore);
-  while (hasMore) {
-    nsCOMPtr<nsISupports> window;
-    windowEnumerator->GetNext(getter_AddRefs(window));
-    nsCOMPtr<nsPIDOMWindowOuter> DOMWindow = do_QueryInterface(window);
-    if (DOMWindow) {
-      nsCOMPtr<nsIDocument> docNode = DOMWindow->GetDoc();
+  for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+    nsGlobalWindow* window = iter.Data();
+    if (window->GetDocShell() && window->IsOuterWindow() &&
+        window->IsRootOuterWindow()) {
+      nsCOMPtr<nsIDocument> docNode = window->GetExtantDoc();
+
       if (docNode) {
-        GetAccService()->GetDocAccessible(docNode); // ensure creation
+        GetAccService()->GetDocAccessible(docNode);  // ensure creation
       }
     }
-    windowEnumerator->HasMoreElements(&hasMore);
   }
 }
 
