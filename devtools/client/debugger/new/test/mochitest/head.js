@@ -149,14 +149,16 @@ function waitForThreadEvents(dbg, eventName) {
  * @return {Promise}
  * @static
  */
-function waitForState(dbg, predicate) {
+function waitForState(dbg, predicate, msg) {
   return new Promise(resolve => {
+    info(`Waiting for state change: ${msg || ""}`);
     if (predicate(dbg.store.getState())) {
       return resolve();
     }
 
     const unsubscribe = dbg.store.subscribe(() => {
       if (predicate(dbg.store.getState())) {
+        info(`Finished waiting for state change: ${msg || ""}`);
         unsubscribe();
         resolve();
       }
@@ -216,17 +218,30 @@ async function waitForElement(dbg, selector) {
   return findElementWithSelector(dbg, selector);
 }
 
-function waitForSelectedSource(dbg, sourceId) {
-  return waitForState(dbg, state => {
-    const source = dbg.selectors.getSelectedSource(state);
-    const isLoaded =
-      source && source.has("loadedState") && sourceUtils.isLoaded(source);
-    if (sourceId) {
-      return isLoaded && sourceId == source.get("id");
-    }
+function waitForSelectedSource(dbg, url) {
+  return waitForState(
+    dbg,
+    state => {
+      const source = dbg.selectors.getSelectedSource(state);
+      const isLoaded = source && sourceUtils.isLoaded(source);
+      if (!isLoaded) {
+        return false;
+      }
 
-    return isLoaded;
-  });
+      if (!url) {
+        return true;
+      }
+
+      const newSource = findSource(dbg, url);
+      if (newSource.id != source.get("id")) {
+        return false;
+      }
+
+      // wait for async work to be done
+      return dbg.selectors.hasSymbols(state, source.toJS());
+    },
+    "selected source"
+  );
 }
 
 /**
@@ -252,6 +267,16 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
+  const source = dbg.selectors.getSelectedSource(dbg.getState());
+  if (source && source.get("loadedState") == "loading") {
+    const url = source.get("url");
+    ok(
+      false,
+      `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
+    );
+    return;
+  }
+
   ok(
     lineInfo.wrapClass.includes("debug-line"),
     "Line is highlighted as paused"
@@ -321,8 +346,28 @@ async function waitForPaused(dbg) {
   // We want to make sure that we get both a real paused event and
   // that the state is fully populated. The client may do some more
   // work (call other client methods) before populating the state.
+  let loading = waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
   await waitForThreadEvents(dbg, "paused");
-  await waitForState(dbg, state => isTopFrameSelected(dbg, state));
+  await waitForState(dbg, state => isPaused(dbg));
+  await loading;
+}
+
+/**
+ * Waits for the debugger to be fully paused.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @static
+ */
+async function waitForMappedScopes(dbg) {
+  await waitForState(
+    dbg,
+    state => {
+      const scopes = dbg.selectors.getScopes(state);
+      return scopes && scopes.sourceBindings;
+    },
+    "mapped scopes"
+  );
 }
 
 function isTopFrameSelected(dbg, state) {
@@ -436,6 +481,14 @@ function findSource(dbg, url) {
   return source.toJS();
 }
 
+function waitForLoadedSource(dbg, url) {
+  return waitForState(
+    dbg,
+    state => findSource(dbg, url).loadedState == "loaded",
+    `loaded source`
+  );
+}
+
 /**
  * Selects the source.
  *
@@ -449,7 +502,7 @@ function findSource(dbg, url) {
 function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
-  return dbg.actions.selectSource(source.id, { line });
+  return dbg.actions.selectSource(source.id, { location: { line } });
 }
 
 function closeTab(dbg, url) {
@@ -511,7 +564,7 @@ function stepOut(dbg) {
 function resume(dbg) {
   info("Resuming");
   dbg.actions.resume();
-  return waitForState(dbg, state => !dbg.selectors.isPaused(state));
+  return waitForState(dbg, state => !dbg.selectors.isPaused(state), "resumed");
 }
 
 function deleteExpression(dbg, input) {
@@ -529,7 +582,9 @@ function deleteExpression(dbg, input) {
  * @static
  */
 function reload(dbg, ...sources) {
-  return dbg.client.reload().then(() => waitForSources(dbg, ...sources));
+  return dbg.client
+    .reload()
+    .then(() => waitForSources(dbg, ...sources), "reloaded");
 }
 
 /**
@@ -640,7 +695,7 @@ const shiftOrAlt = isMac
 
 const cmdShift = isMac
   ? { accelKey: true, shiftKey: true, metaKey: true }
-  : { accelKey: true, altKey: true, ctrlKey: true };
+  : { accelKey: true, shiftKey: true, ctrlKey: true };
 
 // On Mac, going to beginning/end only works with meta+left/right.  On
 // Windows, it only works with home/end.  On Linux, apparently, either
@@ -655,9 +710,10 @@ const startKey = isMac
 const keyMappings = {
   debugger: { code: "s", modifiers: shiftOrAlt },
   inspector: { code: "c", modifiers: shiftOrAlt },
-  sourceSearch: { code: "p", modifiers: cmdOrCtrl },
+  quickOpen: { code: "p", modifiers: cmdOrCtrl },
+  quickOpenFunc: { code: "o", modifiers: cmdShift },
+  quickOpenLine: { code: ":", modifiers: cmdOrCtrl },
   fileSearch: { code: "f", modifiers: cmdOrCtrl },
-  functionSearch: { code: "o", modifiers: cmdShift },
   Enter: { code: "VK_RETURN" },
   ShiftEnter: { code: "VK_RETURN", modifiers: shiftOrAlt },
   Up: { code: "VK_UP" },

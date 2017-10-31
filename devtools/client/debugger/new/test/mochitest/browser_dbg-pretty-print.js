@@ -21,9 +21,13 @@ add_task(async function() {
 
   invokeInTab("arithmetic");
   await waitForPaused(dbg);
+
   assertPausedLocation(dbg);
+
   await stepOver(dbg);
+
   assertPausedLocation(dbg);
+
   await resume(dbg);
 
   // The pretty-print button should go away in the pretty-printed
