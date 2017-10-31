@@ -8,6 +8,7 @@
 #include "DrawTargetD2D1.h"
 #include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
+#include "SourceSurfaceCapture.h"
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceDual.h"
 #include "RadialGradientEffectD2D1.h"
@@ -1915,6 +1916,17 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
 {
   RefPtr<ID2D1Image> image;
   switch (aSurface->GetType()) {
+  case SurfaceType::CAPTURE:
+    {
+      SourceSurfaceCapture* capture = static_cast<SourceSurfaceCapture*>(aSurface);
+      RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
+      if (!resolved) {
+        return nullptr;
+      }
+      MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
+      return GetImageForSurface(resolved, aSourceTransform, aExtendMode, aSourceRect, aUserSpace);
+    }
+    break;
   case SurfaceType::D2D1_1_IMAGE:
     {
       SourceSurfaceD2D1 *surf = static_cast<SourceSurfaceD2D1*>(aSurface);
@@ -1960,6 +1972,17 @@ DrawTargetD2D1::OptimizeSourceSurface(SourceSurface* aSurface) const
   if (aSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
+  }
+
+  // Special case captures so we don't resolve them to a data surface.
+  if (aSurface->GetType() == SurfaceType::CAPTURE) {
+    SourceSurfaceCapture* capture = static_cast<SourceSurfaceCapture*>(aSurface);
+    RefPtr<SourceSurface> resolved = capture->Resolve(GetBackendType());
+    if (!resolved) {
+      return nullptr;
+    }
+    MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
+    return OptimizeSourceSurface(resolved);
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();

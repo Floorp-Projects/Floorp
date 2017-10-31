@@ -53,6 +53,7 @@ EXPORTS.mozilla.gfx += [
     'ScaleFactor.h',
     'ScaleFactors2D.h',
     'SourceSurfaceCairo.h',
+    'SourceSurfaceCapture.h',
     'SourceSurfaceRawData.h',
     'StackArray.h',
     'Swizzle.h',
@@ -184,6 +185,7 @@ UNIFIED_SOURCES += [
     'SFNTData.cpp',
     'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',
+    'SourceSurfaceCapture.cpp',
     'SourceSurfaceRawData.cpp',
     'Swizzle.cpp',
 ]
