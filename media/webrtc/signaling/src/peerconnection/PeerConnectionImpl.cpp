@@ -2269,6 +2269,7 @@ PeerConnectionImpl::InsertAudioLevelForContributingSource(
       break;
     }
   }
+
   return NS_OK;
 }
 
