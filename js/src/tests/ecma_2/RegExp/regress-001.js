@@ -19,7 +19,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "JS regexp anchoring on empty match bug";
 var BUGNUMBER = "2157";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 AddRegExpCases( /a||b/.exec(''),
 		"/a||b/.exec('')",

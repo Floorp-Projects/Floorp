@@ -30,7 +30,7 @@ var VERSION = "JS1_1";
 var TITLE   = "functions not separated by semicolons are not errors in version 110 ";
 var BUGNUMBER="99232";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 result = "passed";

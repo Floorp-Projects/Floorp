@@ -18,7 +18,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "The new operator";
 var BUGNUMBER= "327765";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var BOOLEAN = new Boolean();

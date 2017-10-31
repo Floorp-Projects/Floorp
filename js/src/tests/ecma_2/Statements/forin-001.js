@@ -21,7 +21,7 @@ var TITLE   = "The for...in  statement";
 var BUGNUMBER="330890";
 var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=344855";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 ForIn_1( { length:4, company:"netscape", year:2000, 0:"zero" } );

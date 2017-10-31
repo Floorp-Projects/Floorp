@@ -24,7 +24,7 @@
 var SECTION = "11.9.2";
 var VERSION = "ECMA_1";
 var BUGNUMBER="77391";
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " The equals operator ( == )");
 

@@ -20,7 +20,7 @@ var VERSION = "ECMA_2";
 var TITLE   = "The if  statement";
 var BUGNUMBER="148822";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var a = 0;

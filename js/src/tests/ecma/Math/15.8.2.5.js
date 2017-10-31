@@ -18,7 +18,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "Math.atan2(x,y)";
 var BUGNUMBER="76111";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

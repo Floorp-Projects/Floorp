@@ -54,7 +54,7 @@ var VERSION = "ECMA_1";
 var TITLE   = "String.protoype.indexOf";
 var BUGNUMBER="105721";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

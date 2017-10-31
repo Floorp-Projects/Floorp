@@ -17,7 +17,7 @@ var VERSION = 'no version';
 var TITLE = 'String:splice 2';
 var BUGNUMBER="123795";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog('Executing script: splice2.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 

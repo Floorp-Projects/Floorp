@@ -41,7 +41,7 @@ var BUGNUMBER="331411";
 
 var EXCLUDE = "true";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

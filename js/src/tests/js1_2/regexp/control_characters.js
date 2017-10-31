@@ -17,7 +17,7 @@ var VERSION = 'no version';
 var TITLE = 'RegExp: .';
 var BUGNUMBER="123802";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog('Executing script: control_characters.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 
