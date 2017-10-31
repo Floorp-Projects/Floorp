@@ -304,8 +304,7 @@ class FormatProvider(MachCommandBase):
             # Remove comments and empty lines
             if line.startswith('#') or len(line.strip()) == 0:
                 continue
-             # The regexp is to make sure we are managing relative paths
-            ignored_dir.append("^[\./]*" + line.rstrip())
+            ignored_dir.append(line.rstrip())
 
         # Generates the list of regexp
         ignored_dir_re = '(%s)' % '|'.join(ignored_dir)
