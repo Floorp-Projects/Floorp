@@ -9,7 +9,6 @@ var summary = 'x->regExpStatics should be stacked and unstacked around the lambd
 var actual = '';
 var expect = '';
 
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  

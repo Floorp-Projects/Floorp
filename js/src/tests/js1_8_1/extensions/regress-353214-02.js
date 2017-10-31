@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -25,6 +24,4 @@ function test()
   actual = f + '';
 
   compareSource(expect, actual, summary);
-
-  exitFunc ('test');
 }

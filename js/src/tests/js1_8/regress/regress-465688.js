@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for each (let d in [-0x80000000, -0x80000000]) - -d;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

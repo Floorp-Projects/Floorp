@@ -108,7 +108,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -131,8 +130,6 @@ function test()
   }
 
   reportCompare('No Crash', 'No Crash', '');
-
-  exitFunc ('test');
 }
 
 

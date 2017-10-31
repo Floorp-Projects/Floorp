@@ -40,12 +40,9 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   // we expect this to fail (exit code 3), but NOT crash. -
   var obj = new objRecurse();
-
-  exitFunc ('test');
 }

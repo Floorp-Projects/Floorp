@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -26,6 +25,4 @@ function test()
   actual += ',' + 'iI\u0130'.replace(/\u0130/gi, '#');
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

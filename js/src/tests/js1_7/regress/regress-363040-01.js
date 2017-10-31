@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -90,6 +89,4 @@ function test()
   expect = '((a+2)+1)';
   actual = arr2elms.reduceRight(f,'a');
   reportCompare(expect + '', actual + '', testdesc + ' : ' + expect);
-
-  exitFunc ('test');
 }

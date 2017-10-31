@@ -18,7 +18,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -27,6 +26,4 @@ function test()
   for (let x; __defineSetter__; (<{x}></{x}> for (x in x))) {}
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

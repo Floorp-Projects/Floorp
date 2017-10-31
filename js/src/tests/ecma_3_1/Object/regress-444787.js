@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -100,6 +99,4 @@ function test()
     actual   = Object.getPrototypeOf(instance);
     reportCompare(expect, actual, summary + ' instance: ' + instance + ', type: ' + type.name);
   }
-
-  exitFunc ('test');
 }

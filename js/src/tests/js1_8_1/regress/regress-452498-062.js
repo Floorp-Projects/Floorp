@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -39,6 +38,4 @@ function test()
 // Assertion failure: ATOM_IS_STRING(atom), at ../jsinterp.cpp:5686
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

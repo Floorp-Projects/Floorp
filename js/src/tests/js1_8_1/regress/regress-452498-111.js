@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -27,8 +26,6 @@ new Function("{function x(){}}");
 // Assertion failure: pn->pn_defn || (fun->flags & JSFUN_LAMBDA), at ../jsemit.cpp:4149
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 
 

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -41,6 +40,4 @@ function test()
 // Assertion failure: OBJ_IS_CLONED_BLOCK(obj), at ../jsobj.cpp:2392
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   printStatus ("Unicode non-breaking space character test.");
   printBugNumber (23613);
 
@@ -19,6 +17,4 @@ function test()
   var str = "\u00A0foo";
   reportCompare (0, str.search(/^\sfoo$/),
 		 "Unicode non-breaking space character regexp test.");
-
-  exitFunc ("test");
 }

@@ -22,7 +22,6 @@ test();
 
 function test()
 {
-    enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus(summary);
     
@@ -646,6 +645,4 @@ function test()
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
-
-    exitFunc ('test');
 }

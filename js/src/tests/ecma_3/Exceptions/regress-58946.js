@@ -10,7 +10,6 @@ var stat =  'Testing a return statement inside a catch statement inside a functi
 test();
 
 function test() {
-  enterFunc ("test");
   printBugNumber(BUGNUMBER);
   printStatus (stat);
 
@@ -31,6 +30,4 @@ function test() {
   actual = f();
 
   reportCompare(expect, actual, stat);
-
-  exitFunc ("test");
 }

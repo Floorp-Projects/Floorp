@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -31,6 +30,4 @@ function test()
   expect = '(function () {({a: undefined});})';
   actual = (function () {({a: undefined});}).toSource();
   compareSource(expect, actual, summary + ': toSource');
-
-  exitFunc ('test');
 }

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -30,7 +29,6 @@ function test()
     print(expect = actual = 'Test requires browser.');
     reportCompare(expect, actual, summary);
   }
-  exitFunc ('test');
 }
 
 function boom()

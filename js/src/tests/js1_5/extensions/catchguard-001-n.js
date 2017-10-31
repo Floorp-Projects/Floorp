@@ -10,8 +10,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var EXCEPTION_DATA = "String exception";
   var e;
 
@@ -37,6 +35,4 @@ function test()
   reportCompare('PASS', 'FAIL',
 		"Illegally constructed catchguard should have thrown " +
 		"an exception.");
-
-  exitFunc ("test");
 }

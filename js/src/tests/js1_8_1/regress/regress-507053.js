@@ -34,7 +34,6 @@ finish_test();
 
 function start_test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 }
@@ -42,5 +41,4 @@ function start_test()
 function finish_test()
 {
   reportCompare(expect, actual, summary);
-  exitFunc ('test');
 }

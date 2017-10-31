@@ -18,13 +18,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   [].concat(null);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

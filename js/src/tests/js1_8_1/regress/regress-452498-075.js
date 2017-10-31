@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -27,6 +26,4 @@ function test()
 // Assertion failure: regs.sp == StackBase(fp), at ../jsinterp.cpp:2980
 
     reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
