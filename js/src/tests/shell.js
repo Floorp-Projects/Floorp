@@ -340,10 +340,7 @@
    *************************************************************************/
 
   var PASSED = " PASSED! ";
-  global.PASSED = PASSED;
-
   var FAILED = " FAILED! ";
-  global.FAILED = FAILED;
 
   /** Set up test environment. */
   function startTest() {
@@ -386,9 +383,7 @@
         funcName += "()";
 
       if (lastFunc !== funcName) {
-        // XXX Eliminate this dependency on global.reportCompare's identity.
-        global.reportCompare(funcName, lastFunc,
-                             "Test driver failure wrong exit function ");
+        reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
       }
     }
   }
