@@ -134,7 +134,6 @@ var summary = '';
 
 function test()
 {
-  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var i = 0, len = cases.length; i < len; i++) {
