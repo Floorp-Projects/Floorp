@@ -540,20 +540,20 @@ AlphaBoxBlur::~AlphaBoxBlur()
 }
 
 IntSize
-AlphaBoxBlur::GetSize()
+AlphaBoxBlur::GetSize() const
 {
   IntSize size(mRect.Width(), mRect.Height());
   return size;
 }
 
 int32_t
-AlphaBoxBlur::GetStride()
+AlphaBoxBlur::GetStride() const
 {
   return mStride;
 }
 
 IntRect
-AlphaBoxBlur::GetRect()
+AlphaBoxBlur::GetRect() const
 {
   return mRect;
 }
@@ -575,7 +575,7 @@ AlphaBoxBlur::GetSurfaceAllocationSize() const
 }
 
 void
-AlphaBoxBlur::Blur(uint8_t* aData)
+AlphaBoxBlur::Blur(uint8_t* aData) const
 {
   if (!aData) {
     return;
@@ -771,7 +771,7 @@ AlphaBoxBlur::BoxBlur_C(uint8_t* aData,
                         int32_t aTopLobe,
                         int32_t aBottomLobe,
                         uint32_t *aIntegralImage,
-                        size_t aIntegralImageStride)
+                        size_t aIntegralImageStride) const
 {
   IntSize size = GetSize();
 

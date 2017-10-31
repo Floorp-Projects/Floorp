@@ -16,6 +16,7 @@ namespace mozilla {
 namespace gfx {
 
 class DrawingCommand;
+class AlphaBoxBlur;
 
 class DrawTargetCaptureImpl : public DrawTargetCapture
 {
@@ -101,7 +102,7 @@ public:
                          const IntRect& aBounds,
                          bool aCopyBackground) override;
   virtual void PopLayer() override;
-
+  virtual void Blur(const AlphaBoxBlur& aBlur) override;
 
   virtual void SetTransform(const Matrix &aTransform) override;
 

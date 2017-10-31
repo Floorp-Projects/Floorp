@@ -305,6 +305,15 @@ DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 }
 
 void
+DrawTargetCaptureImpl::Blur(const AlphaBoxBlur& aBlur)
+{
+  // gfxAlphaBoxBlur should not use this if it takes the accelerated path.
+  MOZ_ASSERT(GetBackendType() == BackendType::SKIA);
+
+  AppendCommand(BlurCommand)(aBlur);
+}
+
+void
 DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform)
 {
   uint8_t* start = &mDrawCommandStorage.front();
