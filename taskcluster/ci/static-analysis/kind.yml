@@ -92,10 +92,12 @@ jobs:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
             using: mozharness
+            options: [append-env-variables-from-configs]
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_firefox_win32_clang_debug.py
+                - builds/taskcluster_base_win32.py
+                - builds/taskcluster_sub_win32/clang_debug.py
         toolchains:
             - win32-clang-cl
             - win32-rust
@@ -117,10 +119,12 @@ jobs:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
             using: mozharness
+            options: [append-env-variables-from-configs]
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_firefox_win32_clang.py
+                - builds/taskcluster_base_win32.py
+                - builds/taskcluster_sub_win32/clang.py
         toolchains:
             - win32-clang-cl
             - win32-rust
