@@ -59,7 +59,6 @@ var SECONDS     = 15;
 var MS          = 16;
 
 
-var gTc= 0;
 var TITLE = "Date constructor:  new Date( value )";
 var SECTION = "15.9.3.8";
 var VERSION = "ECMA_1";
