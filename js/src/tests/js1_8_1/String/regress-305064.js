@@ -139,3 +139,16 @@ for (var j = 0; j < trimMethods.length; ++j)
   }
 }
 
+function toPrinted(value) {
+  return value.replace(/[^\u0020-\u007E]/g, function(c) {
+    if (c === "\n")
+      return "NL";
+
+    var ch = c.charCodeAt(0);
+    var hex = ch.toString(16).toUpperCase();
+    if (ch > 0xff) {
+      return "\\u" + "0000".slice(hex.length) + hex;
+    }
+    return "\\x" + "00".slice(hex.length) + hex;
+  });
+}
