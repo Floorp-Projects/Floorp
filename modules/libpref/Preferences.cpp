@@ -693,24 +693,31 @@ PREF_GetCStringPref(const char* aPrefName,
                     nsACString& aValueOut,
                     bool aGetDefault)
 {
+  aValueOut.SetIsVoid(true);
+
   if (!gHashTable) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  const char* stringVal = nullptr;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
+  if (!pref || !pref->mPrefFlags.IsTypeString()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  if (pref && pref->mPrefFlags.IsTypeString()) {
-    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-        !pref->mPrefFlags.HasUserValue()) {
-      stringVal = pref->mDefaultPref.mStringVal;
-    } else {
-      stringVal = pref->mUserPref.mStringVal;
+  const char* stringVal = nullptr;
+  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
     }
+    stringVal = pref->mDefaultPref.mStringVal;
+  } else {
+    stringVal = pref->mUserPref.mStringVal;
   }
 
   if (!stringVal) {
-    aValueOut.SetIsVoid(true);
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -718,15 +725,6 @@ PREF_GetCStringPref(const char* aPrefName,
   return NS_OK;
 }
 
-// Get an int preference. This function takes a dotted notation of the
-// preference name (e.g. "browser.startup.homepage")
-//
-// It also takes a pointer to fill in with the return value and return an error
-// value. At the moment, this is simply an int but it may be converted to an
-// enum once the global error strategy is worked out.
-//
-// This function will perform conversion if the type doesn't match what was
-// requested. (If it is reasonably possible.)
 static nsresult
 PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
 {
@@ -734,28 +732,26 @@ PREF_GetIntPref(const char* aPrefName, int32_t* aValueOut, bool aGetDefault)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = NS_ERROR_UNEXPECTED;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  if (pref && pref->mPrefFlags.IsTypeInt()) {
-    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-        !pref->mPrefFlags.HasUserValue()) {
-      int32_t tempInt = pref->mDefaultPref.mIntVal;
-
-      // Check to see if we even had a default.
-      if (!pref->mPrefFlags.HasDefault()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      *aValueOut = tempInt;
-    } else {
-      *aValueOut = pref->mUserPref.mIntVal;
-    }
-    rv = NS_OK;
+  if (!pref || !pref->mPrefFlags.IsTypeInt()) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  return rv;
+  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aValueOut = pref->mDefaultPref.mIntVal;
+  } else {
+    *aValueOut = pref->mUserPref.mIntVal;
+  }
+
+  return NS_OK;
 }
 
-// Like PREF_GetIntPref(), but for booleans.
 static nsresult
 PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
 {
@@ -763,26 +759,24 @@ PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = NS_ERROR_UNEXPECTED;
   PrefHashEntry* pref = pref_HashTableLookup(aPrefName);
-  //NS_ASSERTION(pref, aPrefName);
-  if (pref && pref->mPrefFlags.IsTypeBool()) {
-    if (aGetDefault || pref->mPrefFlags.IsLocked() ||
-        !pref->mPrefFlags.HasUserValue()) {
-      bool tempBool = pref->mDefaultPref.mBoolVal;
-
-      // Check to see if we even had a default.
-      if (pref->mPrefFlags.HasDefault()) {
-        *aValueOut = tempBool;
-        rv = NS_OK;
-      }
-    } else {
-      *aValueOut = pref->mUserPref.mBoolVal;
-      rv = NS_OK;
-    }
+  if (!pref || !pref->mPrefFlags.IsTypeBool()) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  return rv;
+  if (aGetDefault || pref->mPrefFlags.IsLocked() ||
+      !pref->mPrefFlags.HasUserValue()) {
+
+    // Do we have a default?
+    if (!pref->mPrefFlags.HasDefault()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    *aValueOut = pref->mDefaultPref.mBoolVal;
+  } else {
+    *aValueOut = pref->mUserPref.mBoolVal;
+  }
+
+  return NS_OK;
 }
 
 // Clears the given pref (reverts it to its default value).
