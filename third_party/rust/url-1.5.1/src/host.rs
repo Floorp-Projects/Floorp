@@ -137,7 +137,7 @@ impl<'a> Host<&'a str> {
 impl Host<String> {
     /// Parse a host: either an IPv6 address in [] square brackets, or a domain.
     ///
-    /// <https://url.spec.whatwg.org/#host-parsing>
+    /// https://url.spec.whatwg.org/#host-parsing
     pub fn parse(input: &str) -> Result<Self, ParseError> {
         if input.starts_with('[') {
             if !input.ends_with(']') {
@@ -309,7 +309,7 @@ fn longest_zero_sequence(pieces: &[u16; 8]) -> (isize, isize) {
     }
 }
 
-/// <https://url.spec.whatwg.org/#ipv4-number-parser>
+/// https://url.spec.whatwg.org/#ipv4-number-parser
 fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
     let mut r = 10;
     if input.starts_with("0x") || input.starts_with("0X") {
@@ -331,7 +331,7 @@ fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
     }
 }
 
-/// <https://url.spec.whatwg.org/#concept-ipv4-parser>
+/// https://url.spec.whatwg.org/#concept-ipv4-parser
 fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
     if input.is_empty() {
         return Ok(None)
@@ -368,7 +368,7 @@ fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
     Ok(Some(Ipv4Addr::from(ipv4)))
 }
 
-/// <https://url.spec.whatwg.org/#concept-ipv6-parser>
+/// https://url.spec.whatwg.org/#concept-ipv6-parser
 fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
     let input = input.as_bytes();
     let len = input.len();
@@ -423,9 +423,6 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
                         return Err(ParseError::InvalidIpv6Address)
                     }
                     i = start;
-                    if piece_pointer > 6 {
-                        return Err(ParseError::InvalidIpv6Address)
-                    }
                     is_ip_v4 = true;
                 },
                 b':' => {
@@ -448,24 +445,16 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
         if piece_pointer > 6 {
             return Err(ParseError::InvalidIpv6Address)
         }
-        let mut numbers_seen = 0;
+        let mut dots_seen = 0;
         while i < len {
-            if numbers_seen > 0 {
-                if numbers_seen < 4 && (i < len && input[i] == b'.') {
-                    i += 1
-                } else {
-                    return Err(ParseError::InvalidIpv6Address)
-                }
-            }
-
-            let mut ipv4_piece = None;
+            let mut value = None;
             while i < len {
                 let digit = match input[i] {
                     c @ b'0' ... b'9' => c - b'0',
                     _ => break
                 };
-                match ipv4_piece {
-                    None => ipv4_piece = Some(digit as u16),
+                match value {
+                    None => value = Some(digit as u16),
                     Some(0) => return Err(ParseError::InvalidIpv6Address),  // No leading zero
                     Some(ref mut v) => {
                         *v = *v * 10 + digit as u16;
@@ -476,28 +465,24 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
                 }
                 i += 1;
             }
-
-            pieces[piece_pointer] = if let Some(v) = ipv4_piece {
+            if dots_seen < 3 && !(i < len && input[i] == b'.') {
+                return Err(ParseError::InvalidIpv6Address)
+            }
+            pieces[piece_pointer] = if let Some(v) = value {
                 pieces[piece_pointer] * 0x100 + v
             } else {
                 return Err(ParseError::InvalidIpv6Address)
             };
-            numbers_seen += 1;
-
-            if numbers_seen == 2 || numbers_seen == 4 {
+            if dots_seen == 1 || dots_seen == 3 {
                 piece_pointer += 1;
             }
-        }
-
-        if numbers_seen != 4 {
-            return Err(ParseError::InvalidIpv6Address)
+            i += 1;
+            if dots_seen == 3 && i < len {
+                return Err(ParseError::InvalidIpv6Address)
+            }
+            dots_seen += 1;
         }
     }
-
-    if i < len {
-        return Err(ParseError::InvalidIpv6Address)
-    }
-
     match compress_pointer {
         Some(compress_pointer) => {
             let mut swaps = piece_pointer - compress_pointer;
