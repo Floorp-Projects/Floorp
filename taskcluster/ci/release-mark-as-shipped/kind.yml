@@ -1,0 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - push-apk
+   - release-bouncer-aliases
+   - release-version-bump
+
+
+jobs:
+   fennec:
+      name: release-fennec_mark_as_shipped
+      description: mark release as shipped in Ship-It
+      worker-type: buildbot-bridge/buildbot-bridge
+      run-on-projects: []
+      run:
+         using: buildbot
+         product: fennec
+         buildername: release-{branch}-fennec_mark_as_shipped
+         release-promotion: true
+         routes:
+            - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
+            - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
+      notifications:
+         completed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         failed:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+         exception:
+            by-project:
+               maple:
+                  - "release-drivers-staging"
+               try:
+                  #- "{task[tags][createdForUser]}"
+               default:
+                  - "release-drivers"
+      extra:
+         product: fennec

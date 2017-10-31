@@ -1437,6 +1437,59 @@ public:
       *((&_41)+aIndex) = aVector.w;
   }
 
+  bool Decompose(Point3D& translation, Quaternion& rotation, Point3D& scale) const
+  {
+    // Ensure matrix can be normalized
+    if (gfx::FuzzyEqual(_44, 0.0f)) {
+      return false;
+    }
+    Matrix4x4Typed mat = *this;
+    mat.Normalize();
+    if (HasPerspectiveComponent()) {
+      // We do not support projection matrices
+      return false;
+    }
+
+    // Extract translation
+    translation.x = mat._41;
+    translation.y = mat._42;
+    translation.z = mat._43;
+
+    // Remove translation
+    mat._41 = 0.0f;
+    mat._42 = 0.0f;
+    mat._43 = 0.0f;
+
+    // Extract scale
+    scale.x = sqrtf(_11 * _11 + _21 * _21 + _31 * _31);
+    scale.y = sqrtf(_12 * _12 + _22 * _22 + _32 * _32);
+    scale.z = sqrtf(_13 * _13 + _23 * _23 + _33 * _33);
+
+    // Remove scale
+    if (gfx::FuzzyEqual(scale.x, 0.0f) ||
+        gfx::FuzzyEqual(scale.y, 0.0f) ||
+        gfx::FuzzyEqual(scale.z, 0.0f)) {
+      // We do not support matrices with a zero scale component
+      return false;
+    }
+    Float invXS = 1.0f / scale.x;
+    Float invYS = 1.0f / scale.y;
+    Float invZS = 1.0f / scale.z;
+    mat._11 *= invXS;
+    mat._21 *= invXS;
+    mat._31 *= invXS;
+    mat._12 *= invYS;
+    mat._22 *= invYS;
+    mat._32 *= invYS;
+    mat._13 *= invZS;
+    mat._23 *= invZS;
+    mat._33 *= invZS;
+
+    // Extract rotation
+    rotation.SetFromRotationMatrix(mat);
+    return true;
+  }
+
   // Sets this matrix to a rotation matrix given by aQuat.
   // This quaternion *MUST* be normalized!
   // Implemented in Quaternion.cpp

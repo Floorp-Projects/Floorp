@@ -1443,11 +1443,6 @@ toolbarpaletteitem[place="palette"][hidden] {
   }
 }
 
-.urlbar-page-action[disabled] {
-  pointer-events: none;
-  -moz-user-focus: ignore;
-}
-
 /* WebExtension Sidebars */
 #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: var(--webextension-menuitem-image, inherit);

@@ -1118,39 +1118,46 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag**)
   return NS_OK;
 }
 
+#define RELEASE_ASSERT_SUCCEEDED(rv, name) do { \
+    if (NS_FAILED(rv)) {                                                       \
+      if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {                  \
+        if (auto* context = CycleCollectedJSContext::Get()) {                  \
+          if (nsCOMPtr<nsIException> exn = context->GetPendingException()) {   \
+            nsAutoCString msg;                                                 \
+            if (NS_SUCCEEDED(exn->GetMessageMoz(msg))) {                       \
+              MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s", msg.get());\
+            }                                                                  \
+          }                                                                    \
+        }                                                                      \
+      }                                                                        \
+                                                                               \
+      nsAutoCString errorName;                                                 \
+      GetErrorName(rv, errorName);                                             \
+      MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s",                    \
+                              errorName.get());                                \
+    }                                                                          \
+  } while (0)
+
+
 nsCOMPtr<nsIAsyncShutdownClient>
 ServiceWorkerRegistrar::GetShutdownPhase() const
 {
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-  MOZ_RELEASE_ASSERT(svc);
-
-  nsCOMPtr<nsIAsyncShutdownClient> client;
-  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
+  nsresult rv;
+  nsCOMPtr<nsIAsyncShutdownService> svc = do_GetService(
+      "@mozilla.org/async-shutdown-service;1", &rv);
   // If this fails, something is very wrong on the JS side (or we're out of
   // memory), and there's no point in continuing startup. Include as much
   // information as possible in the crash report.
-  if (NS_FAILED(rv)) {
-    if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {
-      if (auto* context = CycleCollectedJSContext::Get()) {
-        if (nsCOMPtr<nsIException> exn = context->GetPendingException()) {
-          nsAutoCString msg;
-          if (NS_SUCCEEDED(exn->GetMessageMoz(msg))) {
-            MOZ_CRASH_UNSAFE_PRINTF("Failed to get profileBeforeChange shutdown blocker: %s",
-                                    msg.get());
+  RELEASE_ASSERT_SUCCEEDED(rv, "async shutdown service");
 
-          }
-        }
-      }
-    }
 
-    nsAutoCString errorName;
-    GetErrorName(rv, errorName);
-    MOZ_CRASH_UNSAFE_PRINTF("Failed to get profileBeforeChange shutdown blocker: %s",
-                            errorName.get());
-  }
-  MOZ_RELEASE_ASSERT(client);
+  nsCOMPtr<nsIAsyncShutdownClient> client;
+  rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
+  RELEASE_ASSERT_SUCCEEDED(rv, "profileBeforeChange shutdown blocker");
   return Move(client);
 }
+
+#undef RELEASE_ASSERT_SUCCEEDED
 
 void
 ServiceWorkerRegistrar::Shutdown()

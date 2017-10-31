@@ -79,9 +79,6 @@ extern ClientDownloadRequest_ResourceDefaultTypeInternal _ClientDownloadRequest_
 class ClientDownloadRequest_SignatureInfo;
 class ClientDownloadRequest_SignatureInfoDefaultTypeInternal;
 extern ClientDownloadRequest_SignatureInfoDefaultTypeInternal _ClientDownloadRequest_SignatureInfo_default_instance_;
-class ClientDownloadRequest_URLChainEntry;
-class ClientDownloadRequest_URLChainEntryDefaultTypeInternal;
-extern ClientDownloadRequest_URLChainEntryDefaultTypeInternal _ClientDownloadRequest_URLChainEntry_default_instance_;
 class ClientDownloadResponse;
 class ClientDownloadResponseDefaultTypeInternal;
 extern ClientDownloadResponseDefaultTypeInternal _ClientDownloadResponse_default_instance_;
@@ -142,21 +139,12 @@ extern ClientIncidentReport_IncidentData_BinaryIntegrityIncidentDefaultTypeInter
 class ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile;
 class ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFileDefaultTypeInternal;
 extern ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFileDefaultTypeInternal _ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile_default_instance_;
-class ClientIncidentReport_IncidentData_BlacklistLoadIncident;
-class ClientIncidentReport_IncidentData_BlacklistLoadIncidentDefaultTypeInternal;
-extern ClientIncidentReport_IncidentData_BlacklistLoadIncidentDefaultTypeInternal _ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_;
 class ClientIncidentReport_IncidentData_ResourceRequestIncident;
 class ClientIncidentReport_IncidentData_ResourceRequestIncidentDefaultTypeInternal;
 extern ClientIncidentReport_IncidentData_ResourceRequestIncidentDefaultTypeInternal _ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_;
-class ClientIncidentReport_IncidentData_SuspiciousModuleIncident;
-class ClientIncidentReport_IncidentData_SuspiciousModuleIncidentDefaultTypeInternal;
-extern ClientIncidentReport_IncidentData_SuspiciousModuleIncidentDefaultTypeInternal _ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_;
 class ClientIncidentReport_IncidentData_TrackedPreferenceIncident;
 class ClientIncidentReport_IncidentData_TrackedPreferenceIncidentDefaultTypeInternal;
 extern ClientIncidentReport_IncidentData_TrackedPreferenceIncidentDefaultTypeInternal _ClientIncidentReport_IncidentData_TrackedPreferenceIncident_default_instance_;
-class ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident;
-class ClientIncidentReport_IncidentData_VariationsSeedSignatureIncidentDefaultTypeInternal;
-extern ClientIncidentReport_IncidentData_VariationsSeedSignatureIncidentDefaultTypeInternal _ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_;
 class ClientIncidentReport_NonBinaryDownloadDetails;
 class ClientIncidentReport_NonBinaryDownloadDetailsDefaultTypeInternal;
 extern ClientIncidentReport_NonBinaryDownloadDetailsDefaultTypeInternal _ClientIncidentReport_NonBinaryDownloadDetails_default_instance_;
@@ -205,12 +193,51 @@ extern ClientSafeBrowsingReportRequest_HTTPResponse_FirstLineDefaultTypeInternal
 class ClientSafeBrowsingReportRequest_Resource;
 class ClientSafeBrowsingReportRequest_ResourceDefaultTypeInternal;
 extern ClientSafeBrowsingReportRequest_ResourceDefaultTypeInternal _ClientSafeBrowsingReportRequest_Resource_default_instance_;
+class ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties;
+class ClientSafeBrowsingReportRequest_SafeBrowsingClientPropertiesDefaultTypeInternal;
+extern ClientSafeBrowsingReportRequest_SafeBrowsingClientPropertiesDefaultTypeInternal _ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_;
 class ClientUploadResponse;
 class ClientUploadResponseDefaultTypeInternal;
 extern ClientUploadResponseDefaultTypeInternal _ClientUploadResponse_default_instance_;
 class DownloadMetadata;
 class DownloadMetadataDefaultTypeInternal;
 extern DownloadMetadataDefaultTypeInternal _DownloadMetadata_default_instance_;
+class HTMLElement;
+class HTMLElementDefaultTypeInternal;
+extern HTMLElementDefaultTypeInternal _HTMLElement_default_instance_;
+class HTMLElement_Attribute;
+class HTMLElement_AttributeDefaultTypeInternal;
+extern HTMLElement_AttributeDefaultTypeInternal _HTMLElement_Attribute_default_instance_;
+class ImageData;
+class ImageDataDefaultTypeInternal;
+extern ImageDataDefaultTypeInternal _ImageData_default_instance_;
+class ImageData_Dimensions;
+class ImageData_DimensionsDefaultTypeInternal;
+extern ImageData_DimensionsDefaultTypeInternal _ImageData_Dimensions_default_instance_;
+class LoginReputationClientRequest;
+class LoginReputationClientRequestDefaultTypeInternal;
+extern LoginReputationClientRequestDefaultTypeInternal _LoginReputationClientRequest_default_instance_;
+class LoginReputationClientRequest_Frame;
+class LoginReputationClientRequest_FrameDefaultTypeInternal;
+extern LoginReputationClientRequest_FrameDefaultTypeInternal _LoginReputationClientRequest_Frame_default_instance_;
+class LoginReputationClientRequest_Frame_Form;
+class LoginReputationClientRequest_Frame_FormDefaultTypeInternal;
+extern LoginReputationClientRequest_Frame_FormDefaultTypeInternal _LoginReputationClientRequest_Frame_Form_default_instance_;
+class LoginReputationClientRequest_PasswordReuseEvent;
+class LoginReputationClientRequest_PasswordReuseEventDefaultTypeInternal;
+extern LoginReputationClientRequest_PasswordReuseEventDefaultTypeInternal _LoginReputationClientRequest_PasswordReuseEvent_default_instance_;
+class LoginReputationClientResponse;
+class LoginReputationClientResponseDefaultTypeInternal;
+extern LoginReputationClientResponseDefaultTypeInternal _LoginReputationClientResponse_default_instance_;
+class NotificationImageReportRequest;
+class NotificationImageReportRequestDefaultTypeInternal;
+extern NotificationImageReportRequestDefaultTypeInternal _NotificationImageReportRequest_default_instance_;
+class ReferrerChainEntry;
+class ReferrerChainEntryDefaultTypeInternal;
+extern ReferrerChainEntryDefaultTypeInternal _ReferrerChainEntry_default_instance_;
+class ReferrerChainEntry_ServerRedirect;
+class ReferrerChainEntry_ServerRedirectDefaultTypeInternal;
+extern ReferrerChainEntry_ServerRedirectDefaultTypeInternal _ReferrerChainEntry_ServerRedirect_default_instance_;
 }  // namespace safe_browsing
 
 namespace safe_browsing {
@@ -240,18 +267,36 @@ const ChromeUserPopulation_UserPopulation ChromeUserPopulation_UserPopulation_Us
 const ChromeUserPopulation_UserPopulation ChromeUserPopulation_UserPopulation_UserPopulation_MAX = ChromeUserPopulation_UserPopulation_EXTENDED_REPORTING;
 const int ChromeUserPopulation_UserPopulation_UserPopulation_ARRAYSIZE = ChromeUserPopulation_UserPopulation_UserPopulation_MAX + 1;
 
-enum ClientDownloadRequest_URLChainEntry_URLType {
-  ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL = 1,
-  ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_REFERRER = 2,
-  ClientDownloadRequest_URLChainEntry_URLType_LANDING_PAGE = 3,
-  ClientDownloadRequest_URLChainEntry_URLType_LANDING_REFERRER = 4,
-  ClientDownloadRequest_URLChainEntry_URLType_CLIENT_REDIRECT = 5,
-  ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT = 6
+enum LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType {
+  LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_NOT_SIGNED_IN = 0,
+  LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_GMAIL = 1,
+  LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_GSUITE = 2
 };
-bool ClientDownloadRequest_URLChainEntry_URLType_IsValid(int value);
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry_URLType_URLType_MIN = ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX = ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT;
-const int ClientDownloadRequest_URLChainEntry_URLType_URLType_ARRAYSIZE = ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX + 1;
+bool LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(int value);
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_MIN = LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_NOT_SIGNED_IN;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_MAX = LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_GSUITE;
+const int LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_ARRAYSIZE = LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_MAX + 1;
+
+enum LoginReputationClientRequest_TriggerType {
+  LoginReputationClientRequest_TriggerType_TRIGGER_TYPE_UNSPECIFIED = 0,
+  LoginReputationClientRequest_TriggerType_UNFAMILIAR_LOGIN_PAGE = 1,
+  LoginReputationClientRequest_TriggerType_PASSWORD_REUSE_EVENT = 2
+};
+bool LoginReputationClientRequest_TriggerType_IsValid(int value);
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest_TriggerType_TriggerType_MIN = LoginReputationClientRequest_TriggerType_TRIGGER_TYPE_UNSPECIFIED;
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest_TriggerType_TriggerType_MAX = LoginReputationClientRequest_TriggerType_PASSWORD_REUSE_EVENT;
+const int LoginReputationClientRequest_TriggerType_TriggerType_ARRAYSIZE = LoginReputationClientRequest_TriggerType_TriggerType_MAX + 1;
+
+enum LoginReputationClientResponse_VerdictType {
+  LoginReputationClientResponse_VerdictType_VERDICT_TYPE_UNSPECIFIED = 0,
+  LoginReputationClientResponse_VerdictType_SAFE = 1,
+  LoginReputationClientResponse_VerdictType_LOW_REPUTATION = 2,
+  LoginReputationClientResponse_VerdictType_PHISHING = 3
+};
+bool LoginReputationClientResponse_VerdictType_IsValid(int value);
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse_VerdictType_VerdictType_MIN = LoginReputationClientResponse_VerdictType_VERDICT_TYPE_UNSPECIFIED;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse_VerdictType_VerdictType_MAX = LoginReputationClientResponse_VerdictType_PHISHING;
+const int LoginReputationClientResponse_VerdictType_VerdictType_ARRAYSIZE = LoginReputationClientResponse_VerdictType_VerdictType_MAX + 1;
 
 enum ClientDownloadRequest_ResourceType {
   ClientDownloadRequest_ResourceType_DOWNLOAD_URL = 0,
@@ -283,6 +328,18 @@ bool ClientDownloadRequest_DownloadType_IsValid(int value);
 const ClientDownloadRequest_DownloadType ClientDownloadRequest_DownloadType_DownloadType_MIN = ClientDownloadRequest_DownloadType_WIN_EXECUTABLE;
 const ClientDownloadRequest_DownloadType ClientDownloadRequest_DownloadType_DownloadType_MAX = ClientDownloadRequest_DownloadType_SAMPLED_UNSUPPORTED_FILE;
 const int ClientDownloadRequest_DownloadType_DownloadType_ARRAYSIZE = ClientDownloadRequest_DownloadType_DownloadType_MAX + 1;
+
+enum ReferrerChainEntry_URLType {
+  ReferrerChainEntry_URLType_EVENT_URL = 1,
+  ReferrerChainEntry_URLType_LANDING_PAGE = 2,
+  ReferrerChainEntry_URLType_LANDING_REFERRER = 3,
+  ReferrerChainEntry_URLType_CLIENT_REDIRECT = 4,
+  ReferrerChainEntry_URLType_DEPRECATED_SERVER_REDIRECT = 5
+};
+bool ReferrerChainEntry_URLType_IsValid(int value);
+const ReferrerChainEntry_URLType ReferrerChainEntry_URLType_URLType_MIN = ReferrerChainEntry_URLType_EVENT_URL;
+const ReferrerChainEntry_URLType ReferrerChainEntry_URLType_URLType_MAX = ReferrerChainEntry_URLType_DEPRECATED_SERVER_REDIRECT;
+const int ReferrerChainEntry_URLType_URLType_ARRAYSIZE = ReferrerChainEntry_URLType_URLType_MAX + 1;
 
 enum ClientDownloadResponse_Verdict {
   ClientDownloadResponse_Verdict_SAFE = 0,
@@ -321,11 +378,13 @@ enum ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState {
   ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_CLEARED = 1,
   ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_WEAK_LEGACY_OBSOLETE = 2,
   ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_CHANGED = 3,
-  ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_UNTRUSTED_UNKNOWN_VALUE = 4
+  ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_UNTRUSTED_UNKNOWN_VALUE = 4,
+  ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_BYPASS_CLEARED = 5,
+  ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_BYPASS_CHANGED = 6
 };
 bool ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_IsValid(int value);
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_ValueState_MIN = ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_UNKNOWN;
-const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_ValueState_MAX = ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_UNTRUSTED_UNKNOWN_VALUE;
+const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_ValueState_MAX = ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_BYPASS_CHANGED;
 const int ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_ValueState_ARRAYSIZE = ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_ValueState_MAX + 1;
 
 enum ClientIncidentReport_IncidentData_ResourceRequestIncident_Type {
@@ -387,16 +446,31 @@ enum ClientSafeBrowsingReportRequest_ReportType {
   ClientSafeBrowsingReportRequest_ReportType_URL_PHISHING = 1,
   ClientSafeBrowsingReportRequest_ReportType_URL_MALWARE = 2,
   ClientSafeBrowsingReportRequest_ReportType_URL_UNWANTED = 3,
-  ClientSafeBrowsingReportRequest_ReportType_CLIENT_SIDE_PHISHING_URL = 4,
-  ClientSafeBrowsingReportRequest_ReportType_CLIENT_SIDE_MALWARE_URL = 5,
+  ClientSafeBrowsingReportRequest_ReportType_URL_CLIENT_SIDE_PHISHING = 4,
+  ClientSafeBrowsingReportRequest_ReportType_URL_CLIENT_SIDE_MALWARE = 5,
   ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_RECOVERY = 6,
   ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_WARNING = 7,
-  ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_BY_API = 10
+  ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_BY_API = 10,
+  ClientSafeBrowsingReportRequest_ReportType_URL_PASSWORD_PROTECTION_PHISHING = 12,
+  ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_OPENED = 13,
+  ClientSafeBrowsingReportRequest_ReportType_AD_SAMPLE = 14
 };
 bool ClientSafeBrowsingReportRequest_ReportType_IsValid(int value);
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest_ReportType_ReportType_MIN = ClientSafeBrowsingReportRequest_ReportType_UNKNOWN;
-const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest_ReportType_ReportType_MAX = ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_BY_API;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest_ReportType_ReportType_MAX = ClientSafeBrowsingReportRequest_ReportType_AD_SAMPLE;
 const int ClientSafeBrowsingReportRequest_ReportType_ReportType_ARRAYSIZE = ClientSafeBrowsingReportRequest_ReportType_ReportType_MAX + 1;
+
+enum ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType {
+  ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED = 0,
+  ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_PVER3_NATIVE = 1,
+  ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_PVER4_NATIVE = 2,
+  ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_ANDROID_SAFETYNET = 3,
+  ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_FLYWHEEL = 4
+};
+bool ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(int value);
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_MIN = ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_MAX = ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_FLYWHEEL;
+const int ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_ARRAYSIZE = ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_MAX + 1;
 
 // ===================================================================
 
@@ -503,6 +577,28 @@ class ChromeUserPopulation : public ::google::protobuf::MessageLite /* @@protoc_
 
   // accessors -------------------------------------------------------
 
+  // repeated string finch_active_groups = 4;
+  int finch_active_groups_size() const;
+  void clear_finch_active_groups();
+  static const int kFinchActiveGroupsFieldNumber = 4;
+  const ::std::string& finch_active_groups(int index) const;
+  ::std::string* mutable_finch_active_groups(int index);
+  void set_finch_active_groups(int index, const ::std::string& value);
+  #if LANG_CXX11
+  void set_finch_active_groups(int index, ::std::string&& value);
+  #endif
+  void set_finch_active_groups(int index, const char* value);
+  void set_finch_active_groups(int index, const char* value, size_t size);
+  ::std::string* add_finch_active_groups();
+  void add_finch_active_groups(const ::std::string& value);
+  #if LANG_CXX11
+  void add_finch_active_groups(::std::string&& value);
+  #endif
+  void add_finch_active_groups(const char* value);
+  void add_finch_active_groups(const char* value, size_t size);
+  const ::google::protobuf::RepeatedPtrField< ::std::string>& finch_active_groups() const;
+  ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_finch_active_groups();
+
   // optional .safe_browsing.ChromeUserPopulation.UserPopulation user_population = 1;
   bool has_user_population() const;
   void clear_user_population();
@@ -510,15 +606,26 @@ class ChromeUserPopulation : public ::google::protobuf::MessageLite /* @@protoc_
   ::safe_browsing::ChromeUserPopulation_UserPopulation user_population() const;
   void set_user_population(::safe_browsing::ChromeUserPopulation_UserPopulation value);
 
+  // optional bool is_history_sync_enabled = 2;
+  bool has_is_history_sync_enabled() const;
+  void clear_is_history_sync_enabled();
+  static const int kIsHistorySyncEnabledFieldNumber = 2;
+  bool is_history_sync_enabled() const;
+  void set_is_history_sync_enabled(bool value);
+
   // @@protoc_insertion_point(class_scope:safe_browsing.ChromeUserPopulation)
  private:
   void set_has_user_population();
   void clear_has_user_population();
+  void set_has_is_history_sync_enabled();
+  void clear_has_is_history_sync_enabled();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> finch_active_groups_;
   int user_population_;
+  bool is_history_sync_enabled_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -1371,6 +1478,850 @@ class ClientMalwareRequest : public ::google::protobuf::MessageLite /* @@protoc_
 };
 // -------------------------------------------------------------------
 
+class LoginReputationClientRequest_Frame_Form : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.LoginReputationClientRequest.Frame.Form) */ {
+ public:
+  LoginReputationClientRequest_Frame_Form();
+  virtual ~LoginReputationClientRequest_Frame_Form();
+
+  LoginReputationClientRequest_Frame_Form(const LoginReputationClientRequest_Frame_Form& from);
+
+  inline LoginReputationClientRequest_Frame_Form& operator=(const LoginReputationClientRequest_Frame_Form& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  LoginReputationClientRequest_Frame_Form(LoginReputationClientRequest_Frame_Form&& from) noexcept
+    : LoginReputationClientRequest_Frame_Form() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginReputationClientRequest_Frame_Form& operator=(LoginReputationClientRequest_Frame_Form&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const LoginReputationClientRequest_Frame_Form& default_instance();
+
+  static inline const LoginReputationClientRequest_Frame_Form* internal_default_instance() {
+    return reinterpret_cast<const LoginReputationClientRequest_Frame_Form*>(
+               &_LoginReputationClientRequest_Frame_Form_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    6;
+
+  void Swap(LoginReputationClientRequest_Frame_Form* other);
+  friend void swap(LoginReputationClientRequest_Frame_Form& a, LoginReputationClientRequest_Frame_Form& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LoginReputationClientRequest_Frame_Form* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LoginReputationClientRequest_Frame_Form* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LoginReputationClientRequest_Frame_Form& from);
+  void MergeFrom(const LoginReputationClientRequest_Frame_Form& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LoginReputationClientRequest_Frame_Form* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string action_url = 1;
+  bool has_action_url() const;
+  void clear_action_url();
+  static const int kActionUrlFieldNumber = 1;
+  const ::std::string& action_url() const;
+  void set_action_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_action_url(::std::string&& value);
+  #endif
+  void set_action_url(const char* value);
+  void set_action_url(const char* value, size_t size);
+  ::std::string* mutable_action_url();
+  ::std::string* release_action_url();
+  void set_allocated_action_url(::std::string* action_url);
+
+  // optional bool has_password_field = 2;
+  bool has_has_password_field() const;
+  void clear_has_password_field();
+  static const int kHasPasswordFieldFieldNumber = 2;
+  bool has_password_field() const;
+  void set_has_password_field(bool value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.LoginReputationClientRequest.Frame.Form)
+ private:
+  void set_has_action_url();
+  void clear_has_action_url();
+  void set_has_has_password_field();
+  void clear_has_has_password_field();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr action_url_;
+  bool has_password_field_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LoginReputationClientRequest_Frame : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.LoginReputationClientRequest.Frame) */ {
+ public:
+  LoginReputationClientRequest_Frame();
+  virtual ~LoginReputationClientRequest_Frame();
+
+  LoginReputationClientRequest_Frame(const LoginReputationClientRequest_Frame& from);
+
+  inline LoginReputationClientRequest_Frame& operator=(const LoginReputationClientRequest_Frame& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  LoginReputationClientRequest_Frame(LoginReputationClientRequest_Frame&& from) noexcept
+    : LoginReputationClientRequest_Frame() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginReputationClientRequest_Frame& operator=(LoginReputationClientRequest_Frame&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const LoginReputationClientRequest_Frame& default_instance();
+
+  static inline const LoginReputationClientRequest_Frame* internal_default_instance() {
+    return reinterpret_cast<const LoginReputationClientRequest_Frame*>(
+               &_LoginReputationClientRequest_Frame_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    7;
+
+  void Swap(LoginReputationClientRequest_Frame* other);
+  friend void swap(LoginReputationClientRequest_Frame& a, LoginReputationClientRequest_Frame& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LoginReputationClientRequest_Frame* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LoginReputationClientRequest_Frame* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LoginReputationClientRequest_Frame& from);
+  void MergeFrom(const LoginReputationClientRequest_Frame& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LoginReputationClientRequest_Frame* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef LoginReputationClientRequest_Frame_Form Form;
+
+  // accessors -------------------------------------------------------
+
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+  int referrer_chain_size() const;
+  void clear_referrer_chain();
+  static const int kReferrerChainFieldNumber = 5;
+  const ::safe_browsing::ReferrerChainEntry& referrer_chain(int index) const;
+  ::safe_browsing::ReferrerChainEntry* mutable_referrer_chain(int index);
+  ::safe_browsing::ReferrerChainEntry* add_referrer_chain();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+      mutable_referrer_chain();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+      referrer_chain() const;
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+  int forms_size() const;
+  void clear_forms();
+  static const int kFormsFieldNumber = 6;
+  const ::safe_browsing::LoginReputationClientRequest_Frame_Form& forms(int index) const;
+  ::safe_browsing::LoginReputationClientRequest_Frame_Form* mutable_forms(int index);
+  ::safe_browsing::LoginReputationClientRequest_Frame_Form* add_forms();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >*
+      mutable_forms();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >&
+      forms() const;
+
+  // optional string url = 3;
+  bool has_url() const;
+  void clear_url();
+  static const int kUrlFieldNumber = 3;
+  const ::std::string& url() const;
+  void set_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_url(::std::string&& value);
+  #endif
+  void set_url(const char* value);
+  void set_url(const char* value, size_t size);
+  ::std::string* mutable_url();
+  ::std::string* release_url();
+  void set_allocated_url(::std::string* url);
+
+  // optional int32 frame_index = 1;
+  bool has_frame_index() const;
+  void clear_frame_index();
+  static const int kFrameIndexFieldNumber = 1;
+  ::google::protobuf::int32 frame_index() const;
+  void set_frame_index(::google::protobuf::int32 value);
+
+  // optional int32 parent_frame_index = 2;
+  bool has_parent_frame_index() const;
+  void clear_parent_frame_index();
+  static const int kParentFrameIndexFieldNumber = 2;
+  ::google::protobuf::int32 parent_frame_index() const;
+  void set_parent_frame_index(::google::protobuf::int32 value);
+
+  // optional bool has_password_field = 4;
+  bool has_has_password_field() const;
+  void clear_has_password_field();
+  static const int kHasPasswordFieldFieldNumber = 4;
+  bool has_password_field() const;
+  void set_has_password_field(bool value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.LoginReputationClientRequest.Frame)
+ private:
+  void set_has_frame_index();
+  void clear_has_frame_index();
+  void set_has_parent_frame_index();
+  void clear_has_parent_frame_index();
+  void set_has_url();
+  void clear_has_url();
+  void set_has_has_password_field();
+  void clear_has_has_password_field();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry > referrer_chain_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form > forms_;
+  ::google::protobuf::internal::ArenaStringPtr url_;
+  ::google::protobuf::int32 frame_index_;
+  ::google::protobuf::int32 parent_frame_index_;
+  bool has_password_field_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LoginReputationClientRequest_PasswordReuseEvent : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent) */ {
+ public:
+  LoginReputationClientRequest_PasswordReuseEvent();
+  virtual ~LoginReputationClientRequest_PasswordReuseEvent();
+
+  LoginReputationClientRequest_PasswordReuseEvent(const LoginReputationClientRequest_PasswordReuseEvent& from);
+
+  inline LoginReputationClientRequest_PasswordReuseEvent& operator=(const LoginReputationClientRequest_PasswordReuseEvent& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  LoginReputationClientRequest_PasswordReuseEvent(LoginReputationClientRequest_PasswordReuseEvent&& from) noexcept
+    : LoginReputationClientRequest_PasswordReuseEvent() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginReputationClientRequest_PasswordReuseEvent& operator=(LoginReputationClientRequest_PasswordReuseEvent&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const LoginReputationClientRequest_PasswordReuseEvent& default_instance();
+
+  static inline const LoginReputationClientRequest_PasswordReuseEvent* internal_default_instance() {
+    return reinterpret_cast<const LoginReputationClientRequest_PasswordReuseEvent*>(
+               &_LoginReputationClientRequest_PasswordReuseEvent_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(LoginReputationClientRequest_PasswordReuseEvent* other);
+  friend void swap(LoginReputationClientRequest_PasswordReuseEvent& a, LoginReputationClientRequest_PasswordReuseEvent& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LoginReputationClientRequest_PasswordReuseEvent* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LoginReputationClientRequest_PasswordReuseEvent* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LoginReputationClientRequest_PasswordReuseEvent& from);
+  void MergeFrom(const LoginReputationClientRequest_PasswordReuseEvent& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LoginReputationClientRequest_PasswordReuseEvent* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType SyncAccountType;
+  static const SyncAccountType NOT_SIGNED_IN =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_NOT_SIGNED_IN;
+  static const SyncAccountType GMAIL =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_GMAIL;
+  static const SyncAccountType GSUITE =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_GSUITE;
+  static inline bool SyncAccountType_IsValid(int value) {
+    return LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(value);
+  }
+  static const SyncAccountType SyncAccountType_MIN =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_MIN;
+  static const SyncAccountType SyncAccountType_MAX =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_MAX;
+  static const int SyncAccountType_ARRAYSIZE =
+    LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_SyncAccountType_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // repeated string domains_matching_password = 1;
+  int domains_matching_password_size() const;
+  void clear_domains_matching_password();
+  static const int kDomainsMatchingPasswordFieldNumber = 1;
+  const ::std::string& domains_matching_password(int index) const;
+  ::std::string* mutable_domains_matching_password(int index);
+  void set_domains_matching_password(int index, const ::std::string& value);
+  #if LANG_CXX11
+  void set_domains_matching_password(int index, ::std::string&& value);
+  #endif
+  void set_domains_matching_password(int index, const char* value);
+  void set_domains_matching_password(int index, const char* value, size_t size);
+  ::std::string* add_domains_matching_password();
+  void add_domains_matching_password(const ::std::string& value);
+  #if LANG_CXX11
+  void add_domains_matching_password(::std::string&& value);
+  #endif
+  void add_domains_matching_password(const char* value);
+  void add_domains_matching_password(const char* value, size_t size);
+  const ::google::protobuf::RepeatedPtrField< ::std::string>& domains_matching_password() const;
+  ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_domains_matching_password();
+
+  // optional int32 frame_id = 2;
+  bool has_frame_id() const;
+  void clear_frame_id();
+  static const int kFrameIdFieldNumber = 2;
+  ::google::protobuf::int32 frame_id() const;
+  void set_frame_id(::google::protobuf::int32 value);
+
+  // optional bool is_chrome_signin_password = 3;
+  bool has_is_chrome_signin_password() const;
+  void clear_is_chrome_signin_password();
+  static const int kIsChromeSigninPasswordFieldNumber = 3;
+  bool is_chrome_signin_password() const;
+  void set_is_chrome_signin_password(bool value);
+
+  // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+  bool has_sync_account_type() const;
+  void clear_sync_account_type();
+  static const int kSyncAccountTypeFieldNumber = 4;
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType sync_account_type() const;
+  void set_sync_account_type(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+ private:
+  void set_has_frame_id();
+  void clear_has_frame_id();
+  void set_has_is_chrome_signin_password();
+  void clear_has_is_chrome_signin_password();
+  void set_has_sync_account_type();
+  void clear_has_sync_account_type();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> domains_matching_password_;
+  ::google::protobuf::int32 frame_id_;
+  bool is_chrome_signin_password_;
+  int sync_account_type_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LoginReputationClientRequest : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.LoginReputationClientRequest) */ {
+ public:
+  LoginReputationClientRequest();
+  virtual ~LoginReputationClientRequest();
+
+  LoginReputationClientRequest(const LoginReputationClientRequest& from);
+
+  inline LoginReputationClientRequest& operator=(const LoginReputationClientRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  LoginReputationClientRequest(LoginReputationClientRequest&& from) noexcept
+    : LoginReputationClientRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginReputationClientRequest& operator=(LoginReputationClientRequest&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const LoginReputationClientRequest& default_instance();
+
+  static inline const LoginReputationClientRequest* internal_default_instance() {
+    return reinterpret_cast<const LoginReputationClientRequest*>(
+               &_LoginReputationClientRequest_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    9;
+
+  void Swap(LoginReputationClientRequest* other);
+  friend void swap(LoginReputationClientRequest& a, LoginReputationClientRequest& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LoginReputationClientRequest* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LoginReputationClientRequest* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LoginReputationClientRequest& from);
+  void MergeFrom(const LoginReputationClientRequest& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LoginReputationClientRequest* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef LoginReputationClientRequest_Frame Frame;
+  typedef LoginReputationClientRequest_PasswordReuseEvent PasswordReuseEvent;
+
+  typedef LoginReputationClientRequest_TriggerType TriggerType;
+  static const TriggerType TRIGGER_TYPE_UNSPECIFIED =
+    LoginReputationClientRequest_TriggerType_TRIGGER_TYPE_UNSPECIFIED;
+  static const TriggerType UNFAMILIAR_LOGIN_PAGE =
+    LoginReputationClientRequest_TriggerType_UNFAMILIAR_LOGIN_PAGE;
+  static const TriggerType PASSWORD_REUSE_EVENT =
+    LoginReputationClientRequest_TriggerType_PASSWORD_REUSE_EVENT;
+  static inline bool TriggerType_IsValid(int value) {
+    return LoginReputationClientRequest_TriggerType_IsValid(value);
+  }
+  static const TriggerType TriggerType_MIN =
+    LoginReputationClientRequest_TriggerType_TriggerType_MIN;
+  static const TriggerType TriggerType_MAX =
+    LoginReputationClientRequest_TriggerType_TriggerType_MAX;
+  static const int TriggerType_ARRAYSIZE =
+    LoginReputationClientRequest_TriggerType_TriggerType_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+  int frames_size() const;
+  void clear_frames();
+  static const int kFramesFieldNumber = 3;
+  const ::safe_browsing::LoginReputationClientRequest_Frame& frames(int index) const;
+  ::safe_browsing::LoginReputationClientRequest_Frame* mutable_frames(int index);
+  ::safe_browsing::LoginReputationClientRequest_Frame* add_frames();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >*
+      mutable_frames();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >&
+      frames() const;
+
+  // optional string page_url = 1;
+  bool has_page_url() const;
+  void clear_page_url();
+  static const int kPageUrlFieldNumber = 1;
+  const ::std::string& page_url() const;
+  void set_page_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_page_url(::std::string&& value);
+  #endif
+  void set_page_url(const char* value);
+  void set_page_url(const char* value, size_t size);
+  ::std::string* mutable_page_url();
+  ::std::string* release_page_url();
+  void set_allocated_page_url(::std::string* page_url);
+
+  // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+  bool has_password_reuse_event() const;
+  void clear_password_reuse_event();
+  static const int kPasswordReuseEventFieldNumber = 4;
+  const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent& password_reuse_event() const;
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* mutable_password_reuse_event();
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* release_password_reuse_event();
+  void set_allocated_password_reuse_event(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* password_reuse_event);
+
+  // optional .safe_browsing.ChromeUserPopulation population = 6;
+  bool has_population() const;
+  void clear_population();
+  static const int kPopulationFieldNumber = 6;
+  const ::safe_browsing::ChromeUserPopulation& population() const;
+  ::safe_browsing::ChromeUserPopulation* mutable_population();
+  ::safe_browsing::ChromeUserPopulation* release_population();
+  void set_allocated_population(::safe_browsing::ChromeUserPopulation* population);
+
+  // optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+  bool has_trigger_type() const;
+  void clear_trigger_type();
+  static const int kTriggerTypeFieldNumber = 2;
+  ::safe_browsing::LoginReputationClientRequest_TriggerType trigger_type() const;
+  void set_trigger_type(::safe_browsing::LoginReputationClientRequest_TriggerType value);
+
+  // optional int32 stored_verdict_cnt = 5;
+  bool has_stored_verdict_cnt() const;
+  void clear_stored_verdict_cnt();
+  static const int kStoredVerdictCntFieldNumber = 5;
+  ::google::protobuf::int32 stored_verdict_cnt() const;
+  void set_stored_verdict_cnt(::google::protobuf::int32 value);
+
+  // optional bool clicked_through_interstitial = 7;
+  bool has_clicked_through_interstitial() const;
+  void clear_clicked_through_interstitial();
+  static const int kClickedThroughInterstitialFieldNumber = 7;
+  bool clicked_through_interstitial() const;
+  void set_clicked_through_interstitial(bool value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.LoginReputationClientRequest)
+ private:
+  void set_has_page_url();
+  void clear_has_page_url();
+  void set_has_trigger_type();
+  void clear_has_trigger_type();
+  void set_has_password_reuse_event();
+  void clear_has_password_reuse_event();
+  void set_has_stored_verdict_cnt();
+  void clear_has_stored_verdict_cnt();
+  void set_has_population();
+  void clear_has_population();
+  void set_has_clicked_through_interstitial();
+  void clear_has_clicked_through_interstitial();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame > frames_;
+  ::google::protobuf::internal::ArenaStringPtr page_url_;
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* password_reuse_event_;
+  ::safe_browsing::ChromeUserPopulation* population_;
+  int trigger_type_;
+  ::google::protobuf::int32 stored_verdict_cnt_;
+  bool clicked_through_interstitial_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LoginReputationClientResponse : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.LoginReputationClientResponse) */ {
+ public:
+  LoginReputationClientResponse();
+  virtual ~LoginReputationClientResponse();
+
+  LoginReputationClientResponse(const LoginReputationClientResponse& from);
+
+  inline LoginReputationClientResponse& operator=(const LoginReputationClientResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  LoginReputationClientResponse(LoginReputationClientResponse&& from) noexcept
+    : LoginReputationClientResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline LoginReputationClientResponse& operator=(LoginReputationClientResponse&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const LoginReputationClientResponse& default_instance();
+
+  static inline const LoginReputationClientResponse* internal_default_instance() {
+    return reinterpret_cast<const LoginReputationClientResponse*>(
+               &_LoginReputationClientResponse_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    10;
+
+  void Swap(LoginReputationClientResponse* other);
+  friend void swap(LoginReputationClientResponse& a, LoginReputationClientResponse& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LoginReputationClientResponse* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LoginReputationClientResponse* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LoginReputationClientResponse& from);
+  void MergeFrom(const LoginReputationClientResponse& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LoginReputationClientResponse* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef LoginReputationClientResponse_VerdictType VerdictType;
+  static const VerdictType VERDICT_TYPE_UNSPECIFIED =
+    LoginReputationClientResponse_VerdictType_VERDICT_TYPE_UNSPECIFIED;
+  static const VerdictType SAFE =
+    LoginReputationClientResponse_VerdictType_SAFE;
+  static const VerdictType LOW_REPUTATION =
+    LoginReputationClientResponse_VerdictType_LOW_REPUTATION;
+  static const VerdictType PHISHING =
+    LoginReputationClientResponse_VerdictType_PHISHING;
+  static inline bool VerdictType_IsValid(int value) {
+    return LoginReputationClientResponse_VerdictType_IsValid(value);
+  }
+  static const VerdictType VerdictType_MIN =
+    LoginReputationClientResponse_VerdictType_VerdictType_MIN;
+  static const VerdictType VerdictType_MAX =
+    LoginReputationClientResponse_VerdictType_VerdictType_MAX;
+  static const int VerdictType_ARRAYSIZE =
+    LoginReputationClientResponse_VerdictType_VerdictType_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // optional string cache_expression = 3;
+  bool has_cache_expression() const;
+  void clear_cache_expression();
+  static const int kCacheExpressionFieldNumber = 3;
+  const ::std::string& cache_expression() const;
+  void set_cache_expression(const ::std::string& value);
+  #if LANG_CXX11
+  void set_cache_expression(::std::string&& value);
+  #endif
+  void set_cache_expression(const char* value);
+  void set_cache_expression(const char* value, size_t size);
+  ::std::string* mutable_cache_expression();
+  ::std::string* release_cache_expression();
+  void set_allocated_cache_expression(::std::string* cache_expression);
+
+  // optional bytes verdict_token = 5;
+  bool has_verdict_token() const;
+  void clear_verdict_token();
+  static const int kVerdictTokenFieldNumber = 5;
+  const ::std::string& verdict_token() const;
+  void set_verdict_token(const ::std::string& value);
+  #if LANG_CXX11
+  void set_verdict_token(::std::string&& value);
+  #endif
+  void set_verdict_token(const char* value);
+  void set_verdict_token(const void* value, size_t size);
+  ::std::string* mutable_verdict_token();
+  ::std::string* release_verdict_token();
+  void set_allocated_verdict_token(::std::string* verdict_token);
+
+  // optional int64 cache_duration_sec = 2;
+  bool has_cache_duration_sec() const;
+  void clear_cache_duration_sec();
+  static const int kCacheDurationSecFieldNumber = 2;
+  ::google::protobuf::int64 cache_duration_sec() const;
+  void set_cache_duration_sec(::google::protobuf::int64 value);
+
+  // optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+  bool has_verdict_type() const;
+  void clear_verdict_type();
+  static const int kVerdictTypeFieldNumber = 1;
+  ::safe_browsing::LoginReputationClientResponse_VerdictType verdict_type() const;
+  void set_verdict_type(::safe_browsing::LoginReputationClientResponse_VerdictType value);
+
+  // optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR bool has_deprecated_cache_expression_exact_match() const;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR void clear_deprecated_cache_expression_exact_match();
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR static const int kDEPRECATEDCacheExpressionExactMatchFieldNumber = 4;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR bool deprecated_cache_expression_exact_match() const;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR void set_deprecated_cache_expression_exact_match(bool value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.LoginReputationClientResponse)
+ private:
+  void set_has_verdict_type();
+  void clear_has_verdict_type();
+  void set_has_cache_duration_sec();
+  void clear_has_cache_duration_sec();
+  void set_has_cache_expression();
+  void clear_has_cache_expression();
+  void set_has_deprecated_cache_expression_exact_match();
+  void clear_has_deprecated_cache_expression_exact_match();
+  void set_has_verdict_token();
+  void clear_has_verdict_token();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr cache_expression_;
+  ::google::protobuf::internal::ArenaStringPtr verdict_token_;
+  ::google::protobuf::int64 cache_duration_sec_;
+  int verdict_type_;
+  bool deprecated_cache_expression_exact_match_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class ClientMalwareResponse : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientMalwareResponse) */ {
  public:
   ClientMalwareResponse();
@@ -1411,7 +2362,7 @@ class ClientMalwareResponse : public ::google::protobuf::MessageLite /* @@protoc
                &_ClientMalwareResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    6;
+    11;
 
   void Swap(ClientMalwareResponse* other);
   friend void swap(ClientMalwareResponse& a, ClientMalwareResponse& b) {
@@ -1553,7 +2504,7 @@ class ClientDownloadRequest_Digests : public ::google::protobuf::MessageLite /* 
                &_ClientDownloadRequest_Digests_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    12;
 
   void Swap(ClientDownloadRequest_Digests* other);
   friend void swap(ClientDownloadRequest_Digests& a, ClientDownloadRequest_Digests& b) {
@@ -1703,7 +2654,7 @@ class ClientDownloadRequest_Resource : public ::google::protobuf::MessageLite /*
                &_ClientDownloadRequest_Resource_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    13;
 
   void Swap(ClientDownloadRequest_Resource* other);
   friend void swap(ClientDownloadRequest_Resource& a, ClientDownloadRequest_Resource& b) {
@@ -1866,7 +2817,7 @@ class ClientDownloadRequest_CertificateChain_Element : public ::google::protobuf
                &_ClientDownloadRequest_CertificateChain_Element_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    14;
 
   void Swap(ClientDownloadRequest_CertificateChain_Element* other);
   friend void swap(ClientDownloadRequest_CertificateChain_Element& a, ClientDownloadRequest_CertificateChain_Element& b) {
@@ -1980,7 +2931,7 @@ class ClientDownloadRequest_CertificateChain : public ::google::protobuf::Messag
                &_ClientDownloadRequest_CertificateChain_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    15;
 
   void Swap(ClientDownloadRequest_CertificateChain* other);
   friend void swap(ClientDownloadRequest_CertificateChain& a, ClientDownloadRequest_CertificateChain& b) {
@@ -2091,7 +3042,7 @@ class ClientDownloadRequest_ExtendedAttr : public ::google::protobuf::MessageLit
                &_ClientDownloadRequest_ExtendedAttr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    16;
 
   void Swap(ClientDownloadRequest_ExtendedAttr* other);
   friend void swap(ClientDownloadRequest_ExtendedAttr& a, ClientDownloadRequest_ExtendedAttr& b) {
@@ -2223,7 +3174,7 @@ class ClientDownloadRequest_SignatureInfo : public ::google::protobuf::MessageLi
                &_ClientDownloadRequest_SignatureInfo_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    17;
 
   void Swap(ClientDownloadRequest_SignatureInfo* other);
   friend void swap(ClientDownloadRequest_SignatureInfo& a, ClientDownloadRequest_SignatureInfo& b) {
@@ -2378,7 +3329,7 @@ class ClientDownloadRequest_PEImageHeaders_DebugData : public ::google::protobuf
                &_ClientDownloadRequest_PEImageHeaders_DebugData_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    18;
 
   void Swap(ClientDownloadRequest_PEImageHeaders_DebugData* other);
   friend void swap(ClientDownloadRequest_PEImageHeaders_DebugData& a, ClientDownloadRequest_PEImageHeaders_DebugData& b) {
@@ -2510,7 +3461,7 @@ class ClientDownloadRequest_PEImageHeaders : public ::google::protobuf::MessageL
                &_ClientDownloadRequest_PEImageHeaders_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    19;
 
   void Swap(ClientDownloadRequest_PEImageHeaders* other);
   friend void swap(ClientDownloadRequest_PEImageHeaders& a, ClientDownloadRequest_PEImageHeaders& b) {
@@ -2734,7 +3685,7 @@ class ClientDownloadRequest_MachOHeaders_LoadCommand : public ::google::protobuf
                &_ClientDownloadRequest_MachOHeaders_LoadCommand_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    15;
+    20;
 
   void Swap(ClientDownloadRequest_MachOHeaders_LoadCommand* other);
   friend void swap(ClientDownloadRequest_MachOHeaders_LoadCommand& a, ClientDownloadRequest_MachOHeaders_LoadCommand& b) {
@@ -2861,7 +3812,7 @@ class ClientDownloadRequest_MachOHeaders : public ::google::protobuf::MessageLit
                &_ClientDownloadRequest_MachOHeaders_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    16;
+    21;
 
   void Swap(ClientDownloadRequest_MachOHeaders* other);
   friend void swap(ClientDownloadRequest_MachOHeaders& a, ClientDownloadRequest_MachOHeaders& b) {
@@ -2990,7 +3941,7 @@ class ClientDownloadRequest_ImageHeaders : public ::google::protobuf::MessageLit
                &_ClientDownloadRequest_ImageHeaders_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    17;
+    22;
 
   void Swap(ClientDownloadRequest_ImageHeaders* other);
   friend void swap(ClientDownloadRequest_ImageHeaders& a, ClientDownloadRequest_ImageHeaders& b) {
@@ -3111,7 +4062,7 @@ class ClientDownloadRequest_ArchivedBinary : public ::google::protobuf::MessageL
                &_ClientDownloadRequest_ArchivedBinary_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    18;
+    23;
 
   void Swap(ClientDownloadRequest_ArchivedBinary* other);
   friend void swap(ClientDownloadRequest_ArchivedBinary& a, ClientDownloadRequest_ArchivedBinary& b) {
@@ -3241,237 +4192,6 @@ class ClientDownloadRequest_ArchivedBinary : public ::google::protobuf::MessageL
 };
 // -------------------------------------------------------------------
 
-class ClientDownloadRequest_URLChainEntry : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientDownloadRequest.URLChainEntry) */ {
- public:
-  ClientDownloadRequest_URLChainEntry();
-  virtual ~ClientDownloadRequest_URLChainEntry();
-
-  ClientDownloadRequest_URLChainEntry(const ClientDownloadRequest_URLChainEntry& from);
-
-  inline ClientDownloadRequest_URLChainEntry& operator=(const ClientDownloadRequest_URLChainEntry& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ClientDownloadRequest_URLChainEntry(ClientDownloadRequest_URLChainEntry&& from) noexcept
-    : ClientDownloadRequest_URLChainEntry() {
-    *this = ::std::move(from);
-  }
-
-  inline ClientDownloadRequest_URLChainEntry& operator=(ClientDownloadRequest_URLChainEntry&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  inline const ::std::string& unknown_fields() const {
-    return _internal_metadata_.unknown_fields();
-  }
-  inline ::std::string* mutable_unknown_fields() {
-    return _internal_metadata_.mutable_unknown_fields();
-  }
-
-  static const ClientDownloadRequest_URLChainEntry& default_instance();
-
-  static inline const ClientDownloadRequest_URLChainEntry* internal_default_instance() {
-    return reinterpret_cast<const ClientDownloadRequest_URLChainEntry*>(
-               &_ClientDownloadRequest_URLChainEntry_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    19;
-
-  void Swap(ClientDownloadRequest_URLChainEntry* other);
-  friend void swap(ClientDownloadRequest_URLChainEntry& a, ClientDownloadRequest_URLChainEntry& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ClientDownloadRequest_URLChainEntry* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ClientDownloadRequest_URLChainEntry* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const ClientDownloadRequest_URLChainEntry& from);
-  void MergeFrom(const ClientDownloadRequest_URLChainEntry& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(ClientDownloadRequest_URLChainEntry* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  typedef ClientDownloadRequest_URLChainEntry_URLType URLType;
-  static const URLType DOWNLOAD_URL =
-    ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_URL;
-  static const URLType DOWNLOAD_REFERRER =
-    ClientDownloadRequest_URLChainEntry_URLType_DOWNLOAD_REFERRER;
-  static const URLType LANDING_PAGE =
-    ClientDownloadRequest_URLChainEntry_URLType_LANDING_PAGE;
-  static const URLType LANDING_REFERRER =
-    ClientDownloadRequest_URLChainEntry_URLType_LANDING_REFERRER;
-  static const URLType CLIENT_REDIRECT =
-    ClientDownloadRequest_URLChainEntry_URLType_CLIENT_REDIRECT;
-  static const URLType SERVER_REDIRECT =
-    ClientDownloadRequest_URLChainEntry_URLType_SERVER_REDIRECT;
-  static inline bool URLType_IsValid(int value) {
-    return ClientDownloadRequest_URLChainEntry_URLType_IsValid(value);
-  }
-  static const URLType URLType_MIN =
-    ClientDownloadRequest_URLChainEntry_URLType_URLType_MIN;
-  static const URLType URLType_MAX =
-    ClientDownloadRequest_URLChainEntry_URLType_URLType_MAX;
-  static const int URLType_ARRAYSIZE =
-    ClientDownloadRequest_URLChainEntry_URLType_URLType_ARRAYSIZE;
-
-  // accessors -------------------------------------------------------
-
-  // optional string url = 1;
-  bool has_url() const;
-  void clear_url();
-  static const int kUrlFieldNumber = 1;
-  const ::std::string& url() const;
-  void set_url(const ::std::string& value);
-  #if LANG_CXX11
-  void set_url(::std::string&& value);
-  #endif
-  void set_url(const char* value);
-  void set_url(const char* value, size_t size);
-  ::std::string* mutable_url();
-  ::std::string* release_url();
-  void set_allocated_url(::std::string* url);
-
-  // optional string ip_address = 3;
-  bool has_ip_address() const;
-  void clear_ip_address();
-  static const int kIpAddressFieldNumber = 3;
-  const ::std::string& ip_address() const;
-  void set_ip_address(const ::std::string& value);
-  #if LANG_CXX11
-  void set_ip_address(::std::string&& value);
-  #endif
-  void set_ip_address(const char* value);
-  void set_ip_address(const char* value, size_t size);
-  ::std::string* mutable_ip_address();
-  ::std::string* release_ip_address();
-  void set_allocated_ip_address(::std::string* ip_address);
-
-  // optional string referrer = 4;
-  bool has_referrer() const;
-  void clear_referrer();
-  static const int kReferrerFieldNumber = 4;
-  const ::std::string& referrer() const;
-  void set_referrer(const ::std::string& value);
-  #if LANG_CXX11
-  void set_referrer(::std::string&& value);
-  #endif
-  void set_referrer(const char* value);
-  void set_referrer(const char* value, size_t size);
-  ::std::string* mutable_referrer();
-  ::std::string* release_referrer();
-  void set_allocated_referrer(::std::string* referrer);
-
-  // optional string main_frame_referrer = 5;
-  bool has_main_frame_referrer() const;
-  void clear_main_frame_referrer();
-  static const int kMainFrameReferrerFieldNumber = 5;
-  const ::std::string& main_frame_referrer() const;
-  void set_main_frame_referrer(const ::std::string& value);
-  #if LANG_CXX11
-  void set_main_frame_referrer(::std::string&& value);
-  #endif
-  void set_main_frame_referrer(const char* value);
-  void set_main_frame_referrer(const char* value, size_t size);
-  ::std::string* mutable_main_frame_referrer();
-  ::std::string* release_main_frame_referrer();
-  void set_allocated_main_frame_referrer(::std::string* main_frame_referrer);
-
-  // optional double timestamp_in_millisec = 8;
-  bool has_timestamp_in_millisec() const;
-  void clear_timestamp_in_millisec();
-  static const int kTimestampInMillisecFieldNumber = 8;
-  double timestamp_in_millisec() const;
-  void set_timestamp_in_millisec(double value);
-
-  // optional bool is_retargeting = 6;
-  bool has_is_retargeting() const;
-  void clear_is_retargeting();
-  static const int kIsRetargetingFieldNumber = 6;
-  bool is_retargeting() const;
-  void set_is_retargeting(bool value);
-
-  // optional bool is_user_initiated = 7;
-  bool has_is_user_initiated() const;
-  void clear_is_user_initiated();
-  static const int kIsUserInitiatedFieldNumber = 7;
-  bool is_user_initiated() const;
-  void set_is_user_initiated(bool value);
-
-  // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-  bool has_type() const;
-  void clear_type();
-  static const int kTypeFieldNumber = 2;
-  ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType type() const;
-  void set_type(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType value);
-
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadRequest.URLChainEntry)
- private:
-  void set_has_url();
-  void clear_has_url();
-  void set_has_type();
-  void clear_has_type();
-  void set_has_ip_address();
-  void clear_has_ip_address();
-  void set_has_referrer();
-  void clear_has_referrer();
-  void set_has_main_frame_referrer();
-  void clear_has_main_frame_referrer();
-  void set_has_is_retargeting();
-  void clear_has_is_retargeting();
-  void set_has_is_user_initiated();
-  void clear_has_is_user_initiated();
-  void set_has_timestamp_in_millisec();
-  void clear_has_timestamp_in_millisec();
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::HasBits<1> _has_bits_;
-  mutable int _cached_size_;
-  ::google::protobuf::internal::ArenaStringPtr url_;
-  ::google::protobuf::internal::ArenaStringPtr ip_address_;
-  ::google::protobuf::internal::ArenaStringPtr referrer_;
-  ::google::protobuf::internal::ArenaStringPtr main_frame_referrer_;
-  double timestamp_in_millisec_;
-  bool is_retargeting_;
-  bool is_user_initiated_;
-  int type_;
-  friend struct protobuf_csd_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
 class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientDownloadRequest) */ {
  public:
   ClientDownloadRequest();
@@ -3512,7 +4232,7 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
                &_ClientDownloadRequest_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    20;
+    24;
 
   void Swap(ClientDownloadRequest* other);
   friend void swap(ClientDownloadRequest& a, ClientDownloadRequest& b) {
@@ -3565,7 +4285,6 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   typedef ClientDownloadRequest_MachOHeaders MachOHeaders;
   typedef ClientDownloadRequest_ImageHeaders ImageHeaders;
   typedef ClientDownloadRequest_ArchivedBinary ArchivedBinary;
-  typedef ClientDownloadRequest_URLChainEntry URLChainEntry;
 
   typedef ClientDownloadRequest_ResourceType ResourceType;
   static const ResourceType DOWNLOAD_URL =
@@ -3671,17 +4390,17 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   const ::google::protobuf::RepeatedPtrField< ::std::string>& alternate_extensions() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_alternate_extensions();
 
-  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
-  int url_chain_size() const;
-  void clear_url_chain();
-  static const int kUrlChainFieldNumber = 36;
-  const ::safe_browsing::ClientDownloadRequest_URLChainEntry& url_chain(int index) const;
-  ::safe_browsing::ClientDownloadRequest_URLChainEntry* mutable_url_chain(int index);
-  ::safe_browsing::ClientDownloadRequest_URLChainEntry* add_url_chain();
-  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >*
-      mutable_url_chain();
-  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >&
-      url_chain() const;
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
+  int referrer_chain_size() const;
+  void clear_referrer_chain();
+  static const int kReferrerChainFieldNumber = 36;
+  const ::safe_browsing::ReferrerChainEntry& referrer_chain(int index) const;
+  ::safe_browsing::ReferrerChainEntry* mutable_referrer_chain(int index);
+  ::safe_browsing::ReferrerChainEntry* add_referrer_chain();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+      mutable_referrer_chain();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+      referrer_chain() const;
 
   // required string url = 1;
   bool has_url() const;
@@ -3728,6 +4447,21 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   ::std::string* release_locale();
   void set_allocated_locale(::std::string* locale);
 
+  // optional bytes udif_code_signature = 40;
+  bool has_udif_code_signature() const;
+  void clear_udif_code_signature();
+  static const int kUdifCodeSignatureFieldNumber = 40;
+  const ::std::string& udif_code_signature() const;
+  void set_udif_code_signature(const ::std::string& value);
+  #if LANG_CXX11
+  void set_udif_code_signature(::std::string&& value);
+  #endif
+  void set_udif_code_signature(const char* value);
+  void set_udif_code_signature(const void* value, size_t size);
+  ::std::string* mutable_udif_code_signature();
+  ::std::string* release_udif_code_signature();
+  void set_allocated_udif_code_signature(::std::string* udif_code_signature);
+
   // required .safe_browsing.ClientDownloadRequest.Digests digests = 2;
   bool has_digests() const;
   void clear_digests();
@@ -3770,6 +4504,13 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   static const int kLengthFieldNumber = 3;
   ::google::protobuf::int64 length() const;
   void set_length(::google::protobuf::int64 value);
+
+  // optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR bool has_deprecated_download_attribution_finch_enabled() const;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR void clear_deprecated_download_attribution_finch_enabled();
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR static const int kDEPRECATEDDownloadAttributionFinchEnabledFieldNumber = 39;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR bool deprecated_download_attribution_finch_enabled() const;
+  GOOGLE_PROTOBUF_DEPRECATED_ATTR void set_deprecated_download_attribution_finch_enabled(bool value);
 
   // optional .safe_browsing.ClientDownloadRequest.DownloadType download_type = 10 [default = WIN_EXECUTABLE];
   bool has_download_type() const;
@@ -3834,6 +4575,10 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   void clear_has_skipped_url_whitelist();
   void set_has_skipped_certificate_whitelist();
   void clear_has_skipped_certificate_whitelist();
+  void set_has_deprecated_download_attribution_finch_enabled();
+  void clear_has_deprecated_download_attribution_finch_enabled();
+  void set_has_udif_code_signature();
+  void clear_has_udif_code_signature();
 
   // helper for ByteSizeLong()
   size_t RequiredFieldsByteSizeFallback() const;
@@ -3844,20 +4589,393 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite /* @@protoc
   ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_Resource > resources_;
   ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_ArchivedBinary > archived_binary_;
   ::google::protobuf::RepeatedPtrField< ::std::string> alternate_extensions_;
-  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry > url_chain_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry > referrer_chain_;
   ::google::protobuf::internal::ArenaStringPtr url_;
   ::google::protobuf::internal::ArenaStringPtr file_basename_;
   ::google::protobuf::internal::ArenaStringPtr locale_;
+  ::google::protobuf::internal::ArenaStringPtr udif_code_signature_;
   ::safe_browsing::ClientDownloadRequest_Digests* digests_;
   ::safe_browsing::ClientDownloadRequest_SignatureInfo* signature_;
   ::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers_;
   ::safe_browsing::ChromeUserPopulation* population_;
   ::google::protobuf::int64 length_;
+  bool deprecated_download_attribution_finch_enabled_;
   int download_type_;
   bool user_initiated_;
   bool archive_valid_;
   bool skipped_url_whitelist_;
   bool skipped_certificate_whitelist_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ReferrerChainEntry_ServerRedirect : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ReferrerChainEntry.ServerRedirect) */ {
+ public:
+  ReferrerChainEntry_ServerRedirect();
+  virtual ~ReferrerChainEntry_ServerRedirect();
+
+  ReferrerChainEntry_ServerRedirect(const ReferrerChainEntry_ServerRedirect& from);
+
+  inline ReferrerChainEntry_ServerRedirect& operator=(const ReferrerChainEntry_ServerRedirect& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ReferrerChainEntry_ServerRedirect(ReferrerChainEntry_ServerRedirect&& from) noexcept
+    : ReferrerChainEntry_ServerRedirect() {
+    *this = ::std::move(from);
+  }
+
+  inline ReferrerChainEntry_ServerRedirect& operator=(ReferrerChainEntry_ServerRedirect&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ReferrerChainEntry_ServerRedirect& default_instance();
+
+  static inline const ReferrerChainEntry_ServerRedirect* internal_default_instance() {
+    return reinterpret_cast<const ReferrerChainEntry_ServerRedirect*>(
+               &_ReferrerChainEntry_ServerRedirect_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    25;
+
+  void Swap(ReferrerChainEntry_ServerRedirect* other);
+  friend void swap(ReferrerChainEntry_ServerRedirect& a, ReferrerChainEntry_ServerRedirect& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ReferrerChainEntry_ServerRedirect* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ReferrerChainEntry_ServerRedirect* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ReferrerChainEntry_ServerRedirect& from);
+  void MergeFrom(const ReferrerChainEntry_ServerRedirect& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ReferrerChainEntry_ServerRedirect* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string url = 1;
+  bool has_url() const;
+  void clear_url();
+  static const int kUrlFieldNumber = 1;
+  const ::std::string& url() const;
+  void set_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_url(::std::string&& value);
+  #endif
+  void set_url(const char* value);
+  void set_url(const char* value, size_t size);
+  ::std::string* mutable_url();
+  ::std::string* release_url();
+  void set_allocated_url(::std::string* url);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ReferrerChainEntry.ServerRedirect)
+ private:
+  void set_has_url();
+  void clear_has_url();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr url_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ReferrerChainEntry : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ReferrerChainEntry) */ {
+ public:
+  ReferrerChainEntry();
+  virtual ~ReferrerChainEntry();
+
+  ReferrerChainEntry(const ReferrerChainEntry& from);
+
+  inline ReferrerChainEntry& operator=(const ReferrerChainEntry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ReferrerChainEntry(ReferrerChainEntry&& from) noexcept
+    : ReferrerChainEntry() {
+    *this = ::std::move(from);
+  }
+
+  inline ReferrerChainEntry& operator=(ReferrerChainEntry&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ReferrerChainEntry& default_instance();
+
+  static inline const ReferrerChainEntry* internal_default_instance() {
+    return reinterpret_cast<const ReferrerChainEntry*>(
+               &_ReferrerChainEntry_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    26;
+
+  void Swap(ReferrerChainEntry* other);
+  friend void swap(ReferrerChainEntry& a, ReferrerChainEntry& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ReferrerChainEntry* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ReferrerChainEntry* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ReferrerChainEntry& from);
+  void MergeFrom(const ReferrerChainEntry& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ReferrerChainEntry* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef ReferrerChainEntry_ServerRedirect ServerRedirect;
+
+  typedef ReferrerChainEntry_URLType URLType;
+  static const URLType EVENT_URL =
+    ReferrerChainEntry_URLType_EVENT_URL;
+  static const URLType LANDING_PAGE =
+    ReferrerChainEntry_URLType_LANDING_PAGE;
+  static const URLType LANDING_REFERRER =
+    ReferrerChainEntry_URLType_LANDING_REFERRER;
+  static const URLType CLIENT_REDIRECT =
+    ReferrerChainEntry_URLType_CLIENT_REDIRECT;
+  static const URLType DEPRECATED_SERVER_REDIRECT =
+    ReferrerChainEntry_URLType_DEPRECATED_SERVER_REDIRECT;
+  static inline bool URLType_IsValid(int value) {
+    return ReferrerChainEntry_URLType_IsValid(value);
+  }
+  static const URLType URLType_MIN =
+    ReferrerChainEntry_URLType_URLType_MIN;
+  static const URLType URLType_MAX =
+    ReferrerChainEntry_URLType_URLType_MAX;
+  static const int URLType_ARRAYSIZE =
+    ReferrerChainEntry_URLType_URLType_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // repeated string ip_addresses = 3;
+  int ip_addresses_size() const;
+  void clear_ip_addresses();
+  static const int kIpAddressesFieldNumber = 3;
+  const ::std::string& ip_addresses(int index) const;
+  ::std::string* mutable_ip_addresses(int index);
+  void set_ip_addresses(int index, const ::std::string& value);
+  #if LANG_CXX11
+  void set_ip_addresses(int index, ::std::string&& value);
+  #endif
+  void set_ip_addresses(int index, const char* value);
+  void set_ip_addresses(int index, const char* value, size_t size);
+  ::std::string* add_ip_addresses();
+  void add_ip_addresses(const ::std::string& value);
+  #if LANG_CXX11
+  void add_ip_addresses(::std::string&& value);
+  #endif
+  void add_ip_addresses(const char* value);
+  void add_ip_addresses(const char* value, size_t size);
+  const ::google::protobuf::RepeatedPtrField< ::std::string>& ip_addresses() const;
+  ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_ip_addresses();
+
+  // repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+  int server_redirect_chain_size() const;
+  void clear_server_redirect_chain();
+  static const int kServerRedirectChainFieldNumber = 8;
+  const ::safe_browsing::ReferrerChainEntry_ServerRedirect& server_redirect_chain(int index) const;
+  ::safe_browsing::ReferrerChainEntry_ServerRedirect* mutable_server_redirect_chain(int index);
+  ::safe_browsing::ReferrerChainEntry_ServerRedirect* add_server_redirect_chain();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >*
+      mutable_server_redirect_chain();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >&
+      server_redirect_chain() const;
+
+  // optional string url = 1;
+  bool has_url() const;
+  void clear_url();
+  static const int kUrlFieldNumber = 1;
+  const ::std::string& url() const;
+  void set_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_url(::std::string&& value);
+  #endif
+  void set_url(const char* value);
+  void set_url(const char* value, size_t size);
+  ::std::string* mutable_url();
+  ::std::string* release_url();
+  void set_allocated_url(::std::string* url);
+
+  // optional string referrer_url = 4;
+  bool has_referrer_url() const;
+  void clear_referrer_url();
+  static const int kReferrerUrlFieldNumber = 4;
+  const ::std::string& referrer_url() const;
+  void set_referrer_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_referrer_url(::std::string&& value);
+  #endif
+  void set_referrer_url(const char* value);
+  void set_referrer_url(const char* value, size_t size);
+  ::std::string* mutable_referrer_url();
+  ::std::string* release_referrer_url();
+  void set_allocated_referrer_url(::std::string* referrer_url);
+
+  // optional string referrer_main_frame_url = 5;
+  bool has_referrer_main_frame_url() const;
+  void clear_referrer_main_frame_url();
+  static const int kReferrerMainFrameUrlFieldNumber = 5;
+  const ::std::string& referrer_main_frame_url() const;
+  void set_referrer_main_frame_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_referrer_main_frame_url(::std::string&& value);
+  #endif
+  void set_referrer_main_frame_url(const char* value);
+  void set_referrer_main_frame_url(const char* value, size_t size);
+  ::std::string* mutable_referrer_main_frame_url();
+  ::std::string* release_referrer_main_frame_url();
+  void set_allocated_referrer_main_frame_url(::std::string* referrer_main_frame_url);
+
+  // optional string main_frame_url = 9;
+  bool has_main_frame_url() const;
+  void clear_main_frame_url();
+  static const int kMainFrameUrlFieldNumber = 9;
+  const ::std::string& main_frame_url() const;
+  void set_main_frame_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_main_frame_url(::std::string&& value);
+  #endif
+  void set_main_frame_url(const char* value);
+  void set_main_frame_url(const char* value, size_t size);
+  ::std::string* mutable_main_frame_url();
+  ::std::string* release_main_frame_url();
+  void set_allocated_main_frame_url(::std::string* main_frame_url);
+
+  // optional double navigation_time_msec = 7;
+  bool has_navigation_time_msec() const;
+  void clear_navigation_time_msec();
+  static const int kNavigationTimeMsecFieldNumber = 7;
+  double navigation_time_msec() const;
+  void set_navigation_time_msec(double value);
+
+  // optional bool is_retargeting = 6;
+  bool has_is_retargeting() const;
+  void clear_is_retargeting();
+  static const int kIsRetargetingFieldNumber = 6;
+  bool is_retargeting() const;
+  void set_is_retargeting(bool value);
+
+  // optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+  bool has_type() const;
+  void clear_type();
+  static const int kTypeFieldNumber = 2;
+  ::safe_browsing::ReferrerChainEntry_URLType type() const;
+  void set_type(::safe_browsing::ReferrerChainEntry_URLType value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ReferrerChainEntry)
+ private:
+  void set_has_url();
+  void clear_has_url();
+  void set_has_main_frame_url();
+  void clear_has_main_frame_url();
+  void set_has_type();
+  void clear_has_type();
+  void set_has_referrer_url();
+  void clear_has_referrer_url();
+  void set_has_referrer_main_frame_url();
+  void clear_has_referrer_main_frame_url();
+  void set_has_is_retargeting();
+  void clear_has_is_retargeting();
+  void set_has_navigation_time_msec();
+  void clear_has_navigation_time_msec();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> ip_addresses_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect > server_redirect_chain_;
+  ::google::protobuf::internal::ArenaStringPtr url_;
+  ::google::protobuf::internal::ArenaStringPtr referrer_url_;
+  ::google::protobuf::internal::ArenaStringPtr referrer_main_frame_url_;
+  ::google::protobuf::internal::ArenaStringPtr main_frame_url_;
+  double navigation_time_msec_;
+  bool is_retargeting_;
+  int type_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -3902,7 +5020,7 @@ class ClientDownloadResponse_MoreInfo : public ::google::protobuf::MessageLite /
                &_ClientDownloadResponse_MoreInfo_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    21;
+    27;
 
   void Swap(ClientDownloadResponse_MoreInfo* other);
   friend void swap(ClientDownloadResponse_MoreInfo& a, ClientDownloadResponse_MoreInfo& b) {
@@ -4034,7 +5152,7 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite /* @@proto
                &_ClientDownloadResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    22;
+    28;
 
   void Swap(ClientDownloadResponse* other);
   friend void swap(ClientDownloadResponse& a, ClientDownloadResponse& b) {
@@ -4136,6 +5254,13 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite /* @@proto
   ::safe_browsing::ClientDownloadResponse_Verdict verdict() const;
   void set_verdict(::safe_browsing::ClientDownloadResponse_Verdict value);
 
+  // optional bool upload = 5;
+  bool has_upload() const;
+  void clear_upload();
+  static const int kUploadFieldNumber = 5;
+  bool upload() const;
+  void set_upload(bool value);
+
   // @@protoc_insertion_point(class_scope:safe_browsing.ClientDownloadResponse)
  private:
   void set_has_verdict();
@@ -4144,6 +5269,8 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite /* @@proto
   void clear_has_more_info();
   void set_has_token();
   void clear_has_token();
+  void set_has_upload();
+  void clear_has_upload();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -4151,6 +5278,7 @@ class ClientDownloadResponse : public ::google::protobuf::MessageLite /* @@proto
   ::google::protobuf::internal::ArenaStringPtr token_;
   ::safe_browsing::ClientDownloadResponse_MoreInfo* more_info_;
   int verdict_;
+  bool upload_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -4195,7 +5323,7 @@ class ClientDownloadReport_UserInformation : public ::google::protobuf::MessageL
                &_ClientDownloadReport_UserInformation_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    23;
+    29;
 
   void Swap(ClientDownloadReport_UserInformation* other);
   friend void swap(ClientDownloadReport_UserInformation& a, ClientDownloadReport_UserInformation& b) {
@@ -4309,7 +5437,7 @@ class ClientDownloadReport : public ::google::protobuf::MessageLite /* @@protoc_
                &_ClientDownloadReport_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    24;
+    30;
 
   void Swap(ClientDownloadReport* other);
   friend void swap(ClientDownloadReport& a, ClientDownloadReport& b) {
@@ -4488,7 +5616,7 @@ class ClientUploadResponse : public ::google::protobuf::MessageLite /* @@protoc_
                &_ClientUploadResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    25;
+    31;
 
   void Swap(ClientUploadResponse* other);
   friend void swap(ClientUploadResponse& a, ClientUploadResponse& b) {
@@ -4627,7 +5755,7 @@ class ClientIncidentReport_IncidentData_TrackedPreferenceIncident : public ::goo
                &_ClientIncidentReport_IncidentData_TrackedPreferenceIncident_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    26;
+    32;
 
   void Swap(ClientIncidentReport_IncidentData_TrackedPreferenceIncident* other);
   friend void swap(ClientIncidentReport_IncidentData_TrackedPreferenceIncident& a, ClientIncidentReport_IncidentData_TrackedPreferenceIncident& b) {
@@ -4682,6 +5810,10 @@ class ClientIncidentReport_IncidentData_TrackedPreferenceIncident : public ::goo
     ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_CHANGED;
   static const ValueState UNTRUSTED_UNKNOWN_VALUE =
     ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_UNTRUSTED_UNKNOWN_VALUE;
+  static const ValueState BYPASS_CLEARED =
+    ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_BYPASS_CLEARED;
+  static const ValueState BYPASS_CHANGED =
+    ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_BYPASS_CHANGED;
   static inline bool ValueState_IsValid(int value) {
     return ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_IsValid(value);
   }
@@ -4813,7 +5945,7 @@ class ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile : 
                &_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    27;
+    33;
 
   void Swap(ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile* other);
   friend void swap(ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile& a, ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile& b) {
@@ -4951,7 +6083,7 @@ class ClientIncidentReport_IncidentData_BinaryIntegrityIncident : public ::googl
                &_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    28;
+    34;
 
   void Swap(ClientIncidentReport_IncidentData_BinaryIntegrityIncident* other);
   friend void swap(ClientIncidentReport_IncidentData_BinaryIntegrityIncident& a, ClientIncidentReport_IncidentData_BinaryIntegrityIncident& b) {
@@ -5074,298 +6206,6 @@ class ClientIncidentReport_IncidentData_BinaryIntegrityIncident : public ::googl
 };
 // -------------------------------------------------------------------
 
-class ClientIncidentReport_IncidentData_BlacklistLoadIncident : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident) */ {
- public:
-  ClientIncidentReport_IncidentData_BlacklistLoadIncident();
-  virtual ~ClientIncidentReport_IncidentData_BlacklistLoadIncident();
-
-  ClientIncidentReport_IncidentData_BlacklistLoadIncident(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from);
-
-  inline ClientIncidentReport_IncidentData_BlacklistLoadIncident& operator=(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ClientIncidentReport_IncidentData_BlacklistLoadIncident(ClientIncidentReport_IncidentData_BlacklistLoadIncident&& from) noexcept
-    : ClientIncidentReport_IncidentData_BlacklistLoadIncident() {
-    *this = ::std::move(from);
-  }
-
-  inline ClientIncidentReport_IncidentData_BlacklistLoadIncident& operator=(ClientIncidentReport_IncidentData_BlacklistLoadIncident&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  inline const ::std::string& unknown_fields() const {
-    return _internal_metadata_.unknown_fields();
-  }
-  inline ::std::string* mutable_unknown_fields() {
-    return _internal_metadata_.mutable_unknown_fields();
-  }
-
-  static const ClientIncidentReport_IncidentData_BlacklistLoadIncident& default_instance();
-
-  static inline const ClientIncidentReport_IncidentData_BlacklistLoadIncident* internal_default_instance() {
-    return reinterpret_cast<const ClientIncidentReport_IncidentData_BlacklistLoadIncident*>(
-               &_ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    29;
-
-  void Swap(ClientIncidentReport_IncidentData_BlacklistLoadIncident* other);
-  friend void swap(ClientIncidentReport_IncidentData_BlacklistLoadIncident& a, ClientIncidentReport_IncidentData_BlacklistLoadIncident& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ClientIncidentReport_IncidentData_BlacklistLoadIncident* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ClientIncidentReport_IncidentData_BlacklistLoadIncident* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from);
-  void MergeFrom(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(ClientIncidentReport_IncidentData_BlacklistLoadIncident* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional string path = 1;
-  bool has_path() const;
-  void clear_path();
-  static const int kPathFieldNumber = 1;
-  const ::std::string& path() const;
-  void set_path(const ::std::string& value);
-  #if LANG_CXX11
-  void set_path(::std::string&& value);
-  #endif
-  void set_path(const char* value);
-  void set_path(const char* value, size_t size);
-  ::std::string* mutable_path();
-  ::std::string* release_path();
-  void set_allocated_path(::std::string* path);
-
-  // optional string version = 3;
-  bool has_version() const;
-  void clear_version();
-  static const int kVersionFieldNumber = 3;
-  const ::std::string& version() const;
-  void set_version(const ::std::string& value);
-  #if LANG_CXX11
-  void set_version(::std::string&& value);
-  #endif
-  void set_version(const char* value);
-  void set_version(const char* value, size_t size);
-  ::std::string* mutable_version();
-  ::std::string* release_version();
-  void set_allocated_version(::std::string* version);
-
-  // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-  bool has_digest() const;
-  void clear_digest();
-  static const int kDigestFieldNumber = 2;
-  const ::safe_browsing::ClientDownloadRequest_Digests& digest() const;
-  ::safe_browsing::ClientDownloadRequest_Digests* mutable_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* release_digest();
-  void set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest);
-
-  // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-  bool has_signature() const;
-  void clear_signature();
-  static const int kSignatureFieldNumber = 5;
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo& signature() const;
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* mutable_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* release_signature();
-  void set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature);
-
-  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-  bool has_image_headers() const;
-  void clear_image_headers();
-  static const int kImageHeadersFieldNumber = 6;
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders& image_headers() const;
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* mutable_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* release_image_headers();
-  void set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers);
-
-  // optional bool blacklist_initialized = 4;
-  bool has_blacklist_initialized() const;
-  void clear_blacklist_initialized();
-  static const int kBlacklistInitializedFieldNumber = 4;
-  bool blacklist_initialized() const;
-  void set_blacklist_initialized(bool value);
-
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
- private:
-  void set_has_path();
-  void clear_has_path();
-  void set_has_digest();
-  void clear_has_digest();
-  void set_has_version();
-  void clear_has_version();
-  void set_has_blacklist_initialized();
-  void clear_has_blacklist_initialized();
-  void set_has_signature();
-  void clear_has_signature();
-  void set_has_image_headers();
-  void clear_has_image_headers();
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::HasBits<1> _has_bits_;
-  mutable int _cached_size_;
-  ::google::protobuf::internal::ArenaStringPtr path_;
-  ::google::protobuf::internal::ArenaStringPtr version_;
-  ::safe_browsing::ClientDownloadRequest_Digests* digest_;
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* signature_;
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers_;
-  bool blacklist_initialized_;
-  friend struct protobuf_csd_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident) */ {
- public:
-  ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident();
-  virtual ~ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident();
-
-  ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from);
-
-  inline ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& operator=(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident&& from) noexcept
-    : ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident() {
-    *this = ::std::move(from);
-  }
-
-  inline ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& operator=(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  inline const ::std::string& unknown_fields() const {
-    return _internal_metadata_.unknown_fields();
-  }
-  inline ::std::string* mutable_unknown_fields() {
-    return _internal_metadata_.mutable_unknown_fields();
-  }
-
-  static const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& default_instance();
-
-  static inline const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* internal_default_instance() {
-    return reinterpret_cast<const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident*>(
-               &_ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    30;
-
-  void Swap(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* other);
-  friend void swap(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& a, ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from);
-  void MergeFrom(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional string variations_seed_signature = 1;
-  bool has_variations_seed_signature() const;
-  void clear_variations_seed_signature();
-  static const int kVariationsSeedSignatureFieldNumber = 1;
-  const ::std::string& variations_seed_signature() const;
-  void set_variations_seed_signature(const ::std::string& value);
-  #if LANG_CXX11
-  void set_variations_seed_signature(::std::string&& value);
-  #endif
-  void set_variations_seed_signature(const char* value);
-  void set_variations_seed_signature(const char* value, size_t size);
-  ::std::string* mutable_variations_seed_signature();
-  ::std::string* release_variations_seed_signature();
-  void set_allocated_variations_seed_signature(::std::string* variations_seed_signature);
-
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
- private:
-  void set_has_variations_seed_signature();
-  void clear_has_variations_seed_signature();
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::HasBits<1> _has_bits_;
-  mutable int _cached_size_;
-  ::google::protobuf::internal::ArenaStringPtr variations_seed_signature_;
-  friend struct protobuf_csd_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
 class ClientIncidentReport_IncidentData_ResourceRequestIncident : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident) */ {
  public:
   ClientIncidentReport_IncidentData_ResourceRequestIncident();
@@ -5406,7 +6246,7 @@ class ClientIncidentReport_IncidentData_ResourceRequestIncident : public ::googl
                &_ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    31;
+    35;
 
   void Swap(ClientIncidentReport_IncidentData_ResourceRequestIncident* other);
   friend void swap(ClientIncidentReport_IncidentData_ResourceRequestIncident& a, ClientIncidentReport_IncidentData_ResourceRequestIncident& b) {
@@ -5523,174 +6363,6 @@ class ClientIncidentReport_IncidentData_ResourceRequestIncident : public ::googl
 };
 // -------------------------------------------------------------------
 
-class ClientIncidentReport_IncidentData_SuspiciousModuleIncident : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident) */ {
- public:
-  ClientIncidentReport_IncidentData_SuspiciousModuleIncident();
-  virtual ~ClientIncidentReport_IncidentData_SuspiciousModuleIncident();
-
-  ClientIncidentReport_IncidentData_SuspiciousModuleIncident(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from);
-
-  inline ClientIncidentReport_IncidentData_SuspiciousModuleIncident& operator=(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ClientIncidentReport_IncidentData_SuspiciousModuleIncident(ClientIncidentReport_IncidentData_SuspiciousModuleIncident&& from) noexcept
-    : ClientIncidentReport_IncidentData_SuspiciousModuleIncident() {
-    *this = ::std::move(from);
-  }
-
-  inline ClientIncidentReport_IncidentData_SuspiciousModuleIncident& operator=(ClientIncidentReport_IncidentData_SuspiciousModuleIncident&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  inline const ::std::string& unknown_fields() const {
-    return _internal_metadata_.unknown_fields();
-  }
-  inline ::std::string* mutable_unknown_fields() {
-    return _internal_metadata_.mutable_unknown_fields();
-  }
-
-  static const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& default_instance();
-
-  static inline const ClientIncidentReport_IncidentData_SuspiciousModuleIncident* internal_default_instance() {
-    return reinterpret_cast<const ClientIncidentReport_IncidentData_SuspiciousModuleIncident*>(
-               &_ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    32;
-
-  void Swap(ClientIncidentReport_IncidentData_SuspiciousModuleIncident* other);
-  friend void swap(ClientIncidentReport_IncidentData_SuspiciousModuleIncident& a, ClientIncidentReport_IncidentData_SuspiciousModuleIncident& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ClientIncidentReport_IncidentData_SuspiciousModuleIncident* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ClientIncidentReport_IncidentData_SuspiciousModuleIncident* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from);
-  void MergeFrom(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(ClientIncidentReport_IncidentData_SuspiciousModuleIncident* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional string path = 1;
-  bool has_path() const;
-  void clear_path();
-  static const int kPathFieldNumber = 1;
-  const ::std::string& path() const;
-  void set_path(const ::std::string& value);
-  #if LANG_CXX11
-  void set_path(::std::string&& value);
-  #endif
-  void set_path(const char* value);
-  void set_path(const char* value, size_t size);
-  ::std::string* mutable_path();
-  ::std::string* release_path();
-  void set_allocated_path(::std::string* path);
-
-  // optional string version = 3;
-  bool has_version() const;
-  void clear_version();
-  static const int kVersionFieldNumber = 3;
-  const ::std::string& version() const;
-  void set_version(const ::std::string& value);
-  #if LANG_CXX11
-  void set_version(::std::string&& value);
-  #endif
-  void set_version(const char* value);
-  void set_version(const char* value, size_t size);
-  ::std::string* mutable_version();
-  ::std::string* release_version();
-  void set_allocated_version(::std::string* version);
-
-  // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-  bool has_digest() const;
-  void clear_digest();
-  static const int kDigestFieldNumber = 2;
-  const ::safe_browsing::ClientDownloadRequest_Digests& digest() const;
-  ::safe_browsing::ClientDownloadRequest_Digests* mutable_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* release_digest();
-  void set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest);
-
-  // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-  bool has_signature() const;
-  void clear_signature();
-  static const int kSignatureFieldNumber = 4;
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo& signature() const;
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* mutable_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* release_signature();
-  void set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature);
-
-  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-  bool has_image_headers() const;
-  void clear_image_headers();
-  static const int kImageHeadersFieldNumber = 5;
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders& image_headers() const;
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* mutable_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* release_image_headers();
-  void set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers);
-
-  // @@protoc_insertion_point(class_scope:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
- private:
-  void set_has_path();
-  void clear_has_path();
-  void set_has_digest();
-  void clear_has_digest();
-  void set_has_version();
-  void clear_has_version();
-  void set_has_signature();
-  void clear_has_signature();
-  void set_has_image_headers();
-  void clear_has_image_headers();
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::HasBits<1> _has_bits_;
-  mutable int _cached_size_;
-  ::google::protobuf::internal::ArenaStringPtr path_;
-  ::google::protobuf::internal::ArenaStringPtr version_;
-  ::safe_browsing::ClientDownloadRequest_Digests* digest_;
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* signature_;
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers_;
-  friend struct protobuf_csd_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
 class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientIncidentReport.IncidentData) */ {
  public:
   ClientIncidentReport_IncidentData();
@@ -5731,7 +6403,7 @@ class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite
                &_ClientIncidentReport_IncidentData_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    33;
+    36;
 
   void Swap(ClientIncidentReport_IncidentData* other);
   friend void swap(ClientIncidentReport_IncidentData& a, ClientIncidentReport_IncidentData& b) {
@@ -5777,10 +6449,7 @@ class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite
 
   typedef ClientIncidentReport_IncidentData_TrackedPreferenceIncident TrackedPreferenceIncident;
   typedef ClientIncidentReport_IncidentData_BinaryIntegrityIncident BinaryIntegrityIncident;
-  typedef ClientIncidentReport_IncidentData_BlacklistLoadIncident BlacklistLoadIncident;
-  typedef ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident VariationsSeedSignatureIncident;
   typedef ClientIncidentReport_IncidentData_ResourceRequestIncident ResourceRequestIncident;
-  typedef ClientIncidentReport_IncidentData_SuspiciousModuleIncident SuspiciousModuleIncident;
 
   // accessors -------------------------------------------------------
 
@@ -5802,24 +6471,6 @@ class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite
   ::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident* release_binary_integrity();
   void set_allocated_binary_integrity(::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident* binary_integrity);
 
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
-  bool has_blacklist_load() const;
-  void clear_blacklist_load();
-  static const int kBlacklistLoadFieldNumber = 4;
-  const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident& blacklist_load() const;
-  ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* mutable_blacklist_load();
-  ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* release_blacklist_load();
-  void set_allocated_blacklist_load(::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* blacklist_load);
-
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-  bool has_variations_seed_signature() const;
-  void clear_variations_seed_signature();
-  static const int kVariationsSeedSignatureFieldNumber = 6;
-  const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& variations_seed_signature() const;
-  ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* mutable_variations_seed_signature();
-  ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* release_variations_seed_signature();
-  void set_allocated_variations_seed_signature(::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* variations_seed_signature);
-
   // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
   bool has_resource_request() const;
   void clear_resource_request();
@@ -5828,15 +6479,6 @@ class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite
   ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident* mutable_resource_request();
   ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident* release_resource_request();
   void set_allocated_resource_request(::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident* resource_request);
-
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-  bool has_suspicious_module() const;
-  void clear_suspicious_module();
-  static const int kSuspiciousModuleFieldNumber = 8;
-  const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident& suspicious_module() const;
-  ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* mutable_suspicious_module();
-  ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* release_suspicious_module();
-  void set_allocated_suspicious_module(::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* suspicious_module);
 
   // optional int64 incident_time_msec = 1;
   bool has_incident_time_msec() const;
@@ -5853,24 +6495,15 @@ class ClientIncidentReport_IncidentData : public ::google::protobuf::MessageLite
   void clear_has_tracked_preference();
   void set_has_binary_integrity();
   void clear_has_binary_integrity();
-  void set_has_blacklist_load();
-  void clear_has_blacklist_load();
-  void set_has_variations_seed_signature();
-  void clear_has_variations_seed_signature();
   void set_has_resource_request();
   void clear_has_resource_request();
-  void set_has_suspicious_module();
-  void clear_has_suspicious_module();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
   ::safe_browsing::ClientIncidentReport_IncidentData_TrackedPreferenceIncident* tracked_preference_;
   ::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident* binary_integrity_;
-  ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* blacklist_load_;
-  ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* variations_seed_signature_;
   ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident* resource_request_;
-  ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* suspicious_module_;
   ::google::protobuf::int64 incident_time_msec_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
@@ -5916,7 +6549,7 @@ class ClientIncidentReport_DownloadDetails : public ::google::protobuf::MessageL
                &_ClientIncidentReport_DownloadDetails_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    34;
+    37;
 
   void Swap(ClientIncidentReport_DownloadDetails* other);
   friend void swap(ClientIncidentReport_DownloadDetails& a, ClientIncidentReport_DownloadDetails& b) {
@@ -6062,7 +6695,7 @@ class ClientIncidentReport_EnvironmentData_OS_RegistryValue : public ::google::p
                &_ClientIncidentReport_EnvironmentData_OS_RegistryValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    35;
+    38;
 
   void Swap(ClientIncidentReport_EnvironmentData_OS_RegistryValue* other);
   friend void swap(ClientIncidentReport_EnvironmentData_OS_RegistryValue& a, ClientIncidentReport_EnvironmentData_OS_RegistryValue& b) {
@@ -6204,7 +6837,7 @@ class ClientIncidentReport_EnvironmentData_OS_RegistryKey : public ::google::pro
                &_ClientIncidentReport_EnvironmentData_OS_RegistryKey_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    36;
+    39;
 
   void Swap(ClientIncidentReport_EnvironmentData_OS_RegistryKey* other);
   friend void swap(ClientIncidentReport_EnvironmentData_OS_RegistryKey& a, ClientIncidentReport_EnvironmentData_OS_RegistryKey& b) {
@@ -6344,7 +6977,7 @@ class ClientIncidentReport_EnvironmentData_OS : public ::google::protobuf::Messa
                &_ClientIncidentReport_EnvironmentData_OS_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    37;
+    40;
 
   void Swap(ClientIncidentReport_EnvironmentData_OS* other);
   friend void swap(ClientIncidentReport_EnvironmentData_OS& a, ClientIncidentReport_EnvironmentData_OS& b) {
@@ -6502,7 +7135,7 @@ class ClientIncidentReport_EnvironmentData_Machine : public ::google::protobuf::
                &_ClientIncidentReport_EnvironmentData_Machine_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    38;
+    41;
 
   void Swap(ClientIncidentReport_EnvironmentData_Machine* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Machine& a, ClientIncidentReport_EnvironmentData_Machine& b) {
@@ -6644,7 +7277,7 @@ class ClientIncidentReport_EnvironmentData_Process_Patch : public ::google::prot
                &_ClientIncidentReport_EnvironmentData_Process_Patch_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    39;
+    42;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process_Patch* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process_Patch& a, ClientIncidentReport_EnvironmentData_Process_Patch& b) {
@@ -6776,7 +7409,7 @@ class ClientIncidentReport_EnvironmentData_Process_NetworkProvider : public ::go
                &_ClientIncidentReport_EnvironmentData_Process_NetworkProvider_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    40;
+    43;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process_NetworkProvider* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process_NetworkProvider& a, ClientIncidentReport_EnvironmentData_Process_NetworkProvider& b) {
@@ -6872,7 +7505,7 @@ class ClientIncidentReport_EnvironmentData_Process_Dll : public ::google::protob
                &_ClientIncidentReport_EnvironmentData_Process_Dll_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    41;
+    44;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process_Dll* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process_Dll& a, ClientIncidentReport_EnvironmentData_Process_Dll& b) {
@@ -7044,7 +7677,7 @@ class ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification : pu
                &_ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    42;
+    45;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification& a, ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification& b) {
@@ -7196,7 +7829,7 @@ class ClientIncidentReport_EnvironmentData_Process_ModuleState : public ::google
                &_ClientIncidentReport_EnvironmentData_Process_ModuleState_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    43;
+    46;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process_ModuleState* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process_ModuleState& a, ClientIncidentReport_EnvironmentData_Process_ModuleState& b) {
@@ -7377,7 +8010,7 @@ class ClientIncidentReport_EnvironmentData_Process : public ::google::protobuf::
                &_ClientIncidentReport_EnvironmentData_Process_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    44;
+    47;
 
   void Swap(ClientIncidentReport_EnvironmentData_Process* other);
   friend void swap(ClientIncidentReport_EnvironmentData_Process& a, ClientIncidentReport_EnvironmentData_Process& b) {
@@ -7577,19 +8210,19 @@ class ClientIncidentReport_EnvironmentData_Process : public ::google::protobuf::
   bool metrics_consent() const;
   void set_metrics_consent(bool value);
 
-  // optional bool extended_consent = 8;
-  bool has_extended_consent() const;
-  void clear_extended_consent();
-  static const int kExtendedConsentFieldNumber = 8;
-  bool extended_consent() const;
-  void set_extended_consent(bool value);
+  // optional bool OBSOLETE_extended_consent = 8;
+  bool has_obsolete_extended_consent() const;
+  void clear_obsolete_extended_consent();
+  static const int kOBSOLETEExtendedConsentFieldNumber = 8;
+  bool obsolete_extended_consent() const;
+  void set_obsolete_extended_consent(bool value);
 
-  // optional bool field_trial_participant = 12;
-  bool has_field_trial_participant() const;
-  void clear_field_trial_participant();
-  static const int kFieldTrialParticipantFieldNumber = 12;
-  bool field_trial_participant() const;
-  void set_field_trial_participant(bool value);
+  // optional bool OBSOLETE_field_trial_participant = 12;
+  bool has_obsolete_field_trial_participant() const;
+  void clear_obsolete_field_trial_participant();
+  static const int kOBSOLETEFieldTrialParticipantFieldNumber = 12;
+  bool obsolete_field_trial_participant() const;
+  void set_obsolete_field_trial_participant(bool value);
 
   // @@protoc_insertion_point(class_scope:safe_browsing.ClientIncidentReport.EnvironmentData.Process)
  private:
@@ -7601,10 +8234,10 @@ class ClientIncidentReport_EnvironmentData_Process : public ::google::protobuf::
   void clear_has_uptime_msec();
   void set_has_metrics_consent();
   void clear_has_metrics_consent();
-  void set_has_extended_consent();
-  void clear_has_extended_consent();
-  void set_has_field_trial_participant();
-  void clear_has_field_trial_participant();
+  void set_has_obsolete_extended_consent();
+  void clear_has_obsolete_extended_consent();
+  void set_has_obsolete_field_trial_participant();
+  void clear_has_obsolete_field_trial_participant();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -7619,8 +8252,8 @@ class ClientIncidentReport_EnvironmentData_Process : public ::google::protobuf::
   ::google::protobuf::int64 uptime_msec_;
   int chrome_update_channel_;
   bool metrics_consent_;
-  bool extended_consent_;
-  bool field_trial_participant_;
+  bool obsolete_extended_consent_;
+  bool obsolete_field_trial_participant_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -7665,7 +8298,7 @@ class ClientIncidentReport_EnvironmentData : public ::google::protobuf::MessageL
                &_ClientIncidentReport_EnvironmentData_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    45;
+    48;
 
   void Swap(ClientIncidentReport_EnvironmentData* other);
   friend void swap(ClientIncidentReport_EnvironmentData& a, ClientIncidentReport_EnvironmentData& b) {
@@ -7801,7 +8434,7 @@ class ClientIncidentReport_ExtensionData_ExtensionInfo : public ::google::protob
                &_ClientIncidentReport_ExtensionData_ExtensionInfo_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    46;
+    49;
 
   void Swap(ClientIncidentReport_ExtensionData_ExtensionInfo* other);
   friend void swap(ClientIncidentReport_ExtensionData_ExtensionInfo& a, ClientIncidentReport_ExtensionData_ExtensionInfo& b) {
@@ -8158,7 +8791,7 @@ class ClientIncidentReport_ExtensionData : public ::google::protobuf::MessageLit
                &_ClientIncidentReport_ExtensionData_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    47;
+    50;
 
   void Swap(ClientIncidentReport_ExtensionData* other);
   friend void swap(ClientIncidentReport_ExtensionData& a, ClientIncidentReport_ExtensionData& b) {
@@ -8268,7 +8901,7 @@ class ClientIncidentReport_NonBinaryDownloadDetails : public ::google::protobuf:
                &_ClientIncidentReport_NonBinaryDownloadDetails_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    48;
+    51;
 
   void Swap(ClientIncidentReport_NonBinaryDownloadDetails* other);
   friend void swap(ClientIncidentReport_NonBinaryDownloadDetails& a, ClientIncidentReport_NonBinaryDownloadDetails& b) {
@@ -8428,7 +9061,7 @@ class ClientIncidentReport : public ::google::protobuf::MessageLite /* @@protoc_
                &_ClientIncidentReport_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    49;
+    52;
 
   void Swap(ClientIncidentReport* other);
   friend void swap(ClientIncidentReport& a, ClientIncidentReport& b) {
@@ -8603,7 +9236,7 @@ class ClientIncidentResponse_EnvironmentRequest : public ::google::protobuf::Mes
                &_ClientIncidentResponse_EnvironmentRequest_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    50;
+    53;
 
   void Swap(ClientIncidentResponse_EnvironmentRequest* other);
   friend void swap(ClientIncidentResponse_EnvironmentRequest& a, ClientIncidentResponse_EnvironmentRequest& b) {
@@ -8709,7 +9342,7 @@ class ClientIncidentResponse : public ::google::protobuf::MessageLite /* @@proto
                &_ClientIncidentResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    51;
+    54;
 
   void Swap(ClientIncidentResponse* other);
   friend void swap(ClientIncidentResponse& a, ClientIncidentResponse& b) {
@@ -8848,7 +9481,7 @@ class DownloadMetadata : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_DownloadMetadata_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    52;
+    55;
 
   void Swap(DownloadMetadata* other);
   friend void swap(DownloadMetadata& a, DownloadMetadata& b) {
@@ -8966,7 +9599,7 @@ class ClientSafeBrowsingReportRequest_HTTPHeader : public ::google::protobuf::Me
                &_ClientSafeBrowsingReportRequest_HTTPHeader_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    53;
+    56;
 
   void Swap(ClientSafeBrowsingReportRequest_HTTPHeader* other);
   friend void swap(ClientSafeBrowsingReportRequest_HTTPHeader& a, ClientSafeBrowsingReportRequest_HTTPHeader& b) {
@@ -9098,7 +9731,7 @@ class ClientSafeBrowsingReportRequest_HTTPRequest_FirstLine : public ::google::p
                &_ClientSafeBrowsingReportRequest_HTTPRequest_FirstLine_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    54;
+    57;
 
   void Swap(ClientSafeBrowsingReportRequest_HTTPRequest_FirstLine* other);
   friend void swap(ClientSafeBrowsingReportRequest_HTTPRequest_FirstLine& a, ClientSafeBrowsingReportRequest_HTTPRequest_FirstLine& b) {
@@ -9248,7 +9881,7 @@ class ClientSafeBrowsingReportRequest_HTTPRequest : public ::google::protobuf::M
                &_ClientSafeBrowsingReportRequest_HTTPRequest_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    55;
+    58;
 
   void Swap(ClientSafeBrowsingReportRequest_HTTPRequest* other);
   friend void swap(ClientSafeBrowsingReportRequest_HTTPRequest& a, ClientSafeBrowsingReportRequest_HTTPRequest& b) {
@@ -9417,7 +10050,7 @@ class ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine : public ::google::
                &_ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    56;
+    59;
 
   void Swap(ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine* other);
   friend void swap(ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine& a, ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine& b) {
@@ -9463,20 +10096,20 @@ class ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine : public ::google::
 
   // accessors -------------------------------------------------------
 
-  // optional bytes reason = 2;
-  bool has_reason() const;
-  void clear_reason();
-  static const int kReasonFieldNumber = 2;
-  const ::std::string& reason() const;
-  void set_reason(const ::std::string& value);
+  // optional bytes message = 2;
+  bool has_message() const;
+  void clear_message();
+  static const int kMessageFieldNumber = 2;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
   #if LANG_CXX11
-  void set_reason(::std::string&& value);
+  void set_message(::std::string&& value);
   #endif
-  void set_reason(const char* value);
-  void set_reason(const void* value, size_t size);
-  ::std::string* mutable_reason();
-  ::std::string* release_reason();
-  void set_allocated_reason(::std::string* reason);
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
 
   // optional bytes version = 3;
   bool has_version() const;
@@ -9504,15 +10137,15 @@ class ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine : public ::google::
  private:
   void set_has_code();
   void clear_has_code();
-  void set_has_reason();
-  void clear_has_reason();
+  void set_has_message();
+  void clear_has_message();
   void set_has_version();
   void clear_has_version();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
-  ::google::protobuf::internal::ArenaStringPtr reason_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
   ::google::protobuf::internal::ArenaStringPtr version_;
   ::google::protobuf::int32 code_;
   friend struct protobuf_csd_2eproto::TableStruct;
@@ -9559,7 +10192,7 @@ class ClientSafeBrowsingReportRequest_HTTPResponse : public ::google::protobuf::
                &_ClientSafeBrowsingReportRequest_HTTPResponse_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    57;
+    60;
 
   void Swap(ClientSafeBrowsingReportRequest_HTTPResponse* other);
   friend void swap(ClientSafeBrowsingReportRequest_HTTPResponse& a, ClientSafeBrowsingReportRequest_HTTPResponse& b) {
@@ -9746,7 +10379,7 @@ class ClientSafeBrowsingReportRequest_Resource : public ::google::protobuf::Mess
                &_ClientSafeBrowsingReportRequest_Resource_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    58;
+    61;
 
   void Swap(ClientSafeBrowsingReportRequest_Resource* other);
   friend void swap(ClientSafeBrowsingReportRequest_Resource& a, ClientSafeBrowsingReportRequest_Resource& b) {
@@ -9895,6 +10528,150 @@ class ClientSafeBrowsingReportRequest_Resource : public ::google::protobuf::Mess
 };
 // -------------------------------------------------------------------
 
+class ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties) */ {
+ public:
+  ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties();
+  virtual ~ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties();
+
+  ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from);
+
+  inline ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& operator=(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties&& from) noexcept
+    : ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties() {
+    *this = ::std::move(from);
+  }
+
+  inline ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& operator=(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& default_instance();
+
+  static inline const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* internal_default_instance() {
+    return reinterpret_cast<const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties*>(
+               &_ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    62;
+
+  void Swap(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* other);
+  friend void swap(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& a, ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from);
+  void MergeFrom(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string client_version = 1;
+  bool has_client_version() const;
+  void clear_client_version();
+  static const int kClientVersionFieldNumber = 1;
+  const ::std::string& client_version() const;
+  void set_client_version(const ::std::string& value);
+  #if LANG_CXX11
+  void set_client_version(::std::string&& value);
+  #endif
+  void set_client_version(const char* value);
+  void set_client_version(const char* value, size_t size);
+  ::std::string* mutable_client_version();
+  ::std::string* release_client_version();
+  void set_allocated_client_version(::std::string* client_version);
+
+  // optional int64 google_play_services_version = 2;
+  bool has_google_play_services_version() const;
+  void clear_google_play_services_version();
+  static const int kGooglePlayServicesVersionFieldNumber = 2;
+  ::google::protobuf::int64 google_play_services_version() const;
+  void set_google_play_services_version(::google::protobuf::int64 value);
+
+  // optional bool is_instant_apps = 3;
+  bool has_is_instant_apps() const;
+  void clear_is_instant_apps();
+  static const int kIsInstantAppsFieldNumber = 3;
+  bool is_instant_apps() const;
+  void set_is_instant_apps(bool value);
+
+  // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+  bool has_url_api_type() const;
+  void clear_url_api_type();
+  static const int kUrlApiTypeFieldNumber = 4;
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType url_api_type() const;
+  void set_url_api_type(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+ private:
+  void set_has_client_version();
+  void clear_has_client_version();
+  void set_has_google_play_services_version();
+  void clear_has_google_play_services_version();
+  void set_has_is_instant_apps();
+  void clear_has_is_instant_apps();
+  void set_has_url_api_type();
+  void clear_has_url_api_type();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr client_version_;
+  ::google::protobuf::int64 google_play_services_version_;
+  bool is_instant_apps_;
+  int url_api_type_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ClientSafeBrowsingReportRequest) */ {
  public:
   ClientSafeBrowsingReportRequest();
@@ -9935,7 +10712,7 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
                &_ClientSafeBrowsingReportRequest_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    59;
+    63;
 
   void Swap(ClientSafeBrowsingReportRequest* other);
   friend void swap(ClientSafeBrowsingReportRequest& a, ClientSafeBrowsingReportRequest& b) {
@@ -9983,6 +10760,7 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
   typedef ClientSafeBrowsingReportRequest_HTTPRequest HTTPRequest;
   typedef ClientSafeBrowsingReportRequest_HTTPResponse HTTPResponse;
   typedef ClientSafeBrowsingReportRequest_Resource Resource;
+  typedef ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties SafeBrowsingClientProperties;
 
   typedef ClientSafeBrowsingReportRequest_ReportType ReportType;
   static const ReportType UNKNOWN =
@@ -9993,16 +10771,22 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
     ClientSafeBrowsingReportRequest_ReportType_URL_MALWARE;
   static const ReportType URL_UNWANTED =
     ClientSafeBrowsingReportRequest_ReportType_URL_UNWANTED;
-  static const ReportType CLIENT_SIDE_PHISHING_URL =
-    ClientSafeBrowsingReportRequest_ReportType_CLIENT_SIDE_PHISHING_URL;
-  static const ReportType CLIENT_SIDE_MALWARE_URL =
-    ClientSafeBrowsingReportRequest_ReportType_CLIENT_SIDE_MALWARE_URL;
+  static const ReportType URL_CLIENT_SIDE_PHISHING =
+    ClientSafeBrowsingReportRequest_ReportType_URL_CLIENT_SIDE_PHISHING;
+  static const ReportType URL_CLIENT_SIDE_MALWARE =
+    ClientSafeBrowsingReportRequest_ReportType_URL_CLIENT_SIDE_MALWARE;
   static const ReportType DANGEROUS_DOWNLOAD_RECOVERY =
     ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_RECOVERY;
   static const ReportType DANGEROUS_DOWNLOAD_WARNING =
     ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_WARNING;
   static const ReportType DANGEROUS_DOWNLOAD_BY_API =
     ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_BY_API;
+  static const ReportType URL_PASSWORD_PROTECTION_PHISHING =
+    ClientSafeBrowsingReportRequest_ReportType_URL_PASSWORD_PROTECTION_PHISHING;
+  static const ReportType DANGEROUS_DOWNLOAD_OPENED =
+    ClientSafeBrowsingReportRequest_ReportType_DANGEROUS_DOWNLOAD_OPENED;
+  static const ReportType AD_SAMPLE =
+    ClientSafeBrowsingReportRequest_ReportType_AD_SAMPLE;
   static inline bool ReportType_IsValid(int value) {
     return ClientSafeBrowsingReportRequest_ReportType_IsValid(value);
   }
@@ -10012,6 +10796,27 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
     ClientSafeBrowsingReportRequest_ReportType_ReportType_MAX;
   static const int ReportType_ARRAYSIZE =
     ClientSafeBrowsingReportRequest_ReportType_ReportType_ARRAYSIZE;
+
+  typedef ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType SafeBrowsingUrlApiType;
+  static const SafeBrowsingUrlApiType SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED;
+  static const SafeBrowsingUrlApiType PVER3_NATIVE =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_PVER3_NATIVE;
+  static const SafeBrowsingUrlApiType PVER4_NATIVE =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_PVER4_NATIVE;
+  static const SafeBrowsingUrlApiType ANDROID_SAFETYNET =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_ANDROID_SAFETYNET;
+  static const SafeBrowsingUrlApiType FLYWHEEL =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_FLYWHEEL;
+  static inline bool SafeBrowsingUrlApiType_IsValid(int value) {
+    return ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(value);
+  }
+  static const SafeBrowsingUrlApiType SafeBrowsingUrlApiType_MIN =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_MIN;
+  static const SafeBrowsingUrlApiType SafeBrowsingUrlApiType_MAX =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_MAX;
+  static const int SafeBrowsingUrlApiType_ARRAYSIZE =
+    ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_SafeBrowsingUrlApiType_ARRAYSIZE;
 
   // accessors -------------------------------------------------------
 
@@ -10048,6 +10853,18 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
   void add_client_asn(const char* value, size_t size);
   const ::google::protobuf::RepeatedPtrField< ::std::string>& client_asn() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_client_asn();
+
+  // repeated .safe_browsing.HTMLElement dom = 16;
+  int dom_size() const;
+  void clear_dom();
+  static const int kDomFieldNumber = 16;
+  const ::safe_browsing::HTMLElement& dom(int index) const;
+  ::safe_browsing::HTMLElement* mutable_dom(int index);
+  ::safe_browsing::HTMLElement* add_dom();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >*
+      mutable_dom();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >&
+      dom() const;
 
   // optional string url = 1;
   bool has_url() const;
@@ -10124,6 +10941,22 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
   ::std::string* release_token();
   void set_allocated_token(::std::string* token);
 
+  // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+  bool has_client_properties() const;
+  void clear_client_properties();
+  static const int kClientPropertiesFieldNumber = 17;
+  const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& client_properties() const;
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* mutable_client_properties();
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* release_client_properties();
+  void set_allocated_client_properties(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* client_properties);
+
+  // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
+  bool has_type() const;
+  void clear_type();
+  static const int kTypeFieldNumber = 10;
+  ::safe_browsing::ClientSafeBrowsingReportRequest_ReportType type() const;
+  void set_type(::safe_browsing::ClientSafeBrowsingReportRequest_ReportType value);
+
   // optional bool complete = 5;
   bool has_complete() const;
   void clear_complete();
@@ -10145,12 +10978,12 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
   bool repeat_visit() const;
   void set_repeat_visit(bool value);
 
-  // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
-  bool has_type() const;
-  void clear_type();
-  static const int kTypeFieldNumber = 10;
-  ::safe_browsing::ClientSafeBrowsingReportRequest_ReportType type() const;
-  void set_type(::safe_browsing::ClientSafeBrowsingReportRequest_ReportType value);
+  // optional bool show_download_in_folder = 18;
+  bool has_show_download_in_folder() const;
+  void clear_show_download_in_folder();
+  static const int kShowDownloadInFolderFieldNumber = 18;
+  bool show_download_in_folder() const;
+  void set_show_download_in_folder(bool value);
 
   // optional .safe_browsing.ClientDownloadResponse.Verdict download_verdict = 11;
   bool has_download_verdict() const;
@@ -10181,22 +11014,723 @@ class ClientSafeBrowsingReportRequest : public ::google::protobuf::MessageLite /
   void clear_has_repeat_visit();
   void set_has_token();
   void clear_has_token();
+  void set_has_client_properties();
+  void clear_has_client_properties();
+  void set_has_show_download_in_folder();
+  void clear_has_show_download_in_folder();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
   ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientSafeBrowsingReportRequest_Resource > resources_;
   ::google::protobuf::RepeatedPtrField< ::std::string> client_asn_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement > dom_;
   ::google::protobuf::internal::ArenaStringPtr url_;
   ::google::protobuf::internal::ArenaStringPtr page_url_;
   ::google::protobuf::internal::ArenaStringPtr referrer_url_;
   ::google::protobuf::internal::ArenaStringPtr client_country_;
   ::google::protobuf::internal::ArenaStringPtr token_;
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* client_properties_;
+  int type_;
   bool complete_;
   bool did_proceed_;
   bool repeat_visit_;
-  int type_;
+  bool show_download_in_folder_;
   int download_verdict_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class HTMLElement_Attribute : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.HTMLElement.Attribute) */ {
+ public:
+  HTMLElement_Attribute();
+  virtual ~HTMLElement_Attribute();
+
+  HTMLElement_Attribute(const HTMLElement_Attribute& from);
+
+  inline HTMLElement_Attribute& operator=(const HTMLElement_Attribute& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  HTMLElement_Attribute(HTMLElement_Attribute&& from) noexcept
+    : HTMLElement_Attribute() {
+    *this = ::std::move(from);
+  }
+
+  inline HTMLElement_Attribute& operator=(HTMLElement_Attribute&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const HTMLElement_Attribute& default_instance();
+
+  static inline const HTMLElement_Attribute* internal_default_instance() {
+    return reinterpret_cast<const HTMLElement_Attribute*>(
+               &_HTMLElement_Attribute_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    64;
+
+  void Swap(HTMLElement_Attribute* other);
+  friend void swap(HTMLElement_Attribute& a, HTMLElement_Attribute& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline HTMLElement_Attribute* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  HTMLElement_Attribute* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const HTMLElement_Attribute& from);
+  void MergeFrom(const HTMLElement_Attribute& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(HTMLElement_Attribute* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string name = 1;
+  bool has_name() const;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+
+  // optional string value = 2;
+  bool has_value() const;
+  void clear_value();
+  static const int kValueFieldNumber = 2;
+  const ::std::string& value() const;
+  void set_value(const ::std::string& value);
+  #if LANG_CXX11
+  void set_value(::std::string&& value);
+  #endif
+  void set_value(const char* value);
+  void set_value(const char* value, size_t size);
+  ::std::string* mutable_value();
+  ::std::string* release_value();
+  void set_allocated_value(::std::string* value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.HTMLElement.Attribute)
+ private:
+  void set_has_name();
+  void clear_has_name();
+  void set_has_value();
+  void clear_has_value();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
+  ::google::protobuf::internal::ArenaStringPtr value_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class HTMLElement : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.HTMLElement) */ {
+ public:
+  HTMLElement();
+  virtual ~HTMLElement();
+
+  HTMLElement(const HTMLElement& from);
+
+  inline HTMLElement& operator=(const HTMLElement& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  HTMLElement(HTMLElement&& from) noexcept
+    : HTMLElement() {
+    *this = ::std::move(from);
+  }
+
+  inline HTMLElement& operator=(HTMLElement&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const HTMLElement& default_instance();
+
+  static inline const HTMLElement* internal_default_instance() {
+    return reinterpret_cast<const HTMLElement*>(
+               &_HTMLElement_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    65;
+
+  void Swap(HTMLElement* other);
+  friend void swap(HTMLElement& a, HTMLElement& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline HTMLElement* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  HTMLElement* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const HTMLElement& from);
+  void MergeFrom(const HTMLElement& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(HTMLElement* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef HTMLElement_Attribute Attribute;
+
+  // accessors -------------------------------------------------------
+
+  // repeated int32 child_ids = 3;
+  int child_ids_size() const;
+  void clear_child_ids();
+  static const int kChildIdsFieldNumber = 3;
+  ::google::protobuf::int32 child_ids(int index) const;
+  void set_child_ids(int index, ::google::protobuf::int32 value);
+  void add_child_ids(::google::protobuf::int32 value);
+  const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      child_ids() const;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_child_ids();
+
+  // repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+  int attribute_size() const;
+  void clear_attribute();
+  static const int kAttributeFieldNumber = 6;
+  const ::safe_browsing::HTMLElement_Attribute& attribute(int index) const;
+  ::safe_browsing::HTMLElement_Attribute* mutable_attribute(int index);
+  ::safe_browsing::HTMLElement_Attribute* add_attribute();
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >*
+      mutable_attribute();
+  const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >&
+      attribute() const;
+
+  // optional string tag = 2;
+  bool has_tag() const;
+  void clear_tag();
+  static const int kTagFieldNumber = 2;
+  const ::std::string& tag() const;
+  void set_tag(const ::std::string& value);
+  #if LANG_CXX11
+  void set_tag(::std::string&& value);
+  #endif
+  void set_tag(const char* value);
+  void set_tag(const char* value, size_t size);
+  ::std::string* mutable_tag();
+  ::std::string* release_tag();
+  void set_allocated_tag(::std::string* tag);
+
+  // optional int32 id = 1;
+  bool has_id() const;
+  void clear_id();
+  static const int kIdFieldNumber = 1;
+  ::google::protobuf::int32 id() const;
+  void set_id(::google::protobuf::int32 value);
+
+  // optional int32 resource_id = 5;
+  bool has_resource_id() const;
+  void clear_resource_id();
+  static const int kResourceIdFieldNumber = 5;
+  ::google::protobuf::int32 resource_id() const;
+  void set_resource_id(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.HTMLElement)
+ private:
+  void set_has_id();
+  void clear_has_id();
+  void set_has_tag();
+  void clear_has_tag();
+  void set_has_resource_id();
+  void clear_has_resource_id();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > child_ids_;
+  ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute > attribute_;
+  ::google::protobuf::internal::ArenaStringPtr tag_;
+  ::google::protobuf::int32 id_;
+  ::google::protobuf::int32 resource_id_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ImageData_Dimensions : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ImageData.Dimensions) */ {
+ public:
+  ImageData_Dimensions();
+  virtual ~ImageData_Dimensions();
+
+  ImageData_Dimensions(const ImageData_Dimensions& from);
+
+  inline ImageData_Dimensions& operator=(const ImageData_Dimensions& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ImageData_Dimensions(ImageData_Dimensions&& from) noexcept
+    : ImageData_Dimensions() {
+    *this = ::std::move(from);
+  }
+
+  inline ImageData_Dimensions& operator=(ImageData_Dimensions&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ImageData_Dimensions& default_instance();
+
+  static inline const ImageData_Dimensions* internal_default_instance() {
+    return reinterpret_cast<const ImageData_Dimensions*>(
+               &_ImageData_Dimensions_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    66;
+
+  void Swap(ImageData_Dimensions* other);
+  friend void swap(ImageData_Dimensions& a, ImageData_Dimensions& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ImageData_Dimensions* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ImageData_Dimensions* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ImageData_Dimensions& from);
+  void MergeFrom(const ImageData_Dimensions& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ImageData_Dimensions* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 width = 1;
+  bool has_width() const;
+  void clear_width();
+  static const int kWidthFieldNumber = 1;
+  ::google::protobuf::int32 width() const;
+  void set_width(::google::protobuf::int32 value);
+
+  // optional int32 height = 2;
+  bool has_height() const;
+  void clear_height();
+  static const int kHeightFieldNumber = 2;
+  ::google::protobuf::int32 height() const;
+  void set_height(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ImageData.Dimensions)
+ private:
+  void set_has_width();
+  void clear_has_width();
+  void set_has_height();
+  void clear_has_height();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::int32 width_;
+  ::google::protobuf::int32 height_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ImageData : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.ImageData) */ {
+ public:
+  ImageData();
+  virtual ~ImageData();
+
+  ImageData(const ImageData& from);
+
+  inline ImageData& operator=(const ImageData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ImageData(ImageData&& from) noexcept
+    : ImageData() {
+    *this = ::std::move(from);
+  }
+
+  inline ImageData& operator=(ImageData&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ImageData& default_instance();
+
+  static inline const ImageData* internal_default_instance() {
+    return reinterpret_cast<const ImageData*>(
+               &_ImageData_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    67;
+
+  void Swap(ImageData* other);
+  friend void swap(ImageData& a, ImageData& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ImageData* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ImageData* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ImageData& from);
+  void MergeFrom(const ImageData& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ImageData* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef ImageData_Dimensions Dimensions;
+
+  // accessors -------------------------------------------------------
+
+  // optional bytes data = 1;
+  bool has_data() const;
+  void clear_data();
+  static const int kDataFieldNumber = 1;
+  const ::std::string& data() const;
+  void set_data(const ::std::string& value);
+  #if LANG_CXX11
+  void set_data(::std::string&& value);
+  #endif
+  void set_data(const char* value);
+  void set_data(const void* value, size_t size);
+  ::std::string* mutable_data();
+  ::std::string* release_data();
+  void set_allocated_data(::std::string* data);
+
+  // optional string mime_type = 2;
+  bool has_mime_type() const;
+  void clear_mime_type();
+  static const int kMimeTypeFieldNumber = 2;
+  const ::std::string& mime_type() const;
+  void set_mime_type(const ::std::string& value);
+  #if LANG_CXX11
+  void set_mime_type(::std::string&& value);
+  #endif
+  void set_mime_type(const char* value);
+  void set_mime_type(const char* value, size_t size);
+  ::std::string* mutable_mime_type();
+  ::std::string* release_mime_type();
+  void set_allocated_mime_type(::std::string* mime_type);
+
+  // optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+  bool has_dimensions() const;
+  void clear_dimensions();
+  static const int kDimensionsFieldNumber = 3;
+  const ::safe_browsing::ImageData_Dimensions& dimensions() const;
+  ::safe_browsing::ImageData_Dimensions* mutable_dimensions();
+  ::safe_browsing::ImageData_Dimensions* release_dimensions();
+  void set_allocated_dimensions(::safe_browsing::ImageData_Dimensions* dimensions);
+
+  // optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+  bool has_original_dimensions() const;
+  void clear_original_dimensions();
+  static const int kOriginalDimensionsFieldNumber = 4;
+  const ::safe_browsing::ImageData_Dimensions& original_dimensions() const;
+  ::safe_browsing::ImageData_Dimensions* mutable_original_dimensions();
+  ::safe_browsing::ImageData_Dimensions* release_original_dimensions();
+  void set_allocated_original_dimensions(::safe_browsing::ImageData_Dimensions* original_dimensions);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.ImageData)
+ private:
+  void set_has_data();
+  void clear_has_data();
+  void set_has_mime_type();
+  void clear_has_mime_type();
+  void set_has_dimensions();
+  void clear_has_dimensions();
+  void set_has_original_dimensions();
+  void clear_has_original_dimensions();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr data_;
+  ::google::protobuf::internal::ArenaStringPtr mime_type_;
+  ::safe_browsing::ImageData_Dimensions* dimensions_;
+  ::safe_browsing::ImageData_Dimensions* original_dimensions_;
+  friend struct protobuf_csd_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class NotificationImageReportRequest : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:safe_browsing.NotificationImageReportRequest) */ {
+ public:
+  NotificationImageReportRequest();
+  virtual ~NotificationImageReportRequest();
+
+  NotificationImageReportRequest(const NotificationImageReportRequest& from);
+
+  inline NotificationImageReportRequest& operator=(const NotificationImageReportRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  NotificationImageReportRequest(NotificationImageReportRequest&& from) noexcept
+    : NotificationImageReportRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline NotificationImageReportRequest& operator=(NotificationImageReportRequest&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::std::string& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::std::string* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const NotificationImageReportRequest& default_instance();
+
+  static inline const NotificationImageReportRequest* internal_default_instance() {
+    return reinterpret_cast<const NotificationImageReportRequest*>(
+               &_NotificationImageReportRequest_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    68;
+
+  void Swap(NotificationImageReportRequest* other);
+  friend void swap(NotificationImageReportRequest& a, NotificationImageReportRequest& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NotificationImageReportRequest* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  NotificationImageReportRequest* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const NotificationImageReportRequest& from);
+  void MergeFrom(const NotificationImageReportRequest& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(NotificationImageReportRequest* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional string notification_origin = 1;
+  bool has_notification_origin() const;
+  void clear_notification_origin();
+  static const int kNotificationOriginFieldNumber = 1;
+  const ::std::string& notification_origin() const;
+  void set_notification_origin(const ::std::string& value);
+  #if LANG_CXX11
+  void set_notification_origin(::std::string&& value);
+  #endif
+  void set_notification_origin(const char* value);
+  void set_notification_origin(const char* value, size_t size);
+  ::std::string* mutable_notification_origin();
+  ::std::string* release_notification_origin();
+  void set_allocated_notification_origin(::std::string* notification_origin);
+
+  // optional .safe_browsing.ImageData image = 2;
+  bool has_image() const;
+  void clear_image();
+  static const int kImageFieldNumber = 2;
+  const ::safe_browsing::ImageData& image() const;
+  ::safe_browsing::ImageData* mutable_image();
+  ::safe_browsing::ImageData* release_image();
+  void set_allocated_image(::safe_browsing::ImageData* image);
+
+  // @@protoc_insertion_point(class_scope:safe_browsing.NotificationImageReportRequest)
+ private:
+  void set_has_notification_origin();
+  void clear_has_notification_origin();
+  void set_has_image();
+  void clear_has_image();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::internal::ArenaStringPtr notification_origin_;
+  ::safe_browsing::ImageData* image_;
   friend struct protobuf_csd_2eproto::TableStruct;
 };
 // ===================================================================
@@ -10234,6 +11768,99 @@ inline void ChromeUserPopulation::set_user_population(::safe_browsing::ChromeUse
   set_has_user_population();
   user_population_ = value;
   // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.user_population)
+}
+
+// optional bool is_history_sync_enabled = 2;
+inline bool ChromeUserPopulation::has_is_history_sync_enabled() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ChromeUserPopulation::set_has_is_history_sync_enabled() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ChromeUserPopulation::clear_has_is_history_sync_enabled() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ChromeUserPopulation::clear_is_history_sync_enabled() {
+  is_history_sync_enabled_ = false;
+  clear_has_is_history_sync_enabled();
+}
+inline bool ChromeUserPopulation::is_history_sync_enabled() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ChromeUserPopulation.is_history_sync_enabled)
+  return is_history_sync_enabled_;
+}
+inline void ChromeUserPopulation::set_is_history_sync_enabled(bool value) {
+  set_has_is_history_sync_enabled();
+  is_history_sync_enabled_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.is_history_sync_enabled)
+}
+
+// repeated string finch_active_groups = 4;
+inline int ChromeUserPopulation::finch_active_groups_size() const {
+  return finch_active_groups_.size();
+}
+inline void ChromeUserPopulation::clear_finch_active_groups() {
+  finch_active_groups_.Clear();
+}
+inline const ::std::string& ChromeUserPopulation::finch_active_groups(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Get(index);
+}
+inline ::std::string* ChromeUserPopulation::mutable_finch_active_groups(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Mutable(index);
+}
+inline void ChromeUserPopulation::set_finch_active_groups(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  finch_active_groups_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+inline void ChromeUserPopulation::set_finch_active_groups(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  finch_active_groups_.Mutable(index)->assign(std::move(value));
+}
+#endif
+inline void ChromeUserPopulation::set_finch_active_groups(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  finch_active_groups_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+inline void ChromeUserPopulation::set_finch_active_groups(int index, const char* value, size_t size) {
+  finch_active_groups_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+inline ::std::string* ChromeUserPopulation::add_finch_active_groups() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Add();
+}
+inline void ChromeUserPopulation::add_finch_active_groups(const ::std::string& value) {
+  finch_active_groups_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+#if LANG_CXX11
+inline void ChromeUserPopulation::add_finch_active_groups(::std::string&& value) {
+  finch_active_groups_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+#endif
+inline void ChromeUserPopulation::add_finch_active_groups(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  finch_active_groups_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+inline void ChromeUserPopulation::add_finch_active_groups(const char* value, size_t size) {
+  finch_active_groups_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ChromeUserPopulation::finch_active_groups() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ChromeUserPopulation::mutable_finch_active_groups() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return &finch_active_groups_;
 }
 
 // -------------------------------------------------------------------
@@ -11372,6 +12999,907 @@ inline void ClientMalwareRequest::set_allocated_population(::safe_browsing::Chro
     clear_has_population();
   }
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientMalwareRequest.population)
+}
+
+// -------------------------------------------------------------------
+
+// LoginReputationClientRequest_Frame_Form
+
+// optional string action_url = 1;
+inline bool LoginReputationClientRequest_Frame_Form::has_action_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LoginReputationClientRequest_Frame_Form::set_has_action_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LoginReputationClientRequest_Frame_Form::clear_has_action_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LoginReputationClientRequest_Frame_Form::clear_action_url() {
+  action_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_action_url();
+}
+inline const ::std::string& LoginReputationClientRequest_Frame_Form::action_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  return action_url_.GetNoArena();
+}
+inline void LoginReputationClientRequest_Frame_Form::set_action_url(const ::std::string& value) {
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+#if LANG_CXX11
+inline void LoginReputationClientRequest_Frame_Form::set_action_url(::std::string&& value) {
+  set_has_action_url();
+  action_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+#endif
+inline void LoginReputationClientRequest_Frame_Form::set_action_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+inline void LoginReputationClientRequest_Frame_Form::set_action_url(const char* value, size_t size) {
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+inline ::std::string* LoginReputationClientRequest_Frame_Form::mutable_action_url() {
+  set_has_action_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  return action_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* LoginReputationClientRequest_Frame_Form::release_action_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  clear_has_action_url();
+  return action_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void LoginReputationClientRequest_Frame_Form::set_allocated_action_url(::std::string* action_url) {
+  if (action_url != NULL) {
+    set_has_action_url();
+  } else {
+    clear_has_action_url();
+  }
+  action_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), action_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+
+// optional bool has_password_field = 2;
+inline bool LoginReputationClientRequest_Frame_Form::has_has_password_field() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LoginReputationClientRequest_Frame_Form::set_has_has_password_field() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LoginReputationClientRequest_Frame_Form::clear_has_has_password_field() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LoginReputationClientRequest_Frame_Form::clear_has_password_field() {
+  has_password_field_ = false;
+  clear_has_has_password_field();
+}
+inline bool LoginReputationClientRequest_Frame_Form::has_password_field() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.Form.has_password_field)
+  return has_password_field_;
+}
+inline void LoginReputationClientRequest_Frame_Form::set_has_password_field(bool value) {
+  set_has_has_password_field();
+  has_password_field_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.Form.has_password_field)
+}
+
+// -------------------------------------------------------------------
+
+// LoginReputationClientRequest_Frame
+
+// optional int32 frame_index = 1;
+inline bool LoginReputationClientRequest_Frame::has_frame_index() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LoginReputationClientRequest_Frame::set_has_frame_index() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LoginReputationClientRequest_Frame::clear_has_frame_index() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LoginReputationClientRequest_Frame::clear_frame_index() {
+  frame_index_ = 0;
+  clear_has_frame_index();
+}
+inline ::google::protobuf::int32 LoginReputationClientRequest_Frame::frame_index() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.frame_index)
+  return frame_index_;
+}
+inline void LoginReputationClientRequest_Frame::set_frame_index(::google::protobuf::int32 value) {
+  set_has_frame_index();
+  frame_index_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.frame_index)
+}
+
+// optional int32 parent_frame_index = 2;
+inline bool LoginReputationClientRequest_Frame::has_parent_frame_index() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LoginReputationClientRequest_Frame::set_has_parent_frame_index() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LoginReputationClientRequest_Frame::clear_has_parent_frame_index() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LoginReputationClientRequest_Frame::clear_parent_frame_index() {
+  parent_frame_index_ = 0;
+  clear_has_parent_frame_index();
+}
+inline ::google::protobuf::int32 LoginReputationClientRequest_Frame::parent_frame_index() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.parent_frame_index)
+  return parent_frame_index_;
+}
+inline void LoginReputationClientRequest_Frame::set_parent_frame_index(::google::protobuf::int32 value) {
+  set_has_parent_frame_index();
+  parent_frame_index_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.parent_frame_index)
+}
+
+// optional string url = 3;
+inline bool LoginReputationClientRequest_Frame::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LoginReputationClientRequest_Frame::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LoginReputationClientRequest_Frame::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LoginReputationClientRequest_Frame::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+inline const ::std::string& LoginReputationClientRequest_Frame::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.url)
+  return url_.GetNoArena();
+}
+inline void LoginReputationClientRequest_Frame::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+#if LANG_CXX11
+inline void LoginReputationClientRequest_Frame::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+#endif
+inline void LoginReputationClientRequest_Frame::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+inline void LoginReputationClientRequest_Frame::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+inline ::std::string* LoginReputationClientRequest_Frame::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* LoginReputationClientRequest_Frame::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.Frame.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void LoginReputationClientRequest_Frame::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+
+// optional bool has_password_field = 4;
+inline bool LoginReputationClientRequest_Frame::has_has_password_field() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LoginReputationClientRequest_Frame::set_has_has_password_field() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LoginReputationClientRequest_Frame::clear_has_has_password_field() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LoginReputationClientRequest_Frame::clear_has_password_field() {
+  has_password_field_ = false;
+  clear_has_has_password_field();
+}
+inline bool LoginReputationClientRequest_Frame::has_password_field() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.has_password_field)
+  return has_password_field_;
+}
+inline void LoginReputationClientRequest_Frame::set_has_password_field(bool value) {
+  set_has_has_password_field();
+  has_password_field_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.has_password_field)
+}
+
+// repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+inline int LoginReputationClientRequest_Frame::referrer_chain_size() const {
+  return referrer_chain_.size();
+}
+inline void LoginReputationClientRequest_Frame::clear_referrer_chain() {
+  referrer_chain_.Clear();
+}
+inline const ::safe_browsing::ReferrerChainEntry& LoginReputationClientRequest_Frame::referrer_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Get(index);
+}
+inline ::safe_browsing::ReferrerChainEntry* LoginReputationClientRequest_Frame::mutable_referrer_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Mutable(index);
+}
+inline ::safe_browsing::ReferrerChainEntry* LoginReputationClientRequest_Frame::add_referrer_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+LoginReputationClientRequest_Frame::mutable_referrer_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return &referrer_chain_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+LoginReputationClientRequest_Frame::referrer_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_;
+}
+
+// repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+inline int LoginReputationClientRequest_Frame::forms_size() const {
+  return forms_.size();
+}
+inline void LoginReputationClientRequest_Frame::clear_forms() {
+  forms_.Clear();
+}
+inline const ::safe_browsing::LoginReputationClientRequest_Frame_Form& LoginReputationClientRequest_Frame::forms(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Get(index);
+}
+inline ::safe_browsing::LoginReputationClientRequest_Frame_Form* LoginReputationClientRequest_Frame::mutable_forms(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Mutable(index);
+}
+inline ::safe_browsing::LoginReputationClientRequest_Frame_Form* LoginReputationClientRequest_Frame::add_forms() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >*
+LoginReputationClientRequest_Frame::mutable_forms() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return &forms_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >&
+LoginReputationClientRequest_Frame::forms() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_;
+}
+
+// -------------------------------------------------------------------
+
+// LoginReputationClientRequest_PasswordReuseEvent
+
+// repeated string domains_matching_password = 1;
+inline int LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password_size() const {
+  return domains_matching_password_.size();
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_domains_matching_password() {
+  domains_matching_password_.Clear();
+}
+inline const ::std::string& LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Get(index);
+}
+inline ::std::string* LoginReputationClientRequest_PasswordReuseEvent::mutable_domains_matching_password(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Mutable(index);
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  domains_matching_password_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  domains_matching_password_.Mutable(index)->assign(std::move(value));
+}
+#endif
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  domains_matching_password_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const char* value, size_t size) {
+  domains_matching_password_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+inline ::std::string* LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Add();
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const ::std::string& value) {
+  domains_matching_password_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+#if LANG_CXX11
+inline void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(::std::string&& value) {
+  domains_matching_password_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+#endif
+inline void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  domains_matching_password_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const char* value, size_t size) {
+  domains_matching_password_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+LoginReputationClientRequest_PasswordReuseEvent::mutable_domains_matching_password() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return &domains_matching_password_;
+}
+
+// optional int32 frame_id = 2;
+inline bool LoginReputationClientRequest_PasswordReuseEvent::has_frame_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_has_frame_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_has_frame_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_frame_id() {
+  frame_id_ = 0;
+  clear_has_frame_id();
+}
+inline ::google::protobuf::int32 LoginReputationClientRequest_PasswordReuseEvent::frame_id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.frame_id)
+  return frame_id_;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_frame_id(::google::protobuf::int32 value) {
+  set_has_frame_id();
+  frame_id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.frame_id)
+}
+
+// optional bool is_chrome_signin_password = 3;
+inline bool LoginReputationClientRequest_PasswordReuseEvent::has_is_chrome_signin_password() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_has_is_chrome_signin_password() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_has_is_chrome_signin_password() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_is_chrome_signin_password() {
+  is_chrome_signin_password_ = false;
+  clear_has_is_chrome_signin_password();
+}
+inline bool LoginReputationClientRequest_PasswordReuseEvent::is_chrome_signin_password() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.is_chrome_signin_password)
+  return is_chrome_signin_password_;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_is_chrome_signin_password(bool value) {
+  set_has_is_chrome_signin_password();
+  is_chrome_signin_password_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.is_chrome_signin_password)
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+inline bool LoginReputationClientRequest_PasswordReuseEvent::has_sync_account_type() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_has_sync_account_type() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_has_sync_account_type() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::clear_sync_account_type() {
+  sync_account_type_ = 0;
+  clear_has_sync_account_type();
+}
+inline ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::sync_account_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.sync_account_type)
+  return static_cast< ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType >(sync_account_type_);
+}
+inline void LoginReputationClientRequest_PasswordReuseEvent::set_sync_account_type(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType value) {
+  assert(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(value));
+  set_has_sync_account_type();
+  sync_account_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.sync_account_type)
+}
+
+// -------------------------------------------------------------------
+
+// LoginReputationClientRequest
+
+// optional string page_url = 1;
+inline bool LoginReputationClientRequest::has_page_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_page_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LoginReputationClientRequest::clear_has_page_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LoginReputationClientRequest::clear_page_url() {
+  page_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_page_url();
+}
+inline const ::std::string& LoginReputationClientRequest::page_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.page_url)
+  return page_url_.GetNoArena();
+}
+inline void LoginReputationClientRequest::set_page_url(const ::std::string& value) {
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.page_url)
+}
+#if LANG_CXX11
+inline void LoginReputationClientRequest::set_page_url(::std::string&& value) {
+  set_has_page_url();
+  page_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.page_url)
+}
+#endif
+inline void LoginReputationClientRequest::set_page_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.page_url)
+}
+inline void LoginReputationClientRequest::set_page_url(const char* value, size_t size) {
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.page_url)
+}
+inline ::std::string* LoginReputationClientRequest::mutable_page_url() {
+  set_has_page_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.page_url)
+  return page_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* LoginReputationClientRequest::release_page_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.page_url)
+  clear_has_page_url();
+  return page_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void LoginReputationClientRequest::set_allocated_page_url(::std::string* page_url) {
+  if (page_url != NULL) {
+    set_has_page_url();
+  } else {
+    clear_has_page_url();
+  }
+  page_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), page_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.page_url)
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+inline bool LoginReputationClientRequest::has_trigger_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_trigger_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LoginReputationClientRequest::clear_has_trigger_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LoginReputationClientRequest::clear_trigger_type() {
+  trigger_type_ = 0;
+  clear_has_trigger_type();
+}
+inline ::safe_browsing::LoginReputationClientRequest_TriggerType LoginReputationClientRequest::trigger_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.trigger_type)
+  return static_cast< ::safe_browsing::LoginReputationClientRequest_TriggerType >(trigger_type_);
+}
+inline void LoginReputationClientRequest::set_trigger_type(::safe_browsing::LoginReputationClientRequest_TriggerType value) {
+  assert(::safe_browsing::LoginReputationClientRequest_TriggerType_IsValid(value));
+  set_has_trigger_type();
+  trigger_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.trigger_type)
+}
+
+// repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+inline int LoginReputationClientRequest::frames_size() const {
+  return frames_.size();
+}
+inline void LoginReputationClientRequest::clear_frames() {
+  frames_.Clear();
+}
+inline const ::safe_browsing::LoginReputationClientRequest_Frame& LoginReputationClientRequest::frames(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Get(index);
+}
+inline ::safe_browsing::LoginReputationClientRequest_Frame* LoginReputationClientRequest::mutable_frames(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Mutable(index);
+}
+inline ::safe_browsing::LoginReputationClientRequest_Frame* LoginReputationClientRequest::add_frames() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >*
+LoginReputationClientRequest::mutable_frames() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.frames)
+  return &frames_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >&
+LoginReputationClientRequest::frames() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_;
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+inline bool LoginReputationClientRequest::has_password_reuse_event() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_password_reuse_event() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LoginReputationClientRequest::clear_has_password_reuse_event() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LoginReputationClientRequest::clear_password_reuse_event() {
+  if (password_reuse_event_ != NULL) password_reuse_event_->::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent::Clear();
+  clear_has_password_reuse_event();
+}
+inline const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent& LoginReputationClientRequest::password_reuse_event() const {
+  const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* p = password_reuse_event_;
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent*>(
+      &::safe_browsing::_LoginReputationClientRequest_PasswordReuseEvent_default_instance_);
+}
+inline ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* LoginReputationClientRequest::mutable_password_reuse_event() {
+  set_has_password_reuse_event();
+  if (password_reuse_event_ == NULL) {
+    password_reuse_event_ = new ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  return password_reuse_event_;
+}
+inline ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* LoginReputationClientRequest::release_password_reuse_event() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  clear_has_password_reuse_event();
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* temp = password_reuse_event_;
+  password_reuse_event_ = NULL;
+  return temp;
+}
+inline void LoginReputationClientRequest::set_allocated_password_reuse_event(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* password_reuse_event) {
+  delete password_reuse_event_;
+  password_reuse_event_ = password_reuse_event;
+  if (password_reuse_event) {
+    set_has_password_reuse_event();
+  } else {
+    clear_has_password_reuse_event();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+}
+
+// optional int32 stored_verdict_cnt = 5;
+inline bool LoginReputationClientRequest::has_stored_verdict_cnt() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_stored_verdict_cnt() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void LoginReputationClientRequest::clear_has_stored_verdict_cnt() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void LoginReputationClientRequest::clear_stored_verdict_cnt() {
+  stored_verdict_cnt_ = 0;
+  clear_has_stored_verdict_cnt();
+}
+inline ::google::protobuf::int32 LoginReputationClientRequest::stored_verdict_cnt() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.stored_verdict_cnt)
+  return stored_verdict_cnt_;
+}
+inline void LoginReputationClientRequest::set_stored_verdict_cnt(::google::protobuf::int32 value) {
+  set_has_stored_verdict_cnt();
+  stored_verdict_cnt_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.stored_verdict_cnt)
+}
+
+// optional .safe_browsing.ChromeUserPopulation population = 6;
+inline bool LoginReputationClientRequest::has_population() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_population() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LoginReputationClientRequest::clear_has_population() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LoginReputationClientRequest::clear_population() {
+  if (population_ != NULL) population_->::safe_browsing::ChromeUserPopulation::Clear();
+  clear_has_population();
+}
+inline const ::safe_browsing::ChromeUserPopulation& LoginReputationClientRequest::population() const {
+  const ::safe_browsing::ChromeUserPopulation* p = population_;
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.population)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ChromeUserPopulation*>(
+      &::safe_browsing::_ChromeUserPopulation_default_instance_);
+}
+inline ::safe_browsing::ChromeUserPopulation* LoginReputationClientRequest::mutable_population() {
+  set_has_population();
+  if (population_ == NULL) {
+    population_ = new ::safe_browsing::ChromeUserPopulation;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.population)
+  return population_;
+}
+inline ::safe_browsing::ChromeUserPopulation* LoginReputationClientRequest::release_population() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.population)
+  clear_has_population();
+  ::safe_browsing::ChromeUserPopulation* temp = population_;
+  population_ = NULL;
+  return temp;
+}
+inline void LoginReputationClientRequest::set_allocated_population(::safe_browsing::ChromeUserPopulation* population) {
+  delete population_;
+  population_ = population;
+  if (population) {
+    set_has_population();
+  } else {
+    clear_has_population();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.population)
+}
+
+// optional bool clicked_through_interstitial = 7;
+inline bool LoginReputationClientRequest::has_clicked_through_interstitial() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void LoginReputationClientRequest::set_has_clicked_through_interstitial() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void LoginReputationClientRequest::clear_has_clicked_through_interstitial() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void LoginReputationClientRequest::clear_clicked_through_interstitial() {
+  clicked_through_interstitial_ = false;
+  clear_has_clicked_through_interstitial();
+}
+inline bool LoginReputationClientRequest::clicked_through_interstitial() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.clicked_through_interstitial)
+  return clicked_through_interstitial_;
+}
+inline void LoginReputationClientRequest::set_clicked_through_interstitial(bool value) {
+  set_has_clicked_through_interstitial();
+  clicked_through_interstitial_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.clicked_through_interstitial)
+}
+
+// -------------------------------------------------------------------
+
+// LoginReputationClientResponse
+
+// optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+inline bool LoginReputationClientResponse::has_verdict_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LoginReputationClientResponse::set_has_verdict_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LoginReputationClientResponse::clear_has_verdict_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LoginReputationClientResponse::clear_verdict_type() {
+  verdict_type_ = 0;
+  clear_has_verdict_type();
+}
+inline ::safe_browsing::LoginReputationClientResponse_VerdictType LoginReputationClientResponse::verdict_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.verdict_type)
+  return static_cast< ::safe_browsing::LoginReputationClientResponse_VerdictType >(verdict_type_);
+}
+inline void LoginReputationClientResponse::set_verdict_type(::safe_browsing::LoginReputationClientResponse_VerdictType value) {
+  assert(::safe_browsing::LoginReputationClientResponse_VerdictType_IsValid(value));
+  set_has_verdict_type();
+  verdict_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.verdict_type)
+}
+
+// optional int64 cache_duration_sec = 2;
+inline bool LoginReputationClientResponse::has_cache_duration_sec() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LoginReputationClientResponse::set_has_cache_duration_sec() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LoginReputationClientResponse::clear_has_cache_duration_sec() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LoginReputationClientResponse::clear_cache_duration_sec() {
+  cache_duration_sec_ = GOOGLE_LONGLONG(0);
+  clear_has_cache_duration_sec();
+}
+inline ::google::protobuf::int64 LoginReputationClientResponse::cache_duration_sec() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.cache_duration_sec)
+  return cache_duration_sec_;
+}
+inline void LoginReputationClientResponse::set_cache_duration_sec(::google::protobuf::int64 value) {
+  set_has_cache_duration_sec();
+  cache_duration_sec_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.cache_duration_sec)
+}
+
+// optional string cache_expression = 3;
+inline bool LoginReputationClientResponse::has_cache_expression() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LoginReputationClientResponse::set_has_cache_expression() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LoginReputationClientResponse::clear_has_cache_expression() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LoginReputationClientResponse::clear_cache_expression() {
+  cache_expression_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_cache_expression();
+}
+inline const ::std::string& LoginReputationClientResponse::cache_expression() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.cache_expression)
+  return cache_expression_.GetNoArena();
+}
+inline void LoginReputationClientResponse::set_cache_expression(const ::std::string& value) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+#if LANG_CXX11
+inline void LoginReputationClientResponse::set_cache_expression(::std::string&& value) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+#endif
+inline void LoginReputationClientResponse::set_cache_expression(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+inline void LoginReputationClientResponse::set_cache_expression(const char* value, size_t size) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+inline ::std::string* LoginReputationClientResponse::mutable_cache_expression() {
+  set_has_cache_expression();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientResponse.cache_expression)
+  return cache_expression_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* LoginReputationClientResponse::release_cache_expression() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientResponse.cache_expression)
+  clear_has_cache_expression();
+  return cache_expression_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void LoginReputationClientResponse::set_allocated_cache_expression(::std::string* cache_expression) {
+  if (cache_expression != NULL) {
+    set_has_cache_expression();
+  } else {
+    clear_has_cache_expression();
+  }
+  cache_expression_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), cache_expression);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+
+// optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+inline bool LoginReputationClientResponse::has_deprecated_cache_expression_exact_match() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void LoginReputationClientResponse::set_has_deprecated_cache_expression_exact_match() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void LoginReputationClientResponse::clear_has_deprecated_cache_expression_exact_match() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void LoginReputationClientResponse::clear_deprecated_cache_expression_exact_match() {
+  deprecated_cache_expression_exact_match_ = false;
+  clear_has_deprecated_cache_expression_exact_match();
+}
+inline bool LoginReputationClientResponse::deprecated_cache_expression_exact_match() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.DEPRECATED_cache_expression_exact_match)
+  return deprecated_cache_expression_exact_match_;
+}
+inline void LoginReputationClientResponse::set_deprecated_cache_expression_exact_match(bool value) {
+  set_has_deprecated_cache_expression_exact_match();
+  deprecated_cache_expression_exact_match_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.DEPRECATED_cache_expression_exact_match)
+}
+
+// optional bytes verdict_token = 5;
+inline bool LoginReputationClientResponse::has_verdict_token() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LoginReputationClientResponse::set_has_verdict_token() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LoginReputationClientResponse::clear_has_verdict_token() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LoginReputationClientResponse::clear_verdict_token() {
+  verdict_token_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_verdict_token();
+}
+inline const ::std::string& LoginReputationClientResponse::verdict_token() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.verdict_token)
+  return verdict_token_.GetNoArena();
+}
+inline void LoginReputationClientResponse::set_verdict_token(const ::std::string& value) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+#if LANG_CXX11
+inline void LoginReputationClientResponse::set_verdict_token(::std::string&& value) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+#endif
+inline void LoginReputationClientResponse::set_verdict_token(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+inline void LoginReputationClientResponse::set_verdict_token(const void* value, size_t size) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+inline ::std::string* LoginReputationClientResponse::mutable_verdict_token() {
+  set_has_verdict_token();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientResponse.verdict_token)
+  return verdict_token_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* LoginReputationClientResponse::release_verdict_token() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientResponse.verdict_token)
+  clear_has_verdict_token();
+  return verdict_token_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void LoginReputationClientResponse::set_allocated_verdict_token(::std::string* verdict_token) {
+  if (verdict_token != NULL) {
+    set_has_verdict_token();
+  } else {
+    clear_has_verdict_token();
+  }
+  verdict_token_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), verdict_token);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientResponse.verdict_token)
 }
 
 // -------------------------------------------------------------------
@@ -13399,359 +15927,6 @@ inline void ClientDownloadRequest_ArchivedBinary::set_allocated_image_headers(::
 
 // -------------------------------------------------------------------
 
-// ClientDownloadRequest_URLChainEntry
-
-// optional string url = 1;
-inline bool ClientDownloadRequest_URLChainEntry::has_url() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_url() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_url() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_url() {
-  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_url();
-}
-inline const ::std::string& ClientDownloadRequest_URLChainEntry::url() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  return url_.GetNoArena();
-}
-inline void ClientDownloadRequest_URLChainEntry::set_url(const ::std::string& value) {
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-#if LANG_CXX11
-inline void ClientDownloadRequest_URLChainEntry::set_url(::std::string&& value) {
-  set_has_url();
-  url_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-#endif
-inline void ClientDownloadRequest_URLChainEntry::set_url(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-inline void ClientDownloadRequest_URLChainEntry::set_url(const char* value, size_t size) {
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_url() {
-  set_has_url();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::release_url() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  clear_has_url();
-  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientDownloadRequest_URLChainEntry::set_allocated_url(::std::string* url) {
-  if (url != NULL) {
-    set_has_url();
-  } else {
-    clear_has_url();
-  }
-  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-inline bool ClientDownloadRequest_URLChainEntry::has_type() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_type() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_type() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_type() {
-  type_ = 1;
-  clear_has_type();
-}
-inline ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::type() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
-  return static_cast< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType >(type_);
-}
-inline void ClientDownloadRequest_URLChainEntry::set_type(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType value) {
-  assert(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType_IsValid(value));
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
-}
-
-// optional string ip_address = 3;
-inline bool ClientDownloadRequest_URLChainEntry::has_ip_address() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_ip_address() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_ip_address() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_ip_address() {
-  ip_address_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_ip_address();
-}
-inline const ::std::string& ClientDownloadRequest_URLChainEntry::ip_address() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  return ip_address_.GetNoArena();
-}
-inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const ::std::string& value) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-#if LANG_CXX11
-inline void ClientDownloadRequest_URLChainEntry::set_ip_address(::std::string&& value) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-#endif
-inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-inline void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value, size_t size) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_ip_address() {
-  set_has_ip_address();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  return ip_address_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::release_ip_address() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  clear_has_ip_address();
-  return ip_address_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientDownloadRequest_URLChainEntry::set_allocated_ip_address(::std::string* ip_address) {
-  if (ip_address != NULL) {
-    set_has_ip_address();
-  } else {
-    clear_has_ip_address();
-  }
-  ip_address_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ip_address);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-
-// optional string referrer = 4;
-inline bool ClientDownloadRequest_URLChainEntry::has_referrer() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_referrer() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_referrer() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_referrer() {
-  referrer_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_referrer();
-}
-inline const ::std::string& ClientDownloadRequest_URLChainEntry::referrer() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  return referrer_.GetNoArena();
-}
-inline void ClientDownloadRequest_URLChainEntry::set_referrer(const ::std::string& value) {
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-#if LANG_CXX11
-inline void ClientDownloadRequest_URLChainEntry::set_referrer(::std::string&& value) {
-  set_has_referrer();
-  referrer_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-#endif
-inline void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-inline void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value, size_t size) {
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_referrer() {
-  set_has_referrer();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  return referrer_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::release_referrer() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  clear_has_referrer();
-  return referrer_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientDownloadRequest_URLChainEntry::set_allocated_referrer(::std::string* referrer) {
-  if (referrer != NULL) {
-    set_has_referrer();
-  } else {
-    clear_has_referrer();
-  }
-  referrer_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-
-// optional string main_frame_referrer = 5;
-inline bool ClientDownloadRequest_URLChainEntry::has_main_frame_referrer() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_main_frame_referrer() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_main_frame_referrer() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_main_frame_referrer() {
-  main_frame_referrer_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_main_frame_referrer();
-}
-inline const ::std::string& ClientDownloadRequest_URLChainEntry::main_frame_referrer() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  return main_frame_referrer_.GetNoArena();
-}
-inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const ::std::string& value) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-#if LANG_CXX11
-inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(::std::string&& value) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-#endif
-inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-inline void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value, size_t size) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::mutable_main_frame_referrer() {
-  set_has_main_frame_referrer();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  return main_frame_referrer_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientDownloadRequest_URLChainEntry::release_main_frame_referrer() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  clear_has_main_frame_referrer();
-  return main_frame_referrer_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientDownloadRequest_URLChainEntry::set_allocated_main_frame_referrer(::std::string* main_frame_referrer) {
-  if (main_frame_referrer != NULL) {
-    set_has_main_frame_referrer();
-  } else {
-    clear_has_main_frame_referrer();
-  }
-  main_frame_referrer_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), main_frame_referrer);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-
-// optional bool is_retargeting = 6;
-inline bool ClientDownloadRequest_URLChainEntry::has_is_retargeting() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_is_retargeting() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_is_retargeting() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_is_retargeting() {
-  is_retargeting_ = false;
-  clear_has_is_retargeting();
-}
-inline bool ClientDownloadRequest_URLChainEntry::is_retargeting() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
-  return is_retargeting_;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_is_retargeting(bool value) {
-  set_has_is_retargeting();
-  is_retargeting_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
-}
-
-// optional bool is_user_initiated = 7;
-inline bool ClientDownloadRequest_URLChainEntry::has_is_user_initiated() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_is_user_initiated() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_is_user_initiated() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_is_user_initiated() {
-  is_user_initiated_ = false;
-  clear_has_is_user_initiated();
-}
-inline bool ClientDownloadRequest_URLChainEntry::is_user_initiated() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
-  return is_user_initiated_;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_is_user_initiated(bool value) {
-  set_has_is_user_initiated();
-  is_user_initiated_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
-}
-
-// optional double timestamp_in_millisec = 8;
-inline bool ClientDownloadRequest_URLChainEntry::has_timestamp_in_millisec() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_has_timestamp_in_millisec() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_has_timestamp_in_millisec() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void ClientDownloadRequest_URLChainEntry::clear_timestamp_in_millisec() {
-  timestamp_in_millisec_ = 0;
-  clear_has_timestamp_in_millisec();
-}
-inline double ClientDownloadRequest_URLChainEntry::timestamp_in_millisec() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
-  return timestamp_in_millisec_;
-}
-inline void ClientDownloadRequest_URLChainEntry::set_timestamp_in_millisec(double value) {
-  set_has_timestamp_in_millisec();
-  timestamp_in_millisec_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
-}
-
-// -------------------------------------------------------------------
-
 // ClientDownloadRequest
 
 // required string url = 1;
@@ -13819,13 +15994,13 @@ inline void ClientDownloadRequest::set_allocated_url(::std::string* url) {
 
 // required .safe_browsing.ClientDownloadRequest.Digests digests = 2;
 inline bool ClientDownloadRequest::has_digests() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void ClientDownloadRequest::set_has_digests() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void ClientDownloadRequest::clear_has_digests() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void ClientDownloadRequest::clear_digests() {
   if (digests_ != NULL) digests_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
@@ -13865,13 +16040,13 @@ inline void ClientDownloadRequest::set_allocated_digests(::safe_browsing::Client
 
 // required int64 length = 3;
 inline bool ClientDownloadRequest::has_length() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void ClientDownloadRequest::set_has_length() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void ClientDownloadRequest::clear_has_length() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void ClientDownloadRequest::clear_length() {
   length_ = GOOGLE_LONGLONG(0);
@@ -13919,13 +16094,13 @@ ClientDownloadRequest::resources() const {
 
 // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
 inline bool ClientDownloadRequest::has_signature() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void ClientDownloadRequest::set_has_signature() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void ClientDownloadRequest::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void ClientDownloadRequest::clear_signature() {
   if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
@@ -13965,13 +16140,13 @@ inline void ClientDownloadRequest::set_allocated_signature(::safe_browsing::Clie
 
 // optional bool user_initiated = 6;
 inline bool ClientDownloadRequest::has_user_initiated() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void ClientDownloadRequest::set_has_user_initiated() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void ClientDownloadRequest::clear_has_user_initiated() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void ClientDownloadRequest::clear_user_initiated() {
   user_initiated_ = false;
@@ -14052,13 +16227,13 @@ inline void ClientDownloadRequest::set_allocated_file_basename(::std::string* fi
 
 // optional .safe_browsing.ClientDownloadRequest.DownloadType download_type = 10 [default = WIN_EXECUTABLE];
 inline bool ClientDownloadRequest::has_download_type() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void ClientDownloadRequest::set_has_download_type() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void ClientDownloadRequest::clear_has_download_type() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void ClientDownloadRequest::clear_download_type() {
   download_type_ = 0;
@@ -14140,13 +16315,13 @@ inline void ClientDownloadRequest::set_allocated_locale(::std::string* locale) {
 
 // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
 inline bool ClientDownloadRequest::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void ClientDownloadRequest::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void ClientDownloadRequest::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void ClientDownloadRequest::clear_image_headers() {
   if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
@@ -14216,13 +16391,13 @@ ClientDownloadRequest::archived_binary() const {
 
 // optional .safe_browsing.ChromeUserPopulation population = 24;
 inline bool ClientDownloadRequest::has_population() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void ClientDownloadRequest::set_has_population() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void ClientDownloadRequest::clear_has_population() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void ClientDownloadRequest::clear_population() {
   if (population_ != NULL) population_->::safe_browsing::ChromeUserPopulation::Clear();
@@ -14262,13 +16437,13 @@ inline void ClientDownloadRequest::set_allocated_population(::safe_browsing::Chr
 
 // optional bool archive_valid = 26;
 inline bool ClientDownloadRequest::has_archive_valid() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void ClientDownloadRequest::set_has_archive_valid() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void ClientDownloadRequest::clear_has_archive_valid() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void ClientDownloadRequest::clear_archive_valid() {
   archive_valid_ = false;
@@ -14286,13 +16461,13 @@ inline void ClientDownloadRequest::set_archive_valid(bool value) {
 
 // optional bool skipped_url_whitelist = 28;
 inline bool ClientDownloadRequest::has_skipped_url_whitelist() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void ClientDownloadRequest::set_has_skipped_url_whitelist() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void ClientDownloadRequest::clear_has_skipped_url_whitelist() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void ClientDownloadRequest::clear_skipped_url_whitelist() {
   skipped_url_whitelist_ = false;
@@ -14310,13 +16485,13 @@ inline void ClientDownloadRequest::set_skipped_url_whitelist(bool value) {
 
 // optional bool skipped_certificate_whitelist = 31;
 inline bool ClientDownloadRequest::has_skipped_certificate_whitelist() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void ClientDownloadRequest::set_has_skipped_certificate_whitelist() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void ClientDownloadRequest::clear_has_skipped_certificate_whitelist() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void ClientDownloadRequest::clear_skipped_certificate_whitelist() {
   skipped_certificate_whitelist_ = false;
@@ -14401,34 +16576,616 @@ ClientDownloadRequest::mutable_alternate_extensions() {
   return &alternate_extensions_;
 }
 
-// repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
-inline int ClientDownloadRequest::url_chain_size() const {
-  return url_chain_.size();
+// repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
+inline int ClientDownloadRequest::referrer_chain_size() const {
+  return referrer_chain_.size();
 }
-inline void ClientDownloadRequest::clear_url_chain() {
-  url_chain_.Clear();
+inline void ClientDownloadRequest::clear_referrer_chain() {
+  referrer_chain_.Clear();
 }
-inline const ::safe_browsing::ClientDownloadRequest_URLChainEntry& ClientDownloadRequest::url_chain(int index) const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Get(index);
+inline const ::safe_browsing::ReferrerChainEntry& ClientDownloadRequest::referrer_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Get(index);
 }
-inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::mutable_url_chain(int index) {
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Mutable(index);
+inline ::safe_browsing::ReferrerChainEntry* ClientDownloadRequest::mutable_referrer_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Mutable(index);
 }
-inline ::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::add_url_chain() {
-  // @@protoc_insertion_point(field_add:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Add();
+inline ::safe_browsing::ReferrerChainEntry* ClientDownloadRequest::add_referrer_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Add();
 }
-inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >*
-ClientDownloadRequest::mutable_url_chain() {
-  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.url_chain)
-  return &url_chain_;
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+ClientDownloadRequest::mutable_referrer_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return &referrer_chain_;
 }
-inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >&
-ClientDownloadRequest::url_chain() const {
-  // @@protoc_insertion_point(field_list:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_;
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+ClientDownloadRequest::referrer_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_;
+}
+
+// optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+inline bool ClientDownloadRequest::has_deprecated_download_attribution_finch_enabled() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void ClientDownloadRequest::set_has_deprecated_download_attribution_finch_enabled() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void ClientDownloadRequest::clear_has_deprecated_download_attribution_finch_enabled() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void ClientDownloadRequest::clear_deprecated_download_attribution_finch_enabled() {
+  deprecated_download_attribution_finch_enabled_ = false;
+  clear_has_deprecated_download_attribution_finch_enabled();
+}
+inline bool ClientDownloadRequest::deprecated_download_attribution_finch_enabled() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.DEPRECATED_download_attribution_finch_enabled)
+  return deprecated_download_attribution_finch_enabled_;
+}
+inline void ClientDownloadRequest::set_deprecated_download_attribution_finch_enabled(bool value) {
+  set_has_deprecated_download_attribution_finch_enabled();
+  deprecated_download_attribution_finch_enabled_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.DEPRECATED_download_attribution_finch_enabled)
+}
+
+// optional bytes udif_code_signature = 40;
+inline bool ClientDownloadRequest::has_udif_code_signature() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClientDownloadRequest::set_has_udif_code_signature() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClientDownloadRequest::clear_has_udif_code_signature() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClientDownloadRequest::clear_udif_code_signature() {
+  udif_code_signature_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_udif_code_signature();
+}
+inline const ::std::string& ClientDownloadRequest::udif_code_signature() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  return udif_code_signature_.GetNoArena();
+}
+inline void ClientDownloadRequest::set_udif_code_signature(const ::std::string& value) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+#if LANG_CXX11
+inline void ClientDownloadRequest::set_udif_code_signature(::std::string&& value) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+#endif
+inline void ClientDownloadRequest::set_udif_code_signature(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+inline void ClientDownloadRequest::set_udif_code_signature(const void* value, size_t size) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+inline ::std::string* ClientDownloadRequest::mutable_udif_code_signature() {
+  set_has_udif_code_signature();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  return udif_code_signature_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ClientDownloadRequest::release_udif_code_signature() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  clear_has_udif_code_signature();
+  return udif_code_signature_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ClientDownloadRequest::set_allocated_udif_code_signature(::std::string* udif_code_signature) {
+  if (udif_code_signature != NULL) {
+    set_has_udif_code_signature();
+  } else {
+    clear_has_udif_code_signature();
+  }
+  udif_code_signature_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), udif_code_signature);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+
+// -------------------------------------------------------------------
+
+// ReferrerChainEntry_ServerRedirect
+
+// optional string url = 1;
+inline bool ReferrerChainEntry_ServerRedirect::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ReferrerChainEntry_ServerRedirect::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ReferrerChainEntry_ServerRedirect::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ReferrerChainEntry_ServerRedirect::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+inline const ::std::string& ReferrerChainEntry_ServerRedirect::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  return url_.GetNoArena();
+}
+inline void ReferrerChainEntry_ServerRedirect::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry_ServerRedirect::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+#endif
+inline void ReferrerChainEntry_ServerRedirect::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+inline void ReferrerChainEntry_ServerRedirect::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+inline ::std::string* ReferrerChainEntry_ServerRedirect::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ReferrerChainEntry_ServerRedirect::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ReferrerChainEntry_ServerRedirect::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+
+// -------------------------------------------------------------------
+
+// ReferrerChainEntry
+
+// optional string url = 1;
+inline bool ReferrerChainEntry::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ReferrerChainEntry::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ReferrerChainEntry::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ReferrerChainEntry::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+inline const ::std::string& ReferrerChainEntry::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.url)
+  return url_.GetNoArena();
+}
+inline void ReferrerChainEntry::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.url)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.url)
+}
+#endif
+inline void ReferrerChainEntry::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.url)
+}
+inline void ReferrerChainEntry::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.url)
+}
+inline ::std::string* ReferrerChainEntry::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ReferrerChainEntry::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ReferrerChainEntry::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.url)
+}
+
+// optional string main_frame_url = 9;
+inline bool ReferrerChainEntry::has_main_frame_url() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ReferrerChainEntry::set_has_main_frame_url() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ReferrerChainEntry::clear_has_main_frame_url() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ReferrerChainEntry::clear_main_frame_url() {
+  main_frame_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_main_frame_url();
+}
+inline const ::std::string& ReferrerChainEntry::main_frame_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.main_frame_url)
+  return main_frame_url_.GetNoArena();
+}
+inline void ReferrerChainEntry::set_main_frame_url(const ::std::string& value) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::set_main_frame_url(::std::string&& value) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+#endif
+inline void ReferrerChainEntry::set_main_frame_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+inline void ReferrerChainEntry::set_main_frame_url(const char* value, size_t size) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+inline ::std::string* ReferrerChainEntry::mutable_main_frame_url() {
+  set_has_main_frame_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.main_frame_url)
+  return main_frame_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ReferrerChainEntry::release_main_frame_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.main_frame_url)
+  clear_has_main_frame_url();
+  return main_frame_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ReferrerChainEntry::set_allocated_main_frame_url(::std::string* main_frame_url) {
+  if (main_frame_url != NULL) {
+    set_has_main_frame_url();
+  } else {
+    clear_has_main_frame_url();
+  }
+  main_frame_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), main_frame_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+
+// optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+inline bool ReferrerChainEntry::has_type() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ReferrerChainEntry::set_has_type() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ReferrerChainEntry::clear_has_type() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ReferrerChainEntry::clear_type() {
+  type_ = 4;
+  clear_has_type();
+}
+inline ::safe_browsing::ReferrerChainEntry_URLType ReferrerChainEntry::type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.type)
+  return static_cast< ::safe_browsing::ReferrerChainEntry_URLType >(type_);
+}
+inline void ReferrerChainEntry::set_type(::safe_browsing::ReferrerChainEntry_URLType value) {
+  assert(::safe_browsing::ReferrerChainEntry_URLType_IsValid(value));
+  set_has_type();
+  type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.type)
+}
+
+// repeated string ip_addresses = 3;
+inline int ReferrerChainEntry::ip_addresses_size() const {
+  return ip_addresses_.size();
+}
+inline void ReferrerChainEntry::clear_ip_addresses() {
+  ip_addresses_.Clear();
+}
+inline const ::std::string& ReferrerChainEntry::ip_addresses(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Get(index);
+}
+inline ::std::string* ReferrerChainEntry::mutable_ip_addresses(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Mutable(index);
+}
+inline void ReferrerChainEntry::set_ip_addresses(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ip_addresses)
+  ip_addresses_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::set_ip_addresses(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ip_addresses)
+  ip_addresses_.Mutable(index)->assign(std::move(value));
+}
+#endif
+inline void ReferrerChainEntry::set_ip_addresses(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  ip_addresses_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+inline void ReferrerChainEntry::set_ip_addresses(int index, const char* value, size_t size) {
+  ip_addresses_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+inline ::std::string* ReferrerChainEntry::add_ip_addresses() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Add();
+}
+inline void ReferrerChainEntry::add_ip_addresses(const ::std::string& value) {
+  ip_addresses_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::add_ip_addresses(::std::string&& value) {
+  ip_addresses_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+#endif
+inline void ReferrerChainEntry::add_ip_addresses(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  ip_addresses_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+inline void ReferrerChainEntry::add_ip_addresses(const char* value, size_t size) {
+  ip_addresses_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ReferrerChainEntry::ip_addresses() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ReferrerChainEntry::mutable_ip_addresses() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return &ip_addresses_;
+}
+
+// optional string referrer_url = 4;
+inline bool ReferrerChainEntry::has_referrer_url() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ReferrerChainEntry::set_has_referrer_url() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ReferrerChainEntry::clear_has_referrer_url() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ReferrerChainEntry::clear_referrer_url() {
+  referrer_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_referrer_url();
+}
+inline const ::std::string& ReferrerChainEntry::referrer_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.referrer_url)
+  return referrer_url_.GetNoArena();
+}
+inline void ReferrerChainEntry::set_referrer_url(const ::std::string& value) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::set_referrer_url(::std::string&& value) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+#endif
+inline void ReferrerChainEntry::set_referrer_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+inline void ReferrerChainEntry::set_referrer_url(const char* value, size_t size) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+inline ::std::string* ReferrerChainEntry::mutable_referrer_url() {
+  set_has_referrer_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.referrer_url)
+  return referrer_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ReferrerChainEntry::release_referrer_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.referrer_url)
+  clear_has_referrer_url();
+  return referrer_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ReferrerChainEntry::set_allocated_referrer_url(::std::string* referrer_url) {
+  if (referrer_url != NULL) {
+    set_has_referrer_url();
+  } else {
+    clear_has_referrer_url();
+  }
+  referrer_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+
+// optional string referrer_main_frame_url = 5;
+inline bool ReferrerChainEntry::has_referrer_main_frame_url() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ReferrerChainEntry::set_has_referrer_main_frame_url() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ReferrerChainEntry::clear_has_referrer_main_frame_url() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ReferrerChainEntry::clear_referrer_main_frame_url() {
+  referrer_main_frame_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_referrer_main_frame_url();
+}
+inline const ::std::string& ReferrerChainEntry::referrer_main_frame_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  return referrer_main_frame_url_.GetNoArena();
+}
+inline void ReferrerChainEntry::set_referrer_main_frame_url(const ::std::string& value) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+#if LANG_CXX11
+inline void ReferrerChainEntry::set_referrer_main_frame_url(::std::string&& value) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+#endif
+inline void ReferrerChainEntry::set_referrer_main_frame_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+inline void ReferrerChainEntry::set_referrer_main_frame_url(const char* value, size_t size) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+inline ::std::string* ReferrerChainEntry::mutable_referrer_main_frame_url() {
+  set_has_referrer_main_frame_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  return referrer_main_frame_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ReferrerChainEntry::release_referrer_main_frame_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  clear_has_referrer_main_frame_url();
+  return referrer_main_frame_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ReferrerChainEntry::set_allocated_referrer_main_frame_url(::std::string* referrer_main_frame_url) {
+  if (referrer_main_frame_url != NULL) {
+    set_has_referrer_main_frame_url();
+  } else {
+    clear_has_referrer_main_frame_url();
+  }
+  referrer_main_frame_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer_main_frame_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+
+// optional bool is_retargeting = 6;
+inline bool ReferrerChainEntry::has_is_retargeting() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ReferrerChainEntry::set_has_is_retargeting() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ReferrerChainEntry::clear_has_is_retargeting() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ReferrerChainEntry::clear_is_retargeting() {
+  is_retargeting_ = false;
+  clear_has_is_retargeting();
+}
+inline bool ReferrerChainEntry::is_retargeting() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.is_retargeting)
+  return is_retargeting_;
+}
+inline void ReferrerChainEntry::set_is_retargeting(bool value) {
+  set_has_is_retargeting();
+  is_retargeting_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.is_retargeting)
+}
+
+// optional double navigation_time_msec = 7;
+inline bool ReferrerChainEntry::has_navigation_time_msec() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ReferrerChainEntry::set_has_navigation_time_msec() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ReferrerChainEntry::clear_has_navigation_time_msec() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ReferrerChainEntry::clear_navigation_time_msec() {
+  navigation_time_msec_ = 0;
+  clear_has_navigation_time_msec();
+}
+inline double ReferrerChainEntry::navigation_time_msec() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.navigation_time_msec)
+  return navigation_time_msec_;
+}
+inline void ReferrerChainEntry::set_navigation_time_msec(double value) {
+  set_has_navigation_time_msec();
+  navigation_time_msec_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.navigation_time_msec)
+}
+
+// repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+inline int ReferrerChainEntry::server_redirect_chain_size() const {
+  return server_redirect_chain_.size();
+}
+inline void ReferrerChainEntry::clear_server_redirect_chain() {
+  server_redirect_chain_.Clear();
+}
+inline const ::safe_browsing::ReferrerChainEntry_ServerRedirect& ReferrerChainEntry::server_redirect_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Get(index);
+}
+inline ::safe_browsing::ReferrerChainEntry_ServerRedirect* ReferrerChainEntry::mutable_server_redirect_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Mutable(index);
+}
+inline ::safe_browsing::ReferrerChainEntry_ServerRedirect* ReferrerChainEntry::add_server_redirect_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >*
+ReferrerChainEntry::mutable_server_redirect_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return &server_redirect_chain_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >&
+ReferrerChainEntry::server_redirect_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_;
 }
 
 // -------------------------------------------------------------------
@@ -14697,6 +17454,30 @@ inline void ClientDownloadResponse::set_allocated_token(::std::string* token) {
   }
   token_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), token);
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadResponse.token)
+}
+
+// optional bool upload = 5;
+inline bool ClientDownloadResponse::has_upload() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClientDownloadResponse::set_has_upload() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClientDownloadResponse::clear_has_upload() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClientDownloadResponse::clear_upload() {
+  upload_ = false;
+  clear_has_upload();
+}
+inline bool ClientDownloadResponse::upload() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadResponse.upload)
+  return upload_;
+}
+inline void ClientDownloadResponse::set_upload(bool value) {
+  set_has_upload();
+  upload_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadResponse.upload)
 }
 
 // -------------------------------------------------------------------
@@ -15686,365 +18467,6 @@ ClientIncidentReport_IncidentData_BinaryIntegrityIncident::contained_file() cons
 
 // -------------------------------------------------------------------
 
-// ClientIncidentReport_IncidentData_BlacklistLoadIncident
-
-// optional string path = 1;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_path() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_path() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_path() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_path() {
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_path();
-}
-inline const ::std::string& ClientIncidentReport_IncidentData_BlacklistLoadIncident::path() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  return path_.GetNoArena();
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const ::std::string& value) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-#if LANG_CXX11
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(::std::string&& value) {
-  set_has_path();
-  path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-#endif
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const char* value, size_t size) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-inline ::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_path() {
-  set_has_path();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  return path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_path() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  clear_has_path();
-  return path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_path(::std::string* path) {
-  if (path != NULL) {
-    set_has_path();
-  } else {
-    clear_has_path();
-  }
-  path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), path);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_digest() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_digest() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_digest() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_digest() {
-  if (digest_ != NULL) digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-  clear_has_digest();
-}
-inline const ::safe_browsing::ClientDownloadRequest_Digests& ClientIncidentReport_IncidentData_BlacklistLoadIncident::digest() const {
-  const ::safe_browsing::ClientDownloadRequest_Digests* p = digest_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_Digests*>(
-      &::safe_browsing::_ClientDownloadRequest_Digests_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_digest() {
-  set_has_digest();
-  if (digest_ == NULL) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  return digest_;
-}
-inline ::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_digest() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  clear_has_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* temp = digest_;
-  digest_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest) {
-  delete digest_;
-  digest_ = digest;
-  if (digest) {
-    set_has_digest();
-  } else {
-    clear_has_digest();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-}
-
-// optional string version = 3;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_version() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_version() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_version() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_version() {
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_version();
-}
-inline const ::std::string& ClientIncidentReport_IncidentData_BlacklistLoadIncident::version() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  return version_.GetNoArena();
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const ::std::string& value) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-#if LANG_CXX11
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(::std::string&& value) {
-  set_has_version();
-  version_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-#endif
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const char* value, size_t size) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-inline ::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_version() {
-  set_has_version();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  return version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_version() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  clear_has_version();
-  return version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_version(::std::string* version) {
-  if (version != NULL) {
-    set_has_version();
-  } else {
-    clear_has_version();
-  }
-  version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), version);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-
-// optional bool blacklist_initialized = 4;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_blacklist_initialized() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_blacklist_initialized() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_blacklist_initialized() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_blacklist_initialized() {
-  blacklist_initialized_ = false;
-  clear_has_blacklist_initialized();
-}
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::blacklist_initialized() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.blacklist_initialized)
-  return blacklist_initialized_;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_blacklist_initialized(bool value) {
-  set_has_blacklist_initialized();
-  blacklist_initialized_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.blacklist_initialized)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_signature() {
-  if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-  clear_has_signature();
-}
-inline const ::safe_browsing::ClientDownloadRequest_SignatureInfo& ClientIncidentReport_IncidentData_BlacklistLoadIncident::signature() const {
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo* p = signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      &::safe_browsing::_ClientDownloadRequest_SignatureInfo_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_signature() {
-  set_has_signature();
-  if (signature_ == NULL) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  return signature_;
-}
-inline ::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  clear_has_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* temp = signature_;
-  signature_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature) {
-  delete signature_;
-  signature_ = signature;
-  if (signature) {
-    set_has_signature();
-  } else {
-    clear_has_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-inline bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_image_headers() {
-  if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-  clear_has_image_headers();
-}
-inline const ::safe_browsing::ClientDownloadRequest_ImageHeaders& ClientIncidentReport_IncidentData_BlacklistLoadIncident::image_headers() const {
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders* p = image_headers_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      &::safe_browsing::_ClientDownloadRequest_ImageHeaders_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_image_headers() {
-  set_has_image_headers();
-  if (image_headers_ == NULL) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  return image_headers_;
-}
-inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_image_headers() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  clear_has_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* temp = image_headers_;
-  image_headers_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers) {
-  delete image_headers_;
-  image_headers_ = image_headers;
-  if (image_headers) {
-    set_has_image_headers();
-  } else {
-    clear_has_image_headers();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-}
-
-// -------------------------------------------------------------------
-
-// ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident
-
-// optional string variations_seed_signature = 1;
-inline bool ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::has_variations_seed_signature() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_has_variations_seed_signature() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::clear_has_variations_seed_signature() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::clear_variations_seed_signature() {
-  variations_seed_signature_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_variations_seed_signature();
-}
-inline const ::std::string& ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::variations_seed_signature() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  return variations_seed_signature_.GetNoArena();
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const ::std::string& value) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-#if LANG_CXX11
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(::std::string&& value) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-#endif
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const char* value, size_t size) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-inline ::std::string* ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::mutable_variations_seed_signature() {
-  set_has_variations_seed_signature();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  return variations_seed_signature_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::release_variations_seed_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  clear_has_variations_seed_signature();
-  return variations_seed_signature_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_allocated_variations_seed_signature(::std::string* variations_seed_signature) {
-  if (variations_seed_signature != NULL) {
-    set_has_variations_seed_signature();
-  } else {
-    clear_has_variations_seed_signature();
-  }
-  variations_seed_signature_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), variations_seed_signature);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-
-// -------------------------------------------------------------------
-
 // ClientIncidentReport_IncidentData_ResourceRequestIncident
 
 // optional bytes digest = 1;
@@ -16200,285 +18622,17 @@ inline void ClientIncidentReport_IncidentData_ResourceRequestIncident::set_type(
 
 // -------------------------------------------------------------------
 
-// ClientIncidentReport_IncidentData_SuspiciousModuleIncident
-
-// optional string path = 1;
-inline bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_path() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_path() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_path() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_path() {
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_path();
-}
-inline const ::std::string& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::path() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  return path_.GetNoArena();
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const ::std::string& value) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-#if LANG_CXX11
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(::std::string&& value) {
-  set_has_path();
-  path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-#endif
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const char* value, size_t size) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-inline ::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_path() {
-  set_has_path();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  return path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_path() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  clear_has_path();
-  return path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_path(::std::string* path) {
-  if (path != NULL) {
-    set_has_path();
-  } else {
-    clear_has_path();
-  }
-  path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), path);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-inline bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_digest() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_digest() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_digest() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_digest() {
-  if (digest_ != NULL) digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-  clear_has_digest();
-}
-inline const ::safe_browsing::ClientDownloadRequest_Digests& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::digest() const {
-  const ::safe_browsing::ClientDownloadRequest_Digests* p = digest_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_Digests*>(
-      &::safe_browsing::_ClientDownloadRequest_Digests_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_digest() {
-  set_has_digest();
-  if (digest_ == NULL) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  return digest_;
-}
-inline ::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_digest() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  clear_has_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* temp = digest_;
-  digest_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest) {
-  delete digest_;
-  digest_ = digest;
-  if (digest) {
-    set_has_digest();
-  } else {
-    clear_has_digest();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-}
-
-// optional string version = 3;
-inline bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_version() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_version() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_version() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_version() {
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_version();
-}
-inline const ::std::string& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::version() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  return version_.GetNoArena();
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const ::std::string& value) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-#if LANG_CXX11
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(::std::string&& value) {
-  set_has_version();
-  version_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-#endif
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const char* value, size_t size) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-inline ::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_version() {
-  set_has_version();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  return version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_version() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  clear_has_version();
-  return version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_version(::std::string* version) {
-  if (version != NULL) {
-    set_has_version();
-  } else {
-    clear_has_version();
-  }
-  version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), version);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-inline bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_signature() {
-  if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-  clear_has_signature();
-}
-inline const ::safe_browsing::ClientDownloadRequest_SignatureInfo& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::signature() const {
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo* p = signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      &::safe_browsing::_ClientDownloadRequest_SignatureInfo_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_signature() {
-  set_has_signature();
-  if (signature_ == NULL) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  return signature_;
-}
-inline ::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  clear_has_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* temp = signature_;
-  signature_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature) {
-  delete signature_;
-  signature_ = signature;
-  if (signature) {
-    set_has_signature();
-  } else {
-    clear_has_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-inline bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_image_headers() {
-  if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-  clear_has_image_headers();
-}
-inline const ::safe_browsing::ClientDownloadRequest_ImageHeaders& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::image_headers() const {
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders* p = image_headers_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      &::safe_browsing::_ClientDownloadRequest_ImageHeaders_default_instance_);
-}
-inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_image_headers() {
-  set_has_image_headers();
-  if (image_headers_ == NULL) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  return image_headers_;
-}
-inline ::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_image_headers() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  clear_has_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* temp = image_headers_;
-  image_headers_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers) {
-  delete image_headers_;
-  image_headers_ = image_headers;
-  if (image_headers) {
-    set_has_image_headers();
-  } else {
-    clear_has_image_headers();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-}
-
-// -------------------------------------------------------------------
-
 // ClientIncidentReport_IncidentData
 
 // optional int64 incident_time_msec = 1;
 inline bool ClientIncidentReport_IncidentData::has_incident_time_msec() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void ClientIncidentReport_IncidentData::set_has_incident_time_msec() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void ClientIncidentReport_IncidentData::clear_has_incident_time_msec() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void ClientIncidentReport_IncidentData::clear_incident_time_msec() {
   incident_time_msec_ = GOOGLE_LONGLONG(0);
@@ -16586,107 +18740,15 @@ inline void ClientIncidentReport_IncidentData::set_allocated_binary_integrity(::
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.binary_integrity)
 }
 
-// optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
-inline bool ClientIncidentReport_IncidentData::has_blacklist_load() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void ClientIncidentReport_IncidentData::set_has_blacklist_load() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData::clear_has_blacklist_load() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void ClientIncidentReport_IncidentData::clear_blacklist_load() {
-  if (blacklist_load_ != NULL) blacklist_load_->::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident::Clear();
-  clear_has_blacklist_load();
-}
-inline const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident& ClientIncidentReport_IncidentData::blacklist_load() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* p = blacklist_load_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_);
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* ClientIncidentReport_IncidentData::mutable_blacklist_load() {
-  set_has_blacklist_load();
-  if (blacklist_load_ == NULL) {
-    blacklist_load_ = new ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  return blacklist_load_;
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* ClientIncidentReport_IncidentData::release_blacklist_load() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  clear_has_blacklist_load();
-  ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* temp = blacklist_load_;
-  blacklist_load_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData::set_allocated_blacklist_load(::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* blacklist_load) {
-  delete blacklist_load_;
-  blacklist_load_ = blacklist_load;
-  if (blacklist_load) {
-    set_has_blacklist_load();
-  } else {
-    clear_has_blacklist_load();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-}
-
-// optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-inline bool ClientIncidentReport_IncidentData::has_variations_seed_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void ClientIncidentReport_IncidentData::set_has_variations_seed_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData::clear_has_variations_seed_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void ClientIncidentReport_IncidentData::clear_variations_seed_signature() {
-  if (variations_seed_signature_ != NULL) variations_seed_signature_->::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::Clear();
-  clear_has_variations_seed_signature();
-}
-inline const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& ClientIncidentReport_IncidentData::variations_seed_signature() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* p = variations_seed_signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_);
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* ClientIncidentReport_IncidentData::mutable_variations_seed_signature() {
-  set_has_variations_seed_signature();
-  if (variations_seed_signature_ == NULL) {
-    variations_seed_signature_ = new ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  return variations_seed_signature_;
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* ClientIncidentReport_IncidentData::release_variations_seed_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  clear_has_variations_seed_signature();
-  ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* temp = variations_seed_signature_;
-  variations_seed_signature_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData::set_allocated_variations_seed_signature(::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* variations_seed_signature) {
-  delete variations_seed_signature_;
-  variations_seed_signature_ = variations_seed_signature;
-  if (variations_seed_signature) {
-    set_has_variations_seed_signature();
-  } else {
-    clear_has_variations_seed_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-}
-
 // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
 inline bool ClientIncidentReport_IncidentData::has_resource_request() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void ClientIncidentReport_IncidentData::set_has_resource_request() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void ClientIncidentReport_IncidentData::clear_has_resource_request() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void ClientIncidentReport_IncidentData::clear_resource_request() {
   if (resource_request_ != NULL) resource_request_->::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident::Clear();
@@ -16722,52 +18784,6 @@ inline void ClientIncidentReport_IncidentData::set_allocated_resource_request(::
     clear_has_resource_request();
   }
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.resource_request)
-}
-
-// optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-inline bool ClientIncidentReport_IncidentData::has_suspicious_module() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void ClientIncidentReport_IncidentData::set_has_suspicious_module() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void ClientIncidentReport_IncidentData::clear_has_suspicious_module() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void ClientIncidentReport_IncidentData::clear_suspicious_module() {
-  if (suspicious_module_ != NULL) suspicious_module_->::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident::Clear();
-  clear_has_suspicious_module();
-}
-inline const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident& ClientIncidentReport_IncidentData::suspicious_module() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* p = suspicious_module_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_);
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* ClientIncidentReport_IncidentData::mutable_suspicious_module() {
-  set_has_suspicious_module();
-  if (suspicious_module_ == NULL) {
-    suspicious_module_ = new ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  return suspicious_module_;
-}
-inline ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* ClientIncidentReport_IncidentData::release_suspicious_module() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  clear_has_suspicious_module();
-  ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* temp = suspicious_module_;
-  suspicious_module_ = NULL;
-  return temp;
-}
-inline void ClientIncidentReport_IncidentData::set_allocated_suspicious_module(::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* suspicious_module) {
-  delete suspicious_module_;
-  suspicious_module_ = suspicious_module;
-  if (suspicious_module) {
-    set_has_suspicious_module();
-  } else {
-    clear_has_suspicious_module();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
 }
 
 // -------------------------------------------------------------------
@@ -18515,28 +20531,28 @@ inline void ClientIncidentReport_EnvironmentData_Process::set_metrics_consent(bo
   // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.metrics_consent)
 }
 
-// optional bool extended_consent = 8;
-inline bool ClientIncidentReport_EnvironmentData_Process::has_extended_consent() const {
+// optional bool OBSOLETE_extended_consent = 8;
+inline bool ClientIncidentReport_EnvironmentData_Process::has_obsolete_extended_consent() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::set_has_extended_consent() {
+inline void ClientIncidentReport_EnvironmentData_Process::set_has_obsolete_extended_consent() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::clear_has_extended_consent() {
+inline void ClientIncidentReport_EnvironmentData_Process::clear_has_obsolete_extended_consent() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::clear_extended_consent() {
-  extended_consent_ = false;
-  clear_has_extended_consent();
+inline void ClientIncidentReport_EnvironmentData_Process::clear_obsolete_extended_consent() {
+  obsolete_extended_consent_ = false;
+  clear_has_obsolete_extended_consent();
 }
-inline bool ClientIncidentReport_EnvironmentData_Process::extended_consent() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.extended_consent)
-  return extended_consent_;
+inline bool ClientIncidentReport_EnvironmentData_Process::obsolete_extended_consent() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_extended_consent)
+  return obsolete_extended_consent_;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::set_extended_consent(bool value) {
-  set_has_extended_consent();
-  extended_consent_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.extended_consent)
+inline void ClientIncidentReport_EnvironmentData_Process::set_obsolete_extended_consent(bool value) {
+  set_has_obsolete_extended_consent();
+  obsolete_extended_consent_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_extended_consent)
 }
 
 // repeated .safe_browsing.ClientIncidentReport.EnvironmentData.Process.Dll dll = 9;
@@ -18668,28 +20684,28 @@ ClientIncidentReport_EnvironmentData_Process::module_state() const {
   return module_state_;
 }
 
-// optional bool field_trial_participant = 12;
-inline bool ClientIncidentReport_EnvironmentData_Process::has_field_trial_participant() const {
+// optional bool OBSOLETE_field_trial_participant = 12;
+inline bool ClientIncidentReport_EnvironmentData_Process::has_obsolete_field_trial_participant() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::set_has_field_trial_participant() {
+inline void ClientIncidentReport_EnvironmentData_Process::set_has_obsolete_field_trial_participant() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::clear_has_field_trial_participant() {
+inline void ClientIncidentReport_EnvironmentData_Process::clear_has_obsolete_field_trial_participant() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::clear_field_trial_participant() {
-  field_trial_participant_ = false;
-  clear_has_field_trial_participant();
+inline void ClientIncidentReport_EnvironmentData_Process::clear_obsolete_field_trial_participant() {
+  obsolete_field_trial_participant_ = false;
+  clear_has_obsolete_field_trial_participant();
 }
-inline bool ClientIncidentReport_EnvironmentData_Process::field_trial_participant() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.field_trial_participant)
-  return field_trial_participant_;
+inline bool ClientIncidentReport_EnvironmentData_Process::obsolete_field_trial_participant() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_field_trial_participant)
+  return obsolete_field_trial_participant_;
 }
-inline void ClientIncidentReport_EnvironmentData_Process::set_field_trial_participant(bool value) {
-  set_has_field_trial_participant();
-  field_trial_participant_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.field_trial_participant)
+inline void ClientIncidentReport_EnvironmentData_Process::set_obsolete_field_trial_participant(bool value) {
+  set_has_obsolete_field_trial_participant();
+  obsolete_field_trial_participant_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_field_trial_participant)
 }
 
 // -------------------------------------------------------------------
@@ -20864,67 +22880,67 @@ inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_code(::g
   // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.code)
 }
 
-// optional bytes reason = 2;
-inline bool ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::has_reason() const {
+// optional bytes message = 2;
+inline bool ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::has_message() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_has_reason() {
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_has_message() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_has_reason() {
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_has_message() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_reason() {
-  reason_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_reason();
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_message();
 }
-inline const ::std::string& ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::reason() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  return reason_.GetNoArena();
+inline const ::std::string& ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::message() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  return message_.GetNoArena();
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const ::std::string& value) {
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const ::std::string& value) {
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 #if LANG_CXX11
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(::std::string&& value) {
-  set_has_reason();
-  reason_.SetNoArena(
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(::std::string&& value) {
+  set_has_message();
+  message_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 #endif
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const char* value) {
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const void* value, size_t size) {
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const void* value, size_t size) {
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
-inline ::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::mutable_reason() {
-  set_has_reason();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  return reason_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+inline ::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::mutable_message() {
+  set_has_message();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::release_reason() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  clear_has_reason();
-  return reason_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+inline ::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::release_message() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  clear_has_message();
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_allocated_reason(::std::string* reason) {
-  if (reason != NULL) {
-    set_has_reason();
+inline void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    set_has_message();
   } else {
-    clear_has_reason();
+    clear_has_message();
   }
-  reason_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), reason);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 
 // optional bytes version = 3;
@@ -21585,17 +23601,157 @@ inline void ClientSafeBrowsingReportRequest_Resource::set_allocated_tag_name(::s
 
 // -------------------------------------------------------------------
 
+// ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties
+
+// optional string client_version = 1;
+inline bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_client_version() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_client_version() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_client_version() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_client_version() {
+  client_version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_client_version();
+}
+inline const ::std::string& ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::client_version() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  return client_version_.GetNoArena();
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const ::std::string& value) {
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+#if LANG_CXX11
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(::std::string&& value) {
+  set_has_client_version();
+  client_version_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+#endif
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const char* value, size_t size) {
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+inline ::std::string* ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::mutable_client_version() {
+  set_has_client_version();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  return client_version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::release_client_version() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  clear_has_client_version();
+  return client_version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_allocated_client_version(::std::string* client_version) {
+  if (client_version != NULL) {
+    set_has_client_version();
+  } else {
+    clear_has_client_version();
+  }
+  client_version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), client_version);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+
+// optional int64 google_play_services_version = 2;
+inline bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_google_play_services_version() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_google_play_services_version() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_google_play_services_version() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_google_play_services_version() {
+  google_play_services_version_ = GOOGLE_LONGLONG(0);
+  clear_has_google_play_services_version();
+}
+inline ::google::protobuf::int64 ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::google_play_services_version() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.google_play_services_version)
+  return google_play_services_version_;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_google_play_services_version(::google::protobuf::int64 value) {
+  set_has_google_play_services_version();
+  google_play_services_version_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.google_play_services_version)
+}
+
+// optional bool is_instant_apps = 3;
+inline bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_is_instant_apps() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_is_instant_apps() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_is_instant_apps() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_is_instant_apps() {
+  is_instant_apps_ = false;
+  clear_has_is_instant_apps();
+}
+inline bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::is_instant_apps() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.is_instant_apps)
+  return is_instant_apps_;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_is_instant_apps(bool value) {
+  set_has_is_instant_apps();
+  is_instant_apps_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.is_instant_apps)
+}
+
+// optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+inline bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_url_api_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_url_api_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_url_api_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_url_api_type() {
+  url_api_type_ = 0;
+  clear_has_url_api_type();
+}
+inline ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::url_api_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.url_api_type)
+  return static_cast< ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType >(url_api_type_);
+}
+inline void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_url_api_type(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType value) {
+  assert(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(value));
+  set_has_url_api_type();
+  url_api_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.url_api_type)
+}
+
+// -------------------------------------------------------------------
+
 // ClientSafeBrowsingReportRequest
 
 // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
 inline bool ClientSafeBrowsingReportRequest::has_type() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void ClientSafeBrowsingReportRequest::set_has_type() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_has_type() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_type() {
   type_ = 0;
@@ -21614,13 +23770,13 @@ inline void ClientSafeBrowsingReportRequest::set_type(::safe_browsing::ClientSaf
 
 // optional .safe_browsing.ClientDownloadResponse.Verdict download_verdict = 11;
 inline bool ClientSafeBrowsingReportRequest::has_download_verdict() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void ClientSafeBrowsingReportRequest::set_has_download_verdict() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_has_download_verdict() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_download_verdict() {
   download_verdict_ = 0;
@@ -21856,15 +24012,45 @@ ClientSafeBrowsingReportRequest::resources() const {
   return resources_;
 }
 
+// repeated .safe_browsing.HTMLElement dom = 16;
+inline int ClientSafeBrowsingReportRequest::dom_size() const {
+  return dom_.size();
+}
+inline void ClientSafeBrowsingReportRequest::clear_dom() {
+  dom_.Clear();
+}
+inline const ::safe_browsing::HTMLElement& ClientSafeBrowsingReportRequest::dom(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Get(index);
+}
+inline ::safe_browsing::HTMLElement* ClientSafeBrowsingReportRequest::mutable_dom(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Mutable(index);
+}
+inline ::safe_browsing::HTMLElement* ClientSafeBrowsingReportRequest::add_dom() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >*
+ClientSafeBrowsingReportRequest::mutable_dom() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return &dom_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >&
+ClientSafeBrowsingReportRequest::dom() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_;
+}
+
 // optional bool complete = 5;
 inline bool ClientSafeBrowsingReportRequest::has_complete() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void ClientSafeBrowsingReportRequest::set_has_complete() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_has_complete() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_complete() {
   complete_ = false;
@@ -22014,13 +24200,13 @@ inline void ClientSafeBrowsingReportRequest::set_allocated_client_country(::std:
 
 // optional bool did_proceed = 8;
 inline bool ClientSafeBrowsingReportRequest::has_did_proceed() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void ClientSafeBrowsingReportRequest::set_has_did_proceed() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_has_did_proceed() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_did_proceed() {
   did_proceed_ = false;
@@ -22038,13 +24224,13 @@ inline void ClientSafeBrowsingReportRequest::set_did_proceed(bool value) {
 
 // optional bool repeat_visit = 9;
 inline bool ClientSafeBrowsingReportRequest::has_repeat_visit() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void ClientSafeBrowsingReportRequest::set_has_repeat_visit() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_has_repeat_visit() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void ClientSafeBrowsingReportRequest::clear_repeat_visit() {
   repeat_visit_ = false;
@@ -22123,10 +24309,790 @@ inline void ClientSafeBrowsingReportRequest::set_allocated_token(::std::string* 
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.token)
 }
 
+// optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+inline bool ClientSafeBrowsingReportRequest::has_client_properties() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest::set_has_client_properties() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ClientSafeBrowsingReportRequest::clear_has_client_properties() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ClientSafeBrowsingReportRequest::clear_client_properties() {
+  if (client_properties_ != NULL) client_properties_->::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::Clear();
+  clear_has_client_properties();
+}
+inline const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& ClientSafeBrowsingReportRequest::client_properties() const {
+  const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* p = client_properties_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties*>(
+      &::safe_browsing::_ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_);
+}
+inline ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* ClientSafeBrowsingReportRequest::mutable_client_properties() {
+  set_has_client_properties();
+  if (client_properties_ == NULL) {
+    client_properties_ = new ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  return client_properties_;
+}
+inline ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* ClientSafeBrowsingReportRequest::release_client_properties() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  clear_has_client_properties();
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* temp = client_properties_;
+  client_properties_ = NULL;
+  return temp;
+}
+inline void ClientSafeBrowsingReportRequest::set_allocated_client_properties(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* client_properties) {
+  delete client_properties_;
+  client_properties_ = client_properties;
+  if (client_properties) {
+    set_has_client_properties();
+  } else {
+    clear_has_client_properties();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+}
+
+// optional bool show_download_in_folder = 18;
+inline bool ClientSafeBrowsingReportRequest::has_show_download_in_folder() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void ClientSafeBrowsingReportRequest::set_has_show_download_in_folder() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void ClientSafeBrowsingReportRequest::clear_has_show_download_in_folder() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void ClientSafeBrowsingReportRequest::clear_show_download_in_folder() {
+  show_download_in_folder_ = false;
+  clear_has_show_download_in_folder();
+}
+inline bool ClientSafeBrowsingReportRequest::show_download_in_folder() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.show_download_in_folder)
+  return show_download_in_folder_;
+}
+inline void ClientSafeBrowsingReportRequest::set_show_download_in_folder(bool value) {
+  set_has_show_download_in_folder();
+  show_download_in_folder_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.show_download_in_folder)
+}
+
+// -------------------------------------------------------------------
+
+// HTMLElement_Attribute
+
+// optional string name = 1;
+inline bool HTMLElement_Attribute::has_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void HTMLElement_Attribute::set_has_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void HTMLElement_Attribute::clear_has_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void HTMLElement_Attribute::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_name();
+}
+inline const ::std::string& HTMLElement_Attribute::name() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.Attribute.name)
+  return name_.GetNoArena();
+}
+inline void HTMLElement_Attribute::set_name(const ::std::string& value) {
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.Attribute.name)
+}
+#if LANG_CXX11
+inline void HTMLElement_Attribute::set_name(::std::string&& value) {
+  set_has_name();
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.Attribute.name)
+}
+#endif
+inline void HTMLElement_Attribute::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.Attribute.name)
+}
+inline void HTMLElement_Attribute::set_name(const char* value, size_t size) {
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.Attribute.name)
+}
+inline ::std::string* HTMLElement_Attribute::mutable_name() {
+  set_has_name();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.Attribute.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* HTMLElement_Attribute::release_name() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.Attribute.name)
+  clear_has_name();
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void HTMLElement_Attribute::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    set_has_name();
+  } else {
+    clear_has_name();
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.Attribute.name)
+}
+
+// optional string value = 2;
+inline bool HTMLElement_Attribute::has_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void HTMLElement_Attribute::set_has_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void HTMLElement_Attribute::clear_has_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void HTMLElement_Attribute::clear_value() {
+  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_value();
+}
+inline const ::std::string& HTMLElement_Attribute::value() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.Attribute.value)
+  return value_.GetNoArena();
+}
+inline void HTMLElement_Attribute::set_value(const ::std::string& value) {
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.Attribute.value)
+}
+#if LANG_CXX11
+inline void HTMLElement_Attribute::set_value(::std::string&& value) {
+  set_has_value();
+  value_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.Attribute.value)
+}
+#endif
+inline void HTMLElement_Attribute::set_value(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.Attribute.value)
+}
+inline void HTMLElement_Attribute::set_value(const char* value, size_t size) {
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.Attribute.value)
+}
+inline ::std::string* HTMLElement_Attribute::mutable_value() {
+  set_has_value();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.Attribute.value)
+  return value_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* HTMLElement_Attribute::release_value() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.Attribute.value)
+  clear_has_value();
+  return value_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void HTMLElement_Attribute::set_allocated_value(::std::string* value) {
+  if (value != NULL) {
+    set_has_value();
+  } else {
+    clear_has_value();
+  }
+  value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.Attribute.value)
+}
+
+// -------------------------------------------------------------------
+
+// HTMLElement
+
+// optional int32 id = 1;
+inline bool HTMLElement::has_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void HTMLElement::set_has_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void HTMLElement::clear_has_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void HTMLElement::clear_id() {
+  id_ = 0;
+  clear_has_id();
+}
+inline ::google::protobuf::int32 HTMLElement::id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.id)
+  return id_;
+}
+inline void HTMLElement::set_id(::google::protobuf::int32 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.id)
+}
+
+// optional string tag = 2;
+inline bool HTMLElement::has_tag() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void HTMLElement::set_has_tag() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void HTMLElement::clear_has_tag() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void HTMLElement::clear_tag() {
+  tag_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_tag();
+}
+inline const ::std::string& HTMLElement::tag() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.tag)
+  return tag_.GetNoArena();
+}
+inline void HTMLElement::set_tag(const ::std::string& value) {
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.tag)
+}
+#if LANG_CXX11
+inline void HTMLElement::set_tag(::std::string&& value) {
+  set_has_tag();
+  tag_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.tag)
+}
+#endif
+inline void HTMLElement::set_tag(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.tag)
+}
+inline void HTMLElement::set_tag(const char* value, size_t size) {
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.tag)
+}
+inline ::std::string* HTMLElement::mutable_tag() {
+  set_has_tag();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.tag)
+  return tag_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* HTMLElement::release_tag() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.tag)
+  clear_has_tag();
+  return tag_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void HTMLElement::set_allocated_tag(::std::string* tag) {
+  if (tag != NULL) {
+    set_has_tag();
+  } else {
+    clear_has_tag();
+  }
+  tag_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), tag);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.tag)
+}
+
+// repeated int32 child_ids = 3;
+inline int HTMLElement::child_ids_size() const {
+  return child_ids_.size();
+}
+inline void HTMLElement::clear_child_ids() {
+  child_ids_.Clear();
+}
+inline ::google::protobuf::int32 HTMLElement::child_ids(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.child_ids)
+  return child_ids_.Get(index);
+}
+inline void HTMLElement::set_child_ids(int index, ::google::protobuf::int32 value) {
+  child_ids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.child_ids)
+}
+inline void HTMLElement::add_child_ids(::google::protobuf::int32 value) {
+  child_ids_.Add(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.HTMLElement.child_ids)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+HTMLElement::child_ids() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.HTMLElement.child_ids)
+  return child_ids_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+HTMLElement::mutable_child_ids() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.HTMLElement.child_ids)
+  return &child_ids_;
+}
+
+// optional int32 resource_id = 5;
+inline bool HTMLElement::has_resource_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void HTMLElement::set_has_resource_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void HTMLElement::clear_has_resource_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void HTMLElement::clear_resource_id() {
+  resource_id_ = 0;
+  clear_has_resource_id();
+}
+inline ::google::protobuf::int32 HTMLElement::resource_id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.resource_id)
+  return resource_id_;
+}
+inline void HTMLElement::set_resource_id(::google::protobuf::int32 value) {
+  set_has_resource_id();
+  resource_id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.resource_id)
+}
+
+// repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+inline int HTMLElement::attribute_size() const {
+  return attribute_.size();
+}
+inline void HTMLElement::clear_attribute() {
+  attribute_.Clear();
+}
+inline const ::safe_browsing::HTMLElement_Attribute& HTMLElement::attribute(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.attribute)
+  return attribute_.Get(index);
+}
+inline ::safe_browsing::HTMLElement_Attribute* HTMLElement::mutable_attribute(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.attribute)
+  return attribute_.Mutable(index);
+}
+inline ::safe_browsing::HTMLElement_Attribute* HTMLElement::add_attribute() {
+  // @@protoc_insertion_point(field_add:safe_browsing.HTMLElement.attribute)
+  return attribute_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >*
+HTMLElement::mutable_attribute() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.HTMLElement.attribute)
+  return &attribute_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >&
+HTMLElement::attribute() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.HTMLElement.attribute)
+  return attribute_;
+}
+
+// -------------------------------------------------------------------
+
+// ImageData_Dimensions
+
+// optional int32 width = 1;
+inline bool ImageData_Dimensions::has_width() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ImageData_Dimensions::set_has_width() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ImageData_Dimensions::clear_has_width() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ImageData_Dimensions::clear_width() {
+  width_ = 0;
+  clear_has_width();
+}
+inline ::google::protobuf::int32 ImageData_Dimensions::width() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.Dimensions.width)
+  return width_;
+}
+inline void ImageData_Dimensions::set_width(::google::protobuf::int32 value) {
+  set_has_width();
+  width_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.Dimensions.width)
+}
+
+// optional int32 height = 2;
+inline bool ImageData_Dimensions::has_height() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ImageData_Dimensions::set_has_height() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ImageData_Dimensions::clear_has_height() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ImageData_Dimensions::clear_height() {
+  height_ = 0;
+  clear_has_height();
+}
+inline ::google::protobuf::int32 ImageData_Dimensions::height() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.Dimensions.height)
+  return height_;
+}
+inline void ImageData_Dimensions::set_height(::google::protobuf::int32 value) {
+  set_has_height();
+  height_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.Dimensions.height)
+}
+
+// -------------------------------------------------------------------
+
+// ImageData
+
+// optional bytes data = 1;
+inline bool ImageData::has_data() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ImageData::set_has_data() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ImageData::clear_has_data() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ImageData::clear_data() {
+  data_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_data();
+}
+inline const ::std::string& ImageData::data() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.data)
+  return data_.GetNoArena();
+}
+inline void ImageData::set_data(const ::std::string& value) {
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.data)
+}
+#if LANG_CXX11
+inline void ImageData::set_data(::std::string&& value) {
+  set_has_data();
+  data_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ImageData.data)
+}
+#endif
+inline void ImageData::set_data(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ImageData.data)
+}
+inline void ImageData::set_data(const void* value, size_t size) {
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ImageData.data)
+}
+inline ::std::string* ImageData::mutable_data() {
+  set_has_data();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.data)
+  return data_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ImageData::release_data() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.data)
+  clear_has_data();
+  return data_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ImageData::set_allocated_data(::std::string* data) {
+  if (data != NULL) {
+    set_has_data();
+  } else {
+    clear_has_data();
+  }
+  data_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), data);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.data)
+}
+
+// optional string mime_type = 2;
+inline bool ImageData::has_mime_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ImageData::set_has_mime_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ImageData::clear_has_mime_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ImageData::clear_mime_type() {
+  mime_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_mime_type();
+}
+inline const ::std::string& ImageData::mime_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.mime_type)
+  return mime_type_.GetNoArena();
+}
+inline void ImageData::set_mime_type(const ::std::string& value) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.mime_type)
+}
+#if LANG_CXX11
+inline void ImageData::set_mime_type(::std::string&& value) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ImageData.mime_type)
+}
+#endif
+inline void ImageData::set_mime_type(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ImageData.mime_type)
+}
+inline void ImageData::set_mime_type(const char* value, size_t size) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ImageData.mime_type)
+}
+inline ::std::string* ImageData::mutable_mime_type() {
+  set_has_mime_type();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.mime_type)
+  return mime_type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* ImageData::release_mime_type() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.mime_type)
+  clear_has_mime_type();
+  return mime_type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void ImageData::set_allocated_mime_type(::std::string* mime_type) {
+  if (mime_type != NULL) {
+    set_has_mime_type();
+  } else {
+    clear_has_mime_type();
+  }
+  mime_type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), mime_type);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.mime_type)
+}
+
+// optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+inline bool ImageData::has_dimensions() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ImageData::set_has_dimensions() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ImageData::clear_has_dimensions() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ImageData::clear_dimensions() {
+  if (dimensions_ != NULL) dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+  clear_has_dimensions();
+}
+inline const ::safe_browsing::ImageData_Dimensions& ImageData::dimensions() const {
+  const ::safe_browsing::ImageData_Dimensions* p = dimensions_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.dimensions)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData_Dimensions*>(
+      &::safe_browsing::_ImageData_Dimensions_default_instance_);
+}
+inline ::safe_browsing::ImageData_Dimensions* ImageData::mutable_dimensions() {
+  set_has_dimensions();
+  if (dimensions_ == NULL) {
+    dimensions_ = new ::safe_browsing::ImageData_Dimensions;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.dimensions)
+  return dimensions_;
+}
+inline ::safe_browsing::ImageData_Dimensions* ImageData::release_dimensions() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.dimensions)
+  clear_has_dimensions();
+  ::safe_browsing::ImageData_Dimensions* temp = dimensions_;
+  dimensions_ = NULL;
+  return temp;
+}
+inline void ImageData::set_allocated_dimensions(::safe_browsing::ImageData_Dimensions* dimensions) {
+  delete dimensions_;
+  dimensions_ = dimensions;
+  if (dimensions) {
+    set_has_dimensions();
+  } else {
+    clear_has_dimensions();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.dimensions)
+}
+
+// optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+inline bool ImageData::has_original_dimensions() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ImageData::set_has_original_dimensions() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ImageData::clear_has_original_dimensions() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ImageData::clear_original_dimensions() {
+  if (original_dimensions_ != NULL) original_dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+  clear_has_original_dimensions();
+}
+inline const ::safe_browsing::ImageData_Dimensions& ImageData::original_dimensions() const {
+  const ::safe_browsing::ImageData_Dimensions* p = original_dimensions_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.original_dimensions)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData_Dimensions*>(
+      &::safe_browsing::_ImageData_Dimensions_default_instance_);
+}
+inline ::safe_browsing::ImageData_Dimensions* ImageData::mutable_original_dimensions() {
+  set_has_original_dimensions();
+  if (original_dimensions_ == NULL) {
+    original_dimensions_ = new ::safe_browsing::ImageData_Dimensions;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.original_dimensions)
+  return original_dimensions_;
+}
+inline ::safe_browsing::ImageData_Dimensions* ImageData::release_original_dimensions() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.original_dimensions)
+  clear_has_original_dimensions();
+  ::safe_browsing::ImageData_Dimensions* temp = original_dimensions_;
+  original_dimensions_ = NULL;
+  return temp;
+}
+inline void ImageData::set_allocated_original_dimensions(::safe_browsing::ImageData_Dimensions* original_dimensions) {
+  delete original_dimensions_;
+  original_dimensions_ = original_dimensions;
+  if (original_dimensions) {
+    set_has_original_dimensions();
+  } else {
+    clear_has_original_dimensions();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.original_dimensions)
+}
+
+// -------------------------------------------------------------------
+
+// NotificationImageReportRequest
+
+// optional string notification_origin = 1;
+inline bool NotificationImageReportRequest::has_notification_origin() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void NotificationImageReportRequest::set_has_notification_origin() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void NotificationImageReportRequest::clear_has_notification_origin() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void NotificationImageReportRequest::clear_notification_origin() {
+  notification_origin_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_notification_origin();
+}
+inline const ::std::string& NotificationImageReportRequest::notification_origin() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.NotificationImageReportRequest.notification_origin)
+  return notification_origin_.GetNoArena();
+}
+inline void NotificationImageReportRequest::set_notification_origin(const ::std::string& value) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+#if LANG_CXX11
+inline void NotificationImageReportRequest::set_notification_origin(::std::string&& value) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+#endif
+inline void NotificationImageReportRequest::set_notification_origin(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+inline void NotificationImageReportRequest::set_notification_origin(const char* value, size_t size) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+inline ::std::string* NotificationImageReportRequest::mutable_notification_origin() {
+  set_has_notification_origin();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.NotificationImageReportRequest.notification_origin)
+  return notification_origin_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* NotificationImageReportRequest::release_notification_origin() {
+  // @@protoc_insertion_point(field_release:safe_browsing.NotificationImageReportRequest.notification_origin)
+  clear_has_notification_origin();
+  return notification_origin_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void NotificationImageReportRequest::set_allocated_notification_origin(::std::string* notification_origin) {
+  if (notification_origin != NULL) {
+    set_has_notification_origin();
+  } else {
+    clear_has_notification_origin();
+  }
+  notification_origin_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), notification_origin);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+
+// optional .safe_browsing.ImageData image = 2;
+inline bool NotificationImageReportRequest::has_image() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void NotificationImageReportRequest::set_has_image() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void NotificationImageReportRequest::clear_has_image() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void NotificationImageReportRequest::clear_image() {
+  if (image_ != NULL) image_->::safe_browsing::ImageData::Clear();
+  clear_has_image();
+}
+inline const ::safe_browsing::ImageData& NotificationImageReportRequest::image() const {
+  const ::safe_browsing::ImageData* p = image_;
+  // @@protoc_insertion_point(field_get:safe_browsing.NotificationImageReportRequest.image)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData*>(
+      &::safe_browsing::_ImageData_default_instance_);
+}
+inline ::safe_browsing::ImageData* NotificationImageReportRequest::mutable_image() {
+  set_has_image();
+  if (image_ == NULL) {
+    image_ = new ::safe_browsing::ImageData;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.NotificationImageReportRequest.image)
+  return image_;
+}
+inline ::safe_browsing::ImageData* NotificationImageReportRequest::release_image() {
+  // @@protoc_insertion_point(field_release:safe_browsing.NotificationImageReportRequest.image)
+  clear_has_image();
+  ::safe_browsing::ImageData* temp = image_;
+  image_ = NULL;
+  return temp;
+}
+inline void NotificationImageReportRequest::set_allocated_image(::safe_browsing::ImageData* image) {
+  delete image_;
+  image_ = image;
+  if (image) {
+    set_has_image();
+  } else {
+    clear_has_image();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.NotificationImageReportRequest.image)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -22255,9 +25221,12 @@ namespace google {
 namespace protobuf {
 
 template <> struct is_proto_enum< ::safe_browsing::ChromeUserPopulation_UserPopulation> : ::google::protobuf::internal::true_type {};
-template <> struct is_proto_enum< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::safe_browsing::LoginReputationClientRequest_TriggerType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::safe_browsing::LoginReputationClientResponse_VerdictType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientDownloadRequest_ResourceType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientDownloadRequest_DownloadType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::safe_browsing::ReferrerChainEntry_URLType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientDownloadResponse_Verdict> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientDownloadReport_Reason> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientUploadResponse_UploadStatus> : ::google::protobuf::internal::true_type {};
@@ -22268,6 +25237,7 @@ template <> struct is_proto_enum< ::safe_browsing::ClientIncidentReport_Environm
 template <> struct is_proto_enum< ::safe_browsing::ClientIncidentReport_EnvironmentData_Process_Channel> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientIncidentReport_ExtensionData_ExtensionInfo_ExtensionState> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::safe_browsing::ClientSafeBrowsingReportRequest_ReportType> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType> : ::google::protobuf::internal::true_type {};
 
 }  // namespace protobuf
 }  // namespace google

@@ -41,6 +41,40 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
+class nsDisplayTableCellSelection final : public nsDisplayItem {
+public:
+  nsDisplayTableCellSelection(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplayTableCellSelection);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTableCellSelection() {
+    MOZ_COUNT_DTOR(nsDisplayTableCellSelection);
+  }
+#endif
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override
+  {
+    static_cast<nsTableCellFrame*>(mFrame)->DecorateForSelection(aCtx->GetDrawTarget(), ToReferenceFrame());
+  }
+  NS_DISPLAY_DECL_NAME("TableCellSelection", TYPE_TABLE_CELL_SELECTION)
+
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override
+  {
+    RefPtr<nsFrameSelection> frameSelection = mFrame->PresContext()->PresShell()->FrameSelection();
+    if (frameSelection->GetTableCellSelection()) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
                                    nsTableFrame* aTableFrame,
                                    ClassID aID)
@@ -423,14 +457,6 @@ void nsTableCellFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDi
   GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
 }
 
-static void
-PaintTableCellSelection(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                        const nsRect& aRect, nsPoint aPt)
-{
-  static_cast<nsTableCellFrame*>(aFrame)->DecorateForSelection(aDrawTarget,
-                                                               aPt);
-}
-
 bool
 nsTableCellFrame::ShouldPaintBordersAndBackgrounds() const
 {
@@ -493,9 +519,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // and display the selection border if we need to
     if (IsSelected()) {
       aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayGeneric(aBuilder, this, ::PaintTableCellSelection,
-                         "TableCellSelection",
-                         DisplayItemType::TYPE_TABLE_CELL_SELECTION));
+        nsDisplayTableCellSelection(aBuilder, this));
     }
   }
 

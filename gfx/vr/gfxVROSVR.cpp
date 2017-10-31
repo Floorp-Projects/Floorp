@@ -261,6 +261,15 @@ VRDisplayOSVR::VRDisplayOSVR(OSVR_ClientContext* context,
     mDisplayInfo.mEyeTranslation[eye].x = eyePose.translation.data[0];
     mDisplayInfo.mEyeTranslation[eye].y = eyePose.translation.data[1];
     mDisplayInfo.mEyeTranslation[eye].z = eyePose.translation.data[2];
+
+    Matrix4x4 pose;
+    pose.SetRotationFromQuaternion(gfx::Quaternion(osvrQuatGetX(&eyePose.rotation),
+                                                   osvrQuatGetY(&eyePose.rotation),
+                                                   osvrQuatGetZ(&eyePose.rotation),
+                                                   osvrQuatGetW(&eyePose.rotation)));
+    pose.PreTranslate(eyePose.translation.data[0], eyePose.translation.data[1], eyePose.translation.data[2]);
+    pose.Invert();
+    mHeadToEye[eye] = pose;
   }
 }
 
@@ -305,6 +314,9 @@ VRDisplayOSVR::GetSensorState()
     result.orientation[1] = orientation.data[2];
     result.orientation[2] = orientation.data[3];
     result.orientation[3] = orientation.data[0];
+  } else {
+    // default to an identity quaternion
+    result.orientation[3] = 1.0f;
   }
 
   OSVR_PositionState position;
@@ -315,6 +327,8 @@ VRDisplayOSVR::GetSensorState()
     result.position[1] = position.data[1];
     result.position[2] = position.data[2];
   }
+
+  result.CalcViewMatrices(mHeadToEye);
 
   return result;
 }

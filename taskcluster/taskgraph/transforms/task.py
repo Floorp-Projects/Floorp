@@ -23,7 +23,7 @@ from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import validate_schema, Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO
@@ -44,7 +44,24 @@ def _run_task_suffix():
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,
-    {Required('task-reference'): basestring})
+    {Required('task-reference'): basestring},
+)
+
+notification_ids = optionally_keyed_by('project', Any(None, [basestring]))
+notification_schema = Schema({
+    Required("subject"): basestring,
+    Required("message"): basestring,
+    Required("ids"): notification_ids,
+
+})
+
+FULL_TASK_NAME = (
+    "[{task[payload][properties][product]} "
+    "{task[payload][properties][version]} "
+    "build{task[payload][properties][build_number]}/"
+    "{task[payload][sourcestamp][branch]}] "
+    "{task[metadata][name]} task"
+)
 
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
@@ -202,6 +219,13 @@ task_description_schema = Schema({
 
     # Whether the job should use sccache compiler caching.
     Required('needs-sccache', default=False): bool,
+
+    # notifications
+    Optional('notifications'): {
+        Optional('completed'): Any(notification_schema, notification_ids),
+        Optional('failed'): Any(notification_schema, notification_ids),
+        Optional('exception'): Any(notification_schema, notification_ids),
+    },
 
     # information specific to the worker implementation that will run this task
     'worker': Any({
@@ -375,8 +399,13 @@ task_description_schema = Schema({
         },
         Required('properties'): {
             'product': basestring,
+            Optional('build_number'): int,
+            Optional('release_promotion'): bool,
+            Optional('tuxedo_server_url'): optionally_keyed_by('project', basestring),
             Extra: taskref_or_string,  # additional properties are allowed
         },
+        Optional('scopes'): [basestring],
+        Optional('routes'): [basestring],
     }, {
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
@@ -410,7 +439,7 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'scriptworker-signing',
 
-        # the maximum time to spend signing, in seconds
+        # the maximum time to run, in seconds
         Required('max-run-time', default=600): int,
 
         # list of artifact URLs for the artifacts that should be signed
@@ -430,7 +459,7 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'beetmover',
 
-        # the maximum time to spend signing, in seconds
+        # the maximum time to run, in seconds
         Required('max-run-time', default=600): int,
 
         # locale key, if this is a locale beetmover job
@@ -450,6 +479,12 @@ task_description_schema = Schema({
             # locale is used to map upload path and allow for duplicate simple names
             Required('locale'): basestring,
         }],
+    }, {
+        Required('implementation'): 'beetmover-cdns',
+
+        # the maximum time to run, in seconds
+        Required('max-run-time', default=600): int,
+        Required('product'): basestring,
     }, {
         Required('implementation'): 'balrog',
 
@@ -495,6 +530,9 @@ task_description_schema = Schema({
         Optional('rollout-percentage'): int,
     }),
 })
+
+TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherder/' \
+                           'blob/master/schemas/task-treeherder-config.yml'
 
 GROUP_NAMES = {
     'cram': 'Cram tests',
@@ -548,6 +586,7 @@ GROUP_NAMES = {
     'pub': 'APK publishing',
     'p': 'Partial generation',
     'ps': 'Partials signing',
+    'Rel': 'Release promotion',
 }
 
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
@@ -937,6 +976,19 @@ def build_beetmover_payload(config, task, task_def):
         task_def['payload'].update(release_config)
 
 
+@payload_builder('beetmover-cdns')
+def build_beetmover_cdns_payload(config, task, task_def):
+    worker = task['worker']
+    release_config = get_release_config(config, force=True)
+
+    task_def['payload'] = {
+        'maxRunTime': worker['max-run-time'],
+        'product': worker['product'],
+        'version': release_config['version'],
+        'build_number': release_config['build_number'],
+    }
+
+
 @payload_builder('balrog')
 def build_balrog_payload(config, task, task_def):
     worker = task['worker']
@@ -1003,9 +1055,23 @@ def build_buildbot_bridge_payload(config, task, task_def):
         'sourcestamp': worker['sourcestamp'],
         'properties': worker['properties'],
     }
+    task_def['scopes'].extend(worker.get('scopes', []))
+    task_def['routes'].extend(worker.get('routes', []))
 
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def task_name_from_label(config, tasks):
+    for task in tasks:
+        if 'label' not in task:
+            if 'name' not in task:
+                raise Exception("task has neither a name nor a label")
+            task['label'] = '{}-{}'.format(config.kind, task['name'])
+        if task.get('name'):
+            del task['name']
+        yield task
 
 
 @transforms.add
@@ -1178,6 +1244,12 @@ def build_task(config, tasks):
                     raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
                 treeherder['groupName'] = GROUP_NAMES[groupSymbol]
             treeherder['symbol'] = symbol
+            if len(symbol) > 25 or len(groupSymbol) > 25:
+                raise RuntimeError("Treeherder group and symbol names must not be longer than "
+                                   "25 characters: {} (see {})".format(
+                                       task_th['symbol'],
+                                       TC_TREEHERDER_SCHEMA_URL,
+                                       ))
             treeherder['jobKind'] = task_th['kind']
             treeherder['tier'] = task_th['tier']
 
@@ -1262,6 +1334,48 @@ def build_task(config, tasks):
             if payload:
                 env = payload.setdefault('env', {})
                 env['MOZ_AUTOMATION'] = '1'
+
+        notifications = task.get('notifications')
+        if notifications:
+            task_def['extra'].setdefault('notifications', {})
+            for k, v in notifications.items():
+                if isinstance(v, dict) and len(v) == 1 and v.keys()[0].startswith('by-'):
+                    v = {'tmp': v}
+                    resolve_keyed_by(v, 'tmp', 'notifications', **config.params)
+                    v = v['tmp']
+                if isinstance(v, list):
+                    v = {'ids': v}
+                    if 'completed' == k:
+                        v.update({
+                            "subject": "Completed: {}".format(FULL_TASK_NAME),
+                            "message": "{} has completed successfully! Yay!".format(
+                                FULL_TASK_NAME),
+                        })
+                    elif k == 'failed':
+                        v.update({
+                            "subject": "Failed: {}".format(FULL_TASK_NAME),
+                            "message": "Uh-oh! {} failed.".format(FULL_TASK_NAME),
+                        })
+                    elif k == 'exception':
+                        v.update({
+                            "subject": "Exception: {}".format(FULL_TASK_NAME),
+                            "message": "Uh-oh! {} resulted in an exception.".format(
+                                FULL_TASK_NAME),
+                        })
+                else:
+                    resolve_keyed_by(v, 'ids', 'notifications', **config.params)
+                if v['ids'] is None:
+                    continue
+                notifications_kwargs = dict(
+                    task=task_def,
+                    config=config.__dict__,
+                    release_config=get_release_config(config, force=True),
+                )
+                task_def['extra']['notifications']['task-' + k] = {
+                    'subject': v['subject'].format(**notifications_kwargs),
+                    'message': v['message'].format(**notifications_kwargs),
+                    'ids': v['ids'],
+                }
 
         yield {
             'label': task['label'],

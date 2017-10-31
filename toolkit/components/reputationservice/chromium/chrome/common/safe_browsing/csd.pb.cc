@@ -45,6 +45,31 @@ public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientMalwareRequest>
      _instance;
 } _ClientMalwareRequest_default_instance_;
+class LoginReputationClientRequest_Frame_FormDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<LoginReputationClientRequest_Frame_Form>
+     _instance;
+} _LoginReputationClientRequest_Frame_Form_default_instance_;
+class LoginReputationClientRequest_FrameDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<LoginReputationClientRequest_Frame>
+     _instance;
+} _LoginReputationClientRequest_Frame_default_instance_;
+class LoginReputationClientRequest_PasswordReuseEventDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<LoginReputationClientRequest_PasswordReuseEvent>
+     _instance;
+} _LoginReputationClientRequest_PasswordReuseEvent_default_instance_;
+class LoginReputationClientRequestDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<LoginReputationClientRequest>
+     _instance;
+} _LoginReputationClientRequest_default_instance_;
+class LoginReputationClientResponseDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<LoginReputationClientResponse>
+     _instance;
+} _LoginReputationClientResponse_default_instance_;
 class ClientMalwareResponseDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientMalwareResponse>
@@ -110,16 +135,21 @@ public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientDownloadRequest_ArchivedBinary>
      _instance;
 } _ClientDownloadRequest_ArchivedBinary_default_instance_;
-class ClientDownloadRequest_URLChainEntryDefaultTypeInternal {
-public:
- ::google::protobuf::internal::ExplicitlyConstructed<ClientDownloadRequest_URLChainEntry>
-     _instance;
-} _ClientDownloadRequest_URLChainEntry_default_instance_;
 class ClientDownloadRequestDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientDownloadRequest>
      _instance;
 } _ClientDownloadRequest_default_instance_;
+class ReferrerChainEntry_ServerRedirectDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<ReferrerChainEntry_ServerRedirect>
+     _instance;
+} _ReferrerChainEntry_ServerRedirect_default_instance_;
+class ReferrerChainEntryDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<ReferrerChainEntry>
+     _instance;
+} _ReferrerChainEntry_default_instance_;
 class ClientDownloadResponse_MoreInfoDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientDownloadResponse_MoreInfo>
@@ -160,26 +190,11 @@ public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData_BinaryIntegrityIncident>
      _instance;
 } _ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_;
-class ClientIncidentReport_IncidentData_BlacklistLoadIncidentDefaultTypeInternal {
-public:
- ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData_BlacklistLoadIncident>
-     _instance;
-} _ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_;
-class ClientIncidentReport_IncidentData_VariationsSeedSignatureIncidentDefaultTypeInternal {
-public:
- ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident>
-     _instance;
-} _ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_;
 class ClientIncidentReport_IncidentData_ResourceRequestIncidentDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData_ResourceRequestIncident>
      _instance;
 } _ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_;
-class ClientIncidentReport_IncidentData_SuspiciousModuleIncidentDefaultTypeInternal {
-public:
- ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData_SuspiciousModuleIncident>
-     _instance;
-} _ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_;
 class ClientIncidentReport_IncidentDataDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientIncidentReport_IncidentData>
@@ -310,11 +325,41 @@ public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientSafeBrowsingReportRequest_Resource>
      _instance;
 } _ClientSafeBrowsingReportRequest_Resource_default_instance_;
+class ClientSafeBrowsingReportRequest_SafeBrowsingClientPropertiesDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties>
+     _instance;
+} _ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_;
 class ClientSafeBrowsingReportRequestDefaultTypeInternal {
 public:
  ::google::protobuf::internal::ExplicitlyConstructed<ClientSafeBrowsingReportRequest>
      _instance;
 } _ClientSafeBrowsingReportRequest_default_instance_;
+class HTMLElement_AttributeDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<HTMLElement_Attribute>
+     _instance;
+} _HTMLElement_Attribute_default_instance_;
+class HTMLElementDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<HTMLElement>
+     _instance;
+} _HTMLElement_default_instance_;
+class ImageData_DimensionsDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<ImageData_Dimensions>
+     _instance;
+} _ImageData_Dimensions_default_instance_;
+class ImageDataDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<ImageData>
+     _instance;
+} _ImageData_default_instance_;
+class NotificationImageReportRequestDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<NotificationImageReportRequest>
+     _instance;
+} _NotificationImageReportRequest_default_instance_;
 
 namespace protobuf_csd_2eproto {
 
@@ -329,6 +374,15 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
   { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
   { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
   { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
@@ -407,7 +461,17 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientMalwareRequest_UrlInfo_default_instance_);_ClientMalwareRequest_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientMalwareRequest_default_instance_);_ClientMalwareResponse_default_instance_._instance.DefaultConstruct();
+      &_ClientMalwareRequest_default_instance_);_LoginReputationClientRequest_Frame_Form_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_LoginReputationClientRequest_Frame_Form_default_instance_);_LoginReputationClientRequest_Frame_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_LoginReputationClientRequest_Frame_default_instance_);_LoginReputationClientRequest_PasswordReuseEvent_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_LoginReputationClientRequest_PasswordReuseEvent_default_instance_);_LoginReputationClientRequest_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_LoginReputationClientRequest_default_instance_);_LoginReputationClientResponse_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_LoginReputationClientResponse_default_instance_);_ClientMalwareResponse_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientMalwareResponse_default_instance_);_ClientDownloadRequest_Digests_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
@@ -433,11 +497,13 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientDownloadRequest_ImageHeaders_default_instance_);_ClientDownloadRequest_ArchivedBinary_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientDownloadRequest_ArchivedBinary_default_instance_);_ClientDownloadRequest_URLChainEntry_default_instance_._instance.DefaultConstruct();
+      &_ClientDownloadRequest_ArchivedBinary_default_instance_);_ClientDownloadRequest_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientDownloadRequest_URLChainEntry_default_instance_);_ClientDownloadRequest_default_instance_._instance.DefaultConstruct();
+      &_ClientDownloadRequest_default_instance_);_ReferrerChainEntry_ServerRedirect_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientDownloadRequest_default_instance_);_ClientDownloadResponse_MoreInfo_default_instance_._instance.DefaultConstruct();
+      &_ReferrerChainEntry_ServerRedirect_default_instance_);_ReferrerChainEntry_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_ReferrerChainEntry_default_instance_);_ClientDownloadResponse_MoreInfo_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientDownloadResponse_MoreInfo_default_instance_);_ClientDownloadResponse_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
@@ -453,15 +519,9 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile_default_instance_);_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_);_ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_._instance.DefaultConstruct();
+      &_ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_);_ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_);_ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_._instance.DefaultConstruct();
-  ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_);_ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_._instance.DefaultConstruct();
-  ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_);_ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_._instance.DefaultConstruct();
-  ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_);_ClientIncidentReport_IncidentData_default_instance_._instance.DefaultConstruct();
+      &_ClientIncidentReport_IncidentData_ResourceRequestIncident_default_instance_);_ClientIncidentReport_IncidentData_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientIncidentReport_IncidentData_default_instance_);_ClientIncidentReport_DownloadDetails_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
@@ -513,11 +573,27 @@ void TableStruct::InitDefaultsImpl() {
   ::google::protobuf::internal::OnShutdownDestroyMessage(
       &_ClientSafeBrowsingReportRequest_HTTPResponse_default_instance_);_ClientSafeBrowsingReportRequest_Resource_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientSafeBrowsingReportRequest_Resource_default_instance_);_ClientSafeBrowsingReportRequest_default_instance_._instance.DefaultConstruct();
+      &_ClientSafeBrowsingReportRequest_Resource_default_instance_);_ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_._instance.DefaultConstruct();
   ::google::protobuf::internal::OnShutdownDestroyMessage(
-      &_ClientSafeBrowsingReportRequest_default_instance_);_ClientPhishingRequest_default_instance_._instance.get_mutable()->population_ = const_cast< ::safe_browsing::ChromeUserPopulation*>(
+      &_ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_);_ClientSafeBrowsingReportRequest_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_ClientSafeBrowsingReportRequest_default_instance_);_HTMLElement_Attribute_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_HTMLElement_Attribute_default_instance_);_HTMLElement_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_HTMLElement_default_instance_);_ImageData_Dimensions_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_ImageData_Dimensions_default_instance_);_ImageData_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_ImageData_default_instance_);_NotificationImageReportRequest_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_NotificationImageReportRequest_default_instance_);_ClientPhishingRequest_default_instance_._instance.get_mutable()->population_ = const_cast< ::safe_browsing::ChromeUserPopulation*>(
       ::safe_browsing::ChromeUserPopulation::internal_default_instance());
   _ClientMalwareRequest_default_instance_._instance.get_mutable()->population_ = const_cast< ::safe_browsing::ChromeUserPopulation*>(
+      ::safe_browsing::ChromeUserPopulation::internal_default_instance());
+  _LoginReputationClientRequest_default_instance_._instance.get_mutable()->password_reuse_event_ = const_cast< ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent*>(
+      ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent::internal_default_instance());
+  _LoginReputationClientRequest_default_instance_._instance.get_mutable()->population_ = const_cast< ::safe_browsing::ChromeUserPopulation*>(
       ::safe_browsing::ChromeUserPopulation::internal_default_instance());
   _ClientDownloadRequest_ImageHeaders_default_instance_._instance.get_mutable()->pe_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_PEImageHeaders*>(
       ::safe_browsing::ClientDownloadRequest_PEImageHeaders::internal_default_instance());
@@ -551,30 +627,12 @@ void TableStruct::InitDefaultsImpl() {
       ::safe_browsing::ClientDownloadRequest_SignatureInfo::internal_default_instance());
   _ClientIncidentReport_IncidentData_BinaryIntegrityIncident_default_instance_._instance.get_mutable()->image_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
       ::safe_browsing::ClientDownloadRequest_ImageHeaders::internal_default_instance());
-  _ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_._instance.get_mutable()->digest_ = const_cast< ::safe_browsing::ClientDownloadRequest_Digests*>(
-      ::safe_browsing::ClientDownloadRequest_Digests::internal_default_instance());
-  _ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_._instance.get_mutable()->signature_ = const_cast< ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      ::safe_browsing::ClientDownloadRequest_SignatureInfo::internal_default_instance());
-  _ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_._instance.get_mutable()->image_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      ::safe_browsing::ClientDownloadRequest_ImageHeaders::internal_default_instance());
-  _ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_._instance.get_mutable()->digest_ = const_cast< ::safe_browsing::ClientDownloadRequest_Digests*>(
-      ::safe_browsing::ClientDownloadRequest_Digests::internal_default_instance());
-  _ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_._instance.get_mutable()->signature_ = const_cast< ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      ::safe_browsing::ClientDownloadRequest_SignatureInfo::internal_default_instance());
-  _ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_._instance.get_mutable()->image_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      ::safe_browsing::ClientDownloadRequest_ImageHeaders::internal_default_instance());
   _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->tracked_preference_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_TrackedPreferenceIncident*>(
       ::safe_browsing::ClientIncidentReport_IncidentData_TrackedPreferenceIncident::internal_default_instance());
   _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->binary_integrity_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident*>(
       ::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident::internal_default_instance());
-  _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->blacklist_load_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident*>(
-      ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident::internal_default_instance());
-  _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->variations_seed_signature_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident*>(
-      ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::internal_default_instance());
   _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->resource_request_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident*>(
       ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident::internal_default_instance());
-  _ClientIncidentReport_IncidentData_default_instance_._instance.get_mutable()->suspicious_module_ = const_cast< ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident*>(
-      ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident::internal_default_instance());
   _ClientIncidentReport_DownloadDetails_default_instance_._instance.get_mutable()->download_ = const_cast< ::safe_browsing::ClientDownloadRequest*>(
       ::safe_browsing::ClientDownloadRequest::internal_default_instance());
   _ClientIncidentReport_EnvironmentData_Process_Dll_default_instance_._instance.get_mutable()->image_headers_ = const_cast< ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
@@ -607,6 +665,14 @@ void TableStruct::InitDefaultsImpl() {
       ::safe_browsing::ClientSafeBrowsingReportRequest_HTTPRequest::internal_default_instance());
   _ClientSafeBrowsingReportRequest_Resource_default_instance_._instance.get_mutable()->response_ = const_cast< ::safe_browsing::ClientSafeBrowsingReportRequest_HTTPResponse*>(
       ::safe_browsing::ClientSafeBrowsingReportRequest_HTTPResponse::internal_default_instance());
+  _ClientSafeBrowsingReportRequest_default_instance_._instance.get_mutable()->client_properties_ = const_cast< ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties*>(
+      ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::internal_default_instance());
+  _ImageData_default_instance_._instance.get_mutable()->dimensions_ = const_cast< ::safe_browsing::ImageData_Dimensions*>(
+      ::safe_browsing::ImageData_Dimensions::internal_default_instance());
+  _ImageData_default_instance_._instance.get_mutable()->original_dimensions_ = const_cast< ::safe_browsing::ImageData_Dimensions*>(
+      ::safe_browsing::ImageData_Dimensions::internal_default_instance());
+  _NotificationImageReportRequest_default_instance_._instance.get_mutable()->image_ = const_cast< ::safe_browsing::ImageData*>(
+      ::safe_browsing::ImageData::internal_default_instance());
 }
 
 void InitDefaults() {
@@ -645,14 +711,11 @@ const ChromeUserPopulation_UserPopulation ChromeUserPopulation::UserPopulation_M
 const ChromeUserPopulation_UserPopulation ChromeUserPopulation::UserPopulation_MAX;
 const int ChromeUserPopulation::UserPopulation_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-bool ClientDownloadRequest_URLChainEntry_URLType_IsValid(int value) {
+bool LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(int value) {
   switch (value) {
+    case 0:
     case 1:
     case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
       return true;
     default:
       return false;
@@ -660,15 +723,52 @@ bool ClientDownloadRequest_URLChainEntry_URLType_IsValid(int value) {
 }
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::DOWNLOAD_URL;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::DOWNLOAD_REFERRER;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::LANDING_PAGE;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::LANDING_REFERRER;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::CLIENT_REDIRECT;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::SERVER_REDIRECT;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::URLType_MIN;
-const ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::URLType_MAX;
-const int ClientDownloadRequest_URLChainEntry::URLType_ARRAYSIZE;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::NOT_SIGNED_IN;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::GMAIL;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::GSUITE;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::SyncAccountType_MIN;
+const LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::SyncAccountType_MAX;
+const int LoginReputationClientRequest_PasswordReuseEvent::SyncAccountType_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool LoginReputationClientRequest_TriggerType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest::TRIGGER_TYPE_UNSPECIFIED;
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest::UNFAMILIAR_LOGIN_PAGE;
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest::PASSWORD_REUSE_EVENT;
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest::TriggerType_MIN;
+const LoginReputationClientRequest_TriggerType LoginReputationClientRequest::TriggerType_MAX;
+const int LoginReputationClientRequest::TriggerType_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool LoginReputationClientResponse_VerdictType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::VERDICT_TYPE_UNSPECIFIED;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::SAFE;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::LOW_REPUTATION;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::PHISHING;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::VerdictType_MIN;
+const LoginReputationClientResponse_VerdictType LoginReputationClientResponse::VerdictType_MAX;
+const int LoginReputationClientResponse::VerdictType_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool ClientDownloadRequest_ResourceType_IsValid(int value) {
   switch (value) {
@@ -729,6 +829,29 @@ const ClientDownloadRequest_DownloadType ClientDownloadRequest::SAMPLED_UNSUPPOR
 const ClientDownloadRequest_DownloadType ClientDownloadRequest::DownloadType_MIN;
 const ClientDownloadRequest_DownloadType ClientDownloadRequest::DownloadType_MAX;
 const int ClientDownloadRequest::DownloadType_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool ReferrerChainEntry_URLType_IsValid(int value) {
+  switch (value) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const ReferrerChainEntry_URLType ReferrerChainEntry::EVENT_URL;
+const ReferrerChainEntry_URLType ReferrerChainEntry::LANDING_PAGE;
+const ReferrerChainEntry_URLType ReferrerChainEntry::LANDING_REFERRER;
+const ReferrerChainEntry_URLType ReferrerChainEntry::CLIENT_REDIRECT;
+const ReferrerChainEntry_URLType ReferrerChainEntry::DEPRECATED_SERVER_REDIRECT;
+const ReferrerChainEntry_URLType ReferrerChainEntry::URLType_MIN;
+const ReferrerChainEntry_URLType ReferrerChainEntry::URLType_MAX;
+const int ReferrerChainEntry::URLType_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool ClientDownloadResponse_Verdict_IsValid(int value) {
   switch (value) {
@@ -798,6 +921,8 @@ bool ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState_IsVa
     case 2:
     case 3:
     case 4:
+    case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -810,6 +935,8 @@ const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState Cli
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::WEAK_LEGACY_OBSOLETE;
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::CHANGED;
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::UNTRUSTED_UNKNOWN_VALUE;
+const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::BYPASS_CLEARED;
+const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::BYPASS_CHANGED;
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::ValueState_MIN;
 const ClientIncidentReport_IncidentData_TrackedPreferenceIncident_ValueState ClientIncidentReport_IncidentData_TrackedPreferenceIncident::ValueState_MAX;
 const int ClientIncidentReport_IncidentData_TrackedPreferenceIncident::ValueState_ARRAYSIZE;
@@ -928,6 +1055,9 @@ bool ClientSafeBrowsingReportRequest_ReportType_IsValid(int value) {
     case 6:
     case 7:
     case 10:
+    case 12:
+    case 13:
+    case 14:
       return true;
     default:
       return false;
@@ -939,20 +1069,48 @@ const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_PHISHING;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_MALWARE;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_UNWANTED;
-const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::CLIENT_SIDE_PHISHING_URL;
-const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::CLIENT_SIDE_MALWARE_URL;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_CLIENT_SIDE_PHISHING;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_CLIENT_SIDE_MALWARE;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::DANGEROUS_DOWNLOAD_RECOVERY;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::DANGEROUS_DOWNLOAD_WARNING;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::DANGEROUS_DOWNLOAD_BY_API;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::URL_PASSWORD_PROTECTION_PHISHING;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::DANGEROUS_DOWNLOAD_OPENED;
+const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::AD_SAMPLE;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::ReportType_MIN;
 const ClientSafeBrowsingReportRequest_ReportType ClientSafeBrowsingReportRequest::ReportType_MAX;
 const int ClientSafeBrowsingReportRequest::ReportType_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::SAFE_BROWSING_URL_API_TYPE_UNSPECIFIED;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::PVER3_NATIVE;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::PVER4_NATIVE;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::ANDROID_SAFETYNET;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::FLYWHEEL;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::SafeBrowsingUrlApiType_MIN;
+const ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest::SafeBrowsingUrlApiType_MAX;
+const int ClientSafeBrowsingReportRequest::SafeBrowsingUrlApiType_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ChromeUserPopulation::kUserPopulationFieldNumber;
+const int ChromeUserPopulation::kIsHistorySyncEnabledFieldNumber;
+const int ChromeUserPopulation::kFinchActiveGroupsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ChromeUserPopulation::ChromeUserPopulation()
@@ -967,15 +1125,20 @@ ChromeUserPopulation::ChromeUserPopulation(const ChromeUserPopulation& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _has_bits_(from._has_bits_),
-      _cached_size_(0) {
+      _cached_size_(0),
+      finch_active_groups_(from.finch_active_groups_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  user_population_ = from.user_population_;
+  ::memcpy(&user_population_, &from.user_population_,
+    static_cast<size_t>(reinterpret_cast<char*>(&is_history_sync_enabled_) -
+    reinterpret_cast<char*>(&user_population_)) + sizeof(is_history_sync_enabled_));
   // @@protoc_insertion_point(copy_constructor:safe_browsing.ChromeUserPopulation)
 }
 
 void ChromeUserPopulation::SharedCtor() {
   _cached_size_ = 0;
-  user_population_ = 0;
+  ::memset(&user_population_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&is_history_sync_enabled_) -
+      reinterpret_cast<char*>(&user_population_)) + sizeof(is_history_sync_enabled_));
 }
 
 ChromeUserPopulation::~ChromeUserPopulation() {
@@ -1010,7 +1173,13 @@ void ChromeUserPopulation::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  user_population_ = 0;
+  finch_active_groups_.Clear();
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 3u) {
+    ::memset(&user_population_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&is_history_sync_enabled_) -
+        reinterpret_cast<char*>(&user_population_)) + sizeof(is_history_sync_enabled_));
+  }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
@@ -1052,6 +1221,32 @@ bool ChromeUserPopulation::MergePartialFromCodedStream(
         break;
       }
 
+      // optional bool is_history_sync_enabled = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_is_history_sync_enabled();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_history_sync_enabled_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated string finch_active_groups = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_finch_active_groups()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -1085,6 +1280,17 @@ void ChromeUserPopulation::SerializeWithCachedSizes(
       1, this->user_population(), output);
   }
 
+  // optional bool is_history_sync_enabled = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->is_history_sync_enabled(), output);
+  }
+
+  // repeated string finch_active_groups = 4;
+  for (int i = 0, n = this->finch_active_groups_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      4, this->finch_active_groups(i), output);
+  }
+
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
                    static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:safe_browsing.ChromeUserPopulation)
@@ -1096,12 +1302,27 @@ size_t ChromeUserPopulation::ByteSizeLong() const {
 
   total_size += _internal_metadata_.unknown_fields().size();
 
-  // optional .safe_browsing.ChromeUserPopulation.UserPopulation user_population = 1;
-  if (has_user_population()) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->user_population());
+  // repeated string finch_active_groups = 4;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->finch_active_groups_size());
+  for (int i = 0, n = this->finch_active_groups_size(); i < n; i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->finch_active_groups(i));
   }
 
+  if (_has_bits_[0 / 32] & 3u) {
+    // optional .safe_browsing.ChromeUserPopulation.UserPopulation user_population = 1;
+    if (has_user_population()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->user_population());
+    }
+
+    // optional bool is_history_sync_enabled = 2;
+    if (has_is_history_sync_enabled()) {
+      total_size += 1 + 1;
+    }
+
+  }
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -1121,8 +1342,16 @@ void ChromeUserPopulation::MergeFrom(const ChromeUserPopulation& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.has_user_population()) {
-    set_user_population(from.user_population());
+  finch_active_groups_.MergeFrom(from.finch_active_groups_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      user_population_ = from.user_population_;
+    }
+    if (cached_has_bits & 0x00000002u) {
+      is_history_sync_enabled_ = from.is_history_sync_enabled_;
+    }
+    _has_bits_[0] |= cached_has_bits;
   }
 }
 
@@ -1143,7 +1372,9 @@ void ChromeUserPopulation::Swap(ChromeUserPopulation* other) {
 }
 void ChromeUserPopulation::InternalSwap(ChromeUserPopulation* other) {
   using std::swap;
+  finch_active_groups_.InternalSwap(&other->finch_active_groups_);
   swap(user_population_, other->user_population_);
+  swap(is_history_sync_enabled_, other->is_history_sync_enabled_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
@@ -1179,6 +1410,99 @@ void ChromeUserPopulation::set_user_population(::safe_browsing::ChromeUserPopula
   set_has_user_population();
   user_population_ = value;
   // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.user_population)
+}
+
+// optional bool is_history_sync_enabled = 2;
+bool ChromeUserPopulation::has_is_history_sync_enabled() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void ChromeUserPopulation::set_has_is_history_sync_enabled() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void ChromeUserPopulation::clear_has_is_history_sync_enabled() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void ChromeUserPopulation::clear_is_history_sync_enabled() {
+  is_history_sync_enabled_ = false;
+  clear_has_is_history_sync_enabled();
+}
+bool ChromeUserPopulation::is_history_sync_enabled() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ChromeUserPopulation.is_history_sync_enabled)
+  return is_history_sync_enabled_;
+}
+void ChromeUserPopulation::set_is_history_sync_enabled(bool value) {
+  set_has_is_history_sync_enabled();
+  is_history_sync_enabled_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.is_history_sync_enabled)
+}
+
+// repeated string finch_active_groups = 4;
+int ChromeUserPopulation::finch_active_groups_size() const {
+  return finch_active_groups_.size();
+}
+void ChromeUserPopulation::clear_finch_active_groups() {
+  finch_active_groups_.Clear();
+}
+const ::std::string& ChromeUserPopulation::finch_active_groups(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Get(index);
+}
+::std::string* ChromeUserPopulation::mutable_finch_active_groups(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Mutable(index);
+}
+void ChromeUserPopulation::set_finch_active_groups(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  finch_active_groups_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+void ChromeUserPopulation::set_finch_active_groups(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  finch_active_groups_.Mutable(index)->assign(std::move(value));
+}
+#endif
+void ChromeUserPopulation::set_finch_active_groups(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  finch_active_groups_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+void ChromeUserPopulation::set_finch_active_groups(int index, const char* value, size_t size) {
+  finch_active_groups_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+::std::string* ChromeUserPopulation::add_finch_active_groups() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_.Add();
+}
+void ChromeUserPopulation::add_finch_active_groups(const ::std::string& value) {
+  finch_active_groups_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+#if LANG_CXX11
+void ChromeUserPopulation::add_finch_active_groups(::std::string&& value) {
+  finch_active_groups_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+#endif
+void ChromeUserPopulation::add_finch_active_groups(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  finch_active_groups_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+void ChromeUserPopulation::add_finch_active_groups(const char* value, size_t size) {
+  finch_active_groups_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.ChromeUserPopulation.finch_active_groups)
+}
+const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ChromeUserPopulation::finch_active_groups() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return finch_active_groups_;
+}
+::google::protobuf::RepeatedPtrField< ::std::string>*
+ChromeUserPopulation::mutable_finch_active_groups() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ChromeUserPopulation.finch_active_groups)
+  return &finch_active_groups_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -4129,6 +4453,2647 @@ void ClientMalwareRequest::set_allocated_population(::safe_browsing::ChromeUserP
     clear_has_population();
   }
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientMalwareRequest.population)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LoginReputationClientRequest_Frame_Form::kActionUrlFieldNumber;
+const int LoginReputationClientRequest_Frame_Form::kHasPasswordFieldFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LoginReputationClientRequest_Frame_Form::LoginReputationClientRequest_Frame_Form()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.LoginReputationClientRequest.Frame.Form)
+}
+LoginReputationClientRequest_Frame_Form::LoginReputationClientRequest_Frame_Form(const LoginReputationClientRequest_Frame_Form& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  action_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_action_url()) {
+    action_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.action_url_);
+  }
+  has_password_field_ = from.has_password_field_;
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.LoginReputationClientRequest.Frame.Form)
+}
+
+void LoginReputationClientRequest_Frame_Form::SharedCtor() {
+  _cached_size_ = 0;
+  action_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  has_password_field_ = false;
+}
+
+LoginReputationClientRequest_Frame_Form::~LoginReputationClientRequest_Frame_Form() {
+  // @@protoc_insertion_point(destructor:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  SharedDtor();
+}
+
+void LoginReputationClientRequest_Frame_Form::SharedDtor() {
+  action_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void LoginReputationClientRequest_Frame_Form::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LoginReputationClientRequest_Frame_Form& LoginReputationClientRequest_Frame_Form::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LoginReputationClientRequest_Frame_Form* LoginReputationClientRequest_Frame_Form::New(::google::protobuf::Arena* arena) const {
+  LoginReputationClientRequest_Frame_Form* n = new LoginReputationClientRequest_Frame_Form;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LoginReputationClientRequest_Frame_Form::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (has_action_url()) {
+    GOOGLE_DCHECK(!action_url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+    (*action_url_.UnsafeRawStringPointer())->clear();
+  }
+  has_password_field_ = false;
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool LoginReputationClientRequest_Frame_Form::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string action_url = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_action_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool has_password_field = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_has_password_field();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &has_password_field_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  return false;
+#undef DO_
+}
+
+void LoginReputationClientRequest_Frame_Form::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string action_url = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->action_url(), output);
+  }
+
+  // optional bool has_password_field = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->has_password_field(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.LoginReputationClientRequest.Frame.Form)
+}
+
+size_t LoginReputationClientRequest_Frame_Form::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 3u) {
+    // optional string action_url = 1;
+    if (has_action_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->action_url());
+    }
+
+    // optional bool has_password_field = 2;
+    if (has_has_password_field()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LoginReputationClientRequest_Frame_Form::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LoginReputationClientRequest_Frame_Form*>(&from));
+}
+
+void LoginReputationClientRequest_Frame_Form::MergeFrom(const LoginReputationClientRequest_Frame_Form& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_action_url();
+      action_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.action_url_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      has_password_field_ = from.has_password_field_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void LoginReputationClientRequest_Frame_Form::CopyFrom(const LoginReputationClientRequest_Frame_Form& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.LoginReputationClientRequest.Frame.Form)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LoginReputationClientRequest_Frame_Form::IsInitialized() const {
+  return true;
+}
+
+void LoginReputationClientRequest_Frame_Form::Swap(LoginReputationClientRequest_Frame_Form* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LoginReputationClientRequest_Frame_Form::InternalSwap(LoginReputationClientRequest_Frame_Form* other) {
+  using std::swap;
+  action_url_.Swap(&other->action_url_);
+  swap(has_password_field_, other->has_password_field_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LoginReputationClientRequest_Frame_Form::GetTypeName() const {
+  return "safe_browsing.LoginReputationClientRequest.Frame.Form";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LoginReputationClientRequest_Frame_Form
+
+// optional string action_url = 1;
+bool LoginReputationClientRequest_Frame_Form::has_action_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void LoginReputationClientRequest_Frame_Form::set_has_action_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void LoginReputationClientRequest_Frame_Form::clear_has_action_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void LoginReputationClientRequest_Frame_Form::clear_action_url() {
+  action_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_action_url();
+}
+const ::std::string& LoginReputationClientRequest_Frame_Form::action_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  return action_url_.GetNoArena();
+}
+void LoginReputationClientRequest_Frame_Form::set_action_url(const ::std::string& value) {
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+#if LANG_CXX11
+void LoginReputationClientRequest_Frame_Form::set_action_url(::std::string&& value) {
+  set_has_action_url();
+  action_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+#endif
+void LoginReputationClientRequest_Frame_Form::set_action_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+void LoginReputationClientRequest_Frame_Form::set_action_url(const char* value, size_t size) {
+  set_has_action_url();
+  action_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+::std::string* LoginReputationClientRequest_Frame_Form::mutable_action_url() {
+  set_has_action_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  return action_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* LoginReputationClientRequest_Frame_Form::release_action_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+  clear_has_action_url();
+  return action_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void LoginReputationClientRequest_Frame_Form::set_allocated_action_url(::std::string* action_url) {
+  if (action_url != NULL) {
+    set_has_action_url();
+  } else {
+    clear_has_action_url();
+  }
+  action_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), action_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.Frame.Form.action_url)
+}
+
+// optional bool has_password_field = 2;
+bool LoginReputationClientRequest_Frame_Form::has_has_password_field() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void LoginReputationClientRequest_Frame_Form::set_has_has_password_field() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void LoginReputationClientRequest_Frame_Form::clear_has_has_password_field() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void LoginReputationClientRequest_Frame_Form::clear_has_password_field() {
+  has_password_field_ = false;
+  clear_has_has_password_field();
+}
+bool LoginReputationClientRequest_Frame_Form::has_password_field() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.Form.has_password_field)
+  return has_password_field_;
+}
+void LoginReputationClientRequest_Frame_Form::set_has_password_field(bool value) {
+  set_has_has_password_field();
+  has_password_field_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.Form.has_password_field)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LoginReputationClientRequest_Frame::kFrameIndexFieldNumber;
+const int LoginReputationClientRequest_Frame::kParentFrameIndexFieldNumber;
+const int LoginReputationClientRequest_Frame::kUrlFieldNumber;
+const int LoginReputationClientRequest_Frame::kHasPasswordFieldFieldNumber;
+const int LoginReputationClientRequest_Frame::kReferrerChainFieldNumber;
+const int LoginReputationClientRequest_Frame::kFormsFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LoginReputationClientRequest_Frame::LoginReputationClientRequest_Frame()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.LoginReputationClientRequest.Frame)
+}
+LoginReputationClientRequest_Frame::LoginReputationClientRequest_Frame(const LoginReputationClientRequest_Frame& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      referrer_chain_(from.referrer_chain_),
+      forms_(from.forms_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_url()) {
+    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  }
+  ::memcpy(&frame_index_, &from.frame_index_,
+    static_cast<size_t>(reinterpret_cast<char*>(&has_password_field_) -
+    reinterpret_cast<char*>(&frame_index_)) + sizeof(has_password_field_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.LoginReputationClientRequest.Frame)
+}
+
+void LoginReputationClientRequest_Frame::SharedCtor() {
+  _cached_size_ = 0;
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&frame_index_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&has_password_field_) -
+      reinterpret_cast<char*>(&frame_index_)) + sizeof(has_password_field_));
+}
+
+LoginReputationClientRequest_Frame::~LoginReputationClientRequest_Frame() {
+  // @@protoc_insertion_point(destructor:safe_browsing.LoginReputationClientRequest.Frame)
+  SharedDtor();
+}
+
+void LoginReputationClientRequest_Frame::SharedDtor() {
+  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void LoginReputationClientRequest_Frame::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LoginReputationClientRequest_Frame& LoginReputationClientRequest_Frame::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LoginReputationClientRequest_Frame* LoginReputationClientRequest_Frame::New(::google::protobuf::Arena* arena) const {
+  LoginReputationClientRequest_Frame* n = new LoginReputationClientRequest_Frame;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LoginReputationClientRequest_Frame::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.LoginReputationClientRequest.Frame)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  referrer_chain_.Clear();
+  forms_.Clear();
+  if (has_url()) {
+    GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+    (*url_.UnsafeRawStringPointer())->clear();
+  }
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 14u) {
+    ::memset(&frame_index_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&has_password_field_) -
+        reinterpret_cast<char*>(&frame_index_)) + sizeof(has_password_field_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool LoginReputationClientRequest_Frame::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.LoginReputationClientRequest.Frame)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 frame_index = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+          set_has_frame_index();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &frame_index_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int32 parent_frame_index = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_parent_frame_index();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &parent_frame_index_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string url = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool has_password_field = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+          set_has_has_password_field();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &has_password_field_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_referrer_chain()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_forms()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.LoginReputationClientRequest.Frame)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.LoginReputationClientRequest.Frame)
+  return false;
+#undef DO_
+}
+
+void LoginReputationClientRequest_Frame::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.LoginReputationClientRequest.Frame)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 frame_index = 1;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->frame_index(), output);
+  }
+
+  // optional int32 parent_frame_index = 2;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->parent_frame_index(), output);
+  }
+
+  // optional string url = 3;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      3, this->url(), output);
+  }
+
+  // optional bool has_password_field = 4;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->has_password_field(), output);
+  }
+
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->referrer_chain_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      5, this->referrer_chain(static_cast<int>(i)), output);
+  }
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->forms_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, this->forms(static_cast<int>(i)), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.LoginReputationClientRequest.Frame)
+}
+
+size_t LoginReputationClientRequest_Frame::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.LoginReputationClientRequest.Frame)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+  {
+    unsigned int count = static_cast<unsigned int>(this->referrer_chain_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->referrer_chain(static_cast<int>(i)));
+    }
+  }
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+  {
+    unsigned int count = static_cast<unsigned int>(this->forms_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->forms(static_cast<int>(i)));
+    }
+  }
+
+  if (_has_bits_[0 / 32] & 15u) {
+    // optional string url = 3;
+    if (has_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->url());
+    }
+
+    // optional int32 frame_index = 1;
+    if (has_frame_index()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->frame_index());
+    }
+
+    // optional int32 parent_frame_index = 2;
+    if (has_parent_frame_index()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->parent_frame_index());
+    }
+
+    // optional bool has_password_field = 4;
+    if (has_has_password_field()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LoginReputationClientRequest_Frame::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LoginReputationClientRequest_Frame*>(&from));
+}
+
+void LoginReputationClientRequest_Frame::MergeFrom(const LoginReputationClientRequest_Frame& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.LoginReputationClientRequest.Frame)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  referrer_chain_.MergeFrom(from.referrer_chain_);
+  forms_.MergeFrom(from.forms_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 15u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_url();
+      url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      frame_index_ = from.frame_index_;
+    }
+    if (cached_has_bits & 0x00000004u) {
+      parent_frame_index_ = from.parent_frame_index_;
+    }
+    if (cached_has_bits & 0x00000008u) {
+      has_password_field_ = from.has_password_field_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void LoginReputationClientRequest_Frame::CopyFrom(const LoginReputationClientRequest_Frame& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.LoginReputationClientRequest.Frame)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LoginReputationClientRequest_Frame::IsInitialized() const {
+  return true;
+}
+
+void LoginReputationClientRequest_Frame::Swap(LoginReputationClientRequest_Frame* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LoginReputationClientRequest_Frame::InternalSwap(LoginReputationClientRequest_Frame* other) {
+  using std::swap;
+  referrer_chain_.InternalSwap(&other->referrer_chain_);
+  forms_.InternalSwap(&other->forms_);
+  url_.Swap(&other->url_);
+  swap(frame_index_, other->frame_index_);
+  swap(parent_frame_index_, other->parent_frame_index_);
+  swap(has_password_field_, other->has_password_field_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LoginReputationClientRequest_Frame::GetTypeName() const {
+  return "safe_browsing.LoginReputationClientRequest.Frame";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LoginReputationClientRequest_Frame
+
+// optional int32 frame_index = 1;
+bool LoginReputationClientRequest_Frame::has_frame_index() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void LoginReputationClientRequest_Frame::set_has_frame_index() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void LoginReputationClientRequest_Frame::clear_has_frame_index() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void LoginReputationClientRequest_Frame::clear_frame_index() {
+  frame_index_ = 0;
+  clear_has_frame_index();
+}
+::google::protobuf::int32 LoginReputationClientRequest_Frame::frame_index() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.frame_index)
+  return frame_index_;
+}
+void LoginReputationClientRequest_Frame::set_frame_index(::google::protobuf::int32 value) {
+  set_has_frame_index();
+  frame_index_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.frame_index)
+}
+
+// optional int32 parent_frame_index = 2;
+bool LoginReputationClientRequest_Frame::has_parent_frame_index() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void LoginReputationClientRequest_Frame::set_has_parent_frame_index() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void LoginReputationClientRequest_Frame::clear_has_parent_frame_index() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void LoginReputationClientRequest_Frame::clear_parent_frame_index() {
+  parent_frame_index_ = 0;
+  clear_has_parent_frame_index();
+}
+::google::protobuf::int32 LoginReputationClientRequest_Frame::parent_frame_index() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.parent_frame_index)
+  return parent_frame_index_;
+}
+void LoginReputationClientRequest_Frame::set_parent_frame_index(::google::protobuf::int32 value) {
+  set_has_parent_frame_index();
+  parent_frame_index_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.parent_frame_index)
+}
+
+// optional string url = 3;
+bool LoginReputationClientRequest_Frame::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void LoginReputationClientRequest_Frame::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void LoginReputationClientRequest_Frame::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void LoginReputationClientRequest_Frame::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+const ::std::string& LoginReputationClientRequest_Frame::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.url)
+  return url_.GetNoArena();
+}
+void LoginReputationClientRequest_Frame::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+#if LANG_CXX11
+void LoginReputationClientRequest_Frame::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+#endif
+void LoginReputationClientRequest_Frame::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+void LoginReputationClientRequest_Frame::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+::std::string* LoginReputationClientRequest_Frame::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* LoginReputationClientRequest_Frame::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.Frame.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void LoginReputationClientRequest_Frame::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.Frame.url)
+}
+
+// optional bool has_password_field = 4;
+bool LoginReputationClientRequest_Frame::has_has_password_field() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void LoginReputationClientRequest_Frame::set_has_has_password_field() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void LoginReputationClientRequest_Frame::clear_has_has_password_field() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void LoginReputationClientRequest_Frame::clear_has_password_field() {
+  has_password_field_ = false;
+  clear_has_has_password_field();
+}
+bool LoginReputationClientRequest_Frame::has_password_field() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.has_password_field)
+  return has_password_field_;
+}
+void LoginReputationClientRequest_Frame::set_has_password_field(bool value) {
+  set_has_has_password_field();
+  has_password_field_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.Frame.has_password_field)
+}
+
+// repeated .safe_browsing.ReferrerChainEntry referrer_chain = 5;
+int LoginReputationClientRequest_Frame::referrer_chain_size() const {
+  return referrer_chain_.size();
+}
+void LoginReputationClientRequest_Frame::clear_referrer_chain() {
+  referrer_chain_.Clear();
+}
+const ::safe_browsing::ReferrerChainEntry& LoginReputationClientRequest_Frame::referrer_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Get(index);
+}
+::safe_browsing::ReferrerChainEntry* LoginReputationClientRequest_Frame::mutable_referrer_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Mutable(index);
+}
+::safe_browsing::ReferrerChainEntry* LoginReputationClientRequest_Frame::add_referrer_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+LoginReputationClientRequest_Frame::mutable_referrer_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return &referrer_chain_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+LoginReputationClientRequest_Frame::referrer_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.Frame.referrer_chain)
+  return referrer_chain_;
+}
+
+// repeated .safe_browsing.LoginReputationClientRequest.Frame.Form forms = 6;
+int LoginReputationClientRequest_Frame::forms_size() const {
+  return forms_.size();
+}
+void LoginReputationClientRequest_Frame::clear_forms() {
+  forms_.Clear();
+}
+const ::safe_browsing::LoginReputationClientRequest_Frame_Form& LoginReputationClientRequest_Frame::forms(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Get(index);
+}
+::safe_browsing::LoginReputationClientRequest_Frame_Form* LoginReputationClientRequest_Frame::mutable_forms(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Mutable(index);
+}
+::safe_browsing::LoginReputationClientRequest_Frame_Form* LoginReputationClientRequest_Frame::add_forms() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >*
+LoginReputationClientRequest_Frame::mutable_forms() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return &forms_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame_Form >&
+LoginReputationClientRequest_Frame::forms() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.Frame.forms)
+  return forms_;
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LoginReputationClientRequest_PasswordReuseEvent::kDomainsMatchingPasswordFieldNumber;
+const int LoginReputationClientRequest_PasswordReuseEvent::kFrameIdFieldNumber;
+const int LoginReputationClientRequest_PasswordReuseEvent::kIsChromeSigninPasswordFieldNumber;
+const int LoginReputationClientRequest_PasswordReuseEvent::kSyncAccountTypeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LoginReputationClientRequest_PasswordReuseEvent::LoginReputationClientRequest_PasswordReuseEvent()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+}
+LoginReputationClientRequest_PasswordReuseEvent::LoginReputationClientRequest_PasswordReuseEvent(const LoginReputationClientRequest_PasswordReuseEvent& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      domains_matching_password_(from.domains_matching_password_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&frame_id_, &from.frame_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&sync_account_type_) -
+    reinterpret_cast<char*>(&frame_id_)) + sizeof(sync_account_type_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(&frame_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&sync_account_type_) -
+      reinterpret_cast<char*>(&frame_id_)) + sizeof(sync_account_type_));
+}
+
+LoginReputationClientRequest_PasswordReuseEvent::~LoginReputationClientRequest_PasswordReuseEvent() {
+  // @@protoc_insertion_point(destructor:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  SharedDtor();
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::SharedDtor() {
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LoginReputationClientRequest_PasswordReuseEvent& LoginReputationClientRequest_PasswordReuseEvent::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LoginReputationClientRequest_PasswordReuseEvent* LoginReputationClientRequest_PasswordReuseEvent::New(::google::protobuf::Arena* arena) const {
+  LoginReputationClientRequest_PasswordReuseEvent* n = new LoginReputationClientRequest_PasswordReuseEvent;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  domains_matching_password_.Clear();
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 7u) {
+    ::memset(&frame_id_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&sync_account_type_) -
+        reinterpret_cast<char*>(&frame_id_)) + sizeof(sync_account_type_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool LoginReputationClientRequest_PasswordReuseEvent::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated string domains_matching_password = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_domains_matching_password()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int32 frame_id = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_frame_id();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &frame_id_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool is_chrome_signin_password = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+          set_has_is_chrome_signin_password();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_chrome_signin_password_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(value)) {
+            set_sync_account_type(static_cast< ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(32u);
+            unknown_fields_stream.WriteVarint32(
+                static_cast< ::google::protobuf::uint32>(value));
+          }
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  return false;
+#undef DO_
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated string domains_matching_password = 1;
+  for (int i = 0, n = this->domains_matching_password_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      1, this->domains_matching_password(i), output);
+  }
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 frame_id = 2;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->frame_id(), output);
+  }
+
+  // optional bool is_chrome_signin_password = 3;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->is_chrome_signin_password(), output);
+  }
+
+  // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      4, this->sync_account_type(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+}
+
+size_t LoginReputationClientRequest_PasswordReuseEvent::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // repeated string domains_matching_password = 1;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->domains_matching_password_size());
+  for (int i = 0, n = this->domains_matching_password_size(); i < n; i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->domains_matching_password(i));
+  }
+
+  if (_has_bits_[0 / 32] & 7u) {
+    // optional int32 frame_id = 2;
+    if (has_frame_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->frame_id());
+    }
+
+    // optional bool is_chrome_signin_password = 3;
+    if (has_is_chrome_signin_password()) {
+      total_size += 1 + 1;
+    }
+
+    // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+    if (has_sync_account_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->sync_account_type());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LoginReputationClientRequest_PasswordReuseEvent*>(&from));
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::MergeFrom(const LoginReputationClientRequest_PasswordReuseEvent& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  domains_matching_password_.MergeFrom(from.domains_matching_password_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 7u) {
+    if (cached_has_bits & 0x00000001u) {
+      frame_id_ = from.frame_id_;
+    }
+    if (cached_has_bits & 0x00000002u) {
+      is_chrome_signin_password_ = from.is_chrome_signin_password_;
+    }
+    if (cached_has_bits & 0x00000004u) {
+      sync_account_type_ = from.sync_account_type_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::CopyFrom(const LoginReputationClientRequest_PasswordReuseEvent& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LoginReputationClientRequest_PasswordReuseEvent::IsInitialized() const {
+  return true;
+}
+
+void LoginReputationClientRequest_PasswordReuseEvent::Swap(LoginReputationClientRequest_PasswordReuseEvent* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LoginReputationClientRequest_PasswordReuseEvent::InternalSwap(LoginReputationClientRequest_PasswordReuseEvent* other) {
+  using std::swap;
+  domains_matching_password_.InternalSwap(&other->domains_matching_password_);
+  swap(frame_id_, other->frame_id_);
+  swap(is_chrome_signin_password_, other->is_chrome_signin_password_);
+  swap(sync_account_type_, other->sync_account_type_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LoginReputationClientRequest_PasswordReuseEvent::GetTypeName() const {
+  return "safe_browsing.LoginReputationClientRequest.PasswordReuseEvent";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LoginReputationClientRequest_PasswordReuseEvent
+
+// repeated string domains_matching_password = 1;
+int LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password_size() const {
+  return domains_matching_password_.size();
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_domains_matching_password() {
+  domains_matching_password_.Clear();
+}
+const ::std::string& LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Get(index);
+}
+::std::string* LoginReputationClientRequest_PasswordReuseEvent::mutable_domains_matching_password(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Mutable(index);
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  domains_matching_password_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  domains_matching_password_.Mutable(index)->assign(std::move(value));
+}
+#endif
+void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  domains_matching_password_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_domains_matching_password(int index, const char* value, size_t size) {
+  domains_matching_password_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+::std::string* LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_.Add();
+}
+void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const ::std::string& value) {
+  domains_matching_password_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+#if LANG_CXX11
+void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(::std::string&& value) {
+  domains_matching_password_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+#endif
+void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  domains_matching_password_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+void LoginReputationClientRequest_PasswordReuseEvent::add_domains_matching_password(const char* value, size_t size) {
+  domains_matching_password_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+}
+const ::google::protobuf::RepeatedPtrField< ::std::string>&
+LoginReputationClientRequest_PasswordReuseEvent::domains_matching_password() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return domains_matching_password_;
+}
+::google::protobuf::RepeatedPtrField< ::std::string>*
+LoginReputationClientRequest_PasswordReuseEvent::mutable_domains_matching_password() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.domains_matching_password)
+  return &domains_matching_password_;
+}
+
+// optional int32 frame_id = 2;
+bool LoginReputationClientRequest_PasswordReuseEvent::has_frame_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_has_frame_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_has_frame_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_frame_id() {
+  frame_id_ = 0;
+  clear_has_frame_id();
+}
+::google::protobuf::int32 LoginReputationClientRequest_PasswordReuseEvent::frame_id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.frame_id)
+  return frame_id_;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_frame_id(::google::protobuf::int32 value) {
+  set_has_frame_id();
+  frame_id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.frame_id)
+}
+
+// optional bool is_chrome_signin_password = 3;
+bool LoginReputationClientRequest_PasswordReuseEvent::has_is_chrome_signin_password() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_has_is_chrome_signin_password() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_has_is_chrome_signin_password() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_is_chrome_signin_password() {
+  is_chrome_signin_password_ = false;
+  clear_has_is_chrome_signin_password();
+}
+bool LoginReputationClientRequest_PasswordReuseEvent::is_chrome_signin_password() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.is_chrome_signin_password)
+  return is_chrome_signin_password_;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_is_chrome_signin_password(bool value) {
+  set_has_is_chrome_signin_password();
+  is_chrome_signin_password_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.is_chrome_signin_password)
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.SyncAccountType sync_account_type = 4;
+bool LoginReputationClientRequest_PasswordReuseEvent::has_sync_account_type() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_has_sync_account_type() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_has_sync_account_type() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void LoginReputationClientRequest_PasswordReuseEvent::clear_sync_account_type() {
+  sync_account_type_ = 0;
+  clear_has_sync_account_type();
+}
+::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType LoginReputationClientRequest_PasswordReuseEvent::sync_account_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.sync_account_type)
+  return static_cast< ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType >(sync_account_type_);
+}
+void LoginReputationClientRequest_PasswordReuseEvent::set_sync_account_type(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType value) {
+  assert(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent_SyncAccountType_IsValid(value));
+  set_has_sync_account_type();
+  sync_account_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.PasswordReuseEvent.sync_account_type)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LoginReputationClientRequest::kPageUrlFieldNumber;
+const int LoginReputationClientRequest::kTriggerTypeFieldNumber;
+const int LoginReputationClientRequest::kFramesFieldNumber;
+const int LoginReputationClientRequest::kPasswordReuseEventFieldNumber;
+const int LoginReputationClientRequest::kStoredVerdictCntFieldNumber;
+const int LoginReputationClientRequest::kPopulationFieldNumber;
+const int LoginReputationClientRequest::kClickedThroughInterstitialFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LoginReputationClientRequest::LoginReputationClientRequest()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.LoginReputationClientRequest)
+}
+LoginReputationClientRequest::LoginReputationClientRequest(const LoginReputationClientRequest& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      frames_(from.frames_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  page_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_page_url()) {
+    page_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.page_url_);
+  }
+  if (from.has_password_reuse_event()) {
+    password_reuse_event_ = new ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent(*from.password_reuse_event_);
+  } else {
+    password_reuse_event_ = NULL;
+  }
+  if (from.has_population()) {
+    population_ = new ::safe_browsing::ChromeUserPopulation(*from.population_);
+  } else {
+    population_ = NULL;
+  }
+  ::memcpy(&trigger_type_, &from.trigger_type_,
+    static_cast<size_t>(reinterpret_cast<char*>(&clicked_through_interstitial_) -
+    reinterpret_cast<char*>(&trigger_type_)) + sizeof(clicked_through_interstitial_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.LoginReputationClientRequest)
+}
+
+void LoginReputationClientRequest::SharedCtor() {
+  _cached_size_ = 0;
+  page_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&password_reuse_event_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&clicked_through_interstitial_) -
+      reinterpret_cast<char*>(&password_reuse_event_)) + sizeof(clicked_through_interstitial_));
+}
+
+LoginReputationClientRequest::~LoginReputationClientRequest() {
+  // @@protoc_insertion_point(destructor:safe_browsing.LoginReputationClientRequest)
+  SharedDtor();
+}
+
+void LoginReputationClientRequest::SharedDtor() {
+  page_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete password_reuse_event_;
+  if (this != internal_default_instance()) delete population_;
+}
+
+void LoginReputationClientRequest::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LoginReputationClientRequest& LoginReputationClientRequest::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LoginReputationClientRequest* LoginReputationClientRequest::New(::google::protobuf::Arena* arena) const {
+  LoginReputationClientRequest* n = new LoginReputationClientRequest;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LoginReputationClientRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.LoginReputationClientRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  frames_.Clear();
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 7u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!page_url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*page_url_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(password_reuse_event_ != NULL);
+      password_reuse_event_->::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent::Clear();
+    }
+    if (cached_has_bits & 0x00000004u) {
+      GOOGLE_DCHECK(population_ != NULL);
+      population_->::safe_browsing::ChromeUserPopulation::Clear();
+    }
+  }
+  if (cached_has_bits & 56u) {
+    ::memset(&trigger_type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&clicked_through_interstitial_) -
+        reinterpret_cast<char*>(&trigger_type_)) + sizeof(clicked_through_interstitial_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool LoginReputationClientRequest::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.LoginReputationClientRequest)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string page_url = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_page_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::LoginReputationClientRequest_TriggerType_IsValid(value)) {
+            set_trigger_type(static_cast< ::safe_browsing::LoginReputationClientRequest_TriggerType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(16u);
+            unknown_fields_stream.WriteVarint32(
+                static_cast< ::google::protobuf::uint32>(value));
+          }
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_frames()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_password_reuse_event()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int32 stored_verdict_cnt = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+          set_has_stored_verdict_cnt();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &stored_verdict_cnt_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ChromeUserPopulation population = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_population()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool clicked_through_interstitial = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+          set_has_clicked_through_interstitial();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &clicked_through_interstitial_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.LoginReputationClientRequest)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.LoginReputationClientRequest)
+  return false;
+#undef DO_
+}
+
+void LoginReputationClientRequest::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.LoginReputationClientRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string page_url = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->page_url(), output);
+  }
+
+  // optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      2, this->trigger_type(), output);
+  }
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->frames_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, this->frames(static_cast<int>(i)), output);
+  }
+
+  // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      4, *this->password_reuse_event_, output);
+  }
+
+  // optional int32 stored_verdict_cnt = 5;
+  if (cached_has_bits & 0x00000010u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->stored_verdict_cnt(), output);
+  }
+
+  // optional .safe_browsing.ChromeUserPopulation population = 6;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, *this->population_, output);
+  }
+
+  // optional bool clicked_through_interstitial = 7;
+  if (cached_has_bits & 0x00000020u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->clicked_through_interstitial(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.LoginReputationClientRequest)
+}
+
+size_t LoginReputationClientRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.LoginReputationClientRequest)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+  {
+    unsigned int count = static_cast<unsigned int>(this->frames_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->frames(static_cast<int>(i)));
+    }
+  }
+
+  if (_has_bits_[0 / 32] & 63u) {
+    // optional string page_url = 1;
+    if (has_page_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->page_url());
+    }
+
+    // optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+    if (has_password_reuse_event()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->password_reuse_event_);
+    }
+
+    // optional .safe_browsing.ChromeUserPopulation population = 6;
+    if (has_population()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->population_);
+    }
+
+    // optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+    if (has_trigger_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->trigger_type());
+    }
+
+    // optional int32 stored_verdict_cnt = 5;
+    if (has_stored_verdict_cnt()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->stored_verdict_cnt());
+    }
+
+    // optional bool clicked_through_interstitial = 7;
+    if (has_clicked_through_interstitial()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LoginReputationClientRequest::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LoginReputationClientRequest*>(&from));
+}
+
+void LoginReputationClientRequest::MergeFrom(const LoginReputationClientRequest& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.LoginReputationClientRequest)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  frames_.MergeFrom(from.frames_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 63u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_page_url();
+      page_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.page_url_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      mutable_password_reuse_event()->::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent::MergeFrom(from.password_reuse_event());
+    }
+    if (cached_has_bits & 0x00000004u) {
+      mutable_population()->::safe_browsing::ChromeUserPopulation::MergeFrom(from.population());
+    }
+    if (cached_has_bits & 0x00000008u) {
+      trigger_type_ = from.trigger_type_;
+    }
+    if (cached_has_bits & 0x00000010u) {
+      stored_verdict_cnt_ = from.stored_verdict_cnt_;
+    }
+    if (cached_has_bits & 0x00000020u) {
+      clicked_through_interstitial_ = from.clicked_through_interstitial_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void LoginReputationClientRequest::CopyFrom(const LoginReputationClientRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.LoginReputationClientRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LoginReputationClientRequest::IsInitialized() const {
+  return true;
+}
+
+void LoginReputationClientRequest::Swap(LoginReputationClientRequest* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LoginReputationClientRequest::InternalSwap(LoginReputationClientRequest* other) {
+  using std::swap;
+  frames_.InternalSwap(&other->frames_);
+  page_url_.Swap(&other->page_url_);
+  swap(password_reuse_event_, other->password_reuse_event_);
+  swap(population_, other->population_);
+  swap(trigger_type_, other->trigger_type_);
+  swap(stored_verdict_cnt_, other->stored_verdict_cnt_);
+  swap(clicked_through_interstitial_, other->clicked_through_interstitial_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LoginReputationClientRequest::GetTypeName() const {
+  return "safe_browsing.LoginReputationClientRequest";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LoginReputationClientRequest
+
+// optional string page_url = 1;
+bool LoginReputationClientRequest::has_page_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void LoginReputationClientRequest::set_has_page_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void LoginReputationClientRequest::clear_has_page_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void LoginReputationClientRequest::clear_page_url() {
+  page_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_page_url();
+}
+const ::std::string& LoginReputationClientRequest::page_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.page_url)
+  return page_url_.GetNoArena();
+}
+void LoginReputationClientRequest::set_page_url(const ::std::string& value) {
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.page_url)
+}
+#if LANG_CXX11
+void LoginReputationClientRequest::set_page_url(::std::string&& value) {
+  set_has_page_url();
+  page_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientRequest.page_url)
+}
+#endif
+void LoginReputationClientRequest::set_page_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientRequest.page_url)
+}
+void LoginReputationClientRequest::set_page_url(const char* value, size_t size) {
+  set_has_page_url();
+  page_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientRequest.page_url)
+}
+::std::string* LoginReputationClientRequest::mutable_page_url() {
+  set_has_page_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.page_url)
+  return page_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* LoginReputationClientRequest::release_page_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.page_url)
+  clear_has_page_url();
+  return page_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void LoginReputationClientRequest::set_allocated_page_url(::std::string* page_url) {
+  if (page_url != NULL) {
+    set_has_page_url();
+  } else {
+    clear_has_page_url();
+  }
+  page_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), page_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.page_url)
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.TriggerType trigger_type = 2;
+bool LoginReputationClientRequest::has_trigger_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void LoginReputationClientRequest::set_has_trigger_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void LoginReputationClientRequest::clear_has_trigger_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void LoginReputationClientRequest::clear_trigger_type() {
+  trigger_type_ = 0;
+  clear_has_trigger_type();
+}
+::safe_browsing::LoginReputationClientRequest_TriggerType LoginReputationClientRequest::trigger_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.trigger_type)
+  return static_cast< ::safe_browsing::LoginReputationClientRequest_TriggerType >(trigger_type_);
+}
+void LoginReputationClientRequest::set_trigger_type(::safe_browsing::LoginReputationClientRequest_TriggerType value) {
+  assert(::safe_browsing::LoginReputationClientRequest_TriggerType_IsValid(value));
+  set_has_trigger_type();
+  trigger_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.trigger_type)
+}
+
+// repeated .safe_browsing.LoginReputationClientRequest.Frame frames = 3;
+int LoginReputationClientRequest::frames_size() const {
+  return frames_.size();
+}
+void LoginReputationClientRequest::clear_frames() {
+  frames_.Clear();
+}
+const ::safe_browsing::LoginReputationClientRequest_Frame& LoginReputationClientRequest::frames(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Get(index);
+}
+::safe_browsing::LoginReputationClientRequest_Frame* LoginReputationClientRequest::mutable_frames(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Mutable(index);
+}
+::safe_browsing::LoginReputationClientRequest_Frame* LoginReputationClientRequest::add_frames() {
+  // @@protoc_insertion_point(field_add:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >*
+LoginReputationClientRequest::mutable_frames() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.LoginReputationClientRequest.frames)
+  return &frames_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::LoginReputationClientRequest_Frame >&
+LoginReputationClientRequest::frames() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.LoginReputationClientRequest.frames)
+  return frames_;
+}
+
+// optional .safe_browsing.LoginReputationClientRequest.PasswordReuseEvent password_reuse_event = 4;
+bool LoginReputationClientRequest::has_password_reuse_event() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void LoginReputationClientRequest::set_has_password_reuse_event() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void LoginReputationClientRequest::clear_has_password_reuse_event() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void LoginReputationClientRequest::clear_password_reuse_event() {
+  if (password_reuse_event_ != NULL) password_reuse_event_->::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent::Clear();
+  clear_has_password_reuse_event();
+}
+const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent& LoginReputationClientRequest::password_reuse_event() const {
+  const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* p = password_reuse_event_;
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent*>(
+      &::safe_browsing::_LoginReputationClientRequest_PasswordReuseEvent_default_instance_);
+}
+::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* LoginReputationClientRequest::mutable_password_reuse_event() {
+  set_has_password_reuse_event();
+  if (password_reuse_event_ == NULL) {
+    password_reuse_event_ = new ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  return password_reuse_event_;
+}
+::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* LoginReputationClientRequest::release_password_reuse_event() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+  clear_has_password_reuse_event();
+  ::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* temp = password_reuse_event_;
+  password_reuse_event_ = NULL;
+  return temp;
+}
+void LoginReputationClientRequest::set_allocated_password_reuse_event(::safe_browsing::LoginReputationClientRequest_PasswordReuseEvent* password_reuse_event) {
+  delete password_reuse_event_;
+  password_reuse_event_ = password_reuse_event;
+  if (password_reuse_event) {
+    set_has_password_reuse_event();
+  } else {
+    clear_has_password_reuse_event();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.password_reuse_event)
+}
+
+// optional int32 stored_verdict_cnt = 5;
+bool LoginReputationClientRequest::has_stored_verdict_cnt() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+void LoginReputationClientRequest::set_has_stored_verdict_cnt() {
+  _has_bits_[0] |= 0x00000010u;
+}
+void LoginReputationClientRequest::clear_has_stored_verdict_cnt() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+void LoginReputationClientRequest::clear_stored_verdict_cnt() {
+  stored_verdict_cnt_ = 0;
+  clear_has_stored_verdict_cnt();
+}
+::google::protobuf::int32 LoginReputationClientRequest::stored_verdict_cnt() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.stored_verdict_cnt)
+  return stored_verdict_cnt_;
+}
+void LoginReputationClientRequest::set_stored_verdict_cnt(::google::protobuf::int32 value) {
+  set_has_stored_verdict_cnt();
+  stored_verdict_cnt_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.stored_verdict_cnt)
+}
+
+// optional .safe_browsing.ChromeUserPopulation population = 6;
+bool LoginReputationClientRequest::has_population() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void LoginReputationClientRequest::set_has_population() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void LoginReputationClientRequest::clear_has_population() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void LoginReputationClientRequest::clear_population() {
+  if (population_ != NULL) population_->::safe_browsing::ChromeUserPopulation::Clear();
+  clear_has_population();
+}
+const ::safe_browsing::ChromeUserPopulation& LoginReputationClientRequest::population() const {
+  const ::safe_browsing::ChromeUserPopulation* p = population_;
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.population)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ChromeUserPopulation*>(
+      &::safe_browsing::_ChromeUserPopulation_default_instance_);
+}
+::safe_browsing::ChromeUserPopulation* LoginReputationClientRequest::mutable_population() {
+  set_has_population();
+  if (population_ == NULL) {
+    population_ = new ::safe_browsing::ChromeUserPopulation;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientRequest.population)
+  return population_;
+}
+::safe_browsing::ChromeUserPopulation* LoginReputationClientRequest::release_population() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientRequest.population)
+  clear_has_population();
+  ::safe_browsing::ChromeUserPopulation* temp = population_;
+  population_ = NULL;
+  return temp;
+}
+void LoginReputationClientRequest::set_allocated_population(::safe_browsing::ChromeUserPopulation* population) {
+  delete population_;
+  population_ = population;
+  if (population) {
+    set_has_population();
+  } else {
+    clear_has_population();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientRequest.population)
+}
+
+// optional bool clicked_through_interstitial = 7;
+bool LoginReputationClientRequest::has_clicked_through_interstitial() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+void LoginReputationClientRequest::set_has_clicked_through_interstitial() {
+  _has_bits_[0] |= 0x00000020u;
+}
+void LoginReputationClientRequest::clear_has_clicked_through_interstitial() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+void LoginReputationClientRequest::clear_clicked_through_interstitial() {
+  clicked_through_interstitial_ = false;
+  clear_has_clicked_through_interstitial();
+}
+bool LoginReputationClientRequest::clicked_through_interstitial() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientRequest.clicked_through_interstitial)
+  return clicked_through_interstitial_;
+}
+void LoginReputationClientRequest::set_clicked_through_interstitial(bool value) {
+  set_has_clicked_through_interstitial();
+  clicked_through_interstitial_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientRequest.clicked_through_interstitial)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LoginReputationClientResponse::kVerdictTypeFieldNumber;
+const int LoginReputationClientResponse::kCacheDurationSecFieldNumber;
+const int LoginReputationClientResponse::kCacheExpressionFieldNumber;
+const int LoginReputationClientResponse::kDEPRECATEDCacheExpressionExactMatchFieldNumber;
+const int LoginReputationClientResponse::kVerdictTokenFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LoginReputationClientResponse::LoginReputationClientResponse()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.LoginReputationClientResponse)
+}
+LoginReputationClientResponse::LoginReputationClientResponse(const LoginReputationClientResponse& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  cache_expression_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_cache_expression()) {
+    cache_expression_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.cache_expression_);
+  }
+  verdict_token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_verdict_token()) {
+    verdict_token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.verdict_token_);
+  }
+  ::memcpy(&cache_duration_sec_, &from.cache_duration_sec_,
+    static_cast<size_t>(reinterpret_cast<char*>(&deprecated_cache_expression_exact_match_) -
+    reinterpret_cast<char*>(&cache_duration_sec_)) + sizeof(deprecated_cache_expression_exact_match_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.LoginReputationClientResponse)
+}
+
+void LoginReputationClientResponse::SharedCtor() {
+  _cached_size_ = 0;
+  cache_expression_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  verdict_token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&cache_duration_sec_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&deprecated_cache_expression_exact_match_) -
+      reinterpret_cast<char*>(&cache_duration_sec_)) + sizeof(deprecated_cache_expression_exact_match_));
+}
+
+LoginReputationClientResponse::~LoginReputationClientResponse() {
+  // @@protoc_insertion_point(destructor:safe_browsing.LoginReputationClientResponse)
+  SharedDtor();
+}
+
+void LoginReputationClientResponse::SharedDtor() {
+  cache_expression_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  verdict_token_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void LoginReputationClientResponse::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LoginReputationClientResponse& LoginReputationClientResponse::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LoginReputationClientResponse* LoginReputationClientResponse::New(::google::protobuf::Arena* arena) const {
+  LoginReputationClientResponse* n = new LoginReputationClientResponse;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LoginReputationClientResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.LoginReputationClientResponse)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!cache_expression_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*cache_expression_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(!verdict_token_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*verdict_token_.UnsafeRawStringPointer())->clear();
+    }
+  }
+  if (cached_has_bits & 28u) {
+    ::memset(&cache_duration_sec_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&deprecated_cache_expression_exact_match_) -
+        reinterpret_cast<char*>(&cache_duration_sec_)) + sizeof(deprecated_cache_expression_exact_match_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool LoginReputationClientResponse::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.LoginReputationClientResponse)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::LoginReputationClientResponse_VerdictType_IsValid(value)) {
+            set_verdict_type(static_cast< ::safe_browsing::LoginReputationClientResponse_VerdictType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(8u);
+            unknown_fields_stream.WriteVarint32(
+                static_cast< ::google::protobuf::uint32>(value));
+          }
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int64 cache_duration_sec = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_cache_duration_sec();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &cache_duration_sec_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string cache_expression = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_cache_expression()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+          set_has_deprecated_cache_expression_exact_match();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &deprecated_cache_expression_exact_match_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bytes verdict_token = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_verdict_token()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.LoginReputationClientResponse)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.LoginReputationClientResponse)
+  return false;
+#undef DO_
+}
+
+void LoginReputationClientResponse::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.LoginReputationClientResponse)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->verdict_type(), output);
+  }
+
+  // optional int64 cache_duration_sec = 2;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->cache_duration_sec(), output);
+  }
+
+  // optional string cache_expression = 3;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      3, this->cache_expression(), output);
+  }
+
+  // optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+  if (cached_has_bits & 0x00000010u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->deprecated_cache_expression_exact_match(), output);
+  }
+
+  // optional bytes verdict_token = 5;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      5, this->verdict_token(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.LoginReputationClientResponse)
+}
+
+size_t LoginReputationClientResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.LoginReputationClientResponse)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 31u) {
+    // optional string cache_expression = 3;
+    if (has_cache_expression()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->cache_expression());
+    }
+
+    // optional bytes verdict_token = 5;
+    if (has_verdict_token()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->verdict_token());
+    }
+
+    // optional int64 cache_duration_sec = 2;
+    if (has_cache_duration_sec()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->cache_duration_sec());
+    }
+
+    // optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+    if (has_verdict_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->verdict_type());
+    }
+
+    // optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+    if (has_deprecated_cache_expression_exact_match()) {
+      total_size += 1 + 1;
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LoginReputationClientResponse::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LoginReputationClientResponse*>(&from));
+}
+
+void LoginReputationClientResponse::MergeFrom(const LoginReputationClientResponse& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.LoginReputationClientResponse)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 31u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_cache_expression();
+      cache_expression_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.cache_expression_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      set_has_verdict_token();
+      verdict_token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.verdict_token_);
+    }
+    if (cached_has_bits & 0x00000004u) {
+      cache_duration_sec_ = from.cache_duration_sec_;
+    }
+    if (cached_has_bits & 0x00000008u) {
+      verdict_type_ = from.verdict_type_;
+    }
+    if (cached_has_bits & 0x00000010u) {
+      deprecated_cache_expression_exact_match_ = from.deprecated_cache_expression_exact_match_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void LoginReputationClientResponse::CopyFrom(const LoginReputationClientResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.LoginReputationClientResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LoginReputationClientResponse::IsInitialized() const {
+  return true;
+}
+
+void LoginReputationClientResponse::Swap(LoginReputationClientResponse* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LoginReputationClientResponse::InternalSwap(LoginReputationClientResponse* other) {
+  using std::swap;
+  cache_expression_.Swap(&other->cache_expression_);
+  verdict_token_.Swap(&other->verdict_token_);
+  swap(cache_duration_sec_, other->cache_duration_sec_);
+  swap(verdict_type_, other->verdict_type_);
+  swap(deprecated_cache_expression_exact_match_, other->deprecated_cache_expression_exact_match_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LoginReputationClientResponse::GetTypeName() const {
+  return "safe_browsing.LoginReputationClientResponse";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LoginReputationClientResponse
+
+// optional .safe_browsing.LoginReputationClientResponse.VerdictType verdict_type = 1;
+bool LoginReputationClientResponse::has_verdict_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void LoginReputationClientResponse::set_has_verdict_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void LoginReputationClientResponse::clear_has_verdict_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void LoginReputationClientResponse::clear_verdict_type() {
+  verdict_type_ = 0;
+  clear_has_verdict_type();
+}
+::safe_browsing::LoginReputationClientResponse_VerdictType LoginReputationClientResponse::verdict_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.verdict_type)
+  return static_cast< ::safe_browsing::LoginReputationClientResponse_VerdictType >(verdict_type_);
+}
+void LoginReputationClientResponse::set_verdict_type(::safe_browsing::LoginReputationClientResponse_VerdictType value) {
+  assert(::safe_browsing::LoginReputationClientResponse_VerdictType_IsValid(value));
+  set_has_verdict_type();
+  verdict_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.verdict_type)
+}
+
+// optional int64 cache_duration_sec = 2;
+bool LoginReputationClientResponse::has_cache_duration_sec() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void LoginReputationClientResponse::set_has_cache_duration_sec() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void LoginReputationClientResponse::clear_has_cache_duration_sec() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void LoginReputationClientResponse::clear_cache_duration_sec() {
+  cache_duration_sec_ = GOOGLE_LONGLONG(0);
+  clear_has_cache_duration_sec();
+}
+::google::protobuf::int64 LoginReputationClientResponse::cache_duration_sec() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.cache_duration_sec)
+  return cache_duration_sec_;
+}
+void LoginReputationClientResponse::set_cache_duration_sec(::google::protobuf::int64 value) {
+  set_has_cache_duration_sec();
+  cache_duration_sec_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.cache_duration_sec)
+}
+
+// optional string cache_expression = 3;
+bool LoginReputationClientResponse::has_cache_expression() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void LoginReputationClientResponse::set_has_cache_expression() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void LoginReputationClientResponse::clear_has_cache_expression() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void LoginReputationClientResponse::clear_cache_expression() {
+  cache_expression_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_cache_expression();
+}
+const ::std::string& LoginReputationClientResponse::cache_expression() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.cache_expression)
+  return cache_expression_.GetNoArena();
+}
+void LoginReputationClientResponse::set_cache_expression(const ::std::string& value) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+#if LANG_CXX11
+void LoginReputationClientResponse::set_cache_expression(::std::string&& value) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+#endif
+void LoginReputationClientResponse::set_cache_expression(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+void LoginReputationClientResponse::set_cache_expression(const char* value, size_t size) {
+  set_has_cache_expression();
+  cache_expression_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+::std::string* LoginReputationClientResponse::mutable_cache_expression() {
+  set_has_cache_expression();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientResponse.cache_expression)
+  return cache_expression_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* LoginReputationClientResponse::release_cache_expression() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientResponse.cache_expression)
+  clear_has_cache_expression();
+  return cache_expression_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void LoginReputationClientResponse::set_allocated_cache_expression(::std::string* cache_expression) {
+  if (cache_expression != NULL) {
+    set_has_cache_expression();
+  } else {
+    clear_has_cache_expression();
+  }
+  cache_expression_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), cache_expression);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientResponse.cache_expression)
+}
+
+// optional bool DEPRECATED_cache_expression_exact_match = 4 [deprecated = true];
+bool LoginReputationClientResponse::has_deprecated_cache_expression_exact_match() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+void LoginReputationClientResponse::set_has_deprecated_cache_expression_exact_match() {
+  _has_bits_[0] |= 0x00000010u;
+}
+void LoginReputationClientResponse::clear_has_deprecated_cache_expression_exact_match() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+void LoginReputationClientResponse::clear_deprecated_cache_expression_exact_match() {
+  deprecated_cache_expression_exact_match_ = false;
+  clear_has_deprecated_cache_expression_exact_match();
+}
+bool LoginReputationClientResponse::deprecated_cache_expression_exact_match() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.DEPRECATED_cache_expression_exact_match)
+  return deprecated_cache_expression_exact_match_;
+}
+void LoginReputationClientResponse::set_deprecated_cache_expression_exact_match(bool value) {
+  set_has_deprecated_cache_expression_exact_match();
+  deprecated_cache_expression_exact_match_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.DEPRECATED_cache_expression_exact_match)
+}
+
+// optional bytes verdict_token = 5;
+bool LoginReputationClientResponse::has_verdict_token() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void LoginReputationClientResponse::set_has_verdict_token() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void LoginReputationClientResponse::clear_has_verdict_token() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void LoginReputationClientResponse::clear_verdict_token() {
+  verdict_token_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_verdict_token();
+}
+const ::std::string& LoginReputationClientResponse::verdict_token() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.LoginReputationClientResponse.verdict_token)
+  return verdict_token_.GetNoArena();
+}
+void LoginReputationClientResponse::set_verdict_token(const ::std::string& value) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+#if LANG_CXX11
+void LoginReputationClientResponse::set_verdict_token(::std::string&& value) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+#endif
+void LoginReputationClientResponse::set_verdict_token(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+void LoginReputationClientResponse::set_verdict_token(const void* value, size_t size) {
+  set_has_verdict_token();
+  verdict_token_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.LoginReputationClientResponse.verdict_token)
+}
+::std::string* LoginReputationClientResponse::mutable_verdict_token() {
+  set_has_verdict_token();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.LoginReputationClientResponse.verdict_token)
+  return verdict_token_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* LoginReputationClientResponse::release_verdict_token() {
+  // @@protoc_insertion_point(field_release:safe_browsing.LoginReputationClientResponse.verdict_token)
+  clear_has_verdict_token();
+  return verdict_token_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void LoginReputationClientResponse::set_allocated_verdict_token(::std::string* verdict_token) {
+  if (verdict_token != NULL) {
+    set_has_verdict_token();
+  } else {
+    clear_has_verdict_token();
+  }
+  verdict_token_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), verdict_token);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.LoginReputationClientResponse.verdict_token)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -9914,834 +12879,6 @@ void ClientDownloadRequest_ArchivedBinary::set_allocated_image_headers(::safe_br
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ClientDownloadRequest_URLChainEntry::kUrlFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kTypeFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kIpAddressFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kReferrerFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kMainFrameReferrerFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kIsRetargetingFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kIsUserInitiatedFieldNumber;
-const int ClientDownloadRequest_URLChainEntry::kTimestampInMillisecFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-ClientDownloadRequest_URLChainEntry::ClientDownloadRequest_URLChainEntry()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    protobuf_csd_2eproto::InitDefaults();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
-}
-ClientDownloadRequest_URLChainEntry::ClientDownloadRequest_URLChainEntry(const ClientDownloadRequest_URLChainEntry& from)
-  : ::google::protobuf::MessageLite(),
-      _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_url()) {
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
-  }
-  ip_address_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_ip_address()) {
-    ip_address_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.ip_address_);
-  }
-  referrer_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_referrer()) {
-    referrer_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_);
-  }
-  main_frame_referrer_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_main_frame_referrer()) {
-    main_frame_referrer_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.main_frame_referrer_);
-  }
-  ::memcpy(&timestamp_in_millisec_, &from.timestamp_in_millisec_,
-    static_cast<size_t>(reinterpret_cast<char*>(&type_) -
-    reinterpret_cast<char*>(&timestamp_in_millisec_)) + sizeof(type_));
-  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
-}
-
-void ClientDownloadRequest_URLChainEntry::SharedCtor() {
-  _cached_size_ = 0;
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ip_address_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  referrer_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  main_frame_referrer_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&timestamp_in_millisec_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&is_user_initiated_) -
-      reinterpret_cast<char*>(&timestamp_in_millisec_)) + sizeof(is_user_initiated_));
-  type_ = 1;
-}
-
-ClientDownloadRequest_URLChainEntry::~ClientDownloadRequest_URLChainEntry() {
-  // @@protoc_insertion_point(destructor:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  SharedDtor();
-}
-
-void ClientDownloadRequest_URLChainEntry::SharedDtor() {
-  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ip_address_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  referrer_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  main_frame_referrer_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-
-void ClientDownloadRequest_URLChainEntry::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientDownloadRequest_URLChainEntry& ClientDownloadRequest_URLChainEntry::default_instance() {
-  protobuf_csd_2eproto::InitDefaults();
-  return *internal_default_instance();
-}
-
-ClientDownloadRequest_URLChainEntry* ClientDownloadRequest_URLChainEntry::New(::google::protobuf::Arena* arena) const {
-  ClientDownloadRequest_URLChainEntry* n = new ClientDownloadRequest_URLChainEntry;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void ClientDownloadRequest_URLChainEntry::Clear() {
-// @@protoc_insertion_point(message_clear_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 15u) {
-    if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*url_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(!ip_address_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*ip_address_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(!referrer_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*referrer_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000008u) {
-      GOOGLE_DCHECK(!main_frame_referrer_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*main_frame_referrer_.UnsafeRawStringPointer())->clear();
-    }
-  }
-  if (cached_has_bits & 240u) {
-    ::memset(&timestamp_in_millisec_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&is_user_initiated_) -
-        reinterpret_cast<char*>(&timestamp_in_millisec_)) + sizeof(is_user_initiated_));
-    type_ = 1;
-  }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
-}
-
-bool ClientDownloadRequest_URLChainEntry::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
-      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
-          &::google::protobuf::internal::InternalMetadataWithArenaLite::
-              mutable_unknown_fields));
-  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
-      &unknown_fields_string, false);
-  // @@protoc_insertion_point(parse_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string url = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType_IsValid(value)) {
-            set_type(static_cast< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType >(value));
-          } else {
-            unknown_fields_stream.WriteVarint32(16u);
-            unknown_fields_stream.WriteVarint32(
-                static_cast< ::google::protobuf::uint32>(value));
-          }
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional string ip_address = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_ip_address()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional string referrer = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_referrer()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional string main_frame_referrer = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_main_frame_referrer()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional bool is_retargeting = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
-          set_has_is_retargeting();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &is_retargeting_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional bool is_user_initiated = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
-          set_has_is_user_initiated();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &is_user_initiated_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional double timestamp_in_millisec = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(65u /* 65 & 0xFF */)) {
-          set_has_timestamp_in_millisec();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
-                 input, &timestamp_in_millisec_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
-            input, tag, &unknown_fields_stream));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  return false;
-#undef DO_
-}
-
-void ClientDownloadRequest_URLChainEntry::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional string url = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->url(), output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-  if (cached_has_bits & 0x00000080u) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->type(), output);
-  }
-
-  // optional string ip_address = 3;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->ip_address(), output);
-  }
-
-  // optional string referrer = 4;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      4, this->referrer(), output);
-  }
-
-  // optional string main_frame_referrer = 5;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      5, this->main_frame_referrer(), output);
-  }
-
-  // optional bool is_retargeting = 6;
-  if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->is_retargeting(), output);
-  }
-
-  // optional bool is_user_initiated = 7;
-  if (cached_has_bits & 0x00000040u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->is_user_initiated(), output);
-  }
-
-  // optional double timestamp_in_millisec = 8;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteDouble(8, this->timestamp_in_millisec(), output);
-  }
-
-  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
-                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
-  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientDownloadRequest.URLChainEntry)
-}
-
-size_t ClientDownloadRequest_URLChainEntry::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  size_t total_size = 0;
-
-  total_size += _internal_metadata_.unknown_fields().size();
-
-  if (_has_bits_[0 / 32] & 255u) {
-    // optional string url = 1;
-    if (has_url()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->url());
-    }
-
-    // optional string ip_address = 3;
-    if (has_ip_address()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->ip_address());
-    }
-
-    // optional string referrer = 4;
-    if (has_referrer()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->referrer());
-    }
-
-    // optional string main_frame_referrer = 5;
-    if (has_main_frame_referrer()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->main_frame_referrer());
-    }
-
-    // optional double timestamp_in_millisec = 8;
-    if (has_timestamp_in_millisec()) {
-      total_size += 1 + 8;
-    }
-
-    // optional bool is_retargeting = 6;
-    if (has_is_retargeting()) {
-      total_size += 1 + 1;
-    }
-
-    // optional bool is_user_initiated = 7;
-    if (has_is_user_initiated()) {
-      total_size += 1 + 1;
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-    if (has_type()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
-    }
-
-  }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientDownloadRequest_URLChainEntry::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientDownloadRequest_URLChainEntry*>(&from));
-}
-
-void ClientDownloadRequest_URLChainEntry::MergeFrom(const ClientDownloadRequest_URLChainEntry& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 255u) {
-    if (cached_has_bits & 0x00000001u) {
-      set_has_url();
-      url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
-    }
-    if (cached_has_bits & 0x00000002u) {
-      set_has_ip_address();
-      ip_address_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.ip_address_);
-    }
-    if (cached_has_bits & 0x00000004u) {
-      set_has_referrer();
-      referrer_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_);
-    }
-    if (cached_has_bits & 0x00000008u) {
-      set_has_main_frame_referrer();
-      main_frame_referrer_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.main_frame_referrer_);
-    }
-    if (cached_has_bits & 0x00000010u) {
-      timestamp_in_millisec_ = from.timestamp_in_millisec_;
-    }
-    if (cached_has_bits & 0x00000020u) {
-      is_retargeting_ = from.is_retargeting_;
-    }
-    if (cached_has_bits & 0x00000040u) {
-      is_user_initiated_ = from.is_user_initiated_;
-    }
-    if (cached_has_bits & 0x00000080u) {
-      type_ = from.type_;
-    }
-    _has_bits_[0] |= cached_has_bits;
-  }
-}
-
-void ClientDownloadRequest_URLChainEntry::CopyFrom(const ClientDownloadRequest_URLChainEntry& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ClientDownloadRequest.URLChainEntry)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientDownloadRequest_URLChainEntry::IsInitialized() const {
-  return true;
-}
-
-void ClientDownloadRequest_URLChainEntry::Swap(ClientDownloadRequest_URLChainEntry* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void ClientDownloadRequest_URLChainEntry::InternalSwap(ClientDownloadRequest_URLChainEntry* other) {
-  using std::swap;
-  url_.Swap(&other->url_);
-  ip_address_.Swap(&other->ip_address_);
-  referrer_.Swap(&other->referrer_);
-  main_frame_referrer_.Swap(&other->main_frame_referrer_);
-  swap(timestamp_in_millisec_, other->timestamp_in_millisec_);
-  swap(is_retargeting_, other->is_retargeting_);
-  swap(is_user_initiated_, other->is_user_initiated_);
-  swap(type_, other->type_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::std::string ClientDownloadRequest_URLChainEntry::GetTypeName() const {
-  return "safe_browsing.ClientDownloadRequest.URLChainEntry";
-}
-
-#if PROTOBUF_INLINE_NOT_IN_HEADERS
-// ClientDownloadRequest_URLChainEntry
-
-// optional string url = 1;
-bool ClientDownloadRequest_URLChainEntry::has_url() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_url() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_url() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_url() {
-  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_url();
-}
-const ::std::string& ClientDownloadRequest_URLChainEntry::url() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  return url_.GetNoArena();
-}
-void ClientDownloadRequest_URLChainEntry::set_url(const ::std::string& value) {
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-#if LANG_CXX11
-void ClientDownloadRequest_URLChainEntry::set_url(::std::string&& value) {
-  set_has_url();
-  url_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-#endif
-void ClientDownloadRequest_URLChainEntry::set_url(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-void ClientDownloadRequest_URLChainEntry::set_url(const char* value, size_t size) {
-  set_has_url();
-  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-::std::string* ClientDownloadRequest_URLChainEntry::mutable_url() {
-  set_has_url();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientDownloadRequest_URLChainEntry::release_url() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-  clear_has_url();
-  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientDownloadRequest_URLChainEntry::set_allocated_url(::std::string* url) {
-  if (url != NULL) {
-    set_has_url();
-  } else {
-    clear_has_url();
-  }
-  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.url)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.URLChainEntry.URLType type = 2;
-bool ClientDownloadRequest_URLChainEntry::has_type() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_type() {
-  _has_bits_[0] |= 0x00000080u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_type() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_type() {
-  type_ = 1;
-  clear_has_type();
-}
-::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType ClientDownloadRequest_URLChainEntry::type() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
-  return static_cast< ::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType >(type_);
-}
-void ClientDownloadRequest_URLChainEntry::set_type(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType value) {
-  assert(::safe_browsing::ClientDownloadRequest_URLChainEntry_URLType_IsValid(value));
-  set_has_type();
-  type_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.type)
-}
-
-// optional string ip_address = 3;
-bool ClientDownloadRequest_URLChainEntry::has_ip_address() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_ip_address() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_ip_address() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_ip_address() {
-  ip_address_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_ip_address();
-}
-const ::std::string& ClientDownloadRequest_URLChainEntry::ip_address() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  return ip_address_.GetNoArena();
-}
-void ClientDownloadRequest_URLChainEntry::set_ip_address(const ::std::string& value) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-#if LANG_CXX11
-void ClientDownloadRequest_URLChainEntry::set_ip_address(::std::string&& value) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-#endif
-void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-void ClientDownloadRequest_URLChainEntry::set_ip_address(const char* value, size_t size) {
-  set_has_ip_address();
-  ip_address_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-::std::string* ClientDownloadRequest_URLChainEntry::mutable_ip_address() {
-  set_has_ip_address();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  return ip_address_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientDownloadRequest_URLChainEntry::release_ip_address() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-  clear_has_ip_address();
-  return ip_address_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientDownloadRequest_URLChainEntry::set_allocated_ip_address(::std::string* ip_address) {
-  if (ip_address != NULL) {
-    set_has_ip_address();
-  } else {
-    clear_has_ip_address();
-  }
-  ip_address_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ip_address);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.ip_address)
-}
-
-// optional string referrer = 4;
-bool ClientDownloadRequest_URLChainEntry::has_referrer() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_referrer() {
-  _has_bits_[0] |= 0x00000004u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_referrer() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_referrer() {
-  referrer_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_referrer();
-}
-const ::std::string& ClientDownloadRequest_URLChainEntry::referrer() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  return referrer_.GetNoArena();
-}
-void ClientDownloadRequest_URLChainEntry::set_referrer(const ::std::string& value) {
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-#if LANG_CXX11
-void ClientDownloadRequest_URLChainEntry::set_referrer(::std::string&& value) {
-  set_has_referrer();
-  referrer_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-#endif
-void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-void ClientDownloadRequest_URLChainEntry::set_referrer(const char* value, size_t size) {
-  set_has_referrer();
-  referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-::std::string* ClientDownloadRequest_URLChainEntry::mutable_referrer() {
-  set_has_referrer();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  return referrer_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientDownloadRequest_URLChainEntry::release_referrer() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-  clear_has_referrer();
-  return referrer_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientDownloadRequest_URLChainEntry::set_allocated_referrer(::std::string* referrer) {
-  if (referrer != NULL) {
-    set_has_referrer();
-  } else {
-    clear_has_referrer();
-  }
-  referrer_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.referrer)
-}
-
-// optional string main_frame_referrer = 5;
-bool ClientDownloadRequest_URLChainEntry::has_main_frame_referrer() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_main_frame_referrer() {
-  _has_bits_[0] |= 0x00000008u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_main_frame_referrer() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_main_frame_referrer() {
-  main_frame_referrer_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_main_frame_referrer();
-}
-const ::std::string& ClientDownloadRequest_URLChainEntry::main_frame_referrer() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  return main_frame_referrer_.GetNoArena();
-}
-void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const ::std::string& value) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-#if LANG_CXX11
-void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(::std::string&& value) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-#endif
-void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-void ClientDownloadRequest_URLChainEntry::set_main_frame_referrer(const char* value, size_t size) {
-  set_has_main_frame_referrer();
-  main_frame_referrer_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-::std::string* ClientDownloadRequest_URLChainEntry::mutable_main_frame_referrer() {
-  set_has_main_frame_referrer();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  return main_frame_referrer_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientDownloadRequest_URLChainEntry::release_main_frame_referrer() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-  clear_has_main_frame_referrer();
-  return main_frame_referrer_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientDownloadRequest_URLChainEntry::set_allocated_main_frame_referrer(::std::string* main_frame_referrer) {
-  if (main_frame_referrer != NULL) {
-    set_has_main_frame_referrer();
-  } else {
-    clear_has_main_frame_referrer();
-  }
-  main_frame_referrer_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), main_frame_referrer);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.URLChainEntry.main_frame_referrer)
-}
-
-// optional bool is_retargeting = 6;
-bool ClientDownloadRequest_URLChainEntry::has_is_retargeting() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_is_retargeting() {
-  _has_bits_[0] |= 0x00000020u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_is_retargeting() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_is_retargeting() {
-  is_retargeting_ = false;
-  clear_has_is_retargeting();
-}
-bool ClientDownloadRequest_URLChainEntry::is_retargeting() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
-  return is_retargeting_;
-}
-void ClientDownloadRequest_URLChainEntry::set_is_retargeting(bool value) {
-  set_has_is_retargeting();
-  is_retargeting_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_retargeting)
-}
-
-// optional bool is_user_initiated = 7;
-bool ClientDownloadRequest_URLChainEntry::has_is_user_initiated() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_is_user_initiated() {
-  _has_bits_[0] |= 0x00000040u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_is_user_initiated() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_is_user_initiated() {
-  is_user_initiated_ = false;
-  clear_has_is_user_initiated();
-}
-bool ClientDownloadRequest_URLChainEntry::is_user_initiated() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
-  return is_user_initiated_;
-}
-void ClientDownloadRequest_URLChainEntry::set_is_user_initiated(bool value) {
-  set_has_is_user_initiated();
-  is_user_initiated_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.is_user_initiated)
-}
-
-// optional double timestamp_in_millisec = 8;
-bool ClientDownloadRequest_URLChainEntry::has_timestamp_in_millisec() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-void ClientDownloadRequest_URLChainEntry::set_has_timestamp_in_millisec() {
-  _has_bits_[0] |= 0x00000010u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_has_timestamp_in_millisec() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-void ClientDownloadRequest_URLChainEntry::clear_timestamp_in_millisec() {
-  timestamp_in_millisec_ = 0;
-  clear_has_timestamp_in_millisec();
-}
-double ClientDownloadRequest_URLChainEntry::timestamp_in_millisec() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
-  return timestamp_in_millisec_;
-}
-void ClientDownloadRequest_URLChainEntry::set_timestamp_in_millisec(double value) {
-  set_has_timestamp_in_millisec();
-  timestamp_in_millisec_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.URLChainEntry.timestamp_in_millisec)
-}
-
-#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
-
-// ===================================================================
-
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ClientDownloadRequest::kUrlFieldNumber;
 const int ClientDownloadRequest::kDigestsFieldNumber;
 const int ClientDownloadRequest::kLengthFieldNumber;
@@ -10758,7 +12895,9 @@ const int ClientDownloadRequest::kArchiveValidFieldNumber;
 const int ClientDownloadRequest::kSkippedUrlWhitelistFieldNumber;
 const int ClientDownloadRequest::kSkippedCertificateWhitelistFieldNumber;
 const int ClientDownloadRequest::kAlternateExtensionsFieldNumber;
-const int ClientDownloadRequest::kUrlChainFieldNumber;
+const int ClientDownloadRequest::kReferrerChainFieldNumber;
+const int ClientDownloadRequest::kDEPRECATEDDownloadAttributionFinchEnabledFieldNumber;
+const int ClientDownloadRequest::kUdifCodeSignatureFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadRequest::ClientDownloadRequest()
@@ -10777,7 +12916,7 @@ ClientDownloadRequest::ClientDownloadRequest(const ClientDownloadRequest& from)
       resources_(from.resources_),
       archived_binary_(from.archived_binary_),
       alternate_extensions_(from.alternate_extensions_),
-      url_chain_(from.url_chain_) {
+      referrer_chain_(from.referrer_chain_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_url()) {
@@ -10790,6 +12929,10 @@ ClientDownloadRequest::ClientDownloadRequest(const ClientDownloadRequest& from)
   locale_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_locale()) {
     locale_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.locale_);
+  }
+  udif_code_signature_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_udif_code_signature()) {
+    udif_code_signature_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.udif_code_signature_);
   }
   if (from.has_digests()) {
     digests_ = new ::safe_browsing::ClientDownloadRequest_Digests(*from.digests_);
@@ -10822,6 +12965,7 @@ void ClientDownloadRequest::SharedCtor() {
   url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_basename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   locale_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  udif_code_signature_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&digests_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&skipped_certificate_whitelist_) -
       reinterpret_cast<char*>(&digests_)) + sizeof(skipped_certificate_whitelist_));
@@ -10836,6 +12980,7 @@ void ClientDownloadRequest::SharedDtor() {
   url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_basename_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   locale_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  udif_code_signature_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete digests_;
   if (this != internal_default_instance()) delete signature_;
   if (this != internal_default_instance()) delete image_headers_;
@@ -10869,9 +13014,9 @@ void ClientDownloadRequest::Clear() {
   resources_.Clear();
   archived_binary_.Clear();
   alternate_extensions_.Clear();
-  url_chain_.Clear();
+  referrer_chain_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 127u) {
+  if (cached_has_bits & 255u) {
     if (cached_has_bits & 0x00000001u) {
       GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
       (*url_.UnsafeRawStringPointer())->clear();
@@ -10885,27 +13030,30 @@ void ClientDownloadRequest::Clear() {
       (*locale_.UnsafeRawStringPointer())->clear();
     }
     if (cached_has_bits & 0x00000008u) {
+      GOOGLE_DCHECK(!udif_code_signature_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*udif_code_signature_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000010u) {
       GOOGLE_DCHECK(digests_ != NULL);
       digests_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
     }
-    if (cached_has_bits & 0x00000010u) {
+    if (cached_has_bits & 0x00000020u) {
       GOOGLE_DCHECK(signature_ != NULL);
       signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
     }
-    if (cached_has_bits & 0x00000020u) {
+    if (cached_has_bits & 0x00000040u) {
       GOOGLE_DCHECK(image_headers_ != NULL);
       image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
     }
-    if (cached_has_bits & 0x00000040u) {
+    if (cached_has_bits & 0x00000080u) {
       GOOGLE_DCHECK(population_ != NULL);
       population_->::safe_browsing::ChromeUserPopulation::Clear();
     }
   }
-  length_ = GOOGLE_LONGLONG(0);
-  if (cached_has_bits & 7936u) {
-    ::memset(&download_type_, 0, static_cast<size_t>(
+  if (cached_has_bits & 32512u) {
+    ::memset(&length_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&skipped_certificate_whitelist_) -
-        reinterpret_cast<char*>(&download_type_)) + sizeof(skipped_certificate_whitelist_));
+        reinterpret_cast<char*>(&length_)) + sizeof(skipped_certificate_whitelist_));
   }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -11138,12 +13286,38 @@ bool ClientDownloadRequest::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+      // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
       case 36: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(34u /* 290 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_url_chain()));
+                input, add_referrer_chain()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+      case 39: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 312 & 0xFF */)) {
+          set_has_deprecated_download_attribution_finch_enabled();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &deprecated_download_attribution_finch_enabled_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bytes udif_code_signature = 40;
+      case 40: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u /* 322 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_udif_code_signature()));
         } else {
           goto handle_unusual;
         }
@@ -11184,13 +13358,13 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
   }
 
   // required .safe_browsing.ClientDownloadRequest.Digests digests = 2;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->digests_, output);
   }
 
   // required int64 length = 3;
-  if (cached_has_bits & 0x00000080u) {
+  if (cached_has_bits & 0x00000100u) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->length(), output);
   }
 
@@ -11202,13 +13376,13 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
   }
 
   // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-  if (cached_has_bits & 0x00000010u) {
+  if (cached_has_bits & 0x00000020u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       5, *this->signature_, output);
   }
 
   // optional bool user_initiated = 6;
-  if (cached_has_bits & 0x00000200u) {
+  if (cached_has_bits & 0x00000800u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->user_initiated(), output);
   }
 
@@ -11219,7 +13393,7 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
   }
 
   // optional .safe_browsing.ClientDownloadRequest.DownloadType download_type = 10 [default = WIN_EXECUTABLE];
-  if (cached_has_bits & 0x00000100u) {
+  if (cached_has_bits & 0x00000400u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       10, this->download_type(), output);
   }
@@ -11231,7 +13405,7 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
   }
 
   // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
-  if (cached_has_bits & 0x00000020u) {
+  if (cached_has_bits & 0x00000040u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       18, *this->image_headers_, output);
   }
@@ -11244,23 +13418,23 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
   }
 
   // optional .safe_browsing.ChromeUserPopulation population = 24;
-  if (cached_has_bits & 0x00000040u) {
+  if (cached_has_bits & 0x00000080u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       24, *this->population_, output);
   }
 
   // optional bool archive_valid = 26;
-  if (cached_has_bits & 0x00000400u) {
+  if (cached_has_bits & 0x00001000u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(26, this->archive_valid(), output);
   }
 
   // optional bool skipped_url_whitelist = 28;
-  if (cached_has_bits & 0x00000800u) {
+  if (cached_has_bits & 0x00002000u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(28, this->skipped_url_whitelist(), output);
   }
 
   // optional bool skipped_certificate_whitelist = 31;
-  if (cached_has_bits & 0x00001000u) {
+  if (cached_has_bits & 0x00004000u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(31, this->skipped_certificate_whitelist(), output);
   }
 
@@ -11270,11 +13444,22 @@ void ClientDownloadRequest::SerializeWithCachedSizes(
       35, this->alternate_extensions(i), output);
   }
 
-  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->url_chain_size()); i < n; i++) {
+      n = static_cast<unsigned int>(this->referrer_chain_size()); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      36, this->url_chain(static_cast<int>(i)), output);
+      36, this->referrer_chain(static_cast<int>(i)), output);
+  }
+
+  // optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+  if (cached_has_bits & 0x00000200u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(39, this->deprecated_download_attribution_finch_enabled(), output);
+  }
+
+  // optional bytes udif_code_signature = 40;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      40, this->udif_code_signature(), output);
   }
 
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
@@ -11315,7 +13500,7 @@ size_t ClientDownloadRequest::ByteSizeLong() const {
 
   total_size += _internal_metadata_.unknown_fields().size();
 
-  if (((_has_bits_[0] & 0x00000089) ^ 0x00000089) == 0) {  // All required fields are present.
+  if (((_has_bits_[0] & 0x00000111) ^ 0x00000111) == 0) {  // All required fields are present.
     // required string url = 1;
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -11364,18 +13549,18 @@ size_t ClientDownloadRequest::ByteSizeLong() const {
       this->alternate_extensions(i));
   }
 
-  // repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
+  // repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
   {
-    unsigned int count = static_cast<unsigned int>(this->url_chain_size());
+    unsigned int count = static_cast<unsigned int>(this->referrer_chain_size());
     total_size += 2UL * count;
     for (unsigned int i = 0; i < count; i++) {
       total_size +=
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->url_chain(static_cast<int>(i)));
+          this->referrer_chain(static_cast<int>(i)));
     }
   }
 
-  if (_has_bits_[0 / 32] & 6u) {
+  if (_has_bits_[0 / 32] & 14u) {
     // optional string file_basename = 9;
     if (has_file_basename()) {
       total_size += 1 +
@@ -11390,8 +13575,15 @@ size_t ClientDownloadRequest::ByteSizeLong() const {
           this->locale());
     }
 
+    // optional bytes udif_code_signature = 40;
+    if (has_udif_code_signature()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->udif_code_signature());
+    }
+
   }
-  if (_has_bits_[0 / 32] & 112u) {
+  if (_has_bits_[0 / 32] & 224u) {
     // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
     if (has_signature()) {
       total_size += 1 +
@@ -11414,7 +13606,12 @@ size_t ClientDownloadRequest::ByteSizeLong() const {
     }
 
   }
-  if (_has_bits_[8 / 32] & 7936u) {
+  if (_has_bits_[8 / 32] & 32256u) {
+    // optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+    if (has_deprecated_download_attribution_finch_enabled()) {
+      total_size += 2 + 1;
+    }
+
     // optional .safe_browsing.ClientDownloadRequest.DownloadType download_type = 10 [default = WIN_EXECUTABLE];
     if (has_download_type()) {
       total_size += 1 +
@@ -11464,7 +13661,7 @@ void ClientDownloadRequest::MergeFrom(const ClientDownloadRequest& from) {
   resources_.MergeFrom(from.resources_);
   archived_binary_.MergeFrom(from.archived_binary_);
   alternate_extensions_.MergeFrom(from.alternate_extensions_);
-  url_chain_.MergeFrom(from.url_chain_);
+  referrer_chain_.MergeFrom(from.referrer_chain_);
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 255u) {
     if (cached_has_bits & 0x00000001u) {
@@ -11480,36 +13677,42 @@ void ClientDownloadRequest::MergeFrom(const ClientDownloadRequest& from) {
       locale_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.locale_);
     }
     if (cached_has_bits & 0x00000008u) {
-      mutable_digests()->::safe_browsing::ClientDownloadRequest_Digests::MergeFrom(from.digests());
+      set_has_udif_code_signature();
+      udif_code_signature_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.udif_code_signature_);
     }
     if (cached_has_bits & 0x00000010u) {
-      mutable_signature()->::safe_browsing::ClientDownloadRequest_SignatureInfo::MergeFrom(from.signature());
+      mutable_digests()->::safe_browsing::ClientDownloadRequest_Digests::MergeFrom(from.digests());
     }
     if (cached_has_bits & 0x00000020u) {
-      mutable_image_headers()->::safe_browsing::ClientDownloadRequest_ImageHeaders::MergeFrom(from.image_headers());
+      mutable_signature()->::safe_browsing::ClientDownloadRequest_SignatureInfo::MergeFrom(from.signature());
     }
     if (cached_has_bits & 0x00000040u) {
-      mutable_population()->::safe_browsing::ChromeUserPopulation::MergeFrom(from.population());
+      mutable_image_headers()->::safe_browsing::ClientDownloadRequest_ImageHeaders::MergeFrom(from.image_headers());
     }
     if (cached_has_bits & 0x00000080u) {
+      mutable_population()->::safe_browsing::ChromeUserPopulation::MergeFrom(from.population());
+    }
+  }
+  if (cached_has_bits & 32512u) {
+    if (cached_has_bits & 0x00000100u) {
       length_ = from.length_;
     }
-    _has_bits_[0] |= cached_has_bits;
-  }
-  if (cached_has_bits & 7936u) {
-    if (cached_has_bits & 0x00000100u) {
-      download_type_ = from.download_type_;
-    }
     if (cached_has_bits & 0x00000200u) {
-      user_initiated_ = from.user_initiated_;
+      deprecated_download_attribution_finch_enabled_ = from.deprecated_download_attribution_finch_enabled_;
     }
     if (cached_has_bits & 0x00000400u) {
-      archive_valid_ = from.archive_valid_;
+      download_type_ = from.download_type_;
     }
     if (cached_has_bits & 0x00000800u) {
-      skipped_url_whitelist_ = from.skipped_url_whitelist_;
+      user_initiated_ = from.user_initiated_;
     }
     if (cached_has_bits & 0x00001000u) {
+      archive_valid_ = from.archive_valid_;
+    }
+    if (cached_has_bits & 0x00002000u) {
+      skipped_url_whitelist_ = from.skipped_url_whitelist_;
+    }
+    if (cached_has_bits & 0x00004000u) {
       skipped_certificate_whitelist_ = from.skipped_certificate_whitelist_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -11524,7 +13727,7 @@ void ClientDownloadRequest::CopyFrom(const ClientDownloadRequest& from) {
 }
 
 bool ClientDownloadRequest::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000089) != 0x00000089) return false;
+  if ((_has_bits_[0] & 0x00000111) != 0x00000111) return false;
   if (!::google::protobuf::internal::AllAreInitialized(this->resources())) return false;
   if (!::google::protobuf::internal::AllAreInitialized(this->archived_binary())) return false;
   if (has_signature()) {
@@ -11545,15 +13748,17 @@ void ClientDownloadRequest::InternalSwap(ClientDownloadRequest* other) {
   resources_.InternalSwap(&other->resources_);
   archived_binary_.InternalSwap(&other->archived_binary_);
   alternate_extensions_.InternalSwap(&other->alternate_extensions_);
-  url_chain_.InternalSwap(&other->url_chain_);
+  referrer_chain_.InternalSwap(&other->referrer_chain_);
   url_.Swap(&other->url_);
   file_basename_.Swap(&other->file_basename_);
   locale_.Swap(&other->locale_);
+  udif_code_signature_.Swap(&other->udif_code_signature_);
   swap(digests_, other->digests_);
   swap(signature_, other->signature_);
   swap(image_headers_, other->image_headers_);
   swap(population_, other->population_);
   swap(length_, other->length_);
+  swap(deprecated_download_attribution_finch_enabled_, other->deprecated_download_attribution_finch_enabled_);
   swap(download_type_, other->download_type_);
   swap(user_initiated_, other->user_initiated_);
   swap(archive_valid_, other->archive_valid_);
@@ -11636,13 +13841,13 @@ void ClientDownloadRequest::set_allocated_url(::std::string* url) {
 
 // required .safe_browsing.ClientDownloadRequest.Digests digests = 2;
 bool ClientDownloadRequest::has_digests() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 void ClientDownloadRequest::set_has_digests() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 void ClientDownloadRequest::clear_has_digests() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 void ClientDownloadRequest::clear_digests() {
   if (digests_ != NULL) digests_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
@@ -11682,13 +13887,13 @@ void ClientDownloadRequest::set_allocated_digests(::safe_browsing::ClientDownloa
 
 // required int64 length = 3;
 bool ClientDownloadRequest::has_length() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 void ClientDownloadRequest::set_has_length() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 void ClientDownloadRequest::clear_has_length() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 void ClientDownloadRequest::clear_length() {
   length_ = GOOGLE_LONGLONG(0);
@@ -11736,13 +13941,13 @@ ClientDownloadRequest::resources() const {
 
 // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
 bool ClientDownloadRequest::has_signature() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 void ClientDownloadRequest::set_has_signature() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 void ClientDownloadRequest::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 void ClientDownloadRequest::clear_signature() {
   if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
@@ -11782,13 +13987,13 @@ void ClientDownloadRequest::set_allocated_signature(::safe_browsing::ClientDownl
 
 // optional bool user_initiated = 6;
 bool ClientDownloadRequest::has_user_initiated() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 void ClientDownloadRequest::set_has_user_initiated() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000800u;
 }
 void ClientDownloadRequest::clear_has_user_initiated() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 void ClientDownloadRequest::clear_user_initiated() {
   user_initiated_ = false;
@@ -11869,13 +14074,13 @@ void ClientDownloadRequest::set_allocated_file_basename(::std::string* file_base
 
 // optional .safe_browsing.ClientDownloadRequest.DownloadType download_type = 10 [default = WIN_EXECUTABLE];
 bool ClientDownloadRequest::has_download_type() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 void ClientDownloadRequest::set_has_download_type() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000400u;
 }
 void ClientDownloadRequest::clear_has_download_type() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 void ClientDownloadRequest::clear_download_type() {
   download_type_ = 0;
@@ -11957,13 +14162,13 @@ void ClientDownloadRequest::set_allocated_locale(::std::string* locale) {
 
 // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 18;
 bool ClientDownloadRequest::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 void ClientDownloadRequest::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 void ClientDownloadRequest::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 void ClientDownloadRequest::clear_image_headers() {
   if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
@@ -12033,13 +14238,13 @@ ClientDownloadRequest::archived_binary() const {
 
 // optional .safe_browsing.ChromeUserPopulation population = 24;
 bool ClientDownloadRequest::has_population() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 void ClientDownloadRequest::set_has_population() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 void ClientDownloadRequest::clear_has_population() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 void ClientDownloadRequest::clear_population() {
   if (population_ != NULL) population_->::safe_browsing::ChromeUserPopulation::Clear();
@@ -12079,13 +14284,13 @@ void ClientDownloadRequest::set_allocated_population(::safe_browsing::ChromeUser
 
 // optional bool archive_valid = 26;
 bool ClientDownloadRequest::has_archive_valid() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 void ClientDownloadRequest::set_has_archive_valid() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00001000u;
 }
 void ClientDownloadRequest::clear_has_archive_valid() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 void ClientDownloadRequest::clear_archive_valid() {
   archive_valid_ = false;
@@ -12103,13 +14308,13 @@ void ClientDownloadRequest::set_archive_valid(bool value) {
 
 // optional bool skipped_url_whitelist = 28;
 bool ClientDownloadRequest::has_skipped_url_whitelist() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 void ClientDownloadRequest::set_has_skipped_url_whitelist() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00002000u;
 }
 void ClientDownloadRequest::clear_has_skipped_url_whitelist() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 void ClientDownloadRequest::clear_skipped_url_whitelist() {
   skipped_url_whitelist_ = false;
@@ -12127,13 +14332,13 @@ void ClientDownloadRequest::set_skipped_url_whitelist(bool value) {
 
 // optional bool skipped_certificate_whitelist = 31;
 bool ClientDownloadRequest::has_skipped_certificate_whitelist() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 void ClientDownloadRequest::set_has_skipped_certificate_whitelist() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 void ClientDownloadRequest::clear_has_skipped_certificate_whitelist() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 void ClientDownloadRequest::clear_skipped_certificate_whitelist() {
   skipped_certificate_whitelist_ = false;
@@ -12218,34 +14423,1333 @@ ClientDownloadRequest::mutable_alternate_extensions() {
   return &alternate_extensions_;
 }
 
-// repeated .safe_browsing.ClientDownloadRequest.URLChainEntry url_chain = 36;
-int ClientDownloadRequest::url_chain_size() const {
-  return url_chain_.size();
+// repeated .safe_browsing.ReferrerChainEntry referrer_chain = 36;
+int ClientDownloadRequest::referrer_chain_size() const {
+  return referrer_chain_.size();
 }
-void ClientDownloadRequest::clear_url_chain() {
-  url_chain_.Clear();
+void ClientDownloadRequest::clear_referrer_chain() {
+  referrer_chain_.Clear();
 }
-const ::safe_browsing::ClientDownloadRequest_URLChainEntry& ClientDownloadRequest::url_chain(int index) const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Get(index);
+const ::safe_browsing::ReferrerChainEntry& ClientDownloadRequest::referrer_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Get(index);
 }
-::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::mutable_url_chain(int index) {
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Mutable(index);
+::safe_browsing::ReferrerChainEntry* ClientDownloadRequest::mutable_referrer_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Mutable(index);
 }
-::safe_browsing::ClientDownloadRequest_URLChainEntry* ClientDownloadRequest::add_url_chain() {
-  // @@protoc_insertion_point(field_add:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_.Add();
+::safe_browsing::ReferrerChainEntry* ClientDownloadRequest::add_referrer_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_.Add();
 }
-::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >*
-ClientDownloadRequest::mutable_url_chain() {
-  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.url_chain)
-  return &url_chain_;
+::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >*
+ClientDownloadRequest::mutable_referrer_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return &referrer_chain_;
 }
-const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ClientDownloadRequest_URLChainEntry >&
-ClientDownloadRequest::url_chain() const {
-  // @@protoc_insertion_point(field_list:safe_browsing.ClientDownloadRequest.url_chain)
-  return url_chain_;
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry >&
+ClientDownloadRequest::referrer_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ClientDownloadRequest.referrer_chain)
+  return referrer_chain_;
+}
+
+// optional bool DEPRECATED_download_attribution_finch_enabled = 39 [deprecated = true];
+bool ClientDownloadRequest::has_deprecated_download_attribution_finch_enabled() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+void ClientDownloadRequest::set_has_deprecated_download_attribution_finch_enabled() {
+  _has_bits_[0] |= 0x00000200u;
+}
+void ClientDownloadRequest::clear_has_deprecated_download_attribution_finch_enabled() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+void ClientDownloadRequest::clear_deprecated_download_attribution_finch_enabled() {
+  deprecated_download_attribution_finch_enabled_ = false;
+  clear_has_deprecated_download_attribution_finch_enabled();
+}
+bool ClientDownloadRequest::deprecated_download_attribution_finch_enabled() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.DEPRECATED_download_attribution_finch_enabled)
+  return deprecated_download_attribution_finch_enabled_;
+}
+void ClientDownloadRequest::set_deprecated_download_attribution_finch_enabled(bool value) {
+  set_has_deprecated_download_attribution_finch_enabled();
+  deprecated_download_attribution_finch_enabled_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.DEPRECATED_download_attribution_finch_enabled)
+}
+
+// optional bytes udif_code_signature = 40;
+bool ClientDownloadRequest::has_udif_code_signature() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void ClientDownloadRequest::set_has_udif_code_signature() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void ClientDownloadRequest::clear_has_udif_code_signature() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void ClientDownloadRequest::clear_udif_code_signature() {
+  udif_code_signature_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_udif_code_signature();
+}
+const ::std::string& ClientDownloadRequest::udif_code_signature() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  return udif_code_signature_.GetNoArena();
+}
+void ClientDownloadRequest::set_udif_code_signature(const ::std::string& value) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+#if LANG_CXX11
+void ClientDownloadRequest::set_udif_code_signature(::std::string&& value) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+#endif
+void ClientDownloadRequest::set_udif_code_signature(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+void ClientDownloadRequest::set_udif_code_signature(const void* value, size_t size) {
+  set_has_udif_code_signature();
+  udif_code_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+::std::string* ClientDownloadRequest::mutable_udif_code_signature() {
+  set_has_udif_code_signature();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  return udif_code_signature_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ClientDownloadRequest::release_udif_code_signature() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientDownloadRequest.udif_code_signature)
+  clear_has_udif_code_signature();
+  return udif_code_signature_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ClientDownloadRequest::set_allocated_udif_code_signature(::std::string* udif_code_signature) {
+  if (udif_code_signature != NULL) {
+    set_has_udif_code_signature();
+  } else {
+    clear_has_udif_code_signature();
+  }
+  udif_code_signature_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), udif_code_signature);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadRequest.udif_code_signature)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ReferrerChainEntry_ServerRedirect::kUrlFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ReferrerChainEntry_ServerRedirect::ReferrerChainEntry_ServerRedirect()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ReferrerChainEntry.ServerRedirect)
+}
+ReferrerChainEntry_ServerRedirect::ReferrerChainEntry_ServerRedirect(const ReferrerChainEntry_ServerRedirect& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_url()) {
+    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  }
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ReferrerChainEntry.ServerRedirect)
+}
+
+void ReferrerChainEntry_ServerRedirect::SharedCtor() {
+  _cached_size_ = 0;
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+ReferrerChainEntry_ServerRedirect::~ReferrerChainEntry_ServerRedirect() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  SharedDtor();
+}
+
+void ReferrerChainEntry_ServerRedirect::SharedDtor() {
+  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void ReferrerChainEntry_ServerRedirect::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ReferrerChainEntry_ServerRedirect& ReferrerChainEntry_ServerRedirect::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ReferrerChainEntry_ServerRedirect* ReferrerChainEntry_ServerRedirect::New(::google::protobuf::Arena* arena) const {
+  ReferrerChainEntry_ServerRedirect* n = new ReferrerChainEntry_ServerRedirect;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ReferrerChainEntry_ServerRedirect::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (has_url()) {
+    GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+    (*url_.UnsafeRawStringPointer())->clear();
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool ReferrerChainEntry_ServerRedirect::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string url = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  return false;
+#undef DO_
+}
+
+void ReferrerChainEntry_ServerRedirect::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string url = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->url(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ReferrerChainEntry.ServerRedirect)
+}
+
+size_t ReferrerChainEntry_ServerRedirect::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // optional string url = 1;
+  if (has_url()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->url());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ReferrerChainEntry_ServerRedirect::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ReferrerChainEntry_ServerRedirect*>(&from));
+}
+
+void ReferrerChainEntry_ServerRedirect::MergeFrom(const ReferrerChainEntry_ServerRedirect& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.has_url()) {
+    set_has_url();
+    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  }
+}
+
+void ReferrerChainEntry_ServerRedirect::CopyFrom(const ReferrerChainEntry_ServerRedirect& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ReferrerChainEntry.ServerRedirect)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ReferrerChainEntry_ServerRedirect::IsInitialized() const {
+  return true;
+}
+
+void ReferrerChainEntry_ServerRedirect::Swap(ReferrerChainEntry_ServerRedirect* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ReferrerChainEntry_ServerRedirect::InternalSwap(ReferrerChainEntry_ServerRedirect* other) {
+  using std::swap;
+  url_.Swap(&other->url_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ReferrerChainEntry_ServerRedirect::GetTypeName() const {
+  return "safe_browsing.ReferrerChainEntry.ServerRedirect";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ReferrerChainEntry_ServerRedirect
+
+// optional string url = 1;
+bool ReferrerChainEntry_ServerRedirect::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void ReferrerChainEntry_ServerRedirect::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void ReferrerChainEntry_ServerRedirect::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void ReferrerChainEntry_ServerRedirect::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+const ::std::string& ReferrerChainEntry_ServerRedirect::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  return url_.GetNoArena();
+}
+void ReferrerChainEntry_ServerRedirect::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+#if LANG_CXX11
+void ReferrerChainEntry_ServerRedirect::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+#endif
+void ReferrerChainEntry_ServerRedirect::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+void ReferrerChainEntry_ServerRedirect::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+::std::string* ReferrerChainEntry_ServerRedirect::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ReferrerChainEntry_ServerRedirect::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ReferrerChainEntry_ServerRedirect::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.ServerRedirect.url)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ReferrerChainEntry::kUrlFieldNumber;
+const int ReferrerChainEntry::kMainFrameUrlFieldNumber;
+const int ReferrerChainEntry::kTypeFieldNumber;
+const int ReferrerChainEntry::kIpAddressesFieldNumber;
+const int ReferrerChainEntry::kReferrerUrlFieldNumber;
+const int ReferrerChainEntry::kReferrerMainFrameUrlFieldNumber;
+const int ReferrerChainEntry::kIsRetargetingFieldNumber;
+const int ReferrerChainEntry::kNavigationTimeMsecFieldNumber;
+const int ReferrerChainEntry::kServerRedirectChainFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ReferrerChainEntry::ReferrerChainEntry()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ReferrerChainEntry)
+}
+ReferrerChainEntry::ReferrerChainEntry(const ReferrerChainEntry& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      ip_addresses_(from.ip_addresses_),
+      server_redirect_chain_(from.server_redirect_chain_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_url()) {
+    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  }
+  referrer_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_referrer_url()) {
+    referrer_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_url_);
+  }
+  referrer_main_frame_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_referrer_main_frame_url()) {
+    referrer_main_frame_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_main_frame_url_);
+  }
+  main_frame_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_main_frame_url()) {
+    main_frame_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.main_frame_url_);
+  }
+  ::memcpy(&navigation_time_msec_, &from.navigation_time_msec_,
+    static_cast<size_t>(reinterpret_cast<char*>(&type_) -
+    reinterpret_cast<char*>(&navigation_time_msec_)) + sizeof(type_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ReferrerChainEntry)
+}
+
+void ReferrerChainEntry::SharedCtor() {
+  _cached_size_ = 0;
+  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  referrer_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  referrer_main_frame_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  main_frame_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&navigation_time_msec_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&is_retargeting_) -
+      reinterpret_cast<char*>(&navigation_time_msec_)) + sizeof(is_retargeting_));
+  type_ = 4;
+}
+
+ReferrerChainEntry::~ReferrerChainEntry() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ReferrerChainEntry)
+  SharedDtor();
+}
+
+void ReferrerChainEntry::SharedDtor() {
+  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  referrer_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  referrer_main_frame_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  main_frame_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void ReferrerChainEntry::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ReferrerChainEntry& ReferrerChainEntry::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ReferrerChainEntry* ReferrerChainEntry::New(::google::protobuf::Arena* arena) const {
+  ReferrerChainEntry* n = new ReferrerChainEntry;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ReferrerChainEntry::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.ReferrerChainEntry)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ip_addresses_.Clear();
+  server_redirect_chain_.Clear();
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 15u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*url_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(!referrer_url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*referrer_url_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000004u) {
+      GOOGLE_DCHECK(!referrer_main_frame_url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*referrer_main_frame_url_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000008u) {
+      GOOGLE_DCHECK(!main_frame_url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*main_frame_url_.UnsafeRawStringPointer())->clear();
+    }
+  }
+  if (cached_has_bits & 112u) {
+    ::memset(&navigation_time_msec_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&is_retargeting_) -
+        reinterpret_cast<char*>(&navigation_time_msec_)) + sizeof(is_retargeting_));
+    type_ = 4;
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool ReferrerChainEntry::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ReferrerChainEntry)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string url = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::ReferrerChainEntry_URLType_IsValid(value)) {
+            set_type(static_cast< ::safe_browsing::ReferrerChainEntry_URLType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(16u);
+            unknown_fields_stream.WriteVarint32(
+                static_cast< ::google::protobuf::uint32>(value));
+          }
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated string ip_addresses = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_ip_addresses()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string referrer_url = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_referrer_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string referrer_main_frame_url = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_referrer_main_frame_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool is_retargeting = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
+          set_has_is_retargeting();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_retargeting_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional double navigation_time_msec = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(57u /* 57 & 0xFF */)) {
+          set_has_navigation_time_msec();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &navigation_time_msec_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_server_redirect_chain()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string main_frame_url = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_main_frame_url()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ReferrerChainEntry)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ReferrerChainEntry)
+  return false;
+#undef DO_
+}
+
+void ReferrerChainEntry::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ReferrerChainEntry)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string url = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->url(), output);
+  }
+
+  // optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+  if (cached_has_bits & 0x00000040u) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      2, this->type(), output);
+  }
+
+  // repeated string ip_addresses = 3;
+  for (int i = 0, n = this->ip_addresses_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      3, this->ip_addresses(i), output);
+  }
+
+  // optional string referrer_url = 4;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      4, this->referrer_url(), output);
+  }
+
+  // optional string referrer_main_frame_url = 5;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      5, this->referrer_main_frame_url(), output);
+  }
+
+  // optional bool is_retargeting = 6;
+  if (cached_has_bits & 0x00000020u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->is_retargeting(), output);
+  }
+
+  // optional double navigation_time_msec = 7;
+  if (cached_has_bits & 0x00000010u) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(7, this->navigation_time_msec(), output);
+  }
+
+  // repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->server_redirect_chain_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      8, this->server_redirect_chain(static_cast<int>(i)), output);
+  }
+
+  // optional string main_frame_url = 9;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      9, this->main_frame_url(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ReferrerChainEntry)
+}
+
+size_t ReferrerChainEntry::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ReferrerChainEntry)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // repeated string ip_addresses = 3;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->ip_addresses_size());
+  for (int i = 0, n = this->ip_addresses_size(); i < n; i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->ip_addresses(i));
+  }
+
+  // repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+  {
+    unsigned int count = static_cast<unsigned int>(this->server_redirect_chain_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->server_redirect_chain(static_cast<int>(i)));
+    }
+  }
+
+  if (_has_bits_[0 / 32] & 127u) {
+    // optional string url = 1;
+    if (has_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->url());
+    }
+
+    // optional string referrer_url = 4;
+    if (has_referrer_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->referrer_url());
+    }
+
+    // optional string referrer_main_frame_url = 5;
+    if (has_referrer_main_frame_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->referrer_main_frame_url());
+    }
+
+    // optional string main_frame_url = 9;
+    if (has_main_frame_url()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->main_frame_url());
+    }
+
+    // optional double navigation_time_msec = 7;
+    if (has_navigation_time_msec()) {
+      total_size += 1 + 8;
+    }
+
+    // optional bool is_retargeting = 6;
+    if (has_is_retargeting()) {
+      total_size += 1 + 1;
+    }
+
+    // optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+    if (has_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ReferrerChainEntry::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ReferrerChainEntry*>(&from));
+}
+
+void ReferrerChainEntry::MergeFrom(const ReferrerChainEntry& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ReferrerChainEntry)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  ip_addresses_.MergeFrom(from.ip_addresses_);
+  server_redirect_chain_.MergeFrom(from.server_redirect_chain_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 127u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_url();
+      url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      set_has_referrer_url();
+      referrer_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_url_);
+    }
+    if (cached_has_bits & 0x00000004u) {
+      set_has_referrer_main_frame_url();
+      referrer_main_frame_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.referrer_main_frame_url_);
+    }
+    if (cached_has_bits & 0x00000008u) {
+      set_has_main_frame_url();
+      main_frame_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.main_frame_url_);
+    }
+    if (cached_has_bits & 0x00000010u) {
+      navigation_time_msec_ = from.navigation_time_msec_;
+    }
+    if (cached_has_bits & 0x00000020u) {
+      is_retargeting_ = from.is_retargeting_;
+    }
+    if (cached_has_bits & 0x00000040u) {
+      type_ = from.type_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void ReferrerChainEntry::CopyFrom(const ReferrerChainEntry& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ReferrerChainEntry)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ReferrerChainEntry::IsInitialized() const {
+  return true;
+}
+
+void ReferrerChainEntry::Swap(ReferrerChainEntry* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ReferrerChainEntry::InternalSwap(ReferrerChainEntry* other) {
+  using std::swap;
+  ip_addresses_.InternalSwap(&other->ip_addresses_);
+  server_redirect_chain_.InternalSwap(&other->server_redirect_chain_);
+  url_.Swap(&other->url_);
+  referrer_url_.Swap(&other->referrer_url_);
+  referrer_main_frame_url_.Swap(&other->referrer_main_frame_url_);
+  main_frame_url_.Swap(&other->main_frame_url_);
+  swap(navigation_time_msec_, other->navigation_time_msec_);
+  swap(is_retargeting_, other->is_retargeting_);
+  swap(type_, other->type_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ReferrerChainEntry::GetTypeName() const {
+  return "safe_browsing.ReferrerChainEntry";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ReferrerChainEntry
+
+// optional string url = 1;
+bool ReferrerChainEntry::has_url() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void ReferrerChainEntry::set_has_url() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void ReferrerChainEntry::clear_has_url() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void ReferrerChainEntry::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_url();
+}
+const ::std::string& ReferrerChainEntry::url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.url)
+  return url_.GetNoArena();
+}
+void ReferrerChainEntry::set_url(const ::std::string& value) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.url)
+}
+#if LANG_CXX11
+void ReferrerChainEntry::set_url(::std::string&& value) {
+  set_has_url();
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.url)
+}
+#endif
+void ReferrerChainEntry::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.url)
+}
+void ReferrerChainEntry::set_url(const char* value, size_t size) {
+  set_has_url();
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.url)
+}
+::std::string* ReferrerChainEntry::mutable_url() {
+  set_has_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ReferrerChainEntry::release_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.url)
+  clear_has_url();
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ReferrerChainEntry::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    set_has_url();
+  } else {
+    clear_has_url();
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.url)
+}
+
+// optional string main_frame_url = 9;
+bool ReferrerChainEntry::has_main_frame_url() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void ReferrerChainEntry::set_has_main_frame_url() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void ReferrerChainEntry::clear_has_main_frame_url() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void ReferrerChainEntry::clear_main_frame_url() {
+  main_frame_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_main_frame_url();
+}
+const ::std::string& ReferrerChainEntry::main_frame_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.main_frame_url)
+  return main_frame_url_.GetNoArena();
+}
+void ReferrerChainEntry::set_main_frame_url(const ::std::string& value) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+#if LANG_CXX11
+void ReferrerChainEntry::set_main_frame_url(::std::string&& value) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+#endif
+void ReferrerChainEntry::set_main_frame_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+void ReferrerChainEntry::set_main_frame_url(const char* value, size_t size) {
+  set_has_main_frame_url();
+  main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+::std::string* ReferrerChainEntry::mutable_main_frame_url() {
+  set_has_main_frame_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.main_frame_url)
+  return main_frame_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ReferrerChainEntry::release_main_frame_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.main_frame_url)
+  clear_has_main_frame_url();
+  return main_frame_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ReferrerChainEntry::set_allocated_main_frame_url(::std::string* main_frame_url) {
+  if (main_frame_url != NULL) {
+    set_has_main_frame_url();
+  } else {
+    clear_has_main_frame_url();
+  }
+  main_frame_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), main_frame_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.main_frame_url)
+}
+
+// optional .safe_browsing.ReferrerChainEntry.URLType type = 2 [default = CLIENT_REDIRECT];
+bool ReferrerChainEntry::has_type() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+void ReferrerChainEntry::set_has_type() {
+  _has_bits_[0] |= 0x00000040u;
+}
+void ReferrerChainEntry::clear_has_type() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+void ReferrerChainEntry::clear_type() {
+  type_ = 4;
+  clear_has_type();
+}
+::safe_browsing::ReferrerChainEntry_URLType ReferrerChainEntry::type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.type)
+  return static_cast< ::safe_browsing::ReferrerChainEntry_URLType >(type_);
+}
+void ReferrerChainEntry::set_type(::safe_browsing::ReferrerChainEntry_URLType value) {
+  assert(::safe_browsing::ReferrerChainEntry_URLType_IsValid(value));
+  set_has_type();
+  type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.type)
+}
+
+// repeated string ip_addresses = 3;
+int ReferrerChainEntry::ip_addresses_size() const {
+  return ip_addresses_.size();
+}
+void ReferrerChainEntry::clear_ip_addresses() {
+  ip_addresses_.Clear();
+}
+const ::std::string& ReferrerChainEntry::ip_addresses(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Get(index);
+}
+::std::string* ReferrerChainEntry::mutable_ip_addresses(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Mutable(index);
+}
+void ReferrerChainEntry::set_ip_addresses(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ip_addresses)
+  ip_addresses_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+void ReferrerChainEntry::set_ip_addresses(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.ip_addresses)
+  ip_addresses_.Mutable(index)->assign(std::move(value));
+}
+#endif
+void ReferrerChainEntry::set_ip_addresses(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  ip_addresses_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+void ReferrerChainEntry::set_ip_addresses(int index, const char* value, size_t size) {
+  ip_addresses_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+::std::string* ReferrerChainEntry::add_ip_addresses() {
+  // @@protoc_insertion_point(field_add_mutable:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_.Add();
+}
+void ReferrerChainEntry::add_ip_addresses(const ::std::string& value) {
+  ip_addresses_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+#if LANG_CXX11
+void ReferrerChainEntry::add_ip_addresses(::std::string&& value) {
+  ip_addresses_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+#endif
+void ReferrerChainEntry::add_ip_addresses(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  ip_addresses_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+void ReferrerChainEntry::add_ip_addresses(const char* value, size_t size) {
+  ip_addresses_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:safe_browsing.ReferrerChainEntry.ip_addresses)
+}
+const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ReferrerChainEntry::ip_addresses() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return ip_addresses_;
+}
+::google::protobuf::RepeatedPtrField< ::std::string>*
+ReferrerChainEntry::mutable_ip_addresses() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ReferrerChainEntry.ip_addresses)
+  return &ip_addresses_;
+}
+
+// optional string referrer_url = 4;
+bool ReferrerChainEntry::has_referrer_url() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void ReferrerChainEntry::set_has_referrer_url() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void ReferrerChainEntry::clear_has_referrer_url() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void ReferrerChainEntry::clear_referrer_url() {
+  referrer_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_referrer_url();
+}
+const ::std::string& ReferrerChainEntry::referrer_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.referrer_url)
+  return referrer_url_.GetNoArena();
+}
+void ReferrerChainEntry::set_referrer_url(const ::std::string& value) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+#if LANG_CXX11
+void ReferrerChainEntry::set_referrer_url(::std::string&& value) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+#endif
+void ReferrerChainEntry::set_referrer_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+void ReferrerChainEntry::set_referrer_url(const char* value, size_t size) {
+  set_has_referrer_url();
+  referrer_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+::std::string* ReferrerChainEntry::mutable_referrer_url() {
+  set_has_referrer_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.referrer_url)
+  return referrer_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ReferrerChainEntry::release_referrer_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.referrer_url)
+  clear_has_referrer_url();
+  return referrer_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ReferrerChainEntry::set_allocated_referrer_url(::std::string* referrer_url) {
+  if (referrer_url != NULL) {
+    set_has_referrer_url();
+  } else {
+    clear_has_referrer_url();
+  }
+  referrer_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.referrer_url)
+}
+
+// optional string referrer_main_frame_url = 5;
+bool ReferrerChainEntry::has_referrer_main_frame_url() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void ReferrerChainEntry::set_has_referrer_main_frame_url() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void ReferrerChainEntry::clear_has_referrer_main_frame_url() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void ReferrerChainEntry::clear_referrer_main_frame_url() {
+  referrer_main_frame_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_referrer_main_frame_url();
+}
+const ::std::string& ReferrerChainEntry::referrer_main_frame_url() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  return referrer_main_frame_url_.GetNoArena();
+}
+void ReferrerChainEntry::set_referrer_main_frame_url(const ::std::string& value) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+#if LANG_CXX11
+void ReferrerChainEntry::set_referrer_main_frame_url(::std::string&& value) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+#endif
+void ReferrerChainEntry::set_referrer_main_frame_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+void ReferrerChainEntry::set_referrer_main_frame_url(const char* value, size_t size) {
+  set_has_referrer_main_frame_url();
+  referrer_main_frame_url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+::std::string* ReferrerChainEntry::mutable_referrer_main_frame_url() {
+  set_has_referrer_main_frame_url();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  return referrer_main_frame_url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ReferrerChainEntry::release_referrer_main_frame_url() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+  clear_has_referrer_main_frame_url();
+  return referrer_main_frame_url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ReferrerChainEntry::set_allocated_referrer_main_frame_url(::std::string* referrer_main_frame_url) {
+  if (referrer_main_frame_url != NULL) {
+    set_has_referrer_main_frame_url();
+  } else {
+    clear_has_referrer_main_frame_url();
+  }
+  referrer_main_frame_url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), referrer_main_frame_url);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ReferrerChainEntry.referrer_main_frame_url)
+}
+
+// optional bool is_retargeting = 6;
+bool ReferrerChainEntry::has_is_retargeting() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+void ReferrerChainEntry::set_has_is_retargeting() {
+  _has_bits_[0] |= 0x00000020u;
+}
+void ReferrerChainEntry::clear_has_is_retargeting() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+void ReferrerChainEntry::clear_is_retargeting() {
+  is_retargeting_ = false;
+  clear_has_is_retargeting();
+}
+bool ReferrerChainEntry::is_retargeting() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.is_retargeting)
+  return is_retargeting_;
+}
+void ReferrerChainEntry::set_is_retargeting(bool value) {
+  set_has_is_retargeting();
+  is_retargeting_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.is_retargeting)
+}
+
+// optional double navigation_time_msec = 7;
+bool ReferrerChainEntry::has_navigation_time_msec() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+void ReferrerChainEntry::set_has_navigation_time_msec() {
+  _has_bits_[0] |= 0x00000010u;
+}
+void ReferrerChainEntry::clear_has_navigation_time_msec() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+void ReferrerChainEntry::clear_navigation_time_msec() {
+  navigation_time_msec_ = 0;
+  clear_has_navigation_time_msec();
+}
+double ReferrerChainEntry::navigation_time_msec() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.navigation_time_msec)
+  return navigation_time_msec_;
+}
+void ReferrerChainEntry::set_navigation_time_msec(double value) {
+  set_has_navigation_time_msec();
+  navigation_time_msec_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ReferrerChainEntry.navigation_time_msec)
+}
+
+// repeated .safe_browsing.ReferrerChainEntry.ServerRedirect server_redirect_chain = 8;
+int ReferrerChainEntry::server_redirect_chain_size() const {
+  return server_redirect_chain_.size();
+}
+void ReferrerChainEntry::clear_server_redirect_chain() {
+  server_redirect_chain_.Clear();
+}
+const ::safe_browsing::ReferrerChainEntry_ServerRedirect& ReferrerChainEntry::server_redirect_chain(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Get(index);
+}
+::safe_browsing::ReferrerChainEntry_ServerRedirect* ReferrerChainEntry::mutable_server_redirect_chain(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Mutable(index);
+}
+::safe_browsing::ReferrerChainEntry_ServerRedirect* ReferrerChainEntry::add_server_redirect_chain() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >*
+ReferrerChainEntry::mutable_server_redirect_chain() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return &server_redirect_chain_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::ReferrerChainEntry_ServerRedirect >&
+ReferrerChainEntry::server_redirect_chain() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ReferrerChainEntry.server_redirect_chain)
+  return server_redirect_chain_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -12640,6 +16144,7 @@ void ClientDownloadResponse_MoreInfo::set_allocated_url(::std::string* url) {
 const int ClientDownloadResponse::kVerdictFieldNumber;
 const int ClientDownloadResponse::kMoreInfoFieldNumber;
 const int ClientDownloadResponse::kTokenFieldNumber;
+const int ClientDownloadResponse::kUploadFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadResponse::ClientDownloadResponse()
@@ -12665,7 +16170,9 @@ ClientDownloadResponse::ClientDownloadResponse(const ClientDownloadResponse& fro
   } else {
     more_info_ = NULL;
   }
-  verdict_ = from.verdict_;
+  ::memcpy(&verdict_, &from.verdict_,
+    static_cast<size_t>(reinterpret_cast<char*>(&upload_) -
+    reinterpret_cast<char*>(&verdict_)) + sizeof(upload_));
   // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientDownloadResponse)
 }
 
@@ -12673,8 +16180,8 @@ void ClientDownloadResponse::SharedCtor() {
   _cached_size_ = 0;
   token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&more_info_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&verdict_) -
-      reinterpret_cast<char*>(&more_info_)) + sizeof(verdict_));
+      reinterpret_cast<char*>(&upload_) -
+      reinterpret_cast<char*>(&more_info_)) + sizeof(upload_));
 }
 
 ClientDownloadResponse::~ClientDownloadResponse() {
@@ -12722,7 +16229,11 @@ void ClientDownloadResponse::Clear() {
       more_info_->::safe_browsing::ClientDownloadResponse_MoreInfo::Clear();
     }
   }
-  verdict_ = 0;
+  if (cached_has_bits & 12u) {
+    ::memset(&verdict_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&upload_) -
+        reinterpret_cast<char*>(&verdict_)) + sizeof(upload_));
+  }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
 }
@@ -12788,6 +16299,20 @@ bool ClientDownloadResponse::MergePartialFromCodedStream(
         break;
       }
 
+      // optional bool upload = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+          set_has_upload();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &upload_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -12833,6 +16358,11 @@ void ClientDownloadResponse::SerializeWithCachedSizes(
       3, this->token(), output);
   }
 
+  // optional bool upload = 5;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->upload(), output);
+  }
+
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
                    static_cast<int>(_internal_metadata_.unknown_fields().size()));
   // @@protoc_insertion_point(serialize_end:safe_browsing.ClientDownloadResponse)
@@ -12844,7 +16374,7 @@ size_t ClientDownloadResponse::ByteSizeLong() const {
 
   total_size += _internal_metadata_.unknown_fields().size();
 
-  if (_has_bits_[0 / 32] & 7u) {
+  if (_has_bits_[0 / 32] & 15u) {
     // optional bytes token = 3;
     if (has_token()) {
       total_size += 1 +
@@ -12863,6 +16393,11 @@ size_t ClientDownloadResponse::ByteSizeLong() const {
     if (has_verdict()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->verdict());
+    }
+
+    // optional bool upload = 5;
+    if (has_upload()) {
+      total_size += 1 + 1;
     }
 
   }
@@ -12886,7 +16421,7 @@ void ClientDownloadResponse::MergeFrom(const ClientDownloadResponse& from) {
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 7u) {
+  if (cached_has_bits & 15u) {
     if (cached_has_bits & 0x00000001u) {
       set_has_token();
       token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.token_);
@@ -12896,6 +16431,9 @@ void ClientDownloadResponse::MergeFrom(const ClientDownloadResponse& from) {
     }
     if (cached_has_bits & 0x00000004u) {
       verdict_ = from.verdict_;
+    }
+    if (cached_has_bits & 0x00000008u) {
+      upload_ = from.upload_;
     }
     _has_bits_[0] |= cached_has_bits;
   }
@@ -12921,6 +16459,7 @@ void ClientDownloadResponse::InternalSwap(ClientDownloadResponse* other) {
   token_.Swap(&other->token_);
   swap(more_info_, other->more_info_);
   swap(verdict_, other->verdict_);
+  swap(upload_, other->upload_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
@@ -13065,6 +16604,30 @@ void ClientDownloadResponse::set_allocated_token(::std::string* token) {
   }
   token_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), token);
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientDownloadResponse.token)
+}
+
+// optional bool upload = 5;
+bool ClientDownloadResponse::has_upload() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void ClientDownloadResponse::set_has_upload() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void ClientDownloadResponse::clear_has_upload() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void ClientDownloadResponse::clear_upload() {
+  upload_ = false;
+  clear_has_upload();
+}
+bool ClientDownloadResponse::upload() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientDownloadResponse.upload)
+  return upload_;
+}
+void ClientDownloadResponse::set_upload(bool value) {
+  set_has_upload();
+  upload_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientDownloadResponse.upload)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -15895,985 +19458,6 @@ ClientIncidentReport_IncidentData_BinaryIntegrityIncident::contained_file() cons
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kPathFieldNumber;
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kDigestFieldNumber;
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kVersionFieldNumber;
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kBlacklistInitializedFieldNumber;
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kSignatureFieldNumber;
-const int ClientIncidentReport_IncidentData_BlacklistLoadIncident::kImageHeadersFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-ClientIncidentReport_IncidentData_BlacklistLoadIncident::ClientIncidentReport_IncidentData_BlacklistLoadIncident()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    protobuf_csd_2eproto::InitDefaults();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-}
-ClientIncidentReport_IncidentData_BlacklistLoadIncident::ClientIncidentReport_IncidentData_BlacklistLoadIncident(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from)
-  : ::google::protobuf::MessageLite(),
-      _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_path()) {
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
-  }
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_version()) {
-    version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-  }
-  if (from.has_digest()) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests(*from.digest_);
-  } else {
-    digest_ = NULL;
-  }
-  if (from.has_signature()) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo(*from.signature_);
-  } else {
-    signature_ = NULL;
-  }
-  if (from.has_image_headers()) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders(*from.image_headers_);
-  } else {
-    image_headers_ = NULL;
-  }
-  blacklist_initialized_ = from.blacklist_initialized_;
-  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::SharedCtor() {
-  _cached_size_ = 0;
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&digest_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&blacklist_initialized_) -
-      reinterpret_cast<char*>(&digest_)) + sizeof(blacklist_initialized_));
-}
-
-ClientIncidentReport_IncidentData_BlacklistLoadIncident::~ClientIncidentReport_IncidentData_BlacklistLoadIncident() {
-  // @@protoc_insertion_point(destructor:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  SharedDtor();
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::SharedDtor() {
-  path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete digest_;
-  if (this != internal_default_instance()) delete signature_;
-  if (this != internal_default_instance()) delete image_headers_;
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientIncidentReport_IncidentData_BlacklistLoadIncident& ClientIncidentReport_IncidentData_BlacklistLoadIncident::default_instance() {
-  protobuf_csd_2eproto::InitDefaults();
-  return *internal_default_instance();
-}
-
-ClientIncidentReport_IncidentData_BlacklistLoadIncident* ClientIncidentReport_IncidentData_BlacklistLoadIncident::New(::google::protobuf::Arena* arena) const {
-  ClientIncidentReport_IncidentData_BlacklistLoadIncident* n = new ClientIncidentReport_IncidentData_BlacklistLoadIncident;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::Clear() {
-// @@protoc_insertion_point(message_clear_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 31u) {
-    if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(!path_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*path_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(!version_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*version_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(digest_ != NULL);
-      digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-    }
-    if (cached_has_bits & 0x00000008u) {
-      GOOGLE_DCHECK(signature_ != NULL);
-      signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-    }
-    if (cached_has_bits & 0x00000010u) {
-      GOOGLE_DCHECK(image_headers_ != NULL);
-      image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-    }
-  }
-  blacklist_initialized_ = false;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
-}
-
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
-      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
-          &::google::protobuf::internal::InternalMetadataWithArenaLite::
-              mutable_unknown_fields));
-  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
-      &unknown_fields_string, false);
-  // @@protoc_insertion_point(parse_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string path = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_path()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_digest()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional string version = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_version()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional bool blacklist_initialized = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-          set_has_blacklist_initialized();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &blacklist_initialized_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_signature()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_image_headers()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
-            input, tag, &unknown_fields_stream));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  return false;
-#undef DO_
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional string path = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->path(), output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, *this->digest_, output);
-  }
-
-  // optional string version = 3;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->version(), output);
-  }
-
-  // optional bool blacklist_initialized = 4;
-  if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->blacklist_initialized(), output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      5, *this->signature_, output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      6, *this->image_headers_, output);
-  }
-
-  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
-                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
-  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-}
-
-size_t ClientIncidentReport_IncidentData_BlacklistLoadIncident::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  size_t total_size = 0;
-
-  total_size += _internal_metadata_.unknown_fields().size();
-
-  if (_has_bits_[0 / 32] & 63u) {
-    // optional string path = 1;
-    if (has_path()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->path());
-    }
-
-    // optional string version = 3;
-    if (has_version()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->version());
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-    if (has_digest()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->digest_);
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-    if (has_signature()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->signature_);
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-    if (has_image_headers()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->image_headers_);
-    }
-
-    // optional bool blacklist_initialized = 4;
-    if (has_blacklist_initialized()) {
-      total_size += 1 + 1;
-    }
-
-  }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientIncidentReport_IncidentData_BlacklistLoadIncident*>(&from));
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::MergeFrom(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 63u) {
-    if (cached_has_bits & 0x00000001u) {
-      set_has_path();
-      path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
-    }
-    if (cached_has_bits & 0x00000002u) {
-      set_has_version();
-      version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-    }
-    if (cached_has_bits & 0x00000004u) {
-      mutable_digest()->::safe_browsing::ClientDownloadRequest_Digests::MergeFrom(from.digest());
-    }
-    if (cached_has_bits & 0x00000008u) {
-      mutable_signature()->::safe_browsing::ClientDownloadRequest_SignatureInfo::MergeFrom(from.signature());
-    }
-    if (cached_has_bits & 0x00000010u) {
-      mutable_image_headers()->::safe_browsing::ClientDownloadRequest_ImageHeaders::MergeFrom(from.image_headers());
-    }
-    if (cached_has_bits & 0x00000020u) {
-      blacklist_initialized_ = from.blacklist_initialized_;
-    }
-    _has_bits_[0] |= cached_has_bits;
-  }
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::CopyFrom(const ClientIncidentReport_IncidentData_BlacklistLoadIncident& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::IsInitialized() const {
-  if (has_signature()) {
-    if (!this->signature_->IsInitialized()) return false;
-  }
-  if (has_image_headers()) {
-    if (!this->image_headers_->IsInitialized()) return false;
-  }
-  return true;
-}
-
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::Swap(ClientIncidentReport_IncidentData_BlacklistLoadIncident* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::InternalSwap(ClientIncidentReport_IncidentData_BlacklistLoadIncident* other) {
-  using std::swap;
-  path_.Swap(&other->path_);
-  version_.Swap(&other->version_);
-  swap(digest_, other->digest_);
-  swap(signature_, other->signature_);
-  swap(image_headers_, other->image_headers_);
-  swap(blacklist_initialized_, other->blacklist_initialized_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::std::string ClientIncidentReport_IncidentData_BlacklistLoadIncident::GetTypeName() const {
-  return "safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident";
-}
-
-#if PROTOBUF_INLINE_NOT_IN_HEADERS
-// ClientIncidentReport_IncidentData_BlacklistLoadIncident
-
-// optional string path = 1;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_path() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_path() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_path() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_path() {
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_path();
-}
-const ::std::string& ClientIncidentReport_IncidentData_BlacklistLoadIncident::path() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  return path_.GetNoArena();
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const ::std::string& value) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-#if LANG_CXX11
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(::std::string&& value) {
-  set_has_path();
-  path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-#endif
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_path(const char* value, size_t size) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_path() {
-  set_has_path();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  return path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_path() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-  clear_has_path();
-  return path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_path(::std::string* path) {
-  if (path != NULL) {
-    set_has_path();
-  } else {
-    clear_has_path();
-  }
-  path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), path);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.path)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_digest() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_digest() {
-  _has_bits_[0] |= 0x00000004u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_digest() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_digest() {
-  if (digest_ != NULL) digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-  clear_has_digest();
-}
-const ::safe_browsing::ClientDownloadRequest_Digests& ClientIncidentReport_IncidentData_BlacklistLoadIncident::digest() const {
-  const ::safe_browsing::ClientDownloadRequest_Digests* p = digest_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_Digests*>(
-      &::safe_browsing::_ClientDownloadRequest_Digests_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_digest() {
-  set_has_digest();
-  if (digest_ == NULL) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  return digest_;
-}
-::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_digest() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-  clear_has_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* temp = digest_;
-  digest_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest) {
-  delete digest_;
-  digest_ = digest;
-  if (digest) {
-    set_has_digest();
-  } else {
-    clear_has_digest();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.digest)
-}
-
-// optional string version = 3;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_version() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_version() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_version() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_version() {
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_version();
-}
-const ::std::string& ClientIncidentReport_IncidentData_BlacklistLoadIncident::version() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  return version_.GetNoArena();
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const ::std::string& value) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-#if LANG_CXX11
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(::std::string&& value) {
-  set_has_version();
-  version_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-#endif
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_version(const char* value, size_t size) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_version() {
-  set_has_version();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  return version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_version() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-  clear_has_version();
-  return version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_version(::std::string* version) {
-  if (version != NULL) {
-    set_has_version();
-  } else {
-    clear_has_version();
-  }
-  version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), version);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.version)
-}
-
-// optional bool blacklist_initialized = 4;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_blacklist_initialized() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_blacklist_initialized() {
-  _has_bits_[0] |= 0x00000020u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_blacklist_initialized() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_blacklist_initialized() {
-  blacklist_initialized_ = false;
-  clear_has_blacklist_initialized();
-}
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::blacklist_initialized() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.blacklist_initialized)
-  return blacklist_initialized_;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_blacklist_initialized(bool value) {
-  set_has_blacklist_initialized();
-  blacklist_initialized_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.blacklist_initialized)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 5;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_signature() {
-  if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-  clear_has_signature();
-}
-const ::safe_browsing::ClientDownloadRequest_SignatureInfo& ClientIncidentReport_IncidentData_BlacklistLoadIncident::signature() const {
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo* p = signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      &::safe_browsing::_ClientDownloadRequest_SignatureInfo_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_signature() {
-  set_has_signature();
-  if (signature_ == NULL) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  return signature_;
-}
-::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-  clear_has_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* temp = signature_;
-  signature_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature) {
-  delete signature_;
-  signature_ = signature;
-  if (signature) {
-    set_has_signature();
-  } else {
-    clear_has_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.signature)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 6;
-bool ClientIncidentReport_IncidentData_BlacklistLoadIncident::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000010u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::clear_image_headers() {
-  if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-  clear_has_image_headers();
-}
-const ::safe_browsing::ClientDownloadRequest_ImageHeaders& ClientIncidentReport_IncidentData_BlacklistLoadIncident::image_headers() const {
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders* p = image_headers_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      &::safe_browsing::_ClientDownloadRequest_ImageHeaders_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_BlacklistLoadIncident::mutable_image_headers() {
-  set_has_image_headers();
-  if (image_headers_ == NULL) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  return image_headers_;
-}
-::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_BlacklistLoadIncident::release_image_headers() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-  clear_has_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* temp = image_headers_;
-  image_headers_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_BlacklistLoadIncident::set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers) {
-  delete image_headers_;
-  image_headers_ = image_headers;
-  if (image_headers) {
-    set_has_image_headers();
-  } else {
-    clear_has_image_headers();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident.image_headers)
-}
-
-#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
-
-// ===================================================================
-
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::kVariationsSeedSignatureFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    protobuf_csd_2eproto::InitDefaults();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-}
-ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from)
-  : ::google::protobuf::MessageLite(),
-      _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  variations_seed_signature_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_variations_seed_signature()) {
-    variations_seed_signature_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.variations_seed_signature_);
-  }
-  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::SharedCtor() {
-  _cached_size_ = 0;
-  variations_seed_signature_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-
-ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::~ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident() {
-  // @@protoc_insertion_point(destructor:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  SharedDtor();
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::SharedDtor() {
-  variations_seed_signature_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::default_instance() {
-  protobuf_csd_2eproto::InitDefaults();
-  return *internal_default_instance();
-}
-
-ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::New(::google::protobuf::Arena* arena) const {
-  ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* n = new ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::Clear() {
-// @@protoc_insertion_point(message_clear_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  if (has_variations_seed_signature()) {
-    GOOGLE_DCHECK(!variations_seed_signature_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-    (*variations_seed_signature_.UnsafeRawStringPointer())->clear();
-  }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
-}
-
-bool ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
-      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
-          &::google::protobuf::internal::InternalMetadataWithArenaLite::
-              mutable_unknown_fields));
-  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
-      &unknown_fields_string, false);
-  // @@protoc_insertion_point(parse_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string variations_seed_signature = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_variations_seed_signature()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
-            input, tag, &unknown_fields_stream));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  return false;
-#undef DO_
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional string variations_seed_signature = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->variations_seed_signature(), output);
-  }
-
-  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
-                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
-  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-}
-
-size_t ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  size_t total_size = 0;
-
-  total_size += _internal_metadata_.unknown_fields().size();
-
-  // optional string variations_seed_signature = 1;
-  if (has_variations_seed_signature()) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->variations_seed_signature());
-  }
-
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident*>(&from));
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::MergeFrom(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.has_variations_seed_signature()) {
-    set_has_variations_seed_signature();
-    variations_seed_signature_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.variations_seed_signature_);
-  }
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::CopyFrom(const ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::IsInitialized() const {
-  return true;
-}
-
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::Swap(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::InternalSwap(ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* other) {
-  using std::swap;
-  variations_seed_signature_.Swap(&other->variations_seed_signature_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::std::string ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::GetTypeName() const {
-  return "safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident";
-}
-
-#if PROTOBUF_INLINE_NOT_IN_HEADERS
-// ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident
-
-// optional string variations_seed_signature = 1;
-bool ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::has_variations_seed_signature() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_has_variations_seed_signature() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::clear_has_variations_seed_signature() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::clear_variations_seed_signature() {
-  variations_seed_signature_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_variations_seed_signature();
-}
-const ::std::string& ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::variations_seed_signature() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  return variations_seed_signature_.GetNoArena();
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const ::std::string& value) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-#if LANG_CXX11
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(::std::string&& value) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-#endif
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_variations_seed_signature(const char* value, size_t size) {
-  set_has_variations_seed_signature();
-  variations_seed_signature_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-::std::string* ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::mutable_variations_seed_signature() {
-  set_has_variations_seed_signature();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  return variations_seed_signature_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::release_variations_seed_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-  clear_has_variations_seed_signature();
-  return variations_seed_signature_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::set_allocated_variations_seed_signature(::std::string* variations_seed_signature) {
-  if (variations_seed_signature != NULL) {
-    set_has_variations_seed_signature();
-  } else {
-    clear_has_variations_seed_signature();
-  }
-  variations_seed_signature_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), variations_seed_signature);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident.variations_seed_signature)
-}
-
-#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
-
-// ===================================================================
-
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ClientIncidentReport_IncidentData_ResourceRequestIncident::kDigestFieldNumber;
 const int ClientIncidentReport_IncidentData_ResourceRequestIncident::kOriginFieldNumber;
 const int ClientIncidentReport_IncidentData_ResourceRequestIncident::kTypeFieldNumber;
@@ -17325,664 +19909,10 @@ void ClientIncidentReport_IncidentData_ResourceRequestIncident::set_type(::safe_
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ClientIncidentReport_IncidentData_SuspiciousModuleIncident::kPathFieldNumber;
-const int ClientIncidentReport_IncidentData_SuspiciousModuleIncident::kDigestFieldNumber;
-const int ClientIncidentReport_IncidentData_SuspiciousModuleIncident::kVersionFieldNumber;
-const int ClientIncidentReport_IncidentData_SuspiciousModuleIncident::kSignatureFieldNumber;
-const int ClientIncidentReport_IncidentData_SuspiciousModuleIncident::kImageHeadersFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-ClientIncidentReport_IncidentData_SuspiciousModuleIncident::ClientIncidentReport_IncidentData_SuspiciousModuleIncident()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    protobuf_csd_2eproto::InitDefaults();
-  }
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-}
-ClientIncidentReport_IncidentData_SuspiciousModuleIncident::ClientIncidentReport_IncidentData_SuspiciousModuleIncident(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from)
-  : ::google::protobuf::MessageLite(),
-      _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_path()) {
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
-  }
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_version()) {
-    version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-  }
-  if (from.has_digest()) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests(*from.digest_);
-  } else {
-    digest_ = NULL;
-  }
-  if (from.has_signature()) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo(*from.signature_);
-  } else {
-    signature_ = NULL;
-  }
-  if (from.has_image_headers()) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders(*from.image_headers_);
-  } else {
-    image_headers_ = NULL;
-  }
-  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::SharedCtor() {
-  _cached_size_ = 0;
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&digest_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&image_headers_) -
-      reinterpret_cast<char*>(&digest_)) + sizeof(image_headers_));
-}
-
-ClientIncidentReport_IncidentData_SuspiciousModuleIncident::~ClientIncidentReport_IncidentData_SuspiciousModuleIncident() {
-  // @@protoc_insertion_point(destructor:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  SharedDtor();
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::SharedDtor() {
-  path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete digest_;
-  if (this != internal_default_instance()) delete signature_;
-  if (this != internal_default_instance()) delete image_headers_;
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::default_instance() {
-  protobuf_csd_2eproto::InitDefaults();
-  return *internal_default_instance();
-}
-
-ClientIncidentReport_IncidentData_SuspiciousModuleIncident* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::New(::google::protobuf::Arena* arena) const {
-  ClientIncidentReport_IncidentData_SuspiciousModuleIncident* n = new ClientIncidentReport_IncidentData_SuspiciousModuleIncident;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::Clear() {
-// @@protoc_insertion_point(message_clear_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 31u) {
-    if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(!path_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*path_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(!version_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*version_.UnsafeRawStringPointer())->clear();
-    }
-    if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(digest_ != NULL);
-      digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-    }
-    if (cached_has_bits & 0x00000008u) {
-      GOOGLE_DCHECK(signature_ != NULL);
-      signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-    }
-    if (cached_has_bits & 0x00000010u) {
-      GOOGLE_DCHECK(image_headers_ != NULL);
-      image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-    }
-  }
-  _has_bits_.Clear();
-  _internal_metadata_.Clear();
-}
-
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
-      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
-          &::google::protobuf::internal::InternalMetadataWithArenaLite::
-              mutable_unknown_fields));
-  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
-      &unknown_fields_string, false);
-  // @@protoc_insertion_point(parse_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional string path = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_path()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_digest()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional string version = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_version()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_signature()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_image_headers()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
-            input, tag, &unknown_fields_stream));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  return false;
-#undef DO_
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional string path = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->path(), output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, *this->digest_, output);
-  }
-
-  // optional string version = 3;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->version(), output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      4, *this->signature_, output);
-  }
-
-  // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      5, *this->image_headers_, output);
-  }
-
-  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
-                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
-  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-}
-
-size_t ClientIncidentReport_IncidentData_SuspiciousModuleIncident::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  size_t total_size = 0;
-
-  total_size += _internal_metadata_.unknown_fields().size();
-
-  if (_has_bits_[0 / 32] & 31u) {
-    // optional string path = 1;
-    if (has_path()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->path());
-    }
-
-    // optional string version = 3;
-    if (has_version()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->version());
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-    if (has_digest()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->digest_);
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-    if (has_signature()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->signature_);
-    }
-
-    // optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-    if (has_image_headers()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->image_headers_);
-    }
-
-  }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::CheckTypeAndMergeFrom(
-    const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClientIncidentReport_IncidentData_SuspiciousModuleIncident*>(&from));
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::MergeFrom(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 31u) {
-    if (cached_has_bits & 0x00000001u) {
-      set_has_path();
-      path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
-    }
-    if (cached_has_bits & 0x00000002u) {
-      set_has_version();
-      version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-    }
-    if (cached_has_bits & 0x00000004u) {
-      mutable_digest()->::safe_browsing::ClientDownloadRequest_Digests::MergeFrom(from.digest());
-    }
-    if (cached_has_bits & 0x00000008u) {
-      mutable_signature()->::safe_browsing::ClientDownloadRequest_SignatureInfo::MergeFrom(from.signature());
-    }
-    if (cached_has_bits & 0x00000010u) {
-      mutable_image_headers()->::safe_browsing::ClientDownloadRequest_ImageHeaders::MergeFrom(from.image_headers());
-    }
-  }
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::CopyFrom(const ClientIncidentReport_IncidentData_SuspiciousModuleIncident& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::IsInitialized() const {
-  if (has_signature()) {
-    if (!this->signature_->IsInitialized()) return false;
-  }
-  if (has_image_headers()) {
-    if (!this->image_headers_->IsInitialized()) return false;
-  }
-  return true;
-}
-
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::Swap(ClientIncidentReport_IncidentData_SuspiciousModuleIncident* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::InternalSwap(ClientIncidentReport_IncidentData_SuspiciousModuleIncident* other) {
-  using std::swap;
-  path_.Swap(&other->path_);
-  version_.Swap(&other->version_);
-  swap(digest_, other->digest_);
-  swap(signature_, other->signature_);
-  swap(image_headers_, other->image_headers_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
-}
-
-::std::string ClientIncidentReport_IncidentData_SuspiciousModuleIncident::GetTypeName() const {
-  return "safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident";
-}
-
-#if PROTOBUF_INLINE_NOT_IN_HEADERS
-// ClientIncidentReport_IncidentData_SuspiciousModuleIncident
-
-// optional string path = 1;
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_path() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_path() {
-  _has_bits_[0] |= 0x00000001u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_path() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_path() {
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_path();
-}
-const ::std::string& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::path() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  return path_.GetNoArena();
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const ::std::string& value) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-#if LANG_CXX11
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(::std::string&& value) {
-  set_has_path();
-  path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-#endif
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_path(const char* value, size_t size) {
-  set_has_path();
-  path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_path() {
-  set_has_path();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  return path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_path() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-  clear_has_path();
-  return path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_path(::std::string* path) {
-  if (path != NULL) {
-    set_has_path();
-  } else {
-    clear_has_path();
-  }
-  path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), path);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.path)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.Digests digest = 2;
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_digest() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_digest() {
-  _has_bits_[0] |= 0x00000004u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_digest() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_digest() {
-  if (digest_ != NULL) digest_->::safe_browsing::ClientDownloadRequest_Digests::Clear();
-  clear_has_digest();
-}
-const ::safe_browsing::ClientDownloadRequest_Digests& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::digest() const {
-  const ::safe_browsing::ClientDownloadRequest_Digests* p = digest_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_Digests*>(
-      &::safe_browsing::_ClientDownloadRequest_Digests_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_digest() {
-  set_has_digest();
-  if (digest_ == NULL) {
-    digest_ = new ::safe_browsing::ClientDownloadRequest_Digests;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  return digest_;
-}
-::safe_browsing::ClientDownloadRequest_Digests* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_digest() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-  clear_has_digest();
-  ::safe_browsing::ClientDownloadRequest_Digests* temp = digest_;
-  digest_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_digest(::safe_browsing::ClientDownloadRequest_Digests* digest) {
-  delete digest_;
-  digest_ = digest;
-  if (digest) {
-    set_has_digest();
-  } else {
-    clear_has_digest();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.digest)
-}
-
-// optional string version = 3;
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_version() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_version() {
-  _has_bits_[0] |= 0x00000002u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_version() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_version() {
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_version();
-}
-const ::std::string& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::version() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  return version_.GetNoArena();
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const ::std::string& value) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-#if LANG_CXX11
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(::std::string&& value) {
-  set_has_version();
-  version_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-#endif
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_version(const char* value, size_t size) {
-  set_has_version();
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_version() {
-  set_has_version();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  return version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_version() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-  clear_has_version();
-  return version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_version(::std::string* version) {
-  if (version != NULL) {
-    set_has_version();
-  } else {
-    clear_has_version();
-  }
-  version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), version);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.version)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.SignatureInfo signature = 4;
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_signature() {
-  if (signature_ != NULL) signature_->::safe_browsing::ClientDownloadRequest_SignatureInfo::Clear();
-  clear_has_signature();
-}
-const ::safe_browsing::ClientDownloadRequest_SignatureInfo& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::signature() const {
-  const ::safe_browsing::ClientDownloadRequest_SignatureInfo* p = signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_SignatureInfo*>(
-      &::safe_browsing::_ClientDownloadRequest_SignatureInfo_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_signature() {
-  set_has_signature();
-  if (signature_ == NULL) {
-    signature_ = new ::safe_browsing::ClientDownloadRequest_SignatureInfo;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  return signature_;
-}
-::safe_browsing::ClientDownloadRequest_SignatureInfo* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-  clear_has_signature();
-  ::safe_browsing::ClientDownloadRequest_SignatureInfo* temp = signature_;
-  signature_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_signature(::safe_browsing::ClientDownloadRequest_SignatureInfo* signature) {
-  delete signature_;
-  signature_ = signature;
-  if (signature) {
-    set_has_signature();
-  } else {
-    clear_has_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.signature)
-}
-
-// optional .safe_browsing.ClientDownloadRequest.ImageHeaders image_headers = 5;
-bool ClientIncidentReport_IncidentData_SuspiciousModuleIncident::has_image_headers() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_has_image_headers() {
-  _has_bits_[0] |= 0x00000010u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_has_image_headers() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::clear_image_headers() {
-  if (image_headers_ != NULL) image_headers_->::safe_browsing::ClientDownloadRequest_ImageHeaders::Clear();
-  clear_has_image_headers();
-}
-const ::safe_browsing::ClientDownloadRequest_ImageHeaders& ClientIncidentReport_IncidentData_SuspiciousModuleIncident::image_headers() const {
-  const ::safe_browsing::ClientDownloadRequest_ImageHeaders* p = image_headers_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientDownloadRequest_ImageHeaders*>(
-      &::safe_browsing::_ClientDownloadRequest_ImageHeaders_default_instance_);
-}
-::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::mutable_image_headers() {
-  set_has_image_headers();
-  if (image_headers_ == NULL) {
-    image_headers_ = new ::safe_browsing::ClientDownloadRequest_ImageHeaders;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  return image_headers_;
-}
-::safe_browsing::ClientDownloadRequest_ImageHeaders* ClientIncidentReport_IncidentData_SuspiciousModuleIncident::release_image_headers() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-  clear_has_image_headers();
-  ::safe_browsing::ClientDownloadRequest_ImageHeaders* temp = image_headers_;
-  image_headers_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData_SuspiciousModuleIncident::set_allocated_image_headers(::safe_browsing::ClientDownloadRequest_ImageHeaders* image_headers) {
-  delete image_headers_;
-  image_headers_ = image_headers;
-  if (image_headers) {
-    set_has_image_headers();
-  } else {
-    clear_has_image_headers();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident.image_headers)
-}
-
-#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
-
-// ===================================================================
-
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ClientIncidentReport_IncidentData::kIncidentTimeMsecFieldNumber;
 const int ClientIncidentReport_IncidentData::kTrackedPreferenceFieldNumber;
 const int ClientIncidentReport_IncidentData::kBinaryIntegrityFieldNumber;
-const int ClientIncidentReport_IncidentData::kBlacklistLoadFieldNumber;
-const int ClientIncidentReport_IncidentData::kVariationsSeedSignatureFieldNumber;
 const int ClientIncidentReport_IncidentData::kResourceRequestFieldNumber;
-const int ClientIncidentReport_IncidentData::kSuspiciousModuleFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_IncidentData::ClientIncidentReport_IncidentData()
@@ -18009,25 +19939,10 @@ ClientIncidentReport_IncidentData::ClientIncidentReport_IncidentData(const Clien
   } else {
     binary_integrity_ = NULL;
   }
-  if (from.has_blacklist_load()) {
-    blacklist_load_ = new ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident(*from.blacklist_load_);
-  } else {
-    blacklist_load_ = NULL;
-  }
-  if (from.has_variations_seed_signature()) {
-    variations_seed_signature_ = new ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident(*from.variations_seed_signature_);
-  } else {
-    variations_seed_signature_ = NULL;
-  }
   if (from.has_resource_request()) {
     resource_request_ = new ::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident(*from.resource_request_);
   } else {
     resource_request_ = NULL;
-  }
-  if (from.has_suspicious_module()) {
-    suspicious_module_ = new ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident(*from.suspicious_module_);
-  } else {
-    suspicious_module_ = NULL;
   }
   incident_time_msec_ = from.incident_time_msec_;
   // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientIncidentReport.IncidentData)
@@ -18048,10 +19963,7 @@ ClientIncidentReport_IncidentData::~ClientIncidentReport_IncidentData() {
 void ClientIncidentReport_IncidentData::SharedDtor() {
   if (this != internal_default_instance()) delete tracked_preference_;
   if (this != internal_default_instance()) delete binary_integrity_;
-  if (this != internal_default_instance()) delete blacklist_load_;
-  if (this != internal_default_instance()) delete variations_seed_signature_;
   if (this != internal_default_instance()) delete resource_request_;
-  if (this != internal_default_instance()) delete suspicious_module_;
 }
 
 void ClientIncidentReport_IncidentData::SetCachedSize(int size) const {
@@ -18079,7 +19991,7 @@ void ClientIncidentReport_IncidentData::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 63u) {
+  if (cached_has_bits & 7u) {
     if (cached_has_bits & 0x00000001u) {
       GOOGLE_DCHECK(tracked_preference_ != NULL);
       tracked_preference_->::safe_browsing::ClientIncidentReport_IncidentData_TrackedPreferenceIncident::Clear();
@@ -18089,20 +20001,8 @@ void ClientIncidentReport_IncidentData::Clear() {
       binary_integrity_->::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident::Clear();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(blacklist_load_ != NULL);
-      blacklist_load_->::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident::Clear();
-    }
-    if (cached_has_bits & 0x00000008u) {
-      GOOGLE_DCHECK(variations_seed_signature_ != NULL);
-      variations_seed_signature_->::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::Clear();
-    }
-    if (cached_has_bits & 0x00000010u) {
       GOOGLE_DCHECK(resource_request_ != NULL);
       resource_request_->::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident::Clear();
-    }
-    if (cached_has_bits & 0x00000020u) {
-      GOOGLE_DCHECK(suspicious_module_ != NULL);
-      suspicious_module_->::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident::Clear();
     }
   }
   incident_time_msec_ = GOOGLE_LONGLONG(0);
@@ -18164,48 +20064,12 @@ bool ClientIncidentReport_IncidentData::MergePartialFromCodedStream(
         break;
       }
 
-      // optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_blacklist_load()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_variations_seed_signature()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
       // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
       case 7: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_resource_request()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_suspicious_module()));
         } else {
           goto handle_unusual;
         }
@@ -18240,7 +20104,7 @@ void ClientIncidentReport_IncidentData::SerializeWithCachedSizes(
 
   cached_has_bits = _has_bits_[0];
   // optional int64 incident_time_msec = 1;
-  if (cached_has_bits & 0x00000040u) {
+  if (cached_has_bits & 0x00000008u) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->incident_time_msec(), output);
   }
 
@@ -18256,28 +20120,10 @@ void ClientIncidentReport_IncidentData::SerializeWithCachedSizes(
       3, *this->binary_integrity_, output);
   }
 
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
+  // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
   if (cached_has_bits & 0x00000004u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      4, *this->blacklist_load_, output);
-  }
-
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      6, *this->variations_seed_signature_, output);
-  }
-
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
       7, *this->resource_request_, output);
-  }
-
-  // optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-  if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      8, *this->suspicious_module_, output);
   }
 
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
@@ -18291,7 +20137,7 @@ size_t ClientIncidentReport_IncidentData::ByteSizeLong() const {
 
   total_size += _internal_metadata_.unknown_fields().size();
 
-  if (_has_bits_[0 / 32] & 127u) {
+  if (_has_bits_[0 / 32] & 15u) {
     // optional .safe_browsing.ClientIncidentReport.IncidentData.TrackedPreferenceIncident tracked_preference = 2;
     if (has_tracked_preference()) {
       total_size += 1 +
@@ -18306,32 +20152,11 @@ size_t ClientIncidentReport_IncidentData::ByteSizeLong() const {
           *this->binary_integrity_);
     }
 
-    // optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
-    if (has_blacklist_load()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->blacklist_load_);
-    }
-
-    // optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-    if (has_variations_seed_signature()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->variations_seed_signature_);
-    }
-
     // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
     if (has_resource_request()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *this->resource_request_);
-    }
-
-    // optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-    if (has_suspicious_module()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *this->suspicious_module_);
     }
 
     // optional int64 incident_time_msec = 1;
@@ -18362,7 +20187,7 @@ void ClientIncidentReport_IncidentData::MergeFrom(const ClientIncidentReport_Inc
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 127u) {
+  if (cached_has_bits & 15u) {
     if (cached_has_bits & 0x00000001u) {
       mutable_tracked_preference()->::safe_browsing::ClientIncidentReport_IncidentData_TrackedPreferenceIncident::MergeFrom(from.tracked_preference());
     }
@@ -18370,18 +20195,9 @@ void ClientIncidentReport_IncidentData::MergeFrom(const ClientIncidentReport_Inc
       mutable_binary_integrity()->::safe_browsing::ClientIncidentReport_IncidentData_BinaryIntegrityIncident::MergeFrom(from.binary_integrity());
     }
     if (cached_has_bits & 0x00000004u) {
-      mutable_blacklist_load()->::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident::MergeFrom(from.blacklist_load());
-    }
-    if (cached_has_bits & 0x00000008u) {
-      mutable_variations_seed_signature()->::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::MergeFrom(from.variations_seed_signature());
-    }
-    if (cached_has_bits & 0x00000010u) {
       mutable_resource_request()->::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident::MergeFrom(from.resource_request());
     }
-    if (cached_has_bits & 0x00000020u) {
-      mutable_suspicious_module()->::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident::MergeFrom(from.suspicious_module());
-    }
-    if (cached_has_bits & 0x00000040u) {
+    if (cached_has_bits & 0x00000008u) {
       incident_time_msec_ = from.incident_time_msec_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -18399,12 +20215,6 @@ bool ClientIncidentReport_IncidentData::IsInitialized() const {
   if (has_binary_integrity()) {
     if (!this->binary_integrity_->IsInitialized()) return false;
   }
-  if (has_blacklist_load()) {
-    if (!this->blacklist_load_->IsInitialized()) return false;
-  }
-  if (has_suspicious_module()) {
-    if (!this->suspicious_module_->IsInitialized()) return false;
-  }
   return true;
 }
 
@@ -18416,10 +20226,7 @@ void ClientIncidentReport_IncidentData::InternalSwap(ClientIncidentReport_Incide
   using std::swap;
   swap(tracked_preference_, other->tracked_preference_);
   swap(binary_integrity_, other->binary_integrity_);
-  swap(blacklist_load_, other->blacklist_load_);
-  swap(variations_seed_signature_, other->variations_seed_signature_);
   swap(resource_request_, other->resource_request_);
-  swap(suspicious_module_, other->suspicious_module_);
   swap(incident_time_msec_, other->incident_time_msec_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
@@ -18435,13 +20242,13 @@ void ClientIncidentReport_IncidentData::InternalSwap(ClientIncidentReport_Incide
 
 // optional int64 incident_time_msec = 1;
 bool ClientIncidentReport_IncidentData::has_incident_time_msec() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 void ClientIncidentReport_IncidentData::set_has_incident_time_msec() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000008u;
 }
 void ClientIncidentReport_IncidentData::clear_has_incident_time_msec() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 void ClientIncidentReport_IncidentData::clear_incident_time_msec() {
   incident_time_msec_ = GOOGLE_LONGLONG(0);
@@ -18549,107 +20356,15 @@ void ClientIncidentReport_IncidentData::set_allocated_binary_integrity(::safe_br
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.binary_integrity)
 }
 
-// optional .safe_browsing.ClientIncidentReport.IncidentData.BlacklistLoadIncident blacklist_load = 4;
-bool ClientIncidentReport_IncidentData::has_blacklist_load() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-void ClientIncidentReport_IncidentData::set_has_blacklist_load() {
-  _has_bits_[0] |= 0x00000004u;
-}
-void ClientIncidentReport_IncidentData::clear_has_blacklist_load() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-void ClientIncidentReport_IncidentData::clear_blacklist_load() {
-  if (blacklist_load_ != NULL) blacklist_load_->::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident::Clear();
-  clear_has_blacklist_load();
-}
-const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident& ClientIncidentReport_IncidentData::blacklist_load() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* p = blacklist_load_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_BlacklistLoadIncident_default_instance_);
-}
-::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* ClientIncidentReport_IncidentData::mutable_blacklist_load() {
-  set_has_blacklist_load();
-  if (blacklist_load_ == NULL) {
-    blacklist_load_ = new ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  return blacklist_load_;
-}
-::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* ClientIncidentReport_IncidentData::release_blacklist_load() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-  clear_has_blacklist_load();
-  ::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* temp = blacklist_load_;
-  blacklist_load_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData::set_allocated_blacklist_load(::safe_browsing::ClientIncidentReport_IncidentData_BlacklistLoadIncident* blacklist_load) {
-  delete blacklist_load_;
-  blacklist_load_ = blacklist_load;
-  if (blacklist_load) {
-    set_has_blacklist_load();
-  } else {
-    clear_has_blacklist_load();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.blacklist_load)
-}
-
-// optional .safe_browsing.ClientIncidentReport.IncidentData.VariationsSeedSignatureIncident variations_seed_signature = 6;
-bool ClientIncidentReport_IncidentData::has_variations_seed_signature() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-void ClientIncidentReport_IncidentData::set_has_variations_seed_signature() {
-  _has_bits_[0] |= 0x00000008u;
-}
-void ClientIncidentReport_IncidentData::clear_has_variations_seed_signature() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-void ClientIncidentReport_IncidentData::clear_variations_seed_signature() {
-  if (variations_seed_signature_ != NULL) variations_seed_signature_->::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident::Clear();
-  clear_has_variations_seed_signature();
-}
-const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident& ClientIncidentReport_IncidentData::variations_seed_signature() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* p = variations_seed_signature_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident_default_instance_);
-}
-::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* ClientIncidentReport_IncidentData::mutable_variations_seed_signature() {
-  set_has_variations_seed_signature();
-  if (variations_seed_signature_ == NULL) {
-    variations_seed_signature_ = new ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  return variations_seed_signature_;
-}
-::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* ClientIncidentReport_IncidentData::release_variations_seed_signature() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-  clear_has_variations_seed_signature();
-  ::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* temp = variations_seed_signature_;
-  variations_seed_signature_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData::set_allocated_variations_seed_signature(::safe_browsing::ClientIncidentReport_IncidentData_VariationsSeedSignatureIncident* variations_seed_signature) {
-  delete variations_seed_signature_;
-  variations_seed_signature_ = variations_seed_signature;
-  if (variations_seed_signature) {
-    set_has_variations_seed_signature();
-  } else {
-    clear_has_variations_seed_signature();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.variations_seed_signature)
-}
-
 // optional .safe_browsing.ClientIncidentReport.IncidentData.ResourceRequestIncident resource_request = 7;
 bool ClientIncidentReport_IncidentData::has_resource_request() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 void ClientIncidentReport_IncidentData::set_has_resource_request() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000004u;
 }
 void ClientIncidentReport_IncidentData::clear_has_resource_request() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 void ClientIncidentReport_IncidentData::clear_resource_request() {
   if (resource_request_ != NULL) resource_request_->::safe_browsing::ClientIncidentReport_IncidentData_ResourceRequestIncident::Clear();
@@ -18685,52 +20400,6 @@ void ClientIncidentReport_IncidentData::set_allocated_resource_request(::safe_br
     clear_has_resource_request();
   }
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.resource_request)
-}
-
-// optional .safe_browsing.ClientIncidentReport.IncidentData.SuspiciousModuleIncident suspicious_module = 8;
-bool ClientIncidentReport_IncidentData::has_suspicious_module() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-void ClientIncidentReport_IncidentData::set_has_suspicious_module() {
-  _has_bits_[0] |= 0x00000020u;
-}
-void ClientIncidentReport_IncidentData::clear_has_suspicious_module() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-void ClientIncidentReport_IncidentData::clear_suspicious_module() {
-  if (suspicious_module_ != NULL) suspicious_module_->::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident::Clear();
-  clear_has_suspicious_module();
-}
-const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident& ClientIncidentReport_IncidentData::suspicious_module() const {
-  const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* p = suspicious_module_;
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident*>(
-      &::safe_browsing::_ClientIncidentReport_IncidentData_SuspiciousModuleIncident_default_instance_);
-}
-::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* ClientIncidentReport_IncidentData::mutable_suspicious_module() {
-  set_has_suspicious_module();
-  if (suspicious_module_ == NULL) {
-    suspicious_module_ = new ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident;
-  }
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  return suspicious_module_;
-}
-::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* ClientIncidentReport_IncidentData::release_suspicious_module() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
-  clear_has_suspicious_module();
-  ::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* temp = suspicious_module_;
-  suspicious_module_ = NULL;
-  return temp;
-}
-void ClientIncidentReport_IncidentData::set_allocated_suspicious_module(::safe_browsing::ClientIncidentReport_IncidentData_SuspiciousModuleIncident* suspicious_module) {
-  delete suspicious_module_;
-  suspicious_module_ = suspicious_module;
-  if (suspicious_module) {
-    set_has_suspicious_module();
-  } else {
-    clear_has_suspicious_module();
-  }
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientIncidentReport.IncidentData.suspicious_module)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -23165,11 +24834,11 @@ const int ClientIncidentReport_EnvironmentData_Process::kNetworkProvidersFieldNu
 const int ClientIncidentReport_EnvironmentData_Process::kChromeUpdateChannelFieldNumber;
 const int ClientIncidentReport_EnvironmentData_Process::kUptimeMsecFieldNumber;
 const int ClientIncidentReport_EnvironmentData_Process::kMetricsConsentFieldNumber;
-const int ClientIncidentReport_EnvironmentData_Process::kExtendedConsentFieldNumber;
+const int ClientIncidentReport_EnvironmentData_Process::kOBSOLETEExtendedConsentFieldNumber;
 const int ClientIncidentReport_EnvironmentData_Process::kDllFieldNumber;
 const int ClientIncidentReport_EnvironmentData_Process::kBlacklistedDllFieldNumber;
 const int ClientIncidentReport_EnvironmentData_Process::kModuleStateFieldNumber;
-const int ClientIncidentReport_EnvironmentData_Process::kFieldTrialParticipantFieldNumber;
+const int ClientIncidentReport_EnvironmentData_Process::kOBSOLETEFieldTrialParticipantFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_EnvironmentData_Process::ClientIncidentReport_EnvironmentData_Process()
@@ -23197,8 +24866,8 @@ ClientIncidentReport_EnvironmentData_Process::ClientIncidentReport_EnvironmentDa
     version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
   }
   ::memcpy(&uptime_msec_, &from.uptime_msec_,
-    static_cast<size_t>(reinterpret_cast<char*>(&field_trial_participant_) -
-    reinterpret_cast<char*>(&uptime_msec_)) + sizeof(field_trial_participant_));
+    static_cast<size_t>(reinterpret_cast<char*>(&obsolete_field_trial_participant_) -
+    reinterpret_cast<char*>(&uptime_msec_)) + sizeof(obsolete_field_trial_participant_));
   // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientIncidentReport.EnvironmentData.Process)
 }
 
@@ -23206,8 +24875,8 @@ void ClientIncidentReport_EnvironmentData_Process::SharedCtor() {
   _cached_size_ = 0;
   version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&uptime_msec_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&field_trial_participant_) -
-      reinterpret_cast<char*>(&uptime_msec_)) + sizeof(field_trial_participant_));
+      reinterpret_cast<char*>(&obsolete_field_trial_participant_) -
+      reinterpret_cast<char*>(&uptime_msec_)) + sizeof(obsolete_field_trial_participant_));
 }
 
 ClientIncidentReport_EnvironmentData_Process::~ClientIncidentReport_EnvironmentData_Process() {
@@ -23256,8 +24925,8 @@ void ClientIncidentReport_EnvironmentData_Process::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 62u) {
     ::memset(&uptime_msec_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&field_trial_participant_) -
-        reinterpret_cast<char*>(&uptime_msec_)) + sizeof(field_trial_participant_));
+        reinterpret_cast<char*>(&obsolete_field_trial_participant_) -
+        reinterpret_cast<char*>(&uptime_msec_)) + sizeof(obsolete_field_trial_participant_));
   }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -23376,14 +25045,14 @@ bool ClientIncidentReport_EnvironmentData_Process::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bool extended_consent = 8;
+      // optional bool OBSOLETE_extended_consent = 8;
       case 8: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(64u /* 64 & 0xFF */)) {
-          set_has_extended_consent();
+          set_has_obsolete_extended_consent();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &extended_consent_)));
+                 input, &obsolete_extended_consent_)));
         } else {
           goto handle_unusual;
         }
@@ -23426,14 +25095,14 @@ bool ClientIncidentReport_EnvironmentData_Process::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bool field_trial_participant = 12;
+      // optional bool OBSOLETE_field_trial_participant = 12;
       case 12: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(96u /* 96 & 0xFF */)) {
-          set_has_field_trial_participant();
+          set_has_obsolete_field_trial_participant();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &field_trial_participant_)));
+                 input, &obsolete_field_trial_participant_)));
         } else {
           goto handle_unusual;
         }
@@ -23509,9 +25178,9 @@ void ClientIncidentReport_EnvironmentData_Process::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->metrics_consent(), output);
   }
 
-  // optional bool extended_consent = 8;
+  // optional bool OBSOLETE_extended_consent = 8;
   if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->extended_consent(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->obsolete_extended_consent(), output);
   }
 
   // repeated .safe_browsing.ClientIncidentReport.EnvironmentData.Process.Dll dll = 9;
@@ -23534,9 +25203,9 @@ void ClientIncidentReport_EnvironmentData_Process::SerializeWithCachedSizes(
       11, this->module_state(static_cast<int>(i)), output);
   }
 
-  // optional bool field_trial_participant = 12;
+  // optional bool OBSOLETE_field_trial_participant = 12;
   if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(12, this->field_trial_participant(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(12, this->obsolete_field_trial_participant(), output);
   }
 
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
@@ -23636,13 +25305,13 @@ size_t ClientIncidentReport_EnvironmentData_Process::ByteSizeLong() const {
       total_size += 1 + 1;
     }
 
-    // optional bool extended_consent = 8;
-    if (has_extended_consent()) {
+    // optional bool OBSOLETE_extended_consent = 8;
+    if (has_obsolete_extended_consent()) {
       total_size += 1 + 1;
     }
 
-    // optional bool field_trial_participant = 12;
-    if (has_field_trial_participant()) {
+    // optional bool OBSOLETE_field_trial_participant = 12;
+    if (has_obsolete_field_trial_participant()) {
       total_size += 1 + 1;
     }
 
@@ -23688,10 +25357,10 @@ void ClientIncidentReport_EnvironmentData_Process::MergeFrom(const ClientInciden
       metrics_consent_ = from.metrics_consent_;
     }
     if (cached_has_bits & 0x00000010u) {
-      extended_consent_ = from.extended_consent_;
+      obsolete_extended_consent_ = from.obsolete_extended_consent_;
     }
     if (cached_has_bits & 0x00000020u) {
-      field_trial_participant_ = from.field_trial_participant_;
+      obsolete_field_trial_participant_ = from.obsolete_field_trial_participant_;
     }
     _has_bits_[0] |= cached_has_bits;
   }
@@ -23725,8 +25394,8 @@ void ClientIncidentReport_EnvironmentData_Process::InternalSwap(ClientIncidentRe
   swap(uptime_msec_, other->uptime_msec_);
   swap(chrome_update_channel_, other->chrome_update_channel_);
   swap(metrics_consent_, other->metrics_consent_);
-  swap(extended_consent_, other->extended_consent_);
-  swap(field_trial_participant_, other->field_trial_participant_);
+  swap(obsolete_extended_consent_, other->obsolete_extended_consent_);
+  swap(obsolete_field_trial_participant_, other->obsolete_field_trial_participant_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
@@ -24004,28 +25673,28 @@ void ClientIncidentReport_EnvironmentData_Process::set_metrics_consent(bool valu
   // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.metrics_consent)
 }
 
-// optional bool extended_consent = 8;
-bool ClientIncidentReport_EnvironmentData_Process::has_extended_consent() const {
+// optional bool OBSOLETE_extended_consent = 8;
+bool ClientIncidentReport_EnvironmentData_Process::has_obsolete_extended_consent() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-void ClientIncidentReport_EnvironmentData_Process::set_has_extended_consent() {
+void ClientIncidentReport_EnvironmentData_Process::set_has_obsolete_extended_consent() {
   _has_bits_[0] |= 0x00000010u;
 }
-void ClientIncidentReport_EnvironmentData_Process::clear_has_extended_consent() {
+void ClientIncidentReport_EnvironmentData_Process::clear_has_obsolete_extended_consent() {
   _has_bits_[0] &= ~0x00000010u;
 }
-void ClientIncidentReport_EnvironmentData_Process::clear_extended_consent() {
-  extended_consent_ = false;
-  clear_has_extended_consent();
+void ClientIncidentReport_EnvironmentData_Process::clear_obsolete_extended_consent() {
+  obsolete_extended_consent_ = false;
+  clear_has_obsolete_extended_consent();
 }
-bool ClientIncidentReport_EnvironmentData_Process::extended_consent() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.extended_consent)
-  return extended_consent_;
+bool ClientIncidentReport_EnvironmentData_Process::obsolete_extended_consent() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_extended_consent)
+  return obsolete_extended_consent_;
 }
-void ClientIncidentReport_EnvironmentData_Process::set_extended_consent(bool value) {
-  set_has_extended_consent();
-  extended_consent_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.extended_consent)
+void ClientIncidentReport_EnvironmentData_Process::set_obsolete_extended_consent(bool value) {
+  set_has_obsolete_extended_consent();
+  obsolete_extended_consent_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_extended_consent)
 }
 
 // repeated .safe_browsing.ClientIncidentReport.EnvironmentData.Process.Dll dll = 9;
@@ -24157,28 +25826,28 @@ ClientIncidentReport_EnvironmentData_Process::module_state() const {
   return module_state_;
 }
 
-// optional bool field_trial_participant = 12;
-bool ClientIncidentReport_EnvironmentData_Process::has_field_trial_participant() const {
+// optional bool OBSOLETE_field_trial_participant = 12;
+bool ClientIncidentReport_EnvironmentData_Process::has_obsolete_field_trial_participant() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-void ClientIncidentReport_EnvironmentData_Process::set_has_field_trial_participant() {
+void ClientIncidentReport_EnvironmentData_Process::set_has_obsolete_field_trial_participant() {
   _has_bits_[0] |= 0x00000020u;
 }
-void ClientIncidentReport_EnvironmentData_Process::clear_has_field_trial_participant() {
+void ClientIncidentReport_EnvironmentData_Process::clear_has_obsolete_field_trial_participant() {
   _has_bits_[0] &= ~0x00000020u;
 }
-void ClientIncidentReport_EnvironmentData_Process::clear_field_trial_participant() {
-  field_trial_participant_ = false;
-  clear_has_field_trial_participant();
+void ClientIncidentReport_EnvironmentData_Process::clear_obsolete_field_trial_participant() {
+  obsolete_field_trial_participant_ = false;
+  clear_has_obsolete_field_trial_participant();
 }
-bool ClientIncidentReport_EnvironmentData_Process::field_trial_participant() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.field_trial_participant)
-  return field_trial_participant_;
+bool ClientIncidentReport_EnvironmentData_Process::obsolete_field_trial_participant() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_field_trial_participant)
+  return obsolete_field_trial_participant_;
 }
-void ClientIncidentReport_EnvironmentData_Process::set_field_trial_participant(bool value) {
-  set_has_field_trial_participant();
-  field_trial_participant_ = value;
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.field_trial_participant)
+void ClientIncidentReport_EnvironmentData_Process::set_obsolete_field_trial_participant(bool value) {
+  set_has_obsolete_field_trial_participant();
+  obsolete_field_trial_participant_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientIncidentReport.EnvironmentData.Process.OBSOLETE_field_trial_participant)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -30062,7 +31731,7 @@ void ClientSafeBrowsingReportRequest_HTTPRequest::set_bodylength(::google::proto
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::kCodeFieldNumber;
-const int ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::kReasonFieldNumber;
+const int ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::kMessageFieldNumber;
 const int ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::kVersionFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -30080,9 +31749,9 @@ ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::ClientSafeBrowsingReport
       _has_bits_(from._has_bits_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  reason_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_reason()) {
-    reason_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.reason_);
+  message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_message()) {
+    message_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.message_);
   }
   version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_version()) {
@@ -30094,7 +31763,7 @@ ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::ClientSafeBrowsingReport
 
 void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::SharedCtor() {
   _cached_size_ = 0;
-  reason_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  message_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   code_ = 0;
 }
@@ -30105,7 +31774,7 @@ ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::~ClientSafeBrowsingRepor
 }
 
 void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::SharedDtor() {
-  reason_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  message_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
@@ -30136,8 +31805,8 @@ void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 3u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(!reason_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-      (*reason_.UnsafeRawStringPointer())->clear();
+      GOOGLE_DCHECK(!message_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*message_.UnsafeRawStringPointer())->clear();
     }
     if (cached_has_bits & 0x00000002u) {
       GOOGLE_DCHECK(!version_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
@@ -30179,12 +31848,12 @@ bool ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::MergePartialFromCod
         break;
       }
 
-      // optional bytes reason = 2;
+      // optional bytes message = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_reason()));
+                input, this->mutable_message()));
         } else {
           goto handle_unusual;
         }
@@ -30235,10 +31904,10 @@ void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::SerializeWithCached
     ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->code(), output);
   }
 
-  // optional bytes reason = 2;
+  // optional bytes message = 2;
   if (cached_has_bits & 0x00000001u) {
     ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
-      2, this->reason(), output);
+      2, this->message(), output);
   }
 
   // optional bytes version = 3;
@@ -30259,11 +31928,11 @@ size_t ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::ByteSizeLong() co
   total_size += _internal_metadata_.unknown_fields().size();
 
   if (_has_bits_[0 / 32] & 7u) {
-    // optional bytes reason = 2;
-    if (has_reason()) {
+    // optional bytes message = 2;
+    if (has_message()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
-          this->reason());
+          this->message());
     }
 
     // optional bytes version = 3;
@@ -30303,8 +31972,8 @@ void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::MergeFrom(const Cli
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 7u) {
     if (cached_has_bits & 0x00000001u) {
-      set_has_reason();
-      reason_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.reason_);
+      set_has_message();
+      message_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.message_);
     }
     if (cached_has_bits & 0x00000002u) {
       set_has_version();
@@ -30334,7 +32003,7 @@ void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::Swap(ClientSafeBrow
 }
 void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::InternalSwap(ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine* other) {
   using std::swap;
-  reason_.Swap(&other->reason_);
+  message_.Swap(&other->message_);
   version_.Swap(&other->version_);
   swap(code_, other->code_);
   swap(_has_bits_[0], other->_has_bits_[0]);
@@ -30373,67 +32042,67 @@ void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_code(::google::
   // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.code)
 }
 
-// optional bytes reason = 2;
-bool ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::has_reason() const {
+// optional bytes message = 2;
+bool ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::has_message() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_has_reason() {
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_has_message() {
   _has_bits_[0] |= 0x00000001u;
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_has_reason() {
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_has_message() {
   _has_bits_[0] &= ~0x00000001u;
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_reason() {
-  reason_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_reason();
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_message();
 }
-const ::std::string& ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::reason() const {
-  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  return reason_.GetNoArena();
+const ::std::string& ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::message() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  return message_.GetNoArena();
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const ::std::string& value) {
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const ::std::string& value) {
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 #if LANG_CXX11
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(::std::string&& value) {
-  set_has_reason();
-  reason_.SetNoArena(
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(::std::string&& value) {
+  set_has_message();
+  message_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 #endif
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const char* value) {
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_reason(const void* value, size_t size) {
-  set_has_reason();
-  reason_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_message(const void* value, size_t size) {
+  set_has_message();
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
-::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::mutable_reason() {
-  set_has_reason();
-  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  return reason_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::mutable_message() {
+  set_has_message();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::release_reason() {
-  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
-  clear_has_reason();
-  return reason_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+::std::string* ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::release_message() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
+  clear_has_message();
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_allocated_reason(::std::string* reason) {
-  if (reason != NULL) {
-    set_has_reason();
+void ClientSafeBrowsingReportRequest_HTTPResponse_FirstLine::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    set_has_message();
   } else {
-    clear_has_reason();
+    clear_has_message();
   }
-  reason_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), reason);
-  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.reason)
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.HTTPResponse.FirstLine.message)
 }
 
 // optional bytes version = 3;
@@ -31958,18 +33627,482 @@ void ClientSafeBrowsingReportRequest_Resource::set_allocated_tag_name(::std::str
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::kClientVersionFieldNumber;
+const int ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::kGooglePlayServicesVersionFieldNumber;
+const int ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::kIsInstantAppsFieldNumber;
+const int ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::kUrlApiTypeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+}
+ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  client_version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_client_version()) {
+    client_version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.client_version_);
+  }
+  ::memcpy(&google_play_services_version_, &from.google_play_services_version_,
+    static_cast<size_t>(reinterpret_cast<char*>(&url_api_type_) -
+    reinterpret_cast<char*>(&google_play_services_version_)) + sizeof(url_api_type_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::SharedCtor() {
+  _cached_size_ = 0;
+  client_version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&google_play_services_version_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&url_api_type_) -
+      reinterpret_cast<char*>(&google_play_services_version_)) + sizeof(url_api_type_));
+}
+
+ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::~ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  SharedDtor();
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::SharedDtor() {
+  client_version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::New(::google::protobuf::Arena* arena) const {
+  ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* n = new ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (has_client_version()) {
+    GOOGLE_DCHECK(!client_version_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+    (*client_version_.UnsafeRawStringPointer())->clear();
+  }
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 14u) {
+    ::memset(&google_play_services_version_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&url_api_type_) -
+        reinterpret_cast<char*>(&google_play_services_version_)) + sizeof(url_api_type_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string client_version = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_client_version()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int64 google_play_services_version = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_google_play_services_version();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &google_play_services_version_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool is_instant_apps = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+          set_has_is_instant_apps();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &is_instant_apps_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(value)) {
+            set_url_api_type(static_cast< ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(32u);
+            unknown_fields_stream.WriteVarint32(
+                static_cast< ::google::protobuf::uint32>(value));
+          }
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  return false;
+#undef DO_
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string client_version = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->client_version(), output);
+  }
+
+  // optional int64 google_play_services_version = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->google_play_services_version(), output);
+  }
+
+  // optional bool is_instant_apps = 3;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->is_instant_apps(), output);
+  }
+
+  // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      4, this->url_api_type(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+}
+
+size_t ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 15u) {
+    // optional string client_version = 1;
+    if (has_client_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->client_version());
+    }
+
+    // optional int64 google_play_services_version = 2;
+    if (has_google_play_services_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->google_play_services_version());
+    }
+
+    // optional bool is_instant_apps = 3;
+    if (has_is_instant_apps()) {
+      total_size += 1 + 1;
+    }
+
+    // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+    if (has_url_api_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->url_api_type());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties*>(&from));
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::MergeFrom(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 15u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_client_version();
+      client_version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.client_version_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      google_play_services_version_ = from.google_play_services_version_;
+    }
+    if (cached_has_bits & 0x00000004u) {
+      is_instant_apps_ = from.is_instant_apps_;
+    }
+    if (cached_has_bits & 0x00000008u) {
+      url_api_type_ = from.url_api_type_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::CopyFrom(const ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::IsInitialized() const {
+  return true;
+}
+
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::Swap(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::InternalSwap(ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* other) {
+  using std::swap;
+  client_version_.Swap(&other->client_version_);
+  swap(google_play_services_version_, other->google_play_services_version_);
+  swap(is_instant_apps_, other->is_instant_apps_);
+  swap(url_api_type_, other->url_api_type_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::GetTypeName() const {
+  return "safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties
+
+// optional string client_version = 1;
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_client_version() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_client_version() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_client_version() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_client_version() {
+  client_version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_client_version();
+}
+const ::std::string& ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::client_version() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  return client_version_.GetNoArena();
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const ::std::string& value) {
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+#if LANG_CXX11
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(::std::string&& value) {
+  set_has_client_version();
+  client_version_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+#endif
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_client_version(const char* value, size_t size) {
+  set_has_client_version();
+  client_version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+::std::string* ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::mutable_client_version() {
+  set_has_client_version();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  return client_version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::release_client_version() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+  clear_has_client_version();
+  return client_version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_allocated_client_version(::std::string* client_version) {
+  if (client_version != NULL) {
+    set_has_client_version();
+  } else {
+    clear_has_client_version();
+  }
+  client_version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), client_version);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.client_version)
+}
+
+// optional int64 google_play_services_version = 2;
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_google_play_services_version() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_google_play_services_version() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_google_play_services_version() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_google_play_services_version() {
+  google_play_services_version_ = GOOGLE_LONGLONG(0);
+  clear_has_google_play_services_version();
+}
+::google::protobuf::int64 ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::google_play_services_version() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.google_play_services_version)
+  return google_play_services_version_;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_google_play_services_version(::google::protobuf::int64 value) {
+  set_has_google_play_services_version();
+  google_play_services_version_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.google_play_services_version)
+}
+
+// optional bool is_instant_apps = 3;
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_is_instant_apps() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_is_instant_apps() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_is_instant_apps() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_is_instant_apps() {
+  is_instant_apps_ = false;
+  clear_has_is_instant_apps();
+}
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::is_instant_apps() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.is_instant_apps)
+  return is_instant_apps_;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_is_instant_apps(bool value) {
+  set_has_is_instant_apps();
+  is_instant_apps_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.is_instant_apps)
+}
+
+// optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingUrlApiType url_api_type = 4;
+bool ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::has_url_api_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_has_url_api_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_has_url_api_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::clear_url_api_type() {
+  url_api_type_ = 0;
+  clear_has_url_api_type();
+}
+::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::url_api_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.url_api_type)
+  return static_cast< ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType >(url_api_type_);
+}
+void ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::set_url_api_type(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType value) {
+  assert(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingUrlApiType_IsValid(value));
+  set_has_url_api_type();
+  url_api_type_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties.url_api_type)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ClientSafeBrowsingReportRequest::kTypeFieldNumber;
 const int ClientSafeBrowsingReportRequest::kDownloadVerdictFieldNumber;
 const int ClientSafeBrowsingReportRequest::kUrlFieldNumber;
 const int ClientSafeBrowsingReportRequest::kPageUrlFieldNumber;
 const int ClientSafeBrowsingReportRequest::kReferrerUrlFieldNumber;
 const int ClientSafeBrowsingReportRequest::kResourcesFieldNumber;
+const int ClientSafeBrowsingReportRequest::kDomFieldNumber;
 const int ClientSafeBrowsingReportRequest::kCompleteFieldNumber;
 const int ClientSafeBrowsingReportRequest::kClientAsnFieldNumber;
 const int ClientSafeBrowsingReportRequest::kClientCountryFieldNumber;
 const int ClientSafeBrowsingReportRequest::kDidProceedFieldNumber;
 const int ClientSafeBrowsingReportRequest::kRepeatVisitFieldNumber;
 const int ClientSafeBrowsingReportRequest::kTokenFieldNumber;
+const int ClientSafeBrowsingReportRequest::kClientPropertiesFieldNumber;
+const int ClientSafeBrowsingReportRequest::kShowDownloadInFolderFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest::ClientSafeBrowsingReportRequest()
@@ -31986,7 +34119,8 @@ ClientSafeBrowsingReportRequest::ClientSafeBrowsingReportRequest(const ClientSaf
       _has_bits_(from._has_bits_),
       _cached_size_(0),
       resources_(from.resources_),
-      client_asn_(from.client_asn_) {
+      client_asn_(from.client_asn_),
+      dom_(from.dom_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_url()) {
@@ -32008,9 +34142,14 @@ ClientSafeBrowsingReportRequest::ClientSafeBrowsingReportRequest(const ClientSaf
   if (from.has_token()) {
     token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.token_);
   }
-  ::memcpy(&complete_, &from.complete_,
+  if (from.has_client_properties()) {
+    client_properties_ = new ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties(*from.client_properties_);
+  } else {
+    client_properties_ = NULL;
+  }
+  ::memcpy(&type_, &from.type_,
     static_cast<size_t>(reinterpret_cast<char*>(&download_verdict_) -
-    reinterpret_cast<char*>(&complete_)) + sizeof(download_verdict_));
+    reinterpret_cast<char*>(&type_)) + sizeof(download_verdict_));
   // @@protoc_insertion_point(copy_constructor:safe_browsing.ClientSafeBrowsingReportRequest)
 }
 
@@ -32021,9 +34160,9 @@ void ClientSafeBrowsingReportRequest::SharedCtor() {
   referrer_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   client_country_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&complete_, 0, static_cast<size_t>(
+  ::memset(&client_properties_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&download_verdict_) -
-      reinterpret_cast<char*>(&complete_)) + sizeof(download_verdict_));
+      reinterpret_cast<char*>(&client_properties_)) + sizeof(download_verdict_));
 }
 
 ClientSafeBrowsingReportRequest::~ClientSafeBrowsingReportRequest() {
@@ -32037,6 +34176,7 @@ void ClientSafeBrowsingReportRequest::SharedDtor() {
   referrer_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   client_country_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   token_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete client_properties_;
 }
 
 void ClientSafeBrowsingReportRequest::SetCachedSize(int size) const {
@@ -32065,8 +34205,9 @@ void ClientSafeBrowsingReportRequest::Clear() {
 
   resources_.Clear();
   client_asn_.Clear();
+  dom_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 31u) {
+  if (cached_has_bits & 63u) {
     if (cached_has_bits & 0x00000001u) {
       GOOGLE_DCHECK(!url_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
       (*url_.UnsafeRawStringPointer())->clear();
@@ -32087,16 +34228,20 @@ void ClientSafeBrowsingReportRequest::Clear() {
       GOOGLE_DCHECK(!token_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
       (*token_.UnsafeRawStringPointer())->clear();
     }
+    if (cached_has_bits & 0x00000020u) {
+      GOOGLE_DCHECK(client_properties_ != NULL);
+      client_properties_->::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::Clear();
+    }
   }
-  if (cached_has_bits & 224u) {
-    ::memset(&complete_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&repeat_visit_) -
-        reinterpret_cast<char*>(&complete_)) + sizeof(repeat_visit_));
-  }
-  if (cached_has_bits & 768u) {
+  if (cached_has_bits & 192u) {
     ::memset(&type_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&complete_) -
+        reinterpret_cast<char*>(&type_)) + sizeof(complete_));
+  }
+  if (cached_has_bits & 3840u) {
+    ::memset(&did_proceed_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&download_verdict_) -
-        reinterpret_cast<char*>(&type_)) + sizeof(download_verdict_));
+        reinterpret_cast<char*>(&did_proceed_)) + sizeof(download_verdict_));
   }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -32114,7 +34259,7 @@ bool ClientSafeBrowsingReportRequest::MergePartialFromCodedStream(
       &unknown_fields_string, false);
   // @@protoc_insertion_point(parse_start:safe_browsing.ClientSafeBrowsingReportRequest)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -32286,6 +34431,44 @@ bool ClientSafeBrowsingReportRequest::MergePartialFromCodedStream(
         break;
       }
 
+      // repeated .safe_browsing.HTMLElement dom = 16;
+      case 16: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(130u /* 130 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_dom()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+      case 17: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(138u /* 138 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_client_properties()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional bool show_download_in_folder = 18;
+      case 18: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(144u /* 144 & 0xFF */)) {
+          set_has_show_download_in_folder();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &show_download_in_folder_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -32339,7 +34522,7 @@ void ClientSafeBrowsingReportRequest::SerializeWithCachedSizes(
   }
 
   // optional bool complete = 5;
-  if (cached_has_bits & 0x00000020u) {
+  if (cached_has_bits & 0x00000080u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->complete(), output);
   }
 
@@ -32356,23 +34539,23 @@ void ClientSafeBrowsingReportRequest::SerializeWithCachedSizes(
   }
 
   // optional bool did_proceed = 8;
-  if (cached_has_bits & 0x00000040u) {
+  if (cached_has_bits & 0x00000100u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(8, this->did_proceed(), output);
   }
 
   // optional bool repeat_visit = 9;
-  if (cached_has_bits & 0x00000080u) {
+  if (cached_has_bits & 0x00000200u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(9, this->repeat_visit(), output);
   }
 
   // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
-  if (cached_has_bits & 0x00000100u) {
+  if (cached_has_bits & 0x00000040u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       10, this->type(), output);
   }
 
   // optional .safe_browsing.ClientDownloadResponse.Verdict download_verdict = 11;
-  if (cached_has_bits & 0x00000200u) {
+  if (cached_has_bits & 0x00000800u) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       11, this->download_verdict(), output);
   }
@@ -32381,6 +34564,24 @@ void ClientSafeBrowsingReportRequest::SerializeWithCachedSizes(
   if (cached_has_bits & 0x00000010u) {
     ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
       15, this->token(), output);
+  }
+
+  // repeated .safe_browsing.HTMLElement dom = 16;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->dom_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      16, this->dom(static_cast<int>(i)), output);
+  }
+
+  // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+  if (cached_has_bits & 0x00000020u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      17, *this->client_properties_, output);
+  }
+
+  // optional bool show_download_in_folder = 18;
+  if (cached_has_bits & 0x00000400u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(18, this->show_download_in_folder(), output);
   }
 
   output->WriteRaw(_internal_metadata_.unknown_fields().data(),
@@ -32411,6 +34612,17 @@ size_t ClientSafeBrowsingReportRequest::ByteSizeLong() const {
   for (int i = 0, n = this->client_asn_size(); i < n; i++) {
     total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
       this->client_asn(i));
+  }
+
+  // repeated .safe_browsing.HTMLElement dom = 16;
+  {
+    unsigned int count = static_cast<unsigned int>(this->dom_size());
+    total_size += 2UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->dom(static_cast<int>(i)));
+    }
   }
 
   if (_has_bits_[0 / 32] & 255u) {
@@ -32449,11 +34661,26 @@ size_t ClientSafeBrowsingReportRequest::ByteSizeLong() const {
           this->token());
     }
 
+    // optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+    if (has_client_properties()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->client_properties_);
+    }
+
+    // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
+    if (has_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+    }
+
     // optional bool complete = 5;
     if (has_complete()) {
       total_size += 1 + 1;
     }
 
+  }
+  if (_has_bits_[8 / 32] & 3840u) {
     // optional bool did_proceed = 8;
     if (has_did_proceed()) {
       total_size += 1 + 1;
@@ -32464,12 +34691,9 @@ size_t ClientSafeBrowsingReportRequest::ByteSizeLong() const {
       total_size += 1 + 1;
     }
 
-  }
-  if (_has_bits_[8 / 32] & 768u) {
-    // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
-    if (has_type()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+    // optional bool show_download_in_folder = 18;
+    if (has_show_download_in_folder()) {
+      total_size += 2 + 1;
     }
 
     // optional .safe_browsing.ClientDownloadResponse.Verdict download_verdict = 11;
@@ -32500,6 +34724,7 @@ void ClientSafeBrowsingReportRequest::MergeFrom(const ClientSafeBrowsingReportRe
 
   resources_.MergeFrom(from.resources_);
   client_asn_.MergeFrom(from.client_asn_);
+  dom_.MergeFrom(from.dom_);
   cached_has_bits = from._has_bits_[0];
   if (cached_has_bits & 255u) {
     if (cached_has_bits & 0x00000001u) {
@@ -32523,21 +34748,27 @@ void ClientSafeBrowsingReportRequest::MergeFrom(const ClientSafeBrowsingReportRe
       token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.token_);
     }
     if (cached_has_bits & 0x00000020u) {
-      complete_ = from.complete_;
+      mutable_client_properties()->::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::MergeFrom(from.client_properties());
     }
     if (cached_has_bits & 0x00000040u) {
-      did_proceed_ = from.did_proceed_;
+      type_ = from.type_;
     }
     if (cached_has_bits & 0x00000080u) {
-      repeat_visit_ = from.repeat_visit_;
+      complete_ = from.complete_;
     }
     _has_bits_[0] |= cached_has_bits;
   }
-  if (cached_has_bits & 768u) {
+  if (cached_has_bits & 3840u) {
     if (cached_has_bits & 0x00000100u) {
-      type_ = from.type_;
+      did_proceed_ = from.did_proceed_;
     }
     if (cached_has_bits & 0x00000200u) {
+      repeat_visit_ = from.repeat_visit_;
+    }
+    if (cached_has_bits & 0x00000400u) {
+      show_download_in_folder_ = from.show_download_in_folder_;
+    }
+    if (cached_has_bits & 0x00000800u) {
       download_verdict_ = from.download_verdict_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -32564,15 +34795,18 @@ void ClientSafeBrowsingReportRequest::InternalSwap(ClientSafeBrowsingReportReque
   using std::swap;
   resources_.InternalSwap(&other->resources_);
   client_asn_.InternalSwap(&other->client_asn_);
+  dom_.InternalSwap(&other->dom_);
   url_.Swap(&other->url_);
   page_url_.Swap(&other->page_url_);
   referrer_url_.Swap(&other->referrer_url_);
   client_country_.Swap(&other->client_country_);
   token_.Swap(&other->token_);
+  swap(client_properties_, other->client_properties_);
+  swap(type_, other->type_);
   swap(complete_, other->complete_);
   swap(did_proceed_, other->did_proceed_);
   swap(repeat_visit_, other->repeat_visit_);
-  swap(type_, other->type_);
+  swap(show_download_in_folder_, other->show_download_in_folder_);
   swap(download_verdict_, other->download_verdict_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
@@ -32588,13 +34822,13 @@ void ClientSafeBrowsingReportRequest::InternalSwap(ClientSafeBrowsingReportReque
 
 // optional .safe_browsing.ClientSafeBrowsingReportRequest.ReportType type = 10;
 bool ClientSafeBrowsingReportRequest::has_type() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 void ClientSafeBrowsingReportRequest::set_has_type() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000040u;
 }
 void ClientSafeBrowsingReportRequest::clear_has_type() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 void ClientSafeBrowsingReportRequest::clear_type() {
   type_ = 0;
@@ -32613,13 +34847,13 @@ void ClientSafeBrowsingReportRequest::set_type(::safe_browsing::ClientSafeBrowsi
 
 // optional .safe_browsing.ClientDownloadResponse.Verdict download_verdict = 11;
 bool ClientSafeBrowsingReportRequest::has_download_verdict() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 void ClientSafeBrowsingReportRequest::set_has_download_verdict() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000800u;
 }
 void ClientSafeBrowsingReportRequest::clear_has_download_verdict() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 void ClientSafeBrowsingReportRequest::clear_download_verdict() {
   download_verdict_ = 0;
@@ -32855,15 +35089,45 @@ ClientSafeBrowsingReportRequest::resources() const {
   return resources_;
 }
 
+// repeated .safe_browsing.HTMLElement dom = 16;
+int ClientSafeBrowsingReportRequest::dom_size() const {
+  return dom_.size();
+}
+void ClientSafeBrowsingReportRequest::clear_dom() {
+  dom_.Clear();
+}
+const ::safe_browsing::HTMLElement& ClientSafeBrowsingReportRequest::dom(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Get(index);
+}
+::safe_browsing::HTMLElement* ClientSafeBrowsingReportRequest::mutable_dom(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Mutable(index);
+}
+::safe_browsing::HTMLElement* ClientSafeBrowsingReportRequest::add_dom() {
+  // @@protoc_insertion_point(field_add:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >*
+ClientSafeBrowsingReportRequest::mutable_dom() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return &dom_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement >&
+ClientSafeBrowsingReportRequest::dom() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.ClientSafeBrowsingReportRequest.dom)
+  return dom_;
+}
+
 // optional bool complete = 5;
 bool ClientSafeBrowsingReportRequest::has_complete() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 void ClientSafeBrowsingReportRequest::set_has_complete() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000080u;
 }
 void ClientSafeBrowsingReportRequest::clear_has_complete() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 void ClientSafeBrowsingReportRequest::clear_complete() {
   complete_ = false;
@@ -33013,13 +35277,13 @@ void ClientSafeBrowsingReportRequest::set_allocated_client_country(::std::string
 
 // optional bool did_proceed = 8;
 bool ClientSafeBrowsingReportRequest::has_did_proceed() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 void ClientSafeBrowsingReportRequest::set_has_did_proceed() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000100u;
 }
 void ClientSafeBrowsingReportRequest::clear_has_did_proceed() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 void ClientSafeBrowsingReportRequest::clear_did_proceed() {
   did_proceed_ = false;
@@ -33037,13 +35301,13 @@ void ClientSafeBrowsingReportRequest::set_did_proceed(bool value) {
 
 // optional bool repeat_visit = 9;
 bool ClientSafeBrowsingReportRequest::has_repeat_visit() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 void ClientSafeBrowsingReportRequest::set_has_repeat_visit() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000200u;
 }
 void ClientSafeBrowsingReportRequest::clear_has_repeat_visit() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 void ClientSafeBrowsingReportRequest::clear_repeat_visit() {
   repeat_visit_ = false;
@@ -33120,6 +35384,2216 @@ void ClientSafeBrowsingReportRequest::set_allocated_token(::std::string* token) 
   }
   token_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), token);
   // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.token)
+}
+
+// optional .safe_browsing.ClientSafeBrowsingReportRequest.SafeBrowsingClientProperties client_properties = 17;
+bool ClientSafeBrowsingReportRequest::has_client_properties() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+void ClientSafeBrowsingReportRequest::set_has_client_properties() {
+  _has_bits_[0] |= 0x00000020u;
+}
+void ClientSafeBrowsingReportRequest::clear_has_client_properties() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+void ClientSafeBrowsingReportRequest::clear_client_properties() {
+  if (client_properties_ != NULL) client_properties_->::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::Clear();
+  clear_has_client_properties();
+}
+const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties& ClientSafeBrowsingReportRequest::client_properties() const {
+  const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* p = client_properties_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties*>(
+      &::safe_browsing::_ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties_default_instance_);
+}
+::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* ClientSafeBrowsingReportRequest::mutable_client_properties() {
+  set_has_client_properties();
+  if (client_properties_ == NULL) {
+    client_properties_ = new ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  return client_properties_;
+}
+::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* ClientSafeBrowsingReportRequest::release_client_properties() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+  clear_has_client_properties();
+  ::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* temp = client_properties_;
+  client_properties_ = NULL;
+  return temp;
+}
+void ClientSafeBrowsingReportRequest::set_allocated_client_properties(::safe_browsing::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties* client_properties) {
+  delete client_properties_;
+  client_properties_ = client_properties;
+  if (client_properties) {
+    set_has_client_properties();
+  } else {
+    clear_has_client_properties();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ClientSafeBrowsingReportRequest.client_properties)
+}
+
+// optional bool show_download_in_folder = 18;
+bool ClientSafeBrowsingReportRequest::has_show_download_in_folder() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+void ClientSafeBrowsingReportRequest::set_has_show_download_in_folder() {
+  _has_bits_[0] |= 0x00000400u;
+}
+void ClientSafeBrowsingReportRequest::clear_has_show_download_in_folder() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+void ClientSafeBrowsingReportRequest::clear_show_download_in_folder() {
+  show_download_in_folder_ = false;
+  clear_has_show_download_in_folder();
+}
+bool ClientSafeBrowsingReportRequest::show_download_in_folder() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ClientSafeBrowsingReportRequest.show_download_in_folder)
+  return show_download_in_folder_;
+}
+void ClientSafeBrowsingReportRequest::set_show_download_in_folder(bool value) {
+  set_has_show_download_in_folder();
+  show_download_in_folder_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ClientSafeBrowsingReportRequest.show_download_in_folder)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int HTMLElement_Attribute::kNameFieldNumber;
+const int HTMLElement_Attribute::kValueFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+HTMLElement_Attribute::HTMLElement_Attribute()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.HTMLElement.Attribute)
+}
+HTMLElement_Attribute::HTMLElement_Attribute(const HTMLElement_Attribute& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_name()) {
+    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
+  }
+  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_value()) {
+    value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+  }
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.HTMLElement.Attribute)
+}
+
+void HTMLElement_Attribute::SharedCtor() {
+  _cached_size_ = 0;
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+HTMLElement_Attribute::~HTMLElement_Attribute() {
+  // @@protoc_insertion_point(destructor:safe_browsing.HTMLElement.Attribute)
+  SharedDtor();
+}
+
+void HTMLElement_Attribute::SharedDtor() {
+  name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void HTMLElement_Attribute::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const HTMLElement_Attribute& HTMLElement_Attribute::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+HTMLElement_Attribute* HTMLElement_Attribute::New(::google::protobuf::Arena* arena) const {
+  HTMLElement_Attribute* n = new HTMLElement_Attribute;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void HTMLElement_Attribute::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.HTMLElement.Attribute)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!name_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*name_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(!value_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*value_.UnsafeRawStringPointer())->clear();
+    }
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool HTMLElement_Attribute::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.HTMLElement.Attribute)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string name = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_name()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string value = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_value()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.HTMLElement.Attribute)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.HTMLElement.Attribute)
+  return false;
+#undef DO_
+}
+
+void HTMLElement_Attribute::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.HTMLElement.Attribute)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string name = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->name(), output);
+  }
+
+  // optional string value = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->value(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.HTMLElement.Attribute)
+}
+
+size_t HTMLElement_Attribute::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.HTMLElement.Attribute)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 3u) {
+    // optional string name = 1;
+    if (has_name()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->name());
+    }
+
+    // optional string value = 2;
+    if (has_value()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->value());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void HTMLElement_Attribute::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const HTMLElement_Attribute*>(&from));
+}
+
+void HTMLElement_Attribute::MergeFrom(const HTMLElement_Attribute& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.HTMLElement.Attribute)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_name();
+      name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      set_has_value();
+      value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+    }
+  }
+}
+
+void HTMLElement_Attribute::CopyFrom(const HTMLElement_Attribute& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.HTMLElement.Attribute)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool HTMLElement_Attribute::IsInitialized() const {
+  return true;
+}
+
+void HTMLElement_Attribute::Swap(HTMLElement_Attribute* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void HTMLElement_Attribute::InternalSwap(HTMLElement_Attribute* other) {
+  using std::swap;
+  name_.Swap(&other->name_);
+  value_.Swap(&other->value_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string HTMLElement_Attribute::GetTypeName() const {
+  return "safe_browsing.HTMLElement.Attribute";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// HTMLElement_Attribute
+
+// optional string name = 1;
+bool HTMLElement_Attribute::has_name() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void HTMLElement_Attribute::set_has_name() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void HTMLElement_Attribute::clear_has_name() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void HTMLElement_Attribute::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_name();
+}
+const ::std::string& HTMLElement_Attribute::name() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.Attribute.name)
+  return name_.GetNoArena();
+}
+void HTMLElement_Attribute::set_name(const ::std::string& value) {
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.Attribute.name)
+}
+#if LANG_CXX11
+void HTMLElement_Attribute::set_name(::std::string&& value) {
+  set_has_name();
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.Attribute.name)
+}
+#endif
+void HTMLElement_Attribute::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.Attribute.name)
+}
+void HTMLElement_Attribute::set_name(const char* value, size_t size) {
+  set_has_name();
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.Attribute.name)
+}
+::std::string* HTMLElement_Attribute::mutable_name() {
+  set_has_name();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.Attribute.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* HTMLElement_Attribute::release_name() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.Attribute.name)
+  clear_has_name();
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void HTMLElement_Attribute::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    set_has_name();
+  } else {
+    clear_has_name();
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.Attribute.name)
+}
+
+// optional string value = 2;
+bool HTMLElement_Attribute::has_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void HTMLElement_Attribute::set_has_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void HTMLElement_Attribute::clear_has_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void HTMLElement_Attribute::clear_value() {
+  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_value();
+}
+const ::std::string& HTMLElement_Attribute::value() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.Attribute.value)
+  return value_.GetNoArena();
+}
+void HTMLElement_Attribute::set_value(const ::std::string& value) {
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.Attribute.value)
+}
+#if LANG_CXX11
+void HTMLElement_Attribute::set_value(::std::string&& value) {
+  set_has_value();
+  value_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.Attribute.value)
+}
+#endif
+void HTMLElement_Attribute::set_value(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.Attribute.value)
+}
+void HTMLElement_Attribute::set_value(const char* value, size_t size) {
+  set_has_value();
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.Attribute.value)
+}
+::std::string* HTMLElement_Attribute::mutable_value() {
+  set_has_value();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.Attribute.value)
+  return value_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* HTMLElement_Attribute::release_value() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.Attribute.value)
+  clear_has_value();
+  return value_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void HTMLElement_Attribute::set_allocated_value(::std::string* value) {
+  if (value != NULL) {
+    set_has_value();
+  } else {
+    clear_has_value();
+  }
+  value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.Attribute.value)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int HTMLElement::kIdFieldNumber;
+const int HTMLElement::kTagFieldNumber;
+const int HTMLElement::kChildIdsFieldNumber;
+const int HTMLElement::kResourceIdFieldNumber;
+const int HTMLElement::kAttributeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+HTMLElement::HTMLElement()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.HTMLElement)
+}
+HTMLElement::HTMLElement(const HTMLElement& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      child_ids_(from.child_ids_),
+      attribute_(from.attribute_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  tag_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_tag()) {
+    tag_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.tag_);
+  }
+  ::memcpy(&id_, &from.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&resource_id_) -
+    reinterpret_cast<char*>(&id_)) + sizeof(resource_id_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.HTMLElement)
+}
+
+void HTMLElement::SharedCtor() {
+  _cached_size_ = 0;
+  tag_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&resource_id_) -
+      reinterpret_cast<char*>(&id_)) + sizeof(resource_id_));
+}
+
+HTMLElement::~HTMLElement() {
+  // @@protoc_insertion_point(destructor:safe_browsing.HTMLElement)
+  SharedDtor();
+}
+
+void HTMLElement::SharedDtor() {
+  tag_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void HTMLElement::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const HTMLElement& HTMLElement::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+HTMLElement* HTMLElement::New(::google::protobuf::Arena* arena) const {
+  HTMLElement* n = new HTMLElement;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void HTMLElement::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.HTMLElement)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  child_ids_.Clear();
+  attribute_.Clear();
+  if (has_tag()) {
+    GOOGLE_DCHECK(!tag_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+    (*tag_.UnsafeRawStringPointer())->clear();
+  }
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 6u) {
+    ::memset(&id_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&resource_id_) -
+        reinterpret_cast<char*>(&id_)) + sizeof(resource_id_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool HTMLElement::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.HTMLElement)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 id = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+          set_has_id();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &id_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string tag = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_tag()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated int32 child_ids = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 1, 24u, input, this->mutable_child_ids())));
+        } else if (
+            static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, this->mutable_child_ids())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int32 resource_id = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+          set_has_resource_id();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &resource_id_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_attribute()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.HTMLElement)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.HTMLElement)
+  return false;
+#undef DO_
+}
+
+void HTMLElement::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.HTMLElement)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 id = 1;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->id(), output);
+  }
+
+  // optional string tag = 2;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->tag(), output);
+  }
+
+  // repeated int32 child_ids = 3;
+  for (int i = 0, n = this->child_ids_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(
+      3, this->child_ids(i), output);
+  }
+
+  // optional int32 resource_id = 5;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->resource_id(), output);
+  }
+
+  // repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->attribute_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, this->attribute(static_cast<int>(i)), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.HTMLElement)
+}
+
+size_t HTMLElement::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.HTMLElement)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  // repeated int32 child_ids = 3;
+  {
+    size_t data_size = ::google::protobuf::internal::WireFormatLite::
+      Int32Size(this->child_ids_);
+    total_size += 1 *
+                  ::google::protobuf::internal::FromIntSize(this->child_ids_size());
+    total_size += data_size;
+  }
+
+  // repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+  {
+    unsigned int count = static_cast<unsigned int>(this->attribute_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->attribute(static_cast<int>(i)));
+    }
+  }
+
+  if (_has_bits_[0 / 32] & 7u) {
+    // optional string tag = 2;
+    if (has_tag()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->tag());
+    }
+
+    // optional int32 id = 1;
+    if (has_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->id());
+    }
+
+    // optional int32 resource_id = 5;
+    if (has_resource_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->resource_id());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void HTMLElement::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const HTMLElement*>(&from));
+}
+
+void HTMLElement::MergeFrom(const HTMLElement& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.HTMLElement)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  child_ids_.MergeFrom(from.child_ids_);
+  attribute_.MergeFrom(from.attribute_);
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 7u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_tag();
+      tag_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.tag_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      id_ = from.id_;
+    }
+    if (cached_has_bits & 0x00000004u) {
+      resource_id_ = from.resource_id_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void HTMLElement::CopyFrom(const HTMLElement& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.HTMLElement)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool HTMLElement::IsInitialized() const {
+  return true;
+}
+
+void HTMLElement::Swap(HTMLElement* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void HTMLElement::InternalSwap(HTMLElement* other) {
+  using std::swap;
+  child_ids_.InternalSwap(&other->child_ids_);
+  attribute_.InternalSwap(&other->attribute_);
+  tag_.Swap(&other->tag_);
+  swap(id_, other->id_);
+  swap(resource_id_, other->resource_id_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string HTMLElement::GetTypeName() const {
+  return "safe_browsing.HTMLElement";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// HTMLElement
+
+// optional int32 id = 1;
+bool HTMLElement::has_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void HTMLElement::set_has_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void HTMLElement::clear_has_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void HTMLElement::clear_id() {
+  id_ = 0;
+  clear_has_id();
+}
+::google::protobuf::int32 HTMLElement::id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.id)
+  return id_;
+}
+void HTMLElement::set_id(::google::protobuf::int32 value) {
+  set_has_id();
+  id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.id)
+}
+
+// optional string tag = 2;
+bool HTMLElement::has_tag() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void HTMLElement::set_has_tag() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void HTMLElement::clear_has_tag() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void HTMLElement::clear_tag() {
+  tag_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_tag();
+}
+const ::std::string& HTMLElement::tag() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.tag)
+  return tag_.GetNoArena();
+}
+void HTMLElement::set_tag(const ::std::string& value) {
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.tag)
+}
+#if LANG_CXX11
+void HTMLElement::set_tag(::std::string&& value) {
+  set_has_tag();
+  tag_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.HTMLElement.tag)
+}
+#endif
+void HTMLElement::set_tag(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.HTMLElement.tag)
+}
+void HTMLElement::set_tag(const char* value, size_t size) {
+  set_has_tag();
+  tag_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.HTMLElement.tag)
+}
+::std::string* HTMLElement::mutable_tag() {
+  set_has_tag();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.tag)
+  return tag_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* HTMLElement::release_tag() {
+  // @@protoc_insertion_point(field_release:safe_browsing.HTMLElement.tag)
+  clear_has_tag();
+  return tag_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void HTMLElement::set_allocated_tag(::std::string* tag) {
+  if (tag != NULL) {
+    set_has_tag();
+  } else {
+    clear_has_tag();
+  }
+  tag_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), tag);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.HTMLElement.tag)
+}
+
+// repeated int32 child_ids = 3;
+int HTMLElement::child_ids_size() const {
+  return child_ids_.size();
+}
+void HTMLElement::clear_child_ids() {
+  child_ids_.Clear();
+}
+::google::protobuf::int32 HTMLElement::child_ids(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.child_ids)
+  return child_ids_.Get(index);
+}
+void HTMLElement::set_child_ids(int index, ::google::protobuf::int32 value) {
+  child_ids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.child_ids)
+}
+void HTMLElement::add_child_ids(::google::protobuf::int32 value) {
+  child_ids_.Add(value);
+  // @@protoc_insertion_point(field_add:safe_browsing.HTMLElement.child_ids)
+}
+const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+HTMLElement::child_ids() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.HTMLElement.child_ids)
+  return child_ids_;
+}
+::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+HTMLElement::mutable_child_ids() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.HTMLElement.child_ids)
+  return &child_ids_;
+}
+
+// optional int32 resource_id = 5;
+bool HTMLElement::has_resource_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void HTMLElement::set_has_resource_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void HTMLElement::clear_has_resource_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void HTMLElement::clear_resource_id() {
+  resource_id_ = 0;
+  clear_has_resource_id();
+}
+::google::protobuf::int32 HTMLElement::resource_id() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.resource_id)
+  return resource_id_;
+}
+void HTMLElement::set_resource_id(::google::protobuf::int32 value) {
+  set_has_resource_id();
+  resource_id_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.HTMLElement.resource_id)
+}
+
+// repeated .safe_browsing.HTMLElement.Attribute attribute = 6;
+int HTMLElement::attribute_size() const {
+  return attribute_.size();
+}
+void HTMLElement::clear_attribute() {
+  attribute_.Clear();
+}
+const ::safe_browsing::HTMLElement_Attribute& HTMLElement::attribute(int index) const {
+  // @@protoc_insertion_point(field_get:safe_browsing.HTMLElement.attribute)
+  return attribute_.Get(index);
+}
+::safe_browsing::HTMLElement_Attribute* HTMLElement::mutable_attribute(int index) {
+  // @@protoc_insertion_point(field_mutable:safe_browsing.HTMLElement.attribute)
+  return attribute_.Mutable(index);
+}
+::safe_browsing::HTMLElement_Attribute* HTMLElement::add_attribute() {
+  // @@protoc_insertion_point(field_add:safe_browsing.HTMLElement.attribute)
+  return attribute_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >*
+HTMLElement::mutable_attribute() {
+  // @@protoc_insertion_point(field_mutable_list:safe_browsing.HTMLElement.attribute)
+  return &attribute_;
+}
+const ::google::protobuf::RepeatedPtrField< ::safe_browsing::HTMLElement_Attribute >&
+HTMLElement::attribute() const {
+  // @@protoc_insertion_point(field_list:safe_browsing.HTMLElement.attribute)
+  return attribute_;
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ImageData_Dimensions::kWidthFieldNumber;
+const int ImageData_Dimensions::kHeightFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ImageData_Dimensions::ImageData_Dimensions()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ImageData.Dimensions)
+}
+ImageData_Dimensions::ImageData_Dimensions(const ImageData_Dimensions& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&width_, &from.width_,
+    static_cast<size_t>(reinterpret_cast<char*>(&height_) -
+    reinterpret_cast<char*>(&width_)) + sizeof(height_));
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ImageData.Dimensions)
+}
+
+void ImageData_Dimensions::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(&width_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&height_) -
+      reinterpret_cast<char*>(&width_)) + sizeof(height_));
+}
+
+ImageData_Dimensions::~ImageData_Dimensions() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ImageData.Dimensions)
+  SharedDtor();
+}
+
+void ImageData_Dimensions::SharedDtor() {
+}
+
+void ImageData_Dimensions::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ImageData_Dimensions& ImageData_Dimensions::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ImageData_Dimensions* ImageData_Dimensions::New(::google::protobuf::Arena* arena) const {
+  ImageData_Dimensions* n = new ImageData_Dimensions;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ImageData_Dimensions::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.ImageData.Dimensions)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 3u) {
+    ::memset(&width_, 0, static_cast<size_t>(
+        reinterpret_cast<char*>(&height_) -
+        reinterpret_cast<char*>(&width_)) + sizeof(height_));
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool ImageData_Dimensions::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ImageData.Dimensions)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 width = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+          set_has_width();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &width_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional int32 height = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+          set_has_height();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &height_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ImageData.Dimensions)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ImageData.Dimensions)
+  return false;
+#undef DO_
+}
+
+void ImageData_Dimensions::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ImageData.Dimensions)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 width = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->width(), output);
+  }
+
+  // optional int32 height = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->height(), output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ImageData.Dimensions)
+}
+
+size_t ImageData_Dimensions::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ImageData.Dimensions)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 3u) {
+    // optional int32 width = 1;
+    if (has_width()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->width());
+    }
+
+    // optional int32 height = 2;
+    if (has_height()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->height());
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ImageData_Dimensions::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ImageData_Dimensions*>(&from));
+}
+
+void ImageData_Dimensions::MergeFrom(const ImageData_Dimensions& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ImageData.Dimensions)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      width_ = from.width_;
+    }
+    if (cached_has_bits & 0x00000002u) {
+      height_ = from.height_;
+    }
+    _has_bits_[0] |= cached_has_bits;
+  }
+}
+
+void ImageData_Dimensions::CopyFrom(const ImageData_Dimensions& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ImageData.Dimensions)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ImageData_Dimensions::IsInitialized() const {
+  return true;
+}
+
+void ImageData_Dimensions::Swap(ImageData_Dimensions* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ImageData_Dimensions::InternalSwap(ImageData_Dimensions* other) {
+  using std::swap;
+  swap(width_, other->width_);
+  swap(height_, other->height_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ImageData_Dimensions::GetTypeName() const {
+  return "safe_browsing.ImageData.Dimensions";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ImageData_Dimensions
+
+// optional int32 width = 1;
+bool ImageData_Dimensions::has_width() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void ImageData_Dimensions::set_has_width() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void ImageData_Dimensions::clear_has_width() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void ImageData_Dimensions::clear_width() {
+  width_ = 0;
+  clear_has_width();
+}
+::google::protobuf::int32 ImageData_Dimensions::width() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.Dimensions.width)
+  return width_;
+}
+void ImageData_Dimensions::set_width(::google::protobuf::int32 value) {
+  set_has_width();
+  width_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.Dimensions.width)
+}
+
+// optional int32 height = 2;
+bool ImageData_Dimensions::has_height() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void ImageData_Dimensions::set_has_height() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void ImageData_Dimensions::clear_has_height() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void ImageData_Dimensions::clear_height() {
+  height_ = 0;
+  clear_has_height();
+}
+::google::protobuf::int32 ImageData_Dimensions::height() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.Dimensions.height)
+  return height_;
+}
+void ImageData_Dimensions::set_height(::google::protobuf::int32 value) {
+  set_has_height();
+  height_ = value;
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.Dimensions.height)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ImageData::kDataFieldNumber;
+const int ImageData::kMimeTypeFieldNumber;
+const int ImageData::kDimensionsFieldNumber;
+const int ImageData::kOriginalDimensionsFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ImageData::ImageData()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.ImageData)
+}
+ImageData::ImageData(const ImageData& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_data()) {
+    data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+  }
+  mime_type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_mime_type()) {
+    mime_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.mime_type_);
+  }
+  if (from.has_dimensions()) {
+    dimensions_ = new ::safe_browsing::ImageData_Dimensions(*from.dimensions_);
+  } else {
+    dimensions_ = NULL;
+  }
+  if (from.has_original_dimensions()) {
+    original_dimensions_ = new ::safe_browsing::ImageData_Dimensions(*from.original_dimensions_);
+  } else {
+    original_dimensions_ = NULL;
+  }
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.ImageData)
+}
+
+void ImageData::SharedCtor() {
+  _cached_size_ = 0;
+  data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  mime_type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::memset(&dimensions_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&original_dimensions_) -
+      reinterpret_cast<char*>(&dimensions_)) + sizeof(original_dimensions_));
+}
+
+ImageData::~ImageData() {
+  // @@protoc_insertion_point(destructor:safe_browsing.ImageData)
+  SharedDtor();
+}
+
+void ImageData::SharedDtor() {
+  data_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  mime_type_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete dimensions_;
+  if (this != internal_default_instance()) delete original_dimensions_;
+}
+
+void ImageData::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ImageData& ImageData::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ImageData* ImageData::New(::google::protobuf::Arena* arena) const {
+  ImageData* n = new ImageData;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ImageData::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.ImageData)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 15u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!data_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*data_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(!mime_type_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*mime_type_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000004u) {
+      GOOGLE_DCHECK(dimensions_ != NULL);
+      dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+    }
+    if (cached_has_bits & 0x00000008u) {
+      GOOGLE_DCHECK(original_dimensions_ != NULL);
+      original_dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+    }
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool ImageData::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.ImageData)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional bytes data = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_data()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional string mime_type = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_mime_type()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_dimensions()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_original_dimensions()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.ImageData)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.ImageData)
+  return false;
+#undef DO_
+}
+
+void ImageData::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.ImageData)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional bytes data = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      1, this->data(), output);
+  }
+
+  // optional string mime_type = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->mime_type(), output);
+  }
+
+  // optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, *this->dimensions_, output);
+  }
+
+  // optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      4, *this->original_dimensions_, output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.ImageData)
+}
+
+size_t ImageData::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.ImageData)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 15u) {
+    // optional bytes data = 1;
+    if (has_data()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->data());
+    }
+
+    // optional string mime_type = 2;
+    if (has_mime_type()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->mime_type());
+    }
+
+    // optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+    if (has_dimensions()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->dimensions_);
+    }
+
+    // optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+    if (has_original_dimensions()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->original_dimensions_);
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ImageData::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ImageData*>(&from));
+}
+
+void ImageData::MergeFrom(const ImageData& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.ImageData)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 15u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_data();
+      data_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.data_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      set_has_mime_type();
+      mime_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.mime_type_);
+    }
+    if (cached_has_bits & 0x00000004u) {
+      mutable_dimensions()->::safe_browsing::ImageData_Dimensions::MergeFrom(from.dimensions());
+    }
+    if (cached_has_bits & 0x00000008u) {
+      mutable_original_dimensions()->::safe_browsing::ImageData_Dimensions::MergeFrom(from.original_dimensions());
+    }
+  }
+}
+
+void ImageData::CopyFrom(const ImageData& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.ImageData)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ImageData::IsInitialized() const {
+  return true;
+}
+
+void ImageData::Swap(ImageData* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ImageData::InternalSwap(ImageData* other) {
+  using std::swap;
+  data_.Swap(&other->data_);
+  mime_type_.Swap(&other->mime_type_);
+  swap(dimensions_, other->dimensions_);
+  swap(original_dimensions_, other->original_dimensions_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ImageData::GetTypeName() const {
+  return "safe_browsing.ImageData";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ImageData
+
+// optional bytes data = 1;
+bool ImageData::has_data() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void ImageData::set_has_data() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void ImageData::clear_has_data() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void ImageData::clear_data() {
+  data_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_data();
+}
+const ::std::string& ImageData::data() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.data)
+  return data_.GetNoArena();
+}
+void ImageData::set_data(const ::std::string& value) {
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.data)
+}
+#if LANG_CXX11
+void ImageData::set_data(::std::string&& value) {
+  set_has_data();
+  data_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ImageData.data)
+}
+#endif
+void ImageData::set_data(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ImageData.data)
+}
+void ImageData::set_data(const void* value, size_t size) {
+  set_has_data();
+  data_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ImageData.data)
+}
+::std::string* ImageData::mutable_data() {
+  set_has_data();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.data)
+  return data_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ImageData::release_data() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.data)
+  clear_has_data();
+  return data_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ImageData::set_allocated_data(::std::string* data) {
+  if (data != NULL) {
+    set_has_data();
+  } else {
+    clear_has_data();
+  }
+  data_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), data);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.data)
+}
+
+// optional string mime_type = 2;
+bool ImageData::has_mime_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void ImageData::set_has_mime_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void ImageData::clear_has_mime_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void ImageData::clear_mime_type() {
+  mime_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_mime_type();
+}
+const ::std::string& ImageData::mime_type() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.mime_type)
+  return mime_type_.GetNoArena();
+}
+void ImageData::set_mime_type(const ::std::string& value) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.ImageData.mime_type)
+}
+#if LANG_CXX11
+void ImageData::set_mime_type(::std::string&& value) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.ImageData.mime_type)
+}
+#endif
+void ImageData::set_mime_type(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.ImageData.mime_type)
+}
+void ImageData::set_mime_type(const char* value, size_t size) {
+  set_has_mime_type();
+  mime_type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.ImageData.mime_type)
+}
+::std::string* ImageData::mutable_mime_type() {
+  set_has_mime_type();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.mime_type)
+  return mime_type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ImageData::release_mime_type() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.mime_type)
+  clear_has_mime_type();
+  return mime_type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ImageData::set_allocated_mime_type(::std::string* mime_type) {
+  if (mime_type != NULL) {
+    set_has_mime_type();
+  } else {
+    clear_has_mime_type();
+  }
+  mime_type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), mime_type);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.mime_type)
+}
+
+// optional .safe_browsing.ImageData.Dimensions dimensions = 3;
+bool ImageData::has_dimensions() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+void ImageData::set_has_dimensions() {
+  _has_bits_[0] |= 0x00000004u;
+}
+void ImageData::clear_has_dimensions() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+void ImageData::clear_dimensions() {
+  if (dimensions_ != NULL) dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+  clear_has_dimensions();
+}
+const ::safe_browsing::ImageData_Dimensions& ImageData::dimensions() const {
+  const ::safe_browsing::ImageData_Dimensions* p = dimensions_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.dimensions)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData_Dimensions*>(
+      &::safe_browsing::_ImageData_Dimensions_default_instance_);
+}
+::safe_browsing::ImageData_Dimensions* ImageData::mutable_dimensions() {
+  set_has_dimensions();
+  if (dimensions_ == NULL) {
+    dimensions_ = new ::safe_browsing::ImageData_Dimensions;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.dimensions)
+  return dimensions_;
+}
+::safe_browsing::ImageData_Dimensions* ImageData::release_dimensions() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.dimensions)
+  clear_has_dimensions();
+  ::safe_browsing::ImageData_Dimensions* temp = dimensions_;
+  dimensions_ = NULL;
+  return temp;
+}
+void ImageData::set_allocated_dimensions(::safe_browsing::ImageData_Dimensions* dimensions) {
+  delete dimensions_;
+  dimensions_ = dimensions;
+  if (dimensions) {
+    set_has_dimensions();
+  } else {
+    clear_has_dimensions();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.dimensions)
+}
+
+// optional .safe_browsing.ImageData.Dimensions original_dimensions = 4;
+bool ImageData::has_original_dimensions() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+void ImageData::set_has_original_dimensions() {
+  _has_bits_[0] |= 0x00000008u;
+}
+void ImageData::clear_has_original_dimensions() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+void ImageData::clear_original_dimensions() {
+  if (original_dimensions_ != NULL) original_dimensions_->::safe_browsing::ImageData_Dimensions::Clear();
+  clear_has_original_dimensions();
+}
+const ::safe_browsing::ImageData_Dimensions& ImageData::original_dimensions() const {
+  const ::safe_browsing::ImageData_Dimensions* p = original_dimensions_;
+  // @@protoc_insertion_point(field_get:safe_browsing.ImageData.original_dimensions)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData_Dimensions*>(
+      &::safe_browsing::_ImageData_Dimensions_default_instance_);
+}
+::safe_browsing::ImageData_Dimensions* ImageData::mutable_original_dimensions() {
+  set_has_original_dimensions();
+  if (original_dimensions_ == NULL) {
+    original_dimensions_ = new ::safe_browsing::ImageData_Dimensions;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.ImageData.original_dimensions)
+  return original_dimensions_;
+}
+::safe_browsing::ImageData_Dimensions* ImageData::release_original_dimensions() {
+  // @@protoc_insertion_point(field_release:safe_browsing.ImageData.original_dimensions)
+  clear_has_original_dimensions();
+  ::safe_browsing::ImageData_Dimensions* temp = original_dimensions_;
+  original_dimensions_ = NULL;
+  return temp;
+}
+void ImageData::set_allocated_original_dimensions(::safe_browsing::ImageData_Dimensions* original_dimensions) {
+  delete original_dimensions_;
+  original_dimensions_ = original_dimensions;
+  if (original_dimensions) {
+    set_has_original_dimensions();
+  } else {
+    clear_has_original_dimensions();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.ImageData.original_dimensions)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int NotificationImageReportRequest::kNotificationOriginFieldNumber;
+const int NotificationImageReportRequest::kImageFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+NotificationImageReportRequest::NotificationImageReportRequest()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_csd_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:safe_browsing.NotificationImageReportRequest)
+}
+NotificationImageReportRequest::NotificationImageReportRequest(const NotificationImageReportRequest& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  notification_origin_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_notification_origin()) {
+    notification_origin_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.notification_origin_);
+  }
+  if (from.has_image()) {
+    image_ = new ::safe_browsing::ImageData(*from.image_);
+  } else {
+    image_ = NULL;
+  }
+  // @@protoc_insertion_point(copy_constructor:safe_browsing.NotificationImageReportRequest)
+}
+
+void NotificationImageReportRequest::SharedCtor() {
+  _cached_size_ = 0;
+  notification_origin_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  image_ = NULL;
+}
+
+NotificationImageReportRequest::~NotificationImageReportRequest() {
+  // @@protoc_insertion_point(destructor:safe_browsing.NotificationImageReportRequest)
+  SharedDtor();
+}
+
+void NotificationImageReportRequest::SharedDtor() {
+  notification_origin_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete image_;
+}
+
+void NotificationImageReportRequest::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const NotificationImageReportRequest& NotificationImageReportRequest::default_instance() {
+  protobuf_csd_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+NotificationImageReportRequest* NotificationImageReportRequest::New(::google::protobuf::Arena* arena) const {
+  NotificationImageReportRequest* n = new NotificationImageReportRequest;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void NotificationImageReportRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:safe_browsing.NotificationImageReportRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      GOOGLE_DCHECK(!notification_origin_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
+      (*notification_origin_.UnsafeRawStringPointer())->clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      GOOGLE_DCHECK(image_ != NULL);
+      image_->::safe_browsing::ImageData::Clear();
+    }
+  }
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool NotificationImageReportRequest::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::LazyStringOutputStream unknown_fields_string(
+      ::google::protobuf::NewPermanentCallback(&_internal_metadata_,
+          &::google::protobuf::internal::InternalMetadataWithArenaLite::
+              mutable_unknown_fields));
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string, false);
+  // @@protoc_insertion_point(parse_start:safe_browsing.NotificationImageReportRequest)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional string notification_origin = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_notification_origin()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // optional .safe_browsing.ImageData image = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_image()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:safe_browsing.NotificationImageReportRequest)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:safe_browsing.NotificationImageReportRequest)
+  return false;
+#undef DO_
+}
+
+void NotificationImageReportRequest::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:safe_browsing.NotificationImageReportRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional string notification_origin = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->notification_origin(), output);
+  }
+
+  // optional .safe_browsing.ImageData image = 2;
+  if (cached_has_bits & 0x00000002u) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2, *this->image_, output);
+  }
+
+  output->WriteRaw(_internal_metadata_.unknown_fields().data(),
+                   static_cast<int>(_internal_metadata_.unknown_fields().size()));
+  // @@protoc_insertion_point(serialize_end:safe_browsing.NotificationImageReportRequest)
+}
+
+size_t NotificationImageReportRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:safe_browsing.NotificationImageReportRequest)
+  size_t total_size = 0;
+
+  total_size += _internal_metadata_.unknown_fields().size();
+
+  if (_has_bits_[0 / 32] & 3u) {
+    // optional string notification_origin = 1;
+    if (has_notification_origin()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->notification_origin());
+    }
+
+    // optional .safe_browsing.ImageData image = 2;
+    if (has_image()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *this->image_);
+    }
+
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void NotificationImageReportRequest::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const NotificationImageReportRequest*>(&from));
+}
+
+void NotificationImageReportRequest::MergeFrom(const NotificationImageReportRequest& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:safe_browsing.NotificationImageReportRequest)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._has_bits_[0];
+  if (cached_has_bits & 3u) {
+    if (cached_has_bits & 0x00000001u) {
+      set_has_notification_origin();
+      notification_origin_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.notification_origin_);
+    }
+    if (cached_has_bits & 0x00000002u) {
+      mutable_image()->::safe_browsing::ImageData::MergeFrom(from.image());
+    }
+  }
+}
+
+void NotificationImageReportRequest::CopyFrom(const NotificationImageReportRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:safe_browsing.NotificationImageReportRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool NotificationImageReportRequest::IsInitialized() const {
+  return true;
+}
+
+void NotificationImageReportRequest::Swap(NotificationImageReportRequest* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void NotificationImageReportRequest::InternalSwap(NotificationImageReportRequest* other) {
+  using std::swap;
+  notification_origin_.Swap(&other->notification_origin_);
+  swap(image_, other->image_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string NotificationImageReportRequest::GetTypeName() const {
+  return "safe_browsing.NotificationImageReportRequest";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// NotificationImageReportRequest
+
+// optional string notification_origin = 1;
+bool NotificationImageReportRequest::has_notification_origin() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+void NotificationImageReportRequest::set_has_notification_origin() {
+  _has_bits_[0] |= 0x00000001u;
+}
+void NotificationImageReportRequest::clear_has_notification_origin() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+void NotificationImageReportRequest::clear_notification_origin() {
+  notification_origin_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_notification_origin();
+}
+const ::std::string& NotificationImageReportRequest::notification_origin() const {
+  // @@protoc_insertion_point(field_get:safe_browsing.NotificationImageReportRequest.notification_origin)
+  return notification_origin_.GetNoArena();
+}
+void NotificationImageReportRequest::set_notification_origin(const ::std::string& value) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+#if LANG_CXX11
+void NotificationImageReportRequest::set_notification_origin(::std::string&& value) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+#endif
+void NotificationImageReportRequest::set_notification_origin(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+void NotificationImageReportRequest::set_notification_origin(const char* value, size_t size) {
+  set_has_notification_origin();
+  notification_origin_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+::std::string* NotificationImageReportRequest::mutable_notification_origin() {
+  set_has_notification_origin();
+  // @@protoc_insertion_point(field_mutable:safe_browsing.NotificationImageReportRequest.notification_origin)
+  return notification_origin_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* NotificationImageReportRequest::release_notification_origin() {
+  // @@protoc_insertion_point(field_release:safe_browsing.NotificationImageReportRequest.notification_origin)
+  clear_has_notification_origin();
+  return notification_origin_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void NotificationImageReportRequest::set_allocated_notification_origin(::std::string* notification_origin) {
+  if (notification_origin != NULL) {
+    set_has_notification_origin();
+  } else {
+    clear_has_notification_origin();
+  }
+  notification_origin_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), notification_origin);
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.NotificationImageReportRequest.notification_origin)
+}
+
+// optional .safe_browsing.ImageData image = 2;
+bool NotificationImageReportRequest::has_image() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+void NotificationImageReportRequest::set_has_image() {
+  _has_bits_[0] |= 0x00000002u;
+}
+void NotificationImageReportRequest::clear_has_image() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+void NotificationImageReportRequest::clear_image() {
+  if (image_ != NULL) image_->::safe_browsing::ImageData::Clear();
+  clear_has_image();
+}
+const ::safe_browsing::ImageData& NotificationImageReportRequest::image() const {
+  const ::safe_browsing::ImageData* p = image_;
+  // @@protoc_insertion_point(field_get:safe_browsing.NotificationImageReportRequest.image)
+  return p != NULL ? *p : *reinterpret_cast<const ::safe_browsing::ImageData*>(
+      &::safe_browsing::_ImageData_default_instance_);
+}
+::safe_browsing::ImageData* NotificationImageReportRequest::mutable_image() {
+  set_has_image();
+  if (image_ == NULL) {
+    image_ = new ::safe_browsing::ImageData;
+  }
+  // @@protoc_insertion_point(field_mutable:safe_browsing.NotificationImageReportRequest.image)
+  return image_;
+}
+::safe_browsing::ImageData* NotificationImageReportRequest::release_image() {
+  // @@protoc_insertion_point(field_release:safe_browsing.NotificationImageReportRequest.image)
+  clear_has_image();
+  ::safe_browsing::ImageData* temp = image_;
+  image_ = NULL;
+  return temp;
+}
+void NotificationImageReportRequest::set_allocated_image(::safe_browsing::ImageData* image) {
+  delete image_;
+  image_ = image;
+  if (image) {
+    set_has_image();
+  } else {
+    clear_has_image();
+  }
+  // @@protoc_insertion_point(field_set_allocated:safe_browsing.NotificationImageReportRequest.image)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

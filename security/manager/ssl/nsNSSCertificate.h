@@ -100,7 +100,7 @@ public:
 
   // Split a certificate chain into the root, intermediates (if any), and end
   // entity. This method does so blindly, assuming that the current list object
-  // is ordered [root, intermediates..., end entity]. If that isn't true, this
+  // is ordered [end entity, intermediates..., root]. If that isn't true, this
   // method will return the certificates at the two ends without regard to the
   // actual chain of trust. Callers are encouraged to check, if there's any
   // doubt.

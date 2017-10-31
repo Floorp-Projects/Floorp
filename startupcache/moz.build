@@ -9,12 +9,6 @@ with Files("**"):
 
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'nsIStartupCache.idl',
-]
-
-XPIDL_MODULE = 'startupcache'
-
 EXPORTS.mozilla.scache += [
     'StartupCache.h',
     'StartupCacheUtils.h',
@@ -22,7 +16,6 @@ EXPORTS.mozilla.scache += [
 
 UNIFIED_SOURCES += [
     'StartupCache.cpp',
-    'StartupCacheModule.cpp',
     'StartupCacheUtils.cpp',
 ]
 
