@@ -202,6 +202,10 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
     mDocument->EndLoad();
   }
 
+  // Dropping the stream parser changes the parser's apparent script-createdness,
+  // which is why the stream parser must not be dropped before this executor's
+  // nsHtml5Parser has been made unreachable from its nsHTMLDocument.
+  // (mDocument->EndLoad() above drops the parser from the document.)
   GetParser()->DropStreamParser();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
