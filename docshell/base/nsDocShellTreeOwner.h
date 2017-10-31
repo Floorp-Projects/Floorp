@@ -28,7 +28,6 @@
 #include "nsITooltipTextProvider.h"
 #include "nsCTooltipTextProvider.h"
 #include "nsIDroppedLinkHandler.h"
-#include "nsCommandHandler.h"
 
 namespace mozilla {
 namespace dom {
@@ -45,7 +44,7 @@ class ChromeContextMenuListener;
   { 0x6d10c180, 0x6888, 0x11d4, { 0x95, 0x2b, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
 
 // This is a fake 'hidden' interface that nsDocShellTreeOwner implements.
-// Classes such as nsCommandHandler can QI for this interface to be sure that
+// Classes can QI for this interface to be sure that
 // they're dealing with a valid nsDocShellTreeOwner and not some other object
 // that implements nsIDocShellTreeOwner.
 class nsICDocShellTreeOwner : public nsISupports
@@ -65,7 +64,6 @@ class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
                                   public nsSupportsWeakReference
 {
   friend class nsWebBrowser;
-  friend class nsCommandHandler;
 
 public:
   NS_DECL_ISUPPORTS
