@@ -30,7 +30,6 @@ var TITLE   = "Keywords";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var null = true";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "var null = true",     "error",    eval("var null = true") );
 

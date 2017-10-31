@@ -57,7 +57,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var UNDEFINED = void 0;
 
 DESCRIPTION = "UNDEFINED = void 0; var o = new UNDEFINED()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "UNDEFINED = void 0; var o = new UNDEFINED()",

@@ -57,7 +57,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var OBJECT = new Object();
 
 DESCRIPTION = "OBJECT = new Object; var o = new OBJECT()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "OBJECT = new Object; var o = new OBJECT()",

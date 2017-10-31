@@ -29,7 +29,6 @@ startTest();
 writeHeaderToLog( SECTION + " Number.prototype.toString()");
 
 DESCRIPTION = "o = new String(); o.toString = Number.prototype.toString; o.toString()";
-EXPECTED = "error";
 
 new TestCase(SECTION, 
 	     "o = new String(); o.toString = Number.prototype.toString; o.toString()", 

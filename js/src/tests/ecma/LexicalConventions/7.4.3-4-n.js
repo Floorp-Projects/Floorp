@@ -53,7 +53,6 @@ catch(e)
 }
 
 DESCRIPTION = "var super = true"
-  EXPECTED = "error";
 
 // force exception since this is a negative test
 if (actual == 'error')

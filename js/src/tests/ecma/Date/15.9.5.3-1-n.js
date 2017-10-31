@@ -29,7 +29,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var OBJ = new MyObject( new Date(0) );
 
 DESCRIPTION = "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()",

@@ -57,7 +57,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var STRING = "";
 
 DESCRIPTION = "STRING = '', var s = new STRING()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "STRING = '', var s = new STRING()",

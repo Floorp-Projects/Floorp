@@ -37,7 +37,6 @@ var TITLE   = "The Math Object";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "MYMATH = Math()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "MYMATH = Math()",

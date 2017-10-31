@@ -57,7 +57,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var BOOLEAN = new Boolean();
 
 DESCRIPTION = "var BOOLEAN = new Boolean(); var b = new BOOLEAN()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "var BOOLEAN = new Boolean(); var b = new BOOLEAN()",

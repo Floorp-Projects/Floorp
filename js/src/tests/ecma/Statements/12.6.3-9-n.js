@@ -51,7 +51,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 //  LeftHandSideExpression:NewExpression:MemberExpression
 
 DESCRIPTION = "object is not defined";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "object is not defined",

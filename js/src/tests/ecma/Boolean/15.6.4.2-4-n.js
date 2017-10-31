@@ -25,7 +25,6 @@ var TITLE   = "Boolean.prototype.toString()";
 writeHeaderToLog( SECTION +" "+ TITLE );
 
 DESCRIPTION = "tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()";
-EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"tostr=Boolean.prototype.toString; x=new String( 'hello' ); x.toString=tostr; x.toString()",

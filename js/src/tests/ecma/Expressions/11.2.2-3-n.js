@@ -55,7 +55,6 @@ var TITLE   = "The new operator";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var DESCRIPTION = "NULL = null; var o = new NULL()";
-var EXPECTED = "error";
 var NULL = null;
 
 new TestCase( SECTION,
