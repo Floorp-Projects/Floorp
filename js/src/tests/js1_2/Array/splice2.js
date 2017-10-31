@@ -110,7 +110,6 @@ function exhaustiveSpliceTestWithArgs(testname, testArray)
       }
     }
   }
-  var testcase = new TestCase(SECTION, testname, true, passed);
-  if (!passed) testcase.reason = reason;
-  return testcase;
+
+  new TestCase(SECTION, testname, true, passed, reason);
 }

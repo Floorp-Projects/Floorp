@@ -75,14 +75,8 @@ function addProperty(name, value) {
     eval( "this."+ name+" = "+ false );
   }
 
-  var testcase = new TestCase( SECTION,
+  new TestCase( SECTION,
 		"Property: " + name +" already enumerated?",
 		false,
 		pass );
-
-  if ( testcase.passed == false ) {
-    testcase.reason = "property already enumerated";
-
-  }
-
 }
