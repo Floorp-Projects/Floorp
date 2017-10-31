@@ -348,17 +348,12 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY showAllHistoryCmd2.label "Show All History">
 <!ENTITY showAllHistoryCmd.commandkey "H">
 
-<!ENTITY appMenuCustomize.label "Customize">
-<!ENTITY appMenuCustomize.tooltip "Customize the Menu and Toolbars">
-<!ENTITY appMenuCustomizeExit.label "Exit Customize">
-<!ENTITY appMenuCustomizeExit.tooltip "Finish Customizing">
 <!ENTITY appMenuHistory.showAll.label "Show All History">
 <!ENTITY appMenuHistory.clearRecent.label "Clear Recent History…">
 <!ENTITY appMenuHistory.restoreSession.label "Restore Previous Session">
 <!ENTITY appMenuHistory.viewSidebar.label "View History Sidebar">
 <!ENTITY appMenuHistory.recentHistory.label "Recent History">
 <!ENTITY appMenuHelp.label "Help">
-<!ENTITY appMenuHelp.tooltip "Open Help Menu">
 
 <!ENTITY appMenuRemoteTabs.label "Synced Tabs">
 <!-- LOCALIZATION NOTE (appMenuRemoteTabs.notabs.label): This is shown beneath
@@ -831,8 +826,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncToolbarButton.label      "Sync">
 
 <!ENTITY customizeMode.menuAndToolbars.header3 "Drag your favorite items into the toolbar or overflow menu.">
-<!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
-<!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
 <!ENTITY customizeMode.done "Done">
 <!ENTITY customizeMode.titlebar "Title Bar">
