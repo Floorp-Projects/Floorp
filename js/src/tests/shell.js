@@ -520,7 +520,7 @@
     var lines = StringSplit(msg, "\n");
 
     for (var i = 0; i < lines.length; i++)
-      print(STATUS + lines[i]);
+      print("STATUS: " + lines[i]);
   }
   global.printStatus = printStatus;
 
@@ -715,8 +715,6 @@
   };
   global.assertEventuallyDeepEq = assertEventuallyDeepEq;
 })(this);
-
-var STATUS = "STATUS: ";
 
 var gDelayTestDriverEnd = false;
 var gFailureExpected = false;
