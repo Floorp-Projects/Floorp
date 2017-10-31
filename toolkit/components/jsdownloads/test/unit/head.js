@@ -99,7 +99,7 @@ var gHttpServer;
  * on the currently running instance of the test HTTP server.
  */
 function httpUrl(aFileName) {
-  return "http://localhost:" + gHttpServer.identity.primaryPort + "/" +
+  return "http://www.example.com:" + gHttpServer.identity.primaryPort + "/" +
          aFileName;
 }
 
@@ -631,6 +631,14 @@ add_task(function test_common_initialize() {
       // Stop the HTTP server, calling resolve when it's done.
       gHttpServer.stop(resolve);
     });
+  });
+
+  // Serve the downloads from a domain located in the Internet zone on Windows.
+  gHttpServer.identity.setPrimary("http", "www.example.com",
+                                  gHttpServer.identity.primaryPort);
+  Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
+  do_register_cleanup(function() {
+    Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
   // Cache locks might prevent concurrent requests to the same resource, and
