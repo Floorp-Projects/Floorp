@@ -390,6 +390,7 @@ extern HeapSlot* const emptyObjectElements;
 extern HeapSlot* const emptyObjectElementsShared;
 
 struct Class;
+class AutoCheckShapeConsistency;
 class GCMarker;
 class Shape;
 
@@ -551,6 +552,7 @@ class NativeObject : public ShapedObject
 
   protected:
 #ifdef DEBUG
+    friend class js::AutoCheckShapeConsistency;
     void checkShapeConsistency();
 #else
     void checkShapeConsistency() { }
