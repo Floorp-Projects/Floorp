@@ -9,8 +9,10 @@ import copy
 import os
 import platform
 import pprint
+import re
 import urllib2
 import json
+import socket
 from urlparse import urlparse, ParseResult
 
 from mozharness.base.errors import BaseErrorList
@@ -50,53 +52,52 @@ TOOLTOOL_PLATFORM_DIR = {
 testing_config_options = [
     [["--installer-url"],
      {"action": "store",
-      "dest": "installer_url",
-      "default": None,
-      "help": "URL to the installer to install",
+     "dest": "installer_url",
+     "default": None,
+     "help": "URL to the installer to install",
       }],
     [["--installer-path"],
      {"action": "store",
-      "dest": "installer_path",
-      "default": None,
-      "help": "Path to the installer to install.  This is set automatically if run with "
-        "--download-and-extract.",
+     "dest": "installer_path",
+     "default": None,
+     "help": "Path to the installer to install.  This is set automatically if run with --download-and-extract.",
       }],
     [["--binary-path"],
      {"action": "store",
-      "dest": "binary_path",
-      "default": None,
-      "help": "Path to installed binary.  This is set automatically if run with --install.",
+     "dest": "binary_path",
+     "default": None,
+     "help": "Path to installed binary.  This is set automatically if run with --install.",
       }],
     [["--exe-suffix"],
      {"action": "store",
-      "dest": "exe_suffix",
-      "default": None,
-      "help": "Executable suffix for binaries on this platform",
+     "dest": "exe_suffix",
+     "default": None,
+     "help": "Executable suffix for binaries on this platform",
       }],
     [["--test-url"],
      {"action": "store",
-      "dest": "test_url",
-      "default": None,
-      "help": "URL to the zip file containing the actual tests",
+     "dest": "test_url",
+     "default": None,
+     "help": "URL to the zip file containing the actual tests",
       }],
     [["--test-packages-url"],
      {"action": "store",
-      "dest": "test_packages_url",
-      "default": None,
-      "help": "URL to a json file describing which tests archives to download",
+     "dest": "test_packages_url",
+     "default": None,
+     "help": "URL to a json file describing which tests archives to download",
       }],
     [["--jsshell-url"],
      {"action": "store",
-      "dest": "jsshell_url",
-      "default": None,
-      "help": "URL to the jsshell to install",
+     "dest": "jsshell_url",
+     "default": None,
+     "help": "URL to the jsshell to install",
       }],
     [["--download-symbols"],
      {"action": "store",
-      "dest": "download_symbols",
-      "type": "choice",
-      "choices": ['ondemand', 'true'],
-      "help": "Download and extract crash reporter symbols.",
+     "dest": "download_symbols",
+     "type": "choice",
+     "choices": ['ondemand', 'true'],
+     "help": "Download and extract crash reporter symbols.",
       }],
 ] + copy.deepcopy(virtualenv_config_options) \
   + copy.deepcopy(try_config_options) \
@@ -211,7 +212,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                     self.symbols_url = symbols_url
             except Exception as ex:
                 self.warning("Cannot open symbols url %s (installer url: %s): %s" %
-                             (symbols_url, self.installer_url, ex))
+                    (symbols_url, self.installer_url, ex))
                 if raise_on_failure:
                     raise
 
@@ -242,7 +243,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
         c = self.config
         orig_config = copy.deepcopy(c)
         self.warning("When you use developer_config.py, we drop "
-                     "'read-buildbot-config' from the list of actions.")
+                "'read-buildbot-config' from the list of actions.")
         if "read-buildbot-config" in rw_config.actions:
             rw_config.actions.remove("read-buildbot-config")
         self.actions = tuple(rw_config.actions)
@@ -259,8 +260,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
             self.exception("You must use --installer-url with developer_config.py")
         if c.get("require_test_zip"):
             if not c.get('test_url') and not c.get('test_packages_url'):
-                self.exception("You must use --test-url or "
-                               "--test-packages-url with developer_config.py")
+                self.exception("You must use --test-url or --test-packages-url with developer_config.py")
 
         c["installer_url"] = _replace_url(c["installer_url"], c["replace_urls"])
         if c.get("test_url"):
@@ -292,8 +292,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
             self.https_username, self.https_password = get_credentials()
             # This creates a password manager
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            # Because we have put None at the start it will use this username/password combination
-            # from here on
+            # Because we have put None at the start it will use this username/password combination from here on
             passman.add_password(None, url, self.https_username, self.https_password)
             authhandler = urllib2.HTTPBasicAuthHandler(passman)
 
@@ -312,6 +311,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
         c = self.config
         try:
             files = self.buildbot_config['sourcestamp']['changes'][-1]['files']
+            buildbot_prop_branch = self.buildbot_config['properties']['branch']
 
             # Bug 868490 - Only require exactly two files if require_test_zip;
             # otherwise accept either 1 or 2, since we'll be getting a
@@ -321,8 +321,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 expected_length = [2, 3]
             actual_length = len(files)
             if actual_length not in expected_length:
-                self.fatal("Unexpected number of files in buildbot config %s.\n"
-                           "Expected these number(s) of files: %s, but got: %d" %
+                self.fatal("Unexpected number of files in buildbot config %s.\nExpected these number(s) of files: %s, but got: %d" %
                            (c['buildbot_json_path'], str(expected_length), actual_length))
             for f in files:
                 if f['name'].endswith('tests.zip'):  # yuk
@@ -336,8 +335,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 elif f['name'].endswith('test_packages.json'):
                     self.test_packages_url = str(f['name'])
                     self.info("Found a test packages url %s." % self.test_packages_url)
-                elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip',
-                                                             'stylo-bindings.zip')):
+                elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip', 'stylo-bindings.zip')):
                     if not self.installer_url:
                         self.installer_url = str(f['name'])
                         self.info("Found installer url %s." % self.installer_url)
@@ -403,8 +401,7 @@ You can set this by:
 2. running via buildbot and running the read-buildbot-config action
 
 """
-        if (self.config.get("require_test_zip")
-            and not self.test_url and not self.test_packages_url):
+        if self.config.get("require_test_zip") and not self.test_url and not self.test_packages_url:
             message += """test_url isn't set!
 
 You can set this by:
@@ -529,8 +526,10 @@ You can set this by:
         if self.installer_path:
             file_name = self.installer_path
         dirs = self.query_abs_dirs()
-        source = self.download_file(self.installer_url, file_name=file_name,
-                                    parent_dir=dirs['abs_work_dir'], error_level=FATAL)
+        source = self.download_file(self.installer_url,
+                                            file_name=file_name,
+                                            parent_dir=dirs['abs_work_dir'],
+                                            error_level=FATAL)
         self.installer_path = os.path.realpath(source)
         self.set_buildbot_property("build_url", self.installer_url, write_to_file=True)
 
@@ -620,8 +619,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
     def install_app(self, app=None, target_dir=None, installer_path=None):
         """ Dependent on mozinstall """
         # install the application
-        cmd = self.query_exe("mozinstall", default=self.query_python_path("mozinstall"),
-                             return_type="list")
+        cmd = self.query_exe("mozinstall", default=self.query_python_path("mozinstall"), return_type="list")
         if app:
             cmd.extend(['--app', app])
         # Remove the below when we no longer need to support mozinstall 0.3
@@ -722,7 +720,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
             return self.nodejs_path
 
         c = self.config
-        dirs = self.query_abs_dirs()
+        dirs = self.query_abs_dirs();
 
         nodejs_path = self.query_nodejs_filename()
         if not self.config.get('download_nodejs'):
@@ -752,8 +750,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
                 self.chmod(abs_nodejs_path, 0755)
             self.nodejs_path = abs_nodejs_path
         else:
-            self.warning("nodejs path was given but couldn't be found. "
-                         "Tried looking in '%s'" % abs_nodejs_path)
+            self.warning("nodejs path was given but couldn't be found. Tried looking in '%s'" % abs_nodejs_path)
             self.buildbot_status(TBPL_WARNING, WARNING)
 
         return self.nodejs_path

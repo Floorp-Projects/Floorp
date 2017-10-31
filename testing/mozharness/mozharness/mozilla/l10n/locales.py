@@ -8,6 +8,7 @@
 """
 
 import os
+from urlparse import urljoin
 import pprint
 import sys
 from copy import deepcopy

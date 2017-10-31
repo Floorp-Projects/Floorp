@@ -88,17 +88,13 @@ class BuildbotMixin(object):
                 if os.path.exists(log_file):
                     file_size = os.path.getsize(log_file)
                     if file_size > self.config['buildbot_max_log_size']:
-                        self.error("Log file size %d is greater than max allowed %d! Setting "
-                                   "TBPL_FAILURE (was %s)..." %
-                                   (file_size, self.config['buildbot_max_log_size'], tbpl_status))
+                        self.error("Log file size %d is greater than max allowed %d! Setting TBPL_FAILURE (was %s)..." % (file_size, self.config['buildbot_max_log_size'], tbpl_status))
                         tbpl_status = TBPL_FAILURE
             if not level:
                 level = TBPL_STATUS_DICT[tbpl_status]
-            self.worst_buildbot_status = self.worst_level(tbpl_status, self.worst_buildbot_status,
-                                                          TBPL_WORST_LEVEL_TUPLE)
+            self.worst_buildbot_status = self.worst_level(tbpl_status, self.worst_buildbot_status, TBPL_WORST_LEVEL_TUPLE)
             if self.worst_buildbot_status != tbpl_status:
-                self.info("Current worst status %s is worse; keeping it." %
-                          self.worst_buildbot_status)
+                self.info("Current worst status %s is worse; keeping it." % self.worst_buildbot_status)
             self.add_summary("# TBPL %s #" % self.worst_buildbot_status, level=level)
             if set_return_code:
                 self.return_code = EXIT_STATUS_DICT[self.worst_buildbot_status]
@@ -141,8 +137,7 @@ class BuildbotMixin(object):
             self.info("Writing buildbot properties to %s" % file_name)
         else:
             if not isinstance(prop_list, (list, tuple)):
-                self.log("dump_buildbot_properties: Can't dump non-list prop_list %s!" %
-                         str(prop_list), level=error_level)
+                self.log("dump_buildbot_properties: Can't dump non-list prop_list %s!" % str(prop_list), level=error_level)
                 return
             self.info("Writing buildbot properties %s to %s" % (str(prop_list), file_name))
         contents = ""
@@ -151,7 +146,7 @@ class BuildbotMixin(object):
         return self.write_to_file(file_name, contents)
 
     def invoke_sendchange(self, downloadables=None, branch=None,
-                          username="sendchange-unittest", sendchange_props=None):
+                   username="sendchange-unittest", sendchange_props=None):
         """ Generic sendchange, currently b2g- and unittest-specific.
             """
         c = self.config
@@ -159,11 +154,9 @@ class BuildbotMixin(object):
         if branch is None:
             if c.get("debug_build"):
                 platform = re.sub('[_-]debug', '', self.buildbot_config["properties"]["platform"])
-                branch = '%s-%s-debug-unittest' % (self.buildbot_config["properties"]["branch"],
-                                                   platform)
+                branch = '%s-%s-debug-unittest' % (self.buildbot_config["properties"]["branch"], platform)
             else:
-                branch = '%s-%s-opt-unittest' % (self.buildbot_config["properties"]["branch"],
-                                                 self.buildbot_config["properties"]["platform"])
+                branch = '%s-%s-opt-unittest' % (self.buildbot_config["properties"]["branch"], self.buildbot_config["properties"]["platform"])
         sendchange = [
             'sendchange',
             '--master', c.get("sendchange_masters")[0],
@@ -174,18 +167,15 @@ class BuildbotMixin(object):
             sendchange += ['-r', self.buildbot_config['sourcestamp']["revision"]]
         if len(self.buildbot_config['sourcestamp']['changes']) > 0:
             if self.buildbot_config['sourcestamp']['changes'][0].get('who'):
-                sendchange += ['--username',
-                               self.buildbot_config['sourcestamp']['changes'][0]['who']]
+                sendchange += ['--username', self.buildbot_config['sourcestamp']['changes'][0]['who']]
             if self.buildbot_config['sourcestamp']['changes'][0].get('comments'):
-                sendchange += ['--comments', self.buildbot_config['sourcestamp']
-                               ['changes'][0]['comments'].encode('ascii', 'ignore')]
+                sendchange += ['--comments', self.buildbot_config['sourcestamp']['changes'][0]['comments'].encode('ascii', 'ignore')]
         if sendchange_props:
             for key, value in sendchange_props.iteritems():
                 sendchange.extend(['--property', '%s:%s' % (key, value)])
         else:
             if self.buildbot_config["properties"].get("builduid"):
-                sendchange += ['--property', "builduid:%s" %
-                               self.buildbot_config["properties"]["builduid"]]
+                sendchange += ['--property', "builduid:%s" % self.buildbot_config["properties"]["builduid"]]
             sendchange += [
                 '--property', "buildid:%s" % self.query_buildid(),
                 '--property', 'pgo_build:False',
@@ -196,8 +186,7 @@ class BuildbotMixin(object):
 
         retcode = self.run_command(buildbot + sendchange)
         if retcode != 0:
-            self.info("The sendchange failed but we don't want to turn the build orange: %s" %
-                      retcode)
+            self.info("The sendchange failed but we don't want to turn the build orange: %s" % retcode)
 
     def query_build_name(self):
         build_name = self.config.get('platform')
