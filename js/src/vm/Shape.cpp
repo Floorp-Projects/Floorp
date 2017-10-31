@@ -499,27 +499,26 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
         Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, flags));
         child.updateGetterSetter(getter, setter);
         shape = getChildProperty(cx, obj, last, &child);
+        if (!shape) {
+            obj->checkShapeConsistency();
+            return nullptr;
+        }
     }
 
-    if (shape) {
-        MOZ_ASSERT(shape == obj->lastProperty());
+    MOZ_ASSERT(shape == obj->lastProperty());
 
-        if (table) {
-            /* Store the tree node pointer in the table entry for id. */
-            entry->setPreservingCollision(shape);
-            table->incEntryCount();
+    if (table) {
+        /* Store the tree node pointer in the table entry for id. */
+        entry->setPreservingCollision(shape);
+        table->incEntryCount();
 
-            /* Pass the table along to the new last property, namely shape. */
-            MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
-            shape->parent->handoffTableTo(shape);
-        }
-
-        obj->checkShapeConsistency();
-        return shape;
+        /* Pass the table along to the new last property, namely shape. */
+        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
+        shape->parent->handoffTableTo(shape);
     }
 
     obj->checkShapeConsistency();
-    return nullptr;
+    return shape;
 }
 
 /* static */ Shape*
@@ -575,27 +574,26 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, flags));
         shape = getChildProperty(cx, obj, last, &child);
+        if (!shape) {
+            obj->checkShapeConsistency();
+            return nullptr;
+        }
     }
 
-    if (shape) {
-        MOZ_ASSERT(shape == obj->lastProperty());
+    MOZ_ASSERT(shape == obj->lastProperty());
 
-        if (table) {
-            /* Store the tree node pointer in the table entry for id. */
-            entry->setPreservingCollision(shape);
-            table->incEntryCount();
+    if (table) {
+        /* Store the tree node pointer in the table entry for id. */
+        entry->setPreservingCollision(shape);
+        table->incEntryCount();
 
-            /* Pass the table along to the new last property, namely shape. */
-            MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
-            shape->parent->handoffTableTo(shape);
-        }
-
-        obj->checkShapeConsistency();
-        return shape;
+        /* Pass the table along to the new last property, namely shape. */
+        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
+        shape->parent->handoffTableTo(shape);
     }
 
     obj->checkShapeConsistency();
-    return nullptr;
+    return shape;
 }
 
 /* static */ Shape*
