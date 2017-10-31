@@ -1,4 +1,3 @@
-// |reftest| fails
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,7 +27,6 @@ function test()
     {s : '\u0020', t : 'SPACE'},
     {s : '\u00A0', t : 'NO-BREAK SPACE'},
     {s : '\u1680', t : 'OGHAM SPACE MARK'},
-    {s : '\u180E', t : 'MONGOLIAN VOWEL SEPARATOR'},
     {s : '\u2000', t : 'EN QUAD'},
     {s : '\u2001', t : 'EM QUAD'},
     {s : '\u2002', t : 'EN SPACE'},
@@ -47,7 +45,6 @@ function test()
     {s : '\u000D', t : 'CARRIAGE RETURN'},
     {s : '\u2028', t : 'LINE SEPARATOR'},
     {s : '\u2029', t : 'PARAGRAPH SEPARATOR'},
-    {s : '\u200B', t : 'ZERO WIDTH SPACE (category Cf)'}
     ];
 
   for (var i = 0; i < whitespace.length; ++i)
