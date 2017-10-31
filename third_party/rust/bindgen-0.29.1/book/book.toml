@@ -1,3 +1,0 @@
-title = "The `bindgen` User Guide"
-author = "The Servo project developers"
-description = "`bindgen` automatically generates Rust FFI bindings to C and C++ libraries."

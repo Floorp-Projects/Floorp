@@ -83,11 +83,11 @@ impl ClangSubItemParser for Module {
                 let module_id = ctx.module(cursor);
                 ctx.with_module(module_id, |ctx| {
                     cursor.visit(
-                        |cursor| parse_one(ctx, cursor, Some(module_id)),
+                        |cursor| parse_one(ctx, cursor, Some(module_id.into())),
                     )
                 });
 
-                Ok(ParseResult::AlreadyResolved(module_id))
+                Ok(ParseResult::AlreadyResolved(module_id.into()))
             }
             _ => Err(ParseError::Continue),
         }

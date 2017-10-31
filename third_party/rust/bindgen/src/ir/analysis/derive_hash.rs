@@ -33,11 +33,8 @@ use std::collections::HashSet;
 ///   derived hash if any of the template arguments or template definition
 ///   cannot derive hash.
 #[derive(Debug, Clone)]
-pub struct CannotDeriveHash<'ctx, 'gen>
-where
-    'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct CannotDeriveHash<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
     // set cannot derive hash.
@@ -53,7 +50,7 @@ where
     dependencies: HashMap<ItemId, Vec<ItemId>>,
 }
 
-impl<'ctx, 'gen> CannotDeriveHash<'ctx, 'gen> {
+impl<'ctx> CannotDeriveHash<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             // These are the only edges that can affect whether a type can derive
@@ -77,7 +74,8 @@ impl<'ctx, 'gen> CannotDeriveHash<'ctx, 'gen> {
         }
     }
 
-    fn insert(&mut self, id: ItemId) -> ConstrainResult {
+    fn insert<Id: Into<ItemId>>(&mut self, id: Id) -> ConstrainResult {
+        let id = id.into();
         trace!("inserting {:?} into the cannot_derive_hash set", id);
 
         let was_not_already_in_set = self.cannot_derive_hash.insert(id);
@@ -92,12 +90,12 @@ impl<'ctx, 'gen> CannotDeriveHash<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for CannotDeriveHash<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashSet<ItemId>;
 
-    fn new(ctx: &'ctx BindgenContext<'gen>) -> CannotDeriveHash<'ctx, 'gen> {
+    fn new(ctx: &'ctx BindgenContext) -> CannotDeriveHash<'ctx> {
         let cannot_derive_hash = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
@@ -129,11 +127,17 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
             }
         };
 
+        if self.ctx.no_hash_by_name(&item) {
+            return self.insert(id)
+        }
+
         if item.is_opaque(self.ctx, &()) {
             let layout_can_derive = ty.layout(self.ctx).map_or(true, |l| {
                 l.opaque().can_trivially_derive_hash()
             });
-            return if layout_can_derive {
+            return if layout_can_derive &&
+                !(ty.is_union() &&
+                  self.ctx.options().rust_features().untagged_union()) {
                 trace!("    we can trivially derive Hash for the layout");
                 ConstrainResult::Same
             } else {
@@ -179,7 +183,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
             }
 
             TypeKind::Array(t, len) => {
-                if self.cannot_derive_hash.contains(&t) {
+                if self.cannot_derive_hash.contains(&t.into()) {
                     trace!(
                         "    arrays of T for which we cannot derive Hash \
                             also cannot derive Hash"
@@ -187,7 +191,10 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
                     return self.insert(id);
                 }
 
-                if len <= RUST_DERIVE_IN_ARRAY_LIMIT {
+                if len == 0 {
+                    trace!("    cannot derive `Hash` for incomplete arrays");
+                    self.insert(id)
+                } else if len <= RUST_DERIVE_IN_ARRAY_LIMIT {
                     trace!("    array is small enough to derive Hash");
                     ConstrainResult::Same
                 } else {
@@ -223,7 +230,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) => {
-                if self.cannot_derive_hash.contains(&t) {
+                if self.cannot_derive_hash.contains(&t.into()) {
                     trace!(
                         "    aliases and type refs to T which cannot derive \
                             Hash also cannot derive Hash"
@@ -264,8 +271,8 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
 
                 let bases_cannot_derive =
                     info.base_members().iter().any(|base| {
-                        !self.ctx.whitelisted_items().contains(&base.ty) ||
-                            self.cannot_derive_hash.contains(&base.ty)
+                        !self.ctx.whitelisted_items().contains(&base.ty.into()) ||
+                            self.cannot_derive_hash.contains(&base.ty.into())
                     });
                 if bases_cannot_derive {
                     trace!(
@@ -279,16 +286,24 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
                     info.fields().iter().any(|f| match *f {
                         Field::DataMember(ref data) => {
                             !self.ctx.whitelisted_items().contains(
-                                &data.ty(),
+                                &data.ty().into(),
                             ) ||
-                                self.cannot_derive_hash.contains(&data.ty())
+                                self.cannot_derive_hash.contains(&data.ty().into())
                         }
                         Field::Bitfields(ref bfu) => {
+                            if bfu.layout().align > RUST_DERIVE_IN_ARRAY_LIMIT {
+                                trace!(
+                                    "   we cannot derive Hash for a bitfield larger then \
+                                        the limit"
+                                );
+                                return true;
+                            }
+
                             bfu.bitfields().iter().any(|b| {
                                 !self.ctx.whitelisted_items().contains(
-                                    &b.ty(),
+                                    &b.ty().into(),
                                 ) ||
-                                    self.cannot_derive_hash.contains(&b.ty())
+                                    self.cannot_derive_hash.contains(&b.ty().into())
                             })
                         }
                     });
@@ -304,7 +319,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
             TypeKind::TemplateInstantiation(ref template) => {
                 let args_cannot_derive =
                     template.template_arguments().iter().any(|arg| {
-                        self.cannot_derive_hash.contains(&arg)
+                        self.cannot_derive_hash.contains(&arg.into())
                     });
                 if args_cannot_derive {
                     trace!(
@@ -319,7 +334,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
                     "The early ty.is_opaque check should have handled this case"
                 );
                 let def_cannot_derive = self.cannot_derive_hash.contains(
-                    &template.template_definition(),
+                    &template.template_definition().into(),
                 );
                 if def_cannot_derive {
                     trace!(
@@ -354,8 +369,8 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveHash<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<CannotDeriveHash<'ctx, 'gen>> for HashSet<ItemId> {
-    fn from(analysis: CannotDeriveHash<'ctx, 'gen>) -> Self {
+impl<'ctx> From<CannotDeriveHash<'ctx>> for HashSet<ItemId> {
+    fn from(analysis: CannotDeriveHash<'ctx>) -> Self {
         analysis.cannot_derive_hash
     }
 }

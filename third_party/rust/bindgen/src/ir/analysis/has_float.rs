@@ -23,10 +23,8 @@ use ir::comp::FieldMethods;
 ///   float if any of the template arguments or template definition
 ///   has.
 #[derive(Debug, Clone)]
-pub struct HasFloat<'ctx, 'gen>
-    where 'gen: 'ctx
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct HasFloat<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
     // set has float.
@@ -42,7 +40,7 @@ pub struct HasFloat<'ctx, 'gen>
     dependencies: HashMap<ItemId, Vec<ItemId>>,
 }
 
-impl<'ctx, 'gen> HasFloat<'ctx, 'gen> {
+impl<'ctx> HasFloat<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             EdgeKind::BaseMember |
@@ -64,7 +62,8 @@ impl<'ctx, 'gen> HasFloat<'ctx, 'gen> {
         }
     }
 
-    fn insert(&mut self, id: ItemId) -> ConstrainResult {
+    fn insert<Id: Into<ItemId>>(&mut self, id: Id) -> ConstrainResult {
+        let id = id.into();
         trace!("inserting {:?} into the has_float set", id);
 
         let was_not_already_in_set = self.has_float.insert(id);
@@ -79,12 +78,12 @@ impl<'ctx, 'gen> HasFloat<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashSet<ItemId>;
 
-    fn new(ctx: &'ctx BindgenContext<'gen>) -> HasFloat<'ctx, 'gen> {
+    fn new(ctx: &'ctx BindgenContext) -> HasFloat<'ctx> {
         let has_float = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
@@ -142,7 +141,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
             }
 
             TypeKind::Array(t, _) => {
-                if self.has_float.contains(&t) {
+                if self.has_float.contains(&t.into()) {
                     trace!("    Array with type T that has float also has float");
                     return self.insert(id)
                 }
@@ -153,7 +152,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) => {
-                if self.has_float.contains(&t) {
+                if self.has_float.contains(&t.into()) {
                     trace!("    aliases and type refs to T which have float \
                             also have float");
                     self.insert(id)
@@ -167,7 +166,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
             TypeKind::Comp(ref info) => {
                 let bases_have = info.base_members()
                     .iter()
-                    .any(|base| self.has_float.contains(&base.ty));
+                    .any(|base| self.has_float.contains(&base.ty.into()));
                 if bases_have {
                     trace!("    bases have float, so we also have");
                     return self.insert(id);
@@ -177,12 +176,12 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
                     .any(|f| {
                         match *f {
                             Field::DataMember(ref data) => {
-                                self.has_float.contains(&data.ty())
+                                self.has_float.contains(&data.ty().into())
                             }
                             Field::Bitfields(ref bfu) => {
                                 bfu.bitfields()
                                     .iter().any(|b| {
-                                        self.has_float.contains(&b.ty())
+                                        self.has_float.contains(&b.ty().into())
                                     })
                             },
                         }
@@ -199,7 +198,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
             TypeKind::TemplateInstantiation(ref template) => {
                 let args_have = template.template_arguments()
                     .iter()
-                    .any(|arg| self.has_float.contains(&arg));
+                    .any(|arg| self.has_float.contains(&arg.into()));
                 if args_have {
                     trace!("    template args have float, so \
                             insantiation also has float");
@@ -207,7 +206,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
                 }
 
                 let def_has = self.has_float
-                    .contains(&template.template_definition());
+                    .contains(&template.template_definition().into());
                 if def_has {
                     trace!("    template definition has float, so \
                             insantiation also has");
@@ -232,8 +231,8 @@ impl<'ctx, 'gen> MonotoneFramework for HasFloat<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<HasFloat<'ctx, 'gen>> for HashSet<ItemId> {
-    fn from(analysis: HasFloat<'ctx, 'gen>) -> Self {
+impl<'ctx> From<HasFloat<'ctx>> for HashSet<ItemId> {
+    fn from(analysis: HasFloat<'ctx>) -> Self {
         analysis.has_float
     }
 }
