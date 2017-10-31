@@ -20,15 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  if (!options().match(/strict/))
-  {
-    options('strict');
-  }
-  if (!options().match(/werror/))
-  {
-    options('werror');
-  }
-
   print('test crash from bug 371292 Comment 9');
 
   try
