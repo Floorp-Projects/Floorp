@@ -47,20 +47,20 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     const uint8_t* p = reader.Read(nalLen);
 
     if (!writer.Write(kAnnexBDelimiter, ArrayLength(kAnnexBDelimiter))) {
-      return Err(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
     if (!p) {
       break;
     }
     if (!writer.Write(p, nalLen)) {
-      return Err(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   }
 
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
 
   if (!samplewriter->Replace(tmp.Elements(), tmp.Length())) {
-    return Err(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
@@ -68,7 +68,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     RefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
-      return Err(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
 
     // Prepending the NAL with SPS/PPS will mess up the encryption subsample
@@ -222,7 +222,7 @@ ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
       aBr.Seek(startOffset);
       if (!aBw.WriteU32(sizeNAL)
           || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
-        return Err(NS_ERROR_FAILURE);
+        return Err(NS_ERROR_OUT_OF_MEMORY);
       }
       aBr.Read(startSize);
       startOffset = offset;
@@ -232,7 +232,7 @@ ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
   if (sizeNAL) {
     if (!aBw.WriteU32(sizeNAL)
         || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
-      return Err(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   }
   return Ok();
@@ -305,12 +305,12 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
     }
     if (!writer.WriteU32(nalLen)
         || !writer.Write(p, nalLen)) {
-      return Err(NS_ERROR_FAILURE);
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   }
   nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
   if (!samplewriter->Replace(dest.Elements(), dest.Length())) {
-    return Err(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
   return Ok();
 }
