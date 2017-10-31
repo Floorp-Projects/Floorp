@@ -10,6 +10,7 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="error_reporting_helpers.js"></script>
+  <script src="utils.js"></script>
 </head>
 <body>
 <p id="display"></p>
@@ -27,17 +28,16 @@ add_task(() => {
 
 // test for bug 1408734
 add_task(async () => {
-  let waitForControlled = new Promise((resolve) => {
-    navigator.serviceWorker.oncontrollerchange = resolve;
-  });
-
   // register a service worker
   let registration = await navigator.serviceWorker.register("fetch.js", {scope: "./"});
-  let worker = registration.installing || registration.active;
+  let sw = registration.installing || registration.active;
+
+  // wait for service worker be activated
+  await waitForState(sw, 'activated');
 
   // wait for control changed
-  worker.postMessage('claim');
-  await waitForControlled;
+  sw.postMessage('claim');
+  await waitForControlled(window);
 
   // get the ServiceWorkerRegistration we just register through GetRegistration
   registration = await navigator.serviceWorker.getRegistration("./");
