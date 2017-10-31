@@ -74,9 +74,7 @@ function addThis()
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
   testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
-  exitFunc ('test');
 }

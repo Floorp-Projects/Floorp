@@ -15,13 +15,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   this.__defineGetter__("x", "".match); if (x) 3;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

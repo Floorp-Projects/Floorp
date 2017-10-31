@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -27,7 +26,5 @@ function test()
   [1,2,3].map(function(v, i, t) { return /a/gi.exec(v); });
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 

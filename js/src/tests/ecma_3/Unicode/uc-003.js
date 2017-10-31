@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var \u0041 = 5;
   var A\u03B2 = 15;
 
@@ -25,6 +23,4 @@ function test()
 		 "Escaped non-ASCII Identifier test");
   reportCompare (16, eval("++A\u03B2"),
 		 "Escaped non-ASCII Identifier test");
-   
-  exitFunc ("test");
 }

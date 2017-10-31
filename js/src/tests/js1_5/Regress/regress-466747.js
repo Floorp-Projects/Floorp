@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -54,6 +53,4 @@ function test()
 
     window.addEventListener('load', boom, false);
   }
-
-  exitFunc ('test');
 }

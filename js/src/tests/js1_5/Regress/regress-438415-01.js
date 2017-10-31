@@ -15,13 +15,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   [1,,].pop();
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

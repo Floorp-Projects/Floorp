@@ -24,7 +24,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
   printBugNumber(BUGNUMBER);
   printStatus (status);
 
@@ -82,7 +81,4 @@ function test()
   actual = obj.five;
   expect=4;
   reportCompare (expect, actual, status);
-
-
-  exitFunc ("test");
 }

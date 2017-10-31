@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   printStatus ("Unicode Characters 1C-1F negative test.");
   printBugNumber (23612);
    
@@ -21,6 +19,4 @@ function test()
 		 "Unicode whitespace test (1E.)");
   reportCompare ("error", eval ("'no'\u001F+' error'"),
 		 "Unicode whitespace test (1F.)");
-
-  exitFunc ("test");
 }

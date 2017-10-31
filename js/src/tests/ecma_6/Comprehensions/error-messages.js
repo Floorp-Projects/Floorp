@@ -134,7 +134,6 @@ var summary = '';
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -169,6 +168,4 @@ function test()
     else
       expectSuccess(error(inGenExp(expr)), 'genexp context, ' + desc);
   }
-
-  exitFunc ('test');
 }

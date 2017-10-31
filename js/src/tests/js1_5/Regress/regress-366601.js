@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -33,6 +32,4 @@ function test()
     throw "Unexpected result: bad switch label";
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

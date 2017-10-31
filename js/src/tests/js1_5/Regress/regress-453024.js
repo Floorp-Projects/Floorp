@@ -20,7 +20,6 @@ else
 
   function test()
   {
-    enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus (summary);
  
@@ -36,8 +35,6 @@ else
     reportCompare(expect, actual, summary);
 
     jsTestDriverEnd();
-
-    exitFunc ('test');
   }
 
   window.addEventListener('load', test, false);

@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -52,6 +51,4 @@ function test()
     var v = whitespace[i];
     reportCompare(true, !!(/\s/.test(v.s)), 'Is ' + v.t + ' a space');
   }
- 
-  exitFunc ('test');
 }

@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   /(|)??x/g.exec("y");
 
   reportCompare(expect, actual, summary + ': /(|)??x/g.exec("y")');
-
-  exitFunc ('test');
 }

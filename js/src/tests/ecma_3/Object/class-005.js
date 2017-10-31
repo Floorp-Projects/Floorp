@@ -59,7 +59,6 @@ function addThis()
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -67,8 +66,6 @@ function test()
   {
     reportCompare(expectedvalue[i], actualvalue[i], getStatus(i));
   }
-
-  exitFunc ('test');
 }
 
 

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -39,6 +38,4 @@ function test()
   expect = 'undefined';
   actual = "y".replace(/(x)?y/, function($0, $1){ return $1; }) + '';
   reportCompare(expect, actual, summary + ': "y".replace(/(x)?y/, function($0, $1){ return $1; })');
-
-  exitFunc ('test');
 }

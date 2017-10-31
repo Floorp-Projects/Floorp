@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -44,6 +43,4 @@ function test()
   delete __proto__.x;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

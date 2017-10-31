@@ -18,7 +18,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -37,6 +36,4 @@ function test()
   var stop = new Date();
 
   print('Elapsed time: ' + Math.floor((stop - start)/1000) + ' seconds');
-
-  exitFunc ('test');
 }

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -32,6 +31,4 @@ function test()
     reportCompare(expect, actual, summary + 
                   ': function f4() { let local; return local.prop };');
   }
-
-  exitFunc ('test');
 }
