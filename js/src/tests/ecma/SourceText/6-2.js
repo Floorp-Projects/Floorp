@@ -76,22 +76,19 @@ new TestCase(  SECTION,
 	       "PAS\'SED",
 	       eval('var s = "PAS\\u0027SED"; s') );
 
-var testcase =  new TestCase( SECTION,
-			      'var s="PAS\\u0027SED"; s',
-			      "PAS\'SED",
-			      "" );
 var s = "PAS\u0027SED";
 
-testcase.actual =  s;
+new TestCase( SECTION,
+	      'var s="PAS\\u0027SED"; s',
+	      "PAS\'SED",
+	      s );
 
-testcase = new TestCase(  SECTION,
-			  'var s = "PAS\\u0022SED"; s',
-			  "PAS\"SED",
-			  "" );
 var s = "PAS\u0022SED";
 
-testcase.actual = s;
-
+new TestCase( SECTION,
+	      'var s = "PAS\\u0022SED"; s',
+	      "PAS\"SED",
+	      s );
 
 test();
 

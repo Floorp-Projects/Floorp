@@ -21,12 +21,13 @@ var TITLE   = "Comments";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
+var actual = "pass";
 
-var testcase =  new TestCase( SECTION,
-			      "code following multiline comment",
-			      "pass",
-			      "pass");
+////actual="fail";
 
-////testcase.actual="fail";
+new TestCase( SECTION,
+			     "code following multiline comment",
+			     "pass",
+			     actual);
 
 test();
