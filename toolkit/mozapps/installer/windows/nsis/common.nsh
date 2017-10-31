@@ -3629,6 +3629,16 @@
             ${EndIf}
           ${EndIf}
         ${Loop}
+        ; There might also be a shortcut with a different name created by a
+        ; previous version of the installer.
+        ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+          ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandFullName}.lnk"
+          Pop $R5
+          ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            Delete "$SMPROGRAMS\${BrandFullName}.lnk"
+          ${EndIf}
+        ${EndIf}
 
         ; Delete Quick Launch shortcuts for this application
         StrCpy $R4 -1
@@ -3649,6 +3659,16 @@
             ${EndIf}
           ${EndIf}
         ${Loop}
+        ; There might also be a shortcut with a different name created by a
+        ; previous version of the installer.
+        ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
+          ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
+          Pop $R5
+          ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
+          ${EndIf}
+        ${EndIf}
 
         ; Delete Desktop shortcuts for this application
         StrCpy $R4 -1
@@ -3669,6 +3689,16 @@
             ${EndIf}
           ${EndIf}
         ${Loop}
+        ; There might also be a shortcut with a different name created by a
+        ; previous version of the installer.
+        ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+          ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
+          Pop $R5
+          ${${_MOZFUNC_UN}GetLongPath} "$R5" $R5
+          ${If} "$INSTDIR\${FileMainEXE}" == "$R5"
+            Delete "$DESKTOP\${BrandFullName}.lnk"
+          ${EndIf}
+        ${EndIf}
 
         ${${_MOZFUNC_UN}GetLongPath} "$SMPROGRAMS" $R6
 

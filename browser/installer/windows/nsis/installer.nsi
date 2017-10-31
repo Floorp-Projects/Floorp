@@ -463,9 +463,9 @@ Section "-Application" APP_IDX
   ; Always add the application's shortcuts to the shortcuts log ini file. The
   ; DeleteShortcuts macro will do the right thing on uninstall if the
   ; shortcuts don't exist.
-  ${LogStartMenuShortcut} "${BrandFullName}.lnk"
-  ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
-  ${LogDesktopShortcut} "${BrandFullName}.lnk"
+  ${LogStartMenuShortcut} "${BrandShortName}.lnk"
+  ${LogQuickLaunchShortcut} "${BrandShortName}.lnk"
+  ${LogDesktopShortcut} "${BrandShortName}.lnk"
 
   ; Best effort to update the Win7 taskbar and start menu shortcut app model
   ; id's. The possible contexts are current user / system and the user that
@@ -495,17 +495,17 @@ Section "-Application" APP_IDX
   ; since this will either add it for the user if unelevated or All Users if
   ; elevated.
   ${If} $AddStartMenuSC == 1
-    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+    CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                            "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
+        ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
-      ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
+      ${LogMsg} "Added Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
     ${Else}
-      ${LogMsg} "** ERROR Adding Shortcut: $SMPROGRAMS\${BrandFullName}.lnk"
+      ${LogMsg} "** ERROR Adding Shortcut: $SMPROGRAMS\${BrandShortName}.lnk"
     ${EndIf}
   ${EndIf}
 
@@ -525,17 +525,17 @@ Section "-Application" APP_IDX
   ${EndIf}
 
   ${If} $AddDesktopSC == 1
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
+    CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
                                              "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID"  "true"
+        ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID"  "true"
       ${EndIf}
-      ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
+      ${LogMsg} "Added Shortcut: $DESKTOP\${BrandShortName}.lnk"
     ${Else}
-      ${LogMsg} "** ERROR Adding Shortcut: $DESKTOP\${BrandFullName}.lnk"
+      ${LogMsg} "** ERROR Adding Shortcut: $DESKTOP\${BrandShortName}.lnk"
     ${EndIf}
   ${EndIf}
 
@@ -548,12 +548,12 @@ Section "-Application" APP_IDX
       ${GetOptions} "$0" "/UAC:" $0
       ${If} ${Errors}
         Call AddQuickLaunchShortcut
-        ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
+        ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandShortName}.lnk"
       ${Else}
         ; It is not possible to add a log entry from the unelevated process so
         ; add the log entry without the path since there is no simple way to
         ; know the correct full path.
-        ${LogMsg} "Added Quick Launch Shortcut: ${BrandFullName}.lnk"
+        ${LogMsg} "Added Quick Launch Shortcut: ${BrandShortName}.lnk"
         GetFunctionAddress $0 AddQuickLaunchShortcut
         UAC::ExecCodeSegment $0
       ${EndIf}
@@ -744,9 +744,9 @@ FunctionEnd
 # Helper Functions
 
 Function AddQuickLaunchShortcut
-  CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-  ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
+  CreateShortCut "$QUICKLAUNCH\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+  ${If} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
+    ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandShortName}.lnk" \
                                            "$INSTDIR"
   ${EndIf}
 FunctionEnd
