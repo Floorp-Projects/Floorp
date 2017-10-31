@@ -1,6 +1,6 @@
 "use strict";
 
-/* global windowTracker */
+/* global windowTracker, EventManager, EventEmitter */
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -297,6 +297,8 @@ class Theme {
   }
 }
 
+const onUpdatedEmitter = new EventEmitter();
+
 this.theme = class extends ExtensionAPI {
   onManifestEntry(entryName) {
     if (!gThemesEnabled) {
@@ -314,12 +316,14 @@ this.theme = class extends ExtensionAPI {
 
     this.theme = new Theme(extension.baseURI, extension.logger);
     this.theme.load(manifest.theme);
+    onUpdatedEmitter.emit("theme-updated", manifest.theme);
   }
 
   onShutdown() {
     if (this.theme) {
       this.theme.unload();
     }
+    onUpdatedEmitter.emit("theme-updated", {});
   }
 
   getAPI(context) {
@@ -362,6 +366,7 @@ this.theme = class extends ExtensionAPI {
             browserWindow = windowTracker.getWindow(windowId, context);
           }
           this.theme.load(details, browserWindow);
+          onUpdatedEmitter.emit("theme-updated", details, windowId);
         },
         reset: (windowId) => {
           if (!gThemesEnabled) {
@@ -380,7 +385,22 @@ this.theme = class extends ExtensionAPI {
           }
 
           this.theme.unload(browserWindow);
+          onUpdatedEmitter.emit("theme-updated", {}, windowId);
         },
+        onUpdated: new EventManager(context, "theme.onUpdated", fire => {
+          let callback = (event, theme, windowId) => {
+            if (windowId) {
+              fire.async({theme, windowId});
+            } else {
+              fire.async({theme});
+            }
+          };
+
+          onUpdatedEmitter.on("theme-updated", callback);
+          return () => {
+            onUpdatedEmitter.off("theme-updated", callback);
+          };
+        }).api(),
       },
     };
   }
