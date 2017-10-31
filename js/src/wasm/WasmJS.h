@@ -71,6 +71,9 @@ ExportedFunctionToInstanceObject(JSFunction* fun);
 extern uint32_t
 ExportedFunctionToFuncIndex(JSFunction* fun);
 
+extern bool
+IsSharedWasmMemoryObject(JSObject* obj);
+
 } // namespace wasm
 
 // The class of the WebAssembly global namespace object.
