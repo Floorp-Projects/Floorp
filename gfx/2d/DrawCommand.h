@@ -180,6 +180,8 @@ public:
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   RefPtr<SourceSurface> mSurface;
   Rect mDest;
@@ -216,6 +218,8 @@ public:
     aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   RefPtr<SourceSurface> mSurface;
   Point mDest;
@@ -245,6 +249,8 @@ public:
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   RefPtr<FilterNode> mFilter;
   Rect mSourceRect;
@@ -269,6 +275,8 @@ public:
   {
     aDT->ClearRect(mRect);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Rect mRect;
@@ -300,6 +308,8 @@ public:
     }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<SourceSurface> mSurface;
@@ -335,6 +345,8 @@ public:
     return true;
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   Rect mRect;
   StoredPattern mPattern;
@@ -363,6 +375,8 @@ public:
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Rect mRect;
@@ -394,6 +408,8 @@ public:
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Point mStart;
@@ -429,6 +445,8 @@ public:
     aDeviceRect = mPath->GetBounds(aTransform);
     return true;
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<Path> mPath;
@@ -506,6 +524,8 @@ public:
     return true;
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   RefPtr<Path> mPath;
   StoredPattern mPattern;
@@ -546,6 +566,8 @@ public:
     buf.mGlyphs = &mGlyphs.front();
     aDT->FillGlyphs(mFont, buf, mPattern, mOptions, mRenderingOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<ScaledFont> mFont;
@@ -591,6 +613,8 @@ public:
     aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   RefPtr<ScaledFont> mFont;
   std::vector<Glyph> mGlyphs;
@@ -620,6 +644,8 @@ public:
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   StoredPattern mSource;
@@ -651,6 +677,8 @@ public:
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
 
+  static const bool AffectsSnapshot = true;
+
 private:
   StoredPattern mSource;
   RefPtr<SourceSurface> mMask;
@@ -676,6 +704,8 @@ public:
     aDT->PushClip(mPath);
   }
 
+  static const bool AffectsSnapshot = false;
+
 private:
   RefPtr<Path> mPath;
 };
@@ -697,6 +727,8 @@ public:
   {
     aDT->PushClipRect(mRect);
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   Rect mRect;
@@ -731,6 +763,8 @@ public:
                    mMaskTransform, mBounds, mCopyBackground);
   }
 
+  static const bool AffectsSnapshot = false;
+
 private:
   bool mOpaque;
   float mOpacity;
@@ -756,6 +790,8 @@ public:
   {
     aDT->PopClip();
   }
+
+  static const bool AffectsSnapshot = false;
 };
 
 class PopLayerCommand : public DrawingCommand
@@ -774,6 +810,8 @@ public:
   {
     aDT->PopLayer();
   }
+
+  static const bool AffectsSnapshot = true;
 };
 
 class SetTransformCommand : public DrawingCommand
@@ -799,6 +837,8 @@ public:
     }
   }
 
+  static const bool AffectsSnapshot = false;
+
 private:
   Matrix mTransform;
 };
@@ -822,6 +862,8 @@ public:
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
   }
 
+  static const bool AffectsSnapshot = false;
+
 private:
   bool mPermitSubpixelAA;
 };
@@ -842,6 +884,8 @@ public:
   {
     aDT->Flush();
   }
+
+  static const bool AffectsSnapshot = false;
 };
 
 class BlurCommand : public DrawingCommand
@@ -859,6 +903,8 @@ public:
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const {
     aDT->Blur(mBlur);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   AlphaBoxBlur mBlur;
