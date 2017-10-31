@@ -94,13 +94,15 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       /// ** All values >= eFallbackClickToPlay are plugin placeholder types
       ///    that would be replaced by a real plugin if activated (PlayPlugin())
       /// ** Furthermore, values >= eFallbackClickToPlay and
-      ///    <= eFallbackVulnerableNoUpdate are click-to-play types.
+      ///    <= eFallbackClickToPlayQuiet are click-to-play types.
       // The plugin is disabled until the user clicks on it
       eFallbackClickToPlay = nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY,
       // The plugin is vulnerable (update available)
       eFallbackVulnerableUpdatable = nsIObjectLoadingContent::PLUGIN_VULNERABLE_UPDATABLE,
       // The plugin is vulnerable (no update available)
       eFallbackVulnerableNoUpdate = nsIObjectLoadingContent::PLUGIN_VULNERABLE_NO_UPDATE,
+      // The plugin is click-to-play, but the user won't see overlays
+      eFallbackClickToPlayQuiet = nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY_QUIET,
     };
 
     nsObjectLoadingContent();

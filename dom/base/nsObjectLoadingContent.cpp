@@ -1333,6 +1333,7 @@ nsObjectLoadingContent::ObjectState() const
         case eFallbackUserDisabled:
           return NS_EVENT_STATE_USERDISABLED;
         case eFallbackClickToPlay:
+        case eFallbackClickToPlayQuiet:
           return NS_EVENT_STATE_TYPE_CLICK_TO_PLAY;
         case eFallbackDisabled:
           return NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_HANDLER_DISABLED;
@@ -2378,7 +2379,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
 
     // Don't fire error events if we're falling back to click-to-play; instead
     // pretend like this is a really slow-loading plug-in instead.
-    if (fallbackType != eFallbackClickToPlay) {
+    if (fallbackType != eFallbackClickToPlay && fallbackType != eFallbackClickToPlayQuiet) {
       MaybeFireErrorEvent();
     }
 
@@ -3342,6 +3343,14 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
       return true;
     case nsIPermissionManager::DENY_ACTION:
       aReason = eFallbackDisabled;
+      return false;
+    case PLUGIN_PERMISSION_PROMPT_ACTION_QUIET:
+      if (PreferFallback(true /* isPluginClickToPlay */)) {
+        aReason = eFallbackAlternate;
+      } else {
+        aReason = eFallbackClickToPlayQuiet;
+      }
+
       return false;
     case nsIPermissionManager::PROMPT_ACTION:
       if (PreferFallback(true /* isPluginClickToPlay */)) {
