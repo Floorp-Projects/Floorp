@@ -495,6 +495,7 @@ nsSiteSecurityService::nsSiteSecurityService()
   : mMaxMaxAge(kSixtyDaysInSeconds)
   , mUsePreloadList(true)
   , mPreloadListTimeOffset(0)
+  , mProcessPKPHeadersFromNonBuiltInRoots(false)
   , mDafsa(kDafsa)
 {
 }
