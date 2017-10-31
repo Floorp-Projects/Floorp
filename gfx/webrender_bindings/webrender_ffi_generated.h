@@ -529,13 +529,20 @@ struct WrImageMask {
   }
 };
 
-struct StickySideConstraint {
-  float margin;
-  float max_offset;
+// The minimum and maximum allowable offset for a sticky frame in a single dimension.
+struct StickyOffsetBounds {
+  // The minimum offset for this frame, typically a negative value, which specifies how
+  // far in the negative direction the sticky frame can offset its contents in this
+  // dimension.
+  float min;
+  // The maximum offset for this frame, typically a positive value, which specifies how
+  // far in the positive direction the sticky frame can offset its contents in this
+  // dimension.
+  float max;
 
-  bool operator==(const StickySideConstraint& aOther) const {
-    return margin == aOther.margin &&
-           max_offset == aOther.max_offset;
+  bool operator==(const StickyOffsetBounds& aOther) const {
+    return min == aOther.min &&
+           max == aOther.max;
   }
 };
 
@@ -1040,10 +1047,12 @@ WR_FUNC;
 WR_INLINE
 uint64_t wr_dp_define_sticky_frame(WrState *aState,
                                    LayoutRect aContentRect,
-                                   const StickySideConstraint *aTopRange,
-                                   const StickySideConstraint *aRightRange,
-                                   const StickySideConstraint *aBottomRange,
-                                   const StickySideConstraint *aLeftRange)
+                                   const float *aTopMargin,
+                                   const float *aRightMargin,
+                                   const float *aBottomMargin,
+                                   const float *aLeftMargin,
+                                   StickyOffsetBounds aVerticalBounds,
+                                   StickyOffsetBounds aHorizontalBounds)
 WR_FUNC;
 
 WR_INLINE
@@ -1433,16 +1442,7 @@ void wr_resource_updates_delete_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-ResourceUpdates *wr_resource_updates_deserialize(ByteSlice aData)
-WR_FUNC;
-
-WR_INLINE
 ResourceUpdates *wr_resource_updates_new()
-WR_FUNC;
-
-WR_INLINE
-void wr_resource_updates_serialize(ResourceUpdates *aResources,
-                                   VecU8 *aInto)
 WR_FUNC;
 
 WR_INLINE

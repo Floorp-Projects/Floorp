@@ -11,28 +11,28 @@ const OLD_URL = "http://example.com/";
 const RECENT_URL = "http://example.com/2/";
 const REFERENCE_DATE = new Date();
 
-// pages/visits to add via History.insert
-const PAGE_INFOS = [
+// Visits to add via addVisits
+const PLACEINFO = [
   {
-    url: RECENT_URL,
+    uri: RECENT_URL,
     title: `test visit for ${RECENT_URL}`,
-    visits: [
-      {date: REFERENCE_DATE},
-    ],
+    visitDate: REFERENCE_DATE,
   },
   {
-    url: OLD_URL,
+    uri: OLD_URL,
     title: `test visit for ${OLD_URL}`,
-    visits: [
-      {date: new Date(Number(REFERENCE_DATE) - 1000)},
-      {date: new Date(Number(REFERENCE_DATE) - 2000)},
-    ],
+    visitDate: new Date(Number(REFERENCE_DATE) - 1000),
+  },
+  {
+    uri: OLD_URL,
+    title: `test visit for ${OLD_URL}`,
+    visitDate: new Date(Number(REFERENCE_DATE) - 2000),
   },
 ];
 
 async function setupHistory() {
-  await PlacesTestUtils.clearHistory();
-  await PlacesUtils.history.insertMany(PAGE_INFOS);
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.addVisits(PLACEINFO);
   is((await PlacesTestUtils.visitsInDB(RECENT_URL)), 1, "Expected number of visits found in history database.");
   is((await PlacesTestUtils.visitsInDB(OLD_URL)), 2, "Expected number of visits found in history database.");
 }

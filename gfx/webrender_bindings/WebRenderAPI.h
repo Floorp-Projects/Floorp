@@ -240,10 +240,12 @@ public:
   Maybe<wr::WrClipId> GetCacheOverride(const DisplayItemClipChain* aParent);
 
   wr::WrStickyId DefineStickyFrame(const wr::LayoutRect& aContentRect,
-                                   const wr::StickySideConstraint* aTop,
-                                   const wr::StickySideConstraint* aRight,
-                                   const wr::StickySideConstraint* aBottom,
-                                   const wr::StickySideConstraint* aLeft);
+                                   const float* aTopMargin,
+                                   const float* aRightMargin,
+                                   const float* aBottomMargin,
+                                   const float* aLeftMargin,
+                                   const StickyOffsetBounds& aVerticalBounds,
+                                   const StickyOffsetBounds& aHorizontalBounds);
   void PushStickyFrame(const wr::WrStickyId& aStickyId,
                        const DisplayItemClipChain* aParent);
   void PopStickyFrame(const DisplayItemClipChain* aParent);

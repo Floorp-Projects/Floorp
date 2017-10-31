@@ -152,44 +152,84 @@ pub struct PrimitiveMetadata {
     pub tag: Option<ItemTag>,
 }
 
+#[derive(Debug,Clone,Copy)]
+pub enum RectangleContent {
+    Fill(ColorF),
+    Clear,
+}
+
 #[derive(Debug)]
-#[repr(C)]
 pub struct RectanglePrimitive {
-    pub color: ColorF,
+    pub content: RectangleContent,
 }
 
 impl ToGpuBlocks for RectanglePrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push(self.color.premultiplied());
+        match &self.content {
+            &RectangleContent::Fill(ref color) => {
+                request.push(color.premultiplied());
+            }
+            &RectangleContent::Clear => {
+                // Opaque black with operator dest out
+                request.push(ColorF::new(0.0, 0.0, 0.0, 1.0));
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum BrushMaskKind {
+    //Rect,         // TODO(gw): Optimization opportunity for masks with 0 border radii.
+    Corner(LayerSize),
+    RoundedRect(LayerRect, BorderRadius),
+}
+
+#[derive(Debug)]
+pub enum BrushKind {
+    Mask {
+        clip_mode: ClipMode,
+        kind: BrushMaskKind,
     }
 }
 
 #[derive(Debug)]
 pub struct BrushPrimitive {
-    pub clip_mode: ClipMode,
-    pub radius: BorderRadius,
+    pub kind: BrushKind,
 }
 
 impl ToGpuBlocks for BrushPrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push([
-            self.clip_mode as u32 as f32,
-            0.0,
-            0.0,
-            0.0
-        ]);
-        request.push([
-            self.radius.top_left.width,
-            self.radius.top_left.height,
-            self.radius.top_right.width,
-            self.radius.top_right.height,
-        ]);
-        request.push([
-            self.radius.bottom_right.width,
-            self.radius.bottom_right.height,
-            self.radius.bottom_left.width,
-            self.radius.bottom_left.height,
-        ]);
+        match self.kind {
+            BrushKind::Mask { clip_mode, kind: BrushMaskKind::Corner(radius) } => {
+                request.push([
+                    radius.width,
+                    radius.height,
+                    clip_mode as u32 as f32,
+                    0.0,
+                ]);
+            }
+            BrushKind::Mask { clip_mode, kind: BrushMaskKind::RoundedRect(rect, radii) } => {
+                request.push([
+                    clip_mode as u32 as f32,
+                    0.0,
+                    0.0,
+                    0.0
+                ]);
+                request.push(rect);
+                request.push([
+                    radii.top_left.width,
+                    radii.top_left.height,
+                    radii.top_right.width,
+                    radii.top_right.height,
+                ]);
+                request.push([
+                    radii.bottom_right.width,
+                    radii.bottom_right.height,
+                    radii.bottom_left.width,
+                    radii.bottom_left.height,
+                ]);
+            }
+        }
     }
 }
 
@@ -874,8 +914,14 @@ impl PrimitiveStore {
 
         let metadata = match container {
             PrimitiveContainer::Rectangle(rect) => {
+                let opacity = match &rect.content {
+                    &RectangleContent::Fill(ref color) => {
+                        PrimitiveOpacity::from_alpha(color.a)
+                    },
+                    &RectangleContent::Clear => PrimitiveOpacity::opaque()
+                };
                 let metadata = PrimitiveMetadata {
-                    opacity: PrimitiveOpacity::from_alpha(rect.color.a),
+                    opacity,
                     prim_kind: PrimitiveKind::Rectangle,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_rectangles.len()),
                     ..base_metadata
@@ -1191,7 +1237,7 @@ impl PrimitiveStore {
         // Try to create a mask if we may need to.
         let prim_clips = clip_store.get(&metadata.clip_sources);
         let is_axis_aligned = prim_context.packed_layer.transform.preserves_2d_axis_alignment();
-        let clip_task = if prim_clips.is_masking() {
+        let clip_task = if prim_context.clip_chain.is_some() || prim_clips.is_masking() {
             // Take into account the actual clip info of the primitive, and
             // mutate the current bounds accordingly.
             let mask_rect = match prim_clips.bounds.outer {
@@ -1205,35 +1251,24 @@ impl PrimitiveStore {
                 _ => prim_screen_rect,
             };
 
-            let extra_clip = Some(Rc::new(ClipChainNode {
-                work_item: ClipWorkItem {
-                    layer_index: prim_context.packed_layer_index,
-                    clip_sources: metadata.clip_sources.weak(),
-                    coordinate_system_id: prim_context.coordinate_system_id,
-                },
-                prev: None,
-            }));
+            let extra_clip = if prim_clips.is_masking() {
+                Some(Rc::new(ClipChainNode {
+                    work_item: ClipWorkItem {
+                        layer_index: prim_context.packed_layer_index,
+                        clip_sources: metadata.clip_sources.weak(),
+                        coordinate_system_id: prim_context.coordinate_system_id,
+                    },
+                    prev: None,
+                }))
+            } else {
+                None
+            };
 
             RenderTask::new_mask(
                 None,
                 mask_rect,
                 prim_context.clip_chain.clone(),
                 extra_clip,
-                prim_screen_rect,
-                clip_store,
-                is_axis_aligned,
-                prim_context.coordinate_system_id,
-            )
-        } else if prim_context.clip_chain.is_some() {
-            // If the primitive doesn't have a specific clip, key the task ID off the
-            // stacking context. This means that two primitives which are only clipped
-            // by the stacking context stack can share clip masks during render task
-            // assignment to targets.
-            RenderTask::new_mask(
-                Some(prim_context.clip_id),
-                prim_context.clip_bounds,
-                prim_context.clip_chain.clone(),
-                None,
                 prim_screen_rect,
                 clip_store,
                 is_axis_aligned,

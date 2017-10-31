@@ -12,7 +12,6 @@ XPIDL_SOURCES += [
     'nsICookie.idl',
     'nsICookie2.idl',
     'nsICookieManager.idl',
-    'nsICookieManager2.idl',
     'nsICookiePermission.idl',
     'nsICookieService.idl',
 ]

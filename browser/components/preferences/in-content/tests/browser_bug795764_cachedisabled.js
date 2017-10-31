@@ -21,7 +21,6 @@ function test() {
     ["browser.cache.disk.enable", false],
     ["browser.cache.memory.enable", false],
     ["browser.storageManager.enabled", true],
-    ["browser.preferences.offlineGroup.enabled", true],
     ["privacy.userContext.ui.enabled", true]
   ]}).then(() => open_preferences(runTest));
 }

@@ -84,7 +84,8 @@ float rounded_rect(vec2 pos,
                    vec4 clip_center_radius_tl,
                    vec4 clip_center_radius_tr,
                    vec4 clip_center_radius_br,
-                   vec4 clip_center_radius_bl) {
+                   vec4 clip_center_radius_bl,
+                   float aa_range) {
     // Start with a negative value (means "inside") for all fragments that are not
     // in a corner. If the fragment is in a corner, one of the clip_against_ellipse_if_needed
     // calls below will update it.
@@ -113,7 +114,6 @@ float rounded_rect(vec2 pos,
 
     // Apply AA
     // See comment in ps_border_corner about the choice of constants.
-    float aa_range = compute_aa_range(pos);
 
     return distance_aa(aa_range, current_distance);
 }

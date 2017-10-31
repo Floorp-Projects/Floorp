@@ -1877,6 +1877,11 @@ impl Device {
         self.gl.blend_equation(gl::FUNC_ADD);
     }
 
+    pub fn set_blend_mode_premultiplied_dest_out(&self) {
+        self.gl.blend_func(gl::ZERO, gl::ONE_MINUS_SRC_ALPHA);
+        self.gl.blend_equation(gl::FUNC_ADD);
+    }
+
     pub fn set_blend_mode_alpha(&self) {
         self.gl.blend_func_separate(
             gl::SRC_ALPHA,

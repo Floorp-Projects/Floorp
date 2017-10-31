@@ -1,6 +1,6 @@
 /*
  * Bug 1267910 - Add test cases for the backward compatiability and originAttributes
- *               of nsICookieManager2.
+ *               of nsICookieManager.
  */
 
 var {utils: Cu, interfaces: Ci, classes: Cc} = Components;

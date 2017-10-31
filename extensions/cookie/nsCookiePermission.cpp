@@ -9,7 +9,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsICookie2.h"
 #include "nsIServiceManager.h"
-#include "nsICookieManager2.h"
+#include "nsICookieManager.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProtocolHandler.h"
@@ -213,7 +213,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     // If it's third party, check whether cookies are already set
     if (isThirdParty) {
       nsresult rv;
-      nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
+      nsCOMPtr<nsICookieManager> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) {
         *aResult = false;
         break;
