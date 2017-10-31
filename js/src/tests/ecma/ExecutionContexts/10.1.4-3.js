@@ -44,31 +44,21 @@ startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-new TestCase( "SECTION",
-	      "with MyObject, eval should be [object Global].eval " );
+addTestCase();
 
 test();
 
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
+function addTestCase() {
+   var MYOBJECT = new MyObject();
+   var INPUT = 2;
 
-    var MYOBJECT = new MyObject();
-    var INPUT = 2;
-    gTestcases[gTc].description += ( INPUT +"" );
-
-    with ( MYOBJECT ) {
+   var actual, expect;
+   with ( MYOBJECT ) {
       eval( INPUT );
-    }
+   }
 
-    gTestcases[gTc].passed = writeTestCaseResult(
-      gTestcases[gTc].expect,
-      gTestcases[gTc].actual,
-      gTestcases[gTc].description +" = "+
-      gTestcases[gTc].actual );
-
-    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
-  }
-  return ( gTestcases );
+   new TestCase("SECTION", "with MyObject, eval should be [object Global].eval (" + INPUT + ")",
+                expect, actual);
 }
 
 function MyObject() {

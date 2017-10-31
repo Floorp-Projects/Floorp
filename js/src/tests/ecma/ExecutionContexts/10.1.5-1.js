@@ -31,54 +31,16 @@ startTest();
 
 writeHeaderToLog( SECTION + " Global Object");
 
-
-new TestCase( "SECTION", "Global Code check" );
-
-if ( Object == null ) {
-  gTestcases[0].reason += " Object == null" ;
-}
-if ( Function == null ) {
-  gTestcases[0].reason += " Function == null";
-}
-if ( String == null ) {
-  gTestcases[0].reason += " String == null";
-}
-if ( Array == null ) {
-  gTestcases[0].reason += " Array == null";
-}
-if ( Number == null ) {
-  gTestcases[0].reason += " Function == null";
-}
-if ( Math == null ) {
-  gTestcases[0].reason += " Math == null";
-}
-if ( Boolean == null ) {
-  gTestcases[0].reason += " Boolean == null";
-}
-if ( Date  == null ) {
-  gTestcases[0].reason += " Date == null";
-}
-/*
-  if ( NaN == null ) {
-  gTestcases[0].reason += " NaN == null";
-  }
-  if ( Infinity == null ) {
-  gTestcases[0].reason += " Infinity == null";
-  }
-*/
-if ( eval == null ) {
-  gTestcases[0].reason += " eval == null";
-}
-if ( parseInt == null ) {
-  gTestcases[0].reason += " parseInt == null";
-}
-
-if ( gTestcases[0].reason != "" ) {
-  gTestcases[0].actual = "fail";
-} else {
-  gTestcases[0].actual = "pass";
-}
-gTestcases[0].expect = "pass";
+new TestCase( "SECTION", "Global Code check: Object", false, Object == null);
+new TestCase( "SECTION", "Global Code check: Function", false, Function == null);
+new TestCase( "SECTION", "Global Code check: String", false, String == null);
+new TestCase( "SECTION", "Global Code check: Array", false, Array == null);
+new TestCase( "SECTION", "Global Code check: Number", false, Number == null);
+new TestCase( "SECTION", "Global Code check: Math", false, Math == null);
+new TestCase( "SECTION", "Global Code check: Boolean", false, Boolean == null);
+new TestCase( "SECTION", "Global Code check: Date", false, Date == null);
+new TestCase( "SECTION", "Global Code check: eval", false, eval == null);
+new TestCase( "SECTION", "Global Code check: parseInt", false, parseInt == null);
 
 test();
 
