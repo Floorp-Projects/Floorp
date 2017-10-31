@@ -18,6 +18,7 @@ static const char hexCharsUpper[] = "0123456789ABCDEF";
 static const char hexCharsUpperLower[] = "0123456789ABCDEFabcdef";
 
 static const int netCharType[256] =
+// clang-format off
 /*  Bit 0       xalpha      -- the alphas
 **  Bit 1       xpalpha     -- as xalpha but
 **                             converts spaces to plus and plus to %2B
@@ -34,7 +35,8 @@ static const int netCharType[256] =
      7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,   /* 5X  PQRSTUVWXYZ[\]^_  */
      0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,   /* 6x  `abcdefghijklmno  */
      7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,   /* 7X  pqrstuvwxyz{\}~  DEL */
-     0, };
+     0,
+  };
 
 /* decode % escaped hex codes into character values
  */
@@ -42,7 +44,7 @@ static const int netCharType[256] =
     ((C >= '0' && C <= '9') ? C - '0' : \
      ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
-
+// clang-format on
 
 #define IS_OK(C) (netCharType[((unsigned int)(C))] & (aFlags))
 #define HEX_ESCAPE '%'
@@ -257,6 +259,7 @@ nsAppendEscapedHTML(const nsACString& aSrc, nsACString& aDst)
 // esc_Ref           =   512
 
 static const uint32_t EscapeChars[256] =
+// clang-format off
 //   0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
 {
      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  // 0x
@@ -269,6 +272,7 @@ static const uint32_t EscapeChars[256] =
   1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896,1012, 896,1023,   0,  // 7x  pqrstuvwxyz{|}~ DEL
      0                                                                              // 80 to FF are zero
 };
+// clang-format on
 
 static uint16_t dontNeedEscape(unsigned char aChar, uint32_t aFlags)
 {
