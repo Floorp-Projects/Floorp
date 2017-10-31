@@ -485,10 +485,6 @@ project_flag('MOZ_PLACES',
              help='Build Places if required',
              set_as_define=True)
 
-project_flag('MOZ_SOCIAL',
-             help='Build SocialAPI if required',
-             default=True)
-
 project_flag('MOZ_SERVICES_HEALTHREPORT',
              help='Build Firefox Health Reporter Service',
              set_for_old_configure=True,
