@@ -4,11 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER     = "(none)";
 var summary = "|it.send(o)| without an RHS";
 var actual, expect;
 
-printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************
