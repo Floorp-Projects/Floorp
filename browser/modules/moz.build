@@ -119,7 +119,10 @@ with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+    'test/browser/formValidation/browser.ini',
+]
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
