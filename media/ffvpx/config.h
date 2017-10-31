@@ -27,11 +27,7 @@
 #define HAVE_LIBC_MSVCRT 0
 #endif
 #elif defined(XP_DARWIN)
-#if defined(HAVE_64BIT_BUILD)
 #include "config_darwin64.h"
-#else
-#include "config_darwin32.h"
-#endif
 #elif defined(XP_UNIX)
 #if defined(HAVE_64BIT_BUILD)
 #include "config_unix64.h"
