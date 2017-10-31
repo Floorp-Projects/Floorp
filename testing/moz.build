@@ -1,3 +1,6 @@
+with Files("*"):
+    BUG_COMPONENT = ("Testing", "General")
+
 with Files("awsy/**"):
     BUG_COMPONENT = ("Testing", "AWSY")
     SCHEDULES.exclusive = ["awsy"]

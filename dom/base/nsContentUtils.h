@@ -1973,6 +1973,11 @@ public:
   static void RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable);
 
   /**
+   * Returns true if we are doing StableState/MetastableState.
+   */
+  static bool IsInStableOrMetaStableState();
+
+  /**
    * Returns a nsISerialEventTarget which will run any event dispatched to it
    * once the event loop has reached a "stable state". Runnables dispatched to
    * this event target must not cause any queued events to be processed (i.e.
