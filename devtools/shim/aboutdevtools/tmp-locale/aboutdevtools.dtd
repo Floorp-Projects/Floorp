@@ -23,3 +23,13 @@
 <!ENTITY  aboutDevtools.enable.closeButton "Close this page">
 <!ENTITY  aboutDevtools.welcome.title "Welcome to Firefox Developer Tools!">
 <!ENTITY  aboutDevtools.welcome.message "You’ve successfully enabled DevTools! To get started, explore the Web Developer menu or open the tools with ##INSPECTOR_SHORTCUT##.">
+
+<!ENTITY  aboutDevtools.newsletter.title "Mozilla Developer Newsletter">
+<!ENTITY  aboutDevtools.newsletter.message "Get developer news, tricks and resources sent straight to your inbox.">
+<!ENTITY  aboutDevtools.newsletter.email.placeholder "Email">
+<!ENTITY  aboutDevtools.newsletter.privacy.label "I’m okay with Mozilla handling my info as explained in this <a class=&#x0022;external&#x0022; href=&#x0022;https://www.mozilla.org/privacy/&#x0022;>Privacy Policy</a>.">
+<!ENTITY  aboutDevtools.newsletter.subscribe.label "Subscribe">
+
+<!ENTITY  aboutDevtools.newsletter.thanks.title "Thanks!">
+<!ENTITY  aboutDevtools.newsletter.thanks.message "If you haven’t previously confirmed a subscription to a Mozilla-related newsletter you may have to do so. Please check your inbox or your spam filter for an email from us.">
+
