@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "2D.h"
+#include "Blur.h"
 #include "Filters.h"
 #include <vector>
 
@@ -39,7 +40,8 @@ enum class CommandType : int8_t {
   POPLAYER,
   SETTRANSFORM,
   SETPERMITSUBPIXELAA,
-  FLUSH
+  FLUSH,
+  BLUR
 };
 
 class DrawingCommand
@@ -710,8 +712,23 @@ public:
   }
 };
 
-} // namespace gfx
+class BlurCommand : public DrawingCommand
+{
+public:
+  explicit BlurCommand(const AlphaBoxBlur& aBlur)
+   : DrawingCommand(CommandType::BLUR)
+   , mBlur(aBlur)
+  {}
 
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const {
+    aDT->Blur(mBlur);
+  }
+
+private:
+  AlphaBoxBlur mBlur;
+};
+
+} // namespace gfx
 } // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWCOMMAND_H_ */
