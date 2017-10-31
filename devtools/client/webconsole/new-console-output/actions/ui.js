@@ -11,10 +11,11 @@ const Services = require("Services");
 
 const {
   FILTER_BAR_TOGGLE,
+  INITIALIZE,
   PERSIST_TOGGLE,
   PREFS,
-  TIMESTAMPS_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
+  TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 function filterBarToggle(show) {
@@ -51,9 +52,16 @@ function selectNetworkMessageTab(id) {
   };
 }
 
+function initialize() {
+  return {
+    type: INITIALIZE
+  };
+}
+
 module.exports = {
   filterBarToggle,
+  initialize,
   persistToggle,
-  timestampsToggle,
   selectNetworkMessageTab,
+  timestampsToggle,
 };

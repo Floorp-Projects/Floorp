@@ -74,7 +74,7 @@ function promiseIsURIVisited(aURI) {
  */
 function add_cookie(aDomain) {
   check_cookie_exists(aDomain, false);
-  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   cm.add(aDomain, COOKIE_PATH, COOKIE_NAME, "", false, false, false,
          COOKIE_EXPIRY, {});
   check_cookie_exists(aDomain, true);
@@ -89,7 +89,7 @@ function add_cookie(aDomain) {
  *        True if the cookie should exist, false otherwise.
  */
 function check_cookie_exists(aDomain, aExists) {
-  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   let cookie = {
     host: aDomain,
     name: COOKIE_NAME,

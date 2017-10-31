@@ -8,7 +8,6 @@
 
 :root {
   --tabs-top-border-width: 0px;
-  --tab-toolbar-navbar-overlap: 1px;
   --tab-min-height: 33px;
   --tab-min-width: 76px;
   --tab-loading-fill: #0A84FF;
@@ -416,8 +415,8 @@ tabbrowser {
   background-repeat: no-repeat;
   border-left: 1px solid;
   border-image: linear-gradient(rgba(255,255,255,.2),
-                                rgba(255,255,255,.2) calc(100% - 1px - var(--tab-toolbar-navbar-overlap)),
-                                transparent calc(100% - 1px - var(--tab-toolbar-navbar-overlap)));
+                                rgba(255,255,255,.2) calc(100% - 1px - @navbarTabsShadowSize@),
+                                transparent calc(100% - 1px - @navbarTabsShadowSize@));
   border-image-slice: 1;
   pointer-events: none;
   position: relative;
@@ -560,7 +559,7 @@ tabbrowser {
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
   background-image: url(chrome://browser/skin/tabbrowser/indicator-tab-attention.svg);
-  background-position: center bottom calc(-4px + var(--tab-toolbar-navbar-overlap));
+  background-position: center bottom calc(-4px + @navbarTabsShadowSize@);
   background-repeat: no-repeat;
 }
 
@@ -624,7 +623,7 @@ tabbrowser {
 .tabbrowser-tab[visuallyselected]::after {
   border-color: var(--tabs-border);
   margin-top: 0;
-  margin-bottom: var(--tab-toolbar-navbar-overlap);
+  margin-bottom: @navbarTabsShadowSize@;
   opacity: 1;
 }
 

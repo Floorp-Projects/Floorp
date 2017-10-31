@@ -9,7 +9,7 @@
  * If we want these commands to run on remote devices/connections, they need to
  * run on the server (runAt=server). Unfortunately, cookie commands not only
  * need to run on the server, they also need to access to the parent process to
- * retrieve and manipulate cookies via nsICookieManager2.
+ * retrieve and manipulate cookies via nsICookieManager.
  * However, server-running commands have no way of accessing the parent process
  * for now.
  *
@@ -25,7 +25,7 @@ const l10n = require("gcli/l10n");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "cookieMgr", function () {
-  return Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
+  return Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
 });
 
 /**

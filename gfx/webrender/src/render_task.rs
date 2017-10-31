@@ -338,12 +338,8 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         content_origin: LayerPoint,
         color: ColorF,
+        clear_mode: ClearMode,
     ) -> RenderTask {
-        let clear_mode = match target_kind {
-            RenderTargetKind::Color => ClearMode::Transparent,
-            RenderTargetKind::Alpha => ClearMode::One,
-        };
-
         RenderTask {
             cache_key: None,
             children: Vec::new(),

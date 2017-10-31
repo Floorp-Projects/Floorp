@@ -56,10 +56,11 @@ void main(void) {
         // Fetch the dynamic picture that we are drawing on.
         PictureTask pic_task = fetch_picture_task(brush.picture_address);
 
+        local_pos = local_rect.p0 + aPosition.xy * local_rect.size;
+
         // Right now - pictures only support local positions. In the future, this
         // will be expanded to support transform picture types (the common kind).
-        device_pos = pic_task.target_rect.p0 + aPosition.xy * pic_task.target_rect.size;
-        local_pos = aPosition.xy * pic_task.target_rect.size / uDevicePixelRatio;
+        device_pos = pic_task.target_rect.p0 + uDevicePixelRatio * (local_pos - pic_task.content_origin);
 
         // Write the final position transformed by the orthographic device-pixel projection.
         gl_Position = uTransform * vec4(device_pos, 0.0, 1.0);
