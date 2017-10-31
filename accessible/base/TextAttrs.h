@@ -399,9 +399,7 @@ protected:
   class TextDecorValue
   {
   public:
-    TextDecorValue() :
-      mColor{0}, mLine{STYLE_TEXT_DECORATION_LINE_NONE},
-      mStyle{NS_STYLE_TEXT_DECORATION_STYLE_NONE} { }
+    TextDecorValue() { }
     explicit TextDecorValue(nsIFrame* aFrame);
 
     nscolor Color() const { return mColor; }
