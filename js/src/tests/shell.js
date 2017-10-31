@@ -46,6 +46,7 @@
   }
 
   var evaluate = global.evaluate;
+  var options = global.options;
 
   /****************************
    * GENERAL HELPER FUNCTIONS *
@@ -88,6 +89,21 @@
 
       ArrayPush(parts, ReflectApply(StringPrototypeSubstring, str, [last, i]));
       last = i + delimiter.length;
+    }
+  }
+
+  function shellOptionsClear() {
+    assertEq(runningInBrowser, false, "Only called when running in the shell.");
+
+    // Return early if no options are set.
+    var currentOptions = options();
+    if (currentOptions === "")
+      return;
+
+    // Turn off current settings.
+    var optionNames = StringSplit(currentOptions, ",");
+    for (var i = 0; i < optionNames.length; i++) {
+      options(optionNames[i]);
     }
   }
 
@@ -564,11 +580,8 @@
       return;
     }
 
-    try {
-      optionsClear();
-    } catch(ex) {
-      dump('jsTestDriverEnd ' + ex);
-    }
+    // Unset all options when the test has finished.
+    shellOptionsClear();
 
     var testCases = getTestCases();
     for (var i = 0; i < testCases.length; i++) {
@@ -576,27 +589,6 @@
     }
   }
   global.jsTestDriverEnd = jsTestDriverEnd;
-
-  // Harness internal function, only exported for browser.js.
-  // XXX: This function is only exported for the window.onerror handler in
-  // browser.js. If the handler doesn't actually need to clear the options, we
-  // can remove this export.
-  function optionsClear() {
-    // Return early if no options are set.
-    var currentOptions = options();
-    if (currentOptions === "")
-      return;
-
-    // Turn off current settings.
-    var optionNames = StringSplit(currentOptions, ",");
-    for (var i = 0; i < optionNames.length; i++) {
-      var optionName = optionNames[i];
-      if (optionName) {
-        options(optionName);
-      }
-    }
-  }
-  global.optionsClear = optionsClear;
 
   /************************************
    * PROMISE TESTING FUNCTION EXPORTS *
@@ -635,7 +627,7 @@
   // Clear all options before running any tests. browser.js performs this
   // set-up as part of its jsTestDriverBrowserInit function.
   if (!runningInBrowser)
-    optionsClear();
+    shellOptionsClear();
 })(this);
 
 var gDelayTestDriverEnd = false;

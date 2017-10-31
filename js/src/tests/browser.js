@@ -237,7 +237,6 @@
   // Saved harness functions.
   var dump = global.dump;
   var gczeal = global.gczeal;
-  var optionsClear = global.optionsClear;
   var print = global.print;
   var reportFailure = global.reportFailure;
   var TestCase = global.TestCase;
@@ -289,6 +288,17 @@
     ReflectApply(NodePrototypeTextContentSetter, element, [text]);
   }
 
+  // Object containing the set options.
+  var currentOptions;
+
+  // browser.js version of shell.js' |shellOptionsClear| function.
+  function browserOptionsClear() {
+    for (var optionName in currentOptions) {
+      delete currentOptions[optionName];
+      SpecialPowersCu[optionName] = false;
+    }
+  }
+
   // This function is *only* used by shell.js's for-browsers |print()| function!
   // It's only defined/exported here because it needs CreateElement and friends,
   // only defined here, and we're not yet ready to move them to shell.js.
@@ -328,10 +338,8 @@
   var expectedError;
 
   window.onerror = function (msg, page, line, column, error) {
-    // Restore options in case a test case used this common variable name.
-    global.options = options;
-
-    optionsClear();
+    // Unset all options even when the test finished with an error.
+    browserOptionsClear();
 
     if (DESCRIPTION === undefined) {
       DESCRIPTION = "Unknown";
@@ -374,7 +382,7 @@
     // of the previously set values
 
     var value = "";
-    for (var optionName in options.currvalues) {
+    for (var optionName in currentOptions) {
       if (value)
         value += ",";
       value += optionName;
@@ -388,13 +396,13 @@
         throw "Unsupported JSContext option '" + aOptionName + "'";
       }
 
-      if (aOptionName in options.currvalues) {
+      if (aOptionName in currentOptions) {
         // option is set, toggle it to unset
-        delete options.currvalues[aOptionName];
+        delete currentOptions[aOptionName];
         SpecialPowersCu[aOptionName] = false;
       } else {
         // option is not set, toggle it to set
-        options.currvalues[aOptionName] = true;
+        currentOptions[aOptionName] = true;
         SpecialPowersCu[aOptionName] = true;
       }
     }
@@ -409,7 +417,7 @@
 
   function jsTestDriverBrowserInit() {
     // Unset all options before running any test code, cf. the call to
-    // |optionsClear| in shell.js' set-up code.
+    // |shellOptionsClear| in shell.js' set-up code.
     for (var optionName of ["strict", "werror", "strict_mode"]) {
       if (!HasOwnProperty(SpecialPowersCu, optionName))
         throw "options is out of sync with Components.utils";
@@ -421,9 +429,8 @@
         SpecialPowersCu[optionName] = false;
     }
 
-    // Hash containing the set options, initially empty because we just turned
-    // off all options.
-    options.currvalues = Object.create(null);
+    // Initialize with an empty set, because we just turned off all options.
+    currentOptions = Object.create(null);
 
     if (document.location.search.indexOf("?") !== 0) {
       // not called with a query string
@@ -614,14 +621,8 @@
 
     window.onerror = null;
 
-    // Restore options in case a test case used this common variable name.
-    global.options = options;
-
-    try {
-      optionsClear();
-    } catch (ex) {
-      dump("jsTestDriverEnd " + ex);
-    }
+    // Unset all options when the test has finished.
+    browserOptionsClear();
 
     if (window.opener && window.opener.runNextTest) {
       if (window.opener.reportCallBack) {
