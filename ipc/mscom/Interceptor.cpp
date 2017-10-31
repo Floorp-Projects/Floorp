@@ -16,6 +16,7 @@
 #include "mozilla/mscom/Objref.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/ThreadLocal.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
@@ -131,6 +132,111 @@ private:
   LiveSet*  mLiveSet;
 };
 
+class MOZ_RAII ReentrySentinel final
+{
+public:
+  explicit ReentrySentinel(Interceptor* aCurrent)
+    : mCurInterceptor(aCurrent)
+  {
+    static const bool kHasTls = tlsSentinelStackTop.init();
+    MOZ_RELEASE_ASSERT(kHasTls);
+
+    mPrevSentinel = tlsSentinelStackTop.get();
+    tlsSentinelStackTop.set(this);
+  }
+
+  ~ReentrySentinel()
+  {
+    tlsSentinelStackTop.set(mPrevSentinel);
+  }
+
+  bool IsOutermost() const
+  {
+    return !(mPrevSentinel && mPrevSentinel->IsMarshaling(mCurInterceptor));
+  }
+
+  ReentrySentinel(const ReentrySentinel&) = delete;
+  ReentrySentinel(ReentrySentinel&&) = delete;
+  ReentrySentinel& operator=(const ReentrySentinel&) = delete;
+  ReentrySentinel& operator=(ReentrySentinel&&) = delete;
+
+private:
+  bool IsMarshaling(Interceptor* aTopInterceptor) const
+  {
+    return aTopInterceptor == mCurInterceptor ||
+           (mPrevSentinel && mPrevSentinel->IsMarshaling(aTopInterceptor));
+  }
+
+private:
+  Interceptor*      mCurInterceptor;
+  ReentrySentinel*  mPrevSentinel;
+
+  static MOZ_THREAD_LOCAL(ReentrySentinel*) tlsSentinelStackTop;
+};
+
+MOZ_THREAD_LOCAL(ReentrySentinel*) ReentrySentinel::tlsSentinelStackTop;
+
+class MOZ_RAII LoggedQIResult final
+{
+public:
+  explicit LoggedQIResult(REFIID aIid)
+    : mIid(aIid)
+    , mHr(E_UNEXPECTED)
+    , mTarget(nullptr)
+    , mInterceptor(nullptr)
+    , mBegin(TimeStamp::Now())
+  {
+  }
+
+  ~LoggedQIResult()
+  {
+    if (!mTarget) {
+      return;
+    }
+
+    TimeStamp end(TimeStamp::Now());
+    TimeDuration total(end - mBegin);
+    TimeDuration overhead(total - mNonOverheadDuration);
+
+    InterceptorLog::QI(mHr, mTarget, mIid, mInterceptor, &overhead,
+                       &mNonOverheadDuration);
+  }
+
+  void Log(IUnknown* aTarget, IUnknown* aInterceptor)
+  {
+    mTarget = aTarget;
+    mInterceptor = aInterceptor;
+  }
+
+  void operator=(HRESULT aHr)
+  {
+    mHr = aHr;
+  }
+
+  operator HRESULT()
+  {
+    return mHr;
+  }
+
+  operator TimeDuration*()
+  {
+    return &mNonOverheadDuration;
+  }
+
+  LoggedQIResult(const LoggedQIResult&) = delete;
+  LoggedQIResult(LoggedQIResult&&) = delete;
+  LoggedQIResult& operator=(const LoggedQIResult&) = delete;
+  LoggedQIResult& operator=(LoggedQIResult&&) = delete;
+
+private:
+  REFIID        mIid;
+  HRESULT       mHr;
+  IUnknown*     mTarget;
+  IUnknown*     mInterceptor;
+  TimeDuration  mNonOverheadDuration;
+  TimeStamp     mBegin;
+};
+
 } // namespace detail
 
 static detail::LiveSet&
@@ -240,9 +346,11 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                DWORD* pSize)
 {
+  detail::ReentrySentinel sentinel(this);
+
   HRESULT hr = mStdMarshal->GetMarshalSizeMax(MarshalAs(riid), pv, dwDestContext,
                                               pvDestContext, mshlflags, pSize);
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !sentinel.IsOutermost()) {
     return hr;
   }
 
@@ -264,6 +372,8 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
                               DWORD dwDestContext, void* pvDestContext,
                               DWORD mshlflags)
 {
+  detail::ReentrySentinel sentinel(this);
+
   HRESULT hr;
 
 #if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
@@ -282,7 +392,7 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
 
   hr = mStdMarshal->MarshalInterface(pStm, MarshalAs(riid), pv, dwDestContext,
                                      pvDestContext, mshlflags);
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !sentinel.IsOutermost()) {
     return hr;
   }
 
@@ -488,67 +598,6 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
   return hr;
 }
 
-class MOZ_RAII LoggedQIResult final
-{
-public:
-  explicit LoggedQIResult(REFIID aIid)
-    : mIid(aIid)
-    , mHr(E_UNEXPECTED)
-    , mTarget(nullptr)
-    , mInterceptor(nullptr)
-    , mBegin(TimeStamp::Now())
-  {
-  }
-
-  ~LoggedQIResult()
-  {
-    if (!mTarget) {
-      return;
-    }
-
-    TimeStamp end(TimeStamp::Now());
-    TimeDuration total(end - mBegin);
-    TimeDuration overhead(total - mNonOverheadDuration);
-
-    InterceptorLog::QI(mHr, mTarget, mIid, mInterceptor, &overhead,
-                       &mNonOverheadDuration);
-  }
-
-  void Log(IUnknown* aTarget, IUnknown* aInterceptor)
-  {
-    mTarget = aTarget;
-    mInterceptor = aInterceptor;
-  }
-
-  void operator=(HRESULT aHr)
-  {
-    mHr = aHr;
-  }
-
-  operator HRESULT()
-  {
-    return mHr;
-  }
-
-  operator TimeDuration*()
-  {
-    return &mNonOverheadDuration;
-  }
-
-  LoggedQIResult(const LoggedQIResult&) = delete;
-  LoggedQIResult(LoggedQIResult&&) = delete;
-  LoggedQIResult& operator=(const LoggedQIResult&) = delete;
-  LoggedQIResult& operator=(LoggedQIResult&&) = delete;
-
-private:
-  REFIID        mIid;
-  HRESULT       mHr;
-  IUnknown*     mTarget;
-  IUnknown*     mInterceptor;
-  TimeDuration  mNonOverheadDuration;
-  TimeStamp     mBegin;
-};
-
 /**
  * This method contains the core guts of the handling of QueryInterface calls
  * that are delegated to us from the ICallInterceptor.
@@ -560,7 +609,7 @@ private:
 HRESULT
 Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 {
-  LoggedQIResult result(aIid);
+  detail::LoggedQIResult result(aIid);
 
   if (!aOutInterceptor) {
     return E_INVALIDARG;
@@ -696,19 +745,25 @@ Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput,
 HRESULT
 Interceptor::QueryInterface(REFIID riid, void** ppv)
 {
+  if (riid == IID_INoMarshal) {
+    // This entire library is designed around marshaling, so there's no point
+    // propagating this QI request all over the place!
+    return E_NOINTERFACE;
+  }
+
   return WeakReferenceSupport::QueryInterface(riid, ppv);
 }
 
 HRESULT
 Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
 {
-  if (aIid == IID_INoMarshal) {
-    // This entire library is designed around marshaling, so there's no point
-    // propagating this QI request all over the place!
-    return E_NOINTERFACE;
-  }
-
   if (aIid == IID_IStdMarshalInfo) {
+    detail::ReentrySentinel sentinel(this);
+
+    if (!sentinel.IsOutermost()) {
+      return E_NOINTERFACE;
+    }
+
     // Do not indicate that this interface is available unless we actually
     // support it. We'll check that by looking for a successful call to
     // IInterceptorSink::GetHandler()
