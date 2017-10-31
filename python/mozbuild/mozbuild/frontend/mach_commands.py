@@ -173,6 +173,59 @@ class MozbuildFileCommands(MachCommandBase):
             print('unhandled output format: %s' % fmt)
             return 1
 
+    @SubCommand('file-info', 'bugzilla-automation',
+                'Perform Bugzilla metadata analysis as required for automation')
+    @CommandArgument('out_dir', help='Where to write files')
+    def bugzilla_automation(self, out_dir):
+        """Analyze and validate Bugzilla metadata as required by automation.
+
+        This will write out JSON and gzipped JSON files for Bugzilla metadata.
+
+        The exit code will be non-0 if Bugzilla metadata fails validation.
+        """
+        import gzip
+
+        missing_component = set()
+        component_by_path = {}
+
+        # TODO operate in VCS space. This requires teaching the VCS reader
+        # to understand wildcards and/or for the relative path issue in the
+        # VCS finder to be worked out.
+        for p, m in sorted(self._get_files_info(['**']).items()):
+            if 'BUG_COMPONENT' not in m:
+                missing_component.add(p)
+                print('Missing Bugzilla component: %s' % p)
+                continue
+
+            c = m['BUG_COMPONENT']
+            component_by_path[p] = [c.product, c.component]
+
+        print('Examined %d files' % len(component_by_path))
+
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        components_json = os.path.join(out_dir, 'components.json')
+        print('Writing %s' % components_json)
+        with open(components_json, 'wb') as fh:
+            json.dump(component_by_path, fh, sort_keys=True, indent=2)
+
+        missing_json = os.path.join(out_dir, 'missing.json')
+        print('Writing %s' % missing_json)
+        with open(missing_json, 'wb') as fh:
+            json.dump({'missing': sorted(missing_component)}, fh, indent=2)
+
+        # Write compressed versions of JSON files.
+        for p in (components_json, missing_json):
+            gzip_path = '%s.gz' % p
+            print('Writing %s' % gzip_path)
+            with open(p, 'rb') as ifh, gzip.open(gzip_path, 'wb') as ofh:
+                while True:
+                    data = ifh.read(32768)
+                    if not data:
+                        break
+                    ofh.write(data)
+
     @SubCommand('file-info', 'dep-tests',
                 'Show test files marked as dependencies of these source files.')
     @CommandArgument('-r', '--rev',
