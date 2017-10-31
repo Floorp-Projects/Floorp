@@ -7315,10 +7315,12 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     bool snap;
     nsRect itemBounds = GetBounds(aDisplayListBuilder, &snap);
 
-    Maybe<wr::StickySideConstraint> top;
-    Maybe<wr::StickySideConstraint> right;
-    Maybe<wr::StickySideConstraint> bottom;
-    Maybe<wr::StickySideConstraint> left;
+    Maybe<float> topMargin;
+    Maybe<float> rightMargin;
+    Maybe<float> bottomMargin;
+    Maybe<float> leftMargin;
+    wr::StickyOffsetBounds vBounds = { 0.0, 0.0 };
+    wr::StickyOffsetBounds hBounds = { 0.0, 0.0 };
 
     nsRect outer;
     nsRect inner;
@@ -7353,7 +7355,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       // then no adjustment is needed and distance is 0 so again using
       // -distance works.
       nscoord distance = DistanceToRange(inner.YMost(), outer.YMost());
-      float margin = NSAppUnitsToFloatPixels(itemBounds.y - scrollPort.y - distance, auPerDevPixel);
+      topMargin = Some(NSAppUnitsToFloatPixels(itemBounds.y - scrollPort.y - distance, auPerDevPixel));
       // Question: Given the current state, what is the range during which
       // WR will have to apply an adjustment to the item (in order to prevent
       // the item from visually moving) as a result of async scrolling?
@@ -7364,36 +7366,34 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       // this value also needs to be converted from being relative to the
       // scrollframe to being relative to the reference frame, so we have to
       // adjust it by |offset|.
-      float maxOffset = NSAppUnitsToFloatPixels(std::max(0, outer.YMost() + offset.y), auPerDevPixel);
-      top = Some(wr::StickySideConstraint { margin, maxOffset });
+      vBounds.max = NSAppUnitsToFloatPixels(std::max(0, outer.YMost() + offset.y), auPerDevPixel);
     }
     if (outer.y != inner.y) {
       // Similar logic as in the previous section, but this time we care about
       // the distance from itemBounds.YMost() to scrollPort.YMost().
       nscoord distance = DistanceToRange(outer.y, inner.y);
-      float margin = NSAppUnitsToFloatPixels(scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel);
+      bottomMargin = Some(NSAppUnitsToFloatPixels(scrollPort.YMost() - itemBounds.YMost() + distance, auPerDevPixel));
       // And here WR will be moving the item upwards rather than downwards so
       // again things are inverted from the previous block.
-      float maxOffset = NSAppUnitsToFloatPixels(std::min(0, outer.y + offset.y), auPerDevPixel);
-      bottom = Some(wr::StickySideConstraint { margin, maxOffset });
+      vBounds.min = NSAppUnitsToFloatPixels(std::min(0, outer.y + offset.y), auPerDevPixel);
     }
     // Same as above, but for the x-axis
     if (outer.XMost() != inner.XMost()) {
       nscoord distance = DistanceToRange(inner.XMost(), outer.XMost());
-      float margin = NSAppUnitsToFloatPixels(itemBounds.x - scrollPort.x - distance, auPerDevPixel);
-      float maxOffset = NSAppUnitsToFloatPixels(std::max(0, outer.XMost() + offset.x), auPerDevPixel);
-      left = Some(wr::StickySideConstraint { margin, maxOffset });
+      leftMargin = Some(NSAppUnitsToFloatPixels(itemBounds.x - scrollPort.x - distance, auPerDevPixel));
+      hBounds.max = NSAppUnitsToFloatPixels(std::max(0, outer.XMost() + offset.x), auPerDevPixel);
     }
     if (outer.x != inner.x) {
       nscoord distance = DistanceToRange(outer.x, inner.x);
-      float margin = NSAppUnitsToFloatPixels(scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel);
-      float maxOffset = NSAppUnitsToFloatPixels(std::min(0, outer.x + offset.x), auPerDevPixel);
-      right = Some(wr::StickySideConstraint { margin, maxOffset });
+      rightMargin = Some(NSAppUnitsToFloatPixels(scrollPort.XMost() - itemBounds.XMost() + distance, auPerDevPixel));
+      hBounds.min = NSAppUnitsToFloatPixels(std::min(0, outer.x + offset.x), auPerDevPixel);
     }
 
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(itemBounds, auPerDevPixel);
     wr::WrStickyId id = aBuilder.DefineStickyFrame(aSc.ToRelativeLayoutRect(bounds),
-        top.ptrOr(nullptr), right.ptrOr(nullptr), bottom.ptrOr(nullptr), left.ptrOr(nullptr));
+        topMargin.ptrOr(nullptr), rightMargin.ptrOr(nullptr),
+        bottomMargin.ptrOr(nullptr), leftMargin.ptrOr(nullptr),
+        vBounds, hBounds);
 
     aBuilder.PushStickyFrame(id, GetClipChain());
   }
