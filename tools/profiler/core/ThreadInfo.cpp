@@ -31,6 +31,7 @@ ThreadInfo::ThreadInfo(const char* aName,
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
   , mIsBeingProfiled(false)
+  , mFirstSavedStreamedSampleTime{0.0}
   , mContext(nullptr)
   , mJSSampling(INACTIVE)
   , mLastSample()

@@ -64,24 +64,44 @@ public:
   static void Shutdown();
 
   TISInputSourceWrapper()
+    : mInputSource{nullptr}
+    , mKeyboardLayout{nullptr}
+    , mUCKeyboardLayout{nullptr}
+    , mIsRTL{0}
+    , mOverrideKeyboard{false}
   {
     mInputSourceList = nullptr;
     Clear();
   }
 
   explicit TISInputSourceWrapper(const char* aID)
+    : mInputSource{nullptr}
+    , mKeyboardLayout{nullptr}
+    , mUCKeyboardLayout{nullptr}
+    , mIsRTL{0}
+    , mOverrideKeyboard{false}
   {
     mInputSourceList = nullptr;
     InitByInputSourceID(aID);
   }
 
   explicit TISInputSourceWrapper(SInt32 aLayoutID)
+    : mInputSource{nullptr}
+    , mKeyboardLayout{nullptr}
+    , mUCKeyboardLayout{nullptr}
+    , mIsRTL{0}
+    , mOverrideKeyboard{false}
   {
     mInputSourceList = nullptr;
     InitByLayoutID(aLayoutID);
   }
 
   explicit TISInputSourceWrapper(TISInputSourceRef aInputSource)
+    : mInputSource{nullptr}
+    , mKeyboardLayout{nullptr}
+    , mUCKeyboardLayout{nullptr}
+    , mIsRTL{0}
+    , mOverrideKeyboard{false}
   {
     mInputSourceList = nullptr;
     InitByTISInputSourceRef(aInputSource);
