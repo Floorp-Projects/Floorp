@@ -733,6 +733,24 @@ KeyframeEffectReadOnly::ComposeStyle(
                      *segment,
                      computedTiming);
   }
+
+  // If the animation produces any transform change hint, we need to record the
+  // current time to unthrottle the animation periodically when the animation is
+  // being throttled because it's scrolled out of view.
+  if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
+                               nsChangeHint_AddOrRemoveTransform |
+                               nsChangeHint_UpdateTransformLayer)) {
+    nsPresContext* presContext =
+      nsContentUtils::GetContextForContent(mTarget->mElement);
+    if (presContext) {
+      TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
+      EffectSet* effectSet =
+        EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+      MOZ_ASSERT(effectSet, "ComposeStyle should only be called on an effect "
+                            "that is part of an effect set");
+      effectSet->UpdateLastTransformSyncTime(now);
+    }
+  }
 }
 
 bool
@@ -1392,8 +1410,17 @@ KeyframeEffectReadOnly::CanThrottle() const
   // is in background tabs.
   if (mInEffectOnLastAnimationTimingUpdate && CanIgnoreIfNotVisible()) {
     nsIPresShell* presShell = GetPresShell();
-    if ((presShell && !presShell->IsActive()) ||
-        frame->IsScrolledOutOfView()) {
+    if (presShell && !presShell->IsActive()) {
+      return true;
+    }
+    if (frame->IsScrolledOutOfView()) {
+      // If there are transform change hints, unthrottle the animation
+      // periodically since it might affect the overflow region.
+      if (mCumulativeChangeHint & (nsChangeHint_UpdatePostTransformOverflow |
+                                   nsChangeHint_AddOrRemoveTransform |
+                                   nsChangeHint_UpdateTransformLayer)) {
+        return CanThrottleTransformChanges(*frame);
+      }
       return true;
     }
   }
