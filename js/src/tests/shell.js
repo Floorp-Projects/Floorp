@@ -646,42 +646,25 @@
   function test() {
     var testCases = getTestCases();
     for (var i = 0; i < testCases.length; i++) {
-      // temporary hack to work around some unknown issue in 1.7
-      try {
-        var testCase = testCases[i];
-        testCase.passed = writeTestCaseResult(
-          testCase.expect,
-          testCase.actual,
-          testCase.description + " = " + testCase.actual);
-        testCase.reason += testCase.passed ? "" : "wrong value ";
-      } catch(e) {
-        print('test(): empty testcase at index = ' + i + ' ' + e);
+      var testCase = testCases[i];
+      testCase.passed = getTestCaseResult(testCase.expect, testCase.actual);
+      testCase.reason += testCase.passed ? "" : "wrong value ";
+
+      // if running under reftest, let it handle result reporting.
+      if (!runningInBrowser) {
+        var message = `${testCase.description} = ${testCase.actual} expected: ${testCase.expect}`;
+        print((testCase.passed ? PASSED : FAILED) + message);
       }
     }
-    return testCases;
   }
   global.test = test;
 
-  /*
-   * Begin printing functions.  These functions use the shell's
-   * print function.  When running tests in the browser, browser.js
-   * overrides these functions to write to the page.
-   */
-  function writeTestCaseResult(expect, actual, string) {
-    var passed = getTestCaseResult(expect, actual);
-    // if running under reftest, let it handle result reporting.
-    if (!runningInBrowser) {
-      print((passed ? PASSED : FAILED) + string + ' expected: ' + expect);
-    }
-    return passed;
-  }
-
-  // Note: browser.js overrides this function.
+  // This function uses the shell's print function. When running tests in the
+  // browser, browser.js overrides this function to write to the page.
   function writeHeaderToLog(string) {
     print(string);
   }
   global.writeHeaderToLog = writeHeaderToLog;
-  /* end of print functions */
 
   // Note: browser.js overrides this function.
   function jsTestDriverEnd() {
