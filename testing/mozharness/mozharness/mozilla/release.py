@@ -68,3 +68,5 @@ def get_previous_version(version, partial_versions):
         composed = sorted([(v, StrictVersion(v)) for v in partial_versions if
                            v != version], key=lambda x: x[1], reverse=True)
         return composed[0][0]
+
+

@@ -1,7 +1,6 @@
 import json
 import site
 
-
 # SelfServeMixin {{{1
 class SelfServeMixin(object):
     def _get_session(self):

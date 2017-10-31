@@ -11,6 +11,7 @@ from mozharness.base.script import (
     PreScriptAction,
     PostScriptAction,
 )
+from mozharness.mozilla.tooltool import TooltoolMixin
 
 code_coverage_config_options = [
     [["--code-coverage"],
@@ -76,17 +77,15 @@ class CodeCoverageMixin(object):
         # Create the grcov directory, get the tooltool manifest, and finally
         # download and unpack the grcov binary.
         self.grcov_dir = tempfile.mkdtemp()
-        manifest = os.path.join(dirs.get('abs_test_install_dir',
-                                os.path.join(dirs['abs_work_dir'], 'tests')),
-                                'config/tooltool-manifests/linux64/ccov.manifest')
+        manifest = os.path.join(dirs.get('abs_test_install_dir', os.path.join(dirs['abs_work_dir'], 'tests')), \
+            'config/tooltool-manifests/linux64/ccov.manifest')
 
         tooltool_path = self._fetch_tooltool_py()
-        cmd = [tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch',
-               '-m', manifest, '-o', '-c', '/builds/worker/tooltool-cache']
+        cmd = [tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
+            '-m', manifest, '-o', '-c', '/builds/worker/tooltool-cache']
         self.run_command(cmd, cwd=self.grcov_dir)
-        self.run_command(['tar', '-jxvf',
-                          os.path.join(self.grcov_dir, 'grcov-linux-standalone-x86_64.tar.bz2'),
-                          '-C', self.grcov_dir], cwd=self.grcov_dir)
+        self.run_command(['tar', '-jxvf', os.path.join(self.grcov_dir, 'grcov-linux-standalone-x86_64.tar.bz2'), \
+            '-C', self.grcov_dir], cwd=self.grcov_dir)
 
     @PostScriptAction('run-tests')
     def _package_coverage_data(self, action, success=None):
@@ -99,9 +98,7 @@ class CodeCoverageMixin(object):
             # TODO This is fragile, find rel_topsrcdir properly somehow
             # We need to find the path relative to the gecko topsrcdir. Use
             # some known gecko directories as a test.
-            canary_dirs = [
-                'browser', 'docshell', 'dom', 'js', 'layout', 'toolkit', 'xpcom', 'xpfe'
-            ]
+            canary_dirs = ['browser', 'docshell', 'dom', 'js', 'layout', 'toolkit', 'xpcom', 'xpfe']
             rel_topsrcdir = None
             for root, dirs, files in os.walk(self.gcov_dir):
                 # need to use 'any' in case no gcda data was generated in that subdir.
@@ -143,17 +140,14 @@ class CodeCoverageMixin(object):
 
             # 'grcov_output' will be a tuple, the first variable is the path to the lcov output,
             # the other is the path to the standard error output.
-            grcov_output = self.get_output_from_command(
-                grcov_command, cwd=self.grcov_dir,
-                silent=True, tmpfile_base_path=os.path.join(self.grcov_dir, 'grcov_lcov_output'),
-                save_tmpfiles=True, return_type='files'
-                )
+            grcov_output = self.get_output_from_command(grcov_command, cwd=self.grcov_dir, \
+                silent=True, tmpfile_base_path=os.path.join(self.grcov_dir, 'grcov_lcov_output'), \
+                save_tmpfiles=True, return_type='files')
             new_output_name = grcov_output[0] + '.info'
             os.rename(grcov_output[0], new_output_name)
 
             # Zip the grcov output and upload it.
-            command = ['zip', os.path.join(dirs['abs_blob_upload_dir'],
-                       'code-coverage-grcov.zip'), new_output_name]
+            command = ['zip', os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip'), new_output_name]
             self.run_command(command, cwd=self.grcov_dir)
         shutil.rmtree(self.gcov_dir)
         shutil.rmtree(self.jsvm_dir)
