@@ -474,30 +474,41 @@ GeckoChildProcessHost::GetChildLogName(const char* origLogName,
 class AutoSetAndRestoreEnvVarForChildProcess {
 public:
   AutoSetAndRestoreEnvVarForChildProcess(const char* envVar,
-                                         const char* newVal) {
+                                         const char* newVal,
+                                         nsCString& saveString) {
     const char* origVal = PR_GetEnv(envVar);
-    mSetString.Assign(envVar);
-    mSetString.Append('=');
-    mRestoreString.Assign(mSetString);
+    if (origVal != nullptr) {
+      mSetString.Assign(envVar);
+      mSetString.Append('=');
+      saveString.Assign(mSetString);
 
-    mSetString.Append(newVal);
-    mRestoreString.Append(origVal);
+      mSetString.Append(newVal);
+      saveString.Append(origVal);
+      mRestorePtr = saveString.get();
 
-    // Passing to PR_SetEnv is ok here if we keep the the storage alive
-    // for the time we launch the sub-process.  It's copied to the new
-    // environment by PR_DuplicateEnvironment()
-    PR_SetEnv(mSetString.get());
+      // Passing to PR_SetEnv is ok here if we keep the the storage alive
+      // for the time we launch the sub-process.  It's copied to the new
+      // environment by PR_DuplicateEnvironment()
+      PR_SetEnv(mSetString.get());
+    }
   }
   // Delegate helper
   AutoSetAndRestoreEnvVarForChildProcess(const char* envVar,
-                                         nsCString& newVal)
-    : AutoSetAndRestoreEnvVarForChildProcess(envVar, newVal.get()) {}
+                                         nsCString& newVal,
+                                         nsCString& saveString)
+    : AutoSetAndRestoreEnvVarForChildProcess(envVar, newVal.get(),
+                                             saveString) {}
   ~AutoSetAndRestoreEnvVarForChildProcess() {
-    PR_SetEnv(mRestoreString.get());
+    if (mRestorePtr) {
+      PR_SetEnv(mRestorePtr);
+    }
   }
 private:
+  // Needs to live for process launch.
   nsAutoCString mSetString;
-  nsAutoCString mRestoreString;
+  // This storage cannot die for the duration of *any* process in our
+  // inheritance tree, because PR_SetEnv points to it directly.
+  const char* mRestorePtr{nullptr};
 };
 
 bool
@@ -522,18 +533,18 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   if (origNSPRLogName) {
     nsAutoCString nsprLogName;
     GetChildLogName(origNSPRLogName, nsprLogName);
-    nsprLogDir.emplace("NSPR_LOG_FILE", nsprLogName);
+    nsprLogDir.emplace("NSPR_LOG_FILE", nsprLogName, mRestoreOrigNSPRLogName);
   }
   if (origMozLogName) {
     nsAutoCString mozLogName;
     GetChildLogName(origMozLogName, mozLogName);
-    mozLogDir.emplace("MOZ_LOG_FILE", mozLogName);
+    mozLogDir.emplace("MOZ_LOG_FILE", mozLogName, mRestoreOrigMozLogName);
   }
 
   // `RUST_LOG_CHILD` is meant for logging child processes only.
   const char* childRustLog = PR_GetEnv("RUST_LOG_CHILD");
   if (childRustLog) {
-    rustLogDir.emplace("RUST_LOG", childRustLog);
+    rustLogDir.emplace("RUST_LOG", childRustLog, mRestoreOrigRustLog);
   }
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -551,11 +562,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     if (NS_SUCCEEDED(rv)) {
       // Point a bunch of things that might want to write from content to our
       // shiny new content-process specific tmpdir
-      tmpDir.emplace("TMPDIR", tmpDirName);
-      xdgCacheHome.emplace("XDG_CACHE_HOME", tmpDirName);
-      xdgCacheDir.emplace("XDG_CACHE_DIR", tmpDirName);
+      tmpDir.emplace("TMPDIR", tmpDirName, mRestoreTmpDir);
+      xdgCacheHome.emplace("XDG_CACHE_HOME", tmpDirName, mRestoreXdgCacheHome);
+      xdgCacheDir.emplace("XDG_CACHE_DIR", tmpDirName,  mRestoreXdgCacheDir);
       // Partial fix for bug 1380051 (not persistent - should be)
-      mesaCacheDir.emplace("MESA_GLSL_CACHE_DIR", tmpDirName);
+      mesaCacheDir.emplace("MESA_GLSL_CACHE_DIR", tmpDirName, mRestoreMesaCacheDir);
     }
   }
 #endif
