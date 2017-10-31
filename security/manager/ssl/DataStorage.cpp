@@ -73,6 +73,7 @@ StaticAutoPtr<DataStorage::DataStorages> DataStorage::sDataStorages;
 
 DataStorage::DataStorage(const nsString& aFilename)
   : mMutex("DataStorage::mMutex")
+  , mTimerDelay(sDataStorageDefaultTimerDelay)
   , mPendingWrite(false)
   , mShuttingDown(false)
   , mInitCalled(false)

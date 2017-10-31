@@ -52,6 +52,7 @@ static mozilla::LazyLogModule sSHParserLog("nsSecurityHeaderParser");
 
 nsSecurityHeaderParser::nsSecurityHeaderParser(const nsCString& aHeader)
   : mCursor(aHeader.get())
+  , mDirective(nullptr)
   , mError(false)
 {
 }
