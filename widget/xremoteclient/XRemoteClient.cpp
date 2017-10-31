@@ -10,6 +10,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "XRemoteClient.h"
+#include "RemoteUtils.h"
 #include "plstr.h"
 #include "prsystem.h"
 #include "mozilla/Logging.h"
@@ -602,17 +603,6 @@ XRemoteClient::FreeLock(Window aWindow)
   return NS_OK;
 }
 
-/* like strcpy, but return the char after the final null */
-static char*
-estrcpy(const char* s, char* d)
-{
-  while (*s)
-    *d++ = *s++;
-
-  *d++ = '\0';
-  return d;
-}
-
 nsresult
 XRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
                                  const char* aDesktopStartupID,
@@ -620,67 +610,13 @@ XRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
 {
   *aDestroyed = false;
 
-  char cwdbuf[MAX_PATH];
-  if (!getcwd(cwdbuf, MAX_PATH))
-    return NS_ERROR_UNEXPECTED;
-
-  // the commandline property is constructed as an array of int32_t
-  // followed by a series of null-terminated strings:
-  //
-  // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
-  // (offset is from the beginning of the buffer)
-
-  static char desktopStartupPrefix[] = " DESKTOP_STARTUP_ID=";
-
-  int32_t argvlen = strlen(cwdbuf);
-  for (int i = 0; i < argc; ++i) {
-    int32_t len = strlen(argv[i]);
-    if (i == 0 && aDesktopStartupID) {
-      len += sizeof(desktopStartupPrefix) - 1 + strlen(aDesktopStartupID);
-    }
-    argvlen += len;
-  }
-
-  auto* buffer = (int32_t*) malloc(argvlen + argc + 1 +
-                                      sizeof(int32_t) * (argc + 1));
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  buffer[0] = TO_LITTLE_ENDIAN32(argc);
-
-  auto *bufend = (char*) (buffer + argc + 1);
-
-  bufend = estrcpy(cwdbuf, bufend);
-
-  for (int i = 0; i < argc; ++i) {
-    buffer[i + 1] = TO_LITTLE_ENDIAN32(bufend - ((char*) buffer));
-    bufend = estrcpy(argv[i], bufend);
-    if (i == 0 && aDesktopStartupID) {
-      bufend = estrcpy(desktopStartupPrefix, bufend - 1);
-      bufend = estrcpy(aDesktopStartupID, bufend - 1);
-    }
-  }
-
-#ifdef DEBUG_bsmedberg
-  int32_t   debug_argc   = TO_LITTLE_ENDIAN32(*buffer);
-  char *debug_workingdir = (char*) (buffer + argc + 1);
-
-  printf("Sending command line:\n"
-         "  working dir: %s\n"
-         "  argc:\t%i",
-         debug_workingdir,
-         debug_argc);
-
-  int32_t  *debug_offset = buffer + 1;
-  for (int debug_i = 0; debug_i < debug_argc; ++debug_i)
-    printf("  argv[%i]:\t%s\n", debug_i,
-           ((char*) buffer) + TO_LITTLE_ENDIAN32(debug_offset[debug_i]));
-#endif
-
+  int commandLineLength;
+  char* commandLine = ConstructCommandLine(argc, argv, aDesktopStartupID,
+                                           &commandLineLength);
   XChangeProperty (mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
-                   PropModeReplace, (unsigned char *) buffer,
-                   bufend - ((char*) buffer));
-  free(buffer);
+                   PropModeReplace, (unsigned char *) commandLine,
+                   commandLineLength);
+  free(commandLine);
 
   if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandLineAtom))
     return NS_ERROR_FAILURE;
