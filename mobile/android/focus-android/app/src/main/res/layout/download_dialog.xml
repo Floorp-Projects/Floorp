@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text" />
+            android:textColor="@color/dialogAccent" />
 
         <Button
             android:id="@+id/download_dialog_download"
@@ -60,7 +60,7 @@
             android:layout_gravity="end"
             android:layout_weight="1"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text" />
+            android:textColor="@color/dialogAccent" />
 
     </LinearLayout>
 

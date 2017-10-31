@@ -85,7 +85,7 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
                     context.startActivity(openFileIntent);
                 }
             });
-            snackbar.setActionTextColor(ContextCompat.getColor(context, R.color.download_dialog_text));
+            snackbar.setActionTextColor(ContextCompat.getColor(context, R.color.snackbarActionText));
         }
         snackbar.show();
     }

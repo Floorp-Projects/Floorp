@@ -61,8 +61,8 @@
               Check design_navigation_item.xml source here :
               https://android.googlesource.com/platform/frameworks/support.git/+/master/design/res/layout/design_navigation_item.xml
             -->
-        <item name="listPreferredItemPaddingLeft">24dp</item>
-        <item name="listPreferredItemPaddingRight">24dp</item>
+        <item name="listPreferredItemPaddingLeft">@dimen/dialogHorizontalPadding</item>
+        <item name="listPreferredItemPaddingRight">@dimen/dialogHorizontalPadding</item>
     </style>
 
     <style name="ContextMenuTextAppearence">

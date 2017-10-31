@@ -29,4 +29,6 @@
     <dimen name="floating_action_button_size">56dp</dimen>
 
     <dimen name="adaptive_icon_drawable_dimen">108dp</dimen> <!-- Specified in AdaptiveIconDrawable docs. -->
+
+    <dimen name="dialogHorizontalPadding">24dp</dimen>
 </resources>

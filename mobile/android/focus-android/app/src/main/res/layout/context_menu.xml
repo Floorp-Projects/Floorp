@@ -25,8 +25,8 @@
         android:textColor="#66ffffff"
         android:textSize="12sp"
         android:fontFamily="@string/font_roboto_regular"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="@dimen/dialogHorizontalPadding"
+        android:paddingEnd="@dimen/dialogHorizontalPadding"
         android:paddingTop="16dp"
         android:paddingBottom="16dp" />
 

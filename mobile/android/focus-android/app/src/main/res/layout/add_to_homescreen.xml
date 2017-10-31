@@ -12,8 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingStart="@dimen/dialogHorizontalPadding"
+        android:paddingEnd="@dimen/dialogHorizontalPadding"
         android:paddingTop="16dp"
         android:paddingBottom="10dp">
 
@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:backgroundTint="@color/add_to_homescreen_button_text"
+            android:backgroundTint="@color/dialogAccent"
             android:inputType="text"
             android:paddingStart="10dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text"
+            android:textColor="@color/dialogAccent"
             android:textSize="14sp"
             android:fontFamily="@string/font_roboto_medium" />
 
@@ -70,7 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textAllCaps="true"
-            android:textColor="@color/download_dialog_text"
+            android:textColor="@color/dialogAccent"
             android:textSize="14sp"
             android:fontFamily="@string/font_roboto_medium" />
     </LinearLayout>
@@ -83,8 +83,8 @@
         android:background="#ff262626"
         android:orientation="horizontal"
         android:paddingBottom="16dp"
-        android:paddingEnd="24dp"
-        android:paddingStart="24dp"
+        android:paddingEnd="@dimen/dialogHorizontalPadding"
+        android:paddingStart="@dimen/dialogHorizontalPadding"
         android:paddingTop="16dp"
         android:visibility="gone">
 

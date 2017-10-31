@@ -10,7 +10,10 @@
     android:gravity="center_vertical"
     android:ellipsize="end"
     android:textSize="14sp"
-    android:padding="24dp"
+    android:paddingStart="@dimen/dialogHorizontalPadding"
+    android:paddingEnd="@dimen/dialogHorizontalPadding"
+    android:paddingTop="24dp"
+    android:paddingBottom="24dp"
     android:textColor="#ffb2b2b2"
     tools:text="http://www.mozilla.org"
     android:fontFamily="@string/font_roboto_regular" />
