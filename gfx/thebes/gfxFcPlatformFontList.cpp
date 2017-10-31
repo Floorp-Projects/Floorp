@@ -690,15 +690,16 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         // so that it gets deleted whenever cairo decides
         NS_ASSERTION(mFTFace, "FT_Face is null when setting user data");
         NS_ASSERTION(mUserFontData, "user font data is null when setting user data");
+        mUserFontData.get()->AddRef();
         if (cairo_font_face_set_user_data(face,
                                           &sFcFontlistUserFontDataKey,
                                           mUserFontData,
                                           ReleaseFTUserFontData) != CAIRO_STATUS_SUCCESS) {
             NS_WARNING("Failed binding FTUserFontData to Cairo font face");
+            mUserFontData.get()->Release();
             cairo_font_face_destroy(face);
             return nullptr;
         }
-        mUserFontData.get()->AddRef();
     }
 
     cairo_scaled_font_t *scaledFont = nullptr;
