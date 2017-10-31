@@ -1008,6 +1008,10 @@ gfxPlatform::Shutdown()
 
     gfx::Factory::ShutDown();
 
+    if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+      mozilla::wr::wr_shutdown_external_log_handler();
+    }
+
     delete gGfxPlatformPrefsLock;
 
     gfxVars::Shutdown();
@@ -1015,8 +1019,6 @@ gfxPlatform::Shutdown()
     gfxFont::DestroySingletons();
 
     gfxConfig::Shutdown();
-
-    mozilla::wr::wr_shutdown_external_log_handler();
 
     gPlatform->WillShutdown();
 
