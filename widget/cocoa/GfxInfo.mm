@@ -31,7 +31,7 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-GfxInfo::GfxInfo()
+GfxInfo::GfxInfo() : mOSXVersion{0}
 {
 }
 
