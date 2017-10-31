@@ -7,6 +7,7 @@
 #include "DrawTargetCapture.h"
 #include "DrawCommand.h"
 #include "gfxPlatform.h"
+#include "SourceSurfaceCapture.h"
 
 namespace mozilla {
 namespace gfx {
@@ -14,12 +15,17 @@ namespace gfx {
 
 DrawTargetCaptureImpl::~DrawTargetCaptureImpl()
 {
+  if (mSnapshot && !mSnapshot->hasOneRef()) {
+    mSnapshot->DrawTargetWillDestroy();
+    mSnapshot = nullptr;
+  }
 }
 
 DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
                                              const IntSize& aSize,
                                              SurfaceFormat aFormat)
   : mSize(aSize),
+    mSnapshot(nullptr),
     mStride(0),
     mSurfaceAllocationSize(0)
 {
@@ -72,35 +78,30 @@ DrawTargetCaptureImpl::InitForData(int32_t aStride, size_t aSurfaceAllocationSiz
 already_AddRefed<SourceSurface>
 DrawTargetCaptureImpl::Snapshot()
 {
-  RefPtr<DrawTarget> dt;
-  if (!mSurfaceAllocationSize) {
-    dt = mRefDT->CreateSimilarDrawTarget(mSize, mFormat);
-  } else {
-    uint8_t* data = static_cast<uint8_t*>(calloc(1, mSurfaceAllocationSize));
-    if (!data) {
-      return nullptr;
-    }
-    BackendType type = mRefDT->GetBackendType();
-    if (!Factory::DoesBackendSupportDataDrawtarget(type)) {
-      type = BackendType::SKIA;
-    }
-    dt = Factory::CreateDrawTargetForData(type, data, mSize, mStride, mFormat);
-    if (!dt) {
-      return nullptr;
-    }
-    dt->AddUserData(reinterpret_cast<UserDataKey*>(dt.get()),
-                    data,
-                    free);
+  if (!mSnapshot) {
+    mSnapshot = new SourceSurfaceCapture(this);
   }
 
-  ReplayToDrawTarget(dt, Matrix());
+  RefPtr<SourceSurface> surface = mSnapshot;
+  return surface.forget();
+}
 
-  return dt->Snapshot();
+already_AddRefed<SourceSurface>
+DrawTargetCaptureImpl::OptimizeSourceSurface(SourceSurface *aSurface) const
+{
+  // If the surface is a recording, make sure it gets resolved on the paint thread.
+  if (aSurface->GetType() == SurfaceType::CAPTURE) {
+    RefPtr<SourceSurface> surface = aSurface;
+    return surface.forget();
+  }
+  return mRefDT->OptimizeSourceSurface(aSurface);
 }
 
 void
 DrawTargetCaptureImpl::DetachAllSnapshots()
-{}
+{
+  MarkChanged();
+}
 
 #define AppendCommand(arg) new (AppendToCommandList<arg>()) arg
 
@@ -368,6 +369,22 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
     result = true;
   }
   return result;
+}
+
+void
+DrawTargetCaptureImpl::MarkChanged()
+{
+  if (!mSnapshot) {
+    return;
+  }
+
+  if (mSnapshot->hasOneRef()) {
+    mSnapshot = nullptr;
+    return;
+  }
+
+  mSnapshot->DrawTargetWillChange();
+  mSnapshot = nullptr;
 }
 
 } // namespace gfx
