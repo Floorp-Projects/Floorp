@@ -1210,11 +1210,10 @@ class GCRuntime
     AtomMarkingRuntime atomMarking;
 
   private:
-    // When chunks are empty, they reside in the emptyChunks pool and are
-    // re-used as needed or eventually expired if not re-used. The emptyChunks
-    // pool gets refilled from the background allocation task heuristically so
-    // that empty chunks should always be available for immediate allocation
-    // without syscalls.
+    // When empty, chunks reside in the emptyChunks pool and are re-used as
+    // needed or eventually expired if not re-used. The emptyChunks pool gets
+    // refilled from the background allocation task heuristically so that empty
+    // chunks should always available for immediate allocation without syscalls.
     GCLockData<ChunkPool> emptyChunks_;
 
     // Chunks which have had some, but not all, of their arenas allocated live
