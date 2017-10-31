@@ -426,6 +426,25 @@ Factory::CreateCaptureDrawTarget(BackendType aBackend, const IntSize& aSize, Sur
   return MakeAndAddRef<DrawTargetCaptureImpl>(aBackend, aSize, aFormat);
 }
 
+already_AddRefed<DrawTargetCapture>
+Factory::CreateCaptureDrawTargetForData(BackendType aBackend,
+                                        const IntSize &aSize,
+                                        SurfaceFormat aFormat,
+                                        int32_t aStride,
+                                        size_t aSurfaceAllocationSize)
+{
+  MOZ_ASSERT(aSurfaceAllocationSize && aStride);
+
+  BackendType type = aBackend;
+  if (!Factory::DoesBackendSupportDataDrawtarget(aBackend)) {
+    type = BackendType::SKIA;
+  }
+
+  RefPtr<DrawTargetCaptureImpl> dt = new DrawTargetCaptureImpl(type, aSize, aFormat);
+  dt->InitForData(aStride, aSurfaceAllocationSize);
+  return dt.forget();
+}
+
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForData(BackendType aBackend,
                                  unsigned char *aData,

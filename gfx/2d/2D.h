@@ -1516,6 +1516,9 @@ public:
   static already_AddRefed<DrawTargetCapture>
     CreateCaptureDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
 
+  static already_AddRefed<DrawTargetCapture>
+    CreateCaptureDrawTargetForData(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat,
+                                   int32_t aStride, size_t aSurfaceAllocationSize);
 
   static already_AddRefed<DrawTarget>
     CreateWrapAndRecordDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);
