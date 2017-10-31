@@ -75,7 +75,7 @@ add_task(async function() {
     // Simulate clicking the "Allow Always" button.
     let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
     await promiseForNotificationShown(notification, browser);
-    PopupNotifications.panel.firstChild._primaryButton.click();
+    PopupNotifications.panel.firstChild.button.click();
 
     // Prepare a crash report topic observer that only returns when
     // the crash report has been successfully sent.
