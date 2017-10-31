@@ -681,9 +681,10 @@ function jsTestDriverEnd()
   }
   else
   {
-    for (var i = 0; i < gTestcases.length; i++)
+    var testCases = getTestCases();
+    for (var i = 0; i < testCases.length; i++)
     {
-      gTestcases[i].dump();
+      testCases[i].dump();
     }
 
     // tell reftest the test is complete.
