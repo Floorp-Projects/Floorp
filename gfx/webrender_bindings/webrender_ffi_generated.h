@@ -1144,6 +1144,11 @@ void wr_dp_push_box_shadow(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_push_clear_rect(WrState *aState,
+                           LayoutRect aRect)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_push_clip(WrState *aState,
                      uint64_t aClipId)
 WR_FUNC;

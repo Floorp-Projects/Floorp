@@ -4663,6 +4663,22 @@ nsDisplayClearBackground::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+bool
+nsDisplayClearBackground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                  const StackingContextHelper& aSc,
+                                                  mozilla::layers::WebRenderLayerManager* aManager,
+                                                  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+    nsRect(ToReferenceFrame(), mFrame->GetSize()),
+    mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aBuilder.PushClearRect(aSc.ToRelativeLayoutRect(bounds));
+
+  return true;
+}
+
 nsRect
 nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder,
                             bool* aSnap) const
