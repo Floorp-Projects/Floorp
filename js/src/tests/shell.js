@@ -306,12 +306,6 @@
   }
   global.XorShiftGenerator = XorShiftGenerator;
 
-  /******************************************************
-   * TEST METADATA EXPORTS (these are of dubious value) *
-   ******************************************************/
-
-  global.BUGNUMBER = "";
-
   /*************************************************************************
    * HARNESS-CENTRIC EXPORTS (we should generally work to eliminate these) *
    *************************************************************************/
@@ -445,7 +439,6 @@
   * Print a bugnumber message.
   */
   function printBugNumber(num) {
-    BUGNUMBER = num;
     print('BUGNUMBER: ' + num);
   }
   global.printBugNumber = printBugNumber;

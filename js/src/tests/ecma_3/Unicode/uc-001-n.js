@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var BUGNUMBER = 23612;
 
 test();
 
 function test()
 {
   printStatus ("Unicode Characters 1C-1F negative test.");
-  printBugNumber (23612);
+  printBugNumber (BUGNUMBER);
    
   reportCompare ("error", eval ("'no'\u001C+' error'"),
 		 "Unicode whitespace test (1C.)");

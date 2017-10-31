@@ -12,7 +12,8 @@
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=133897
  */
 //-----------------------------------------------------------------------------
-printBugNumber(96526);
+var BUGNUMBER = 96526;
+printBugNumber(BUGNUMBER);
 printStatus("Just seeing that we don't crash when compiling this script -");
 
 
