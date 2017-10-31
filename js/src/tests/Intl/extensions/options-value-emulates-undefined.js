@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell||!this.hasOwnProperty('Intl'))
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
@@ -9,12 +9,6 @@ var summary =
   "preclude imputing default values";
 
 print(BUGNUMBER + ": " + summary);
-
-if (typeof Intl !== 'object' && typeof quit == 'function') {
-  print("Test skipped");
-  reportCompare(true, true);
-  quit(0);
-}
 
 /**************
  * BEGIN TEST *

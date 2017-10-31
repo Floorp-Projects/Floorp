@@ -206,15 +206,6 @@
     print = global.print;
   }
 
-  var quit = global.quit;
-  if (typeof quit !== "function") {
-    // XXX There's something very strange about quit() in browser runs being a
-    //     function that doesn't quit at all (!).  We should get rid of quit()
-    //     as an integral part of tests in favor of something else.
-    quit = function quit() {};
-    global.quit = quit;
-  }
-
   var gczeal = global.gczeal;
   if (typeof gczeal !== "function") {
     if (typeof SpecialPowersSetGCZeal === "function") {
