@@ -333,19 +333,15 @@ function gc()
   }
 }
 
-function options(aOptionName)
-{
+function options(aOptionName) {
   // return value of options() is a comma delimited list
   // of the previously set values
 
-  var value = '';
-  for (var optionName in options.currvalues)
-  {
-    value += optionName + ',';
-  }
-  if (value)
-  {
-    value = value.substring(0, value.length-1);
+  var value = "";
+  for (var optionName in options.currvalues) {
+    if (value)
+      value += ",";
+    value += optionName;
   }
 
   if (aOptionName) {
@@ -353,18 +349,18 @@ function options(aOptionName)
       // This test is trying to flip an unsupported option, so it's
       // likely no longer testing what it was supposed to.  Fail it
       // hard.
-      throw "Unsupported JSContext option '"+ aOptionName +"'";
+      throw "Unsupported JSContext option '" + aOptionName + "'";
     }
 
-    if (options.currvalues.hasOwnProperty(aOptionName))
+    if (aOptionName in options.currvalues) {
       // option is set, toggle it to unset
       delete options.currvalues[aOptionName];
-    else
+      SpecialPowers.Cu[aOptionName] = false;
+    } else {
       // option is not set, toggle it to set
       options.currvalues[aOptionName] = true;
-
-    SpecialPowers.Cu[aOptionName] =
-      options.currvalues.hasOwnProperty(aOptionName);
+      SpecialPowers.Cu[aOptionName] = true;
+    }
   }
 
   return value;
@@ -376,26 +372,20 @@ function options(aOptionName)
 jstestsOptions = options;
 
 function optionsInit() {
-
-  // hash containing the set options.
+  // Hash containing the set options.
   options.currvalues = {
-    strict:     true,
-    werror:     true,
-    strict_mode: true
+    __proto__: null,
+    strict: true,
+    werror: true,
+    strict_mode: true,
   };
 
-  for (var optionName in options.currvalues)
-  {
+  for (var optionName in options.currvalues) {
     var propName = optionName;
-
     if (!(propName in SpecialPowers.Cu))
-    {
       throw "options.currvalues is out of sync with Components.utils";
-    }
     if (!SpecialPowers.Cu[propName])
-    {
       delete options.currvalues[optionName];
-    }
   }
 }
 
