@@ -2818,31 +2818,26 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
   }
 
   const PrefName& pref = GetPrefName(aStartingAt);
-  const char* branchName = pref.get();
-  size_t len = strlen(branchName);
+  nsAutoCString branchName(pref.get());
 
-  // The following check insures that if the branch name already has a "." at
-  // the end, we don't end up with a "..". This fixes an incompatibility
-  // between nsIPref, which needs the period added, and nsIPrefBranch which
-  // does not. When nsIPref goes away this function should be fixed to never
-  // add the period at all.
-  nsAutoCString branch_dot(branchName);
-  if (len > 1 && branchName[len - 1] != '.') {
-    branch_dot += '.';
+  // Add a trailing '.' if it doesn't already have one.
+  if (branchName.Length() > 1 &&
+      !StringEndsWith(branchName, NS_LITERAL_CSTRING("."))) {
+    branchName += '.';
   }
 
-  // Delete a branch. Used for deleting mime types.
-  const char* to_delete = branch_dot.get();
-  MOZ_ASSERT(to_delete);
-  len = strlen(to_delete);
+  const nsACString& branchNameNoDot =
+    Substring(branchName, 0, branchName.Length() - 1);
+
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PrefHashEntry*>(iter.Get());
 
-    // Note: if we're deleting "ldap" then we want to delete "ldap.xxx" and
-    // "ldap" (if such a leaf node exists) but not "ldap_1.xxx".
-    if (PL_strncmp(entry->mKey, to_delete, len) == 0 ||
-        (len - 1 == strlen(entry->mKey) &&
-         PL_strncmp(entry->mKey, to_delete, len - 1) == 0)) {
+    // The first disjunct matches branches: e.g. a branch name "foo.bar."
+    // matches an mKey "foo.bar.baz" (but it won't match "foo.barrel.baz").
+    // The second disjunct matches leaf nodes: e.g. a branch name "foo.bar."
+    // matches an mKey "foo.bar" (by ignoring the trailing '.').
+    nsDependentCString key(entry->mKey);
+    if (StringBeginsWith(key, branchName) || key.Equals(branchNameNoDot)) {
       iter.Remove();
     }
   }
