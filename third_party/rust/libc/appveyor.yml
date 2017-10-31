@@ -25,3 +25,7 @@ build: false
 test_script:
   - cargo test --target %TARGET%
   - cargo test --manifest-path libc-test/Cargo.toml --target %TARGET%
+
+cache:
+  - target
+  - C:\Users\appveyor\.cargo\registry

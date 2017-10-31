@@ -10,12 +10,10 @@
 //! ```
 #![cfg_attr(test, deny(warnings))]
 #![deny(missing_docs)]
-#![doc(html_root_url = "https://docs.rs/num_cpus/1.7.0")]
 #![allow(non_snake_case)]
 
 #[cfg(not(windows))]
 extern crate libc;
-
 
 /// Returns the number of available CPUs of the current system.
 ///
@@ -37,7 +35,7 @@ pub fn get_physical() -> usize {
 }
 
 
-#[cfg(not(any(target_os = "linux", target_os = "windows", target_os="macos")))]
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
 #[inline]
 fn get_num_physical_cpus() -> usize {
     // Not implemented, fallback
@@ -245,30 +243,6 @@ fn get_num_cpus() -> usize {
     cpus as usize
 }
 
-
-#[cfg(target_os = "macos")]
-fn get_num_physical_cpus() -> usize {
-    use std::ffi::CStr;
-    use std::ptr;
-
-    let mut cpus: i32 = 0;
-    let mut cpus_size = std::mem::size_of_val(&cpus);
-
-    let sysctl_name = CStr::from_bytes_with_nul(b"hw.physicalcpu\0")
-        .expect("byte literal is missing NUL");
-
-    unsafe {
-        if 0 != libc::sysctlbyname(sysctl_name.as_ptr(),
-                                   &mut cpus as *mut _ as *mut _,
-                                   &mut cpus_size as *mut _ as *mut _,
-                                   ptr::null_mut(),
-                                   0) {
-            return get_num_cpus();
-        }
-    }
-    cpus as usize
-}
-
 #[cfg(target_os = "linux")]
 fn get_num_cpus() -> usize {
     let mut set:  libc::cpu_set_t = unsafe { std::mem::zeroed() };
@@ -299,14 +273,7 @@ fn get_num_cpus() -> usize {
     target_os = "fuchsia")
 )]
 fn get_num_cpus() -> usize {
-    // On ARM targets, processors could be turned off to save power.
-    // Use `_SC_NPROCESSORS_CONF` to get the real number.
-    #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
-    const CONF_NAME: libc::c_int = libc::_SC_NPROCESSORS_CONF;
-    #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
-    const CONF_NAME: libc::c_int = libc::_SC_NPROCESSORS_ONLN;
-
-    let cpus = unsafe { libc::sysconf(CONF_NAME) };
+    let cpus = unsafe { libc::sysconf(libc::_SC_NPROCESSORS_ONLN) };
     if cpus < 1 {
         1
     } else {
