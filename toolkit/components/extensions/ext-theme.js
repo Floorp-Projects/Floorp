@@ -28,12 +28,27 @@ class Theme {
    *   to show manifest warnings to the theme author.
    */
   constructor(baseURI, logger) {
-    // A dictionary of light weight theme styles.
-    this.lwtStyles = {
-      icons: {},
-    };
+    // The base theme applied to all windows.
+    this.baseProperties = {};
+
+    // Window-specific theme overrides.
+    this.windowOverrides = new WeakMap();
+
     this.baseURI = baseURI;
     this.logger = logger;
+  }
+
+  /**
+   * Gets the current theme for a specified window
+   *
+   * @param {Object} window
+   * @returns {Object} The theme of the specified window
+   */
+  getWindowTheme(window) {
+    if (this.windowOverrides.has(window)) {
+      return this.windowOverrides.get(window);
+    }
+    return this.baseProperties;
   }
 
   /**
@@ -46,6 +61,10 @@ class Theme {
    *   this parameter will apply the theme globally.
    */
   load(details, targetWindow) {
+    this.lwtStyles = {
+      icons: {},
+    };
+
     if (targetWindow) {
       this.lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
     }
@@ -70,6 +89,11 @@ class Theme {
     if (this.lwtStyles.headerURL &&
         this.lwtStyles.accentcolor &&
         this.lwtStyles.textcolor) {
+      if (!targetWindow) {
+        this.baseProperties = details;
+      } else {
+        this.windowOverrides.set(targetWindow, details);
+      }
       LightweightThemeManager.fallbackThemeData = this.lwtStyles;
       Services.obs.notifyObservers(null,
         "lightweight-theme-styling-update",
@@ -245,7 +269,7 @@ class Theme {
    * @param {Object} targetWindow The window the theme should be unloaded from
    */
   unload(targetWindow) {
-    let lwtStyles = {
+    this.lwtStyles = {
       headerURL: "",
       accentcolor: "",
       additionalBackgrounds: "",
@@ -256,16 +280,20 @@ class Theme {
     };
 
     if (targetWindow) {
-      lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
+      this.lwtStyles.window = getWinUtils(targetWindow).outerWindowID;
+      this.windowOverrides.set(targetWindow, {});
+    } else {
+      this.windowOverrides = new WeakMap();
+      this.baseProperties = {};
     }
 
     for (let icon of ICONS) {
-      lwtStyles.icons[`--${icon}--icon`] = "";
+      this.lwtStyles.icons[`--${icon}--icon`] = "";
     }
     LightweightThemeManager.fallbackThemeData = null;
     Services.obs.notifyObservers(null,
       "lightweight-theme-styling-update",
-      JSON.stringify(lwtStyles));
+      JSON.stringify(this.lwtStyles));
   }
 }
 
@@ -299,6 +327,23 @@ this.theme = class extends ExtensionAPI {
 
     return {
       theme: {
+        getCurrent: (windowId) => {
+          // Return empty theme if none is applied.
+          if (!this.theme) {
+            return Promise.resolve({});
+          }
+
+          // Return theme applied on last focused window when no ID is supplied.
+          if (!windowId) {
+            return Promise.resolve(this.theme.getWindowTheme(windowTracker.topWindow));
+          }
+
+          const browserWindow = windowTracker.getWindow(windowId, context);
+          if (!browserWindow) {
+            return Promise.reject(`Invalid window ID: ${windowId}`);
+          }
+          return Promise.resolve(this.theme.getWindowTheme(browserWindow));
+        },
         update: (windowId, details) => {
           if (!gThemesEnabled) {
             // Return early if themes are disabled.

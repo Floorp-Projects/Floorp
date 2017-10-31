@@ -459,10 +459,24 @@
     "permissions": ["theme"],
     "functions": [
       {
+        "name": "getCurrent",
+        "type": "function",
+        "async": true,
+        "description": "Returns the current theme for the specified window or the last focused window.",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "windowId",
+            "optional": true,
+            "description": "The window for which we want the theme."
+          }
+        ]
+      },
+      {
         "name": "update",
         "type": "function",
         "async": true,
-        "description": "Make complete or partial updates to the theme. Resolves when the update has completed.",
+        "description": "Make complete updates to the theme. Resolves when the update has completed.",
         "parameters": [
           {
             "type": "integer",
