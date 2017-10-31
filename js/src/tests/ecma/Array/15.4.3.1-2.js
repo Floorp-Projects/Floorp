@@ -16,7 +16,6 @@
 
 var SECTION = "15.4.3.1-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Array.prototype";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

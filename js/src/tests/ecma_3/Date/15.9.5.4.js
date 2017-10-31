@@ -36,7 +36,6 @@ var hopeThisIsTimeString = '';
 var cnEmptyString = '';
 var cnERR ='OOPS! FATAL ERROR: no regexp match in extractTimeString()';
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // first, a couple of generic tests -

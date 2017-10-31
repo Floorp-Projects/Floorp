@@ -24,7 +24,6 @@
 */
 var SECTION = "15.7.4.2-2-n";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Number.prototype.toString()");
 

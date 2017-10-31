@@ -17,7 +17,6 @@
 */
 var SECTION = "7.5-4-n";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Identifiers";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

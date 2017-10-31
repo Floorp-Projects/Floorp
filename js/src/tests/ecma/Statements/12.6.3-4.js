@@ -42,7 +42,6 @@
 */
 var SECTION = "12.6.3-4";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=344855";
 

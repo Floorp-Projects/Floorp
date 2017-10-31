@@ -18,7 +18,6 @@ var SECTION = "exception-005";
 var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: ToObjectError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 ToObject_1();

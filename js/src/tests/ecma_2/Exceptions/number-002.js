@@ -22,7 +22,6 @@ var SECTION = "number-002";
 var VERSION = "JS1_4";
 var TITLE   = "Exceptions for Number.valueOf()";
 
-startTest();
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
 var result = "Failed";

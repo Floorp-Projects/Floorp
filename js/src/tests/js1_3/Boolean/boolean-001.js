@@ -17,7 +17,6 @@ var SECTION = "boolean-001.js";
 var VERSION = "JS_1.3";
 var TITLE   = "new Boolean(false) should evaluate to false";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 BooleanTest( "new Boolean(true)",  new Boolean(true),  true );

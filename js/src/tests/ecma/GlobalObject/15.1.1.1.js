@@ -16,7 +16,6 @@
 */
 var SECTION = "15.1.1.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "NaN";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

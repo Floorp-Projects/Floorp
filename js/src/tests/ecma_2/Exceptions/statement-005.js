@@ -16,7 +16,6 @@ var SECTION = "statement-005";
 var VERSION = "JS1_4";
 var TITLE   = "The for..in statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";

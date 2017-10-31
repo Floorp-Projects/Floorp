@@ -23,7 +23,6 @@
 
 var SECTION = "8.4";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The String type";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

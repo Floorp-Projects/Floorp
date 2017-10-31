@@ -27,7 +27,6 @@ var SECTION = "proto_5";
 var VERSION = "JS1_3";
 var TITLE   = "Logical OR || in Constructors";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {

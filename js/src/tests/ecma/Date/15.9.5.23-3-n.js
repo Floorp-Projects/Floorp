@@ -21,7 +21,6 @@
 
 var SECTION = "15.9.5.23-3-n";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Date.prototype.setTime()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

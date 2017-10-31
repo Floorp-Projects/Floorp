@@ -38,7 +38,6 @@
 */
 var SECTION = "15.4.2.2-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The Array Constructor:  new Array( len )";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

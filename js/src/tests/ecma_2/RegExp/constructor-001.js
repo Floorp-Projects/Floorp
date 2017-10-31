@@ -16,7 +16,6 @@ var SECTION = "RegExp/constructor-001";
 var VERSION = "ECMA_2";
 var TITLE   = "new RegExp()";
 
-startTest();
 
 /*
  * for each test case, verify:

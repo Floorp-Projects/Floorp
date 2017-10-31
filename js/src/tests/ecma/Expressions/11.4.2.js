@@ -14,7 +14,6 @@
 */
 var SECTION = "11.4.2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The void operator";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

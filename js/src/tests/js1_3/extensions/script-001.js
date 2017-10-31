@@ -110,7 +110,6 @@ var SECTION = "script-001";
 var VERSION = "JS1_3";
 var TITLE   = "NativeScript";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 if (typeof Script == 'undefined')

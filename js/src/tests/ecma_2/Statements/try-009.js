@@ -20,7 +20,6 @@ var SECTION = "try-009";
 var VERSION = "ECMA_2";
 var TITLE   = "The try statement: try in a while block";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var EXCEPTION_STRING = "Exception thrown: ";

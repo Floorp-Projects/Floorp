@@ -29,7 +29,6 @@
 */
 var SECTION = "15.7.4";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Properties of the Number Prototype Object";
 
 writeHeaderToLog( SECTION + " "+TITLE);

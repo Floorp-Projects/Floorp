@@ -49,7 +49,6 @@
 
 var SECTION = "11.2.2-6-n.js";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The new operator";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

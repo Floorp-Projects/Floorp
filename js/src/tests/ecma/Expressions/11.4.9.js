@@ -17,7 +17,6 @@
 */
 var SECTION = "11.4.9";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Logical NOT operator (!)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);

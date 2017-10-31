@@ -40,7 +40,6 @@
 */
 var SECTION = "10.1.4-1";
 var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 

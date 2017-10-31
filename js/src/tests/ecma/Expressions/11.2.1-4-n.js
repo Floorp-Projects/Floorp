@@ -48,7 +48,6 @@
 */
 var SECTION = "11.2.1-4-n";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 

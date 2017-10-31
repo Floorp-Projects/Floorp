@@ -19,7 +19,6 @@
 */
 var SECTION = "15.7.4.3-1";
 var VERSION = "ECMA_1";
-startTest();
 
 
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");

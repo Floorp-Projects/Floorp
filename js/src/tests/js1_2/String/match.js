@@ -14,7 +14,6 @@
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 var VERSION = 'no version';
-startTest();
 var TITLE = 'String:match';
 
 writeHeaderToLog('Executing script: match.js');
