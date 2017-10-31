@@ -37,9 +37,6 @@
   ; setup the application model id registration value
   ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
 
-  ; Win7 taskbar and start menu link maintenance
-  Call FixShortcutAppModelIDs
-
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
@@ -54,9 +51,6 @@
     ${FixShellIconHandler} "HKLM"
     ${SetAppLSPCategories} ${LSP_CATEGORIES}
 
-    ; Win7 taskbar and start menu link maintenance
-    Call FixShortcutAppModelIDs
-
     ; Add the Firewall entries after an update
     Call AddFirewallEntries
 
@@ -70,25 +64,30 @@
   ; root of the Start Menu Programs directory.
   ${MigrateStartMenuShortcut}
 
-  ; Update lastwritetime of the Start Menu shortcut to clear the tile cache.
-  ; Do this for both shell contexts in case the user has shortcuts in multiple
-  ; locations, then restore the previous context at the end.
-  ${If} ${AtLeastWin8}
-    SetShellVarContext all
-    ${TouchStartMenuShortcut}
-    SetShellVarContext current
-    ${TouchStartMenuShortcut}
-    ${If} $TmpVal == "HKLM"
-      SetShellVarContext all
-    ${ElseIf} $TmpVal == "HKCU"
-      SetShellVarContext current
-    ${EndIf}
-  ${EndIf}
-
   ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
   ${MigrateTaskBarShortcut}
 
+  ; Update the name/icon/AppModelID of our shortcuts as needed, then update the
+  ; lastwritetime of the Start Menu shortcut to clear the tile icon cache.
+  ; Do this for both shell contexts in case the user has shortcuts in multiple
+  ; locations, then restore the previous context at the end.
+  SetShellVarContext all
   ${UpdateShortcutBranding}
+  ${If} ${AtLeastWin8}
+    ${TouchStartMenuShortcut}
+  ${EndIf}
+  Call FixShortcutAppModelIDs
+  SetShellVarContext current
+  ${UpdateShortcutBranding}
+  ${If} ${AtLeastWin8}
+    ${TouchStartMenuShortcut}
+  ${EndIf}
+  Call FixShortcutAppModelIDs
+  ${If} $TmpVal == "HKLM"
+    SetShellVarContext all
+  ${ElseIf} $TmpVal == "HKCU"
+    SetShellVarContext current
+  ${EndIf}
 
   ${RemoveDeprecatedKeys}
   ${Set32to64DidMigrateReg}
@@ -165,10 +164,11 @@
 !define PostUpdate "!insertmacro PostUpdate"
 
 ; Update the last modified time on the Start Menu shortcut, so that its icon
-; gets refreshed. Should be called on Win8+ after MigrateStartMenuShortcut.
+; gets refreshed. Should be called on Win8+ after MigrateStartMenuShortcut
+; and UpdateShortcutBranding.
 !macro TouchStartMenuShortcut
-  ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-    FileOpen $0 "$SMPROGRAMS\${BrandFullName}.lnk" a
+  ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+    FileOpen $0 "$SMPROGRAMS\${BrandShortName}.lnk" a
     ${IfNot} ${Errors}
       System::Call '*(i, i) p .r1'
       System::Call 'kernel32::GetSystemTimeAsFileTime(p r1)'
@@ -208,51 +208,51 @@
   ${EndIf}
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
-  ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
+  ${Unless} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
     SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
   ${EndUnless}
 
-  ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
+  ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+    ShellLink::GetShortCutArgs "$DESKTOP\${BrandShortName}.lnk"
     Pop $0
     ${If} "$0" == ""
-      ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
+      ShellLink::GetShortCutTarget "$DESKTOP\${BrandShortName}.lnk"
       Pop $0
       ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR\${FileMainEXE}"
-        Delete "$DESKTOP\${BrandFullName}.lnk"
+        Delete "$DESKTOP\${BrandShortName}.lnk"
       ${EndIf}
     ${EndIf}
   ${EndIf}
 
   SetShellVarContext all  ; Set $SMPROGRAMS to All Users
-  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
     SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
                                 ; Menu Programs directory
   ${EndUnless}
 
-  ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-    ShellLink::GetShortCutArgs "$SMPROGRAMS\${BrandFullName}.lnk"
+  ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+    ShellLink::GetShortCutArgs "$SMPROGRAMS\${BrandShortName}.lnk"
     Pop $0
     ${If} "$0" == ""
-      ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::GetShortCutTarget "$SMPROGRAMS\${BrandShortName}.lnk"
       Pop $0
       ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR\${FileMainEXE}"
-        Delete "$SMPROGRAMS\${BrandFullName}.lnk"
+        Delete "$SMPROGRAMS\${BrandShortName}.lnk"
       ${EndIf}
     ${EndIf}
   ${EndIf}
 
-  ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-    ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
+  ${If} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
+    ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandShortName}.lnk"
     Pop $0
     ${If} "$0" == ""
-      ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
+      ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandShortName}.lnk"
       Pop $0
       ${GetLongPath} "$0" $0
       ${If} "$0" == "$INSTDIR\${FileMainEXE}"
-        Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
+        Delete "$QUICKLAUNCH\${BrandShortName}.lnk"
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -275,24 +275,24 @@
   ${EndIf}
 
   SetShellVarContext all  ; Set $DESKTOP to All Users
-  ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-    CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR"
+  ${Unless} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+    CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID" "true"
+        ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
     ${Else}
       SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
-      ${Unless} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-        CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-        ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
-          ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandFullName}.lnk" \
+      ${Unless} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+        CreateShortCut "$DESKTOP\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+        ${If} ${FileExists} "$DESKTOP\${BrandShortName}.lnk"
+          ShellLink::SetShortCutWorkingDirectory "$DESKTOP\${BrandShortName}.lnk" \
                                                  "$INSTDIR"
           ${If} ${AtLeastWin7}
           ${AndIf} "$AppUserModelID" != ""
-            ApplicationID::Set "$DESKTOP\${BrandFullName}.lnk" "$AppUserModelID" "true"
+            ApplicationID::Set "$DESKTOP\${BrandShortName}.lnk" "$AppUserModelID" "true"
           ${EndIf}
         ${EndIf}
       ${EndUnless}
@@ -300,26 +300,26 @@
   ${EndUnless}
 
   SetShellVarContext all  ; Set $SMPROGRAMS to All Users
-  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+  ${Unless} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+    CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                              "$INSTDIR"
       ${If} ${AtLeastWin7}
       ${AndIf} "$AppUserModelID" != ""
-        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
+        ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
       ${EndIf}
     ${Else}
       SetShellVarContext current  ; Set $SMPROGRAMS to the current user's Start
                                   ; Menu Programs directory
-      ${Unless} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-        CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
-        ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-          ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+      ${Unless} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+        CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" "$INSTDIR\${FileMainEXE}"
+        ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+          ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                                  "$INSTDIR"
           ${If} ${AtLeastWin7}
           ${AndIf} "$AppUserModelID" != ""
-            ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
+            ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" "$AppUserModelID" "true"
           ${EndIf}
         ${EndIf}
       ${EndUnless}
@@ -328,11 +328,11 @@
 
   ; Windows 7 doesn't use the QuickLaunch directory
   ${Unless} ${AtLeastWin7}
-  ${AndUnless} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-    CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" \
+  ${AndUnless} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
+    CreateShortCut "$QUICKLAUNCH\${BrandShortName}.lnk" \
                    "$INSTDIR\${FileMainEXE}"
-    ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
-      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandFullName}.lnk" \
+    ${If} ${FileExists} "$QUICKLAUNCH\${BrandShortName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$QUICKLAUNCH\${BrandShortName}.lnk" \
                                              "$INSTDIR"
     ${EndIf}
   ${EndUnless}
@@ -340,9 +340,11 @@
 !define ShowShortcuts "!insertmacro ShowShortcuts"
 
 ; Update the branding information on all shortcuts our installer created,
-; in case the branding has changed between updates.
+; to convert from BrandFullName (which is what we used to name shortcuts)
+; to BrandShortName (which is what we now name shortcuts). Also update the
+; icon if it's been changed.
 ; This should only be called sometime after both MigrateStartMenuShortcut
-; and MigrateTaskBarShurtcut
+; and MigrateTaskBarShurtcut, and it assumes SHCTX is set correctly.
 !macro UpdateShortcutBranding
   ${GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
   ${If} ${FileExists} "$R9"
@@ -370,16 +372,16 @@
           ${EndIf}
 
           ${If} $R5 == "1"
-          ${OrIf} $R8 != "${BrandFullName}.lnk"
+          ${OrIf} $R8 != "${BrandShortName}.lnk"
             Delete "$SMPROGRAMS\$R8"
             ${If} ${FileExists} "$INSTDIR\firefox.ico"
-              CreateShortcut "$SMPROGRAMS\${BrandFullName}.lnk" \
+              CreateShortcut "$SMPROGRAMS\${BrandShortName}.lnk" \
                              "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\firefox.ico"
             ${Else}
-              CreateShortcut "$SMPROGRAMS\${BrandFullName}.lnk" \
+              CreateShortcut "$SMPROGRAMS\${BrandShortName}.lnk" \
                              "$INSTDIR\${FileMainEXE}"
             ${EndIf}
-            WriteINIStr "$R9" "STARTMENU" "Shortcut0" "${BrandFullName}.lnk"
+            WriteINIStr "$R9" "STARTMENU" "Shortcut0" "${BrandShortName}.lnk"
           ${EndIf}
         ${EndIf}
       ${EndIf}
@@ -407,16 +409,16 @@
           ${EndIf}
 
           ${If} $R5 == "1"
-          ${OrIf} $R8 != "${BrandFullName}.lnk"
+          ${OrIf} $R8 != "${BrandShortName}.lnk"
             Delete "$DESKTOP\$R8"
             ${If} ${FileExists} "$INSTDIR\firefox.ico"
-              CreateShortcut "$DESKTOP\${BrandFullName}.lnk" \
+              CreateShortcut "$DESKTOP\${BrandShortName}.lnk" \
                              "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\firefox.ico"
             ${Else}
-              CreateShortcut "$DESKTOP\${BrandFullName}.lnk" \
+              CreateShortcut "$DESKTOP\${BrandShortName}.lnk" \
                              "$INSTDIR\${FileMainEXE}"
             ${EndIf}
-            WriteINIStr "$R9" "DESKTOP" "Shortcut0" "${BrandFullName}.lnk"
+            WriteINIStr "$R9" "DESKTOP" "Shortcut0" "${BrandShortName}.lnk"
           ${EndIf}
         ${EndIf}
       ${EndIf}
@@ -1291,7 +1293,7 @@
       ReadINIStr $1 "$0" "STARTMENU" "Shortcut0"
       ${If} ${Errors}
         ; The STARTMENU ini section doesn't exist.
-        ${LogStartMenuShortcut} "${BrandFullName}.lnk"
+        ${LogStartMenuShortcut} "${BrandShortName}.lnk"
         ${GetLongPath} "$SMPROGRAMS" $2
         ${GetLongPath} "$2\$5" $1
         ${If} "$1" != ""
@@ -1302,14 +1304,14 @@
               ShellLink::GetShortCutTarget "$1\$3"
               Pop $4
               ${If} "$INSTDIR\${FileMainEXE}" == "$4"
-                CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" \
+                CreateShortCut "$SMPROGRAMS\${BrandShortName}.lnk" \
                                "$INSTDIR\${FileMainEXE}"
-                ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
-                  ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                ${If} ${FileExists} "$SMPROGRAMS\${BrandShortName}.lnk"
+                  ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandShortName}.lnk" \
                                                          "$INSTDIR"
                   ${If} ${AtLeastWin7}
                   ${AndIf} "$AppUserModelID" != ""
-                    ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" \
+                    ApplicationID::Set "$SMPROGRAMS\${BrandShortName}.lnk" \
                                        "$AppUserModelID" "true"
                   ${EndIf}
                 ${EndIf}
@@ -1387,9 +1389,9 @@
 !macro CreateShortcutsLog
   ${GetShortcutsLogPath} $0
   ${Unless} ${FileExists} "$0"
-    ${LogStartMenuShortcut} "${BrandFullName}.lnk"
-    ${LogQuickLaunchShortcut} "${BrandFullName}.lnk"
-    ${LogDesktopShortcut} "${BrandFullName}.lnk"
+    ${LogStartMenuShortcut} "${BrandShortName}.lnk"
+    ${LogQuickLaunchShortcut} "${BrandShortName}.lnk"
+    ${LogDesktopShortcut} "${BrandShortName}.lnk"
   ${EndUnless}
 !macroend
 !define CreateShortcutsLog "!insertmacro CreateShortcutsLog"
