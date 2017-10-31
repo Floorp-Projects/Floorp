@@ -113,19 +113,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private final SiteIdentityPopup mSiteIdentityPopup;
     private int mSecurityImageLevel;
 
-    // Security level constants, which map to the icons / levels defined in:
-    // http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_level.xml
-    // Default level (unverified pages) - globe icon:
-    private static final int LEVEL_DEFAULT_GLOBE = 0;
-    // Levels for displaying Mixed Content state icons.
-    private static final int LEVEL_WARNING_MINOR = 3;
-    private static final int LEVEL_LOCK_DISABLED = 4;
-    // Levels for displaying Tracking Protection state icons.
-    private static final int LEVEL_SHIELD_ENABLED = 5;
-    private static final int LEVEL_SHIELD_DISABLED = 6;
-    // Icon used for about:home
-    private static final int LEVEL_SEARCH_ICON = 999;
-
     private final ForegroundColorSpan mUrlColorSpan;
     private final ForegroundColorSpan mPrivateUrlColorSpan;
     private final ForegroundColorSpan mBlockedColorSpan;
