@@ -30,6 +30,10 @@ this.PluginContent = function(global) {
 const FLASH_MIME_TYPE = "application/x-shockwave-flash";
 const REPLACEMENT_STYLE_SHEET = Services.io.newURI("chrome://pluginproblem/content/pluginReplaceBinding.css");
 
+const OVERLAY_DISPLAY_HIDDEN = 0;
+const OVERLAY_DISPLAY_VISIBLE = 1;
+const OVERLAY_DISPLAY_MINIMAL = 2;
+
 PluginContent.prototype = {
   init(global) {
     this.global = global;
@@ -284,9 +288,10 @@ PluginContent.prototype = {
   /**
    * Update the visibility of the plugin overlay.
    */
-  setVisibility(plugin, overlay, shouldShow) {
-    overlay.classList.toggle("visible", shouldShow);
-    if (shouldShow) {
+  setVisibility(plugin, overlay, overlayDisplayState) {
+    overlay.classList.toggle("visible", overlayDisplayState != OVERLAY_DISPLAY_HIDDEN);
+    overlay.classList.toggle("minimal", overlayDisplayState == OVERLAY_DISPLAY_MINIMAL)
+    if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
       overlay.removeAttribute("dismissed");
     }
   },
@@ -299,11 +304,19 @@ PluginContent.prototype = {
    * This function will handle showing or hiding the overlay.
    * @returns true if the plugin is invisible.
    */
-  shouldShowOverlay(plugin, overlay) {
+  computeOverlayDisplayState(plugin, overlay) {
+    let fallbackType = plugin.pluginFallbackType;
+    if (plugin.pluginFallbackTypeOverride !== undefined) {
+      fallbackType = plugin.pluginFallbackTypeOverride;
+    }
+    if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET) {
+      return OVERLAY_DISPLAY_HIDDEN;
+    }
+
     // If the overlay size is 0, we haven't done layout yet. Presume that
     // plugins are visible until we know otherwise.
     if (overlay.scrollWidth == 0) {
-      return true;
+      return OVERLAY_DISPLAY_VISIBLE;
     }
 
     // Is the <object>'s size too small to hold what we want to show?
@@ -313,7 +326,7 @@ PluginContent.prototype = {
     let overflows = (overlay.scrollWidth > Math.ceil(pluginRect.width)) ||
                     (overlay.scrollHeight - 5 > Math.ceil(pluginRect.height));
     if (overflows) {
-      return false;
+      return OVERLAY_DISPLAY_MINIMAL;
     }
 
     // Is the plugin covered up by other content so that it is not clickable?
@@ -340,11 +353,11 @@ PluginContent.prototype = {
       }
       let el = cwu.elementFromPoint(x, y, true, true);
       if (el === plugin) {
-        return true;
+        return OVERLAY_DISPLAY_VISIBLE;
       }
     }
 
-    return false;
+    return OVERLAY_DISPLAY_HIDDEN;
   },
 
   addLinkClickCallback(linkNode, callbackName /* callbackArgs...*/) {
@@ -392,6 +405,7 @@ PluginContent.prototype = {
       case Ci.nsIObjectLoadingContent.PLUGIN_OUTDATED:
         return "PluginOutdated";
       case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
+      case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET:
         return "PluginClickToPlay";
       case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
         return "PluginVulnerableUpdatable";
@@ -462,7 +476,7 @@ PluginContent.prototype = {
     if (eventType == "PluginPlaceholderReplaced") {
       plugin.removeAttribute("href");
       let overlay = this.getPluginUI(plugin, "main");
-      this.setVisibility(plugin, overlay, true);
+      this.setVisibility(plugin, overlay, OVERLAY_DISPLAY_VISIBLE);
       let inIDOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                           .getService(Ci.inIDOMUtils);
       // Add psuedo class so our styling will take effect
@@ -547,10 +561,10 @@ PluginContent.prototype = {
     if (eventType != "PluginCrashed") {
       if (overlay != null) {
         this.setVisibility(plugin, overlay,
-                           this.shouldShowOverlay(plugin, overlay));
+                           this.computeOverlayDisplayState(plugin, overlay));
         let resizeListener = () => {
           this.setVisibility(plugin, overlay,
-            this.shouldShowOverlay(plugin, overlay));
+            this.computeOverlayDisplayState(plugin, overlay));
           this.updateNotificationUI();
         };
         plugin.addEventListener("overflow", resizeListener);
@@ -592,7 +606,7 @@ PluginContent.prototype = {
 
     let isFallbackTypeValid =
       objLoadingContent.pluginFallbackType >= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
-      objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
+      objLoadingContent.pluginFallbackType <= Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET;
 
     return !objLoadingContent.activated &&
            pluginPermission != Ci.nsIPermissionManager.DENY_ACTION &&
@@ -665,7 +679,8 @@ PluginContent.prototype = {
 
     let overlay = this.getPluginUI(plugin, "main");
 
-    if (pluginPermission == Ci.nsIPermissionManager.DENY_ACTION) {
+    if (pluginPermission == Ci.nsIPermissionManager.DENY_ACTION ||
+        pluginPermission == Ci.nsIObjectLoadingContent.PLUGIN_PERMISSION_PROMPT_ACTION_QUIET) {
       if (overlay) {
         overlay.classList.remove("visible");
       }
@@ -733,10 +748,11 @@ PluginContent.prototype = {
         } else {
           pluginFound = true;
         }
-        if (newState == "block") {
+        if (newState == "block" || newState == "blockalways" || newState == "continueblocking") {
           if (overlay) {
             overlay.addEventListener("click", this, true);
           }
+          plugin.pluginFallbackTypeOverride = pluginInfo.fallbackType;
           plugin.reload(true);
         } else if (this.canActivatePlugin(plugin)) {
           if (overlay) {
@@ -751,7 +767,7 @@ PluginContent.prototype = {
     // user probably needs is for us to allow and then refresh. Additionally, if
     // this is content that requires HLS or we replaced the placeholder the page
     // needs to be refreshed for it to insert its plugins
-    if (newState != "block" &&
+    if (newState != "block" && newState != "blockalways" && newState != "continueblocking" &&
        (!pluginFound || placeHolderFound || contentWindow.pluginRequiresReload)) {
       this.reloadPage();
     }
@@ -854,6 +870,7 @@ PluginContent.prototype = {
           haveInsecure = true;
           // fall through
 
+        case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET:
         case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
           actions.set(action.permissionString, action);
           continue;
@@ -877,6 +894,7 @@ PluginContent.prototype = {
         continue;
       }
       if (fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY &&
+          fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET &&
           fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE &&
           fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE) {
         continue;
@@ -885,9 +903,9 @@ PluginContent.prototype = {
       if (!overlay) {
         continue;
       }
-      let shouldShow = this.shouldShowOverlay(plugin, overlay);
-      this.setVisibility(plugin, overlay, shouldShow);
-      if (shouldShow) {
+      let overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
+      this.setVisibility(plugin, overlay, overlayDisplayState);
+      if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
         actions.delete(info.permissionString);
         if (actions.size == 0) {
           break;
@@ -1071,21 +1089,21 @@ PluginContent.prototype = {
     let link = this.getPluginUI(plugin, "reloadLink");
     this.addLinkClickCallback(link, "reloadPage");
 
-    let isShowing = this.shouldShowOverlay(plugin, overlay);
+    let overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
 
     // Is the <object>'s size too small to hold what we want to show?
-    if (!isShowing) {
+    if (overlayDisplayState != OVERLAY_DISPLAY_VISIBLE) {
       // First try hiding the crash report submission UI.
       statusDiv.removeAttribute("status");
 
-      isShowing = this.shouldShowOverlay(plugin, overlay);
+      overlayDisplayState = this.computeOverlayDisplayState(plugin, overlay);
     }
-    this.setVisibility(plugin, overlay, isShowing);
+    this.setVisibility(plugin, overlay, overlayDisplayState);
 
     let doc = plugin.ownerDocument;
     let runID = plugin.runID;
 
-    if (isShowing) {
+    if (overlayDisplayState == OVERLAY_DISPLAY_VISIBLE) {
       // If a previous plugin on the page was too small and resulted in adding a
       // notification bar, then remove it because this plugin instance it big
       // enough to serve as in-content notification.
