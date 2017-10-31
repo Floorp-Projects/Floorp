@@ -67,9 +67,6 @@ parent:
   async NewPoseMoveToMockController(uint32_t aDeviceID, GamepadPoseState aPose);
 
 child:
-
-  async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
-
   // Notify children of updated VR display enumeration and details.  This will
   // be sent to all children when the parent receives RefreshDisplays, even
   // if no changes have been detected.  This ensures that Promises exposed
