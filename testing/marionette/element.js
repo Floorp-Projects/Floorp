@@ -32,7 +32,6 @@ const {
   ORDERED_NODE_ITERATOR_TYPE,
 } = Ci.nsIDOMXPathResult;
 
-const SVGNS = "http://www.w3.org/2000/svg";
 const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -143,14 +142,14 @@ element.Store = class {
    */
   add(el) {
     const isDOMElement = element.isDOMElement(el);
-    const isSVGElement = element.isSVGElement(el);
     const isDOMWindow = element.isDOMWindow(el);
     const isXULElement = element.isXULElement(el);
     const context = isXULElement ? "chrome" : "content";
 
-    if (!(isDOMElement || isSVGElement || isDOMWindow || isXULElement)) {
-      throw new TypeError("Expected Element, SVGElement, " +
-          pprint`WindowProxy, or XULElement, got: ${el}`);
+    if (!(isDOMElement || isDOMWindow || isXULElement)) {
+      throw new TypeError(
+          "Expected an element or WindowProxy, " +
+          pprint`got: ${el}`);
     }
 
     for (let i in this.els) {
@@ -1058,16 +1057,14 @@ element.scrollIntoView = function(el) {
  * Ascertains whether <var>node</var> is a DOM-, SVG-, or XUL element.
  *
  * @param {*} node
- *     Element thought to be an <code>Element</code>,
- *     <code>SVGElement</code>, or <code>XULElement</code>.
+ *     Element thought to be an <code>Element</code> or
+ *     <code>XULElement</code>.
  *
  * @return {boolean}
  *     True if <var>node</var> is an element, false otherwise.
  */
 element.isElement = function(node) {
-  return element.isDOMElement(node) ||
-      element.isSVGElement(node) ||
-      element.isXULElement(node);
+  return element.isDOMElement(node) || element.isXULElement(node);
 };
 
 /**
@@ -1082,24 +1079,9 @@ element.isElement = function(node) {
 element.isDOMElement = function(node) {
   return typeof node == "object" &&
       node !== null &&
+      "nodeType" in node &&
       node.nodeType === node.ELEMENT_NODE &&
       !element.isXULElement(node);
-};
-
-/**
- * Ascertains whether <var>node</var> is an SVG element.
- *
- * @param {*} node
- *     Object thought to be an <code>SVGElement</code>.
- *
- * @return {boolean}
- *     True if <var>node</var> is an SVG element, false otherwise.
- */
-element.isSVGElement = function(node) {
-  return typeof node == "object" &&
-      node !== null &&
-      node.nodeType === node.ELEMENT_NODE &&
-      node.namespaceURI === SVGNS;
 };
 
 /**
@@ -1252,7 +1234,7 @@ class WebElement {
   static from(node) {
     const uuid = WebElement.generateUUID();
 
-    if (element.isDOMElement(node) || element.isSVGElement(node)) {
+    if (element.isDOMElement(node)) {
       return new ContentWebElement(uuid);
     } else if (element.isDOMWindow(node)) {
       if (node.parent === node) {
