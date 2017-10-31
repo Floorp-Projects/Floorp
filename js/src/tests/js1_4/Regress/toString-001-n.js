@@ -26,7 +26,6 @@ var o = {};
 o.toString = Function.prototype.toString;
 
 DESCRIPTION = "var o = {}; o.toString = Function.prototype.toString; o.toString();";
-EXPECTED = "error";
 
 new TestCase(
   SECTION,

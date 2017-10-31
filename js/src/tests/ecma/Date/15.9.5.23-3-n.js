@@ -29,7 +29,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var MYDATE = new MyDate(TIME_1970);
 
 DESCRIPTION = "MYDATE.setTime(TIME_2000)";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "MYDATE.setTime(TIME_2000)",

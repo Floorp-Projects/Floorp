@@ -33,7 +33,6 @@ var actual = 'no error';
 var prefValue;
 
 DESCRIPTION = "var class = true";
-EXPECTED = "error";
 
 
 print("This test requires option javascript.options.strict enabled");

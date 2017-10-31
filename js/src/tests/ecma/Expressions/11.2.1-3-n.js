@@ -64,7 +64,6 @@ PROPERTY[p++] = new Property(  "undefined",    void 0,   "undefined",   NaN );
 for ( var i = 0, RESULT; i < PROPERTY.length; i++ ) {
 
   DESCRIPTION = PROPERTY[i].object + ".valueOf()";
-  EXPECTED = "error";
 
   new TestCase( SECTION,
 		PROPERTY[i].object + ".valueOf()",

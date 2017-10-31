@@ -21,7 +21,6 @@ var TITLE   = "The break in statement";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "break";
-EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"break",

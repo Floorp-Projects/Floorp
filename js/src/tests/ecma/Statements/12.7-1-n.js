@@ -20,7 +20,6 @@ var TITLE   = "The continue statement";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "continue";
-EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"continue",

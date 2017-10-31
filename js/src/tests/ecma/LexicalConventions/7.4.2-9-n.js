@@ -36,7 +36,6 @@ var TITLE   = "Keywords";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var delete = true";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "var delete = true",     "error",    eval("var delete = true") );
 

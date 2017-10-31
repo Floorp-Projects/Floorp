@@ -57,7 +57,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var NUMBER = new Number(1);
 
 DESCRIPTION = "var NUMBER = new Number(1); var n = new NUMBER()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "var NUMBER = new Number(1); var n = new NUMBER()",

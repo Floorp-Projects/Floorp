@@ -34,7 +34,6 @@ startTest();
 writeHeaderToLog( SECTION + " Keywords");
 
 DESCRIPTION = "var return = true";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "var return = true",     "error",    eval("var return = true") );
 

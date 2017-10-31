@@ -47,7 +47,6 @@ var TITLE   = "Function Calls";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "null.valueOf()";
-EXPECTED = "error";
 
 new TestCase( SECTION,
               "null.valueOf()",

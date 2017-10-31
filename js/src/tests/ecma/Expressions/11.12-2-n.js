@@ -29,7 +29,6 @@ writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
 // the following expression should be an error in JS.
 
 DESCRIPTION = "var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR";
-EXPECTED = "error";
 
 new TestCase( SECTION,
               "var MYVAR =  true ? 'EXPR1', 'EXPR2' : 'EXPR3'; MYVAR",

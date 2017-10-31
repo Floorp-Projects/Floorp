@@ -51,7 +51,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 //  LeftHandSideExpression:NewExpression:MemberExpression
 
 DESCRIPTION = "bad left-hand side expression";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "bad left-hand side expression",

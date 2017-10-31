@@ -14,7 +14,6 @@ print("Null throw test.");
 print("BUGNUMBER: 21799");
 
 DESCRIPTION = "throw null";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "throw null",     "error",    eval("throw null" ));
 

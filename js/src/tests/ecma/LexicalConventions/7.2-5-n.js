@@ -31,8 +31,7 @@ var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-DESCRIPTION =
-  EXPECTED = "error";
+DESCRIPTION = "error";
 
 new TestCase( SECTION,    "\rb",     "error",    eval("\rb"));
 test();

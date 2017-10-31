@@ -20,7 +20,6 @@ var TITLE   = "f.apply(2,2) doesn't crash";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "f.apply(2,2) doesn't crash";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "f.apply(2,2) doesn't crash",     "error",    eval("f.apply(2,2)") );
 

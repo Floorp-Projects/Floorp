@@ -42,7 +42,6 @@ var expect = "Passed";
 */
 
 DESCRIPTION = "try = true";
-EXPECTED = "error";
 
 new TestCase(
   SECTION,

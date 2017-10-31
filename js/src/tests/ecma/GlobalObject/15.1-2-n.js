@@ -24,7 +24,6 @@ var TITLE   = "The Global Object";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var MY_GLOBAL = this()";
-EXPECTED = "error";
 
 new TestCase(   SECTION,
 		"var MY_GLOBAL = this()",

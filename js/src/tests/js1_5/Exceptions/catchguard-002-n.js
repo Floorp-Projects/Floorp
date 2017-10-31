@@ -5,7 +5,6 @@
 
 
 DESCRIPTION = "var in catch clause should have caused an error.";
-EXPECTED = "error";
 
 var expect;
 var actual;

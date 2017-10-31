@@ -23,7 +23,6 @@ var TITLE   = "Identifiers";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var 123=\"hi\"";
-EXPECTED = "error";
 
 new TestCase( SECTION,    "var 123=\"hi\"",   "error",    eval("var 123 = \"hi\";array[item] = 123;") );
 

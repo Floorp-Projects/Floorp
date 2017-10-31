@@ -51,7 +51,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 //  LeftHandSideExpression:NewExpression:MemberExpression
 
 DESCRIPTION = "more than one member expression";
-EXPECTED = "error";
 
 new TestCase( SECTION,
 	      "more than one member expression",

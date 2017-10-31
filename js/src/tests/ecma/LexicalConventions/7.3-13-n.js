@@ -22,7 +22,6 @@ var TITLE   = "Comments";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "nested comment";
-EXPECTED = "error";
 
 var testcase = new TestCase( SECTION,
 			     "nested comment",

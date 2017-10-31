@@ -36,7 +36,6 @@ var TITLE   = "Keywords";
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var typeof = true";
-EXPECTED = "error";
 
 new TestCase( SECTION,  "var typeof = true",     "error",    eval("var typeof = true") );
 
