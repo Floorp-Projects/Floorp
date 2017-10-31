@@ -405,5 +405,12 @@ DrawTargetCaptureImpl::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceForm
   return MakeAndAddRef<DrawTargetCaptureImpl>(GetBackendType(), aSize, aFormat);
 }
 
+RefPtr<DrawTarget>
+DrawTargetCaptureImpl::CreateSimilarRasterTarget(const IntSize& aSize, SurfaceFormat aFormat) const
+{
+  MOZ_ASSERT(!mRefDT->IsCaptureDT());
+  return mRefDT->CreateSimilarDrawTarget(aSize, aFormat);
+}
+
 } // namespace gfx
 } // namespace mozilla
