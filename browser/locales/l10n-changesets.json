@@ -496,13 +496,13 @@
             "win32", 
             "win64"
         ], 
-        "revision": "0729352399ba"
+        "revision": "9e9796b48f28"
     }, 
     "ja-JP-mac": {
         "platforms": [
             "macosx64"
         ], 
-        "revision": "788b3ad663ef"
+        "revision": "2cbb5add9822"
     }, 
     "ka": {
         "platforms": [
