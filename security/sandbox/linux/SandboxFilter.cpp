@@ -927,13 +927,6 @@ public:
       // fork() fails; see bug 227246 and bug 1299581.
       return Error(ECHILD);
 
-      // inotify_{add,rm}_watch take filesystem paths.  Pretend the
-      // kernel doesn't support inotify; note that this could make
-      // libgio attempt network connections for FAM.
-    case __NR_inotify_init:
-    case __NR_inotify_init1:
-      return Error(ENOSYS);
-
     case __NR_eventfd2:
       return Allow();
 
