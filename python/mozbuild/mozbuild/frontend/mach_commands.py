@@ -226,6 +226,10 @@ class MozbuildFileCommands(MachCommandBase):
                         break
                     ofh.write(data)
 
+        # Causes CI task to fail if files are missing Bugzilla annotation.
+        if missing_component:
+            return 1
+
     @SubCommand('file-info', 'dep-tests',
                 'Show test files marked as dependencies of these source files.')
     @CommandArgument('-r', '--rev',
