@@ -457,6 +457,38 @@
     "namespace": "theme",
     "description": "The theme API allows customizing of visual elements of the browser.",
     "permissions": ["theme"],
+    "types": [
+      {
+        "id": "ThemeUpdateInfo",
+        "type": "object",
+        "description": "Info provided in the onUpdated listener.",
+        "properties": {
+          "theme": {
+            "type": "object",
+            "description": "The new theme after update"
+          },
+          "windowId": {
+            "type": "integer",
+            "description": "The id of the window the theme has been applied to",
+            "optional": true
+          }
+        }
+      }
+    ],
+    "events": [
+      {
+        "name": "onUpdated",
+        "type": "function",
+        "description": "Fired when a new theme has been applied",
+        "parameters": [
+          {
+            "$ref": "ThemeUpdateInfo",
+            "name": "updateInfo",
+            "description": "Details of the theme update"
+          }
+        ]
+      }
+    ],
     "functions": [
       {
         "name": "getCurrent",
