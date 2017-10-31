@@ -212,6 +212,7 @@
 %define HAVE_POLL_H 0
 %define HAVE_SNDIO_H 0
 %define HAVE_SOUNDCARD_H 0
+%define HAVE_STDATOMIC_H 0
 %define HAVE_SYS_MMAN_H 0
 %define HAVE_SYS_PARAM_H 0
 %define HAVE_SYS_RESOURCE_H 0
