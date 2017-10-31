@@ -975,7 +975,7 @@ DestroySurfaceDescriptor(IShmemAllocator* aAllocator, SurfaceDescriptor* aSurfac
       break;
     }
     default:
-      NS_RUNTIMEABORT("surface type not implemented!");
+      MOZ_CRASH("surface type not implemented!");
   }
   *aSurface = SurfaceDescriptor();
 }

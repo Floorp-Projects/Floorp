@@ -146,10 +146,8 @@ mozilla::ipc::IPCResult
 TestInterruptErrorCleanupChild::AnswerError()
 {
     _exit(0);
-    NS_RUNTIMEABORT("unreached");
-    return IPC_FAIL_NO_REASON(this);
+    MOZ_CRASH("unreached");
 }
-
 
 } // namespace _ipdltest
 } // namespace mozilla
