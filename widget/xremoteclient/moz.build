@@ -10,5 +10,6 @@ with Files("**"):
 FINAL_LIBRARY = 'xul'
 
 SOURCES += [
+    'RemoteUtils.cpp',
     'XRemoteClient.cpp',
 ]
