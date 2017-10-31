@@ -607,7 +607,6 @@
     }
   }
 
-  // Overrides the definition from shell.js
   function jsTestDriverEnd() {
     // gDelayTestDriverEnd is used to delay collection of the test result and
     // signal to Spider so that tests can continue to run after page load has
@@ -691,5 +690,7 @@
   jsTestDriverBrowserInit();
 
 })(this);
+
+var gDelayTestDriverEnd = false;
 
 var gPageCompleted;
