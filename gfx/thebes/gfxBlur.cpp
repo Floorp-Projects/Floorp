@@ -84,6 +84,19 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
       aUseHardwareAccel &&
       backend == BackendType::DIRECT2D1_1) {
     mAccelerated = true;
+  }
+
+  if (aReferenceDT->IsCaptureDT()) {
+    if (mAccelerated) {
+      mDrawTarget = Factory::CreateCaptureDrawTarget(backend, mBlur.GetSize(), SurfaceFormat::A8);
+    } else {
+      mDrawTarget =
+        Factory::CreateCaptureDrawTargetForData(backend, mBlur.GetSize(), SurfaceFormat::A8,
+                                                mBlur.GetStride(), blurDataSize);
+    }
+  } else if (mAccelerated) {
+    // Note: CreateShadowDrawTarget is only implemented for Cairo, so we don't
+    // care about mimicking this in the DrawTargetCapture case.
     mDrawTarget =
       aReferenceDT->CreateShadowDrawTarget(mBlur.GetSize(),
                                            SurfaceFormat::A8,
@@ -130,20 +143,18 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
 already_AddRefed<SourceSurface>
 gfxAlphaBoxBlur::DoBlur(const Color* aShadowColor, IntPoint* aOutTopLeft)
 {
-  if (mData) {
-    mBlur.Blur(mData);
-  }
-
   if (aOutTopLeft) {
     *aOutTopLeft = mBlur.GetRect().TopLeft();
   }
 
-  RefPtr<SourceSurface> blurMask = mDrawTarget->Snapshot();
-  if (mAccelerated) {
+  RefPtr<SourceSurface> blurMask;
+  if (mData) {
+    mBlur.Blur(mData);
+    blurMask = mDrawTarget->Snapshot();
+  } else if (mAccelerated) {
+    blurMask = mDrawTarget->Snapshot();
     RefPtr<DrawTarget> blurDT =
-      Factory::CreateDrawTarget(mDrawTarget->GetBackendType(),
-                                blurMask->GetSize(),
-                                SurfaceFormat::A8);
+      mDrawTarget->CreateSimilarDrawTarget(blurMask->GetSize(), SurfaceFormat::A8);
     if (!blurDT) {
       return nullptr;
     }
@@ -151,6 +162,9 @@ gfxAlphaBoxBlur::DoBlur(const Color* aShadowColor, IntPoint* aOutTopLeft)
                                   AlphaBoxBlur::CalculateBlurSigma(mBlur.GetBlurRadius().width),
                                   CompositionOp::OP_OVER);
     blurMask = blurDT->Snapshot();
+  } else if (mDrawTarget->IsCaptureDT()) {
+    mDrawTarget->Blur(mBlur);
+    blurMask = mDrawTarget->Snapshot();
   }
 
   if (!aShadowColor) {
@@ -158,9 +172,7 @@ gfxAlphaBoxBlur::DoBlur(const Color* aShadowColor, IntPoint* aOutTopLeft)
   }
 
   RefPtr<DrawTarget> shadowDT =
-    Factory::CreateDrawTarget(mDrawTarget->GetBackendType(),
-                              blurMask->GetSize(),
-                              SurfaceFormat::B8G8R8A8);
+    mDrawTarget->CreateSimilarDrawTarget(blurMask->GetSize(), SurfaceFormat::B8G8R8A8);
   if (!shadowDT) {
     return nullptr;
   }
@@ -173,7 +185,7 @@ gfxAlphaBoxBlur::DoBlur(const Color* aShadowColor, IntPoint* aOutTopLeft)
 void
 gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
 {
-  if (!mAccelerated && !mData) {
+  if ((mDrawTarget && !mDrawTarget->IsCaptureDT()) && !mAccelerated && !mData) {
     return;
   }
 
