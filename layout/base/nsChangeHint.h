@@ -449,11 +449,13 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
 
-#define nsChangeHint_Hints_CanIgnoreIfNotVisible   \
-  nsChangeHint(NS_STYLE_HINT_VISUAL |              \
-               nsChangeHint_NeutralChange |        \
-               nsChangeHint_UpdateOpacityLayer |   \
-               nsChangeHint_UpdateTransformLayer | \
+#define nsChangeHint_Hints_CanIgnoreIfNotVisible           \
+  nsChangeHint(NS_STYLE_HINT_VISUAL |                      \
+               nsChangeHint_NeutralChange |                \
+               nsChangeHint_UpdateOpacityLayer |           \
+               nsChangeHint_AddOrRemoveTransform |         \
+               nsChangeHint_UpdatePostTransformOverflow  | \
+               nsChangeHint_UpdateTransformLayer |         \
                nsChangeHint_UpdateUsesOpacity)
 
 // NB: Once we drop support for the old style system, this logic should be
