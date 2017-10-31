@@ -785,48 +785,6 @@ PREF_GetBoolPref(const char* aPrefName, bool* aValueOut, bool aGetDefault)
   return rv;
 }
 
-// Delete a branch of the tree.
-static nsresult
-PREF_DeleteBranch(const char* aBranchName)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  size_t len = strlen(aBranchName);
-
-  if (!gHashTable) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // The following check insures that if the branch name already has a "." at
-  // the end, we don't end up with a "..". This fixes an incompatibility
-  // between nsIPref, which needs the period added, and nsIPrefBranch which
-  // does not. When nsIPref goes away this function should be fixed to never
-  // add the period at all.
-  nsAutoCString branch_dot(aBranchName);
-  if (len > 1 && aBranchName[len - 1] != '.') {
-    branch_dot += '.';
-  }
-
-  // Delete a branch. Used for deleting mime types.
-  const char* to_delete = branch_dot.get();
-  MOZ_ASSERT(to_delete);
-  len = strlen(to_delete);
-  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PrefHashEntry*>(iter.Get());
-
-    // Note: if we're deleting "ldap" then we want to delete "ldap.xxx" and
-    // "ldap" (if such a leaf node exists) but not "ldap_1.xxx".
-    if (PL_strncmp(entry->mKey, to_delete, len) == 0 ||
-        (len - 1 == strlen(entry->mKey) &&
-         PL_strncmp(entry->mKey, to_delete, len - 1) == 0)) {
-      iter.Remove();
-    }
-  }
-
-  Preferences::HandleDirty();
-  return NS_OK;
-}
-
 // Clears the given pref (reverts it to its default value).
 static nsresult
 PREF_ClearUserPref(const char* aPrefName)
@@ -2853,8 +2811,44 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt)
   ENSURE_MAIN_PROCESS("DeleteBranch", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);
 
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gHashTable) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   const PrefName& pref = GetPrefName(aStartingAt);
-  return PREF_DeleteBranch(pref.get());
+  const char* branchName = pref.get();
+  size_t len = strlen(branchName);
+
+  // The following check insures that if the branch name already has a "." at
+  // the end, we don't end up with a "..". This fixes an incompatibility
+  // between nsIPref, which needs the period added, and nsIPrefBranch which
+  // does not. When nsIPref goes away this function should be fixed to never
+  // add the period at all.
+  nsAutoCString branch_dot(branchName);
+  if (len > 1 && branchName[len - 1] != '.') {
+    branch_dot += '.';
+  }
+
+  // Delete a branch. Used for deleting mime types.
+  const char* to_delete = branch_dot.get();
+  MOZ_ASSERT(to_delete);
+  len = strlen(to_delete);
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+
+    // Note: if we're deleting "ldap" then we want to delete "ldap.xxx" and
+    // "ldap" (if such a leaf node exists) but not "ldap_1.xxx".
+    if (PL_strncmp(entry->mKey, to_delete, len) == 0 ||
+        (len - 1 == strlen(entry->mKey) &&
+         PL_strncmp(entry->mKey, to_delete, len - 1) == 0)) {
+      iter.Remove();
+    }
+  }
+
+  Preferences::HandleDirty();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
