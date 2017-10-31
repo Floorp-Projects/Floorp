@@ -283,7 +283,7 @@ window.onerror = function (msg, page, line, column, error) {
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
 
-  optionsPush();
+  optionsClear();
 
   if (typeof DESCRIPTION == 'undefined') {
     DESCRIPTION = 'Unknown';
@@ -387,10 +387,6 @@ function optionsInit() {
   // record initial values to support resetting
   // options to their initial values
   options.initvalues = {};
-
-  // record values in a stack to support pushing
-  // and popping options
-  options.stackvalues = [];
 
   for (var optionName in options.currvalues)
   {
