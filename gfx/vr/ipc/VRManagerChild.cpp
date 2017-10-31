@@ -93,8 +93,7 @@ VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint)
 
   RefPtr<VRManagerChild> child(new VRManagerChild());
   if (!aEndpoint.Bind(child)) {
-    NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return false;
+    MOZ_CRASH("Couldn't Open() Compositor channel.");
   }
   sVRManagerChildSingleton = child;
   return true;
@@ -131,8 +130,7 @@ VRManagerChild::InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint)
 
   sVRManagerChildSingleton = new VRManagerChild();
   if (!aEndpoint.Bind(sVRManagerChildSingleton)) {
-    NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return;
+    MOZ_CRASH("Couldn't Open() Compositor channel.");
   }
 }
 

@@ -418,16 +418,17 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
     // Bug 1362117 - Cairo may keep the font face alive after the owning NativeFontResource
     // was freed. To prevent this, we must bind the NativeFontResource to the font face so that
     // it stays alive at least as long as the font face.
+    aNativeFontResource->AddRef();
     if (cairo_font_face_set_user_data(font,
                                       &sNativeFontResourceKey,
                                       aNativeFontResource,
                                       ReleaseNativeFontResource) != CAIRO_STATUS_SUCCESS) {
       gfxWarning() << "Failed binding NativeFontResource to Cairo font face";
+      aNativeFontResource->Release();
       cairo_font_face_destroy(font);
       FcPatternDestroy(pattern);
       return nullptr;
     }
-    aNativeFontResource->AddRef();
   }
 
   cairo_matrix_t sizeMatrix;
