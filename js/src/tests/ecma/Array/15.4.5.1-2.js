@@ -38,7 +38,7 @@
    15. Return.
 
 
-   These are gTestcases from Waldemar, detailed in
+   These are test cases from Waldemar, detailed in
    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=123552
 
    Author:             christine@netscape.com
