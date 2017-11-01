@@ -28,6 +28,7 @@ SOURCES += [
     'frame.c',
     'imgutils.c',
     'log.c',
+    'log2_tab.c',
     'mathematics.c',
     'mem.c',
     'opt.c',
