@@ -11,40 +11,17 @@ pub type pid_t = usize;
 pub type gid_t = usize;
 pub type uid_t = usize;
 
-pub type in_addr_t = u32;
-pub type in_port_t = u16;
-
-pub type socklen_t = u32;
-pub type sa_family_t = u16;
+pub type suseconds_t = i64;
 
 s! {
-    pub struct in_addr {
-        pub s_addr: in_addr_t,
+    pub struct timeval {
+        pub tv_sec: time_t,
+        pub tv_usec: suseconds_t,
     }
 
-    pub struct in6_addr {
-        pub s6_addr: [u8; 16],
-        __align: [u32; 0],
-    }
-
-    pub struct sockaddr {
-        pub sa_family: sa_family_t,
-        pub sa_data: [::c_char; 14],
-    }
-
-    pub struct sockaddr_in {
-        pub sin_family: sa_family_t,
-        pub sin_port: ::in_port_t,
-        pub sin_addr: ::in_addr,
-        pub sin_zero: [u8; 8],
-    }
-
-    pub struct sockaddr_in6 {
-        pub sin6_family: sa_family_t,
-        pub sin6_port: in_port_t,
-        pub sin6_flowinfo: u32,
-        pub sin6_addr: ::in6_addr,
-        pub sin6_scope_id: u32,
+    pub struct timespec {
+        pub tv_sec: time_t,
+        pub tv_nsec: c_long,
     }
 }
 
@@ -83,14 +60,45 @@ pub const S_IXOTH: mode_t = 0x1;
 pub const S_IWOTH: mode_t = 0x2;
 pub const S_IROTH: mode_t = 0x4;
 
+pub const F_DUPFD: ::c_int = 0;
+pub const F_GETFD: ::c_int = 1;
+pub const F_SETFD: ::c_int = 2;
+pub const F_GETFL: ::c_int = 3;
+pub const F_SETFL: ::c_int = 4;
+
+pub const O_RDONLY: ::c_int =     0x0001_0000;
+pub const O_WRONLY: ::c_int =     0x0002_0000;
+pub const O_RDWR: ::c_int =       0x0003_0000;
+pub const O_NONBLOCK: ::c_int =   0x0004_0000;
+pub const O_APPEND: ::c_int =     0x0008_0000;
+pub const O_SHLOCK: ::c_int =     0x0010_0000;
+pub const O_EXLOCK: ::c_int =     0x0020_0000;
+pub const O_ASYNC: ::c_int =      0x0040_0000;
+pub const O_FSYNC: ::c_int =      0x0080_0000;
+pub const O_CLOEXEC: ::c_int =    0x0100_0000;
+pub const O_CREAT: ::c_int =      0x0200_0000;
+pub const O_TRUNC: ::c_int =      0x0400_0000;
+pub const O_EXCL: ::c_int =       0x0800_0000;
+pub const O_DIRECTORY: ::c_int =  0x1000_0000;
+pub const O_STAT: ::c_int =       0x2000_0000;
+pub const O_SYMLINK: ::c_int =    0x4000_0000;
+pub const O_NOFOLLOW: ::c_int =   0x8000_0000;
+pub const O_ACCMODE: ::c_int =    O_RDONLY | O_WRONLY | O_RDWR;
+
 extern {
     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
     pub fn read(fd: ::c_int, buf: *mut ::c_void, count: ::size_t)
                 -> ::ssize_t;
     pub fn write(fd: ::c_int, buf: *const ::c_void, count: ::size_t)
                  -> ::ssize_t;
+    pub fn fcntl(fd: ::c_int, cmd: ::c_int, ...) -> ::c_int;
+    pub fn close(fd: ::c_int) -> ::c_int;
 }
 
 #[link(name = "c")]
 #[link(name = "m")]
 extern {}
+
+pub use self::net::*;
+
+mod net;

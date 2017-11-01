@@ -1,51 +1,7 @@
-pub type wchar_t = i32;
 pub type c_long = i64;
 pub type c_ulong = u64;
-pub type nlink_t = u64;
 
 s! {
-    pub struct stat {
-        pub st_dev: ::dev_t,
-        pub st_ino: ::ino_t,
-        pub st_nlink: ::nlink_t,
-        pub st_mode: ::mode_t,
-        pub st_uid: ::uid_t,
-        pub st_gid: ::gid_t,
-        __pad0: ::c_int,
-        pub st_rdev: ::dev_t,
-        pub st_size: ::off_t,
-        pub st_blksize: ::blksize_t,
-        pub st_blocks: ::blkcnt_t,
-        pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_long,
-        pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_long,
-        pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_long,
-        __unused: [::c_long; 3],
-    }
-
-    pub struct stat64 {
-        pub st_dev: ::dev_t,
-        pub st_ino: ::ino64_t,
-        pub st_nlink: ::nlink_t,
-        pub st_mode: ::mode_t,
-        pub st_uid: ::uid_t,
-        pub st_gid: ::gid_t,
-        __pad0: ::c_int,
-        pub st_rdev: ::dev_t,
-        pub st_size: ::off_t,
-        pub st_blksize: ::blksize_t,
-        pub st_blocks: ::blkcnt64_t,
-        pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_long,
-        pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_long,
-        pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_long,
-        __reserved: [::c_long; 3],
-    }
-
     pub struct statfs64 {
         pub f_type: ::c_ulong,
         pub f_bsize: ::c_ulong,
@@ -162,16 +118,23 @@ s! {
         pub _pad: [::c_int; 29],
         _align: [usize; 0],
     }
+
+    pub struct termios2 {
+        pub c_iflag: ::tcflag_t,
+        pub c_oflag: ::tcflag_t,
+        pub c_cflag: ::tcflag_t,
+        pub c_lflag: ::tcflag_t,
+        pub c_line: ::cc_t,
+        pub c_cc: [::cc_t; 19],
+        pub c_ispeed: ::speed_t,
+        pub c_ospeed: ::speed_t,
+    }
 }
 
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 
-pub const O_DIRECT: ::c_int = 0x4000;
-pub const O_DIRECTORY: ::c_int = 0x10000;
-pub const O_NOFOLLOW: ::c_int = 0x20000;
 pub const O_ASYNC: ::c_int = 0x2000;
-pub const O_LARGEFILE: ::c_int = 0;
 
 pub const FIOCLEX: ::c_int = 0x5451;
 pub const FIONBIO: ::c_int = 0x5421;
@@ -202,7 +165,6 @@ pub const MAP_NORESERVE: ::c_int = 0x04000;
 pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
-pub const MAP_32BIT: ::c_int = 0x0040;
 
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;

@@ -591,6 +591,9 @@ pub const WSTOPPED: ::c_int = WUNTRACED;
 pub const WCONTINUED: ::c_int = 0x08;
 pub const WNOWAIT: ::c_int = 0x80;
 
+pub const AT_FDCWD: ::c_int = 0xffd19553;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x1000;
+
 // Solaris defines a great many more of these; we only expose the
 // standardized ones.
 pub const P_PID: idtype_t = 0;
@@ -765,6 +768,13 @@ pub const GLOB_NOESCAPE: ::c_int = 64;
 pub const GLOB_NOSPACE : ::c_int = -2;
 pub const GLOB_ABORTED : ::c_int = -1;
 pub const GLOB_NOMATCH : ::c_int = -3;
+
+pub const POLLIN: ::c_short = 0x1;
+pub const POLLPRI: ::c_short = 0x2;
+pub const POLLOUT: ::c_short = 0x4;
+pub const POLLERR: ::c_short = 0x8;
+pub const POLLHUP: ::c_short = 0x10;
+pub const POLLNVAL: ::c_short = 0x20;
 
 pub const POSIX_MADV_NORMAL: ::c_int = 0;
 pub const POSIX_MADV_RANDOM: ::c_int = 1;
@@ -1100,6 +1110,7 @@ pub const RTLD_DEFAULT: *mut ::c_void = -2isize as *mut ::c_void;
 pub const RTLD_SELF: *mut ::c_void = -3isize as *mut ::c_void;
 pub const RTLD_PROBE: *mut ::c_void = -4isize as *mut ::c_void;
 
+pub const RTLD_LAZY: ::c_int = 0x1;
 pub const RTLD_NOW: ::c_int = 0x2;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
 pub const RTLD_GLOBAL: ::c_int = 0x100;
@@ -1213,6 +1224,10 @@ extern {
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
     pub fn if_nameindex() -> *mut if_nameindex;
     pub fn if_freenameindex(ptr: *mut if_nameindex);
+    pub fn pthread_create(native: *mut ::pthread_t,
+                          attr: *const ::pthread_attr_t,
+                          f: extern fn(*mut ::c_void) -> *mut ::c_void,
+                          value: *mut ::c_void) -> ::c_int;
     pub fn pthread_condattr_getclock(attr: *const pthread_condattr_t,
                                      clock_id: *mut clockid_t) -> ::c_int;
     pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
@@ -1245,11 +1260,15 @@ extern {
 
     pub fn msync(addr: *mut ::c_void, len: ::size_t, flags: ::c_int) -> ::c_int;
 
+    pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
+
     pub fn recvfrom(socket: ::c_int, buf: *mut ::c_void, len: ::size_t,
                     flags: ::c_int, addr: *mut ::sockaddr,
                     addrlen: *mut ::socklen_t) -> ::ssize_t;
     pub fn mkstemps(template: *mut ::c_char, suffixlen: ::c_int) -> ::c_int;
     pub fn futimes(fd: ::c_int, times: *const ::timeval) -> ::c_int;
+    pub fn utimensat(dirfd: ::c_int, path: *const ::c_char,
+                     times: *const ::timespec, flag: ::c_int) -> ::c_int;
     pub fn nl_langinfo(item: ::nl_item) -> *mut ::c_char;
 
     pub fn bind(socket: ::c_int, address: *const ::sockaddr,

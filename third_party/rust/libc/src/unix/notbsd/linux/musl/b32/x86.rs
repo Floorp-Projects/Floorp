@@ -151,6 +151,17 @@ s! {
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
     }
+
+    pub struct termios2 {
+        pub c_iflag: ::tcflag_t,
+        pub c_oflag: ::tcflag_t,
+        pub c_cflag: ::tcflag_t,
+        pub c_lflag: ::tcflag_t,
+        pub c_line: ::cc_t,
+        pub c_cc: [::cc_t; 19],
+        pub c_ispeed: ::speed_t,
+        pub c_ospeed: ::speed_t,
+    }
 }
 
 pub const O_DIRECT: ::c_int = 0x4000;
@@ -798,3 +809,8 @@ pub const CS: ::c_int = 13;
 pub const EFL: ::c_int = 14;
 pub const UESP: ::c_int = 15;
 pub const SS: ::c_int = 16;
+
+#[doc(hidden)]
+pub const AF_MAX: ::c_int = 42;
+#[doc(hidden)]
+pub const PF_MAX: ::c_int = AF_MAX;
