@@ -125,12 +125,6 @@ ENGINE_APPLY_FAIL:                     "error.engine.reason.apply_fail",
 // an upload failure where the batch was interrupted with a 412
 ENGINE_BATCH_INTERRUPTED:              "error.engine.reason.batch_interrupted",
 
-// info types for Service.getStorageInfo
-INFO_COLLECTIONS:                      "collections",
-INFO_COLLECTION_USAGE:                 "collection_usage",
-INFO_COLLECTION_COUNTS:                "collection_counts",
-INFO_QUOTA:                            "quota",
-
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncMasterPasswordLocked:             "User elected to leave Master Password locked",
 kSyncWeaveDisabled:                    "Weave is disabled",
