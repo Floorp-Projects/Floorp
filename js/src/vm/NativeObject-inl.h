@@ -12,6 +12,7 @@
 #include "jscntxt.h"
 
 #include "builtin/TypedObject.h"
+#include "gc/GCTrace.h"
 #include "proxy/Proxy.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
@@ -19,6 +20,8 @@
 #include "jsobjinlines.h"
 
 #include "gc/Heap-inl.h"
+#include "gc/Marking-inl.h"
+#include "gc/ObjectKind-inl.h"
 
 namespace js {
 

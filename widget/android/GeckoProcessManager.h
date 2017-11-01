@@ -38,7 +38,7 @@ class GeckoProcessManager final
         nsCOMPtr<nsPIDOMWindowOuter> domWin = tab->GetParentWindowOuter();
         NS_ENSURE_TRUE(domWin, nullptr);
 
-        return WidgetUtils::DOMWindowToWidget(domWin);
+        return widget::WidgetUtils::DOMWindowToWidget(domWin);
     }
 
 public:

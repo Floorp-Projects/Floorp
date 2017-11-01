@@ -8,7 +8,7 @@ function test() {
      return;
 
   var catch1, catch2, catch3, finally1, finally2, finally3;
-  function gen() {
+  function* gen() {
     yield 1;
     try {
       try {
@@ -25,6 +25,6 @@ function test() {
   iter = gen();
   iter.next();
   iter.next();
-  iter.close();
+  iter.return();
   gc();
 } 

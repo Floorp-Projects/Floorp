@@ -699,7 +699,6 @@ with modules["DOM"]:
 # =======================================================================
 with modules["IMGLIB"]:
     errors["NS_IMAGELIB_SUCCESS_LOAD_FINISHED"] = SUCCESS(0)
-    errors["NS_IMAGELIB_CHANGING_OWNER"] = SUCCESS(1)
 
     errors["NS_IMAGELIB_ERROR_FAILURE"] = FAILURE(5)
     errors["NS_IMAGELIB_ERROR_NO_DECODER"] = FAILURE(6)

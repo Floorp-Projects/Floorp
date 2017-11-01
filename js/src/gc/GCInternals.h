@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * GC-internal definitions.
+ */
+
 #ifndef gc_GCInternals_h
 #define gc_GCInternals_h
 
@@ -13,6 +17,7 @@
 
 #include "jscntxt.h"
 
+#include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
@@ -233,6 +238,30 @@ class MOZ_RAII AutoEmptyNursery : public AutoAssertEmptyNursery
   public:
     explicit AutoEmptyNursery(JSContext* cx);
 };
+
+extern void
+DelayCrossCompartmentGrayMarking(JSObject* src);
+
+inline bool
+IsOOMReason(JS::gcreason::Reason reason)
+{
+    return reason == JS::gcreason::LAST_DITCH ||
+           reason == JS::gcreason::MEM_PRESSURE;
+}
+
+inline void
+RelocationOverlay::forwardTo(Cell* cell)
+{
+    MOZ_ASSERT(!isForwarded());
+    // The location of magic_ is important because it must never be valid to see
+    // the value Relocated there in a GC thing that has not been moved.
+    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSObject, group_) &&
+                  offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) &&
+                  offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.flags),
+                  "RelocationOverlay::magic_ is in the wrong location");
+    magic_ = Relocated;
+    newLocation_ = cell;
+}
 
 } /* namespace gc */
 } /* namespace js */

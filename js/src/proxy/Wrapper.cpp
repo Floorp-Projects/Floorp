@@ -17,6 +17,7 @@
 
 #include "jsobjinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

@@ -204,6 +204,12 @@ protected:
   virtual bool
   DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* aActor) override;
 
+  virtual PClientManagerChild*
+  AllocPClientManagerChild() override;
+
+  virtual bool
+  DeallocPClientManagerChild(PClientManagerChild* aActor) override;
+
 #ifdef EARLY_BETA_OR_EARLIER
   virtual void
   OnChannelReceivedMessage(const Message& aMsg) override;

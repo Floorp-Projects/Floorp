@@ -139,7 +139,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
                                              nsGenericHTMLElement,
                                              nsIImageLoadingContent,
-                                             imgIOnloadBlocker,
                                              imgINotificationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)

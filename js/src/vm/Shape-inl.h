@@ -19,7 +19,7 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
-#include "jsgcinlines.h"
+#include "gc/Marking-inl.h"
 
 namespace js {
 
@@ -392,7 +392,7 @@ Shape::searchNoHashify(Shape* start, jsid id)
 
 /* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                              uint32_t slot, unsigned attrs, unsigned flags, bool allowDictionary)
+                              uint32_t slot, unsigned attrs)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
@@ -407,13 +407,12 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
-    return addDataPropertyInternal(cx, obj, id, slot, attrs, flags, entry, allowDictionary, keep);
+    return addDataPropertyInternal(cx, obj, id, slot, attrs, entry, keep);
 }
 
 /* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                                  GetterOp getter, SetterOp setter, unsigned attrs,
-                                  unsigned flags, bool allowDictionary)
+                                  GetterOp getter, SetterOp setter, unsigned attrs)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
@@ -428,8 +427,7 @@ NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
-    return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, flags, entry,
-                                       allowDictionary, keep);
+    return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry, keep);
 }
 
 } /* namespace js */

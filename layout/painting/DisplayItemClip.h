@@ -81,7 +81,7 @@ public:
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
   // or clearing of other clips must be done by the caller.
   // See aBegin/aEnd note on ApplyRoundedRectsTo.
-  void ApplyTo(gfxContext* aContext, nsPresContext* aPresContext,
+  void ApplyTo(gfxContext* aContext, int32_t A2D,
                uint32_t aBegin = 0, uint32_t aEnd = UINT32_MAX);
 
   void ApplyRectTo(gfxContext* aContext, int32_t A2D) const;

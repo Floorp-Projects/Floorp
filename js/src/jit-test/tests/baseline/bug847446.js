@@ -1,7 +1,7 @@
 // |jit-test| error: ReferenceError
 var k = 0;
 function test() {
-    function gen()  {
+    function* gen()  {
 	try {
 	    try {
 		yield 1;
@@ -12,8 +12,9 @@ function test() {
 	} finally { }
     }
     try {
-	for (var i in gen())
-	    test();
+	var g = gen();
+	assertEq(g.next().value, 1);
+	g.next();
     } catch (e) {
 	throw e;
     }

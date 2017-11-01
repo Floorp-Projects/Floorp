@@ -25,6 +25,7 @@
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Iteration-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Stack-inl.h"
@@ -129,14 +130,8 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();
 
-    bool constructingLegacyGen =
-        data.constructing && CalleeTokenToFunction(data.calleeToken)->isLegacyGenerator();
-
-    // Caller must construct |this| before invoking the Ion function. Legacy
-    // generators can be called with 'new' but when we resume them, the
-    // this-slot and arguments are |undefined| (they are stored in the
-    // CallObject).
-    MOZ_ASSERT_IF(data.constructing && !constructingLegacyGen,
+    // Caller must construct |this| before invoking the function.
+    MOZ_ASSERT_IF(data.constructing,
                   data.maxArgv[0].isObject() || data.maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
 
     data.result.setInt32(data.numActualArgs);
@@ -164,8 +159,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     // class constructors, which are forced to do it themselves.
     if (!data.result.isMagic() &&
         data.constructing &&
-        data.result.isPrimitive() &&
-        !constructingLegacyGen)
+        data.result.isPrimitive())
     {
         MOZ_ASSERT(data.maxArgv[0].isObject());
         data.result = data.maxArgv[0];

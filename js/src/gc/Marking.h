@@ -4,6 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * Marking and sweeping APIs for use by implementations of different GC cell
+ * kinds.
+ */
+
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
@@ -142,6 +147,56 @@ template<typename T>
 void
 CheckTracedThing(JSTracer* trc, T thing);
 
+namespace gc {
+
+// Functions for checking and updating GC thing pointers that might have been
+// moved by compacting GC. Overloads are also provided that work with Values.
+//
+// IsForwarded    - check whether a pointer refers to an GC thing that has been
+//                  moved.
+//
+// Forwarded      - return a pointer to the new location of a GC thing given a
+//                  pointer to old location.
+//
+// MaybeForwarded - used before dereferencing a pointer that may refer to a
+//                  moved GC thing without updating it. For JSObjects this will
+//                  also update the object's shape pointer if it has been moved
+//                  to allow slots to be accessed.
+
+template <typename T>
+inline bool IsForwarded(T* t);
+inline bool IsForwarded(const JS::Value& value);
+
+template <typename T>
+inline T* Forwarded(T* t);
+
+inline Value Forwarded(const JS::Value& value);
+
+template <typename T>
+inline T MaybeForwarded(T t);
+
+inline void
+MakeAccessibleAfterMovingGC(void* anyp) {}
+
+inline void
+MakeAccessibleAfterMovingGC(JSObject* obj); // Defined in jsobjinlines.h.
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
+template <typename T>
+inline bool IsGCThingValidAfterMovingGC(T* t);
+
+template <typename T>
+inline void CheckGCThingAfterMovingGC(T* t);
+
+template <typename T>
+inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t);
+
+inline void CheckValueAfterMovingGC(const JS::Value& value);
+
+#endif // JSGC_HASH_TABLE_CHECKS
+
+} /* namespace gc */
 } /* namespace js */
 
 #endif /* gc_Marking_h */

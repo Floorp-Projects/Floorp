@@ -1,6 +1,6 @@
-for (a in (eval("\
+for (a of (eval("\
   (function() {\
-    return function() {\
+    return function*() {\
       yield ((function() {\
         return d\
       })())\

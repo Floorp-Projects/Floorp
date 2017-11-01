@@ -22,6 +22,7 @@
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
@@ -3578,6 +3579,26 @@ ContentChild::RecvSetPluginList(const uint32_t& aPluginEpoch,
   RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   host->SetPluginsInContent(aPluginEpoch, aPluginTags, aFakePluginTags);
   return IPC_OK();
+}
+
+PClientOpenWindowOpChild*
+ContentChild::AllocPClientOpenWindowOpChild(const ClientOpenWindowArgs& aArgs)
+{
+  return AllocClientOpenWindowOpChild();
+}
+
+IPCResult
+ContentChild::RecvPClientOpenWindowOpConstructor(PClientOpenWindowOpChild* aActor,
+                                                 const ClientOpenWindowArgs& aArgs)
+{
+  InitClientOpenWindowOpChild(aActor, aArgs);
+  return IPC_OK();
+}
+
+bool
+ContentChild::DeallocPClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor)
+{
+  return DeallocClientOpenWindowOpChild(aActor);
 }
 
 mozilla::ipc::IPCResult

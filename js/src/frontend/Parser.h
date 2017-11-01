@@ -171,13 +171,9 @@ class ParserBase : public StrictModeGetter
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
-    // Determine whether |yield| is a valid name in the current context, or
-    // whether it's prohibited due to strictness, JS version, or occurrence
-    // inside a star generator.
+    // Determine whether |yield| is a valid name in the current context.
     bool yieldExpressionsSupported() {
-        return (versionNumber() >= JSVERSION_1_7 && !pc->isAsync()) ||
-               pc->isStarGenerator() ||
-               pc->isLegacyGenerator();
+        return pc->isStarGenerator();
     }
 
     virtual bool strictMode() { return pc->sc()->strict(); }
@@ -241,7 +237,6 @@ class ParserBase : public StrictModeGetter
 
     bool warnOnceAboutExprClosure();
     bool warnOnceAboutForEach();
-    bool warnOnceAboutLegacyGenerator();
 
     bool allowsForEachIn() {
 #if !JS_HAS_FOR_EACH_IN

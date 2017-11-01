@@ -5375,7 +5375,7 @@ static bool
 DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isGeneratorFunction)", args, obj, script);
-    args.rval().setBoolean(script->isLegacyGenerator() || script->isStarGenerator());
+    args.rval().setBoolean(script->isStarGenerator());
     return true;
 }
 
@@ -7648,9 +7648,7 @@ DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
 DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame)
 {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-    return referent.hasScript() &&
-           (referent.script()->isStarGenerator() ||
-            referent.script()->isLegacyGenerator());
+    return referent.hasScript() && referent.script()->isStarGenerator();
 }
 
 /* static */ bool
@@ -9964,7 +9962,7 @@ DebuggerObject::isGeneratorFunction() const
     MOZ_ASSERT(isDebuggeeFunction());
 
     JSFunction* fun = RemoveAsyncWrapper(&referent()->as<JSFunction>());
-    return fun->isLegacyGenerator() || fun->isStarGenerator();
+    return fun->isStarGenerator();
 }
 
 bool

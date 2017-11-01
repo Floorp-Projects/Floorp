@@ -546,9 +546,13 @@ class nsHtml5TreeOperation final {
 
     nsresult Perform(nsHtml5TreeOpExecutor* aBuilder,
                      nsIContent** aScriptElement,
-                     bool* aInterrupted);
+                     bool* aInterrupted,
+                     bool* aStreamEnded);
 
   private:
+    nsHtml5TreeOperation(const nsHtml5TreeOperation&) = delete;
+    nsHtml5TreeOperation& operator=(const nsHtml5TreeOperation&) = delete;
+
     // possible optimization:
     // Make the queue take items the size of pointer and make the op code
     // decide how many operands it dequeues after it.

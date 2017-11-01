@@ -294,8 +294,6 @@ public:
                   GeckoView::Param aView, jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher);
 
-    void LoadUri(jni::String::Param aUri, int32_t aFlags);
-
     void EnableEventDispatcher();
 };
 
@@ -307,6 +305,8 @@ class nsWindow::NPZCSupport final
     : public NativePanZoomController::Natives<NPZCSupport>
 {
     using LockedWindowPtr = WindowPtr<NPZCSupport>::Locked;
+
+    static bool sNegateWheelScroll;
 
     WindowPtr<NPZCSupport> mWindow;
     NativePanZoomController::GlobalRef mNPZC;
@@ -367,6 +367,13 @@ public:
         , mPreviousButtons(0)
     {
         MOZ_ASSERT(mWindow);
+
+        static bool sInited;
+        if (!sInited) {
+            Preferences::AddBoolVarCache(&sNegateWheelScroll,
+                                         "ui.scrolling.negate_wheel_scroll");
+            sInited = true;
+        }
     }
 
     ~NPZCSupport()
@@ -456,6 +463,11 @@ public:
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
+        if (sNegateWheelScroll) {
+            aHScroll = -aHScroll;
+            aVScroll = -aVScroll;
+        }
+
         ScrollWheelInput input(aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
                                ScrollWheelInput::SCROLLDELTA_PIXEL,
@@ -543,26 +555,26 @@ public:
         MouseInput::MouseType mouseType = MouseInput::MOUSE_NONE;
         MouseInput::ButtonType buttonType = MouseInput::NONE;
         switch (aAction) {
-            case AndroidMotionEvent::ACTION_DOWN:
+            case java::sdk::MotionEvent::ACTION_DOWN:
                 mouseType = MouseInput::MOUSE_DOWN;
                 buttonType = GetButtonType(buttons ^ mPreviousButtons);
                 mPreviousButtons = buttons;
                 break;
-            case AndroidMotionEvent::ACTION_UP:
+            case java::sdk::MotionEvent::ACTION_UP:
                 mouseType = MouseInput::MOUSE_UP;
                 buttonType = GetButtonType(buttons ^ mPreviousButtons);
                 mPreviousButtons = buttons;
                 break;
-            case AndroidMotionEvent::ACTION_MOVE:
+            case java::sdk::MotionEvent::ACTION_MOVE:
                 mouseType = MouseInput::MOUSE_MOVE;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_MOVE:
+            case java::sdk::MotionEvent::ACTION_HOVER_MOVE:
                 mouseType = MouseInput::MOUSE_MOVE;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_ENTER:
+            case java::sdk::MotionEvent::ACTION_HOVER_ENTER:
                 mouseType = MouseInput::MOUSE_WIDGET_ENTER;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_EXIT:
+            case java::sdk::MotionEvent::ACTION_HOVER_EXIT:
                 mouseType = MouseInput::MOUSE_WIDGET_EXIT;
                 break;
             default:
@@ -735,6 +747,8 @@ public:
 
 template<> const char
 nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[] = "NPZCSupport";
+
+bool nsWindow::NPZCSupport::sNegateWheelScroll;
 
 NS_IMPL_ISUPPORTS(nsWindow::AndroidView,
                   nsIAndroidEventDispatcher,
@@ -1377,41 +1391,6 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
 
     mGeckoViewWindow->OnReattach(aView);
-}
-
-void
-nsWindow::GeckoViewSupport::LoadUri(jni::String::Param aUri, int32_t aFlags)
-{
-    if (!mDOMWindow) {
-        return;
-    }
-
-    nsCOMPtr<nsIURI> uri = nsAppShell::ResolveURI(aUri->ToCString());
-    if (NS_WARN_IF(!uri)) {
-        return;
-    }
-
-    nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(mDOMWindow);
-    nsCOMPtr<nsIBrowserDOMWindow> browserWin;
-
-    if (NS_WARN_IF(!chromeWin) || NS_WARN_IF(NS_FAILED(
-            chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserWin))))) {
-        return;
-    }
-
-    const int flags = aFlags == GeckoView::LOAD_NEW_TAB ?
-                        nsIBrowserDOMWindow::OPEN_NEWTAB :
-                      aFlags == GeckoView::LOAD_SWITCH_TAB ?
-                        nsIBrowserDOMWindow::OPEN_SWITCHTAB :
-                        nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
-    nsCOMPtr<mozIDOMWindowProxy> newWin;
-
-    if (NS_FAILED(browserWin->OpenURI(
-            uri, nullptr, flags, nsIBrowserDOMWindow::OPEN_EXTERNAL,
-            nsContentUtils::GetSystemPrincipal(),
-            getter_AddRefs(newWin)))) {
-        NS_WARNING("Failed to open URI");
-    }
 }
 
 void

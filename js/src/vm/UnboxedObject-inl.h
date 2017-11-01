@@ -168,6 +168,17 @@ UnboxedPlainObject::layout() const
     return group()->unboxedLayout();
 }
 
+/////////////////////////////////////////////////////////////////////
+// UnboxedLayout
+/////////////////////////////////////////////////////////////////////
+
+gc::AllocKind
+js::UnboxedLayout::getAllocKind() const
+{
+    MOZ_ASSERT(size());
+    return gc::GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + size());
+}
+
 } // namespace js
 
 #endif // vm_UnboxedObject_inl_h

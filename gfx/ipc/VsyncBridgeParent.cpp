@@ -28,7 +28,7 @@ VsyncBridgeParent::VsyncBridgeParent()
  : mOpen(false)
 {
   MOZ_COUNT_CTOR(VsyncBridgeParent);
-  mCompositorThreadRef = new CompositorThreadHolderDebug("VsyncBridge");
+  mCompositorThreadRef = CompositorThreadHolder::GetSingleton();
 }
 
 VsyncBridgeParent::~VsyncBridgeParent()
