@@ -124,10 +124,12 @@ win64/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_debug.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/debug.py
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -149,10 +151,12 @@ win64/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -174,10 +178,12 @@ win64-dmd/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
         custom-build-variant-cfg: dmd
     run-on-projects: []
     toolchains:
@@ -238,10 +244,12 @@ win64-nightly/opt:
     run:
         using: mozharness
         actions: [clone-tools, build, check-test, update]
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
             - disable_signing.py
             - taskcluster_nightly.py
     toolchains:
@@ -265,11 +273,12 @@ win64/pgo:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
-        options: [enable-pgo]
+        options: [enable-pgo, append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -320,10 +329,12 @@ win64-add-on-devel/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: "mozharness/scripts/fx_desktop_build.py"
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_addondevel.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/addondevel.py
             - balrog/production.py
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
@@ -347,10 +358,12 @@ win64-noopt/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_win64_noopt_debug.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/noopt_debug.py
     run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
@@ -429,10 +442,12 @@ win64-rusttests/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_win64_rusttests_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/rusttests_opt.py
     run-on-projects: ['trunk', 'try']
     toolchains:
         - win64-clang-cl
@@ -455,10 +470,12 @@ win64-ccov/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_win64_ccov_debug.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/ccov_debug.py
     run-on-projects: []
     toolchains:
         - win64-clang-cl
@@ -482,10 +499,12 @@ win64-asan/debug:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_win64_asan_debug.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/asan_debug.py
     run-on-projects: []
     toolchains:
         - win64-clang-cl
@@ -509,10 +528,12 @@ win64-asan/opt:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_win64_asan_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/asan_opt.py
     run-on-projects: []
     toolchains:
         - win64-clang-cl
@@ -572,10 +593,12 @@ win64-devedition-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
-            - builds/taskcluster_firefox_windows_64_opt.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/opt.py
             - disable_signing.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: devedition
