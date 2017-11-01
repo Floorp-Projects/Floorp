@@ -1684,22 +1684,12 @@ nsCSSRuleProcessor::LangPseudoMatches(const mozilla::dom::Element* aElement,
 
   nsDependentString langString(aString);
   language.StripWhitespace();
-  int32_t begin = 0;
-  int32_t len = language.Length();
-  while (begin < len) {
-    int32_t end = language.FindChar(char16_t(','), begin);
-    if (end == kNotFound) {
-      end = len;
-    }
-    if (nsStyleUtil::DashMatchCompare(Substring(language, begin, end - begin),
+  for (auto const& lang : language.Split(char16_t(','))) {
+    if (nsStyleUtil::DashMatchCompare(lang,
                                       langString,
                                       nsASCIICaseInsensitiveStringComparator())) {
       return true;
     }
-    begin = end + 1;
-  }
-  if (begin < len) {
-    return true;
   }
   return false;
 }
