@@ -75,20 +75,6 @@ public class GeckoView extends LayerView {
         }
     }
 
-    static {
-        EventDispatcher.getInstance().registerUiThreadListener(new BundleEventListener() {
-            @Override
-            public void handleMessage(final String event, final GeckoBundle message,
-                                      final EventCallback callback) {
-                if ("GeckoView:Prompt".equals(event)) {
-                    handlePromptEvent(/* view */ null, message, callback);
-                }
-            }
-        }, "GeckoView:Prompt");
-    }
-
-    private static PromptDelegate sDefaultPromptDelegate;
-
     private final NativeQueue mNativeQueue =
         new NativeQueue(State.INITIAL, State.READY);
 
@@ -861,17 +847,6 @@ public class GeckoView extends LayerView {
     }
 
     /**
-     * Set the default prompt delegate for all GeckoView instances. The default prompt
-     * delegate is used for certain types of prompts and for GeckoViews that do not have
-     * custom prompt delegates.
-     * @param delegate PromptDelegate instance or null to use the built-in delegate.
-     * @see #setPromptDelegate(PromptDelegate)
-     */
-    public static void setDefaultPromptDelegate(PromptDelegate delegate) {
-        sDefaultPromptDelegate = delegate;
-    }
-
-    /**
     * Set the content scroll callback handler.
     * This will replace the current handler.
     * @param listener An implementation of ScrollListener.
@@ -881,18 +856,8 @@ public class GeckoView extends LayerView {
     }
 
     /**
-     * Get the default prompt delegate for all GeckoView instances.
-     * @return PromptDelegate instance
-     * @see #getPromptDelegate()
-     */
-    public static PromptDelegate getDefaultPromptDelegate() {
-        return sDefaultPromptDelegate;
-    }
-
-    /**
      * Set the current prompt delegate for this GeckoView.
-     * @param delegate PromptDelegate instance or null to use the default delegate.
-     * @see #setDefaultPromptDelegate(PromptDelegate)
+     * @param delegate PromptDelegate instance or null to use the built-in delegate.
      */
     public void setPromptDelegate(PromptDelegate delegate) {
         mPromptDelegate = delegate;
@@ -900,8 +865,7 @@ public class GeckoView extends LayerView {
 
     /**
      * Get the current prompt delegate for this GeckoView.
-     * @return PromptDelegate instance or null if using default delegate.
-     * @see #getDefaultPromptDelegate()
+     * @return PromptDelegate instance or null if using built-in delegate.
      */
     public PromptDelegate getPromptDelegate() {
         return mPromptDelegate;
@@ -1132,13 +1096,7 @@ public class GeckoView extends LayerView {
     /* package */ static void handlePromptEvent(final GeckoView view,
                                                 final GeckoBundle message,
                                                 final EventCallback callback) {
-        final PromptDelegate delegate;
-        if (view != null && view.mPromptDelegate != null) {
-            delegate = view.mPromptDelegate;
-        } else {
-            delegate = sDefaultPromptDelegate;
-        }
-
+        final PromptDelegate delegate = view.getPromptDelegate();
         if (delegate == null) {
             // Default behavior is same as calling dismiss() on callback.
             callback.sendSuccess(null);
