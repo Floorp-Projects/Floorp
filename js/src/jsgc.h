@@ -48,12 +48,6 @@ template <typename T> struct MapTypeToFinalizeKind {};
 FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
 #undef EXPAND_MAPTYPETOFINALIZEKIND
 
-template <typename T> struct ParticipatesInCC {};
-#define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
-    template <> struct ParticipatesInCC<type> { static const bool value = addToCCKind; };
-JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
-#undef EXPAND_PARTICIPATES_IN_CC
-
 } /* namespace gc */
 
 extern void
