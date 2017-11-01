@@ -7,8 +7,10 @@
 function getSelectDialogDoc() {
   // Trudge through all the open windows, until we find the one
   // that has selectDialog.xul loaded.
-  // var enumerator = Services.wm.getEnumerator("navigator:browser");
-  var enumerator = Services.wm.getXULWindowEnumerator(null);
+  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator);
+  // var enumerator = wm.getEnumerator("navigator:browser");
+  var enumerator = wm.getXULWindowEnumerator(null);
 
   while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
