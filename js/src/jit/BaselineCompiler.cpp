@@ -4597,10 +4597,8 @@ BaselineCompiler::emit_JSOP_YIELD()
 
     MOZ_ASSERT(frame.stackDepth() >= 1);
 
-    if (frame.stackDepth() == 1 && !script->isLegacyGenerator()) {
-        // If the expression stack is empty, we can inline the YIELD. Don't do
-        // this for legacy generators: we have to throw an exception if the
-        // generator is in the closing state, see GeneratorObject::suspend.
+    if (frame.stackDepth() == 1) {
+        // If the expression stack is empty, we can inline the YIELD.
 
         masm.storeValue(Int32Value(GET_UINT24(pc)),
                         Address(genObj, GeneratorObject::offsetOfYieldAndAwaitIndexSlot()));

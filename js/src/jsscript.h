@@ -752,7 +752,7 @@ class ScriptSourceObject : public NativeObject
     static const uint32_t RESERVED_SLOTS = 4;
 };
 
-enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
+enum GeneratorKind { NotGenerator, StarGenerator };
 enum FunctionAsyncKind { SyncFunction, AsyncFunction };
 
 static inline unsigned
@@ -1445,12 +1445,11 @@ class JSScript : public js::gc::TenuredCell
     js::GeneratorKind generatorKind() const {
         return js::GeneratorKindFromBits(generatorKindBits_);
     }
-    bool isLegacyGenerator() const { return generatorKind() == js::LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
     void setGeneratorKind(js::GeneratorKind kind) {
         // A script only gets its generator kind set as part of initialization,
         // so it can only transition from not being a generator.
-        MOZ_ASSERT(!isStarGenerator() && !isLegacyGenerator());
+        MOZ_ASSERT(!isStarGenerator());
         generatorKindBits_ = GeneratorKindAsBits(kind);
     }
 
@@ -1613,7 +1612,7 @@ class JSScript : public js::gc::TenuredCell
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) && !hasInnerFunctions_ && !types_ &&
-               !isStarGenerator() && !isLegacyGenerator() && !isAsync() &&
+               !isStarGenerator() && !isAsync() &&
                !isDefaultClassConstructor() &&
                !hasBaselineScript() && !hasAnyIonScript() &&
                !doNotRelazify_;
@@ -1835,7 +1834,7 @@ class JSScript : public js::gc::TenuredCell
     bool hasTrynotes() const     { return hasArray(TRYNOTES); }
     bool hasScopeNotes() const   { return hasArray(SCOPENOTES); }
     bool hasYieldAndAwaitOffsets() const {
-        return isStarGenerator() || isLegacyGenerator() || isAsync();
+        return isStarGenerator() || isAsync();
     }
 
 #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
@@ -2256,16 +2255,12 @@ class LazyScript : public gc::TenuredCell
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(p_.generatorKindBits); }
 
-    bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
-
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
 
     void setGeneratorKind(GeneratorKind kind) {
         // A script only gets its generator kind set as part of initialization,
         // so it can only transition from NotGenerator.
-        MOZ_ASSERT(!isStarGenerator() && !isLegacyGenerator());
-        // Legacy generators cannot currently be lazy.
-        MOZ_ASSERT(kind != LegacyGenerator);
+        MOZ_ASSERT(!isStarGenerator());
         p_.generatorKindBits = GeneratorKindAsBits(kind);
     }
 

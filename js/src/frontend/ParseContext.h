@@ -620,15 +620,9 @@ class ParseContext : public Nestable<ParseContext>
         return sc_->isFunctionBox() && sc_->asFunctionBox()->useAsmOrInsideUseAsm();
     }
 
-    // Most functions start off being parsed as non-generators.
-    // Non-generators transition to LegacyGenerator on parsing "yield" in JS 1.7.
     // An ES6 generator is marked as a "star generator" before its body is parsed.
     GeneratorKind generatorKind() const {
         return sc_->isFunctionBox() ? sc_->asFunctionBox()->generatorKind() : NotGenerator;
-    }
-
-    bool isLegacyGenerator() const {
-        return generatorKind() == LegacyGenerator;
     }
 
     bool isStarGenerator() const {
@@ -640,7 +634,7 @@ class ParseContext : public Nestable<ParseContext>
     }
 
     bool needsDotGeneratorName() const {
-        return isStarGenerator() || isLegacyGenerator() || isAsync();
+        return isStarGenerator() || isAsync();
     }
 
     FunctionAsyncKind asyncKind() const {

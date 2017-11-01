@@ -4417,7 +4417,6 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     // FIXME: Don't build arguments for ES6 generator expressions.
     if (scriptArg->isDebuggee() ||
         script->isStarGenerator() ||
-        script->isLegacyGenerator() ||
         script->isAsync() ||
         script->bindingsAccessedDynamically())
     {
