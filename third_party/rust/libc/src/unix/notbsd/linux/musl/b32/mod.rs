@@ -1,6 +1,7 @@
 pub type c_long = i32;
 pub type c_ulong = u32;
 pub type nlink_t = u32;
+pub type blksize_t = ::c_long;
 pub type __u64 = ::c_ulonglong;
 
 s! {
@@ -31,7 +32,22 @@ s! {
     pub struct sem_t {
         __val: [::c_int; 4],
     }
+
+    pub struct ipc_perm {
+        pub __ipc_perm_key: ::key_t,
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
+        pub cuid: ::uid_t,
+        pub cgid: ::gid_t,
+        pub mode: ::mode_t,
+        pub __seq: ::c_int,
+        __unused1: ::c_long,
+        __unused2: ::c_long
+    }
 }
+
+pub const SIGSTKSZ: ::size_t = 8192;
+pub const MINSIGSTKSZ: ::size_t = 2048;
 
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;

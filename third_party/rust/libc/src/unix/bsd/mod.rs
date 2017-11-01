@@ -299,6 +299,7 @@ pub const MDMBUF: ::tcflag_t = 0x00100000;
 pub const WNOHANG: ::c_int = 0x00000001;
 pub const WUNTRACED: ::c_int = 0x00000002;
 
+pub const RTLD_LAZY: ::c_int = 0x1;
 pub const RTLD_NOW: ::c_int = 0x2;
 pub const RTLD_NEXT: *mut ::c_void = -1isize as *mut ::c_void;
 pub const RTLD_DEFAULT: *mut ::c_void = -2isize as *mut ::c_void;
@@ -313,6 +314,12 @@ pub const TCP_MAXSEG: ::c_int = 2;
 
 pub const PIPE_BUF: usize = 512;
 
+pub const POLLIN: ::c_short = 0x1;
+pub const POLLPRI: ::c_short = 0x2;
+pub const POLLOUT: ::c_short = 0x4;
+pub const POLLERR: ::c_short = 0x8;
+pub const POLLHUP: ::c_short = 0x10;
+pub const POLLNVAL: ::c_short = 0x20;
 pub const POLLRDNORM: ::c_short = 0x040;
 pub const POLLWRNORM: ::c_short = 0x004;
 pub const POLLRDBAND: ::c_short = 0x080;
@@ -359,6 +366,10 @@ f! {
 
     pub fn WCOREDUMP(status: ::c_int) -> bool {
         (status & 0o200) != 0
+    }
+
+    pub fn QCMD(cmd: ::c_int, type_: ::c_int) -> ::c_int {
+        (cmd << 8) | (type_ & 0x00ff)
     }
 }
 
@@ -480,6 +491,9 @@ extern {
                            oldset: *mut sigset_t) -> ::c_int;
     pub fn sem_open(name: *const ::c_char, oflag: ::c_int, ...) -> *mut sem_t;
     pub fn getgrnam(name: *const ::c_char) -> *mut ::group;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "pthread_cancel$UNIX2003")]
+    pub fn pthread_cancel(thread: ::pthread_t) -> ::c_int;
     pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
     pub fn sem_unlink(name: *const ::c_char) -> ::c_int;
     pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;

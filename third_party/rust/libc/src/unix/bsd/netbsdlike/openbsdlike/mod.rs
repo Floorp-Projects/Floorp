@@ -221,6 +221,72 @@ pub const SO_RTABLE: ::c_int = 0x1021;
 pub const SO_PEERCRED: ::c_int = 0x1022;
 pub const SO_SPLICE: ::c_int = 0x1023;
 
+// sys/netinet/in.h
+// Protocols (RFC 1700)
+// NOTE: These are in addition to the constants defined in src/unix/mod.rs
+
+// IPPROTO_IP defined in src/unix/mod.rs
+/// Hop-by-hop option header
+pub const IPPROTO_HOPOPTS: ::c_int = 0;
+// IPPROTO_ICMP defined in src/unix/mod.rs
+/// group mgmt protocol
+pub const IPPROTO_IGMP: ::c_int = 2;
+/// gateway^2 (deprecated)
+pub const IPPROTO_GGP: ::c_int = 3;
+/// for compatibility
+pub const IPPROTO_IPIP: ::c_int = 4;
+// IPPROTO_TCP defined in src/unix/mod.rs
+/// exterior gateway protocol
+pub const IPPROTO_EGP: ::c_int = 8;
+/// pup
+pub const IPPROTO_PUP: ::c_int = 12;
+// IPPROTO_UDP defined in src/unix/mod.rs
+/// xns idp
+pub const IPPROTO_IDP: ::c_int = 22;
+/// tp-4 w/ class negotiation
+pub const IPPROTO_TP: ::c_int = 29;
+// IPPROTO_IPV6 defined in src/unix/mod.rs
+/// IP6 routing header
+pub const IPPROTO_ROUTING: ::c_int = 43;
+/// IP6 fragmentation header
+pub const IPPROTO_FRAGMENT: ::c_int = 44;
+/// resource reservation
+pub const IPPROTO_RSVP: ::c_int = 46;
+/// General Routing Encap.
+pub const IPPROTO_GRE: ::c_int = 47;
+/// IP6 Encap Sec. Payload
+pub const IPPROTO_ESP: ::c_int = 50;
+/// IP6 Auth Header
+pub const IPPROTO_AH: ::c_int = 51;
+/// IP Mobility RFC 2004
+pub const IPPROTO_MOBILE: ::c_int = 55;
+// IPPROTO_ICMPV6 defined in src/unix/mod.rs
+/// IP6 no next header
+pub const IPPROTO_NONE: ::c_int = 59;
+/// IP6 destination option
+pub const IPPROTO_DSTOPTS: ::c_int = 60;
+/// ISO cnlp
+pub const IPPROTO_EON: ::c_int = 80;
+/// Ethernet-in-IP
+pub const IPPROTO_ETHERIP: ::c_int = 97;
+/// encapsulation header
+pub const IPPROTO_ENCAP: ::c_int = 98;
+/// Protocol indep. multicast
+pub const IPPROTO_PIM: ::c_int = 103;
+/// IP Payload Comp. Protocol
+pub const IPPROTO_IPCOMP: ::c_int = 108;
+/// CARP
+pub const IPPROTO_CARP: ::c_int = 112;
+/// unicast MPLS packet
+pub const IPPROTO_MPLS: ::c_int = 137;
+/// PFSYNC
+pub const IPPROTO_PFSYNC: ::c_int = 240;
+pub const IPPROTO_MAX: ::c_int = 256;
+
+/* Only used internally, so it can be outside the range of valid IP protocols */
+/// Divert sockets
+pub const IPPROTO_DIVERT: ::c_int = 258;
+
 pub const AF_ECMA: ::c_int = 8;
 pub const AF_ROUTE: ::c_int = 17;
 pub const AF_ENCAP: ::c_int = 28;
