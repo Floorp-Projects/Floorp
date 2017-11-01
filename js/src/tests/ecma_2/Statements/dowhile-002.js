@@ -17,10 +17,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "dowhile-002";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 LabeledContinue( 0, 1 );
@@ -51,20 +49,17 @@ woohoo: {
   }
 
   new TestCase(
-    SECTION,
     "do while ( " + i +" < " + limit +" )",
     expect,
     i );
 
   new TestCase(
-    SECTION,
     "breaking out of a do... while loop",
     "pass",
     result1 );
 
 
   new TestCase(
-    SECTION,
     "breaking out of a labeled do...while loop",
     "pass",
     result2 );

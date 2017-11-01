@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -36,6 +35,4 @@ function test()
     s.toString(o);
   }
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -1,8 +1,3 @@
-if (!this.Promise) {
-    reportCompare(true,true);
-    quit(0);
-}
-
 assertEq(Promise[Symbol.species], Promise);
 let prop = Object.getOwnPropertyDescriptor(Promise, Symbol.species);
 assertEq('get' in prop, true);

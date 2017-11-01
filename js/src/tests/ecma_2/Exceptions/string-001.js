@@ -22,10 +22,8 @@
    Date:               1 october 1997
 */
 var SECTION = "string-001";
-var VERSION = "JS1_4";
 var TITLE   = "String.prototype.toString";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -42,7 +40,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJECT = new Object; "+
   " OBJECT.toString = String.prototype.toString; OBJECT.toString()" +
   " (threw " + exception +")",

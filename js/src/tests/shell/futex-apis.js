@@ -5,10 +5,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-if (!(this.SharedArrayBuffer && this.Atomics)) {
-    reportCompare(true,true);
-    quit(0);
-}
+if (this.SharedArrayBuffer && this.Atomics) {
 
 // Checks for parameter validation of wait/wake API.  All of these test
 // cases should throw exceptions during parameter validation, before
@@ -46,7 +43,7 @@ let sab = new SharedArrayBuffer(16);
 		  new Set(),
 		  new WeakMap(),
 		  new WeakSet(),
-		  this.Promise ? new Promise(() => "done") : null,
+		  new Promise(() => "done"),
 		  Symbol("halleluja"),
 		  // TODO: Proxy?
 		  Object,
@@ -108,5 +105,7 @@ let sab = new SharedArrayBuffer(16);
 	assertThrowsInstanceOf(() => Atomics.wake(view, Idx), RangeError);
     }
 }
+
+} // if (this.SharedArrayBuffer && this.Atomics) { ... }
 
 reportCompare(true,true);

@@ -16,9 +16,7 @@ var expect = 0;
 
 function noargslength()
 {
-  enterFunc('noargslength');
   return eval('arguments').length;
-  exitFunc('noargslength');
 }
 
 //-----------------------------------------------------------------------------
@@ -27,11 +25,8 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

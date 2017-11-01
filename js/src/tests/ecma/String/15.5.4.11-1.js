@@ -26,24 +26,22 @@
 */
 
 var SECTION = "15.5.4.11-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.toLowerCase()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,  "String.prototype.toLowerCase.length",        0,          String.prototype.toLowerCase.length );
+new TestCase( "String.prototype.toLowerCase.length",        0,          String.prototype.toLowerCase.length );
 
 // Basic Latin, Latin-1 Supplement, Latin Extended A
 for ( var i = 0; i <= 0x017f; i++ ) {
   var U = new Unicode(i);
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()",
   String.fromCharCode(U.lower),
   eval("var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()") );
 */
-  new TestCase(   SECTION,
+  new TestCase(
 		  "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase().charCodeAt(0)",
 		  U.lower,
 		  eval("var s = new String( String.fromCharCode(i) ); s.toLowerCase().charCodeAt(0)") );

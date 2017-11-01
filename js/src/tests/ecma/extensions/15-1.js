@@ -22,33 +22,31 @@
 
 */
 var SECTION = "15-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Native ECMAScript Objects";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 /*
-  new TestCase( SECTION,  "Function.prototype.__proto__", Object.prototype,   Function.prototype.__proto__ );
-  new TestCase( SECTION,  "Array.prototype.__proto__",    Object.prototype,   Array.prototype.__proto__ );
-  new TestCase( SECTION,  "String.prototype.__proto__",   Object.prototype,   String.prototype.__proto__ );
-  new TestCase( SECTION,  "Boolean.prototype.__proto__",  Object.prototype,   Boolean.prototype.__proto__ );
-  new TestCase( SECTION,  "Number.prototype.__proto__",   Object.prototype,   Number.prototype.__proto__ );
-//    new TestCase( SECTION,  "Math.prototype.__proto__",     Object.prototype,   Math.prototype.__proto__ );
-new TestCase( SECTION,  "Date.prototype.__proto__",     Object.prototype,   Date.prototype.__proto__ );
-new TestCase( SECTION,  "TestCase.prototype.__proto__", Object.prototype,   TestCase.prototype.__proto__ );
+  new TestCase( "Function.prototype.__proto__", Object.prototype,   Function.prototype.__proto__ );
+  new TestCase( "Array.prototype.__proto__",    Object.prototype,   Array.prototype.__proto__ );
+  new TestCase( "String.prototype.__proto__",   Object.prototype,   String.prototype.__proto__ );
+  new TestCase( "Boolean.prototype.__proto__",  Object.prototype,   Boolean.prototype.__proto__ );
+  new TestCase( "Number.prototype.__proto__",   Object.prototype,   Number.prototype.__proto__ );
+//    new TestCase( "Math.prototype.__proto__",     Object.prototype,   Math.prototype.__proto__ );
+new TestCase( "Date.prototype.__proto__",     Object.prototype,   Date.prototype.__proto__ );
+new TestCase( "TestCase.prototype.__proto__", Object.prototype,   TestCase.prototype.__proto__ );
 
-new TestCase( SECTION,  "MyObject.prototype.__proto__", Object.prototype,   MyObject.prototype.__proto__ );
+new TestCase( "MyObject.prototype.__proto__", Object.prototype,   MyObject.prototype.__proto__ );
 */
-new TestCase( SECTION,  "Function.prototype.__proto__ == Object.prototype", true,   Function.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "Array.prototype.__proto__ == Object.prototype",    true,   Array.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "String.prototype.__proto__ == Object.prototype",   true,   String.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "Boolean.prototype.__proto__ == Object.prototype",  true,   Boolean.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "Number.prototype.__proto__ == Object.prototype",   true,   Number.prototype.__proto__ == Object.prototype );
-//    new TestCase( SECTION,  "Math.prototype.__proto__ == Object.prototype",     true,   Math.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "Date.prototype.__proto__ == Object.prototype",     true,   Date.prototype.__proto__ == Object.prototype );
-new TestCase( SECTION,  "TestCase.prototype.__proto__ == Object.prototype", true,   TestCase.prototype.__proto__ == Object.prototype );
+new TestCase( "Function.prototype.__proto__ == Object.prototype", true,   Function.prototype.__proto__ == Object.prototype );
+new TestCase( "Array.prototype.__proto__ == Object.prototype",    true,   Array.prototype.__proto__ == Object.prototype );
+new TestCase( "String.prototype.__proto__ == Object.prototype",   true,   String.prototype.__proto__ == Object.prototype );
+new TestCase( "Boolean.prototype.__proto__ == Object.prototype",  true,   Boolean.prototype.__proto__ == Object.prototype );
+new TestCase( "Number.prototype.__proto__ == Object.prototype",   true,   Number.prototype.__proto__ == Object.prototype );
+//    new TestCase( "Math.prototype.__proto__ == Object.prototype",     true,   Math.prototype.__proto__ == Object.prototype );
+new TestCase( "Date.prototype.__proto__ == Object.prototype",     true,   Date.prototype.__proto__ == Object.prototype );
+new TestCase( "TestCase.prototype.__proto__ == Object.prototype", true,   TestCase.prototype.__proto__ == Object.prototype );
 
-new TestCase( SECTION,  "MyObject.prototype.__proto__ == Object.prototype", true,   MyObject.prototype.__proto__ == Object.prototype );
+new TestCase( "MyObject.prototype.__proto__ == Object.prototype", true,   MyObject.prototype.__proto__ == Object.prototype );
 
 
 test();

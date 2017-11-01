@@ -82,17 +82,17 @@ public:
   /**
    * Return the size, in pixels, of the 8-bit alpha surface we'd use.
    */
-  IntSize GetSize();
+  IntSize GetSize() const;
 
   /**
    * Return the stride, in bytes, of the 8-bit alpha surface we'd use.
    */
-  int32_t GetStride();
+  int32_t GetStride() const;
 
   /**
    * Returns the device-space rectangle the 8-bit alpha surface covers.
    */
-  IntRect GetRect();
+  IntRect GetRect() const;
 
   /**
    * Return a pointer to a dirty rect, as passed in to the constructor, or nullptr
@@ -124,7 +124,7 @@ public:
    * alpha surface data. The size must be at least that returned by
    * GetSurfaceAllocationSize() or bad things will happen.
    */
-  void Blur(uint8_t* aData);
+  void Blur(uint8_t* aData) const;
 
   /**
    * Calculates a blur radius that, when used with box blur, approximates a
@@ -139,19 +139,19 @@ private:
 
   void BoxBlur_C(uint8_t* aData,
                  int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                 int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
+                 int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
   void BoxBlur_SSE2(uint8_t* aData,
                     int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
+                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
 #ifdef BUILD_ARM_NEON
   void BoxBlur_NEON(uint8_t* aData,
                     int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
+                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
 #endif
 #ifdef _MIPS_ARCH_LOONGSON3A
   void BoxBlur_LS3(uint8_t* aData,
                     int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
+                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride) const;
 #endif
 
   static CheckedInt<int32_t> RoundUpToMultipleOf4(int32_t aVal);

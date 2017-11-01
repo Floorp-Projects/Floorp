@@ -16,12 +16,11 @@
  *
  */
 var SECTION = "switch-001";
-var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 
 var BUGNUMBER="315767";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 SwitchTest( 0, 126 );
@@ -57,7 +56,6 @@ function SwitchTest( input, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "switch with no breaks, case expressions are numbers.  input is "+
     input,
     expect,

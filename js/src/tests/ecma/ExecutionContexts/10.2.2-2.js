@@ -31,8 +31,6 @@
 */
 
 var SECTION = "10.2.2-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Eval Code";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -49,41 +47,33 @@ for ( p in this ) {
 
 with ( OBJECT ) {
   var THIS = this;
-  new TestCase( SECTION,
-		"eval( 'this == THIS' )",                 
+  new TestCase( "eval( 'this == THIS' )",                 
 		true,              
 		eval("this == THIS") );
-  new TestCase( SECTION,
-		"this in a with() block",                 
+  new TestCase( "this in a with() block",                 
 		GLOBAL, 
 		this+"" );
-  new TestCase( SECTION,
-		"new MyObject('hello').value",            
+  new TestCase( "new MyObject('hello').value",            
 		"hello",           
 		value );
-  new TestCase( SECTION,
-		"eval(new MyObject('hello').value)",      
+  new TestCase( "eval(new MyObject('hello').value)",      
 		"hello",           
 		eval("value") );
-  new TestCase( SECTION,
-		"new MyObject('hello').getClass()",       
+  new TestCase( "new MyObject('hello').getClass()",       
 		"[object Object]", 
 		getClass() );
-  new TestCase( SECTION,
-		"eval(new MyObject('hello').getClass())", 
+  new TestCase( "eval(new MyObject('hello').getClass())", 
 		"[object Object]", 
 		eval("getClass()") );
-  new TestCase( SECTION,
-		"eval(new MyObject('hello').toString())", 
+  new TestCase( "eval(new MyObject('hello').toString())", 
 		"hello", 
 		eval("toString()") );
-  new TestCase( SECTION,
-		"eval('getClass') == Object.prototype.toString", 
+  new TestCase( "eval('getClass') == Object.prototype.toString", 
 		true, 
 		eval("getClass") == Object.prototype.toString );
 
   for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
-    new TestCase( SECTION, GLOBAL_PROPERTIES[i] +
+    new TestCase( GLOBAL_PROPERTIES[i] +
 		  " == THIS["+GLOBAL_PROPERTIES[i]+"]", true,
 		  eval(GLOBAL_PROPERTIES[i]) == eval( "THIS[GLOBAL_PROPERTIES[i]]") );
   }

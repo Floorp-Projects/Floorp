@@ -18,13 +18,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   actual = String(y.foo);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

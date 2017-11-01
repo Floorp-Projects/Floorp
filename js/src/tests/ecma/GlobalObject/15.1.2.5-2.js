@@ -53,8 +53,6 @@
 */
 
 var SECTION = "15.1.2.5-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "unescape(string)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -62,7 +60,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 // since there is only one character following "%", no conversion should occur.
 
 for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE += 16 ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %"+ (ToHexString(CHARCODE)).substring(0,1) +" )",
 		"%"+(ToHexString(CHARCODE)).substring(0,1),
 		unescape( "%" + (ToHexString(CHARCODE)).substring(0,1) )  );
@@ -71,7 +69,7 @@ for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE += 16 ) {
 // since there is only one character following "%u", no conversion should occur.
 
 for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE +=16 ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %u"+ (ToHexString(CHARCODE)).substring(0,1) +" )",
 		"%u"+(ToHexString(CHARCODE)).substring(0,1),
 		unescape( "%u" + (ToHexString(CHARCODE)).substring(0,1) )  );
@@ -81,8 +79,7 @@ for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE +=16 ) {
 // three char unicode string.  no conversion should occur
 
 for ( var CHARCODE = 1024; CHARCODE < 65536; CHARCODE+= 1234 ) {
-  new TestCase
-    (   SECTION,
+  new TestCase(
 	"unescape( %u"+ (ToUnicodeString(CHARCODE)).substring(0,3)+ " )",
 
 	"%u"+(ToUnicodeString(CHARCODE)).substring(0,3),

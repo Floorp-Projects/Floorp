@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -37,6 +36,4 @@ function test()
   expect = 'before yield';
   gen.send(undefined);
   reportCompare(expect, actual, 'send(undefined) to newborn generator');
-
-  exitFunc ('test');
 }

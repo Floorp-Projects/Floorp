@@ -26,8 +26,6 @@
 */
 
 var SECTION = "15.5.4.11-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.toLowerCase()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -37,12 +35,12 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 for ( var i = 0xFF00; i <= 0xFFEF; i++ ) {
   var U = new Unicode(i);
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()",
   String.fromCharCode(U.lower),
   eval("var s = new String( String.fromCharCode("+i+") ); s.toLowerCase()") );
 */
-  new TestCase(   SECTION,
+  new TestCase(
 		  "var s = new String( String.fromCharCode("+i+") ); s.toLowerCase().charCodeAt(0)",
 		  U.lower,
 		  eval("var s = new String( String.fromCharCode(i) ); s.toLowerCase().charCodeAt(0)") );

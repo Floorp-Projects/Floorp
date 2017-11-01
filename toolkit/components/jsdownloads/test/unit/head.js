@@ -37,6 +37,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
+                                  "resource://testing-common/FileTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
                                   "resource://testing-common/MockRegistrar.jsm");
 
@@ -97,58 +99,16 @@ var gHttpServer;
  * on the currently running instance of the test HTTP server.
  */
 function httpUrl(aFileName) {
-  return "http://localhost:" + gHttpServer.identity.primaryPort + "/" +
+  return "http://www.example.com:" + gHttpServer.identity.primaryPort + "/" +
          aFileName;
 }
 
-// While the previous test file should have deleted all the temporary files it
-// used, on Windows these might still be pending deletion on the physical file
-// system.  Thus, start from a new base number every time, to make a collision
-// with a file that is still pending deletion highly unlikely.
-var gFileCounter = Math.floor(Math.random() * 1000000);
-
 /**
- * Returns a reference to a temporary file, that is guaranteed not to exist, and
- * to have never been created before.
- *
- * @param aLeafName
- *        Suggested leaf name for the file to be created.
- *
- * @return nsIFile pointing to a non-existent file in a temporary directory.
- *
- * @note It is not enough to delete the file if it exists, or to delete the file
- *       after calling nsIFile.createUnique, because on Windows the delete
- *       operation in the file system may still be pending, preventing a new
- *       file with the same name to be created.
+ * Returns a reference to a temporary file that is guaranteed not to exist and
+ * is cleaned up later. See FileTestUtils.getTempFile for details.
  */
-function getTempFile(aLeafName) {
-  // Prepend a serial number to the extension in the suggested leaf name.
-  let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
-  let leafName = base + "-" + gFileCounter + ext;
-  gFileCounter++;
-
-  // Get a file reference under the temporary directory for this test file.
-  let file = FileUtils.getFile("TmpD", [leafName]);
-  do_check_false(file.exists());
-
-  do_register_cleanup(function() {
-    try {
-      file.remove(false);
-    } catch (e) {
-      if (!(e instanceof Components.Exception &&
-            (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED ||
-             e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-             e.result == Cr.NS_ERROR_FILE_NOT_FOUND))) {
-        throw e;
-      }
-      // On Windows, we may get an access denied error if the file existed before,
-      // and was recently deleted.
-      // Don't bother checking file.exists() as that may also cause an access
-      // denied error.
-    }
-  });
-
-  return file;
+function getTempFile(leafName) {
+  return FileTestUtils.getTempFile(leafName);
 }
 
 /**
@@ -671,6 +631,14 @@ add_task(function test_common_initialize() {
       // Stop the HTTP server, calling resolve when it's done.
       gHttpServer.stop(resolve);
     });
+  });
+
+  // Serve the downloads from a domain located in the Internet zone on Windows.
+  gHttpServer.identity.setPrimary("http", "www.example.com",
+                                  gHttpServer.identity.primaryPort);
+  Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
+  do_register_cleanup(function() {
+    Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
   // Cache locks might prevent concurrent requests to the same resource, and

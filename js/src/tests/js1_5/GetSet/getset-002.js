@@ -29,8 +29,6 @@ var t = {
 
 function test(t)
 {
-  enterFunc ("test");
-   
   printStatus ("Basic Getter/ Setter test (object literal notation)");
 
   reportCompare ("<initial y>", t._y, "y prototype check");

@@ -20,9 +20,7 @@
    Date:               09 september 1998
 */
 var SECTION = "boolean-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Boolean.prototype.valueOf()";
-startTest();
 writeHeaderToLog( SECTION +" "+ TITLE );
 
 
@@ -41,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "Assigning Boolean.prototype.valueOf to a String object "+
   "(threw " +exception +")",
   "Passed!",

@@ -13,11 +13,10 @@
  *  Date:               11 August 1998
  */
 var SECTION = "while-004";
-var VERSION = "ECMA_2";
 var TITLE   = "while statement";
 var BUGNUMBER="316725";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile_1();
@@ -49,7 +48,6 @@ function DoWhile_1() {
   result = dowhile();
 
   new TestCase(
-    SECTION,
     "DoWhile_1" + description,
     "pass",
     result );
@@ -78,19 +76,16 @@ theloop:
   result2 = "pass";
 
   new TestCase(
-    SECTION,
     "DoWhile_2:  " +description + " - code inside the loop, before the continue should be executed ("+j+")",
     true,
     j == 10 );
 
   new TestCase(
-    SECTION,
     "DoWhile_2:  " +description +" - code after labeled continue should not be executed",
     "pass",
     result1 );
 
   new TestCase(
-    SECTION,
     "DoWhile_2:  " +description +" - code after loop but inside label should be executed",
     "pass",
     result2 );
@@ -117,20 +112,17 @@ woohoo: {
   result3 = "pass";
 
   new TestCase(
-    SECTION,
     "DoWhile_3: " +description +" - verify break out of loop",
     "pass",
     result1 );
 
 
   new TestCase(
-    SECTION,
     "DoWhile_3: " +description +" - verify break out of label",
     "pass",
     result2 );
 
   new TestCase(
-    SECTION,
     "DoWhile_3: " +description + " - verify correct exit from label",
     "pass",
     result3 );
@@ -157,19 +149,16 @@ woohooboy: {
   result3 = "pass";
 
   new TestCase(
-    SECTION,
     "DoWhile_4: " +description +" - verify break out of while loop",
     "pass",
     result1 );
 
   new TestCase(
-    SECTION,
     "DoWhile_4: " +description + " - verify break out of label",
     "pass",
     result2 );
 
   new TestCase(
-    SECTION,
     "DoWhile_4: " +description +" - verify that statements after label are evaluated",
     "pass",
     result3 );
@@ -197,19 +186,16 @@ theloop: {
   }
 
   new TestCase(
-    SECTION,
     "DoWhile_5: " +description + " - continue should not execute statements above the loop",
     true,
     ( j == 1 ) );
 
   new TestCase(
-    SECTION,
     "DoWhile_5: " +description +" - code after labeled continue should not be executed",
     "pass",
     result1 );
 
   new TestCase(
-    SECTION,
     "DoWhile_5: " +description +" - code after loop but inside label should be executed",
     "pass",
     result2 );

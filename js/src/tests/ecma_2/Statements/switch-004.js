@@ -21,11 +21,10 @@
  *
  */
 var SECTION = "switch-003";
-var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 var BUGNUMBER= "315988";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 ONE = new Number(1);
@@ -87,7 +86,6 @@ function SwitchTest( input, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "switch with no breaks:  input is " + input,
     expect,
     result );

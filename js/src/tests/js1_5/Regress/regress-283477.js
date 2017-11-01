@@ -10,7 +10,6 @@ var actual = '';
 var expect = '';
 var status;
 
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
@@ -23,5 +22,3 @@ status = summary + ' ' + inSection(2) + " " + ' "".lastIndexOf("hello");';
 expect = -1;
 actual = "".lastIndexOf("hello");
 reportCompare(expect, actual, status);
-
-exitFunc ('test');

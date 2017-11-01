@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -26,6 +25,4 @@ function test()
 // Assertion failure: pn_defn, at ../jsparse.h:655
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

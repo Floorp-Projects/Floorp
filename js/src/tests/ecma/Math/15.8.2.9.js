@@ -24,132 +24,130 @@
 */
 
 var SECTION = "15.8.2.9";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.floor(x)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor.length",
 	      1,
 	      Math.floor.length );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor()",
 	      Number.NaN,
 	      Math.floor() );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(void 0)",
 	      Number.NaN,
 	      Math.floor(void 0) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(null)",
 	      0,
 	      Math.floor(null) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(true)",
 	      1,
 	      Math.floor(true) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(false)",
 	      0,
 	      Math.floor(false) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor('1.1')",
 	      1,
 	      Math.floor("1.1") );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor('-1.1')",
 	      -2,
 	      Math.floor("-1.1") );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor('0.1')",
 	      0,
 	      Math.floor("0.1") );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor('-0.1')",
 	      -1,
 	      Math.floor("-0.1") );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(NaN)",
 	      Number.NaN,
 	      Math.floor(Number.NaN)  );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(NaN)==-Math.ceil(-NaN)",
 	      false,
 	      Math.floor(Number.NaN) == -Math.ceil(-Number.NaN) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(0)",
 	      0,
 	      Math.floor(0)           );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(0)==-Math.ceil(-0)",
 	      true,
 	      Math.floor(0) == -Math.ceil(-0) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(-0)",
 	      -0,
 	      Math.floor(-0)          );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Infinity/Math.floor(-0)",
 	      -Infinity,
 	      Infinity/Math.floor(-0)          );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(-0)==-Math.ceil(0)",
 	      true,
 	      Math.floor(-0)== -Math.ceil(0) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(Infinity)",
 	      Number.POSITIVE_INFINITY,
 	      Math.floor(Number.POSITIVE_INFINITY) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(Infinity)==-Math.ceil(-Infinity)",
 	      true,
 	      Math.floor(Number.POSITIVE_INFINITY) == -Math.ceil(Number.NEGATIVE_INFINITY) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(-Infinity)",
 	      Number.NEGATIVE_INFINITY,
 	      Math.floor(Number.NEGATIVE_INFINITY) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(-Infinity)==-Math.ceil(Infinity)",
 	      true,
 	      Math.floor(Number.NEGATIVE_INFINITY) == -Math.ceil(Number.POSITIVE_INFINITY) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(0.0000001)",
 	      0,
 	      Math.floor(0.0000001) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(0.0000001)==-Math.ceil(0.0000001)", true,
 	      Math.floor(0.0000001)==-Math.ceil(-0.0000001) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(-0.0000001)",
 	      -1,
 	      Math.floor(-0.0000001) );
 
-new TestCase( SECTION,
+new TestCase(
 	      "Math.floor(0.0000001)==-Math.ceil(0.0000001)",
 	      true,
 	      Math.floor(-0.0000001)==-Math.ceil(0.0000001) );

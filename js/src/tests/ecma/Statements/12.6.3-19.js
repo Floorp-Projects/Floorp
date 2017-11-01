@@ -41,8 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -56,15 +54,13 @@ function f() {     count++; return new Array("h","e","l","l","o"); }
 var result = "";
 for ( p in f() ) { result += f()[p] };
 
-new TestCase( SECTION,
-	      "count = 0; result = \"\"; "+
+new TestCase( "count = 0; result = \"\"; "+
 	      "function f() { count++; return new Array(\"h\",\"e\",\"l\",\"l\",\"o\"); }"+
 	      "for ( p in f() ) { result += f()[p] }; count",
 	      6,
 	      count );
 
-new TestCase( SECTION,
-	      "result",
+new TestCase( "result",
 	      "hello",
 	      result );
 

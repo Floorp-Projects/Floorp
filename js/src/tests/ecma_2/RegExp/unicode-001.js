@@ -13,10 +13,8 @@
  *  Date:               19 February 1999
  */
 var SECTION = "RegExp/unicode-001.js";
-var VERSION = "ECMA_2";
 var TITLE   = "new RegExp( pattern, flags )";
 
-startTest();
 
 // These examples come from 15.7.1, UnicodeEscapeSequence
 

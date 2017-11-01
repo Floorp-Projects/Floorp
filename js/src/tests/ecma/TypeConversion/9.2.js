@@ -22,81 +22,74 @@
    Date:               14 july 1997
 */
 var SECTION = "9.2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "ToBoolean";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // special cases here
 
-new TestCase( SECTION,   "Boolean()",                     false,  Boolean() );
-new TestCase( SECTION,   "Boolean(var x)",                false,  Boolean(eval("var x")) );
-new TestCase( SECTION,   "Boolean(void 0)",               false,  Boolean(void 0) );
-new TestCase( SECTION,   "Boolean(null)",                 false,  Boolean(null) );
-new TestCase( SECTION,   "Boolean(false)",                false,  Boolean(false) );
-new TestCase( SECTION,   "Boolean(true)",                 true,   Boolean(true) );
-new TestCase( SECTION,   "Boolean(0)",                    false,  Boolean(0) );
-new TestCase( SECTION,   "Boolean(-0)",                   false,  Boolean(-0) );
-new TestCase( SECTION,   "Boolean(NaN)",                  false,  Boolean(Number.NaN) );
-new TestCase( SECTION,   "Boolean('')",                   false,  Boolean("") );
+new TestCase( "Boolean()",                     false,  Boolean() );
+new TestCase( "Boolean(var x)",                false,  Boolean(eval("var x")) );
+new TestCase( "Boolean(void 0)",               false,  Boolean(void 0) );
+new TestCase( "Boolean(null)",                 false,  Boolean(null) );
+new TestCase( "Boolean(false)",                false,  Boolean(false) );
+new TestCase( "Boolean(true)",                 true,   Boolean(true) );
+new TestCase( "Boolean(0)",                    false,  Boolean(0) );
+new TestCase( "Boolean(-0)",                   false,  Boolean(-0) );
+new TestCase( "Boolean(NaN)",                  false,  Boolean(Number.NaN) );
+new TestCase( "Boolean('')",                   false,  Boolean("") );
 
 // normal test cases here
 
-new TestCase( SECTION,   "Boolean(Infinity)",             true,   Boolean(Number.POSITIVE_INFINITY) );
-new TestCase( SECTION,   "Boolean(-Infinity)",            true,   Boolean(Number.NEGATIVE_INFINITY) );
-new TestCase( SECTION,   "Boolean(Math.PI)",              true,   Boolean(Math.PI) );
-new TestCase( SECTION,   "Boolean(1)",                    true,   Boolean(1) );
-new TestCase( SECTION,   "Boolean(-1)",                   true,   Boolean(-1) );
-new TestCase( SECTION,   "Boolean([tab])",                true,   Boolean("\t") );
-new TestCase( SECTION,   "Boolean('0')",                  true,   Boolean("0") );
-new TestCase( SECTION,   "Boolean('string')",             true,   Boolean("string") );
+new TestCase( "Boolean(Infinity)",             true,   Boolean(Number.POSITIVE_INFINITY) );
+new TestCase( "Boolean(-Infinity)",            true,   Boolean(Number.NEGATIVE_INFINITY) );
+new TestCase( "Boolean(Math.PI)",              true,   Boolean(Math.PI) );
+new TestCase( "Boolean(1)",                    true,   Boolean(1) );
+new TestCase( "Boolean(-1)",                   true,   Boolean(-1) );
+new TestCase( "Boolean([tab])",                true,   Boolean("\t") );
+new TestCase( "Boolean('0')",                  true,   Boolean("0") );
+new TestCase( "Boolean('string')",             true,   Boolean("string") );
 
 // ToBoolean (object) should always return true.
-new TestCase( SECTION,   "Boolean(new String() )",        true,   Boolean(new String()) );
-new TestCase( SECTION,   "Boolean(new String('') )",      true,   Boolean(new String("")) );
+new TestCase( "Boolean(new String() )",        true,   Boolean(new String()) );
+new TestCase( "Boolean(new String('') )",      true,   Boolean(new String("")) );
 
-new TestCase( SECTION,   "Boolean(new Boolean(true))",    true,   Boolean(new Boolean(true)) );
-new TestCase( SECTION,   "Boolean(new Boolean(false))",   true,   Boolean(new Boolean(false)) );
-new TestCase( SECTION,   "Boolean(new Boolean() )",       true,   Boolean(new Boolean()) );
+new TestCase( "Boolean(new Boolean(true))",    true,   Boolean(new Boolean(true)) );
+new TestCase( "Boolean(new Boolean(false))",   true,   Boolean(new Boolean(false)) );
+new TestCase( "Boolean(new Boolean() )",       true,   Boolean(new Boolean()) );
 
-new TestCase( SECTION,   "Boolean(new Array())",          true,   Boolean(new Array()) );
+new TestCase( "Boolean(new Array())",          true,   Boolean(new Array()) );
 
-new TestCase( SECTION,   "Boolean(new Number())",         true,   Boolean(new Number()) );
-new TestCase( SECTION,   "Boolean(new Number(-0))",       true,   Boolean(new Number(-0)) );
-new TestCase( SECTION,   "Boolean(new Number(0))",        true,   Boolean(new Number(0)) );
-new TestCase( SECTION,   "Boolean(new Number(NaN))",      true,   Boolean(new Number(Number.NaN)) );
+new TestCase( "Boolean(new Number())",         true,   Boolean(new Number()) );
+new TestCase( "Boolean(new Number(-0))",       true,   Boolean(new Number(-0)) );
+new TestCase( "Boolean(new Number(0))",        true,   Boolean(new Number(0)) );
+new TestCase( "Boolean(new Number(NaN))",      true,   Boolean(new Number(Number.NaN)) );
 
-new TestCase( SECTION,   "Boolean(new Number(-1))",       true,   Boolean(new Number(-1)) );
-new TestCase( SECTION,   "Boolean(new Number(Infinity))", true,   Boolean(new Number(Number.POSITIVE_INFINITY)) );
-new TestCase( SECTION,   "Boolean(new Number(-Infinity))",true,   Boolean(new Number(Number.NEGATIVE_INFINITY)) );
+new TestCase( "Boolean(new Number(-1))",       true,   Boolean(new Number(-1)) );
+new TestCase( "Boolean(new Number(Infinity))", true,   Boolean(new Number(Number.POSITIVE_INFINITY)) );
+new TestCase( "Boolean(new Number(-Infinity))",true,   Boolean(new Number(Number.NEGATIVE_INFINITY)) );
 
-new TestCase( SECTION,    "Boolean(new Object())",       true,       Boolean(new Object()) );
-new TestCase( SECTION,    "Boolean(new Function())",     true,       Boolean(new Function()) );
-new TestCase( SECTION,    "Boolean(new Date())",         true,       Boolean(new Date()) );
-new TestCase( SECTION,    "Boolean(new Date(0))",         true,       Boolean(new Date(0)) );
-new TestCase( SECTION,    "Boolean(Math)",         true,       Boolean(Math) );
+new TestCase( "Boolean(new Object())",       true,       Boolean(new Object()) );
+new TestCase( "Boolean(new Function())",     true,       Boolean(new Function()) );
+new TestCase( "Boolean(new Date())",         true,       Boolean(new Date()) );
+new TestCase( "Boolean(new Date(0))",         true,       Boolean(new Date(0)) );
+new TestCase( "Boolean(Math)",         true,       Boolean(Math) );
 
 // bug 375793
-new TestCase( SECTION,
-              "NaN ? true : false",
+new TestCase( "NaN ? true : false",
               false,
               (NaN ? true : false) );
-new TestCase( SECTION,
-              "1000 % 0 ? true : false",
+new TestCase( "1000 % 0 ? true : false",
               false,
               (1000 % 0 ? true : false) );
-new TestCase( SECTION,
-              "(function(a,b){ return a % b ? true : false })(1000, 0)",
+new TestCase( "(function(a,b){ return a % b ? true : false })(1000, 0)",
               false,
               ((function(a,b){ return a % b ? true : false })(1000, 0)) );
 
-new TestCase( SECTION,
-              "(function(x) { return !(x) })(0/0)",
+new TestCase( "(function(x) { return !(x) })(0/0)",
               true,
               ((function(x) { return !(x) })(0/0)) );
-new TestCase( SECTION,
-              "!(0/0)",
+new TestCase( "!(0/0)",
               true,
               (!(0/0)) );
 test();

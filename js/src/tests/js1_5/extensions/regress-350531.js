@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -151,6 +150,4 @@ next_subset:
   }
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

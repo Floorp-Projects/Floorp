@@ -22,45 +22,44 @@
    Date:               12 november 1997
 */
 var SECTION = "11.9.2";
-var VERSION = "ECMA_1";
 var BUGNUMBER="77391";
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " The equals operator ( == )");
 
 // type x and type y are the same.  if type x is undefined or null, return true
 
-new TestCase( SECTION,    "void 0 == void 0",        false,   void 0 != void 0 );
-new TestCase( SECTION,    "null == null",           false,   null != null );
+new TestCase( "void 0 == void 0",        false,   void 0 != void 0 );
+new TestCase( "null == null",           false,   null != null );
 
 //  if x is NaN, return false. if y is NaN, return false.
 
-new TestCase( SECTION,    "NaN != NaN",             true,  Number.NaN != Number.NaN );
-new TestCase( SECTION,    "NaN != 0",               true,  Number.NaN != 0 );
-new TestCase( SECTION,    "0 != NaN",               true,  0 != Number.NaN );
-new TestCase( SECTION,    "NaN != Infinity",        true,  Number.NaN != Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "Infinity != NaN",        true,  Number.POSITIVE_INFINITY != Number.NaN );
+new TestCase( "NaN != NaN",             true,  Number.NaN != Number.NaN );
+new TestCase( "NaN != 0",               true,  Number.NaN != 0 );
+new TestCase( "0 != NaN",               true,  0 != Number.NaN );
+new TestCase( "NaN != Infinity",        true,  Number.NaN != Number.POSITIVE_INFINITY );
+new TestCase( "Infinity != NaN",        true,  Number.POSITIVE_INFINITY != Number.NaN );
 
 // if x is the same number value as y, return true.
 
-new TestCase( SECTION,    "Number.MAX_VALUE != Number.MAX_VALUE",   false,   Number.MAX_VALUE != Number.MAX_VALUE );
-new TestCase( SECTION,    "Number.MIN_VALUE != Number.MIN_VALUE",   false,   Number.MIN_VALUE != Number.MIN_VALUE );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY != Number.POSITIVE_INFINITY",   false,   Number.POSITIVE_INFINITY != Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY != Number.NEGATIVE_INFINITY",   false,   Number.NEGATIVE_INFINITY != Number.NEGATIVE_INFINITY );
+new TestCase( "Number.MAX_VALUE != Number.MAX_VALUE",   false,   Number.MAX_VALUE != Number.MAX_VALUE );
+new TestCase( "Number.MIN_VALUE != Number.MIN_VALUE",   false,   Number.MIN_VALUE != Number.MIN_VALUE );
+new TestCase( "Number.POSITIVE_INFINITY != Number.POSITIVE_INFINITY",   false,   Number.POSITIVE_INFINITY != Number.POSITIVE_INFINITY );
+new TestCase( "Number.NEGATIVE_INFINITY != Number.NEGATIVE_INFINITY",   false,   Number.NEGATIVE_INFINITY != Number.NEGATIVE_INFINITY );
 
 //  if xis 0 and y is -0, return true.   if x is -0 and y is 0, return true.
 
-new TestCase( SECTION,    "0 != 0",                 false,   0 != 0 );
-new TestCase( SECTION,    "0 != -0",                false,   0 != -0 );
-new TestCase( SECTION,    "-0 != 0",                false,   -0 != 0 );
-new TestCase( SECTION,    "-0 != -0",               false,   -0 != -0 );
+new TestCase( "0 != 0",                 false,   0 != 0 );
+new TestCase( "0 != -0",                false,   0 != -0 );
+new TestCase( "-0 != 0",                false,   -0 != 0 );
+new TestCase( "-0 != -0",               false,   -0 != -0 );
 
 // return false.
 
-new TestCase( SECTION,    "0.9 != 1",               true,  0.9 != 1 );
-new TestCase( SECTION,    "0.999999 != 1",          true,  0.999999 != 1 );
-new TestCase( SECTION,    "0.9999999999 != 1",      true,  0.9999999999 != 1 );
-new TestCase( SECTION,    "0.9999999999999 != 1",   true,  0.9999999999999 != 1 );
+new TestCase( "0.9 != 1",               true,  0.9 != 1 );
+new TestCase( "0.999999 != 1",          true,  0.999999 != 1 );
+new TestCase( "0.9999999999 != 1",      true,  0.9999999999 != 1 );
+new TestCase( "0.9999999999999 != 1",   true,  0.9999999999999 != 1 );
 
 // type x and type y are the same type, but not numbers.
 
@@ -68,54 +67,54 @@ new TestCase( SECTION,    "0.9999999999999 != 1",   true,  0.9999999999999 != 1 
 // x and y are strings.  return true if x and y are exactly the same sequence of characters.
 // otherwise, return false.
 
-new TestCase( SECTION,    "'hello' != 'hello'",         false,   "hello" != "hello" );
+new TestCase( "'hello' != 'hello'",         false,   "hello" != "hello" );
 
 // x and y are booleans.  return true if both are true or both are false.
 
-new TestCase( SECTION,    "true != true",               false,   true != true );
-new TestCase( SECTION,    "false != false",             false,   false != false );
-new TestCase( SECTION,    "true != false",              true,  true != false );
-new TestCase( SECTION,    "false != true",              true,  false != true );
+new TestCase( "true != true",               false,   true != true );
+new TestCase( "false != false",             false,   false != false );
+new TestCase( "true != false",              true,  true != false );
+new TestCase( "false != true",              true,  false != true );
 
 // return true if x and y refer to the same object.  otherwise return false.
 
-new TestCase( SECTION,    "new MyObject(true) != new MyObject(true)",   true,  new MyObject(true) != new MyObject(true) );
-new TestCase( SECTION,    "new Boolean(true) != new Boolean(true)",     true,  new Boolean(true) != new Boolean(true) );
-new TestCase( SECTION,    "new Boolean(false) != new Boolean(false)",   true,  new Boolean(false) != new Boolean(false) );
+new TestCase( "new MyObject(true) != new MyObject(true)",   true,  new MyObject(true) != new MyObject(true) );
+new TestCase( "new Boolean(true) != new Boolean(true)",     true,  new Boolean(true) != new Boolean(true) );
+new TestCase( "new Boolean(false) != new Boolean(false)",   true,  new Boolean(false) != new Boolean(false) );
 
 
-new TestCase( SECTION,    "x = new MyObject(true); y = x; z = x; z != y",   false,  eval("x = new MyObject(true); y = x; z = x; z != y") );
-new TestCase( SECTION,    "x = new MyObject(false); y = x; z = x; z != y",  false,  eval("x = new MyObject(false); y = x; z = x; z != y") );
-new TestCase( SECTION,    "x = new Boolean(true); y = x; z = x; z != y",   false,  eval("x = new Boolean(true); y = x; z = x; z != y") );
-new TestCase( SECTION,    "x = new Boolean(false); y = x; z = x; z != y",   false,  eval("x = new Boolean(false); y = x; z = x; z != y") );
+new TestCase( "x = new MyObject(true); y = x; z = x; z != y",   false,  eval("x = new MyObject(true); y = x; z = x; z != y") );
+new TestCase( "x = new MyObject(false); y = x; z = x; z != y",  false,  eval("x = new MyObject(false); y = x; z = x; z != y") );
+new TestCase( "x = new Boolean(true); y = x; z = x; z != y",   false,  eval("x = new Boolean(true); y = x; z = x; z != y") );
+new TestCase( "x = new Boolean(false); y = x; z = x; z != y",   false,  eval("x = new Boolean(false); y = x; z = x; z != y") );
 
-new TestCase( SECTION,    "new Boolean(true) != new Boolean(true)",     true,  new Boolean(true) != new Boolean(true) );
-new TestCase( SECTION,    "new Boolean(false) != new Boolean(false)",   true,  new Boolean(false) != new Boolean(false) );
+new TestCase( "new Boolean(true) != new Boolean(true)",     true,  new Boolean(true) != new Boolean(true) );
+new TestCase( "new Boolean(false) != new Boolean(false)",   true,  new Boolean(false) != new Boolean(false) );
 
 // if x is null and y is undefined, return true.  if x is undefined and y is null return true.
 
-new TestCase( SECTION,    "null != void 0",             false,   null != void 0 );
-new TestCase( SECTION,    "void 0 != null",             false,   void 0 != null );
+new TestCase( "null != void 0",             false,   null != void 0 );
+new TestCase( "void 0 != null",             false,   void 0 != null );
 
 // if type(x) is Number and type(y) is string, return the result of the comparison x != ToNumber(y).
 
-new TestCase( SECTION,    "1 != '1'",                   false,   1 != '1' );
-new TestCase( SECTION,    "255 != '0xff'",               false,  255 != '0xff' );
-new TestCase( SECTION,    "0 != '\r'",                  false,   0 != "\r" );
-new TestCase( SECTION,    "1e19 != '1e19'",             false,   1e19 != "1e19" );
+new TestCase( "1 != '1'",                   false,   1 != '1' );
+new TestCase( "255 != '0xff'",               false,  255 != '0xff' );
+new TestCase( "0 != '\r'",                  false,   0 != "\r" );
+new TestCase( "1e19 != '1e19'",             false,   1e19 != "1e19" );
 
 
-new TestCase( SECTION,    "new Boolean(true) != true",  false,   true != new Boolean(true) );
-new TestCase( SECTION,    "new MyObject(true) != true", false,   true != new MyObject(true) );
+new TestCase( "new Boolean(true) != true",  false,   true != new Boolean(true) );
+new TestCase( "new MyObject(true) != true", false,   true != new MyObject(true) );
 
-new TestCase( SECTION,    "new Boolean(false) != false",    false,   new Boolean(false) != false );
-new TestCase( SECTION,    "new MyObject(false) != false",   false,   new MyObject(false) != false );
+new TestCase( "new Boolean(false) != false",    false,   new Boolean(false) != false );
+new TestCase( "new MyObject(false) != false",   false,   new MyObject(false) != false );
 
-new TestCase( SECTION,    "true != new Boolean(true)",      false,   true != new Boolean(true) );
-new TestCase( SECTION,    "true != new MyObject(true)",     false,   true != new MyObject(true) );
+new TestCase( "true != new Boolean(true)",      false,   true != new Boolean(true) );
+new TestCase( "true != new MyObject(true)",     false,   true != new MyObject(true) );
 
-new TestCase( SECTION,    "false != new Boolean(false)",    false,   false != new Boolean(false) );
-new TestCase( SECTION,    "false != new MyObject(false)",   false,   false != new MyObject(false) );
+new TestCase( "false != new Boolean(false)",    false,   false != new Boolean(false) );
+new TestCase( "false != new MyObject(false)",   false,   false != new MyObject(false) );
 
 test();
 

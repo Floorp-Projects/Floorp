@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -30,6 +29,4 @@ function test()
     actual = ex + '';
   }
   reportCompare(expect, actual, summary + '(new RegExp("[\xDF-\xC7]]", "i")).exec("")');
-
-  exitFunc ('test');
 }

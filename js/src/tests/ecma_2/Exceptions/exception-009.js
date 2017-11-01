@@ -17,11 +17,10 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-009";
-var VERSION = "JS1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: SyntaxError";
 var BUGNUMBER= "312964";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 try {
@@ -32,7 +31,6 @@ try {
   result = "failed: threw " + e;
 } finally {
   new TestCase(
-    SECTION,
     "nested try",
     expect,
     result );

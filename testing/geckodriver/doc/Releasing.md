@@ -122,8 +122,6 @@ of [testing/geckodriver] to the latter branch:
 	% git rm -rf .
 	% git clean -fxd
 	% cp -r $SRC/gecko/testing/geckodriver/* .
-	% git add .
-	% git commit -am "import of vX.Y.Z"
 
 [README]: ../README.md
 [testing/geckodriver]: ../
@@ -145,16 +143,25 @@ published earlier, or the latest version available if no changes have
 been made to it since the last geckodriver release.
 
 
+Commit local changes
+--------------------
+
+Now commit all the changes you have made locally to the _release_ branch:
+
+	% git add .
+	% git commit -am "import of vX.Y.Z"
+
+As indicated above, the changes you make to this branch will not
+be upstreamed back into mozilla-central.  It is merely used as a
+staging ground for pushing builds to Travis.
+
+
 Tag the release
 ---------------
 
-Run the following command:
+Run the following command to tag the release:
 
-	% git tag -a 'vX.Y.Z'
-
-Write the following in the annotation:
-
-	Tagging release vX.Y.Z
+	% git tag 'vX.Y.Z'
 
 
 Make the release

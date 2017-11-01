@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -37,6 +36,4 @@ function test()
   expect = 'function';
   actual = typeof g([1, 2]);
   reportCompare(expect, actual, "type for destructuring parameter case");
-
-  exitFunc ('test');
 }

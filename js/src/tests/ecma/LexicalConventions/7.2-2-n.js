@@ -25,16 +25,13 @@
    Date:               11 september 1997
 */
 var SECTION = "7.2-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Line Terminators";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "\r\r\r\nb";
-EXPECTED = "error"
 
-  new TestCase( SECTION,   DESCRIPTION,     "error",     eval("\r\r\r\nb"));
+  new TestCase( DESCRIPTION,     "error",     eval("\r\r\r\nb"));
 
 test();
 

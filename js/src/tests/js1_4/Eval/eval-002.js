@@ -34,11 +34,10 @@
  *
  */
 var SECTION = "eval-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Calling eval indirectly should NOT fail in version 140";
 var BUGNUMBER="38512";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MY_EVAL = eval;
@@ -55,7 +54,6 @@ function EvalTest()
   MY_EVAL( "RESULT = EXPECT" );
 
   new TestCase(
-    SECTION,
     "Call eval indirectly",
     EXPECT,
     RESULT );

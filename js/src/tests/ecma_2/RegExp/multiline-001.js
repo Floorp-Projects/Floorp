@@ -13,11 +13,10 @@
  */
 
 var SECTION = "RegExp/multiline-001";
-var VERSION = "ECMA_2";
 var TITLE   = "RegExp: multiline flag";
 var BUGNUMBER="343901";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 var woodpeckers = "ivory-billed\ndowny\nhairy\nacorn\nyellow-bellied sapsucker\n" +
   "northern flicker\npileated\n";

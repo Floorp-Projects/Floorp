@@ -30,8 +30,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.7.1";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The left shift operator ( << )");
 
@@ -39,7 +37,7 @@ for ( power = 0; power < 33; power++ ) {
   shiftexp = Math.pow( 2, power );
 
   for ( addexp = 0; addexp < 33; addexp++ ) {
-    new TestCase( SECTION,
+    new TestCase(
 		  shiftexp + " << " + addexp,
 		  LeftShift( shiftexp, addexp ),
 		  shiftexp << addexp );

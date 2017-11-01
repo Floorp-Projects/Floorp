@@ -17,10 +17,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-009";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement: try in a while block";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var EXCEPTION_STRING = "Exception thrown: ";
@@ -57,7 +55,6 @@ function TryInWhile( object ) {
   }
 
   new TestCase(
-    SECTION,
     "( "+ object  +".thrower() )",
     (object.result
      ? EXCEPTION_STRING + object.value :

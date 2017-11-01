@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   (new Function("({}), arguments;"))();
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

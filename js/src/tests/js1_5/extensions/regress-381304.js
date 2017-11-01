@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -65,5 +64,4 @@ function test()
   expect = '({set in(value) {this.for = value;}, get inn() {return this.for;}})';
   actual = obj.toSource();
   compareSource(expect, actual, summary + ': 5');
-  exitFunc ('test');
 }

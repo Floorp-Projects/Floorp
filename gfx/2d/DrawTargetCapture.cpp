@@ -7,6 +7,7 @@
 #include "DrawTargetCapture.h"
 #include "DrawCommand.h"
 #include "gfxPlatform.h"
+#include "SourceSurfaceCapture.h"
 
 namespace mozilla {
 namespace gfx {
@@ -14,20 +15,19 @@ namespace gfx {
 
 DrawTargetCaptureImpl::~DrawTargetCaptureImpl()
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-
-  uint8_t* current = start;
-
-  while (current < start + mDrawCommandStorage.size()) {
-    reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t))->~DrawingCommand();
-    current += *(uint32_t*)current;
+  if (mSnapshot && !mSnapshot->hasOneRef()) {
+    mSnapshot->DrawTargetWillDestroy();
+    mSnapshot = nullptr;
   }
 }
 
 DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
                                              const IntSize& aSize,
                                              SurfaceFormat aFormat)
-  : mSize(aSize)
+  : mSize(aSize),
+    mSnapshot(nullptr),
+    mStride(0),
+    mSurfaceAllocationSize(0)
 {
   RefPtr<DrawTarget> screenRefDT =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
@@ -36,10 +36,16 @@ DrawTargetCaptureImpl::DrawTargetCaptureImpl(BackendType aBackend,
   if (aBackend == screenRefDT->GetBackendType()) {
     mRefDT = screenRefDT;
   } else {
-    // If you got here, we have to create a new ref DT to create
-    // backend specific assets like paths / gradients. Try to
-    // create the same backend type as the screen ref dt.
-    gfxWarning() << "Creating a RefDT in DrawTargetCapture.";
+    // This situation can happen if a blur operation decides to
+    // use an unaccelerated path even if the system backend is
+    // Direct2D.
+    //
+    // We don't really want to encounter the reverse scenario:
+    // we shouldn't pick an accelerated backend if the system
+    // backend is skia.
+    if (aBackend == BackendType::DIRECT2D1_1) {
+      gfxWarning() << "Creating a RefDT in DrawTargetCapture.";
+    }
 
     // Create a 1x1 size ref dt to create assets
     // If we have to snapshot, we'll just create the real DT
@@ -62,19 +68,40 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
   return true;
 }
 
+void
+DrawTargetCaptureImpl::InitForData(int32_t aStride, size_t aSurfaceAllocationSize)
+{
+  mStride = aStride;
+  mSurfaceAllocationSize = aSurfaceAllocationSize;
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetCaptureImpl::Snapshot()
 {
-  RefPtr<DrawTarget> dt = mRefDT->CreateSimilarDrawTarget(mSize, mFormat);
+  if (!mSnapshot) {
+    mSnapshot = new SourceSurfaceCapture(this);
+  }
 
-  ReplayToDrawTarget(dt, Matrix());
+  RefPtr<SourceSurface> surface = mSnapshot;
+  return surface.forget();
+}
 
-  return dt->Snapshot();
+already_AddRefed<SourceSurface>
+DrawTargetCaptureImpl::OptimizeSourceSurface(SourceSurface *aSurface) const
+{
+  // If the surface is a recording, make sure it gets resolved on the paint thread.
+  if (aSurface->GetType() == SurfaceType::CAPTURE) {
+    RefPtr<SourceSurface> surface = aSurface;
+    return surface.forget();
+  }
+  return mRefDT->OptimizeSourceSurface(aSurface);
 }
 
 void
 DrawTargetCaptureImpl::DetachAllSnapshots()
-{}
+{
+  MarkChanged();
+}
 
 #define AppendCommand(arg) new (AppendToCommandList<arg>()) arg
 
@@ -98,6 +125,18 @@ DrawTargetCaptureImpl::DrawSurface(SourceSurface *aSurface,
 {
   aSurface->GuaranteePersistance();
   AppendCommand(DrawSurfaceCommand)(aSurface, aDest, aSource, aSurfOptions, aOptions);
+}
+
+void
+DrawTargetCaptureImpl::DrawSurfaceWithShadow(SourceSurface *aSurface,
+                                             const Point &aDest,
+                                             const Color &aColor,
+                                             const Point &aOffset,
+                                             Float aSigma,
+                                             CompositionOp aOperator)
+{
+  aSurface->GuaranteePersistance();
+  AppendCommand(DrawSurfaceWithShadowCommand)(aSurface, aDest, aColor, aOffset, aSigma, aOperator);
 }
 
 void
@@ -271,15 +310,20 @@ DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 }
 
 void
+DrawTargetCaptureImpl::Blur(const AlphaBoxBlur& aBlur)
+{
+  // gfxAlphaBoxBlur should not use this if it takes the accelerated path.
+  MOZ_ASSERT(GetBackendType() == BackendType::SKIA);
+
+  AppendCommand(BlurCommand)(aBlur);
+}
+
+void
 DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform)
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-
-  uint8_t* current = start;
-
-  while (current < start + mDrawCommandStorage.size()) {
-    reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t))->ExecuteOnDT(aDT, &aTransform);
-    current += *(uint32_t*)current;
+  for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
+    DrawingCommand* cmd = iter.Get();
+    cmd->ExecuteOnDT(aDT, &aTransform);
   }
 }
 
@@ -288,14 +332,10 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
                                                  Color& aColor,
                                                  std::vector<Glyph>& aGlyphs)
 {
-  uint8_t* start = &mDrawCommandStorage.front();
-  uint8_t* current = start;
   bool result = false;
 
-  while (current < start + mDrawCommandStorage.size()) {
-    DrawingCommand* command =
-      reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t));
-    current += *(uint32_t*)current;
+  for (CaptureCommandList::iterator iter(mCommands); !iter.Done(); iter.Next()) {
+    DrawingCommand* command = iter.Get();
 
     if (command->GetType() != CommandType::FILLGLYPHS &&
         command->GetType() != CommandType::SETTRANSFORM) {
@@ -341,6 +381,35 @@ DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont
     result = true;
   }
   return result;
+}
+
+void
+DrawTargetCaptureImpl::MarkChanged()
+{
+  if (!mSnapshot) {
+    return;
+  }
+
+  if (mSnapshot->hasOneRef()) {
+    mSnapshot = nullptr;
+    return;
+  }
+
+  mSnapshot->DrawTargetWillChange();
+  mSnapshot = nullptr;
+}
+
+already_AddRefed<DrawTarget>
+DrawTargetCaptureImpl::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  return MakeAndAddRef<DrawTargetCaptureImpl>(GetBackendType(), aSize, aFormat);
+}
+
+RefPtr<DrawTarget>
+DrawTargetCaptureImpl::CreateSimilarRasterTarget(const IntSize& aSize, SurfaceFormat aFormat) const
+{
+  MOZ_ASSERT(!mRefDT->IsCaptureDT());
+  return mRefDT->CreateSimilarDrawTarget(aSize, aFormat);
 }
 
 } // namespace gfx

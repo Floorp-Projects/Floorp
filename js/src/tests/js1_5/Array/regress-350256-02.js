@@ -21,8 +21,6 @@ if (this.getMaxArgs)
 
 function test(length)
 {
-  enterFunc ('test');
-
   var a = new Array();
   a[length - 2] = 'length-2';
   a[length - 1] = 'length-1';
@@ -42,6 +40,4 @@ function test(length)
   actual = f.apply(null, a);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -26,6 +25,4 @@ function test()
     dict = {p: 1, q: 1, p:1};
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

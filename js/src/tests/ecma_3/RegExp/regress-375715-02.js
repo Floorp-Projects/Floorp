@@ -16,12 +16,9 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   /[\s-:]/;
   reportCompare(expect, actual, summary + '/[\s-:]/');
-
-  exitFunc ('test');
 }

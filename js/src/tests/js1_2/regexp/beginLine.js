@@ -13,8 +13,6 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
-startTest();
 var TITLE = 'RegExp: ^';
 
 writeHeaderToLog('Executing script: beginLine.js');
@@ -22,23 +20,23 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 
 // 'abcde'.match(new RegExp('^ab'))
-new TestCase ( SECTION, "'abcde'.match(new RegExp('^ab'))",
+new TestCase ( "'abcde'.match(new RegExp('^ab'))",
 	       String(["ab"]), String('abcde'.match(new RegExp('^ab'))));
 
 // 'ab\ncde'.match(new RegExp('^..^e'))
-new TestCase ( SECTION, "'ab\ncde'.match(new RegExp('^..^e'))",
+new TestCase ( "'ab\ncde'.match(new RegExp('^..^e'))",
 	       null, 'ab\ncde'.match(new RegExp('^..^e')));
 
 // 'yyyyy'.match(new RegExp('^xxx'))
-new TestCase ( SECTION, "'yyyyy'.match(new RegExp('^xxx'))",
+new TestCase ( "'yyyyy'.match(new RegExp('^xxx'))",
 	       null, 'yyyyy'.match(new RegExp('^xxx')));
 
 // '^^^x'.match(new RegExp('^\\^+'))
-new TestCase ( SECTION, "'^^^x'.match(new RegExp('^\\^+'))",
+new TestCase ( "'^^^x'.match(new RegExp('^\\^+'))",
 	       String(['^^^']), String('^^^x'.match(new RegExp('^\\^+'))));
 
 // '^^^x'.match(/^\^+/)
-new TestCase ( SECTION, "'^^^x'.match(/^\\^+/)",
+new TestCase ( "'^^^x'.match(/^\\^+/)",
 	       String(['^^^']), String('^^^x'.match(/^\^+/)));
 
 test();

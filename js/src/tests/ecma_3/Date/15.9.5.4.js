@@ -22,7 +22,6 @@
 */
 //-----------------------------------------------------------------------------
 var SECTION = "15.9.5.4";
-var VERSION = "ECMA_3"; 
 var TITLE   = "Date.prototype.toTimeString()";
   
 var status = '';
@@ -36,7 +35,6 @@ var hopeThisIsTimeString = '';
 var cnEmptyString = '';
 var cnERR ='OOPS! FATAL ERROR: no regexp match in extractTimeString()';
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // first, a couple of generic tests -
@@ -89,7 +87,6 @@ test();
 function addTestCase()
 {
   new TestCase(
-    SECTION,
     status,
     expect,
     actual);

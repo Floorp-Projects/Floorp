@@ -12,11 +12,10 @@
  */
 
 var SECTION = "regress";       // provide a document reference (ie, ECMA section)
-var VERSION = "JS1_4"; // Version of JavaScript or ECMA
 var TITLE   = "Regression test for bugzilla #7224";       // Provide ECMA section title or a description
 var BUGNUMBER = "http://bugzilla.mozilla.org/show_bug.cgi?id=7224";     // Provide URL to bugsplat or bugzilla report
 
-startTest();               // leave this alone
+printBugNumber(BUGNUMBER);
 
 /*
  * Calls to AddTestCase here. AddTestCase is a function that is defined

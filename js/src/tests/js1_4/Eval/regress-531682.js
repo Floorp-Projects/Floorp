@@ -22,7 +22,6 @@ function scope1() {
 }
 
 function test() {
-    enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus (summary);
 
@@ -30,5 +29,4 @@ function test() {
     actual = eval('x', scope1());
     expect = 0;
     reportCompare(expect, actual, summary);
-    exitFunc ('test');
 }

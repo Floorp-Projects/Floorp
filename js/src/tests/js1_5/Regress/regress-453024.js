@@ -1,3 +1,4 @@
+// |reftest| skip-if(xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,18 +10,11 @@ var summary = 'Do not assert: vp + 2 + argc <= (jsval *) cx->stackPool.current->
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-if (typeof window == 'undefined')
-{
-  reportCompare(true, true, summary + ': test requires browser.');
-}
-else
-{
-  gDelayTestDriverEnd = true;
-  var j = 0;
+gDelayTestDriverEnd = true;
+var j = 0;
 
-  function test()
-  {
-    enterFunc ('test');
+function test()
+{
     printBugNumber(BUGNUMBER);
     printStatus (summary);
  
@@ -36,10 +30,6 @@ else
     reportCompare(expect, actual, summary);
 
     jsTestDriverEnd();
-
-    exitFunc ('test');
-  }
-
-  window.addEventListener('load', test, false);
-
 }
+
+window.addEventListener('load', test, false);

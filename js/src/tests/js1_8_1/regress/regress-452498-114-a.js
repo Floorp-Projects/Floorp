@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -38,6 +37,4 @@ function test()
 // Assertion failure: cg->stackDepth >= 0, at ../jsemit.cpp:185
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

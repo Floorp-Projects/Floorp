@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -35,6 +34,4 @@ function test()
 // expected new behavior // With patch:    "SyntaxError: redeclaration of formal parameter e:"
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

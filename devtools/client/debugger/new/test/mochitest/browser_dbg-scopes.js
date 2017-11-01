@@ -16,6 +16,7 @@ add_task(async function() {
 
   invokeInTab("firstCall");
   await waitForPaused(dbg);
+  await waitForLoadedSource(dbg, "switching-02");
 
   is(getLabel(dbg, 1), "secondCall");
   is(getLabel(dbg, 2), "<this>");

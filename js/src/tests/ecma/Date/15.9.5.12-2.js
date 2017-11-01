@@ -20,8 +20,6 @@
 */
 
 var SECTION = "15.9.5.12";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Date.prototype.getDay()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -36,8 +34,7 @@ function addTestCase( t ) {
 
   for (var d = start; d < stop; d += msPerDay)
   {
-    new TestCase( SECTION,
-                  "(new Date("+d+")).getDay()",
+    new TestCase( "(new Date("+d+")).getDay()",
                   WeekDay((LocalTime(d))),
                   (new Date(d)).getDay() );
   }

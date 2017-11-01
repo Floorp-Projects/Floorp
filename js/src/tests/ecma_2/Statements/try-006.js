@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-006";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /**
@@ -80,7 +78,6 @@ function TryWith( object ) {
   }
 
   new TestCase(
-    SECTION,
     "TryWith( " + object.value +" )",
     (object.exception ? EXCEPTION_STRING +": " + object.valueOf() : object.valueOf()),
     result );

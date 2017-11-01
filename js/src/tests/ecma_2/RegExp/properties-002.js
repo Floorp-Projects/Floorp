@@ -14,11 +14,10 @@
  */
 //-----------------------------------------------------------------------------
 var SECTION = "RegExp/properties-002.js";
-var VERSION = "ECMA_2";
 var TITLE   = "Properties of RegExp Instances";
 var BUGNUMBER ="124339";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 re_1 = /\cA?/g;
 re_1.lastIndex = Math.pow(2,31);

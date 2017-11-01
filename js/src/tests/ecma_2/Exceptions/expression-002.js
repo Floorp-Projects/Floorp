@@ -16,11 +16,9 @@
    Date:               09 september 1998
 */
 var SECTION = "expressions-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 
-startTest();
 
 // go through all Native Function objects, methods, and properties and get their typeof.
 
@@ -44,7 +42,6 @@ try {
 
 
 new TestCase(
-  SECTION,
   "Get the value of an object whose value is undefined "+
   "(threw " + exception +")",
   expect,

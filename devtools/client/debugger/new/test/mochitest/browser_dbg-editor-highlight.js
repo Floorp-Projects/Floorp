@@ -10,17 +10,24 @@ add_task(async function() {
   const { selectors: { getSource }, getState } = dbg;
   const sourceUrl = EXAMPLE_URL + "long.js";
 
+  async function waitForLoaded(dbg, srcUrl) {
+    return waitForState(
+      dbg,
+      state => findSource(dbg, srcUrl).loadedState == "loaded"
+    );
+  }
+
   // The source itself doesn't even exist yet, and using
   // `selectSourceURL` will set a pending request to load this source
   // and highlight a specific line.
-  dbg.actions.selectSourceURL(sourceUrl, { line: 66 });
+  dbg.actions.selectSourceURL(sourceUrl, { location: { line: 66 } });
 
   // Wait for the source text to load and make sure we're in the right
   // place.
-  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForLoaded(dbg, sourceUrl);
 
   // TODO: revisit highlighting lines when the debugger opens
-  //assertHighlightLocation(dbg, "long.js", 66);
+  // assertHighlightLocation(dbg, "long.js", 66);
 
   // Jump to line 16 and make sure the editor scrolled.
   await selectSource(dbg, "long.js", 16);
@@ -45,7 +52,7 @@ add_task(async function() {
   // fully loaded, and check the highlighted line.
   const simple1 = findSource(dbg, "simple1.js");
   ok(getSource(getState(), simple1.id).get("loadedState"));
-  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForLoaded(dbg, "simple1.js");
   ok(getSource(getState(), simple1.id).get("text"));
   assertHighlightLocation(dbg, "simple1.js", 6);
 });

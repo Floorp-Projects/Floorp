@@ -1022,10 +1022,10 @@ AddLengthProperty(JSContext* cx, HandleArrayObject obj)
     RootedId lengthId(cx, NameToId(cx->names().length));
     MOZ_ASSERT(!obj->lookup(cx, lengthId));
 
-    return NativeObject::addProperty(cx, obj, lengthId, array_length_getter, array_length_setter,
-                                     SHAPE_INVALID_SLOT,
-                                     JSPROP_PERMANENT | JSPROP_SHADOWABLE,
-                                     0, /* allowDictionary = */ false);
+    return NativeObject::addAccessorProperty(cx, obj, lengthId,
+                                             array_length_getter, array_length_setter,
+                                             JSPROP_PERMANENT | JSPROP_SHADOWABLE,
+                                             0, /* allowDictionary = */ false);
 }
 
 static bool

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -25,6 +24,4 @@ function test()
   for (let j=0;j<5;++j) { jj=j; print(actual += '' + (jj--) + ',') }
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
