@@ -22,9 +22,6 @@ with Files("test/browser/*SitePermissions*"):
 with Files("test/browser/browser_UnsubmittedCrashHandler.js"):
     BUG_COMPONENT = ("Toolkit", "Crash Reporting")
 
-with Files("test/browser/browser_bug1319078.js"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
 with Files("test/browser/browser_taskbar_preview.js"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
 
@@ -119,7 +116,10 @@ with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+    'test/browser/formValidation/browser.ini',
+]
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
