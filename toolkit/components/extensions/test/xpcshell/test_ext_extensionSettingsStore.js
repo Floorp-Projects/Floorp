@@ -114,6 +114,11 @@ add_task(async function test_settings_store() {
       "getLevelOfControl returns correct levelOfControl with only one item in the list.");
     ok(ExtensionSettingsStore.hasSetting(extensions[extensionIndex].id, TEST_TYPE, key),
        "hasSetting returns the correct value when an extension has a setting set.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with only one item in the list.");
   }
 
   // Add a setting for the oldest extension.
@@ -136,6 +141,11 @@ add_task(async function test_settings_store() {
       levelOfControl,
       "controlled_by_other_extensions",
       "getLevelOfControl returns correct levelOfControl when another extension is in control.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with more than one item in the list.");
   }
 
   // Reload the settings store to emulate a browser restart.
@@ -159,13 +169,18 @@ add_task(async function test_settings_store() {
     item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key);
     deepEqual(
       item,
-      ITEMS[key][2],
+      itemToAdd,
       "getSetting returns correct item with more than one item in the list.");
     levelOfControl = await ExtensionSettingsStore.getLevelOfControl(extensions[extensionIndex].id, TEST_TYPE, key);
     equal(
       levelOfControl,
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl when this extension is in control.");
+    item = await ExtensionSettingsStore.getSetting(TEST_TYPE, key, extensions[extensionIndex].id);
+    deepEqual(
+      item,
+      itemToAdd,
+      "getSetting with id returns correct item with more than one item in the list.");
   }
 
   for (let extension of extensions) {
