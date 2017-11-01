@@ -62,9 +62,6 @@ PrepareForDebugGC(JSRuntime* rt);
 /* Functions for managing cross compartment gray pointers. */
 
 extern void
-DelayCrossCompartmentGrayMarking(JSObject* src);
-
-extern void
 NotifyGCNukeWrapper(JSObject* o);
 
 extern unsigned
@@ -189,13 +186,6 @@ NewMemoryStatisticsObject(JSContext* cx);
 
 const char*
 StateName(State state);
-
-inline bool
-IsOOMReason(JS::gcreason::Reason reason)
-{
-    return reason == JS::gcreason::LAST_DITCH ||
-           reason == JS::gcreason::MEM_PRESSURE;
-}
 
 } /* namespace gc */
 
