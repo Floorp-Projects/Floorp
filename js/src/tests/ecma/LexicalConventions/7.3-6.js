@@ -15,17 +15,16 @@
 
 */
 var SECTION = "7.3-6";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Comments";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
-var testcase = new TestCase( SECTION,
-			     "comment with multiple asterisks",
-			     "pass",
-			     "fail");
 
+var actual = "fail";
 /*
-***/testcase.actual="pass";
+***/actual="pass";
+
+new TestCase( "comment with multiple asterisks",
+			     "pass",
+			     actual);
 
 test();

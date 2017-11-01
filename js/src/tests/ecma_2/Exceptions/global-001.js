@@ -18,10 +18,8 @@
    Date:               12 november 1997
 */
 var SECTION = "global-001";
-var VERSION = "ECMA_1";
 var TITLE   = "The Global Object";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -36,7 +34,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "result = new this()" +
   " (threw " + exception +")",
   expect,

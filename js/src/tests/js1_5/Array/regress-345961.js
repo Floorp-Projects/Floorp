@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -31,6 +30,4 @@ function test()
   array.shift(1);
   actual = array.hasOwnProperty(1);
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

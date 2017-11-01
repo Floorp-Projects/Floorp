@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -24,6 +23,4 @@ function test()
   var x = (gen ==gen);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

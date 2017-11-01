@@ -34,11 +34,10 @@
  *
  */
 var SECTION = "eval-003.js";
-var VERSION = "JS1_4";
 var TITLE   = "Calling eval indirectly should NOT fail in version 140";
 var BUGNUMBER="38512";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var MY_EVAL = eval;
@@ -58,7 +57,6 @@ function EvalTest()
     EXPECT = 1;  //The base e to the power (-1 + 1),  i.e. the power 0,  equals 1 ....
 
     new TestCase(
-      SECTION,
       "Call eval indirectly",
       EXPECT,
       RESULT );

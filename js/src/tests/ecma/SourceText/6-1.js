@@ -46,49 +46,51 @@
 */
 
 var SECTION = "6-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Source Text";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var testcase = new TestCase( SECTION,
-			     "// the following character should not be interpreted as a line terminator in a comment: \u000A",
-			     'PASSED',
-			     "PASSED" );
+var actual;
 
-// \u000A testcase.actual = "FAILED!";
+actual = "PASSED";
+// \u000A actual = "FAILED!";
 
-testcase =
-  new TestCase( SECTION,
-		"// the following character should not be interpreted as a line terminator in a comment: \\n 'FAILED'",
-		'PASSED',
-		'PASSED' );
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \u000A",
+	      'PASSED',
+	      actual );
 
-// the following character should noy be interpreted as a line terminator: \\n testcase.actual = "FAILED"
 
-testcase =
-  new TestCase( SECTION,
-		"// the following character should not be interpreted as a line terminator in a comment: \\u000A 'FAILED'",
-		'PASSED',
-		'PASSED' );
+actual = 'PASSED';
+// the following character should noy be interpreted as a line terminator: \\n actual = "FAILED"
 
-// the following character should not be interpreted as a line terminator:   \u000A testcase.actual = "FAILED"
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \\n 'FAILED'",
+	      'PASSED',
+	      actual );
 
-testcase =
-  new TestCase( SECTION,
-		"// the following character should not be interpreted as a line terminator in a comment: \n 'PASSED'",
-		'PASSED',
-		'PASSED' );
-// the following character should not be interpreted as a line terminator: \n testcase.actual = 'FAILED'
 
-testcase =
-  new TestCase(   SECTION,
-		  "// the following character should not be interpreted as a line terminator in a comment: u000D",
-		  'PASSED',
-		  'PASSED' );
+actual = 'PASSED';
+// the following character should not be interpreted as a line terminator:   \u000A actual = "FAILED"
 
-// the following character should not be interpreted as a line terminator:   \u000D testcase.actual = "FAILED"
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \\u000A 'FAILED'",
+	      'PASSED',
+	      actual );
+
+
+actual = 'PASSED';
+// the following character should not be interpreted as a line terminator: \n actual = 'FAILED'
+
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: \n 'PASSED'",
+	      'PASSED',
+	      actual );
+
+
+actual = 'PASSED';
+// the following character should not be interpreted as a line terminator:   \u000D actual = "FAILED"
+
+new TestCase( "// the following character should not be interpreted as a line terminator in a comment: u000D",
+	      'PASSED',
+	      actual );
+
 
 test();
 

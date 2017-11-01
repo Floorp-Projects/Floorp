@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   (function() { x = 0; function x() { return 4; }; var x; const y = 1; })();
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

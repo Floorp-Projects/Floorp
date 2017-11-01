@@ -1,10 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell) -- needs drainJobQueue
 
-if (!this.Promise) {
-    this.reportCompare && reportCompare(true,true);
-    quit(0);
-}
-
 // Resolve Promise with itself by directly calling the "Promise Resolve Function".
 let resolve;
 let promise = new Promise(function(x) { resolve = x; });

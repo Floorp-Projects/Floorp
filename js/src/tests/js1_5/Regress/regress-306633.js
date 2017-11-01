@@ -12,15 +12,6 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (!options().match(/strict/))
-{
-  options('strict');
-}
-if (!options().match(/werror/))
-{
-  options('werror');
-}
-
 expect = 'SyntaxError';
 
 try

@@ -11,11 +11,10 @@
  */
 
 var SECTION = "11.4.7";
-var VERSION = "ECMA";
 var TITLE   = "Unary - Operator";
 var BUGNUMBER = "432881";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 test_negation(0, -0.0);
 test_negation(-0.0, 0);

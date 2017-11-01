@@ -15,17 +15,16 @@
 
 */
 var SECTION = "7.3-4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Comments";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var testcase = new TestCase( SECTION,
-			     "multiline comment ",
-			     "pass",
-			     "pass");
+var actual = "pass";
 
-/*testcase.actual = "fail";*/
+/*actual = "fail";*/
+
+new TestCase( "multiline comment ",
+			     "pass",
+			     actual);
 
 test();

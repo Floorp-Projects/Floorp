@@ -4,11 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER     = "(none)";
 var summary = "calling it.close multiple times is harmless";
 var actual, expect;
 
-printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

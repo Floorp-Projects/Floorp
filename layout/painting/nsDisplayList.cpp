@@ -1148,9 +1148,7 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
   dirty.IntersectRect(dirty, overflowRect);
 
   if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) &&
-      dirty.IsEmpty() &&
-      (!aFrame->ForceDescendIntoIfVisible() ||
-       visible.IsEmpty())) {
+      visible.IsEmpty()) {
     return;
   }
 

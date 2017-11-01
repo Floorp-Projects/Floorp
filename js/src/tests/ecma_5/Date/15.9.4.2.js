@@ -45,7 +45,6 @@ function TZInMonth(month){
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
  
   JanTZ = TZInMonth(1);
@@ -131,6 +130,4 @@ function test()
 
   // Bug 730838 - non-zero fraction part for midnight should produce NaN
   checkInvalid("1970-01-01T24:00:00.500Z");
-
-  exitFunc ('test');
 }

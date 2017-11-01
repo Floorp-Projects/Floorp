@@ -30,48 +30,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
+                                  "resource://testing-common/FileTestUtils.jsm");
 
 const TEST_TARGET_FILE_NAME_PDF = "test-download.pdf";
 
 // Support functions
 
-// While the previous test file should have deleted all the temporary files it
-// used, on Windows these might still be pending deletion on the physical file
-// system.  Thus, start from a new base number every time, to make a collision
-// with a file that is still pending deletion highly unlikely.
-var gFileCounter = Math.floor(Math.random() * 1000000);
-
 /**
- * Returns a reference to a temporary file, that is guaranteed not to exist, and
- * to have never been created before.
- *
- * @param aLeafName
- *        Suggested leaf name for the file to be created.
- *
- * @return nsIFile pointing to a non-existent file in a temporary directory.
- *
- * @note It is not enough to delete the file if it exists, or to delete the file
- *       after calling nsIFile.createUnique, because on Windows the delete
- *       operation in the file system may still be pending, preventing a new
- *       file with the same name to be created.
+ * Returns a reference to a temporary file that is guaranteed not to exist and
+ * is cleaned up later. See FileTestUtils.getTempFile for details.
  */
-function getTempFile(aLeafName) {
-  // Prepend a serial number to the extension in the suggested leaf name.
-  let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
-  let leafName = base + "-" + gFileCounter + ext;
-  gFileCounter++;
-
-  // Get a file reference under the temporary directory for this test file.
-  let file = FileUtils.getFile("TmpD", [leafName]);
-  ok(!file.exists(), "Temp file does not exist");
-
-  registerCleanupFunction(function() {
-    if (file.exists()) {
-      file.remove(false);
-    }
-  });
-
-  return file;
+function getTempFile(leafName) {
+  return FileTestUtils.getTempFile(leafName);
 }
 
 function promiseBrowserLoaded(browser) {

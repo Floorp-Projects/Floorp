@@ -15,10 +15,8 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-002";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: ConstructError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 Construct_1();
@@ -36,7 +34,6 @@ function Construct_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "new Math() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

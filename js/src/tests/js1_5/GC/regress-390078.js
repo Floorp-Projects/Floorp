@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -31,6 +30,4 @@ function test()
   "".match.apply(123456789, a);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

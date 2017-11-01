@@ -31,10 +31,8 @@
  */
 
 var SECTION = "ecma_2/String/split-003.js";
-var VERSION = "ECMA_2";
 var TITLE   = "String.prototype.split( regexp, [,limit] )";
 
-startTest();
 
 // separator is a regexp
 // separator regexp value global setting is set

@@ -16,31 +16,28 @@
 
 
 var SECTION = "11.4.1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The delete operator";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-//    new TestCase( SECTION,   "x=[9,8,7];delete(x[2]);x.length",         2,             eval("x=[9,8,7];delete(x[2]);x.length") );
-//    new TestCase( SECTION,   "x=[9,8,7];delete(x[2]);x.toString()",     "9,8",         eval("x=[9,8,7];delete(x[2]);x.toString()") );
-new TestCase( SECTION,   "x=new Date();delete x;typeof(x)",        "undefined",    eval("x=new Date();delete x;typeof(x)") );
+//    new TestCase( "x=[9,8,7];delete(x[2]);x.length",         2,             eval("x=[9,8,7];delete(x[2]);x.length") );
+//    new TestCase( "x=[9,8,7];delete(x[2]);x.toString()",     "9,8",         eval("x=[9,8,7];delete(x[2]);x.toString()") );
+new TestCase( "x=new Date();delete x;typeof(x)",        "undefined",    eval("x=new Date();delete x;typeof(x)") );
 
-//    array[item++] = new TestCase( SECTION,   "delete(x=new Date())",        true,   delete(x=new Date()) );
-//    array[item++] = new TestCase( SECTION,   "delete('string primitive')",   true,   delete("string primitive") );
-//    array[item++] = new TestCase( SECTION,   "delete(new String( 'string object' ) )",  true,   delete(new String("string object")) );
-//    array[item++] = new TestCase( SECTION,   "delete(new Number(12345) )",  true,   delete(new Number(12345)) );
-new TestCase( SECTION,   "delete(Math.PI)",             false,   delete(Math.PI) );
-//    array[item++] = new TestCase( SECTION,   "delete(null)",                true,   delete(null) );
-//    array[item++] = new TestCase( SECTION,   "delete(void(0))",             true,   delete(void(0)) );
+//    array[item++] = new TestCase( "delete(x=new Date())",        true,   delete(x=new Date()) );
+//    array[item++] = new TestCase( "delete('string primitive')",   true,   delete("string primitive") );
+//    array[item++] = new TestCase( "delete(new String( 'string object' ) )",  true,   delete(new String("string object")) );
+//    array[item++] = new TestCase( "delete(new Number(12345) )",  true,   delete(new Number(12345)) );
+new TestCase( "delete(Math.PI)",             false,   delete(Math.PI) );
+//    array[item++] = new TestCase( "delete(null)",                true,   delete(null) );
+//    array[item++] = new TestCase( "delete(void(0))",             true,   delete(void(0)) );
 
 // variables declared with the var statement are not deletable.
 
 var abc;
-new TestCase( SECTION,   "var abc; delete(abc)",        false,   delete abc );
+new TestCase( "var abc; delete(abc)",        false,   delete abc );
 
-new TestCase(   SECTION,
-                "var OB = new MyObject(); for ( p in OB ) { delete p }",
+new TestCase(   "var OB = new MyObject(); for ( p in OB ) { delete p }",
                 true,
                 eval("var OB = new MyObject(); for ( p in OB ) { delete p }") );
 

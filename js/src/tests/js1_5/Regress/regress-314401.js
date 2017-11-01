@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow
+// |reftest| skip-if(xulRuntime.shell||(xulRuntime.OS=="WINNT"&&isDebugBuild)) slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,14 +13,8 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (typeof setTimeout == 'undefined')
-{
-  reportCompare(expect, actual, 'Test Skipped.');
-}
-else
-{
-  gDelayTestDriverEnd = true;
-  window.onerror = null;
+gDelayTestDriverEnd = true;
+window.onerror = null;
 
   try
   {
@@ -69,4 +63,3 @@ else
     reportCompare(expect, actual, 'setInterval(Script, 0, "", null)');
   }
   setTimeout('gDelayTestDriverEnd = false; jsTestDriverEnd();', 0);
-}

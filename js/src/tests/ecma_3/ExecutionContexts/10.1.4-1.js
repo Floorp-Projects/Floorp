@@ -25,7 +25,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -44,6 +43,4 @@ function test()
     reportCompare('PASS', 'FAIL', "Expected to be able to delete x");
 
   reportCompare('PASS', 'PASS', '10.1.4.1 Entering An Execution Context');
-
-  exitFunc("test");       
 }

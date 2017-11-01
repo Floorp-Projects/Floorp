@@ -15,14 +15,11 @@
    Date:               16 september 1997
 */
 var SECTION = "15.7.4.1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Number.prototype.constructor";
 
 writeHeaderToLog( SECTION + " "+TITLE);
 
-new TestCase(   SECTION,
-		"Number.prototype.constructor",
+new TestCase(   "Number.prototype.constructor",
 		Number,
 		Number.prototype.constructor );
 test();

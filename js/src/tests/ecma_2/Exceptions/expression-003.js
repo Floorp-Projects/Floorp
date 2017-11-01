@@ -16,11 +16,9 @@
    Date:               09 september 1998
 */
 var SECTION = "expressions-003.js";
-var VERSION = "JS1_4";
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 
-startTest();
 
 // try to access properties of primitive types
 
@@ -39,7 +37,6 @@ try {
 
 
 new TestCase(
-  SECTION,
   "Get the toString value of an object whose value is undefined "+
   "(threw " + exception +")",
   expect,

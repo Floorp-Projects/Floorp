@@ -14,16 +14,14 @@
  *  Date:               11 August 1998
  */
 var SECTION = "toString-001.js";
-var VERSION = "JS1_4";
 var TITLE   = "Regression test case for 104766";
 var BUGNUMBER="310514";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase(
-  SECTION,
   "StripSpaces(Array.prototype.concat.toString()).substring(0,17)",
   "functionconcat(){",
   StripSpaces(Array.prototype.concat.toString()).substring(0,17));

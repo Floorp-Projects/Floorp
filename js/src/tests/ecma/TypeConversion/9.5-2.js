@@ -35,86 +35,84 @@
    Date:               17 july 1997
 */
 var SECTION = "9.5-2";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " ToInt32");
 
-new TestCase( SECTION,   "0 << 0",                        0,              0 << 0 );
-new TestCase( SECTION,   "-0 << 0",                       0,              -0 << 0 );
-new TestCase( SECTION,   "Infinity << 0",                 0,              "Infinity" << 0 );
-new TestCase( SECTION,   "-Infinity << 0",                0,              "-Infinity" << 0 );
-new TestCase( SECTION,   "Number.POSITIVE_INFINITY << 0", 0,              Number.POSITIVE_INFINITY << 0 );
-new TestCase( SECTION,   "Number.NEGATIVE_INFINITY << 0", 0,              Number.NEGATIVE_INFINITY << 0 );
-new TestCase( SECTION,   "Number.NaN << 0",               0,              Number.NaN << 0 );
+new TestCase( "0 << 0",                        0,              0 << 0 );
+new TestCase( "-0 << 0",                       0,              -0 << 0 );
+new TestCase( "Infinity << 0",                 0,              "Infinity" << 0 );
+new TestCase( "-Infinity << 0",                0,              "-Infinity" << 0 );
+new TestCase( "Number.POSITIVE_INFINITY << 0", 0,              Number.POSITIVE_INFINITY << 0 );
+new TestCase( "Number.NEGATIVE_INFINITY << 0", 0,              Number.NEGATIVE_INFINITY << 0 );
+new TestCase( "Number.NaN << 0",               0,              Number.NaN << 0 );
 
-new TestCase( SECTION,   "Number.MIN_VALUE << 0",         0,              Number.MIN_VALUE << 0 );
-new TestCase( SECTION,   "-Number.MIN_VALUE << 0",        0,              -Number.MIN_VALUE << 0 );
-new TestCase( SECTION,   "0.1 << 0",                      0,              0.1 << 0 );
-new TestCase( SECTION,   "-0.1 << 0",                     0,              -0.1 << 0 );
-new TestCase( SECTION,   "1 << 0",                        1,              1 << 0 );
-new TestCase( SECTION,   "1.1 << 0",                      1,              1.1 << 0 );
-new TestCase( SECTION,   "-1 << 0",                     ToInt32(-1),             -1 << 0 );
+new TestCase( "Number.MIN_VALUE << 0",         0,              Number.MIN_VALUE << 0 );
+new TestCase( "-Number.MIN_VALUE << 0",        0,              -Number.MIN_VALUE << 0 );
+new TestCase( "0.1 << 0",                      0,              0.1 << 0 );
+new TestCase( "-0.1 << 0",                     0,              -0.1 << 0 );
+new TestCase( "1 << 0",                        1,              1 << 0 );
+new TestCase( "1.1 << 0",                      1,              1.1 << 0 );
+new TestCase( "-1 << 0",                     ToInt32(-1),             -1 << 0 );
 
 
-new TestCase( SECTION,   "2147483647 << 0",     ToInt32(2147483647),    2147483647 << 0 );
-new TestCase( SECTION,   "2147483648 << 0",     ToInt32(2147483648),    2147483648 << 0 );
-new TestCase( SECTION,   "2147483649 << 0",     ToInt32(2147483649),    2147483649 << 0 );
+new TestCase( "2147483647 << 0",     ToInt32(2147483647),    2147483647 << 0 );
+new TestCase( "2147483648 << 0",     ToInt32(2147483648),    2147483648 << 0 );
+new TestCase( "2147483649 << 0",     ToInt32(2147483649),    2147483649 << 0 );
 
-new TestCase( SECTION,   "(Math.pow(2,31)-1) << 0", ToInt32(2147483647),    (Math.pow(2,31)-1) << 0 );
-new TestCase( SECTION,   "Math.pow(2,31) << 0",     ToInt32(2147483648),    Math.pow(2,31) << 0 );
-new TestCase( SECTION,   "(Math.pow(2,31)+1) << 0", ToInt32(2147483649),    (Math.pow(2,31)+1) << 0 );
+new TestCase( "(Math.pow(2,31)-1) << 0", ToInt32(2147483647),    (Math.pow(2,31)-1) << 0 );
+new TestCase( "Math.pow(2,31) << 0",     ToInt32(2147483648),    Math.pow(2,31) << 0 );
+new TestCase( "(Math.pow(2,31)+1) << 0", ToInt32(2147483649),    (Math.pow(2,31)+1) << 0 );
 
-new TestCase( SECTION,   "(Math.pow(2,32)-1) << 0",   ToInt32(4294967295),    (Math.pow(2,32)-1) << 0 );
-new TestCase( SECTION,   "(Math.pow(2,32)) << 0",     ToInt32(4294967296),    (Math.pow(2,32)) << 0 );
-new TestCase( SECTION,   "(Math.pow(2,32)+1) << 0",   ToInt32(4294967297),    (Math.pow(2,32)+1) << 0 );
+new TestCase( "(Math.pow(2,32)-1) << 0",   ToInt32(4294967295),    (Math.pow(2,32)-1) << 0 );
+new TestCase( "(Math.pow(2,32)) << 0",     ToInt32(4294967296),    (Math.pow(2,32)) << 0 );
+new TestCase( "(Math.pow(2,32)+1) << 0",   ToInt32(4294967297),    (Math.pow(2,32)+1) << 0 );
 
-new TestCase( SECTION,   "4294967295 << 0",     ToInt32(4294967295),    4294967295 << 0 );
-new TestCase( SECTION,   "4294967296 << 0",     ToInt32(4294967296),    4294967296 << 0 );
-new TestCase( SECTION,   "4294967297 << 0",     ToInt32(4294967297),    4294967297 << 0 );
+new TestCase( "4294967295 << 0",     ToInt32(4294967295),    4294967295 << 0 );
+new TestCase( "4294967296 << 0",     ToInt32(4294967296),    4294967296 << 0 );
+new TestCase( "4294967297 << 0",     ToInt32(4294967297),    4294967297 << 0 );
 
-new TestCase( SECTION,   "'2147483647' << 0",   ToInt32(2147483647),    '2147483647' << 0 );
-new TestCase( SECTION,   "'2147483648' << 0",   ToInt32(2147483648),    '2147483648' << 0 );
-new TestCase( SECTION,   "'2147483649' << 0",   ToInt32(2147483649),    '2147483649' << 0 );
+new TestCase( "'2147483647' << 0",   ToInt32(2147483647),    '2147483647' << 0 );
+new TestCase( "'2147483648' << 0",   ToInt32(2147483648),    '2147483648' << 0 );
+new TestCase( "'2147483649' << 0",   ToInt32(2147483649),    '2147483649' << 0 );
 
-new TestCase( SECTION,   "'4294967295' << 0",   ToInt32(4294967295),    '4294967295' << 0 );
-new TestCase( SECTION,   "'4294967296' << 0",   ToInt32(4294967296),    '4294967296' << 0 );
-new TestCase( SECTION,   "'4294967297' << 0",   ToInt32(4294967297),    '4294967297' << 0 );
+new TestCase( "'4294967295' << 0",   ToInt32(4294967295),    '4294967295' << 0 );
+new TestCase( "'4294967296' << 0",   ToInt32(4294967296),    '4294967296' << 0 );
+new TestCase( "'4294967297' << 0",   ToInt32(4294967297),    '4294967297' << 0 );
 
-new TestCase( SECTION,   "-2147483647 << 0",    ToInt32(-2147483647),   -2147483647	<< 0 );
-new TestCase( SECTION,   "-2147483648 << 0",    ToInt32(-2147483648),   -2147483648 << 0 );
-new TestCase( SECTION,   "-2147483649 << 0",    ToInt32(-2147483649),   -2147483649 << 0 );
+new TestCase( "-2147483647 << 0",    ToInt32(-2147483647),   -2147483647	<< 0 );
+new TestCase( "-2147483648 << 0",    ToInt32(-2147483648),   -2147483648 << 0 );
+new TestCase( "-2147483649 << 0",    ToInt32(-2147483649),   -2147483649 << 0 );
 
-new TestCase( SECTION,   "-4294967295 << 0",    ToInt32(-4294967295),   -4294967295 << 0 );
-new TestCase( SECTION,   "-4294967296 << 0",    ToInt32(-4294967296),   -4294967296 << 0 );
-new TestCase( SECTION,   "-4294967297 << 0",    ToInt32(-4294967297),   -4294967297 << 0 );
+new TestCase( "-4294967295 << 0",    ToInt32(-4294967295),   -4294967295 << 0 );
+new TestCase( "-4294967296 << 0",    ToInt32(-4294967296),   -4294967296 << 0 );
+new TestCase( "-4294967297 << 0",    ToInt32(-4294967297),   -4294967297 << 0 );
 
 /*
  * Numbers between 2^31 and 2^32 will have a negative ToInt32 per ECMA (see step 5 of introduction)
  * (These are by stevechapel@earthlink.net; cf. http://bugzilla.mozilla.org/show_bug.cgi?id=120083)
  */
-new TestCase( SECTION,   "2147483648.25 << 0",  ToInt32(2147483648.25),   2147483648.25 << 0 );
-new TestCase( SECTION,   "2147483648.5 << 0",   ToInt32(2147483648.5),    2147483648.5 << 0 );
-new TestCase( SECTION,   "2147483648.75 << 0",  ToInt32(2147483648.75),   2147483648.75 << 0 );
-new TestCase( SECTION,   "4294967295.25 << 0",  ToInt32(4294967295.25),   4294967295.25 << 0 );
-new TestCase( SECTION,   "4294967295.5 << 0",   ToInt32(4294967295.5),    4294967295.5 << 0 );
-new TestCase( SECTION,   "4294967295.75 << 0",  ToInt32(4294967295.75),   4294967295.75 << 0 );
-new TestCase( SECTION,   "3000000000.25 << 0",  ToInt32(3000000000.25),   3000000000.25 << 0 );
-new TestCase( SECTION,   "3000000000.5 << 0",   ToInt32(3000000000.5),    3000000000.5 << 0 );
-new TestCase( SECTION,   "3000000000.75 << 0",  ToInt32(3000000000.75),   3000000000.75 << 0 );
+new TestCase( "2147483648.25 << 0",  ToInt32(2147483648.25),   2147483648.25 << 0 );
+new TestCase( "2147483648.5 << 0",   ToInt32(2147483648.5),    2147483648.5 << 0 );
+new TestCase( "2147483648.75 << 0",  ToInt32(2147483648.75),   2147483648.75 << 0 );
+new TestCase( "4294967295.25 << 0",  ToInt32(4294967295.25),   4294967295.25 << 0 );
+new TestCase( "4294967295.5 << 0",   ToInt32(4294967295.5),    4294967295.5 << 0 );
+new TestCase( "4294967295.75 << 0",  ToInt32(4294967295.75),   4294967295.75 << 0 );
+new TestCase( "3000000000.25 << 0",  ToInt32(3000000000.25),   3000000000.25 << 0 );
+new TestCase( "3000000000.5 << 0",   ToInt32(3000000000.5),    3000000000.5 << 0 );
+new TestCase( "3000000000.75 << 0",  ToInt32(3000000000.75),   3000000000.75 << 0 );
 
 /*
  * Numbers between - 2^31 and - 2^32
  */
-new TestCase( SECTION,   "-2147483648.25 << 0",  ToInt32(-2147483648.25),   -2147483648.25 << 0 );
-new TestCase( SECTION,   "-2147483648.5 << 0",   ToInt32(-2147483648.5),    -2147483648.5 << 0 );
-new TestCase( SECTION,   "-2147483648.75 << 0",  ToInt32(-2147483648.75),   -2147483648.75 << 0 );
-new TestCase( SECTION,   "-4294967295.25 << 0",  ToInt32(-4294967295.25),   -4294967295.25 << 0 );
-new TestCase( SECTION,   "-4294967295.5 << 0",   ToInt32(-4294967295.5),    -4294967295.5 << 0 );
-new TestCase( SECTION,   "-4294967295.75 << 0",  ToInt32(-4294967295.75),   -4294967295.75 << 0 );
-new TestCase( SECTION,   "-3000000000.25 << 0",  ToInt32(-3000000000.25),   -3000000000.25 << 0 );
-new TestCase( SECTION,   "-3000000000.5 << 0",   ToInt32(-3000000000.5),    -3000000000.5 << 0 );
-new TestCase( SECTION,   "-3000000000.75 << 0",  ToInt32(-3000000000.75),   -3000000000.75 << 0 );
+new TestCase( "-2147483648.25 << 0",  ToInt32(-2147483648.25),   -2147483648.25 << 0 );
+new TestCase( "-2147483648.5 << 0",   ToInt32(-2147483648.5),    -2147483648.5 << 0 );
+new TestCase( "-2147483648.75 << 0",  ToInt32(-2147483648.75),   -2147483648.75 << 0 );
+new TestCase( "-4294967295.25 << 0",  ToInt32(-4294967295.25),   -4294967295.25 << 0 );
+new TestCase( "-4294967295.5 << 0",   ToInt32(-4294967295.5),    -4294967295.5 << 0 );
+new TestCase( "-4294967295.75 << 0",  ToInt32(-4294967295.75),   -4294967295.75 << 0 );
+new TestCase( "-3000000000.25 << 0",  ToInt32(-3000000000.25),   -3000000000.25 << 0 );
+new TestCase( "-3000000000.5 << 0",   ToInt32(-3000000000.5),    -3000000000.5 << 0 );
+new TestCase( "-3000000000.75 << 0",  ToInt32(-3000000000.75),   -3000000000.75 << 0 );
 
 
 test();

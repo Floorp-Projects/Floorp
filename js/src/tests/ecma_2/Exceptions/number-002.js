@@ -19,10 +19,8 @@
    Date:               16 september 1997
 */
 var SECTION = "number-002";
-var VERSION = "JS1_4";
 var TITLE   = "Exceptions for Number.valueOf()";
 
-startTest();
 writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
 var result = "Failed";
@@ -39,7 +37,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "object = new Object(); object.valueOf = Number.prototype.valueOf; object.valueOf()" +
   " (threw " + exception +")",
   expect,

@@ -16,10 +16,8 @@
  *
  */
 var SECTION = "switch-002";
-var VERSION = "ECMA_2";
 var TITLE   = "The switch statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 SwitchTest( 0, 6 );
@@ -56,7 +54,6 @@ function SwitchTest( input, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "switch with no breaks:  input is " + input,
     expect,
     result );

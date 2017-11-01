@@ -17,13 +17,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
 // Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:5916
   ({ set z(v){},  set y(v) { return --x; }, set w(v) { return --w; } });
   reportCompare(expect, actual, summary + ': 3');
-
-  exitFunc ('test');
 }

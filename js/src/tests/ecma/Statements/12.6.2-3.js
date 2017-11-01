@@ -17,13 +17,11 @@
    Date:               15 september 1997
 */
 var SECTION = "12.6.2-3";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "for statement",  100,     testprogram() );
+new TestCase( "for statement",  100,     testprogram() );
 
 test();
 

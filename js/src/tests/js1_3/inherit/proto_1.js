@@ -22,10 +22,8 @@
 */
 
 var SECTION = "proto_1";
-var VERSION = "JS1_3";
 var TITLE   = "new PrototypeObject";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
@@ -56,79 +54,65 @@ Engineer.prototype = new WorkerBee();
 
 var jim = new Employee();
 
-new TestCase( SECTION,
-	      "jim = new Employee(); jim.name",
+new TestCase( "jim = new Employee(); jim.name",
 	      "",
 	      jim.name );
 
 
-new TestCase( SECTION,
-	      "jim = new Employee(); jim.dept",
+new TestCase( "jim = new Employee(); jim.dept",
 	      "general",
 	      jim.dept );
 
 var sally = new Manager();
 
-new TestCase( SECTION,
-	      "sally = new Manager(); sally.name",
+new TestCase( "sally = new Manager(); sally.name",
 	      "",
 	      sally.name );
-new TestCase( SECTION,
-	      "sally = new Manager(); sally.dept",
+new TestCase( "sally = new Manager(); sally.dept",
 	      "general",
 	      sally.dept );
 
-new TestCase( SECTION,
-	      "sally = new Manager(); sally.reports.length",
+new TestCase( "sally = new Manager(); sally.reports.length",
 	      0,
 	      sally.reports.length );
 
-new TestCase( SECTION,
-	      "sally = new Manager(); typeof sally.reports",
+new TestCase( "sally = new Manager(); typeof sally.reports",
 	      "object",
 	      typeof sally.reports );
 
 var fred = new SalesPerson();
 
-new TestCase( SECTION,
-	      "fred = new SalesPerson(); fred.name",
+new TestCase( "fred = new SalesPerson(); fred.name",
 	      "",
 	      fred.name );
 
-new TestCase( SECTION,
-	      "fred = new SalesPerson(); fred.dept",
+new TestCase( "fred = new SalesPerson(); fred.dept",
 	      "sales",
 	      fred.dept );
 
-new TestCase( SECTION,
-	      "fred = new SalesPerson(); fred.quota",
+new TestCase( "fred = new SalesPerson(); fred.quota",
 	      100,
 	      fred.quota );
 
-new TestCase( SECTION,
-	      "fred = new SalesPerson(); fred.projects.length",
+new TestCase( "fred = new SalesPerson(); fred.projects.length",
 	      0,
 	      fred.projects.length );
 
 var jane = new Engineer();
 
-new TestCase( SECTION,
-	      "jane = new Engineer(); jane.name",
+new TestCase( "jane = new Engineer(); jane.name",
 	      "",
 	      jane.name );
 
-new TestCase( SECTION,
-	      "jane = new Engineer(); jane.dept",
+new TestCase( "jane = new Engineer(); jane.dept",
 	      "engineering",
 	      jane.dept );
 
-new TestCase( SECTION,
-	      "jane = new Engineer(); jane.projects.length",
+new TestCase( "jane = new Engineer(); jane.projects.length",
 	      0,
 	      jane.projects.length );
 
-new TestCase( SECTION,
-	      "jane = new Engineer(); jane.machine",
+new TestCase( "jane = new Engineer(); jane.machine",
 	      "",
 	      jane.machine );
 

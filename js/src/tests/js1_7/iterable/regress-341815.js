@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- bug xxx - fails to dismiss alert
+// |reftest| skip -- bug xxx - fails to dismiss alert
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,6 @@ var ialert = 0;
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -49,8 +48,6 @@ function test()
   print('done');
 
   setTimeout('checkTest()', 10000);
-
-  exitFunc ('test');
 }
 
 function init()
@@ -80,15 +77,7 @@ function checkTest()
   jsTestDriverEnd();
 }
 
-if (typeof window != 'undefined')
-{
-  // delay test driver end
-  gDelayTestDriverEnd = true;
+// delay test driver end
+gDelayTestDriverEnd = true;
 
-  window.addEventListener("load", init, false);
-}
-else
-{
-  reportCompare(expect, actual, summary);
-}
-
+window.addEventListener("load", init, false);

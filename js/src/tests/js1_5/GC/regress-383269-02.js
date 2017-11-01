@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -61,6 +60,4 @@ function test()
     actual = "generate_big_object_graph() leaked, base_gc_time="+base_time+", last_gc_time="+time;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

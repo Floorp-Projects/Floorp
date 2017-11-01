@@ -15,11 +15,10 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-003";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=313585";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // Tests start here.
@@ -63,17 +62,14 @@ function TrySomething( expression, throwing ) {
 
 
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     innerFinally );
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     outerCatch );
   new TestCase(
-    SECTION,
     "eval( " + expression +" )",
     "PASS",
     outerFinally );

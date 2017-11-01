@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -83,6 +82,4 @@ function test()
   var y = /(1)/y;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -9,7 +9,6 @@ var summary = 'Do not crash with nested function and "delete" op';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  

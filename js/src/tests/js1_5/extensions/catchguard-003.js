@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var EXCEPTION_DATA = "String exception";
   var e = "foo", x = "foo";
   var caught = false;
@@ -53,6 +51,4 @@ function test()
 		  x + "'.)");
 
   reportCompare('PASS', 'PASS', 'Catchguard Common Scope test');
-
-  exitFunc ("test");
 }

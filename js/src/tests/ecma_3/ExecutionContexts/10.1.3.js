@@ -10,6 +10,8 @@
    VariableDeclarations don't replace existing values with undefined
 */
 
+var BUGNUMBER = 17290;
+
 test();
 
 function f()
@@ -26,12 +28,8 @@ function f()
 
 function test()
 {
-  enterFunc ("test");
-
   printStatus ("ECMA Section: 10.1.3: Variable Instantiation.");
-  printBugNumber (17290);
+  printBugNumber (BUGNUMBER);
 
   reportCompare ("function", f(), "Declaration precedence test");
-
-  exitFunc("test");       
 }

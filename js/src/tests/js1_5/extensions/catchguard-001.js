@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var EXCEPTION_DATA = "String exception";
   var e = "foo";
   var caught = false;
@@ -43,5 +41,4 @@ function test()
 		  e + "'.)");
 
   reportCompare('PASS', 'PASS', '');
-  exitFunc ("test");
 }

@@ -26,6 +26,7 @@
 #include "Tools.h"
 #include "DataSurfaceHelpers.h"
 #include "PathHelpers.h"
+#include "SourceSurfaceCapture.h"
 #include "Swizzle.h"
 #include <algorithm>
 
@@ -236,6 +237,16 @@ GetSkImageForSurface(SourceSurface* aSurface, const Rect* aBounds = nullptr, con
   if (!aSurface) {
     gfxDebug() << "Creating null Skia image from null SourceSurface";
     return nullptr;
+  }
+
+  if (aSurface->GetType() == SurfaceType::CAPTURE) {
+    SourceSurfaceCapture* capture = static_cast<SourceSurfaceCapture*>(aSurface);
+    RefPtr<SourceSurface> resolved = capture->Resolve(BackendType::SKIA);
+    if (!resolved) {
+      return nullptr;
+    }
+    MOZ_ASSERT(resolved->GetType() != SurfaceType::CAPTURE);
+    return GetSkImageForSurface(resolved, aBounds, aMatrix);
   }
 
   if (aSurface->GetType() == SurfaceType::SKIA) {
@@ -2163,6 +2174,25 @@ DrawTargetSkia::PopLayer()
   CGContextRelease(mCG);
   mCG = nullptr;
 #endif
+}
+
+void
+DrawTargetSkia::Blur(const AlphaBoxBlur& aBlur)
+{
+  MarkChanged();
+  Flush();
+
+  SkPixmap pixmap;
+  if (!mCanvas->peekPixels(&pixmap)) {
+    gfxWarning() << "Cannot perform in-place blur on non-raster Skia surface";
+    return;
+  }
+
+  // Sanity check that the blur size matches the draw target.
+  MOZ_ASSERT(pixmap.width() == aBlur.GetSize().width);
+  MOZ_ASSERT(pixmap.height() == aBlur.GetSize().height);
+  MOZ_ASSERT(size_t(aBlur.GetStride()) == pixmap.rowBytes());
+  aBlur.Blur(static_cast<uint8_t*>(pixmap.writable_addr()));
 }
 
 already_AddRefed<GradientStops>

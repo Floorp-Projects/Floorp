@@ -13,11 +13,10 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
 var TITLE = 'String:splice 1';
 var BUGNUMBER="123795";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog('Executing script: splice1.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 
@@ -112,8 +111,6 @@ function exhaustiveSpliceTest(testname, testArray)
       }
     }
   }
-  var testcase = new TestCase( SECTION, testname, true, passed);
-  if (!passed)
-    testcase.reason = reason;
-  return testcase;
+
+  new TestCase( testname, true, passed, reason);
 }

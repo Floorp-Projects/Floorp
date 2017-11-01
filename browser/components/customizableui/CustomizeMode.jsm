@@ -1537,14 +1537,14 @@ CustomizeMode.prototype = {
   _updateEmptyPaletteNotice() {
     let paletteItems = this.visiblePalette.getElementsByTagName("toolbarpaletteitem");
     this.paletteEmptyNotice.hidden = !!paletteItems.length;
-    let readyPlayerOne = this.document.getElementById("ready-player-one");
+    let whimsyButton = this.document.getElementById("whimsy-button");
 
     if (paletteItems.length == 1 &&
         paletteItems[0].id.includes("wrapper-customizableui-special-spring")) {
-      readyPlayerOne.hidden = false;
+      whimsyButton.hidden = false;
     } else {
       this.togglePong(false);
-      readyPlayerOne.hidden = true;
+      whimsyButton.hidden = true;
     }
   },
 
@@ -2533,8 +2533,8 @@ CustomizeMode.prototype = {
     // It's possible we're toggling for a reason other than hitting
     // the button (we might be exiting, for example), so make sure that
     // the state and checkbox are in sync.
-    let readyPlayerOne = this.document.getElementById("ready-player-one");
-    readyPlayerOne.checked = enabled;
+    let whimsyButton = this.document.getElementById("whimsy-button");
+    whimsyButton.checked = enabled;
 
     if (enabled) {
       this.visiblePalette.setAttribute("whimsypong", "true");
@@ -2673,6 +2673,7 @@ CustomizeMode.prototype = {
         arena.firstChild.remove();
       }
       arena.removeAttribute("score");
+      arena.removeAttribute("lives");
       arena.style.removeProperty("background-image");
       arena.style.removeProperty("background-position");
       arena.style.removeProperty("background-repeat");
@@ -2730,6 +2731,7 @@ CustomizeMode.prototype = {
         elements.score.textContent = score;
         elements.lives && elements.lives.setAttribute("lives", lives);
         elements.arena.setAttribute("score", score);
+        elements.arena.setAttribute("lives", "0");
       } else {
         rAFHandle = window.requestAnimationFrame(animate);
       }

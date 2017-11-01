@@ -46,8 +46,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.6.1-3";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The Addition operator ( + )");
 
@@ -62,17 +60,15 @@ var MYOB2 = new MyValuelessObject( DATE1 );
 var MYOB3 = new MyProtolessObject( DATE1 );
 var MYOB4 = new MyProtoValuelessObject( DATE1 );
 
-new TestCase(   SECTION,
-                "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + 'string'",
+new TestCase(   "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + 'string'",
                 DATE1.toString() + "string",
                 MYOB2 + 'string' );
 
-new TestCase(   SECTION,
-                "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + new String('string')",
+new TestCase(   "MYOB2 = new MyValuelessObject(DATE1); MYOB3 + new String('string')",
                 DATE1.toString() + "string",
                 MYOB2 + new String('string') );
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "MYOB3 = new MyProtolessObject(DATE1); MYOB3 + new Boolean(true)",
   DATE1.toString() + "true",
   MYOB3 + new Boolean(true) );

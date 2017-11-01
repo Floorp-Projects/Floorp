@@ -1,10 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell) -- needs setPromiseRejectionTrackerCallback
 
-if (!this.Promise) {
-    this.reportCompare && reportCompare(true,true);
-    quit(0);
-}
-
 const UNHANDLED = 0;
 const HANDLED   = 1;
 
