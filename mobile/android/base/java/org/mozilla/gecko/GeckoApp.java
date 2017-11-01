@@ -652,7 +652,6 @@ public abstract class GeckoApp extends GeckoActivity
                               final EventCallback callback) {
         if (event.equals("Gecko:Ready")) {
             mGeckoReadyStartupTimer.stop();
-            geckoConnected();
 
             // This method is already running on the background thread, so we
             // know that mHealthRecorder will exist. That doesn't stop us being
@@ -1197,6 +1196,9 @@ public abstract class GeckoApp extends GeckoActivity
 
         mLayerView.setChromeUri("chrome://browser/content/browser.xul");
         mLayerView.setContentListener(this);
+        mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        GeckoAccessibility.setDelegate(mLayerView);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Accessibility:Event",
@@ -1667,10 +1669,6 @@ public abstract class GeckoApp extends GeckoActivity
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
             if (selectedTab != null) {
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-            }
-
-            if (GeckoThread.isRunning()) {
-                geckoConnected();
             }
         }
     }
@@ -2482,10 +2480,6 @@ public abstract class GeckoApp extends GeckoActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
-    }
-
-    private void geckoConnected() {
-        mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 
     public static class MainLayout extends RelativeLayout {

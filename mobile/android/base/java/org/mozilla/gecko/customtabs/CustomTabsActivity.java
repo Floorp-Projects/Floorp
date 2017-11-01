@@ -38,6 +38,7 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.FormAssistPopup;
+import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
@@ -128,6 +129,8 @@ public class CustomTabsActivity extends AppCompatActivity
         mGeckoView.setNavigationListener(this);
         mGeckoView.setProgressListener(this);
         mGeckoView.setContentListener(this);
+
+        GeckoAccessibility.setDelegate(mGeckoView);
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
