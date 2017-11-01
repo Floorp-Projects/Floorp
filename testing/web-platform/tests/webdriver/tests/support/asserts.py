@@ -21,7 +21,7 @@ errors = {
     "no such window": 404,
     "script timeout": 408,
     "session not created": 500,
-    "stale element reference": 400,
+    "stale element reference": 404,
     "timeout": 408,
     "unable to set cookie": 500,
     "unable to capture screen": 500,
