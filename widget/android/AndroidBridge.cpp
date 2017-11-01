@@ -229,24 +229,30 @@ jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsACString&
 }
 
 static void
-getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
+getHandlersFromStringArray(JNIEnv *aJNIEnv, jni::ObjectArray::Param aArr, size_t aLen,
                            nsIMutableArray *aHandlersArray,
                            nsIHandlerApp **aDefaultApp,
                            const nsAString& aAction = EmptyString(),
                            const nsACString& aMimeType = EmptyCString())
 {
     nsString empty = EmptyString();
-    for (jsize i = 0; i < aLen; i+=4) {
 
-        AutoLocalJNIFrame jniFrame(aJNIEnv, 4);
-        nsJNIString name(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i)), aJNIEnv);
-        nsJNIString isDefault(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 1)), aJNIEnv);
-        nsJNIString packageName(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 2)), aJNIEnv);
-        nsJNIString className(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 3)), aJNIEnv);
+    auto getNormalizedString = [] (jni::Object::Param obj) -> nsString {
+        nsString out;
+        if (!obj) {
+            out.SetIsVoid(true);
+        } else {
+            out.Assign(jni::String::Ref::From(obj)->ToString());
+        }
+        return out;
+    };
+
+    for (size_t i = 0; i < aLen; i += 4) {
+        nsString name(getNormalizedString(aArr->GetElement(i)));
+        nsString isDefault(getNormalizedString(aArr->GetElement(i + 1)));
+        nsString packageName(getNormalizedString(aArr->GetElement(i + 2)));
+        nsString className(getNormalizedString(aArr->GetElement(i + 3)));
+
         nsIHandlerApp* app = nsOSHelperAppService::
             CreateAndroidHandlerApp(name, className, packageName,
                                     className, aMimeType, aAction);
@@ -270,12 +276,12 @@ AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
         return false;
 
     JNIEnv* const env = arr.Env();
-    jsize len = env->GetArrayLength(arr.Get());
+    size_t len = arr->Length();
 
     if (!aHandlersArray)
         return len > 0;
 
-    getHandlersFromStringArray(env, arr.Get(), len, aHandlersArray,
+    getHandlersFromStringArray(env, arr, len, aHandlersArray,
                                aDefaultApp, aAction,
                                NS_ConvertUTF16toUTF8(aMimeType));
     return true;
@@ -315,12 +321,12 @@ AndroidBridge::GetHandlersForURL(const nsAString& aURL,
         return false;
 
     JNIEnv* const env = arr.Env();
-    jsize len = env->GetArrayLength(arr.Get());
+    size_t len = arr->Length();
 
     if (!aHandlersArray)
         return len > 0;
 
-    getHandlersFromStringArray(env, arr.Get(), len, aHandlersArray,
+    getHandlersFromStringArray(env, arr, len, aHandlersArray,
                                aDefaultApp, aAction);
     return true;
 }
@@ -555,7 +561,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
     if (!jstr)
         return false;
 
-    result.Assign(nsJNIString(jstr, jEnv));
+    result.Assign(jni::String::Ref::From(jstr)->ToString());
     return true;
 }
 

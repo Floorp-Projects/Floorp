@@ -543,26 +543,26 @@ public:
         MouseInput::MouseType mouseType = MouseInput::MOUSE_NONE;
         MouseInput::ButtonType buttonType = MouseInput::NONE;
         switch (aAction) {
-            case AndroidMotionEvent::ACTION_DOWN:
+            case java::sdk::MotionEvent::ACTION_DOWN:
                 mouseType = MouseInput::MOUSE_DOWN;
                 buttonType = GetButtonType(buttons ^ mPreviousButtons);
                 mPreviousButtons = buttons;
                 break;
-            case AndroidMotionEvent::ACTION_UP:
+            case java::sdk::MotionEvent::ACTION_UP:
                 mouseType = MouseInput::MOUSE_UP;
                 buttonType = GetButtonType(buttons ^ mPreviousButtons);
                 mPreviousButtons = buttons;
                 break;
-            case AndroidMotionEvent::ACTION_MOVE:
+            case java::sdk::MotionEvent::ACTION_MOVE:
                 mouseType = MouseInput::MOUSE_MOVE;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_MOVE:
+            case java::sdk::MotionEvent::ACTION_HOVER_MOVE:
                 mouseType = MouseInput::MOUSE_MOVE;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_ENTER:
+            case java::sdk::MotionEvent::ACTION_HOVER_ENTER:
                 mouseType = MouseInput::MOUSE_WIDGET_ENTER;
                 break;
-            case AndroidMotionEvent::ACTION_HOVER_EXIT:
+            case java::sdk::MotionEvent::ACTION_HOVER_EXIT:
                 mouseType = MouseInput::MOUSE_WIDGET_EXIT;
                 break;
             default:
