@@ -17,21 +17,24 @@
   exports.defaultMemoize = defaultMemoize;
   exports.createSelectorCreator = createSelectorCreator;
   exports.createStructuredSelector = createStructuredSelector;
-
-  function _toConsumableArray(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-        arr2[i] = arr[i];
-      }
-
-      return arr2;
-    } else {
-      return Array.from(arr);
-    }
-  }
-
   function defaultEqualityCheck(a, b) {
     return a === b;
+  }
+
+  function areArgumentsShallowlyEqual(equalityCheck, prev, next) {
+    if (prev === null || next === null || prev.length !== next.length) {
+      return false;
+    }
+
+    // Do this in a for loop (and not a `forEach` or an `every`) so we can determine equality as fast as possible.
+    var length = prev.length;
+    for (var i = 0; i < length; i++) {
+      if (!equalityCheck(prev[i], next[i])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   function defaultMemoize(func) {
@@ -39,18 +42,14 @@
 
     var lastArgs = null;
     var lastResult = null;
-    var isEqualToLastArg = function isEqualToLastArg(value, index) {
-      return equalityCheck(value, lastArgs[index]);
-    };
+    // we reference arguments instead of spreading them for performance reasons
     return function () {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+      if (!areArgumentsShallowlyEqual(equalityCheck, lastArgs, arguments)) {
+        // apply arguments instead of spreading for performance.
+        lastResult = func.apply(null, arguments);
       }
 
-      if (lastArgs === null || lastArgs.length !== args.length || !args.every(isEqualToLastArg)) {
-        lastResult = func.apply(undefined, args);
-      }
-      lastArgs = args;
+      lastArgs = arguments;
       return lastResult;
     };
   }
@@ -71,13 +70,13 @@
   }
 
   function createSelectorCreator(memoize) {
-    for (var _len2 = arguments.length, memoizeOptions = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      memoizeOptions[_key2 - 1] = arguments[_key2];
+    for (var _len = arguments.length, memoizeOptions = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      memoizeOptions[_key - 1] = arguments[_key];
     }
 
     return function () {
-      for (var _len3 = arguments.length, funcs = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        funcs[_key3] = arguments[_key3];
+      for (var _len2 = arguments.length, funcs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        funcs[_key2] = arguments[_key2];
       }
 
       var recomputations = 0;
@@ -86,19 +85,23 @@
 
       var memoizedResultFunc = memoize.apply(undefined, [function () {
         recomputations++;
-        return resultFunc.apply(undefined, arguments);
+        // apply arguments instead of spreading for performance.
+        return resultFunc.apply(null, arguments);
       }].concat(memoizeOptions));
 
-      var selector = function selector(state, props) {
-        for (var _len4 = arguments.length, args = Array(_len4 > 2 ? _len4 - 2 : 0), _key4 = 2; _key4 < _len4; _key4++) {
-          args[_key4 - 2] = arguments[_key4];
+      // If a selector is called with the exact same arguments we don't need to traverse our dependencies again.
+      var selector = defaultMemoize(function () {
+        var params = [];
+        var length = dependencies.length;
+
+        for (var i = 0; i < length; i++) {
+          // apply arguments instead of spreading and mutate a local list of params for performance.
+          params.push(dependencies[i].apply(null, arguments));
         }
 
-        var params = dependencies.map(function (dependency) {
-          return dependency.apply(undefined, [state, props].concat(args));
-        });
-        return memoizedResultFunc.apply(undefined, _toConsumableArray(params));
-      };
+        // apply arguments instead of spreading for performance.
+        return memoizedResultFunc.apply(null, params);
+      });
 
       selector.resultFunc = resultFunc;
       selector.recomputations = function () {
@@ -123,8 +126,8 @@
     return selectorCreator(objectKeys.map(function (key) {
       return selectors[key];
     }), function () {
-      for (var _len5 = arguments.length, values = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        values[_key5] = arguments[_key5];
+      for (var _len3 = arguments.length, values = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        values[_key3] = arguments[_key3];
       }
 
       return values.reduce(function (composition, value, index) {

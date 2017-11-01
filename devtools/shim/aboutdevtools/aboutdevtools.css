@@ -7,6 +7,10 @@
   --white: #ffffff;
 }
 
+p {
+  line-height: 1.5em;
+}
+
 .box {
   width: 100vw;
   max-width: 850px;
@@ -25,16 +29,12 @@
 
 .left-pane {
   width: 360px;
-  background-image: url(images/otter.png);
-  background-size: 85%;
+  background-image: url(images/otter.svg);
+  background-size: 80%;
   background-position: 50%;
   background-repeat: no-repeat;
   height: 100%;
   flex-shrink: 0;
-}
-
-.message {
-  line-height: 1.6em;
 }
 
 .right-pane {
@@ -50,21 +50,34 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-gap: 40px 20px;
-  margin: 40px;
+  margin: 60px 20px;
   padding: 0;
+}
+
+.feature-icon {
+  width: 55%;
 }
 
 .feature {
   list-style: none;
   text-align: center;
+  margin: 10px 0;
+}
+
+.feature-name {
+  font-size: 28px;
+  font-weight: 300;
+  margin: 10px 0;
 }
 
 .feature-desc {
-  margin: 1em 20px
+  margin: 1em 20px;
 }
 
 .installpage-link {
   color: var(--blue-60);
+  -moz-context-properties: fill;
+  fill: var(--blue-60);
 }
 
 .installpage-link::after {
@@ -74,7 +87,7 @@
   height: 16px;
   width: 16px;
 
-  margin: 0 5px;
+  margin: -.3rem .15rem 0 0.25rem;
   vertical-align: middle;
 
   background-image: url(images/external-link.svg);
@@ -82,10 +95,10 @@
   background-size: 16px 16px;
 }
 
-.installpage-title {
-  font-size: 33px;
-  margin-top: 16px;
+.title {
   font-weight: 300;
+  font-size: 32px;
+  margin-top: 16px;
   line-height: 44px;
 }
 

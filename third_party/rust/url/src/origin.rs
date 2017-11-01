@@ -49,7 +49,7 @@ pub fn url_origin(url: &Url) -> Origin {
 /// - If the scheme is anything else, the origin is opaque, meaning
 ///   the URL does not have the same origin as any other URL.
 ///
-/// For more information see https://url.spec.whatwg.org/#origin
+/// For more information see <https://url.spec.whatwg.org/#origin>
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum Origin {
     /// A globally unique identifier
@@ -86,7 +86,7 @@ impl Origin {
         matches!(*self, Origin::Tuple(..))
     }
 
-    /// https://html.spec.whatwg.org/multipage/#ascii-serialisation-of-an-origin
+    /// <https://html.spec.whatwg.org/multipage/#ascii-serialisation-of-an-origin>
     pub fn ascii_serialization(&self) -> String {
         match *self {
             Origin::Opaque(_) => "null".to_owned(),
@@ -100,7 +100,7 @@ impl Origin {
         }
     }
 
-    /// https://html.spec.whatwg.org/multipage/#unicode-serialisation-of-an-origin
+    /// <https://html.spec.whatwg.org/multipage/#unicode-serialisation-of-an-origin>
     pub fn unicode_serialization(&self) -> String {
         match *self {
             Origin::Opaque(_) => "null".to_owned(),

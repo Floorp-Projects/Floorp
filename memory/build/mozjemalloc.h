@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozjemalloc_h
+#define mozjemalloc_h
+
 #include "mozjemalloc_types.h"
 #include "mozilla/MacroArgs.h"
 
@@ -72,3 +75,5 @@ struct DummyArenaAllocator {
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #include "malloc_decls.h"
 };
+
+#endif

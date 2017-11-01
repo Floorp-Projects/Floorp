@@ -27,7 +27,7 @@
 //! };
 //! ```
 
-use super::context::{BindgenContext, ItemId};
+use super::context::{BindgenContext, ItemId, TypeId};
 use super::item::{IsOpaque, Item, ItemAncestors, ItemCanonicalPath};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use clang;
@@ -109,7 +109,7 @@ pub trait TemplateParameters {
     /// anything but types, so we must treat them as opaque, and avoid
     /// instantiating them.
     fn self_template_params(&self, ctx: &BindgenContext)
-        -> Option<Vec<ItemId>>;
+        -> Option<Vec<TypeId>>;
 
     /// Get the number of free template parameters this template declaration
     /// has.
@@ -136,7 +136,7 @@ pub trait TemplateParameters {
     /// how we would fully reference such a member type in C++:
     /// `Foo<int,char>::Inner`. `Foo` *must* be instantiated with template
     /// arguments before we can gain access to the `Inner` member type.
-    fn all_template_params(&self, ctx: &BindgenContext) -> Option<Vec<ItemId>>
+    fn all_template_params(&self, ctx: &BindgenContext) -> Option<Vec<TypeId>>
     where
         Self: ItemAncestors,
     {
@@ -159,7 +159,7 @@ pub trait TemplateParameters {
     /// Get only the set of template parameters that this item uses. This is a
     /// subset of `all_template_params` and does not necessarily contain any of
     /// `self_template_params`.
-    fn used_template_params(&self, ctx: &BindgenContext) -> Option<Vec<ItemId>>
+    fn used_template_params(&self, ctx: &BindgenContext) -> Option<Vec<TypeId>>
     where
         Self: AsRef<ItemId>,
     {
@@ -190,7 +190,7 @@ pub trait AsTemplateParam {
         &self,
         ctx: &BindgenContext,
         extra: &Self::Extra,
-    ) -> Option<ItemId>;
+    ) -> Option<TypeId>;
 
     /// Is this a named template type parameter?
     fn is_template_param(
@@ -206,34 +206,31 @@ pub trait AsTemplateParam {
 #[derive(Clone, Debug)]
 pub struct TemplateInstantiation {
     /// The template definition which this is instantiating.
-    definition: ItemId,
+    definition: TypeId,
     /// The concrete template arguments, which will be substituted in the
     /// definition for the generic template parameters.
-    args: Vec<ItemId>,
+    args: Vec<TypeId>,
 }
 
 impl TemplateInstantiation {
     /// Construct a new template instantiation from the given parts.
-    pub fn new<I>(
-        template_definition: ItemId,
-        template_args: I,
-    ) -> TemplateInstantiation
+    pub fn new<I>(definition: TypeId, args: I) -> TemplateInstantiation
     where
-        I: IntoIterator<Item = ItemId>,
+        I: IntoIterator<Item = TypeId>,
     {
         TemplateInstantiation {
-            definition: template_definition,
-            args: template_args.into_iter().collect(),
+            definition,
+            args: args.into_iter().collect(),
         }
     }
 
     /// Get the template definition for this instantiation.
-    pub fn template_definition(&self) -> ItemId {
+    pub fn template_definition(&self) -> TypeId {
         self.definition
     }
 
     /// Get the concrete template arguments used in this instantiation.
-    pub fn template_arguments(&self) -> &[ItemId] {
+    pub fn template_arguments(&self) -> &[TypeId] {
         &self.args[..]
     }
 
@@ -353,9 +350,9 @@ impl Trace for TemplateInstantiation {
     where
         T: Tracer,
     {
-        tracer.visit_kind(self.definition, EdgeKind::TemplateDeclaration);
-        for &item in self.template_arguments() {
-            tracer.visit_kind(item, EdgeKind::TemplateArgument);
+        tracer.visit_kind(self.definition.into(), EdgeKind::TemplateDeclaration);
+        for arg in self.template_arguments() {
+            tracer.visit_kind(arg.into(), EdgeKind::TemplateArgument);
         }
     }
 }

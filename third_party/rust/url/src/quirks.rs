@@ -46,7 +46,7 @@ pub fn set_href(url: &mut Url, value: &str) -> Result<(), ParseError> {
 
 /// Getter for https://url.spec.whatwg.org/#dom-url-origin
 pub fn origin(url: &Url) -> String {
-    url.origin().unicode_serialization()
+    url.origin().ascii_serialization()
 }
 
 /// Getter for https://url.spec.whatwg.org/#dom-url-protocol

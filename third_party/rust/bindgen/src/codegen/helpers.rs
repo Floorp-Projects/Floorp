@@ -1,66 +1,62 @@
 //! Helpers for code generation that don't need macro expansion.
 
-use aster;
 use ir::layout::Layout;
-use syntax::ast;
-use syntax::ptr::P;
-
+use quote;
 
 pub mod attributes {
-    use aster;
-    use syntax::ast;
+    use quote;
 
-    pub fn allow(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new()
-            .attr()
-            .list("allow")
-            .words(which_ones)
-            .build()
+    pub fn repr(which: &str) -> quote::Tokens {
+        let which = quote::Ident::new(which);
+        quote! {
+            #[repr( #which )]
+        }
     }
 
-    pub fn repr(which: &str) -> ast::Attribute {
-        aster::AstBuilder::new()
-            .attr()
-            .list("repr")
-            .words(&[which])
-            .build()
+    pub fn repr_list(which_ones: &[&str]) -> quote::Tokens {
+        let which_ones = which_ones.iter().cloned().map(quote::Ident::new);
+        quote! {
+            #[repr( #( #which_ones ),* )]
+        }
     }
 
-    pub fn repr_list(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new()
-            .attr()
-            .list("repr")
-            .words(which_ones)
-            .build()
+    pub fn derives(which_ones: &[&str]) -> quote::Tokens {
+        let which_ones = which_ones.iter().cloned().map(quote::Ident::new);
+        quote! {
+            #[derive( #( #which_ones ),* )]
+        }
     }
 
-    pub fn derives(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new()
-            .attr()
-            .list("derive")
-            .words(which_ones)
-            .build()
+    pub fn inline() -> quote::Tokens {
+        quote! {
+            #[inline]
+        }
     }
 
-    pub fn inline() -> ast::Attribute {
-        aster::AstBuilder::new().attr().word("inline")
+    pub fn doc(comment: String) -> quote::Tokens {
+        // Doc comments are already preprocessed into nice `///` formats by the
+        // time they get here. Just make sure that we have newlines around it so
+        // that nothing else gets wrapped into the comment.
+        let mut tokens = quote! {};
+        tokens.append("\n");
+        tokens.append(comment);
+        tokens.append("\n");
+        tokens
     }
 
-    pub fn doc(comment: String) -> ast::Attribute {
-        aster::AstBuilder::new().attr().doc(&*comment)
-    }
-
-    pub fn link_name(name: &str) -> ast::Attribute {
-        aster::AstBuilder::new()
-            .attr()
-            .name_value("link_name")
-            .str(name)
+    pub fn link_name(name: &str) -> quote::Tokens {
+        // LLVM mangles the name by default but it's already mangled.
+        // Prefixing the name with \u{1} should tell LLVM to not mangle it.
+        let name = format!("\u{1}{}", name);
+        quote! {
+            #[link_name = #name]
+        }
     }
 }
 
 /// Generates a proper type for a field or type with a given `Layout`, that is,
 /// a type with the correct size and alignment restrictions.
-pub fn blob(layout: Layout) -> P<ast::Ty> {
+pub fn blob(layout: Layout) -> quote::Tokens {
     let opaque = layout.opaque();
 
     // FIXME(emilio, #412): We fall back to byte alignment, but there are
@@ -75,39 +71,46 @@ pub fn blob(layout: Layout) -> P<ast::Ty> {
         }
     };
 
+    let ty_name = quote::Ident::new(ty_name);
+
     let data_len = opaque.array_size().unwrap_or(layout.size);
 
-    let inner_ty = aster::AstBuilder::new().ty().path().id(ty_name).build();
     if data_len == 1 {
-        inner_ty
+        quote! {
+            #ty_name
+        }
     } else {
-        aster::ty::TyBuilder::new().array(data_len).build(inner_ty)
+        quote! {
+            [ #ty_name ; #data_len ]
+        }
     }
 }
 
 pub mod ast_ty {
-    use aster;
     use ir::context::BindgenContext;
     use ir::function::FunctionSig;
     use ir::ty::FloatKind;
-    use syntax::ast;
-    use syntax::ptr::P;
+    use quote;
 
-    pub fn raw_type(ctx: &BindgenContext, name: &str) -> P<ast::Ty> {
-        let ident = ctx.rust_ident_raw(&name);
+    pub fn raw_type(ctx: &BindgenContext, name: &str) -> quote::Tokens {
+        let ident = ctx.rust_ident_raw(name);
         match ctx.options().ctypes_prefix {
             Some(ref prefix) => {
-                let prefix = ctx.rust_ident_raw(prefix);
-                quote_ty!(ctx.ext_cx(), $prefix::$ident)
+                let prefix = ctx.rust_ident_raw(prefix.as_str());
+                quote! {
+                    #prefix::#ident
+                }
             }
-            None => quote_ty!(ctx.ext_cx(), ::std::os::raw::$ident),
+            None => quote! {
+                ::std::os::raw::#ident
+            },
         }
     }
 
     pub fn float_kind_rust_type(
         ctx: &BindgenContext,
         fk: FloatKind,
-    ) -> P<ast::Ty> {
+    ) -> quote::Tokens {
         // TODO: we probably should just take the type layout into
         // account?
         //
@@ -116,64 +119,57 @@ pub mod ast_ty {
         // FIXME: `c_longdouble` doesn't seem to be defined in some
         // systems, so we use `c_double` directly.
         match (fk, ctx.options().convert_floats) {
-            (FloatKind::Float, true) => aster::ty::TyBuilder::new().f32(),
+            (FloatKind::Float, true) => quote! { f32 },
             (FloatKind::Double, true) |
-            (FloatKind::LongDouble, true) => aster::ty::TyBuilder::new().f64(),
+            (FloatKind::LongDouble, true) => quote! { f64 },
             (FloatKind::Float, false) => raw_type(ctx, "c_float"),
             (FloatKind::Double, false) |
             (FloatKind::LongDouble, false) => raw_type(ctx, "c_double"),
-            (FloatKind::Float128, _) => {
-                aster::ty::TyBuilder::new().array(16).u8()
-            }
+            (FloatKind::Float128, _) => quote! { [u8; 16] },
         }
     }
 
-    pub fn int_expr(val: i64) -> P<ast::Expr> {
-        use std::i64;
-        let expr = aster::AstBuilder::new().expr();
+    pub fn int_expr(val: i64) -> quote::Tokens {
+        // Don't use quote! { #val } because that adds the type suffix.
+        let mut tokens = quote! {};
+        tokens.append(val.to_string());
+        tokens
+    }
 
-        // This is not representable as an i64 if it's negative, so we
-        // special-case it.
-        //
-        // Fix in aster incoming.
-        if val == i64::MIN {
-            expr.neg().uint(1u64 << 63)
-        } else {
-            expr.int(val)
+    pub fn uint_expr(val: u64) -> quote::Tokens {
+        // Don't use quote! { #val } because that adds the type suffix.
+        let mut tokens = quote! {};
+        tokens.append(val.to_string());
+        tokens
+    }
+
+    /// Returns hex representation of the given value.
+    pub fn hex_expr(val: u64) -> quote::Tokens {
+        let mut tokens = quote! {};
+        tokens.append(format!("{:#x}", val));
+        tokens
+    }
+
+    pub fn byte_array_expr(bytes: &[u8]) -> quote::Tokens {
+        let mut bytes: Vec<_> = bytes.iter().cloned().collect();
+        bytes.push(0);
+        quote! {
+            #bytes
         }
     }
 
-    pub fn bool_expr(val: bool) -> P<ast::Expr> {
-        aster::AstBuilder::new().expr().bool(val)
-    }
-
-    pub fn byte_array_expr(bytes: &[u8]) -> P<ast::Expr> {
-        let mut vec = Vec::with_capacity(bytes.len() + 1);
-        for byte in bytes {
-            vec.push(int_expr(*byte as i64));
-        }
-        vec.push(int_expr(0));
-
-        let kind = ast::ExprKind::Array(vec);
-
-        aster::AstBuilder::new().expr().build_expr_kind(kind)
-    }
-
-    pub fn cstr_expr(mut string: String) -> P<ast::Expr> {
+    pub fn cstr_expr(mut string: String) -> quote::Tokens {
         string.push('\0');
-        aster::AstBuilder::new().expr().build_lit(
-            aster::AstBuilder::new()
-                .lit()
-                .byte_str(string),
-        )
+        let b = quote::ByteStr(&string);
+        quote! {
+            #b
+        }
     }
 
     pub fn float_expr(
         ctx: &BindgenContext,
         f: f64,
-    ) -> Result<P<ast::Expr>, ()> {
-        use aster::symbol::ToSymbol;
-
+    ) -> Result<quote::Tokens, ()> {
         if f.is_finite() {
             let mut string = f.to_string();
 
@@ -182,21 +178,28 @@ pub mod ast_ty {
                 string.push('.');
             }
 
-            let kind =
-                ast::LitKind::FloatUnsuffixed(string.as_str().to_symbol());
-            return Ok(aster::AstBuilder::new().expr().lit().build_lit(kind));
+            let mut tokens = quote! {};
+            tokens.append(string);
+            return Ok(tokens);
         }
 
         let prefix = ctx.trait_prefix();
+
         if f.is_nan() {
-            return Ok(quote_expr!(ctx.ext_cx(), ::$prefix::f64::NAN));
+            return Ok(quote! {
+                ::#prefix::f64::NAN
+            });
         }
 
         if f.is_infinite() {
             return Ok(if f.is_sign_positive() {
-                quote_expr!(ctx.ext_cx(), ::$prefix::f64::INFINITY)
+                quote! {
+                    ::#prefix::f64::INFINITY
+                }
             } else {
-                quote_expr!(ctx.ext_cx(), ::$prefix::f64::NEG_INFINITY)
+                quote! {
+                    ::#prefix::f64::NEG_INFINITY
+                }
             });
         }
 
@@ -207,23 +210,24 @@ pub mod ast_ty {
     pub fn arguments_from_signature(
         signature: &FunctionSig,
         ctx: &BindgenContext,
-    ) -> Vec<P<ast::Expr>> {
-        // TODO: We need to keep in sync the argument names, so we should unify
-        // this with the other loop that decides them.
+    ) -> Vec<quote::Tokens> {
         let mut unnamed_arguments = 0;
         signature
             .argument_types()
             .iter()
             .map(|&(ref name, _ty)| {
-                let arg_name = match *name {
-                    Some(ref name) => ctx.rust_mangle(name).into_owned(),
+                match *name {
+                    Some(ref name) => {
+                        let name = ctx.rust_ident(name);
+                        quote! { #name }
+                    }
                     None => {
                         unnamed_arguments += 1;
-                        format!("arg{}", unnamed_arguments)
+                        let name = ctx.rust_ident(format!("arg{}", unnamed_arguments));
+                        quote! { #name }
                     }
-                };
-                aster::expr::ExprBuilder::new().id(arg_name)
+                }
             })
-            .collect::<Vec<_>>()
+            .collect()
     }
 }

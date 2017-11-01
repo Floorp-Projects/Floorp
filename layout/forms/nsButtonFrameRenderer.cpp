@@ -150,17 +150,6 @@ nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems()
     return false;
   }
 
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
-  nsRect frameRect =
-    nsCSSRendering::GetShadowRect(borderRect, nativeTheme, mFrame);
-
-  if (hasBorderRadius) {
-    nscoord twipsRadii[8];
-    nsSize sz = frameRect.Size();
-    hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
-  }
-
   return true;
 }
 
@@ -265,7 +254,10 @@ class nsDisplayButtonBorder : public nsDisplayItem {
 public:
   nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder,
                                   nsButtonFrameRenderer* aRenderer)
-    : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+    : nsDisplayItem(aBuilder, aRenderer->GetFrame())
+    , mBFR(aRenderer)
+    , mBorderIsEmpty(false)
+  {
     MOZ_COUNT_CTOR(nsDisplayButtonBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -303,6 +295,7 @@ public:
 private:
   nsButtonFrameRenderer* mBFR;
   Maybe<nsCSSBorderRenderer> mBorderRenderer;
+  bool mBorderIsEmpty;
 };
 
 nsDisplayItemGeometry*
@@ -329,6 +322,7 @@ nsDisplayButtonBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
       return LAYER_NONE;
     }
 
+    mBorderIsEmpty = false;
     Maybe<nsCSSBorderRenderer> br =
     nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
                                          nullptr,
@@ -336,8 +330,12 @@ nsDisplayButtonBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                          nsRect(),
                                          nsRect(offset, mFrame->GetSize()),
                                          mFrame->StyleContext(),
-                                         mFrame->GetSkipSides());
+                                         mFrame->GetSkipSides(),
+                                         &mBorderIsEmpty);
     if (!br) {
+      if (mBorderIsEmpty) {
+        return LAYER_ACTIVE;
+      }
       return LAYER_NONE;
     }
 
@@ -372,7 +370,11 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
     return false;
   }
 
-  MOZ_ASSERT(mBorderRenderer);
+  if (!mBorderRenderer) {
+    // empty border, nothing to do
+    MOZ_ASSERT(mBorderIsEmpty);
+    return true;
+  }
 
   // This is really a combination of paint box shadow inner +
   // paint border.

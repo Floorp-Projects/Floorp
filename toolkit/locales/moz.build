@@ -14,3 +14,12 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
   DEFINES['MOZ_GTK'] = True
 
 JAR_MANIFESTS += ['jar.mn']
+
+GENERATED_FILES = [
+    'multilocale.json',
+]
+multilocale = GENERATED_FILES['multilocale.json']
+multilocale.script = 'gen_multilocale.py'
+FINAL_TARGET_FILES.res += [
+    '!multilocale.json',
+]

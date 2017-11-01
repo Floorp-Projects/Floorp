@@ -18,17 +18,6 @@ impl RegexSet {
         self.items.is_empty()
     }
 
-    /// Extend this set with every regex in the iterator.
-    pub fn extend<I, S>(&mut self, iter: I)
-    where
-        I: IntoIterator<Item = S>,
-        S: AsRef<str>,
-    {
-        for s in iter.into_iter() {
-            self.insert(s)
-        }
-    }
-
     /// Insert a new regex into this set.
     pub fn insert<S>(&mut self, string: S)
     where
@@ -41,10 +30,6 @@ impl RegexSet {
     /// Returns slice of String from its field 'items'
     pub fn get_items(&self) -> &[String] {
         &self.items[..]
-    }
-    /// Returns reference of its field 'set'
-    pub fn get_set(&self) -> Option<&RxSet> {
-        self.set.as_ref()
     }
 
     /// Construct a RegexSet from the set of entries we've accumulated.
