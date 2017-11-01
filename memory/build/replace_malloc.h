@@ -79,15 +79,15 @@ MOZ_BEGIN_EXTERN_C
 // definitions.
 #ifndef MOZ_NO_REPLACE_FUNC_DECL
 
-#  ifndef MOZ_REPLACE_WEAK
-#    define MOZ_REPLACE_WEAK
-#  endif
+#ifndef MOZ_REPLACE_WEAK
+#define MOZ_REPLACE_WEAK
+#endif
 
-#  define MALLOC_DECL(name, return_type, ...) \
-    MOZ_EXPORT return_type replace_ ## name(__VA_ARGS__) MOZ_REPLACE_WEAK;
+#define MALLOC_DECL(name, return_type, ...)                                    \
+  MOZ_EXPORT return_type replace_##name(__VA_ARGS__) MOZ_REPLACE_WEAK;
 
-#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
-#  include "malloc_decls.h"
+#define MALLOC_FUNCS MALLOC_FUNCS_ALL
+#include "malloc_decls.h"
 
 #endif // MOZ_NO_REPLACE_FUNC_DECL
 
