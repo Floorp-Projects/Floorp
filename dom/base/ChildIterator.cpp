@@ -162,17 +162,17 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
 }
 
 bool
-ExplicitChildIterator::Seek(nsIContent* aChildToFind)
+ExplicitChildIterator::Seek(const nsIContent* aChildToFind)
 {
   if (aChildToFind->GetParent() == mParent &&
       !aChildToFind->IsRootOfAnonymousSubtree()) {
     // Fast path: just point ourselves to aChildToFind, which is a
     // normal DOM child of ours.
-    MOZ_ASSERT(!nsContentUtils::IsContentInsertionPoint(aChildToFind));
-    mChild = aChildToFind;
+    mChild = const_cast<nsIContent*>(aChildToFind);
     mIndexInInserted = 0;
     mDefaultChild = nullptr;
     mIsFirst = false;
+    MOZ_ASSERT(!nsContentUtils::IsContentInsertionPoint(mChild));
     return true;
   }
 
@@ -286,7 +286,7 @@ AllChildrenIterator::Get() const
 
 
 bool
-AllChildrenIterator::Seek(nsIContent* aChildToFind)
+AllChildrenIterator::Seek(const nsIContent* aChildToFind)
 {
   if (mPhase == eAtBegin || mPhase == eAtBeforeKid) {
     mPhase = eAtExplicitKids;
