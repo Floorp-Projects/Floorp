@@ -25,6 +25,7 @@ float ComputeScaleFactor(int aDCWidth, int aDCHeight,
 
 PDFViaEMFPrintHelper::PDFViaEMFPrintHelper()
   : mPDFDoc(nullptr)
+  , mPrfile(nullptr)
 {
 }
 
@@ -71,6 +72,38 @@ PDFViaEMFPrintHelper::OpenDocument(const char* aFileName)
 
   mPDFDoc = mPDFiumEngine->LoadDocument(aFileName, nullptr);
   NS_ENSURE_TRUE(mPDFDoc, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+nsresult
+PDFViaEMFPrintHelper::OpenDocument(const FileDescriptor& aFD)
+{
+  MOZ_ASSERT(!mPrfile, "Forget to call CloseDocument?");
+
+  if (mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time, "
+                           "Use CloseDocument() to close the opened file "
+                           "before calling OpenDocument()");
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ENSURE_TRUE(CreatePDFiumEngineIfNeed(), NS_ERROR_FAILURE);
+
+  auto rawFD = aFD.ClonePlatformHandle();
+  PRFileDesc* prfile = PR_ImportFile(PROsfd(rawFD.release()));
+  NS_ENSURE_TRUE(prfile, NS_ERROR_FAILURE);
+
+  mPDFDoc = mPDFiumEngine->LoadDocument(prfile, nullptr);
+  if (!mPDFDoc) {
+    PR_Close(prfile);
+    return NS_ERROR_FAILURE;
+  }
+
+  // mPDFiumEngine keeps using this handle until we close mPDFDoc. Instead of
+  // closing this HANDLE here, we close it in
+  // PDFViaEMFPrintHelper::CloseDocument.
+  mPrfile = prfile;
 
   return NS_OK;
 }
@@ -175,6 +208,11 @@ PDFViaEMFPrintHelper::CloseDocument()
   if (mPDFDoc) {
     mPDFiumEngine->CloseDocument(mPDFDoc);
     mPDFDoc = nullptr;
+  }
+
+  if (mPrfile) {
+    PR_Close(mPrfile);
+    mPrfile = nullptr;
   }
 }
 
