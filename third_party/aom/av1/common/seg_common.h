@@ -26,14 +26,37 @@ extern "C" {
 
 #define PREDICTION_PROBS 3
 
+#if CONFIG_LOOPFILTER_LEVEL
+typedef enum {
+  SEG_LVL_ALT_Q,       // Use alternate Quantizer ....
+  SEG_LVL_ALT_LF_Y_V,  // Use alternate loop filter value on y plane vertical
+  SEG_LVL_ALT_LF_Y_H,  // Use alternate loop filter value on y plane horizontal
+  SEG_LVL_ALT_LF_U,    // Use alternate loop filter value on u plane
+  SEG_LVL_ALT_LF_V,    // Use alternate loop filter value on v plane
+  SEG_LVL_REF_FRAME,   // Optional Segment reference frame
+  SEG_LVL_SKIP,        // Optional Segment (0,0) + skip mode
+#if CONFIG_SEGMENT_ZEROMV
+  SEG_LVL_ZEROMV,
+  SEG_LVL_MAX
+#else
+  SEG_LVL_MAX
+#endif
+} SEG_LVL_FEATURES;
+#else  // CONFIG_LOOPFILTER_LEVEL
 // Segment level features.
 typedef enum {
   SEG_LVL_ALT_Q = 0,      // Use alternate Quantizer ....
   SEG_LVL_ALT_LF = 1,     // Use alternate loop filter value...
   SEG_LVL_REF_FRAME = 2,  // Optional Segment reference frame
-  SEG_LVL_SKIP = 3,       // Optional Segment (0,0) + skip mode
-  SEG_LVL_MAX = 4         // Number of features supported
+  SEG_LVL_SKIP = 3,  // Optional Segment (0,0) + skip mode
+#if CONFIG_SEGMENT_ZEROMV
+  SEG_LVL_ZEROMV = 4,
+  SEG_LVL_MAX = 5
+#else
+  SEG_LVL_MAX = 4
+#endif
 } SEG_LVL_FEATURES;
+#endif  // CONFIG_LOOPFILTER_LEVEL
 
 struct segmentation {
   uint8_t enabled;

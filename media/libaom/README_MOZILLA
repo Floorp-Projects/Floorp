@@ -20,6 +20,6 @@ To update to a fork, use
 
   ./mach vendor aom --repo <repository url> [-r <commit>]
 
-The last update was pulled from https://aomedia.googlesource.com/aom
+The last update was pulled from https://aomedia.googlesource.com/aom/
 
-The git commit ID used was f5bdeac22930ff4c6b219be49c843db35970b918 (Thu Jul 27 18:23:37 2017 +0000).
+The git commit ID used was e87fb2378f01103d5d6e477a4ef6892dc714e614 (Tue Oct 10 19:20:52 2017 +0000).

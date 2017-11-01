@@ -64,6 +64,7 @@ endif
 
 # intra predictions
 DSP_SRCS-yes += intrapred.c
+DSP_SRCS-yes += intrapred_common.h
 
 ifneq ($(CONFIG_ANS),yes)
 DSP_SRCS-yes += entcode.c
@@ -75,9 +76,16 @@ DSP_SRCS-$(HAVE_SSE2) += x86/intrapred_sse2.asm
 DSP_SRCS-$(HAVE_SSSE3) += x86/intrapred_ssse3.asm
 DSP_SRCS-$(HAVE_SSSE3) += x86/aom_subpixel_8t_ssse3.asm
 
+DSP_SRCS-$(HAVE_SSE2) += x86/intrapred_sse2.c
+DSP_SRCS-$(HAVE_SSSE3) += x86/intrapred_ssse3.c
+DSP_SRCS-$(HAVE_AVX2) += x86/intrapred_avx2.c
+
 ifeq ($(CONFIG_HIGHBITDEPTH),yes)
 DSP_SRCS-$(HAVE_SSE)  += x86/highbd_intrapred_sse2.asm
 DSP_SRCS-$(HAVE_SSE2) += x86/highbd_intrapred_sse2.asm
+DSP_SRCS-$(HAVE_SSE2) += x86/highbd_intrapred_sse2.c
+DSP_SRCS-$(HAVE_SSSE3) += x86/highbd_intrapred_ssse3.c
+DSP_SRCS-$(HAVE_SSSE3) += x86/highbd_intrapred_avx2.c
 endif  # CONFIG_HIGHBITDEPTH
 
 DSP_SRCS-$(HAVE_NEON_ASM) += arm/intrapred_neon_asm$(ASM)
@@ -120,6 +128,7 @@ DSP_SRCS-$(HAVE_AVX2)  += x86/highbd_convolve_avx2.c
 endif
 DSP_SRCS-$(HAVE_SSE2)  += x86/aom_convolve_copy_sse2.asm
 
+ifneq ($(CONFIG_EXT_PARTITION),yes)
 ifeq ($(HAVE_NEON_ASM),yes)
 DSP_SRCS-yes += arm/aom_convolve_copy_neon_asm$(ASM)
 DSP_SRCS-yes += arm/aom_convolve8_avg_neon_asm$(ASM)
@@ -135,6 +144,7 @@ DSP_SRCS-yes += arm/aom_convolve_avg_neon.c
 DSP_SRCS-yes += arm/aom_convolve_neon.c
 endif  # HAVE_NEON
 endif  # HAVE_NEON_ASM
+endif  # CONFIG_EXT_PARTITION
 
 # common (msa)
 DSP_SRCS-$(HAVE_MSA) += mips/aom_convolve8_avg_horiz_msa.c
@@ -164,7 +174,10 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_vert_dspr2.c
 DSP_SRCS-yes += loopfilter.c
 
 DSP_SRCS-$(ARCH_X86)$(ARCH_X86_64)   += x86/loopfilter_sse2.c
-DSP_SRCS-$(HAVE_AVX2)                += x86/loopfilter_avx2.c
+DSP_SRCS-$(HAVE_SSE2)                += x86/lpf_common_sse2.h
+
+ifneq ($(CONFIG_PARALLEL_DEBLOCKING),yes)
+DSP_SRCS-$(HAVE_AVX2)   += x86/loopfilter_avx2.c
 
 DSP_SRCS-$(HAVE_NEON)   += arm/loopfilter_neon.c
 ifeq ($(HAVE_NEON_ASM),yes)
@@ -191,13 +204,16 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/loopfilter_masks_dspr2.h
 DSP_SRCS-$(HAVE_DSPR2)  += mips/loopfilter_mb_dspr2.c
 DSP_SRCS-$(HAVE_DSPR2)  += mips/loopfilter_mb_horiz_dspr2.c
 DSP_SRCS-$(HAVE_DSPR2)  += mips/loopfilter_mb_vert_dspr2.c
+endif  # !CONFIG_PARALLEL_DEBLOCKING
 
 ifeq ($(CONFIG_HIGHBITDEPTH),yes)
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_loopfilter_sse2.c
+DSP_SRCS-$(HAVE_AVX2)   += x86/highbd_loopfilter_avx2.c
 endif  # CONFIG_HIGHBITDEPTH
 
 DSP_SRCS-yes            += txfm_common.h
 DSP_SRCS-yes            += x86/txfm_common_intrin.h
+DSP_SRCS-$(HAVE_AVX2)   += x86/common_avx2.h
 DSP_SRCS-$(HAVE_SSE2)   += x86/txfm_common_sse2.h
 DSP_SRCS-$(HAVE_SSSE3)  += x86/obmc_intrinsic_ssse3.h
 DSP_SRCS-$(HAVE_MSA)    += mips/txfm_macros_msa.h
@@ -343,10 +359,8 @@ DSP_SRCS-$(HAVE_AVX2)   += x86/sad_highbd_avx2.c
 endif
 
 ifeq ($(CONFIG_AV1_ENCODER),yes)
-ifeq ($(CONFIG_EXT_INTER),yes)
 DSP_SRCS-$(HAVE_SSSE3)  += x86/masked_sad_intrin_ssse3.c
 DSP_SRCS-$(HAVE_SSSE3)  += x86/masked_variance_intrin_ssse3.c
-endif  #CONFIG_EXT_INTER
 ifeq ($(CONFIG_MOTION_VAR),yes)
 DSP_SRCS-$(HAVE_SSE4_1) += x86/obmc_sad_sse4.c
 DSP_SRCS-$(HAVE_SSE4_1) += x86/obmc_variance_sse4.c

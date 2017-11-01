@@ -10,5 +10,5 @@
  */
 
 #include "aom_dsp/aom_simd.h"
-#define SIMD_FUNC(name) name##_sse2
-#include "./od_dering_simd.h"
+#define SIMD_FUNC(name) name##_sse4_1
+#include "./cdef_block_simd.h"

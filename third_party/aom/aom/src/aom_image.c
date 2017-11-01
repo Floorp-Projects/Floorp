@@ -238,3 +238,17 @@ void aom_img_free(aom_image_t *img) {
     if (img->self_allocd) free(img);
   }
 }
+
+int aom_img_plane_width(const aom_image_t *img, int plane) {
+  if (plane > 0 && img->x_chroma_shift > 0)
+    return (img->d_w + 1) >> img->x_chroma_shift;
+  else
+    return img->d_w;
+}
+
+int aom_img_plane_height(const aom_image_t *img, int plane) {
+  if (plane > 0 && img->y_chroma_shift > 0)
+    return (img->d_h + 1) >> img->y_chroma_shift;
+  else
+    return img->d_h;
+}

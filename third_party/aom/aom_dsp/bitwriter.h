@@ -62,9 +62,8 @@ static INLINE void init_token_stats(TOKEN_STATS *token_stats) {
 
 static INLINE void aom_start_encode(aom_writer *bc, uint8_t *buffer) {
 #if CONFIG_ANS
-  (void)bc;
-  (void)buffer;
-  assert(0 && "buf_ans requires a more complicated startup procedure");
+  aom_buf_ans_alloc(bc, /* error context*/ NULL);
+  buf_ans_write_init(bc, buffer);
 #else
   aom_daala_start_encode(bc, buffer);
 #endif
@@ -72,8 +71,8 @@ static INLINE void aom_start_encode(aom_writer *bc, uint8_t *buffer) {
 
 static INLINE void aom_stop_encode(aom_writer *bc) {
 #if CONFIG_ANS
-  (void)bc;
-  assert(0 && "buf_ans requires a more complicated shutdown procedure");
+  aom_buf_ans_flush(bc);
+  bc->pos = buf_ans_write_end(bc);
 #else
   aom_daala_stop_encode(bc);
 #endif
@@ -142,6 +141,14 @@ static INLINE void aom_write_symbol(aom_writer *w, int symb, aom_cdf_prob *cdf,
   aom_write_cdf(w, symb, cdf, nsymbs);
   update_cdf(cdf, symb, nsymbs);
 }
+
+#if CONFIG_LV_MAP
+static INLINE void aom_write_bin(aom_writer *w, int symb, aom_cdf_prob *cdf,
+                                 int nsymbs) {
+  aom_write_cdf(w, symb, cdf, nsymbs);
+  update_cdf(cdf, symb, nsymbs);
+}
+#endif
 
 static INLINE void aom_write_tree_as_cdf(aom_writer *w,
                                          const aom_tree_index *tree,

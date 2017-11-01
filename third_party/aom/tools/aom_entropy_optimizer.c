@@ -28,7 +28,6 @@
 #include "./aom_config.h"
 #include "av1/common/entropymode.h"
 
-#if CONFIG_ALT_INTRA
 #if CONFIG_SMOOTH_HV
 const aom_tree_index av1_intra_mode_tree[TREE_SIZE(INTRA_MODES)] = {
   -DC_PRED,
@@ -70,25 +69,19 @@ const aom_tree_index av1_intra_mode_tree[TREE_SIZE(INTRA_MODES)] = {
   -D207_PRED, -SMOOTH_PRED, /* 9 = D207_NODE */
 };
 #endif  // CONFIG_SMOOTH_HV
-#else
-const aom_tree_index av1_intra_mode_tree[TREE_SIZE(INTRA_MODES)] = {
-  -DC_PRED,   2,          /* 0 = DC_NODE */
-  -TM_PRED,   4,          /* 1 = TM_NODE */
-  -V_PRED,    6,          /* 2 = V_NODE */
-  8,          12,         /* 3 = COM_NODE */
-  -H_PRED,    10,         /* 4 = H_NODE */
-  -D135_PRED, -D117_PRED, /* 5 = D135_NODE */
-  -D45_PRED,  14,         /* 6 = D45_NODE */
-  -D63_PRED,  16,         /* 7 = D63_NODE */
-  -D153_PRED, -D207_PRED  /* 8 = D153_NODE */
-};
-#endif  // CONFIG_ALT_INTRA
 
 #define SPACES_PER_TAB 2
 
 typedef unsigned int aom_count_type;
 // A log file recording parsed counts
 static FILE *logfile;  // TODO(yuec): make it a command line option
+
+static INLINE aom_prob get_binary_prob_new(unsigned int n0, unsigned int n1) {
+  // The "+1" will prevent this function from generating extreme probability
+  // when both n0 and n1 are small
+  const unsigned int den = n0 + 1 + n1 + 1;
+  return get_prob(n0 + 1, den);
+}
 
 // Optimized probabilities will be stored in probs[].
 static unsigned int optimize_tree_probs(const aom_tree_index *tree,
@@ -101,7 +94,7 @@ static unsigned int optimize_tree_probs(const aom_tree_index *tree,
   const int r = tree[idx + 1];
   const unsigned int right_count =
       (r <= 0) ? counts[-r] : optimize_tree_probs(tree, r, counts, probs);
-  probs[idx >> 1] = get_binary_prob(left_count, right_count);
+  probs[idx >> 1] = get_binary_prob_new(left_count, right_count);
   return left_count + right_count;
 }
 
@@ -127,7 +120,7 @@ static int parse_stats(aom_count_type **ct_ptr, FILE *const probsfile, int tabs,
       optimize_tree_probs(tree, 0, counts1d, probs);
     } else {
       assert(total_modes == 2);
-      probs[0] = get_binary_prob(counts1d[0], counts1d[1]);
+      probs[0] = get_binary_prob_new(counts1d[0], counts1d[1]);
     }
     if (tabs > 0) fprintf(probsfile, "%*c", tabs * SPACES_PER_TAB, ' ');
     for (int k = 0; k < total_modes - 1; ++k) {
@@ -144,10 +137,10 @@ static int parse_stats(aom_count_type **ct_ptr, FILE *const probsfile, int tabs,
     for (int k = 0; k < cts_each_dim[0]; ++k) {
       if (k == cts_each_dim[0] - 1) {
         fprintf(probsfile, " %3d ",
-                get_binary_prob((*ct_ptr)[0], (*ct_ptr)[1]));
+                get_binary_prob_new((*ct_ptr)[0], (*ct_ptr)[1]));
       } else {
         fprintf(probsfile, " %3d,",
-                get_binary_prob((*ct_ptr)[0], (*ct_ptr)[1]));
+                get_binary_prob_new((*ct_ptr)[0], (*ct_ptr)[1]));
       }
       fprintf(logfile, "%d %d\n", (*ct_ptr)[0], (*ct_ptr)[1]);
       (*ct_ptr) += 2;
@@ -402,27 +395,10 @@ int main(int argc, const char **argv) {
   /* Interpolation filter */
   cts_each_dim[0] = SWITCHABLE_FILTER_CONTEXTS;
   cts_each_dim[1] = SWITCHABLE_FILTERS;
-  optimize_entropy_table(
-      &fc.switchable_interp[0][0], probsfile, 2, cts_each_dim,
-      av1_switchable_interp_tree, 0,
-      "static const aom_prob \n"
-      "default_switchable_interp_prob[SWITCHABLE_FILTER_CONTEXTS]"
-      "[SWITCHABLE_FILTERS - 1]");
   optimize_cdf_table(&fc.switchable_interp[0][0], probsfile, 2, cts_each_dim,
                      "static const aom_cdf_prob\n"
                      "default_switchable_interp_cdf[SWITCHABLE_FILTER_CONTEXTS]"
                      "[CDF_SIZE(SWITCHABLE_FILTERS)]");
-
-  /* Blockzero */
-  cts_each_dim[0] = TX_SIZES;
-  cts_each_dim[1] = PLANE_TYPES;
-  cts_each_dim[2] = REF_TYPES;
-  cts_each_dim[3] = BLOCKZ_CONTEXTS;
-  cts_each_dim[4] = 2;
-  optimize_entropy_table(
-      &fc.blockz_count[0][0][0][0][0], probsfile, 5, cts_each_dim, NULL, 1,
-      "static const aom_prob av1_default_blockzero_probs[TX_SIZES]"
-      "[PLANE_TYPES][REF_TYPES][BLOCKZ_CONTEXTS]");
 
   /* Motion vector referencing */
   cts_each_dim[0] = NEWMV_MODE_CONTEXTS;
@@ -461,8 +437,7 @@ int main(int argc, const char **argv) {
                      "static const aom_cdf_prob "
                      "default_drl_cdf[DRL_MODE_CONTEXTS][CDF_SIZE(2)]");
 
-/* ext_inter experiment */
-#if CONFIG_EXT_INTER
+  /* ext_inter experiment */
   /* New compound mode */
   cts_each_dim[0] = INTER_MODE_CONTEXTS;
   cts_each_dim[1] = INTER_COMPOUND_MODES;
@@ -534,7 +509,6 @@ int main(int argc, const char **argv) {
       &fc.compound_interinter[0][0], probsfile, 2, cts_each_dim,
       "static const aom_cdf_prob\n"
       "default_compound_type_cdf[BLOCK_SIZES_ALL][CDF_SIZE(COMPOUND_TYPES)]");
-#endif
 
 /* motion_var and warped_motion experiments */
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
@@ -559,6 +533,31 @@ int main(int argc, const char **argv) {
                      "static const aom_cdf_prob "
                      "default_obmc_cdf[BLOCK_SIZES_ALL][CDF_SIZE(2)]");
 #endif  // CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+  cts_each_dim[0] = ADAPT_OVERLAP_BLOCKS;
+  cts_each_dim[1] = MAX_NCOBMC_MODES;
+  optimize_entropy_table(
+      &fc.ncobmc_mode[0][0], probsfile, 2, cts_each_dim, av1_ncobmc_mode_tree,
+      0,
+      "static const aom_prob default_ncobmc_mode_prob[ADAPT_OVERLAP_BLOCKS]"
+      "[MAX_NCOBMC_MODES - 1]");
+  optimize_cdf_table(&fc.ncobmc_mode[0][0], probsfile, 2, cts_each_dim,
+                     "static const aom_cdf_prob\n"
+                     "default_ncobmc_mode_cdf[ADAPT_OVERLAP_BLOCKS]"
+                     "[CDF_SIZE(MAX_NCOBMC_MODES)]");
+#if CONFIG_WARPED_MOTION
+  cts_each_dim[0] = BLOCK_SIZES_ALL;
+  cts_each_dim[1] = OBMC_FAMILY_MODES;
+  optimize_entropy_table(
+      &fc.ncobmc[0][0], probsfile, 2, cts_each_dim, av1_ncobmc_tree, 0,
+      "static const aom_prob default_ncobmc_prob[BLOCK_SIZES_ALL]"
+      "[OBMC_FAMILY_MODES - 1]");
+  optimize_cdf_table(&fc.ncobmc[0][0], probsfile, 2, cts_each_dim,
+                     "static const aom_cdf_prob\n"
+                     "default_ncobmc_cdf[BLOCK_SIZES_ALL]"
+                     "[CDF_SIZE(OBMC_FAMILY_MODES)]");
+#endif
+#endif  // CONFIG_NCOBMC_ADAPT_WEIGHT
 #endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
 
   /* Intra/inter flag */
@@ -663,7 +662,7 @@ int main(int argc, const char **argv) {
 #endif  // CONFIG_EXT_REFS
 
 /* Compound single ref inter mode */
-#if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+#if CONFIG_COMPOUND_SINGLEREF
   cts_each_dim[0] = COMP_INTER_MODE_CONTEXTS;
   cts_each_dim[1] = 2;
   optimize_entropy_table(&fc.comp_inter_mode[0][0], probsfile, 2, cts_each_dim,
@@ -677,7 +676,6 @@ int main(int argc, const char **argv) {
 #endif
 
 /* Transform size */
-// TODO(yuec): av1_tx_size_tree has variable sizes, so needs special handling
 #if CONFIG_RECT_TX_EXT && (CONFIG_EXT_TX || CONFIG_VAR_TX)
   cts_each_dim[0] = 2;
   optimize_entropy_table(&fc.quarter_tx_size[0], probsfile, 1, cts_each_dim,
@@ -720,8 +718,7 @@ int main(int argc, const char **argv) {
       "static const aom_cdf_prob default_intrabc_cdf[CDF_SIZE(2)]");
 #endif
 
-/* delta_q experiment */
-#if CONFIG_DELTA_Q
+  /* delta_q */
   cts_each_dim[0] = DELTA_Q_PROBS;
   cts_each_dim[1] = 2;
   optimize_entropy_table(
@@ -733,7 +730,6 @@ int main(int argc, const char **argv) {
   optimize_entropy_table(
       &fc.delta_lf[0][0], probsfile, 2, cts_each_dim, NULL, 1,
       "static const aom_prob default_delta_lf_probs[DELTA_LF_PROBS]");
-#endif
 #endif
 
 /* Transform type */
@@ -796,6 +792,143 @@ int main(int argc, const char **argv) {
       &fc.filter_intra[0][0], probsfile, 2, cts_each_dim,
       "static const aom_cdf_prob default_filter_intra_cdf[2][CDF_SIZE(2)]");
 #endif
+
+#if CONFIG_LV_MAP
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = NUM_BASE_LEVELS;
+  cts_each_dim[3] = COEFF_BASE_CONTEXTS;
+  cts_each_dim[4] = 2;
+  optimize_entropy_table(&fc.coeff_base[0][0][0][0][0], probsfile, 5,
+                         cts_each_dim, NULL, 1,
+                         "static const aom_prob "
+                         "default_coeff_base[TX_SIZES][PLANE_TYPES][NUM_BASE_"
+                         "LEVELS][COEFF_BASE_CONTEXTS]");
+  optimize_cdf_table(&fc.coeff_base[0][0][0][0][0], probsfile, 5, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_coeff_base_cdf[TX_SIZES][PLANE_TYPES][NUM_BASE_"
+                     "LEVELS][COEFF_BASE_CONTEXTS][CDF_SIZE(2)]");
+
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = SIG_COEF_CONTEXTS;
+  cts_each_dim[3] = 2;
+  optimize_entropy_table(
+      &fc.nz_map[0][0][0][0], probsfile, 4, cts_each_dim, NULL, 1,
+      "static const aom_prob "
+      "default_nz_map[TX_SIZES][PLANE_TYPES][SIG_COEF_CONTEXTS]");
+  optimize_cdf_table(&fc.nz_map[0][0][0][0], probsfile, 4, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_nz_map_cdf[TX_SIZES][PLANE_TYPES][SIG_COEF_"
+                     "CONTEXTS][CDF_SIZE(2)]");
+
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = EOB_COEF_CONTEXTS;
+  cts_each_dim[3] = 2;
+  optimize_entropy_table(
+      &fc.eob_flag[0][0][0][0], probsfile, 4, cts_each_dim, NULL, 1,
+      "static const aom_prob "
+      "default_eob_flag[TX_SIZES][PLANE_TYPES][EOB_COEF_CONTEXTS]");
+  optimize_cdf_table(&fc.eob_flag[0][0][0][0], probsfile, 4, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_eob_flag_cdf[TX_SIZES][PLANE_TYPES][EOB_COEF_"
+                     "CONTEXTS][CDF_SIZE(2)]");
+
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = LEVEL_CONTEXTS;
+  cts_each_dim[3] = 2;
+  optimize_entropy_table(
+      &fc.coeff_lps[0][0][0][0], probsfile, 4, cts_each_dim, NULL, 1,
+      "static const aom_prob "
+      "default_coeff_lps[TX_SIZES][PLANE_TYPES][LEVEL_CONTEXTS]");
+  optimize_cdf_table(&fc.coeff_lps[0][0][0][0], probsfile, 4, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_coeff_lps_cdf[TX_SIZES][PLANE_TYPES][LEVEL_"
+                     "CONTEXTS][CDF_SIZE(2)]");
+
+#if BR_NODE
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = BASE_RANGE_SETS;
+  cts_each_dim[3] = LEVEL_CONTEXTS;
+  cts_each_dim[4] = 2;
+  optimize_entropy_table(&fc.coeff_br[0][0][0][0][0], probsfile, 5,
+                         cts_each_dim, NULL, 1,
+                         "static const aom_prob "
+                         "default_coeff_br[TX_SIZES][PLANE_TYPES][BASE_RANGE_"
+                         "SETS][LEVEL_CONTEXTS]");
+  optimize_cdf_table(&fc.coeff_br[0][0][0][0][0], probsfile, 5, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_coeff_br_cdf[TX_SIZES][PLANE_TYPES][BASE_RANGE_"
+                     "SETS][LEVEL_CONTEXTS][CDF_SIZE(2)]");
+#endif  // BR_NODE
+
+#if CONFIG_CTX1D
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = TX_CLASSES;
+  cts_each_dim[3] = 2;
+  optimize_entropy_table(&fc.eob_mode[0][0][0][0], probsfile, 4, cts_each_dim,
+                         NULL, 1,
+                         "static const aom_prob "
+                         "default_eob_mode[TX_SIZES][PLANE_TYPES][TX_CLASSES]");
+  optimize_cdf_table(&fc.eob_mode[0][0][0][0], probsfile, 4, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_eob_mode_cdf[TX_SIZES][PLANE_TYPES][TX_CLASSES]["
+                     "CDF_SIZE(2)]");
+
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = TX_CLASSES;
+  cts_each_dim[3] = EMPTY_LINE_CONTEXTS;
+  cts_each_dim[4] = 2;
+  optimize_entropy_table(&fc.empty_line[0][0][0][0][0], probsfile, 5,
+                         cts_each_dim, NULL, 1,
+                         "static const aom_prob "
+                         "default_empty_line[TX_SIZES][PLANE_TYPES][TX_CLASSES]"
+                         "[EMPTY_LINE_CONTEXTS]");
+  optimize_cdf_table(&fc.empty_line[0][0][0][0][0], probsfile, 5, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_empty_line_cdf[TX_SIZES][PLANE_TYPES][TX_CLASSES]"
+                     "[EMPTY_LINE_CONTEXTS][CDF_SIZE(2)]");
+
+  cts_each_dim[0] = TX_SIZES;
+  cts_each_dim[1] = PLANE_TYPES;
+  cts_each_dim[2] = TX_CLASSES;
+  cts_each_dim[3] = HV_EOB_CONTEXTS;
+  cts_each_dim[4] = 2;
+  optimize_entropy_table(
+      &fc.hv_eob[0][0][0][0][0], probsfile, 5, cts_each_dim, NULL, 1,
+      "static const aom_prob "
+      "default_hv_eob[TX_SIZES][PLANE_TYPES][TX_CLASSES][HV_EOB_CONTEXTS]");
+  optimize_cdf_table(&fc.hv_eob[0][0][0][0][0], probsfile, 5, cts_each_dim,
+                     "static const aom_cdf_prob "
+                     "default_hv_eob_cdf[TX_SIZES][PLANE_TYPES][TX_CLASSES][HV_"
+                     "EOB_CONTEXTS][CDF_SIZE(2)]");
+#endif  // CONFIG_CTX1D
+#endif  // CONFIG_LV_MAP
+
+/* lgt_from_pred experiment */
+#if CONFIG_LGT_FROM_PRED
+  cts_each_dim[0] = LGT_SIZES;
+  if (LGT_FROM_PRED_INTRA) {
+    cts_each_dim[1] = INTRA_MODES;
+    cts_each_dim[2] = 2;
+    optimize_entropy_table(&fc.intra_lgt[0][0][0], probsfile, 3, cts_each_dim,
+                           NULL, 1,
+                           "static const aom_prob default_intra_lgt_prob"
+                           "[LGT_SIZES][INTRA_MODES][2]");
+  }
+  if (LGT_FROM_PRED_INTER) {
+    cts_each_dim[1] = 2;
+    optimize_entropy_table(&fc.inter_lgt[0][0], probsfile, 2, cts_each_dim,
+                           NULL, 1,
+                           "static const aom_prob default_inter_lgt_prob"
+                           "[LGT_SIZES][2]");
+  }
+#endif  // CONFIG_LGT_FROM_PRED
 
   fclose(statsfile);
   fclose(logfile);

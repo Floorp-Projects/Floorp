@@ -138,47 +138,6 @@ int av1_prob_diff_update_savings_search(const unsigned int *ct, aom_prob oldp,
   return bestsavings;
 }
 
-int av1_prob_diff_update_savings_search_model(const unsigned int *ct,
-                                              const aom_prob oldp,
-                                              aom_prob *bestp, aom_prob upd,
-                                              int stepsize, int probwt) {
-  int i, old_b, new_b, update_b, savings, bestsavings;
-  int newp;
-  const int step_sign = *bestp > oldp ? -1 : 1;
-  const int step = stepsize * step_sign;
-  const int upd_cost = av1_cost_one(upd) - av1_cost_zero(upd);
-  const aom_prob *newplist, *oldplist;
-  aom_prob bestnewp;
-  oldplist = av1_pareto8_full[oldp - 1];
-  old_b = cost_branch256(ct + 2 * PIVOT_NODE, oldp);
-  for (i = UNCONSTRAINED_NODES; i < ENTROPY_NODES; ++i)
-    old_b += cost_branch256(ct + 2 * i, oldplist[i - UNCONSTRAINED_NODES]);
-
-  bestsavings = 0;
-  bestnewp = oldp;
-
-  assert(stepsize > 0);
-
-  if (old_b > upd_cost + (MIN_DELP_BITS << AV1_PROB_COST_SHIFT)) {
-    for (newp = *bestp; (newp - oldp) * step_sign < 0; newp += step) {
-      if (newp < 1 || newp > 255) continue;
-      newplist = av1_pareto8_full[newp - 1];
-      new_b = cost_branch256(ct + 2 * PIVOT_NODE, newp);
-      for (i = UNCONSTRAINED_NODES; i < ENTROPY_NODES; ++i)
-        new_b += cost_branch256(ct + 2 * i, newplist[i - UNCONSTRAINED_NODES]);
-      update_b = prob_diff_update_cost(newp, oldp) + upd_cost;
-      savings = old_b - new_b - update_b * probwt;
-      if (savings > bestsavings) {
-        bestsavings = savings;
-        bestnewp = newp;
-      }
-    }
-  }
-
-  *bestp = bestnewp;
-  return bestsavings;
-}
-
 void av1_cond_prob_diff_update(aom_writer *w, aom_prob *oldp,
                                const unsigned int ct[2], int probwt) {
   const aom_prob upd = DIFF_UPDATE_PROB;

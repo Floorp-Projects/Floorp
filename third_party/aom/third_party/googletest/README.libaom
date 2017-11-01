@@ -22,3 +22,5 @@ Local Modifications:
     CONTRIBUTORS
     LICENSE
     README.md
+- Suppress unsigned overflow instrumentation in the LCG
+  https://github.com/google/googletest/pull/1066

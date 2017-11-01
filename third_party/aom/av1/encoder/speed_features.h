@@ -21,31 +21,34 @@ extern "C" {
 enum {
   INTRA_ALL = (1 << DC_PRED) | (1 << V_PRED) | (1 << H_PRED) | (1 << D45_PRED) |
               (1 << D135_PRED) | (1 << D117_PRED) | (1 << D153_PRED) |
-              (1 << D207_PRED) | (1 << D63_PRED) |
-#if CONFIG_ALT_INTRA
-              (1 << SMOOTH_PRED) |
+              (1 << D207_PRED) | (1 << D63_PRED) | (1 << SMOOTH_PRED) |
 #if CONFIG_SMOOTH_HV
               (1 << SMOOTH_V_PRED) | (1 << SMOOTH_H_PRED) |
 #endif  // CONFIG_SMOOTH_HV
-#endif  // CONFIG_ALT_INTRA
               (1 << TM_PRED),
 #if CONFIG_CFL
   UV_INTRA_ALL = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED) |
                  (1 << UV_D45_PRED) | (1 << UV_D135_PRED) |
                  (1 << UV_D117_PRED) | (1 << UV_D153_PRED) |
                  (1 << UV_D207_PRED) | (1 << UV_D63_PRED) |
-#if CONFIG_ALT_INTRA
                  (1 << UV_SMOOTH_PRED) |
 #if CONFIG_SMOOTH_HV
                  (1 << UV_SMOOTH_V_PRED) | (1 << UV_SMOOTH_H_PRED) |
 #endif  // CONFIG_SMOOTH_HV
-#endif  // CONFIG_ALT_INTRA
-                 (1 << UV_TM_PRED),
+                 (1 << UV_TM_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC = (1 << UV_DC_PRED),
+  UV_INTRA_DC_CFL = (1 << UV_DC_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC_TM = (1 << UV_DC_PRED) | (1 << UV_TM_PRED),
+  UV_INTRA_DC_TM_CFL =
+      (1 << UV_DC_PRED) | (1 << UV_TM_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC_H_V = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED),
+  UV_INTRA_DC_H_V_CFL = (1 << UV_DC_PRED) | (1 << UV_V_PRED) |
+                        (1 << UV_H_PRED) | (1 << UV_CFL_PRED),
   UV_INTRA_DC_TM_H_V = (1 << UV_DC_PRED) | (1 << UV_TM_PRED) |
                        (1 << UV_V_PRED) | (1 << UV_H_PRED),
+  UV_INTRA_DC_TM_H_V_CFL = (1 << UV_DC_PRED) | (1 << UV_TM_PRED) |
+                           (1 << UV_V_PRED) | (1 << UV_H_PRED) |
+                           (1 << UV_CFL_PRED),
 #endif  // CONFIG_CFL
   INTRA_DC = (1 << DC_PRED),
   INTRA_DC_TM = (1 << DC_PRED) | (1 << TM_PRED),
@@ -54,7 +57,6 @@ enum {
       (1 << DC_PRED) | (1 << TM_PRED) | (1 << V_PRED) | (1 << H_PRED)
 };
 
-#if CONFIG_EXT_INTER
 enum {
 #if CONFIG_COMPOUND_SINGLEREF
 // TODO(zoeliu): To further consider following single ref comp modes:
@@ -90,17 +92,6 @@ enum {
                             (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
                             (1 << NEAR_NEARMV),
 };
-#else   // !CONFIG_EXT_INTER
-enum {
-  INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV),
-  INTER_NEAREST = (1 << NEARESTMV),
-  INTER_NEAREST_NEW = (1 << NEARESTMV) | (1 << NEWMV),
-  INTER_NEAREST_ZERO = (1 << NEARESTMV) | (1 << ZEROMV),
-  INTER_NEAREST_NEW_ZERO = (1 << NEARESTMV) | (1 << ZEROMV) | (1 << NEWMV),
-  INTER_NEAREST_NEAR_NEW = (1 << NEARESTMV) | (1 << NEARMV) | (1 << NEWMV),
-  INTER_NEAREST_NEAR_ZERO = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV),
-};
-#endif  // CONFIG_EXT_INTER
 
 enum {
   DISABLE_ALL_INTER_SPLIT = (1 << THR_COMP_GA) | (1 << THR_COMP_LA) |
@@ -209,6 +200,10 @@ typedef struct {
   TX_TYPE_PRUNE_MODE prune_mode;
   int fast_intra_tx_type_search;
   int fast_inter_tx_type_search;
+
+  // Use a skip flag prediction model to detect blocks with skip = 1 early
+  // and avoid doing full TX type search for such blocks.
+  int use_skip_flag_prediction;
 } TX_TYPE_SEARCH;
 
 typedef enum {
@@ -409,13 +404,11 @@ typedef struct SPEED_FEATURES {
   // Choose a very large value (UINT_MAX) to use 8-tap always
   unsigned int disable_filter_search_var_thresh;
 
-#if CONFIG_EXT_INTER
   // A source variance threshold below which wedge search is disabled
   unsigned int disable_wedge_search_var_thresh;
 
   // Whether fast wedge sign estimate is used
   int fast_wedge_sign_estimate;
-#endif  // CONFIG_EXT_INTER
 
   // These bit masks allow you to enable or disable intra modes for each
   // transform size separately.

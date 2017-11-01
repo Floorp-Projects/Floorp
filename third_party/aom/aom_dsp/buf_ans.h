@@ -46,6 +46,7 @@ struct BufAnsCoder {
 #if ANS_MAX_SYMBOLS
   int window_size;
 #endif
+  int pos;  // Dummy variable to store the output buffer after closing
 };
 
 // Allocate a buffered ANS coder to store size symbols.
@@ -54,7 +55,7 @@ struct BufAnsCoder {
 // When ANS_MAX_SYMBOLS is turned off, size is merely an initial hint and the
 // buffer will grow on demand
 void aom_buf_ans_alloc(struct BufAnsCoder *c,
-                       struct aom_internal_error_info *error, int hint);
+                       struct aom_internal_error_info *error);
 
 void aom_buf_ans_free(struct BufAnsCoder *c);
 

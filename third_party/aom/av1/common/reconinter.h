@@ -40,34 +40,27 @@ static INLINE void inter_predictor(const uint8_t *src, int src_stride,
                                    uint8_t *dst, int dst_stride, int subpel_x,
                                    int subpel_y, const struct scale_factors *sf,
                                    int w, int h, ConvolveParams *conv_params,
-#if CONFIG_DUAL_FILTER
-                                   const InterpFilter *interp_filter,
-#else
-                                   const InterpFilter interp_filter,
-#endif
-                                   int xs, int ys) {
-#if CONFIG_DUAL_FILTER
-  const InterpFilter filter_x = av1_get_plane_interp_filter(
-      interp_filter[1 + 2 * conv_params->ref], conv_params->plane);
-  const InterpFilter filter_y = av1_get_plane_interp_filter(
-      interp_filter[0 + 2 * conv_params->ref], conv_params->plane);
-  const InterpFilterParams interp_filter_params_x =
-      av1_get_interp_filter_params(filter_x);
-  const InterpFilterParams interp_filter_params_y =
-      av1_get_interp_filter_params(filter_y);
-#else
-  const InterpFilterParams interp_filter_params_x =
-      av1_get_interp_filter_params(interp_filter);
-  const InterpFilterParams interp_filter_params_y = interp_filter_params_x;
-#endif
-
+                                   InterpFilters interp_filters, int xs,
+                                   int ys) {
   assert(conv_params->do_average == 0 || conv_params->do_average == 1);
   assert(sf);
   if (has_scale(xs, ys)) {
     // TODO(afergs, debargha): Use a different scale convolve function
     // that uses higher precision for subpel_x, subpel_y, xs, ys
-    av1_convolve_scale(src, src_stride, dst, dst_stride, w, h, interp_filter,
-                       subpel_x, xs, subpel_y, ys, conv_params);
+    if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
+#if CONFIG_CONVOLVE_ROUND
+      av1_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
+                             interp_filters, subpel_x, xs, subpel_y, ys, 1,
+                             conv_params);
+      conv_params->do_post_rounding = 1;
+#else
+      assert(0);
+#endif  // CONFIG_CONVOLVE_ROUND
+    } else {
+      assert(conv_params->round == CONVOLVE_OPT_ROUND);
+      av1_convolve_scale(src, src_stride, dst, dst_stride, w, h, interp_filters,
+                         subpel_x, xs, subpel_y, ys, conv_params);
+    }
   } else {
     subpel_x >>= SCALE_EXTRA_BITS;
     subpel_y >>= SCALE_EXTRA_BITS;
@@ -80,31 +73,32 @@ static INLINE void inter_predictor(const uint8_t *src, int src_stride,
     if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
 #if CONFIG_CONVOLVE_ROUND
       av1_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
-#if CONFIG_DUAL_FILTER
-                             interp_filter,
-#else   // CONFIG_DUAL_FILTER
-                             &interp_filter,
-#endif  // CONFIG_DUAL_FILTER
-                             subpel_x, xs, subpel_y, ys, conv_params);
+                             interp_filters, subpel_x, xs, subpel_y, ys, 0,
+                             conv_params);
       conv_params->do_post_rounding = 1;
 #else
       assert(0);
 #endif  // CONFIG_CONVOLVE_ROUND
     } else {
       assert(conv_params->round == CONVOLVE_OPT_ROUND);
+
+      InterpFilterParams filter_params_x, filter_params_y;
+      av1_get_convolve_filter_params(interp_filters, 0, &filter_params_x,
+                                     &filter_params_y);
+
       if (w <= 2 || h <= 2) {
-        av1_convolve_c(src, src_stride, dst, dst_stride, w, h, interp_filter,
+        av1_convolve_c(src, src_stride, dst, dst_stride, w, h, interp_filters,
                        subpel_x, xs, subpel_y, ys, conv_params);
-      } else if (interp_filter_params_x.taps == SUBPEL_TAPS &&
-                 interp_filter_params_y.taps == SUBPEL_TAPS) {
-        const int16_t *kernel_x = av1_get_interp_filter_subpel_kernel(
-            interp_filter_params_x, subpel_x);
-        const int16_t *kernel_y = av1_get_interp_filter_subpel_kernel(
-            interp_filter_params_y, subpel_y);
+      } else if (filter_params_x.taps == SUBPEL_TAPS &&
+                 filter_params_y.taps == SUBPEL_TAPS) {
+        const int16_t *kernel_x =
+            av1_get_interp_filter_subpel_kernel(filter_params_x, subpel_x);
+        const int16_t *kernel_y =
+            av1_get_interp_filter_subpel_kernel(filter_params_y, subpel_y);
         sf->predict[subpel_x != 0][subpel_y != 0][conv_params->do_average](
             src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h);
       } else {
-        av1_convolve(src, src_stride, dst, dst_stride, w, h, interp_filter,
+        av1_convolve(src, src_stride, dst, dst_stride, w, h, interp_filters,
                      subpel_x, xs, subpel_y, ys, conv_params);
       }
     }
@@ -117,31 +111,26 @@ static INLINE void highbd_inter_predictor(const uint8_t *src, int src_stride,
                                           int subpel_x, int subpel_y,
                                           const struct scale_factors *sf, int w,
                                           int h, ConvolveParams *conv_params,
-#if CONFIG_DUAL_FILTER
-                                          const InterpFilter *interp_filter,
-#else
-                                          const InterpFilter interp_filter,
-#endif
-                                          int xs, int ys, int bd) {
+                                          InterpFilters interp_filters, int xs,
+                                          int ys, int bd) {
   const int avg = conv_params->do_average;
   assert(avg == 0 || avg == 1);
-#if CONFIG_DUAL_FILTER
-  const int ref = conv_params->ref;
-  const InterpFilterParams interp_filter_params_x =
-      av1_get_interp_filter_params(interp_filter[1 + 2 * ref]);
-  const InterpFilterParams interp_filter_params_y =
-      av1_get_interp_filter_params(interp_filter[0 + 2 * ref]);
-#else
-  const InterpFilterParams interp_filter_params_x =
-      av1_get_interp_filter_params(interp_filter);
-  const InterpFilterParams interp_filter_params_y = interp_filter_params_x;
-#endif
 
   if (has_scale(xs, ys)) {
-    av1_highbd_convolve_scale(
-        src, src_stride, dst, dst_stride, w, h, interp_filter,
-        subpel_x >> SCALE_EXTRA_BITS, xs >> SCALE_EXTRA_BITS,
-        subpel_y >> SCALE_EXTRA_BITS, ys >> SCALE_EXTRA_BITS, avg, bd);
+    if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
+#if CONFIG_CONVOLVE_ROUND
+      av1_highbd_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
+                                    interp_filters, subpel_x, xs, subpel_y, ys,
+                                    1, conv_params, bd);
+      conv_params->do_post_rounding = 1;
+#else
+      assert(0);
+#endif  // CONFIG_CONVOLVE_ROUND
+    } else {
+      av1_highbd_convolve_scale(src, src_stride, dst, dst_stride, w, h,
+                                interp_filters, subpel_x, xs, subpel_y, ys, avg,
+                                bd);
+    }
   } else {
     subpel_x >>= SCALE_EXTRA_BITS;
     subpel_y >>= SCALE_EXTRA_BITS;
@@ -154,37 +143,36 @@ static INLINE void highbd_inter_predictor(const uint8_t *src, int src_stride,
     if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
 #if CONFIG_CONVOLVE_ROUND
       av1_highbd_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
-#if CONFIG_DUAL_FILTER
-                                    interp_filter,
-#else  // CONFIG_DUAL_FILTER
-                                    &interp_filter,
-#endif  // CONFIG_DUAL_FILTER
-                                    subpel_x, xs, subpel_y, ys, conv_params,
-                                    bd);
+                                    interp_filters, subpel_x, xs, subpel_y, ys,
+                                    0, conv_params, bd);
       conv_params->do_post_rounding = 1;
 #else
       assert(0);
 #endif  // CONFIG_CONVOLVE_ROUND
     } else {
-      if (interp_filter_params_x.taps == SUBPEL_TAPS &&
-          interp_filter_params_y.taps == SUBPEL_TAPS && w > 2 && h > 2) {
-        const int16_t *kernel_x = av1_get_interp_filter_subpel_kernel(
-            interp_filter_params_x, subpel_x);
-        const int16_t *kernel_y = av1_get_interp_filter_subpel_kernel(
-            interp_filter_params_y, subpel_y);
+      InterpFilterParams filter_params_x, filter_params_y;
+      av1_get_convolve_filter_params(interp_filters, 0, &filter_params_x,
+                                     &filter_params_y);
+
+      if (filter_params_x.taps == SUBPEL_TAPS &&
+          filter_params_y.taps == SUBPEL_TAPS && w > 2 && h > 2) {
+        const int16_t *kernel_x =
+            av1_get_interp_filter_subpel_kernel(filter_params_x, subpel_x);
+        const int16_t *kernel_y =
+            av1_get_interp_filter_subpel_kernel(filter_params_y, subpel_y);
         sf->highbd_predict[subpel_x != 0][subpel_y != 0][avg](
             src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h,
             bd);
       } else {
         av1_highbd_convolve(src, src_stride, dst, dst_stride, w, h,
-                            interp_filter, subpel_x, xs, subpel_y, ys, avg, bd);
+                            interp_filters, subpel_x, xs, subpel_y, ys, avg,
+                            bd);
       }
     }
   }
 }
 #endif  // CONFIG_HIGHBITDEPTH
 
-#if CONFIG_EXT_INTER
 // Set to (1 << 5) if the 32-ary codebooks are used for any bock size
 #define MAX_WEDGE_TYPES (1 << 4)
 
@@ -239,7 +227,8 @@ static INLINE int is_interinter_compound_used(COMPOUND_TYPE type,
     case COMPOUND_WEDGE: return wedge_params_lookup[sb_type].bits > 0;
 #endif  // CONFIG_WEDGE
 #if CONFIG_COMPOUND_SEGMENT
-    case COMPOUND_SEG: return sb_type >= BLOCK_8X8;
+    case COMPOUND_SEG:
+      return AOMMIN(block_size_wide[sb_type], block_size_high[sb_type]) >= 8;
 #endif  // CONFIG_COMPOUND_SEGMENT
     default: assert(0); return 0;
   }
@@ -288,225 +277,20 @@ void build_compound_seg_mask_highbd(uint8_t *mask, SEG_MASK_TYPE mask_type,
                                     BLOCK_SIZE sb_type, int h, int w, int bd);
 #endif  // CONFIG_HIGHBITDEPTH
 #endif  // CONFIG_COMPOUND_SEGMENT
-#endif  // CONFIG_EXT_INTER
 
-void build_inter_predictors(const AV1_COMMON *cm, MACROBLOCKD *xd, int plane,
-#if CONFIG_MOTION_VAR
-                            int mi_col_offset, int mi_row_offset,
-#endif  // CONFIG_MOTION_VAR
-                            int block, int bw, int bh, int x, int y, int w,
-                            int h,
-#if CONFIG_SUPERTX && CONFIG_EXT_INTER
-                            int wedge_offset_x, int wedge_offset_y,
-#endif  // CONFIG_SUPERTX && CONFIG_EXT_INTER
-                            int mi_x, int mi_y);
-
-#if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-// This function will determine whether or not to create a warped
-// prediction and return the appropriate motion model depending
-// on the configuration. Behavior will change with different
-// combinations of GLOBAL_MOTION, WARPED_MOTION and MOTION_VAR.
-static INLINE int allow_warp(const MODE_INFO *const mi,
-                             const WarpTypesAllowed *const warp_types,
-#if CONFIG_GLOBAL_MOTION
-                             const WarpedMotionParams *const gm_params,
-#endif  // CONFIG_GLOBAL_MOTION
-#if CONFIG_MOTION_VAR
-                             int mi_col_offset, int mi_row_offset,
-#endif  // CONFIG_MOTION_VAR
-                             WarpedMotionParams *final_warp_params) {
-  const MB_MODE_INFO *const mbmi = &mi->mbmi;
-  set_default_warp_params(final_warp_params);
-
-// Only global motion configured
-#if CONFIG_GLOBAL_MOTION && !CONFIG_WARPED_MOTION && !CONFIG_MOTION_VAR
-  (void)mbmi;
-  if (warp_types->global_warp_allowed) {
-    memcpy(final_warp_params, gm_params, sizeof(*final_warp_params));
-    return 1;
-  }
-#endif  // CONFIG_GLOBAL_MOTION && !CONFIG_WARPED_MOTION && !CONFIG_MOTION_VAR
-
-// Only warped motion configured
-#if CONFIG_WARPED_MOTION && !CONFIG_GLOBAL_MOTION && !CONFIG_MOTION_VAR
-  if (warp_types->local_warp_allowed) {
-    memcpy(final_warp_params, &mbmi->wm_params[0], sizeof(*final_warp_params));
-    return 1;
-  }
-#endif  // CONFIG_WARPED_MOTION && !CONFIG_GLOBAL_MOTION && !CONFIG_MOTION_VAR
-
-// Warped and global motion configured
-#if CONFIG_GLOBAL_MOTION && CONFIG_WARPED_MOTION && !CONFIG_MOTION_VAR
-  // When both are enabled, warped will take priority. The global parameters
-  // will only be used to compute projection samples to find the warped model.
-  // Note that when a block chooses global, it will not be possible to
-  // select WARPED_CAUSAL.
-  if (warp_types->local_warp_allowed) {
-    memcpy(final_warp_params, &mbmi->wm_params[0], sizeof(*final_warp_params));
-    return 1;
-  } else if (warp_types->global_warp_allowed) {
-    memcpy(final_warp_params, gm_params, sizeof(*final_warp_params));
-    return 1;
-  }
-#endif  // CONFIG_GLOBAL_MOTION && CONFIG_WARPED_MOTION && !CONFIG_MOTION_VAR
-
-// Motion var and global motion configured
-#if CONFIG_GLOBAL_MOTION && CONFIG_MOTION_VAR && !CONFIG_WARPED_MOTION
-  // We warp if either case is true:
-  //   1.) We are predicting a block which uses global motion
-  //   2.) We are predicting a neighboring block of a block using OBMC,
-  //       the neighboring block uses global motion, and we have enabled
-  //       WARP_GM_NEIGHBORS_WITH_OBMC
-  const int build_for_obmc = !(mi_col_offset == 0 && mi_row_offset == 0);
-  (void)mbmi;
-  if (warp_types->global_warp_allowed &&
-      (WARP_GM_NEIGHBORS_WITH_OBMC || !build_for_obmc)) {
-    memcpy(final_warp_params, gm_params, sizeof(*final_warp_params));
-    return 1;
-  }
-#endif  // CONFIG_GLOBAL_MOTION && CONFIG_MOTION_VAR && !CONFIG_WARPED_MOTION
-
-// Motion var and warped motion configured
-#if CONFIG_WARPED_MOTION && CONFIG_MOTION_VAR && !CONFIG_GLOBAL_MOTION
-  // We warp if either case is true:
-  //   1.) We are predicting a block with motion mode WARPED_CAUSAL
-  //   2.) We are predicting a neighboring block of a block using OBMC,
-  //       the neighboring block has mode WARPED_CAUSAL, and we have enabled
-  //       WARP_WM_NEIGHBORS_WITH_OBMC
-  const int build_for_obmc = !(mi_col_offset == 0 && mi_row_offset == 0);
-  if (warp_types->local_warp_allowed) {
-    if ((build_for_obmc && WARP_WM_NEIGHBORS_WITH_OBMC) || (!build_for_obmc)) {
-      memcpy(final_warp_params, &mbmi->wm_params[0],
-             sizeof(*final_warp_params));
-      return 1;
-    }
-  }
-#endif  // CONFIG_WARPED_MOTION && CONFIG_MOTION_VAR && !CONFIG_GLOBAL_MOTION
-
-// Motion var, warped motion and global motion all configured
-#if CONFIG_WARPED_MOTION && CONFIG_MOTION_VAR && CONFIG_GLOBAL_MOTION
-  const int build_for_obmc = !(mi_col_offset == 0 && mi_row_offset == 0);
-  if (warp_types->local_warp_allowed) {
-    if ((build_for_obmc && WARP_WM_NEIGHBORS_WITH_OBMC) || (!build_for_obmc)) {
-      memcpy(final_warp_params, &mbmi->wm_params[0],
-             sizeof(*final_warp_params));
-      return 1;
-    }
-  } else if (warp_types->global_warp_allowed &&
-             (WARP_GM_NEIGHBORS_WITH_OBMC || !build_for_obmc)) {
-    memcpy(final_warp_params, gm_params, sizeof(*final_warp_params));
-    return 1;
-  }
-#endif  // CONFIG_WARPED_MOTION && CONFIG_MOTION_VAR && CONFIG_GLOBAL_MOTION
-
-  return 0;
-}
-#endif  // CONFIG_GLOBAL_MOTION ||CONFIG_WARPED_MOTION
-
-static INLINE void av1_make_inter_predictor(
-    const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+void av1_make_masked_inter_predictor(
+    const uint8_t *pre, int pre_stride, uint8_t *dst, int dst_stride,
     const int subpel_x, const int subpel_y, const struct scale_factors *sf,
-    int w, int h, ConvolveParams *conv_params,
-#if CONFIG_DUAL_FILTER
-    const InterpFilter *interp_filter,
-#else
-    const InterpFilter interp_filter,
-#endif
-#if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-    const WarpTypesAllowed *warp_types, int p_col, int p_row, int plane,
-    int ref,
-#endif  // CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-#if CONFIG_MOTION_VAR
-    int mi_col_offset, int mi_row_offset,
-#endif
-    int xs, int ys, const MACROBLOCKD *xd) {
-  (void)xd;
-
-#if CONFIG_MOTION_VAR
-  const MODE_INFO *mi = xd->mi[mi_col_offset + xd->mi_stride * mi_row_offset];
-#else
-  const MODE_INFO *mi = xd->mi[0];
-  (void)mi;
-#endif  // CONFIG_MOTION_VAR
-
-// Make sure the selected motion mode is valid for this configuration
-#if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
-  assert_motion_mode_valid(mi->mbmi.motion_mode,
-#if CONFIG_GLOBAL_MOTION
-                           0, xd->global_motion,
-#endif  // CONFIG_GLOBAL_MOTION
-#if CONFIG_WARPED_MOTION
-                           xd,
-#endif
-                           mi);
-#endif  // CONFIG MOTION_VAR || CONFIG_WARPED_MOTION
-
-#if CONFIG_WARPED_MOTION || CONFIG_GLOBAL_MOTION
-  WarpedMotionParams final_warp_params;
-  const int do_warp = allow_warp(
-      mi, warp_types,
-#if CONFIG_GLOBAL_MOTION
-#if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
-      // TODO(zoeliu): To further check the single
-      // ref comp mode to work together with
-      //               global motion.
-      has_second_ref(&mi->mbmi) ? &xd->global_motion[mi->mbmi.ref_frame[ref]]
-                                : &xd->global_motion[mi->mbmi.ref_frame[0]],
-#else   // !(CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF)
-      &xd->global_motion[mi->mbmi.ref_frame[ref]],
-#endif  // CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
-#endif  // CONFIG_GLOBAL_MOTION
-#if CONFIG_MOTION_VAR
-      mi_col_offset, mi_row_offset,
-#endif  // CONFIG_MOTION_VAR
-      &final_warp_params);
-  if (do_warp) {
-    const struct macroblockd_plane *const pd = &xd->plane[plane];
-    const struct buf_2d *const pre_buf = &pd->pre[ref];
-    av1_warp_plane(&final_warp_params,
-#if CONFIG_HIGHBITDEPTH
-                   xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH, xd->bd,
-#endif  // CONFIG_HIGHBITDEPTH
-                   pre_buf->buf0, pre_buf->width, pre_buf->height,
-                   pre_buf->stride, dst, p_col, p_row, w, h, dst_stride,
-                   pd->subsampling_x, pd->subsampling_y, xs, ys, conv_params);
-    return;
-  }
-#endif  // CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-#if CONFIG_HIGHBITDEPTH
-  if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    highbd_inter_predictor(src, src_stride, dst, dst_stride, subpel_x, subpel_y,
-                           sf, w, h, conv_params, interp_filter, xs, ys,
-                           xd->bd);
-    return;
-  }
-#endif  // CONFIG_HIGHBITDEPTH
-  inter_predictor(src, src_stride, dst, dst_stride, subpel_x, subpel_y, sf, w,
-                  h, conv_params, interp_filter, xs, ys);
-}
-
-#if CONFIG_EXT_INTER
-void av1_make_masked_inter_predictor(const uint8_t *pre, int pre_stride,
-                                     uint8_t *dst, int dst_stride,
-                                     const int subpel_x, const int subpel_y,
-                                     const struct scale_factors *sf, int w,
-                                     int h, ConvolveParams *conv_params,
-#if CONFIG_DUAL_FILTER
-                                     const InterpFilter *interp_filter,
-#else
-                                     const InterpFilter interp_filter,
-#endif
-                                     int xs, int ys,
+    int w, int h, ConvolveParams *conv_params, InterpFilters interp_filters,
+    int xs, int ys,
 #if CONFIG_SUPERTX
-                                     int wedge_offset_x, int wedge_offset_y,
+    int wedge_offset_x, int wedge_offset_y,
 #endif  // CONFIG_SUPERTX
-                                     int plane,
+    int plane,
 #if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-                                     const WarpTypesAllowed *warp_types,
-                                     int p_col, int p_row, int ref,
+    const WarpTypesAllowed *warp_types, int p_col, int p_row, int ref,
 #endif  // CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
-                                     MACROBLOCKD *xd);
-#endif  // CONFIG_EXT_INTER
+    MACROBLOCKD *xd);
 
 static INLINE int round_mv_comp_q4(int value) {
   return (value < 0 ? value - 2 : value + 2) / 4;
@@ -588,18 +372,13 @@ void av1_build_inter_predictors_sb(const AV1_COMMON *cm, MACROBLOCKD *xd,
 
 #if CONFIG_SUPERTX
 void av1_build_inter_predictor_sb_sub8x8_extend(const AV1_COMMON *cm,
-                                                MACROBLOCKD *xd,
-#if CONFIG_EXT_INTER
-                                                int mi_row_ori, int mi_col_ori,
-#endif  // CONFIG_EXT_INTER
-                                                int mi_row, int mi_col,
-                                                int plane, BLOCK_SIZE bsize,
-                                                int block);
+                                                MACROBLOCKD *xd, int mi_row_ori,
+                                                int mi_col_ori, int mi_row,
+                                                int mi_col, int plane,
+                                                BLOCK_SIZE bsize, int block);
 
 void av1_build_inter_predictor_sb_extend(const AV1_COMMON *cm, MACROBLOCKD *xd,
-#if CONFIG_EXT_INTER
                                          int mi_row_ori, int mi_col_ori,
-#endif  // CONFIG_EXT_INTER
                                          int mi_row, int mi_col, int plane,
                                          BLOCK_SIZE bsize);
 struct macroblockd_plane;
@@ -614,11 +393,7 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
                                int dst_stride, const MV *src_mv,
                                const struct scale_factors *sf, int w, int h,
                                ConvolveParams *conv_params,
-#if CONFIG_DUAL_FILTER
-                               const InterpFilter *interp_filter,
-#else
-                               const InterpFilter interp_filter,
-#endif
+                               InterpFilters interp_filters,
 #if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
                                const WarpTypesAllowed *warp_types, int p_col,
                                int p_row, int plane, int ref,
@@ -630,11 +405,7 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
 void av1_highbd_build_inter_predictor(
     const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
     const MV *mv_q3, const struct scale_factors *sf, int w, int h, int do_avg,
-#if CONFIG_DUAL_FILTER
-    const InterpFilter *interp_filter,
-#else
-    const InterpFilter interp_filter,
-#endif
+    InterpFilters interp_filters,
 #if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
     const WarpTypesAllowed *warp_types, int p_col, int p_row,
 #endif  // CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
@@ -657,11 +428,11 @@ static INLINE void setup_pred_plane(struct buf_2d *dst, BLOCK_SIZE bsize,
                                     const struct scale_factors *scale,
                                     int subsampling_x, int subsampling_y) {
 #if CONFIG_CHROMA_SUB8X8
-  if (bsize < BLOCK_8X8) {
-    // Offset the buffer pointer
-    if (subsampling_y && (mi_row & 0x01)) mi_row -= 1;
-    if (subsampling_x && (mi_col & 0x01)) mi_col -= 1;
-  }
+  // Offset the buffer pointer
+  if (subsampling_y && (mi_row & 0x01) && (mi_size_high[bsize] == 1))
+    mi_row -= 1;
+  if (subsampling_x && (mi_col & 0x01) && (mi_size_wide[bsize] == 1))
+    mi_col -= 1;
 #else
   (void)bsize;
 #endif
@@ -740,16 +511,8 @@ static INLINE int has_subpel_mv_component(const MODE_INFO *const mi,
 
 static INLINE void set_default_interp_filters(
     MB_MODE_INFO *const mbmi, InterpFilter frame_interp_filter) {
-#if CONFIG_DUAL_FILTER
-  int dir;
-  for (dir = 0; dir < 4; ++dir)
-    mbmi->interp_filter[dir] = frame_interp_filter == SWITCHABLE
-                                   ? EIGHTTAP_REGULAR
-                                   : frame_interp_filter;
-#else
-  mbmi->interp_filter = frame_interp_filter == SWITCHABLE ? EIGHTTAP_REGULAR
-                                                          : frame_interp_filter;
-#endif  // CONFIG_DUAL_FILTER
+  mbmi->interp_filters =
+      av1_broadcast_interp_filter(av1_unswitchable_filter(frame_interp_filter));
 }
 
 static INLINE int av1_is_interp_needed(const MACROBLOCKD *const xd) {
@@ -810,7 +573,6 @@ void av1_build_ncobmc_inter_predictors_sb(const AV1_COMMON *cm, MACROBLOCKD *xd,
 #endif
 #endif  // CONFIG_MOTION_VAR
 
-#if CONFIG_EXT_INTER
 #define MASK_MASTER_SIZE ((MAX_WEDGE_SIZE) << 1)
 #define MASK_MASTER_STRIDE (MASK_MASTER_SIZE)
 
@@ -836,26 +598,26 @@ const uint8_t *av1_get_compound_type_mask_inverse(
 const uint8_t *av1_get_compound_type_mask(
     const INTERINTER_COMPOUND_DATA *const comp_data, BLOCK_SIZE sb_type);
 #if CONFIG_INTERINTRA
-void av1_build_interintra_predictors(MACROBLOCKD *xd, uint8_t *ypred,
-                                     uint8_t *upred, uint8_t *vpred,
-                                     int ystride, int ustride, int vstride,
-                                     BUFFER_SET *ctx, BLOCK_SIZE bsize);
-void av1_build_interintra_predictors_sby(MACROBLOCKD *xd, uint8_t *ypred,
-                                         int ystride, BUFFER_SET *ctx,
+void av1_build_interintra_predictors(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                     uint8_t *ypred, uint8_t *upred,
+                                     uint8_t *vpred, int ystride, int ustride,
+                                     int vstride, BUFFER_SET *ctx,
+                                     BLOCK_SIZE bsize);
+void av1_build_interintra_predictors_sby(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                         uint8_t *ypred, int ystride,
+                                         BUFFER_SET *ctx, BLOCK_SIZE bsize);
+void av1_build_interintra_predictors_sbc(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                         uint8_t *upred, int ustride,
+                                         BUFFER_SET *ctx, int plane,
                                          BLOCK_SIZE bsize);
-void av1_build_interintra_predictors_sbc(MACROBLOCKD *xd, uint8_t *upred,
-                                         int ustride, BUFFER_SET *ctx,
-                                         int plane, BLOCK_SIZE bsize);
-void av1_build_interintra_predictors_sbuv(MACROBLOCKD *xd, uint8_t *upred,
-                                          uint8_t *vpred, int ustride,
-                                          int vstride, BUFFER_SET *ctx,
-                                          BLOCK_SIZE bsize);
+void av1_build_interintra_predictors_sbuv(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                          uint8_t *upred, uint8_t *vpred,
+                                          int ustride, int vstride,
+                                          BUFFER_SET *ctx, BLOCK_SIZE bsize);
 
-void av1_build_intra_predictors_for_interintra(MACROBLOCKD *xd,
-                                               BLOCK_SIZE bsize, int plane,
-                                               BUFFER_SET *ctx,
-                                               uint8_t *intra_pred,
-                                               int intra_stride);
+void av1_build_intra_predictors_for_interintra(
+    const AV1_COMMON *cm, MACROBLOCKD *xd, BLOCK_SIZE bsize, int plane,
+    BUFFER_SET *ctx, uint8_t *intra_pred, int intra_stride);
 void av1_combine_interintra(MACROBLOCKD *xd, BLOCK_SIZE bsize, int plane,
                             const uint8_t *inter_pred, int inter_stride,
                             const uint8_t *intra_pred, int intra_stride);
@@ -871,7 +633,45 @@ void av1_build_wedge_inter_predictor_from_buf(
 #endif  // CONFIG_SUPERTX
     uint8_t *ext_dst0[3], int ext_dst_stride0[3], uint8_t *ext_dst1[3],
     int ext_dst_stride1[3]);
-#endif  // CONFIG_EXT_INTER
+
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+#define ASSIGN_ALIGNED_PTRS(p, a, s) \
+  p[0] = a;                          \
+  p[1] = a + s;                      \
+  p[2] = a + 2 * s;
+
+#define ASSIGN_ALIGNED_PTRS_HBD(p, a, s, l) \
+  p[0] = CONVERT_TO_BYTEPTR(a);             \
+  p[1] = CONVERT_TO_BYTEPTR(a + s * l);     \
+  p[2] = CONVERT_TO_BYTEPTR(a + 2 * s * l);
+
+void alloc_ncobmc_pred_buffer(MACROBLOCKD *const xd);
+void free_ncobmc_pred_buffer(MACROBLOCKD *const xd);
+void set_sb_mi_boundaries(const AV1_COMMON *const cm, MACROBLOCKD *const xd,
+                          const int mi_row, const int mi_col);
+
+void reset_xd_boundary(MACROBLOCKD *xd, int mi_row, int bh, int mi_col, int bw,
+                       int mi_rows, int mi_cols);
+
+void get_pred_from_intrpl_buf(MACROBLOCKD *xd, int mi_row, int mi_col,
+                              BLOCK_SIZE bsize, int plane);
+
+void build_ncobmc_intrpl_pred(const AV1_COMMON *const cm, MACROBLOCKD *xd,
+                              int plane, int pxl_row, int pxl_col,
+                              BLOCK_SIZE bsize, uint8_t *preds[][MAX_MB_PLANE],
+                              int ps[MAX_MB_PLANE],  // pred buffer strides
+                              int mode);
+
+void av1_get_ext_blk_preds(const AV1_COMMON *cm, MACROBLOCKD *xd, int bsize,
+                           int mi_row, int mi_col,
+                           uint8_t *dst_buf[][MAX_MB_PLANE],
+                           int dst_stride[MAX_MB_PLANE]);
+
+void av1_get_ori_blk_pred(const AV1_COMMON *cm, MACROBLOCKD *xd, int bsize,
+                          int mi_row, int mi_col,
+                          uint8_t *dst_buf[MAX_MB_PLANE],
+                          int dst_stride[MAX_MB_PLANE]);
+#endif  // CONFIG_NCOBMC_ADAPT_WEIGHT
 
 #ifdef __cplusplus
 }  // extern "C"

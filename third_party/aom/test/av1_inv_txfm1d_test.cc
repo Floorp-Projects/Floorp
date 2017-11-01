@@ -9,6 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <math.h>
+
 #include "test/av1_txfm_test.h"
 #include "test/util.h"
 #include "av1/common/av1_fwd_txfm1d.h"
@@ -44,6 +46,68 @@ const TxfmFunc inv_txfm_func_ls[][2] = {
 // the maximum stage number of fwd/inv 1d dct/adst txfm is 12
 const int8_t cos_bit[12] = { 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13 };
 const int8_t range_bit[12] = { 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32 };
+
+void reference_idct_1d_int(const int32_t *in, int32_t *out, int size) {
+  double input[64];
+  for (int i = 0; i < size; ++i) input[i] = in[i];
+
+  double output[64];
+  libaom_test::reference_idct_1d(input, output, size);
+
+  for (int i = 0; i < size; ++i)
+    out[i] = static_cast<int32_t>(round(output[i]));
+}
+
+void random_matrix(int32_t *dst, int len, ACMRandom *rnd) {
+  const int bits = 16;
+  const int maxVal = (1 << (bits - 1)) - 1;
+  const int minVal = -(1 << (bits - 1));
+  for (int i = 0; i < len; ++i) {
+    if (rnd->Rand8() % 10)
+      dst[i] = minVal + rnd->Rand16() % (1 << bits);
+    else
+      dst[i] = rnd->Rand8() % 2 ? minVal : maxVal;
+  }
+}
+
+TEST(av1_inv_txfm1d, InvAccuracyCheck) {
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+  const int count_test_block = 20000;
+  const int max_error[] = { 6, 10, 19, 28 };
+  for (int k = 0; k < count_test_block; ++k) {
+    // choose a random transform to test
+    const int txfm_type = rnd.Rand8() % NELEMENTS(inv_txfm_func_ls);
+    const int txfm_size = txfm_size_ls[txfm_type];
+    const TxfmFunc txfm_func = inv_txfm_func_ls[txfm_type][0];
+
+    int32_t input[64];
+    random_matrix(input, txfm_size, &rnd);
+
+    int32_t ref_output[64];
+    reference_idct_1d_int(input, ref_output, txfm_size);
+
+    int32_t output[64];
+    txfm_func(input, output, cos_bit, range_bit);
+
+    for (int i = 0; i < txfm_size; ++i) {
+      EXPECT_LE(abs(output[i] - ref_output[i]), max_error[txfm_type]);
+    }
+  }
+}
+
+static INLINE int get_max_bit(int x) {
+  int max_bit = -1;
+  while (x) {
+    x = x >> 1;
+    max_bit++;
+  }
+  return max_bit;
+}
+
+TEST(av1_inv_txfm1d, get_max_bit) {
+  int max_bit = get_max_bit(8);
+  EXPECT_EQ(max_bit, 3);
+}
 
 TEST(av1_inv_txfm1d, round_trip) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());

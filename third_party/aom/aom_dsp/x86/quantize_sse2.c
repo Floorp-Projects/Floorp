@@ -16,29 +16,29 @@
 #include "aom/aom_integer.h"
 
 static INLINE __m128i load_coefficients(const tran_low_t *coeff_ptr) {
-#if CONFIG_HIGHBITDEPTH
-  return _mm_setr_epi16((int16_t)coeff_ptr[0], (int16_t)coeff_ptr[1],
-                        (int16_t)coeff_ptr[2], (int16_t)coeff_ptr[3],
-                        (int16_t)coeff_ptr[4], (int16_t)coeff_ptr[5],
-                        (int16_t)coeff_ptr[6], (int16_t)coeff_ptr[7]);
-#else
-  return _mm_load_si128((const __m128i *)coeff_ptr);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    return _mm_setr_epi16((int16_t)coeff_ptr[0], (int16_t)coeff_ptr[1],
+                          (int16_t)coeff_ptr[2], (int16_t)coeff_ptr[3],
+                          (int16_t)coeff_ptr[4], (int16_t)coeff_ptr[5],
+                          (int16_t)coeff_ptr[6], (int16_t)coeff_ptr[7]);
+  } else {
+    return _mm_load_si128((const __m128i *)coeff_ptr);
+  }
 }
 
 static INLINE void store_coefficients(__m128i coeff_vals,
                                       tran_low_t *coeff_ptr) {
-#if CONFIG_HIGHBITDEPTH
-  __m128i one = _mm_set1_epi16(1);
-  __m128i coeff_vals_hi = _mm_mulhi_epi16(coeff_vals, one);
-  __m128i coeff_vals_lo = _mm_mullo_epi16(coeff_vals, one);
-  __m128i coeff_vals_1 = _mm_unpacklo_epi16(coeff_vals_lo, coeff_vals_hi);
-  __m128i coeff_vals_2 = _mm_unpackhi_epi16(coeff_vals_lo, coeff_vals_hi);
-  _mm_store_si128((__m128i *)(coeff_ptr), coeff_vals_1);
-  _mm_store_si128((__m128i *)(coeff_ptr + 4), coeff_vals_2);
-#else
-  _mm_store_si128((__m128i *)(coeff_ptr), coeff_vals);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    __m128i one = _mm_set1_epi16(1);
+    __m128i coeff_vals_hi = _mm_mulhi_epi16(coeff_vals, one);
+    __m128i coeff_vals_lo = _mm_mullo_epi16(coeff_vals, one);
+    __m128i coeff_vals_1 = _mm_unpacklo_epi16(coeff_vals_lo, coeff_vals_hi);
+    __m128i coeff_vals_2 = _mm_unpackhi_epi16(coeff_vals_lo, coeff_vals_hi);
+    _mm_store_si128((__m128i *)(coeff_ptr), coeff_vals_1);
+    _mm_store_si128((__m128i *)(coeff_ptr + 4), coeff_vals_2);
+  } else {
+    _mm_store_si128((__m128i *)(coeff_ptr), coeff_vals);
+  }
 }
 
 void aom_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,

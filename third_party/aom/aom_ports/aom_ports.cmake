@@ -22,16 +22,16 @@ set(AOM_PORTS_INCLUDES
     "${AOM_ROOT}/aom_ports/msvc.h"
     "${AOM_ROOT}/aom_ports/system_state.h")
 
+set(AOM_PORTS_ASM_X86 "${AOM_ROOT}/aom_ports/emms.asm")
+
 set(AOM_PORTS_INCLUDES_X86
     "${AOM_ROOT}/aom_ports/x86_abi_support.asm")
-
-set(AOM_PORTS_ASM_MMX "${AOM_ROOT}/aom_ports/emms.asm")
 
 set(AOM_PORTS_SOURCES_ARM
     "${AOM_ROOT}/aom_ports/arm.h"
     "${AOM_ROOT}/aom_ports/arm_cpudetect.c")
 
-# For arm targets and targets where HAVE_MMX is true:
+# For arm and x86 targets:
 #   Creates the aom_ports build target, adds the includes in aom_ports to the
 #   target, and makes libaom depend on it.
 # Otherwise:
@@ -39,8 +39,8 @@ set(AOM_PORTS_SOURCES_ARM
 # For all target platforms:
 #   The libaom target must exist before this function is called.
 function (setup_aom_ports_targets)
-  if (HAVE_MMX)
-    add_asm_library("aom_ports" "AOM_PORTS_ASM_MMX" "aom")
+  if ("${AOM_TARGET_CPU}" MATCHES "^x86")
+    add_asm_library("aom_ports" "AOM_PORTS_ASM_X86" "aom")
     set(aom_ports_has_symbols 1)
   elseif ("${AOM_TARGET_CPU}" MATCHES "arm")
     add_library(aom_ports OBJECT ${AOM_PORTS_SOURCES_ARM})

@@ -244,14 +244,18 @@ static unsigned char *downconvert_frame(YV12_BUFFER_CONFIG *frm,
                                         int bit_depth) {
   int i, j;
   uint16_t *orig_buf = CONVERT_TO_SHORTPTR(frm->y_buffer);
-  uint8_t *buf = malloc(frm->y_height * frm->y_stride * sizeof(*buf));
-
-  for (i = 0; i < frm->y_height; ++i)
-    for (j = 0; j < frm->y_width; ++j)
-      buf[i * frm->y_stride + j] =
-          orig_buf[i * frm->y_stride + j] >> (bit_depth - 8);
-
-  return buf;
+  uint8_t *buf_8bit = frm->y_buffer_8bit;
+  assert(buf_8bit);
+  if (!frm->buf_8bit_valid) {
+    for (i = 0; i < frm->y_height; ++i) {
+      for (j = 0; j < frm->y_width; ++j) {
+        buf_8bit[i * frm->y_stride + j] =
+            orig_buf[i * frm->y_stride + j] >> (bit_depth - 8);
+      }
+    }
+    frm->buf_8bit_valid = 1;
+  }
+  return buf_8bit;
 }
 #endif
 
@@ -274,16 +278,10 @@ int compute_global_motion_feature_based(
   if (frm->flags & YV12_FLAG_HIGHBITDEPTH) {
     // The frame buffer is 16-bit, so we need to convert to 8 bits for the
     // following code. We cache the result until the frame is released.
-    if (frm->y_buffer_8bit)
-      frm_buffer = frm->y_buffer_8bit;
-    else
-      frm_buffer = frm->y_buffer_8bit = downconvert_frame(frm, bit_depth);
+    frm_buffer = downconvert_frame(frm, bit_depth);
   }
   if (ref->flags & YV12_FLAG_HIGHBITDEPTH) {
-    if (ref->y_buffer_8bit)
-      ref_buffer = ref->y_buffer_8bit;
-    else
-      ref_buffer = ref->y_buffer_8bit = downconvert_frame(ref, bit_depth);
+    ref_buffer = downconvert_frame(ref, bit_depth);
   }
 #endif
 

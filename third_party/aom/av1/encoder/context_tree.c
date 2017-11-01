@@ -22,19 +22,14 @@ static const BLOCK_SIZE square[MAX_SB_SIZE_LOG2 - 1] = {
 #endif  // CONFIG_EXT_PARTITION
 };
 
-static void alloc_mode_context(AV1_COMMON *cm, int num_4x4_blk,
+static void alloc_mode_context(AV1_COMMON *cm, int num_pix,
 #if CONFIG_EXT_PARTITION_TYPES
                                PARTITION_TYPE partition,
 #endif
                                PICK_MODE_CONTEXT *ctx) {
-  const int num_blk = (num_4x4_blk < 4 ? 4 : num_4x4_blk);
-  const int num_pix = num_blk * tx_size_2d[0];
   int i;
-#if CONFIG_CB4X4 && CONFIG_VAR_TX
-  ctx->num_4x4_blk = num_blk / 4;
-#else
+  const int num_blk = num_pix / 16;
   ctx->num_4x4_blk = num_blk;
-#endif
 
 #if CONFIG_EXT_PARTITION_TYPES
   ctx->partition = partition;
@@ -64,13 +59,15 @@ static void alloc_mode_context(AV1_COMMON *cm, int num_4x4_blk,
 #endif
   }
 
-#if CONFIG_PALETTE
   for (i = 0; i < 2; ++i) {
     CHECK_MEM_ERROR(
         cm, ctx->color_index_map[i],
         aom_memalign(32, num_pix * sizeof(*ctx->color_index_map[i])));
   }
-#endif  // CONFIG_PALETTE
+#if CONFIG_MRC_TX
+  CHECK_MEM_ERROR(cm, ctx->mrc_mask,
+                  aom_memalign(32, num_pix * sizeof(*ctx->mrc_mask)));
+#endif  // CONFIG_MRC_TX
 }
 
 static void free_mode_context(PICK_MODE_CONTEXT *ctx) {
@@ -98,80 +95,63 @@ static void free_mode_context(PICK_MODE_CONTEXT *ctx) {
 #endif
   }
 
-#if CONFIG_PALETTE
   for (i = 0; i < 2; ++i) {
     aom_free(ctx->color_index_map[i]);
     ctx->color_index_map[i] = 0;
   }
-#endif  // CONFIG_PALETTE
+#if CONFIG_MRC_TX
+  aom_free(ctx->mrc_mask);
+  ctx->mrc_mask = 0;
+#endif  // CONFIG_MRC_TX
 }
 
-static void alloc_tree_contexts(AV1_COMMON *cm, PC_TREE *tree,
-                                int num_4x4_blk) {
+static void alloc_tree_contexts(AV1_COMMON *cm, PC_TREE *tree, int num_pix) {
 #if CONFIG_EXT_PARTITION_TYPES
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_NONE, &tree->none);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_HORZ, &tree->horizontal[0]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_VERT, &tree->vertical[0]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_VERT, &tree->horizontal[1]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_VERT, &tree->vertical[1]);
+  alloc_mode_context(cm, num_pix, PARTITION_NONE, &tree->none);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_HORZ, &tree->horizontal[0]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_VERT, &tree->vertical[0]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_VERT, &tree->horizontal[1]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_VERT, &tree->vertical[1]);
 
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_A,
-                     &tree->horizontala[0]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_A,
-                     &tree->horizontala[1]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_HORZ_A,
-                     &tree->horizontala[2]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_HORZ_B,
-                     &tree->horizontalb[0]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_B,
-                     &tree->horizontalb[1]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_B,
-                     &tree->horizontalb[2]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_VERT_A,
-                     &tree->verticala[0]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_VERT_A,
-                     &tree->verticala[1]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_VERT_A,
-                     &tree->verticala[2]);
-  alloc_mode_context(cm, num_4x4_blk / 2, PARTITION_VERT_B,
-                     &tree->verticalb[0]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_VERT_B,
-                     &tree->verticalb[1]);
-  alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_VERT_B,
-                     &tree->verticalb[2]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_A, &tree->horizontala[0]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_A, &tree->horizontala[1]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_HORZ_A, &tree->horizontala[2]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_HORZ_B, &tree->horizontalb[0]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_B, &tree->horizontalb[1]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_B, &tree->horizontalb[2]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_VERT_A, &tree->verticala[0]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_VERT_A, &tree->verticala[1]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_VERT_A, &tree->verticala[2]);
+  alloc_mode_context(cm, num_pix / 2, PARTITION_VERT_B, &tree->verticalb[0]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_VERT_B, &tree->verticalb[1]);
+  alloc_mode_context(cm, num_pix / 4, PARTITION_VERT_B, &tree->verticalb[2]);
   for (int i = 0; i < 4; ++i) {
-    alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_4,
+    alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_4,
                        &tree->horizontal4[i]);
-    alloc_mode_context(cm, num_4x4_blk / 4, PARTITION_HORZ_4,
-                       &tree->vertical4[i]);
+    alloc_mode_context(cm, num_pix / 4, PARTITION_HORZ_4, &tree->vertical4[i]);
   }
 #if CONFIG_SUPERTX
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_HORZ,
-                     &tree->horizontal_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_VERT, &tree->vertical_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_SPLIT, &tree->split_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_HORZ_A,
-                     &tree->horizontala_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_HORZ_B,
-                     &tree->horizontalb_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_VERT_A,
-                     &tree->verticala_supertx);
-  alloc_mode_context(cm, num_4x4_blk, PARTITION_VERT_B,
-                     &tree->verticalb_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_HORZ, &tree->horizontal_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_VERT, &tree->vertical_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_SPLIT, &tree->split_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_HORZ_A, &tree->horizontala_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_HORZ_B, &tree->horizontalb_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_VERT_A, &tree->verticala_supertx);
+  alloc_mode_context(cm, num_pix, PARTITION_VERT_B, &tree->verticalb_supertx);
 #endif  // CONFIG_SUPERTX
 #else
-  alloc_mode_context(cm, num_4x4_blk, &tree->none);
-  alloc_mode_context(cm, num_4x4_blk / 2, &tree->horizontal[0]);
-  alloc_mode_context(cm, num_4x4_blk / 2, &tree->vertical[0]);
+  alloc_mode_context(cm, num_pix, &tree->none);
+  alloc_mode_context(cm, num_pix / 2, &tree->horizontal[0]);
+  alloc_mode_context(cm, num_pix / 2, &tree->vertical[0]);
 #if CONFIG_SUPERTX
-  alloc_mode_context(cm, num_4x4_blk, &tree->horizontal_supertx);
-  alloc_mode_context(cm, num_4x4_blk, &tree->vertical_supertx);
-  alloc_mode_context(cm, num_4x4_blk, &tree->split_supertx);
+  alloc_mode_context(cm, num_pix, &tree->horizontal_supertx);
+  alloc_mode_context(cm, num_pix, &tree->vertical_supertx);
+  alloc_mode_context(cm, num_pix, &tree->split_supertx);
 #endif
 
-  if (num_4x4_blk > 4) {
-    alloc_mode_context(cm, num_4x4_blk / 2, &tree->horizontal[1]);
-    alloc_mode_context(cm, num_4x4_blk / 2, &tree->vertical[1]);
+  if (num_pix > 16) {
+    alloc_mode_context(cm, num_pix / 2, &tree->horizontal[1]);
+    alloc_mode_context(cm, num_pix / 2, &tree->vertical[1]);
   } else {
     memset(&tree->horizontal[1], 0, sizeof(tree->horizontal[1]));
     memset(&tree->vertical[1], 0, sizeof(tree->vertical[1]));
@@ -217,8 +197,6 @@ static void free_tree_contexts(PC_TREE *tree) {
 // represents the state of our search.
 void av1_setup_pc_tree(AV1_COMMON *cm, ThreadData *td) {
   int i, j;
-// TODO(jingning): The pc_tree allocation is redundant. We can take out all
-// the leaf nodes after cb4x4 mode is enabled.
 #if CONFIG_CB4X4
 #if CONFIG_EXT_PARTITION
   const int tree_nodes_inc = 1024;
@@ -239,20 +217,21 @@ void av1_setup_pc_tree(AV1_COMMON *cm, ThreadData *td) {
 #endif  // CONFIG_EXT_PARTITION
   int pc_tree_index = 0;
   PC_TREE *this_pc;
-  PICK_MODE_CONTEXT *this_leaf;
   int square_index = 1;
   int nodes;
 
+#if !CONFIG_CB4X4
   aom_free(td->leaf_tree);
   CHECK_MEM_ERROR(cm, td->leaf_tree,
                   aom_calloc(leaf_nodes, sizeof(*td->leaf_tree)));
+  PICK_MODE_CONTEXT *this_leaf = &td->leaf_tree[0];
+#endif
   aom_free(td->pc_tree);
   CHECK_MEM_ERROR(cm, td->pc_tree,
                   aom_calloc(tree_nodes, sizeof(*td->pc_tree)));
-
   this_pc = &td->pc_tree[0];
-  this_leaf = &td->leaf_tree[0];
 
+#if !CONFIG_CB4X4
   // 4x4 blocks smaller than 8x8 but in the same 8x8 block share the same
   // context so we only need to allocate 1 for each 8x8 block.
   for (i = 0; i < leaf_nodes; ++i) {
@@ -262,6 +241,7 @@ void av1_setup_pc_tree(AV1_COMMON *cm, ThreadData *td) {
     alloc_mode_context(cm, 16, &td->leaf_tree[i]);
 #endif
   }
+#endif
 
   // Sets up all the leaf nodes in the tree.
   for (pc_tree_index = 0; pc_tree_index < leaf_nodes; ++pc_tree_index) {
@@ -272,8 +252,10 @@ void av1_setup_pc_tree(AV1_COMMON *cm, ThreadData *td) {
 #else
     alloc_tree_contexts(cm, tree, 4);
 #endif
+#if !CONFIG_CB4X4
     tree->leaf_split[0] = this_leaf++;
     for (j = 1; j < 4; j++) tree->leaf_split[j] = tree->leaf_split[0];
+#endif
   }
 
   // Each node has 4 leaf nodes, fill each block_size level of the tree
@@ -311,29 +293,28 @@ void av1_free_pc_tree(ThreadData *td) {
 #else
   const int tree_nodes_inc = 256;
 #endif  // CONFIG_EXT_PARTITION
-  const int leaf_factor = 4;
 #else
   const int tree_nodes_inc = 0;
-  const int leaf_factor = 1;
 #endif
 
 #if CONFIG_EXT_PARTITION
-  const int leaf_nodes = 256 * leaf_factor;
   const int tree_nodes = tree_nodes_inc + 256 + 64 + 16 + 4 + 1;
 #else
-  const int leaf_nodes = 64 * leaf_factor;
   const int tree_nodes = tree_nodes_inc + 64 + 16 + 4 + 1;
 #endif  // CONFIG_EXT_PARTITION
   int i;
-
-  // Set up all 4x4 mode contexts
-  for (i = 0; i < leaf_nodes; ++i) free_mode_context(&td->leaf_tree[i]);
-
-  // Sets up all the leaf nodes in the tree.
   for (i = 0; i < tree_nodes; ++i) free_tree_contexts(&td->pc_tree[i]);
-
   aom_free(td->pc_tree);
   td->pc_tree = NULL;
+#if !CONFIG_CB4X4
+  const int leaf_factor = 1;
+#if CONFIG_EXT_PARTITION
+  const int leaf_nodes = 256 * leaf_factor;
+#else
+  const int leaf_nodes = 64 * leaf_factor;
+#endif  // CONFIG_EXT_PARTITION
+  for (i = 0; i < leaf_nodes; ++i) free_mode_context(&td->leaf_tree[i]);
   aom_free(td->leaf_tree);
   td->leaf_tree = NULL;
+#endif
 }
