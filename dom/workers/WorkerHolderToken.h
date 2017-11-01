@@ -8,7 +8,7 @@
 #define mozilla_dom_workers_WorkerHolderToken_h
 
 #include "nsISupportsImpl.h"
-#include "nsTArray.h"
+#include "nsTObserverArray.h"
 #include "WorkerHolder.h"
 
 BEGIN_WORKERS_NAMESPACE
@@ -67,7 +67,7 @@ private:
   virtual bool
   Notify(workers::Status aStatus) override;
 
-  nsTArray<Listener*> mListenerList;
+  nsTObserverArray<Listener*> mListenerList;
   const Status mShutdownStatus;
   bool mShuttingDown;
 
