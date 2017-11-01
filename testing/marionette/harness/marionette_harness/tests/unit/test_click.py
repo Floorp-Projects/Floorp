@@ -254,6 +254,17 @@ class TestClick(TestLegacyClick):
         option.click()
         self.assertTrue(option.get_property("selected"))
 
+    def test_table_tr(self):
+        self.marionette.navigate(inline("""
+          <table>
+            <tr><td onclick="window.clicked = true;">
+              foo
+            </td></tr>
+          </table>"""))
+        tr = self.marionette.find_element(By.TAG_NAME, "tr")
+        tr.click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
+
     def test_obscured_element(self):
         self.marionette.navigate(obscured_overlay)
         overlay = self.marionette.find_element(By.ID, "overlay")
