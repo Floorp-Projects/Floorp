@@ -9,6 +9,14 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "aom_dsp/aom_simd.h"
-#define SIMD_FUNC(name) name##_neon
-#include "./od_dering_simd.h"
+#include <stdio.h>
+#include "av1/common/enums.h"
+#include "av1/common/onyxc_int.h"
+#include "av1/common/common.h"
+
+#ifndef AV1_COMMON_NCOBMC_KERNELS_H_
+#define AV1_COMMON_NCOBMC_KERNELS_H_
+
+void get_default_ncobmc_kernels(AV1_COMMON *cm);
+
+#endif  // AV1_COMMON_NCOBMC_KERNELS_H_

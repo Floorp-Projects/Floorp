@@ -17,14 +17,15 @@
 static INLINE void read_coeff(const tran_low_t *coeff, intptr_t offset,
                               __m256i *c) {
   const tran_low_t *addr = coeff + offset;
-#if CONFIG_HIGHBITDEPTH
-  const __m256i x0 = _mm256_loadu_si256((const __m256i *)addr);
-  const __m256i x1 = _mm256_loadu_si256((const __m256i *)addr + 1);
-  const __m256i y = _mm256_packs_epi32(x0, x1);
-  *c = _mm256_permute4x64_epi64(y, 0xD8);
-#else
-  *c = _mm256_loadu_si256((const __m256i *)addr);
-#endif
+
+  if (sizeof(tran_low_t) == 4) {
+    const __m256i x0 = _mm256_loadu_si256((const __m256i *)addr);
+    const __m256i x1 = _mm256_loadu_si256((const __m256i *)addr + 1);
+    const __m256i y = _mm256_packs_epi32(x0, x1);
+    *c = _mm256_permute4x64_epi64(y, 0xD8);
+  } else {
+    *c = _mm256_loadu_si256((const __m256i *)addr);
+  }
 }
 
 int64_t av1_block_error_avx2(const tran_low_t *coeff, const tran_low_t *dqcoeff,

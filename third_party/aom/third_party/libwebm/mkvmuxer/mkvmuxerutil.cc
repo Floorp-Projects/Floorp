@@ -10,6 +10,7 @@
 
 #ifdef __ANDROID__
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 #include <cassert>

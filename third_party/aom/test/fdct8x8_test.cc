@@ -44,8 +44,9 @@ typedef void (*FhtFunc)(const int16_t *in, tran_low_t *out, int stride,
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
                         const TxfmParam *txfm_param);
 
-typedef std::tr1::tuple<FdctFunc, IdctFunc, int, aom_bit_depth_t> Dct8x8Param;
-typedef std::tr1::tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t> Ht8x8Param;
+typedef std::tr1::tuple<FdctFunc, IdctFunc, TX_TYPE, aom_bit_depth_t>
+    Dct8x8Param;
+typedef std::tr1::tuple<FhtFunc, IhtFunc, TX_TYPE, aom_bit_depth_t> Ht8x8Param;
 typedef std::tr1::tuple<IdctFunc, IdctFunc, int, aom_bit_depth_t> Idct8x8Param;
 
 void reference_8x8_dct_1d(const double in[8], double out[8]) {
@@ -485,8 +486,8 @@ class FwdTrans8x8TestBase {
         const int diff = dst[j] - ref[j];
 #endif
         const uint32_t error = diff * diff;
-        EXPECT_EQ(0u, error) << "Error: 8x8 IDCT has error " << error
-                             << " at index " << j;
+        EXPECT_EQ(0u, error)
+            << "Error: 8x8 IDCT has error " << error << " at index " << j;
       }
     }
   }
@@ -614,108 +615,124 @@ using std::tr1::make_tuple;
 #if CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(C, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_c,
-                                                     &aom_idct8x8_64_add_c, 0,
-                                                     AOM_BITS_8)));
+                                                     &aom_idct8x8_64_add_c,
+                                                     DCT_DCT, AOM_BITS_8)));
 #else
 INSTANTIATE_TEST_CASE_P(C, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_c,
-                                                     &aom_idct8x8_64_add_c, 0,
-                                                     AOM_BITS_8)));
+                                                     &aom_idct8x8_64_add_c,
+                                                     DCT_DCT, AOM_BITS_8)));
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     C, FwdTrans8x8HT,
     ::testing::Values(
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 0, AOM_BITS_8),
-        make_tuple(&fht8x8_10, &iht8x8_10, 0, AOM_BITS_10),
-        make_tuple(&fht8x8_10, &iht8x8_10, 1, AOM_BITS_10),
-        make_tuple(&fht8x8_10, &iht8x8_10, 2, AOM_BITS_10),
-        make_tuple(&fht8x8_10, &iht8x8_10, 3, AOM_BITS_10),
-        make_tuple(&fht8x8_12, &iht8x8_12, 0, AOM_BITS_12),
-        make_tuple(&fht8x8_12, &iht8x8_12, 1, AOM_BITS_12),
-        make_tuple(&fht8x8_12, &iht8x8_12, 2, AOM_BITS_12),
-        make_tuple(&fht8x8_12, &iht8x8_12, 3, AOM_BITS_12),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 3, AOM_BITS_8)));
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, DCT_DCT, AOM_BITS_8),
+        make_tuple(&fht8x8_10, &iht8x8_10, DCT_DCT, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, ADST_DCT, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, DCT_ADST, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, ADST_ADST, AOM_BITS_10),
+        make_tuple(&fht8x8_12, &iht8x8_12, DCT_DCT, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, ADST_DCT, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, DCT_ADST, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, ADST_ADST, AOM_BITS_12),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, ADST_DCT, AOM_BITS_8),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, DCT_ADST, AOM_BITS_8),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, ADST_ADST,
+                   AOM_BITS_8)));
 #else
 INSTANTIATE_TEST_CASE_P(
     C, FwdTrans8x8HT,
     ::testing::Values(
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 0, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 3, AOM_BITS_8)));
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, DCT_DCT, AOM_BITS_8),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, ADST_DCT, AOM_BITS_8),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, DCT_ADST, AOM_BITS_8),
+        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, ADST_ADST,
+                   AOM_BITS_8)));
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if HAVE_NEON_ASM && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(NEON, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_neon,
                                                      &aom_idct8x8_64_add_neon,
-                                                     0, AOM_BITS_8)));
+                                                     DCT_DCT, AOM_BITS_8)));
 #endif  // HAVE_NEON_ASM && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_NEON && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     NEON, FwdTrans8x8HT,
-    ::testing::Values(
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon, 0, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon, 3, AOM_BITS_8)));
+    ::testing::Values(make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon,
+                                 DCT_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon,
+                                 ADST_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon,
+                                 DCT_ADST, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_neon,
+                                 ADST_ADST, AOM_BITS_8)));
 #endif  // HAVE_NEON && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(SSE2, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_sse2,
                                                      &aom_idct8x8_64_add_sse2,
-                                                     0, AOM_BITS_8)));
+                                                     DCT_DCT, AOM_BITS_8)));
+#if !CONFIG_DAALA_DCT8
 INSTANTIATE_TEST_CASE_P(
     SSE2, FwdTrans8x8HT,
-    ::testing::Values(
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2, 0, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2, 3, AOM_BITS_8)));
+    ::testing::Values(make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2,
+                                 DCT_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2,
+                                 ADST_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2,
+                                 DCT_ADST, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_sse2,
+                                 ADST_ADST, AOM_BITS_8)));
+#endif  // !CONFIG_DAALA_DCT8
 #endif  // HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_SSE2 && CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(SSE2, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_sse2,
-                                                     &aom_idct8x8_64_add_c, 0,
-                                                     AOM_BITS_8)));
-
+                                                     &aom_idct8x8_64_add_c,
+                                                     DCT_DCT, AOM_BITS_8)));
+#if !CONFIG_DAALA_DCT8
 INSTANTIATE_TEST_CASE_P(
     SSE2, FwdTrans8x8HT,
-    ::testing::Values(
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c, 0, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c, 3, AOM_BITS_8)));
-
+    ::testing::Values(make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c,
+                                 DCT_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c,
+                                 ADST_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c,
+                                 DCT_ADST, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_sse2, &av1_iht8x8_64_add_c,
+                                 ADST_ADST, AOM_BITS_8)));
+#endif  // !CONFIG_DAALA_DCT8
 #endif  // HAVE_SSE2 && CONFIG_HIGHBITDEPTH
 
 #if HAVE_SSSE3 && ARCH_X86_64
 INSTANTIATE_TEST_CASE_P(SSSE3, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_ssse3,
                                                      &aom_idct8x8_64_add_ssse3,
-                                                     0, AOM_BITS_8)));
+                                                     DCT_DCT, AOM_BITS_8)));
 #endif
 
 #if HAVE_MSA && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(MSA, FwdTrans8x8DCT,
                         ::testing::Values(make_tuple(&aom_fdct8x8_msa,
-                                                     &aom_idct8x8_64_add_msa, 0,
-                                                     AOM_BITS_8)));
-#if !CONFIG_EXT_TX
+                                                     &aom_idct8x8_64_add_msa,
+                                                     DCT_DCT, AOM_BITS_8)));
+#if !CONFIG_EXT_TX && !CONFIG_DAALA_DCT8
 INSTANTIATE_TEST_CASE_P(
     MSA, FwdTrans8x8HT,
-    ::testing::Values(
-        make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa, 0, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa, 1, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa, 2, AOM_BITS_8),
-        make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa, 3, AOM_BITS_8)));
-#endif  // !CONFIG_EXT_TX
+    ::testing::Values(make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa,
+                                 DCT_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa,
+                                 ADST_DCT, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa,
+                                 DCT_ADST, AOM_BITS_8),
+                      make_tuple(&av1_fht8x8_msa, &av1_iht8x8_64_add_msa,
+                                 ADST_ADST, AOM_BITS_8)));
+#endif  // !CONFIG_EXT_TX && !CONFIG_DAALA_DCT8
 #endif  // HAVE_MSA && !CONFIG_HIGHBITDEPTH
 }  // namespace

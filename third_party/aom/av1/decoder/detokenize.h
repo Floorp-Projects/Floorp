@@ -22,9 +22,7 @@
 extern "C" {
 #endif
 
-#if CONFIG_PALETTE
 void av1_decode_palette_tokens(MACROBLOCKD *const xd, int plane, aom_reader *r);
-#endif  // CONFIG_PALETTE
 
 #if !CONFIG_PVQ || CONFIG_VAR_TX
 int av1_decode_block_tokens(AV1_COMMON *cm, MACROBLOCKD *const xd, int plane,

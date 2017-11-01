@@ -151,8 +151,8 @@ static unsigned int block_variance(const AV1_COMP *const cpi, MACROBLOCK *x,
       (xd->mb_to_bottom_edge < 0) ? ((-xd->mb_to_bottom_edge) >> 3) : 0;
 
   if (right_overflow || bottom_overflow) {
-    const int bw = 8 * mi_size_wide[bs] - right_overflow;
-    const int bh = 8 * mi_size_high[bs] - bottom_overflow;
+    const int bw = MI_SIZE * mi_size_wide[bs] - right_overflow;
+    const int bh = MI_SIZE * mi_size_high[bs] - bottom_overflow;
     int avg;
 #if CONFIG_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {

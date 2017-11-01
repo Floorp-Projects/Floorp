@@ -143,11 +143,10 @@ void od_ec_enc_clear(od_ec_enc *enc) {
 }
 
 /*Encodes a symbol given its frequency in Q15.
-  fl: The cumulative frequency of all symbols that come before the one to be
-       encoded.
-  fh: The cumulative frequency of all symbols up to and including the one to
-       be encoded.
-  {EC_SMALLMUL} Both values are 32768 minus that.*/
+  fl: 32768 minus the cumulative frequency of all symbols that come before the
+       one to be encoded.
+  fh: 32768 minus the cumulative frequency of all symbols up to and including
+       the one to be encoded.*/
 static void od_ec_encode_q15(od_ec_enc *enc, unsigned fl, unsigned fh) {
   od_ec_window l;
   unsigned r;
@@ -156,7 +155,6 @@ static void od_ec_encode_q15(od_ec_enc *enc, unsigned fl, unsigned fh) {
   l = enc->low;
   r = enc->rng;
   OD_ASSERT(32768U <= r);
-#if CONFIG_EC_SMALLMUL
   OD_ASSERT(fh < fl);
   OD_ASSERT(fl <= 32768U);
   if (fl < 32768U) {
@@ -167,14 +165,6 @@ static void od_ec_encode_q15(od_ec_enc *enc, unsigned fl, unsigned fh) {
   } else {
     r -= (r >> 8) * (uint32_t)fh >> 7;
   }
-#else
-  OD_ASSERT(fl < fh);
-  OD_ASSERT(fh <= 32768U);
-  u = fl * (uint32_t)r >> 15;
-  v = fh * (uint32_t)r >> 15;
-  r = v - u;
-  l += u;
-#endif
   od_ec_enc_normalize(enc, l, r);
 #if OD_MEASURE_EC_OVERHEAD
   enc->entropy -= OD_LOG2((double)(OD_ICDF(fh) - OD_ICDF(fl)) / 32768.);
@@ -184,8 +174,7 @@ static void od_ec_encode_q15(od_ec_enc *enc, unsigned fl, unsigned fh) {
 
 /*Encode a single binary value.
   val: The value to encode (0 or 1).
-  {EC_SMALLMUL} f: The probability that the val is one, scaled by 32768.
-  {else} f: The probability that val is zero, scaled by 32768.*/
+  f: The probability that the val is one, scaled by 32768.*/
 void od_ec_encode_bool_q15(od_ec_enc *enc, int val, unsigned f) {
   od_ec_window l;
   unsigned r;
@@ -195,15 +184,9 @@ void od_ec_encode_bool_q15(od_ec_enc *enc, int val, unsigned f) {
   l = enc->low;
   r = enc->rng;
   OD_ASSERT(32768U <= r);
-#if CONFIG_EC_SMALLMUL
   v = (r >> 8) * (uint32_t)f >> 7;
   if (val) l += r - v;
   r = val ? v : r - v;
-#else
-  v = f * (uint32_t)r >> 15;
-  if (val) l += v;
-  r = val ? r - v : v;
-#endif
   od_ec_enc_normalize(enc, l, r);
 #if OD_MEASURE_EC_OVERHEAD
   enc->entropy -=
@@ -214,19 +197,19 @@ void od_ec_encode_bool_q15(od_ec_enc *enc, int val, unsigned f) {
 
 /*Encodes a symbol given a cumulative distribution function (CDF) table in Q15.
   s: The index of the symbol to encode.
-  cdf: The CDF, such that symbol s falls in the range
-        [s > 0 ? cdf[s - 1] : 0, cdf[s]).
-       The values must be monotonically non-decreasing, and the last value
-        must be exactly 32768.
+  icdf: 32768 minus the CDF, such that symbol s falls in the range
+         [s > 0 ? (32768 - icdf[s - 1]) : 0, 32768 - icdf[s]).
+        The values must be monotonically decreasing, and icdf[nsyms - 1] must
+         be 0.
   nsyms: The number of symbols in the alphabet.
          This should be at most 16.*/
-void od_ec_encode_cdf_q15(od_ec_enc *enc, int s, const uint16_t *cdf,
+void od_ec_encode_cdf_q15(od_ec_enc *enc, int s, const uint16_t *icdf,
                           int nsyms) {
   (void)nsyms;
   OD_ASSERT(s >= 0);
   OD_ASSERT(s < nsyms);
-  OD_ASSERT(cdf[nsyms - 1] == OD_ICDF(32768U));
-  od_ec_encode_q15(enc, s > 0 ? cdf[s - 1] : OD_ICDF(0), cdf[s]);
+  OD_ASSERT(icdf[nsyms - 1] == OD_ICDF(32768U));
+  od_ec_encode_q15(enc, s > 0 ? icdf[s - 1] : OD_ICDF(0), icdf[s]);
 }
 
 #if CONFIG_RAWBITS

@@ -185,22 +185,6 @@ const AvxInterface *get_aom_decoder_by_fourcc(uint32_t fourcc) {
 }
 #endif  // CONFIG_AV1_DECODER
 
-// TODO(dkovalev): move this function to aom_image.{c, h}, so it will be part
-// of aom_image_t support
-int aom_img_plane_width(const aom_image_t *img, int plane) {
-  if (plane > 0 && img->x_chroma_shift > 0)
-    return (img->d_w + 1) >> img->x_chroma_shift;
-  else
-    return img->d_w;
-}
-
-int aom_img_plane_height(const aom_image_t *img, int plane) {
-  if (plane > 0 && img->y_chroma_shift > 0)
-    return (img->d_h + 1) >> img->y_chroma_shift;
-  else
-    return img->d_h;
-}
-
 void aom_img_write(const aom_image_t *img, FILE *file) {
   int plane;
 

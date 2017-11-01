@@ -29,7 +29,7 @@ typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
                         const TxfmParam *txfm_param);
 using std::tr1::tuple;
 using libaom_test::FhtFunc;
-typedef tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t, int> Ht64x64Param;
+typedef tuple<FhtFunc, IhtFunc, TX_TYPE, aom_bit_depth_t, int> Ht64x64Param;
 
 void fht64x64_ref(const int16_t *in, tran_low_t *out, int stride,
                   TxfmParam *txfm_param) {
@@ -82,23 +82,38 @@ TEST_P(AV1Trans64x64HT, InvAccuracyCheck) { RunInvAccuracyCheck(4); }
 using std::tr1::make_tuple;
 
 const Ht64x64Param kArrayHt64x64Param_c[] = {
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 0, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 1, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 2, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 3, AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, DCT_DCT, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, ADST_DCT, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, DCT_ADST, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, ADST_ADST, AOM_BITS_8,
+             4096),
 #if CONFIG_EXT_TX
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 4, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 5, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 6, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 7, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 8, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 9, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 10, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 11, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 12, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 13, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 14, AOM_BITS_8, 4096),
-  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, 15, AOM_BITS_8, 4096)
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, FLIPADST_DCT,
+             AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, DCT_FLIPADST,
+             AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, FLIPADST_FLIPADST,
+             AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, ADST_FLIPADST,
+             AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, FLIPADST_ADST,
+             AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, IDTX, AOM_BITS_8, 4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, V_DCT, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, H_DCT, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, V_ADST, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, H_ADST, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, V_FLIPADST, AOM_BITS_8,
+             4096),
+  make_tuple(&av1_fht64x64_c, &av1_iht64x64_4096_add_c, H_FLIPADST, AOM_BITS_8,
+             4096)
 #endif  // CONFIG_EXT_TX
 };
 INSTANTIATE_TEST_CASE_P(C, AV1Trans64x64HT,

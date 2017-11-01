@@ -19,11 +19,11 @@
 static const int8_t fwd_shift_4[3] = { 2, 0, 0 };
 
 // stage range
-static const int8_t fwd_stage_range_col_dct_4[4] = { 15, 16, 17, 17 };
-static const int8_t fwd_stage_range_row_dct_4[4] = { 17, 18, 18, 18 };
-static const int8_t fwd_stage_range_col_adst_4[6] = { 15, 15, 16, 17, 17, 17 };
-static const int8_t fwd_stage_range_row_adst_4[6] = { 17, 17, 17, 18, 18, 18 };
-static const int8_t fwd_stage_range_idx_4[1] = { 18 };
+static const int8_t fwd_stage_range_col_dct_4[4] = { 0, 1, 2, 2 };
+static const int8_t fwd_stage_range_row_dct_4[4] = { 2, 3, 3, 3 };
+static const int8_t fwd_stage_range_col_adst_4[6] = { 0, 0, 1, 2, 2, 2 };
+static const int8_t fwd_stage_range_row_adst_4[6] = { 2, 2, 2, 3, 3, 3 };
+static const int8_t fwd_stage_range_idx_4[1] = { 0 };
 
 // cos bit
 static const int8_t fwd_cos_bit_col_dct_4[4] = { 13, 13, 13, 13 };
@@ -36,13 +36,11 @@ static const int8_t fwd_cos_bit_row_adst_4[6] = { 13, 13, 13, 13, 13, 13 };
 static const int8_t fwd_shift_8[3] = { 2, -1, 0 };
 
 // stage range
-static const int8_t fwd_stage_range_col_dct_8[6] = { 15, 16, 17, 18, 18, 18 };
-static const int8_t fwd_stage_range_row_dct_8[6] = { 17, 18, 19, 19, 19, 19 };
-static const int8_t fwd_stage_range_col_adst_8[8] = { 15, 15, 16, 17,
-                                                      17, 18, 18, 18 };
-static const int8_t fwd_stage_range_row_adst_8[8] = { 17, 17, 17, 18,
-                                                      18, 19, 19, 19 };
-static const int8_t fwd_stage_range_idx_8[1] = { 19 };
+static const int8_t fwd_stage_range_col_dct_8[6] = { 0, 1, 2, 3, 3, 3 };
+static const int8_t fwd_stage_range_row_dct_8[6] = { 3, 4, 5, 5, 5, 5 };
+static const int8_t fwd_stage_range_col_adst_8[8] = { 0, 0, 1, 2, 2, 3, 3, 3 };
+static const int8_t fwd_stage_range_row_adst_8[8] = { 3, 3, 3, 4, 4, 5, 5, 5 };
+static const int8_t fwd_stage_range_idx_8[1] = { 0 };
 
 // cos bit
 static const int8_t fwd_cos_bit_col_dct_8[6] = { 13, 13, 13, 13, 13, 13 };
@@ -59,15 +57,14 @@ static const int8_t fwd_cos_bit_row_adst_8[8] = {
 static const int8_t fwd_shift_16[3] = { 2, -2, 0 };
 
 // stage range
-static const int8_t fwd_stage_range_col_dct_16[8] = { 15, 16, 17, 18,
-                                                      19, 19, 19, 19 };
-static const int8_t fwd_stage_range_row_dct_16[8] = { 17, 18, 19, 20,
-                                                      20, 20, 20, 20 };
-static const int8_t fwd_stage_range_col_adst_16[10] = { 15, 15, 16, 17, 17,
-                                                        18, 18, 19, 19, 19 };
-static const int8_t fwd_stage_range_row_adst_16[10] = { 17, 17, 17, 18, 18,
-                                                        19, 19, 20, 20, 20 };
-static const int8_t fwd_stage_range_idx_16[1] = { 20 };
+static const int8_t fwd_stage_range_col_dct_16[8] = { 0, 1, 2, 3, 4, 4, 4, 4 };
+static const int8_t fwd_stage_range_row_dct_16[8] = { 4, 5, 6, 7, 7, 7, 7, 7 };
+static const int8_t fwd_stage_range_col_adst_16[10] = { 0, 0, 1, 2, 2,
+                                                        3, 3, 4, 4, 4 };
+static const int8_t fwd_stage_range_row_adst_16[10] = {
+  4, 4, 4, 5, 5, 6, 6, 7, 7, 7,
+};
+static const int8_t fwd_stage_range_idx_16[1] = { 0 };
 
 // cos bit
 static const int8_t fwd_cos_bit_col_dct_16[8] = {
@@ -86,17 +83,15 @@ static const int8_t fwd_cos_bit_row_adst_16[10] = { 12, 12, 12, 12, 12,
 static const int8_t fwd_shift_32[3] = { 2, -4, 0 };
 
 // stage range
-static const int8_t fwd_stage_range_col_dct_32[10] = { 15, 16, 17, 18, 19,
-                                                       20, 20, 20, 20, 20 };
-static const int8_t fwd_stage_range_row_dct_32[10] = { 16, 17, 18, 19, 20,
-                                                       20, 20, 20, 20, 20 };
-static const int8_t fwd_stage_range_col_adst_32[12] = {
-  15, 15, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20
-};
-static const int8_t fwd_stage_range_row_adst_32[12] = {
-  16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20
-};
-static const int8_t fwd_stage_range_idx_32[1] = { 20 };
+static const int8_t fwd_stage_range_col_dct_32[10] = { 0, 1, 2, 3, 4,
+                                                       5, 5, 5, 5, 5 };
+static const int8_t fwd_stage_range_row_dct_32[10] = { 5, 6, 7, 8, 9,
+                                                       9, 9, 9, 9, 9 };
+static const int8_t fwd_stage_range_col_adst_32[12] = { 0, 0, 1, 2, 2, 3,
+                                                        3, 4, 4, 5, 5, 5 };
+static const int8_t fwd_stage_range_row_adst_32[12] = { 5, 5, 5, 6, 6, 7,
+                                                        7, 8, 8, 9, 9, 9 };
+static const int8_t fwd_stage_range_idx_32[1] = { 0 };
 
 // cos bit
 static const int8_t fwd_cos_bit_col_dct_32[10] = { 12, 12, 12, 12, 12,
@@ -113,11 +108,11 @@ static const int8_t fwd_cos_bit_row_adst_32[12] = { 12, 12, 12, 12, 12, 12,
 static const int8_t fwd_shift_64[3] = { 0, -2, -2 };
 
 // stage range
-static const int8_t fwd_stage_range_col_dct_64[12] = { 13, 14, 15, 16, 17, 18,
-                                                       19, 19, 19, 19, 19, 19 };
-static const int8_t fwd_stage_range_row_dct_64[12] = { 17, 18, 19, 20, 21, 22,
-                                                       22, 22, 22, 22, 22, 22 };
-static const int8_t fwd_stage_range_idx_64[1] = { 22 };
+static const int8_t fwd_stage_range_col_dct_64[12] = { 0, 1, 2, 3, 4, 5,
+                                                       6, 6, 6, 6, 6, 6 };
+static const int8_t fwd_stage_range_row_dct_64[12] = { 6,  7,  8,  9,  10, 11,
+                                                       11, 11, 11, 11, 11, 11 };
+static const int8_t fwd_stage_range_idx_64[1] = { 0 };
 
 // cos bit
 static const int8_t fwd_cos_bit_col_dct_64[12] = { 15, 15, 15, 15, 15, 14,
