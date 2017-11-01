@@ -171,6 +171,10 @@ public abstract class GeckoApp extends GeckoActivity
     // for crash loop detection purposes.
     private static final int STARTUP_PHASE_DURATION_MS = 30 * 1000;
 
+    protected static final int LOAD_DEFAULT = 0;
+    protected static final int LOAD_NEW_TAB = 1;
+    protected static final int LOAD_SWITCH_TAB = 2;
+
     private static boolean sAlreadyLoaded;
 
     protected RelativeLayout mRootLayout;
@@ -1945,9 +1949,15 @@ public abstract class GeckoApp extends GeckoActivity
                 }
             });
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
+            final GeckoBundle data = new GeckoBundle(2);
+            data.putString("uri", uri);
+            data.putInt("flags", LOAD_SWITCH_TAB);
+            getAppEventDispatcher().dispatch("Tab:OpenUri", data);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
-            mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
+            final GeckoBundle data = new GeckoBundle(2);
+            data.putString("uri", uri);
+            data.putInt("flags", LOAD_NEW_TAB);
+            getAppEventDispatcher().dispatch("Tab:OpenUri", data);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
         } else if (ACTION_LAUNCH_SETTINGS.equals(action)) {

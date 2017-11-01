@@ -369,6 +369,7 @@ var BrowserApp = {
       "Tab:Selected",
       "Tab:Closed",
       "Tab:Move",
+      "Tab:OpenUri",
     ]);
 
     GlobalEventDispatcher.registerListener(this, [
@@ -1927,6 +1928,11 @@ var BrowserApp = {
         }
         break;
       }
+
+      case "Tab:OpenUri":
+        window.browserDOMWindow.openURI(data.uri, null, data.flags,
+                                        Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+        break;
 
       case "Tab:Selected":
         this._handleTabSelected(this.getTabForId(data.id));

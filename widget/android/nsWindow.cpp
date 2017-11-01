@@ -294,8 +294,6 @@ public:
                   GeckoView::Param aView, jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher);
 
-    void LoadUri(jni::String::Param aUri, int32_t aFlags);
-
     void EnableEventDispatcher();
 };
 
@@ -1377,41 +1375,6 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
 
     mGeckoViewWindow->OnReattach(aView);
-}
-
-void
-nsWindow::GeckoViewSupport::LoadUri(jni::String::Param aUri, int32_t aFlags)
-{
-    if (!mDOMWindow) {
-        return;
-    }
-
-    nsCOMPtr<nsIURI> uri = nsAppShell::ResolveURI(aUri->ToCString());
-    if (NS_WARN_IF(!uri)) {
-        return;
-    }
-
-    nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(mDOMWindow);
-    nsCOMPtr<nsIBrowserDOMWindow> browserWin;
-
-    if (NS_WARN_IF(!chromeWin) || NS_WARN_IF(NS_FAILED(
-            chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserWin))))) {
-        return;
-    }
-
-    const int flags = aFlags == GeckoView::LOAD_NEW_TAB ?
-                        nsIBrowserDOMWindow::OPEN_NEWTAB :
-                      aFlags == GeckoView::LOAD_SWITCH_TAB ?
-                        nsIBrowserDOMWindow::OPEN_SWITCHTAB :
-                        nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
-    nsCOMPtr<mozIDOMWindowProxy> newWin;
-
-    if (NS_FAILED(browserWin->OpenURI(
-            uri, nullptr, flags, nsIBrowserDOMWindow::OPEN_EXTERNAL,
-            nsContentUtils::GetSystemPrincipal(),
-            getter_AddRefs(newWin)))) {
-        NS_WARNING("Failed to open URI");
-    }
 }
 
 void

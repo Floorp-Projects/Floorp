@@ -344,8 +344,6 @@ public class GeckoView extends LayerView {
         native void reattach(GeckoView view, Object compositor,
                              EventDispatcher dispatcher);
 
-        native void loadUri(String uri, int flags);
-
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void setState(final State newState) {
             if (mNativeQueue.getState() != State.READY &&
@@ -618,28 +616,6 @@ public class GeckoView extends LayerView {
                     mWindow, "close");
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     mWindow, "disposeNative");
-        }
-    }
-
-    @WrapForJNI public static final int LOAD_DEFAULT = 0;
-    @WrapForJNI public static final int LOAD_NEW_TAB = 1;
-    @WrapForJNI public static final int LOAD_SWITCH_TAB = 2;
-
-    /**
-    * Load the given URI.
-    * Note: Only for Fennec support.
-    * @param uri The URI of the resource to load.
-    * @param flags The load flags (TODO).
-    */
-    public void loadUri(String uri, int flags) {
-        if (mWindow == null) {
-            throw new IllegalStateException("Not attached to window");
-        }
-
-        if (GeckoThread.isRunning()) {
-            mWindow.loadUri(uri, flags);
-        }  else {
-            GeckoThread.queueNativeCall(mWindow, "loadUri", String.class, uri, flags);
         }
     }
 
