@@ -13,6 +13,8 @@
 #include "gc/GCTrace.h"
 #include "gc/Zone.h"
 
+#include "gc/ArenaList-inl.h"
+
 namespace js {
 namespace gc {
 
