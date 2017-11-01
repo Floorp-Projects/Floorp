@@ -44,6 +44,14 @@ public:
   bool InitFromFileContents(const wchar_t* aMetafilePath);
 
   /**
+   * Creates the EMF from the specified data
+   *
+   * @param aByte Pointer to a buffer that contains EMF data.
+   * @param aSize Specifies the size, in bytes, of aByte.
+   */
+  bool InitFromFileContents(PBYTE aBytes, UINT aSize);
+
+  /**
    * If this object was initiaziled using InitForDrawing() then this function
    * returns an HDC that can be drawn to generate the EMF output. Otherwise it
    * returns null. After finishing with the HDC, consumers could call Playback()
@@ -69,6 +77,18 @@ public:
    * file.
    */
   bool SaveToFile();
+
+  /**
+   * Return the size of the enhanced metafile, in bytes.
+   */
+  UINT GetEMFContentSize();
+
+  /**
+   * Retrieves the contents of the EMF and copies them into a buffer.
+   *
+   * @param aByte the buffer to receive the data.
+   */
+  bool GetEMFContentBits(PBYTE aBytes);
 
 private:
 

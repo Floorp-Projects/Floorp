@@ -195,7 +195,7 @@ TEST(TestEMFConversion, TestInsufficientWidthAndHeight)
                                                           emfPath)));
 
   ASSERT_FALSE(PDFHelper->DrawPageToFile(emfPath.get(), 0, 0, 0));
-  ASSERT_FALSE(PDFHelper->DrawPageToFile(emfPath.get(), 0, 100, -1));
+  ASSERT_FALSE(PDFHelper->PageToFile(emfPath.get(), 0, 100, -1));
 
   PDFHelper->CloseDocument();
 }

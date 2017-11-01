@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 /* Scale DC by keeping aspect ratio */
 static
@@ -186,6 +187,8 @@ PDFViaEMFPrintHelper::DrawPageToFile(const wchar_t* aFilePath,
                                      unsigned int aPageIndex,
                                      int aPageWidth, int aPageHeight)
 {
+  MOZ_ASSERT(aFilePath);
+
   // OpenDocument might fail.
   if (!mPDFDoc) {
     MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
@@ -200,6 +203,43 @@ PDFViaEMFPrintHelper::DrawPageToFile(const wchar_t* aFilePath,
   result = RenderPageToDC(emf.GetDC(), aPageIndex, aPageWidth, aPageHeight);
   NS_ENSURE_TRUE(result, false);
   return emf.SaveToFile();
+}
+
+bool
+PDFViaEMFPrintHelper::SavePageToBuffer(unsigned int aPageIndex,
+                                       int aPageWidth, int aPageHeight,
+                                       ipc::Shmem& aMem,
+                                       mozilla::ipc::IShmemAllocator* aAllocator)
+{
+  MOZ_ASSERT(aAllocator);
+
+  // OpenDocument might fail.
+  if (!mPDFDoc) {
+    MOZ_ASSERT_UNREACHABLE("Make sure OpenDocument return true before"
+                           "using DrawPageToFile.");
+    return false;
+  }
+
+  WindowsEMF emf;
+  bool result = emf.InitForDrawing();
+  NS_ENSURE_TRUE(result, false);
+
+  result = RenderPageToDC(emf.GetDC(), aPageIndex, aPageWidth, aPageHeight);
+  NS_ENSURE_TRUE(result, false);
+
+  UINT emfSize = emf.GetEMFContentSize();
+  NS_ENSURE_TRUE(emfSize != 0, false);
+
+  auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
+  result = aAllocator->AllocShmem(emfSize, shmType, &aMem);
+  NS_ENSURE_TRUE(result, false);
+
+  if (!emf.GetEMFContentBits(aMem.get<BYTE>())) {
+    aAllocator->DeallocShmem(aMem);
+    return false;;
+  }
+
+  return true;
 }
 
 void
@@ -221,6 +261,7 @@ PDFViaEMFPrintHelper::CreatePDFiumEngineIfNeed()
 {
   if (!mPDFiumEngine) {
     mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull();
+    MOZ_ASSERT(mPDFiumEngine);
   }
 
   return !!mPDFiumEngine;
