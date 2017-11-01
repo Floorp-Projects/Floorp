@@ -480,10 +480,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
                                           GetterOp getter, SetterOp setter,
                                           unsigned attrs, ShapeTable::Entry* entry,
-                                          bool allowDictionary, const AutoKeepShapeTables& keep)
+                                          const AutoKeepShapeTables& keep)
 {
-    MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
-
     AutoCheckShapeConsistency check(obj);
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -493,7 +491,7 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
      */
     ShapeTable* table = nullptr;
     if (!obj->inDictionaryMode()) {
-        if (allowDictionary && ShouldConvertToDictionary(obj)) {
+        if (ShouldConvertToDictionary(obj)) {
             if (!toDictionaryMode(cx, obj))
                 return nullptr;
             table = obj->lastProperty()->maybeTable(keep);
@@ -953,7 +951,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
          */
         MOZ_ASSERT(obj->nonProxyIsExtensible());
 
-        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry, true, keep);
+        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry, keep);
     }
 
     /* Property exists: search must have returned a valid entry. */

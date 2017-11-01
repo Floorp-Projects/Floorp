@@ -858,7 +858,7 @@ class NativeObject : public ShapedObject
 
     static MOZ_ALWAYS_INLINE Shape* addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                                                         JSGetterOp getter, JSSetterOp setter,
-                                                        unsigned attrs, bool allowDictionary = true);
+                                                        unsigned attrs);
 
     static Shape* addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id);
 
@@ -901,8 +901,7 @@ class NativeObject : public ShapedObject
     static Shape*
     addAccessorPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
                                 JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                                ShapeTable::Entry* entry, bool allowDictionary,
-                                const AutoKeepShapeTables& keep);
+                                ShapeTable::Entry* entry, const AutoKeepShapeTables& keep);
 
     static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
                                              const Vector<Value>& values, void* priv);
