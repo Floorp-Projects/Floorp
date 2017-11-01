@@ -262,6 +262,12 @@ protected:
                                         const uint64_t& aChannelId) override;
   virtual bool
   DeallocPHttpBackgroundChannelParent(PHttpBackgroundChannelParent *aActor) override;
+
+  virtual PClientManagerParent*
+  AllocPClientManagerParent() override;
+
+  virtual bool
+  DeallocPClientManagerParent(PClientManagerParent* aActor) override;
 };
 
 } // namespace ipc
