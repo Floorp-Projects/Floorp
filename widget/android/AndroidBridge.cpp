@@ -318,7 +318,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 {
     ALOG_BRIDGE("AndroidBridge::GetClipboardText");
 
-    auto text = Clipboard::GetText();
+    auto text = Clipboard::GetText(GeckoAppShell::GetApplicationContext());
 
     if (text) {
         aText = text->ToString();
