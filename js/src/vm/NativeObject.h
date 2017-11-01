@@ -874,8 +874,7 @@ class NativeObject : public ShapedObject
 
     static Shape*
     putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                        JSGetterOp getter, JSSetterOp setter,
-                        unsigned attrs, unsigned flags);
+                        JSGetterOp getter, JSSetterOp setter, unsigned attrs);
 
     /* Change the given property into a sibling with the same id in this scope. */
     static Shape*
