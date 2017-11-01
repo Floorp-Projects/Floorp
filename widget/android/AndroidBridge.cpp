@@ -56,7 +56,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::jni;
 using namespace mozilla::java;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
@@ -159,7 +158,7 @@ AndroidBridge::AndroidBridge()
     AutoLocalJNIFrame jniFrame(jEnv);
 
     mMessageQueue = java::GeckoThread::MsgQueue();
-    auto msgQueueClass = Class::LocalRef::Adopt(
+    auto msgQueueClass = jni::Class::LocalRef::Adopt(
             jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
     // mMessageQueueNext must not be null
     mMessageQueueNext = GetMethodID(
@@ -411,7 +410,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
     }
     env->ReleaseLongArrayElements(array, elts, 0);
 
-    GeckoAppShell::Vibrate(LongArray::Ref::From(array), -1 /* don't repeat */);
+    GeckoAppShell::Vibrate(jni::LongArray::Ref::From(array), -1 /* don't repeat */);
 }
 
 void
@@ -649,12 +648,9 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
 
 jobject
 AndroidBridge::GetGlobalContextRef() {
-    if (sGlobalContext) {
-        return sGlobalContext;
-    }
-
+    // The context object can change, so get a fresh copy every time.
     auto context = GeckoAppShell::GetApplicationContext();
-    sGlobalContext = Object::GlobalRef(context).Forget();
+    sGlobalContext = jni::Object::GlobalRef(context).Forget();
     MOZ_ASSERT(sGlobalContext);
     return sGlobalContext;
 }
@@ -835,7 +831,7 @@ AndroidBridge::PumpMessageLoop()
     JNIEnv* const env = jni::GetGeckoThreadEnv();
 
     if (mMessageQueueMessages) {
-        auto msg = Object::LocalRef::Adopt(env,
+        auto msg = jni::Object::LocalRef::Adopt(env,
                 env->GetObjectField(mMessageQueue.Get(),
                                     mMessageQueueMessages));
         // if queue.mMessages is null, queue.next() will block, which we don't
@@ -847,7 +843,7 @@ AndroidBridge::PumpMessageLoop()
         }
     }
 
-    auto msg = Object::LocalRef::Adopt(
+    auto msg = jni::Object::LocalRef::Adopt(
             env, env->CallObjectMethod(mMessageQueue.Get(), mMessageQueueNext));
     if (!msg) {
         return false;
@@ -910,30 +906,30 @@ AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
     return layerClient->IsContentDocumentDisplayed();
 }
 
-Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
-    JNIEnv* const env = GetEnvForThread();
-    auto rv = Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
+jni::Object::LocalRef AndroidBridge::ChannelCreate(jni::Object::Param stream) {
+    JNIEnv* const env = jni::GetEnvForThread();
+    auto rv = jni::Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
             sBridge->jChannels, sBridge->jChannelCreate, stream.Get()));
     MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
-void AndroidBridge::InputStreamClose(Object::Param obj) {
-    JNIEnv* const env = GetEnvForThread();
+void AndroidBridge::InputStreamClose(jni::Object::Param obj) {
+    JNIEnv* const env = jni::GetEnvForThread();
     env->CallVoidMethod(obj.Get(), sBridge->jClose);
     MOZ_CATCH_JNI_EXCEPTION(env);
 }
 
-uint32_t AndroidBridge::InputStreamAvailable(Object::Param obj) {
-    JNIEnv* const env = GetEnvForThread();
+uint32_t AndroidBridge::InputStreamAvailable(jni::Object::Param obj) {
+    JNIEnv* const env = jni::GetEnvForThread();
     auto rv = env->CallIntMethod(obj.Get(), sBridge->jAvailable);
     MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
-nsresult AndroidBridge::InputStreamRead(Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
-    JNIEnv* const env = GetEnvForThread();
-    auto arr = ByteBuffer::New(aBuf, aCount);
+nsresult AndroidBridge::InputStreamRead(jni::Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
+    JNIEnv* const env = jni::GetEnvForThread();
+    auto arr = jni::ByteBuffer::New(aBuf, aCount);
     jint read = env->CallIntMethod(obj.Get(), sBridge->jByteBufferRead, arr.Get());
 
     if (env->ExceptionCheck()) {
