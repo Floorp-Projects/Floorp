@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/EventStates.h"
 
 struct ElementDependentRuleProcessorData;
 class nsIXPConnectWrappedJS;
@@ -174,6 +175,8 @@ public:
                                        nsIContent* aChild);
 
   nsIContent* FindNestedSingleInsertionPoint(nsIContent* aContainer, bool* aMulti);
+
+  bool AnyBindingHasDocumentStateDependency(mozilla::EventStates aStateMask);
 
 protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
