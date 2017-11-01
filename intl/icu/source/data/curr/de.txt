@@ -156,7 +156,7 @@ de{
         }
         BOB{
             "BOB",
-            "Bolivanischer Boliviano",
+            "Bolivianischer Boliviano",
         }
         BOL{
             "BOL",
@@ -261,6 +261,10 @@ de{
         CLP{
             "CLP",
             "Chilenischer Peso",
+        }
+        CNH{
+            "CNH",
+            "Renminbi Yuan (Off–Shore)",
         }
         CNX{
             "CNX",
@@ -1451,7 +1455,7 @@ de{
             other{"Brunei-Dollar"}
         }
         BOB{
-            one{"Bolivanischer Boliviano"}
+            one{"Bolivianischer Boliviano"}
             other{"Bolivianische Bolivianos"}
         }
         BOL{
@@ -1557,6 +1561,10 @@ de{
         CLP{
             one{"Chilenischer Peso"}
             other{"Chilenische Pesos"}
+        }
+        CNH{
+            one{"Renminbi Yuan (Off–Shore)"}
+            other{"Renminbi Yuan (Off–Shore)"}
         }
         CNX{
             one{"Dollar der Chinesischen Volksbank"}
@@ -1708,7 +1716,7 @@ de{
         }
         GIP{
             one{"Gibraltar-Pfund"}
-            other{"Gibraltar Pfund"}
+            other{"Gibraltar-Pfund"}
         }
         GMD{
             one{"Gambia-Dalasi"}
@@ -2495,5 +2503,5 @@ de{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.11"}
 }

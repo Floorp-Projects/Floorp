@@ -262,6 +262,10 @@ fi{
             "CLP",
             "Chilen peso",
         }
+        CNH{
+            "CNH",
+            "Kiinan juan (offshore)",
+        }
         CNX{
             "CNX",
             "Kiinan kansanpankin dollari",
@@ -280,7 +284,7 @@ fi{
         }
         CRC{
             "CRC",
-            "Costa Rican colon",
+            "Costa Rican colón",
         }
         CSD{
             "CSD",
@@ -800,11 +804,11 @@ fi{
         }
         PLN{
             "PLN",
-            "Puolan zloty",
+            "Puolan złoty",
         }
         PLZ{
             "PLZ",
-            "Puolan zloty (1950–1995)",
+            "Puolan złoty (1950–1995)",
         }
         PTE{
             "PTE",
@@ -920,7 +924,7 @@ fi{
         }
         SVC{
             "SVC",
-            "El Salvadorin colon",
+            "El Salvadorin colón",
         }
         SYP{
             "SYP",
@@ -1128,7 +1132,7 @@ fi{
         }
         XUA{
             "XUA",
-            "afrikkalainen ADB-laskentayksikkö",
+            "afrikkalainen AfDB-laskentayksikkö",
         }
         XXX{
             "XXX",
@@ -1199,7 +1203,7 @@ fi{
         AOA{"AOA"}
         ARS{"ARS"}
         AUD{"AUD"}
-        BAM{"KM"}
+        BAM{"BAM"}
         BBD{"BBD"}
         BDT{"BDT"}
         BMD{"BMD"}
@@ -1294,6 +1298,9 @@ fi{
         XCD{"XCD"}
         ZAR{"ZAR"}
         ZMW{"ZMW"}
+    }
+    Currencies%variant{
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1556,6 +1563,10 @@ fi{
             one{"Chilen peso"}
             other{"Chilen pesoa"}
         }
+        CNH{
+            one{"Kiinan juan (offshore)"}
+            other{"Kiinan juania (offshore)"}
+        }
         CNX{
             one{"Kiinan kansanpankin dollari"}
             other{"Kiinan kansanpankin dollaria"}
@@ -1573,8 +1584,8 @@ fi{
             other{"Kolumbian unidad de valor realia"}
         }
         CRC{
-            one{"Costa Rican colon"}
-            other{"Costa Rican colonia"}
+            one{"Costa Rican colón"}
+            other{"Costa Rican colónia"}
         }
         CSD{
             one{"Serbian dinaari (2002–2006)"}
@@ -2093,12 +2104,12 @@ fi{
             other{"Pakistanin rupiaa"}
         }
         PLN{
-            one{"Puolan zloty"}
-            other{"Puolan zlotya"}
+            one{"Puolan złoty"}
+            other{"Puolan złotya"}
         }
         PLZ{
-            one{"Puolan zloty (1950–1995)"}
-            other{"Puolan zlotya (1950–1995)"}
+            one{"Puolan złoty (1950–1995)"}
+            other{"Puolan złotya (1950–1995)"}
         }
         PTE{
             one{"Portugalin escudo"}
@@ -2213,8 +2224,8 @@ fi{
             other{"Neuvostoliiton ruplaa"}
         }
         SVC{
-            one{"El Salvadorin colon"}
-            other{"El Salvadorin colonia"}
+            one{"El Salvadorin colón"}
+            other{"El Salvadorin colónia"}
         }
         SYP{
             one{"Syyrian punta"}
@@ -2421,8 +2432,8 @@ fi{
             other{"testaustarkoitukseen varattua valuuttakoodia"}
         }
         XUA{
-            one{"ADB-laskentayksikkö"}
-            other{"ADB-laskentayksikköä"}
+            one{"AfDB-laskentayksikkö"}
+            other{"AfDB-laskentayksikköä"}
         }
         XXX{
             one{"tuntematon rahayksikkö"}
@@ -2493,5 +2504,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.67"}
 }

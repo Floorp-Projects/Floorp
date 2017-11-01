@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bs{
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre letnje računanje vremena"}
@@ -512,12 +512,12 @@ bs{
             ls{"Vrijeme na Ostrvima Finiks"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Ljetno vrijeme na Ostrvima Sen Pjer i Mikelon"}
-            lg{"Vrijeme na Ostrvima Sen Pjer i Mikelon"}
-            ls{"Standardno vrijeme na Ostrvima Sen Pjer i Mikelon"}
+            ld{"Ljetno vrijeme na Ostrvima Sveti Petar i Mikelon"}
+            lg{"Vrijeme na Ostrvima Sveti Petar i Mikelon"}
+            ls{"Standardno vrijeme na Ostrvima Sveti Petar i Mikelon"}
         }
         "meta:Pitcairn"{
-            ls{"Vrijeme na Ostrvu Pitkern"}
+            ls{"Vrijeme na Ostrvima Pitkern"}
         }
         "meta:Ponape"{
             ls{"Vrijeme na Ostrvu Ponape"}

@@ -13,13 +13,14 @@ sr_Latn{
     }
     ExemplarCharacters{"[a b c č ć d {dž} đ e f g h i j k l {lj} m n {nj} o p r s š t u v z ž]"}
     ExemplarCharactersIndex{"[A B C Č Ć D {DŽ} E F G H I J K L {LJ} M N {NJ} O P Q R S Š T U V W X Y Z Ž]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – , ; \\: ! ? . … ‘ ‚ “ „ ( ) \\[ \\] \\{ \\} * #]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"{0}+"}
+                atLeast{"⩾{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -234,21 +235,10 @@ sr_Latn{
                 timeSeparator{":"}
             }
         }
-        minimalPairs{
-            ordinal{
-                other{"Skrenite u {0}. desno."}
-            }
-            plural{
-                few{"{0} sata"}
-                many{"{0} sati"}
-                one{"{0} sat"}
-                other{"{0} sati"}
-            }
-        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.73"}
+    Version{"2.1.37.8"}
     calendar{
         buddhist{
             eras{
@@ -316,8 +306,17 @@ sr_Latn{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"hh:mm B"}
+                Bhms{"hh:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E hh:mm B"}
+                EBhms{"E hh:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
+                Ehm{"E hh:mm a"}
+                Ehms{"E hh:mm:ss a"}
                 Gy{"y. G"}
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, d. MMM y. G"}
@@ -336,7 +335,7 @@ sr_Latn{
                 MMdd{"MM-dd"}
                 Md{"d.M."}
                 d{"d"}
-                h{"hh a"}
+                h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
                 ms{"mm:ss"}
@@ -482,7 +481,12 @@ sr_Latn{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"hh:mm B"}
+                Bhms{"hh:mm:ss B"}
                 E{"E"}
+                EBhm{"E hh:mm B"}
+                EBhms{"E hh:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d."}
@@ -532,9 +536,9 @@ sr_Latn{
                 yQQQ{"QQQ y."}
                 yQQQQ{"QQQQ y."}
                 yw{
-                    few{"w. 'sedmica' 'u' y."}
-                    one{"w. 'sedmica' 'u' y."}
-                    other{"w. 'sedmica' 'u' y."}
+                    few{"w. 'sedmica' 'u' Y."}
+                    one{"w. 'sedmica' 'u' Y."}
+                    other{"w. 'sedmica' 'u' Y."}
                 }
             }
             dayNames{
@@ -628,10 +632,10 @@ sr_Latn{
                     narrow{
                         afternoon1{"po podne"}
                         evening1{"uveče"}
-                        midnight{"u ponoć"}
+                        midnight{"ponoć"}
                         morning1{"ujutru"}
                         night1{"noću"}
-                        noon{"u podne"}
+                        noon{"podne"}
                     }
                     wide{
                         afternoon1{"po podne"}
@@ -654,12 +658,12 @@ sr_Latn{
                         pm{"po podne"}
                     }
                     narrow{
-                        afternoon1{"po podne"}
+                        afternoon1{"popodne"}
                         am{"pre podne"}
-                        evening1{"uveče"}
+                        evening1{"veče"}
                         midnight{"ponoć"}
-                        morning1{"ujutro"}
-                        night1{"noću"}
+                        morning1{"jutro"}
+                        night1{"noć"}
                         noon{"podne"}
                         pm{"po podne"}
                     }
@@ -771,7 +775,7 @@ sr_Latn{
                 }
                 yMMMM{
                     M{"MMMM – MMMM y."}
-                    y{"MMMM y – MMMM y."}
+                    y{"MMMM y. – MMMM y."}
                 }
                 yMMMd{
                     M{"dd. MMM – dd. MMM y."}
@@ -1422,10 +1426,31 @@ sr_Latn{
                 }
             }
         }
+        dayOfYear{
+            dn{"dan u godini"}
+        }
+        dayOfYear-narrow{
+            dn{"dan u god."}
+        }
+        dayOfYear-short{
+            dn{"dan u god."}
+        }
         dayperiod{
             dn{"pre podne/po podne"}
         }
+        dayperiod-narrow{
+            dn{"pre podne/po podne"}
+        }
+        dayperiod-short{
+            dn{"pre podne/po podne"}
+        }
         era{
+            dn{"era"}
+        }
+        era-narrow{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1660,6 +1685,11 @@ sr_Latn{
         }
         month-narrow{
             dn{"m."}
+            relative{
+                "-1"{"prošlog m."}
+                "0"{"ovog m."}
+                "1"{"sledećeg m."}
+            }
             relativeTime{
                 future{
                     few{"za {0} m."}
@@ -1675,6 +1705,11 @@ sr_Latn{
         }
         month-short{
             dn{"mes."}
+            relative{
+                "-1"{"prošlog mes."}
+                "0"{"ovog mes."}
+                "1"{"sledećeg mes."}
+            }
             relativeTime{
                 future{
                     few{"za {0} mes."}
@@ -1893,9 +1928,9 @@ sr_Latn{
         }
         sun-short{
             relative{
-                "-1"{"prošle ned"}
+                "-1"{"pr. ned."}
                 "0"{"u ned"}
-                "1"{"sledeće ned"}
+                "1"{"sl. ned."}
             }
             relativeTime{
                 future{
@@ -2104,6 +2139,11 @@ sr_Latn{
         }
         week-narrow{
             dn{"n."}
+            relative{
+                "-1"{"prošle n."}
+                "0"{"ove n."}
+                "1"{"sledeće n."}
+            }
             relativePeriod{"nedelja koja počinje {0}."}
             relativeTime{
                 future{
@@ -2120,6 +2160,11 @@ sr_Latn{
         }
         week-short{
             dn{"ned."}
+            relative{
+                "-1"{"prošle ned."}
+                "0"{"ove ned."}
+                "1"{"sledeće ned."}
+            }
             relativePeriod{"nedelja koja počinje {0}."}
             relativeTime{
                 future{
@@ -2134,8 +2179,32 @@ sr_Latn{
                 }
             }
         }
+        weekOfMonth{
+            dn{"nedelja u mesecu"}
+        }
+        weekOfMonth-narrow{
+            dn{"ned. u mes."}
+        }
+        weekOfMonth-short{
+            dn{"ned. u mes."}
+        }
         weekday{
             dn{"dan u nedelji"}
+        }
+        weekday-narrow{
+            dn{"dan u nedelji"}
+        }
+        weekday-short{
+            dn{"dan u nedelji"}
+        }
+        weekdayOfMonth{
+            dn{"dan u mesecu"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"dan u mesecu"}
+        }
+        weekdayOfMonth-short{
+            dn{"dan u mesecu"}
         }
         year{
             dn{"godina"}
@@ -2159,6 +2228,11 @@ sr_Latn{
         }
         year-narrow{
             dn{"g."}
+            relative{
+                "-1"{"prošle g."}
+                "0"{"ove g."}
+                "1"{"sledeće g."}
+            }
             relativeTime{
                 future{
                     few{"za {0} g."}
@@ -2174,6 +2248,11 @@ sr_Latn{
         }
         year-short{
             dn{"god."}
+            relative{
+                "-1"{"prošle god."}
+                "0"{"ove god."}
+                "1"{"sledeće god."}
+            }
             relativeTime{
                 future{
                     few{"za {0} god."}
@@ -2190,8 +2269,20 @@ sr_Latn{
         zone{
             dn{"vremenska zona"}
         }
+        zone-narrow{
+            dn{"vremenska zona"}
+        }
+        zone-short{
+            dn{"vremenska zona"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ili {1}"}
+            end{"{0} ili {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
@@ -2227,5 +2318,32 @@ sr_Latn{
         UK{"UK"}
         US{"SAD"}
         metric{"Metrički"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

@@ -1,11 +1,12 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kl{
-    AuxExemplarCharacters{"[]"}
+    AuxExemplarCharacters{"[ĸ]"}
     ExemplarCharacters{
-        "[a á â ã b c d e é ê f g h i í î ĩ j k l m n o ô p q ĸ r s t u ú û ũ v w x y"
-        " z æ ø å]"
+        "[a á â ã b c d e é ê f g h i í î ĩ j k l m n o ô p q r s t u ú û ũ v w x y z"
+        " æ ø å]"
     }
+    ExemplarCharactersNumbers{"[, . % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             patterns{
@@ -24,9 +25,24 @@ kl{
             }
         }
     }
-    Version{"2.1.31.34"}
+    Version{"2.1.37.1"}
     calendar{
         gregorian{
+            DateTimePatterns{
+                "HH.mm.ss zzzz",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "y MMMM d, EEEE",
+                "y MMMM d",
+                "y MMM d",
+                "y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             dayNames{
                 format{
                     abbreviated{

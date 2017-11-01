@@ -15,6 +15,7 @@ el{
     }
     ExemplarCharacters{"[α ά β γ δ ε έ ζ η ή θ ι ί ϊ ΐ κ λ μ ν ξ ο ό π ρ σ ς τ υ ύ ϋ ΰ φ χ ψ ω ώ]"}
     ExemplarCharactersIndex{"[Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! . … \u0022 « » ( ) \\[ \\] § @ * / \\\\ \\&]"}
     MoreInformation{";"}
     NumberElements{
@@ -25,7 +26,7 @@ el{
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
+                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -213,12 +214,320 @@ el{
         native{"latn"}
         traditional{"grek"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "d/M/y GGGGG",
+                "{1}, {0}",
+                "{1} - {0}",
+                "{1} - {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                E{"ccc"}
+                Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E, d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"d/M/y GGGGG"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
             eras{
                 abbreviated{
                     "BE",
+                }
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "Β.Ε.",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, dd/MM – E, dd/MM"}
+                    d{"E, dd/MM – E, dd/MM"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, dd MMM – E, dd MMM"}
+                    d{"E, dd – E, dd MMM"}
+                }
+                MMMd{
+                    M{"dd MMM – dd MMM"}
+                    d{"dd–dd MMM"}
+                }
+                Md{
+                    M{"dd/MM – dd/MM"}
+                    d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y G"}
+                }
+                yM{
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
+                }
+                yMEd{
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                }
+                yMMM{
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, dd MMM – E, dd MMM y G"}
+                    d{"E, dd – E, dd MMM y G"}
+                    y{"E, dd MMM y – E, dd MMM y G"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"dd MMM – dd MMM y G"}
+                    d{"dd–dd MMM y G"}
+                    y{"dd MMM y – dd MMM y G"}
+                }
+                yMd{
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
+                }
+            }
+        }
+        coptic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Τουτ",
+                        "Μπάπα",
+                        "Χατούρ",
+                        "Κεγιάχκ",
+                        "Τούμπα",
+                        "Αμσίρ",
+                        "Μπαραμχάτ",
+                        "Μπαρμούντα",
+                        "Μπασάνς",
+                        "Μπαούνα",
+                        "Αμπίπ",
+                        "Μέσρα",
+                        "Νεσγ",
+                    }
+                    wide{
+                        "Τουτ",
+                        "Μπάπα",
+                        "Χατούρ",
+                        "Κεγιάχκ",
+                        "Τούμπα",
+                        "Αμσίρ",
+                        "Μπαραμχάτ",
+                        "Μπαρμούντα",
+                        "Μπασάνς",
+                        "Μπαούνα",
+                        "Αμπίπ",
+                        "Μέσρα",
+                        "Νεσγ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Τουτ",
+                        "Μπάπα",
+                        "Χατούρ",
+                        "Κεγιάχκ",
+                        "Τούμπα",
+                        "Αμσίρ",
+                        "Μπαραμχάτ",
+                        "Μπαρμούντα",
+                        "Μπασάνς",
+                        "Μπαούνα",
+                        "Αμπίπ",
+                        "Μέσρα",
+                        "Νεσγ",
+                    }
+                    wide{
+                        "Τουτ",
+                        "Μπάπα",
+                        "Χατούρ",
+                        "Κεγιάχκ",
+                        "Τούμπα",
+                        "Αμσίρ",
+                        "Μπαραμχάτ",
+                        "Μπαρμούντα",
+                        "Μπασάνς",
+                        "Μπαούνα",
+                        "Αμπίπ",
+                        "Μέσρα",
+                        "Νεσγ",
+                    }
+                }
+            }
+        }
+        ethiopic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                    wide{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                    wide{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
                 }
             }
         }
@@ -239,8 +548,17 @@ el{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
@@ -401,7 +719,12 @@ el{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -446,8 +769,8 @@ el{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    one{"εβδομάδα w του y"}
-                    other{"εβδομάδα w του y"}
+                    one{"εβδομάδα w του Y"}
+                    other{"εβδομάδα w του Y"}
                 }
             }
             dayNames{
@@ -560,11 +883,11 @@ el{
                     }
                     narrow{
                         afternoon1{"μεσημ."}
-                        am{"π.μ."}
+                        am{"πμ"}
                         evening1{"απόγ."}
                         morning1{"πρωί"}
                         night1{"βράδυ"}
-                        pm{"μ.μ."}
+                        pm{"μμ"}
                     }
                     wide{
                         afternoon1{"μεσημέρι"}
@@ -827,8 +1150,231 @@ el{
                 abbreviated{
                     "AM",
                 }
+                narrow{
+                    "AM",
+                }
                 wide{
                     "AM",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Τισρί",
+                        "Χεσβάν",
+                        "Κισλέφ",
+                        "Τέβετ",
+                        "Σεβάτ",
+                        "Αντάρ I",
+                        "Αντάρ",
+                        "Νισάν",
+                        "Ιγιάρ",
+                        "Σιβάν",
+                        "Ταμούζ",
+                        "Αβ",
+                        "Έλουλ",
+                        "Αντάρ II",
+                    }
+                    wide{
+                        "Τισρί",
+                        "Χεσβάν",
+                        "Κισλέφ",
+                        "Τέβετ",
+                        "Σεβάτ",
+                        "Αντάρ I",
+                        "Αντάρ",
+                        "Νισάν",
+                        "Ιγιάρ",
+                        "Σιβάν",
+                        "Ταμούζ",
+                        "Αβ",
+                        "Έλουλ",
+                        "Αντάρ II",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Τισρί",
+                        "Χεσβάν",
+                        "Κισλέφ",
+                        "Τέβετ",
+                        "Σεβάτ",
+                        "Αντάρ I",
+                        "Αντάρ",
+                        "Νισάν",
+                        "Ιγιάρ",
+                        "Σιβάν",
+                        "Ταμούζ",
+                        "Αβ",
+                        "Έλουλ",
+                        "Αντάρ II",
+                    }
+                    wide{
+                        "Τισρί",
+                        "Χεσβάν",
+                        "Κισλέφ",
+                        "Τέβετ",
+                        "Σεβάτ",
+                        "Αντάρ I",
+                        "Αντάρ",
+                        "Νισάν",
+                        "Ιγιάρ",
+                        "Σιβάν",
+                        "Ταμούζ",
+                        "Αβ",
+                        "Έλουλ",
+                        "Αντάρ II",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                abbreviated{
+                    "Σάκα",
+                }
+                narrow{
+                    "Σάκα",
+                }
+                wide{
+                    "Σάκα",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "Ε.Ε.",
+                }
+                narrow{
+                    "Ε.Ε.",
+                }
+                wide{
+                    "Ε.Ε.",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
                 }
             }
         }
@@ -866,102 +1412,185 @@ el{
                 yQQQ{"y GGGGG QQQ"}
             }
         }
+        persian{
+            eras{
+                abbreviated{
+                    "AP",
+                }
+                narrow{
+                    "AP",
+                }
+                wide{
+                    "AP",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+            }
+        }
         roc{
             eras{
                 abbreviated{
-                    "Πριν R.O.C.",
+                    "προ R.O.C.",
+                    "R.O.C.",
+                }
+                narrow{
+                    "προ R.O.C.",
+                    "R.O.C.",
+                }
+                wide{
+                    "προ R.O.C.",
                     "R.O.C.",
                 }
             }
         }
     }
     characterLabel{
-        activities{"Δραστηριότητες"}
-        african_scripts{"Αφρικανικές γραφές"}
-        american_scripts{"Αμερικανικές γραφές"}
+        activities{"δραστηριότητα"}
+        african_scripts{"αφρικανική γραφή"}
+        american_scripts{"αμερικανική γραφή"}
         animal{"ζώο"}
-        animals_nature{"Ζώα και φύση"}
-        arrows{"Βέλη"}
+        animals_nature{"ζώο ή φύση"}
+        arrows{"βέλος"}
         body{"σώμα"}
-        box_drawing{"Σχεδίαση πλαισίων"}
+        box_drawing{"σχεδίαση πλαισίων"}
         braille{"Μπράιγ"}
         building{"κτίριο"}
-        bullets_stars{"Κουκκίδες/Αστέρια"}
-        consonantal_jamo{"Συμφωνογραφικά Τζάμο"}
-        currency_symbols{"Σύμβολα νομισμάτων"}
-        dash_connector{"Παύλα/Σύνδεσμος"}
-        digits{"Ψηφία"}
-        dingbats{"Χαρακτήρες Dingbat"}
-        divination_symbols{"Σύμβολα μαντείας"}
-        downwards_arrows{"Βέλη κάτω"}
-        downwards_upwards_arrows{"Βέλη κάτω-πάνω"}
-        east_asian_scripts{"Γραφές Ανατολικής Ασίας"}
-        emoji{"Emoji"}
-        european_scripts{"Ευρωπαϊκές γραφές"}
+        bullets_stars{"κουκκίδα ή αστέρι"}
+        consonantal_jamo{"συμφωνογραφικά Τζάμο"}
+        currency_symbols{"σύμβολο νομίσματος"}
+        dash_connector{"παύλα ή σύνδεσμος"}
+        digits{"ψηφίο"}
+        dingbats{"χαρακτήρας Dingbat"}
+        divination_symbols{"σύμβολο μαντείας"}
+        downwards_arrows{"βέλος κάτω"}
+        downwards_upwards_arrows{"βέλος κάτω-πάνω"}
+        east_asian_scripts{"γραφή Ανατολικής Ασίας"}
+        emoji{"emoji"}
+        european_scripts{"ευρωπαϊκή γραφή"}
         female{"γυναίκα"}
         flag{"σημαία"}
-        flags{"Σημαίες"}
-        food_drink{"Φαγητό και ποτό"}
-        format{"Μορφή"}
-        format_whitespace{"Μορφοποίηση και κενό διάστημα"}
-        full_width_form_variant{"Παραλλαγές πλήρους πλάτους"}
-        geometric_shapes{"Γεωμετρικά σχήματα"}
-        half_width_form_variant{"Παραλλαγές μισού πλάτους"}
-        han_characters{"Χαρακτήρες Χαν"}
-        han_radicals{"Ριζικά Χαν"}
+        flags{"σημαίες"}
+        food_drink{"φαγητό και ποτό"}
+        format{"μορφή"}
+        format_whitespace{"μορφή και κενό διάστημα"}
+        full_width_form_variant{"παραλλαγή πλήρους πλάτους"}
+        geometric_shapes{"γεωμετρικό σχήμα"}
+        half_width_form_variant{"παραλλαγή μισού πλάτους"}
+        han_characters{"χαρακτήρας Χαν"}
+        han_radicals{"ριζικό Χαν"}
         hanja{"Χαντζά"}
         hanzi_simplified{"Χάνζι (Απλοποιημένα)"}
         hanzi_traditional{"Χάνζι (Παραδοσιακά)"}
         heart{"καρδιά"}
-        historic_scripts{"Ιστορικές γραφές"}
-        ideographic_desc_characters{"Ιδεογραφικοί περιγραφικοί χαρακτήρες"}
+        historic_scripts{"ιστορική γραφή"}
+        ideographic_desc_characters{"ιδεογραφικός περιγραφικός χαρακτήρας"}
         japanese_kana{"Ιαπωνικά Κάνα"}
         kanbun{"Κανμπούν"}
         kanji{"Κάντζι"}
         keycap{"πλήκτρο"}
-        leftwards_arrows{"Βέλη αριστερά"}
-        leftwards_rightwards_arrows{"Βέλη αριστερά-δεξιά"}
-        letterlike_symbols{"Σύμβολα με μορφή γραμμάτων"}
-        limited_use{"Περιορισμένης χρήσης"}
+        leftwards_arrows{"βέλος αριστερά"}
+        leftwards_rightwards_arrows{"βέλος αριστερά-δεξιά"}
+        letterlike_symbols{"σύμβολο με μορφή γράμματος"}
+        limited_use{"περιορισμένης χρήσης"}
         male{"άντρας"}
-        math_symbols{"Μαθηματικά σύμβολα"}
-        middle_eastern_scripts{"Γραφές Μέσης Ανατολής"}
-        miscellaneous{"Διάφορα"}
-        modern_scripts{"Σύγχρονες γραφές"}
-        modifier{"Τροποποιητής"}
-        musical_symbols{"Μουσικά σύμβολα"}
+        math_symbols{"μαθηματικό σύμβολο"}
+        middle_eastern_scripts{"γραφή Μέσης Ανατολής"}
+        miscellaneous{"διάφορα"}
+        modern_scripts{"σύγχρονη γραφή"}
+        modifier{"τροποποιητής"}
+        musical_symbols{"μουσικό σύμβολο"}
         nature{"φύση"}
-        nonspacing{"Δεν καταλαμβάνει διάστημα"}
-        numbers{"Αριθμοί"}
-        objects{"Αντικείμενα"}
-        other{"Άλλα"}
-        paired{"Με ζεύξη"}
-        person{"άνθρωπος"}
-        phonetic_alphabet{"Φωνητικό αλφάβητο"}
-        pictographs{"Εικονογράμματα"}
-        place{"τοποθεσία"}
+        nonspacing{"δεν καταλαμβάνει διάστημα"}
+        numbers{"αριθμοί"}
+        objects{"αντικείμενο"}
+        other{"άλλο"}
+        paired{"με ζεύξη"}
+        person{"άτομο"}
+        phonetic_alphabet{"φωνητικό αλφάβητο"}
+        pictographs{"εικονόγραμμα"}
+        place{"μέρος"}
         plant{"φυτό"}
-        punctuation{"Στίξη"}
-        rightwards_arrows{"Βέλη δεξιά"}
+        punctuation{"στίξη"}
+        rightwards_arrows{"βέλος δεξιά"}
         sign_standard_symbols{"Σήματα / Τυπικά σύμβολα"}
-        small_form_variant{"Παραλλαγές μικρού μεγέθους"}
-        smiley{"χαμόγελο"}
-        smileys_people{"Φατσούλες και άτομα"}
-        south_asian_scripts{"Γραφές Νότιας Ασίας"}
-        southeast_asian_scripts{"Γραφές Νοτιοανατολικής Ασίας"}
-        spacing{"Διαστήματα"}
+        small_form_variant{"παραλλαγή μικρού μεγέθους"}
+        smiley{"γελαστούλης"}
+        smileys_people{"γελαστούλης ή άτομο"}
+        south_asian_scripts{"γραφή Νότιας Ασίας"}
+        southeast_asian_scripts{"γραφή Νοτιοανατολικής Ασίας"}
+        spacing{"διαστήματα"}
         sport{"άθληση"}
-        symbols{"Σύμβολα"}
-        technical_symbols{"Τεχνικά σύμβολα"}
-        tone_marks{"Σημάδια τόνου"}
+        symbols{"σύμβολο"}
+        technical_symbols{"τεχνικό σύμβολο"}
+        tone_marks{"σημάδι τόνου"}
         travel{"ταξίδι"}
-        travel_places{"Ταξίδια και μέρη"}
-        upwards_arrows{"Βέλη πάνω"}
-        variant_forms{"Παραλλαγές"}
-        vocalic_jamo{"Φωνηεντικά Τζάμο"}
+        travel_places{"ταξίδι ή μέρος"}
+        upwards_arrows{"βέλος πάνω"}
+        variant_forms{"παραλλαγή"}
+        vocalic_jamo{"φωνηεντικά Τζάμο"}
         weather{"καιρός"}
-        western_asian_scripts{"Γραφές Δυτικής Ασίας"}
-        whitespace{"Κενό διάστημα"}
+        western_asian_scripts{"γραφή Δυτικής Ασίας"}
+        whitespace{"κενό διάστημα"}
     }
     contextTransforms{
         relative:intvector{
@@ -997,7 +1626,7 @@ el{
             }
         }
         day-narrow{
-            dn{"ημέρα"}
+            dn{"ημ."}
             relativeTime{
                 future{
                     one{"σε {0} ημ."}
@@ -1010,23 +1639,44 @@ el{
             }
         }
         day-short{
-            dn{"ημέρα"}
+            dn{"ημ."}
             relativeTime{
                 future{
-                    one{"σε {0} ημέρα"}
-                    other{"σε {0} ημέρες"}
+                    one{"σε {0} ημ."}
+                    other{"σε {0} ημ."}
                 }
                 past{
-                    one{"πριν από {0} ημέρα"}
-                    other{"πριν από {0} ημέρες"}
+                    one{"πριν από {0} ημ."}
+                    other{"πριν από {0} ημ."}
                 }
             }
+        }
+        dayOfYear{
+            dn{"ημέρα έτους"}
+        }
+        dayOfYear-narrow{
+            dn{"ημ. έτους"}
+        }
+        dayOfYear-short{
+            dn{"ημ. έτους"}
         }
         dayperiod{
             dn{"π.μ./μ.μ."}
         }
+        dayperiod-narrow{
+            dn{"πμ/μμ"}
+        }
+        dayperiod-short{
+            dn{"πμ/μμ"}
+        }
         era{
             dn{"περίοδος"}
+        }
+        era-narrow{
+            dn{"περ."}
+        }
+        era-short{
+            dn{"περ."}
         }
         fri{
             relative{
@@ -1082,7 +1732,7 @@ el{
         hour{
             dn{"ώρα"}
             relative{
-                "0"{"αυτήν την ώρα"}
+                "0"{"τρέχουσα ώρα"}
             }
             relativeTime{
                 future{
@@ -1096,7 +1746,7 @@ el{
             }
         }
         hour-narrow{
-            dn{"ώ"}
+            dn{"ώ."}
             relativeTime{
                 future{
                     one{"σε {0} ώ."}
@@ -1109,22 +1759,22 @@ el{
             }
         }
         hour-short{
-            dn{"ώρ."}
+            dn{"ώ."}
             relativeTime{
                 future{
-                    one{"σε {0} ώρα"}
-                    other{"σε {0} ώρ."}
+                    one{"σε {0} ώ."}
+                    other{"σε {0} ώ."}
                 }
                 past{
-                    one{"πριν από {0} ώρα"}
-                    other{"πριν από {0} ώρ."}
+                    one{"πριν από {0} ώ."}
+                    other{"πριν από {0} ώ."}
                 }
             }
         }
         minute{
             dn{"λεπτό"}
             relative{
-                "0"{"αυτό το λεπτό"}
+                "0"{"τρέχον λεπτό"}
             }
             relativeTime{
                 future{
@@ -1138,7 +1788,7 @@ el{
             }
         }
         minute-narrow{
-            dn{"λ"}
+            dn{"λ."}
             relativeTime{
                 future{
                     one{"σε {0} λ."}
@@ -1324,8 +1974,8 @@ el{
                     other{"σε {0} Σάββατα"}
                 }
                 past{
-                    one{"{0} Σάββατο πριν"}
-                    other{"{0} Σάββατα πριν"}
+                    one{"πριν από {0} Σάββατο"}
+                    other{"πριν από {0} Σάββατα"}
                 }
             }
         }
@@ -1380,7 +2030,7 @@ el{
             }
         }
         second-narrow{
-            dn{"δ"}
+            dn{"δ."}
             relativeTime{
                 future{
                     one{"σε {0} δ."}
@@ -1613,7 +2263,7 @@ el{
             dn{"εβδομάδα"}
             relative{
                 "-1"{"προηγούμενη εβδομάδα"}
-                "0"{"αυτήν την εβδομάδα"}
+                "0"{"τρέχουσα εβδομάδα"}
                 "1"{"επόμενη εβδομάδα"}
             }
             relativePeriod{"την εβδομάδα {0}"}
@@ -1630,7 +2280,7 @@ el{
         }
         week-narrow{
             dn{"εβδ."}
-            relativePeriod{"την εβδομάδα {0}"}
+            relativePeriod{"την εβδ. {0}"}
             relativeTime{
                 future{
                     one{"σε {0} εβδ."}
@@ -1644,7 +2294,7 @@ el{
         }
         week-short{
             dn{"εβδ."}
-            relativePeriod{"την εβδομάδα {0}"}
+            relativePeriod{"την εβδ. {0}"}
             relativeTime{
                 future{
                     one{"σε {0} εβδ."}
@@ -1656,8 +2306,32 @@ el{
                 }
             }
         }
+        weekOfMonth{
+            dn{"εβδομάδα μήνα"}
+        }
+        weekOfMonth-narrow{
+            dn{"εβδ. μήνα"}
+        }
+        weekOfMonth-short{
+            dn{"εβδ. μήνα"}
+        }
         weekday{
             dn{"καθημερινή"}
+        }
+        weekday-narrow{
+            dn{"καθημερ."}
+        }
+        weekday-short{
+            dn{"καθημερ."}
+        }
+        weekdayOfMonth{
+            dn{"καθημερινή μήνα"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"καθημερ. μήνα"}
+        }
+        weekdayOfMonth-short{
+            dn{"καθημερ. μήνα"}
         }
         year{
             dn{"έτος"}
@@ -1716,8 +2390,20 @@ el{
         zone{
             dn{"ζώνη ώρας"}
         }
+        zone-narrow{
+            dn{"ζώνη"}
+        }
+        zone-short{
+            dn{"ζώνη"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ή {1}"}
+            end{"{0} ή {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} και {1}"}
             end{"{0} και {1}"}

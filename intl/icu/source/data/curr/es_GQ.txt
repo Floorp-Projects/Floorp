@@ -4,7 +4,7 @@ es_GQ{
     Currencies{
         XAF{
             "FCFA",
-            "franco CFA BEAC",
+            "franco CFA de África Central",
         }
     }
     Version{"2.1.31.33"}

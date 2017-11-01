@@ -122,6 +122,10 @@ uz{
             "CLP",
             "Chili pesosi",
         }
+        CNH{
+            "CNH",
+            "CNH",
+        }
         CNY{
             "CN¥",
             "Xitoy yuani",
@@ -706,6 +710,7 @@ uz{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -854,6 +859,10 @@ uz{
         CLP{
             one{"Chili pesosi"}
             other{"Chili pesosi"}
+        }
+        CNH{
+            one{"CNH"}
+            other{"CNH"}
         }
         CNY{
             one{"Xitoy yuani"}
@@ -1372,5 +1381,5 @@ uz{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.60"}
+    Version{"2.1.37.1"}
 }

@@ -13,7 +13,7 @@ es_PY{
             }
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -136,7 +136,7 @@ es_PY{
         day{
             relative{
                 "-1"{"ayer"}
-                "-2"{"antes de ayer"}
+                "-2"{"anteayer"}
                 "0"{"hoy"}
                 "1"{"mañana"}
                 "2"{"pasado mañana"}
@@ -187,9 +187,6 @@ es_PY{
                 "0"{"este mar."}
                 "1"{"el próximo mar."}
             }
-        }
-        zone{
-            dn{"zona horaria"}
         }
     }
     listPattern{

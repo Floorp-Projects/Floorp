@@ -18,6 +18,7 @@ sq{
         "[A B C Ç D {DH} E Ë F G {GJ} H I J K L {LL} M N {NJ} O P Q R {RR} S {SH} T {"
         "TH} U V X {XH} Y Z {ZH}]"
     }
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / \\& # ′ "
         "″ ~]"
@@ -104,40 +105,40 @@ sq{
                         other{"000 mijë ¤"}
                     }
                     1000000{
-                        one{"0 Mln ¤"}
-                        other{"0 Mln ¤"}
+                        one{"0 mln ¤"}
+                        other{"0 mln ¤"}
                     }
                     10000000{
-                        one{"00 Mln ¤"}
-                        other{"00 Mln ¤"}
+                        one{"00 mln ¤"}
+                        other{"00 mln ¤"}
                     }
                     100000000{
-                        one{"000 Mln ¤"}
-                        other{"000 Mln ¤"}
+                        one{"000 mln ¤"}
+                        other{"000 mln ¤"}
                     }
                     1000000000{
-                        one{"0 Mld ¤"}
-                        other{"0 Mld ¤"}
+                        one{"0 mld ¤"}
+                        other{"0 mld ¤"}
                     }
                     10000000000{
-                        one{"00 Mld ¤"}
-                        other{"00 Mld ¤"}
+                        one{"00 mld ¤"}
+                        other{"00 mld ¤"}
                     }
                     100000000000{
-                        one{"000 Mld ¤"}
-                        other{"000 Mld ¤"}
+                        one{"000 mld ¤"}
+                        other{"000 mld ¤"}
                     }
                     1000000000000{
-                        one{"0 Bln ¤"}
-                        other{"0 Bln ¤"}
+                        one{"0 bln ¤"}
+                        other{"0 bln ¤"}
                     }
                     10000000000000{
-                        one{"00 Bln ¤"}
-                        other{"00 Bln ¤"}
+                        one{"00 bln ¤"}
+                        other{"00 bln ¤"}
                     }
                     100000000000000{
-                        one{"000 Bln ¤"}
-                        other{"000 Bln ¤"}
+                        one{"000 bln ¤"}
+                        other{"000 bln ¤"}
                     }
                 }
                 decimalFormat{
@@ -154,40 +155,40 @@ sq{
                         other{"000 mijë"}
                     }
                     1000000{
-                        one{"0 Mln"}
-                        other{"0 Mln"}
+                        one{"0 mln"}
+                        other{"0 mln"}
                     }
                     10000000{
-                        one{"00 Mln"}
-                        other{"00 Mln"}
+                        one{"00 mln"}
+                        other{"00 mln"}
                     }
                     100000000{
-                        one{"000 Mln"}
-                        other{"000 Mln"}
+                        one{"000 mln"}
+                        other{"000 mln"}
                     }
                     1000000000{
-                        one{"0 Mld"}
-                        other{"0 Mld"}
+                        one{"0 mld"}
+                        other{"0 mld"}
                     }
                     10000000000{
-                        one{"00 Mld"}
-                        other{"00 Mld"}
+                        one{"00 mld"}
+                        other{"00 mld"}
                     }
                     100000000000{
-                        one{"000 Mld"}
-                        other{"000 Mld"}
+                        one{"000 mld"}
+                        other{"000 mld"}
                     }
                     1000000000000{
-                        one{"0 Bln"}
-                        other{"0 Bln"}
+                        one{"0 bln"}
+                        other{"0 bln"}
                     }
                     10000000000000{
-                        one{"00 Bln"}
-                        other{"00 Bln"}
+                        one{"00 bln"}
+                        other{"00 bln"}
                     }
                     100000000000000{
-                        one{"000 Bln"}
-                        other{"000 Bln"}
+                        one{"000 bln"}
+                        other{"000 bln"}
                     }
                 }
             }
@@ -219,7 +220,7 @@ sq{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -238,15 +239,24 @@ sq{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
-                H{"H"}
-                Hm{"H.mm"}
-                Hms{"H.mm.ss"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d.M"}
                 MMM{"LLL"}
@@ -256,10 +266,10 @@ sq{
                 MMMd{"d MMM"}
                 Md{"d.M"}
                 d{"d"}
-                h{"h.a"}
-                hm{"h.mm.a"}
-                hms{"h.mm.ss.a"}
-                ms{"mm.ss"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
@@ -365,10 +375,15 @@ sq{
                 "{1}, {0}",
             }
             appendItems{
-                Timezone{"{0} {1}"}
+                Timezone{"{0}, {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d"}
@@ -414,8 +429,8 @@ sq{
                 yQQQ{"QQQ, y"}
                 yQQQQ{"QQQQ, y"}
                 yw{
-                    one{"'java' w 'e' y"}
-                    other{"'java' w 'e' y"}
+                    one{"'java' w 'e' Y"}
+                    other{"'java' w 'e' Y"}
                 }
             }
             dayNames{
@@ -436,7 +451,7 @@ sq{
                         "M",
                         "E",
                         "P",
-                        "S",
+                        "Sh",
                     }
                     short{
                         "Die",
@@ -474,7 +489,7 @@ sq{
                         "M",
                         "E",
                         "P",
-                        "S",
+                        "Sh",
                     }
                     short{
                         "Die",
@@ -692,8 +707,8 @@ sq{
                         "pri",
                         "maj",
                         "qer",
-                        "kor",
-                        "gsh",
+                        "korr",
+                        "gush",
                         "sht",
                         "tet",
                         "nën",
@@ -701,17 +716,17 @@ sq{
                     }
                     narrow{
                         "j",
-                        "s",
+                        "sh",
                         "m",
                         "p",
                         "m",
                         "q",
                         "k",
                         "g",
-                        "s",
+                        "sh",
                         "t",
                         "n",
-                        "d",
+                        "dh",
                     }
                     wide{
                         "janar",
@@ -736,8 +751,8 @@ sq{
                         "Pri",
                         "Maj",
                         "Qer",
-                        "Kor",
-                        "Gsh",
+                        "Korr",
+                        "Gush",
                         "Sht",
                         "Tet",
                         "Nën",
@@ -745,17 +760,17 @@ sq{
                     }
                     narrow{
                         "J",
-                        "S",
+                        "Sh",
                         "M",
                         "P",
                         "M",
                         "Q",
                         "K",
                         "G",
-                        "S",
+                        "Sh",
                         "T",
                         "N",
-                        "D",
+                        "Dh",
                     }
                     wide{
                         "Janar",
@@ -825,8 +840,10 @@ sq{
         animals_nature{"kafshë dhe natyrë"}
         arrows{"shigjeta"}
         body{"trup"}
-        box_drawing{"Kuti e vizatuar"}
+        box_drawing{"vizatim kutie"}
+        braille{"brailisht"}
         building{"ndërtesë"}
+        bullets_stars{"pika/yje"}
         consonantal_jamo{"jamo bashkëtingëllore"}
         currency_symbols{"simbole monedhash/valutash"}
         dash_connector{"vizë lidhëse"}
@@ -954,10 +971,31 @@ sq{
                 }
             }
         }
+        dayOfYear{
+            dn{"ditë e vitit"}
+        }
+        dayOfYear-narrow{
+            dn{"ditë e vitit"}
+        }
+        dayOfYear-short{
+            dn{"ditë e vitit"}
+        }
         dayperiod{
             dn{"paradite/pasdite"}
         }
+        dayperiod-narrow{
+            dn{"paradite/pasdite"}
+        }
+        dayperiod-short{
+            dn{"paradite/pasdite"}
+        }
         era{
+            dn{"erë"}
+        }
+        era-narrow{
+            dn{"erë"}
+        }
+        era-short{
             dn{"erë"}
         }
         fri{
@@ -973,7 +1011,7 @@ sq{
                 }
                 past{
                     one{"{0} të premte më parë"}
-                    other{"{0} të premtesh më parë"}
+                    other{"{0} të premte më parë"}
                 }
             }
         }
@@ -990,7 +1028,7 @@ sq{
                 }
                 past{
                     one{"{0} të premte më parë"}
-                    other{"{0} të premtesh më parë"}
+                    other{"{0} të premte më parë"}
                 }
             }
         }
@@ -1007,7 +1045,7 @@ sq{
                 }
                 past{
                     one{"{0} të premte më parë"}
-                    other{"{0} të premtesh më parë"}
+                    other{"{0} të premte më parë"}
                 }
             }
         }
@@ -1107,8 +1145,8 @@ sq{
                     other{"pas {0} të hënash"}
                 }
                 past{
-                    one{"{0} të hëne më parë"}
-                    other{"{0} të hënash më parë"}
+                    one{"{0} të hënë më parë"}
+                    other{"{0} të hëna më parë"}
                 }
             }
         }
@@ -1124,8 +1162,8 @@ sq{
                     other{"pas {0} të hënash"}
                 }
                 past{
-                    one{"{0} të hëne më parë"}
-                    other{"{0} të hënash më parë"}
+                    one{"{0} të hënë më parë"}
+                    other{"{0} të hëna më parë"}
                 }
             }
         }
@@ -1141,8 +1179,8 @@ sq{
                     other{"pas {0} të hënash"}
                 }
                 past{
-                    one{"{0} të hëne më parë"}
-                    other{"{0} të hënash më parë"}
+                    one{"{0} të hënë më parë"}
+                    other{"{0} të hëna më parë"}
                 }
             }
         }
@@ -1246,8 +1284,8 @@ sq{
                     other{"pas {0} të shtunash"}
                 }
                 past{
-                    one{"{0} të shtune më parë"}
-                    other{"{0} të shtunash më parë"}
+                    one{"{0} të shtunë më parë"}
+                    other{"{0} të shtuna më parë"}
                 }
             }
         }
@@ -1263,8 +1301,8 @@ sq{
                     other{"pas {0} të shtunash"}
                 }
                 past{
-                    one{"{0} të shtune më parë"}
-                    other{"{0} të shtunash më parë"}
+                    one{"{0} të shtunë më parë"}
+                    other{"{0} të shtuna më parë"}
                 }
             }
         }
@@ -1280,8 +1318,8 @@ sq{
                     other{"pas {0} të shtunash"}
                 }
                 past{
-                    one{"{0} të shtune më parë"}
-                    other{"{0} të shtunash më parë"}
+                    one{"{0} të shtunë më parë"}
+                    other{"{0} të shtuna më parë"}
                 }
             }
         }
@@ -1339,8 +1377,8 @@ sq{
                     other{"pas {0} të dielash"}
                 }
                 past{
-                    one{"{0} të diele më parë"}
-                    other{"{0} të dielash më parë"}
+                    one{"{0} të dielë më parë"}
+                    other{"{0} të diela më parë"}
                 }
             }
         }
@@ -1356,8 +1394,8 @@ sq{
                     other{"pas {0} të dielash"}
                 }
                 past{
-                    one{"{0} të diele më parë"}
-                    other{"{0} të dielash më parë"}
+                    one{"{0} të dielë më parë"}
+                    other{"{0} të diela më parë"}
                 }
             }
         }
@@ -1373,8 +1411,8 @@ sq{
                     other{"pas {0} të dielash"}
                 }
                 past{
-                    one{"{0} të diele më parë"}
-                    other{"{0} të dielash më parë"}
+                    one{"{0} të dielë më parë"}
+                    other{"{0} të diela më parë"}
                 }
             }
         }
@@ -1391,7 +1429,7 @@ sq{
                 }
                 past{
                     one{"{0} të enjte më parë"}
-                    other{"{0} të enjtesh më parë"}
+                    other{"{0} të enjte më parë"}
                 }
             }
         }
@@ -1408,7 +1446,7 @@ sq{
                 }
                 past{
                     one{"{0} të enjte më parë"}
-                    other{"{0} të enjtesh më parë"}
+                    other{"{0} të enjte më parë"}
                 }
             }
         }
@@ -1425,7 +1463,7 @@ sq{
                 }
                 past{
                     one{"{0} të enjte më parë"}
-                    other{"{0} të enjtesh më parë"}
+                    other{"{0} të enjte më parë"}
                 }
             }
         }
@@ -1441,8 +1479,8 @@ sq{
                     other{"pas {0} të martash"}
                 }
                 past{
-                    one{"{0} të marte më parë"}
-                    other{"{0} të martash më parë"}
+                    one{"{0} të martë më parë"}
+                    other{"{0} të marta më parë"}
                 }
             }
         }
@@ -1458,8 +1496,8 @@ sq{
                     other{"pas {0} të martash"}
                 }
                 past{
-                    one{"{0} të marte më parë"}
-                    other{"{0} të martash më parë"}
+                    one{"{0} të martë më parë"}
+                    other{"{0} të marta më parë"}
                 }
             }
         }
@@ -1475,8 +1513,8 @@ sq{
                     other{"pas {0} të martash"}
                 }
                 past{
-                    one{"{0} të marte më parë"}
-                    other{"{0} të martash më parë"}
+                    one{"{0} të martë më parë"}
+                    other{"{0} të marta më parë"}
                 }
             }
         }
@@ -1492,8 +1530,8 @@ sq{
                     other{"pas {0} të mërkurash"}
                 }
                 past{
-                    one{"{0} të mërkure më parë"}
-                    other{"{0} të mërkurash më parë"}
+                    one{"{0} të mërkurë më parë"}
+                    other{"{0} të mërkura më parë"}
                 }
             }
         }
@@ -1509,8 +1547,8 @@ sq{
                     other{"pas {0} të mërkurash"}
                 }
                 past{
-                    one{"{0} të mërkure më parë"}
-                    other{"{0} të mërkurash më parë"}
+                    one{"{0} të mërkurë më parë"}
+                    other{"{0} të mërkura më parë"}
                 }
             }
         }
@@ -1526,8 +1564,8 @@ sq{
                     other{"pas {0} të mërkurash"}
                 }
                 past{
-                    one{"{0} të mërkure më parë"}
-                    other{"{0} të mërkurash më parë"}
+                    one{"{0} të mërkurë më parë"}
+                    other{"{0} të mërkura më parë"}
                 }
             }
         }
@@ -1578,8 +1616,32 @@ sq{
                 }
             }
         }
+        weekOfMonth{
+            dn{"javë e muajit"}
+        }
+        weekOfMonth-narrow{
+            dn{"javë e muajit"}
+        }
+        weekOfMonth-short{
+            dn{"javë e muajit"}
+        }
         weekday{
             dn{"ditë e javës"}
+        }
+        weekday-narrow{
+            dn{"ditë e javës"}
+        }
+        weekday-short{
+            dn{"ditë e javës"}
+        }
+        weekdayOfMonth{
+            dn{"ditë pune e muajit"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ditë pune e muajit"}
+        }
+        weekdayOfMonth-short{
+            dn{"ditë pune e muajit"}
         }
         year{
             dn{"vit"}
@@ -1628,8 +1690,20 @@ sq{
         zone{
             dn{"brezi orar"}
         }
+        zone-narrow{
+            dn{"brezi orar"}
+        }
+        zone-short{
+            dn{"brezi orar"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ose {1}"}
+            end{"{0} ose {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} dhe {1}"}
             end{"{0} dhe {1}"}
@@ -1665,5 +1739,32 @@ sq{
         UK{"britanik (imperial)"}
         US{"amerikan"}
         metric{"metrik"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

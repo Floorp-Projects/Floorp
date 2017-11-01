@@ -13,9 +13,8 @@ es_AR{
                 group{"."}
             }
         }
-        minimumGroupingDigits{"2"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.22"}
     calendar{
         generic{
             availableFormats{
@@ -168,6 +167,24 @@ es_AR{
                     y{"dd/MM/y – dd/MM/y"}
                 }
             }
+            quarters{
+                format{
+                    wide{
+                        "1.er trimestre",
+                        "2.º trimestre",
+                        "3.er trimestre",
+                        "4.º trimestre",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "1.er trimestre",
+                        "2.º trimestre",
+                        "3.er trimestre",
+                        "4.º trimestre",
+                    }
+                }
+            }
         }
     }
     fields{
@@ -223,9 +240,6 @@ es_AR{
                     other{"hace {0} seg."}
                 }
             }
-        }
-        zone{
-            dn{"zona horaria"}
         }
     }
 }

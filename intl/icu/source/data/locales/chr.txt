@@ -16,6 +16,7 @@ chr{
         " ꮼ ꮽ ꮾ ꮿ ᏸ ᏹ ᏺ ᏻ ᏼ]"
     }
     ExemplarCharactersIndex{"[Ꭰ Ꭶ Ꭽ Ꮃ Ꮉ Ꮎ Ꮖ Ꮜ Ꮣ Ꮬ Ꮳ Ꮹ Ꮿ]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -200,10 +201,19 @@ chr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"ᏥᎩᎠ {0}th ᎠᎦᏘᏏ."}
+            }
+            plural{
+                one{"{0} ᎢᎦ"}
+                other{"{0} ᏏᎢᎦ"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.31.74"}
+    Version{"2.1.37.1"}
     calendar{
         generic{
             DateTimePatterns{
@@ -367,6 +377,10 @@ chr{
                 MEd{"E, M/d"}
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
+                MMMMW{
+                    one{"’ᏒᎾᏙᏓᏆᏍᏗ’ W ’ᎾᎿ’ MMMM"}
+                    other{"’ᏒᎾᏙᏓᏆᏍᏗ’ W ’ᎾᎿ’ MMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
@@ -387,6 +401,10 @@ chr{
                 yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"’ᏒᎾᏙᏓᏆᏍᏗ’ w ’ᎾᎿ’ Y"}
+                    other{"’ᏒᎾᏙᏓᏆᏍᏗ’ w ’ᎾᎿ’ Y"}
+                }
             }
             dayNames{
                 format{
@@ -557,7 +575,7 @@ chr{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
+                    d{"MMM d – d"}
                 }
                 Md{
                     M{"M/d – M/d"}
@@ -598,7 +616,7 @@ chr{
                     y{"E, M/d/y – E, M/d/y"}
                 }
                 yMMM{
-                    M{"MMM–MMM y"}
+                    M{"MMM – MMM y"}
                     y{"MMM y – MMM y"}
                 }
                 yMMMEd{
@@ -607,7 +625,7 @@ chr{
                     y{"E, MMM d, y – E, MMM d, y"}
                 }
                 yMMMM{
-                    M{"MMMM–MMMM y"}
+                    M{"MMMM – MMMM y"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
@@ -759,10 +777,13 @@ chr{
         activities{"ᎠᎵᏂᎬᏁᏗ"}
         african_scripts{"ᎬᎿᎨᏍᏛ ᏗᎧᏁᎢᏍᏗ"}
         american_scripts{"ᎠᎹᏰᏟ ᏗᎧᏁᎢᏍᏗ"}
+        animal{"ᎠᏓ"}
         animals_nature{"ᏅᎩ ᏗᏂᏅᏌᏗ ᎠᎴ ᎢᏳᏍᏗ ᏅᏍᏗᏓᏅᎢ"}
         arrows{"ᏗᎦᏟᏓ"}
+        body{"ᎠᏰᎸ"}
         box_drawing{"ᎧᏁᏌᎢ ᏓᎵᎶᏍᏗᎭ"}
         braille{"ᏗᏂᎨᏩ ᏧᏂᎪᎵᏰᏙᏗ"}
+        building{"ᎠᏓᏁᎸ"}
         bullets_stars{"ᎦᏂ/ᏃᏈᏏ"}
         consonantal_jamo{"ᎤᏃᏴᎩ ᏱᎦᏪᏍᏗᎢ ᏣᎼ"}
         currency_symbols{"ᎠᏕᎳ ᏗᏟᎶᏍᏙᏗ"}
@@ -775,6 +796,8 @@ chr{
         east_asian_scripts{"ᏗᎧᎸᎬ ᏓᎶᏂᎨᏍᏛ ᏗᎧᏁᎢᏍᏗ"}
         emoji{"ᎡᎼᏥ"}
         european_scripts{"ᏳᎳᏛ ᏗᎧᏁᎢᏍᏗ"}
+        female{"ᎠᎨᏯ"}
+        flag{"ᎦᏓᏗ"}
         flags{"ᏗᎦᏓᏘ"}
         food_drink{"ᎠᎩᏍᏗ ᎠᎴ ᎠᏗᏔᏍᏘ"}
         format{"ᏱᎬᏁᎸᎯ"}
@@ -787,43 +810,54 @@ chr{
         hanja{"ᎭᎾᏧ"}
         hanzi_simplified{"ᎭᎾᏧ (ᏄᏦᏍᏛᎾᏉ)"}
         hanzi_traditional{"ᎭᎾᏧ (ᎧᏃᎮᏢᏗ)"}
+        heart{"ᎠᏓᏙ"}
         historic_scripts{"ᎤᎵᏍᎨᏗ ᏂᏧᎵᏍᏔᏅᏍᏔᏅ ᏗᎧᏁᎢᏍᏗ"}
         ideographic_desc_characters{"ᏅᏓᎴ ᎪᏪᎶᏗ ᏄᏍᏛ ᏗᎧᏃᏗ ᏧᏃᏴᎩ"}
         japanese_kana{"ᏣᏩᏂᏏ ᎧᎾ"}
         kanbun{"ᎧᏆᎾᏂ"}
         kanji{"ᎧᏅᏥ"}
+        keycap{"ᎠᏚᎢᏍᏘᎠᎵᏚᎶ"}
         leftwards_arrows{"ᎠᎦᏍᎦᏂ ᏗᎦᏟᏓ"}
         leftwards_rightwards_arrows{"ᎠᎦᏍᎦᏂ ᎠᎦᏘᏏᏃ ᏗᎦᏟᏓ"}
         letterlike_symbols{"ᎠᏪᎵ ᏫᎦᏅᏗ ᎢᏳᏍᏗ ᏗᏟᎶᏍᏙᏗ"}
         limited_use{"ᏩᏎᎸᎯ ᎬᏙᏗ"}
+        male{"ᎠᏍᎦᏯ"}
         math_symbols{"ᏗᏎᏍᏗ ᏗᏟᎶᏍᏙᏗ"}
         middle_eastern_scripts{"ᎠᏰᏟ ᏗᎧᎸᎬ ᏗᏜ ᏗᎧᏁᎢᏍᏗ"}
         miscellaneous{"ᏧᏓᎴᏅᏛ"}
         modern_scripts{"ᎪᎯᏊ ᎢᎬᏥᎩ ᏗᎧᏁᎢᏍᏗ"}
         modifier{"ᎦᏁᏟᏴᏍᏗᏍᎩ"}
         musical_symbols{"ᏗᎧᏃᎩᏛ ᎦᏃᏢᎩ"}
+        nature{"ᎤᏁᎳᏅ ᎤᏬᏢᏅ"}
         nonspacing{"ᎤᏜᏅᏛᎾ"}
         numbers{"ᏗᏎᏍᏗ"}
         objects{"ᎪᎱᏍᏗ"}
         other{"ᏐᎢ"}
         paired{"ᏗᎵᎪᏙᏗ"}
+        person{"ᏴᏫ"}
         phonetic_alphabet{"ᎦᏬᏂᎯᏍᏗ ᏗᏕᎶᏆᏍᏙᏗ"}
         pictographs{"ᏗᏟᎳᏍᏔᏄᎯ ᏗᎪᎵᏰᏗ"}
+        place{"ᎾᎿᎢ"}
+        plant{"ᏤᎶᎯ"}
         punctuation{"ᏧᏓᎴᏅᏓ ᏗᏙᏪᎵᏍᎩ ᏗᎬᏙᏗ"}
         rightwards_arrows{"ᎠᎦᏘᏏ ᏗᎦᏟᏓ"}
         sign_standard_symbols{"ᎪᏪᎶᏗ/ᎤᏠᏱᎭᏬ ᏗᏟᎶᏍᏙᏗ"}
         small_form_variant{"ᏧᏍᏗ ᎤᏙᏢᏒ ᏂᏓᏓᎴᎬᎾ"}
+        smiley{"ᎤᏤᏣᏍᏗ"}
         smileys_people{"ᏓᏰᏍᏗᏍᎬ ᎠᎴ ᎠᏂᏴᏫ"}
         south_asian_scripts{"ᏧᎦᎾᏮ ᏓᎶᏂᎨᏍᏛ ᏗᎧᏁᎢᏍᏗ"}
         southeast_asian_scripts{"ᏧᎦᎾᏮ ᏗᎧᎸᎬ ᏓᎶᏂᎨᏍᏛ ᏗᎧᏁᎢᏍᏗ"}
         spacing{"ᎤᏜᎤᏗᎢ"}
+        sport{"ᎠᎾᏁᏦᏍᎩ"}
         symbols{"ᏗᎬᏟᎶᏍᏙᏗ"}
         technical_symbols{"ᎤᏦᏍᏗ ᏂᎬᎿᏅ ᏗᎬᏟᎶᏍᏙᏗ"}
         tone_marks{"ᎤᏃᏴᎦ ᏓᏍᏛᏅᏅ"}
+        travel{"ᎡᏙᎵᏙᎲ"}
         travel_places{"ᎡᏙᎵᏓᏍᏗ ᎠᎴ ᏚᏙᏢᏒ"}
         upwards_arrows{"ᎦᎸᎳᏗ ᏗᎦᏟᏓ"}
         variant_forms{"ᏂᏓᏓᎴᎬᎾ ᎤᏙᏢᏒ"}
         vocalic_jamo{"ᏉᎧᎵ ᏣᎼ"}
+        weather{"ᏙᏯᏗᎳ ᏄᏍᏗᏓᏅ"}
         western_asian_scripts{"ᏭᏕᎵᎬ ᏗᏜ ᏓᎶᏂᎨᏛ ᏗᎧᏁᎢᏍᏗ"}
         whitespace{"ᎤᏁᎬ ᎤᏜᏅᏛᎯ"}
     }
@@ -878,10 +912,31 @@ chr{
                 }
             }
         }
+        dayOfYear{
+            dn{"ᎢᎦ ᎤᏕᏘᏴᏌᏗᏒᎢ"}
+        }
+        dayOfYear-narrow{
+            dn{"ᎢᎦ ᎤᏕ."}
+        }
+        dayOfYear-short{
+            dn{"ᎢᎦ ᎤᏕ."}
+        }
         dayperiod{
             dn{"ᏌᎾᎴ/ᏒᎯᏱ"}
         }
+        dayperiod-narrow{
+            dn{"ᏌᎾᎴ/ᏒᎯᏱ"}
+        }
+        dayperiod-short{
+            dn{"ᏌᎾᎴ/ᏒᎯᏱ"}
+        }
         era{
+            dn{"ᏗᏓᎴᏂᏍᎬ"}
+        }
+        era-narrow{
+            dn{"ᏗᏓᎴᏂᏍᎬ"}
+        }
+        era-short{
             dn{"ᏗᏓᎴᏂᏍᎬ"}
         }
         fri{
@@ -1127,7 +1182,7 @@ chr{
                     other{"ᎾᎿ {0} ᎩᏄᏙᏗ"}
                 }
                 past{
-                    one{"ᎾᎿ {0} ᎩᏄᏙᏗ"}
+                    one{"ᎾᎿ {0} ᎩᏄᏙᏗ ᏥᎨᏒ"}
                     other{"ᎾᎿ {0} ᎩᏄᏙᏗ ᏥᎨᏒ"}
                 }
             }
@@ -1502,8 +1557,32 @@ chr{
                 }
             }
         }
+        weekOfMonth{
+            dn{"ᏒᎾᏙᏓᏆᏍᏗ ᎧᎸᎢ"}
+        }
+        weekOfMonth-narrow{
+            dn{"ᎡᎾ. ᎧᎸ."}
+        }
+        weekOfMonth-short{
+            dn{"ᎡᎾ. ᎧᎸ."}
+        }
         weekday{
             dn{"ᎢᎦ ᏕᎨᏌᏗᏒ"}
+        }
+        weekday-narrow{
+            dn{"ᎢᎦ ᏕᎨ."}
+        }
+        weekday-short{
+            dn{"ᎢᎦ ᏕᎨ."}
+        }
+        weekdayOfMonth{
+            dn{"ᏒᎾᏙᏓᏆᏍᏗ ᎢᎦ ᎧᎸᎢ"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"ᏒᎾ. ᎢᎦ ᎧᎸ."}
+        }
+        weekdayOfMonth-short{
+            dn{"ᏒᎾ. ᎢᎦ ᎧᎸ."}
         }
         year{
             dn{"ᎤᏕᏘᏴᏌᏗᏒᎢ"}
@@ -1552,8 +1631,20 @@ chr{
         zone{
             dn{"ᏂᎬᎾᏛ ᏧᏓᎴᏅᏓ ᏓᏟᎢᎵᏍᏒᎢ"}
         }
+        zone-narrow{
+            dn{"ᏂᎬᎾᏛ ᏧᏓᎴᏅᏓ"}
+        }
+        zone-short{
+            dn{"ᏂᎬᎾᏛ ᏧᏓᎴᏅᏓ"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} or {1}"}
+            end{"{0}, or {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} ᎠᎴ {1}"}
             end{"{0} ᎠᎴ {1}"}

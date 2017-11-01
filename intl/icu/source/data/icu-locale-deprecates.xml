@@ -46,6 +46,8 @@
     <alias from="uz_AF" to="uz_Arab_AF"/>
     <alias from="uz_UZ" to="uz_Latn_UZ"/>
     <alias from="vai_LR" to="vai_Vaii_LR"/>
+    <alias from="yue_CN" to="yue_Hans_CN"/>
+    <alias from="yue_HK" to="yue_Hant_HK"/>
     <alias from="zh_CN" to="zh_Hans_CN"/>
     <alias from="zh_HK" to="zh_Hant_HK"/>
     <alias from="zh_MO" to="zh_Hant_MO"/>
