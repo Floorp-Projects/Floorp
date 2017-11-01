@@ -214,13 +214,15 @@ html, body, #app, #memory-tool {
   min-width: 1.3em;
 }
 
-.snapshot-list-item.selected .delete::before {
-  filter: invert(1);
-}
-
 .snapshot-list-item .delete::before {
+  display: block;
+  width: 16px;
+  height: 16px;
+  content: "";
   background-image: url("chrome://devtools/skin/images/close.svg");
-  background-position: 0.2em 0;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .snapshot-list-item > .snapshot-title {
