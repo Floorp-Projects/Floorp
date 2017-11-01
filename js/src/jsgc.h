@@ -138,55 +138,6 @@ namespace gc {
 void
 MergeCompartments(JSCompartment* source, JSCompartment* target);
 
-/*
- * This structure overlays a Cell in the Nursery and re-purposes its memory
- * for managing the Nursery collection process.
- */
-class RelocationOverlay
-{
-    /* The low bit is set so this should never equal a normal pointer. */
-    static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
-
-    /* Set to Relocated when moved. */
-    uintptr_t magic_;
-
-    /* The location |this| was moved to. */
-    Cell* newLocation_;
-
-    /* A list entry to track all relocated things. */
-    RelocationOverlay* next_;
-
-  public:
-    static RelocationOverlay* fromCell(Cell* cell) {
-        return reinterpret_cast<RelocationOverlay*>(cell);
-    }
-
-    bool isForwarded() const {
-        return magic_ == Relocated;
-    }
-
-    Cell* forwardingAddress() const {
-        MOZ_ASSERT(isForwarded());
-        return newLocation_;
-    }
-
-    void forwardTo(Cell* cell);
-
-    RelocationOverlay*& nextRef() {
-        MOZ_ASSERT(isForwarded());
-        return next_;
-    }
-
-    RelocationOverlay* next() const {
-        MOZ_ASSERT(isForwarded());
-        return next_;
-    }
-
-    static bool isCellForwarded(Cell* cell) {
-        return fromCell(cell)->isForwarded();
-    }
-};
-
 // Functions for checking and updating GC thing pointers that might have been
 // moved by compacting GC. Overloads are also provided that work with Values.
 //
