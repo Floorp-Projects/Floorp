@@ -2516,12 +2516,6 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     if (cacheBlock < 0) {
       // We don't have a complete cached block here.
 
-      if (count > 0) {
-        // Some data has been read, so return what we've got instead of
-        // blocking or trying to find a stream with a partial block.
-        break;
-      }
-
       // See if the data is available in the partial cache block of any
       // stream reading this resource. We need to do this in case there is
       // another stream with this resource that has all the data to the end of
@@ -2531,7 +2525,8 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       while (MediaCacheStream* stream = iter.Next()) {
         if (OffsetToBlockIndexUnchecked(stream->mChannelOffset) ==
               streamBlock &&
-            streamOffset < stream->mChannelOffset) {
+            streamOffset < stream->mChannelOffset &&
+            stream->mChannelOffset == stream->mStreamLength) {
           streamWithPartialBlock = stream;
           break;
         }
@@ -2544,13 +2539,16 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // Clamp bytes until 64-bit file size issues are fixed.
         bytes = std::min(bytes, int64_t(INT32_MAX));
         MOZ_ASSERT(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
-        memcpy(aBuffer,
-          streamWithPartialBlock->mPartialBlockBuffer.get() + offsetInStreamBlock, bytes);
+        memcpy(aBuffer + count,
+               streamWithPartialBlock->mPartialBlockBuffer.get() +
+                 offsetInStreamBlock,
+               bytes);
         if (mCurrentMode == MODE_METADATA) {
           streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
         }
         streamOffset += bytes;
-        count = bytes;
+        count += bytes;
+        // Break for we've reached EOS and have nothing more to read.
         break;
       }
 
@@ -2584,13 +2582,16 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     count += bytes;
   }
 
-  if (count > 0) {
-    // Some data was read, so queue an update since block priorities may
-    // have changed
-    mMediaCache->QueueUpdate();
-  }
-  LOG("Stream %p Read at %" PRId64 " count=%d", this, streamOffset-count, count);
   *aBytes = count;
+  if (count == 0) {
+    return NS_OK;
+  }
+
+  // Some data was read, so queue an update since block priorities may
+  // have changed
+  mMediaCache->QueueUpdate();
+
+  LOG("Stream %p Read at %" PRId64 " count=%d", this, streamOffset-count, count);
   mStreamOffset = streamOffset;
   return NS_OK;
 }
