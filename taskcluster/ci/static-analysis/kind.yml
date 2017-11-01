@@ -96,6 +96,7 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win32.py
                 - builds/taskcluster_sub_win32/clang_debug.py
         toolchains:
@@ -123,6 +124,7 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win32.py
                 - builds/taskcluster_sub_win32/clang.py
         toolchains:
@@ -150,6 +152,7 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/clang_debug.py
         toolchains:
@@ -177,6 +180,7 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
+                - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/clang.py
         toolchains:
