@@ -10097,7 +10097,7 @@ var Catalog = function CatalogClosure() {
     get javaScript() {
       var xref = this.xref;
       var obj = this.catDict.get('Names');
-      var javaScript = [];
+      let javaScript = null;
       function appendIfJavaScriptDict(jsDict) {
         var type = jsDict.get('S');
         if (!(0, _primitives.isName)(type, 'JavaScript')) {
@@ -10108,6 +10108,9 @@ var Catalog = function CatalogClosure() {
           js = (0, _util.bytesToString)(js.getBytes());
         } else if (!(0, _util.isString)(js)) {
           return;
+        }
+        if (!javaScript) {
+          javaScript = [];
         }
         javaScript.push((0, _util.stringToPDFString)(js));
       }
@@ -10127,6 +10130,9 @@ var Catalog = function CatalogClosure() {
         if ((0, _primitives.isName)(actionType, 'Named')) {
           var action = openactionDict.get('N');
           if ((0, _primitives.isName)(action, 'Print')) {
+            if (!javaScript) {
+              javaScript = [];
+            }
             javaScript.push('print({});');
           }
         } else {
@@ -20273,6 +20279,8 @@ function mapSpecialUnicodeValues(code) {
   return 0;
  } else if (code >= 0xF600 && code <= 0xF8FF) {
   return getSpecialPUASymbols()[code] || code;
+ } else if (code === 0x00AD) {
+  return 0x002D;
  }
  return code;
 }
@@ -23275,8 +23283,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '1.10.88';
-var pdfjsBuild = 'c62a1938';
+var pdfjsVersion = '2.0.87';
+var pdfjsBuild = 'b46443f0';
 var pdfjsCoreWorker = __w_pdfjs_require__(18);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -23471,7 +23479,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '1.10.88';
+    let workerVersion = '2.0.87';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -31589,6 +31597,10 @@ var Font = function FontClosure() {
   function int16(b0, b1) {
     return (b0 << 8) + b1;
   }
+  function writeSignedInt16(bytes, index, value) {
+    bytes[index + 1] = value;
+    bytes[index] = value >>> 8;
+  }
   function signedInt16(b0, b1) {
     var value = (b0 << 8) + b1;
     return value & 1 << 15 ? value - 0x10000 : value;
@@ -32238,8 +32250,10 @@ var Font = function FontClosure() {
           return glyphProfile;
         }
         var glyf = source.subarray(sourceStart, sourceEnd);
-        var contoursCount = glyf[0] << 8 | glyf[1];
-        if (contoursCount & 0x8000) {
+        var contoursCount = signedInt16(glyf[0], glyf[1]);
+        if (contoursCount < 0) {
+          contoursCount = -1;
+          writeSignedInt16(glyf, 0, contoursCount);
           dest.set(glyf, destStart);
           glyphProfile.length = glyf.length;
           return glyphProfile;
