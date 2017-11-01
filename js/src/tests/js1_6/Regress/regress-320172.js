@@ -9,7 +9,6 @@ var summary = 'Regression from bug 285219';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 

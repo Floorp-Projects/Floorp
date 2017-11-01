@@ -41,8 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-9-n";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -51,9 +49,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 //  LeftHandSideExpression:NewExpression:MemberExpression
 
 DESCRIPTION = "object is not defined";
-EXPECTED = "error";
 
-new TestCase( SECTION,
+new TestCase(
 	      "object is not defined",
 	      "error",
 	      eval("var o = new MyObject(); var result = 0; for ( var o in foo) { result += this[o]; } ") );

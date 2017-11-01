@@ -13,7 +13,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -31,6 +30,4 @@ function test()
 
   reportCompare("TypeError", actual.name, "bad error name");
   reportCompare(true, /is not a constructor/.test(actual), summary);
-
-  exitFunc ('test');
 }

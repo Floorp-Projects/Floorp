@@ -55,22 +55,19 @@
    Date:               7 october 1997
 */
 var SECTION = "15.4.4.4-1";
-var VERSION = "ECMA_1";
 var BUGNUMBER="123724";
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " Array.prototype.reverse()");
 
 var ARR_PROTOTYPE = Array.prototype;
 
-new TestCase( SECTION,
-	      "Array.prototype.reverse.length",          
+new TestCase( "Array.prototype.reverse.length",          
 	      0,     
 	      Array.prototype.reverse.length );
 
 // length of array is 0
-new TestCase( SECTION,
-	      "var A = new Array();   A.reverse(); A.length",
+new TestCase( "var A = new Array();   A.reverse(); A.length",
 	      0,
 	      eval("var A = new Array();   A.reverse(); A.length") );
 
@@ -78,8 +75,7 @@ new TestCase( SECTION,
 var A = new Array(true);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      "var A = new Array(true);   A.reverse(); A.length",
+new TestCase( "var A = new Array(true);   A.reverse(); A.length",
 	      R.length,
 	      eval("var A = new Array(true);   A.reverse(); A.length") );
 
@@ -90,8 +86,7 @@ var S = "var A = new Array( true,false )";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -102,8 +97,7 @@ var S = "var A = new Array( true,false,null )";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -114,8 +108,7 @@ var S = "var A = new Array( true,false,null,void 0 )";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 CheckItems( R, A );
@@ -126,8 +119,7 @@ var S = "var A = new Array(); A[8] = 'hi', A[3] = 'yo'";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -149,8 +141,7 @@ var S = "var A = new Array("+args+")";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -169,8 +160,7 @@ var S = "var A = new Array("+args+")";
 eval(S);
 var R = Reverse(A);
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -180,8 +170,7 @@ var S = "var MYOBJECT = new Object_1( \"void 0, 1, null, 2, \'\'\" )";
 eval(S);
 var R = Reverse( A );
 
-new TestCase( SECTION,
-	      S +";  A.reverse(); A.length",
+new TestCase( S +";  A.reverse(); A.length",
 	      R.length,
 	      eval( S + "; A.reverse(); A.length") );
 
@@ -192,7 +181,6 @@ test();
 function CheckItems( R, A ) {
   for ( var i = 0; i < R.length; i++ ) {
     new TestCase(
-      SECTION,
       "A["+i+ "]",
       R[i],
       A[i] );

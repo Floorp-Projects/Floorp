@@ -16,42 +16,40 @@
    none
 */
 var SECTION = "11.4.9";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Logical NOT operator (!)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,   "!(null)",                true,   !(null) );
-new TestCase( SECTION,   "!(var x)",               true,   !(eval("var x")) );
-new TestCase( SECTION,   "!(void 0)",              true,   !(void 0) );
+new TestCase( "!(null)",                true,   !(null) );
+new TestCase( "!(var x)",               true,   !(eval("var x")) );
+new TestCase( "!(void 0)",              true,   !(void 0) );
 
-new TestCase( SECTION,   "!(false)",               true,   !(false) );
-new TestCase( SECTION,   "!(true)",                false,  !(true) );
-new TestCase( SECTION,   "!()",                    true,   !(eval()) );
-new TestCase( SECTION,   "!(0)",                   true,   !(0) );
-new TestCase( SECTION,   "!(-0)",                  true,   !(-0) );
-new TestCase( SECTION,   "!(NaN)",                 true,   !(Number.NaN) );
-new TestCase( SECTION,   "!(Infinity)",            false,  !(Number.POSITIVE_INFINITY) );
-new TestCase( SECTION,   "!(-Infinity)",           false,  !(Number.NEGATIVE_INFINITY) );
-new TestCase( SECTION,   "!(Math.PI)",             false,  !(Math.PI) );
-new TestCase( SECTION,   "!(1)",                   false,  !(1) );
-new TestCase( SECTION,   "!(-1)",                  false,  !(-1) );
-new TestCase( SECTION,   "!('')",                  true,   !("") );
-new TestCase( SECTION,   "!('\t')",                false,  !("\t") );
-new TestCase( SECTION,   "!('0')",                 false,  !("0") );
-new TestCase( SECTION,   "!('string')",            false,  !("string") );
-new TestCase( SECTION,   "!(new String(''))",      false,  !(new String("")) );
-new TestCase( SECTION,   "!(new String('string'))",    false,  !(new String("string")) );
-new TestCase( SECTION,   "!(new String())",        false,  !(new String()) );
-new TestCase( SECTION,   "!(new Boolean(true))",   false,   !(new Boolean(true)) );
-new TestCase( SECTION,   "!(new Boolean(false))",  false,   !(new Boolean(false)) );
-new TestCase( SECTION,   "!(new Array())",         false,  !(new Array()) );
-new TestCase( SECTION,   "!(new Array(1,2,3)",     false,  !(new Array(1,2,3)) );
-new TestCase( SECTION,   "!(new Number())",        false,  !(new Number()) );
-new TestCase( SECTION,   "!(new Number(0))",       false,  !(new Number(0)) );
-new TestCase( SECTION,   "!(new Number(NaN))",     false,  !(new Number(Number.NaN)) );
-new TestCase( SECTION,   "!(new Number(Infinity))", false, !(new Number(Number.POSITIVE_INFINITY)) );
+new TestCase( "!(false)",               true,   !(false) );
+new TestCase( "!(true)",                false,  !(true) );
+new TestCase( "!()",                    true,   !(eval()) );
+new TestCase( "!(0)",                   true,   !(0) );
+new TestCase( "!(-0)",                  true,   !(-0) );
+new TestCase( "!(NaN)",                 true,   !(Number.NaN) );
+new TestCase( "!(Infinity)",            false,  !(Number.POSITIVE_INFINITY) );
+new TestCase( "!(-Infinity)",           false,  !(Number.NEGATIVE_INFINITY) );
+new TestCase( "!(Math.PI)",             false,  !(Math.PI) );
+new TestCase( "!(1)",                   false,  !(1) );
+new TestCase( "!(-1)",                  false,  !(-1) );
+new TestCase( "!('')",                  true,   !("") );
+new TestCase( "!('\t')",                false,  !("\t") );
+new TestCase( "!('0')",                 false,  !("0") );
+new TestCase( "!('string')",            false,  !("string") );
+new TestCase( "!(new String(''))",      false,  !(new String("")) );
+new TestCase( "!(new String('string'))",    false,  !(new String("string")) );
+new TestCase( "!(new String())",        false,  !(new String()) );
+new TestCase( "!(new Boolean(true))",   false,   !(new Boolean(true)) );
+new TestCase( "!(new Boolean(false))",  false,   !(new Boolean(false)) );
+new TestCase( "!(new Array())",         false,  !(new Array()) );
+new TestCase( "!(new Array(1,2,3)",     false,  !(new Array(1,2,3)) );
+new TestCase( "!(new Number())",        false,  !(new Number()) );
+new TestCase( "!(new Number(0))",       false,  !(new Number(0)) );
+new TestCase( "!(new Number(NaN))",     false,  !(new Number(Number.NaN)) );
+new TestCase( "!(new Number(Infinity))", false, !(new Number(Number.POSITIVE_INFINITY)) );
 
 test();
 

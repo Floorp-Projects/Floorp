@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -62,6 +61,4 @@ function test()
   expect = [];
   actual = flatten([[[[[]]]]]);     // []
   reportCompare(expect + '', actual + '', summary + ': ' + expect);
-
-  exitFunc ('test');
 }

@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow
+// |reftest| skip-if(xulRuntime.shell||(xulRuntime.OS=="WINNT"&&isDebugBuild)) slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,19 +24,9 @@ function throwBlah()
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
- 
-if (typeof window == 'undefined')
-{
-  expect = actual = 'Not tested. Requires browser.';
-  reportCompare(expect, actual, summary);
-}
-else
-{
-  gDelayTestDriverEnd = true;
-  window.onerror = null;
-  setTimeout('finishtest()', 1000);
-  window.onload = (function () { setInterval('throwBlah()', 0); });
-  setInterval('foo(', 0);
-}
 
-
+gDelayTestDriverEnd = true;
+window.onerror = null;
+setTimeout('finishtest()', 1000);
+window.onload = (function () { setInterval('throwBlah()', 0); });
+setInterval('foo(', 0);

@@ -496,9 +496,9 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
 
     // NOTE: We don't use addDataProperty because we don't want the
     // extensibility check if we're, for example, sparsifying frozen objects..
-    if (!addPropertyInternal(cx, obj, id, nullptr, nullptr, slot,
-                             obj->getElementsHeader()->elementAttributes(),
-                             0, entry, true, keep)) {
+    if (!addDataPropertyInternal(cx, obj, id, slot,
+                                 obj->getElementsHeader()->elementAttributes(),
+                                 0, entry, true, keep)) {
         obj->setDenseElementUnchecked(index, value);
         return false;
     }
@@ -1157,7 +1157,7 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj,
 {
     MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     RootedId id(cx, idArg);
-    return addProperty(cx, obj, id, nullptr, nullptr, slot, attrs, 0);
+    return addDataProperty(cx, obj, id, slot, attrs, 0);
 }
 
 /* static */ Shape*
@@ -1166,7 +1166,7 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj,
 {
     MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     RootedId id(cx, NameToId(name));
-    return addProperty(cx, obj, id, nullptr, nullptr, slot, attrs, 0);
+    return addDataProperty(cx, obj, id, slot, attrs, 0);
 }
 
 template <AllowGC allowGC>
@@ -1430,11 +1430,20 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     // the slower putProperty.
     Shape* shape;
     if (AddOrChange == IsAddOrChange::Add) {
-        shape = NativeObject::addProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                          SHAPE_INVALID_SLOT, desc.attributes(), 0);
+        if (Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter())) {
+            shape = NativeObject::addDataProperty(cx, obj, id, SHAPE_INVALID_SLOT,
+                                                  desc.attributes(), 0);
+        } else {
+            shape = NativeObject::addAccessorProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                                      desc.attributes(), 0);
+        }
     } else {
-        shape = NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                          SHAPE_INVALID_SLOT, desc.attributes(), 0);
+        if (Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter())) {
+            shape = NativeObject::putDataProperty(cx, obj, id, desc.attributes());
+        } else {
+            shape = NativeObject::putAccessorProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                                      desc.attributes(), 0);
+        }
     }
     if (!shape)
         return false;

@@ -24,10 +24,8 @@
 */
 
 var SECTION = "proto_6";
-var VERSION = "JS1_3";
 var TITLE   = "Logical OR || in constructors";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
@@ -73,67 +71,55 @@ var les = new WorkerBee( "Morris, Les",
 
 // Pat, the Engineer
 
-new TestCase( SECTION,
-	      "pat.name",
+new TestCase( "pat.name",
 	      "Toonces, Pat",
 	      pat.name );
 
-new TestCase( SECTION,
-	      "pat.dept",
+new TestCase( "pat.dept",
 	      "engineering",
 	      pat.dept );
 
-new TestCase( SECTION,
-	      "pat.projects.length",
+new TestCase( "pat.projects.length",
 	      2,
 	      pat.projects.length );
 
-new TestCase( SECTION,
-	      "pat.projects[0]",
+new TestCase( "pat.projects[0]",
 	      "SpiderMonkey",
 	      pat.projects[0] );
 
-new TestCase( SECTION,
-	      "pat.projects[1]",
+new TestCase( "pat.projects[1]",
 	      "Rhino",
 	      pat.projects[1] );
 
-new TestCase( SECTION,
-	      "pat.machine",
+new TestCase( "pat.machine",
 	      "indy",
 	      pat.machine );
 
 
 // Les, the WorkerBee
 
-new TestCase( SECTION,
-	      "les.name",
+new TestCase( "les.name",
 	      "Morris, Les",
 	      les.name );
 
-new TestCase( SECTION,
-	      "les.dept",
+new TestCase( "les.dept",
 	      "Training",
 	      les.dept );
 
-new TestCase( SECTION,
-	      "les.projects.length",
+new TestCase( "les.projects.length",
 	      1,
 	      les.projects.length );
 
-new TestCase( SECTION,
-	      "les.projects[0]",
+new TestCase( "les.projects[0]",
 	      "Hippo",
 	      les.projects[0] );
 
 // Terry, the Employee
-new TestCase( SECTION,
-	      "terry.name",
+new TestCase( "terry.name",
 	      "Boomberi, Terry",
 	      terry.name );
 
-new TestCase( SECTION,
-	      "terry.dept",
+new TestCase( "terry.dept",
 	      "Marketing",
 	      terry.dept );
 test();

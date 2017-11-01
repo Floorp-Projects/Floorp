@@ -13,10 +13,8 @@
    Date:               12 november 1997
 */
 var SECTION = "expression-011";
-var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var BOOLEAN  = true;
@@ -33,7 +31,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "BOOLEAN = true; result = new BOOLEAN()" +
   " (threw " + exception +")",
   expect,

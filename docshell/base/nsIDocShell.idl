@@ -12,6 +12,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
+#include "nsCOMPtr.h"
 class nsPresContext;
 class nsIPresShell;
 namespace mozilla {

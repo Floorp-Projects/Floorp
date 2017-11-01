@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   "" + (function() { if(delete(null?0:{})){[]} });
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

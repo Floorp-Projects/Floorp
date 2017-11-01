@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -33,6 +32,4 @@ function test()
 // Assertion failure: (uintN)i < ss->top, at ../jsopcode.cpp:2801
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

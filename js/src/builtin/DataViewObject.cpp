@@ -171,7 +171,7 @@ DataViewObject::getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, c
 
     // Step 7.
     if (offset > bufferByteLength) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OFFSET_OUT_OF_BUFFER);
         return false;
     }
     MOZ_ASSERT(offset <= INT32_MAX);
@@ -190,7 +190,7 @@ DataViewObject::getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, c
         // Step 9.b.
         if (offset + viewByteLength > bufferByteLength) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                      JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+                                      JSMSG_INVALID_DATA_VIEW_LENGTH);
             return false;
         }
     }
@@ -313,8 +313,7 @@ DataViewObject::getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint6
 {
     const size_t TypeSize = sizeof(NativeType);
     if (offset > UINT32_MAX - TypeSize || offset + TypeSize > obj->byteLength()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE,
-                                  "1");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OFFSET_OUT_OF_DATAVIEW);
         return SharedMem<uint8_t*>::unshared(nullptr);
     }
 

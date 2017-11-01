@@ -23,12 +23,10 @@ finish_test();
 //-----------------------------------------------------------------------------
 
 function start_test() {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 }
 
 function finish_test() {
   reportCompare(expect, actual, summary);
-  exitFunc ('test');
 }

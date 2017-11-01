@@ -7,11 +7,9 @@
 // Note that this syntax isn't in the most recently posted ES4 TG1 wiki export,
 // either in the specification parts or in the grammar, so this test might be
 // Spidermonkey-specific.
-var BUGNUMBER     = "(none)";
 var summary = "|yield;| is equivalent to |yield undefined;| ";
 var actual, expect;
 
-printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 /**************

@@ -29,8 +29,6 @@
 */
 
 var SECTION = "10.1.6";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Activation Object";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -39,15 +37,13 @@ var arguments = "FAILED!";
 
 var ARG_STRING = "value of the argument property";
 
-new TestCase( SECTION,
-	      "(new TestObject(0,1,2,3,4,5)).length",
+new TestCase( "(new TestObject(0,1,2,3,4,5)).length",
 	      6,
 	      (new TestObject(0,1,2,3,4,5)).length );
 
 for ( i = 0; i < 6; i++ ) {
 
-  new TestCase( SECTION,
-		"(new TestObject(0,1,2,3,4,5))["+i+"]",
+  new TestCase( "(new TestObject(0,1,2,3,4,5))["+i+"]",
 		i,
 		(new TestObject(0,1,2,3,4,5))[i]);
 }
@@ -55,15 +51,13 @@ for ( i = 0; i < 6; i++ ) {
 
 //    The current object already has an arguments property.
 
-new TestCase( SECTION,
-	      "(new AnotherTestObject(1,2,3)).arguments",
+new TestCase( "(new AnotherTestObject(1,2,3)).arguments",
 	      ARG_STRING,
 	      (new AnotherTestObject(1,2,3)).arguments );
 
 //  The function invoked with [[Call]]
 
-new TestCase( SECTION,
-	      "TestFunction(1,2,3)",
+new TestCase( "TestFunction(1,2,3)",
 	      ARG_STRING,
 	      TestFunction() + '' );
 

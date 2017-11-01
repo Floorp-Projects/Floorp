@@ -1503,7 +1503,7 @@ let PDFViewerApplication = {
         return;
       }
       pdfDocument.getJavaScript().then(javaScript => {
-        if (javaScript.length === 0) {
+        if (!javaScript) {
           return;
         }
         javaScript.some(js => {
@@ -2737,15 +2737,8 @@ class PDFCursorTools {
     this.activeBeforePresentationMode = null;
     this.handTool = new _grab_to_pan.GrabToPan({ element: this.container });
     this._addEventListeners();
-    Promise.all([preferences.get('cursorToolOnLoad'), preferences.get('enableHandToolOnLoad')]).then(([cursorToolPref, handToolPref]) => {
-      if (handToolPref === true) {
-        preferences.set('enableHandToolOnLoad', false);
-        if (cursorToolPref === CursorTool.SELECT) {
-          cursorToolPref = CursorTool.HAND;
-          preferences.set('cursorToolOnLoad', cursorToolPref).catch(() => {});
-        }
-      }
-      this.switchTool(cursorToolPref);
+    preferences.get('cursorToolOnLoad').then(value => {
+      this.switchTool(value);
     }).catch(() => {});
   }
   get activeTool() {

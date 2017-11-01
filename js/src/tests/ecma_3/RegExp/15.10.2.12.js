@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -24,6 +23,4 @@ function test()
   actual = /\d/.test("\uFF11");
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

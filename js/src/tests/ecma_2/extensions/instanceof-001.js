@@ -15,17 +15,14 @@
  *  Date:               2 September 1998
  */
 var SECTION = "instanceof-001";
-var VERSION = "ECMA_2";
 var TITLE   = "instanceof"
 
-  startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object_1, object_2, expect ) {
   result = object_1 instanceof object_2;
 
   new TestCase(
-    SECTION,
     "(" + object_1 + ") instanceof " + object_2,
     expect,
     result );

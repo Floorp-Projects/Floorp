@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -28,6 +27,4 @@ function test()
 //Crash [@ js_IsActiveWithOrBlock]
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

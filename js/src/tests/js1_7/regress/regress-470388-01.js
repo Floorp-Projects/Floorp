@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   for each (let x in [function(){}, new Boolean(false), function(){}]) {}
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

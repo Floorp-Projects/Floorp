@@ -15,10 +15,8 @@
  *  Date:               26 August 1998
  */
 var SECTION = "dowhile-007";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile( new DoWhileObject( false, false, false, false ));
@@ -72,25 +70,21 @@ outie:
   } while ( false );
 
   new TestCase(
-    SECTION,
     "break one: ",
     (object.breakOutOne) ? false : true,
     result1 );
 
   new TestCase(
-    SECTION,
     "break two: ",
     (object.breakOutOne||object.breakOutTwo) ? false : true,
     result2 );
 
   new TestCase(
-    SECTION,
     "break three: ",
     (object.breakOutOne||object.breakOutTwo||object.breakIn) ? false : true,
     result3 );
 
   new TestCase(
-    SECTION,
     "break four: ",
     (object.breakOutOne||object.breakOutTwo||object.breakOutThree) ? false: true,
     result4 );

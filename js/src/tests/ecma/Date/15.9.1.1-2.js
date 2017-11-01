@@ -45,7 +45,7 @@ for ( M_SECS = 0, CURRENT_YEAR = 1970;
       M_SECS > -8640000000000000;
       M_SECS -= FOUR_HUNDRED_YEARS, CURRENT_YEAR -= 400 ) {
 
-  new TestCase( SECTION,
+  new TestCase(
 		"new Date("+M_SECS+")",
 		CURRENT_YEAR,
 		(new Date( M_SECS )).getUTCFullYear() );

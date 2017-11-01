@@ -14,10 +14,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "LexicalConventions/regexp-literals-001.js";
-var VERSION = "ECMA_2";
 var TITLE   = "Regular Expression Literals";
 
-startTest();
 
 // Regular Expression Literals may not be empty; // should be regarded
 // as a comment, not a RegExp literal.

@@ -13,10 +13,8 @@
    Date:               12 november 1997
 */
 var SECTION = "expression-015";
-var VERSION = "JS1_4";
 var TITLE   = "Function Calls";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -31,7 +29,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "3.valueOf()" +
   " (threw " + exception +")",
   expect,

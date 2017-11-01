@@ -391,9 +391,8 @@ Shape::searchNoHashify(Shape* start, jsid id)
 }
 
 /* static */ MOZ_ALWAYS_INLINE Shape*
-NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                          GetterOp getter, SetterOp setter, uint32_t slot, unsigned attrs,
-                          unsigned flags, bool allowDictionary)
+NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                              uint32_t slot, unsigned attrs, unsigned flags, bool allowDictionary)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
@@ -408,8 +407,29 @@ NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
-    return addPropertyInternal(cx, obj, id, getter, setter, slot, attrs, flags, entry,
-                               allowDictionary, keep);
+    return addDataPropertyInternal(cx, obj, id, slot, attrs, flags, entry, allowDictionary, keep);
+}
+
+/* static */ MOZ_ALWAYS_INLINE Shape*
+NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                  GetterOp getter, SetterOp setter, unsigned attrs,
+                                  unsigned flags, bool allowDictionary)
+{
+    MOZ_ASSERT(!JSID_IS_VOID(id));
+    MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
+    MOZ_ASSERT(!obj->containsPure(id));
+
+    AutoKeepShapeTables keep(cx);
+    ShapeTable::Entry* entry = nullptr;
+    if (obj->inDictionaryMode()) {
+        ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        if (!table)
+            return nullptr;
+        entry = &table->search<MaybeAdding::Adding>(id, keep);
+    }
+
+    return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, flags, entry,
+                                       allowDictionary, keep);
 }
 
 } /* namespace js */

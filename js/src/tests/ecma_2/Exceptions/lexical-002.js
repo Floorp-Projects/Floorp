@@ -26,10 +26,8 @@
    Date:               11 september 1997
 */
 var SECTION = "lexical-002";
-var VERSION = "JS1_4";
 var TITLE   = "Line Terminators";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -43,7 +41,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "result=eval(\"\r\nexpect\")" +
   " (threw " + exception +")",
   expect,

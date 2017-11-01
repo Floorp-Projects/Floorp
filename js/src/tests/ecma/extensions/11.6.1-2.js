@@ -46,34 +46,28 @@
    Date:               12 november 1997
 */
 var SECTION = "11.6.1-2";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The Addition operator ( + )");
 
 // tests for "MyValuelessObject", where the value is
 // set in the object's prototype, not the object itself.
 
-new TestCase(   SECTION,
-                "var EXP_1 = new MyValuelessObject('string'); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2",
+new TestCase(   "var EXP_1 = new MyValuelessObject('string'); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2",
                 "stringfalse",
                 eval("var EXP_1 = new MyValuelessObject('string'); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2") );
 
-new TestCase(   SECTION,
-                "var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2",
+new TestCase(   "var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2",
                 "stringfalse",
                 eval("var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2") );
 
 // tests for "MyValuelessObject", where the value is
 // set in the object's prototype, not the object itself.
 
-new TestCase(   SECTION,
-                "var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject('string'); EXP_1 + EXP_2",
+new TestCase(   "var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject('string'); EXP_1 + EXP_2",
                 "100string",
                 eval("var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject('string'); EXP_1 + EXP_2") );
 
-new TestCase(   SECTION,
-                "var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2",
+new TestCase(   "var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2",
                 "string-1",
                 eval("var EXP_1 = new MyValuelessObject(new String('string')); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2") );
 

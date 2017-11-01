@@ -22,23 +22,19 @@
 */
 
 var SECTION = "10.2.3-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Function and Anonymous Code";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var o = new MyObject("hello");
 
-new TestCase( SECTION,
-	      "MyFunction(\"PASSED!\")",
+new TestCase( "MyFunction(\"PASSED!\")",
 	      "PASSED!",
 	      MyFunction("PASSED!") );
 
 var o = MyFunction();
 
-new TestCase( SECTION,
-	      "MyOtherFunction(true);",
+new TestCase( "MyOtherFunction(true);",
 	      false,
 	      MyOtherFunction(true) );
 

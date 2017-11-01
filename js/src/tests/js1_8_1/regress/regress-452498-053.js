@@ -18,7 +18,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -75,6 +74,4 @@ function test()
   for (var z = 0; z < 3; z++) { (new function(){}); }
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

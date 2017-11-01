@@ -20,10 +20,8 @@
    Date:               1 october 1997
 */
 var SECTION = "string-002";
-var VERSION = "JS1_4";
 var TITLE   = "String.prototype.valueOf";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -40,7 +38,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "OBJECT = new Object; OBJECT.valueOf = String.prototype.valueOf;"+
   "result = OBJECT.valueOf();" +
   " (threw " + exception +")",

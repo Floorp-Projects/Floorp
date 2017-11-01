@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "dowhile-003";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile( new DoWhileObject( 1, 1, 0 ));
@@ -47,14 +45,12 @@ function DoWhile( object ) {
   } while( object.value );
 
   new TestCase(
-    SECTION,
     "loop iterations",
     object.iterations,
     i
     );
 
   new TestCase(
-    SECTION,
     "object.value",
     object.endvalue,
     Number( object.value )

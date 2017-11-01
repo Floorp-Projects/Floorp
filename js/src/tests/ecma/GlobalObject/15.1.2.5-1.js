@@ -50,40 +50,38 @@
 */
 
 var SECTION = "15.1.2.5-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "unescape(string)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "unescape.length",       1,               unescape.length );
-new TestCase( SECTION, "unescape.length = null; unescape.length",   1,      eval("unescape.length=null; unescape.length") );
-new TestCase( SECTION, "var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS",    "", eval("var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS") );
+new TestCase( "unescape.length",       1,               unescape.length );
+new TestCase( "unescape.length = null; unescape.length",   1,      eval("unescape.length=null; unescape.length") );
+new TestCase( "var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS",    "", eval("var MYPROPS=''; for ( var p in unescape ) { MYPROPS+= p }; MYPROPS") );
 
-new TestCase( SECTION, "unescape()",              "undefined",    unescape() );
-new TestCase( SECTION, "unescape('')",            "",             unescape('') );
-new TestCase( SECTION, "unescape( null )",        "null",         unescape(null) );
-new TestCase( SECTION, "unescape( void 0 )",      "undefined",    unescape(void 0) );
-new TestCase( SECTION, "unescape( true )",        "true",         unescape( true ) );
-new TestCase( SECTION, "unescape( false )",       "false",        unescape( false ) );
+new TestCase( "unescape()",              "undefined",    unescape() );
+new TestCase( "unescape('')",            "",             unescape('') );
+new TestCase( "unescape( null )",        "null",         unescape(null) );
+new TestCase( "unescape( void 0 )",      "undefined",    unescape(void 0) );
+new TestCase( "unescape( true )",        "true",         unescape( true ) );
+new TestCase( "unescape( false )",       "false",        unescape( false ) );
 
-new TestCase( SECTION, "unescape( new Boolean(true) )",   "true", unescape(new Boolean(true)) );
-new TestCase( SECTION, "unescape( new Boolean(false) )",  "false",    unescape(new Boolean(false)) );
+new TestCase( "unescape( new Boolean(true) )",   "true", unescape(new Boolean(true)) );
+new TestCase( "unescape( new Boolean(false) )",  "false",    unescape(new Boolean(false)) );
 
-new TestCase( SECTION, "unescape( Number.NaN  )",                 "NaN",      unescape(Number.NaN) );
-new TestCase( SECTION, "unescape( -0 )",                          "0",        unescape( -0 ) );
-new TestCase( SECTION, "unescape( 'Infinity' )",                  "Infinity", unescape( "Infinity" ) );
-new TestCase( SECTION, "unescape( Number.POSITIVE_INFINITY )",    "Infinity", unescape( Number.POSITIVE_INFINITY ) );
-new TestCase( SECTION, "unescape( Number.NEGATIVE_INFINITY )",    "-Infinity", unescape( Number.NEGATIVE_INFINITY ) );
+new TestCase( "unescape( Number.NaN  )",                 "NaN",      unescape(Number.NaN) );
+new TestCase( "unescape( -0 )",                          "0",        unescape( -0 ) );
+new TestCase( "unescape( 'Infinity' )",                  "Infinity", unescape( "Infinity" ) );
+new TestCase( "unescape( Number.POSITIVE_INFINITY )",    "Infinity", unescape( Number.POSITIVE_INFINITY ) );
+new TestCase( "unescape( Number.NEGATIVE_INFINITY )",    "-Infinity", unescape( Number.NEGATIVE_INFINITY ) );
 
 var ASCII_TEST_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./";
 
-new TestCase( SECTION, "unescape( " +ASCII_TEST_STRING+" )",    ASCII_TEST_STRING,  unescape( ASCII_TEST_STRING ) );
+new TestCase( "unescape( " +ASCII_TEST_STRING+" )",    ASCII_TEST_STRING,  unescape( ASCII_TEST_STRING ) );
 
 // escaped chars with ascii values less than 256
 
 for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %"+ ToHexString(CHARCODE)+" )",
 		String.fromCharCode(CHARCODE),
 		unescape( "%" + ToHexString(CHARCODE) )  );
@@ -91,20 +89,20 @@ for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE++ ) {
 
 // unicode chars represented by two hex digits
 for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %u"+ ToHexString(CHARCODE)+" )",
 		"%u"+ToHexString(CHARCODE),
 		unescape( "%u" + ToHexString(CHARCODE) )  );
 }
 /*
   for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
   "unescape( %u"+ ToUnicodeString(CHARCODE)+" )",
   String.fromCharCode(CHARCODE),
   unescape( "%u" + ToUnicodeString(CHARCODE) )  );
   }
   for ( var CHARCODE = 256; CHARCODE < 65536; CHARCODE+= 333 ) {
-  new TestCase( SECTION,
+  new TestCase(
   "unescape( %u"+ ToUnicodeString(CHARCODE)+" )",
   String.fromCharCode(CHARCODE),
   unescape( "%u" + ToUnicodeString(CHARCODE) )  );

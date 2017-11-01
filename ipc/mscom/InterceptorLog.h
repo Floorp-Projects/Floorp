@@ -8,6 +8,7 @@
 #define mozilla_mscom_InterceptorLog_h
 
 #include "mozilla/TimeStamp.h"
+#include "nsString.h"
 
 struct ICallFrame;
 struct IUnknown;
@@ -23,7 +24,9 @@ public:
                  IUnknown* aInterface,
                  const TimeDuration* aOverheadDuration = nullptr,
                  const TimeDuration* aGeckoDuration = nullptr);
-  static void Event(ICallFrame* aCallFrame, IUnknown* aTarget,
+  static void CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTarget,
+                           nsACString& aCapturedFrame);
+  static void Event(const nsACString& aCapturedFrame,
                     const TimeDuration& aOverheadDuration,
                     const TimeDuration& aGeckoDuration);
 };

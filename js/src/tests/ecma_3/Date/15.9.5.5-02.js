@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -61,6 +60,4 @@ function test()
   actual = l.match(new RegExp(y)) + '';
   expect = y + '';
   reportCompare(expect, actual, summary + ': check toLocaleString');
-
-  exitFunc ('test');
 }

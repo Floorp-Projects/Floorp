@@ -24,22 +24,9 @@
    Date:               12 november 1997
 */
 var SECTION = "lexical-011";
-var VERSION = "JS1_4";
 var TITLE   = "Future Reserved Words";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
-
-print("This test requires option javascript.options.strict enabled");
-
-if (!options().match(/strict/))
-{
-  options('strict');
-}
-if (!options().match(/werror/))
-{
-  options('werror');
-}
 
 var result = "Failed";
 var exception = "No exception thrown";
@@ -53,7 +40,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "super = true" +
   " (threw " + exception +")",
   expect,

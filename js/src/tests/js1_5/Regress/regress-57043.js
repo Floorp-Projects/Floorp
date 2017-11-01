@@ -41,13 +41,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (var j in index) {testProperty(index[j]);}
-
-  exitFunc ('test');
 }
 
 

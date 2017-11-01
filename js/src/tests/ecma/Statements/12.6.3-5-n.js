@@ -41,8 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -51,9 +49,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 //  LeftHandSideExpression:NewExpression:MemberExpression
 
 DESCRIPTION = "more than one member expression";
-EXPECTED = "error";
 
-new TestCase( SECTION,
+new TestCase(
 	      "more than one member expression",
 	      "error",
 	      eval("var o = new MyObject(); var result = 0; for ( var i, p in this) { result += this[p]; }") );

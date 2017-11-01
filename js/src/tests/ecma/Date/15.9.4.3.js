@@ -87,8 +87,8 @@ test();
 function addNewTestCase( DateCase, DateString, ExpectDate) {
   DateCase = DateCase;
 
-  new TestCase( SECTION, DateString,         ExpectDate.value,       DateCase );
-  new TestCase( SECTION, DateString,         ExpectDate.value,       DateCase );
+  new TestCase( DateString,         ExpectDate.value,       DateCase );
+  new TestCase( DateString,         ExpectDate.value,       DateCase );
 }
 
 function MyDate() {

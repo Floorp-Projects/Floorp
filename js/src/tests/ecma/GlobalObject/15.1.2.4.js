@@ -52,59 +52,57 @@
 
 */
 var SECTION = "15.1.2.4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "escape(string)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "escape.length",         1,          escape.length );
-new TestCase( SECTION, "escape.length = null; escape.length",   1,  eval("escape.length = null; escape.length") );
-new TestCase( SECTION, "var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS",    "",    eval("var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS") );
+new TestCase( "escape.length",         1,          escape.length );
+new TestCase( "escape.length = null; escape.length",   1,  eval("escape.length = null; escape.length") );
+new TestCase( "var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS",    "",    eval("var MYPROPS=''; for ( var p in escape ) { MYPROPS+= p}; MYPROPS") );
 
-new TestCase( SECTION, "escape()",              "undefined",    escape() );
-new TestCase( SECTION, "escape('')",            "",             escape('') );
-new TestCase( SECTION, "escape( null )",        "null",         escape(null) );
-new TestCase( SECTION, "escape( void 0 )",      "undefined",    escape(void 0) );
-new TestCase( SECTION, "escape( true )",        "true",         escape( true ) );
-new TestCase( SECTION, "escape( false )",       "false",        escape( false ) );
+new TestCase( "escape()",              "undefined",    escape() );
+new TestCase( "escape('')",            "",             escape('') );
+new TestCase( "escape( null )",        "null",         escape(null) );
+new TestCase( "escape( void 0 )",      "undefined",    escape(void 0) );
+new TestCase( "escape( true )",        "true",         escape( true ) );
+new TestCase( "escape( false )",       "false",        escape( false ) );
 
-new TestCase( SECTION, "escape( new Boolean(true) )",   "true", escape(new Boolean(true)) );
-new TestCase( SECTION, "escape( new Boolean(false) )",  "false",    escape(new Boolean(false)) );
+new TestCase( "escape( new Boolean(true) )",   "true", escape(new Boolean(true)) );
+new TestCase( "escape( new Boolean(false) )",  "false",    escape(new Boolean(false)) );
 
-new TestCase( SECTION, "escape( Number.NaN  )",                 "NaN",      escape(Number.NaN) );
-new TestCase( SECTION, "escape( -0 )",                          "0",        escape( -0 ) );
-new TestCase( SECTION, "escape( 'Infinity' )",                  "Infinity", escape( "Infinity" ) );
-new TestCase( SECTION, "escape( Number.POSITIVE_INFINITY )",    "Infinity", escape( Number.POSITIVE_INFINITY ) );
-new TestCase( SECTION, "escape( Number.NEGATIVE_INFINITY )",    "-Infinity", escape( Number.NEGATIVE_INFINITY ) );
+new TestCase( "escape( Number.NaN  )",                 "NaN",      escape(Number.NaN) );
+new TestCase( "escape( -0 )",                          "0",        escape( -0 ) );
+new TestCase( "escape( 'Infinity' )",                  "Infinity", escape( "Infinity" ) );
+new TestCase( "escape( Number.POSITIVE_INFINITY )",    "Infinity", escape( Number.POSITIVE_INFINITY ) );
+new TestCase( "escape( Number.NEGATIVE_INFINITY )",    "-Infinity", escape( Number.NEGATIVE_INFINITY ) );
 
 var ASCII_TEST_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./";
 
-new TestCase( SECTION, "escape( " +ASCII_TEST_STRING+" )",    ASCII_TEST_STRING,  escape( ASCII_TEST_STRING ) );
+new TestCase( "escape( " +ASCII_TEST_STRING+" )",    ASCII_TEST_STRING,  escape( ASCII_TEST_STRING ) );
 
 // ASCII value less than
 
 for ( var CHARCODE = 0; CHARCODE < 32; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"escape(String.fromCharCode("+CHARCODE+"))",
 		"%"+ToHexString(CHARCODE),
 		escape(String.fromCharCode(CHARCODE))  );
 }
 for ( var CHARCODE = 128; CHARCODE < 256; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"escape(String.fromCharCode("+CHARCODE+"))",
 		"%"+ToHexString(CHARCODE),
 		escape(String.fromCharCode(CHARCODE))  );
 }
 
 for ( var CHARCODE = 256; CHARCODE < 1024; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"escape(String.fromCharCode("+CHARCODE+"))",
 		"%u"+ ToUnicodeString(CHARCODE),
 		escape(String.fromCharCode(CHARCODE))  );
 }
 for ( var CHARCODE = 65500; CHARCODE < 65536; CHARCODE++ ) {
-  new TestCase( SECTION,
+  new TestCase(
 		"escape(String.fromCharCode("+CHARCODE+"))",
 		"%u"+ ToUnicodeString(CHARCODE),
 		escape(String.fromCharCode(CHARCODE))  );
