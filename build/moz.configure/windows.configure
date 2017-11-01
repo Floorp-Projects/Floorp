@@ -448,11 +448,13 @@ set_config('PATH', alter_path)
 
 check_prog('MAKECAB', ('makecab.exe',))
 
+
 @depends(c_compiler, using_sccache)
 def need_showincludes_prefix(info, using_sccache):
     # sccache does its own -showIncludes prefix checking.
     if info.type in ('clang-cl', 'msvc') and not using_sccache:
         return True
+
 
 @depends(c_compiler, when=need_showincludes_prefix)
 @imports(_from='re', _import='compile', _as='re_compile')
@@ -467,5 +469,6 @@ def msvc_showincludes_prefix(c_compiler):
                 return m.group(1)
     # We should have found the prefix and returned earlier
     die('Cannot find cl -showIncludes prefix.')
+
 
 set_config('CL_INCLUDES_PREFIX', msvc_showincludes_prefix)
