@@ -306,6 +306,8 @@ class nsWindow::NPZCSupport final
 {
     using LockedWindowPtr = WindowPtr<NPZCSupport>::Locked;
 
+    static bool sNegateWheelScroll;
+
     WindowPtr<NPZCSupport> mWindow;
     NativePanZoomController::GlobalRef mNPZC;
     int mPreviousButtons;
@@ -365,6 +367,13 @@ public:
         , mPreviousButtons(0)
     {
         MOZ_ASSERT(mWindow);
+
+        static bool sInited;
+        if (!sInited) {
+            Preferences::AddBoolVarCache(&sNegateWheelScroll,
+                                         "ui.scrolling.negate_wheel_scroll");
+            sInited = true;
+        }
     }
 
     ~NPZCSupport()
@@ -453,6 +462,11 @@ public:
         }
 
         ScreenPoint origin = ScreenPoint(aX, aY);
+
+        if (sNegateWheelScroll) {
+            aHScroll = -aHScroll;
+            aVScroll = -aVScroll;
+        }
 
         ScrollWheelInput input(aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
@@ -733,6 +747,8 @@ public:
 
 template<> const char
 nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[] = "NPZCSupport";
+
+bool nsWindow::NPZCSupport::sNegateWheelScroll;
 
 NS_IMPL_ISUPPORTS(nsWindow::AndroidView,
                   nsIAndroidEventDispatcher,

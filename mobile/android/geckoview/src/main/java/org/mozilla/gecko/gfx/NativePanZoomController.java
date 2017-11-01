@@ -7,7 +7,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -26,9 +25,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private final LayerView mView;
     private boolean mDestroyed;
     private Overscroll mOverscroll;
-    boolean mNegateWheelScroll;
     private float mPointerScrollFactor;
-    private PrefsHelper.PrefHandler mPrefsObserver;
     private long mLastDownTime;
     private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
@@ -110,9 +107,10 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         // Scroll events are not adjusted by the AndroidDyanmicToolbarAnimator so adjust the offset here.
         final float y = coords.y - mView.getCurrentToolbarHeight();
 
-        final float flipFactor = mNegateWheelScroll ? -1.0f : 1.0f;
-        final float hScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL) * flipFactor * mPointerScrollFactor;
-        final float vScroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL) * flipFactor * mPointerScrollFactor;
+        final float hScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL) *
+                              mPointerScrollFactor;
+        final float vScroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL) *
+                              mPointerScrollFactor;
 
         return handleScrollEvent(event.getEventTime(), event.getMetaState(), x, y, hScroll, vScroll);
     }
@@ -141,16 +139,6 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     NativePanZoomController(View view) {
         mView = (LayerView) view;
-
-        String[] prefs = { "ui.scrolling.negate_wheel_scroll" };
-        mPrefsObserver = new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, boolean value) {
-                if (pref.equals("ui.scrolling.negate_wheel_scroll")) {
-                    mNegateWheelScroll = value;
-                }
-            }
-        };
-        PrefsHelper.addObserver(prefs, mPrefsObserver);
 
         TypedValue outValue = new TypedValue();
         if (view.getContext().getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
@@ -196,10 +184,6 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override @WrapForJNI(calledFrom = "ui") // PanZoomController
     public void destroy() {
-        if (mPrefsObserver != null) {
-            PrefsHelper.removeObserver(mPrefsObserver);
-            mPrefsObserver = null;
-        }
         if (mDestroyed || !mView.isGeckoReady()) {
             return;
         }
