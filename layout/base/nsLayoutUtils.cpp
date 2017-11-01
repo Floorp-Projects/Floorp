@@ -1735,6 +1735,33 @@ nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
 }
 
 // static
+bool
+nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
+                                     nsIFrame* aFrame,
+                                     nsAtom* aPseudoElement)
+{
+  NS_PRECONDITION(aFrame, "Must have a frame");
+  NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");
+
+  if (!aFrame->IsGeneratedContentFrame()) {
+    return false;
+  }
+  nsIFrame* parent = aFrame->GetParent();
+  NS_ASSERTION(parent, "Generated content can't be root frame");
+  if (parent->IsGeneratedContentFrame()) {
+    // Not the root of the generated content
+    return false;
+  }
+
+  if (aContent && parent->GetContent() != aContent) {
+    return false;
+  }
+
+  return (aFrame->GetContent()->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore) ==
+    (aPseudoElement == nsCSSPseudoElements::before);
+}
+
+// static
 nsIFrame*
 nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
                                       nsPoint* aExtraOffset)
