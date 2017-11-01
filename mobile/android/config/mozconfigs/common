@@ -8,7 +8,10 @@ if [ "x$IS_NIGHTLY" = "xyes" ]; then
 fi
 
 if [ -z "$NO_NDK" ]; then
-  . "$topsrcdir/build/mozconfig.stylo"
+  # MOZ_UPDATE_CHANNEL isn't always set.  It cannot use to detect as trunk.
+  if [ `tail -1 "$topsrcdir/config/milestone.txt" | grep 'a1'` ] ; then
+    . "$topsrcdir/build/mozconfig.stylo"
+  fi
 fi
 
 MOZ_AUTOMATION_L10N_CHECK=0
