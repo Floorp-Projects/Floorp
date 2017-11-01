@@ -370,11 +370,12 @@ class GitRepository(Repository):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
 
         if upstream == 'default':
-            upstream = self.get_upstream()
+            upstream = self.base_ref
 
         compare = '{}..HEAD'.format(upstream)
-        return self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
-                         '--oneline', '--pretty=format:', compare).splitlines()
+        files = self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
+                          '--oneline', '--pretty=format:', compare).splitlines()
+        return [f for f in files if f]
 
     def add_remove_files(self, path):
         self._run('add', path)
