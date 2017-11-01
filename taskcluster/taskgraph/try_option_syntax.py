@@ -179,6 +179,10 @@ RIDEALONG_BUILDS = {
         'sm-fuzzing',
         'sm-rust-bindings',
     ],
+    'win32': [
+        'sm-plain',
+        'sm-compacting',
+    ],
 }
 
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
