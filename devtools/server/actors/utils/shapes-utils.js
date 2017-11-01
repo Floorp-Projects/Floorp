@@ -130,11 +130,12 @@ const roundTo = (value, exp) => {
  * @param {Number} transX the amount to translate the x coord by
  * @param {Number} transY the amount ot translate the y coord by
  * @param {Number} scale the scaling factor
+ * @param {String} axis the axis to scale on. "x", "y", or "xy" for both.
  * @returns {Array} of the form [newX, newY], containing the coord pair after scaling.
  */
-const scalePoint = (x, y, transX, transY, scale) => {
-  let newX = (x - transX) * scale + transX;
-  let newY = (y - transY) * scale + transY;
+const scalePoint = (x, y, transX, transY, scale, axis = "xy") => {
+  let newX = (axis === "y") ? x : (x - transX) * scale + transX;
+  let newY = (axis === "x") ? y : (y - transY) * scale + transY;
   return [newX, newY];
 };
 
