@@ -49,6 +49,11 @@ a .mainBox:focus,
   word-spacing: initial;
   letter-spacing: initial;
   line-height: initial;
+  visibility: hidden;
+}
+
+.visible {
+  visibility: visible;
 }
 
 /* Initialize the overlay with visibility:hidden to prevent flickering if
@@ -61,6 +66,11 @@ a .mainBox:focus,
 .visible > .hoverBox,
 .visible > .closeIcon {
   visibility: visible;
+}
+
+.minimal > .hoverBox,
+.minimal > .closeIcon {
+  visibility: hidden;
 }
 
 .mainBox[chromedir="rtl"] {

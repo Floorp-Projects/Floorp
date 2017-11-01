@@ -20,7 +20,7 @@
   margin-inline-start: 5px;
   color: var(--theme-body-color);
   background: var(--toolbarbutton-background);
-  border: var(--toolbarbutton-border);
+  border: 1px solid var(--toolbarbutton-border-color);
   text-decoration: none;
   display: inline-block;
   text-align: center;
@@ -34,7 +34,7 @@
 
 .toolbar .btn:hover {
   background: var(--toolbarbutton-hover-background);
-  border: var(--toolbarbutton-hover-border);
+  border-color: var(--toolbarbutton-hover-border-color);
 }
 
 .toolbar .btn:not([disabled]):hover:active {

@@ -3714,7 +3714,7 @@ STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsSize, nsSize_Simple, height);
  * TODO(Emilio): This is a workaround and we should be able to get rid of this
  * one.
  */
-template<typename T, typename Deleter = mozilla::DefaultDelete<T>>
+template<typename T>
 struct UniquePtr_Simple {
   T* mPtr;
 };

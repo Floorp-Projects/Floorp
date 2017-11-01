@@ -512,7 +512,7 @@ $(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(constants_PP_J
 
 .aapt.nodeps: .gradle.nodeps FORCE
 	@$(TOUCH) $@
-	cp $(gradle_dir)/app/intermediates/res/resources-official-photon-debug.ap_ gecko-nodeps.ap_
+	cp $(gradle_dir)/app/outputs/apk/app-official-photon-debug.apk gecko-nodeps.ap_
 	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex classes.dex
 else
 # .aapt.nodeps: AndroidManifest.xml FORCE

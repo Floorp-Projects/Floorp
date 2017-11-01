@@ -188,11 +188,7 @@ fn main() {
     {
         let mut add_one = |name: String, run: test::TestFn| {
             tests.push(test::TestDescAndFn {
-                desc: test::TestDesc {
-                    name: test::DynTestName(name),
-                    ignore: false,
-                    should_panic: test::ShouldPanic::No,
-                },
+                desc: test::TestDesc::new(test::DynTestName(name)),
                 testfn: run,
             })
         };

@@ -46,8 +46,7 @@ import java.net.URISyntaxException;
     /** A reference, that represents the page domain, that allows a return value from an async task. */
     private String[] pageDomainTextReference = new String[] { "" };
 
-    public BottomSheetContextMenu(final Context context,
-                                  final View anchor,
+    public BottomSheetContextMenu(final View anchor,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
                                   final WebpageModel item,
@@ -56,13 +55,13 @@ import java.net.URISyntaxException;
                                   HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                   final int tilesWidth, final int tilesHeight) {
 
-        super(context,
-                anchor,
+        super(anchor,
                 telemetryExtraBuilder,
                 mode,
                 item,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
+        final Context context = anchor.getContext();
 
         // The View encompassing the activity area
         this.activityView = ((Activity) context).findViewById(android.R.id.content);

@@ -4661,6 +4661,22 @@ nsDisplayClearBackground::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+bool
+nsDisplayClearBackground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                  const StackingContextHelper& aSc,
+                                                  mozilla::layers::WebRenderLayerManager* aManager,
+                                                  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+    nsRect(ToReferenceFrame(), mFrame->GetSize()),
+    mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aBuilder.PushClearRect(aSc.ToRelativeLayoutRect(bounds));
+
+  return true;
+}
+
 nsRect
 nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder,
                             bool* aSnap) const
@@ -5576,28 +5592,6 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
     return false;
   }
 
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
-  nsRect frameRect =
-      nsCSSRendering::GetShadowRect(borderRect, nativeTheme, mFrame);
-
-  if (hasBorderRadius) {
-    nscoord twipsRadii[8];
-    nsSize sz = frameRect.Size();
-    hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
-  }
-
-  if (hasBorderRadius) {
-    RectCornerRadii borderRadii;
-    nsCSSRendering::GetBorderRadii(frameRect,
-                                   borderRect,
-                                   mFrame,
-                                   borderRadii);
-    if (!borderRadii.AreRadiiSame()) {
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -5767,18 +5761,6 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
   // We don't support native themed things yet like box shadows around
   // input buttons.
   if (nativeTheme) {
-    return false;
-  }
-
-  nsRect borderRect = nsRect(aReferenceOffset, aFrame->GetSize());
-  RectCornerRadii innerRadii;
-
-  if (hasBorderRadius) {
-    hasBorderRadius =
-      nsCSSRendering::GetShadowInnerRadii(aFrame, borderRect, innerRadii);
-  }
-
-  if (hasBorderRadius && !innerRadii.AreRadiiSame()) {
     return false;
   }
 

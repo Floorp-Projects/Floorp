@@ -3536,7 +3536,7 @@
     "input": "http://你好你好",
     "base": "http://other.com/",
     "href": "http://xn--6qqa088eba/",
-    "origin": "http://你好你好",
+    "origin": "http://xn--6qqa088eba",
     "protocol": "http:",
     "username": "",
     "password": "",
@@ -3631,6 +3631,26 @@
   "Broken IPv6",
   {
     "input": "http://[google.com]",
+    "base": "http://other.com/",
+    "failure": true
+  },
+  {
+    "input": "http://[::1.2.3.4x]",
+    "base": "http://other.com/",
+    "failure": true
+  },
+  {
+    "input": "http://[::1.2.3.]",
+    "base": "http://other.com/",
+    "failure": true
+  },
+  {
+    "input": "http://[::1.2.]",
+    "base": "http://other.com/",
+    "failure": true
+  },
+  {
+    "input": "http://[::1.]",
     "base": "http://other.com/",
     "failure": true
   },

@@ -9,6 +9,7 @@ use ir::derive::CanTriviallyDeriveCopy;
 use ir::item::IsOpaque;
 use ir::template::TemplateParameters;
 use ir::traversal::EdgeKind;
+use ir::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use ir::ty::TypeKind;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -31,11 +32,8 @@ use std::collections::HashSet;
 ///   derived copy if any of the template arguments or template definition
 ///   cannot derive copy.
 #[derive(Debug, Clone)]
-pub struct CannotDeriveCopy<'ctx, 'gen>
-where
-    'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
+pub struct CannotDeriveCopy<'ctx> {
+    ctx: &'ctx BindgenContext,
 
     // The incremental result of this analysis's computation. Everything in this
     // set cannot derive copy.
@@ -51,7 +49,7 @@ where
     dependencies: HashMap<ItemId, Vec<ItemId>>,
 }
 
-impl<'ctx, 'gen> CannotDeriveCopy<'ctx, 'gen> {
+impl<'ctx> CannotDeriveCopy<'ctx> {
     fn consider_edge(kind: EdgeKind) -> bool {
         match kind {
             // These are the only edges that can affect whether a type can derive
@@ -75,7 +73,8 @@ impl<'ctx, 'gen> CannotDeriveCopy<'ctx, 'gen> {
         }
     }
 
-    fn insert(&mut self, id: ItemId) -> ConstrainResult {
+    fn insert<Id: Into<ItemId>>(&mut self, id: Id) -> ConstrainResult {
+        let id = id.into();
         trace!("inserting {:?} into the cannot_derive_copy set", id);
 
         let was_not_already_in_set = self.cannot_derive_copy.insert(id);
@@ -88,14 +87,22 @@ impl<'ctx, 'gen> CannotDeriveCopy<'ctx, 'gen> {
 
         ConstrainResult::Changed
     }
+
+    /// A type is not `Copy` if we've determined it is not copy, or if it is
+    /// blacklisted.
+    fn is_not_copy<Id: Into<ItemId>>(&self, id: Id) -> bool {
+        let id = id.into();
+        self.cannot_derive_copy.contains(&id) ||
+            !self.ctx.whitelisted_items().contains(&id)
+    }
 }
 
-impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
+impl<'ctx> MonotoneFramework for CannotDeriveCopy<'ctx> {
     type Node = ItemId;
-    type Extra = &'ctx BindgenContext<'gen>;
+    type Extra = &'ctx BindgenContext;
     type Output = HashSet<ItemId>;
 
-    fn new(ctx: &'ctx BindgenContext<'gen>) -> CannotDeriveCopy<'ctx, 'gen> {
+    fn new(ctx: &'ctx BindgenContext) -> CannotDeriveCopy<'ctx> {
         let cannot_derive_copy = HashSet::new();
         let dependencies = generate_dependencies(ctx, Self::consider_edge);
 
@@ -118,6 +125,15 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
             return ConstrainResult::Same;
         }
 
+        // If an item is reachable from the whitelisted items set, but isn't
+        // itself whitelisted, then it must be blacklisted. We assume that
+        // blacklisted items are not `Copy`, since they are presumably
+        // blacklisted because they are too complicated for us to understand.
+        if !self.ctx.whitelisted_items().contains(&id) {
+            trace!("    blacklisted items are assumed not to be Copy");
+            return ConstrainResult::Same;
+        }
+
         let item = self.ctx.resolve_item(id);
         let ty = match item.as_type() {
             Some(ty) => ty,
@@ -126,6 +142,10 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
                 return ConstrainResult::Same;
             }
         };
+
+        if self.ctx.no_copy_by_name(&item) {
+            return self.insert(id);
+        }
 
         if item.is_opaque(self.ctx, &()) {
             let layout_can_derive = ty.layout(self.ctx).map_or(true, |l| {
@@ -163,7 +183,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
             }
 
             TypeKind::Array(t, len) => {
-                let cant_derive_copy = self.cannot_derive_copy.contains(&t);
+                let cant_derive_copy = self.is_not_copy(t);
                 if cant_derive_copy {
                     trace!(
                         "    arrays of T for which we cannot derive Copy \
@@ -184,7 +204,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) => {
-                let cant_derive_copy = self.cannot_derive_copy.contains(&t);
+                let cant_derive_copy = self.is_not_copy(t);
                 if cant_derive_copy {
                     trace!(
                         "    arrays of T for which we cannot derive Copy \
@@ -208,7 +228,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
                 // NOTE: Take into account that while unions in C and C++ are copied by
                 // default, the may have an explicit destructor in C++, so we can't
                 // defer this check just for the union case.
-                if self.ctx.lookup_item_id_has_destructor(&id) {
+                if self.ctx.lookup_has_destructor(id.expect_type_id(self.ctx)) {
                     trace!("    comp has destructor which cannot derive copy");
                     return self.insert(id);
                 }
@@ -237,7 +257,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
 
                 let bases_cannot_derive =
                     info.base_members().iter().any(|base| {
-                        self.cannot_derive_copy.contains(&base.ty)
+                        self.is_not_copy(base.ty)
                     });
                 if bases_cannot_derive {
                     trace!(
@@ -250,11 +270,19 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
                 let fields_cannot_derive =
                     info.fields().iter().any(|f| match *f {
                         Field::DataMember(ref data) => {
-                            self.cannot_derive_copy.contains(&data.ty())
+                            self.is_not_copy(data.ty())
                         }
                         Field::Bitfields(ref bfu) => {
+                            if bfu.layout().align > RUST_DERIVE_IN_ARRAY_LIMIT {
+                                trace!(
+                                    "   we cannot derive Copy for a bitfield larger then \
+                                        the limit"
+                                );
+                                return true;
+                            }
+
                             bfu.bitfields().iter().any(|b| {
-                                self.cannot_derive_copy.contains(&b.ty())
+                                self.is_not_copy(b.ty())
                             })
                         }
                     });
@@ -270,7 +298,7 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
             TypeKind::TemplateInstantiation(ref template) => {
                 let args_cannot_derive =
                     template.template_arguments().iter().any(|arg| {
-                        self.cannot_derive_copy.contains(&arg)
+                        self.is_not_copy(*arg)
                     });
                 if args_cannot_derive {
                     trace!(
@@ -284,8 +312,8 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
                     !template.template_definition().is_opaque(self.ctx, &()),
                     "The early ty.is_opaque check should have handled this case"
                 );
-                let def_cannot_derive = self.cannot_derive_copy.contains(
-                    &template.template_definition(),
+                let def_cannot_derive = self.is_not_copy(
+                    template.template_definition()
                 );
                 if def_cannot_derive {
                     trace!(
@@ -320,8 +348,8 @@ impl<'ctx, 'gen> MonotoneFramework for CannotDeriveCopy<'ctx, 'gen> {
     }
 }
 
-impl<'ctx, 'gen> From<CannotDeriveCopy<'ctx, 'gen>> for HashSet<ItemId> {
-    fn from(analysis: CannotDeriveCopy<'ctx, 'gen>) -> Self {
+impl<'ctx> From<CannotDeriveCopy<'ctx>> for HashSet<ItemId> {
+    fn from(analysis: CannotDeriveCopy<'ctx>) -> Self {
         analysis.cannot_derive_copy
     }
 }

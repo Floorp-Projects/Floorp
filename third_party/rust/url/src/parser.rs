@@ -683,7 +683,7 @@ impl<'a> Parser<'a> {
                         self.syntax_violation("unencoded @ sign in username or password")
                     } else {
                         self.syntax_violation(
-                            "embedding authentification information (username or password) \
+                            "embedding authentication information (username or password) \
                             in an URL is not recommended")
                     }
                     last_at = Some((char_count, remaining.clone()))

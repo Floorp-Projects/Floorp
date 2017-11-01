@@ -92,8 +92,6 @@ nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates)
   nsSMILValue sandwichResultValue;
   if (!mAnimationFunctions[firstFuncToCompose]->WillReplace()) {
     sandwichResultValue = smilAttr->GetBaseValue();
-    MOZ_ASSERT(!sandwichResultValue.IsNull(),
-               "Result of GetBaseValue should not be null");
   }
   UpdateCachedBaseValue(sandwichResultValue);
 

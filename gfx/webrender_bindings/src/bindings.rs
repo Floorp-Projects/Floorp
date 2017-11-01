@@ -1387,6 +1387,15 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_push_clear_rect(state: &mut WrState,
+                                        rect: LayoutRect) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let prim_info = LayoutPrimitiveInfo::new(rect);
+    state.frame_builder.dl_builder.push_clear_rect(&prim_info);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: LayoutRect,
                                    clip: LayoutRect,

@@ -224,7 +224,8 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     mScrollingHelper.BeginItem(item, aSc);
     // Note: this call to CreateWebRenderCommands can recurse back into
     // this function if the |item| is a wrapper for a sublist.
-    if (!item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
+    if (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+        !item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
                                        aDisplayListBuilder)) {
       PushItemAsImage(item, aBuilder, aResources, aSc, aDisplayListBuilder);
     }

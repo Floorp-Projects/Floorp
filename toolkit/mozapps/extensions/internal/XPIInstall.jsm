@@ -1799,11 +1799,14 @@ class AddonInstall {
 
         // Deactivate and remove the old add-on as necessary
         let reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
+        let callUpdate = false;
         if (this.existingAddon) {
           if (Services.vc.compare(this.existingAddon.version, this.addon.version) < 0)
             reason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
           else
             reason = BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+          callUpdate = isWebExtension(this.addon.type) && isWebExtension(this.existingAddon.type);
 
           if (this.existingAddon.bootstrap) {
             let file = this.existingAddon._sourceBundle;
@@ -1813,9 +1816,11 @@ class AddonInstall {
                                               { newVersion: this.addon.version });
             }
 
-            XPIProvider.callBootstrapMethod(this.existingAddon, file,
-                                            "uninstall", reason,
-                                            { newVersion: this.addon.version });
+            if (!callUpdate) {
+              XPIProvider.callBootstrapMethod(this.existingAddon, file,
+                                              "uninstall", reason,
+                                              { newVersion: this.addon.version });
+            }
             XPIProvider.unloadBootstrapScope(this.existingAddon.id);
             flushChromeCaches();
           }
@@ -1861,7 +1866,8 @@ class AddonInstall {
         }
 
         if (this.addon.bootstrap) {
-          XPIProvider.callBootstrapMethod(this.addon, file, "install",
+          let method = callUpdate ? "update" : "install";
+          XPIProvider.callBootstrapMethod(this.addon, file, method,
                                           reason, extraParams);
         }
 

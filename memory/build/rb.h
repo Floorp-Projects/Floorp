@@ -38,14 +38,6 @@
  *
  * C++ template implementation of left-leaning red-black trees.
  *
- * Usage:
- *
- *   #define SIZEOF_PTR ...
- *   #define SIZEOF_PTR_2POW ...
- *
- *   #include <rb.h>
- *   ...
- *
  * All operations are done non-recursively.  Parent pointers are not used, and
  * color bits are stored in the least significant bit of right-child pointers,
  * thus making node linkage as compact as is possible for red-black trees.
@@ -74,6 +66,8 @@
 
 #ifndef RB_H_
 #define RB_H_
+
+#include "Utils.h"
 
 enum NodeColor
 {
@@ -139,13 +133,7 @@ template<typename T, typename Trait>
 class RedBlackTree
 {
 public:
-  void Init()
-  {
-    mRoot = &mSentinel;
-    mSentinel.SetLeft(&mSentinel);
-    mSentinel.SetRight(&mSentinel);
-    mSentinel.SetColor(NodeColor::Black);
-  }
+  void Init() { mRoot = nullptr; }
 
   T* First(T* aStart = nullptr)
   {
@@ -236,35 +224,33 @@ private:
   };
 
   TreeNode* mRoot;
-  TreeNode mSentinel;
 
   TreeNode* First(TreeNode* aStart)
   {
     TreeNode* ret;
-    for (ret = aStart ? aStart : mRoot; ret->Left() != &mSentinel;
-         ret = ret->Left()) {
+    for (ret = aStart ? aStart : mRoot; ret && ret->Left(); ret = ret->Left()) {
     }
-    return (ret == &mSentinel) ? nullptr : ret;
+    return ret;
   }
 
   TreeNode* Last(TreeNode* aStart)
   {
     TreeNode* ret;
-    for (ret = aStart ? aStart : mRoot; ret->Right() != &mSentinel;
+    for (ret = aStart ? aStart : mRoot; ret && ret->Right();
          ret = ret->Right()) {
     }
-    return (ret == &mSentinel) ? nullptr : ret;
+    return ret;
   }
 
   TreeNode* Next(TreeNode* aNode)
   {
     TreeNode* ret;
-    if (aNode->Right() != &mSentinel) {
+    if (aNode->Right()) {
       ret = First(aNode->Right());
     } else {
       TreeNode* rbp_n_t = mRoot;
-      MOZ_ASSERT(rbp_n_t != &mSentinel);
-      ret = &mSentinel;
+      MOZ_ASSERT(rbp_n_t);
+      ret = nullptr;
       while (true) {
         int rbp_n_cmp = Trait::Compare(aNode, rbp_n_t);
         if (rbp_n_cmp < 0) {
@@ -275,21 +261,21 @@ private:
         } else {
           break;
         }
-        MOZ_ASSERT(rbp_n_t != &mSentinel);
+        MOZ_ASSERT(rbp_n_t);
       }
     }
-    return (ret == &mSentinel) ? nullptr : ret;
+    return ret;
   }
 
   TreeNode* Prev(TreeNode* aNode)
   {
     TreeNode* ret;
-    if (aNode->Left() != &mSentinel) {
+    if (aNode->Left()) {
       ret = Last(aNode->Left());
     } else {
       TreeNode* rbp_p_t = mRoot;
-      MOZ_ASSERT(rbp_p_t != &mSentinel);
-      ret = &mSentinel;
+      MOZ_ASSERT(rbp_p_t);
+      ret = nullptr;
       while (true) {
         int rbp_p_cmp = Trait::Compare(aNode, rbp_p_t);
         if (rbp_p_cmp < 0) {
@@ -300,31 +286,31 @@ private:
         } else {
           break;
         }
-        MOZ_ASSERT(rbp_p_t != &mSentinel);
+        MOZ_ASSERT(rbp_p_t);
       }
     }
-    return (ret == &mSentinel) ? nullptr : ret;
+    return ret;
   }
 
   TreeNode* Search(TreeNode* aKey)
   {
     TreeNode* ret = mRoot;
     int rbp_se_cmp;
-    while (ret != &mSentinel && (rbp_se_cmp = Trait::Compare(aKey, ret)) != 0) {
+    while (ret && (rbp_se_cmp = Trait::Compare(aKey, ret)) != 0) {
       if (rbp_se_cmp < 0) {
         ret = ret->Left();
       } else {
         ret = ret->Right();
       }
     }
-    return (ret == &mSentinel) ? nullptr : ret;
+    return ret;
   }
 
   TreeNode* SearchOrNext(TreeNode* aKey)
   {
     TreeNode* ret = nullptr;
     TreeNode* rbp_ns_t = mRoot;
-    while (rbp_ns_t != &mSentinel) {
+    while (rbp_ns_t) {
       int rbp_ns_cmp = Trait::Compare(aKey, rbp_ns_t);
       if (rbp_ns_cmp < 0) {
         ret = rbp_ns_t;
@@ -344,9 +330,9 @@ private:
     TreeNode rbp_i_s;
     TreeNode *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
     int rbp_i_cmp = 0;
-    rbp_i_g = &mSentinel;
+    rbp_i_g = nullptr;
     rbp_i_s.SetLeft(mRoot);
-    rbp_i_s.SetRight(&mSentinel);
+    rbp_i_s.SetRight(nullptr);
     rbp_i_s.SetColor(NodeColor::Black);
     rbp_i_p = &rbp_i_s;
     rbp_i_c = mRoot;
@@ -354,10 +340,10 @@ private:
      * splitting 4-nodes as they are encountered. At the end of each
      * iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
      * the tree, assuming a sufficiently deep tree. */
-    while (rbp_i_c != &mSentinel) {
+    while (rbp_i_c) {
       rbp_i_t = rbp_i_c->Left();
-      rbp_i_u = rbp_i_t->Left();
-      if (rbp_i_t->IsRed() && rbp_i_u->IsRed()) {
+      rbp_i_u = rbp_i_t ? rbp_i_t->Left() : nullptr;
+      if (rbp_i_t && rbp_i_u && rbp_i_t->IsRed() && rbp_i_u->IsRed()) {
         /* rbp_i_c is the top of a logical 4-node, so split it.
          * This iteration does not move down the tree, due to the
          * disruptiveness of node splitting.
@@ -404,8 +390,8 @@ private:
       }
     }
     /* rbp_i_p now refers to the node under which to insert. */
-    aNode->SetLeft(&mSentinel);
-    aNode->SetRight(&mSentinel);
+    aNode->SetLeft(nullptr);
+    aNode->SetRight(nullptr);
     aNode->SetColor(NodeColor::Red);
     if (rbp_i_cmp > 0) {
       rbp_i_p->SetRight(aNode);
@@ -429,11 +415,11 @@ private:
     TreeNode *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
     int rbp_r_cmp;
     rbp_r_s.SetLeft(mRoot);
-    rbp_r_s.SetRight(&mSentinel);
+    rbp_r_s.SetRight(nullptr);
     rbp_r_s.SetColor(NodeColor::Black);
     rbp_r_p = &rbp_r_s;
     rbp_r_c = mRoot;
-    rbp_r_xp = &mSentinel;
+    rbp_r_xp = nullptr;
     /* Iterate down the tree, but always transform 2-nodes to 3- or
      * 4-nodes in order to maintain the invariant that the current
      * node is not a 2-node. This allows simple deletion once a leaf
@@ -442,8 +428,9 @@ private:
     rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
     if (rbp_r_cmp < 0) {
       rbp_r_t = rbp_r_c->Left();
-      rbp_r_u = rbp_r_t->Left();
-      if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
+      rbp_r_u = rbp_r_t ? rbp_r_t->Left() : nullptr;
+      if ((!rbp_r_t || rbp_r_t->IsBlack()) &&
+          (!rbp_r_u || rbp_r_u->IsBlack())) {
         /* Apply standard transform to prepare for left move. */
         rbp_r_t = MoveRedLeft(rbp_r_c);
         rbp_r_t->SetColor(NodeColor::Black);
@@ -457,13 +444,13 @@ private:
     } else {
       if (rbp_r_cmp == 0) {
         MOZ_ASSERT(aNode == rbp_r_c);
-        if (rbp_r_c->Right() == &mSentinel) {
+        if (!rbp_r_c->Right()) {
           /* Delete root node (which is also a leaf node). */
-          if (rbp_r_c->Left() != &mSentinel) {
+          if (rbp_r_c->Left()) {
             rbp_r_t = LeanRight(rbp_r_c);
-            rbp_r_t->SetRight(&mSentinel);
+            rbp_r_t->SetRight(nullptr);
           } else {
-            rbp_r_t = &mSentinel;
+            rbp_r_t = nullptr;
           }
           rbp_r_p->SetLeft(rbp_r_t);
         } else {
@@ -476,7 +463,8 @@ private:
         }
       }
       if (rbp_r_cmp == 1) {
-        if (rbp_r_c->Right()->Left()->IsBlack()) {
+        if (rbp_r_c->Right() && (!rbp_r_c->Right()->Left() ||
+                                 rbp_r_c->Right()->Left()->IsBlack())) {
           rbp_r_t = rbp_r_c->Left();
           if (rbp_r_t->IsRed()) {
             /* Standard transform. */
@@ -485,7 +473,7 @@ private:
             /* Root-specific transform. */
             rbp_r_c->SetColor(NodeColor::Red);
             rbp_r_u = rbp_r_t->Left();
-            if (rbp_r_u->IsRed()) {
+            if (rbp_r_u && rbp_r_u->IsRed()) {
               rbp_r_u->SetColor(NodeColor::Black);
               rbp_r_t = RotateRight(rbp_r_c);
               rbp_r_u = RotateLeft(rbp_r_c);
@@ -506,15 +494,15 @@ private:
     }
     if (rbp_r_cmp != 0) {
       while (true) {
-        MOZ_ASSERT(rbp_r_p != &mSentinel);
+        MOZ_ASSERT(rbp_r_p);
         rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
         if (rbp_r_cmp < 0) {
           rbp_r_t = rbp_r_c->Left();
-          if (rbp_r_t == &mSentinel) {
+          if (!rbp_r_t) {
             /* rbp_r_c now refers to the successor node to
              * relocate, and rbp_r_xp/aNode refer to the
              * context for the relocation. */
-            if (rbp_r_xp->Left() == (aNode)) {
+            if (rbp_r_xp->Left() == aNode) {
               rbp_r_xp->SetLeft(rbp_r_c);
             } else {
               MOZ_ASSERT(rbp_r_xp->Right() == (aNode));
@@ -524,15 +512,15 @@ private:
             rbp_r_c->SetRight(aNode->Right());
             rbp_r_c->SetColor(aNode->Color());
             if (rbp_r_p->Left() == rbp_r_c) {
-              rbp_r_p->SetLeft(&mSentinel);
+              rbp_r_p->SetLeft(nullptr);
             } else {
               MOZ_ASSERT(rbp_r_p->Right() == rbp_r_c);
-              rbp_r_p->SetRight(&mSentinel);
+              rbp_r_p->SetRight(nullptr);
             }
             break;
           }
           rbp_r_u = rbp_r_t->Left();
-          if (rbp_r_t->IsBlack() && rbp_r_u->IsBlack()) {
+          if (rbp_r_t->IsBlack() && (!rbp_r_u || rbp_r_u->IsBlack())) {
             rbp_r_t = MoveRedLeft(rbp_r_c);
             if (rbp_r_p->Left() == rbp_r_c) {
               rbp_r_p->SetLeft(rbp_r_t);
@@ -549,13 +537,13 @@ private:
            * the correct node and a leaf node). */
           if (rbp_r_cmp == 0) {
             MOZ_ASSERT(aNode == rbp_r_c);
-            if (rbp_r_c->Right() == &mSentinel) {
+            if (!rbp_r_c->Right()) {
               /* Delete leaf node. */
-              if (rbp_r_c->Left() != &mSentinel) {
+              if (rbp_r_c->Left()) {
                 rbp_r_t = LeanRight(rbp_r_c);
-                rbp_r_t->SetRight(&mSentinel);
+                rbp_r_t->SetRight(nullptr);
               } else {
-                rbp_r_t = &mSentinel;
+                rbp_r_t = nullptr;
               }
               if (rbp_r_p->Left() == rbp_r_c) {
                 rbp_r_p->SetLeft(rbp_r_t);
@@ -573,7 +561,7 @@ private:
           }
           rbp_r_t = rbp_r_c->Right();
           rbp_r_u = rbp_r_t->Left();
-          if (rbp_r_u->IsBlack()) {
+          if (!rbp_r_u || rbp_r_u->IsBlack()) {
             rbp_r_t = MoveRedRight(rbp_r_c);
             if (rbp_r_p->Left() == rbp_r_c) {
               rbp_r_p->SetLeft(rbp_r_t);
@@ -633,13 +621,13 @@ private:
     rbp_mrl_t = aNode->Left();
     rbp_mrl_t->SetColor(NodeColor::Red);
     rbp_mrl_t = aNode->Right();
-    rbp_mrl_u = rbp_mrl_t->Left();
-    if (rbp_mrl_u->IsRed()) {
+    rbp_mrl_u = rbp_mrl_t ? rbp_mrl_t->Left() : nullptr;
+    if (rbp_mrl_u && rbp_mrl_u->IsRed()) {
       rbp_mrl_u = RotateRight(rbp_mrl_t);
       aNode->SetRight(rbp_mrl_u);
       node = RotateLeft(aNode);
       rbp_mrl_t = aNode->Right();
-      if (rbp_mrl_t->IsRed()) {
+      if (rbp_mrl_t && rbp_mrl_t->IsRed()) {
         rbp_mrl_t->SetColor(NodeColor::Black);
         aNode->SetColor(NodeColor::Red);
         rbp_mrl_t = RotateLeft(aNode);
@@ -659,11 +647,11 @@ private:
     TreeNode* node;
     TreeNode* rbp_mrr_t;
     rbp_mrr_t = aNode->Left();
-    if (rbp_mrr_t->IsRed()) {
+    if (rbp_mrr_t && rbp_mrr_t->IsRed()) {
       TreeNode *rbp_mrr_u, *rbp_mrr_v;
       rbp_mrr_u = rbp_mrr_t->Right();
-      rbp_mrr_v = rbp_mrr_u->Left();
-      if (rbp_mrr_v->IsRed()) {
+      rbp_mrr_v = rbp_mrr_u ? rbp_mrr_u->Left() : nullptr;
+      if (rbp_mrr_v && rbp_mrr_v->IsRed()) {
         rbp_mrr_u->SetColor(aNode->Color());
         rbp_mrr_v->SetColor(NodeColor::Black);
         rbp_mrr_u = RotateLeft(rbp_mrr_t);
@@ -682,7 +670,7 @@ private:
     } else {
       rbp_mrr_t->SetColor(NodeColor::Red);
       rbp_mrr_t = rbp_mrr_t->Left();
-      if (rbp_mrr_t->IsRed()) {
+      if (rbp_mrr_t && rbp_mrr_t->IsRed()) {
         rbp_mrr_t->SetColor(NodeColor::Black);
         node = RotateRight(aNode);
         rbp_mrr_t = RotateLeft(aNode);
@@ -710,12 +698,12 @@ private:
    * tree consumes all of memory.  Since each node must contain a minimum of
    * two pointers, there can never be more nodes than:
    *
-   *   1 << ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1))
+   *   1 << ((sizeof(void*)<<3) - (log2(sizeof(void*))+1))
    *
    * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
    * is:
    *
-   *   (3 * ((SIZEOF_PTR<<3) - (SIZEOF_PTR_2POW+1)))
+   *   (3 * ((sizeof(void*)<<3) - (log2(sizeof(void*))+1)))
    *
    * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
    * systems, respectively (approximately 348 and 1440 bytes, respectively).
@@ -723,20 +711,18 @@ private:
 public:
   class Iterator
   {
-    TreeNode* mSentinel;
-    TreeNode* mPath[3 * ((SIZEOF_PTR << 3) - (SIZEOF_PTR_2POW + 1))];
+    TreeNode* mPath[3 * ((sizeof(void*) << 3) - (LOG2(sizeof(void*)) + 1))];
     unsigned mDepth;
 
   public:
     explicit Iterator(RedBlackTree<T, Trait>* aTree)
-      : mSentinel(&aTree->mSentinel)
-      , mDepth(0)
+      : mDepth(0)
     {
       /* Initialize the path to contain the left spine. */
-      if (aTree->mRoot != mSentinel) {
+      if (aTree->mRoot) {
         TreeNode* node;
         mPath[mDepth++] = aTree->mRoot;
-        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
+        while ((node = mPath[mDepth - 1]->Left())) {
           mPath[mDepth++] = node;
         }
       }
@@ -780,10 +766,10 @@ public:
     TreeNode* Next()
     {
       TreeNode* node;
-      if ((node = mPath[mDepth - 1]->Right()) != mSentinel) {
+      if ((node = mPath[mDepth - 1]->Right())) {
         /* The successor is the left-most node in the right subtree. */
         mPath[mDepth++] = node;
-        while ((node = mPath[mDepth - 1]->Left()) != mSentinel) {
+        while ((node = mPath[mDepth - 1]->Left())) {
           mPath[mDepth++] = node;
         }
       } else {
