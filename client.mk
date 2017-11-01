@@ -339,16 +339,13 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout \
-    real_checkout \
+.PHONY: \
     realbuild \
     build \
     profiledbuild \
-    pull_all \
     build_all \
     clobber \
     clobber_all \
-    pull_and_build_all \
     configure \
     preflight_all \
     postflight_all \
