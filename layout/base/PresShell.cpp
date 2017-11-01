@@ -4304,18 +4304,24 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
-  nsStyleSet* geckoSet = mStyleSet->GetAsGecko();
-  if (!geckoSet) {
-    // XXXheycam ServoStyleSets don't support document state selectors,
-    // but these are only used in chrome documents, which we are not
-    // aiming to support yet.
-  } else if (mDidInitialize &&
-             geckoSet->HasDocumentStateDependentStyle(mDocument->GetRootElement(),
-                                                      aStateMask)) {
-    mPresContext->RestyleManager()->PostRestyleEvent(mDocument->GetRootElement(),
-                                                     eRestyle_Subtree,
-                                                     nsChangeHint(0));
-    VERIFY_STYLE_TREE;
+  if (mDidInitialize) {
+    Element* rootElement = aDocument->GetRootElement();
+    bool needRestyle = false;
+    if (mStyleSet->IsServo()) {
+      needRestyle = rootElement &&
+        (mStyleSet->AsServo()->HasDocumentStateDependency(aStateMask) ||
+         aDocument->BindingManager()->
+           AnyBindingHasDocumentStateDependency(aStateMask));
+    } else {
+      needRestyle = mStyleSet->AsGecko()->
+        HasDocumentStateDependentStyle(rootElement, aStateMask);
+    }
+    if (needRestyle) {
+      mPresContext->RestyleManager()->PostRestyleEvent(rootElement,
+                                                       eRestyle_Subtree,
+                                                       nsChangeHint(0));
+      VERIFY_STYLE_TREE;
+    }
   }
 
   if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
