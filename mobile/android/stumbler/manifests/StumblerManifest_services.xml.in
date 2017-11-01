@@ -26,7 +26,6 @@
 <receiver android:exported="true" android:name="org.mozilla.mozstumbler.service.mainthread.SystemReceiver">
   <intent-filter>
     <action android:name="android.intent.action.BOOT_COMPLETED" />
-    <action android:name="android.intent.action.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE" />
   </intent-filter>
 </receiver>
 
