@@ -36,7 +36,7 @@
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layout/RenderFrameChild.h"
@@ -2915,7 +2915,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
       InitAPZState();
     } else {
-      // Fallback to BasicManager
+      NS_WARNING("Fallback to BasicLayerManager");
       mLayersConnected = Some(false);
     }
 
@@ -2952,6 +2952,15 @@ TabChild::CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCom
       success = true;
     }
     if (!success) {
+      // Since no LayerManager is associated with the tab's widget, we will never
+      // have an opportunity to destroy the PLayerTransaction on the next device
+      // or compositor reset. Therefore, we make sure to forcefully close it here.
+      // Failure to do so will cause the next layer tree to fail to attach due
+      // since the compositor requires the old layer tree to be disassociated.
+      if (shadowManager) {
+        static_cast<LayerTransactionChild*>(shadowManager)->Destroy();
+        shadowManager = nullptr;
+      }
       NS_WARNING("failed to allocate layer transaction");
     } else {
       success = mPuppetWidget->CreateRemoteLayerManager([&] (LayerManager* aLayerManager) -> bool {
@@ -3299,7 +3308,9 @@ TabChild::ReinitRenderingForDeviceReset()
       fwd->SynchronouslyShutdown();
     }
   } else {
-    return;
+    if (mLayersConnected.isNothing()) {
+      return;
+    }
   }
 
   // Proceed with destroying and recreating the layer manager.
