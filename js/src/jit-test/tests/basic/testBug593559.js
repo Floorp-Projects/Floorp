@@ -1,4 +1,4 @@
-var gen = (function () {yield})();
+var gen = (function* () {yield})();
 var t = gen.throw;
 try {
     new t;

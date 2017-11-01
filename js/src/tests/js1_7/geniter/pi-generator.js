@@ -13,7 +13,7 @@ printStatus(summary);
  * BEGIN TEST *
  **************/
 
-function pi()
+function* pi()
 {
   var val = 0;
   var curr = 1;
@@ -41,7 +41,7 @@ var vals =
 try
 {
   for (var i = 0, sz = vals.length; i < sz; i++)
-    if (it.next() != vals[i])
+    if (it.next().value != vals[i])
       throw vals[i];
 }
 catch (e)

@@ -21,7 +21,7 @@ function test()
 
   var f;
 
-  function g() {
+  function* g() {
     var x = {};
     f = function () { x.y; };
     if (0) yield;
