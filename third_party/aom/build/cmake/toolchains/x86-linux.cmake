@@ -8,7 +8,12 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_BUILD_CMAKE_TOOLCHAINS_X86_LINUX_CMAKE_)
+set(AOM_BUILD_CMAKE_TOOLCHAINS_X86_LINUX_CMAKE_ 1)
+
 set(CMAKE_SYSTEM_PROCESSOR "x86")
 set(CMAKE_SYSTEM_NAME "Linux")
 set(CMAKE_C_COMPILER_ARG1 "-m32")
 set(CMAKE_CXX_COMPILER_ARG1 "-m32")
+
+endif ()  # AOM_BUILD_CMAKE_TOOLCHAINS_X86_LINUX_CMAKE_

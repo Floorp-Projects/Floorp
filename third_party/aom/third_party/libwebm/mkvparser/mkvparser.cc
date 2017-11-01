@@ -5035,6 +5035,10 @@ bool MasteringMetadata::Parse(IMkvReader* reader, long long mm_start,
       double value = 0;
       const long long value_parse_status =
           UnserializeFloat(reader, read_pos, child_size, value);
+      if (value < -FLT_MAX || value > FLT_MAX ||
+          (value > 0.0 && value < FLT_MIN)) {
+        return false;
+      }
       mm_ptr->luminance_max = static_cast<float>(value);
       if (value_parse_status < 0 || mm_ptr->luminance_max < 0.0 ||
           mm_ptr->luminance_max > 9999.99) {
@@ -5044,6 +5048,10 @@ bool MasteringMetadata::Parse(IMkvReader* reader, long long mm_start,
       double value = 0;
       const long long value_parse_status =
           UnserializeFloat(reader, read_pos, child_size, value);
+      if (value < -FLT_MAX || value > FLT_MAX ||
+          (value > 0.0 && value < FLT_MIN)) {
+        return false;
+      }
       mm_ptr->luminance_min = static_cast<float>(value);
       if (value_parse_status < 0 || mm_ptr->luminance_min < 0.0 ||
           mm_ptr->luminance_min > 999.9999) {
@@ -7903,6 +7911,10 @@ long Block::Parse(const Cluster* pCluster) {
         return E_FILE_FORMAT_INVALID;
 
       curr.len = static_cast<long>(frame_size);
+      // Check if size + curr.len could overflow.
+      if (size > LLONG_MAX - curr.len) {
+        return E_FILE_FORMAT_INVALID;
+      }
       size += curr.len;  // contribution of this frame
 
       --frame_count;
@@ -7981,6 +7993,10 @@ long long Block::GetTime(const Cluster* pCluster) const {
   const long long scale = pInfo->GetTimeCodeScale();
   assert(scale >= 1);
 
+  // Check if tc * scale could overflow.
+  if (tc != 0 && scale > LLONG_MAX / tc) {
+    return -1;
+  }
   const long long ns = tc * scale;
 
   return ns;

@@ -56,15 +56,17 @@ void av1_xform_quant(const AV1_COMMON *cm, MACROBLOCK *x, int plane, int block,
 int av1_optimize_b(const AV1_COMMON *cm, MACROBLOCK *mb, int plane, int blk_row,
                    int blk_col, int block, BLOCK_SIZE plane_bsize,
                    TX_SIZE tx_size, const ENTROPY_CONTEXT *a,
-                   const ENTROPY_CONTEXT *l);
+                   const ENTROPY_CONTEXT *l, int fast_mode);
 
 void av1_subtract_txb(MACROBLOCK *x, int plane, BLOCK_SIZE plane_bsize,
                       int blk_col, int blk_row, TX_SIZE tx_size);
 
 void av1_subtract_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
 
+#if !CONFIG_PVQ
 void av1_set_txb_context(MACROBLOCK *x, int plane, int block, TX_SIZE tx_size,
                          ENTROPY_CONTEXT *a, ENTROPY_CONTEXT *l);
+#endif
 
 void av1_encode_block_intra(int plane, int block, int blk_row, int blk_col,
                             BLOCK_SIZE plane_bsize, TX_SIZE tx_size, void *arg);
@@ -79,22 +81,13 @@ PVQ_SKIP_TYPE av1_pvq_encode_helper(MACROBLOCK *x, tran_low_t *const coeff,
                                     tran_low_t *ref_coeff,
                                     tran_low_t *const dqcoeff, uint16_t *eob,
                                     const int16_t *quant, int plane,
-                                    int tx_size, TX_TYPE tx_type, int *rate,
+                                    TX_SIZE tx_size, TX_TYPE tx_type, int *rate,
                                     int speed, PVQ_INFO *pvq_info);
 
 void av1_store_pvq_enc_info(PVQ_INFO *pvq_info, int *qg, int *theta, int *k,
                             od_coeff *y, int nb_bands, const int *off,
                             int *size, int skip_rest, int skip_dir, int bs);
 #endif
-
-#if CONFIG_DPCM_INTRA
-void av1_encode_block_intra_dpcm(const AV1_COMMON *cm, MACROBLOCK *x,
-                                 PREDICTION_MODE mode, int plane, int block,
-                                 int blk_row, int blk_col,
-                                 BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
-                                 TX_TYPE tx_type, ENTROPY_CONTEXT *ta,
-                                 ENTROPY_CONTEXT *tl, int8_t *skip);
-#endif  // CONFIG_DPCM_INTRA
 
 #ifdef __cplusplus
 }  // extern "C"

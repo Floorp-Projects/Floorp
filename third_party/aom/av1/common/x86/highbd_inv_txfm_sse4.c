@@ -230,7 +230,7 @@ static void write_buffer_4x4(__m128i *in, uint16_t *output, int stride,
 }
 
 void av1_inv_txfm2d_add_4x4_sse4_1(const int32_t *coeff, uint16_t *output,
-                                   int stride, int tx_type, int bd) {
+                                   int stride, TX_TYPE tx_type, int bd) {
   __m128i in[4];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;
@@ -706,7 +706,7 @@ static void write_buffer_8x8(__m128i *in, uint16_t *output, int stride,
 }
 
 void av1_inv_txfm2d_add_8x8_sse4_1(const int32_t *coeff, uint16_t *output,
-                                   int stride, int tx_type, int bd) {
+                                   int stride, TX_TYPE tx_type, int bd) {
   __m128i in[16], out[16];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;
@@ -1316,7 +1316,7 @@ static void round_shift_16x16(__m128i *in, int shift) {
 }
 
 void av1_inv_txfm2d_add_16x16_sse4_1(const int32_t *coeff, uint16_t *output,
-                                     int stride, int tx_type, int bd) {
+                                     int stride, TX_TYPE tx_type, int bd) {
   __m128i in[64], out[64];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;

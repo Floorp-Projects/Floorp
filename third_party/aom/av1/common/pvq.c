@@ -591,7 +591,7 @@ static int32_t od_pow(int32_t x, od_val16 beta)
   /*log2(g/OD_COMPAND_SCALE) = log2(x) - OD_COMPAND_SHIFT in
      Q(OD_LOG2_OUTSHIFT).*/
   logr = od_log2(t) + (log2_x - OD_COMPAND_SHIFT)*OD_LOG2_OUTSCALE;
-  logr = OD_MULT16_32_QBETA(beta, logr);
+  logr = (od_val32)OD_MULT16_32_QBETA(beta, logr);
   return od_exp2(logr);
 }
 #endif
@@ -974,7 +974,7 @@ void od_pvq_synthesis_partial(od_coeff *xcoeff, const od_coeff *ypulse,
       od_val32 x;
       /* This multiply doesn't round, so it introduces some bias.
          It would be nice (but not critical) to fix this. */
-      x = OD_MULT16_32_Q16(ypulse[i], scale);
+      x = (od_val32)OD_MULT16_32_Q16(ypulse[i], scale);
 #if defined(OD_FLOAT_PVQ)
       xcoeff[i] = (od_coeff)floor(.5
        + x*(qm_inv[i]*OD_QM_INV_SCALE_1));

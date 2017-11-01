@@ -47,32 +47,32 @@ static unsigned int do_16x16_motion_iteration(AV1_COMP *cpi, const MV *ref_mv,
   av1_hex_search(x, &ref_full, step_param, x->errorperbit, 0,
                  cond_cost_list(cpi, cost_list), &v_fn_ptr, 0, ref_mv);
 
-  // Try sub-pixel MC
-  // if (bestsme > error_thresh && bestsme < INT_MAX)
+// Try sub-pixel MC
+// if (bestsme > error_thresh && bestsme < INT_MAX)
+#if CONFIG_AMVR
+  if (cpi->common.cur_frame_mv_precision_level == 1) {
+    x->best_mv.as_mv.row *= 8;
+    x->best_mv.as_mv.col *= 8;
+  } else {
+#else
   {
+#endif
     int distortion;
     unsigned int sse;
-    cpi->find_fractional_mv_step(
-        x, ref_mv, cpi->common.allow_high_precision_mv, x->errorperbit,
-        &v_fn_ptr, 0, mv_sf->subpel_iters_per_step,
-        cond_cost_list(cpi, cost_list), NULL, NULL, &distortion, &sse, NULL,
-#if CONFIG_EXT_INTER
-        NULL, 0, 0,
-#endif
-        0, 0, 0);
+    cpi->find_fractional_mv_step(x, ref_mv, cpi->common.allow_high_precision_mv,
+                                 x->errorperbit, &v_fn_ptr, 0,
+                                 mv_sf->subpel_iters_per_step,
+                                 cond_cost_list(cpi, cost_list), NULL, NULL,
+                                 &distortion, &sse, NULL, NULL, 0, 0, 0, 0, 0);
   }
 
-#if CONFIG_EXT_INTER
   if (has_second_ref(&xd->mi[0]->mbmi))
     xd->mi[0]->mbmi.mode = NEW_NEWMV;
   else
-#endif  // CONFIG_EXT_INTER
     xd->mi[0]->mbmi.mode = NEWMV;
 
   xd->mi[0]->mbmi.mv[0] = x->best_mv;
-#if CONFIG_EXT_INTER
   xd->mi[0]->mbmi.ref_frame[1] = NONE_FRAME;
-#endif  // CONFIG_EXT_INTER
 
   av1_build_inter_predictors_sby(&cpi->common, xd, mb_row, mb_col, NULL,
                                  BLOCK_16X16);
@@ -136,6 +136,7 @@ static int do_16x16_zerozero_search(AV1_COMP *cpi, int_mv *dst_mv) {
   return err;
 }
 static int find_best_16x16_intra(AV1_COMP *cpi, PREDICTION_MODE *pbest_mode) {
+  const AV1_COMMON *cm = &cpi->common;
   MACROBLOCK *const x = &cpi->td.mb;
   MACROBLOCKD *const xd = &x->e_mbd;
   PREDICTION_MODE best_mode = -1, mode;
@@ -147,9 +148,10 @@ static int find_best_16x16_intra(AV1_COMP *cpi, PREDICTION_MODE *pbest_mode) {
     unsigned int err;
 
     xd->mi[0]->mbmi.mode = mode;
-    av1_predict_intra_block(xd, 16, 16, BLOCK_16X16, mode, x->plane[0].src.buf,
-                            x->plane[0].src.stride, xd->plane[0].dst.buf,
-                            xd->plane[0].dst.stride, 0, 0, 0);
+    av1_predict_intra_block(cm, xd, 16, 16, BLOCK_16X16, mode,
+                            x->plane[0].src.buf, x->plane[0].src.stride,
+                            xd->plane[0].dst.buf, xd->plane[0].dst.stride, 0, 0,
+                            0);
     err = aom_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                        xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 

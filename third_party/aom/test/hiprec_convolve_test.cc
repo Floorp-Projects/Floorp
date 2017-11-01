@@ -22,11 +22,13 @@ using libaom_test::AV1HighbdHiprecConvolve::AV1HighbdHiprecConvolveTest;
 
 namespace {
 
+#if HAVE_SSE2
 TEST_P(AV1HiprecConvolveTest, CheckOutput) { RunCheckOutput(GET_PARAM(3)); }
 
 INSTANTIATE_TEST_CASE_P(SSE2, AV1HiprecConvolveTest,
                         libaom_test::AV1HiprecConvolve::BuildParams(
                             aom_convolve8_add_src_hip_sse2));
+#endif
 
 #if CONFIG_HIGHBITDEPTH && HAVE_SSSE3
 TEST_P(AV1HighbdHiprecConvolveTest, CheckOutput) {

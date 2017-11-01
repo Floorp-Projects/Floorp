@@ -195,7 +195,7 @@ static void fadst4x4_sse4_1(__m128i *in, int bit) {
 }
 
 void av1_fwd_txfm2d_4x4_sse4_1(const int16_t *input, int32_t *coeff,
-                               int input_stride, int tx_type, int bd) {
+                               int input_stride, TX_TYPE tx_type, int bd) {
   __m128i in[4];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;
@@ -926,7 +926,7 @@ static void fadst8x8_sse4_1(__m128i *in, __m128i *out, int bit) {
 }
 
 void av1_fwd_txfm2d_8x8_sse4_1(const int16_t *input, int32_t *coeff, int stride,
-                               int tx_type, int bd) {
+                               TX_TYPE tx_type, int bd) {
   __m128i in[16], out[16];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;
@@ -1800,7 +1800,7 @@ static void write_buffer_16x16(const __m128i *in, int32_t *output) {
 }
 
 void av1_fwd_txfm2d_16x16_sse4_1(const int16_t *input, int32_t *coeff,
-                                 int stride, int tx_type, int bd) {
+                                 int stride, TX_TYPE tx_type, int bd) {
   __m128i in[64], out[64];
   const TXFM_1D_CFG *row_cfg = NULL;
   const TXFM_1D_CFG *col_cfg = NULL;

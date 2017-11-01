@@ -35,6 +35,8 @@ const int kNumCoeffs = 1024;
 
 const int number_of_iterations = 10000;
 
+const int kSpeedTestNum = 500000;
+
 #if CONFIG_HIGHBITDEPTH
 typedef void (*loop_op_t)(uint16_t *s, int p, const uint8_t *blimit,
                           const uint8_t *limit, const uint8_t *thresh, int bd);
@@ -242,6 +244,43 @@ TEST_P(Loop8Test6Param, ValueCheck) {
       << "First failed at test case " << first_failure;
 }
 
+TEST_P(Loop8Test6Param, DISABLED_Speed) {
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+  const int count_test_block = kSpeedTestNum;
+#if CONFIG_HIGHBITDEPTH
+  const int32_t bd = bit_depth_;
+  DECLARE_ALIGNED(16, uint16_t, s[kNumCoeffs]);
+#else
+  DECLARE_ALIGNED(8, uint8_t, s[kNumCoeffs]);
+#endif  // CONFIG_HIGHBITDEPTH
+
+  uint8_t tmp = static_cast<uint8_t>(rnd(3 * MAX_LOOP_FILTER + 4));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  blimit[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                  tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = static_cast<uint8_t>(rnd(MAX_LOOP_FILTER));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  limit[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                 tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = rnd.Rand8();
+  DECLARE_ALIGNED(16, const uint8_t,
+                  thresh[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                  tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+
+  int32_t p = kNumCoeffs / 32;
+  for (int j = 0; j < kNumCoeffs; ++j) {
+    s[j] = rnd.Rand16() & mask_;
+  }
+
+  for (int i = 0; i < count_test_block; ++i) {
+#if CONFIG_HIGHBITDEPTH
+    loopfilter_op_(s + 8 + p * 8, p, blimit, limit, thresh, bd);
+#else
+    loopfilter_op_(s + 8 + p * 8, p, blimit, limit, thresh);
+#endif  // CONFIG_HIGHBITDEPTH
+  }
+}
+
 TEST_P(Loop8Test9Param, OperationCheck) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());
   const int count_test_block = number_of_iterations;
@@ -408,9 +447,59 @@ TEST_P(Loop8Test9Param, ValueCheck) {
       << "First failed at test case " << first_failure;
 }
 
+TEST_P(Loop8Test9Param, DISABLED_Speed) {
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+  const int count_test_block = kSpeedTestNum;
+#if CONFIG_HIGHBITDEPTH
+  DECLARE_ALIGNED(16, uint16_t, s[kNumCoeffs]);
+#else
+  DECLARE_ALIGNED(8, uint8_t, s[kNumCoeffs]);
+#endif  // CONFIG_HIGHBITDEPTH
+
+  uint8_t tmp = static_cast<uint8_t>(rnd(3 * MAX_LOOP_FILTER + 4));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  blimit0[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                   tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = static_cast<uint8_t>(rnd(MAX_LOOP_FILTER));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  limit0[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                  tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = rnd.Rand8();
+  DECLARE_ALIGNED(16, const uint8_t,
+                  thresh0[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                   tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = static_cast<uint8_t>(rnd(3 * MAX_LOOP_FILTER + 4));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  blimit1[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                   tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = static_cast<uint8_t>(rnd(MAX_LOOP_FILTER));
+  DECLARE_ALIGNED(16, const uint8_t,
+                  limit1[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                  tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  tmp = rnd.Rand8();
+  DECLARE_ALIGNED(16, const uint8_t,
+                  thresh1[16]) = { tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp,
+                                   tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp };
+  int32_t p = kNumCoeffs / 32;  // TODO(pdlf) can we have non-square here?
+  for (int j = 0; j < kNumCoeffs; ++j) {
+    s[j] = rnd.Rand16() & mask_;
+  }
+
+  for (int i = 0; i < count_test_block; ++i) {
+#if CONFIG_HIGHBITDEPTH
+    const int32_t bd = bit_depth_;
+    loopfilter_op_(s + 8 + p * 8, p, blimit0, limit0, thresh0, blimit1, limit1,
+                   thresh1, bd);
+#else
+    loopfilter_op_(s + 8 + p * 8, p, blimit0, limit0, thresh0, blimit1, limit1,
+                   thresh1);
+#endif  // CONFIG_HIGHBITDEPTH
+  }
+}
+
 using std::tr1::make_tuple;
 
-#if HAVE_SSE2 && (!CONFIG_PARALLEL_DEBLOCKING)
+#if HAVE_SSE2
 #if CONFIG_HIGHBITDEPTH
 
 const loop8_param_t kHbdLoop8Test6[] = {
@@ -470,12 +559,38 @@ const loop8_param_t kLoop8Test6[] = {
   make_tuple(&aom_lpf_vertical_4_sse2, &aom_lpf_vertical_4_c, 8),
   make_tuple(&aom_lpf_vertical_8_sse2, &aom_lpf_vertical_8_c, 8),
   make_tuple(&aom_lpf_vertical_16_sse2, &aom_lpf_vertical_16_c, 8),
+#if !CONFIG_PARALLEL_DEBLOCKING
   make_tuple(&aom_lpf_vertical_16_dual_sse2, &aom_lpf_vertical_16_dual_c, 8)
+#endif
 };
 
 INSTANTIATE_TEST_CASE_P(SSE2, Loop8Test6Param,
                         ::testing::ValuesIn(kLoop8Test6));
 #endif  // CONFIG_HIGHBITDEPTH
+#endif  // HAVE_SSE2
+
+#if HAVE_AVX2
+#if CONFIG_HIGHBITDEPTH
+
+const loop8_param_t kHbdLoop8Test6Avx2[] = {
+  make_tuple(&aom_highbd_lpf_horizontal_edge_16_avx2,
+             &aom_highbd_lpf_horizontal_edge_16_c, 8),
+  make_tuple(&aom_highbd_lpf_horizontal_edge_16_avx2,
+             &aom_highbd_lpf_horizontal_edge_16_c, 10),
+  make_tuple(&aom_highbd_lpf_horizontal_edge_16_avx2,
+             &aom_highbd_lpf_horizontal_edge_16_c, 12),
+  make_tuple(&aom_highbd_lpf_vertical_16_dual_avx2,
+             &aom_highbd_lpf_vertical_16_dual_c, 8),
+  make_tuple(&aom_highbd_lpf_vertical_16_dual_avx2,
+             &aom_highbd_lpf_vertical_16_dual_c, 10),
+  make_tuple(&aom_highbd_lpf_vertical_16_dual_avx2,
+             &aom_highbd_lpf_vertical_16_dual_c, 12)
+};
+
+INSTANTIATE_TEST_CASE_P(AVX2, Loop8Test6Param,
+                        ::testing::ValuesIn(kHbdLoop8Test6Avx2));
+
+#endif
 #endif
 
 #if HAVE_AVX2 && (!CONFIG_HIGHBITDEPTH) && (!CONFIG_PARALLEL_DEBLOCKING)
@@ -487,7 +602,7 @@ INSTANTIATE_TEST_CASE_P(
                                  &aom_lpf_horizontal_edge_16_c, 8)));
 #endif
 
-#if HAVE_SSE2 && (!CONFIG_PARALLEL_DEBLOCKING)
+#if HAVE_SSE2
 #if CONFIG_HIGHBITDEPTH
 const dualloop8_param_t kHbdLoop8Test9[] = {
   make_tuple(&aom_highbd_lpf_horizontal_4_dual_sse2,
@@ -519,6 +634,7 @@ const dualloop8_param_t kHbdLoop8Test9[] = {
 INSTANTIATE_TEST_CASE_P(SSE2, Loop8Test9Param,
                         ::testing::ValuesIn(kHbdLoop8Test9));
 #else
+#if !CONFIG_PARALLEL_DEBLOCKING
 const dualloop8_param_t kLoop8Test9[] = {
   make_tuple(&aom_lpf_horizontal_4_dual_sse2, &aom_lpf_horizontal_4_dual_c, 8),
   make_tuple(&aom_lpf_horizontal_8_dual_sse2, &aom_lpf_horizontal_8_dual_c, 8),
@@ -528,7 +644,42 @@ const dualloop8_param_t kLoop8Test9[] = {
 
 INSTANTIATE_TEST_CASE_P(SSE2, Loop8Test9Param,
                         ::testing::ValuesIn(kLoop8Test9));
+#endif
 #endif  // CONFIG_HIGHBITDEPTH
+#endif  // HAVE_SSE2
+
+#if HAVE_AVX2
+#if CONFIG_HIGHBITDEPTH
+const dualloop8_param_t kHbdLoop8Test9Avx2[] = {
+  make_tuple(&aom_highbd_lpf_horizontal_4_dual_avx2,
+             &aom_highbd_lpf_horizontal_4_dual_c, 8),
+  make_tuple(&aom_highbd_lpf_horizontal_4_dual_avx2,
+             &aom_highbd_lpf_horizontal_4_dual_c, 10),
+  make_tuple(&aom_highbd_lpf_horizontal_4_dual_avx2,
+             &aom_highbd_lpf_horizontal_4_dual_c, 12),
+  make_tuple(&aom_highbd_lpf_horizontal_8_dual_avx2,
+             &aom_highbd_lpf_horizontal_8_dual_c, 8),
+  make_tuple(&aom_highbd_lpf_horizontal_8_dual_avx2,
+             &aom_highbd_lpf_horizontal_8_dual_c, 10),
+  make_tuple(&aom_highbd_lpf_horizontal_8_dual_avx2,
+             &aom_highbd_lpf_horizontal_8_dual_c, 12),
+  make_tuple(&aom_highbd_lpf_vertical_4_dual_avx2,
+             &aom_highbd_lpf_vertical_4_dual_c, 8),
+  make_tuple(&aom_highbd_lpf_vertical_4_dual_avx2,
+             &aom_highbd_lpf_vertical_4_dual_c, 10),
+  make_tuple(&aom_highbd_lpf_vertical_4_dual_avx2,
+             &aom_highbd_lpf_vertical_4_dual_c, 12),
+  make_tuple(&aom_highbd_lpf_vertical_8_dual_avx2,
+             &aom_highbd_lpf_vertical_8_dual_c, 8),
+  make_tuple(&aom_highbd_lpf_vertical_8_dual_avx2,
+             &aom_highbd_lpf_vertical_8_dual_c, 10),
+  make_tuple(&aom_highbd_lpf_vertical_8_dual_avx2,
+             &aom_highbd_lpf_vertical_8_dual_c, 12),
+};
+
+INSTANTIATE_TEST_CASE_P(AVX2, Loop8Test9Param,
+                        ::testing::ValuesIn(kHbdLoop8Test9Avx2));
+#endif
 #endif
 
 #if HAVE_NEON && (!CONFIG_PARALLEL_DEBLOCKING)

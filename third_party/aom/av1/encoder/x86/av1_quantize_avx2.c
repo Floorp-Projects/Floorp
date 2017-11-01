@@ -16,24 +16,24 @@
 #include "aom_dsp/aom_dsp_common.h"
 
 static INLINE void read_coeff(const tran_low_t *coeff, __m256i *c) {
-#if CONFIG_HIGHBITDEPTH
-  const __m256i x0 = _mm256_loadu_si256((const __m256i *)coeff);
-  const __m256i x1 = _mm256_loadu_si256((const __m256i *)coeff + 1);
-  *c = _mm256_packs_epi32(x0, x1);
-  *c = _mm256_permute4x64_epi64(*c, 0xD8);
-#else
-  *c = _mm256_loadu_si256((const __m256i *)coeff);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    const __m256i x0 = _mm256_loadu_si256((const __m256i *)coeff);
+    const __m256i x1 = _mm256_loadu_si256((const __m256i *)coeff + 1);
+    *c = _mm256_packs_epi32(x0, x1);
+    *c = _mm256_permute4x64_epi64(*c, 0xD8);
+  } else {
+    *c = _mm256_loadu_si256((const __m256i *)coeff);
+  }
 }
 
 static INLINE void write_zero(tran_low_t *qcoeff) {
   const __m256i zero = _mm256_setzero_si256();
-#if CONFIG_HIGHBITDEPTH
-  _mm256_storeu_si256((__m256i *)qcoeff, zero);
-  _mm256_storeu_si256((__m256i *)qcoeff + 1, zero);
-#else
-  _mm256_storeu_si256((__m256i *)qcoeff, zero);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    _mm256_storeu_si256((__m256i *)qcoeff, zero);
+    _mm256_storeu_si256((__m256i *)qcoeff + 1, zero);
+  } else {
+    _mm256_storeu_si256((__m256i *)qcoeff, zero);
+  }
 }
 
 static INLINE void init_one_qp(const __m128i *p, __m256i *qp) {
@@ -83,19 +83,16 @@ static INLINE void update_qp(int log_scale, __m256i *thr, __m256i *qp) {
     _mm256_storeu_si256((__m256i *)addr + 1, x1);         \
   } while (0)
 
-#if CONFIG_HIGHBITDEPTH
-#define store_two_quan(q, addr1, dq, addr2) \
-  do {                                      \
-    store_quan(q, addr1);                   \
-    store_quan(dq, addr2);                  \
+#define store_two_quan(q, addr1, dq, addr2)      \
+  do {                                           \
+    if (sizeof(tran_low_t) == 4) {               \
+      store_quan(q, addr1);                      \
+      store_quan(dq, addr2);                     \
+    } else {                                     \
+      _mm256_storeu_si256((__m256i *)addr1, q);  \
+      _mm256_storeu_si256((__m256i *)addr2, dq); \
+    }                                            \
   } while (0)
-#else
-#define store_two_quan(q, addr1, dq, addr2)    \
-  do {                                         \
-    _mm256_storeu_si256((__m256i *)addr1, q);  \
-    _mm256_storeu_si256((__m256i *)addr2, dq); \
-  } while (0)
-#endif
 
 static INLINE void quantize(const __m256i *thr, const __m256i *qp, __m256i *c,
                             const int16_t *iscan_ptr, tran_low_t *qcoeff,

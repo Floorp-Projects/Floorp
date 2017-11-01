@@ -210,3 +210,28 @@ int arg_parse_enum_or_int(const struct arg *arg) {
   if (arg->def->enums) return arg_parse_enum(arg);
   return arg_parse_int(arg);
 }
+
+// parse a comma separated list of at most n integers
+// return the number of elements in the list
+int arg_parse_list(const struct arg *arg, int *list, int n) {
+  const char *ptr = arg->val;
+  char *endptr;
+  int i = 0;
+
+  while (ptr[0] != '\0') {
+    int32_t rawval = (int32_t)strtol(ptr, &endptr, 10);
+    if (rawval < INT_MIN || rawval > INT_MAX) {
+      die("Option %s: Value %ld out of range for signed int\n", arg->name,
+          rawval);
+    } else if (i >= n) {
+      die("Option %s: List has more than %d entries\n", arg->name, n);
+    } else if (*endptr == ',') {
+      endptr++;
+    } else if (*endptr != '\0') {
+      die("Option %s: Bad list separator '%c'\n", arg->name, *endptr);
+    }
+    list[i++] = (int)rawval;
+    ptr = endptr;
+  }
+  return i;
+}

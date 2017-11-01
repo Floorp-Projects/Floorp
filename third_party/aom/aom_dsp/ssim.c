@@ -168,23 +168,16 @@ static double aom_highbd_ssim2(const uint8_t *img1, const uint8_t *img2,
 
 double aom_calc_ssim(const YV12_BUFFER_CONFIG *source,
                      const YV12_BUFFER_CONFIG *dest, double *weight) {
-  double a, b, c;
-  double ssimv;
-
-  a = aom_ssim2(source->y_buffer, dest->y_buffer, source->y_stride,
-                dest->y_stride, source->y_crop_width, source->y_crop_height);
-
-  b = aom_ssim2(source->u_buffer, dest->u_buffer, source->uv_stride,
-                dest->uv_stride, source->uv_crop_width, source->uv_crop_height);
-
-  c = aom_ssim2(source->v_buffer, dest->v_buffer, source->uv_stride,
-                dest->uv_stride, source->uv_crop_width, source->uv_crop_height);
-
-  ssimv = a * .8 + .1 * (b + c);
+  double abc[3];
+  for (int i = 0; i < 3; ++i) {
+    const int is_uv = i > 0;
+    abc[i] = aom_ssim2(source->buffers[i], dest->buffers[i],
+                       source->strides[is_uv], dest->strides[is_uv],
+                       source->crop_widths[is_uv], source->crop_heights[is_uv]);
+  }
 
   *weight = 1;
-
-  return ssimv;
+  return abc[0] * .8 + .1 * (abc[1] + abc[2]);
 }
 
 // traditional ssim as per: http://en.wikipedia.org/wiki/Structural_similarity
@@ -433,30 +426,19 @@ double aom_get_ssim_metrics(uint8_t *img1, int img1_pitch, uint8_t *img2,
 double aom_highbd_calc_ssim(const YV12_BUFFER_CONFIG *source,
                             const YV12_BUFFER_CONFIG *dest, double *weight,
                             uint32_t bd, uint32_t in_bd) {
-  double a, b, c;
-  double ssimv;
-  uint32_t shift = 0;
-
   assert(bd >= in_bd);
-  shift = bd - in_bd;
+  const uint32_t shift = bd - in_bd;
 
-  a = aom_highbd_ssim2(source->y_buffer, dest->y_buffer, source->y_stride,
-                       dest->y_stride, source->y_crop_width,
-                       source->y_crop_height, in_bd, shift);
-
-  b = aom_highbd_ssim2(source->u_buffer, dest->u_buffer, source->uv_stride,
-                       dest->uv_stride, source->uv_crop_width,
-                       source->uv_crop_height, in_bd, shift);
-
-  c = aom_highbd_ssim2(source->v_buffer, dest->v_buffer, source->uv_stride,
-                       dest->uv_stride, source->uv_crop_width,
-                       source->uv_crop_height, in_bd, shift);
-
-  ssimv = a * .8 + .1 * (b + c);
+  double abc[3];
+  for (int i = 0; i < 3; ++i) {
+    const int is_uv = i > 0;
+    abc[i] = aom_highbd_ssim2(source->buffers[i], dest->buffers[i],
+                              source->strides[is_uv], dest->strides[is_uv],
+                              source->crop_widths[is_uv],
+                              source->crop_heights[is_uv], in_bd, shift);
+  }
 
   *weight = 1;
-
-  return ssimv;
+  return abc[0] * .8 + .1 * (abc[1] + abc[2]);
 }
-
 #endif  // CONFIG_HIGHBITDEPTH

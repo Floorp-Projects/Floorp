@@ -46,6 +46,14 @@ typedef uint16_t aom_cdf_prob;
 
 #define MAX_PROB 255
 
+#define LV_MAP_PROB 1
+
+#define BR_NODE 1
+
+#if CONFIG_ADAPT_SCAN
+#define CACHE_SCAN_PROB 1
+#endif
+
 #define aom_prob_half ((aom_prob)128)
 
 typedef int8_t aom_tree_index;
@@ -149,7 +157,11 @@ static INLINE void av1_tree_to_cdf(const aom_tree_index *tree,
 void av1_indices_from_tree(int *ind, int *inv, const aom_tree_index *tree);
 
 static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
-  const int rate = 4 + (cdf[nsymbs] > 31) + get_msb(nsymbs);
+  int rate = 4 + (cdf[nsymbs] > 31) + get_msb(nsymbs);
+#if CONFIG_LV_MAP
+  if (nsymbs == 2)
+    rate = 4 + (cdf[nsymbs] > 7) + (cdf[nsymbs] > 15) + get_msb(nsymbs);
+#endif
   const int rate2 = 5;
   int i, tmp;
   int diff;
@@ -158,7 +170,7 @@ static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
   tmp = AOM_ICDF(tmp0);
   diff = ((CDF_PROB_TOP - (nsymbs << rate2)) >> rate) << rate;
 // Single loop (faster)
-#if !CONFIG_ANS && CONFIG_EC_SMALLMUL
+#if !CONFIG_ANS
   for (i = 0; i < nsymbs - 1; ++i, tmp -= tmp0) {
     tmp -= (i == val ? diff : 0);
     cdf[i] += ((tmp - cdf[i]) >> rate);
@@ -182,6 +194,12 @@ static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
 #endif
   cdf[nsymbs] += (cdf[nsymbs] < 32);
 }
+
+#if CONFIG_LV_MAP
+static INLINE void update_bin(aom_cdf_prob *cdf, int val, int nsymbs) {
+  update_cdf(cdf, val, nsymbs);
+}
+#endif
 
 #ifdef __cplusplus
 }  // extern "C"

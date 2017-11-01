@@ -142,6 +142,8 @@ OBMCSADWXH(4, 16)
 OBMCSADWXH(16, 4)
 OBMCSADWXH(8, 32)
 OBMCSADWXH(32, 8)
+OBMCSADWXH(16, 64)
+OBMCSADWXH(64, 16)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,5 +273,7 @@ HBD_OBMCSADWXH(4, 16)
 HBD_OBMCSADWXH(16, 4)
 HBD_OBMCSADWXH(8, 32)
 HBD_OBMCSADWXH(32, 8)
+HBD_OBMCSADWXH(16, 64)
+HBD_OBMCSADWXH(64, 16)
 #endif
 #endif  // CONFIG_HIGHBITDEPTH

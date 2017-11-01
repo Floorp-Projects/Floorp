@@ -14,6 +14,7 @@ use warnings;
 use 5.010;
 use Getopt::Long;
 
+my $git_desc;
 my $version_data;
 my $version_filename;
 GetOptions('version_data=s' => \$version_data,
@@ -27,6 +28,7 @@ if (!defined $version_data || length($version_data) == 0 ||
 
 # Determine if $version_data is a filename or a git tag/description.
 my $version_string;
+chomp($version_data);
 if (-r $version_data) {
   # $version_data is the path to the CHANGELOG. Parse the most recent version.
   my $changelog_filename = $version_data;
@@ -45,6 +47,7 @@ if (-r $version_data) {
   # tagName OR tagName-commitsSinceTag-shortCommitHash
   # In either case we want the first element of the array returned by split.
   $version_string = (split("-", $version_data))[0];
+  $git_desc = $version_data;
 }
 
 if (substr($version_string, 0, 1) eq "v") {
@@ -80,7 +83,19 @@ my $lic_block = << "EOF";
 EOF
 
 select $version_file;
-print << "EOF";
+if (length($git_desc)) {
+  print << "EOF";
+$lic_block
+#define VERSION_MAJOR $version_major
+#define VERSION_MINOR $version_minor
+#define VERSION_PATCH $version_patch
+#define VERSION_EXTRA \"$version_extra\"
+#define VERSION_PACKED $version_packed
+#define VERSION_STRING_NOSP \"$git_desc\"
+#define VERSION_STRING \" $git_desc\"
+EOF
+} else {
+  print << "EOF";
 $lic_block
 #define VERSION_MAJOR $version_major
 #define VERSION_MINOR $version_minor
@@ -90,4 +105,5 @@ $lic_block
 #define VERSION_STRING_NOSP \"v$version_string\"
 #define VERSION_STRING \" v$version_string\"
 EOF
+}
 close($version_file);
