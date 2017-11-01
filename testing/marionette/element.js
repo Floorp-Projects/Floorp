@@ -810,9 +810,17 @@ element.getContainer = function(el) {
  */
 element.isInView = function(el) {
   let originalPointerEvents = el.style.pointerEvents;
+
   try {
     el.style.pointerEvents = "auto";
     const tree = element.getPointerInteractablePaintTree(el);
+
+    // Bug 1413493 - <tr> is not part of the returned paint tree yet. As
+    // workaround check the visibility based on the first contained cell.
+    if (el.localName === "tr" && el.cells && el.cells.length > 0) {
+      return tree.includes(el.cells[0]);
+    }
+
     return tree.includes(el);
   } finally {
     el.style.pointerEvents = originalPointerEvents;
