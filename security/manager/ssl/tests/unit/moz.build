@@ -36,5 +36,6 @@ TEST_DIRS += [
     'test_pinning_dynamic',
     'test_signed_apps',
     'test_startcom_wosign',
+    'test_symantec_apple_google',
     'test_validity',
 ]
