@@ -3,31 +3,11 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  return Management;
-});
-
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
 const EXTENSION1_ID = "extension1@mozilla.com";
 const EXTENSION2_ID = "extension2@mozilla.com";
-
-function awaitEvent(eventName, id) {
-  return new Promise(resolve => {
-    let listener = (_eventName, ...args) => {
-      let extension = args[0];
-      if (_eventName === eventName &&
-          extension.id == id) {
-        Management.off(eventName, listener);
-        resolve(...args);
-      }
-    };
-
-    Management.on(eventName, listener);
-  });
-}
 
 let defaultEngineName = Services.search.currentEngine.name;
 

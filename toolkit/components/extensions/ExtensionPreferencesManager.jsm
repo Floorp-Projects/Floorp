@@ -36,36 +36,20 @@ XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
   return new Preferences({defaultBranch: true});
 });
 
-const ADDON_REPLACE_REASONS = new Set([
-  "ADDON_DOWNGRADE",
-  "ADDON_UPGRADE",
-]);
-
 /* eslint-disable mozilla/balanced-listeners */
-Management.on("shutdown", (type, extension) => {
-  switch (extension.shutdownReason) {
-    case "ADDON_DISABLE":
-    case "ADDON_DOWNGRADE":
-    case "ADDON_UPGRADE":
-      if (ADDON_REPLACE_REASONS.has(extension.shutdownReason)) {
-        Services.obs.notifyObservers(null, "web-extension-preferences-replacing");
-      }
-      this.ExtensionPreferencesManager.disableAll(extension.id);
-      break;
+Management.on("uninstall", (type, {id}) => {
+  ExtensionPreferencesManager.removeAll(id);
+});
 
-    case "ADDON_UNINSTALL":
-      this.ExtensionPreferencesManager.removeAll(extension.id);
-      break;
+Management.on("shutdown", (type, extension) => {
+  if (extension.shutdownReason == "ADDON_DISABLE") {
+    this.ExtensionPreferencesManager.disableAll(extension.id);
   }
 });
 
 Management.on("startup", async (type, extension) => {
-  if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(extension.startupReason)) {
-    const enablePromise = this.ExtensionPreferencesManager.enableAll(extension.id);
-    if (ADDON_REPLACE_REASONS.has(extension.startupReason)) {
-      await enablePromise;
-      Services.obs.notifyObservers(null, "web-extension-preferences-replaced");
-    }
+  if (extension.startupReason == "ADDON_ENABLE") {
+    this.ExtensionPreferencesManager.enableAll(extension.id);
   }
 });
 /* eslint-enable mozilla/balanced-listeners */
