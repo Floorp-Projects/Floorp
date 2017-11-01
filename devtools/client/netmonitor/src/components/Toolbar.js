@@ -12,10 +12,10 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
-  getDisplayedRequestsSummary,
   getRecordingState,
   getRequestFilterTypes,
   getTypeFilteredRequests,
@@ -80,6 +80,7 @@ class Toolbar extends Component {
 
   constructor(props) {
     super(props);
+    this.autocompleteProvider = this.autocompleteProvider.bind(this);
     this.toggleRequestFilterType = this.toggleRequestFilterType.bind(this);
     this.updatePersistentLogsEnabled = this.updatePersistentLogsEnabled.bind(this);
     this.updateBrowserCacheDisabled = this.updateBrowserCacheDisabled.bind(this);
@@ -116,6 +117,10 @@ class Toolbar extends Component {
       Services.prefs.getBoolPref(DEVTOOLS_DISABLE_CACHE_PREF));
   }
 
+  autocompleteProvider(filter) {
+    return autocompleteProvider(filter, this.props.filteredRequests);
+  }
+
   render() {
     let {
       toggleRecording,
@@ -129,18 +134,8 @@ class Toolbar extends Component {
       persistentLogsEnabled,
       toggleBrowserCache,
       browserCacheDisabled,
-      filteredRequests,
       recording,
     } = this.props;
-
-    let toggleButtonClassName = [
-      "network-details-panel-toggle",
-      "devtools-button",
-    ];
-
-    if (!networkDetailsOpen) {
-      toggleButtonClassName.push("pane-collapsed");
-    }
 
     // Render list of filter-buttons.
     let buttons = requestFilterTypes.map(([type, checked]) => {
@@ -163,18 +158,31 @@ class Toolbar extends Component {
 
     // Calculate class-list for toggle recording button. The button
     // has two states: pause/play.
-    let toggleButtonClassList = [
+    let toggleRecordingButtonClass = [
       "devtools-button",
       "requests-list-pause-button",
       recording ? "devtools-pause-icon" : "devtools-play-icon",
+    ].join(" ");
+
+    // Detail toggle button
+    let toggleDetailButtonClassList = [
+      "network-details-panel-toggle",
+      "devtools-button",
     ];
+
+    if (!networkDetailsOpen) {
+      toggleDetailButtonClassList.push("pane-collapsed");
+    }
+    let toggleDetailButtonClass = toggleDetailButtonClassList.join(" ");
+    let toggleDetailButtonTitle = networkDetailsOpen ? COLLAPSE_DETAILS_PANE :
+      EXPAND_DETAILS_PANE;
 
     // Render the entire toolbar.
     return (
       span({ className: "devtools-toolbar devtools-toolbar-container" },
         span({ className: "devtools-toolbar-group" },
           button({
-            className: toggleButtonClassList.join(" "),
+            className: toggleRecordingButtonClass,
             title: TOOLBAR_TOGGLE_RECORDING,
             onClick: toggleRecording,
           }),
@@ -220,12 +228,11 @@ class Toolbar extends Component {
             placeholder: SEARCH_PLACE_HOLDER,
             type: "filter",
             onChange: setRequestFilterText,
-            autocompleteProvider: filter =>
-              autocompleteProvider(filter, filteredRequests),
+            autocompleteProvider: this.autocompleteProvider,
           }),
           button({
-            className: toggleButtonClassName.join(" "),
-            title: networkDetailsOpen ? COLLAPSE_DETAILS_PANE : EXPAND_DETAILS_PANE,
+            className: toggleDetailButtonClass,
+            title: toggleDetailButtonTitle,
             disabled: networkDetailsToggleDisabled,
             tabIndex: "0",
             onClick: toggleNetworkDetails,
@@ -238,14 +245,13 @@ class Toolbar extends Component {
 
 module.exports = connect(
   (state) => ({
+    browserCacheDisabled: state.ui.browserCacheDisabled,
+    filteredRequests: getTypeFilteredRequests(state),
     networkDetailsToggleDisabled: isNetworkDetailsToggleButtonDisabled(state),
     networkDetailsOpen: state.ui.networkDetailsOpen,
     persistentLogsEnabled: state.ui.persistentLogsEnabled,
-    browserCacheDisabled: state.ui.browserCacheDisabled,
     recording: getRecordingState(state),
     requestFilterTypes: getRequestFilterTypes(state),
-    filteredRequests: getTypeFilteredRequests(state),
-    summary: getDisplayedRequestsSummary(state),
   }),
   (dispatch) => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
