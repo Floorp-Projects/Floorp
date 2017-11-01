@@ -1812,9 +1812,6 @@ Engine.prototype = {
     if (aParams.suggestURL) {
       this._urls.push(new EngineURL(URLTYPE_SUGGEST_JSON, "GET", aParams.suggestURL));
     }
-    if (aParams.queryCharset) {
-      this._queryCharset = aParams.queryCharset;
-    }
 
     this._name = aName;
     this.alias = aParams.alias;
