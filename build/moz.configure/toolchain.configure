@@ -1211,6 +1211,7 @@ set_define('HAVE_VISIBILITY_ATTRIBUTE',
 set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
+
 @depends(c_compiler, using_sccache)
 def depend_cflags(info, using_sccache):
     if info.type not in ('clang-cl', 'msvc'):
@@ -1219,6 +1220,7 @@ def depend_cflags(info, using_sccache):
         # sccache supports a special flag to create depfiles
         # by parsing MSVC's -showIncludes output.
         return '-deps$(MDDEPDIR)/$(@F).pp'
+
 
 set_config('_DEPEND_CFLAGS', depend_cflags)
 
