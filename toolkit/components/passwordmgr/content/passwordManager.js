@@ -400,13 +400,16 @@ function DeleteSignon() {
 }
 
 function DeleteAllSignons() {
+  let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(Ci.nsIPromptService);
+
   // Confirm the user wants to remove all passwords
   let dummy = { value: false };
-  if (Services.prompt.confirmEx(window,
-    kSignonBundle.getString("removeAllPasswordsTitle"),
-    kSignonBundle.getString("removeAllPasswordsPrompt"),
-    Services.prompt.STD_YES_NO_BUTTONS + Services.prompt.BUTTON_POS_1_DEFAULT,
-    null, null, null, null, dummy) == 1) // 1 == "No" button
+  if (prompter.confirmEx(window,
+                         kSignonBundle.getString("removeAllPasswordsTitle"),
+                         kSignonBundle.getString("removeAllPasswordsPrompt"),
+                         prompter.STD_YES_NO_BUTTONS + prompter.BUTTON_POS_1_DEFAULT,
+                         null, null, null, null, dummy) == 1) // 1 == "No" button
     return;
 
   let syncNeeded = signonsTreeView._filterSet.length != 0;
@@ -452,12 +455,13 @@ function TogglePasswordVisible() {
 }
 
 function AskUserShowPasswords() {
+  let prompter = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
   let dummy = { value: false };
 
   // Confirm the user wants to display passwords
-  return Services.prompt.confirmEx(window,
+  return prompter.confirmEx(window,
           null,
-          kSignonBundle.getString("noMasterPasswordPrompt"), Services.prompt.STD_YES_NO_BUTTONS,
+          kSignonBundle.getString("noMasterPasswordPrompt"), prompter.STD_YES_NO_BUTTONS,
           null, null, null, null, dummy) == 0; // 0=="Yes" button
 }
 

@@ -13,7 +13,9 @@ Login Manager test: forms and logins without a username.
 runChecksAfterCommonInit(() => startTest());
 runInParent(() => {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  var pwmgr = Cc["@mozilla.org/login-manager;1"]
+              .getService(Ci.nsILoginManager);
+
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 
   // pwlogin1 uses a unique formSubmitURL, to check forms where no other logins
@@ -32,8 +34,8 @@ runInParent(() => {
                 "", "1234", "uname", "pword");
 
 
-  Services.logins.addLogin(pwlogin1);
-  Services.logins.addLogin(pwlogin2);
+  pwmgr.addLogin(pwlogin1);
+  pwmgr.addLogin(pwlogin2);
 });
 </script>
 <p id="display"></p>
@@ -208,3 +210,4 @@ function startTest() {
 </pre>
 </body>
 </html>
+

@@ -128,14 +128,18 @@ function doKey(aKey, modifier) {
  * notifications might be confused by this.
  */
 function commonInit(selfFilling) {
+  var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
+              getService(SpecialPowers.Ci.nsILoginManager);
+  ok(pwmgr != null, "Access LoginManager");
+
   // Check that initial state has no logins
-  var logins = Services.logins.getAllLogins();
+  var logins = pwmgr.getAllLogins();
   is(logins.length, 0, "Not expecting logins to be present");
-  var disabledHosts = Services.logins.getAllDisabledHosts();
+  var disabledHosts = pwmgr.getAllDisabledHosts();
   if (disabledHosts.length) {
     ok(false, "Warning: wasn't expecting disabled hosts to be present.");
     for (var host of disabledHosts)
-      Services.logins.setLoginSavingEnabled(host, true);
+      pwmgr.setLoginSavingEnabled(host, true);
   }
 
   // Add a login that's used in multiple tests
@@ -143,12 +147,12 @@ function commonInit(selfFilling) {
               createInstance(SpecialPowers.Ci.nsILoginInfo);
   login.init("http://mochi.test:8888", "http://mochi.test:8888", null,
              "testuser", "testpass", "uname", "pword");
-  Services.logins.addLogin(login);
+  pwmgr.addLogin(login);
 
   // Last sanity check
-  logins = Services.logins.getAllLogins();
+  logins = pwmgr.getAllLogins();
   is(logins.length, 1, "Checking for successful init login");
-  disabledHosts = Services.logins.getAllDisabledHosts();
+  disabledHosts = pwmgr.getAllDisabledHosts();
   is(disabledHosts.length, 0, "Checking for no disabled hosts");
 
   if (selfFilling)
