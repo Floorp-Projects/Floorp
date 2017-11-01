@@ -417,7 +417,10 @@ class AutofillRecords {
     this._computeFields(recordFound);
 
     this._store.saveSoon();
-    Services.obs.notifyObservers(null, "formautofill-storage-changed", "update");
+
+    let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    str.data = guid;
+    Services.obs.notifyObservers(str, "formautofill-storage-changed", "update");
   }
 
   /**
@@ -1383,22 +1386,7 @@ class Addresses extends AutofillRecords {
       return true;
     }
 
-    for (let field in addressToMerge) {
-      if (this.VALID_FIELDS.includes(field)) {
-        addressFound[field] = addressToMerge[field];
-      }
-    }
-
-    addressFound.timeLastModified = Date.now();
-
-    this._stripComputedFields(addressFound);
-    this._computeFields(addressFound);
-
-    this._store.saveSoon();
-    let str = Cc["@mozilla.org/supports-string;1"]
-                 .createInstance(Ci.nsISupportsString);
-    str.data = guid;
-    Services.obs.notifyObservers(str, "formautofill-storage-changed", "merge");
+    this.update(guid, addressToMerge, true);
     return true;
   }
 
