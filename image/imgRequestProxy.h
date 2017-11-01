@@ -83,8 +83,9 @@ public:
                                                // previous owner has already
                                                // sent notifications out!
 
+  // Add the request to the load group, if any. This should only be called once
+  // during initialization.
   void AddToLoadGroup();
-  void RemoveFromLoadGroup(bool releaseLoadGroup);
 
   inline bool HasObserver() const {
     return mListener != nullptr;
@@ -168,15 +169,17 @@ protected:
       nsresult mStatus;
   };
 
+  /* Remove from and forget the load group. */
+  void RemoveFromLoadGroup();
+
+  /* Remove from the load group and readd as a background request. */
+  void MoveToBackgroundInLoadGroup();
+
   /* Finish up canceling ourselves */
   void DoCancel(nsresult status);
 
   /* Do the proper refcount management to null out mListener */
   void NullOutListener();
-
-  void DoRemoveFromLoadGroup() {
-    RemoveFromLoadGroup(true);
-  }
 
   // Return the ProgressTracker associated with mOwner and/or mImage. It may
   // live either on mOwner or mImage, depending on whether
@@ -236,6 +239,7 @@ private:
   uint32_t    mAnimationConsumers;
   bool mCanceled : 1;
   bool mIsInLoadGroup : 1;
+  bool mForceDispatchLoadGroup : 1;
   bool mListenerIsStrongRef : 1;
   bool mDecodeRequested : 1;
 
