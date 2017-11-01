@@ -75,12 +75,14 @@ public:
 void StartGamepadMonitoring()
 {
   AndroidGamepadManager::Init();
-  java::AndroidGamepadManager::Start();
+  java::AndroidGamepadManager::Start(
+      java::GeckoAppShell::GetApplicationContext());
 }
 
 void StopGamepadMonitoring()
 {
-  java::AndroidGamepadManager::Stop();
+  java::AndroidGamepadManager::Stop(
+      java::GeckoAppShell::GetApplicationContext());
 }
 
 } // namespace dom

@@ -32,7 +32,7 @@ function checkCommon(f, makeFn) {
       };
   };
   assertEqArray(makeFn("...arg")(f, itr), [1, 2, 3]);
-  function gen() {
+  function* gen() {
       for (let i = 1; i < 4; i ++)
           yield i;
   }

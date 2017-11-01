@@ -75,7 +75,7 @@ class Manifest {
   }
 
   async initialise() {
-    this._store = new JSONFile({path: this._path});
+    this._store = new JSONFile({path: this._path, saveDelayMs: 100});
     await this._store.load();
   }
 

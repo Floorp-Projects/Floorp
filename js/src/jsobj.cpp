@@ -39,7 +39,6 @@
 #include "builtin/Object.h"
 #include "builtin/SymbolObject.h"
 #include "frontend/BytecodeCompiler.h"
-#include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
@@ -58,6 +57,8 @@
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
 
+#include "builtin/TypedObject-inl.h"
+#include "gc/Marking-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/Caches-inl.h"
@@ -66,6 +67,8 @@
 #include "vm/NumberObject-inl.h"
 #include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
+#include "vm/TypedArrayObject-inl.h"
+#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

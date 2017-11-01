@@ -670,6 +670,12 @@ public:
   }
 
   bool
+  IsCleanedUp() const
+  {
+    return mCleanedUp;
+  }
+
+  bool
   HadOriginalOpener() const
   {
     MOZ_ASSERT(IsOuterWindow());

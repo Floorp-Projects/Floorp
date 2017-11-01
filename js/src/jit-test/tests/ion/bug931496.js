@@ -1,5 +1,5 @@
 
-function g() {
+function* g() {
     yield
 }
 g()

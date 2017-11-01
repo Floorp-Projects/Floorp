@@ -265,7 +265,6 @@ InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc)
 
     if (isFunctionFrame()) {
         if (!callee().isStarGenerator() &&
-            !callee().isLegacyGenerator() &&
             !callee().isAsync() &&
             isConstructing() &&
             thisArgument().isObject() &&

@@ -8,9 +8,11 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoBundle;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
-public final class GeckoViewSettings {
+public final class GeckoViewSettings implements Parcelable {
     private static final String LOGTAG = "GeckoViewSettings";
     private static final boolean DEBUG = false;
 
@@ -156,4 +158,34 @@ public final class GeckoViewSettings {
             mEventDispatcher.dispatch("GeckoView:UpdateSettings", null);
         }
     }
+
+    @Override // Parcelable
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override // Parcelable
+    public void writeToParcel(Parcel out, int flags) {
+        mBundle.writeToParcel(out, flags);
+    }
+
+    // AIDL code may call readFromParcel even though it's not part of Parcelable.
+    public void readFromParcel(final Parcel source) {
+        mBundle.readFromParcel(source);
+    }
+
+    public static final Parcelable.Creator<GeckoViewSettings> CREATOR
+            = new Parcelable.Creator<GeckoViewSettings>() {
+        @Override
+        public GeckoViewSettings createFromParcel(final Parcel in) {
+            final GeckoViewSettings settings = new GeckoViewSettings();
+            settings.readFromParcel(in);
+            return settings;
+        }
+
+        @Override
+        public GeckoViewSettings[] newArray(final int size) {
+            return new GeckoViewSettings[size];
+        }
+    };
 }

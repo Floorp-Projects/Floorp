@@ -115,16 +115,7 @@ class TypedArrayObject : public NativeObject
     static const uint32_t INLINE_BUFFER_LIMIT =
         (NativeObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
 
-    static gc::AllocKind
-    AllocKindForLazyBuffer(size_t nbytes)
-    {
-        MOZ_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
-        if (nbytes == 0)
-            nbytes += sizeof(uint8_t);
-        size_t dataSlots = AlignBytes(nbytes, sizeof(Value)) / sizeof(Value);
-        MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
-        return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
-    }
+    static inline gc::AllocKind AllocKindForLazyBuffer(size_t nbytes);
 
     inline Scalar::Type type() const;
     inline size_t bytesPerElement() const;

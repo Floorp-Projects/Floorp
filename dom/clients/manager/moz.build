@@ -7,16 +7,46 @@
 EXPORTS.mozilla.dom += [
   'ClientInfo.h',
   'ClientIPCUtils.h',
+  'ClientManagerActors.h',
+  'ClientOpenWindowOpActors.h',
+  'ClientOpPromise.h',
   'ClientState.h',
+  'ClientThing.h',
 ]
 
 UNIFIED_SOURCES += [
+  'ClientHandleChild.cpp',
+  'ClientHandleOpChild.cpp',
+  'ClientHandleOpParent.cpp',
+  'ClientHandleParent.cpp',
   'ClientInfo.cpp',
+  'ClientManagerActors.cpp',
+  'ClientManagerChild.cpp',
+  'ClientManagerOpChild.cpp',
+  'ClientManagerOpParent.cpp',
+  'ClientManagerParent.cpp',
+  'ClientNavigateOpChild.cpp',
+  'ClientNavigateOpParent.cpp',
+  'ClientOpenWindowOpActors.cpp',
+  'ClientOpenWindowOpChild.cpp',
+  'ClientOpenWindowOpParent.cpp',
+  'ClientSourceChild.cpp',
+  'ClientSourceOpChild.cpp',
+  'ClientSourceOpParent.cpp',
+  'ClientSourceParent.cpp',
   'ClientState.cpp',
 ]
 
 IPDL_SOURCES += [
   'ClientIPCTypes.ipdlh',
+  'PClientHandle.ipdl',
+  'PClientHandleOp.ipdl',
+  'PClientManager.ipdl',
+  'PClientManagerOp.ipdl',
+  'PClientNavigateOp.ipdl',
+  'PClientOpenWindowOp.ipdl',
+  'PClientSource.ipdl',
+  'PClientSourceOp.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

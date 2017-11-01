@@ -140,19 +140,6 @@ v = o.next();
 assertEq(v.done, true);
 assertEq(v.value, undefined);
 
-// legacy iterator have no return value
-function g8() {
-  try {
-    return;
-  } finally {
-    yield 43;
-  }
-}
-o = g8();
-v = o.next();
-assertEq(v, 43);
-assertThrowsInstanceOf(() => o.next(), StopIteration);
-
 // in "with" statement
 options("strict");
 eval(`

@@ -23,7 +23,7 @@ function test()
 
   var scope = "Global";
 
-  function gen() {
+  function* gen() {
     var scope = "Generator";
     function inner() {
       actual = scope + " " + typeof scope;

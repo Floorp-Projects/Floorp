@@ -17,6 +17,7 @@
 
 #include "jsalloc.h"
 #include "jscntxt.h"
+#include "jsgc.h"
 
 #include "js/Vector.h"
 

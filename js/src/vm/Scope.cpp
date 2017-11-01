@@ -16,6 +16,7 @@
 #include "vm/StringBuffer.h"
 #include "wasm/WasmInstance.h"
 
+#include "gc/ObjectKind-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;

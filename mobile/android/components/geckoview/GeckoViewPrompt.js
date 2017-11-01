@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -358,19 +359,12 @@ function PromptDelegate(aDomWin) {
     return;
   }
 
-  this._dispatcher = EventDispatcher.instance;
-
-  if (!aDomWin) {
-    return;
+  if (aDomWin) {
+    this._dispatcher = GeckoViewUtils.getDispatcherForWindow(aDomWin);
   }
-  let gvWin = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
-                     .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindow);
-  try {
-    this._dispatcher = gvWin.WindowEventDispatcher || EventDispatcher.for(gvWin);
-  } catch (e) {
-    // Use global dispatcher.
+
+  if (!this._dispatcher) {
+    this._dispatcher = GeckoViewUtils.getActiveDispatcher();
   }
 }
 
@@ -457,24 +451,31 @@ PromptDelegate.prototype = {
     }
 
     let handled = false;
+    let onResponse = response => {
+      if (handled) {
+        return;
+      }
+      aCallback(response);
+      // This callback object is tied to the Java garbage collector because
+      // it is invoked from Java. Manually release the target callback
+      // here; otherwise we may hold onto resources for too long, because
+      // we would be relying on both the Java and the JS garbage collectors
+      // to run.
+      aMsg = undefined;
+      aCallback = undefined;
+      handled = true;
+    };
+
+    if (!this._dispatcher) {
+      onResponse(null);
+      return;
+    }
+
     this._dispatcher.dispatch("GeckoView:Prompt", aMsg, {
-      onSuccess: response => {
-        if (handled) {
-          return;
-        }
-        aCallback(response);
-        // This callback object is tied to the Java garbage collector because
-        // it is invoked from Java. Manually release the target callback
-        // here; otherwise we may hold onto resources for too long, because
-        // we would be relying on both the Java and the JS garbage collectors
-        // to run.
-        aMsg = undefined;
-        aCallback = undefined;
-        handled = true;
-      },
+      onSuccess: onResponse,
       onError: error => {
         Cu.reportError("Prompt error: " + error);
-        this.onSuccess(null);
+        onResponse(null);
       },
     });
   },

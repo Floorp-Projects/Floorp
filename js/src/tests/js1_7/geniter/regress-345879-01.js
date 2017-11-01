@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  function gen() {
+  function* gen() {
     yield isNaN();
   }
 

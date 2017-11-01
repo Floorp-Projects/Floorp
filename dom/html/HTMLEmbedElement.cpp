@@ -63,7 +63,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLEmbedElement,
                                              nsIObjectLoadingContent,
                                              imgINotificationObserver,
                                              nsIImageLoadingContent,
-                                             imgIOnloadBlocker,
                                              nsIChannelEventSink)
 
 NS_IMPL_ELEMENT_CLONE(HTMLEmbedElement)

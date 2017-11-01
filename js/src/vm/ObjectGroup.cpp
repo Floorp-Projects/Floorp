@@ -11,7 +11,6 @@
 #include "jsobj.h"
 
 #include "builtin/DataViewObject.h"
-#include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
@@ -20,10 +19,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 #include "vm/TaggedProto.h"
-#include "vm/UnboxedObject.h"
 
-#include "jsobjinlines.h"
-
+#include "gc/Marking-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
@@ -190,7 +187,7 @@ ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script, jsbytecod
      * Sub2 lets us continue to distinguish the two subclasses and any extra
      * properties added to those prototype objects.
      */
-    if (script->isStarGenerator() || script->isLegacyGenerator() || script->isAsync())
+    if (script->isStarGenerator() || script->isAsync())
         return false;
     if (JSOp(*pc) != JSOP_NEW)
         return false;

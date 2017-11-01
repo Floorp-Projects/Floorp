@@ -15,7 +15,6 @@
 #include "nsXULAppAPI.h"
 #include <prthread.h>
 #include "AndroidBridge.h"
-#include "AndroidJNIWrapper.h"
 #include "AndroidBridgeUtilities.h"
 #include "nsAlertsUtils.h"
 #include "nsAppShell.h"
@@ -57,7 +56,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::jni;
 using namespace mozilla::java;
 
 AndroidBridge* AndroidBridge::sBridge = nullptr;
@@ -160,7 +158,7 @@ AndroidBridge::AndroidBridge()
     AutoLocalJNIFrame jniFrame(jEnv);
 
     mMessageQueue = java::GeckoThread::MsgQueue();
-    auto msgQueueClass = Class::LocalRef::Adopt(
+    auto msgQueueClass = jni::Class::LocalRef::Adopt(
             jEnv, jEnv->GetObjectClass(mMessageQueue.Get()));
     // mMessageQueueNext must not be null
     mMessageQueueNext = GetMethodID(
@@ -188,66 +186,31 @@ AndroidBridge::AndroidBridge()
     jAvailable = inputStream.getMethod("available", "()I");
 }
 
-// Raw JNIEnv variants.
-jstring AndroidBridge::NewJavaString(JNIEnv* env, const char16_t* string, uint32_t len) {
-   jstring ret = env->NewString(reinterpret_cast<const jchar*>(string), len);
-   if (env->ExceptionCheck()) {
-       ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-       env->ExceptionDescribe();
-       env->ExceptionClear();
-       return nullptr;
-    }
-    return ret;
-}
-
-jstring AndroidBridge::NewJavaString(JNIEnv* env, const nsAString& string) {
-    return NewJavaString(env, string.BeginReading(), string.Length());
-}
-
-jstring AndroidBridge::NewJavaString(JNIEnv* env, const char* string) {
-    return NewJavaString(env, NS_ConvertUTF8toUTF16(string));
-}
-
-jstring AndroidBridge::NewJavaString(JNIEnv* env, const nsACString& string) {
-    return NewJavaString(env, NS_ConvertUTF8toUTF16(string));
-}
-
-// AutoLocalJNIFrame variants..
-jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const char16_t* string, uint32_t len) {
-    return NewJavaString(frame->GetEnv(), string, len);
-}
-
-jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsAString& string) {
-    return NewJavaString(frame, string.BeginReading(), string.Length());
-}
-
-jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const char* string) {
-    return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
-}
-
-jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string) {
-    return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
-}
-
 static void
-getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
+getHandlersFromStringArray(JNIEnv *aJNIEnv, jni::ObjectArray::Param aArr, size_t aLen,
                            nsIMutableArray *aHandlersArray,
                            nsIHandlerApp **aDefaultApp,
                            const nsAString& aAction = EmptyString(),
                            const nsACString& aMimeType = EmptyCString())
 {
     nsString empty = EmptyString();
-    for (jsize i = 0; i < aLen; i+=4) {
 
-        AutoLocalJNIFrame jniFrame(aJNIEnv, 4);
-        nsJNIString name(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i)), aJNIEnv);
-        nsJNIString isDefault(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 1)), aJNIEnv);
-        nsJNIString packageName(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 2)), aJNIEnv);
-        nsJNIString className(
-            static_cast<jstring>(aJNIEnv->GetObjectArrayElement(jArr, i + 3)), aJNIEnv);
+    auto getNormalizedString = [] (jni::Object::Param obj) -> nsString {
+        nsString out;
+        if (!obj) {
+            out.SetIsVoid(true);
+        } else {
+            out.Assign(jni::String::Ref::From(obj)->ToString());
+        }
+        return out;
+    };
+
+    for (size_t i = 0; i < aLen; i += 4) {
+        nsString name(getNormalizedString(aArr->GetElement(i)));
+        nsString isDefault(getNormalizedString(aArr->GetElement(i + 1)));
+        nsString packageName(getNormalizedString(aArr->GetElement(i + 2)));
+        nsString className(getNormalizedString(aArr->GetElement(i + 3)));
+
         nsIHandlerApp* app = nsOSHelperAppService::
             CreateAndroidHandlerApp(name, className, packageName,
                                     className, aMimeType, aAction);
@@ -271,12 +234,12 @@ AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
         return false;
 
     JNIEnv* const env = arr.Env();
-    jsize len = env->GetArrayLength(arr.Get());
+    size_t len = arr->Length();
 
     if (!aHandlersArray)
         return len > 0;
 
-    getHandlersFromStringArray(env, arr.Get(), len, aHandlersArray,
+    getHandlersFromStringArray(env, arr, len, aHandlersArray,
                                aDefaultApp, aAction,
                                NS_ConvertUTF16toUTF8(aMimeType));
     return true;
@@ -316,12 +279,12 @@ AndroidBridge::GetHandlersForURL(const nsAString& aURL,
         return false;
 
     JNIEnv* const env = arr.Env();
-    jsize len = env->GetArrayLength(arr.Get());
+    size_t len = arr->Length();
 
     if (!aHandlersArray)
         return len > 0;
 
-    getHandlersFromStringArray(env, arr.Get(), len, aHandlersArray,
+    getHandlersFromStringArray(env, arr, len, aHandlersArray,
                                aDefaultApp, aAction);
     return true;
 }
@@ -355,7 +318,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 {
     ALOG_BRIDGE("AndroidBridge::GetClipboardText");
 
-    auto text = Clipboard::GetText();
+    auto text = Clipboard::GetText(GeckoAppShell::GetApplicationContext());
 
     if (text) {
         aText = text->ToString();
@@ -447,7 +410,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
     }
     env->ReleaseLongArrayElements(array, elts, 0);
 
-    GeckoAppShell::Vibrate(LongArray::Ref::From(array), -1 /* don't repeat */);
+    GeckoAppShell::Vibrate(jni::LongArray::Ref::From(array), -1 /* don't repeat */);
 }
 
 void
@@ -556,7 +519,7 @@ AndroidBridge::GetStaticStringField(const char *className, const char *fieldName
     if (!jstr)
         return false;
 
-    result.Assign(nsJNIString(jstr, jEnv));
+    result.Assign(jni::String::Ref::From(jstr)->ToString());
     return true;
 }
 
@@ -685,12 +648,9 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
 
 jobject
 AndroidBridge::GetGlobalContextRef() {
-    if (sGlobalContext) {
-        return sGlobalContext;
-    }
-
+    // The context object can change, so get a fresh copy every time.
     auto context = GeckoAppShell::GetApplicationContext();
-    sGlobalContext = Object::GlobalRef(context).Forget();
+    sGlobalContext = jni::Object::GlobalRef(context).Forget();
     MOZ_ASSERT(sGlobalContext);
     return sGlobalContext;
 }
@@ -871,7 +831,7 @@ AndroidBridge::PumpMessageLoop()
     JNIEnv* const env = jni::GetGeckoThreadEnv();
 
     if (mMessageQueueMessages) {
-        auto msg = Object::LocalRef::Adopt(env,
+        auto msg = jni::Object::LocalRef::Adopt(env,
                 env->GetObjectField(mMessageQueue.Get(),
                                     mMessageQueueMessages));
         // if queue.mMessages is null, queue.next() will block, which we don't
@@ -883,7 +843,7 @@ AndroidBridge::PumpMessageLoop()
         }
     }
 
-    auto msg = Object::LocalRef::Adopt(
+    auto msg = jni::Object::LocalRef::Adopt(
             env, env->CallObjectMethod(mMessageQueue.Get(), mMessageQueueNext));
     if (!msg) {
         return false;
@@ -946,30 +906,30 @@ AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
     return layerClient->IsContentDocumentDisplayed();
 }
 
-Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
-    JNIEnv* const env = GetEnvForThread();
-    auto rv = Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
+jni::Object::LocalRef AndroidBridge::ChannelCreate(jni::Object::Param stream) {
+    JNIEnv* const env = jni::GetEnvForThread();
+    auto rv = jni::Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
             sBridge->jChannels, sBridge->jChannelCreate, stream.Get()));
     MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
-void AndroidBridge::InputStreamClose(Object::Param obj) {
-    JNIEnv* const env = GetEnvForThread();
+void AndroidBridge::InputStreamClose(jni::Object::Param obj) {
+    JNIEnv* const env = jni::GetEnvForThread();
     env->CallVoidMethod(obj.Get(), sBridge->jClose);
     MOZ_CATCH_JNI_EXCEPTION(env);
 }
 
-uint32_t AndroidBridge::InputStreamAvailable(Object::Param obj) {
-    JNIEnv* const env = GetEnvForThread();
+uint32_t AndroidBridge::InputStreamAvailable(jni::Object::Param obj) {
+    JNIEnv* const env = jni::GetEnvForThread();
     auto rv = env->CallIntMethod(obj.Get(), sBridge->jAvailable);
     MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
-nsresult AndroidBridge::InputStreamRead(Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
-    JNIEnv* const env = GetEnvForThread();
-    auto arr = ByteBuffer::New(aBuf, aCount);
+nsresult AndroidBridge::InputStreamRead(jni::Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
+    JNIEnv* const env = jni::GetEnvForThread();
+    auto arr = jni::ByteBuffer::New(aBuf, aCount);
     jint read = env->CallIntMethod(obj.Get(), sBridge->jByteBufferRead, arr.Get());
 
     if (env->ExceptionCheck()) {

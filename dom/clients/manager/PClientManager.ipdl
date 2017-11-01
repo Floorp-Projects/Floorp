@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PClientHandle;
+include protocol PClientManagerOp;
+include protocol PClientNavigateOp;
+include protocol PClientSource;
+include protocol PIPCBlobInputStream;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PFileDescriptorSet;
+include ClientIPCTypes;
+
+namespace mozilla {
+namespace dom {
+
+sync protocol PClientManager
+{
+  manager PBackground;
+
+  manages PClientHandle;
+  manages PClientManagerOp;
+  manages PClientNavigateOp;
+  manages PClientSource;
+
+parent:
+  async Teardown();
+
+  async PClientHandle(IPCClientInfo aClientInfo);
+  async PClientManagerOp(ClientOpConstructorArgs aArgs);
+  async PClientSource(ClientSourceConstructorArgs aArgs);
+
+child:
+  async PClientNavigateOp(ClientNavigateOpConstructorArgs aArgs);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

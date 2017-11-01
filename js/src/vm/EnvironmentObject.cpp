@@ -23,9 +23,9 @@
 #include "wasm/WasmInstance.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -2599,7 +2599,6 @@ DebugEnvironments::addDebugEnvironment(JSContext* cx, const EnvironmentIter& ei,
     // Generators should always have environments.
     MOZ_ASSERT_IF(ei.scope().is<FunctionScope>(),
                   !ei.scope().as<FunctionScope>().canonicalFunction()->isStarGenerator() &&
-                  !ei.scope().as<FunctionScope>().canonicalFunction()->isLegacyGenerator() &&
                   !ei.scope().as<FunctionScope>().canonicalFunction()->isAsync());
 
     if (!CanUseDebugEnvironmentMaps(cx))
@@ -2746,11 +2745,8 @@ DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame)
         if (!frame.environmentChain()->is<CallObject>())
             return;
 
-        if (frame.callee()->isStarGenerator() || frame.callee()->isLegacyGenerator() ||
-            frame.callee()->isAsync())
-        {
+        if (frame.callee()->isStarGenerator() || frame.callee()->isAsync())
             return;
-        }
 
         CallObject& callobj = frame.environmentChain()->as<CallObject>();
         envs->liveEnvs.remove(&callobj);
@@ -2883,11 +2879,8 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
             continue;
 
         if (frame.isFunctionFrame()) {
-            if (frame.callee()->isStarGenerator() || frame.callee()->isLegacyGenerator() ||
-                frame.callee()->isAsync())
-            {
+            if (frame.callee()->isStarGenerator() || frame.callee()->isAsync())
                 continue;
-            }
         }
 
         if (!frame.isDebuggee())
@@ -3050,8 +3043,7 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
     if (ei.scope().is<FunctionScope>()) {
         RootedFunction callee(cx, ei.scope().as<FunctionScope>().canonicalFunction());
         // Generators should always reify their scopes.
-        MOZ_ASSERT(!callee->isStarGenerator() && !callee->isLegacyGenerator() &&
-                   !callee->isAsync());
+        MOZ_ASSERT(!callee->isStarGenerator() && !callee->isAsync());
 
         JS::ExposeObjectToActiveJS(callee);
         Rooted<CallObject*> callobj(cx, CallObject::createHollowForDebug(cx, callee));

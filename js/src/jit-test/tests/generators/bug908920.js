@@ -1,6 +1,6 @@
 if (typeof schedulegc != 'undefined') {
     Function("\
-        x = (function() { yield })();\
+        x = (function*() { yield })();\
         new Set(x);\
         schedulegc(1);\
         print( /x/ );\

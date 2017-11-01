@@ -3,7 +3,7 @@ function m() {
 
  return (eval("\n\
    (function() {\n\
-     return function() {\n\
+     return function*() {\n\
        yield ((function() {\n\
          print(d);\n\
          return d\n\

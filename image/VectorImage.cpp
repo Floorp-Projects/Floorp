@@ -1197,16 +1197,6 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
     return rv;
   }
 
-  // ProgressTracker::SyncNotifyProgress may release us, so ensure we
-  // stick around long enough to complete our work.
-  RefPtr<VectorImage> kungFuDeathGrip(this);
-
-  // Block page load until the document's ready.  (We unblock it in
-  // OnSVGDocumentLoaded or OnSVGDocumentError.)
-  if (mProgressTracker) {
-    mProgressTracker->SyncNotifyProgress(FLAG_ONLOAD_BLOCKED);
-  }
-
   // Create a listener to wait until the SVG document is fully loaded, which
   // will signal that this image is ready to render. Certain error conditions
   // will prevent us from ever getting this notification, so we also create a
@@ -1290,8 +1280,7 @@ VectorImage::OnSVGDocumentLoaded()
     Progress progress = FLAG_SIZE_AVAILABLE |
                         FLAG_HAS_TRANSPARENCY |
                         FLAG_FRAME_COMPLETE |
-                        FLAG_DECODE_COMPLETE |
-                        FLAG_ONLOAD_UNBLOCKED;
+                        FLAG_DECODE_COMPLETE;
 
     if (mHaveAnimations) {
       progress |= FLAG_IS_ANIMATED;
@@ -1318,7 +1307,7 @@ VectorImage::OnSVGDocumentError()
 
   if (mProgressTracker) {
     // Notify observers about the error and unblock page load.
-    Progress progress = FLAG_ONLOAD_UNBLOCKED | FLAG_HAS_ERROR;
+    Progress progress = FLAG_HAS_ERROR;
 
     // Merge in any saved progress from OnImageDataComplete.
     if (mLoadProgress) {

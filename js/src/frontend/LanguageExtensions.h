@@ -25,7 +25,7 @@ enum class DeprecatedLanguageExtension
 {
     ForEach = 0, // JS 1.6+
     // NO LONGER USING 1
-    LegacyGenerator = 2, // JS 1.7+
+    // NO LONGER USING 2
     ExpressionClosure = 3, // Added in JS 1.8
     // NO LONGER USING 4
     // NO LONGER USING 5

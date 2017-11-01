@@ -1,6 +1,6 @@
 // The argument to Set can be a generator.
 
-function hexData(n) {
+function* hexData(n) {
     for (var i = 0; i < n; i++)
         yield i.toString(16);
 }

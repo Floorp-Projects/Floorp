@@ -6015,7 +6015,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
         aContext->Save();
         NS_ASSERTION(aCommonClipCount < 100,
           "Maybe you really do have more than a hundred clipping rounded rects, or maybe something has gone wrong.");
-        currentClip.ApplyTo(aContext, aPresContext, aCommonClipCount);
+        currentClip.ApplyTo(aContext, aPresContext->AppUnitsPerDevPixel(), aCommonClipCount);
         aContext->NewPath();
       }
     }

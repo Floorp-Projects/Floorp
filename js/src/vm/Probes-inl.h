@@ -42,7 +42,6 @@ probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
         if (!cx->geckoProfiler().enter(cx, script, maybeFun))
             return false;
         MOZ_ASSERT_IF(!fp->script()->isStarGenerator() &&
-                      !fp->script()->isLegacyGenerator() &&
                       !fp->script()->isAsync(),
                       !fp->hasPushedGeckoProfilerFrame());
         fp->setPushedGeckoProfilerFrame();

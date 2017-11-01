@@ -196,11 +196,6 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
 
     void ComplainAboutBogusProtocolCharset(nsIDocument* aDoc);
 
-    bool IsComplete()
-    {
-      return !mParser;
-    }
-    
     bool HasStarted()
     {
       return mStarted;
@@ -225,7 +220,13 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
      * queue unconditionally. (This is for the main thread case.)
      */
     virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
-    
+
+    void ClearOpQueue();
+
+    void RemoveFromStartOfOpQueue(size_t aNumberOfOpsToRemove);
+
+    inline size_t OpQueueLength() { return mOpQueue.Length(); }
+
     nsHtml5TreeOpStage* GetStage()
     {
       return &mStage;

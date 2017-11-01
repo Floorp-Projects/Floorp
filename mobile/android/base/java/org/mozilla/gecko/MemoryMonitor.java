@@ -46,7 +46,7 @@ class MemoryMonitor extends BroadcastReceiver implements ComponentCallbacks2 {
     private static final String ACTION_MEMORY_DUMP = "org.mozilla.gecko.MEMORY_DUMP";
     private static final String ACTION_FORCE_PRESSURE = "org.mozilla.gecko.FORCE_MEMORY_PRESSURE";
 
-    // Memory pressure levels. Keep these in sync with those in AndroidJavaWrappers.h
+    // Memory pressure levels.
     private static final int MEMORY_PRESSURE_NONE = 0;
     private static final int MEMORY_PRESSURE_CLEANUP = 1;
     private static final int MEMORY_PRESSURE_LOW = 2;

@@ -15,7 +15,12 @@
 #include "webrtc/modules/utility/include/jvm_android.h"
 
 #include "webrtc/base/checks.h"
-#include "AndroidJNIWrapper.h"
+
+namespace mozilla {
+namespace jni {
+jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
+}
+}
 
 #define TAG "JVM"
 #define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
@@ -44,9 +49,10 @@ void LoadClasses(JNIEnv* jni) {
   ALOGD("LoadClasses");
   for (auto& c : loaded_classes) {
     ALOGD("name: %s", c.name);
-    jclass globalRef = jsjni_GetGlobalClassRef(c.name);
-    RTC_CHECK(globalRef) << c.name;
-    c.clazz = globalRef;
+    jclass clsRef = mozilla::jni::GetClassRef(jni, c.name);
+    RTC_CHECK(clsRef) << c.name;
+    c.clazz = static_cast<jclass>(jni->NewGlobalRef(clsRef));
+    jni->DeleteLocalRef(clsRef);
   }
 }
 

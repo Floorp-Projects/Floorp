@@ -696,6 +696,16 @@ public:
                     nsTArray<PluginTag>&& aPluginTags,
                     nsTArray<FakePluginTag>&& aFakePluginTags) override;
 
+  virtual PClientOpenWindowOpChild*
+  AllocPClientOpenWindowOpChild(const ClientOpenWindowArgs& aArgs) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPClientOpenWindowOpConstructor(PClientOpenWindowOpChild* aActor,
+                                     const ClientOpenWindowArgs& aArgs) override;
+
+  virtual bool
+  DeallocPClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor) override;
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //

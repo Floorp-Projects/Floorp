@@ -6,12 +6,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "JNI", "resource://gre/modules/JNI.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 // -----------------------------------------------------------------------
 // Directory Provider for special browser folders and files
@@ -178,29 +180,12 @@ DirectoryProvider.prototype = {
 
   _getDistributionDirectories: function() {
     let directories = [];
-    let jenv = null;
 
-    try {
-      jenv = JNI.GetForThread();
-
-      let jDistribution = JNI.LoadClass(jenv, "org.mozilla.gecko.distribution.Distribution", {
-        static_methods: [
-          { name: "getDistributionDirectories", sig: "()[Ljava/lang/String;" }
-        ],
-      });
-
-      let jDirectories = jDistribution.getDistributionDirectories();
-
-      for (let i = 0; i < jDirectories.length; i++) {
-        directories.push(new FileUtils.File(
-          JNI.ReadString(jenv, jDirectories.get(i))
-        ));
-      }
-    } finally {
-      if (jenv) {
-        JNI.UnloadClasses(jenv);
-      }
-    }
+    // Send a synchronous Gecko thread event.
+    EventDispatcher.instance.dispatch("Distribution:GetDirectories", null, {
+      onSuccess: response =>
+        directories = response.map(dir => new FileUtils.File(dir)),
+    });
 
     return directories;
   }

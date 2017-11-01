@@ -12,7 +12,7 @@ var expect;
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
-function fib()
+function* fib()
 {
   var a = 0, b = 1;
 
@@ -33,13 +33,13 @@ reportCompare(expect, actual, summary);
 
 var actual = [];
 var expect = [0, 1, 1, 2, 3, 5, 8, 13];
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
-actual.push(g.next());
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
+actual.push(g.next().value);
 reportCompare(expect.join(), actual.join(), summary);
 

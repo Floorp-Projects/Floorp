@@ -226,6 +226,9 @@ class nsHtml5SpeculativeLoad {
     void Perform(nsHtml5TreeOpExecutor* aExecutor);
 
   private:
+    nsHtml5SpeculativeLoad(const nsHtml5SpeculativeLoad&) = delete;
+    nsHtml5SpeculativeLoad& operator=(const nsHtml5SpeculativeLoad&) = delete;
+
     eHtml5SpeculativeLoad mOpCode;
 
 

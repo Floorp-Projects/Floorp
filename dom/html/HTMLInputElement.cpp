@@ -1253,7 +1253,6 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLInputElement,
                                              nsITextControlElement,
                                              imgINotificationObserver,
                                              nsIImageLoadingContent,
-                                             imgIOnloadBlocker,
                                              nsIDOMNSEditableElement,
                                              nsIConstraintValidation)
 

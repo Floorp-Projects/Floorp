@@ -2,7 +2,7 @@
 
 load(libdir + "asserts.js");
 
-function data2() {
+function* data2() {
     yield [{}, "XR22/Z"];
     yield [{}, "23D-BN"];
     throw "oops";

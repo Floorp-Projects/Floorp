@@ -14,8 +14,6 @@
 
 #include <android/log.h>
 
-#include "AndroidJNIWrapper.h"
-
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"

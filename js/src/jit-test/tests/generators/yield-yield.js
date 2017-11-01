@@ -2,11 +2,11 @@
 
 load(libdir + "asserts.js");
 
-function f() {
+function* f() {
     yield yield 1;
 }
 
 var g = f();
-assertEq(g.next(), 1);
-assertEq(g.send("hello"), "hello");
-assertThrowsValue(() => g.next(), StopIteration);
+assertEq(g.next().value, 1);
+assertEq(g.return("hello").value, "hello");
+assertEq(g.next().value, undefined);

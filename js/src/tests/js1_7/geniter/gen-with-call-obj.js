@@ -1,6 +1,6 @@
 var foo;
 
-function gen() {
+function* gen() {
     var x = 0;
     foo = function() { return x++; }
     for (var i = 0; i < 10; ++i)
@@ -8,7 +8,7 @@ function gen() {
 }
 
 var j = 0;
-for (i in gen())
+for (i of gen())
     assertEq(i, j++);
 
 // now mess up the stack
