@@ -46,21 +46,6 @@ add_task(async function test_clean_up_uitour_after_closing_overlay() {
   await highlightClosePromise;
   is(highlight.state, "closed", "Should close UITour highlight after closing the overlay by clicking the overlay");
 
-  // Trigger UITour showHighlight
-  highlightOpenPromise = promisePopupChange(highlight, "open");
-  await triggerUITourHighlight("library", tab);
-  await highlightOpenPromise;
-  is(highlight.state, "open", "Should show UITour highlight");
-  is(highlight.getAttribute("targetName"), "library", "UITour should highlight library");
-
-  // Close the overlay by clicking the overlay
-  // Should not click the close button here since the close button is hovered by appmenu and can't be clicked on win7
-  highlightClosePromise = promisePopupChange(highlight, "closed");
-  BrowserTestUtils.synthesizeMouseAtPoint(2, 2, {}, tab.linkedBrowser);
-  await promiseOnboardingOverlayClosed(tab.linkedBrowser);
-  await highlightClosePromise;
-  is(highlight.state, "closed", "Should close UITour highlight after closing the overlay by clicking the overlay");
-
   // Trigger UITour showHighlight again
   highlightOpenPromise = promisePopupChange(highlight, "open");
   await triggerUITourHighlight("library", tab);
