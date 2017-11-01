@@ -171,7 +171,10 @@ using namespace mozilla;
 #endif
 
 #ifdef XP_WIN
+#define MALLOC_DECOMMIT
+#endif
 
+#ifdef XP_WIN
 #define STDERR_FILENO 2
 
 // Implement getenv without using malloc.
@@ -189,8 +192,6 @@ getenv(const char* name)
 
   return nullptr;
 }
-
-#define MALLOC_DECOMMIT
 #endif
 
 #ifndef XP_WIN
