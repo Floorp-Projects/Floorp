@@ -13,6 +13,7 @@ import android.support.design.widget.Snackbar;
 import android.view.MenuItem;
 import android.view.View;
 
+import org.mozilla.gecko.Clipboard;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
@@ -27,7 +28,6 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
@@ -279,7 +279,7 @@ public abstract class ActivityStreamContextMenu
                 break;
 
             case R.id.copy_url:
-                Clipboard.setText(item.getUrl());
+                Clipboard.setText(context, item.getUrl());
                 break;
 
             case R.id.add_homescreen:

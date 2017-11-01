@@ -753,7 +753,8 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         }
     }
 
-    public void onFileCallbackResult(final int resultCode, final Intent data) {
+    public void onFileCallbackResult(final Context context, final int resultCode,
+                                     final Intent data) {
         if (mFileCallback == null) {
             return;
         }
@@ -771,7 +772,7 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
 
         if (mFileType == FILE_TYPE_SINGLE ||
             (mFileType == FILE_TYPE_MULTIPLE && clip == null)) {
-            callback.confirm(uri);
+            callback.confirm(context, uri);
 
         } else if (mFileType == FILE_TYPE_MULTIPLE) {
             if (clip == null) {
@@ -784,7 +785,7 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
             for (int i = 0; i < count; i++) {
                 uris.add(clip.getItemAt(i).getUri());
             }
-            callback.confirm(uris.toArray(new Uri[uris.size()]));
+            callback.confirm(context, uris.toArray(new Uri[uris.size()]));
         }
     }
 
