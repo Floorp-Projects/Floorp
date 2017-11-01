@@ -16,6 +16,8 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuInflater;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
@@ -31,6 +33,7 @@ import java.util.Locale;
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String FRAGMENT_RESID_INTENT_EXTRA = "extra_frament_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
+    public static final String MENU_RESID_INTENT_EXTRA = "extra_menu_resid";
     public static final String ACTIONBAR_ICON_INTENT_EXTRA = "extra_actionbar_icon_resid";
 
     public static final int EXTRA_VALUE_NONE = -1;
@@ -58,6 +61,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             prefResId = args.getInt(FRAGMENT_RESID_INTENT_EXTRA, R.xml.settings);
             titleResId = args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings);
 
+            setHasOptionsMenu(args.containsKey(MENU_RESID_INTENT_EXTRA));
+
             if (args.containsKey(ACTIONBAR_ICON_INTENT_EXTRA)) {
                 updater.updateIcon(args.getInt(ACTIONBAR_ICON_INTENT_EXTRA));
             }
@@ -71,9 +76,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onAttach(Context context) {
         super.onAttach(context);
         if (!(getActivity() instanceof ActionBarUpdater)) {
-            throw new IllegalArgumentException("Parent activity must implement TitleUpdater");
+            throw new IllegalArgumentException("Parent activity must implement ActionBarUpdater");
         }
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        final Bundle args = getArguments();
+        inflater.inflate(args.getInt(MENU_RESID_INTENT_EXTRA), menu);
+    }
+
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         final Resources resources = getResources();
@@ -100,7 +112,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
             final Intent intent = getSettingsIntent(getActivity(),
-                    R.xml.manual_add_search_engine, R.string.tutorial_search_title, R.drawable.ic_close);
+                    R.xml.manual_add_search_engine,
+                    R.string.tutorial_search_title,
+                    R.drawable.ic_close,
+                    R.menu.menu_search_engine_manual_add);
             startActivity(intent);
         }
 
@@ -108,15 +123,18 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId) {
-        return getSettingsIntent(context, fragmentResId, titleResId, EXTRA_VALUE_NONE);
+        return getSettingsIntent(context, fragmentResId, titleResId, EXTRA_VALUE_NONE, EXTRA_VALUE_NONE);
     }
 
-    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId, int actionbarIconResId) {
+    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId, int actionbarIconResId, int menuResId) {
         final Intent intent = new Intent(context, SettingsActivity.class);
         intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, fragmentResId);
         intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
         if (actionbarIconResId != EXTRA_VALUE_NONE) {
             intent.putExtra(ACTIONBAR_ICON_INTENT_EXTRA, actionbarIconResId);
+        }
+        if (menuResId != EXTRA_VALUE_NONE) {
+            intent.putExtra(MENU_RESID_INTENT_EXTRA, menuResId);
         }
         return intent;
     }
