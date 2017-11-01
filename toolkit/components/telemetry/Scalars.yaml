@@ -921,6 +921,41 @@ devtools:
     record_in_processes:
       - 'main'
 
+devtools.aboutdevtools:
+  opened:
+    bug_numbers:
+      - 1412029
+    description: >
+      Number of times about:devtools was opened.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+    record_in_processes:
+      - 'main'
+  installed:
+    bug_numbers:
+      - 1412029
+    description: >
+      Number of times devtools were enabled/installed in about:devtools.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+    record_in_processes:
+      - 'main'
+  noinstall_exits:
+    bug_numbers:
+      - 1412029
+    description: >
+      Number of times the user left about:devtools without enabling devtools.
+    expires: "60"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:
