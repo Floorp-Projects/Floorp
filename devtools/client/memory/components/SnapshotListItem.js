@@ -89,9 +89,10 @@ module.exports = createClass({
       className: "save",
     }, L10N.getStr("snapshot.io.save"));
 
-    let deleteButton = !snapshot.path ? void 0 : dom.button({
+    let deleteButton = !snapshot.path ? void 0 : dom.div({
       onClick: () => onDelete(snapshot),
-      className: "devtools-button delete",
+      className: "delete",
+      "aria-role": "button",
       title: L10N.getStr("snapshot.io.delete")
     });
 
