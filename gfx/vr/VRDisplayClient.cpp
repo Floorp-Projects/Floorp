@@ -33,6 +33,7 @@ VRDisplayClient::VRDisplayClient(const VRDisplayInfo& aDisplayInfo)
   , bLastEventWasPresenting(false)
   , mPresentationCount(0)
   , mLastEventFrameId(0)
+  , mLastPresentingGeneration(0)
 {
   MOZ_COUNT_CTOR(VRDisplayClient);
 }
@@ -75,6 +76,22 @@ VRDisplayClient::SetGroupMask(uint32_t aGroupMask)
 {
   VRManagerChild *vm = VRManagerChild::Get();
   vm->SendSetGroupMask(mDisplayInfo.mDisplayID, aGroupMask);
+}
+
+bool
+VRDisplayClient::IsPresentationGenerationCurrent() const
+{
+  if (mLastPresentingGeneration != mDisplayInfo.mPresentingGeneration) {
+    return false;
+  }
+
+  return true;
+}
+
+void
+VRDisplayClient::MakePresentationGenerationCurrent()
+{
+  mLastPresentingGeneration = mDisplayInfo.mPresentingGeneration;
 }
 
 void
