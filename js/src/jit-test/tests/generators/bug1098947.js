@@ -1,4 +1,4 @@
-function f() {
+function* f() {
     try {
         let foo = 3;
         for (var i=0; i<50; i++)
@@ -8,4 +8,4 @@ function f() {
 var it = f();
 for (var i=0; i<40; i++)
     it.next();
-it.close();
+it.return();

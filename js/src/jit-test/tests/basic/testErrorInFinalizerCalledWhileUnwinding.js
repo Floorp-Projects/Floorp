@@ -6,7 +6,7 @@ function foo(arr) {
   return not_defined;
 }
 
-function gen() {
+function* gen() {
   try {
     yield 1;
   } finally {
@@ -16,8 +16,7 @@ function gen() {
 
 function test() {
   var i_have_locals;
-  for (i in gen()) {
-    "this won't work"();
+  for (i of gen()) {
   }
 }
 

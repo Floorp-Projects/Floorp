@@ -24,7 +24,7 @@ function test()
 
   function make_iterator()
   {
-    function generator() {
+    function* generator() {
       try {
         yield 0;
       } finally {
