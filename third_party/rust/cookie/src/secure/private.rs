@@ -36,19 +36,20 @@ impl<'a> PrivateJar<'a> {
         PrivateJar { parent: parent, key: key_array }
     }
 
-    /// Given a sealed value `str` where the nonce is prepended to the original
-    /// value and then both are Base64 encoded, verifies and decrypts the sealed
-    /// value and returns it. If there's a problem, returns an `Err` with a
-    /// string describing the issue.
-    fn unseal(&self, value: &str) -> Result<String, &'static str> {
+    /// Given a sealed value `str` and a key name `name`, where the nonce is
+    /// prepended to the original value and then both are Base64 encoded,
+    /// verifies and decrypts the sealed value and returns it. If there's a
+    /// problem, returns an `Err` with a string describing the issue.
+    fn unseal(&self, name: &str, value: &str) -> Result<String, &'static str> {
         let mut data = base64::decode(value).map_err(|_| "bad base64 value")?;
         if data.len() <= NONCE_LEN {
             return Err("length of decoded data is <= NONCE_LEN");
         }
 
+        let ad = name.as_bytes();
         let key = OpeningKey::new(ALGO, &self.key).expect("opening key");
         let (nonce, sealed) = data.split_at_mut(NONCE_LEN);
-        let unsealed = open_in_place(&key, nonce, &[], 0, sealed)
+        let unsealed = open_in_place(&key, nonce, ad, 0, sealed)
             .map_err(|_| "invalid key/nonce/value: bad seal")?;
 
         ::std::str::from_utf8(unsealed)
@@ -77,7 +78,7 @@ impl<'a> PrivateJar<'a> {
     pub fn get(&self, name: &str) -> Option<Cookie<'static>> {
         if let Some(cookie_ref) = self.parent.get(name) {
             let mut cookie = cookie_ref.clone();
-            if let Ok(value) = self.unseal(cookie.value()) {
+            if let Ok(value) = self.unseal(name, cookie.value()) {
                 cookie.set_value(value);
                 return Some(cookie);
             }
@@ -118,8 +119,11 @@ impl<'a> PrivateJar<'a> {
             SystemRandom::new().fill(nonce).expect("couldn't random fill nonce");
             in_out[..cookie_val.len()].copy_from_slice(cookie_val);
 
+            // Use cookie's name as associated data to prevent value swapping.
+            let ad = cookie.name().as_bytes();
+
             // Perform the actual sealing operation and get the output length.
-            seal_in_place(&key, nonce, &[], in_out, overhead).expect("in-place seal")
+            seal_in_place(&key, nonce, ad, in_out, overhead).expect("in-place seal")
         };
 
         // Base64 encode the nonce and encrypted value.

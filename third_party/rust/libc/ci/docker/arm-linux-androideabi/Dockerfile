@@ -25,7 +25,7 @@ RUN sh /android/android-install-ndk.sh $ANDROID_ARCH
 RUN sh /android/android-install-sdk.sh $ANDROID_ARCH
 RUN mv /root/.android /tmp
 RUN chmod 777 -R /tmp/.android
-RUN chmod 755 /android/sdk/tools/* /android/sdk/tools/qemu/linux-x86_64/*
+RUN chmod 755 /android/sdk/tools/* /android/sdk/emulator/qemu/linux-x86_64/*
 
 ENV PATH=$PATH:/rust/bin \
     CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc \
@@ -38,7 +38,7 @@ ENTRYPOINT [ \
   "-c", \
   # set SHELL so android can detect a 64bits system, see
   # http://stackoverflow.com/a/41789144
-  "SHELL=/bin/dash emulator @arm -no-window & \
+  "SHELL=/bin/dash /android/sdk/emulator/emulator @arm -no-window & \
    rustc /tmp/runtest.rs -o /tmp/runtest && \
    exec \"$@\"", \
   "--" \

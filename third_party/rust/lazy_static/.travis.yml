@@ -6,7 +6,7 @@ rust:
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$PATH
+  export PATH=`python -m site --user-base`/bin:$PATH
 script:
 - |
   travis-cargo build &&
@@ -22,3 +22,6 @@ env:
   global:
   - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
   - secure: YXu24LptjeYirjWYjWGsMT2m3mB7LvQATE6TVo7VEUXv8GYoy2ORIHD83PeImxC93MmZ01QeUezRzuCW51ZcK92VnNSBttlF60SvIX18VsJrV92tsAhievFstqYQ+fB8DIuQ8noU0jPz7GpI+R9dlTRSImAqWOnVIghA+Wzz7Js=
+os:
+  - linux
+  - osx

@@ -5,7 +5,9 @@ pub type ino_t = u64;
 pub type off_t = i64;
 pub type blkcnt_t = i64;
 
-pub type blksize_t = c_long;
+pub type shmatt_t = ::c_ulong;
+pub type msgqnum_t = ::c_ulong;
+pub type msglen_t = ::c_ulong;
 pub type fsblkcnt_t = ::c_ulonglong;
 pub type fsfilcnt_t = ::c_ulonglong;
 pub type rlim_t = ::c_ulonglong;
@@ -36,18 +38,6 @@ s! {
         pub sa_mask: ::sigset_t,
         pub sa_flags: ::c_int,
         pub sa_restorer: ::dox::Option<extern fn()>,
-    }
-
-    pub struct ipc_perm {
-        pub __ipc_perm_key: ::key_t,
-        pub uid: ::uid_t,
-        pub gid: ::gid_t,
-        pub cuid: ::uid_t,
-        pub cgid: ::gid_t,
-        pub mode: ::mode_t,
-        pub __seq: ::c_int,
-        __unused1: ::c_long,
-        __unused2: ::c_long
     }
 
     pub struct termios {
@@ -84,6 +74,12 @@ s! {
         pub freehigh: ::c_ulong,
         pub mem_unit: ::c_uint,
         pub __reserved: [::c_char; 256],
+    }
+
+    pub struct ucred {
+        pub pid: ::pid_t,
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
     }
 }
 
@@ -140,6 +136,9 @@ pub const RLIMIT_NLIMITS: ::c_int = 16;
 
 pub const MAP_ANONYMOUS: ::c_int = MAP_ANON;
 
+pub const SOCK_DCCP: ::c_int = 6;
+pub const SOCK_PACKET: ::c_int = 10;
+
 pub const TCP_COOKIE_TRANSACTIONS: ::c_int = 15;
 pub const TCP_THIN_LINEAR_TIMEOUTS: ::c_int = 16;
 pub const TCP_THIN_DUPACK: ::c_int = 17;
@@ -158,8 +157,6 @@ pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
 
 pub const CPU_SETSIZE: ::c_int = 128;
-
-pub const QFMT_VFS_V1: ::c_int = 4;
 
 pub const PTRACE_TRACEME: ::c_int = 0;
 pub const PTRACE_PEEKTEXT: ::c_int = 1;
@@ -214,8 +211,6 @@ pub const CLOCK_TAI: ::clockid_t = 11;
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
-pub const SIGSTKSZ: ::size_t = 8192;
-pub const MINSIGSTKSZ: ::size_t = 2048;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;
@@ -317,7 +312,9 @@ extern {
 }
 
 cfg_if! {
-    if #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))] {
+    if #[cfg(any(target_arch = "x86_64",
+                 target_arch = "aarch64",
+                 target_arch = "powerpc64"))] {
         mod b64;
         pub use self::b64::*;
     } else if #[cfg(any(target_arch = "x86",

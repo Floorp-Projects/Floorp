@@ -19,10 +19,8 @@ set -ex
 # which apparently magically accepts the licenses.
 
 mkdir sdk
-curl https://dl.google.com/android/repository/tools_r25.2.5-linux.zip -O
-unzip -d sdk tools_r25.2.5-linux.zip
-
-filter="platform-tools,android-24"
+curl https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip -O
+unzip -d sdk sdk-tools-linux-3859397.zip
 
 case "$1" in
   arm | armv7)
@@ -47,11 +45,16 @@ case "$1" in
     ;;
 esac;
 
-filter="$filter,sys-img-$abi-android-24"
+# --no_https avoids
+# javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: No trusted certificate found
+echo "yes" | \
+    ./sdk/tools/bin/sdkmanager --no_https \
+        "emulator" \
+        "platform-tools" \
+        "platforms;android-24" \
+        "system-images;android-24;default;$abi"
 
-./android-accept-licenses.sh "android - update sdk -a --no-ui --filter $filter"
-
-echo "no" | android create avd \
-                --name $1 \
-                --target android-24 \
-                --abi $abi
+echo "no" |
+    ./sdk/tools/bin/avdmanager create avd \
+        --name $1 \
+        --package "system-images;android-24;default;$abi"
