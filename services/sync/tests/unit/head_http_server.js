@@ -7,6 +7,7 @@ var Cm = Components.manager;
 // Shared logging for all HTTP server functions.
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://testing-common/TestUtils.jsm");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
 
 // While the sync code itself uses 1.5, the tests hard-code 1.1,
@@ -328,9 +329,9 @@ ServerCollection.prototype = {
                           options.sort);
           throw new Error("Unknown sort order");
         }
-        // If the client didn't request a sort order, sort newest first,
-        // since `test_history_engine` currently depends on this.
-        data.sort((a, b) => b.modified - a.modified);
+        // If the client didn't request a sort order, shuffle the records
+        // to ensure that we don't accidentally depend on the default order.
+        TestUtils.shuffle(data);
     }
     if (options.full) {
       data = data.map(wbo => wbo.get());
