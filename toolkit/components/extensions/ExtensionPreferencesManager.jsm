@@ -182,6 +182,19 @@ this.ExtensionPreferencesManager = {
   },
 
   /**
+   * Gets the id of the extension controlling a preference or null if it isn't
+   * being controlled.
+   *
+   * @param {string} prefName The name of the preference.
+   *
+   * @returns {Promise} Resolves to the id of the extension, or null.
+   */
+  async getControllingExtensionId(prefName) {
+    await ExtensionSettingsStore.initialize();
+    return ExtensionSettingsStore.getTopExtensionId(STORE_TYPE, prefName);
+  },
+
+  /**
    * Indicates that an extension would like to change the value of a previously
    * defined setting.
    *
