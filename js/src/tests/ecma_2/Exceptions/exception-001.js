@@ -15,10 +15,8 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-001";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions:  CallError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 Call_1();
@@ -36,7 +34,6 @@ function Call_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "Math() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

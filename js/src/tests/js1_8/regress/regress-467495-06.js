@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -39,6 +38,4 @@ function test()
     throw "Bad r[1]";
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

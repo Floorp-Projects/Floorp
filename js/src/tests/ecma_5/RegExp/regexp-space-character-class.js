@@ -15,7 +15,6 @@ test();
  
 function test()
 {
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
@@ -25,6 +24,4 @@ printStatus (summary);
 var non_space_chars = [ "\u200b", "\u200c", "\u200d" ];
 
 reportCompare(non_space_chars.some(function(ch){ return /\s/.test(ch); }), false, summary);
-
-exitFunc ('test');
 }

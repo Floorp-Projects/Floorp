@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * This module implements a number of utilities useful for testing.
+/**
+ * Contains a limited number of testing functions that are commonly used in a
+ * wide variety of situations, for example waiting for an event loop tick or an
+ * observer notification.
  *
- * Additions to this module should be generic and useful to testing multiple
- * features. Utilities only useful to a sepcific testing framework should live
- * in a module specific to that framework, such as BrowserTestUtils.jsm in the
- * case of mochitest-browser-chrome.
+ * More complex functions are likely to belong to a separate test-only module.
+ * Examples include Assert.jsm for generic assertions, FileTestUtils.jsm to work
+ * with local files and their contents, and BrowserTestUtils.jsm to work with
+ * browser windows and tabs.
+ *
+ * Individual components also offer testing functions to other components, for
+ * example LoginTestUtils.jsm.
  */
 
 "use strict";

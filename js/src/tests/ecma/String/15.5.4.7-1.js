@@ -40,8 +40,6 @@
    Date:               2 october 1997
 */
 var SECTION = "15.5.4.7-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.protoype.lastIndexOf";
 
 var TEST_STRING = new String( " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" );
@@ -51,30 +49,25 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var j = 0;
 
 for ( k = 0, i = 0x0021; i < 0x007e; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf(" +String.fromCharCode(i)+ ", 0)",
+  new TestCase( "String.lastIndexOf(" +String.fromCharCode(i)+ ", 0)",
 		-1,
 		TEST_STRING.lastIndexOf( String.fromCharCode(i), 0 ) );
 }
 
 for ( k = 0, i = 0x0020; i < 0x007e; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf("+String.fromCharCode(i)+ ", "+ k +")",
+  new TestCase( "String.lastIndexOf("+String.fromCharCode(i)+ ", "+ k +")",
 		k,
 		TEST_STRING.lastIndexOf( String.fromCharCode(i), k ) );
 }
 
 for ( k = 0, i = 0x0020; i < 0x007e; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf("+String.fromCharCode(i)+ ", "+k+1+")",
+  new TestCase( "String.lastIndexOf("+String.fromCharCode(i)+ ", "+k+1+")",
 		k,
 		TEST_STRING.lastIndexOf( String.fromCharCode(i), k+1 ) );
 }
 
 for ( k = 9, i = 0x0021; i < 0x007d; i++, j++, k++ ) {
-  new TestCase( SECTION,
-
-		"String.lastIndexOf("+(String.fromCharCode(i) +
+  new TestCase( "String.lastIndexOf("+(String.fromCharCode(i) +
 				       String.fromCharCode(i+1)+
 				       String.fromCharCode(i+2)) +", "+ 0 + ")",
 		LastIndexOf( TEST_STRING, String.fromCharCode(i) +
@@ -86,8 +79,7 @@ for ( k = 9, i = 0x0021; i < 0x007d; i++, j++, k++ ) {
 }
 
 for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf("+(String.fromCharCode(i) +
+  new TestCase( "String.lastIndexOf("+(String.fromCharCode(i) +
 				       String.fromCharCode(i+1)+
 				       String.fromCharCode(i+2)) +", "+ k +")",
 		k,
@@ -97,8 +89,7 @@ for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
 					 k ) );
 }
 for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf("+(String.fromCharCode(i) +
+  new TestCase( "String.lastIndexOf("+(String.fromCharCode(i) +
 				       String.fromCharCode(i+1)+
 				       String.fromCharCode(i+2)) +", "+ k+1 +")",
 		k,
@@ -108,8 +99,7 @@ for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
 					 k+1 ) );
 }
 for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
-  new TestCase( SECTION,
-		"String.lastIndexOf("+
+  new TestCase( "String.lastIndexOf("+
 		(String.fromCharCode(i) +
 		 String.fromCharCode(i+1)+
 		 String.fromCharCode(i+2)) +", "+ (k-1) +")",
@@ -121,11 +111,11 @@ for ( k = 0, i = 0x0020; i < 0x007d; i++, j++, k++ ) {
 					 k-1 ) );
 }
 
-new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ", 0 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 0 ) );
+new TestCase( "String.lastIndexOf(" +TEST_STRING + ", 0 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 0 ) );
 
-// new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ", 1 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 1 ));
+// new TestCase( "String.lastIndexOf(" +TEST_STRING + ", 1 )", 0, TEST_STRING.lastIndexOf( TEST_STRING, 1 ));
  
-new TestCase( SECTION,  "String.lastIndexOf(" +TEST_STRING + ")", 0, TEST_STRING.lastIndexOf( TEST_STRING ));
+new TestCase( "String.lastIndexOf(" +TEST_STRING + ")", 0, TEST_STRING.lastIndexOf( TEST_STRING ));
 
 print( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );
 

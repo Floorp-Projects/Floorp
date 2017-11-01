@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -49,6 +48,4 @@ function test()
   actual = (error.stack.length > 0);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

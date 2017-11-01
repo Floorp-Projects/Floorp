@@ -25,7 +25,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -43,6 +42,4 @@ function test()
   encodeURI(URI);
 
   reportCompare('No Crash', 'No Crash', '');
-
-  exitFunc ('test');
 }

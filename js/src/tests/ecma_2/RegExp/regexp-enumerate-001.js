@@ -30,12 +30,11 @@
 //    onerror = err;
 
 var SECTION = "regexp-enumerate-001";
-var VERSION = "ECMA_2";
 var TITLE   = "Regression Test for Enumerating Properties";
 
 var BUGNUMBER="339403";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /*
@@ -55,8 +54,7 @@ var t = new TestRegExp();
 
 for ( p in r ) { e[e.length] = { property:p, value:r[p] }; t.addProperty( p, r[p]) };
 
-new TestCase( SECTION,
-	      "r = new RegExp(); e = new Array(); "+
+new TestCase( "r = new RegExp(); e = new Array(); "+
 	      "for ( p in r ) { e[e.length] = { property:p, value:r[p] }; e.length",
 	      0,
 	      e.length );
@@ -75,14 +73,7 @@ function addProperty(name, value) {
     eval( "this."+ name+" = "+ false );
   }
 
-  new TestCase( SECTION,
-		"Property: " + name +" already enumerated?",
+  new TestCase( "Property: " + name +" already enumerated?",
 		false,
 		pass );
-
-  if ( gTestcases[ gTestcases.length-1].passed == false ) {
-    gTestcases[gTestcases.length-1].reason = "property already enumerated";
-
-  }
-
 }

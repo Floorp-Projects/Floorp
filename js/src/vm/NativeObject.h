@@ -390,6 +390,7 @@ extern HeapSlot* const emptyObjectElements;
 extern HeapSlot* const emptyObjectElementsShared;
 
 struct Class;
+class AutoCheckShapeConsistency;
 class GCMarker;
 class Shape;
 
@@ -551,6 +552,7 @@ class NativeObject : public ShapedObject
 
   protected:
 #ifdef DEBUG
+    friend class js::AutoCheckShapeConsistency;
     void checkShapeConsistency();
 #else
     void checkShapeConsistency() { }
@@ -851,10 +853,13 @@ class NativeObject : public ShapedObject
 
   public:
     /* Add a property whose id is not yet in this scope. */
-    static MOZ_ALWAYS_INLINE Shape* addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                                                JSGetterOp getter, JSSetterOp setter,
-                                                uint32_t slot, unsigned attrs, unsigned flags,
-                                                bool allowDictionary = true);
+    static MOZ_ALWAYS_INLINE Shape* addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                                    uint32_t slot, unsigned attrs, unsigned flags,
+                                                    bool allowDictionary = true);
+    static MOZ_ALWAYS_INLINE Shape* addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                                        JSGetterOp getter, JSSetterOp setter,
+                                                        unsigned attrs, unsigned flags,
+                                                        bool allowDictionary = true);
     static Shape* addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id);
 
     /* Add a data property whose id is not yet in this scope. */
@@ -865,15 +870,12 @@ class NativeObject : public ShapedObject
 
     /* Add or overwrite a property for id in this scope. */
     static Shape*
-    putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                JSGetterOp getter, JSSetterOp setter,
-                uint32_t slot, unsigned attrs,
-                unsigned flags);
-    static inline Shape*
-    putProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-                JSGetterOp getter, JSSetterOp setter,
-                uint32_t slot, unsigned attrs,
-                unsigned flags);
+    putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id, unsigned attrs);
+
+    static Shape*
+    putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                        JSGetterOp getter, JSSetterOp setter,
+                        unsigned attrs, unsigned flags);
 
     /* Change the given property into a sibling with the same id in this scope. */
     static Shape*
@@ -895,10 +897,16 @@ class NativeObject : public ShapedObject
      * 2. Checks for non-extensibility must be done by callers.
      */
     static Shape*
-    addPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
-                        JSGetterOp getter, JSSetterOp setter, uint32_t slot, unsigned attrs,
-                        unsigned flags, ShapeTable::Entry* entry, bool allowDictionary,
-                        const AutoKeepShapeTables& keep);
+    addDataPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
+                            uint32_t slot, unsigned attrs, unsigned flags,
+                            ShapeTable::Entry* entry, bool allowDictionary,
+                            const AutoKeepShapeTables& keep);
+
+    static Shape*
+    addAccessorPropertyInternal(JSContext* cx, HandleNativeObject obj, HandleId id,
+                                JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                                unsigned flags, ShapeTable::Entry* entry, bool allowDictionary,
+                                const AutoKeepShapeTables& keep);
 
     static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
                                              const Vector<Value>& values, void* priv);

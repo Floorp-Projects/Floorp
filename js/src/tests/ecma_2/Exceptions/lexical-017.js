@@ -24,10 +24,8 @@
    Date:               12 november 1997
 */
 var SECTION = "lexical-017";
-var VERSION = "JS1_4";
 var TITLE   = "Future Reserved Words";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -42,7 +40,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "do = true" +
   " (threw " + exception +")",
   expect,

@@ -22,21 +22,19 @@
 */
 
 var SECTION = "11.4.8";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Bitwise Not operator");
 
 for ( var i = 0; i < 35; i++ ) {
   var p = Math.pow(2,i);
 
-  new TestCase( SECTION, "~"+p,   Not(p),     ~p );
+  new TestCase( "~"+p,   Not(p),     ~p );
 
 }
 for ( i = 0; i < 35; i++ ) {
   var p = -Math.pow(2,i);
 
-  new TestCase( SECTION, "~"+p,   Not(p),     ~p );
+  new TestCase( "~"+p,   Not(p),     ~p );
 
 }
 

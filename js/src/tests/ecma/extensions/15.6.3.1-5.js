@@ -12,13 +12,11 @@
    Date:               28 october 1997
 
 */
-var VERSION = "ECMA_2";
-startTest();
 var SECTION = "15.6.3.1-5";
 var TITLE   = "Boolean.prototype"
 
   writeHeaderToLog( SECTION + " " + TITLE );
 
-new TestCase( SECTION,  "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
+new TestCase( "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
 
 test();

@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow
+// |reftest| skip-if(xulRuntime.shell||(xulRuntime.OS=="WINNT"&&isDebugBuild)) slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,22 +17,12 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  if (typeof window != 'undefined')
-  {
-    gDelayTestDriverEnd = true;
-    document.write('<button id="button" onclick="document.getElementsByTagName(\'button\')[0] = \'wtf\';">Crash</button>');
-    window.addEventListener('load', crash, false);
-  }
-  else
-  {
-    reportCompare(expect, actual, summary);
-  }
 
-  exitFunc ('test');
+  gDelayTestDriverEnd = true;
+  document.write('<button id="button" onclick="document.getElementsByTagName(\'button\')[0] = \'wtf\';">Crash</button>');
+  window.addEventListener('load', crash, false);
 }
 
 function crash()

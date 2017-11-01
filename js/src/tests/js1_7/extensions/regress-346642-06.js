@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -57,6 +56,4 @@ function test()
   actual = '';
   actual = 1; try {for(x in (function ([y]) { })() ) { }}catch(ex){} actual = 3;
   reportCompare(expect, actual, summary + ': 5');
-
-  exitFunc ('test');
 }

@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -27,6 +26,4 @@ function test()
   Object.defineProperty(this, "m", { set: f, enumerable: true, configurable: true });
   uneval(this);
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

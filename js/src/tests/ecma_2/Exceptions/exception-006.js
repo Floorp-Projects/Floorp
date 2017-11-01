@@ -15,10 +15,8 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-006";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: TypeError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 ToPrimitive_1();
@@ -47,7 +45,6 @@ function ToPrimitive_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "new MyObject() + new MyObject() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

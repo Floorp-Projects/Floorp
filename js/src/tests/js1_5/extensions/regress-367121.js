@@ -1,3 +1,4 @@
+// |reftest| skip-if(xulRuntime.shell)
 /* -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,16 +17,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  if (typeof window == 'undefined')
-  {
-    actual = expect = 'Test skipped - Test must be run in the browser.';
-    reportCompare(expect, actual, summary);
-  }
-  else if (typeof Script == 'undefined')
+  if (typeof Script == 'undefined')
   {
     actual = expect = 'Test skipped - Test requires Script object..';
     reportCompare(expect, actual, summary);
@@ -34,8 +29,6 @@ function test()
   {
     gDelayTestDriverEnd = true;
   }
-
-  exitFunc ('test');
 }
 
 function handleLoad()
@@ -58,7 +51,4 @@ function handleLoad()
   jsTestDriverEnd();
 }
 
-if (typeof window != 'undefined')
-{
-  window.onload = handleLoad;
-}
+window.onload = handleLoad;

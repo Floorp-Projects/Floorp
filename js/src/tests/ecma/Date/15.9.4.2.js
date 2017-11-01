@@ -43,8 +43,6 @@
 
 */
 
-var VERSION = "ECMA_1";
-startTest();
 var SECTION = "15.9.4.2";
 var TITLE   = "Date.parse()";
 
@@ -68,7 +66,6 @@ var SECONDS     = 15;
 var MS          = 16;
 var TYPEOF  = "object";
 
-//  for TCMS, the gTestcases array must be global.
 writeHeaderToLog("15.9.4.2 Date.parse()" );
 
 // Dates around 1970
@@ -150,8 +147,8 @@ test();
 function addNewTestCase( DateCase, DateString, ResultArray ) {
   DateCase = DateCase;
 
-  new TestCase( SECTION, DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
-  new TestCase( SECTION, DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );
-  new TestCase( SECTION, "Date.parse(" + DateCase.toString() +")",    Math.floor(ResultArray[TIME]/1000)*1000,  Date.parse(DateCase.toString()) );
-  new TestCase( SECTION, "Date.parse(" + DateCase.toGMTString() +")", Math.floor(ResultArray[TIME]/1000)*1000,  Date.parse(DateCase.toGMTString()) );
+  new TestCase( DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
+  new TestCase( DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );
+  new TestCase( "Date.parse(" + DateCase.toString() +")",    Math.floor(ResultArray[TIME]/1000)*1000,  Date.parse(DateCase.toString()) );
+  new TestCase( "Date.parse(" + DateCase.toGMTString() +")", Math.floor(ResultArray[TIME]/1000)*1000,  Date.parse(DateCase.toGMTString()) );
 }

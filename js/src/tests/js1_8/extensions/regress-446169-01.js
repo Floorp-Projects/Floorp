@@ -30,7 +30,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -43,8 +42,6 @@ function test()
     print('Test skipped. Requires thread-safe build with scatter function.');
   }
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 
 

@@ -7,10 +7,7 @@
 
 // Test DataView on SharedArrayBuffer.
 
-if (!this.SharedArrayBuffer) {
-    reportCompare(true,true);
-    quit(0);
-}
+if (this.SharedArrayBuffer) {
 
 var sab = new SharedArrayBuffer(4096);
 var dv = new DataView(sab);
@@ -40,5 +37,7 @@ assertThrowsInstanceOf(() => dv.setInt32(-1, -1), RangeError);
 assertThrowsInstanceOf(() => dv2.setInt32(2080, -1), RangeError);
 assertThrowsInstanceOf(() => dv2.setInt32(2046, -1), RangeError);
 assertThrowsInstanceOf(() => dv2.setInt32(-1, -1), RangeError);
+
+}
 
 reportCompare(true,true);

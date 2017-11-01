@@ -32,11 +32,10 @@
  *
  */
 var SECTION = "function-002.js";
-var VERSION = "JS1_4";
 var TITLE   = "Regression test case for 325843";
 var BUGNUMBER="330462";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
@@ -47,7 +46,6 @@ eval(dec1);
 eval(dec2);
 
 new TestCase(
-  SECTION,
   "typeof f1",
   "function",
   typeof f1 );
@@ -55,13 +53,11 @@ new TestCase(
 
 // force a function decompilation
 new TestCase(
-  SECTION,
   "f1.toString() == dec1",
   true,
   StripSpaces(f1.toString()) == StripSpaces(dec1));
 
 new TestCase(
-  SECTION,
   "typeof f2",
   "function",
   typeof f2 );
@@ -69,7 +65,6 @@ new TestCase(
 // force a function decompilation
 
 new TestCase(
-  SECTION,
   "f2.toString() == dec2",
   true,
   StripSpaces(f2.toString().replace(/new Date\(\)/g, 'new Date')) ==

@@ -22,62 +22,52 @@
    */
 
 var SECTION = "15.4.4.3-1";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Array.prototype.join()");
 
 var ARR_PROTOTYPE = Array.prototype;
 
-new TestCase( SECTION, "Array.prototype.join.length",           1,      Array.prototype.join.length );
+new TestCase( "Array.prototype.join.length",           1,      Array.prototype.join.length );
 
 // case where array length is 0
 
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(); TEST_ARRAY.join()",
+new TestCase(   "var TEST_ARRAY = new Array(); TEST_ARRAY.join()",
 		"",
 		eval("var TEST_ARRAY = new Array(); TEST_ARRAY.join()") );
 
 // array length is 0, but spearator is specified
 
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(); TEST_ARRAY.join(' ')",
+new TestCase(   "var TEST_ARRAY = new Array(); TEST_ARRAY.join(' ')",
 		"",
 		eval("var TEST_ARRAY = new Array(); TEST_ARRAY.join(' ')") );
 
 // length is greater than 0, separator is supplied
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('&')",
+new TestCase(   "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('&')",
 		"&&true&false&123&[object Object]&true",
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('&')") );
 
 // length is greater than 0, separator is empty string
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('')",
+new TestCase(   "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('')",
 		"truefalse123[object Object]true",
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('')") );
 
 // length is greater than 0, separator is undefined
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join(void 0)",
+new TestCase(   "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join(void 0)",
 		",,true,false,123,[object Object],true",
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join(void 0)") );
 
 // length is greater than 0, separator is not supplied
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join()",
+new TestCase(   "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join()",
 		",,true,false,123,[object Object],true",
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join()") );
 
 // separator is a control character
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')",
+new TestCase(   "var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')",
 		decodeURIComponent("%0B%0Btrue%0Bfalse%0B123%0B[object Object]%0Btrue"),
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')") );
 
 // length of array is 1
-new TestCase(   SECTION,
-		"var TEST_ARRAY = new Array(true) ); TEST_ARRAY.join('\v')",
+new TestCase(   "var TEST_ARRAY = new Array(true) ); TEST_ARRAY.join('\v')",
 		"true",
 		eval("var TEST_ARRAY = new Array(true); TEST_ARRAY.join('\v')") );
 
@@ -98,19 +88,16 @@ for ( var index = 0; index < TEST_LENGTH; index++ ) {
 
 TEST_ARRAY = eval( "new Array( "+ARGUMENTS +")" );
 
-new TestCase( SECTION,
-	      "TEST_ARRAY.join("+SEPARATOR+")",  
+new TestCase( "TEST_ARRAY.join("+SEPARATOR+")",  
 	      TEST_RESULT,   
 	      TEST_ARRAY.join( SEPARATOR ) );
 
-new TestCase( SECTION,
-	      "(new Array( Boolean(true), Boolean(false), null,  void 0, Number(1e+21), Number(1e-7))).join()",
+new TestCase( "(new Array( Boolean(true), Boolean(false), null,  void 0, Number(1e+21), Number(1e-7))).join()",
 	      "true,false,,,1e+21,1e-7",
 	      (new Array( Boolean(true), Boolean(false), null,  void 0, Number(1e+21), Number(1e-7))).join() );
 
 // this is not an Array object
-new TestCase(   SECTION,
-		"var OB = new Object_1('true,false,111,0.5,1.23e6,NaN,void 0,null'); OB.join(':')",
+new TestCase(   "var OB = new Object_1('true,false,111,0.5,1.23e6,NaN,void 0,null'); OB.join(':')",
 		"true:false:111:0.5:1230000:NaN::",
 		eval("var OB = new Object_1('true,false,111,0.5,1.23e6,NaN,void 0,null'); OB.join(':')") );
 

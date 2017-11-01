@@ -32,8 +32,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.7.3";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + "  The unsigned right shift operator ( >>> )");
 
@@ -44,8 +42,7 @@ for ( power = 0; power <= 32; power++ ) {
   shiftexp = Math.pow( 2, power );
 
   for ( addexp = 0; addexp <= 32; addexp++ ) {
-    new TestCase( SECTION,
-                  shiftexp + " >>> " + addexp,
+    new TestCase( shiftexp + " >>> " + addexp,
                   UnsignedRightShift( shiftexp, addexp ),
                   shiftexp >>> addexp );
   }

@@ -16,15 +16,12 @@
    Date:               11 september 1997
 */
 var SECTION = "7.5-9-n";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Identifiers";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DESCRIPTION = "var 123=\"hi\"";
-EXPECTED = "error";
 
-new TestCase( SECTION,    "var 123=\"hi\"",   "error",    eval("123 = \"hi\"; array[item] = 123;") );
+new TestCase( "var 123=\"hi\"",   "error",    eval("123 = \"hi\"; array[item] = 123;") );
 
 test();

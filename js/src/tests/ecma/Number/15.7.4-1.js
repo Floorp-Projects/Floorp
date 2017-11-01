@@ -14,13 +14,11 @@
 
 
 var SECTION = "15.7.4-1";
-var VERSION = "ECMA_1";
-startTest();
 writeHeaderToLog( SECTION + "Properties of the Number prototype object");
 
-new TestCase(SECTION, "Number.prototype.valueOf()",      0,                  Number.prototype.valueOf() );
-new TestCase(SECTION, "typeof(Number.prototype)",        "object",           typeof(Number.prototype) );
-new TestCase(SECTION, "Number.prototype.constructor == Number",    true,     Number.prototype.constructor == Number );
-//    new TestCase(SECTION, "Number.prototype == Number.__proto__",      true,   Number.prototype == Number.__proto__ );
+new TestCase("Number.prototype.valueOf()",      0,                  Number.prototype.valueOf() );
+new TestCase("typeof(Number.prototype)",        "object",           typeof(Number.prototype) );
+new TestCase("Number.prototype.constructor == Number",    true,     Number.prototype.constructor == Number );
+//    new TestCase("Number.prototype == Number.__proto__",      true,   Number.prototype == Number.__proto__ );
 
 test();

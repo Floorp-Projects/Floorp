@@ -26,41 +26,22 @@
    Date:               12 november 1997
 */
 var SECTION = "10.5.1-2";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Global Object");
 
-new TestCase( "SECTION", "Eval Code check" );
-
-var EVAL_STRING = 'if ( Object == null ) { gTestcases[0].reason += " Object == null" ; }' +
-  'if ( Function == null ) { gTestcases[0].reason += " Function == null"; }' +
-  'if ( String == null ) { gTestcases[0].reason += " String == null"; }'   +
-  'if ( Array == null ) { gTestcases[0].reason += " Array == null"; }'     +
-  'if ( Number == null ) { gTestcases[0].reason += " Function == null";}'  +
-  'if ( Math == null ) { gTestcases[0].reason += " Math == null"; }'       +
-  'if ( Boolean == null ) { gTestcases[0].reason += " Boolean == null"; }' +
-  'if ( Date  == null ) { gTestcases[0].reason += " Date == null"; }'      +
-  'if ( eval == null ) { gTestcases[0].reason += " eval == null"; }'       +
-  'if ( parseInt == null ) { gTestcases[0].reason += " parseInt == null"; }' ;
+var EVAL_STRING =
+  'new TestCase( "Eval Code check: Object", false, Object == null);' +
+  'new TestCase( "Eval Code check: Function", false, Function == null);' +
+  'new TestCase( "Eval Code check: String", false, String == null);' +
+  'new TestCase( "Eval Code check: Array", false, Array == null);' +
+  'new TestCase( "Eval Code check: Number", false, Number == null);' +
+  'new TestCase( "Eval Code check: Math", false, Math == null);' +
+  'new TestCase( "Eval Code check: Boolean", false, Boolean == null);' +
+  'new TestCase( "Eval Code check: Date", false, Date == null);' +
+  'new TestCase( "Eval Code check: eval", false, eval == null);' +
+  'new TestCase( "Eval Code check: parseInt", false, parseInt == null);';
 
 eval( EVAL_STRING );
-
-/*
-  if ( NaN == null ) {
-  gTestcases[0].reason += " NaN == null";
-  }
-  if ( Infinity == null ) {
-  gTestcases[0].reason += " Infinity == null";
-  }
-*/
-
-if ( gTestcases[0].reason != "" ) {
-  gTestcases[0].actual = "fail";
-} else {
-  gTestcases[0].actual = "pass";
-}
-gTestcases[0].expect = "pass";
 
 test();
 

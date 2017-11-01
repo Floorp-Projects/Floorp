@@ -19,7 +19,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -34,7 +33,5 @@ function test()
 
   reportCompare(itercount, 1, summary + ': right itercount')
   reportCompare(expect, actual, summary + ': right value');
-
-  exitFunc ('test');
 }
 

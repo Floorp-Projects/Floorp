@@ -5,16 +5,17 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-if (!(this.SharedArrayBuffer && this.getSharedArrayBuffer && this.setSharedArrayBuffer)) {
-    reportCompare(true,true);
-    quit(0);
-}
-
 var DEBUG = false;
 
 function dprint(s) {
     if (DEBUG) print(s);
 }
+
+var hasSharedArrayBuffer = !!(this.SharedArrayBuffer &&
+                              this.getSharedArrayBuffer &&
+                              this.setSharedArrayBuffer);
+
+if (hasSharedArrayBuffer) {
 
 // Tests the SharedArrayBuffer mailbox in the shell.
 // Tests the wait/wake functionality in the shell.
@@ -59,13 +60,13 @@ assertThrowsInstanceOf(() => setSharedArrayBuffer(mem), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer("abracadabra"), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(() => 37), Error);
 
+} // if (hasSharedArrayBuffer) { ... }
+
+
 // Futex test
 
-if (helperThreadCount() === 0) {
-  // Abort if there is no helper thread.
-  reportCompare(true,true);
-  quit();
-}
+// Only run if helper threads are available.
+if (hasSharedArrayBuffer && helperThreadCount() !== 0) {
 
 ////////////////////////////////////////////////////////////
 
@@ -155,6 +156,8 @@ finally {
 assertEq(exn, true);
 
 ////////////////////////////////////////////////////////////
+
+} // if (hasSharedArrayBuffer && helperThreadCount() !== 0) { ... }
 
 dprint("Done");
 reportCompare(true,true);

@@ -27,10 +27,8 @@
 //    onerror = err;
 
 var SECTION = "instanceof-002";
-var VERSION = "ECMA_2";
 var TITLE   = "Determining Instance Relationships";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object, constructor ) {
@@ -75,53 +73,43 @@ Engineer.prototype = new WorkerBee();
 
 var pat = new Engineer();
 
-new TestCase( SECTION,
-	      "pat.__proto__ == Engineer.prototype",
+new TestCase( "pat.__proto__ == Engineer.prototype",
 	      true,
 	      pat.__proto__ == Engineer.prototype );
 
-new TestCase( SECTION,
-	      "pat.__proto__.__proto__ == WorkerBee.prototype",
+new TestCase( "pat.__proto__.__proto__ == WorkerBee.prototype",
 	      true,
 	      pat.__proto__.__proto__ == WorkerBee.prototype );
 
-new TestCase( SECTION,
-	      "pat.__proto__.__proto__.__proto__ == Employee.prototype",
+new TestCase( "pat.__proto__.__proto__.__proto__ == Employee.prototype",
 	      true,
 	      pat.__proto__.__proto__.__proto__ == Employee.prototype );
 
-new TestCase( SECTION,
-	      "pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype",
+new TestCase( "pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype",
 	      true,
 	      pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype );
 
-new TestCase( SECTION,
-	      "pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null",
+new TestCase( "pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null",
 	      true,
 	      pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null );
 
-new TestCase( SECTION,
-	      "pat instanceof Engineer",
+new TestCase( "pat instanceof Engineer",
 	      true,
 	      pat instanceof Engineer );
 
-new TestCase( SECTION,
-	      "pat instanceof WorkerBee )",
+new TestCase( "pat instanceof WorkerBee )",
 	      true,
 	      pat instanceof WorkerBee );
 
-new TestCase( SECTION,
-	      "pat instanceof Employee )",
+new TestCase( "pat instanceof Employee )",
 	      true,
 	      pat instanceof Employee );
 
-new TestCase( SECTION,
-	      "pat instanceof Object )",
+new TestCase( "pat instanceof Object )",
 	      true,
 	      pat instanceof Object );
 
-new TestCase( SECTION,
-	      "pat instanceof SalesPerson )",
+new TestCase( "pat instanceof SalesPerson )",
 	      false,
 	      pat instanceof SalesPerson );
 test();

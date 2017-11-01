@@ -12,7 +12,8 @@
  *
  */
 //-----------------------------------------------------------------------------
-printBugNumber(96526);
+var BUGNUMBER = 96526;
+printBugNumber(BUGNUMBER);
 printStatus("Just seeing that we don't crash when compiling this script -");
 
 

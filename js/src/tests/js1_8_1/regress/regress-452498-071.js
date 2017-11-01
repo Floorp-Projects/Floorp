@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -26,6 +25,4 @@ function test()
 // Assertion failure: pn->pn_op == JSOP_NOP, at ../jsparse.cpp:1118
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

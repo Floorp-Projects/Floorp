@@ -18,7 +18,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printStatus (summary);
 
   var actual = { name: "no error", message: "no message" };
@@ -31,6 +30,4 @@ function test()
   reportCompare("TypeError", actual.name, "must be a TypeError");
   reportCompare(true, /not a constructor/.test(actual.message),
                 "message must indicate not a constructor");
-
-  exitFunc ('test');
 }

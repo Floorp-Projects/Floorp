@@ -17,13 +17,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   expect = '(function() { })';
   actual = uneval(eval("(function() { })"));
   compareSource(expect, actual, summary);
-
-  exitFunc ('test');
 }

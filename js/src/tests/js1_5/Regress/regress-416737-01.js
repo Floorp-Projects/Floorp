@@ -15,14 +15,11 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   (function() { (function([]){ function n(){} })(1) });
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 

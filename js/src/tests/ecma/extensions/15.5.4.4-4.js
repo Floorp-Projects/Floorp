@@ -33,41 +33,39 @@
    Date:               2 october 1997
 */
 var SECTION = "15.5.4.4-4";
-var VERSION = "ECMA_2";
-startTest();
 var TITLE   = "String.prototype.charAt";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /*
-  new TestCase( SECTION,     "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "n",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-  new TestCase( SECTION,     "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "u",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-  new TestCase( SECTION,     "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "l",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
-  new TestCase( SECTION,     "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "l",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
+  new TestCase( "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "n",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+  new TestCase( "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "u",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+  new TestCase( "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "l",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+  new TestCase( "x = null; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "l",     eval("x=null; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
 
-  new TestCase( SECTION,     "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "u",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-  new TestCase( SECTION,     "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "n",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-  new TestCase( SECTION,     "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "d",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
-  new TestCase( SECTION,     "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "e",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
+  new TestCase( "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "u",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+  new TestCase( "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "n",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+  new TestCase( "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "d",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+  new TestCase( "x = undefined; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "e",     eval("x=undefined; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
 */
-new TestCase( SECTION,     "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "f",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-new TestCase( SECTION,     "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "a",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-new TestCase( SECTION,     "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "l",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
-new TestCase( SECTION,     "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "s",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
-new TestCase( SECTION,     "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(4)",            "e",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(4)") );
+new TestCase( "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "f",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+new TestCase( "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "a",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+new TestCase( "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "l",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+new TestCase( "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "s",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
+new TestCase( "x = false; x.__proto.charAt = String.prototype.charAt; x.charAt(4)",            "e",     eval("x=false; x.__proto__.charAt = String.prototype.charAt; x.charAt(4)") );
 
-new TestCase( SECTION,     "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "t",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-new TestCase( SECTION,     "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "r",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-new TestCase( SECTION,     "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "u",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
-new TestCase( SECTION,     "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "e",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
+new TestCase( "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "t",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+new TestCase( "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "r",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+new TestCase( "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "u",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+new TestCase( "x = true; x.__proto.charAt = String.prototype.charAt; x.charAt(3)",            "e",     eval("x=true; x.__proto__.charAt = String.prototype.charAt; x.charAt(3)") );
 
-new TestCase( SECTION,     "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "N",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-new TestCase( SECTION,     "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "a",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-new TestCase( SECTION,     "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "N",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+new TestCase( "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "N",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+new TestCase( "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "a",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+new TestCase( "x = NaN; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "N",     eval("x=NaN; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
 
-new TestCase( SECTION,     "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "1",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
-new TestCase( SECTION,     "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "2",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
-new TestCase( SECTION,     "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "3",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
+new TestCase( "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(0)",            "1",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(0)") );
+new TestCase( "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(1)",            "2",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(1)") );
+new TestCase( "x = 123; x.__proto.charAt = String.prototype.charAt; x.charAt(2)",            "3",     eval("x=123; x.__proto__.charAt = String.prototype.charAt; x.charAt(2)") );
 
 
 test();

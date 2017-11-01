@@ -13,8 +13,6 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
-startTest();
 var TITLE = 'statements: do_while';
 
 writeHeaderToLog('Executing script: do_while.js');
@@ -27,7 +25,7 @@ do
   if (x++ == 3) done = true;
 } while (!done);
 
-new TestCase( SECTION, "do_while ",
+new TestCase( "do_while ",
 	      4, x);
 
 //load('d:/javascript/tests/output/statements/do_while.js')

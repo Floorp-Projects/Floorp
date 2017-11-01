@@ -17,8 +17,6 @@
 */
 
 var SECTION = "JS_1.2";
-var VERSION = "JS_1.2";
-startTest();
 var TITLE   = "The variable statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -31,38 +29,31 @@ function f(x) {return x;}
 
 x = f(/abc/);
 
-new TestCase( SECTION,
-	      "function f(x) {return x;}; f()",
+new TestCase( "function f(x) {return x;}; f()",
 	      void 0,
 	      f() );
 
-new TestCase( SECTION,
-	      "f(\"hi\")",
+new TestCase( "f(\"hi\")",
 	      "hi",
 	      f("hi") );
 
-new TestCase( SECTION,
-	      "new f(/abc/) +''",
+new TestCase( "new f(/abc/) +''",
 	      "/abc/",
 	      new f(/abc/) +"" );
 
-new TestCase( SECTION,
-	      "f(/abc/)+'')",
+new TestCase( "f(/abc/)+'')",
 	      "/abc/",
 	      f(/abc/) +'');   
        
-new TestCase( SECTION,
-	      "typeof f(/abc/)",
+new TestCase( "typeof f(/abc/)",
 	      "object",
 	      typeof f(/abc/) );
 
-new TestCase( SECTION,
-	      "typeof new f(/abc/)",
+new TestCase( "typeof new f(/abc/)",
 	      "object",
 	      typeof new f(/abc/) );
 
-new TestCase( SECTION,
-	      "x = new f(/abc/); x.exec(\"hi\")",
+new TestCase( "x = new f(/abc/); x.exec(\"hi\")",
 	      null,
 	      x.exec("hi") );
 

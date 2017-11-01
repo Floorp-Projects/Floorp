@@ -42,10 +42,8 @@
    Date:               11 september 1997
 */
 var SECTION = "statement-002";
-var VERSION = "JS1_4";
 var TITLE   = "The for..in statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -60,7 +58,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "more than one member expression" +
   " (threw " + exception +")",
   expect,

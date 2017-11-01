@@ -52,7 +52,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -60,8 +59,6 @@ function test()
   {
     reportCompare(expect[i], actual[i], getStatus(i));
   }
-
-  exitFunc ('test');
 }
 
 

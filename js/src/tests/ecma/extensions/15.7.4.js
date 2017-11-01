@@ -28,29 +28,24 @@
    Date:               12 november 1997
 */
 var SECTION = "15.7.4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Properties of the Number Prototype Object";
 
 writeHeaderToLog( SECTION + " "+TITLE);
 
-new TestCase( SECTION,
-	      "Number.prototype.toString=Object.prototype.toString;Number.prototype.toString()",
+new TestCase( "Number.prototype.toString=Object.prototype.toString;Number.prototype.toString()",
 	      "[object Number]",
 	      eval("Number.prototype.toString=Object.prototype.toString;Number.prototype.toString()") );
 
-new TestCase( SECTION,
-	      "typeof Number.prototype",  
+new TestCase( "typeof Number.prototype",  
 	      "object",
 	      typeof Number.prototype );
 
-new TestCase( SECTION,
-	      "Number.prototype.valueOf()", 
+new TestCase( "Number.prototype.valueOf()", 
 	      0,
 	      Number.prototype.valueOf() );
 
 //    The __proto__ property cannot be used in ECMA_1 tests.
-//    new TestCase( SECTION, "Number.prototype.__proto__",                        Object.prototype,   Number.prototype.__proto__ );
-//    new TestCase( SECTION, "Number.prototype.__proto__ == Object.prototype",    true,       Number.prototype.__proto__ == Object.prototype );
+//    new TestCase( "Number.prototype.__proto__",                        Object.prototype,   Number.prototype.__proto__ );
+//    new TestCase( "Number.prototype.__proto__ == Object.prototype",    true,       Number.prototype.__proto__ == Object.prototype );
 
 test();

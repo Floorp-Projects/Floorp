@@ -17,10 +17,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var INVALID_JAVA_INTEGER_VALUE = "Invalid value for java.lang.Integer constructor";
@@ -68,13 +66,11 @@ function TryNewJavaInteger( value, expect ) {
     finalTest = true;
   }
   new TestCase(
-    SECTION,
     "newJavaValue( " + value +" )",
     expect,
     result);
 
   new TestCase(
-    SECTION,
     "newJavaValue( " + value +" ) hit finally block",
     true,
     finalTest);

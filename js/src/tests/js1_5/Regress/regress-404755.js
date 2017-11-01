@@ -17,7 +17,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -45,6 +44,4 @@ function test()
     throw "A possible leak is observed";
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -14,7 +14,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -40,6 +39,4 @@ function test()
                   "unnamed function expression not in statement context " +
                   "should have been a SyntaxError");
   }
-
-  exitFunc ('test');
 }

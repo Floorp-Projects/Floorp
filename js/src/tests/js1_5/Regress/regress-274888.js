@@ -9,7 +9,6 @@ var summary = 'Negative lookahead should match at positions > approx. 64k';
 var actual = '';
 var expect = '';
 
-enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
@@ -34,6 +33,3 @@ expect = true;
 actual = re.test(s);
 
 reportCompare(expect, actual, status);
-
-exitFunc ('test');
-

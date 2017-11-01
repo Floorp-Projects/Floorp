@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -44,7 +43,4 @@ function test()
     run();
     reportCompare(expect, actual, summary + ': ' + i);
   }
-
-
-  exitFunc ('test');
 }

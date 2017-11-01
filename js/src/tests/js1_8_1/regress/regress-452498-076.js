@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -26,6 +25,4 @@ function test()
 // 1: ReferenceError: d is not defined
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
