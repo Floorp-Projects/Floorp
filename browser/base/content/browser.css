@@ -340,7 +340,20 @@ toolbarpaletteitem {
   transition: 1.5s margin-top ease-out;
 }
 
-/* Rules to help integrate WebExtension buttons */
+/* Rules to help integrate SDK widgets */
+toolbaritem[sdkstylewidget="true"] > toolbarbutton,
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe,
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-text {
+  display: none;
+}
+
+toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sdkstylewidget="true"] > toolbarbutton {
+  display: -moz-box;
+}
+
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] > .toolbarbutton-text {
+  display: -moz-box;
+}
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: 16px;
@@ -1182,6 +1195,11 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   transform: none;
 }
 %endif
+
+/* Customize mode */
+#PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
+  list-style-image: none;
+}
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
