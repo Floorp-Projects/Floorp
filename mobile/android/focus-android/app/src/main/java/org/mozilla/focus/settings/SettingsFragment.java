@@ -31,34 +31,46 @@ import java.util.Locale;
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String FRAGMENT_RESID_INTENT_EXTRA = "extra_frament_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
+    public static final String ACTIONBAR_ICON_INTENT_EXTRA = "extra_actionbar_icon_resid";
+
+    public static final int EXTRA_VALUE_NONE = -1;
 
     private boolean localeUpdated;
 
-    public interface TitleUpdater {
-        void updateTitle(int stringResId);
+    public interface ActionBarUpdater {
+        void updateTitle(int titleResId);
+        void updateIcon(int iconResId);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Bundle args = getArguments();
-        final int prefResId = args != null ? args.getInt(FRAGMENT_RESID_INTENT_EXTRA) : R.xml.settings;
-        final int titleResId = args != null ? args.getInt(TITLE_RESID_INTENT_EXTRA) : R.string.menu_settings;
 
-       // We've checked that this cast is legal in onAttach.
-        final TitleUpdater titleUpdater = (TitleUpdater) getActivity();
-        if (titleUpdater != null) {
-            titleUpdater.updateTitle(titleResId);
+        // We've checked that this cast is legal in onAttach.
+        final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
+
+        final Bundle args = getArguments();
+        int prefResId = R.xml.settings;
+        int titleResId = R.string.menu_settings;
+
+        if (args != null) {
+            prefResId = args.getInt(FRAGMENT_RESID_INTENT_EXTRA, R.xml.settings);
+            titleResId = args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings);
+
+            if (args.containsKey(ACTIONBAR_ICON_INTENT_EXTRA)) {
+                updater.updateIcon(args.getInt(ACTIONBAR_ICON_INTENT_EXTRA));
+            }
         }
 
+        updater.updateTitle(titleResId);
         addPreferencesFromResource(prefResId);
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (!(context instanceof TitleUpdater)) {
+        if (!(getActivity() instanceof ActionBarUpdater)) {
             throw new IllegalArgumentException("Parent activity must implement TitleUpdater");
         }
     }
@@ -88,8 +100,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
             final Intent intent = getSettingsIntent(getActivity(),
-                    R.xml.manual_add_search_engine,
-                    R.string.tutorial_search_title);
+                    R.xml.manual_add_search_engine, R.string.tutorial_search_title, R.drawable.ic_close);
             startActivity(intent);
         }
 
@@ -97,9 +108,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId) {
+        return getSettingsIntent(context, fragmentResId, titleResId, EXTRA_VALUE_NONE);
+    }
+
+    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId, int actionbarIconResId) {
         final Intent intent = new Intent(context, SettingsActivity.class);
         intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, fragmentResId);
         intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
+        if (actionbarIconResId != EXTRA_VALUE_NONE) {
+            intent.putExtra(ACTIONBAR_ICON_INTENT_EXTRA, actionbarIconResId);
+        }
         return intent;
     }
 
