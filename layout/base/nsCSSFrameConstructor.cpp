@@ -6888,6 +6888,12 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
       sibling = aPrevSibling ?
         FindPreviousSibling(iter, aTargetContent, aTargetContentDisplay, aParentFrame) :
         FindNextSibling(iter, aTargetContent, aTargetContentDisplay, aParentFrame);
+
+      // The recursion above has already done all the placeholder and
+      // continuation fixups.
+      if (sibling) {
+        return sibling;
+      }
     }
     if (!sibling) {
       // ... then ::after / ::before on the opposite end.
@@ -6911,7 +6917,7 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
     sibling = placeholderFrame;
   }
 
-  // The frame we have now should never be a continuation
+  // The frame we have now should never be a continuation.
   NS_ASSERTION(!sibling->GetPrevContinuation(), "How did that happen?");
 
   if (aPrevSibling) {
