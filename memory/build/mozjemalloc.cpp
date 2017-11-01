@@ -182,12 +182,6 @@ getenv(const char* name)
   return nullptr;
 }
 
-#if defined(_WIN64)
-typedef long long ssize_t;
-#else
-typedef long ssize_t;
-#endif
-
 #define MALLOC_DECOMMIT
 #endif
 
