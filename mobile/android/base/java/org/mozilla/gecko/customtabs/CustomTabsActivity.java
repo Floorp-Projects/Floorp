@@ -35,6 +35,7 @@ import android.widget.ProgressBar;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.Clipboard;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.FormAssistPopup;
@@ -56,7 +57,6 @@ import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.ActivityUtils;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
@@ -552,7 +552,7 @@ public class CustomTabsActivity extends AppCompatActivity
         @Override
         public boolean onLongClick(View v) {
             if (!TextUtils.isEmpty(mCurrentUrl)) {
-                Clipboard.setText(mCurrentUrl);
+                Clipboard.setText(CustomTabsActivity.this, mCurrentUrl);
                 SnackbarBuilder.builder(CustomTabsActivity.this)
                         .message(R.string.custom_tabs_hint_url_copy)
                         .duration(Snackbar.LENGTH_SHORT)

@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -22,12 +20,14 @@ import android.view.View;
 import android.view.InputDevice;
 
 class NativePanZoomController extends JNIObject implements PanZoomController {
+    private final float MAX_SCROLL;
+
     private final LayerView mView;
+
     private boolean mDestroyed;
     private Overscroll mOverscroll;
     private float mPointerScrollFactor;
     private long mLastDownTime;
-    private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
     @WrapForJNI(calledFrom = "ui")
     private native boolean handleMotionEvent(
@@ -138,6 +138,8 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
 
     NativePanZoomController(View view) {
+        MAX_SCROLL = 0.075f * view.getContext().getResources().getDisplayMetrics().densityDpi;
+
         mView = (LayerView) view;
 
         TypedValue outValue = new TypedValue();
