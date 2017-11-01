@@ -27,6 +27,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -104,6 +105,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private ImageButton menuView;
     private View statusBar;
     private View urlBar;
+    private SwipeRefreshLayout swipeRefresh;
     private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
 
     /**
@@ -206,6 +208,16 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         progressView = (AnimatedProgressBar) view.findViewById(R.id.progress);
 
+        swipeRefresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.colorAccent);
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                reload();
+            }
+        });
+
         session.getUrl().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String url) {
@@ -228,6 +240,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     progressView.setProgress(progressView.getMax());
                     progressView.setVisibility(View.GONE);
+                    swipeRefresh.setRefreshing(false);
                 }
 
                 updateBlockingBadging(loading || session.isBlockingEnabled());
