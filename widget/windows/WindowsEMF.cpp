@@ -40,6 +40,17 @@ WindowsEMF::InitFromFileContents(const wchar_t* aMetafilePath)
 }
 
 bool
+WindowsEMF::InitFromFileContents(LPBYTE aBytes, UINT aSize)
+{
+  MOZ_ASSERT(aBytes && aSize != 0);
+  ReleaseAllResource();
+
+  mEmf = SetEnhMetaFileBits(aSize, aBytes);
+
+  return !!mEmf;
+}
+
+bool
 WindowsEMF::FinishDocument()
 {
   if (mDC) {
@@ -68,9 +79,8 @@ WindowsEMF::ReleaseAllResource()
 bool
 WindowsEMF::Playback(HDC aDeviceContext, const RECT& aRect)
 {
-  if (!FinishDocument()) {
-    return false;
-  }
+  DebugOnly<bool> result = FinishDocument();
+  MOZ_ASSERT(result, "This function should be used after InitXXX.");
 
   return ::PlayEnhMetaFile(aDeviceContext, mEmf, &aRect) != 0;
 }
@@ -78,10 +88,33 @@ WindowsEMF::Playback(HDC aDeviceContext, const RECT& aRect)
 bool
 WindowsEMF::SaveToFile()
 {
-  if (!FinishDocument()) {
+  DebugOnly<bool> result = FinishDocument();
+  MOZ_ASSERT(result, "This function should be used after InitXXX.");
+
+  ReleaseEMFHandle();
+  return true;
+}
+
+UINT
+WindowsEMF::GetEMFContentSize()
+{
+  DebugOnly<bool> result = FinishDocument();
+  MOZ_ASSERT(result, "This function should be used after InitXXX.");
+
+  return GetEnhMetaFileBits(mEmf, 0, NULL);
+}
+
+bool
+WindowsEMF::GetEMFContentBits(LPBYTE aBytes)
+{
+  DebugOnly<bool> result = FinishDocument();
+  MOZ_ASSERT(result, "This function should be used after InitXXX.");
+
+  UINT emfSize = GetEMFContentSize();
+  if (GetEnhMetaFileBits(mEmf, emfSize, aBytes) != emfSize) {
     return false;
   }
-  ReleaseEMFHandle();
+
   return true;
 }
 
