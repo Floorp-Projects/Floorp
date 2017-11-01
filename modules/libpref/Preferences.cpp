@@ -3212,8 +3212,6 @@ static const char kPrefFileHeader[] =
 // clang-format on
 
 Preferences* Preferences::sPreferences = nullptr;
-nsIPrefBranch* Preferences::sRootBranch = nullptr;
-nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
 bool Preferences::sShutdown = false;
 
 // This globally enables or disables OMT pref writing, both sync and async.
@@ -3546,13 +3544,13 @@ Preferences::SizeOfIncludingThisAndOtherStuff(
     }
   }
 
-  if (sRootBranch) {
-    n += reinterpret_cast<nsPrefBranch*>(sRootBranch)
+  if (sPreferences->mRootBranch) {
+    n += static_cast<nsPrefBranch*>(sPreferences->mRootBranch.get())
            ->SizeOfIncludingThis(aMallocSizeOf);
   }
 
-  if (sDefaultRootBranch) {
-    n += reinterpret_cast<nsPrefBranch*>(sDefaultRootBranch)
+  if (sPreferences->mDefaultRootBranch) {
+    n += static_cast<nsPrefBranch*>(sPreferences->mDefaultRootBranch.get())
            ->SizeOfIncludingThis(aMallocSizeOf);
   }
 
@@ -3709,17 +3707,11 @@ Preferences::GetInstanceForService()
     return nullptr;
   }
 
-  sRootBranch = new nsPrefBranch("", false);
-  NS_ADDREF(sRootBranch);
-  sDefaultRootBranch = new nsPrefBranch("", true);
-  NS_ADDREF(sDefaultRootBranch);
-
   sPreferences = new Preferences();
   NS_ADDREF(sPreferences);
 
   Result<Ok, const char*> res = sPreferences->Init();
   if (res.isErr()) {
-    // The singleton instance will delete sRootBranch and sDefaultRootBranch.
     gCacheDataDesc = res.unwrapErr();
     NS_RELEASE(sPreferences);
     return nullptr;
@@ -3782,7 +3774,11 @@ Preferences::Shutdown()
 // Constructor/Destructor
 //
 
-Preferences::Preferences() = default;
+Preferences::Preferences()
+  : mRootBranch(new nsPrefBranch("", false))
+  , mDefaultRootBranch(new nsPrefBranch("", true))
+{
+}
 
 Preferences::~Preferences()
 {
@@ -3793,9 +3789,6 @@ Preferences::~Preferences()
 
   delete gCacheData;
   gCacheData = nullptr;
-
-  NS_RELEASE(sRootBranch);
-  NS_RELEASE(sDefaultRootBranch);
 
   sPreferences = nullptr;
 
@@ -4170,7 +4163,7 @@ Preferences::GetBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
     prefBranch.forget(aRetVal);
   } else {
     // Special case: caching the default root.
-    nsCOMPtr<nsIPrefBranch> root(sRootBranch);
+    nsCOMPtr<nsIPrefBranch> root(sPreferences->mRootBranch);
     root.forget(aRetVal);
   }
 
@@ -4181,7 +4174,7 @@ NS_IMETHODIMP
 Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal)
 {
   if (!aPrefRoot || !aPrefRoot[0]) {
-    nsCOMPtr<nsIPrefBranch> root(sDefaultRootBranch);
+    nsCOMPtr<nsIPrefBranch> root(sPreferences->mDefaultRootBranch);
     root.forget(aRetVal);
     return NS_OK;
   }
@@ -4865,7 +4858,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sRootBranch->GetComplexValue(
+  nsresult rv = sPreferences->mRootBranch->GetComplexValue(
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
@@ -4878,7 +4871,7 @@ Preferences::GetLocalizedString(const char* aPref, nsAString& aResult)
 Preferences::GetComplex(const char* aPref, const nsIID& aType, void** aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->GetComplexValue(aPref, aType, aResult);
+  return sPreferences->mRootBranch->GetComplexValue(aPref, aType, aResult);
 }
 
 /* static */ nsresult
@@ -4941,7 +4934,7 @@ Preferences::SetComplex(const char* aPref,
                         nsISupports* aValue)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->SetComplexValue(aPref, aType, aValue);
+  return sPreferences->mRootBranch->SetComplexValue(aPref, aType, aValue);
 }
 
 /* static */ nsresult
@@ -4964,7 +4957,7 @@ Preferences::GetType(const char* aPref)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(sPreferences->mRootBranch->GetPrefType(aPref, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
@@ -4974,7 +4967,7 @@ Preferences::AddStrongObserver(nsIObserver* aObserver, const char* aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->AddObserver(aPref, aObserver, false);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, false);
 }
 
 /* static */ nsresult
@@ -4982,7 +4975,7 @@ Preferences::AddWeakObserver(nsIObserver* aObserver, const char* aPref)
 {
   MOZ_ASSERT(aObserver);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->AddObserver(aPref, aObserver, true);
+  return sPreferences->mRootBranch->AddObserver(aPref, aObserver, true);
 }
 
 /* static */ nsresult
@@ -4993,7 +4986,7 @@ Preferences::RemoveObserver(nsIObserver* aObserver, const char* aPref)
     return NS_OK; // Observers have been released automatically.
   }
   NS_ENSURE_TRUE(sPreferences, NS_ERROR_NOT_AVAILABLE);
-  return sRootBranch->RemoveObserver(aPref, aObserver);
+  return sPreferences->mRootBranch->RemoveObserver(aPref, aObserver);
 }
 
 /* static */ nsresult
@@ -5340,7 +5333,7 @@ Preferences::GetDefaultLocalizedString(const char* aPref, nsAString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-  nsresult rv = sDefaultRootBranch->GetComplexValue(
+  nsresult rv = sPreferences->mDefaultRootBranch->GetComplexValue(
     aPref, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(prefLocalString));
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(prefLocalString, "Succeeded but the result is NULL");
@@ -5355,7 +5348,8 @@ Preferences::GetDefaultComplex(const char* aPref,
                                void** aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  return sDefaultRootBranch->GetComplexValue(aPref, aType, aResult);
+  return sPreferences->mDefaultRootBranch->GetComplexValue(
+    aPref, aType, aResult);
 }
 
 /* static */ int32_t
@@ -5363,7 +5357,8 @@ Preferences::GetDefaultType(const char* aPref)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
   int32_t result;
-  return NS_SUCCEEDED(sDefaultRootBranch->GetPrefType(aPref, &result))
+  return NS_SUCCEEDED(
+           sPreferences->mDefaultRootBranch->GetPrefType(aPref, &result))
            ? result
            : nsIPrefBranch::PREF_INVALID;
 }
