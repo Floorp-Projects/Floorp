@@ -223,7 +223,6 @@
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
-#include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
@@ -247,6 +246,7 @@
 
 #include "gc/Heap-inl.h"
 #include "gc/Iteration-inl.h"
+#include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Stack-inl.h"

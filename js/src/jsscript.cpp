@@ -36,7 +36,6 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
-#include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonCode.h"
@@ -56,6 +55,7 @@
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"
