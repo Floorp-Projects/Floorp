@@ -46,6 +46,9 @@ from ..compilation.warnings import (
     WarningsCollector,
     WarningsDatabase,
 )
+from ..shellutil import (
+    quote as shell_quote,
+)
 from ..util import (
     mkdir,
     resolve_target_to_make,
@@ -975,6 +978,12 @@ class CCacheStats(object):
 class BuildDriver(MozbuildObject):
     """Provides a high-level API for build actions."""
 
+    def __init__(self, *args, **kwargs):
+        super(BuildDriver, self).__init__(*args, **kwargs)
+
+        self.log_manager.register_structured_logger(
+            logging.getLogger('mozbuild'))
+
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
               directory=None, verbose=False, keep_going=False, mach_context=None):
         """Invoke the build backend.
@@ -982,8 +991,6 @@ class BuildDriver(MozbuildObject):
         ``what`` defines the thing to build. If not defined, the default
         target is used.
         """
-        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
-
         warnings_path = self._get_state_filename('warnings.json')
         monitor = self._spawn(BuildMonitor)
         monitor.init(warnings_path)
@@ -1271,6 +1278,31 @@ class BuildDriver(MozbuildObject):
                 # Ignore Exceptions in case we can't find config.status (such
                 # as when doing OSX Universal builds)
                 pass
+
+        return status
+
+    def configure(self, options=None, buildstatus_messages=False,
+                  line_handler=None):
+        def on_line(line):
+            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+
+        line_handler = line_handler or on_line
+
+        options = ' '.join(shell_quote(o) for o in options or ())
+        append_env = {b'CONFIGURE_ARGS': options.encode('utf-8')}
+
+        # Only print build status messages when we have an active
+        # monitor.
+        if not buildstatus_messages:
+            append_env[b'NO_BUILDSTATUS_MESSAGES'] =  b'1'
+        status = self._run_make(srcdir=True, filename='client.mk',
+            target='configure', line_handler=line_handler, log=False,
+            print_directory=False, allow_parallel=False, ensure_exit_code=False,
+            append_env=append_env)
+
+        if not status:
+            print('Configure complete!')
+            print('Be sure to run |mach build| to pick up any changes');
 
         return status
 
