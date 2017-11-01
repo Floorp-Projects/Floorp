@@ -946,9 +946,6 @@ constexpr char GeckoView::Window::Close_t::signature[];
 constexpr char GeckoView::Window::DisposeNative_t::name[];
 constexpr char GeckoView::Window::DisposeNative_t::signature[];
 
-constexpr char GeckoView::Window::LoadUri_t::name[];
-constexpr char GeckoView::Window::LoadUri_t::signature[];
-
 constexpr char GeckoView::Window::OnReattach_t::name[];
 constexpr char GeckoView::Window::OnReattach_t::signature[];
 
