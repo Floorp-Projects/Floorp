@@ -8,7 +8,7 @@ from ..cli import BaseTryParser
 from ..vcs import VCSHelper
 
 
-class SyntaxParser(BaseTryParser):
+class EmptyParser(BaseTryParser):
     name = 'empty'
     common_groups = ['push']
 
