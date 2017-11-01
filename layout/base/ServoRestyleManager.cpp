@@ -66,7 +66,7 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
   }
 
   if (aFrame.IsBulletFrame()) {
-    return parent;
+    return FirstContinuationOrPartOfIBSplit(parent);
   }
 
   if (aFrame.IsLineFrame()) {
