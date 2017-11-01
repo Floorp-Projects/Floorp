@@ -10,6 +10,7 @@
 #include "PDFiumEngineShim.h"
 #include "mozilla/Vector.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/Shmem.h"
 
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
@@ -18,6 +19,11 @@ class nsIFile;
 class nsFileInputStream;
 
 namespace mozilla {
+
+namespace ipc {
+  class IShmemAllocator;
+}
+
 namespace widget {
 
 /**
@@ -35,7 +41,7 @@ public:
   virtual ~PDFViaEMFPrintHelper();
 
   /** Loads the specified PDF file. */
-  NS_IMETHOD OpenDocument(nsIFile *aFile);
+  NS_IMETHOD OpenDocument(nsIFile* aFile);
   NS_IMETHOD OpenDocument(const char* aFileName);
   NS_IMETHOD OpenDocument(const FileDescriptor& aFD);
 
@@ -48,9 +54,14 @@ public:
   bool DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
                 int aPageWidth, int aPageHeight);
 
-  /** Convert specified PDF page to EMF and save it to file. */
+  /** Convert a specified PDF page to EMF and save it to file. */
   bool DrawPageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
+
+  /** Create a share memory and serialize the EMF content into it. */
+  bool SavePageToBuffer(unsigned int aPageIndex, int aPageWidth,
+                        int aPageHeight, ipc::Shmem& aMem,
+                        mozilla::ipc::IShmemAllocator* aAllocator);
 
 protected:
   virtual bool CreatePDFiumEngineIfNeed();
