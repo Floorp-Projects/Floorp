@@ -479,7 +479,7 @@ class MOZ_RAII AutoCheckShapeConsistency
 NativeObject::addAccessorPropertyInternal(JSContext* cx,
                                           HandleNativeObject obj, HandleId id,
                                           GetterOp getter, SetterOp setter,
-                                          unsigned attrs, unsigned flags, ShapeTable::Entry* entry,
+                                          unsigned attrs, ShapeTable::Entry* entry,
                                           bool allowDictionary, const AutoKeepShapeTables& keep)
 {
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
@@ -521,7 +521,7 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
         if (!nbase)
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, flags));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
         child.updateGetterSetter(getter, setter);
         shape = getChildProperty(cx, obj, last, &child);
         if (!shape)
@@ -953,8 +953,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
          */
         MOZ_ASSERT(obj->nonProxyIsExtensible());
 
-        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, 0, entry, true,
-                                           keep);
+        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry, true, keep);
     }
 
     /* Property exists: search must have returned a valid entry. */
