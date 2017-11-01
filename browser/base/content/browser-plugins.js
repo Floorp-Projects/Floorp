@@ -142,12 +142,14 @@ var gPluginHandler = {
    * and activate plugins if necessary.
    * aNewState should be either "allownow" "allowalways" or "block"
    */
-  _updatePluginPermission(aNotification, aPluginInfo, aNewState) {
+  _updatePluginPermission(aBrowser, aPluginInfo, aNewState) {
     let permission;
     let expireType;
     let expireTime;
     let histogram =
-      Services.telemetry.getHistogramById("PLUGINS_NOTIFICATION_USER_ACTION");
+      Services.telemetry.getHistogramById("PLUGINS_NOTIFICATION_USER_ACTION_2");
+
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
 
     // Update the permission manager.
     // Also update the current state of pluginInfo.fallbackType so that
@@ -159,7 +161,7 @@ var gPluginHandler = {
         expireTime = Date.now() + Services.prefs.getIntPref(this.PREF_SESSION_PERSIST_MINUTES) * 60 * 1000;
         histogram.add(0);
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
-        aNotification.options.extraAttr = "active";
+        notification.options.extraAttr = "active";
         break;
 
       case "allowalways":
@@ -169,7 +171,7 @@ var gPluginHandler = {
           Services.prefs.getIntPref(this.PREF_PERSISTENT_DAYS) * 24 * 60 * 60 * 1000;
         histogram.add(1);
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
-        aNotification.options.extraAttr = "active";
+        notification.options.extraAttr = "active";
         break;
 
       case "block":
@@ -185,31 +187,48 @@ var gPluginHandler = {
             aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE;
             break;
           default:
-            aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY;
+            // PLUGIN_CLICK_TO_PLAY_QUIET will only last until they reload the page, at
+            // which point it will be PLUGIN_CLICK_TO_PLAY (the overlays will appear)
+            aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET;
         }
-        aNotification.options.extraAttr = "inactive";
+        notification.options.extraAttr = "inactive";
         break;
 
-      // In case a plugin has already been allowed in another tab, the "continue allowing" button
-      // shouldn't change any permissions but should run the plugin-enablement code below.
+      case "blockalways":
+        permission = Ci.nsIObjectLoadingContent.PLUGIN_PERMISSION_PROMPT_ACTION_QUIET;
+        expireType = Ci.nsIPermissionManager.EXPIRE_NEVER;
+        expireTime = 0;
+        histogram.add(3);
+        aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET;
+        notification.options.extraAttr = "inactive";
+        break;
+
+      // In case a plugin has already been allowed/disallowed in another tab, the
+      // buttons matching the existing block state shouldn't change any permissions
+      // but should run the plugin-enablement code below.
       case "continue":
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
-        aNotification.options.extraAttr = "active";
+        notification.options.extraAttr = "active";
         break;
+
+      case "continueblocking":
+        aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET;
+        notification.options.extraAttr = "inactive";
+        break;
+
       default:
         Cu.reportError(Error("Unexpected plugin state: " + aNewState));
         return;
     }
 
-    let browser = aNotification.browser;
-    if (aNewState != "continue") {
-      let principal = aNotification.options.principal;
+    if (aNewState != "continue" && aNewState != "continueblocking") {
+      let principal = notification.options.principal;
       Services.perms.addFromPrincipal(principal, aPluginInfo.permissionString,
                                       permission, expireType, expireTime);
       aPluginInfo.pluginPermissionType = expireType;
     }
 
-    browser.messageManager.sendAsyncMessage("BrowserPlugins:ActivatePlugins", {
+    aBrowser.messageManager.sendAsyncMessage("BrowserPlugins:ActivatePlugins", {
       pluginInfo: aPluginInfo,
       newState: aNewState,
     });
@@ -245,14 +264,9 @@ var gPluginHandler = {
       pluginData = new Map();
     }
 
-    let hasInactivePlugins = true;
-    for (var pluginInfo of plugins) {
+    for (let pluginInfo of plugins) {
       if (pluginData.has(pluginInfo.permissionString)) {
         continue;
-      }
-
-      if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
-        hasInactivePlugins = false;
       }
 
       // If a block contains an infoURL, we should always prefer that to the default
@@ -287,30 +301,105 @@ var gPluginHandler = {
       return;
     }
 
-    let options = {
-      dismissed: !showNow,
-      persistent: showNow,
-      eventCallback: this._clickToPlayNotificationEventCallback,
-      primaryPlugin: primaryPluginPermission,
-      pluginData,
-      principal,
-      extraAttr: hasInactivePlugins ? "inactive" : "active",
-    };
+    if (plugins.length == 1) {
+      let pluginInfo = plugins[0];
+      // If a block contains an infoURL, we should always prefer that to the default
+      // URL that we construct in-product, even for other blocklist types.
+      let url = Services.blocklist.getPluginInfoURL(pluginInfo.pluginTag);
 
-    let badge = document.getElementById("plugin-icon-badge");
-    badge.setAttribute("animate", "true");
-    badge.addEventListener("animationend", function animListener(event) {
-      if (event.animationName == "blink-badge" &&
-          badge.hasAttribute("animate")) {
-        badge.removeAttribute("animate");
-        badge.removeEventListener("animationend", animListener);
+      if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+        if (!url) {
+          url = Services.blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
+        }
+      } else {
+        url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";
       }
-    });
+      pluginInfo.detailsLink = url;
 
-    PopupNotifications.show(browser, "click-to-play-plugins",
-                            "", "plugins-notification-icon",
-                            null, null, options);
-    browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationShown");
+      let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
+      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
+
+      let active = pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
+
+      let options = {
+        dismissed: !showNow,
+        hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
+        persistent: showNow,
+        eventCallback: this._clickToPlayNotificationEventCallback,
+        primaryPlugin: primaryPluginPermission,
+        popupIconClass: "plugin-icon",
+        extraAttr: active ? "active" : "inactive",
+        pluginData,
+        principal,
+      };
+
+      let description;
+      if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE) {
+        description = gNavigatorBundle.getString("flashActivate.outdated.message");
+      } else {
+        description = gNavigatorBundle.getString("flashActivate.message");
+      }
+
+      let badge = document.getElementById("plugin-icon-badge");
+      badge.setAttribute("animate", "true");
+      badge.addEventListener("animationend", function animListener(event) {
+        if (event.animationName == "blink-badge" &&
+            badge.hasAttribute("animate")) {
+          badge.removeAttribute("animate");
+          badge.removeEventListener("animationend", animListener);
+        }
+      });
+
+      let weakBrowser = Cu.getWeakReference(browser);
+      let mainAction = {
+        callback: ({checkboxChecked}) => {
+          let browserRef = weakBrowser.get();
+          if (browserRef) {
+            if (checkboxChecked) {
+              this._updatePluginPermission(browserRef, pluginInfo, "allowalways");
+            } else if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+              this._updatePluginPermission(browserRef, pluginInfo, "continue");
+            } else {
+              this._updatePluginPermission(browserRef, pluginInfo, "allownow");
+            }
+          }
+        },
+        label: gNavigatorBundle.getString("flashActivate.allow"),
+        accessKey: gNavigatorBundle.getString("flashActivate.allow.accesskey"),
+        dismiss: true,
+      };
+
+      let secondaryActions = null;
+      if (!isWindowPrivate) {
+        options.checkbox = {
+          label: gNavigatorBundle.getString("flashActivate.remember"),
+        };
+        secondaryActions = [{
+          callback: ({checkboxChecked}) => {
+            let browserRef = weakBrowser.get();
+            if (browserRef) {
+              if (checkboxChecked) {
+                this._updatePluginPermission(browserRef, pluginInfo, "blockalways");
+              } else if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+                this._updatePluginPermission(browserRef, pluginInfo, "block");
+              } else {
+                this._updatePluginPermission(browserRef, pluginInfo, "continueblocking");
+              }
+            }
+          },
+          label: gNavigatorBundle.getString("flashActivate.noAllow"),
+          accessKey: gNavigatorBundle.getString("flashActivate.noAllow.accesskey"),
+          dismiss: true,
+        }];
+      }
+
+      PopupNotifications.show(browser, "click-to-play-plugins",
+                                             description, "plugins-notification-icon",
+                                             mainAction, secondaryActions, options);
+      browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationShown");
+    } else {
+      this.removeNotification(browser, "click-to-play-plugins");
+    }
   },
 
   removeNotification(browser, name) {
@@ -410,6 +499,7 @@ var gPluginHandler = {
 
         switch (pluginInfo.fallbackType) {
           case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
+          case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET:
             message = gNavigatorBundle.getFormattedString(
               "pluginActivationWarning.message",
               [brand]);

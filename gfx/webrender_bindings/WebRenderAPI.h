@@ -268,6 +268,8 @@ public:
                 bool aIsBackfaceVisible,
                 const wr::ColorF& aColor);
 
+  void PushClearRect(const wr::LayoutRect& aBounds);
+
   void PushLinearGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip,
                           bool aIsBackfaceVisible,

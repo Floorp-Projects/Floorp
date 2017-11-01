@@ -11,6 +11,7 @@
 #[macro_use]
 extern crate url;
 
+use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::path::{Path, PathBuf};
@@ -253,6 +254,15 @@ fn test_form_serialize() {
         .append_pair("foo", "#")
         .finish();
     assert_eq!(encoded, "foo=%C3%A9%26&bar=&foo=%23");
+}
+
+#[test]
+fn form_urlencoded_custom_encoding_override() {
+    let encoded = form_urlencoded::Serializer::new(String::new())
+        .custom_encoding_override(|s| s.as_bytes().to_ascii_uppercase().into())
+        .append_pair("foo", "bar")
+        .finish();
+    assert_eq!(encoded, "FOO=BAR");
 }
 
 #[test]

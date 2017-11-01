@@ -812,6 +812,12 @@ nsUrlClassifierDBServiceWorker::CloseDb()
     mClassifier = nullptr;
   }
 
+  // Clear last completion result when close db so we will still cache completion
+  // result next time we re-open it.
+  if (mLastResults) {
+    mLastResults->Clear();
+  }
+
   LOG(("urlclassifier db closed\n"));
 
   return NS_OK;

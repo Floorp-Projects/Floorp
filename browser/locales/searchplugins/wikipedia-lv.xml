@@ -4,7 +4,7 @@
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
 <ShortName>Vikipēdija</ShortName>
-<Description>Vikipēdija, brīvā encikopēdija</Description>
+<Description>Vikipēdija, brīvā enciklopēdija</Description>
 <InputEncoding>UTF-8</InputEncoding>
 <Image width="16" height="16">resource://search-plugins/images/wikipedia.ico</Image>
 <Url type="application/x-suggestions+json" method="GET" template="https://lv.wikipedia.org/w/api.php">

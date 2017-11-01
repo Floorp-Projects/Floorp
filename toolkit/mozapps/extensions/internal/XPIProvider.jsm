@@ -2245,13 +2245,16 @@ this.XPIProvider = {
       // of XPCOM
       Services.obs.addObserver({
         observe(aSubject, aTopic, aData) {
+          XPIProvider.cleanupTemporaryAddons();
           XPIProvider._closing = true;
           for (let addon of XPIProvider.sortBootstrappedAddons().reverse()) {
             // If no scope has been loaded for this add-on then there is no need
             // to shut it down (should only happen when a bootstrapped add-on is
             // pending enable)
-            if (!XPIProvider.activeAddons.has(addon.id))
+            let activeAddon = XPIProvider.activeAddons.get(addon.id);
+            if (!activeAddon || !activeAddon.started) {
               continue;
+            }
 
             // If the add-on was pending disable then shut it down and remove it
             // from the persisted data.
@@ -2347,34 +2350,6 @@ this.XPIProvider = {
     // Stop anything we were doing asynchronously
     this.cancelAll();
 
-    // Uninstall any temporary add-ons.
-    let tempLocation = XPIStates.getLocation(TemporaryInstallLocation.name);
-    if (tempLocation) {
-      for (let [id, addon] of tempLocation.entries()) {
-        tempLocation.delete(id);
-
-        let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
-
-        let existing = XPIStates.findAddon(id, loc => loc != tempLocation);
-        if (existing) {
-          reason = newVersionReason(addon.version, existing.version);
-        }
-
-        this.callBootstrapMethod(addon, addon.file, "uninstall", reason);
-        this.unloadBootstrapScope(id);
-        TemporaryInstallLocation.uninstallAddon(id);
-
-        if (existing) {
-          let newAddon = XPIDatabase.makeAddonLocationVisible(id, existing.location.name);
-
-          let file = new nsIFile(newAddon.path);
-
-          let data = {oldVersion: addon.version};
-          this.callBootstrapMethod(newAddon, file, "install", reason, data);
-        }
-      }
-    }
-
     this.activeAddons.clear();
     this.allAppGlobal = true;
 
@@ -2405,6 +2380,42 @@ this.XPIProvider = {
       await XPIDatabase.shutdown();
     } catch (err) {
       this._shutdownError = err;
+    }
+  },
+
+  cleanupTemporaryAddons() {
+    let tempLocation = XPIStates.getLocation(TemporaryInstallLocation.name);
+    if (tempLocation) {
+      for (let [id, addon] of tempLocation.entries()) {
+        tempLocation.delete(id);
+
+        let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+
+        let existing = XPIStates.findAddon(id, loc => loc != tempLocation);
+        let callUpdate = false;
+        if (existing) {
+          reason = newVersionReason(addon.version, existing.version);
+          callUpdate = (isWebExtension(addon.type) && isWebExtension(existing.type));
+        }
+
+        this.callBootstrapMethod(addon, addon.file, "shutdown", reason);
+        if (!callUpdate) {
+          this.callBootstrapMethod(addon, addon.file, "uninstall", reason);
+        }
+        this.unloadBootstrapScope(id);
+        TemporaryInstallLocation.uninstallAddon(id);
+        XPIStates.removeAddon(TemporaryInstallLocation.name, id);
+
+        if (existing) {
+          let newAddon = XPIDatabase.makeAddonLocationVisible(id, existing.location.name);
+
+          let file = new nsIFile(newAddon.path);
+
+          let data = {oldVersion: addon.version};
+          let method = callUpdate ? "update" : "install";
+          this.callBootstrapMethod(newAddon, file, method, reason, data);
+        }
+      }
     }
   },
 
@@ -3547,6 +3558,7 @@ this.XPIProvider = {
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = await new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
+    let callUpdate = false;
 
     let extraParams = {};
     extraParams.temporarilyInstalled = aInstallLocation === TemporaryInstallLocation;
@@ -3575,13 +3587,18 @@ this.XPIProvider = {
         extraParams.newVersion = newVersion;
         extraParams.oldVersion = oldVersion;
 
+        callUpdate = isWebExtension(oldAddon.type) && isWebExtension(addon.type);
+
         if (oldAddon.active) {
           XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
                                           "shutdown", uninstallReason,
                                           extraParams);
         }
-        this.callBootstrapMethod(oldAddon, existingAddon,
-                                 "uninstall", uninstallReason, extraParams);
+
+        if (!callUpdate) {
+          this.callBootstrapMethod(oldAddon, existingAddon,
+                                   "uninstall", uninstallReason, extraParams);
+        }
         this.unloadBootstrapScope(existingAddonID);
         flushChromeCaches();
       }
@@ -3592,7 +3609,8 @@ this.XPIProvider = {
     let file = addon._sourceBundle;
 
     XPIProvider._addURIMapping(addon.id, file);
-    XPIProvider.callBootstrapMethod(addon, file, "install", installReason, extraParams);
+    let method = callUpdate ? "update" : "install";
+    XPIProvider.callBootstrapMethod(addon, file, method, installReason, extraParams);
     addon.state = AddonManager.STATE_INSTALLED;
     logger.debug("Install of temporary addon in " + aFile.path + " completed.");
     addon.visible = true;
@@ -4647,10 +4665,12 @@ this.XPIProvider = {
     }
 
     let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+    let callUpdate = false;
     let existingAddon = XPIStates.findAddon(aAddon.id, loc =>
       loc.name != aAddon._installLocation.name);
     if (existingAddon) {
       reason = newVersionReason(aAddon.version, existingAddon.version);
+      callUpdate = isWebExtension(aAddon.type) && isWebExtension(existingAddon.type);
     }
 
     if (!makePending) {
@@ -4660,8 +4680,10 @@ this.XPIProvider = {
                                    reason);
         }
 
-        this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
-                                 reason);
+        if (!callUpdate) {
+          this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
+                                   reason);
+        }
         XPIStates.disableAddon(aAddon.id);
         this.unloadBootstrapScope(aAddon.id);
         flushChromeCaches();
@@ -4683,8 +4705,9 @@ this.XPIProvider = {
           }
 
           if (aAddon.bootstrap) {
+            let method = callUpdate ? "update" : "install";
             XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
-                                            "install", reason);
+                                            method, reason);
 
             if (existing.active) {
               XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,

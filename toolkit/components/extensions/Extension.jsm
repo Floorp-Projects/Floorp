@@ -245,7 +245,7 @@ var UninstallObserver = {
     if (extension) {
       // Let any other interested listeners respond
       // (e.g., display the uninstall URL)
-      Management.emit("uninstall", extension);
+      Management.emit("uninstalling", extension);
     }
   },
 
@@ -975,7 +975,13 @@ const shutdownPromises = new Map();
 
 class BootstrapScope {
   install(data, reason) {}
-  uninstall(data, reason) {}
+  uninstall(data, reason) {
+    Management.emit("uninstall", {id: data.id});
+  }
+
+  update(data, reason) {
+    Management.emit("update", {id: data.id});
+  }
 
   startup(data, reason) {
     this.extension = new Extension(data, this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);

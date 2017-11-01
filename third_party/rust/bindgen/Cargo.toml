@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.30.0"
+version = "0.31.3"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -31,68 +31,58 @@ path = "src/lib.rs"
 name = "bindgen"
 path = "src/main.rs"
 doc = false
-[dependencies.log]
-version = "0.3"
-optional = true
+[dependencies.cexpr]
+version = "0.2"
 
-[dependencies.quasi]
-version = "0.32"
-features = ["with-syntex"]
-
-[dependencies.aster]
-version = "0.41"
-features = ["with-syntex"]
-
-[dependencies.which]
-version = "1.0.2"
+[dependencies.cfg-if]
+version = "0.1.0"
 
 [dependencies.clang-sys]
-version = "0.19.0"
+version = "0.21.0"
 features = ["runtime", "clang_3_9"]
+
+[dependencies.clap]
+version = "2"
 
 [dependencies.env_logger]
 version = "0.4"
 optional = true
 
-[dependencies.syntex_syntax]
-version = "0.58"
-
 [dependencies.lazy_static]
 version = "0.2.1"
 
-[dependencies.cfg-if]
-version = "0.1.0"
+[dependencies.log]
+version = "0.3"
+optional = true
 
 [dependencies.peeking_take_while]
 version = "0.1.2"
 
-[dependencies.clap]
-version = "2"
+[dependencies.quote]
+version = "0.3.15"
 
 [dependencies.regex]
 version = "0.2"
 
-[dependencies.cexpr]
-version = "0.2"
-[dev-dependencies.shlex]
-version = "0.1"
-
+[dependencies.which]
+version = "1.0.2"
 [dev-dependencies.clap]
 version = "2"
 
 [dev-dependencies.diff]
 version = "0.1"
-[build-dependencies.quasi_codegen]
-version = "0.32"
+
+[dev-dependencies.shlex]
+version = "0.1"
 
 [features]
-testing_only_extra_assertions = []
+default = ["logging"]
 logging = ["env_logger", "log"]
 static = []
+testing_only_docs = []
+testing_only_extra_assertions = []
+testing_only_libclang_3_8 = []
 testing_only_libclang_3_9 = []
 testing_only_libclang_4 = []
-default = ["logging"]
-testing_only_docs = []
-testing_only_libclang_3_8 = []
 [badges.travis-ci]
 repository = "rust-lang-nursery/rust-bindgen"

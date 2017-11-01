@@ -1,6 +1,6 @@
 //! Intermediate representation of variables.
 
-use super::context::{BindgenContext, ItemId};
+use super::context::{BindgenContext, TypeId};
 use super::dot::DotAttributes;
 use super::function::cursor_mangling;
 use super::int::IntKind;
@@ -35,7 +35,7 @@ pub struct Var {
     /// The mangled name of the variable.
     mangled_name: Option<String>,
     /// The type of the variable.
-    ty: ItemId,
+    ty: TypeId,
     /// The value of the variable, that needs to be suitable for `ty`.
     val: Option<VarType>,
     /// Whether this variable is const.
@@ -46,18 +46,18 @@ impl Var {
     /// Construct a new `Var`.
     pub fn new(
         name: String,
-        mangled: Option<String>,
-        ty: ItemId,
+        mangled_name: Option<String>,
+        ty: TypeId,
         val: Option<VarType>,
         is_const: bool,
     ) -> Var {
         assert!(!name.is_empty());
         Var {
-            name: name,
-            mangled_name: mangled,
-            ty: ty,
-            val: val,
-            is_const: is_const,
+            name,
+            mangled_name,
+            ty,
+            val,
+            is_const,
         }
     }
 
@@ -72,7 +72,7 @@ impl Var {
     }
 
     /// Get this variable's type.
-    pub fn ty(&self) -> ItemId {
+    pub fn ty(&self) -> TypeId {
         self.ty
     }
 

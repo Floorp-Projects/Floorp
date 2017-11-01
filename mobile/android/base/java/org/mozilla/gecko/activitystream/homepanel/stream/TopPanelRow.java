@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPage;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.home.HomePager;
@@ -46,11 +47,15 @@ public class TopPanelRow extends StreamViewHolder {
 
     private final SwipeListener swipeListener = new SwipeListener();
 
-    public TopPanelRow(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    /**
+     * @param onCardLongClickListener A listener for when a card is long-clicked.
+     */
+    public TopPanelRow(final View itemView, final HomePager.OnUrlOpenListener onUrlOpenListener,
+            final OnCardLongClickListener onCardLongClickListener) {
         super(itemView);
 
         topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
-        topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener, onUrlOpenInBackgroundListener));
+        topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener, onCardLongClickListener));
         topSitesPager.addOnPageChangeListener(swipeListener);
     }
 
@@ -84,5 +89,9 @@ public class TopPanelRow extends StreamViewHolder {
         // no event is sent in that case, but we need to know the right page number to send correct
         // page swipe events
         swipeListener.currentPosition = 0;
+    }
+
+    public interface OnCardLongClickListener {
+        boolean onClick(TopSite topSite, int absolutePosition, int faviconWidth, int faviconHeight);
     }
 }

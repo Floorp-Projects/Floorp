@@ -108,12 +108,15 @@
 #include "mozmemory_wrap.h"
 #include "mozjemalloc.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "Utils.h"
 
 // On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
 // operating system.  If we release 1MB of live pages with MADV_DONTNEED, our
@@ -149,6 +152,8 @@
 #include <string.h>
 #include <algorithm>
 
+using namespace mozilla;
+
 #ifdef XP_WIN
 
 // Some defines from the CRT internal headers that we need here.
@@ -157,21 +162,7 @@
 #include <windows.h>
 #include <intrin.h>
 
-#define SIZE_T_MAX SIZE_MAX
 #define STDERR_FILENO 2
-
-// Use MSVC intrinsics.
-#pragma intrinsic(_BitScanForward)
-static __forceinline int
-ffs(int x)
-{
-  unsigned long i;
-
-  if (_BitScanForward(&i, x) != 0) {
-    return i + 1;
-  }
-  return 0;
-}
 
 // Implement getenv without using malloc.
 static char mozillaMallocOptionsBuf[64];
@@ -219,9 +210,6 @@ typedef long ssize_t;
 
 #include <errno.h>
 #include <limits.h>
-#ifndef SIZE_T_MAX
-#define SIZE_T_MAX SIZE_MAX
-#endif
 #include <pthread.h>
 #include <sched.h>
 #include <stdarg.h>
@@ -230,9 +218,6 @@ typedef long ssize_t;
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef XP_DARWIN
-#include <strings.h>
-#endif
 #include <unistd.h>
 
 #ifdef XP_DARWIN
@@ -301,13 +286,6 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 
 // Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
 #define QUANTUM_2POW_MIN 4
-#if defined(_WIN64) || defined(__LP64__)
-#define SIZEOF_PTR_2POW 3
-#else
-#define SIZEOF_PTR_2POW 2
-#endif
-
-#define SIZEOF_PTR (1U << SIZEOF_PTR_2POW)
 
 #include "rb.h"
 
@@ -462,7 +440,7 @@ static size_t arena_maxclass; // Max size class for arenas.
 static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 
 // The current amount of recycled bytes, updated atomically.
-static mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gRecycledSize;
+static Atomic<size_t, ReleaseAcquire> gRecycledSize;
 
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
@@ -507,7 +485,7 @@ private:
 };
 
 // Set to true once the allocator has been initialized.
-static mozilla::Atomic<bool> malloc_initialized(false);
+static Atomic<bool> malloc_initialized(false);
 
 #if defined(XP_WIN)
 // No init lock for Windows.
@@ -645,12 +623,12 @@ class AddressRadixTree
 {
 // Size of each radix tree node (as a power of 2).
 // This impacts tree depth.
-#if (SIZEOF_PTR == 4)
-  static const size_t kNodeSize2Pow = 14;
-#else
+#ifdef HAVE_64BIT_BUILD
   static const size_t kNodeSize2Pow = CACHELINE_2POW;
+#else
+  static const size_t kNodeSize2Pow = 14;
 #endif
-  static const size_t kBitsPerLevel = kNodeSize2Pow - SIZEOF_PTR_2POW;
+  static const size_t kBitsPerLevel = kNodeSize2Pow - LOG2(sizeof(void*));
   static const size_t kBitsAtLevel1 =
     (Bits % kBitsPerLevel) ? Bits % kBitsPerLevel : kBitsPerLevel;
   static const size_t kHeight = (Bits + kBitsPerLevel - 1) / kBitsPerLevel;
@@ -806,7 +784,7 @@ struct arena_chunk_t
   //
   // We're currently lazy and don't remove a chunk from this list when
   // all its madvised pages are recommitted.
-  mozilla::DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
+  DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
 #endif
 
   // Number of dirty pages.
@@ -920,7 +898,7 @@ private:
 #ifdef MALLOC_DOUBLE_PURGE
   // Head of a linked list of MADV_FREE'd-page-containing chunks this
   // arena manages.
-  mozilla::DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
+  DoublyLinkedList<arena_chunk_t> mChunksMAdvised;
 #endif
 
   // In order to avoid rapid chunk allocation/deallocation when an arena
@@ -1057,7 +1035,7 @@ struct ArenaTreeTrait
 
 // ******
 // Chunks.
-static AddressRadixTree<(SIZEOF_PTR << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
+static AddressRadixTree<(sizeof(void*) << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
 
 // Protects chunk-related data structures.
 static Mutex chunks_mtx;
@@ -1112,8 +1090,7 @@ static Mutex arenas_lock; // Protects arenas initialization.
 #if !defined(XP_DARWIN)
 static MOZ_THREAD_LOCAL(arena_t*) thread_arena;
 #else
-static mozilla::detail::ThreadLocal<arena_t*,
-                                    mozilla::detail::ThreadLocalKeyStorage>
+static detail::ThreadLocal<arena_t*, detail::ThreadLocalKeyStorage>
   thread_arena;
 #endif
 
@@ -1323,24 +1300,6 @@ GetChunkOffsetForPtr(const void* aPtr)
 // Return the smallest pagesize multiple that is >= s.
 #define PAGE_CEILING(s) (((s) + pagesize_mask) & ~pagesize_mask)
 
-// Compute the smallest power of 2 that is >= x.
-static inline size_t
-pow2_ceil(size_t x)
-{
-
-  x--;
-  x |= x >> 1;
-  x |= x >> 2;
-  x |= x >> 4;
-  x |= x >> 8;
-  x |= x >> 16;
-#if (SIZEOF_PTR == 8)
-  x |= x >> 32;
-#endif
-  x++;
-  return x;
-}
-
 static inline const char*
 _getprogname(void)
 {
@@ -1517,7 +1476,7 @@ struct BaseNodeFreePolicy
   void operator()(extent_node_t* aPtr) { base_node_dealloc(aPtr); }
 };
 
-using UniqueBaseNode = mozilla::UniquePtr<extent_node_t, BaseNodeFreePolicy>;
+using UniqueBaseNode = UniquePtr<extent_node_t, BaseNodeFreePolicy>;
 
 // End Utility functions/macros.
 // ***************************************************************************
@@ -1683,7 +1642,7 @@ AddressRadixTree<Bits>::GetSlot(void* aKey, bool aCreate)
   for (i = lshift = 0, height = kHeight, node = mRoot; i < height - 1;
        i++, lshift += bits, node = child) {
     bits = i ? kBitsPerLevel : kBitsAtLevel1;
-    subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
+    subkey = (key << lshift) >> ((sizeof(void*) << 3) - bits);
     child = (void**)node[subkey];
     if (!child && aCreate) {
       child = (void**)base_calloc(1 << kBitsPerLevel, sizeof(void*));
@@ -1699,7 +1658,7 @@ AddressRadixTree<Bits>::GetSlot(void* aKey, bool aCreate)
   // node is a leaf, so it contains values rather than node
   // pointers.
   bits = i ? kBitsPerLevel : kBitsAtLevel1;
-  subkey = (key << lshift) >> ((SIZEOF_PTR << 3) - bits);
+  subkey = (key << lshift) >> ((sizeof(void*) << 3) - bits);
   return &node[subkey];
 }
 
@@ -2223,7 +2182,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
   mask = run->regs_mask[i];
   if (mask != 0) {
     // Usable allocation found.
-    bit = ffs((int)mask) - 1;
+    bit = CountTrailingZeroes32(mask);
 
     regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
     MOZ_ASSERT(regind < bin->nregs);
@@ -2241,7 +2200,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
     mask = run->regs_mask[i];
     if (mask != 0) {
       // Usable allocation found.
-      bit = ffs((int)mask) - 1;
+      bit = CountTrailingZeroes32(mask);
 
       regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
       MOZ_ASSERT(regind < bin->nregs);
@@ -2521,8 +2480,7 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
   mRunsAvail.Insert(&aChunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
-  new (&aChunk->chunks_madvised_elem)
-    mozilla::DoublyLinkedListElement<arena_chunk_t>();
+  new (&aChunk->chunks_madvised_elem) DoublyLinkedListElement<arena_chunk_t>();
 #endif
 }
 
@@ -2998,24 +2956,20 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
 
   if (aSize < small_min) {
     // Tiny.
-    aSize = pow2_ceil(aSize);
-    bin = &mBins[ffs((int)(aSize >> (TINY_MIN_2POW + 1)))];
-
-    // Bin calculation is always correct, but we may need
-    // to fix size for the purposes of assertions and/or
-    // stats accuracy.
+    aSize = RoundUpPow2(aSize);
     if (aSize < (1U << TINY_MIN_2POW)) {
       aSize = 1U << TINY_MIN_2POW;
     }
+    bin = &mBins[FloorLog2(aSize >> TINY_MIN_2POW)];
   } else if (aSize <= small_max) {
     // Quantum-spaced.
     aSize = QUANTUM_CEILING(aSize);
     bin = &mBins[ntbins + (aSize >> QUANTUM_2POW_MIN) - 1];
   } else {
     // Sub-page.
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
     bin = &mBins[ntbins + nqbins +
-                 (ffs((int)(aSize >> SMALL_MAX_2POW_DEFAULT)) - 2)];
+                 (FloorLog2(aSize >> SMALL_MAX_2POW_DEFAULT) - 1)];
   }
   MOZ_DIAGNOSTIC_ASSERT(aSize == bin->reg_size);
 
@@ -3700,8 +3654,8 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   // Try to avoid moving the allocation.
   if (aSize < small_min) {
     if (aOldSize < small_min &&
-        ffs((int)(pow2_ceil(aSize) >> (TINY_MIN_2POW + 1))) ==
-          ffs((int)(pow2_ceil(aOldSize) >> (TINY_MIN_2POW + 1)))) {
+        (RoundUpPow2(aSize) >> (TINY_MIN_2POW + 1) ==
+         RoundUpPow2(aOldSize) >> (TINY_MIN_2POW + 1))) {
       goto IN_PLACE; // Same size class.
     }
   } else if (aSize <= small_max) {
@@ -3712,7 +3666,7 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
     }
   } else if (aSize <= bin_maxclass) {
     if (aOldSize > small_max && aOldSize <= bin_maxclass &&
-        pow2_ceil(aSize) == pow2_ceil(aOldSize)) {
+        RoundUpPow2(aSize) == RoundUpPow2(aOldSize)) {
       goto IN_PLACE; // Same size class.
     }
   } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
@@ -3784,7 +3738,7 @@ arena_t::Init()
   // Initialize chunks.
   mChunksDirty.Init();
 #ifdef MALLOC_DOUBLE_PURGE
-  new (&mChunksMAdvised) mozilla::DoublyLinkedList<arena_chunk_t>();
+  new (&mChunksMAdvised) DoublyLinkedList<arena_chunk_t>();
 #endif
   mSpare = nullptr;
 
@@ -4140,7 +4094,9 @@ static
 #else
   pagesize = (size_t)result;
   pagesize_mask = (size_t)result - 1;
-  pagesize_2pow = ffs((int)result) - 1;
+  pagesize_2pow = FloorLog2(result);
+  MOZ_RELEASE_ASSERT(1ULL << pagesize_2pow == pagesize,
+                     "Page size is not a power of two");
 #endif
 
   // Get runtime configuration.
@@ -4371,30 +4327,22 @@ inline void*
 BaseAllocator::calloc(size_t aNum, size_t aSize)
 {
   void* ret;
-  size_t num_size;
 
-  if (!malloc_init()) {
+  if (malloc_init()) {
+    CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aNum) * aSize;
+    if (checkedSize.isValid()) {
+      size_t allocSize = checkedSize.value();
+      if (allocSize == 0) {
+        allocSize = 1;
+      }
+      ret = imalloc(allocSize, /* zero = */ true, mArena);
+    } else {
+      ret = nullptr;
+    }
+  } else {
     ret = nullptr;
-    goto RETURN;
   }
 
-  num_size = aNum * aSize;
-  if (num_size == 0) {
-    num_size = 1;
-
-    // Try to avoid division here.  We know that it isn't possible to
-    // overflow during multiplication if neither operand uses any of the
-    // most significant half of the bits in a size_t.
-  } else if (((aNum | aSize) & (SIZE_T_MAX << (sizeof(size_t) << 2))) &&
-             (num_size / aSize != aNum)) {
-    // size_t overflow.
-    ret = nullptr;
-    goto RETURN;
-  }
-
-  ret = imalloc(num_size, /* zero = */ true, mArena);
-
-RETURN:
   if (!ret) {
     errno = ENOMEM;
   }
@@ -4523,7 +4471,7 @@ MozJemalloc::malloc_good_size(size_t aSize)
   // arena_t::MallocSmall().
   if (aSize < small_min) {
     // Small (tiny).
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
 
     // We omit the #ifdefs from arena_t::MallocSmall() --
     // it can be inaccurate with its size in some cases, but this
@@ -4536,7 +4484,7 @@ MozJemalloc::malloc_good_size(size_t aSize)
     aSize = QUANTUM_CEILING(aSize);
   } else if (aSize <= bin_maxclass) {
     // Small (sub-page).
-    aSize = pow2_ceil(aSize);
+    aSize = RoundUpPow2(aSize);
   } else if (aSize <= arena_maxclass) {
     // Large.
     aSize = PAGE_CEILING(aSize);
@@ -4706,8 +4654,8 @@ hard_purge_chunk(arena_chunk_t* aChunk)
     if (npages > 0) {
       pages_decommit(((char*)aChunk) + (i << pagesize_2pow),
                      npages << pagesize_2pow);
-      mozilla::Unused << pages_commit(((char*)aChunk) + (i << pagesize_2pow),
-                                      npages << pagesize_2pow);
+      Unused << pages_commit(((char*)aChunk) + (i << pagesize_2pow),
+                             npages << pagesize_2pow);
     }
     i += npages;
   }
@@ -5122,7 +5070,13 @@ void*
 _recalloc(void* aPtr, size_t aCount, size_t aSize)
 {
   size_t oldsize = aPtr ? isalloc(aPtr) : 0;
-  size_t newsize = aCount * aSize;
+  CheckedInt<size_t> checkedSize = CheckedInt<size_t>(aCount) * aSize;
+
+  if (!checkedSize.isValid()) {
+    return nullptr;
+  }
+
+  size_t newsize = checkedSize.value();
 
   // In order for all trailing bytes to be zeroed, the caller needs to
   // use calloc(), followed by recalloc().  However, the current calloc()

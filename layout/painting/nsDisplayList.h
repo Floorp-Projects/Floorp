@@ -4104,6 +4104,12 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
 
+  bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
+
   NS_DISPLAY_DECL_NAME("ClearBackground", TYPE_CLEAR_BACKGROUND)
 };
 

@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 const {
+  InvalidArgumentError,
   InvalidSelectorError,
   NoSuchElementError,
   StaleElementReferenceError,
@@ -95,8 +96,8 @@ element.Strategy = {
  * Stores known/seen elements and their associated web element
  * references.
  *
- * Elements are added by calling |add(el)| or |addAll(elements)|, and
- * may be queried by their web element reference using |get(element)|.
+ * Elements are added by calling {@link #add()} or {@link addAll()},
+ * and may be queried by their web element reference using {@link get()}.
  *
  * @class
  * @memberof element
@@ -122,7 +123,7 @@ element.Store = class {
    *
    * @return {Array.<WebElement>}
    *     List of the web element references associated with each element
-   *     from |els|.
+   *     from <var>els</var>.
    */
   addAll(els) {
     let add = this.add.bind(this);
@@ -258,11 +259,11 @@ element.Store = class {
  * document root or a given node.
  *
  * If |timeout| is above 0, an implicit search technique is used.
- * This will wait for the duration of |timeout| for the element
- * to appear in the DOM.
+ * This will wait for the duration of <var>timeout</var> for the
+ * element to appear in the DOM.
  *
- * See the |element.Strategy| enum for a full list of supported
- * search strategies that can be passed to |strategy|.
+ * See the {@link element.Strategy} enum for a full list of supported
+ * search strategies that can be passed to <var>strategy</var>.
  *
  * Available flags for <var>opts</var>:
  *
@@ -776,7 +777,7 @@ element.isSelected = function(el) {
  *     X- and Y coordinates.
  *
  * @throws TypeError
- *     If |xOffset| or |yOffset| are not numbers.
+ *     If <var>xOffset</var> or <var>yOffset</var> are not numbers.
  */
 element.coordinates = function(
     node, xOffset = undefined, yOffset = undefined) {
@@ -813,7 +814,7 @@ element.coordinates = function(
  *     the target's bounding box.
  *
  * @return {boolean}
- *     True if if |el| is in viewport, false otherwise.
+ *     True if if <var>el</var> is in viewport, false otherwise.
  */
 element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
@@ -1245,7 +1246,7 @@ class WebElement {
    * @return {(ContentWebElement|ChromeWebElement)}
    *     Web element reference for <var>el</var>.
    *
-   * @throws {TypeError}
+   * @throws {InvalidArgumentError}
    *     If <var>node</var> is neither a <code>WindowProxy</code>,
    *     DOM element, or a XUL element.
    */
@@ -1263,7 +1264,7 @@ class WebElement {
       return new ChromeWebElement(uuid);
     }
 
-    throw new TypeError("Expected DOM window/element " +
+    throw new InvalidArgumentError("Expected DOM window/element " +
         pprint`or XUL element, got: ${node}`);
   }
 
@@ -1280,16 +1281,12 @@ class WebElement {
    * @return {WebElement}
    *     Representation of the web element.
    *
-   * @throws {TypeError}
+   * @throws {InvalidArgumentError}
    *     If <var>json</var> is not a web element reference.
    */
   static fromJSON(json) {
-    let keys = [];
-    try {
-      keys = Object.keys(json);
-    } catch (e) {
-      throw new TypeError(`Expected JSON Object: ${e}`);
-    }
+    assert.object(json);
+    let keys = Object.keys(json);
 
     for (let key of keys) {
       switch (key) {
@@ -1308,7 +1305,7 @@ class WebElement {
       }
     }
 
-    throw new TypeError(
+    throw new InvalidArgumentError(
         pprint`Expected web element reference, got: ${json}`);
   }
 
@@ -1333,9 +1330,8 @@ class WebElement {
    *     based on <var>context</var>.
    *
    * @throws {InvalidArgumentError}
-   *     If <var>uuid</var> is not a string.
-   * @throws {TypeError}
-   *     If <var>context</var> is an invalid context.
+   *     If <var>uuid</var> is not a string or <var>context</var>
+   *     is an invalid context.
    */
   static fromUUID(uuid, context) {
     assert.string(uuid);
@@ -1348,7 +1344,7 @@ class WebElement {
         return new ContentWebElement(uuid);
 
       default:
-        throw new TypeError("Unknown context: " + context);
+        throw new InvalidArgumentError("Unknown context: " + context);
     }
   }
 
@@ -1407,7 +1403,7 @@ class ContentWebElement extends WebElement {
     const {Identifier, LegacyIdentifier} = ContentWebElement;
 
     if (!(Identifier in json) && !(LegacyIdentifier in json)) {
-      throw new TypeError(
+      throw new InvalidArgumentError(
           pprint`Expected web element reference, got: ${json}`);
     }
 
@@ -1434,7 +1430,7 @@ class ContentWebWindow extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebWindow.Identifier in json)) {
-      throw new TypeError(
+      throw new InvalidArgumentError(
           pprint`Expected web window reference, got: ${json}`);
     }
     let uuid = json[ContentWebWindow.Identifier];
@@ -1459,7 +1455,8 @@ class ContentWebFrame extends WebElement {
 
   static fromJSON(json) {
     if (!(ContentWebFrame.Identifier in json)) {
-      throw new TypeError(pprint`Expected web frame reference, got: ${json}`);
+      throw new InvalidArgumentError(
+          pprint`Expected web frame reference, got: ${json}`);
     }
     let uuid = json[ContentWebFrame.Identifier];
     return new ContentWebFrame(uuid);
@@ -1482,7 +1479,7 @@ class ChromeWebElement extends WebElement {
 
   static fromJSON(json) {
     if (!(ChromeWebElement.Identifier in json)) {
-      throw new TypeError("Expected chrome element reference " +
+      throw new InvalidArgumentError("Expected chrome element reference " +
           pprint`for XUL/XBL element, got: ${json}`);
     }
     let uuid = json[ChromeWebElement.Identifier];

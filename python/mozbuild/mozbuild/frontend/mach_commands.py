@@ -173,6 +173,90 @@ class MozbuildFileCommands(MachCommandBase):
             print('unhandled output format: %s' % fmt)
             return 1
 
+    @SubCommand('file-info', 'bugzilla-automation',
+                'Perform Bugzilla metadata analysis as required for automation')
+    @CommandArgument('out_dir', help='Where to write files')
+    def bugzilla_automation(self, out_dir):
+        """Analyze and validate Bugzilla metadata as required by automation.
+
+        This will write out JSON and gzipped JSON files for Bugzilla metadata.
+
+        The exit code will be non-0 if Bugzilla metadata fails validation.
+        """
+        import gzip
+
+        missing_component = set()
+        seen_components = set()
+        component_by_path = {}
+
+        # TODO operate in VCS space. This requires teaching the VCS reader
+        # to understand wildcards and/or for the relative path issue in the
+        # VCS finder to be worked out.
+        for p, m in sorted(self._get_files_info(['**']).items()):
+            if 'BUG_COMPONENT' not in m:
+                missing_component.add(p)
+                print('Missing Bugzilla component: %s' % p)
+                continue
+
+            c = m['BUG_COMPONENT']
+            seen_components.add(c)
+            component_by_path[p] = [c.product, c.component]
+
+        print('Examined %d files' % len(component_by_path))
+
+        # We also have a normalized versions of the file to components mapping
+        # that requires far less storage space by eliminating redundant strings.
+        indexed_components = {i: [c.product, c.component]
+                              for i, c in enumerate(sorted(seen_components))}
+        components_index = {tuple(v): k for k, v in indexed_components.items()}
+        normalized_component = {
+            'components': indexed_components,
+            'paths': {}
+        }
+
+        for p, c in component_by_path.items():
+            d = normalized_component['paths']
+            while '/' in p:
+                base, p = p.split('/', 1)
+                d = d.setdefault(base, {})
+
+            d[p] = components_index[tuple(c)]
+
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        components_json = os.path.join(out_dir, 'components.json')
+        print('Writing %s' % components_json)
+        with open(components_json, 'wb') as fh:
+            json.dump(component_by_path, fh, sort_keys=True, indent=2)
+
+        missing_json = os.path.join(out_dir, 'missing.json')
+        print('Writing %s' % missing_json)
+        with open(missing_json, 'wb') as fh:
+            json.dump({'missing': sorted(missing_component)}, fh, indent=2)
+
+        indexed_components_json = os.path.join(out_dir,
+                                               'components-normalized.json')
+        print('Writing %s' % indexed_components_json)
+        with open(indexed_components_json, 'wb') as fh:
+            # Don't indent so file is as small as possible.
+            json.dump(normalized_component, fh, sort_keys=True)
+
+        # Write compressed versions of JSON files.
+        for p in (components_json, indexed_components_json, missing_json):
+            gzip_path = '%s.gz' % p
+            print('Writing %s' % gzip_path)
+            with open(p, 'rb') as ifh, gzip.open(gzip_path, 'wb') as ofh:
+                while True:
+                    data = ifh.read(32768)
+                    if not data:
+                        break
+                    ofh.write(data)
+
+        # Causes CI task to fail if files are missing Bugzilla annotation.
+        if missing_component:
+            return 1
+
     @SubCommand('file-info', 'dep-tests',
                 'Show test files marked as dependencies of these source files.')
     @CommandArgument('-r', '--rev',
