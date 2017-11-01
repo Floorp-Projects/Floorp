@@ -1,6 +1,6 @@
 // |jit-test| error: ReferenceError;
 gczeal(4);
-function gen() {
+function* gen() {
   var c = [1, "x"];
   try {
     yield c;
@@ -9,6 +9,6 @@ function gen() {
   }
 }
 var iter = gen();
-for (i in iter) {
+for (i of iter) {
   (SECTION)();
 }

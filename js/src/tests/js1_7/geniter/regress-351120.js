@@ -23,7 +23,7 @@ function test()
   actual = '';
   try
   {
-    (function() { yield [].z({}); })().next();
+    (function*() { yield [].z({}); })().next();
   }
   catch(ex)
   {

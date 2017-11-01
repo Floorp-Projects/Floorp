@@ -15,7 +15,7 @@ printStatus(summary);
 
 var failed = false;
 
-function gen()
+function* gen()
 {
   yield 17;
 }

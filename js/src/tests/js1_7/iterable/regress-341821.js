@@ -21,7 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  function generator()
+  function* generator()
   {
     try {
       yield [];

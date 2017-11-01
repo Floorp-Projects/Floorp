@@ -1,6 +1,6 @@
 load(libdir + "evalInFrame.js");
 
-function f() {
+function* f() {
     {
         let x = 1;
         while (true) {
@@ -16,24 +16,24 @@ function f() {
 }
 
 var gen = f();
-assertEq(gen.next(), 1);
-assertEq(gen.next(), 2);
+assertEq(gen.next().value, 1);
+assertEq(gen.next().value, 2);
 gc();
-assertEq(gen.next(), 3);
+assertEq(gen.next().value, 3);
 gc();
-assertEq(gen.next(), 2);
-assertEq(gen.next(), 2);
+assertEq(gen.next().value, 2);
+assertEq(gen.next().value, 2);
 gc();
-assertEq(gen.next(), 3);
+assertEq(gen.next().value, 3);
 gc();
-assertEq(gen.next(), 3);
-assertEq(gen.next(), 2);
+assertEq(gen.next().value, 3);
+assertEq(gen.next().value, 2);
 gc();
-assertEq(gen.next(), 3);
+assertEq(gen.next().value, 3);
 gen = null;
 gc();
 
-function g() {
+function* g() {
     {
         let x = 1;
         while (true) {
@@ -46,8 +46,8 @@ function g() {
 }
 
 var gen = g();
-var g1 = gen.next();
-var g2 = gen.next();
+var g1 = gen.next().value;
+var g2 = gen.next().value;
 gc();
 assertEq(g1(1), 2);
 assertEq(g2(1), 3);

@@ -9,7 +9,7 @@ var summary = "Live generators should not cache Gecko Profiler state";
 
 print(BUGNUMBER + ": " + summary);
 
-function gen() {
+function* gen() {
   var x = yield turnoff();
   yield x;
   yield 'bye';
@@ -29,9 +29,9 @@ for (var slowAsserts of [ true, false ]) {
     enableGeckoProfiling();
 
   g = gen();
-  assertEq(g.next(), 'hi');
-  assertEq(g.send('gurgitating...'), 'gurgitating...');
-  for (var x in g)
+  assertEq(g.next().value, 'hi');
+  assertEq(g.next('gurgitating...').value, 'gurgitating...');
+  for (var x of g)
     assertEq(x, 'bye');
 }
 

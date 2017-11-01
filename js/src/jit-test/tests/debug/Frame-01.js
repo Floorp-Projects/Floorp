@@ -26,8 +26,8 @@ test("eval('debugger;');", {type: "eval", generator: false, constructing: false}
 test("this.eval('debugger;');  // indirect eval", {type: "eval", generator: false, constructing: false});
 test("(function () { eval('debugger;'); })();", {type: "eval", generator: false, constructing: false});
 test("new function () { eval('debugger'); }", {type: "eval", generator: false, constructing: false});
-test("function gen() { debugger; yield 1; debugger; }\n" +
-     "for (var x in gen()) {}\n",
+test("function* gen() { debugger; yield 1; debugger; }\n" +
+     "for (var x of gen()) {}\n",
      {type: "call", generator: true, constructing: false}, 2);
 test("var iter = (function* stargen() { debugger; yield 1; debugger; })();\n" +
      "iter.next(); iter.next();",

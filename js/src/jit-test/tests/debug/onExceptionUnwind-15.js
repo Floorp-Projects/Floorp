@@ -4,7 +4,7 @@
 g = newGlobal();
 g.parent = this;
 g.eval("Debugger(parent).onExceptionUnwind=(function() {})");
-function throwInNext() {
+function* throwInNext() {
   yield 1;
   yield 2;
   yield 3;
@@ -12,7 +12,7 @@ function throwInNext() {
 }
 
 function f() {
-  for (var o of new throwInNext);
+  for (var o of throwInNext());
 }
 
 var log = "";

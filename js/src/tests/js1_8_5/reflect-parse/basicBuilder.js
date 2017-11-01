@@ -39,7 +39,7 @@ assertGlobalExpr("(function() { })", 11, { functionExpression: () => 11 });
 assertGlobalExpr("[1,2,3]", 12, { arrayExpression: () => 12 });
 assertGlobalExpr("({ x: y })", 13, { objectExpression: () => 13 });
 assertGlobalExpr("this", 14, { thisExpression: () => 14 });
-assertGlobalExpr("(function() { yield 42 })", genFunExpr("legacy", null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
+assertGlobalExpr("(function*() { yield 42 })", genFunExpr("es6", null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: () => 1 });
 assertGlobalStmt("try { } catch (e) { }", 2, { tryStatement: (b, g, u, f) => u, catchClause: () => 2 });
