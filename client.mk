@@ -213,7 +213,15 @@ endif
 MAKEFILE      = $(wildcard $(OBJDIR)/Makefile)
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
 
-$(CONFIGURES): %: %.in
+EXTRA_CONFIG_DEPS := \
+  $(TOPSRCDIR)/aclocal.m4 \
+  $(TOPSRCDIR)/old-configure.in \
+  $(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
+  $(TOPSRCDIR)/js/src/aclocal.m4 \
+  $(TOPSRCDIR)/js/src/old-configure.in \
+  $(NULL)
+
+$(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@
 	cp -f $< $@
 	chmod +x $@
