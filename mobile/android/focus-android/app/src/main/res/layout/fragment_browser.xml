@@ -37,7 +37,8 @@
                 <org.mozilla.focus.web.IWebView
                     android:id="@+id/webview"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:scrollbarThumbVertical="@drawable/scrollbar_thumb" />
 
             </android.support.v4.widget.SwipeRefreshLayout>
 

@@ -60,4 +60,6 @@
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
 
     <color name="preference_row_selected">#414146</color>
+
+    <color name="scrollbarThumb">#aaaaaaaa</color>
 </resources>
