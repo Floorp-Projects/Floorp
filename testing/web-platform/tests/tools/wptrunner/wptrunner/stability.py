@@ -1,14 +1,14 @@
 import copy
 import functools
 import imp
+import io
 import os
-import sys
 from collections import OrderedDict, defaultdict
 from datetime import datetime
 
 from mozlog import reader
-from mozlog.formatters import JSONFormatter, TbplFormatter
-from mozlog.handlers import BaseHandler, LogLevelFilter, StreamHandler
+from mozlog.formatters import JSONFormatter
+from mozlog.handlers import BaseHandler, StreamHandler, LogLevelFilter
 
 here = os.path.dirname(__file__)
 localpaths = imp.load_source("localpaths", os.path.abspath(os.path.join(here, os.pardir, os.pardir, "localpaths.py")))
@@ -180,31 +180,26 @@ def run_step(logger, iterations, restart_after_iteration, kwargs_extras, **kwarg
     kwargs["pause_after_test"] = False
     kwargs.update(kwargs_extras)
 
-    handler = LogActionFilter(
-        LogLevelFilter(
-            StreamHandler(
-                sys.stdout,
-                TbplFormatter()
-            ),
-            "WARNING"),
-        ["log", "process_output"])
+    def wrap_handler(x):
+        return LogActionFilter(
+            LogLevelFilter(x, "WARNING"),
+            ["log", "process_output"])
 
-    # There is a public API for this in the next mozlog
     initial_handlers = logger._state.handlers
-    logger._state.handlers = []
+    logger._state.handlers = [wrap_handler(handler)
+                              for handler in initial_handlers]
 
-    with open("raw.log", "wb") as log:
-        # Setup logging for wptrunner that keeps process output and
-        # warning+ level logs only
-        logger.add_handler(handler)
-        logger.add_handler(StreamHandler(log, JSONFormatter()))
+    log = io.BytesIO()
+    # Setup logging for wptrunner that keeps process output and
+    # warning+ level logs only
+    logger.add_handler(StreamHandler(log, JSONFormatter()))
 
-        wptrunner.run_tests(**kwargs)
+    wptrunner.run_tests(**kwargs)
 
     logger._state.handlers = initial_handlers
 
-    with open("raw.log", "rb") as log:
-        results, inconsistent = process_results(log, iterations)
+    log.seek(0)
+    results, inconsistent = process_results(log, iterations)
     return results, inconsistent, iterations
 
 
