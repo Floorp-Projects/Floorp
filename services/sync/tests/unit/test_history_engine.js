@@ -38,7 +38,7 @@ add_task(async function test_history_download_limit() {
   }
 
   // We have 15 records on the server since the last sync, but our download
-  // limit is 5 records at a time.
+  // limit is 5 records at a time. We should eventually fetch all 15.
   engine.lastSync = lastSync;
   engine.downloadBatchSize = 4;
   engine.downloadLimit = 5;
@@ -52,7 +52,8 @@ add_task(async function test_history_download_limit() {
 
   let backlogAfterFirstSync = engine.toFetch.slice(0);
   deepEqual(backlogAfterFirstSync, ["place0000000", "place0000001",
-    "place0000002", "place0000003", "place0000004"]);
+    "place0000002", "place0000003", "place0000004", "place0000005",
+    "place0000006", "place0000007", "place0000008", "place0000009"]);
 
   // We should have fast-forwarded the last sync time.
   equal(engine.lastSync, lastSync + 15);
@@ -67,8 +68,7 @@ add_task(async function test_history_download_limit() {
   let backlogAfterSecondSync = engine.toFetch.slice(0);
   deepEqual(backlogAfterFirstSync, backlogAfterSecondSync);
 
-  // Now add a newer record to the server. We should download and apply it, even
-  // though we've backlogged records with higher sort indices.
+  // Now add a newer record to the server.
   let newWBO = new ServerWBO("placeAAAAAAA", encryptPayload({
     id: "placeAAAAAAA",
     histUri: "http://example.com/a",
@@ -99,8 +99,13 @@ add_task(async function test_history_download_limit() {
   ping = await sync_engine_and_validate_telem(engine, false);
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
-  deepEqual(engine.toFetch, []);
+  deepEqual(engine.toFetch, ["place0000005", "place0000006", "place0000007",
+    "place0000008", "place0000009"]);
 
-  // Note that we'll only have fetched *at most* 10 records: we'll never fetch
-  // the remaining 5, because they're not in our backlog.
+  // Sync again to clear out the backlog.
+  engine.lastModified = collection.modified;
+  ping = await sync_engine_and_validate_telem(engine, false);
+  deepEqual(ping.engines[0].incoming, { applied: 5 });
+
+  deepEqual(engine.toFetch, []);
 });
