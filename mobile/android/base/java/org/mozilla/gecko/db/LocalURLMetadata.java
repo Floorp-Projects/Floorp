@@ -82,7 +82,7 @@ public class LocalURLMetadata implements URLMetadata {
 
                 ArrayList<Integer> sizes = new ArrayList<Integer>(icons.length());
                 while (keys.hasNext()) {
-                    sizes.add(new Integer(keys.next()));
+                    sizes.add(Integer.valueOf(keys.next()));
                 }
 
                 final int bestSize = LoadFaviconResult.selectBestSizeFromList(sizes, preferredSize);
