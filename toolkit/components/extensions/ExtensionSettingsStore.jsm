@@ -110,14 +110,37 @@ function ensureType(type) {
   }
 }
 
-// Return an object with properties for key, value|initialValue, id|null, or
-// null if no setting has been stored for that key.
-function getTopItem(type, key) {
+/**
+ * Return an object with properties for key, value|initialValue, id|null, or
+ * null if no setting has been stored for that key.
+ *
+ * If no id is passed then return the highest priority item for the key.
+ *
+ * @param {string} type
+ *        The type of setting to be retrieved.
+ * @param {string} key
+ *        A string that uniquely identifies the setting.
+ * @param {string} id
+ *        The id of the extension for which the item is being retrieved.
+ *        If no id is passed, then the highest priority item for the key
+ *        is returned.
+ *
+ * @returns {object | null}
+ *          Either an object with properties for key and value, or
+ *          null if no key is found.
+ */
+function getItem(type, key, id) {
   ensureType(type);
 
   let keyInfo = _store.data[type][key];
   if (!keyInfo) {
     return null;
+  }
+
+  if (id) {
+    // Return the item that corresponds to the extension with id of id.
+    let item = keyInfo.precedenceList.find(item => item.id === id);
+    return item ? {key, value: item.value, id} : null;
   }
 
   // Find the highest precedence, enabled setting.
@@ -205,7 +228,7 @@ function alterSetting(id, type, key, action) {
   }
 
   if (foundIndex === 0) {
-    returnItem = getTopItem(type, key);
+    returnItem = getItem(type, key);
   }
 
   if (action === "remove" && keyInfo.precedenceList.length === 0) {
@@ -243,9 +266,9 @@ this.ExtensionSettingsStore = {
    * @param {string} value
    *        The value to be stored in the setting.
    * @param {function} initialValueCallback
-   *        An function to be called to determine the initial value for the
+   *        A function to be called to determine the initial value for the
    *        setting. This will be passed the value in the callbackArgument
-   *        argument.
+   *        argument. If omitted the initial value will be undefined.
    * @param {any} callbackArgument
    *        The value to be passed into the initialValueCallback. It defaults to
    *        the value of the key argument.
@@ -256,7 +279,7 @@ this.ExtensionSettingsStore = {
    *                          added does not need to be set because it is not
    *                          at the top of the precedence list.
    */
-  async addSetting(id, type, key, value, initialValueCallback, callbackArgument = key) {
+  async addSetting(id, type, key, value, initialValueCallback = () => undefined, callbackArgument = key) {
     if (typeof initialValueCallback != "function") {
       throw new Error("initialValueCallback must be a function.");
     }
@@ -402,16 +425,19 @@ this.ExtensionSettingsStore = {
   },
 
   /**
-   * Retrieves a setting from the store, returning the current top precedent
-   * setting for the key.
+   * Retrieves a setting from the store, either for a specific extension,
+   * or current top precedent setting for the key.
    *
    * @param {string} type The type of setting to be returned.
    * @param {string} key A string that uniquely identifies the setting.
+   * @param {string} id
+   *        The id of the extension for which the setting is being retrieved.
+   *        Defaults to undefined, in which case the top setting is returned.
    *
-   * @returns {object} An object with properties for key and value.
+   * @returns {object} An object with properties for key, value and id.
    */
-  getSetting(type, key) {
-    return getTopItem(type, key);
+  getSetting(type, key, id) {
+    return getItem(type, key, id);
   },
 
   /**
