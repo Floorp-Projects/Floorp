@@ -3,8 +3,8 @@
 const SESSION = {
   windows: [{
     tabs: [
-      {entries: [{url: "about:blank", triggeringPrincipal_base64}]},
-      {entries: [{url: "https://example.com/", triggeringPrincipal_base64}]},
+      {entries: [{url: "about:blank"}]},
+      {entries: [{url: "https://example.com/"}]},
     ],
   }],
 };
