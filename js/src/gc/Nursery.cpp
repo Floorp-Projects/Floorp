@@ -474,15 +474,24 @@ js::Nursery::calcPromotionRate(bool *validForTenuring) const {
     float used = float(previousGC.nurseryUsedBytes);
     float capacity = float(previousGC.nurseryCapacity);
     float tenured = float(previousGC.tenuredBytes);
+    float rate;
 
-    if (validForTenuring) {
-        /*
-         * We can only use promotion rates if they're likely to be valid,
-         * they're only valid if the nursury was at least 90% full.
-         */
-        *validForTenuring = used > capacity * 0.9f;
+    if (previousGC.nurseryUsedBytes > 0) {
+        if (validForTenuring) {
+            /*
+             * We can only use promotion rates if they're likely to be valid,
+             * they're only valid if the nursury was at least 90% full.
+             */
+            *validForTenuring = used > capacity * 0.9f;
+        }
+        rate = tenured / used;
+    } else {
+        if (validForTenuring)
+            *validForTenuring = false;
+        rate = 0.0f;
     }
-    return tenured / used;
+
+    return rate;
 }
 
 void
