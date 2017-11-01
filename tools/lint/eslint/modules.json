@@ -107,7 +107,6 @@
   "import_module.jsm": ["MODULE_IMPORTED", "MODULE_URI", "SUBMODULE_IMPORTED", "same_scope", "SUBMODULE_IMPORTED_TO_SCOPE"],
   "import_sub_module.jsm": ["SUBMODULE_IMPORTED", "test_obj"],
   "InlineSpellChecker.jsm": ["InlineSpellChecker", "SpellCheckHelper"],
-  "JNI.jsm": ["JNI", "android_log"],
   "JSDOMParser.js": ["JSDOMParser"],
   "jsdebugger.jsm": ["addDebuggerToGlobal"],
   "json2.js": ["JSON"],

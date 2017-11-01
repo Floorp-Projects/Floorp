@@ -289,6 +289,9 @@ public class GeckoApplication extends Application
 
         IntentHelper.init();
 
+        EventDispatcher.getInstance().registerGeckoThreadListener(mListener,
+                "Distribution:GetDirectories",
+                null);
         EventDispatcher.getInstance().registerUiThreadListener(mListener,
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
@@ -307,6 +310,9 @@ public class GeckoApplication extends Application
      * replaces an old one due to assets change.
      */
     private void onDestroy() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(mListener,
+                "Distribution:GetDirectories",
+                null);
         EventDispatcher.getInstance().unregisterUiThreadListener(mListener,
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
@@ -494,6 +500,9 @@ public class GeckoApplication extends Application
                         .fromEvent(message)
                         .callback(callback)
                         .buildAndShow();
+
+            } else if ("Distribution:GetDirectories".equals(event)) {
+                callback.sendSuccess(Distribution.getDistributionDirectories());
             }
         }
     }
