@@ -246,6 +246,7 @@
 #include "jsscriptinlines.h"
 
 #include "gc/Heap-inl.h"
+#include "gc/Iteration-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Stack-inl.h"
