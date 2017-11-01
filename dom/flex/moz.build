@@ -7,6 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
 EXPORTS.mozilla.dom += [
     'Flex.h',
     'FlexItem.h',
