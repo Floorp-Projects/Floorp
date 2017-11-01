@@ -78,10 +78,15 @@ interface nsIInterceptedChannel : nsISupports
      * - The caller may optionally pass a spec for a URL that this response
      *   originates from; an empty string will cause the original
      *   intercepted request's URL to be used instead.
+     * - The responseRedirected flag is false will cause the channel do an
+     *   internal redirect when the original intercepted reauest's URL is
+     *   different from the response's URL. The flag is true will cause the
+     *   chaanel do a non-internal redirect when the URLs are different.
      */
     void startSynthesizedResponse(in nsIInputStream body,
                                   in nsIInterceptedBodyCallback callback,
-                                  in ACString finalURLSpec);
+                                  in ACString finalURLSpec,
+                                  in bool responseRedirected);
 
     /**
      * Instruct a channel that has been intercepted that response synthesis
