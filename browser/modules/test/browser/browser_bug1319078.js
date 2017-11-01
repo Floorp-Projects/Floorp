@@ -17,13 +17,13 @@ function incrementTest() {
 /**
  * In this test, we check that no popup appears if the element display is none.
  */
-add_task(async function test_display_none() {
+add_task(async function() {
   ok(gInvalidFormPopup,
      "The browser should have a popup to show when a form is invalid");
 
   incrementTest();
   let testPage =
-    "data:text/html;charset=utf-8," +
+    "data:text/html," +
     '<form target="t"><input type="url"  placeholder="url" value="http://" style="display: none;"><input id="s" type="button" value="check"></form>';
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
   await BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);
@@ -35,10 +35,10 @@ add_task(async function test_display_none() {
 /**
  * In this test, we check that no popup appears if the element visibility is hidden.
  */
-add_task(async function test_visibility_hidden() {
+add_task(async function() {
   incrementTest();
   let testPage =
-    "data:text/html;charset=utf-8," +
+    "data:text/html," +
     '<form target="t"><input type="url"  placeholder="url" value="http://" style="visibility: hidden;"><input id="s" type="button" value="check"></form>';
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
   await BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);
