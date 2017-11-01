@@ -547,11 +547,8 @@ NativeObject::addAccessorPropertyInternal(JSContext* cx,
 NativeObject::addDataPropertyInternal(JSContext* cx,
                                       HandleNativeObject obj, HandleId id,
                                       uint32_t slot, unsigned attrs,
-                                      unsigned flags, ShapeTable::Entry* entry,
-                                      bool allowDictionary, const AutoKeepShapeTables& keep)
+                                      ShapeTable::Entry* entry, const AutoKeepShapeTables& keep)
 {
-    MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
-
     AutoCheckShapeConsistency check(obj);
 
     /*
@@ -564,10 +561,7 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
             (slot == SHAPE_INVALID_SLOT) ||
             obj->lastProperty()->hasMissingSlot() ||
             (slot == obj->lastProperty()->maybeSlot() + 1);
-        MOZ_ASSERT_IF(!allowDictionary, stableSlot);
-        if (allowDictionary &&
-            (!stableSlot || ShouldConvertToDictionary(obj)))
-        {
+        if (!stableSlot || ShouldConvertToDictionary(obj)) {
             if (!toDictionaryMode(cx, obj))
                 return nullptr;
             table = obj->lastProperty()->maybeTable(keep);
@@ -595,7 +589,7 @@ NativeObject::addDataPropertyInternal(JSContext* cx,
         if (!nbase)
             return nullptr;
 
-        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, flags));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, 0));
         shape = getChildProperty(cx, obj, last, &child);
         if (!shape)
             return nullptr;
@@ -817,8 +811,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
          */
         MOZ_ASSERT(obj->nonProxyIsExtensible());
 
-        return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, 0, entry, true,
-                                       keep);
+        return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, entry, keep);
     }
 
     /* Property exists: search must have returned a valid entry. */
