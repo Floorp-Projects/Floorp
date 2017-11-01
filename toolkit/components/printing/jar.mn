@@ -4,12 +4,6 @@
 
 toolkit.jar:
 #ifndef XP_MACOSX
-#ifdef XP_UNIX
-   content/global/printdialog.js                    (content/printdialog.js)
-   content/global/printdialog.xul                   (content/printdialog.xul)
-   content/global/printjoboptions.js                (content/printjoboptions.js)
-   content/global/printjoboptions.xul               (content/printjoboptions.xul)
-#endif
    content/global/printPageSetup.js                 (content/printPageSetup.js)
    content/global/printPageSetup.xul                (content/printPageSetup.xul)
    content/global/printPreviewProgress.js           (content/printPreviewProgress.js)
