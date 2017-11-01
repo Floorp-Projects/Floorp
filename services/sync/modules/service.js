@@ -30,7 +30,6 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
-Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/stages/enginesync.js");
 Cu.import("resource://services-sync/stages/declined.js");
 Cu.import("resource://services-sync/status.js");
@@ -62,11 +61,6 @@ function getEngineModules() {
   }
   return result;
 }
-
-const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
-                            INFO_COLLECTION_USAGE,
-                            INFO_COLLECTION_COUNTS,
-                            INFO_QUOTA];
 
 // A unique identifier for this browser session. Used for logging so
 // we can easily see whether 2 logs are in the same browser session or
@@ -483,16 +477,6 @@ Sync11Service.prototype = {
     res.authenticator = this.identity.getResourceAuthenticator();
 
     return res;
-  },
-
-  /**
-   * Obtain a SyncStorageRequest instance with authentication credentials.
-   */
-  getStorageRequest: function getStorageRequest(url) {
-    let request = new SyncStorageRequest(url);
-    request.authenticator = this.identity.getRESTRequestAuthenticator();
-
-    return request;
   },
 
   /**
@@ -1375,53 +1359,6 @@ Sync11Service.prototype = {
         await engine.resetClient();
       }
     })();
-  },
-
-  /**
-   * Fetch storage info from the server.
-   *
-   * @param type
-   *        String specifying what info to fetch from the server. Must be one
-   *        of the INFO_* values. See Sync Storage Server API spec for details.
-   * @param callback
-   *        Callback function with signature (error, data) where `data' is
-   *        the return value from the server already parsed as JSON.
-   *
-   * @return RESTRequest instance representing the request, allowing callers
-   *         to cancel the request.
-   */
-  getStorageInfo: function getStorageInfo(type, callback) {
-    if (STORAGE_INFO_TYPES.indexOf(type) == -1) {
-      throw new Error(`Invalid value for 'type': ${type}`);
-    }
-
-    let info_type = "info/" + type;
-    this._log.trace("Retrieving '" + info_type + "'...");
-    let url = this.userBaseURL + info_type;
-    return this.getStorageRequest(url).get(function onComplete(error) {
-      // Note: 'this' is the request.
-      if (error) {
-        this._log.debug("Failed to retrieve '" + info_type + "'", error);
-        return callback(error);
-      }
-      if (this.response.status != 200) {
-        this._log.debug("Failed to retrieve '" + info_type +
-                        "': server responded with HTTP" +
-                        this.response.status);
-        return callback(this.response);
-      }
-
-      let result;
-      try {
-        result = JSON.parse(this.response.body);
-      } catch (ex) {
-        this._log.debug("Server returned invalid JSON for '" + info_type +
-                        "': " + this.response.body);
-        return callback(ex);
-      }
-      this._log.trace("Successfully retrieved '" + info_type + "'.");
-      return callback(null, result);
-    });
   },
 
   recordTelemetryEvent(object, method, value, extra = undefined) {
