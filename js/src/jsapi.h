@@ -1748,16 +1748,6 @@ JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data);
 /*
  * Garbage collector API.
  */
-namespace JS {
-
-extern JS_PUBLIC_API(bool)
-IsIdleGCTaskNeeded(JSRuntime* rt);
-
-extern JS_PUBLIC_API(void)
-RunIdleTimeGCTask(JSRuntime* rt);
-
-} // namespace JS
-
 extern JS_PUBLIC_API(void)
 JS_GC(JSContext* cx);
 

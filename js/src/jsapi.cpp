@@ -1439,20 +1439,6 @@ JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
     return cx->runtime()->gc.removeBlackRootsTracer(traceOp, data);
 }
 
-JS_PUBLIC_API(bool)
-JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
-  // Currently, we only collect nursery during idle time.
-  return rt->gc.nursery().needIdleTimeCollection();
-}
-
-JS_PUBLIC_API(void)
-JS::RunIdleTimeGCTask(JSRuntime* rt) {
-  GCRuntime& gc = rt->gc;
-  if (gc.nursery().needIdleTimeCollection()) {
-    gc.minorGC(JS::gcreason::IDLE_TIME_COLLECTION);
-  }
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSContext* cx)
 {
