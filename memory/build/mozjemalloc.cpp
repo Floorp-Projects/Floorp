@@ -249,9 +249,6 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 #endif
 #endif
 
-// Size of stack-allocated buffer passed to strerror_r().
-#define STRERROR_BUF 64
-
 // Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
 #define QUANTUM_2POW_MIN 4
 
@@ -1551,7 +1548,7 @@ static void
 pages_unmap(void* aAddr, size_t aSize)
 {
   if (munmap(aAddr, aSize) == -1) {
-    char buf[STRERROR_BUF];
+    char buf[64];
 
     if (strerror_r(errno, buf, sizeof(buf)) == 0) {
       _malloc_message(
