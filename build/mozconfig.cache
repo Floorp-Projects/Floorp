@@ -124,12 +124,6 @@ else
     mk_add_options "UPLOAD_EXTRA_FILES+=sccache.log.gz"
     case "$platform" in
     win*)
-        # sccache supports a special flag to create depfiles.
-        #TODO: bug 1318370 - move this all into toolchain.configure
-        export _DEPEND_CFLAGS='-deps$(MDDEPDIR)/$(@F).pp'
-        # Windows builds have a default wrapper that needs to be overridden
-        mk_add_options "export CC_WRAPPER="
-        mk_add_options "export CXX_WRAPPER="
         # For now, sccache doesn't support separate PDBs so force debug info to be
         # in object files.
         mk_add_options "export COMPILE_PDB_FLAG="

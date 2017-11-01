@@ -1,4 +1,4 @@
-function gen() {
+function* gen() {
     try {
 	yield 3;
     } finally {
@@ -6,6 +6,6 @@ function gen() {
     }
 }
 try {
-    for (var i in gen())
+    for (var i of gen())
 	foo();
 } catch (e) {}

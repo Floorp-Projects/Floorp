@@ -36,7 +36,6 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
-#include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonCode.h"
@@ -56,6 +55,7 @@
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"
@@ -341,7 +341,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         FunctionHasThisBinding,
         FunctionHasExtraBodyVarScope,
         IsGeneratorExp,
-        IsLegacyGenerator,
         IsStarGenerator,
         IsAsync,
         HasRest,
@@ -457,8 +456,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             scriptBits |= (1 << OwnSource);
         if (script->isGeneratorExp())
             scriptBits |= (1 << IsGeneratorExp);
-        if (script->isLegacyGenerator())
-            scriptBits |= (1 << IsLegacyGenerator);
         if (script->isStarGenerator())
             scriptBits |= (1 << IsStarGenerator);
         if (script->asyncKind() == AsyncFunction)
@@ -632,13 +629,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             script->isDerivedClassConstructor_ = true;
         if (scriptBits & (1 << IsDefaultClassConstructor))
             script->isDefaultClassConstructor_ = true;
-
-        if (scriptBits & (1 << IsLegacyGenerator)) {
-            MOZ_ASSERT(!(scriptBits & (1 << IsStarGenerator)));
-            script->setGeneratorKind(LegacyGenerator);
-        } else if (scriptBits & (1 << IsStarGenerator))
+        if (scriptBits & (1 << IsStarGenerator))
             script->setGeneratorKind(StarGenerator);
-
         if (scriptBits & (1 << IsAsync))
             script->setAsyncKind(AsyncFunction);
         if (scriptBits & (1 << HasRest))
@@ -4205,7 +4197,6 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
         return true;
 
     MOZ_ASSERT(!script->isStarGenerator());
-    MOZ_ASSERT(!script->isLegacyGenerator());
     MOZ_ASSERT(!script->isAsync());
 
     script->needsArgsObj_ = true;

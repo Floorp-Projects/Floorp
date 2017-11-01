@@ -63,11 +63,20 @@ enum class DispatchTarget
 };
 
 
+extern JavaVM* sJavaVM;
 extern JNIEnv* sGeckoThreadEnv;
 
 inline bool IsAvailable()
 {
     return !!sGeckoThreadEnv;
+}
+
+inline JavaVM* GetVM()
+{
+#ifdef MOZ_CHECK_JNI
+    MOZ_ASSERT(sJavaVM);
+#endif
+    return sJavaVM;
 }
 
 inline JNIEnv* GetGeckoThreadEnv()

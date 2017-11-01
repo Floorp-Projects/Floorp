@@ -13,7 +13,7 @@ for (f().x of [])
 assertEq(s, '');
 
 // Test 2: check proper interleaving of f calls, iterator.next() calls, and the loop body.
-function g() {
+function* g() {
     s += 'g';
     yield 0;
     s += 'g';

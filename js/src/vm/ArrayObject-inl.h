@@ -12,7 +12,6 @@
 #include "gc/GCTrace.h"
 #include "vm/String.h"
 
-#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/TypeInference-inl.h"

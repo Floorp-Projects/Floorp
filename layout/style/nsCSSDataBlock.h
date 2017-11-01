@@ -17,7 +17,6 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
 #include "nsStyleStruct.h"
-#include "imgRequestProxy.h"
 
 struct nsRuleData;
 class nsCSSExpandedDataBlock;

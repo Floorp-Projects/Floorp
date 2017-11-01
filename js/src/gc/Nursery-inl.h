@@ -13,6 +13,7 @@
 #include "jscntxt.h"
 
 #include "gc/Heap.h"
+#include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "js/TracingAPI.h"
 #include "vm/Runtime.h"

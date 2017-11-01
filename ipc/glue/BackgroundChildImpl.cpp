@@ -16,6 +16,7 @@
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
@@ -569,6 +570,18 @@ BackgroundChildImpl::DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* a
   MOZ_ASSERT(aActor);
   delete static_cast<dom::GamepadTestChannelChild*>(aActor);
   return true;
+}
+
+mozilla::dom::PClientManagerChild*
+BackgroundChildImpl::AllocPClientManagerChild()
+{
+  return mozilla::dom::AllocClientManagerChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPClientManagerChild(mozilla::dom::PClientManagerChild* aActor)
+{
+  return mozilla::dom::DeallocClientManagerChild(aActor);
 }
 
 #ifdef EARLY_BETA_OR_EARLIER

@@ -63,7 +63,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 
 nsBulletFrame::~nsBulletFrame()
 {
-  NS_ASSERTION(!mBlockingOnload, "Still blocking onload in destructor?");
 }
 
 void
@@ -1228,42 +1227,6 @@ nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aDa
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBulletFrame::BlockOnload(imgIRequest* aRequest)
-{
-  if (aRequest != mImageRequest) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(!mBlockingOnload, "Double BlockOnload for an nsBulletFrame?");
-
-  nsIDocument* doc = GetOurCurrentDoc();
-  if (doc) {
-    mBlockingOnload = true;
-    doc->BlockOnload();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBulletFrame::UnblockOnload(imgIRequest* aRequest)
-{
-  if (aRequest != mImageRequest) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(!mBlockingOnload, "Double UnblockOnload for an nsBulletFrame?");
-
-  nsIDocument* doc = GetOurCurrentDoc();
-  if (doc) {
-    doc->UnblockOnload(false);
-  }
-  mBlockingOnload = false;
-
-  return NS_OK;
-}
-
 nsIDocument*
 nsBulletFrame::GetOurCurrentDoc() const
 {
@@ -1470,15 +1433,6 @@ nsBulletFrame::DeregisterAndCancelImageRequest()
 
     isRequestRegistered = mRequestRegistered;
 
-    // Unblock onload if we blocked it.
-    if (mBlockingOnload) {
-      nsIDocument* doc = GetOurCurrentDoc();
-      if (doc) {
-        doc->UnblockOnload(false);
-      }
-      mBlockingOnload = false;
-    }
-
     // Cancel the image request and forget about it.
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nullptr;
@@ -1508,22 +1462,4 @@ nsBulletListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* 
     return NS_ERROR_FAILURE;
   }
   return mFrame->Notify(aRequest, aType, aData);
-}
-
-NS_IMETHODIMP
-nsBulletListener::BlockOnload(imgIRequest* aRequest)
-{
-  if (!mFrame) {
-    return NS_ERROR_FAILURE;
-  }
-  return mFrame->BlockOnload(aRequest);
-}
-
-NS_IMETHODIMP
-nsBulletListener::UnblockOnload(imgIRequest* aRequest)
-{
-  if (!mFrame) {
-    return NS_ERROR_FAILURE;
-  }
-  return mFrame->UnblockOnload(aRequest);
 }

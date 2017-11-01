@@ -43,7 +43,8 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  java::Clipboard::SetText(buffer);
+  java::Clipboard::SetText(java::GeckoAppShell::GetApplicationContext(),
+                           buffer);
   return NS_OK;
 }
 
@@ -84,7 +85,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  java::Clipboard::ClearText();
+  java::Clipboard::ClearText(java::GeckoAppShell::GetApplicationContext());
   
   return NS_OK;
 }
@@ -100,7 +101,8 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
 
   for (uint32_t k = 0; k < aLength; k++) {
     if (strcmp(aFlavorList[k], kUnicodeMime) == 0) {
-      *aHasText = java::Clipboard::HasText();
+      *aHasText = java::Clipboard::HasText(
+          java::GeckoAppShell::GetApplicationContext());
       break;
     }
   }

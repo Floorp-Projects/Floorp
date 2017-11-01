@@ -146,38 +146,38 @@ public class AndroidGamepadManager {
     }
 
     @WrapForJNI
-    private static void start() {
+    private static void start(final Context context) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                doStart();
+                doStart(context);
             }
         });
     }
 
-    /* package */ static void doStart() {
+    /* package */ static void doStart(final Context context) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             scanForGamepads();
-            addDeviceListener();
+            addDeviceListener(context);
             sStarted = true;
         }
     }
 
     @WrapForJNI
-    private static void stop() {
+    private static void stop(final Context context) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                doStop();
+                doStop(context);
             }
         });
     }
 
-    /* package */ static void doStop() {
+    /* package */ static void doStop(final Context context) {
         ThreadUtils.assertOnUiThread();
         if (sStarted) {
-            removeDeviceListener();
+            removeDeviceListener(context);
             sPendingGamepads.clear();
             sGamepads.clear();
             sStarted = false;
@@ -362,7 +362,7 @@ public class AndroidGamepadManager {
         sGamepads.remove(deviceId);
     }
 
-    private static void addDeviceListener() {
+    private static void addDeviceListener(final Context context) {
         if (Build.VERSION.SDK_INT < 16) {
             // Poll known gamepads to see if they've disappeared.
             sPollTimer = new Timer();
@@ -408,13 +408,12 @@ public class AndroidGamepadManager {
                 }
             };
             final InputManager im = (InputManager)
-                    GeckoAppShell.getApplicationContext()
-                                 .getSystemService(Context.INPUT_SERVICE);
+                    context.getSystemService(Context.INPUT_SERVICE);
             im.registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
         }
     }
 
-    private static void removeDeviceListener() {
+    private static void removeDeviceListener(final Context context) {
         if (Build.VERSION.SDK_INT < 16) {
             if (sPollTimer != null) {
                 sPollTimer.cancel();
@@ -422,8 +421,7 @@ public class AndroidGamepadManager {
             }
         } else {
             final InputManager im = (InputManager)
-                    GeckoAppShell.getApplicationContext()
-                                 .getSystemService(Context.INPUT_SERVICE);
+                    context.getSystemService(Context.INPUT_SERVICE);
             im.unregisterInputDeviceListener(sListener);
             sListener = null;
         }

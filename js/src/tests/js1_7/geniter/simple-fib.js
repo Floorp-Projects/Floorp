@@ -15,7 +15,7 @@ printStatus(summary);
  * BEGIN TEST *
  **************/
 
-function fib()
+function* fib()
 {
   var a = 0, b = 1;
   while (true)
@@ -33,13 +33,13 @@ try
 {
   var g = fib();
 
-  if (g.next() != 0)
+  if (g.next().value != 0)
     throw "F_0 = 0";
-  if (g.next() != 1)
+  if (g.next().value != 1)
     throw "F_1 = 1";
-  if (g.next() != 1)
+  if (g.next().value != 1)
     throw "F_2 = 1";
-  if (g.next() != 2)
+  if (g.next().value != 2)
     throw "F_3 = 2";
 }
 catch (e)

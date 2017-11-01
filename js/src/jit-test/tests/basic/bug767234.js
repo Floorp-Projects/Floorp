@@ -1,4 +1,4 @@
-function gen()
+function* gen()
 {
     var local = new Date();
     yield 1;
