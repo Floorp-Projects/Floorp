@@ -1426,7 +1426,7 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                                                   desc.attributes());
         } else {
             shape = NativeObject::addAccessorProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                                      desc.attributes(), 0);
+                                                      desc.attributes());
         }
     } else {
         if (Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter())) {

@@ -413,7 +413,7 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 /* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                                   GetterOp getter, SetterOp setter, unsigned attrs,
-                                  unsigned flags, bool allowDictionary)
+                                  bool allowDictionary)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
@@ -428,7 +428,7 @@ NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
-    return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, flags, entry,
+    return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, entry,
                                        allowDictionary, keep);
 }
 

@@ -1025,7 +1025,7 @@ AddLengthProperty(JSContext* cx, HandleArrayObject obj)
     return NativeObject::addAccessorProperty(cx, obj, lengthId,
                                              array_length_getter, array_length_setter,
                                              JSPROP_PERMANENT | JSPROP_SHADOWABLE,
-                                             0, /* allowDictionary = */ false);
+                                             /* allowDictionary = */ false);
 }
 
 static bool
