@@ -12,32 +12,12 @@
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
 #include "private/pprio.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace widget {
 
-typedef void (STDCALL *FPDF_InitLibrary_Pfn)();
-typedef void (STDCALL *FPDF_DestroyLibrary_Pfn)();
-
-typedef FPDF_DOCUMENT (STDCALL *FPDF_LoadDocument_Pfn)(FPDF_STRING file_path,
-                                                      FPDF_BYTESTRING password);
-typedef FPDF_DOCUMENT (STDCALL *FPDF_LoadCustomDocument_Pfn)(FPDF_FILEACCESS* pFileAccess,
-                                                             FPDF_BYTESTRING password);
-typedef void(STDCALL *FPDF_CloseDocument_Pfn)(FPDF_DOCUMENT aDocument);
-
-typedef int (STDCALL *FPDF_GetPageCount_Pfn)(FPDF_DOCUMENT aDocument);
-
-typedef FPDF_PAGE (STDCALL *FPDF_LoadPage_Pfn)(FPDF_DOCUMENT aDocument,
-                                               int aPageIndex);
-typedef void (STDCALL *FPDF_ClosePage_Pfn)(FPDF_PAGE aPage);
-typedef void (STDCALL *FPDF_RenderPage_Pfn)(HDC aDC,
-                                            FPDF_PAGE aPage,
-                                            int aStartX,
-                                            int aStartY,
-                                            int aSizeX,
-                                            int aSizeY,
-                                            int aRotate,
-                                            int aFlags);
+struct PDFFunctionPointerTable;
 
 /**
  * This class exposes an interface to the PDFium library and
@@ -76,17 +56,8 @@ private:
   ~PDFiumEngineShim();
   bool Init(const nsCString& aLibrary);
 
+  UniquePtr<PDFFunctionPointerTable> mTable;
   bool        mInitialized ;
-
-  FPDF_InitLibrary_Pfn        mFPDF_InitLibrary;
-  FPDF_DestroyLibrary_Pfn     mFPDF_DestroyLibrary;
-  FPDF_LoadDocument_Pfn       mFPDF_LoadDocument;
-  FPDF_LoadCustomDocument_Pfn mFPDF_LoadCustomDocument;
-  FPDF_CloseDocument_Pfn      mFPDF_CloseDocument;
-  FPDF_GetPageCount_Pfn       mFPDF_GetPageCount;
-  FPDF_LoadPage_Pfn           mFPDF_LoadPage;
-  FPDF_ClosePage_Pfn          mFPDF_ClosePage;
-  FPDF_RenderPage_Pfn         mFPDF_RenderPage;
 
   PRLibrary*  mPRLibrary;
 };
