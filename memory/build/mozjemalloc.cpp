@@ -254,10 +254,6 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
 #define CHUNK_2POW_DEFAULT 20
-// Maximum number of dirty pages per arena.
-#define DIRTY_MAX_DEFAULT (1U << 8)
-
-static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 
 // Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
 // so over-estimates are okay (up to a point), but under-estimates will
@@ -279,25 +275,6 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 // power of 2.
 #define SMALL_MAX_2POW_DEFAULT 9
 #define SMALL_MAX_DEFAULT (1U << SMALL_MAX_2POW_DEFAULT)
-
-// RUN_MAX_OVRHD indicates maximum desired run header overhead.  Runs are sized
-// as small as possible such that this setting is still honored, without
-// violating other constraints.  The goal is to make runs as small as possible
-// without exceeding a per run external fragmentation threshold.
-//
-// We use binary fixed point math for overhead computations, where the binary
-// point is implicitly RUN_BFP bits to the left.
-//
-// Note that it is possible to set RUN_MAX_OVRHD low enough that it cannot be
-// honored for some/all object sizes, since there is one bit of header overhead
-// per object (plus a constant).  This constraint is relaxed (ignored) for runs
-// that are so small that the per-region overhead is greater than:
-//
-//   (RUN_MAX_OVRHD / (reg_size << (3+RUN_BFP))
-#define RUN_BFP 12
-//                                    \/   Implicit binary fixed point.
-#define RUN_MAX_OVRHD 0x0000003dU
-#define RUN_MAX_OVRHD_RELAX 0x00001800U
 
 // When MALLOC_STATIC_PAGESIZE is defined, the page size is fixed at
 // compile-time for better performance, as opposed to determined at
@@ -400,6 +377,42 @@ static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 
 // The current amount of recycled bytes, updated atomically.
 static Atomic<size_t, ReleaseAcquire> gRecycledSize;
+
+// Maximum number of dirty pages per arena.
+#define DIRTY_MAX_DEFAULT (1U << 8)
+
+static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
+
+// RUN_MAX_OVRHD indicates maximum desired run header overhead.  Runs are sized
+// as small as possible such that this setting is still honored, without
+// violating other constraints.  The goal is to make runs as small as possible
+// without exceeding a per run external fragmentation threshold.
+//
+// We use binary fixed point math for overhead computations, where the binary
+// point is implicitly RUN_BFP bits to the left.
+//
+// Note that it is possible to set RUN_MAX_OVRHD low enough that it cannot be
+// honored for some/all object sizes, since there is one bit of header overhead
+// per object (plus a constant).  This constraint is relaxed (ignored) for runs
+// that are so small that the per-region overhead is greater than:
+//
+//   (RUN_MAX_OVRHD / (reg_size << (3+RUN_BFP))
+#define RUN_BFP 12
+//                                    \/   Implicit binary fixed point.
+#define RUN_MAX_OVRHD 0x0000003dU
+#define RUN_MAX_OVRHD_RELAX 0x00001800U
+
+// Return the smallest chunk multiple that is >= s.
+#define CHUNK_CEILING(s) (((s) + chunksize_mask) & ~chunksize_mask)
+
+// Return the smallest cacheline multiple that is >= s.
+#define CACHELINE_CEILING(s) (((s) + (CACHELINE - 1)) & ~(CACHELINE - 1))
+
+// Return the smallest quantum multiple that is >= a.
+#define QUANTUM_CEILING(a) (((a) + quantum_mask) & ~quantum_mask)
+
+// Return the smallest pagesize multiple that is >= s.
+#define PAGE_CEILING(s) (((s) + pagesize_mask) & ~pagesize_mask)
 
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
@@ -1316,18 +1329,6 @@ GetChunkOffsetForPtr(const void* aPtr)
 {
   return (size_t)(uintptr_t(aPtr) & chunksize_mask);
 }
-
-// Return the smallest chunk multiple that is >= s.
-#define CHUNK_CEILING(s) (((s) + chunksize_mask) & ~chunksize_mask)
-
-// Return the smallest cacheline multiple that is >= s.
-#define CACHELINE_CEILING(s) (((s) + (CACHELINE - 1)) & ~(CACHELINE - 1))
-
-// Return the smallest quantum multiple that is >= a.
-#define QUANTUM_CEILING(a) (((a) + quantum_mask) & ~quantum_mask)
-
-// Return the smallest pagesize multiple that is >= s.
-#define PAGE_CEILING(s) (((s) + pagesize_mask) & ~pagesize_mask)
 
 static inline const char*
 _getprogname(void)
