@@ -1,6 +1,11 @@
-/* -*- Mode: C; tab-width: 8; c-basic-offset: 8 -*- */
-/* vim:set softtabstop=8 shiftwidth=8: */
-/*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Portions of this file were originally under the following license:
+ *
  * Copyright (C) 2006-2008 Jason Evans <jasone@FreeBSD.org>.
  * All rights reserved.
  *
