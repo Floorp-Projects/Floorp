@@ -30,4 +30,15 @@ CompareAddr(T* aAddr1, T* aAddr2)
   return (addr1 > addr2) - (addr1 < addr2);
 }
 
+// User-defined literals to make constants more legible
+constexpr unsigned long long int operator"" _KiB(unsigned long long int aNum)
+{
+  return aNum * 1024;
+}
+
+constexpr unsigned long long int operator"" _MiB(unsigned long long int aNum)
+{
+  return aNum * 1024_KiB;
+}
+
 #endif
