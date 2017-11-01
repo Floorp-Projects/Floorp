@@ -7,6 +7,7 @@
 const kSearchEngineURL = "https://example.com/?search={searchTerms}";
 const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
 const kSearchTerm = "foo";
+const kSearchTermIntl = "日";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 
 add_task(async function test_extension_adding_engine() {
@@ -31,6 +32,10 @@ add_task(async function test_extension_adding_engine() {
 
   let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
   let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  let encodedSubmissionURL = engine.getSubmission(kSearchTermIntl).uri.spec;
+  let testSubmissionURL = kSearchEngineURL.replace("{searchTerms}", encodeURIComponent(kSearchTermIntl));
+  is(encodedSubmissionURL, testSubmissionURL, "Encoded UTF-8 URLs should match");
+
   is(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
 
   await ext1.unload();
