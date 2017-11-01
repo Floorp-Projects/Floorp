@@ -163,6 +163,9 @@ SERVO_BINDING_FUNC(Servo_StyleSet_HasStateDependency, bool,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
                    uint64_t state)
+SERVO_BINDING_FUNC(Servo_StyleSet_HasDocumentStateDependency, bool,
+                   RawServoStyleSetBorrowed set,
+                   uint64_t state)
 
 // CSSRuleList
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
