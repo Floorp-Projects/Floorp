@@ -10,10 +10,10 @@
 #include "mozjemalloc_types.h"
 #include "mozilla/MacroArgs.h"
 
-/* Macro helpers */
+// Macro helpers
 
 #define MACRO_CALL(a, b) a b
-/* Can't use macros recursively, so we need another one doing the same as above. */
+// Can't use macros recursively, so we need another one doing the same as above.
 #define MACRO_CALL2(a, b) a b
 
 #define ARGS_HELPER(name, ...) MACRO_CALL2( \
@@ -31,10 +31,9 @@
 
 #ifdef MOZ_MEMORY
 
-/* Generic interface exposing the whole public allocator API
- * This facilitates the implementation of things like replace-malloc.
- * Note: compilers are expected to be able to optimize out `this`.
- */
+// Generic interface exposing the whole public allocator API
+// This facilitates the implementation of things like replace-malloc.
+// Note: compilers are expected to be able to optimize out `this`.
 template <typename T>
 struct Allocator: public T {
 #define MALLOC_DECL(name, return_type, ...) \
@@ -42,12 +41,12 @@ struct Allocator: public T {
 #include "malloc_decls.h"
 };
 
-/* The MozJemalloc allocator */
+// The MozJemalloc allocator
 struct MozJemallocBase {};
 typedef Allocator<MozJemallocBase> MozJemalloc;
 
 #ifdef MOZ_REPLACE_MALLOC
-/* The replace-malloc allocator */
+// The replace-malloc allocator
 struct ReplaceMallocBase {};
 typedef Allocator<ReplaceMallocBase> ReplaceMalloc;
 
@@ -56,10 +55,10 @@ typedef ReplaceMalloc DefaultMalloc;
 typedef MozJemalloc DefaultMalloc;
 #endif
 
-#endif /* MOZ_MEMORY */
+#endif // MOZ_MEMORY
 
-/* Dummy implementation of the moz_arena_* API, falling back to a given
- * implementation of the base allocator. */
+// Dummy implementation of the moz_arena_* API, falling back to a given
+// implementation of the base allocator.
 template <typename T>
 struct DummyArenaAllocator {
   static arena_id_t moz_create_arena(void) { return 0; }

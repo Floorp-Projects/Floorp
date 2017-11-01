@@ -7,16 +7,14 @@
 #ifndef mozmemory_h
 #define mozmemory_h
 
-/*
- * This header is meant to be used when the following functions are
- * necessary:
- *   - malloc_good_size (used to be called je_malloc_usable_in_advance)
- *   - jemalloc_stats
- *   - jemalloc_purge_freed_pages
- *   - jemalloc_free_dirty_pages
- *   - jemalloc_thread_local_arena
- *   - jemalloc_ptr_info
- */
+// This header is meant to be used when the following functions are
+// necessary:
+//   - malloc_good_size (used to be called je_malloc_usable_in_advance)
+//   - jemalloc_stats
+//   - jemalloc_purge_freed_pages
+//   - jemalloc_free_dirty_pages
+//   - jemalloc_thread_local_arena
+//   - jemalloc_ptr_info
 
 #ifdef MALLOC_H
 #include MALLOC_H
@@ -27,17 +25,14 @@
 #include "mozjemalloc_types.h"
 
 #ifdef MOZ_MEMORY
-/*
- * On OSX, malloc/malloc.h contains the declaration for malloc_good_size,
- * which will call back in jemalloc, through the zone allocator so just use it.
- */
+// On OSX, malloc/malloc.h contains the declaration for malloc_good_size,
+// which will call back in jemalloc, through the zone allocator so just use it.
 #ifndef XP_DARWIN
 MOZ_MEMORY_API size_t malloc_good_size_impl(size_t size);
 
-/* Note: the MOZ_GLUE_IN_PROGRAM ifdef below is there to avoid -Werror turning
- * the protective if into errors. MOZ_GLUE_IN_PROGRAM is what triggers MFBT_API
- * to use weak imports. */
-
+// Note: the MOZ_GLUE_IN_PROGRAM ifdef below is there to avoid -Werror turning
+// the protective if into errors. MOZ_GLUE_IN_PROGRAM is what triggers MFBT_API
+// to use weak imports.
 static inline size_t _malloc_good_size(size_t size) {
 #  if defined(MOZ_GLUE_IN_PROGRAM) && !defined(IMPL_MFBT)
   if (!malloc_good_size)
@@ -61,4 +56,4 @@ static inline size_t _malloc_good_size(size_t size) {
 #define MALLOC_FUNCS MALLOC_FUNCS_ARENA
 #include "malloc_decls.h"
 
-#endif /* mozmemory_h */
+#endif // mozmemory_h

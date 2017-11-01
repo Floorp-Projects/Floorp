@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Helper header to declare all the supported malloc functions.
- * MALLOC_DECL arguments are:
- *   - function name
- *   - return type
- *   - argument types
- */
+// Helper header to declare all the supported malloc functions.
+// MALLOC_DECL arguments are:
+//   - function name
+//   - return type
+//   - argument types
 
 #ifndef malloc_decls_h
 #  define malloc_decls_h
@@ -32,7 +30,7 @@
                             MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
                             MALLOC_FUNCS_ARENA)
 
-#endif /* malloc_decls_h */
+#endif // malloc_decls_h
 
 #ifndef MALLOC_FUNCS
 #  define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
@@ -62,77 +60,65 @@ MALLOC_DECL(malloc_good_size, size_t, size_t)
 #  endif
 #  if MALLOC_FUNCS & MALLOC_FUNCS_JEMALLOC
 MALLOC_DECL(jemalloc_stats, void, jemalloc_stats_t *)
-/*
- * On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
- * back to the operating system.  On Mac, the operating system doesn't take
- * this memory back immediately; instead, the OS takes it back only when the
- * machine is running out of physical memory.
- *
- * This is great from the standpoint of efficiency, but it makes measuring our
- * actual RSS difficult, because pages which we've MADV_FREE'd shouldn't count
- * against our RSS.
- *
- * This function explicitly purges any MADV_FREE'd pages from physical memory,
- * causing our reported RSS match the amount of memory we're actually using.
- *
- * Note that this call is expensive in two ways.  First, it may be slow to
- * execute, because it may make a number of slow syscalls to free memory.  This
- * function holds the big jemalloc locks, so basically all threads are blocked
- * while this function runs.
- *
- * This function is also expensive in that the next time we go to access a page
- * which we've just explicitly decommitted, the operating system has to attach
- * to it a physical page!  If we hadn't run this function, the OS would have
- * less work to do.
- *
- * If MALLOC_DOUBLE_PURGE is not defined, this function does nothing.
- */
+
+// On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
+// back to the operating system.  On Mac, the operating system doesn't take
+// this memory back immediately; instead, the OS takes it back only when the
+// machine is running out of physical memory.
+//
+// This is great from the standpoint of efficiency, but it makes measuring our
+// actual RSS difficult, because pages which we've MADV_FREE'd shouldn't count
+// against our RSS.
+//
+// This function explicitly purges any MADV_FREE'd pages from physical memory,
+// causing our reported RSS match the amount of memory we're actually using.
+//
+// Note that this call is expensive in two ways.  First, it may be slow to
+// execute, because it may make a number of slow syscalls to free memory.  This
+// function holds the big jemalloc locks, so basically all threads are blocked
+// while this function runs.
+//
+// This function is also expensive in that the next time we go to access a page
+// which we've just explicitly decommitted, the operating system has to attach
+// to it a physical page!  If we hadn't run this function, the OS would have
+// less work to do.
+//
+// If MALLOC_DOUBLE_PURGE is not defined, this function does nothing.
 MALLOC_DECL(jemalloc_purge_freed_pages, void)
 
-/*
- * Free all unused dirty pages in all arenas. Calling this function will slow
- * down subsequent allocations so it is recommended to use it only when
- * memory needs to be reclaimed at all costs (see bug 805855). This function
- * provides functionality similar to mallctl("arenas.purge") in jemalloc 3.
- */
+// Free all unused dirty pages in all arenas. Calling this function will slow
+// down subsequent allocations so it is recommended to use it only when
+// memory needs to be reclaimed at all costs (see bug 805855). This function
+// provides functionality similar to mallctl("arenas.purge") in jemalloc 3.
 MALLOC_DECL(jemalloc_free_dirty_pages, void)
 
-/*
- * Opt in or out of a thread local arena (bool argument is whether to opt-in
- * (true) or out (false)).
- */
+// Opt in or out of a thread local arena (bool argument is whether to opt-in
+// (true) or out (false)).
 MALLOC_DECL(jemalloc_thread_local_arena, void, bool)
 
-/*
- * Provide information about any allocation enclosing the given address.
- */
+// Provide information about any allocation enclosing the given address.
 MALLOC_DECL(jemalloc_ptr_info, void, const void*, jemalloc_ptr_info_t*)
 #  endif
 
 #  if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_BASE
-/*
- * Creates a separate arena, and returns its id, valid to use with moz_arena_*
- * functions.
- */
+
+// Creates a separate arena, and returns its id, valid to use with moz_arena_*
+// functions.
 MALLOC_DECL(moz_create_arena, arena_id_t)
 
-/*
- * Dispose of the given arena. Subsequent uses of the arena will fail.
- */
+// Dispose of the given arena. Subsequent uses of the arena will fail.
 MALLOC_DECL(moz_dispose_arena, void, arena_id_t)
 #  endif
 
 #  if MALLOC_FUNCS & MALLOC_FUNCS_ARENA_ALLOC
-/*
- * Same as the functions without the moz_arena_ prefix, but using arenas
- * created with moz_create_arena.
- * The contract, even if not enforced at runtime in some configurations,
- * is that moz_arena_realloc and moz_arena_free will crash if the wrong
- * arena id is given. All functions will crash if the arena id is invalid.
- * Although discouraged, plain realloc and free can still be used on
- * pointers allocated with these functions. Realloc will properly keep
- * new pointers in the same arena as the original.
- */
+// Same as the functions without the moz_arena_ prefix, but using arenas
+// created with moz_create_arena.
+// The contract, even if not enforced at runtime in some configurations,
+// is that moz_arena_realloc and moz_arena_free will crash if the wrong
+// arena id is given. All functions will crash if the arena id is invalid.
+// Although discouraged, plain realloc and free can still be used on
+// pointers allocated with these functions. Realloc will properly keep
+// new pointers in the same arena as the original.
 MALLOC_DECL(moz_arena_malloc, void*, arena_id_t, size_t)
 MALLOC_DECL(moz_arena_calloc, void*, arena_id_t, size_t, size_t)
 MALLOC_DECL(moz_arena_realloc, void*, arena_id_t, void*, size_t)
@@ -140,7 +126,7 @@ MALLOC_DECL(moz_arena_free, void, arena_id_t, void*)
 MALLOC_DECL(moz_arena_memalign, void*, arena_id_t, size_t, size_t)
 #  endif
 
-#endif /* MALLOC_DECL */
+#endif // MALLOC_DECL
 
 #undef MALLOC_DECL
 #undef MALLOC_FUNCS
