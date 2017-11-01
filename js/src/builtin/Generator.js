@@ -70,69 +70,6 @@ function StarGeneratorReturn(val) {
     }
 }
 
-function LegacyGeneratorNext(val) {
-    if (!IsObject(this) || !IsLegacyGeneratorObject(this))
-        return callFunction(CallLegacyGeneratorMethodIfWrapped, this, val, "LegacyGeneratorNext");
-
-    if (LegacyGeneratorObjectIsClosed(this))
-        ThrowStopIteration();
-
-    if (GeneratorIsRunning(this))
-        ThrowTypeError(JSMSG_NESTING_GENERATOR);
-
-    try {
-        return resumeGenerator(this, val, "next");
-    } catch (e) {
-        if (!LegacyGeneratorObjectIsClosed(this))
-            GeneratorSetClosed(this);
-        throw e;
-    }
-}
-_SetCanonicalName(LegacyGeneratorNext, "next");
-
-function LegacyGeneratorThrow(val) {
-    if (!IsObject(this) || !IsLegacyGeneratorObject(this))
-        return callFunction(CallLegacyGeneratorMethodIfWrapped, this, val, "LegacyGeneratorThrow");
-
-    if (LegacyGeneratorObjectIsClosed(this))
-        throw val;
-
-    if (GeneratorIsRunning(this))
-        ThrowTypeError(JSMSG_NESTING_GENERATOR);
-
-    try {
-        return resumeGenerator(this, val, "throw");
-    } catch (e) {
-        if (!LegacyGeneratorObjectIsClosed(this))
-            GeneratorSetClosed(this);
-        throw e;
-    }
-}
-
-// Called by js::CloseIterator.
-function LegacyGeneratorCloseInternal() {
-    assert(IsObject(this), "Not an object: " + ToString(this));
-    assert(IsLegacyGeneratorObject(this), "Not a legacy generator object: " + ToString(this));
-    assert(!LegacyGeneratorObjectIsClosed(this), "Already closed: " + ToString(this));
-
-    if (GeneratorIsRunning(this))
-        ThrowTypeError(JSMSG_NESTING_GENERATOR);
-
-    resumeGenerator(this, undefined, "close");
-    if (!LegacyGeneratorObjectIsClosed(this))
-        CloseClosingLegacyGeneratorObject(this);
-}
-
-function LegacyGeneratorClose() {
-    if (!IsObject(this) || !IsLegacyGeneratorObject(this))
-        return callFunction(CallLegacyGeneratorMethodIfWrapped, this, "LegacyGeneratorClose");
-
-    if (LegacyGeneratorObjectIsClosed(this))
-        return undefined;
-
-    callFunction(LegacyGeneratorCloseInternal, this);
-}
-
 function InterpretGeneratorResume(gen, val, kind) {
     // If we want to resume a generator in the interpreter, the script containing
     // the resumeGenerator/JSOP_RESUME also has to run in the interpreter. The

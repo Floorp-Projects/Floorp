@@ -75,20 +75,6 @@ public class GeckoView extends LayerView {
         }
     }
 
-    static {
-        EventDispatcher.getInstance().registerUiThreadListener(new BundleEventListener() {
-            @Override
-            public void handleMessage(final String event, final GeckoBundle message,
-                                      final EventCallback callback) {
-                if ("GeckoView:Prompt".equals(event)) {
-                    handlePromptEvent(/* view */ null, message, callback);
-                }
-            }
-        }, "GeckoView:Prompt");
-    }
-
-    private static PromptDelegate sDefaultPromptDelegate;
-
     private final NativeQueue mNativeQueue =
         new NativeQueue(State.INITIAL, State.READY);
 
@@ -343,8 +329,6 @@ public class GeckoView extends LayerView {
 
         native void reattach(GeckoView view, Object compositor,
                              EventDispatcher dispatcher);
-
-        native void loadUri(String uri, int flags);
 
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void setState(final State newState) {
@@ -621,28 +605,6 @@ public class GeckoView extends LayerView {
         }
     }
 
-    @WrapForJNI public static final int LOAD_DEFAULT = 0;
-    @WrapForJNI public static final int LOAD_NEW_TAB = 1;
-    @WrapForJNI public static final int LOAD_SWITCH_TAB = 2;
-
-    /**
-    * Load the given URI.
-    * Note: Only for Fennec support.
-    * @param uri The URI of the resource to load.
-    * @param flags The load flags (TODO).
-    */
-    public void loadUri(String uri, int flags) {
-        if (mWindow == null) {
-            throw new IllegalStateException("Not attached to window");
-        }
-
-        if (GeckoThread.isRunning()) {
-            mWindow.loadUri(uri, flags);
-        }  else {
-            GeckoThread.queueNativeCall(mWindow, "loadUri", String.class, uri, flags);
-        }
-    }
-
     /**
     * Load the given URI.
     * @param uri The URI of the resource to load.
@@ -885,17 +847,6 @@ public class GeckoView extends LayerView {
     }
 
     /**
-     * Set the default prompt delegate for all GeckoView instances. The default prompt
-     * delegate is used for certain types of prompts and for GeckoViews that do not have
-     * custom prompt delegates.
-     * @param delegate PromptDelegate instance or null to use the built-in delegate.
-     * @see #setPromptDelegate(PromptDelegate)
-     */
-    public static void setDefaultPromptDelegate(PromptDelegate delegate) {
-        sDefaultPromptDelegate = delegate;
-    }
-
-    /**
     * Set the content scroll callback handler.
     * This will replace the current handler.
     * @param listener An implementation of ScrollListener.
@@ -905,18 +856,8 @@ public class GeckoView extends LayerView {
     }
 
     /**
-     * Get the default prompt delegate for all GeckoView instances.
-     * @return PromptDelegate instance
-     * @see #getPromptDelegate()
-     */
-    public static PromptDelegate getDefaultPromptDelegate() {
-        return sDefaultPromptDelegate;
-    }
-
-    /**
      * Set the current prompt delegate for this GeckoView.
-     * @param delegate PromptDelegate instance or null to use the default delegate.
-     * @see #setDefaultPromptDelegate(PromptDelegate)
+     * @param delegate PromptDelegate instance or null to use the built-in delegate.
      */
     public void setPromptDelegate(PromptDelegate delegate) {
         mPromptDelegate = delegate;
@@ -924,8 +865,7 @@ public class GeckoView extends LayerView {
 
     /**
      * Get the current prompt delegate for this GeckoView.
-     * @return PromptDelegate instance or null if using default delegate.
-     * @see #getDefaultPromptDelegate()
+     * @return PromptDelegate instance or null if using built-in delegate.
      */
     public PromptDelegate getPromptDelegate() {
         return mPromptDelegate;
@@ -1089,24 +1029,23 @@ public class GeckoView extends LayerView {
         }
 
         @Override // FileCallback
-        public void confirm(final Uri uri) {
+        public void confirm(final Context context, final Uri uri) {
             if ("file".equals(mType)) {
-                confirm(uri == null ? null : new Uri[] { uri });
+                confirm(context, uri == null ? null : new Uri[] { uri });
                 return;
             } else {
                 throw new UnsupportedOperationException();
             }
         }
 
-        private static String getFile(final Uri uri) {
+        private static String getFile(final Context context, final Uri uri) {
             if (uri == null) {
                 return null;
             }
             if ("file".equals(uri.getScheme())) {
                 return uri.getPath();
             }
-            final ContentResolver cr =
-                    GeckoAppShell.getApplicationContext().getContentResolver();
+            final ContentResolver cr = context.getContentResolver();
             final Cursor cur = cr.query(uri, new String[] { "_data" }, /* selection */ null,
                                         /* args */ null, /* sort */ null);
             if (cur == null) {
@@ -1133,14 +1072,14 @@ public class GeckoView extends LayerView {
         }
 
         @Override // FileCallback
-        public void confirm(final Uri[] uris) {
+        public void confirm(final Context context, final Uri[] uris) {
             if ("single".equals(mMode) && (uris == null || uris.length != 1)) {
                 throw new IllegalArgumentException();
             }
             if ("file".equals(mType)) {
                 final String[] paths = new String[uris != null ? uris.length : 0];
                 for (int i = 0; i < paths.length; i++) {
-                    paths[i] = getFile(uris[i]);
+                    paths[i] = getFile(context, uris[i]);
                     if (paths[i] == null) {
                         Log.e(LOGTAG, "Only file URI is supported: " + uris[i]);
                     }
@@ -1156,13 +1095,7 @@ public class GeckoView extends LayerView {
     /* package */ static void handlePromptEvent(final GeckoView view,
                                                 final GeckoBundle message,
                                                 final EventCallback callback) {
-        final PromptDelegate delegate;
-        if (view != null && view.mPromptDelegate != null) {
-            delegate = view.mPromptDelegate;
-        } else {
-            delegate = sDefaultPromptDelegate;
-        }
-
+        final PromptDelegate delegate = view.getPromptDelegate();
         if (delegate == null) {
             // Default behavior is same as calling dismiss() on callback.
             callback.sendSuccess(null);
@@ -1833,17 +1766,19 @@ public class GeckoView extends LayerView {
              * Called by the prompt implementation when the user makes a file selection in
              * single-selection mode.
              *
+             * @param context An application Context for parsing URIs.
              * @param uri The URI of the selected file.
              */
-            void confirm(Uri uri);
+            void confirm(Context context, Uri uri);
 
             /**
              * Called by the prompt implementation when the user makes file selections in
              * multiple-selection mode.
              *
+             * @param context An application Context for parsing URIs.
              * @param uris Array of URI objects for the selected files.
              */
-            void confirm(Uri[] uris);
+            void confirm(Context context, Uri[] uris);
         }
 
         static final int FILE_TYPE_SINGLE = 1;

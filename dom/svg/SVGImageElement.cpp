@@ -51,7 +51,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGImageElement, SVGImageElementBase,
                             nsIDOMNode, nsIDOMElement,
                             nsIDOMSVGElement,
                             imgINotificationObserver,
-                            nsIImageLoadingContent, imgIOnloadBlocker)
+                            nsIImageLoadingContent)
 
 //----------------------------------------------------------------------
 // Implementation

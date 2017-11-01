@@ -18,7 +18,7 @@
 #include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
-#include "AndroidJNIWrapper.h"
+#include "AndroidBridge.h"
 
 static JavaVM* g_jvm_capture = NULL;
 static jclass g_java_capturer_class = NULL;  // VideoCaptureAndroid.class.
@@ -64,12 +64,15 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
     g_jvm_capture = javaVM;
     AttachThreadScoped ats(g_jvm_capture);
 
-    g_context = jsjni_GetGlobalContextRef();
+    g_context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
 
     videocapturemodule::DeviceInfoAndroid::Initialize(g_jvm_capture);
 
+    jclass clsRef = mozilla::jni::GetClassRef(
+        ats.env(), "org/webrtc/videoengine/VideoCaptureAndroid");
     g_java_capturer_class =
-      jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
+        static_cast<jclass>(ats.env()->NewGlobalRef(clsRef));
+    ats.env()->DeleteLocalRef(clsRef);
     assert(g_java_capturer_class);
 
     JNINativeMethod native_methods[] = {

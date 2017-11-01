@@ -42,7 +42,6 @@
 #include "mozilla/Unused.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#include "AndroidJNIWrapper.h"
 #include "VideoEngine.h"
 #endif
 
@@ -1159,8 +1158,7 @@ WebrtcVideoConduit::InitMain()
     }
   }
 #ifdef MOZ_WIDGET_ANDROID
-  // get the JVM
-  JavaVM *jvm = jsjni_GetVM();
+  JavaVM* jvm = mozilla::jni::GetVM();
 
   if (mozilla::camera::VideoEngine::SetAndroidObjects(jvm) != 0) {
     CSFLogError(LOGTAG,  "%s: could not set Android objects", __FUNCTION__);

@@ -558,6 +558,8 @@ def set_tier(config, tests):
                                          'windows10-64-stylo-disabled/opt',
                                          'macosx64/opt',
                                          'macosx64/debug',
+                                         'macosx64-nightly/opt',
+                                         'macosx64-devedition/opt',
                                          'macosx64-stylo-disabled/debug',
                                          'macosx64-stylo-disabled/opt',
                                          'android-4.3-arm7-api-16/opt',

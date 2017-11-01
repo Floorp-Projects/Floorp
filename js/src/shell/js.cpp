@@ -199,6 +199,45 @@ InstallCoverageSignalHandlers()
 }
 #endif
 
+class OffThreadState {
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+  public:
+    OffThreadState()
+      : monitor(mutexid::ShellOffThreadState),
+        state(IDLE),
+        runtime(nullptr),
+        token(),
+        source(nullptr)
+    { }
+
+    bool startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource);
+
+    bool startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&& newXdr);
+
+    void abandon(JSContext* cx);
+
+    void markDone(void* newToken);
+
+    void* waitUntilDone(JSContext* cx, ScriptKind kind);
+
+    JS::TranscodeBuffer& xdrBuffer() { return xdr; }
+
+  private:
+    js::Monitor monitor;
+    ScriptKind scriptKind;
+    State state;
+    JSRuntime* runtime;
+    void* token;
+    char16_t* source;
+    JS::TranscodeBuffer xdr;
+};
+static OffThreadState gOffThreadState;
+
 bool
 OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource)
 {
@@ -211,6 +250,7 @@ OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char
     source = newSource.forget();
 
     scriptKind = kind;
+    runtime = cx->runtime();
     state = COMPILING;
     return true;
 }
@@ -227,6 +267,7 @@ OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&
     xdr = mozilla::Move(newXdr);
 
     scriptKind = kind;
+    runtime = cx->runtime();
     state = COMPILING;
     return true;
 }
@@ -265,7 +306,7 @@ void*
 OffThreadState::waitUntilDone(JSContext* cx, ScriptKind kind)
 {
     AutoLockMonitor alm(monitor);
-    if (state == IDLE || scriptKind != kind)
+    if (state == IDLE || cx->runtime() != runtime || scriptKind != kind)
         return nullptr;
 
     if (state == COMPILING) {
@@ -3383,7 +3424,7 @@ CooperativeEndWait(JSContext* cx)
 }
 
 static void
-CooperativeYield()
+CooperativeYield(bool terminating = false)
 {
     LockGuard<Mutex> lock(cooperationState->lock);
     MOZ_ASSERT(!cooperationState->idle);
@@ -3392,7 +3433,7 @@ CooperativeYield()
 
     // Wait until another thread takes over control before returning, if there
     // is another thread to do so.
-    if (cooperationState->numThreads) {
+    if (!terminating && cooperationState->numThreads) {
         uint64_t count = cooperationState->yieldCount;
         cooperationState->cvar.wait(lock, [&] { return cooperationState->yieldCount != count; });
     }
@@ -3552,7 +3593,7 @@ WorkerMain(void* arg)
         js_delete(sc);
         if (input->siblingContext) {
             cooperationState->numThreads--;
-            CooperativeYield();
+            CooperativeYield(/* terminating = */ true);
         }
         js_delete(input);
     });
@@ -3925,6 +3966,13 @@ KillWorkerThreads(JSContext* cx)
 {
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
 
+    // Yield until all other cooperative threads in the main runtime finish.
+    while (cooperationState->numThreads) {
+        CooperativeBeginWait(cx);
+        CooperativeYield();
+        CooperativeEndWait(cx);
+    }
+
     if (!workerThreadsLock) {
         MOZ_ASSERT(workerThreads.empty());
         return;
@@ -3946,13 +3994,6 @@ KillWorkerThreads(JSContext* cx)
 
     js_delete(workerThreadsLock);
     workerThreadsLock = nullptr;
-
-    // Yield until all other cooperative threads in the main runtime finish.
-    while (cooperationState->numThreads) {
-        CooperativeBeginWait(cx);
-        CooperativeYield();
-        CooperativeEndWait(cx);
-    }
 
     js_delete(cooperationState);
     cooperationState = nullptr;
@@ -4456,8 +4497,7 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
 static void
 OffThreadCompileScriptCallback(void* token, void* callbackData)
 {
-    ShellContext* sc = static_cast<ShellContext*>(callbackData);
-    sc->offThreadState.markDone(token);
+    gOffThreadState.markDone(token);
 }
 
 static bool
@@ -4534,17 +4574,16 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    ShellContext* sc = GetShellContext(cx);
-    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::Script, ownedChars)) {
+    if (!gOffThreadState.startIfIdle(cx, ScriptKind::Script, ownedChars)) {
         JS_ReportErrorASCII(cx, "called offThreadCompileScript without calling runOffThreadScript"
                             " to receive prior off-thread compilation");
         return false;
     }
 
     if (!JS::CompileOffThread(cx, options, chars, length,
-                              OffThreadCompileScriptCallback, sc))
+                              OffThreadCompileScriptCallback, nullptr))
     {
-        sc->offThreadState.abandon(cx);
+        gOffThreadState.abandon(cx);
         return false;
     }
 
@@ -4560,8 +4599,7 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    ShellContext* sc = GetShellContext(cx);
-    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::Script);
+    void* token = gOffThreadState.waitUntilDone(cx, ScriptKind::Script);
     if (!token) {
         JS_ReportErrorASCII(cx, "called runOffThreadScript when no compilation is pending");
         return false;
@@ -4621,17 +4659,16 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    ShellContext* sc = GetShellContext(cx);
-    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::Module, ownedChars)) {
+    if (!gOffThreadState.startIfIdle(cx, ScriptKind::Module, ownedChars)) {
         JS_ReportErrorASCII(cx, "called offThreadCompileModule without receiving prior off-thread "
                             "compilation");
         return false;
     }
 
     if (!JS::CompileOffThreadModule(cx, options, chars, length,
-                                    OffThreadCompileScriptCallback, sc))
+                                    OffThreadCompileScriptCallback, nullptr))
     {
-        sc->offThreadState.abandon(cx);
+        gOffThreadState.abandon(cx);
         return false;
     }
 
@@ -4647,8 +4684,7 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    ShellContext* sc = GetShellContext(cx);
-    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::Module);
+    void* token = gOffThreadState.waitUntilDone(cx, ScriptKind::Module);
     if (!token) {
         JS_ReportErrorASCII(cx, "called finishOffThreadModule when no compilation is pending");
         return false;
@@ -4725,17 +4761,16 @@ OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    ShellContext* sc = GetShellContext(cx);
-    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::DecodeScript, mozilla::Move(loadBuffer))) {
+    if (!gOffThreadState.startIfIdle(cx, ScriptKind::DecodeScript, mozilla::Move(loadBuffer))) {
         JS_ReportErrorASCII(cx, "called offThreadDecodeScript without calling "
                             "runOffThreadDecodedScript to receive prior off-thread compilation");
         return false;
     }
 
-    if (!JS::DecodeOffThreadScript(cx, options, sc->offThreadState.xdrBuffer(), 0,
-                                   OffThreadCompileScriptCallback, sc))
+    if (!JS::DecodeOffThreadScript(cx, options, gOffThreadState.xdrBuffer(), 0,
+                                   OffThreadCompileScriptCallback, nullptr))
     {
-        sc->offThreadState.abandon(cx);
+        gOffThreadState.abandon(cx);
         return false;
     }
 
@@ -4751,8 +4786,7 @@ runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    ShellContext* sc = GetShellContext(cx);
-    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::DecodeScript);
+    void* token = gOffThreadState.waitUntilDone(cx, ScriptKind::DecodeScript);
     if (!token) {
         JS_ReportErrorASCII(cx, "called runOffThreadDecodedScript when no compilation is pending");
         return false;
@@ -7853,7 +7887,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, const char16_t* begin,
     if (memory == MAP_FAILED)
         return JS::AsmJSCache_InternalError;
     MOZ_ASSERT(*(uint32_t*)memory == 0);
-    if (mprotect(memory, serializedSize, PROT_WRITE))
+    if (mprotect(memory, serializedSize, PROT_READ | PROT_WRITE))
         return JS::AsmJSCache_InternalError;
 #endif
 

@@ -10,7 +10,6 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.health.HealthRecorder;
@@ -34,7 +33,6 @@ import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.text.FloatingToolbarTextSelection;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
-import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -47,7 +45,6 @@ import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
 
-import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
@@ -64,17 +61,14 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
-import android.provider.MediaStore.Images.Media;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Base64;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
@@ -99,11 +93,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -170,6 +160,10 @@ public abstract class GeckoApp extends GeckoActivity
     // Length of time in ms during which crashes are classified as startup crashes
     // for crash loop detection purposes.
     private static final int STARTUP_PHASE_DURATION_MS = 30 * 1000;
+
+    protected static final int LOAD_DEFAULT = 0;
+    protected static final int LOAD_NEW_TAB = 1;
+    protected static final int LOAD_SWITCH_TAB = 2;
 
     private static boolean sAlreadyLoaded;
 
@@ -648,7 +642,6 @@ public abstract class GeckoApp extends GeckoActivity
                               final EventCallback callback) {
         if (event.equals("Gecko:Ready")) {
             mGeckoReadyStartupTimer.stop();
-            geckoConnected();
 
             // This method is already running on the background thread, so we
             // know that mHealthRecorder will exist. That doesn't stop us being
@@ -674,22 +667,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         } else if ("Accessibility:Event".equals(event)) {
             GeckoAccessibility.sendAccessibilityEvent(mLayerView, message);
-
-        } else if ("Bookmark:Insert".equals(event)) {
-            final BrowserDB db = BrowserDB.from(getProfile());
-            final boolean bookmarkAdded = db.addBookmark(
-                    getContentResolver(), message.getString("title"), message.getString("url"));
-            final int resId = bookmarkAdded ? R.string.bookmark_added
-                                            : R.string.bookmark_already_added;
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    SnackbarBuilder.builder(GeckoApp.this)
-                            .message(resId)
-                            .duration(Snackbar.LENGTH_LONG)
-                            .buildAndShow();
-                }
-            });
 
         } else if ("Contact:Add".equals(event)) {
             final String email = message.getString("email");
@@ -724,10 +701,6 @@ public abstract class GeckoApp extends GeckoActivity
             if (layerView != null) {
                 layerView.setFullScreenState(FullScreenState.NONE);
             }
-
-        } else if ("Image:SetAs".equals(event)) {
-            String src = message.getString("url");
-            setImageAs(src);
 
         } else if ("Locale:Set".equals(event)) {
             setLocale(message.getString("locale"));
@@ -865,130 +838,6 @@ public abstract class GeckoApp extends GeckoActivity
                 }
             }
         });
-    }
-
-    private void showSetImageResult(final boolean success, final int message, final String path) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!success) {
-                    SnackbarBuilder.builder(GeckoApp.this)
-                            .message(message)
-                            .duration(Snackbar.LENGTH_LONG)
-                            .buildAndShow();
-                    return;
-                }
-
-                final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.setData(Uri.parse(path));
-
-                // Removes the image from storage once the chooser activity ends.
-                Intent chooser = Intent.createChooser(intent, getString(message));
-                ActivityResultHandler handler = new ActivityResultHandler() {
-                    @Override
-                    public void onActivityResult (int resultCode, Intent data) {
-                        getContentResolver().delete(intent.getData(), null, null);
-                    }
-                };
-                ActivityHandlerHelper.startIntentForActivity(GeckoApp.this, chooser, handler);
-            }
-        });
-    }
-
-    // Checks the necessary permissions before attempting to download and set the image as wallpaper.
-    private void setImageAs(final String aSrc) {
-        Permissions
-                .from(this)
-                .onBackgroundThread()
-                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .andFallback(new Runnable() {
-                    @Override
-                    public void run() {
-                        showSetImageResult(/* success */ false, R.string.set_image_path_fail, null);
-                    }
-                })
-                .run(new Runnable() {
-                    @Override
-                    public void run() {
-                        downloadImageForSetImage(aSrc);
-                    }
-                });
-    }
-
-
-    /**
-     * Downloads the image given by <code>aSrc</code> synchronously and then displays the Chooser
-     * activity to set the image as wallpaper.
-     *
-     * @param aSrc The URI to download the image from.
-     */
-    private void downloadImageForSetImage(final String aSrc) {
-        // Network access from the main thread can cause a StrictMode crash on release builds.
-        ThreadUtils.assertOnBackgroundThread();
-
-        boolean isDataURI = aSrc.startsWith("data:");
-        Bitmap image = null;
-        InputStream is = null;
-        ByteArrayOutputStream os = null;
-        try {
-            if (isDataURI) {
-                int dataStart = aSrc.indexOf(",");
-                byte[] buf = Base64.decode(aSrc.substring(dataStart + 1), Base64.DEFAULT);
-                image = BitmapUtils.decodeByteArray(buf);
-            } else {
-                int byteRead;
-                byte[] buf = new byte[4192];
-                os = new ByteArrayOutputStream();
-                URL url = new URL(aSrc);
-                is = url.openStream();
-
-                // Cannot read from same stream twice. Also, InputStream from
-                // URL does not support reset. So converting to byte array.
-
-                while ((byteRead = is.read(buf)) != -1) {
-                    os.write(buf, 0, byteRead);
-                }
-                byte[] imgBuffer = os.toByteArray();
-                image = BitmapUtils.decodeByteArray(imgBuffer);
-            }
-            if (image != null) {
-                // Some devices don't have a DCIM folder and the Media.insertImage call will fail.
-                File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-                if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
-                    showSetImageResult(/* success */ false, R.string.set_image_path_fail, null);
-                    return;
-                }
-                String path = Media.insertImage(getContentResolver(), image, null, null);
-                if (path == null) {
-                    showSetImageResult(/* success */ false, R.string.set_image_path_fail, null);
-                    return;
-                }
-                showSetImageResult(/* success */ true, R.string.set_image_chooser_title, path);
-            } else {
-                showSetImageResult(/* success */ false, R.string.set_image_fail, null);
-            }
-        } catch (OutOfMemoryError ome) {
-            Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);
-        } catch (IOException ioe) {
-            Log.e(LOGTAG, "I/O Exception while setting wallpaper", ioe);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ioe) {
-                    Log.w(LOGTAG, "I/O Exception while closing stream", ioe);
-                }
-            }
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException ioe) {
-                    Log.w(LOGTAG, "I/O Exception while closing stream", ioe);
-                }
-            }
-        }
     }
 
     private int getBitmapSampleSize(BitmapFactory.Options options, int idealWidth, int idealHeight) {
@@ -1193,15 +1042,13 @@ public abstract class GeckoApp extends GeckoActivity
 
         mLayerView.setChromeUri("chrome://browser/content/browser.xul");
         mLayerView.setContentListener(this);
+        mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        GeckoAccessibility.setDelegate(mLayerView);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Accessibility:Event",
             "Locale:Set",
-            null);
-
-        getAppEventDispatcher().registerBackgroundThreadListener(this,
-            "Bookmark:Insert",
-            "Image:SetAs",
             null);
 
         getAppEventDispatcher().registerUiThreadListener(this,
@@ -1664,10 +1511,6 @@ public abstract class GeckoApp extends GeckoActivity
             if (selectedTab != null) {
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
             }
-
-            if (GeckoThread.isRunning()) {
-                geckoConnected();
-            }
         }
     }
 
@@ -1945,9 +1788,15 @@ public abstract class GeckoApp extends GeckoActivity
                 }
             });
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
+            final GeckoBundle data = new GeckoBundle(2);
+            data.putString("uri", uri);
+            data.putInt("flags", LOAD_SWITCH_TAB);
+            getAppEventDispatcher().dispatch("Tab:OpenUri", data);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
-            mLayerView.loadUri(uri, GeckoView.LOAD_NEW_TAB);
+            final GeckoBundle data = new GeckoBundle(2);
+            data.putString("uri", uri);
+            data.putInt("flags", LOAD_NEW_TAB);
+            getAppEventDispatcher().dispatch("Tab:OpenUri", data);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
         } else if (ACTION_LAUNCH_SETTINGS.equals(action)) {
@@ -2199,11 +2048,6 @@ public abstract class GeckoApp extends GeckoActivity
         getAppEventDispatcher().unregisterGeckoThreadListener(this,
             "Accessibility:Event",
             "Locale:Set",
-            null);
-
-        getAppEventDispatcher().unregisterBackgroundThreadListener(this,
-            "Bookmark:Insert",
-            "Image:SetAs",
             null);
 
         getAppEventDispatcher().unregisterUiThreadListener(this,
@@ -2472,10 +2316,6 @@ public abstract class GeckoApp extends GeckoActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
-    }
-
-    private void geckoConnected() {
-        mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 
     public static class MainLayout extends RelativeLayout {

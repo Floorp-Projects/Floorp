@@ -10,9 +10,6 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/media/MediaSystemResourceService.h"
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"     // for CrashReporter
-#endif
 
 namespace mozilla {
 
@@ -22,33 +19,6 @@ void ReleaseVRManagerParentSingleton();
 } // namespace gfx
 
 namespace layers {
-
-#ifdef MOZ_CRASHREPORTER
-static Atomic<int32_t> sHoldersNextId(0);
-#endif
-
-CompositorThreadHolderDebug::CompositorThreadHolderDebug(const char* aName)
-  : mHolder(CompositorThreadHolder::GetSingleton())
-{
-#ifdef MOZ_CRASHREPORTER
-  if (XRE_IsParentProcess()) {
-    mId.AppendLiteral("gfxCTH:");
-    mId.Append(aName);
-    mId.AppendLiteral(":");
-    mId.AppendInt(++sHoldersNextId);
-    CrashReporter::AnnotateCrashReport(mId, NS_LITERAL_CSTRING("1"));
-  }
-#endif
-}
-
-CompositorThreadHolderDebug::~CompositorThreadHolderDebug()
-{
-#ifdef MOZ_CRASHREPORTER
-  if (XRE_IsParentProcess()) {
-    CrashReporter::AnnotateCrashReport(mId, NS_LITERAL_CSTRING("0"));
-  }
-#endif
-}
 
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
 static bool sFinishedCompositorShutDown = false;

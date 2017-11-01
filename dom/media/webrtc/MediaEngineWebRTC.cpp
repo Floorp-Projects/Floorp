@@ -25,7 +25,6 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "VideoEngine.h"
-#include "AndroidJNIWrapper.h"
 #include "AndroidBridge.h"
 #endif
 
@@ -282,12 +281,8 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
   }
 
 #ifdef MOZ_WIDGET_ANDROID
+  JavaVM* jvm = mozilla::jni::GetVM();
   jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
-
-  // get the JVM
-  JavaVM* jvm;
-  JNIEnv* const env = jni::GetEnvForThread();
-  MOZ_ALWAYS_TRUE(!env->GetJavaVM(&jvm));
 
   if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
     LOG(("VoiceEngine:SetAndroidObjects Failed"));

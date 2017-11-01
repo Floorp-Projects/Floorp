@@ -91,10 +91,9 @@ DisplayItemClip::IntersectWith(const DisplayItemClip& aOther)
 
 void
 DisplayItemClip::ApplyTo(gfxContext* aContext,
-                         nsPresContext* aPresContext,
+                         int32_t A2D,
                          uint32_t aBegin, uint32_t aEnd)
 {
-  int32_t A2D = aPresContext->AppUnitsPerDevPixel();
   ApplyRectTo(aContext, A2D);
   ApplyRoundedRectClipsTo(aContext, A2D, aBegin, aEnd);
 }

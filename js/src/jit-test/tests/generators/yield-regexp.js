@@ -17,16 +17,14 @@ load(libdir + "asserts.js");
 // This test will need changes if we change our JS >= 1.7 parsing to be
 // ES6-compatible.
 
-function f1() {
-  yield /abc/g;
+// TODO: fix yield in non-generator functions.
+var ex;
+try {
+  eval(`function f1() { yield /abc/g; }`);
+} catch(e) {
+  ex = e;
 }
-
-var g = f1();
-var v;
-v = g.next();
-assertEq(v instanceof RegExp, true);
-assertEq(v.toString(), "/abc/g");
-assertThrowsValue(() => g.next(), StopIteration);
+assertEq(ex.message.includes("reserved identifier"), true);
 
 function* f2() {
   yield /abc/g;

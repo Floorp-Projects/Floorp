@@ -27,4 +27,4 @@ assertThrowsInstanceOf(function () {
 assertThrowsInstanceOf(function () {
     eval("function f(a=1,b=1,a=1) {}");
 }, SyntaxError);
-function silly_but_okay(a=(function () { yield 97; })) {}
+function silly_but_okay(a=(function* () { yield 97; })) {}

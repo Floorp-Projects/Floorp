@@ -1,6 +1,6 @@
 // OSR into a |finally| block while closing a legacy generator should work.
 var log = "";
-function f() {
+function* f() {
     try {
 	try {
 	    log += "a";
@@ -19,6 +19,6 @@ function f() {
 }
 
 var it = f();
-assertEq(it.next(), 2);
-it.close();
+assertEq(it.next().value, 2);
+it.return();
 assertEq(log, "acd");

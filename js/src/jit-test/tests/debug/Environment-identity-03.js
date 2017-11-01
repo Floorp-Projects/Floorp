@@ -89,7 +89,7 @@ function DeepStaticShallowDynamic(i, n) {
 }
 g.eval(DeepStaticShallowDynamic(1, N));
 
-function range(start, stop) {
+function* range(start, stop) {
     for (var i = start; i < stop; i++)
         yield i;
 }

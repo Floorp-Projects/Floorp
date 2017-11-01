@@ -31,9 +31,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Manifests",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "JNI",
-                                  "resource://gre/modules/JNI.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
                                   "resource://gre/modules/UITelemetry.jsm");
 
@@ -372,6 +369,7 @@ var BrowserApp = {
       "Tab:Selected",
       "Tab:Closed",
       "Tab:Move",
+      "Tab:OpenUri",
     ]);
 
     GlobalEventDispatcher.registerListener(this, [
@@ -754,7 +752,7 @@ var BrowserApp = {
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
-        WindowEventDispatcher.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Bookmark:Insert",
           url: url,
           title: title
@@ -895,7 +893,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_background_image");
 
         let src = aTarget.src;
-        WindowEventDispatcher.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Image:SetAs",
           url: src
         });
@@ -1930,6 +1928,11 @@ var BrowserApp = {
         }
         break;
       }
+
+      case "Tab:OpenUri":
+        window.browserDOMWindow.openURI(data.uri, null, data.flags,
+                                        Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+        break;
 
       case "Tab:Selected":
         this._handleTabSelected(this.getTabForId(data.id));
@@ -3626,14 +3629,10 @@ Tab.prototype = {
         this.id = aParams.tabID;
         stub = true;
       } else {
-        let jenv = JNI.GetForThread();
-        let jTabs = JNI.LoadClass(jenv, "org.mozilla.gecko.Tabs", {
-          static_methods: [
-            { name: "getNextTabId", sig: "()I" }
-          ],
+        // Send a synchronous Gecko thread event.
+        GlobalEventDispatcher.dispatch("Tab:GetNextTabId", null, {
+          onSuccess: response => this.id = response,
         });
-        this.id = jTabs.getNextTabId();
-        JNI.UnloadClasses(jenv);
       }
 
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;

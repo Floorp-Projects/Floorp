@@ -290,12 +290,6 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
     mCacheEntry = nullptr;
   }
 
-  // If a proxy is removed for a reason other than its owner being
-  // changed, remove the proxy from the loadgroup.
-  if (aStatus != NS_IMAGELIB_CHANGING_OWNER) {
-    proxy->RemoveFromLoadGroup(true);
-  }
-
   return NS_OK;
 }
 
@@ -360,7 +354,7 @@ imgRequest::ContinueCancel(nsresult aStatus)
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  progressTracker->SyncNotifyProgress(FLAG_HAS_ERROR | FLAG_ONLOAD_UNBLOCKED);
+  progressTracker->SyncNotifyProgress(FLAG_HAS_ERROR);
 
   RemoveFromCache();
 

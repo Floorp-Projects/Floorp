@@ -1,6 +1,6 @@
 // Nested for-of loops can use the same generator-iterator.
 
-function range(n) {
+function* range(n) {
     for (var i = 0; i < n; i++)
         yield i;
 }

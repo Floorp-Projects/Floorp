@@ -6,6 +6,8 @@
 
 #include "jit/Linker.h"
 
+#include "jsgc.h"
+
 #include "gc/StoreBuffer-inl.h"
 
 namespace js {

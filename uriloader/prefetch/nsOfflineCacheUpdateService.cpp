@@ -257,6 +257,9 @@ nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
 nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService()
 {
     gOfflineCacheUpdateService = nullptr;
+
+    delete mAllowedDomains;
+    mAllowedDomains = nullptr;
 }
 
 nsresult

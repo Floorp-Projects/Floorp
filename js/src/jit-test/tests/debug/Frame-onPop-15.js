@@ -18,7 +18,7 @@ dbg.onDebuggerStatement = function handleDebugger(frame) {
 
     if (frame.eval('i').return % 3 == 0) {
         frame.onPop = function handlePop(c) {
-            log += ')' + c.return;
+            log += ')' + c.return.unsafeDereference().value;
             assertEq(debuggerFrames.indexOf(this) != -1, true);
             assertEq(poppedFrames.indexOf(this), -1);
             poppedFrames.push(this);
@@ -26,7 +26,7 @@ dbg.onDebuggerStatement = function handleDebugger(frame) {
     }
 };
 
-g.eval("function g() { for (var i = 0; i < 10; i++) { debugger; yield i; } }");
+g.eval("function* g() { for (var i = 0; i < 10; i++) { debugger; yield i; } }");
 log ='';
-assertEq(g.eval("var t = 0; for (j in g()) t += j; t;"), 45);
+assertEq(g.eval("var t = 0; for (j of g()) t += j; t;"), 45);
 assertEq(log, "d)0ddd)3ddd)6ddd)9");

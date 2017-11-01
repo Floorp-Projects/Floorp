@@ -47,7 +47,7 @@ public:
   TextRange(HyperTextAccessible* aRoot,
             HyperTextAccessible* aStartContainer, int32_t aStartOffset,
             HyperTextAccessible* aEndContainer, int32_t aEndOffset);
-  TextRange() {}
+  TextRange() : mStartOffset{0}, mEndOffset{0} {}
   TextRange(TextRange&& aRange) :
     mRoot(mozilla::Move(aRange.mRoot)),
     mStartContainer(mozilla::Move(aRange.mStartContainer)),

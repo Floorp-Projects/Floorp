@@ -34,6 +34,7 @@
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
@@ -2514,6 +2515,18 @@ void
 ContentParent::OnCompositorDeviceReset()
 {
   Unused << SendReinitRenderingForDeviceReset();
+}
+
+PClientOpenWindowOpParent*
+ContentParent::AllocPClientOpenWindowOpParent(const ClientOpenWindowArgs& aArgs)
+{
+  return AllocClientOpenWindowOpParent(aArgs);
+}
+
+bool
+ContentParent::DeallocPClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor)
+{
+  return DeallocClientOpenWindowOpParent(aActor);
 }
 
 void

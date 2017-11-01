@@ -28,7 +28,7 @@ try
 catch(e) { }
 
 var r;
-function f()
+function* f()
 {
   r = arguments;
   test();
@@ -41,7 +41,7 @@ function test()
   {
     try
     {
-      for (var i in f());
+      for (var i of f());
     }
     catch (e)
     {

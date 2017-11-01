@@ -223,7 +223,6 @@
 #include "gc/FindSCCs.h"
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
-#include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
@@ -246,6 +245,8 @@
 #include "jsscriptinlines.h"
 
 #include "gc/Heap-inl.h"
+#include "gc/Iteration-inl.h"
+#include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/Stack-inl.h"
@@ -287,6 +288,15 @@ namespace TuningDefaults {
 
     /* JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT */
     static const float AllocThresholdFactorAvoidInterrupt = 0.9f;
+
+    /* no parameter */
+    static const float MallocThresholdGrowFactor = 1.5f;
+
+    /* no parameter */
+    static const float MallocThresholdShrinkFactor = 0.9f;
+
+    /* no parameter */
+    static const size_t MallocThresholdLimit = 1024 * 1024 * 1024;
 
     /* no parameter */
     static const size_t ZoneAllocDelayBytes = 1024 * 1024;
@@ -1380,7 +1390,7 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
 void
 GCSchedulingTunables::setMaxMallocBytes(size_t value)
 {
-    maxMallocBytes_ = value;
+    maxMallocBytes_ = std::min(value, TuningDefaults::MallocThresholdLimit);
 }
 
 void
@@ -1917,10 +1927,13 @@ MemoryCounter::updateOnGCEnd(const GCSchedulingTunables& tunables, const AutoLoc
     // Update the trigger threshold at the end of GC and adjust the current
     // byte count to reflect bytes allocated since the start of GC.
     MOZ_ASSERT(bytes_ >= bytesAtStartOfGC_);
-    if (shouldTriggerGC(tunables))
-        maxBytes_ *= 2;
-    else
-        maxBytes_ = std::max(tunables.maxMallocBytes(), size_t(maxBytes_ * 0.9));
+    if (shouldTriggerGC(tunables)) {
+        maxBytes_ = std::min(TuningDefaults::MallocThresholdLimit,
+                             size_t(maxBytes_ * TuningDefaults::MallocThresholdGrowFactor));
+    } else {
+        maxBytes_ = std::max(tunables.maxMallocBytes(),
+                             size_t(maxBytes_ * TuningDefaults::MallocThresholdShrinkFactor));
+    }
     bytes_ -= bytesAtStartOfGC_;
     triggered_ = NoTrigger;
 }
@@ -5036,7 +5049,7 @@ NextIncomingCrossCompartmentPointer(JSObject* prev, bool unlink)
 }
 
 void
-js::DelayCrossCompartmentGrayMarking(JSObject* src)
+js::gc::DelayCrossCompartmentGrayMarking(JSObject* src)
 {
     MOZ_ASSERT(IsGrayListObject(src));
 

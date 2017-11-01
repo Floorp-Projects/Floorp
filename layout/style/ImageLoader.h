@@ -14,7 +14,6 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "imgIRequest.h"
-#include "imgIOnloadBlocker.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
 
@@ -30,8 +29,7 @@ namespace css {
 
 struct ImageValue;
 
-class ImageLoader final : public imgINotificationObserver,
-                          public imgIOnloadBlocker
+class ImageLoader final : public imgINotificationObserver
 {
 public:
   typedef mozilla::css::ImageValue Image;
@@ -44,7 +42,6 @@ public:
   }
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIONLOADBLOCKER
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
   void DropDocumentReference();

@@ -20,7 +20,7 @@ function test()
   printStatus (summary);
 
   var iter;
-  function gen()
+  function* gen()
   {
     try {
       yield iter;
@@ -35,14 +35,14 @@ function test()
 
   expect = 'FINALLY';
   actual = '';
-  (iter = gen()).next().close();
+  (iter = gen()).next().value.return();
   reportCompare(expect, actual, summary);
 
   expect = 'FINALLY';
   actual = '';
   try
   {
-    (iter = gen()).next().throw(1);
+    (iter = gen()).next().value.throw(1);
   }
   catch(ex)
   {
@@ -53,25 +53,12 @@ function test()
   actual = '';
   try
   {
-    (iter = gen()).next().throw(null);
+    (iter = gen()).next().value.throw(null);
   }
   catch(ex)
   {
   }
   reportCompare(expect, actual, summary);
 
-  expect = 'FINALLY';
-  actual = '';
-  var expectexcp = '[object StopIteration]';
-  var actualexcp = '';
-  try
-  {
-    (iter = gen()).next().next();     
-  }
-  catch(ex)
-  {
-    actualexcp = ex + '';
-  }
-  reportCompare(expect, actual, summary);
-  reportCompare(expectexcp, actualexcp, summary);
+  reportCompare((iter = gen()).next().value.next().value, undefined, summary);
 }
