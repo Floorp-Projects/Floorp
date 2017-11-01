@@ -973,7 +973,7 @@ class BootstrapScope {
   }
 
   update(data, reason) {
-    Management.emit("update", {id: data.id});
+    Management.emit("update", {id: data.id, resourceURI: data.resourceURI});
   }
 
   startup(data, reason) {
