@@ -6,6 +6,7 @@
 
 include protocol PBackground;
 include protocol PBrowser;
+include protocol PClientOpenWindowOp;
 include protocol PCompositorManager;
 include protocol PContentBridge;
 include protocol PContentPermissionRequest;
@@ -58,6 +59,7 @@ include PContentPermission;
 include ServiceWorkerConfiguration;
 include GraphicsMessages;
 include MemoryReportTypes;
+include ClientIPCTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -275,6 +277,7 @@ struct XPCOMInitData
 nested(upto inside_cpow) sync protocol PContent
 {
     manages PBrowser;
+    manages PClientOpenWindowOp;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
     manages PPSMContentDownloader;
@@ -673,6 +676,13 @@ child:
      * using the |TelemetryIPC::AddDynamicScalarDefinitions| functions.
      */
     async AddDynamicScalars(DynamicScalarDefinition[] definitions);
+
+    /*
+     * Message to construct a PClientOpenWindowOp actor.  This is used to
+     * open windows cross-process and receive notification when the operation
+     * has completed.
+     */
+    async PClientOpenWindowOp(ClientOpenWindowArgs aArgs);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);

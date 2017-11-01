@@ -13,6 +13,7 @@
 #endif
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/FileSystemBase.h"
@@ -965,6 +966,18 @@ BackgroundParentImpl::DeallocPHttpBackgroundChannelParent(
     dont_AddRef(static_cast<net::HttpBackgroundChannelParent*>(aActor));
 
   return true;
+}
+
+mozilla::dom::PClientManagerParent*
+BackgroundParentImpl::AllocPClientManagerParent()
+{
+  return mozilla::dom::AllocClientManagerParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPClientManagerParent(mozilla::dom::PClientManagerParent* aActor)
+{
+  return mozilla::dom::DeallocClientManagerParent(aActor);
 }
 
 } // namespace ipc
