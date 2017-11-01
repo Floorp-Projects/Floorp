@@ -354,7 +354,7 @@ imgRequest::ContinueCancel(nsresult aStatus)
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  progressTracker->SyncNotifyProgress(FLAG_HAS_ERROR | FLAG_ONLOAD_UNBLOCKED);
+  progressTracker->SyncNotifyProgress(FLAG_HAS_ERROR);
 
   RemoveFromCache();
 
