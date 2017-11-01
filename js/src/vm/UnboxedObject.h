@@ -317,13 +317,6 @@ bool
 TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter, Shape* templateShape,
                           ObjectGroup* group, PreliminaryObjectArray* objects);
 
-inline gc::AllocKind
-UnboxedLayout::getAllocKind() const
-{
-    MOZ_ASSERT(size());
-    return gc::GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + size());
-}
-
 } // namespace js
 
 namespace JS {

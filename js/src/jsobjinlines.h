@@ -29,6 +29,7 @@
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
+#include "gc/ObjectKind-inl.h"
 #include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
 
