@@ -4,7 +4,7 @@ to{
     Currencies{
         AUD{
             "AUD$",
-            "AUD",
+            "Australian Dollar",
         }
         BRL{
             "R$",
@@ -58,6 +58,9 @@ to{
         GEL{"₾"}
     }
     CurrencyPlurals{
+        AUD{
+            other{"Australian Dollar"}
+        }
         TOP{
             other{"Paʻanga fakatonga"}
         }
@@ -71,5 +74,5 @@ to{
     CurrencyUnitPatterns{
         other{"{1} {0}"}
     }
-    Version{"2.1.31.74"}
+    Version{"2.1.37.5"}
 }

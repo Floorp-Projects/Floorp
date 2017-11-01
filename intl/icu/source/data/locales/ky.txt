@@ -12,6 +12,7 @@ ky{
     }
     ExemplarCharacters{"[а б г д е ё ж з и й к л м н ӊ о ө п р с т у ү х ч ш ъ ы э ю я]"}
     ExemplarCharactersIndex{"[А Б В Г Д Е Ё Ж З И Й К Л М Н Ң О Ө П Р С Т У Ү Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / "
         "\\& #]"
@@ -211,7 +212,7 @@ ky{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     calendar{
         generic{
             DateTimePatterns{
@@ -230,12 +231,24 @@ ky{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y-'ж'. d-MMM, E"}
                 GyMMMd{"G y-'ж'. d-MMM"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"dd/MM, E"}
                 MMM{"LLL"}
@@ -244,6 +257,10 @@ ky{
                 MMMd{"d-MMM"}
                 Md{"dd/MM"}
                 d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y-G"}
                 yyyy{"y-G"}
                 yyyyM{"GGGGG y-MM"}
@@ -352,7 +369,12 @@ ky{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -396,8 +418,8 @@ ky{
                 yQQQ{"y-'ж'., QQQ"}
                 yQQQQ{"y-'ж'., QQQQ"}
                 yw{
-                    one{"y-'жылдын' w-'аптасы'"}
-                    other{"y-'жылдын' w-'аптасы'"}
+                    one{"Y-'жылдын' w-'аптасы'"}
+                    other{"Y-'жылдын' w-'аптасы'"}
                 }
             }
             dayNames{
@@ -936,10 +958,31 @@ ky{
                 }
             }
         }
+        dayOfYear{
+            dn{"жылдын күнү"}
+        }
+        dayOfYear-narrow{
+            dn{"жылдын күнү"}
+        }
+        dayOfYear-short{
+            dn{"жылдын күнү"}
+        }
         dayperiod{
             dn{"ТЧ/ТК"}
         }
+        dayperiod-narrow{
+            dn{"ТЧ/ТК"}
+        }
+        dayperiod-short{
+            dn{"ТЧ/ТК"}
+        }
         era{
+            dn{"заман"}
+        }
+        era-narrow{
+            dn{"заман"}
+        }
+        era-short{
             dn{"заман"}
         }
         fri{
@@ -1590,8 +1633,32 @@ ky{
                 }
             }
         }
+        weekOfMonth{
+            dn{"айдын жумасы"}
+        }
+        weekOfMonth-narrow{
+            dn{"айдын жумасы"}
+        }
+        weekOfMonth-short{
+            dn{"айдын жумасы"}
+        }
         weekday{
             dn{"аптанын күнү"}
+        }
+        weekday-narrow{
+            dn{"аптанын күнү"}
+        }
+        weekday-short{
+            dn{"аптанын күнү"}
+        }
+        weekdayOfMonth{
+            dn{"айдын жумуш күнү"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"айдын жумуш күнү"}
+        }
+        weekdayOfMonth-short{
+            dn{"айдын жумуш күнү"}
         }
         year{
             dn{"жыл"}
@@ -1650,8 +1717,20 @@ ky{
         zone{
             dn{"убакыт алкагы"}
         }
+        zone-narrow{
+            dn{"убакыт алкагы"}
+        }
+        zone-short{
+            dn{"убакыт алкагы"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} же {1}"}
+            end{"{0}, же {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} жана {1}"}
             end{"{0} жана {1}"}

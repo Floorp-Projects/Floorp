@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
-    Version{"2.1.32.60"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Afgʻoniston vaqti"}
@@ -278,7 +278,7 @@ uz{
             ls{"Xovd standart vaqti"}
         }
         "meta:India"{
-            ls{"Hindiston vaqti"}
+            ls{"Hindiston standart vaqti"}
         }
         "meta:Indian_Ocean"{
             ls{"Hind okeani vaqti"}

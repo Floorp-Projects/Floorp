@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ko{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"아크레 하계 표준시"}
@@ -267,9 +267,9 @@ ko{
             ls{"감비에 시간"}
         }
         "meta:Georgia"{
-            ld{"그루지아 하계 표준시"}
-            lg{"그루지아 시간"}
-            ls{"그루지아 표준시"}
+            ld{"조지아 하계 표준시"}
+            lg{"조지아 시간"}
+            ls{"조지아 표준시"}
         }
         "meta:Gilbert_Islands"{
             ls{"길버트 제도 시간"}

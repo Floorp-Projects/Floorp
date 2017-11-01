@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cs{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.11"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acrejský letní čas"}
@@ -29,6 +29,9 @@ cs{
             ld{"Aljašský letní čas"}
             lg{"Aljašský čas"}
             ls{"Aljašský standardní čas"}
+            sd{"AKDT"}
+            sg{"AKT"}
+            ss{"AKST"}
         }
         "meta:Almaty"{
             ld{"Almatský letní čas"}
@@ -44,21 +47,33 @@ cs{
             ld{"Severoamerický centrální letní čas"}
             lg{"Severoamerický centrální čas"}
             ls{"Severoamerický centrální standardní čas"}
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
         }
         "meta:America_Eastern"{
             ld{"Severoamerický východní letní čas"}
             lg{"Severoamerický východní čas"}
             ls{"Severoamerický východní standardní čas"}
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
         }
         "meta:America_Mountain"{
             ld{"Severoamerický horský letní čas"}
             lg{"Severoamerický horský čas"}
             ls{"Severoamerický horský standardní čas"}
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
         }
         "meta:America_Pacific"{
             ld{"Severoamerický pacifický letní čas"}
             lg{"Severoamerický pacifický čas"}
             ls{"Severoamerický pacifický standardní čas"}
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
         }
         "meta:Anadyr"{
             ld{"Anadyrský letní čas"}
@@ -104,6 +119,9 @@ cs{
             ld{"Atlantický letní čas"}
             lg{"Atlantický čas"}
             ls{"Atlantický standardní čas"}
+            sd{"ADT"}
+            sg{"AT"}
+            ss{"AST"}
         }
         "meta:Australia_Central"{
             ld{"Středoaustralský letní čas"}

@@ -22,6 +22,9 @@ subdir = test
 # harfbuzz.
 @LAYOUTEX_TRUE@LETEST = letest
 
+# no testdata without tools..
+@TOOLS_TRUE@TESTDATA = testdata
+
 # status dir
 STATUS_TMP = tmp
 STATUS_FULL = $(shell pwd)/$(STATUS_TMP)
@@ -29,7 +32,7 @@ STATUS_FULL = $(shell pwd)/$(STATUS_TMP)
 ## Files to remove for 'make clean'
 CLEANFILES = *~ $(STATUS_TMP)
 
-SUBDIRS = testdata intltest $(IOTEST) cintltst $(LETEST)
+SUBDIRS = $(TESTDATA) intltest $(IOTEST) cintltst $(LETEST)
 
 ## List of phony targets
 .PHONY : everything all all-local all-recursive install install-local		\

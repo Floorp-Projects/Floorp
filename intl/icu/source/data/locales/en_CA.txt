@@ -2,7 +2,14 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_CA{
     %%Parent{"en_001"}
-    Version{"2.1.31.33"}
+    NumberElements{
+        latn{
+            symbols{
+                exponential{"e"}
+            }
+        }
+    }
+    Version{"2.1.37.22"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -155,6 +162,14 @@ en_CA{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            AmPmMarkersAbbr{
+                "a.m.",
+                "p.m.",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -184,6 +199,35 @@ en_CA{
                 yMMMEd{"E, MMM d, y"}
                 yMMMd{"MMM d, y"}
                 yMd{"y-MM-dd"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Sun.",
+                        "Mon.",
+                        "Tue.",
+                        "Wed.",
+                        "Thu.",
+                        "Fri.",
+                        "Sat.",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"a.m."}
+                        pm{"p.m."}
+                    }
+                    narrow{
+                        am{"a.m."}
+                        pm{"p.m."}
+                    }
+                    wide{
+                        am{"a.m."}
+                        pm{"p.m."}
+                    }
+                }
             }
             intervalFormats{
                 MEd{
@@ -227,9 +271,88 @@ en_CA{
                     y{"y-MM-dd – y-MM-dd"}
                 }
             }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan.",
+                        "Feb.",
+                        "Mar.",
+                        "Apr.",
+                        "May",
+                        "Jun.",
+                        "Jul.",
+                        "Aug.",
+                        "Sep.",
+                        "Oct.",
+                        "Nov.",
+                        "Dec.",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "GGGGG y-MM-dd",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
+                MEd{"E, MM-dd"}
+                MMMd{"MMM d"}
+                yyyyMMMEd{"E, MMM d, y G"}
+                yyyyMMMd{"MMM d, y G"}
+            }
         }
     }
+    characterLabel{
+        downwards_arrows{"downward arrow"}
+        downwards_upwards_arrows{"downward upward arrow"}
+        leftwards_arrows{"leftward arrow"}
+        leftwards_rightwards_arrows{"leftward rightward arrow"}
+        letterlike_symbols{"letter-like symbol"}
+        limited_use{"limited use"}
+        nonspacing{"non-spacing"}
+        rightwards_arrows{"rightward arrow"}
+        upwards_arrows{"upward arrows"}
+    }
     fields{
+        dayperiod{
+            dn{"a.m./p.m."}
+        }
+        dayperiod-narrow{
+            dn{"a.m./p.m."}
+        }
+        dayperiod-short{
+            dn{"a.m./p.m."}
+        }
         fri-narrow{
             relativeTime{
                 future{
@@ -254,7 +377,8 @@ en_CA{
                 }
             }
         }
-        hour-short{
+        hour-narrow{
+            dn{"hr."}
             relativeTime{
                 future{
                     one{"in {0} hr."}
@@ -266,7 +390,34 @@ en_CA{
                 }
             }
         }
+        hour-short{
+            dn{"hr."}
+            relativeTime{
+                future{
+                    one{"in {0} hr."}
+                    other{"in {0} hrs."}
+                }
+                past{
+                    one{"{0} hr. ago"}
+                    other{"{0} hrs. ago"}
+                }
+            }
+        }
+        minute-narrow{
+            dn{"min."}
+            relativeTime{
+                future{
+                    one{"in {0} min."}
+                    other{"in {0} mins."}
+                }
+                past{
+                    one{"{0} min. ago"}
+                    other{"{0} mins. ago"}
+                }
+            }
+        }
         minute-short{
+            dn{"min."}
             relativeTime{
                 future{
                     one{"in {0} min."}
@@ -303,6 +454,7 @@ en_CA{
             }
         }
         month-narrow{
+            dn{"mo."}
             relativeTime{
                 future{
                     one{"in {0} mo."}
@@ -315,6 +467,7 @@ en_CA{
             }
         }
         month-short{
+            dn{"mo."}
             relativeTime{
                 future{
                     one{"in {0} mo."}
@@ -327,14 +480,28 @@ en_CA{
             }
         }
         quarter-narrow{
+            dn{"qtr."}
             relativeTime{
                 future{
                     one{"in {0} qtr."}
-                    other{"in {0} qtr."}
+                    other{"in {0} qtrs."}
                 }
                 past{
                     one{"{0} qtr. ago"}
-                    other{"{0} qtr. ago"}
+                    other{"{0} qtrs. ago"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"qtr."}
+            relativeTime{
+                future{
+                    one{"in {0} qtr."}
+                    other{"in {0} qtrs."}
+                }
+                past{
+                    one{"{0} qtr. ago"}
+                    other{"{0} qtrs. ago"}
                 }
             }
         }
@@ -362,7 +529,21 @@ en_CA{
                 }
             }
         }
+        second-narrow{
+            dn{"sec."}
+            relativeTime{
+                future{
+                    one{"in {0} sec."}
+                    other{"in {0} secs."}
+                }
+                past{
+                    one{"{0} sec. ago"}
+                    other{"{0} secs. ago"}
+                }
+            }
+        }
         second-short{
+            dn{"sec."}
             relativeTime{
                 future{
                     one{"in {0} sec."}
@@ -466,7 +647,8 @@ en_CA{
                 }
             }
         }
-        week-short{
+        week-narrow{
+            dn{"wk."}
             relativePeriod{"the wk. of {0}"}
             relativeTime{
                 future{
@@ -479,7 +661,35 @@ en_CA{
                 }
             }
         }
+        week-short{
+            dn{"wk."}
+            relativePeriod{"the wk. of {0}"}
+            relativeTime{
+                future{
+                    one{"in {0} wk."}
+                    other{"in {0} wks."}
+                }
+                past{
+                    one{"{0} wk. ago"}
+                    other{"{0} wks. ago"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"yr."}
+            relativeTime{
+                future{
+                    one{"in {0} yr."}
+                    other{"in {0} yrs."}
+                }
+                past{
+                    one{"{0} yr. ago"}
+                    other{"{0} yrs. ago"}
+                }
+            }
+        }
         year-short{
+            dn{"yr."}
             relativeTime{
                 future{
                     one{"in {0} yr."}

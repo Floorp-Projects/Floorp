@@ -1,8 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     zoneStrings{
+        "meta:Acre"{
+            ld{"acrejský letný čas"}
+            lg{"acrejský čas"}
+            ls{"acrejský štandardný čas"}
+        }
         "meta:Afghanistan"{
             ls{"afganský čas"}
         }
@@ -24,6 +29,11 @@ sk{
             ld{"aljašský letný čas"}
             lg{"aljašský čas"}
             ls{"aljašský štandardný čas"}
+        }
+        "meta:Almaty"{
+            ld{"almaatský letný čas"}
+            lg{"almaatský čas"}
+            ls{"almaatský štandardný čas"}
         }
         "meta:Amazon"{
             ld{"amazonský letný čas"}
@@ -59,6 +69,16 @@ sk{
             ld{"apijský letný čas"}
             lg{"apijský čas"}
             ls{"apijský štandardný čas"}
+        }
+        "meta:Aqtau"{
+            ld{"aktauský letný čas"}
+            lg{"aktauský čas"}
+            ls{"aktauský štandardný čas"}
+        }
+        "meta:Aqtobe"{
+            ld{"aktobský letný čas"}
+            lg{"aktobský čas"}
+            ls{"aktobský štandardný čas"}
         }
         "meta:Arabian"{
             ld{"arabský letný čas"}
@@ -139,8 +159,11 @@ sk{
             lg{"kapverdský čas"}
             ls{"kapverdský štandardný čas"}
         }
+        "meta:Casey"{
+            ls{"čas Caseyho stanice"}
+        }
         "meta:Chamorro"{
-            ls{"chamorrský štandardný čas"}
+            ls{"chamorrský čas"}
         }
         "meta:Chatham"{
             ld{"chathamský letný čas"}
@@ -264,6 +287,9 @@ sk{
             lg{"západogrónsky čas"}
             ls{"západogrónsky štandardný čas"}
         }
+        "meta:Guam"{
+            ls{"guamský čas"}
+        }
         "meta:Gulf"{
             ls{"štandardný čas Perzského zálivu"}
         }
@@ -350,6 +376,9 @@ sk{
         "meta:Kyrgystan"{
             ls{"kirgizský čas"}
         }
+        "meta:Lanka"{
+            ls{"srílanský čas"}
+        }
         "meta:Line_Islands"{
             ls{"čas Rovníkových ostrovov"}
         }
@@ -357,6 +386,11 @@ sk{
             ld{"letný čas ostrova lorda Howa"}
             lg{"čas ostrova lorda Howa"}
             ls{"štandardný čas ostrova lorda Howa"}
+        }
+        "meta:Macau"{
+            ld{"macajský letný čas"}
+            lg{"macajský čas"}
+            ls{"macajský štandardný čas"}
         }
         "meta:Macquarie"{
             ls{"čas ostrova Macquarie"}
@@ -441,6 +475,9 @@ sk{
             lg{"čas súostrovia Fernando de Noronha"}
             ls{"štandardný čas súostrovia Fernando de Noronha"}
         }
+        "meta:North_Mariana"{
+            ls{"severomariánsky čas"}
+        }
         "meta:Novosibirsk"{
             ld{"novosibirský letný čas"}
             lg{"novosibirský čas"}
@@ -493,6 +530,11 @@ sk{
         }
         "meta:Pyongyang"{
             ls{"pchjongjanský čas"}
+        }
+        "meta:Qyzylorda"{
+            ld{"kyzylordský letný čas"}
+            lg{"kyzylordský čas"}
+            ls{"kyzylordský štandardný čas"}
         }
         "meta:Reunion"{
             ls{"réunionský čas"}

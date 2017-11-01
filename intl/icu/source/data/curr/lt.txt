@@ -262,6 +262,10 @@ lt{
             "CLP",
             "Čilės pesas",
         }
+        CNH{
+            "CNH",
+            "Kinijos Užsienio juanis",
+        }
         CNX{
             "CNX",
             "Kinijos \u0022People\u0022 banko doleris",
@@ -1687,6 +1691,12 @@ lt{
             one{"Čilės pesas"}
             other{"Čilės pesų"}
         }
+        CNH{
+            few{"Kinijos Užsienio juaniai"}
+            many{"Kinijos Užsienio juanio"}
+            one{"Kinijos Užsienio juanis"}
+            other{"Kinijos Užsienio juanių"}
+        }
         CNX{
             few{"Kinijos \u0022People\u0022 banko doleriai"}
             many{"Kinijos \u0022People\u0022 banko dolerio"}
@@ -3086,5 +3096,5 @@ lt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

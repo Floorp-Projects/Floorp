@@ -124,15 +124,15 @@ cs{
         }
         BGL{
             "BGL",
-            "BGL",
+            "bulharský tvrdý leva",
         }
         BGM{
             "BGM",
-            "BGM",
+            "bulharský socialistický leva",
         }
         BGN{
             "BGN",
-            "bulharský lev",
+            "bulharský leva",
         }
         BGO{
             "BGO",
@@ -261,6 +261,14 @@ cs{
         CLP{
             "CLP",
             "chilské peso",
+        }
+        CNH{
+            "CNH",
+            "čínský jüan (offshore)",
+        }
+        CNX{
+            "CNX",
+            "čínský dolar ČLB",
         }
         CNY{
             "CN¥",
@@ -1247,6 +1255,8 @@ cs{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
+        LTL{"Lt"}
+        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1474,11 +1484,23 @@ cs{
             one{"belgický finanční frank"}
             other{"belgických finančních franků"}
         }
+        BGL{
+            few{"bulharské tvrdé leva"}
+            many{"bulharského tvrdého leva"}
+            one{"bulharský tvrdý leva"}
+            other{"bulharských tvrdých leva"}
+        }
+        BGM{
+            few{"bulharské socialistické leva"}
+            many{"bulharského socialistického leva"}
+            one{"bulharský socialistický leva"}
+            other{"bulharských socialistických leva"}
+        }
         BGN{
-            few{"bulharské lvy"}
-            many{"bulharského lva"}
-            one{"bulharský lev"}
-            other{"bulharských lvů"}
+            few{"bulharské leva"}
+            many{"bulharského leva"}
+            one{"bulharský leva"}
+            other{"bulharských leva"}
         }
         BGO{
             few{"bulharské leva (1879–1952)"}
@@ -1671,6 +1693,18 @@ cs{
             many{"chilského pesa"}
             one{"chilské peso"}
             other{"chilských pes"}
+        }
+        CNH{
+            few{"čínské jüany (offshore)"}
+            many{"čínského jüanu (offshore)"}
+            one{"čínský jüan (offshore)"}
+            other{"čínských jüanů (offshore)"}
+        }
+        CNX{
+            few{"čínské dolary ČLB"}
+            many{"čínského dolaru ČLB"}
+            one{"čínský dolar ČLB"}
+            other{"čínských dolarů ČLB"}
         }
         CNY{
             few{"čínské jüany"}
@@ -2938,6 +2972,12 @@ cs{
             one{"trojská unce platiny"}
             other{"trojských uncí platiny"}
         }
+        XRE{
+            few{"kód fondů RINET"}
+            many{"kód fondů RINET"}
+            one{"kód fondů RINET"}
+            other{"kód fondů RINET"}
+        }
         XSU{
             few{"sucre"}
             many{"sucre"}
@@ -3053,5 +3093,5 @@ cs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.11"}
 }

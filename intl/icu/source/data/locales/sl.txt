@@ -15,6 +15,8 @@ sl{
     }
     ExemplarCharacters{"[a b c č d e f g h i j k l m n o p r s š t u v z ž]"}
     ExemplarCharactersIndex{"[A B C Č Ć D Đ E F G H I J K L M N O P Q R S Š T U V W X Y Z Ž]"}
+    ExemplarCharactersNumbers{"[, . % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{"[\\- – , ; \\: ! ? . … ' \u0022 „ ‟ « » ( ) \\[ \\] \\{ \\} @ *]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -285,8 +287,245 @@ sl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "bud. kol.",
+                }
+                narrow{
+                    "BK",
+                }
+                wide{
+                    "budistični koledar",
+                }
+            }
+        }
+        coptic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Tout",
+                        "Baba",
+                        "Hator",
+                        "Kiahk",
+                        "Toba",
+                        "Amshir",
+                        "Baramhat",
+                        "Baramouda",
+                        "Bashans",
+                        "Paona",
+                        "Epep",
+                        "Mesra",
+                        "Nasie",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Tout",
+                        "Baba",
+                        "Hator",
+                        "Kiahk",
+                        "Toba",
+                        "Amshir",
+                        "Baramhat",
+                        "Baramouda",
+                        "Bashans",
+                        "Paona",
+                        "Epep",
+                        "Mesra",
+                        "Nasie",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Tout",
+                        "Baba",
+                        "Hator",
+                        "Kiahk",
+                        "Toba",
+                        "Amshir",
+                        "Baramhat",
+                        "Baramouda",
+                        "Bashans",
+                        "Paona",
+                        "Epep",
+                        "Mesra",
+                        "Nasie",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Tout",
+                        "Baba",
+                        "Hator",
+                        "Kiahk",
+                        "Toba",
+                        "Amshir",
+                        "Baramhat",
+                        "Baramouda",
+                        "Bashans",
+                        "Paona",
+                        "Epep",
+                        "Mesra",
+                        "Nasie",
+                    }
+                }
+            }
+        }
+        ethiopic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
+                    wide{
+                        "Meskerem",
+                        "Tekemt",
+                        "Hedar",
+                        "Tahsas",
+                        "Ter",
+                        "Yekatit",
+                        "Megabit",
+                        "Miazia",
+                        "Genbot",
+                        "Sene",
+                        "Hamle",
+                        "Nehasse",
+                        "Pagumen",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -304,8 +543,17 @@ sl{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyM{"M/y G"}
                 GyMMM{"MMM y G"}
@@ -315,7 +563,7 @@ sl{
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
-                MEd{"E, d. MM."}
+                MEd{"E, d. M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMd{"d. MMMM"}
@@ -357,23 +605,23 @@ sl{
                     M{"M.–M."}
                 }
                 MEd{
-                    M{"E, d. M. – E, d. M."}
-                    d{"E, d. – E, d. M."}
+                    M{"E, d. M.–E, d. M."}
+                    d{"E, d.–E, d. M."}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    M{"E, d. MMM–E, d. MMM"}
+                    d{"E, d.–E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. MMM – d. MMM"}
+                    M{"d. MMM–d. MMM"}
                     d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"d. M. – d. M."}
-                    d{"d. – d. M."}
+                    M{"d. M.–d. M."}
+                    d{"d.–d. M."}
                 }
                 d{
                     d{"d.–d."}
@@ -466,7 +714,12 @@ sl{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, d."}
@@ -513,10 +766,10 @@ sl{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"w. 'teden' 'v' y"}
-                    one{"w. 'teden' 'v' y"}
-                    other{"w. 'teden' 'v' y"}
-                    two{"w. 'teden' 'v' y"}
+                    few{"w. 'teden' 'v' Y"}
+                    one{"w. 'teden' 'v' Y"}
+                    other{"w. 'teden' 'v' Y"}
+                    two{"w. 'teden' 'v' Y"}
                 }
             }
             dayNames{
@@ -605,7 +858,7 @@ sl{
                         midnight{"opoln."}
                         morning1{"zjut."}
                         morning2{"dop."}
-                        night1{"noč"}
+                        night1{"ponoči"}
                         noon{"opold."}
                     }
                     narrow{
@@ -909,6 +1162,446 @@ sl{
                 }
             }
         }
+        hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Tishri",
+                        "Heshvan",
+                        "Kislev",
+                        "Tevet",
+                        "Shevat",
+                        "Adar I",
+                        "Adar",
+                        "Nisan",
+                        "Iyar",
+                        "Sivan",
+                        "Tamuz",
+                        "Av",
+                        "Elul",
+                        "Adar II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
+                    wide{
+                        "Tishri",
+                        "Heshvan",
+                        "Kislev",
+                        "Tevet",
+                        "Shevat",
+                        "Adar I",
+                        "Adar",
+                        "Nisan",
+                        "Iyar",
+                        "Sivan",
+                        "Tamuz",
+                        "Av",
+                        "Elul",
+                        "Adar II",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Tishri",
+                        "Heshvan",
+                        "Kislev",
+                        "Tevet",
+                        "Shevat",
+                        "Adar I",
+                        "Adar",
+                        "Nisan",
+                        "Iyar",
+                        "Sivan",
+                        "Tamuz",
+                        "Av",
+                        "Elul",
+                        "Adar II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
+                    }
+                    wide{
+                        "Tishri",
+                        "Heshvan",
+                        "Kislev",
+                        "Tevet",
+                        "Shevat",
+                        "Adar I",
+                        "Adar",
+                        "Nisan",
+                        "Iyar",
+                        "Sivan",
+                        "Tamuz",
+                        "Av",
+                        "Elul",
+                        "Adar II",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                abbreviated{
+                    "Saka",
+                }
+                narrow{
+                    "Saka",
+                }
+                wide{
+                    "Saka",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Chaitra",
+                        "Vaisakha",
+                        "Jyaistha",
+                        "Asadha",
+                        "Sravana",
+                        "Bhadra",
+                        "Asvina",
+                        "Kartika",
+                        "Agrahayana",
+                        "Pausa",
+                        "Magha",
+                        "Phalguna",
+                    }
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
+        }
+        persian{
+            eras{
+                abbreviated{
+                    "AP",
+                }
+                narrow{
+                    "AP",
+                }
+                wide{
+                    "AP",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Farvardin",
+                        "Ordibehesht",
+                        "Khordad",
+                        "Tir",
+                        "Mordad",
+                        "Shahrivar",
+                        "Mehr",
+                        "Aban",
+                        "Azar",
+                        "Dey",
+                        "Bahman",
+                        "Esfand",
+                    }
+                }
+            }
+        }
+        roc{
+            eras{
+                abbreviated{
+                    "pred RK",
+                    "Minguo koledar",
+                }
+                narrow{
+                    "pred RK",
+                    "Minguo koledar",
+                }
+                wide{
+                    "pred RK",
+                    "Minguo koledar",
+                }
+            }
+        }
     }
     characterLabel{
         activities{"dejavnosti"}
@@ -925,7 +1618,7 @@ sl{
         consonantal_jamo{"soglasniška črka jamo"}
         currency_symbols{"valutni simboli"}
         dash_connector{"pomišljaj/povezovalnik"}
-        digits{"številke"}
+        digits{"števke"}
         dingbats{"Dingbati"}
         divination_symbols{"vedeževalski simboli"}
         downwards_arrows{"puščice dol"}
@@ -1063,10 +1756,31 @@ sl{
                 }
             }
         }
+        dayOfYear{
+            dn{"dan leta"}
+        }
+        dayOfYear-narrow{
+            dn{"dan leta"}
+        }
+        dayOfYear-short{
+            dn{"dan leta"}
+        }
         dayperiod{
             dn{"dop/pop"}
         }
+        dayperiod-narrow{
+            dn{"dop/pop"}
+        }
+        dayperiod-short{
+            dn{"dop/pop"}
+        }
         era{
+            dn{"doba"}
+        }
+        era-narrow{
+            dn{"doba"}
+        }
+        era-short{
             dn{"doba"}
         }
         fri{
@@ -1098,16 +1812,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} petke"}
-                    one{"čez {0} petek"}
-                    other{"čez {0} petkov"}
-                    two{"čez {0} petka"}
+                    few{"čez {0} pet."}
+                    one{"čez {0} pet."}
+                    other{"čez {0} pet."}
+                    two{"čez {0} pet."}
                 }
                 past{
-                    few{"pred {0} petki"}
-                    one{"pred {0} petkom"}
-                    other{"pred {0} petki"}
-                    two{"pred {0} petkoma"}
+                    few{"pred {0} pet."}
+                    one{"pred {0} pet."}
+                    other{"pred {0} pet."}
+                    two{"pred {0} pet."}
                 }
             }
         }
@@ -1119,16 +1833,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} petke"}
-                    one{"čez {0} petek"}
-                    other{"čez {0} petkov"}
-                    two{"čez {0} petka"}
+                    few{"čez {0} pet."}
+                    one{"čez {0} pet."}
+                    other{"čez {0} pet."}
+                    two{"čez {0} pet."}
                 }
                 past{
-                    few{"pred {0} petki"}
-                    one{"pred {0} petkom"}
-                    other{"pred {0} petki"}
-                    two{"pred {0} petkoma"}
+                    few{"pred {0} pet."}
+                    one{"pred {0} pet."}
+                    other{"pred {0} pet."}
+                    two{"pred {0} pet."}
                 }
             }
         }
@@ -1290,16 +2004,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} ponedeljke"}
-                    one{"čez {0} ponedeljek"}
-                    other{"čez {0} ponedeljkov"}
-                    two{"čez {0} ponedeljka"}
+                    few{"čez {0} pon."}
+                    one{"čez {0} pon."}
+                    other{"čez {0} pon."}
+                    two{"čez {0} pon."}
                 }
                 past{
-                    few{"pred {0} ponedeljki"}
-                    one{"pred {0} ponedeljkom"}
-                    other{"pred {0} ponedeljki"}
-                    two{"pred {0} ponedeljkoma"}
+                    few{"pred {0} pon."}
+                    one{"pred {0} pon."}
+                    other{"pred {0} pon."}
+                    two{"pred {0} pon."}
                 }
             }
         }
@@ -1346,7 +2060,7 @@ sl{
             dn{"mes."}
             relativeTime{
                 future{
-                    few{"čez {0} mesece"}
+                    few{"čez {0} mes."}
                     one{"čez {0} mes."}
                     other{"čez {0} mes."}
                     two{"čez {0} mes."}
@@ -1455,13 +2169,13 @@ sl{
             relativeTime{
                 future{
                     few{"čez {0} sobote"}
-                    one{"čez {0} soboto"}
+                    one{"čez {0} sob."}
                     other{"čez {0} sobot"}
                     two{"čez {0} soboti"}
                 }
                 past{
                     few{"pred {0} sobotami"}
-                    one{"pred {0} soboto"}
+                    one{"pred {0} sob."}
                     other{"pred {0} sobotami"}
                     two{"pred {0} sobotama"}
                 }
@@ -1475,16 +2189,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} sobote"}
-                    one{"čez {0} soboto"}
-                    other{"čez {0} sobot"}
-                    two{"čez {0} soboti"}
+                    few{"čez {0} sob."}
+                    one{"čez {0} sob."}
+                    other{"čez {0} sob."}
+                    two{"čez {0} sob."}
                 }
                 past{
-                    few{"pred {0} sobotami"}
-                    one{"pred {0} soboto"}
-                    other{"pred {0} sobotami"}
-                    two{"pred {0} sobotama"}
+                    few{"pred {0} sob."}
+                    one{"pred {0} sob."}
+                    other{"pred {0} sob."}
+                    two{"pred {0} sob."}
                 }
             }
         }
@@ -1550,7 +2264,7 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} nedelje"}
+                    few{"čez {0} nedelj"}
                     one{"čez {0} nedeljo"}
                     other{"čez {0} nedelj"}
                     two{"čez {0} nedelji"}
@@ -1571,16 +2285,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} nedelje"}
-                    one{"čez {0} nedeljo"}
-                    other{"čez {0} nedelj"}
-                    two{"čez {0} nedelji"}
+                    few{"čez {0} ned."}
+                    one{"čez {0} ned."}
+                    other{"čez {0} ned."}
+                    two{"čez {0} ned."}
                 }
                 past{
-                    few{"pred {0} nedeljami"}
-                    one{"pred {0} nedeljo"}
-                    other{"pred {0} nedeljami"}
-                    two{"pred {0} nedeljama"}
+                    few{"pred {0} ned."}
+                    one{"pred {0} ned."}
+                    other{"pred {0} ned."}
+                    two{"pred {0} ned."}
                 }
             }
         }
@@ -1635,13 +2349,13 @@ sl{
             relativeTime{
                 future{
                     few{"čez {0} četrtke"}
-                    one{"čez {0} četrtek"}
-                    other{"čez {0} četrtkov"}
-                    two{"čez {0} četrtka"}
+                    one{"čez {0} čet."}
+                    other{"čez {0} čet."}
+                    two{"čez {0} čet."}
                 }
                 past{
                     few{"pred {0} četrtki"}
-                    one{"pred {0} četrtkom"}
+                    one{"pred {0} čet."}
                     other{"pred {0} četrtki"}
                     two{"pred {0} četrtkoma"}
                 }
@@ -1655,16 +2369,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} četrtke"}
-                    one{"čez {0} četrtek"}
-                    other{"čez {0} četrtkov"}
-                    two{"čez {0} četrtka"}
+                    few{"čez {0} čet."}
+                    one{"čez {0} čet."}
+                    other{"čez {0} čet."}
+                    two{"čez {0} čet."}
                 }
                 past{
-                    few{"pred {0} četrtki"}
-                    one{"pred {0} četrtkom"}
-                    other{"pred {0} četrtki"}
-                    two{"pred {0} četrtkoma"}
+                    few{"pred {0} čet."}
+                    one{"pred {0} čet."}
+                    other{"pred {0} čet."}
+                    two{"pred {0} čet."}
                 }
             }
         }
@@ -1718,16 +2432,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} torke"}
-                    one{"čez {0} torek"}
-                    other{"čez {0} torkov"}
-                    two{"čez {0} torka"}
+                    few{"čez {0} tor."}
+                    one{"čez {0} tor."}
+                    other{"čez {0} tor."}
+                    two{"čez {0} tor."}
                 }
                 past{
-                    few{"pred {0} torki"}
-                    one{"pred {0} torkom"}
-                    other{"pred {0} torki"}
-                    two{"pred {0} torkoma"}
+                    few{"pred {0} tor."}
+                    one{"pred {0} tor."}
+                    other{"pred {0} tor."}
+                    two{"pred {0} tor."}
                 }
             }
         }
@@ -1760,16 +2474,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} srede"}
-                    one{"čez {0} sredo"}
-                    other{"čez {0} sred"}
-                    two{"čez {0} sredi"}
+                    few{"čez {0} sre."}
+                    one{"čez {0} sre."}
+                    other{"čez {0} sre."}
+                    two{"čez {0} sre."}
                 }
                 past{
-                    few{"pred {0} sredami"}
-                    one{"pred {0} sredo"}
-                    other{"pred {0} sredami"}
-                    two{"pred {0} sredama"}
+                    few{"pred {0} sre."}
+                    one{"pred {0} sre."}
+                    other{"pred {0} sre."}
+                    two{"pred {0} sre."}
                 }
             }
         }
@@ -1781,16 +2495,16 @@ sl{
             }
             relativeTime{
                 future{
-                    few{"čez {0} srede"}
-                    one{"čez {0} sredo"}
-                    other{"čez {0} sred"}
-                    two{"čez {0} sredi"}
+                    few{"čez {0} sre."}
+                    one{"čez {0} sre."}
+                    other{"čez {0} sre."}
+                    two{"čez {0} sre."}
                 }
                 past{
-                    few{"pred {0} sredami"}
-                    one{"pred {0} sredo"}
-                    other{"pred {0} sredami"}
-                    two{"pred {0} sredama"}
+                    few{"pred {0} sre."}
+                    one{"pred {0} sre."}
+                    other{"pred {0} sre."}
+                    two{"pred {0} sre."}
                 }
             }
         }
@@ -1853,8 +2567,32 @@ sl{
                 }
             }
         }
+        weekOfMonth{
+            dn{"teden meseca"}
+        }
+        weekOfMonth-narrow{
+            dn{"teden meseca"}
+        }
+        weekOfMonth-short{
+            dn{"ted. v mes."}
+        }
         weekday{
             dn{"dan v tednu"}
+        }
+        weekday-narrow{
+            dn{"dan v tednu"}
+        }
+        weekday-short{
+            dn{"dan v tednu"}
+        }
+        weekdayOfMonth{
+            dn{"dan meseca"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"dan v mes."}
+        }
+        weekdayOfMonth-short{
+            dn{"dan meseca"}
         }
         year{
             dn{"leto"}
@@ -1915,8 +2653,20 @@ sl{
         zone{
             dn{"časovni pas"}
         }
+        zone-narrow{
+            dn{"časovni pas"}
+        }
+        zone-short{
+            dn{"časovni pas"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} ali {1}"}
+            end{"{0} ali {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} in {1}"}
             end{"{0} in {1}"}
@@ -1952,5 +2702,32 @@ sl{
         UK{"angleški"}
         US{"imperialni"}
         metric{"metrični"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

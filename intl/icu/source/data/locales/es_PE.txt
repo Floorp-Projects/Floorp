@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_PE{
     %%Parent{"es_419"}
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         generic{
             DateTimePatterns{
@@ -12,7 +12,7 @@ es_PE{
                 "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
-                "d/M/y G",
+                "d 'de' MMM 'de' y G",
                 "d/MM/yy GGGGG",
                 "{1} {0}",
                 "{1}, {0}",

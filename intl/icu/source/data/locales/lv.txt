@@ -12,6 +12,7 @@ lv{
     }
     ExemplarCharacters{"[a ā b c č d e ē f g ģ h i ī j k ķ l ļ m n ņ o p r s š t u ū v z ž]"}
     ExemplarCharactersIndex{"[A Ā B C Č D E Ē F G Ģ H I Ī Y J K Ķ L Ļ M N Ņ O P Q R S Š T U Ū V W X Z Ž]"}
+    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ ‚ \u0022 “ ” „ ( ) \\[ \\] § @ * / \\& # † "
         "‡ ′ ″]"
@@ -36,7 +37,7 @@ lv{
                     1000{
                         one{"0 tūkstotis"}
                         other{"0 tūkstoši"}
-                        zero{"0 tūkstoši"}
+                        zero{"0 tūkstošu"}
                     }
                     10000{
                         one{"00 tūkstotis"}
@@ -51,7 +52,7 @@ lv{
                     1000000{
                         one{"0 miljons"}
                         other{"0 miljoni"}
-                        zero{"0 miljoni"}
+                        zero{"0 miljonu"}
                     }
                     10000000{
                         one{"00 miljons"}
@@ -66,7 +67,7 @@ lv{
                     1000000000{
                         one{"0 miljards"}
                         other{"0 miljardi"}
-                        zero{"0 miljardi"}
+                        zero{"0 miljardu"}
                     }
                     10000000000{
                         one{"00 miljards"}
@@ -81,7 +82,7 @@ lv{
                     1000000000000{
                         one{"0 triljons"}
                         other{"0 triljoni"}
-                        zero{"0 triljoni"}
+                        zero{"0 triljonu"}
                     }
                     10000000000000{
                         one{"00 triljons"}
@@ -249,8 +250,185 @@ lv{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "B.E.",
+                }
+                narrow{
+                    "B.E.",
+                }
+                wide{
+                    "budistu ēra",
+                }
+            }
+        }
+        coptic{
+            eras{
+                abbreviated{
+                    "pirms Diokl.",
+                    "pēc Diokl.",
+                }
+                narrow{
+                    "pirms Diokl.",
+                    "pēc Diokl.",
+                }
+                wide{
+                    "pirms Diokletiāna",
+                    "pēc Diokletiāna",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "tots",
+                        "baba",
+                        "haturs",
+                        "kihaks",
+                        "tuba",
+                        "amšīrs",
+                        "baramhats",
+                        "barmuda",
+                        "bašnass",
+                        "bauna",
+                        "abibs",
+                        "misra",
+                        "nasī",
+                    }
+                    wide{
+                        "tots",
+                        "baba",
+                        "haturs",
+                        "kihaks",
+                        "tuba",
+                        "amšīrs",
+                        "baramhats",
+                        "barmuda",
+                        "bašnass",
+                        "bauna",
+                        "abibs",
+                        "misra",
+                        "nasī",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "tots",
+                        "baba",
+                        "haturs",
+                        "kihaks",
+                        "tuba",
+                        "amšīrs",
+                        "baramhats",
+                        "barmuda",
+                        "bašnass",
+                        "bauna",
+                        "abibs",
+                        "misra",
+                        "nasī",
+                    }
+                    wide{
+                        "tots",
+                        "baba",
+                        "haturs",
+                        "kihaks",
+                        "tuba",
+                        "amšīrs",
+                        "baramhats",
+                        "barmuda",
+                        "bašnass",
+                        "bauna",
+                        "abibs",
+                        "misra",
+                        "nasī",
+                    }
+                }
+            }
+        }
+        ethiopic{
+            eras{
+                abbreviated{
+                    "pirms Kristus",
+                    "pēc Kristus",
+                }
+                narrow{
+                    "pirms Kristus",
+                    "pēc Kristus",
+                }
+                wide{
+                    "pirms Kristus iemiesošanās",
+                    "pēc Kristus iemiesošanās",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "meskerems",
+                        "tekemts",
+                        "hedars",
+                        "tahsass",
+                        "ters",
+                        "jakatīts",
+                        "magabits",
+                        "miāzija",
+                        "genbots",
+                        "senē",
+                        "hamlē",
+                        "nahasē",
+                        "epagomens",
+                    }
+                    wide{
+                        "meskerems",
+                        "tekemts",
+                        "hedars",
+                        "tahsass",
+                        "ters",
+                        "jakatīts",
+                        "magabits",
+                        "miāzija",
+                        "genbots",
+                        "senē",
+                        "hamlē",
+                        "nahasē",
+                        "epagomens",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "meskerems",
+                        "tekemts",
+                        "hedars",
+                        "tahsass",
+                        "ters",
+                        "jakatīts",
+                        "magabits",
+                        "miāzija",
+                        "genbots",
+                        "senē",
+                        "hamlē",
+                        "nahasē",
+                        "epagomens",
+                    }
+                    wide{
+                        "meskerems",
+                        "tekemts",
+                        "hedars",
+                        "tahsass",
+                        "ters",
+                        "jakatīts",
+                        "magabits",
+                        "miāzija",
+                        "genbots",
+                        "senē",
+                        "hamlē",
+                        "nahasē",
+                        "epagomens",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -268,8 +446,17 @@ lv{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y. 'g'. G"}
                 GyMMM{"y. 'g'. MMM G"}
                 GyMMMEd{"E, y. 'g'. d. MMM G"}
@@ -430,7 +617,12 @@ lv{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E, h:mm B"}
+                EBhms{"E, h:mm:ss B"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
@@ -477,9 +669,9 @@ lv{
                 yQQQ{"y. 'g'. QQQ"}
                 yQQQQ{"y. 'g'. QQQQ"}
                 yw{
-                    one{"y. 'g'. w. 'nedēļa'"}
-                    other{"y. 'g'. w. 'nedēļa'"}
-                    zero{"y. 'g'. w. 'nedēļa'"}
+                    one{"Y. 'g'. w. 'nedēļa'"}
+                    other{"Y. 'g'. w. 'nedēļa'"}
+                    zero{"Y. 'g'. w. 'nedēļa'"}
                 }
             }
             dayNames{
@@ -571,7 +763,7 @@ lv{
                         noon{"pusd."}
                     }
                     narrow{
-                        afternoon1{"pēcpusdienā"}
+                        afternoon1{"pēcpusd."}
                         evening1{"vakarā"}
                         midnight{"pusnaktī"}
                         morning1{"no rīta"}
@@ -606,7 +798,7 @@ lv{
                         morning1{"rīts"}
                         night1{"nakts"}
                         noon{"pusd."}
-                        pm{"pēcp."}
+                        pm{"pēcpusd."}
                     }
                     wide{
                         afternoon1{"pēcpusdiena"}
@@ -863,8 +1055,69 @@ lv{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "kopš pasaules radīšanas",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "tišri",
+                        "hešvans",
+                        "kisļevs",
+                        "tevets",
+                        "ševats",
+                        "1. adars",
+                        "adars",
+                        "nisans",
+                        "ijars",
+                        "sivans",
+                        "tamuzs",
+                        "avs",
+                        "eluls",
+                        "2. adars",
+                    }
+                    wide{
+                        "tišri",
+                        "hešvans",
+                        "kisļevs",
+                        "tevets",
+                        "ševats",
+                        "1. adars",
+                        "adars",
+                        "nisans",
+                        "ijars",
+                        "sivans",
+                        "tamuzs",
+                        "avs",
+                        "eluls",
+                        "2. adars",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "tišri",
+                        "hešvans",
+                        "kisļevs",
+                        "tevets",
+                        "ševats",
+                        "1. adars",
+                        "adars",
+                        "nisans",
+                        "ijars",
+                        "sivans",
+                        "tamuzs",
+                        "avs",
+                        "eluls",
+                        "2. adars",
+                    }
                     wide{
                         "tišri",
                         "hešvans",
@@ -884,7 +1137,93 @@ lv{
                 }
             }
         }
+        indian{
+            eras{
+                abbreviated{
+                    "Saka",
+                }
+                narrow{
+                    "Saka",
+                }
+                wide{
+                    "Saka",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Čaitra",
+                        "Vaišākha",
+                        "Džjēštha",
+                        "Āšādha",
+                        "Šrāvana",
+                        "Bhadrapāda",
+                        "Āšvina",
+                        "Kārtika",
+                        "Mārgašīrša",
+                        "Pauša",
+                        "Māgha",
+                        "Phālguna",
+                    }
+                    wide{
+                        "Čaitra",
+                        "Vaišākha",
+                        "Džjēštha",
+                        "Āšādha",
+                        "Šrāvana",
+                        "Bhadrapāda",
+                        "Āšvina",
+                        "Kārtika",
+                        "Mārgašīrša",
+                        "Pauša",
+                        "Māgha",
+                        "Phālguna",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Čaitra",
+                        "Vaišākha",
+                        "Džjēštha",
+                        "Āšādha",
+                        "Šrāvana",
+                        "Bhadrapāda",
+                        "Āšvina",
+                        "Kārtika",
+                        "Mārgašīrša",
+                        "Pauša",
+                        "Māgha",
+                        "Phālguna",
+                    }
+                    wide{
+                        "Čaitra",
+                        "Vaišākha",
+                        "Džjēštha",
+                        "Āšādha",
+                        "Šrāvana",
+                        "Bhadrapāda",
+                        "Āšvina",
+                        "Kārtika",
+                        "Mārgašīrša",
+                        "Pauša",
+                        "Māgha",
+                        "Phālguna",
+                    }
+                }
+            }
+        }
         islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "pēc hidžras",
+                }
+            }
             monthNames{
                 format{
                     wide{
@@ -902,6 +1241,113 @@ lv{
                         "du al-hidžā",
                     }
                 }
+                stand-alone{
+                    wide{
+                        "muharams",
+                        "safars",
+                        "1. rabī",
+                        "2. rabī",
+                        "1. džumādā",
+                        "2. džumādā",
+                        "radžabs",
+                        "šabans",
+                        "ramadāns",
+                        "šauvals",
+                        "du al-kidā",
+                        "du al-hidžā",
+                    }
+                }
+            }
+        }
+        persian{
+            eras{
+                abbreviated{
+                    "pers. gads",
+                }
+                narrow{
+                    "pers. gads",
+                }
+                wide{
+                    "persiešu gads",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "farvardīns",
+                        "ordibehešts",
+                        "hordāds",
+                        "tīrs",
+                        "mordāds",
+                        "šahrivērs",
+                        "mehrs",
+                        "abans",
+                        "azers",
+                        "dejs",
+                        "bahmans",
+                        "esfands",
+                    }
+                    wide{
+                        "farvardīns",
+                        "ordibehešts",
+                        "hordāds",
+                        "tīrs",
+                        "mordāds",
+                        "šahrivērs",
+                        "mehrs",
+                        "abans",
+                        "azers",
+                        "dejs",
+                        "bahmans",
+                        "esfands",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "farvardīns",
+                        "ordibehešts",
+                        "hordāds",
+                        "tīrs",
+                        "mordāds",
+                        "šahrivērs",
+                        "mehrs",
+                        "abans",
+                        "azers",
+                        "dejs",
+                        "bahmans",
+                        "esfands",
+                    }
+                    wide{
+                        "farvardīns",
+                        "ordibehešts",
+                        "hordāds",
+                        "tīrs",
+                        "mordāds",
+                        "šahrivērs",
+                        "mehrs",
+                        "abans",
+                        "azers",
+                        "dejs",
+                        "bahmans",
+                        "esfands",
+                    }
+                }
+            }
+        }
+        roc{
+            eras{
+                abbreviated{
+                    "pirms republikas",
+                    "Miņgo",
+                }
+                narrow{
+                    "pirms rep.",
+                    "Miņgo",
+                }
+                wide{
+                    "pirms Ķīnas Republikas dibināšanas",
+                    "Miņgo",
+                }
             }
         }
     }
@@ -916,10 +1362,10 @@ lv{
         box_drawing{"pseidografika"}
         braille{"Braila raksts"}
         building{"ēka"}
-        bullets_stars{"aizzīmes/zvaigznītes"}
+        bullets_stars{"aizzīmes un zvaigznītes"}
         consonantal_jamo{"džamo līdzskaņi"}
         currency_symbols{"valūtu simboli"}
-        dash_connector{"svītra/savienotājs"}
+        dash_connector{"svītras un savienotāji"}
         digits{"cipari"}
         dingbats{"drukas ornamenti"}
         divination_symbols{"okultie simboli"}
@@ -973,9 +1419,9 @@ lv{
         plant{"augs"}
         punctuation{"pieturzīmes"}
         rightwards_arrows{"pa labi vērstās bultiņas"}
-        sign_standard_symbols{"zīmes/standarta simboli"}
+        sign_standard_symbols{"zīmes un simboli"}
         small_form_variant{"mazo formu varianti"}
-        smiley{"smailijs"}
+        smiley{"smaidiņš"}
         smileys_people{"smaidiņi un cilvēki"}
         south_asian_scripts{"Dienvidāzijas rakstības"}
         southeast_asian_scripts{"Dienvidaustrumāzijas rakstības"}
@@ -989,7 +1435,7 @@ lv{
         upwards_arrows{"augšupvērstās bultiņas"}
         variant_forms{"variantu formas"}
         vocalic_jamo{"skanīgie džamo"}
-        weather{"laiks"}
+        weather{"laikapstākļi"}
         western_asian_scripts{"Rietumāzijas rakstības"}
         whitespace{"baltstarpa"}
     }
@@ -1052,10 +1498,31 @@ lv{
                 }
             }
         }
+        dayOfYear{
+            dn{"gada diena"}
+        }
+        dayOfYear-narrow{
+            dn{"gada diena"}
+        }
+        dayOfYear-short{
+            dn{"gada diena"}
+        }
         dayperiod{
             dn{"priekšpusdienā/pēcpusdienā"}
         }
+        dayperiod-narrow{
+            dn{"priekšpusd./pēcpusd."}
+        }
+        dayperiod-short{
+            dn{"priekšpusd./pēcpusd."}
+        }
         era{
+            dn{"ēra"}
+        }
+        era-narrow{
+            dn{"ēra"}
+        }
+        era-short{
             dn{"ēra"}
         }
         fri{
@@ -1724,7 +2191,7 @@ lv{
         }
         week-narrow{
             dn{"ned."}
-            relativePeriod{"{0}. nedēļa"}
+            relativePeriod{"{0}. ned."}
             relativeTime{
                 future{
                     one{"pēc {0} ned."}
@@ -1740,7 +2207,7 @@ lv{
         }
         week-short{
             dn{"ned."}
-            relativePeriod{"{0}. nedēļa"}
+            relativePeriod{"{0}. ned."}
             relativeTime{
                 future{
                     one{"pēc {0} ned."}
@@ -1754,8 +2221,32 @@ lv{
                 }
             }
         }
+        weekOfMonth{
+            dn{"mēneša nedēļa"}
+        }
+        weekOfMonth-narrow{
+            dn{"mēneša ned."}
+        }
+        weekOfMonth-short{
+            dn{"mēneša ned."}
+        }
         weekday{
             dn{"nedēļas diena"}
+        }
+        weekday-narrow{
+            dn{"nedēļas diena"}
+        }
+        weekday-short{
+            dn{"nedēļas diena"}
+        }
+        weekdayOfMonth{
+            dn{"mēneša nedēļas diena"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"mēneša ned. diena"}
+        }
+        weekdayOfMonth-short{
+            dn{"mēneša ned. diena"}
         }
         year{
             dn{"gads"}
@@ -1810,8 +2301,20 @@ lv{
         zone{
             dn{"laika josla"}
         }
+        zone-narrow{
+            dn{"laika josla"}
+        }
+        zone-short{
+            dn{"laika josla"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} vai {1}"}
+            end{"{0} vai {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} un {1}"}
             end{"{0} un {1}"}
@@ -1847,5 +2350,32 @@ lv{
         UK{"angļu"}
         US{"amerikāņu"}
         metric{"metriskā"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

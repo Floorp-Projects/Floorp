@@ -15,6 +15,7 @@ gd{
     }
     ExemplarCharacters{"[a à b c d e è f g h i ì l m n o ò p r s t u ù]"}
     ExemplarCharactersIndex{"[A B C D E F G H I L M N O P R S T U]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     MoreInformation{"?"}
     NumberElements{
         arab{
@@ -24,9 +25,11 @@ gd{
                 group{"٬"}
                 infinity{"∞"}
                 list{"؛"}
+                minusSign{"؜-"}
                 nan{"NaN"}
                 perMille{"؉"}
                 percentSign{"٪"}
+                plusSign{"؜+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -38,7 +41,7 @@ gd{
                 group{"٬"}
                 infinity{"∞"}
                 list{"؛"}
-                minusSign{"‎-‎"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"؉"}
                 percentSign{"٪"}
@@ -162,6 +165,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         gujr{
@@ -597,6 +601,17 @@ gd{
                 superscriptingExponent{"×"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Gabh an {0}mh air an taobh dheas."}
+            }
+            plural{
+                few{"{0} chaora bhàn"}
+                one{"{0} chaora bhàin"}
+                other{"{0} caoraich bhàna"}
+                two{"{0} caora bàn"}
+            }
+        }
         minimumGroupingDigits{"1"}
         mlym{
             symbols{
@@ -900,7 +915,7 @@ gd{
             }
         }
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.1"}
     calendar{
         buddhist{
             intervalFormats{
@@ -938,12 +953,24 @@ gd{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
@@ -953,6 +980,10 @@ gd{
                 MMdd{"dd/MM"}
                 Md{"d/M"}
                 d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yMEd{"E, d/M/y"}
                 yMM{"MM/y"}
@@ -1145,10 +1176,10 @@ gd{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"'seachdain' w 'dhe' y"}
-                    one{"'seachdain' w 'dhe' y"}
-                    other{"'seachdain' w 'dhe' y"}
-                    two{"'seachdain' w 'dhe' y"}
+                    few{"'seachdain' w 'dhe' Y"}
+                    one{"'seachdain' w 'dhe' Y"}
+                    other{"'seachdain' w 'dhe' Y"}
+                    two{"'seachdain' w 'dhe' Y"}
                 }
             }
             dayNames{
@@ -1523,6 +1554,94 @@ gd{
             }
         }
     }
+    characterLabel{
+        activities{"gnìomhachd"}
+        african_scripts{"sgriobt Afragach"}
+        american_scripts{"sgriobt Aimeireagach"}
+        animal{"beathach"}
+        animals_nature{"beathach no an nàdar"}
+        arrows{"saighead"}
+        body{"bodhaig"}
+        box_drawing{"tarraing bhogsaichean"}
+        braille{"Braille"}
+        building{"togalach"}
+        bullets_stars{"peilear no rionnag"}
+        consonantal_jamo{"Jamo chonsanach"}
+        currency_symbols{"samhla airgeadra"}
+        dash_connector{"strìochag no ceangladair"}
+        digits{"àireamh"}
+        dingbats{"dingbat"}
+        divination_symbols{"samhla fàidheadaireachd"}
+        downwards_arrows{"saighead sìos"}
+        downwards_upwards_arrows{"saighead sìos is suas"}
+        east_asian_scripts{"sgriobt Ear-Àiseanach"}
+        emoji{"Emoji"}
+        european_scripts{"sgriobt Eòrpach"}
+        female{"boireann"}
+        flag{"bratach"}
+        flags{"brataich"}
+        food_drink{"biadh ⁊ deoch"}
+        format{"fòrmatadh"}
+        format_whitespace{"fòrmatadh ⁊ geal-spàs"}
+        full_width_form_variant{"eug-samhail làn-leud"}
+        geometric_shapes{"cruth geomatrach"}
+        half_width_form_variant{"eug-samhail leth-leud"}
+        han_characters{"caractar Han"}
+        han_radicals{"feumh Han"}
+        hanja{"Hanja"}
+        hanzi_simplified{"Hanzi (shìmplichte)"}
+        hanzi_traditional{"Hanzi (thradaiseanta)"}
+        heart{"cridhe"}
+        historic_scripts{"sgriobt eachdraidheil"}
+        ideographic_desc_characters{"idea-ghraf mìneachaidh"}
+        japanese_kana{"Kana na Seapanaise"}
+        kanbun{"Kanbun"}
+        kanji{"Kanji"}
+        keycap{"còmhdachadh iuchrach"}
+        leftwards_arrows{"saighead gu clì"}
+        leftwards_rightwards_arrows{"saighead gu clì ’s deas"}
+        letterlike_symbols{"samhla coltach ri litir"}
+        limited_use{"cleachdadh cuingichte"}
+        male{"fireann"}
+        math_symbols{"samhla matamataig"}
+        middle_eastern_scripts{"sgriobt Ear-mheadhain"}
+        miscellaneous{"measgaichte"}
+        modern_scripts{"sgriobt ùr-nòsach"}
+        modifier{"atharraichear"}
+        musical_symbols{"samhla ciùil"}
+        nature{"an nàdar"}
+        nonspacing{"gun bheàrnadh"}
+        numbers{"àireamhan"}
+        objects{"oibseact"}
+        other{"eile"}
+        paired{"paidhrichte"}
+        person{"neach"}
+        phonetic_alphabet{"aibidil fhuaim-eòlach"}
+        pictographs{"picteagram"}
+        place{"àite"}
+        plant{"lus"}
+        punctuation{"puingeachadh"}
+        rightwards_arrows{"saighead gu deas"}
+        sign_standard_symbols{"sanas no samhla"}
+        small_form_variant{"eug-samhailean beaga"}
+        smiley{"samhla-gniùis"}
+        smileys_people{"samhla-gniùis no neach"}
+        south_asian_scripts{"sgriobt Àisianach deasach"}
+        southeast_asian_scripts{"sgriobt Ear-Àisianach deasach"}
+        spacing{"beàrnadh"}
+        sport{"spòrs"}
+        symbols{"samhla"}
+        technical_symbols{"samhla teignigeach"}
+        tone_marks{"comharra tòna"}
+        travel{"siubhal"}
+        travel_places{"siubhal no àite"}
+        upwards_arrows{"saighead suas"}
+        variant_forms{"eug-samhail"}
+        vocalic_jamo{"Jamo fhuaimreagach"}
+        weather{"an aimsir"}
+        western_asian_scripts{"sgriobt Iar-Àisianach"}
+        whitespace{"geal-spàs"}
+    }
     delimiters{
         alternateQuotationEnd{"’"}
         alternateQuotationStart{"‘"}
@@ -1605,10 +1724,31 @@ gd{
                 }
             }
         }
+        dayOfYear{
+            dn{"là dhen bhliadhna"}
+        }
+        dayOfYear-narrow{
+            dn{"là bl."}
+        }
+        dayOfYear-short{
+            dn{"là blia."}
+        }
         dayperiod{
             dn{"m/f"}
         }
+        dayperiod-narrow{
+            dn{"m/f"}
+        }
+        dayperiod-short{
+            dn{"m/f"}
+        }
         era{
+            dn{"linn"}
+        }
+        era-narrow{
+            dn{"li."}
+        }
+        era-short{
             dn{"linn"}
         }
         fri{
@@ -1617,12 +1757,40 @@ gd{
                 "0"{"DihAoine"}
                 "1"{"DihAoine seo tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DihAoine"}
+                    one{"an ceann {0} DihAoine"}
+                    other{"an ceann {0} DihAoine"}
+                    two{"an ceann {0} DhihAoine"}
+                }
+                past{
+                    few{"o chionn {0} DihAoine"}
+                    one{"o chionn {0} DihAoine"}
+                    other{"o chionn {0} DihAoine"}
+                    two{"o chionn {0} DhihAoine"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"hA. ch."}
                 "0"{"hA."}
                 "1"{"hA. ti."}
+            }
+            relativeTime{
+                future{
+                    few{"an {0} Dih."}
+                    one{"an {0} Dih."}
+                    other{"an {0} Dih."}
+                    two{"an {0} Dhih."}
+                }
+                past{
+                    few{"o {0} Dih."}
+                    one{"o {0} Dih."}
+                    other{"o {0} Dih."}
+                    two{"o {0} Dhih."}
+                }
             }
         }
         fri-short{
@@ -1631,9 +1799,26 @@ gd{
                 "0"{"Dih."}
                 "1"{"Dih. sa tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} Dih."}
+                    one{"an ceann {0} Dih."}
+                    other{"an ceann {0} Dih."}
+                    two{"an ceann {0} Dhih."}
+                }
+                past{
+                    few{"o chionn {0} Dih."}
+                    one{"o chionn {0} Dih."}
+                    other{"o chionn {0} Dih."}
+                    two{"o chionn {0} Dhih."}
+                }
+            }
         }
         hour{
             dn{"uair a thìde"}
+            relative{
+                "0"{"am broinn uair a thìde"}
+            }
             relativeTime{
                 future{
                     few{"an ceann {0} uairean a thìde"}
@@ -1651,6 +1836,9 @@ gd{
         }
         hour-narrow{
             dn{"u"}
+            relative{
+                "0"{"san uair"}
+            }
             relativeTime{
                 future{
                     few{"+{0} u."}
@@ -1668,6 +1856,9 @@ gd{
         }
         hour-short{
             dn{"uair"}
+            relative{
+                "0"{"am broinn uair"}
+            }
             relativeTime{
                 future{
                     few{"an {0} uair."}
@@ -1685,6 +1876,9 @@ gd{
         }
         minute{
             dn{"mionaid"}
+            relative{
+                "0"{"am broinn mionaid"}
+            }
             relativeTime{
                 future{
                     few{"an ceann {0} mionaidean"}
@@ -1702,6 +1896,9 @@ gd{
         }
         minute-narrow{
             dn{"m"}
+            relative{
+                "0"{"sa mhion."}
+            }
             relativeTime{
                 future{
                     few{"+{0} m"}
@@ -1719,6 +1916,9 @@ gd{
         }
         minute-short{
             dn{"mion."}
+            relative{
+                "0"{"am broinn mion."}
+            }
             relativeTime{
                 future{
                     few{"an {0} mion."}
@@ -1740,6 +1940,20 @@ gd{
                 "0"{"DiLuain"}
                 "1"{"DiLuain seo tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiLuain"}
+                    one{"an ceann {0} DiLuain"}
+                    other{"an ceann {0} DiLuain"}
+                    two{"an ceann {0} DhiLuain"}
+                }
+                past{
+                    few{"o chionn {0} DiLuain"}
+                    one{"o chionn {0} DiLuain"}
+                    other{"o chionn {0} DiLuain"}
+                    two{"o chionn {0} DhiLuain"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -1747,12 +1961,40 @@ gd{
                 "0"{"Lu."}
                 "1"{"Lu. ti."}
             }
+            relativeTime{
+                future{
+                    few{"an {0} DiL."}
+                    one{"an {0} DiL."}
+                    other{"an {0} DiL."}
+                    two{"an {0} DhiL."}
+                }
+                past{
+                    few{"o {0} DiL."}
+                    one{"o {0} DiL."}
+                    other{"o {0} DiL."}
+                    two{"o {0} DhiL."}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"DiL. sa chaidh"}
                 "0"{"DiL."}
                 "1"{"DiL. sa tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiL."}
+                    one{"an ceann {0} DiL."}
+                    other{"an ceann {0} DiL."}
+                    two{"an ceann {0} DhiL."}
+                }
+                past{
+                    few{"o chionn {0} DiL."}
+                    one{"o chionn {0} DiL."}
+                    other{"o chionn {0} DiL."}
+                    two{"o chionn {0} DhiL."}
+                }
             }
         }
         month{
@@ -1893,6 +2135,20 @@ gd{
                 "0"{"DiSathairne"}
                 "1"{"DiSathairne seo tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiSathairne"}
+                    one{"an ceann {0} DiSathairne"}
+                    other{"an ceann {0} DiSathairne"}
+                    two{"an ceann {0} DhiSathairne"}
+                }
+                past{
+                    few{"o chionn {0} DiSathairne"}
+                    one{"o chionn {0} DiSathairne"}
+                    other{"o chionn {0} DiSathairne"}
+                    two{"o chionn {0} DhiSathairne"}
+                }
+            }
         }
         sat-narrow{
             relative{
@@ -1900,12 +2156,40 @@ gd{
                 "0"{"Sa."}
                 "1"{"Sa. ti."}
             }
+            relativeTime{
+                future{
+                    few{"an {0} DiS."}
+                    one{"an {0} DiS."}
+                    other{"an {0} DiS."}
+                    two{"an {0} DhiS."}
+                }
+                past{
+                    few{"o {0} DiS."}
+                    one{"o {0} DiS."}
+                    other{"o {0} DiS."}
+                    two{"o {0} DhiS."}
+                }
+            }
         }
         sat-short{
             relative{
                 "-1"{"DiS. sa chaidh"}
                 "0"{"DiS."}
                 "1"{"DiS. sa tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiS."}
+                    one{"an ceann {0} DiS."}
+                    other{"an ceann {0} DiS."}
+                    two{"an ceann {0} DhiS."}
+                }
+                past{
+                    few{"o chionn {0} DiS."}
+                    one{"o chionn {0} DiS."}
+                    other{"o chionn {0} DiS."}
+                    two{"o chionn {0} DhiS."}
+                }
             }
         }
         second{
@@ -1974,12 +2258,40 @@ gd{
                 "0"{"DiDòmhnaich"}
                 "1"{"DiDòmhnaich seo tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiDòmhnaich"}
+                    one{"an ceann {0} DiDòmhnaich"}
+                    other{"an ceann {0} DiDòmhnaich"}
+                    two{"an ceann {0} DhiDòmhnaich"}
+                }
+                past{
+                    few{"o chionn {0} DiDòmhnaich"}
+                    one{"o chionn {0} DiDòmhnaich"}
+                    other{"o chionn {0} DiDòmhnaich"}
+                    two{"o chionn {0} DhiDòmhnaich"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"Dò. ch."}
                 "0"{"Dò."}
                 "1"{"Dò. ti."}
+            }
+            relativeTime{
+                future{
+                    few{"an {0} DiD."}
+                    one{"an {0} DiD."}
+                    other{"an {0} DiD."}
+                    two{"an {0} DhiD."}
+                }
+                past{
+                    few{"o {0} DiD."}
+                    one{"o {0} DiD."}
+                    other{"o {0} DiD."}
+                    two{"o {0} DhiD."}
+                }
             }
         }
         sun-short{
@@ -1988,12 +2300,40 @@ gd{
                 "0"{"DiD."}
                 "1"{"DiD. sa tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiD."}
+                    one{"an ceann {0} DiD."}
+                    other{"an ceann {0} DiD."}
+                    two{"an ceann {0} DhiD."}
+                }
+                past{
+                    few{"o chionn {0} DiDòmhnaich"}
+                    one{"o chionn {0} DiD."}
+                    other{"o chionn {0} DiDòmhnaich"}
+                    two{"o chionn {0} DhiD."}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"DiarDaoin seo chaidh"}
                 "0"{"DiarDaoin"}
                 "1"{"DiarDaoin seo tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiarDaoin"}
+                    one{"an ceann {0} DiarDaoin"}
+                    other{"an ceann {0} DiarDaoin"}
+                    two{"an ceann {0} DhiarDaoin"}
+                }
+                past{
+                    few{"o chionn {0} DiarDaoin"}
+                    one{"o chionn {0} DiarDaoin"}
+                    other{"o chionn {0} DiarDaoin"}
+                    two{"o chionn {0} DhiarDaoin"}
+                }
             }
         }
         thu-narrow{
@@ -2002,12 +2342,40 @@ gd{
                 "0"{"Da."}
                 "1"{"Da. ti."}
             }
+            relativeTime{
+                future{
+                    few{"an {0} Dia."}
+                    one{"an {0} Dia."}
+                    other{"an {0} Dia."}
+                    two{"an {0} Dhia."}
+                }
+                past{
+                    few{"o {0} Dia."}
+                    one{"o {0} Dia."}
+                    other{"o {0} Dia."}
+                    two{"o {0} Dhia."}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"Dia. sa chaidh"}
                 "0"{"Dia."}
                 "1"{"Dia. sa tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} Dia."}
+                    one{"an ceann {0} Dia."}
+                    other{"an ceann {0} Dia."}
+                    two{"an ceann {0} Dhia."}
+                }
+                past{
+                    few{"o chionn {0} Dia."}
+                    one{"o chionn {0} Dia."}
+                    other{"o chionn {0} Dia."}
+                    two{"o chionn {0} Dhia."}
+                }
             }
         }
         tue{
@@ -2016,12 +2384,40 @@ gd{
                 "0"{"DiMàirt"}
                 "1"{"DiMàirt seo tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiMàirt"}
+                    one{"an ceann {0} DiMàirt"}
+                    other{"an ceann {0} DiMàirt"}
+                    two{"an ceann {0} DhiMàirt"}
+                }
+                past{
+                    few{"o chionn {0} DiMàirt"}
+                    one{"o chionn {0} DiMàirt"}
+                    other{"o chionn {0} DiMàirt"}
+                    two{"o chionn {0} DhiMàirt"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"Mà. ch."}
                 "0"{"Mà."}
                 "1"{"Mà. ti."}
+            }
+            relativeTime{
+                future{
+                    few{"an {0} DiM."}
+                    one{"an {0} DiM."}
+                    other{"an {0} DiM."}
+                    two{"an {0} DhiM."}
+                }
+                past{
+                    few{"o {0} DiM."}
+                    one{"o {0} DiM."}
+                    other{"o {0} DiM."}
+                    two{"o {0} DhiM."}
+                }
             }
         }
         tue-short{
@@ -2030,12 +2426,40 @@ gd{
                 "0"{"DiM."}
                 "1"{"DiM. sa tighinn"}
             }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiM."}
+                    one{"an ceann {0} DiM."}
+                    other{"an ceann {0} DiM."}
+                    two{"an ceann {0} DhiM."}
+                }
+                past{
+                    few{"o chionn {0} DiM."}
+                    one{"o chionn {0} DiM."}
+                    other{"o chionn {0} DiM."}
+                    two{"o chionn {0} DhiM."}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"DiCiadain seo chaidh"}
                 "0"{"DiCiadain"}
                 "1"{"DiCiadain seo tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiCiadain"}
+                    one{"an ceann {0} DiCiadain"}
+                    other{"an ceann {0} DiCiadain"}
+                    two{"an ceann {0} DhiCiadain"}
+                }
+                past{
+                    few{"o chionn {0} DiCiadain"}
+                    one{"o chionn {0} DiCiadain"}
+                    other{"o chionn {0} DiCiadain"}
+                    two{"o chionn {0} DhiCiadain"}
+                }
             }
         }
         wed-narrow{
@@ -2044,12 +2468,40 @@ gd{
                 "0"{"Ci."}
                 "1"{"Ci. ti."}
             }
+            relativeTime{
+                future{
+                    few{"an {0} DiC."}
+                    one{"an {0} DiC."}
+                    other{"an {0} DiC."}
+                    two{"an {0} DhiC."}
+                }
+                past{
+                    few{"o {0} DiC."}
+                    one{"o {0} DiC."}
+                    other{"o {0} DiC."}
+                    two{"o {0} DhiC."}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"DiC. sa chaidh"}
                 "0"{"DiC."}
                 "1"{"DiC. sa tighinn"}
+            }
+            relativeTime{
+                future{
+                    few{"an ceann {0} DiC."}
+                    one{"an ceann {0} DiC."}
+                    other{"an ceann {0} DiC."}
+                    two{"an ceann {0} DhiC."}
+                }
+                past{
+                    few{"o chionn {0} DiC."}
+                    one{"o chionn {0} DiC."}
+                    other{"o chionn {0} DiC."}
+                    two{"o chionn {0} DhiC."}
+                }
             }
         }
         week{
@@ -2059,6 +2511,7 @@ gd{
                 "0"{"an t-seachdain seo"}
                 "1"{"an ath-sheachdain"}
             }
+            relativePeriod{"an t-seachdain aig {0}"}
             relativeTime{
                 future{
                     few{"an ceann {0} seachdainean"}
@@ -2081,6 +2534,7 @@ gd{
                 "0"{"an t-sn. seo"}
                 "1"{"ath-shn."}
             }
+            relativePeriod{"an t-seachdain aig {0}"}
             relativeTime{
                 future{
                     few{"+{0} sn."}
@@ -2103,6 +2557,7 @@ gd{
                 "0"{"an t-seachd. seo"}
                 "1"{"an ath-sheachd."}
             }
+            relativePeriod{"an t-seachdain aig {0}"}
             relativeTime{
                 future{
                     few{"an {0} seachd."}
@@ -2118,8 +2573,32 @@ gd{
                 }
             }
         }
+        weekOfMonth{
+            dn{"seachdain dhen mhìos"}
+        }
+        weekOfMonth-narrow{
+            dn{"seachd. mìos"}
+        }
+        weekOfMonth-short{
+            dn{"seachd. mìos"}
+        }
         weekday{
             dn{"latha na seachdaine"}
+        }
+        weekday-narrow{
+            dn{"là sn."}
+        }
+        weekday-short{
+            dn{"là seachd."}
+        }
+        weekdayOfMonth{
+            dn{"là na seachdaine dhen mhìos"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"là sn. mìos"}
+        }
+        weekdayOfMonth-short{
+            dn{"là seachd. mìos"}
         }
         year{
             dn{"bliadhna"}
@@ -2193,11 +2672,29 @@ gd{
         zone{
             dn{"roinn-tìde"}
         }
+        zone-narrow{
+            dn{"roinn"}
+        }
+        zone-short{
+            dn{"roinn"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} no {1}"}
+            end{"{0} no {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} agus {1}"}
             end{"{0} agus {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} is {1}"}
+            end{"{0} is {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

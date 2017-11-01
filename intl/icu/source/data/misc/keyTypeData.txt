@@ -229,6 +229,7 @@ keyTypeData:table(nofallback){
             cle{""}
             clf{""}
             clp{""}
+            cnh{""}
             cnx{""}
             cny{""}
             cop{""}
@@ -392,6 +393,7 @@ keyTypeData:table(nofallback){
             srg{""}
             ssp{""}
             std{""}
+            stn{""}
             sur{""}
             svc{""}
             syp{""}
@@ -608,6 +610,7 @@ keyTypeData:table(nofallback){
             finance{""}
             fullwide{""}
             geor{""}
+            gonm{""}
             grek{""}
             greklow{""}
             gujr{""}

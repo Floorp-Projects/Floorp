@@ -11,6 +11,7 @@ ga{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[a á b c d e é f g h i í l m n o ó p r s t u ú]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -318,7 +319,7 @@ ga{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.5"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -487,12 +488,24 @@ ga{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"LL"}
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
@@ -501,6 +514,10 @@ ga{
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
                 d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"MM/y GGGGG"}
@@ -611,12 +628,12 @@ ga{
         }
         gregorian{
             AmPmMarkers{
-                "a.m.",
-                "p.m.",
+                "r.n.",
+                "i.n.",
             }
             AmPmMarkersAbbr{
-                "a.m.",
-                "p.m.",
+                "r.n.",
+                "i.n.",
             }
             AmPmMarkersNarrow{
                 "a",
@@ -641,7 +658,12 @@ ga{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -688,11 +710,11 @@ ga{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"'seachtain' 'a' w 'i' y"}
-                    many{"'seachtain' 'a' w 'i' y"}
-                    one{"'seachtain' 'a' w 'i' y"}
-                    other{"'seachtain' 'a' w 'i' y"}
-                    two{"'seachtain' 'a' w 'i' y"}
+                    few{"'seachtain' 'a' w 'i' Y"}
+                    many{"'seachtain' 'a' w 'i' Y"}
+                    one{"'seachtain' 'a' w 'i' Y"}
+                    other{"'seachtain' 'a' w 'i' Y"}
+                    two{"'seachtain' 'a' w 'i' Y"}
                 }
             }
             dayNames{
@@ -1045,7 +1067,7 @@ ga{
         }
     }
     characterLabel{
-        activities{"Gníomhaíochtaí"}
+        activities{"Gníomhaíocht"}
         african_scripts{"Scripteanna na hAfraice"}
         american_scripts{"Scripteanna Meiriceánacha"}
         animal{"ainmhí"}
@@ -1087,12 +1109,12 @@ ga{
         japanese_kana{"Kana Seapánach"}
         kanbun{"Kanbun"}
         kanji{"Ceansaí"}
-        keycap{"eochair caidhpe"}
+        keycap{"caipín eochrach"}
         leftwards_arrows{"Saighde Clé"}
         leftwards_rightwards_arrows{"Saighde Clé-Deas"}
         letterlike_symbols{"Siombailí Cosúil le Litreacha"}
         limited_use{"Neamhfhorleathan"}
-        male{"fearann"}
+        male{"fireann"}
         math_symbols{"Siombailí Matamaiticiúla"}
         middle_eastern_scripts{"Scripteanna an Mheánoirthir"}
         miscellaneous{"Éagsúil"}
@@ -1114,7 +1136,7 @@ ga{
         rightwards_arrows{"Saighde Deasa"}
         sign_standard_symbols{"Comharthaí/Siombailí Coitianta"}
         small_form_variant{"Foirmeacha Beaga Malartacha"}
-        smiley{"aghaidh"}
+        smiley{"straoiseog"}
         smileys_people{"Straoiseoga agus Daoine"}
         south_asian_scripts{"Scripteanna na hÁise Theas"}
         southeast_asian_scripts{"Scripteanna na hÁise Thoir Theas"}
@@ -1217,11 +1239,32 @@ ga{
                 }
             }
         }
+        dayOfYear{
+            dn{"Lá den bhliain"}
+        }
+        dayOfYear-narrow{
+            dn{"lá den bhl."}
+        }
+        dayOfYear-short{
+            dn{"lá den bhl."}
+        }
         dayperiod{
+            dn{"a.m./p.m."}
+        }
+        dayperiod-narrow{
+            dn{"a.m./p.m."}
+        }
+        dayperiod-short{
             dn{"a.m./p.m."}
         }
         era{
             dn{"Ré"}
+        }
+        era-narrow{
+            dn{"ré"}
+        }
+        era-short{
+            dn{"ré"}
         }
         fri{
             relative{
@@ -2123,8 +2166,32 @@ ga{
                 }
             }
         }
+        weekOfMonth{
+            dn{"Seachtain den mhí"}
+        }
+        weekOfMonth-narrow{
+            dn{"7n den mhí"}
+        }
+        weekOfMonth-short{
+            dn{"7n den mhí"}
+        }
         weekday{
             dn{"Lá na seachtaine"}
+        }
+        weekday-narrow{
+            dn{"lá den t7n"}
+        }
+        weekday-short{
+            dn{"lá den t7n"}
+        }
+        weekdayOfMonth{
+            dn{"Lá oibre den mhí"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"lá oib. den mhí"}
+        }
+        weekdayOfMonth-short{
+            dn{"lá oib. den mhí"}
         }
         year{
             dn{"Bliain"}
@@ -2201,8 +2268,20 @@ ga{
         zone{
             dn{"Crios Ama"}
         }
+        zone-narrow{
+            dn{"crios"}
+        }
+        zone-short{
+            dn{"crios"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} nó {1}"}
+            end{"{0}, nó {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0} agus {1}"}
             end{"{0}, agus {1}"}
@@ -2238,5 +2317,32 @@ ga{
         UK{"RA"}
         US{"SAM"}
         metric{"Méadrach"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

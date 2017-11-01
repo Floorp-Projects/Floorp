@@ -258,6 +258,10 @@ th{
             "CLP",
             "เปโซชิลี",
         }
+        CNH{
+            "CNH",
+            "หยวน",
+        }
         CNY{
             "CN¥",
             "หยวนจีน",
@@ -912,7 +916,7 @@ th{
         }
         THB{
             "THB",
-            "บาทไทย",
+            "บาท",
         }
         TJR{
             "TJR",
@@ -1205,6 +1209,7 @@ th{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -1245,6 +1250,8 @@ th{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1363,6 +1370,9 @@ th{
         }
         CLP{
             other{"เปโซชิลี"}
+        }
+        CNH{
+            other{"หยวน"}
         }
         CNY{
             other{"หยวนจีน"}
@@ -1761,5 +1771,5 @@ th{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.56"}
 }

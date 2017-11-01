@@ -122,6 +122,10 @@ af{
             "CLP",
             "Chileense peso",
         }
+        CNH{
+            "CNH",
+            "Chinese joean",
+        }
         CNY{
             "CN¥",
             "Sjinese joean renminbi",
@@ -742,6 +746,7 @@ af{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"leu"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -891,6 +896,10 @@ af{
         CLP{
             one{"Chileense peso"}
             other{"Chileense peso"}
+        }
+        CNH{
+            one{"Chinese joean (buiteland)"}
+            other{"Chinese joean (buiteland)"}
         }
         CNY{
             one{"Sjinese joean renminbi"}
@@ -1405,5 +1414,5 @@ af{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.5"}
 }

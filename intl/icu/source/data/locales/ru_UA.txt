@@ -4,7 +4,7 @@ ru_UA{
     NumberElements{
         minimumGroupingDigits{"2"}
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         generic{
             DateTimePatterns{
@@ -24,18 +24,6 @@ ru_UA{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -59,32 +47,6 @@ ru_UA{
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
                 yMEd{"ccc, d.MM.y"}
-            }
-            dayPeriod{
-                format{
-                    narrow{
-                        afternoon1{"дня"}
-                        evening1{"веч."}
-                        midnight{"полн."}
-                        morning1{"утра"}
-                        night1{"ночи"}
-                        noon{"полд."}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                }
             }
             intervalFormats{
                 H{
