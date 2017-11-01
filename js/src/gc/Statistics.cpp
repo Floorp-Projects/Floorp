@@ -17,6 +17,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "jsgc.h"
 #include "jsprf.h"
 #include "jsutil.h"
 
