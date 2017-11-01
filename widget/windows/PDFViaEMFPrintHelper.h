@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "PDFiumEngineShim.h"
 #include "mozilla/Vector.h"
+#include "mozilla/ipc/FileDescriptor.h"
 
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
@@ -28,12 +29,15 @@ namespace widget {
 class PDFViaEMFPrintHelper
 {
 public:
+  typedef mozilla::ipc::FileDescriptor FileDescriptor;
+
   PDFViaEMFPrintHelper();
   virtual ~PDFViaEMFPrintHelper();
 
   /** Loads the specified PDF file. */
   NS_IMETHOD OpenDocument(nsIFile *aFile);
   NS_IMETHOD OpenDocument(const char* aFileName);
+  NS_IMETHOD OpenDocument(const FileDescriptor& aFD);
 
   /** Releases document buffer. */
   void CloseDocument();
@@ -55,6 +59,7 @@ protected:
 
   RefPtr<PDFiumEngineShim>    mPDFiumEngine;
   FPDF_DOCUMENT               mPDFDoc;
+  PRFileDesc*                 mPrfile;
 };
 
 } // namespace widget
