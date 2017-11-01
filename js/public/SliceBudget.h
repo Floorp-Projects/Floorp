@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+#include "jstypes.h"
+
 namespace js {
 
 struct JS_PUBLIC_API(TimeBudget)
