@@ -608,7 +608,10 @@ imgRequestProxy::GetLoadGroup(nsILoadGroup** loadGroup)
 NS_IMETHODIMP
 imgRequestProxy::SetLoadGroup(nsILoadGroup* loadGroup)
 {
-  mLoadGroup = loadGroup;
+  if (loadGroup != mLoadGroup) {
+    MOZ_ASSERT_UNREACHABLE("Switching load groups is unsupported!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   return NS_OK;
 }
 
