@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/GCTrace.h"
-#include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 
 #include "gc/ArenaList-inl.h"
@@ -344,20 +343,6 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
     operator GCType*() const { return get(); }
     GCType* operator ->() const { return get(); }
 };
-
-inline void
-RelocationOverlay::forwardTo(Cell* cell)
-{
-    MOZ_ASSERT(!isForwarded());
-    // The location of magic_ is important because it must never be valid to see
-    // the value Relocated there in a GC thing that has not been moved.
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSObject, group_) &&
-                  offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) &&
-                  offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.flags),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    magic_ = Relocated;
-    newLocation_ = cell;
-}
 
 } /* namespace gc */
 } /* namespace js */
