@@ -925,7 +925,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 
 /* static */ Shape*
 NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                                  GetterOp getter, SetterOp setter, unsigned attrs, unsigned flags)
+                                  GetterOp getter, SetterOp setter, unsigned attrs)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
 
@@ -960,7 +960,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
          */
         MOZ_ASSERT(obj->nonProxyIsExtensible());
 
-        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, flags, entry, true,
+        return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, 0, entry, true,
                                            keep);
     }
 
@@ -984,7 +984,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
      * Now that we've possibly preserved slot, check whether all members match.
      * If so, this is a redundant "put" and we can return without more work.
      */
-    if (shape->matchesParamsAfterId(nbase, SHAPE_INVALID_SLOT, attrs, flags, getter, setter))
+    if (shape->matchesParamsAfterId(nbase, SHAPE_INVALID_SLOT, attrs, 0, getter, setter))
         return shape;
 
     /*
@@ -1023,7 +1023,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 
         shape->setSlot(SHAPE_INVALID_SLOT);
         shape->attrs = uint8_t(attrs);
-        shape->flags = flags | Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
+        shape->flags = Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
 
         AccessorShape& accShape = shape->asAccessorShape();
         accShape.rawGetter = getter;
@@ -1043,7 +1043,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         MOZ_ASSERT(shape == obj->lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, flags));
+        Rooted<StackShape> child(cx, StackShape(nbase, id, SHAPE_INVALID_SLOT, attrs, 0));
         child.updateGetterSetter(getter, setter);
         RootedShape parent(cx, shape->parent);
         shape = getChildProperty(cx, obj, parent, &child);
@@ -1085,14 +1085,8 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
     if (shape->attrs == attrs && shape->getter() == getter && shape->setter() == setter)
         return shape;
 
-    /*
-     * Let JSObject::putProperty handle this |overwriting| case, including
-     * the conservation of shape->slot (if it's valid). We must not call
-     * removeProperty because it will free an allocated shape->slot, and
-     * putProperty won't re-allocate it.
-     */
     RootedId propid(cx, shape->propid());
-    return putAccessorProperty(cx, obj, propid, getter, setter, attrs, shape->flags);
+    return putAccessorProperty(cx, obj, propid, getter, setter, attrs);
 }
 
 /* static */ bool
