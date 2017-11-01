@@ -22,6 +22,7 @@ EXPORTS.mozilla += [
     'CSSEditUtils.h',
     'EditorBase.h',
     'EditorController.h',
+    'EditorDOMPoint.h',
     'EditorUtils.h',
     'EditTransactionBase.h',
     'HTMLEditor.h',
