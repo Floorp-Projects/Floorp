@@ -18,6 +18,11 @@
   <![CDATA[
     function doTest()
     {
+      ok(!isAccessible("image"),
+                      "image without tooltiptext shouldn't be accessible.");
+      testRole("image-tooltiptext", ROLE_GRAPHIC);
+      testRole("image-onclick", ROLE_PUSHBUTTON);
+
       ok(!isAccessible("statusbarpanel"),
                       "statusbarpanel shouldn't be accessible.");
       testRole("statusbarpanel-iconic", ROLE_PUSHBUTTON);
@@ -46,6 +51,10 @@
     <pre id="test">
     </pre>
   </body>
+
+  <image id="image" src="../moz.png"/>
+  <image id="image-tooltiptext" src="../moz.png" tooltiptext="hello"/>
+  <image id="image-onclick" src="../moz.png" onclick=""/>
 
   <statusbarpanel id="statusbarpanel"></statusbarpanel>
   <statusbarpanel id="statusbarpanel-iconic" class="statusbarpanel-iconic"></statusbarpanel>
