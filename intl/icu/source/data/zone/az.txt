@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 az{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Əfqanıstan Vaxtı"}
@@ -468,9 +468,9 @@ az{
             ls{"Feniks Adaları Vaxtı"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"San Pier və Mikelon Yay Vaxtı"}
-            lg{"San Pier və Mikelon Vaxtı"}
-            ls{"San Pier və Mikelon Standart Vaxtı"}
+            ld{"Müqəddəs Pyer və Mikelon Yay Vaxtı"}
+            lg{"Müqəddəs Pyer və Mikelon Vaxtı"}
+            ls{"Müqəddəs Pyer və Mikelon Standart Vaxtı"}
         }
         "meta:Pitcairn"{
             ls{"Pitkern Vaxtı"}

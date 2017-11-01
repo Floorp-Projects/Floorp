@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_HN{
     %%Parent{"es_419"}
-    Version{"2.1.31.33"}
+    Version{"2.1.37.6"}
     calendar{
         generic{
             DateTimePatterns{
@@ -12,7 +12,7 @@ es_HN{
                 "HH:mm",
                 "EEEE dd 'de' MMMM 'de' y G",
                 "dd 'de' MMMM 'de' y G",
-                "d/M/y G",
+                "d 'de' MMM 'de' y G",
                 "dd/MM/yy GGGGG",
                 "{1} {0}",
                 "{1}, {0}",
@@ -67,7 +67,7 @@ es_HN{
         day{
             relative{
                 "-1"{"ayer"}
-                "-2"{"antier"}
+                "-2"{"anteayer"}
                 "0"{"hoy"}
                 "1"{"mañana"}
                 "2"{"pasado mañana"}

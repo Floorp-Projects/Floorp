@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gl{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Horario de Afganistán"}
@@ -66,14 +66,14 @@ gl{
             ls{"Horario estándar árabe"}
         }
         "meta:Argentina"{
-            ld{"Horario de verán de Arxentina"}
-            lg{"Horario de Arxentina"}
-            ls{"Horario estándar de Arxentina"}
+            ld{"Horario de verán da Arxentina"}
+            lg{"Horario da Arxentina"}
+            ls{"Horario estándar da Arxentina"}
         }
         "meta:Argentina_Western"{
-            ld{"Horario de verán de Arxentina Occidental"}
-            lg{"Horario de Arxentina Occidental"}
-            ls{"Horario estándar de Arxentina Occidental"}
+            ld{"Horario de verán da Arxentina Occidental"}
+            lg{"Horario da Arxentina Occidental"}
+            ls{"Horario estándar da Arxentina Occidental"}
         }
         "meta:Armenia"{
             ld{"Horario de verán de Armenia"}
@@ -116,9 +116,9 @@ gl{
             ls{"Horario estándar das Azores"}
         }
         "meta:Bangladesh"{
-            ld{"Horario de verán de Bangladés"}
-            lg{"Horario de Bangladés"}
-            ls{"Horario estándar de Bangladés"}
+            ld{"Horario de verán de Bangladesh"}
+            lg{"Horario de Bangladesh"}
+            ls{"Horario estándar de Bangladesh"}
         }
         "meta:Bhutan"{
             ls{"Horario de Bután"}
@@ -153,9 +153,9 @@ gl{
             ls{"Horario estándar de Chile"}
         }
         "meta:China"{
-            ld{"Horario de verán de China"}
-            lg{"Horario de China"}
-            ls{"Horario estándar de China"}
+            ld{"Horario de verán da China"}
+            lg{"Horario da China"}
+            ls{"Horario estándar da China"}
         }
         "meta:Choibalsan"{
             ld{"Horario de verán de Choibalsan"}
@@ -355,7 +355,7 @@ gl{
             ls{"Horario estándar de Krasnoyarsk"}
         }
         "meta:Kyrgystan"{
-            ls{"Horario de Quirguicistán"}
+            ls{"Horario de Kirguizistán"}
         }
         "meta:Line_Islands"{
             ls{"Horario das Illas da Liña"}
@@ -394,9 +394,9 @@ gl{
             ls{"Horario de Mawson"}
         }
         "meta:Mexico_Northwest"{
-            ld{"Horario de verán de México Noroeste"}
-            lg{"Horario de México Noroeste"}
-            ls{"Horario estándar de México Noroeste"}
+            ld{"Horario de verán do noroeste de México"}
+            lg{"Horario do noroeste de México"}
+            ls{"Horario estándar do noroeste de México"}
         }
         "meta:Mexico_Pacific"{
             ld{"Horario de verán do Pacífico mexicano"}
@@ -404,9 +404,9 @@ gl{
             ls{"Horario estándar do Pacífico mexicano"}
         }
         "meta:Mongolia"{
-            ld{"Horario de verán de Ulán Bátor"}
-            lg{"Horario de Ulán Bátor"}
-            ls{"Horario estándar de Ulán Bátor"}
+            ld{"Horario de verán de Ulaanbaatar"}
+            lg{"Horario de Ulaanbaatar"}
+            ls{"Horario estándar de Ulaanbaatar"}
         }
         "meta:Moscow"{
             ld{"Horario de verán de Moscova"}
@@ -475,9 +475,9 @@ gl{
             ls{"Horario estándar de Paraguai"}
         }
         "meta:Peru"{
-            ld{"Horario de verán de Perú"}
-            lg{"Horario de Perú"}
-            ls{"Horario estándar de Perú"}
+            ld{"Horario de verán do Perú"}
+            lg{"Horario do Perú"}
+            ls{"Horario estándar do Perú"}
         }
         "meta:Philippines"{
             ld{"Horario de verán de Filipinas"}
@@ -488,9 +488,9 @@ gl{
             ls{"Horario das Illas Fénix"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Horario de verán de Saint Pierre e Miquelon"}
-            lg{"Horario de Saint Pierre e Miquelon"}
-            ls{"Horario estándar de Saint Pierre e Miquelon"}
+            ld{"Horario de verán de Saint-Pierre-et-Miquelon"}
+            lg{"Horario de Saint-Pierre-et-Miquelon"}
+            ls{"Horario estándar de Saint-Pierre-et-Miquelon"}
         }
         "meta:Pitcairn"{
             ls{"Horario de Pitcairn"}
@@ -523,7 +523,7 @@ gl{
             ls{"Horario estándar de Samoa"}
         }
         "meta:Seychelles"{
-            ls{"Horario das Seixeles"}
+            ls{"Horario das Seychelles"}
         }
         "meta:Singapore"{
             ls{"Horario estándar de Singapur"}
@@ -552,7 +552,7 @@ gl{
             ls{"Horario de Taxiquistán"}
         }
         "meta:Tokelau"{
-            ls{"Horario de Toquelau"}
+            ls{"Horario de Tokelau"}
         }
         "meta:Tonga"{
             ld{"Horario de verán de Tonga"}
@@ -571,14 +571,14 @@ gl{
             ls{"Horario de Tuvalu"}
         }
         "meta:Uruguay"{
-            ld{"Horario de verán de Uruguai"}
-            lg{"Horario de Uruguai"}
-            ls{"Horario estándar de Uruguai"}
+            ld{"Horario de verán do Uruguai"}
+            lg{"Horario do Uruguai"}
+            ls{"Horario estándar do Uruguai"}
         }
         "meta:Uzbekistan"{
-            ld{"Horario de verán de Usbequistán"}
-            lg{"Horario de Usbequistán"}
-            ls{"Horario estándar de Usbequistán"}
+            ld{"Horario de verán de Uzbequistán"}
+            lg{"Horario de Uzbequistán"}
+            ls{"Horario estándar de Uzbequistán"}
         }
         "meta:Vanuatu"{
             ld{"Horario de verán de Vanuatu"}
@@ -621,8 +621,8 @@ gl{
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"Horario de {0}"}
-        regionFormatDaylight{"Horario de verán de {0}"}
-        regionFormatStandard{"Horario estándar de {0}"}
+        regionFormat{"Horario de: {0}"}
+        regionFormatDaylight{"Horario de verán de: {0}"}
+        regionFormatStandard{"Horario estándar de: {0}"}
     }
 }

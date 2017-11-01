@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
-    Version{"2.1.32.60"}
+    Version{"2.1.37.5"}
     zoneStrings{
         "meta:Acre"{
             ld{"Ora de vară Acre"}
@@ -613,9 +613,9 @@ ro{
             ls{"Ora din Wallis și Futuna"}
         }
         "meta:Yakutsk"{
-            ld{"Ora de vară din Yakuțk"}
-            lg{"Ora din Yakuțk"}
-            ls{"Ora standard din Yakuțk"}
+            ld{"Ora de vară din Iakuțk"}
+            lg{"Ora din Iakuțk"}
+            ls{"Ora standard din Iakuțk"}
         }
         "meta:Yekaterinburg"{
             ld{"Ora de vară din Ekaterinburg"}

@@ -122,6 +122,10 @@ fil{
             "CLP",
             "Piso ng Chile",
         }
+        CNH{
+            "CNH",
+            "CNH",
+        }
         CNY{
             "CN¥",
             "Chinese Yuan",
@@ -738,6 +742,7 @@ fil{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -886,6 +891,10 @@ fil{
         CLP{
             one{"piso ng Chile"}
             other{"piso ng Chile"}
+        }
+        CNH{
+            one{"CNH"}
+            other{"CNH"}
         }
         CNY{
             one{"Chinese yuan"}
@@ -1404,5 +1413,5 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.37.1"}
 }

@@ -1064,6 +1064,13 @@ supplementalData:table(nofallback){
                     320765951,
                 }
             }
+            {
+                from:intvector{
+                    297,
+                    -402654208,
+                }
+                id{"CNH"}
+            }
         }
         CO{
             {
@@ -3822,10 +3829,21 @@ supplementalData:table(nofallback){
         ST{
             {
                 from:intvector{
+                    352,
+                    -1358655488,
+                }
+                id{"STN"}
+            }
+            {
+                from:intvector{
                     56,
                     2006631424,
                 }
                 id{"STD"}
+                to:intvector{
+                    352,
+                    -1358655489,
+                }
             }
         }
         SU{
@@ -4820,6 +4838,12 @@ supplementalData:table(nofallback){
             0,
             0,
         }
+        DKK:intvector{
+            2,
+            0,
+            2,
+            50,
+        }
         ESP:intvector{
             0,
             0,
@@ -4970,6 +4994,12 @@ supplementalData:table(nofallback){
             0,
             0,
         }
+        NOK:intvector{
+            2,
+            0,
+            0,
+            0,
+        }
         OMR:intvector{
             3,
             0,
@@ -4996,6 +5026,12 @@ supplementalData:table(nofallback){
         }
         RWF:intvector{
             0,
+            0,
+            0,
+            0,
+        }
+        SEK:intvector{
+            2,
             0,
             0,
             0,

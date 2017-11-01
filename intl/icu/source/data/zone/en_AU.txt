@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_AU{
     %%Parent{"en_001"}
-    Version{"2.1.32.62"}
+    Version{"2.1.37.6"}
     zoneStrings{
         "meta:Africa_Eastern"{
             ls{"Eastern Africa Time"}
@@ -40,6 +40,11 @@ en_AU{
             sd{"AWDT"}
             sg{"AWT"}
             ss{"AWST"}
+        }
+        "meta:China"{
+            ld{"China Summer Time"}
+            lg{"China Time"}
+            ls{"China Standard Time"}
         }
         "meta:Cook"{
             ld{"Cook Island Summer Time"}

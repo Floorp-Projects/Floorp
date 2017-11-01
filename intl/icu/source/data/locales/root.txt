@@ -14,6 +14,7 @@ root{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[]"}
+    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
@@ -171,7 +172,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -227,7 +228,12 @@ root{
                 Year{"{1} {0}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 Ed{"d, E"}
                 Gy{"r U"}
                 GyMMM{"r(U) MMM"}
@@ -749,7 +755,12 @@ root{
                 Year{"{1} {0}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -966,7 +977,12 @@ root{
                 Year{"{1} {0}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
@@ -1009,7 +1025,7 @@ root{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"'week' w 'of' y"}
+                    other{"'week' w 'of' Y"}
                 }
             }
             dayNames{
@@ -2415,6 +2431,12 @@ root{
         lines{"top-to-bottom"}
     }
     listPattern{
+        or{
+            2{"{0} or {1}"}
+            end{"{0}, or {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
@@ -2454,27 +2476,27 @@ root{
     parse{
         date{
             lenient{
-                "[\\-./]",
+                "[\\--/]",
                 "[\\:∶]",
             }
         }
         general{
             lenient{
-                "[.．․﹒ 。︒｡]",
-                "[$﹩＄$]",
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
                 "[£₤]",
-                "[₨₹{Rs}{Rp}]",
+                "[₨₹{Rp}{Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-－﹣ −⁻₋ ➖‒]",
-                "[,，﹐︐ ، ٫ 、﹑︑､]",
-                "[+＋﬩﹢⁺₊ ➕]",
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
             }
             stricter{
-                "[,，﹐︐ ٫]",
-                "[.．․﹒ ｡]",
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

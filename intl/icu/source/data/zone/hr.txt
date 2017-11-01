@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.1"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre ljetno vrijeme"}
@@ -91,9 +91,9 @@ hr{
             ls{"argentinsko standardno vrijeme"}
         }
         "meta:Argentina_Western"{
-            ld{"zapadno-argentinsko ljetno vrijeme"}
-            lg{"zapadno-argentinsko vrijeme"}
-            ls{"zapadno-argentinsko standardno vrijeme"}
+            ld{"zapadnoargentinsko ljetno vrijeme"}
+            lg{"zapadnoargentinsko vrijeme"}
+            ls{"zapadnoargentinsko standardno vrijeme"}
         }
         "meta:Armenia"{
             ld{"armensko ljetno vrijeme"}
@@ -189,7 +189,7 @@ hr{
             ls{"vrijeme Božićnog otoka"}
         }
         "meta:Cocos"{
-            ls{"vrijeme Kokosovih Otoka"}
+            ls{"vrijeme Kokosovih otoka"}
         }
         "meta:Colombia"{
             ld{"kolumbijsko ljetno vrijeme"}
@@ -197,9 +197,9 @@ hr{
             ls{"kolumbijsko standardno vrijeme"}
         }
         "meta:Cook"{
-            ld{"Cookovo otočje, polusatni pomak, ljetno vrijeme"}
-            lg{"vrijeme Cookovih Otoka"}
-            ls{"standardno vrijeme Cookovih Otoka"}
+            ld{"Cookovi otoci, polusatni pomak, ljetno vrijeme"}
+            lg{"vrijeme Cookovih otoka"}
+            ls{"standardno vrijeme Cookovih otoka"}
         }
         "meta:Cuba"{
             ld{"kubansko ljetno vrijeme"}
@@ -282,7 +282,7 @@ hr{
             ls{"gruzijsko standardno vrijeme"}
         }
         "meta:Gilbert_Islands"{
-            ls{"vrijeme Gilbertovih Otoka"}
+            ls{"vrijeme Gilbertovih otoka"}
         }
         "meta:Greenland_Eastern"{
             ld{"istočnogrenlandsko ljetno vrijeme"}
@@ -438,9 +438,9 @@ hr{
             ls{"meksičko pacifičko standardno vrijeme"}
         }
         "meta:Mongolia"{
-            ld{"ulan-batorsko ljetno vrijeme"}
-            lg{"ulan-batorsko vrijeme"}
-            ls{"ulan-batorsko standardno vrijeme"}
+            ld{"ulanbatorsko ljetno vrijeme"}
+            lg{"ulanbatorsko vrijeme"}
+            ls{"ulanbatorsko standardno vrijeme"}
         }
         "meta:Moscow"{
             ld{"moskovsko ljetno vrijeme"}
@@ -448,7 +448,7 @@ hr{
             ls{"moskovsko standardno vrijeme"}
         }
         "meta:Myanmar"{
-            ls{"mianmarsko vrijeme"}
+            ls{"mjanmarsko vrijeme"}
         }
         "meta:Nauru"{
             ls{"vrijeme Naurua"}

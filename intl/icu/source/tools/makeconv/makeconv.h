@@ -44,18 +44,18 @@ typedef struct NewConverter NewConverter;
 U_CDECL_BEGIN
 struct NewConverter {
     void
-    (* U_CALLCONV close)(NewConverter *cnvData);
+    (* U_CALLCONV_FPTR close)(NewConverter *cnvData);
 
     /** is this byte sequence valid? */
     UBool
-    (* U_CALLCONV isValid)(NewConverter *cnvData,
+    (*U_CALLCONV_FPTR isValid)(NewConverter *cnvData,
                const uint8_t *bytes, int32_t length);
 
     UBool
-    (* U_CALLCONV addTable)(NewConverter *cnvData, UCMTable *table, UConverterStaticData *staticData);
+    (*U_CALLCONV_FPTR addTable)(NewConverter *cnvData, UCMTable *table, UConverterStaticData *staticData);
 
     uint32_t
-    (* U_CALLCONV write)(NewConverter *cnvData, const UConverterStaticData *staticData,
+    (*U_CALLCONV_FPTR write)(NewConverter *cnvData, const UConverterStaticData *staticData,
              UNewDataMemory *pData, int32_t tableType);
 };
 U_CDECL_END

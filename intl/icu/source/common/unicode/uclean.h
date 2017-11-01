@@ -148,15 +148,9 @@ typedef void  U_CALLCONV UMemFreeFn (const void *context, void *mem);
  *  @stable ICU 2.8
  *  @system
  */  
-#ifndef _MSC_VER
 U_STABLE void U_EXPORT2 
-u_setMemoryFunctions(const void *context, UMemAllocFn * U_CALLCONV a, UMemReallocFn * U_CALLCONV r, UMemFreeFn * U_CALLCONV f, 
+u_setMemoryFunctions(const void *context, UMemAllocFn * U_CALLCONV_FPTR a, UMemReallocFn * U_CALLCONV_FPTR r, UMemFreeFn * U_CALLCONV_FPTR f, 
                     UErrorCode *status);
-#else
-U_STABLE void U_EXPORT2 
-u_setMemoryFunctions(const void *context, UMemAllocFn * a, UMemReallocFn * r, UMemFreeFn * f, 
-                    UErrorCode *status);
-#endif
 
 U_CDECL_END
 

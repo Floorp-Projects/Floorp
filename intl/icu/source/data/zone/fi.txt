@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fi{
-    Version{"2.1.32.59"}
+    Version{"2.1.37.67"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acren kesäaika"}
@@ -210,7 +210,7 @@ fi{
             ls{"Davisin aika"}
         }
         "meta:DumontDUrville"{
-            ls{"Dumont-d’Urvillen aika"}
+            ls{"Dumont d’Urvillen aika"}
         }
         "meta:East_Timor"{
             ls{"Itä-Timorin aika"}
@@ -264,7 +264,7 @@ fi{
             ls{"Galápagossaarten aika"}
         }
         "meta:Gambier"{
-            ls{"Gambierin aika"}
+            ls{"Gambiersaarten aika"}
         }
         "meta:Georgia"{
             ld{"Georgian kesäaika"}
@@ -404,7 +404,7 @@ fi{
             ls{"Malediivien aika"}
         }
         "meta:Marquesas"{
-            ls{"Marquesasin aika"}
+            ls{"Marquesassaarten aika"}
         }
         "meta:Marshall_Islands"{
             ls{"Marshallinsaarten aika"}
@@ -465,7 +465,7 @@ fi{
             ls{"Niuen aika"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkinsaarten aika"}
+            ls{"Norfolkinsaaren aika"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronhan kesäaika"}
