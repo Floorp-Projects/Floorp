@@ -40,6 +40,7 @@ extern void
 TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const char* name);
 
 namespace gc {
+
 class Arena;
 enum class AllocKind;
 struct Chunk;

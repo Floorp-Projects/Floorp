@@ -200,34 +200,6 @@ class ArenaCellIter : public ArenaCellIterImpl
     }
 };
 
-class ArenaCellIterUnderGC : public ArenaCellIterImpl
-{
-  public:
-    explicit ArenaCellIterUnderGC(Arena* arena)
-      : ArenaCellIterImpl(arena, CellIterDoesntNeedBarrier)
-    {
-        MOZ_ASSERT(CurrentThreadIsPerformingGC());
-    }
-};
-
-class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
-{
-  public:
-    explicit ArenaCellIterUnderFinalize(Arena* arena)
-      : ArenaCellIterImpl(arena, CellIterDoesntNeedBarrier)
-    {
-        MOZ_ASSERT(CurrentThreadIsGCSweeping());
-    }
-};
-
-class ArenaCellIterUnbarriered : public ArenaCellIterImpl
-{
-  public:
-    explicit ArenaCellIterUnbarriered(Arena* arena)
-      : ArenaCellIterImpl(arena, CellIterDoesntNeedBarrier)
-    {}
-};
-
 template <typename T>
 class ZoneCellIter;
 
@@ -380,77 +352,6 @@ class ZoneCellIter : public ZoneCellIter<TenuredCell> {
     operator GCType*() const { return get(); }
     GCType* operator ->() const { return get(); }
 };
-
-class GrayObjectIter : public ZoneCellIter<TenuredCell> {
-  public:
-    explicit GrayObjectIter(JS::Zone* zone, AllocKind kind) : ZoneCellIter<TenuredCell>() {
-        initForTenuredIteration(zone, kind);
-    }
-
-    JSObject* get() const { return ZoneCellIter<TenuredCell>::get<JSObject>(); }
-    operator JSObject*() const { return get(); }
-    JSObject* operator ->() const { return get(); }
-};
-
-class GCZonesIter
-{
-  private:
-    ZonesIter zone;
-
-  public:
-    explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms) : zone(rt, selector) {
-        MOZ_ASSERT(JS::CurrentThreadIsHeapBusy());
-        if (!zone->isCollectingFromAnyThread())
-            next();
-    }
-
-    bool done() const { return zone.done(); }
-
-    void next() {
-        MOZ_ASSERT(!done());
-        do {
-            zone.next();
-        } while (!zone.done() && !zone->isCollectingFromAnyThread());
-    }
-
-    JS::Zone* get() const {
-        MOZ_ASSERT(!done());
-        return zone;
-    }
-
-    operator JS::Zone*() const { return get(); }
-    JS::Zone* operator->() const { return get(); }
-};
-
-typedef CompartmentsIterT<GCZonesIter> GCCompartmentsIter;
-
-/* Iterates over all zones in the current sweep group. */
-class SweepGroupZonesIter {
-    JS::Zone* current;
-
-  public:
-    explicit SweepGroupZonesIter(JSRuntime* rt) {
-        MOZ_ASSERT(CurrentThreadIsPerformingGC());
-        current = rt->gc.getCurrentSweepGroup();
-    }
-
-    bool done() const { return !current; }
-
-    void next() {
-        MOZ_ASSERT(!done());
-        current = current->nextNodeInGroup();
-    }
-
-    JS::Zone* get() const {
-        MOZ_ASSERT(!done());
-        return current;
-    }
-
-    operator JS::Zone*() const { return get(); }
-    JS::Zone* operator->() const { return get(); }
-};
-
-typedef CompartmentsIterT<SweepGroupZonesIter> SweepGroupCompartmentsIter;
 
 inline void
 RelocationOverlay::forwardTo(Cell* cell)
