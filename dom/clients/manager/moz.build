@@ -8,6 +8,7 @@ EXPORTS.mozilla.dom += [
   'ClientInfo.h',
   'ClientIPCUtils.h',
   'ClientState.h',
+  'ClientThing.h',
 ]
 
 UNIFIED_SOURCES += [
