@@ -2120,64 +2120,53 @@ private:
   void CheckForFirstLineInsertion(nsIFrame* aParentFrame,
                                   nsFrameItems& aFrameItems);
 
-  /**
-   * Find the right frame to use for aContent when looking for sibling
-   * frames for aTargetContent.  If aPrevSibling is true, this
-   * will look for last continuations, etc, as necessary.  This calls
-   * IsValidSibling as needed; if that returns false it returns null.
-   *
-   * @param aContent the content to search for frames
-   * @param aTargetContent the content we're finding a sibling frame for
-   * @param aTargetContentDisplay the CSS display enum for aTargetContent if
-   *          already known, UNSET_DISPLAY otherwise. It will be filled in
-   *          if needed.
-   * @param aParentFrame the nearest ancestor frame, used internally for
-   *          finding ::after / ::before frames
-   * @param aPrevSibling true if we're searching in reverse DOM order
-   */
-  nsIFrame* FindFrameForContentSibling(nsIContent* aContent,
-                                       nsIContent* aTargetContent,
-                                       mozilla::StyleDisplay& aTargetContentDisplay,
-                                       nsContainerFrame* aParentFrame,
-                                       bool aPrevSibling);
+  // The direction in which we should look for siblings.
+  enum class SiblingDirection
+  {
+    Forward,
+    Backward,
+  };
 
   /**
-   * Find the frame for the content immediately preceding the one aIter
-   * points to, following continuations if necessary.  aIter is passed by
-   * value on purpose, so as not to modify the caller's iterator.
+   * Find the frame for the content immediately next to the one aIter points to,
+   * in the direction SiblingDirection indicates, following continuations if
+   * necessary.
+   *
+   * aIter is passed by const reference on purpose, so as not to modify the
+   * caller's iterator.
    *
    * @param aIter should be positioned such that aIter.GetPreviousChild()
    *          is the first content to search for frames
-   * @param aTargetContent the content we're finding a sibling frame for
-   * @param aTargetContentDisplay the CSS display enum for aTargetContent if
-   *          already known, UNSET_DISPLAY otherwise. It will be filled in
-   *          if needed.
-   * @param aParentFrame the nearest ancestor frame, used inernally for
-   *          finding ::after / ::before frames
+   * @param aTargetContentDisplay the CSS display enum for the content aIter
+   *          points to if already known, UNSET_DISPLAY otherwise. It will be
+   *          filled in if needed.
    */
-  nsIFrame* FindPreviousSibling(mozilla::dom::FlattenedChildIterator aIter,
-                                nsIContent* aTargetContent,
-                                mozilla::StyleDisplay& aTargetContentDisplay,
-                                nsContainerFrame* aParentFrame);
+  template<SiblingDirection>
+  nsIFrame* FindSibling(const mozilla::dom::FlattenedChildIterator& aIter,
+                        mozilla::StyleDisplay& aTargetContentDisplay);
 
-  /**
-   * Find the frame for the content node immediately following the one aIter
-   * points to, following continuations if necessary.  aIter is passed by value
-   * on purpose, so as not to modify the caller's iterator.
-   *
-   * @param aIter should be positioned such that aIter.GetNextChild()
-   *          is the first content to search for frames
-   * @param aTargetContent the content we're finding a sibling frame for
-   * @param aTargetContentDisplay the CSS display enum for aTargetContent if
-   *          already known, UNSET_DISPLAY otherwise. It will be filled in
-   *          if needed.
-   * @param aParentFrame the nearest ancestor frame, used inernally for
-   *          finding ::after / ::before frames
-   */
-  nsIFrame* FindNextSibling(mozilla::dom::FlattenedChildIterator aIter,
-                            nsIContent* aTargetContent,
-                            mozilla::StyleDisplay& aTargetContentDisplay,
-                            nsContainerFrame* aParentFrame);
+  // Helper for the implementation of FindSibling.
+  template<SiblingDirection>
+  nsIFrame* FindSiblingInternal(
+    mozilla::dom::FlattenedChildIterator,
+    nsIContent* aTargetContent,
+    mozilla::StyleDisplay& aTargetContentDisplay);
+
+  // An alias of FindSibling<SiblingDirection::Forward>.
+  nsIFrame* FindNextSibling(const mozilla::dom::FlattenedChildIterator& aIter,
+                            mozilla::StyleDisplay& aTargetContentDisplay);
+  // An alias of FindSibling<SiblingDirection::Backwards>.
+  nsIFrame* FindPreviousSibling(const mozilla::dom::FlattenedChildIterator& aIter,
+                                mozilla::StyleDisplay& aTargetContentDisplay);
+
+  // Given a potential first-continuation sibling frame for aTargetContent,
+  // verify that it is an actual valid sibling for it, and return the
+  // appropriate continuation the new frame for aTargetContent should be
+  // inserted next to.
+  nsIFrame* AdjustSiblingFrame(nsIFrame* aSibling,
+                               nsIContent* aTargetContent,
+                               mozilla::StyleDisplay& aTargetContentDisplay,
+                               SiblingDirection aDirection);
 
   // Find the right previous sibling for an insertion.  This also updates the
   // parent frame to point to the correct continuation of the parent frame to
