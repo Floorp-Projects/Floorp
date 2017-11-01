@@ -184,6 +184,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         alias: searchProvider.keyword,
         extensionID: extension.id,
         suggestURL: searchProvider.suggest_url,
+        queryCharset: "UTF-8",
       };
       Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
       if (extension.startupReason === "ADDON_UPGRADE") {
