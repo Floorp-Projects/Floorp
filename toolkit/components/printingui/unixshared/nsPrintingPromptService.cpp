@@ -110,15 +110,6 @@ nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent,
 }
 
 NS_IMETHODIMP
-nsPrintingPromptService::ShowPrinterProperties(mozIDOMWindowProxy *parent,
-                                               const char16_t *printerName,
-                                               nsIPrintSettings *printSettings)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-}
-
-NS_IMETHODIMP
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aStateFlags, nsresult aStatus)
 {
   if ((aStateFlags & STATE_STOP) && mWebProgressListener) {

@@ -14,7 +14,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(328daa3e-09e4-455f-bb6f-0a921766042f)]
+[scriptable, uuid(72006d06-a2a5-4250-ae92-04b2f0e2ab8d)]
 interface nsIPrintingPromptService : nsISupports
 {
    /**
@@ -38,7 +38,6 @@ interface nsIPrintingPromptService : nsISupports
    *             showPrintDialog       - displays a native dialog
    *             showPageSetup         - displays a XUL dialog
    *             showProgress          - displays a XUL dialog
-   *             showPrinterProperties - n/a
    *
    *           Summary for Windows Embedders:
    *             Stated once again: There is no "fallback" native platform support in GFX for the
@@ -49,7 +48,7 @@ interface nsIPrintingPromptService : nsISupports
    *  
    *             Note: The Windows version Mozilla implements this service which is 
    *                   automatically built and registered for you. You can use it as an example.
-   *                   It is located at "mozilla/toolkit/components/printingui/win". That service
+   *                   It is located at "widget/windows/nsPrintDialogService.cpp". That service
    *                   is capable of displaying a native print dialog and a XUL progress dialog.
    *
    *             To fly your own dialog you may:
@@ -73,20 +72,17 @@ interface nsIPrintingPromptService : nsISupports
    *       Mac OS9: showPrintDialog       - displays a native dialog
    *                showPageSetup         - displays a native dialog
    *                showProgress          - displays a XUL dialog
-   *                showPrinterProperties - n/a
-   *                
+   *
    *       Mac OSX: showPrintDialog       - displays a native dialog
    *                showPageSetup         - displays a native dialog
    *                showProgress          - not implemented (provided by OS)
-   *                showPrinterProperties - n/a
-   *                
+   *
    *  GTK: There are no native dialog for GTK.
    *
-   *       Defaults for platform service:           
-   *         showPrintDialog       - displays a XUL dialog
-   *         showPageSetup         - displays a XUL dialog
+   *       Defaults for platform service:
+   *         showPrintDialog       - displays a native dialog
+   *         showPageSetup         - displays a native dialog
    *         showProgress          - displays a XUL dialog
-   *         showPrinterProperties - displays a XUL dialog
    *
    */
  
@@ -140,20 +136,6 @@ interface nsIPrintingPromptService : nsISupports
   void showPageSetup(in mozIDOMWindowProxy parent,
                      in nsIPrintSettings printSettings,
                      in nsIObserver aObs);
-
-  /**
-   *  Sometimes platforms need to bring up a special properties dialog for showing
-   *  print specific properties. Although the PrintSettings has a place to set the 
-   *  printer name, here is is an argument to be clear as to what printer is being
-   *  asked to have the properties set for it. The Printer name in the PS is ignored.
-   *
-   *  @param parent - a DOM windows the dialog will be parented to (required)
-   *  @param printerName - name of printer (required)
-   *  @param printSettings - PrintSettings for page setup (required)
-   */
-  void showPrinterProperties(in mozIDOMWindowProxy parent,
-                             in wstring printerName,
-                             in nsIPrintSettings printSettings);
 
 };
 
