@@ -18,4 +18,16 @@ struct Log2 : mozilla::tl::CeilingLog2<N>
 };
 #define LOG2(N) Log2<N>::value
 
+// Compare two addresses. Returns whether the first address is smaller (-1),
+// equal (0) or greater (1) than the second address.
+template<typename T>
+int
+CompareAddr(T* aAddr1, T* aAddr2)
+{
+  uintptr_t addr1 = reinterpret_cast<uintptr_t>(aAddr1);
+  uintptr_t addr2 = reinterpret_cast<uintptr_t>(aAddr2);
+
+  return (addr1 > addr2) - (addr1 < addr2);
+}
+
 #endif
