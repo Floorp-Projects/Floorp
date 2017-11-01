@@ -86,6 +86,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLTextAreaElement,
                                              nsGenericHTMLFormElementWithState,
+                                             nsIDOMHTMLTextAreaElement,
                                              nsITextControlElement,
                                              nsIDOMNSEditableElement,
                                              nsIMutationObserver,
@@ -120,9 +121,16 @@ HTMLTextAreaElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  return nsGenericHTMLFormElementWithState::GetForm(aForm);
+}
+
+
 // nsIContent
 
-void
+NS_IMETHODIMP
 HTMLTextAreaElement::Select()
 {
   // XXX Bug?  We have to give the input focus before contents can be
@@ -130,7 +138,7 @@ HTMLTextAreaElement::Select()
 
   FocusTristate state = FocusState();
   if (state == eUnfocusable) {
-    return;
+    return NS_OK;
   }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -140,7 +148,7 @@ HTMLTextAreaElement::Select()
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
     SelectAll(presContext);
-    return;
+    return NS_OK;
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -164,6 +172,8 @@ HTMLTextAreaElement::Select()
       }
     }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -193,19 +203,33 @@ HTMLTextAreaElement::IsHTMLFocusable(bool aWithMouse,
   return false;
 }
 
+NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Autofocus, autofocus)
+NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(HTMLTextAreaElement, Cols, cols, DEFAULT_COLS)
+NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Disabled, disabled)
+NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLTextAreaElement, MaxLength, maxlength)
+NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLTextAreaElement, MinLength, minlength)
+NS_IMPL_STRING_ATTR(HTMLTextAreaElement, Name, name)
+NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, ReadOnly, readonly)
+NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Required, required)
+NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(HTMLTextAreaElement, Rows, rows, DEFAULT_ROWS_TEXTAREA)
+NS_IMPL_STRING_ATTR(HTMLTextAreaElement, Wrap, wrap)
+NS_IMPL_STRING_ATTR(HTMLTextAreaElement, Placeholder, placeholder)
+
 int32_t
 HTMLTextAreaElement::TabIndexDefault()
 {
   return 0;
 }
 
-void
+NS_IMETHODIMP
 HTMLTextAreaElement::GetType(nsAString& aType)
 {
   aType.AssignLiteral("textarea");
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 HTMLTextAreaElement::GetValue(nsAString& aValue)
 {
   nsAutoString value;
@@ -215,6 +239,7 @@ HTMLTextAreaElement::GetValue(nsAString& aValue)
   nsContentUtils::PlatformToDOMLineBreaks(value);
 
   aValue = value;
+  return NS_OK;
 }
 
 void
@@ -346,8 +371,8 @@ HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
   return NS_OK;
 }
 
-void
-HTMLTextAreaElement::SetValue(const nsAString& aValue, ErrorResult& aError)
+NS_IMETHODIMP
+HTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
   // If the value has been set by a script, we basically want to keep the
   // current change event state. If the element is ready to fire a change
@@ -364,14 +389,13 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue, ErrorResult& aError)
       nsTextEditorState::eSetValue_ByContent |
       nsTextEditorState::eSetValue_Notify |
       nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aError.Throw(rv);
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFocusedValue.Equals(currentValue)) {
     GetValueInternal(mFocusedValue, true);
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -400,12 +424,21 @@ HTMLTextAreaElement::SetValueChanged(bool aValueChanged)
   return NS_OK;
 }
 
-void
-HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError)
+NS_IMETHODIMP
+HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
   if (!nsContentUtils::GetNodeTextContent(this, false, aDefaultValue, fallible)) {
-    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
+{
+  ErrorResult error;
+  SetDefaultValue(aDefaultValue, error);
+  return error.StealNSResult();
 }
 
 void
@@ -669,7 +702,7 @@ HTMLTextAreaElement::GetControllers(ErrorResult& aError)
   return mControllers;
 }
 
-nsresult
+NS_IMETHODIMP
 HTMLTextAreaElement::GetControllers(nsIControllers** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -687,6 +720,15 @@ HTMLTextAreaElement::GetTextLength()
   nsAutoString val;
   GetValue(val);
   return val.Length();
+}
+
+NS_IMETHODIMP
+HTMLTextAreaElement::GetTextLength(int32_t *aTextLength)
+{
+  NS_ENSURE_ARG_POINTER(aTextLength);
+  *aTextLength = GetTextLength();
+
+  return NS_OK;
 }
 
 Nullable<uint32_t>
@@ -784,8 +826,7 @@ nsresult
 HTMLTextAreaElement::Reset()
 {
   nsAutoString resetVal;
-  IgnoredErrorResult res;
-  GetDefaultValue(resetVal, res);
+  GetDefaultValue(resetVal);
   SetValueChanged(false);
 
   nsresult rv = SetValueInternal(resetVal,
@@ -880,14 +921,12 @@ HTMLTextAreaElement::RestoreState(nsPresState* aState)
   if (state) {
     nsAutoString data;
     state->GetData(data);
-    ErrorResult rv;
-    SetValue(data, rv);
-    ENSURE_SUCCESS(rv, false);
+    nsresult rv = SetValue(data);
+    NS_ENSURE_SUCCESS(rv, false);
   }
 
   if (aState->IsDisabledSet() && !aState->GetDisabled()) {
-    IgnoredErrorResult rv;
-    SetDisabled(false, rv);
+    SetDisabled(false);
   }
 
   return false;
@@ -1081,9 +1120,7 @@ HTMLTextAreaElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     nsAutoString value;
     GetValueInternal(value, true);
-    ErrorResult ret;
-    static_cast<HTMLTextAreaElement*>(aDest)->SetValue(value, ret);
-    return ret.StealNSResult();
+    return static_cast<HTMLTextAreaElement*>(aDest)->SetValue(value);
   }
   return NS_OK;
 }
@@ -1120,14 +1157,16 @@ HTMLTextAreaElement::IsTooLong()
     return false;
   }
 
-  int32_t maxLength = MaxLength();
+  int32_t maxLength = -1;
+  GetMaxLength(&maxLength);
 
   // Maxlength of -1 means parsing error.
   if (maxLength == -1) {
     return false;
   }
 
-  int32_t textLength = GetTextLength();
+  int32_t textLength = -1;
+  GetTextLength(&textLength);
 
   return textLength > maxLength;
 }
@@ -1141,14 +1180,16 @@ HTMLTextAreaElement::IsTooShort()
     return false;
   }
 
-  int32_t minLength = MinLength();
+  int32_t minLength = -1;
+  GetMinLength(&minLength);
 
   // Minlength of -1 means parsing error.
   if (minLength == -1) {
     return false;
   }
 
-  int32_t textLength = GetTextLength();
+  int32_t textLength = -1;
+  GetTextLength(&textLength);
 
   return textLength && textLength < minLength;
 }
@@ -1200,10 +1241,13 @@ HTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
     case VALIDITY_STATE_TOO_LONG:
       {
         nsAutoString message;
-        int32_t maxLength = MaxLength();
-        int32_t textLength = GetTextLength();
+        int32_t maxLength = -1;
+        int32_t textLength = -1;
         nsAutoString strMaxLength;
         nsAutoString strTextLength;
+
+        GetMaxLength(&maxLength);
+        GetTextLength(&textLength);
 
         strMaxLength.AppendInt(maxLength);
         strTextLength.AppendInt(textLength);
@@ -1218,10 +1262,13 @@ HTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
     case VALIDITY_STATE_TOO_SHORT:
       {
         nsAutoString message;
-        int32_t minLength = MinLength();
-        int32_t textLength = GetTextLength();
+        int32_t minLength = -1;
+        int32_t textLength = -1;
         nsAutoString strMinLength;
         nsAutoString strTextLength;
+
+        GetMinLength(&minLength);
+        GetTextLength(&textLength);
 
         strMinLength.AppendInt(minLength);
         strTextLength.AppendInt(textLength);
@@ -1304,8 +1351,7 @@ HTMLTextAreaElement::GetRows()
 NS_IMETHODIMP_(void)
 HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue)
 {
-  IgnoredErrorResult rv;
-  GetDefaultValue(aValue, rv);
+  GetDefaultValue(aValue);
 }
 
 NS_IMETHODIMP_(bool)

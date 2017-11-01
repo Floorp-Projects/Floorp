@@ -21,6 +21,7 @@ XPIDL_SOURCES += [
     'nsIDOMHTMLScriptElement.idl',
     'nsIDOMHTMLSelectElement.idl',
     'nsIDOMHTMLSourceElement.idl',
+    'nsIDOMHTMLTextAreaElement.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIDOMTimeRanges.idl',
     'nsIDOMValidityState.idl',

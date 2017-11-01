@@ -23,6 +23,7 @@
 #include "nsIControllers.h"
 #include "nsXULElement.h"
 #include "nsIURI.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsFocusManager.h"
 #include "nsIFormControl.h"
@@ -49,7 +50,6 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventHandlerBinding.h"
-#include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/layers/KeyboardMap.h"
 #include "xpcpublic.h"
@@ -681,7 +681,7 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   }
 
   if (!controllers) {
-    HTMLTextAreaElement* htmlTextArea = HTMLTextAreaElement::FromContent(targetContent);
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> htmlTextArea(do_QueryInterface(aTarget));
     if (htmlTextArea)
       htmlTextArea->GetControllers(getter_AddRefs(controllers));
   }
