@@ -67,8 +67,6 @@ with Files("**/*.xhtml"):
 with Files("**/*.xul"):
     SCHEDULES.inclusive += ['test-verify']
 
-FILES_PER_UNIFIED_FILE = 1
-
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',
