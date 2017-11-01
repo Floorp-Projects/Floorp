@@ -897,6 +897,18 @@
                   this.mBrowser.userTypedValue = null;
                 }
 
+                // If the tab has been set to "busy" outside the stateChange
+                // handler below (e.g. by sessionStore.navigateAndRestore), and
+                // the load results in an error page, it's possible that there
+                // isn't any (STATE_IS_NETWORK & STATE_STOP) state to cause busy
+                // attribute being removed. In this case we should remove the
+                // attribute here.
+                if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
+                    this.mTab.hasAttribute("busy")) {
+                  this.mTab.removeAttribute("busy");
+                  this.mTabBrowser._tabAttrModified(this.mTab, ["busy"]);
+                }
+
                 // If the browser was playing audio, we should remove the playing state.
                 if (this.mTab.hasAttribute("soundplaying") && !isSameDocument) {
                   clearTimeout(this.mTab._soundPlayingAttrRemovalTimer);

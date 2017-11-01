@@ -14,6 +14,7 @@ devtools-shim.jar:
     # See https://bugzilla.mozilla.org/show_bug.cgi?id=1408369
     content/aboutdevtools/tmp-locale/aboutdevtools.dtd (aboutdevtools/tmp-locale/aboutdevtools.dtd)
 
+    content/aboutdevtools/images/dev-edition-logo.svg (aboutdevtools/images/dev-edition-logo.svg)
     content/aboutdevtools/images/external-link.svg (aboutdevtools/images/external-link.svg)
     content/aboutdevtools/images/feature-inspector.svg (aboutdevtools/images/feature-inspector.svg)
     content/aboutdevtools/images/feature-console.svg (aboutdevtools/images/feature-console.svg)

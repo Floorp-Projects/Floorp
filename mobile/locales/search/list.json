@@ -138,7 +138,7 @@
     "cs": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "duckduckgo", "heureka-cz", "mapy-cz", "seznam-cz", "twitter", "wikipedia-cz"
+          "google", "bing", "duckduckgo", "heureka-cz", "mapy-cz", "seznam-cz", "wikipedia-cz"
         ]
       }
     },

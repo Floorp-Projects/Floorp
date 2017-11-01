@@ -24,8 +24,8 @@ var servicesASTParser = {
   result: {
     "nsIPrefBranch": "prefs",
     "nsIPrefService": "prefs",
-    "nsIXULRuntime": "appInfo",
-    "nsIXULAppInfo": "appInfo",
+    "nsIXULRuntime": "appinfo",
+    "nsIXULAppInfo": "appinfo",
     "nsIDirectoryService": "dirsvc",
     "nsIProperties": "dirsvc",
     "nsIFrameScriptLoader": "mm",

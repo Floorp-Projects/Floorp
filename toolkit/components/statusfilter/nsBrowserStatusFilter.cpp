@@ -191,6 +191,12 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
 
     // If we're here, we have either STATE_START or STATE_STOP.  The
     // listener only cares about these in certain conditions.
+    //
+    // XXX The filter is applied in both parent and child processes, but the
+    // condition below doesn't guarantee STATE_START and STATE_STOP of
+    // STATE_IS_REQUEST are delivered in pairs, meaning that mFinishedRequests
+    // can exceeds mTotalRequests on parent side. This is potentially
+    // problematic.
     bool isLoadingDocument = false;
     if ((aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK ||
          (aStateFlags & nsIWebProgressListener::STATE_IS_REQUEST &&

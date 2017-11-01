@@ -18,8 +18,7 @@ let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js")
 let readyPromise = registerRunTests();
 let chromeScript = runInParent(function chromeSetup() {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-  let pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-
+  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
   let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
   let login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -39,9 +38,9 @@ let chromeScript = runInParent(function chromeSetup() {
   login2B.init("http://mochi.test:8888", "http://username-focus-2", null,
                "testuser2B", "testpass2B", "", "");
 
-  pwmgr.addLogin(login1A);
-  pwmgr.addLogin(login2A);
-  pwmgr.addLogin(login2B);
+  Services.logins.addLogin(login1A);
+  Services.logins.addLogin(login2A);
+  Services.logins.addLogin(login2B);
 });
 </script>
 

@@ -244,7 +244,9 @@ EncodeInputStream(nsIInputStream* aInputStream,
 
 // Maps an encoded character to a value in the Base64 alphabet, per
 // RFC 4648, Table 1. Invalid input characters map to UINT8_MAX.
+
 static const uint8_t kBase64DecodeTable[] = {
+// clang-format off
   /* 0 */  255, 255, 255, 255, 255, 255, 255, 255,
   /* 8 */  255, 255, 255, 255, 255, 255, 255, 255,
   /* 16 */ 255, 255, 255, 255, 255, 255, 255, 255,
@@ -267,6 +269,7 @@ static const uint8_t kBase64DecodeTable[] = {
   /* 112 */ 41, 42, 43, 44, 45, 46, 47, 48,
   /* 120 */ 49, 50, 51, 255, 255, 255, 255, 255,
 };
+// clang-format on
 
 template<typename T>
 MOZ_MUST_USE bool
@@ -291,6 +294,7 @@ static const char kBase64URLAlphabet[] =
 // Maps an encoded character to a value in the Base64 URL alphabet, per
 // RFC 4648, Table 2. Invalid input characters map to UINT8_MAX.
 static const uint8_t kBase64URLDecodeTable[] = {
+// clang-format off
   255, 255, 255, 255, 255, 255, 255, 255,
   255, 255, 255, 255, 255, 255, 255, 255,
   255, 255, 255, 255, 255, 255, 255, 255,
@@ -310,6 +314,7 @@ static const uint8_t kBase64URLDecodeTable[] = {
   42, 43, 44, 45, 46, 47, 48, 49, 50, 51, /* a - z */
   255, 255, 255, 255,
 };
+// clang-format on
 
 bool
 Base64URLCharToValue(char aChar, uint8_t* aValue) {
