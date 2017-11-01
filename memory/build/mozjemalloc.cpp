@@ -422,13 +422,13 @@ static const unsigned nqbins = unsigned(SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN);
 // Platform specific page size conditions copied from js/public/HeapAPI.h
 #if (defined(SOLARIS) || defined(__FreeBSD__)) &&                              \
   (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
-#define pagesize_2pow (size_t(13))
+static const size_t pagesize = 8_KiB;
 #elif defined(__powerpc64__)
-#define pagesize_2pow (size_t(16))
+static const size_t pagesize = 64_KiB;
 #else
-#define pagesize_2pow (size_t(12))
+static const size_t pagesize = 4_KiB;
 #endif
-#define pagesize (size_t(1) << pagesize_2pow)
+#define pagesize_2pow LOG2(pagesize)
 #define pagesize_mask (pagesize - 1)
 
 // Max size class for bins.
