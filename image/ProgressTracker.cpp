@@ -333,10 +333,6 @@ SyncNotifyInternal(const T& aObservers,
     notify([](IProgressObserver* aObs) { aObs->Notify(I::SIZE_AVAILABLE); });
   }
 
-  if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    notify([](IProgressObserver* aObs) { aObs->BlockOnload(); });
-  }
-
   if (aHasImage) {
     // OnFrameUpdate
     // If there's any content in this frame at all (always true for
@@ -359,13 +355,6 @@ SyncNotifyInternal(const T& aObservers,
     if (aProgress & FLAG_IS_ANIMATED) {
       notify([](IProgressObserver* aObs) { aObs->Notify(I::IS_ANIMATED); });
     }
-  }
-
-  // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
-  // observers that can fire events when they receive those notifications to do
-  // so then, instead of being forced to wait for UnblockOnload.
-  if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
-    notify([](IProgressObserver* aObs) { aObs->UnblockOnload(); });
   }
 
   if (aProgress & FLAG_DECODE_COMPLETE) {
@@ -449,10 +438,6 @@ ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread(),
              "SyncNotifyState and mObservers are not threadsafe");
   RefPtr<IProgressObserver> kungFuDeathGrip(aObserver);
-
-  if (mProgress & FLAG_ONLOAD_BLOCKED && !(mProgress & FLAG_ONLOAD_UNBLOCKED)) {
-    aObserver->UnblockOnload();
-  }
 
   if (!(mProgress & FLAG_LOAD_COMPLETE)) {
     aObserver->OnLoadComplete(true);
