@@ -9130,16 +9130,16 @@ MaybeReflowForInflationScreenSizeChange(nsPresContext *aPresContext)
 {
   if (aPresContext) {
     nsIPresShell* presShell = aPresContext->GetPresShell();
-    bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
-    presShell->NotifyFontSizeInflationEnabledIsDirty();
+    const bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
+    presShell->RecomputeFontSizeInflationEnabled();
     bool changed = false;
-    if (presShell && presShell->FontSizeInflationEnabled() &&
+    if (presShell->FontSizeInflationEnabled() &&
         presShell->FontSizeInflationMinTwips() != 0) {
       aPresContext->ScreenSizeInchesForFontInflation(&changed);
     }
 
     changed = changed ||
-      (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
+      fontInflationWasEnabled != presShell->FontSizeInflationEnabled();
     if (changed) {
       nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
       if (docShell) {
