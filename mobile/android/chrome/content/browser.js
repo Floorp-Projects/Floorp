@@ -752,7 +752,7 @@ var BrowserApp = {
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
-        WindowEventDispatcher.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Bookmark:Insert",
           url: url,
           title: title
@@ -893,7 +893,7 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_background_image");
 
         let src = aTarget.src;
-        WindowEventDispatcher.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Image:SetAs",
           url: src
         });
