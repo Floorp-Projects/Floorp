@@ -41,8 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-4";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=344855";
 
@@ -58,8 +56,7 @@ for ( MyObject in o ) {
   result += o[MyObject];
 }
 
-new TestCase( SECTION,
-	      "for ( MyObject in o ) { result += o[MyObject] }",
+new TestCase( "for ( MyObject in o ) { result += o[MyObject] }",
 	      6,
 	      result );
 
@@ -69,8 +66,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "for ( value in o ) { result += o[value]",
+new TestCase( "for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -80,8 +76,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "value = \"value\"; for ( value in o ) { result += o[value]",
+new TestCase( "value = \"value\"; for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -91,8 +86,7 @@ for ( value in o ) {
   result += o[value];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( value in o ) { result += o[value]",
+new TestCase( "value = 0; for ( value in o ) { result += o[value]",
 	      6,
 	      result );
 
@@ -104,8 +98,7 @@ for ( ob[0] in o ) {
   result += o[ob[0]];
 }
 
-new TestCase( SECTION,
-	      "ob = { 0:\"hello\" }; for ( ob[0] in o ) { result += o[ob[0]]",
+new TestCase( "ob = { 0:\"hello\" }; for ( ob[0] in o ) { result += o[ob[0]]",
 	      6,
 	      result );
 
@@ -114,8 +107,7 @@ for ( ob["0"] in o ) {
   result += o[ob["0"]];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob[\"0\"] in o ) { result += o[o[\"0\"]]",
+new TestCase( "value = 0; for ( ob[\"0\"] in o ) { result += o[o[\"0\"]]",
 	      6,
 	      result );
 
@@ -125,8 +117,7 @@ for ( ob[value] in o ) {
   result += o[ob[value]];
 }
 
-new TestCase( SECTION,
-	      "ob = { 0:\"hello\" }; for ( ob[value] in o ) { result += o[ob[value]]",
+new TestCase( "ob = { 0:\"hello\" }; for ( ob[value] in o ) { result += o[ob[value]]",
 	      6,
 	      result );
 
@@ -135,8 +126,7 @@ for ( ob["value"] in o ) {
   result += o[ob["value"]];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob[\"value\"] in o ) { result += o[ob[\"value\"]]",
+new TestCase( "value = 0; for ( ob[\"value\"] in o ) { result += o[ob[\"value\"]]",
 	      6,
 	      result );
 
@@ -145,8 +135,7 @@ for ( ob.value in o ) {
   result += o[ob.value];
 }
 
-new TestCase( SECTION,
-	      "value = 0; for ( ob.value in o ) { result += o[ob.value]",
+new TestCase( "value = 0; for ( ob.value in o ) { result += o[ob.value]",
 	      6,
 	      result );
 

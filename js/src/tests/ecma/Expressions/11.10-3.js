@@ -27,8 +27,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.10-3";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Binary Bitwise Operators:  ^");
 
@@ -41,7 +39,7 @@ for ( shiftpow = 0; shiftpow < 33; shiftpow++ ) {
   for ( addpow = 0; addpow < 33; addpow++ ) {
     addexp += Math.pow(2, addpow);
 
-    new TestCase( SECTION,
+    new TestCase(
 		  shiftexp + " ^ " + addexp,
 		  Xor( shiftexp, addexp ),
 		  shiftexp ^ addexp );

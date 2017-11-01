@@ -30,11 +30,10 @@
  *
  */
 var SECTION = "RegExp/octal-003.js";
-var VERSION = "ECMA_2";
 var TITLE   = "RegExp patterns that contain OctalEscapeSequences";
 var BUGNUMBER="http://scopus/bugsplat/show_bug.cgi?id=346132";
 
-startTest();
+printBugNumber(BUGNUMBER);
 
 AddRegExpCases( /.\011/, "/\\011/", "a" + String.fromCharCode(0) + "11", "a\\011", 0, null );
 

@@ -27,10 +27,8 @@
 */
 
 var SECTION = "proto_3";
-var VERSION = "JS1_3";
 var TITLE   = "Adding properties to the prototype";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
@@ -77,49 +75,40 @@ Engineer.prototype.specialty = "code";
 var chris = new Engineer();
 
 
-new TestCase( SECTION,
-	      "jim = new Employee(); jim.specialty",
+new TestCase( "jim = new Employee(); jim.specialty",
 	      "none",
 	      jim.specialty );
 
-new TestCase( SECTION,
-	      "terry = new Engineer(); terry.specialty",
+new TestCase( "terry = new Engineer(); terry.specialty",
 	      "code",
 	      terry.specialty );
 
-new TestCase( SECTION,
-	      "sean = new SalesPerson(); sean.specialty",
+new TestCase( "sean = new SalesPerson(); sean.specialty",
 	      "none",
 	      sean.specialty );
 
-new TestCase( SECTION,
-	      "wally = new Manager(); wally.specialty",
+new TestCase( "wally = new Manager(); wally.specialty",
 	      "none",
 	      wally.specialty );
 
-new TestCase( SECTION,
-	      "furry = new Manager(); furry.specialty",
+new TestCase( "furry = new Manager(); furry.specialty",
 	      "none",
 	      furry.specialty );
 
-new TestCase( SECTION,
-	      "pat = new Employee(); pat.specialty",
+new TestCase( "pat = new Employee(); pat.specialty",
 	      "none",
 	      pat.specialty );
 
-new TestCase( SECTION,
-	      "leslie = new Engineer(); leslie.specialty",
+new TestCase( "leslie = new Engineer(); leslie.specialty",
 	      "code",
 	      leslie.specialty );
 
-new TestCase( SECTION,
-	      "bubbles = new SalesPerson(); bubbles.specialty",
+new TestCase( "bubbles = new SalesPerson(); bubbles.specialty",
 	      "none",
 	      bubbles.specialty );
 
 
-new TestCase( SECTION,
-	      "chris = new Employee(); chris.specialty",
+new TestCase( "chris = new Employee(); chris.specialty",
 	      "code",
 	      chris.specialty );
 test();

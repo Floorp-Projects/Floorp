@@ -39,84 +39,83 @@
    Date:               12 november 1997
 */
 var SECTION = "11.5.3";
-var VERSION = "ECMA_1";
 var BUGNUMBER="111202";
-startTest();
+printBugNumber(BUGNUMBER);
 
 
 writeHeaderToLog( SECTION + " Applying the % operator");
 
 // if either operand is NaN, the result is NaN.
 
-new TestCase( SECTION,    "Number.NaN % Number.NaN",    Number.NaN,     Number.NaN % Number.NaN );
-new TestCase( SECTION,    "Number.NaN % 1",             Number.NaN,     Number.NaN % 1 );
-new TestCase( SECTION,    "1 % Number.NaN",             Number.NaN,     1 % Number.NaN );
+new TestCase( "Number.NaN % Number.NaN",    Number.NaN,     Number.NaN % Number.NaN );
+new TestCase( "Number.NaN % 1",             Number.NaN,     Number.NaN % 1 );
+new TestCase( "1 % Number.NaN",             Number.NaN,     1 % Number.NaN );
 
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % Number.NaN",    Number.NaN,     Number.POSITIVE_INFINITY % Number.NaN );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % Number.NaN",    Number.NaN,     Number.NEGATIVE_INFINITY % Number.NaN );
+new TestCase( "Number.POSITIVE_INFINITY % Number.NaN",    Number.NaN,     Number.POSITIVE_INFINITY % Number.NaN );
+new TestCase( "Number.NEGATIVE_INFINITY % Number.NaN",    Number.NaN,     Number.NEGATIVE_INFINITY % Number.NaN );
 
 //  If the dividend is an infinity, or the divisor is a zero, or both, the result is NaN.
 //  dividend is an infinity
 
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % Number.NEGATIVE_INFINITY",    Number.NaN,   Number.NEGATIVE_INFINITY % Number.NEGATIVE_INFINITY );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % Number.NEGATIVE_INFINITY",    Number.NaN,   Number.POSITIVE_INFINITY % Number.NEGATIVE_INFINITY );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % Number.POSITIVE_INFINITY",    Number.NaN,   Number.NEGATIVE_INFINITY % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % Number.POSITIVE_INFINITY",    Number.NaN,   Number.POSITIVE_INFINITY % Number.POSITIVE_INFINITY );
+new TestCase( "Number.NEGATIVE_INFINITY % Number.NEGATIVE_INFINITY",    Number.NaN,   Number.NEGATIVE_INFINITY % Number.NEGATIVE_INFINITY );
+new TestCase( "Number.POSITIVE_INFINITY % Number.NEGATIVE_INFINITY",    Number.NaN,   Number.POSITIVE_INFINITY % Number.NEGATIVE_INFINITY );
+new TestCase( "Number.NEGATIVE_INFINITY % Number.POSITIVE_INFINITY",    Number.NaN,   Number.NEGATIVE_INFINITY % Number.POSITIVE_INFINITY );
+new TestCase( "Number.POSITIVE_INFINITY % Number.POSITIVE_INFINITY",    Number.NaN,   Number.POSITIVE_INFINITY % Number.POSITIVE_INFINITY );
 
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % 0",   Number.NaN,     Number.POSITIVE_INFINITY % 0 );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % 0",   Number.NaN,     Number.NEGATIVE_INFINITY % 0 );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % -0",  Number.NaN,     Number.POSITIVE_INFINITY % -0 );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % -0",  Number.NaN,     Number.NEGATIVE_INFINITY % -0 );
+new TestCase( "Number.POSITIVE_INFINITY % 0",   Number.NaN,     Number.POSITIVE_INFINITY % 0 );
+new TestCase( "Number.NEGATIVE_INFINITY % 0",   Number.NaN,     Number.NEGATIVE_INFINITY % 0 );
+new TestCase( "Number.POSITIVE_INFINITY % -0",  Number.NaN,     Number.POSITIVE_INFINITY % -0 );
+new TestCase( "Number.NEGATIVE_INFINITY % -0",  Number.NaN,     Number.NEGATIVE_INFINITY % -0 );
 
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % 1 ",  Number.NaN,     Number.NEGATIVE_INFINITY % 1 );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % -1 ", Number.NaN,     Number.NEGATIVE_INFINITY % -1 );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % 1 ",  Number.NaN,     Number.POSITIVE_INFINITY % 1 );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % -1 ", Number.NaN,     Number.POSITIVE_INFINITY % -1 );
+new TestCase( "Number.NEGATIVE_INFINITY % 1 ",  Number.NaN,     Number.NEGATIVE_INFINITY % 1 );
+new TestCase( "Number.NEGATIVE_INFINITY % -1 ", Number.NaN,     Number.NEGATIVE_INFINITY % -1 );
+new TestCase( "Number.POSITIVE_INFINITY % 1 ",  Number.NaN,     Number.POSITIVE_INFINITY % 1 );
+new TestCase( "Number.POSITIVE_INFINITY % -1 ", Number.NaN,     Number.POSITIVE_INFINITY % -1 );
 
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % Number.MAX_VALUE ",   Number.NaN,   Number.NEGATIVE_INFINITY % Number.MAX_VALUE );
-new TestCase( SECTION,    "Number.NEGATIVE_INFINITY % -Number.MAX_VALUE ",  Number.NaN,   Number.NEGATIVE_INFINITY % -Number.MAX_VALUE );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % Number.MAX_VALUE ",   Number.NaN,   Number.POSITIVE_INFINITY % Number.MAX_VALUE );
-new TestCase( SECTION,    "Number.POSITIVE_INFINITY % -Number.MAX_VALUE ",  Number.NaN,   Number.POSITIVE_INFINITY % -Number.MAX_VALUE );
+new TestCase( "Number.NEGATIVE_INFINITY % Number.MAX_VALUE ",   Number.NaN,   Number.NEGATIVE_INFINITY % Number.MAX_VALUE );
+new TestCase( "Number.NEGATIVE_INFINITY % -Number.MAX_VALUE ",  Number.NaN,   Number.NEGATIVE_INFINITY % -Number.MAX_VALUE );
+new TestCase( "Number.POSITIVE_INFINITY % Number.MAX_VALUE ",   Number.NaN,   Number.POSITIVE_INFINITY % Number.MAX_VALUE );
+new TestCase( "Number.POSITIVE_INFINITY % -Number.MAX_VALUE ",  Number.NaN,   Number.POSITIVE_INFINITY % -Number.MAX_VALUE );
 
 // divisor is 0
-new TestCase( SECTION,    "0 % -0",                         Number.NaN,     0 % -0 );
-new TestCase( SECTION,    "-0 % 0",                         Number.NaN,     -0 % 0 );
-new TestCase( SECTION,    "-0 % -0",                        Number.NaN,     -0 % -0 );
-new TestCase( SECTION,    "0 % 0",                          Number.NaN,     0 % 0 );
+new TestCase( "0 % -0",                         Number.NaN,     0 % -0 );
+new TestCase( "-0 % 0",                         Number.NaN,     -0 % 0 );
+new TestCase( "-0 % -0",                        Number.NaN,     -0 % -0 );
+new TestCase( "0 % 0",                          Number.NaN,     0 % 0 );
 
-new TestCase( SECTION,    "1 % 0",                          Number.NaN,   1%0 );
-new TestCase( SECTION,    "1 % -0",                         Number.NaN,   1%-0 );
-new TestCase( SECTION,    "-1 % 0",                         Number.NaN,   -1%0 );
-new TestCase( SECTION,    "-1 % -0",                        Number.NaN,   -1%-0 );
+new TestCase( "1 % 0",                          Number.NaN,   1%0 );
+new TestCase( "1 % -0",                         Number.NaN,   1%-0 );
+new TestCase( "-1 % 0",                         Number.NaN,   -1%0 );
+new TestCase( "-1 % -0",                        Number.NaN,   -1%-0 );
 
-new TestCase( SECTION,    "Number.MAX_VALUE % 0",           Number.NaN,   Number.MAX_VALUE%0 );
-new TestCase( SECTION,    "Number.MAX_VALUE % -0",          Number.NaN,   Number.MAX_VALUE%-0 );
-new TestCase( SECTION,    "-Number.MAX_VALUE % 0",          Number.NaN,   -Number.MAX_VALUE%0 );
-new TestCase( SECTION,    "-Number.MAX_VALUE % -0",         Number.NaN,   -Number.MAX_VALUE%-0 );
+new TestCase( "Number.MAX_VALUE % 0",           Number.NaN,   Number.MAX_VALUE%0 );
+new TestCase( "Number.MAX_VALUE % -0",          Number.NaN,   Number.MAX_VALUE%-0 );
+new TestCase( "-Number.MAX_VALUE % 0",          Number.NaN,   -Number.MAX_VALUE%0 );
+new TestCase( "-Number.MAX_VALUE % -0",         Number.NaN,   -Number.MAX_VALUE%-0 );
 
 // If the dividend is finite and the divisor is an infinity, the result equals the dividend.
 
-new TestCase( SECTION,    "1 % Number.NEGATIVE_INFINITY",   1,              1 % Number.NEGATIVE_INFINITY );
-new TestCase( SECTION,    "1 % Number.POSITIVE_INFINITY",   1,              1 % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "-1 % Number.POSITIVE_INFINITY",  -1,             -1 % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "-1 % Number.NEGATIVE_INFINITY",  -1,             -1 % Number.NEGATIVE_INFINITY );
+new TestCase( "1 % Number.NEGATIVE_INFINITY",   1,              1 % Number.NEGATIVE_INFINITY );
+new TestCase( "1 % Number.POSITIVE_INFINITY",   1,              1 % Number.POSITIVE_INFINITY );
+new TestCase( "-1 % Number.POSITIVE_INFINITY",  -1,             -1 % Number.POSITIVE_INFINITY );
+new TestCase( "-1 % Number.NEGATIVE_INFINITY",  -1,             -1 % Number.NEGATIVE_INFINITY );
 
-new TestCase( SECTION,    "Number.MAX_VALUE % Number.NEGATIVE_INFINITY",   Number.MAX_VALUE,    Number.MAX_VALUE % Number.NEGATIVE_INFINITY );
-new TestCase( SECTION,    "Number.MAX_VALUE % Number.POSITIVE_INFINITY",   Number.MAX_VALUE,    Number.MAX_VALUE % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "-Number.MAX_VALUE % Number.POSITIVE_INFINITY",  -Number.MAX_VALUE,   -Number.MAX_VALUE % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "-Number.MAX_VALUE % Number.NEGATIVE_INFINITY",  -Number.MAX_VALUE,   -Number.MAX_VALUE % Number.NEGATIVE_INFINITY );
+new TestCase( "Number.MAX_VALUE % Number.NEGATIVE_INFINITY",   Number.MAX_VALUE,    Number.MAX_VALUE % Number.NEGATIVE_INFINITY );
+new TestCase( "Number.MAX_VALUE % Number.POSITIVE_INFINITY",   Number.MAX_VALUE,    Number.MAX_VALUE % Number.POSITIVE_INFINITY );
+new TestCase( "-Number.MAX_VALUE % Number.POSITIVE_INFINITY",  -Number.MAX_VALUE,   -Number.MAX_VALUE % Number.POSITIVE_INFINITY );
+new TestCase( "-Number.MAX_VALUE % Number.NEGATIVE_INFINITY",  -Number.MAX_VALUE,   -Number.MAX_VALUE % Number.NEGATIVE_INFINITY );
 
-new TestCase( SECTION,    "0 % Number.POSITIVE_INFINITY",   0, 0 % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "0 % Number.NEGATIVE_INFINITY",   0, 0 % Number.NEGATIVE_INFINITY );
-new TestCase( SECTION,    "-0 % Number.POSITIVE_INFINITY",  -0,   -0 % Number.POSITIVE_INFINITY );
-new TestCase( SECTION,    "-0 % Number.NEGATIVE_INFINITY",  -0,   -0 % Number.NEGATIVE_INFINITY );
+new TestCase( "0 % Number.POSITIVE_INFINITY",   0, 0 % Number.POSITIVE_INFINITY );
+new TestCase( "0 % Number.NEGATIVE_INFINITY",   0, 0 % Number.NEGATIVE_INFINITY );
+new TestCase( "-0 % Number.POSITIVE_INFINITY",  -0,   -0 % Number.POSITIVE_INFINITY );
+new TestCase( "-0 % Number.NEGATIVE_INFINITY",  -0,   -0 % Number.NEGATIVE_INFINITY );
 
 // If the dividend is a zero and the divisor is finite, the result is the same as the dividend.
 
-new TestCase( SECTION,    "0 % 1",                          0,              0 % 1 );
-new TestCase( SECTION,    "0 % -1",                        -0,              0 % -1 );
-new TestCase( SECTION,    "-0 % 1",                        -0,              -0 % 1 );
-new TestCase( SECTION,    "-0 % -1",                       0,               -0 % -1 );
+new TestCase( "0 % 1",                          0,              0 % 1 );
+new TestCase( "0 % -1",                        -0,              0 % -1 );
+new TestCase( "-0 % 1",                        -0,              -0 % 1 );
+new TestCase( "-0 % -1",                       0,               -0 % -1 );
 
 //        In the remaining cases, where neither an infinity, nor a zero, nor NaN is involved, the floating-point remainder r
 //      from a dividend n and a divisor d is defined by the mathematical relation r = n (d * q) where q is an integer that

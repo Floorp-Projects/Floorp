@@ -20,10 +20,8 @@
 
 var SECTION = "statement-001.js";
 //     var SECTION = "12.6.2-9-n";
-var VERSION = "ECMA_1";
 var TITLE   = "The for statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -38,7 +36,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "for(i) {}" +
   " (threw " + exception +")",
   expect,

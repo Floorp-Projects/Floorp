@@ -13,11 +13,10 @@
    Date:               12 november 1997
 */
 var SECTION = "expression-013";
-var VERSION = "JS1_4";
 var TITLE   = "The new operator";
 var BUGNUMBER= "327765";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var NUMBER = new Number(1);
@@ -34,7 +33,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "NUMBER = new Number(1); result = new NUMBER()" +
   " (threw " + exception +")",
   expect,

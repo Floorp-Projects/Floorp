@@ -10,8 +10,10 @@
 #include <math.h>
 
 #include "2D.h"
+#include "Blur.h"
 #include "Filters.h"
 #include <vector>
+#include "CaptureCommandList.h"
 
 namespace mozilla {
 namespace gfx {
@@ -39,7 +41,8 @@ enum class CommandType : int8_t {
   POPLAYER,
   SETTRANSFORM,
   SETPERMITSUBPIXELAA,
-  FLUSH
+  FLUSH,
+  BLUR
 };
 
 class DrawingCommand
@@ -48,8 +51,8 @@ public:
   virtual ~DrawingCommand() {}
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) const = 0;
-
   virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
+  virtual void CloneInto(CaptureCommandList* aList) = 0;
 
   CommandType GetType() { return mType; }
 
@@ -62,6 +65,8 @@ protected:
 private:
   CommandType mType;
 };
+
+#define CLONE_INTO(Type) new (aList->Append<Type>()) Type
 
 class StrokeOptionsCommand : public DrawingCommand
 {
@@ -166,10 +171,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawSurfaceCommand)(mSurface, mDest, mSource, mSurfOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<SourceSurface> mSurface;
@@ -177,6 +188,45 @@ private:
   Rect mSource;
   DrawSurfaceOptions mSurfOptions;
   DrawOptions mOptions;
+};
+
+class DrawSurfaceWithShadowCommand : public DrawingCommand
+{
+public:
+  DrawSurfaceWithShadowCommand(SourceSurface *aSurface,
+                               const Point &aDest,
+                               const Color &aColor,
+                               const Point &aOffset,
+                               Float aSigma,
+                               CompositionOp aOperator)
+    : DrawingCommand(CommandType::DRAWSURFACEWITHSHADOW),
+      mSurface(aSurface),
+      mDest(aDest),
+      mColor(aColor),
+      mOffset(aOffset),
+      mSigma(aSigma),
+      mOperator(aOperator)
+  {
+  }
+
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawSurfaceWithShadowCommand)(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
+  }
+
+  static const bool AffectsSnapshot = true;
+
+private:
+  RefPtr<SourceSurface> mSurface;
+  Point mDest;
+  Color mColor;
+  Point mOffset;
+  Float mSigma;
+  CompositionOp mOperator;
 };
 
 class DrawFilterCommand : public DrawingCommand
@@ -190,10 +240,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(DrawFilterCommand)(mFilter, mSourceRect, mDestPoint, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<FilterNode> mFilter;
@@ -211,10 +267,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(ClearRectCommand)(mRect);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->ClearRect(mRect);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Rect mRect;
@@ -233,6 +295,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(CopySurfaceCommand)(mSurface, mSourceRect, mDestination);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const
   {
     MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
@@ -242,6 +308,8 @@ public:
     }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<SourceSurface> mSurface;
@@ -262,6 +330,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FillRectCommand)(mRect, mPattern, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->FillRect(mRect, mPattern, mOptions);
@@ -272,6 +344,8 @@ public:
     aDeviceRect = aTransform.TransformBounds(mRect);
     return true;
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Rect mRect;
@@ -293,10 +367,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeRectCommand)(mRect, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Rect mRect;
@@ -320,10 +400,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeLineCommand)(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   Point mStart;
@@ -345,6 +431,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FillCommand)(mPath, mPattern, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Fill(mPath, mPattern, mOptions);
@@ -355,6 +445,8 @@ public:
     aDeviceRect = mPath->GetBounds(aTransform);
     return true;
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<Path> mPath;
@@ -417,6 +509,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(StrokeCommand)(mPath, mPattern, mStrokeOptions, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
@@ -427,6 +523,8 @@ public:
     aDeviceRect = PathExtentsToMaxStrokeExtents(mStrokeOptions, mPath->GetBounds(aTransform), aTransform);
     return true;
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<Path> mPath;
@@ -453,6 +551,14 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    GlyphBuffer glyphs = {
+      mGlyphs.data(),
+      (uint32_t)mGlyphs.size(),
+    };
+    CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions, mRenderingOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     GlyphBuffer buf;
@@ -460,6 +566,8 @@ public:
     buf.mGlyphs = &mGlyphs.front();
     aDT->FillGlyphs(mFont, buf, mPattern, mOptions, mRenderingOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<ScaledFont> mFont;
@@ -489,6 +597,14 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    GlyphBuffer glyphs = {
+      mGlyphs.data(),
+      (uint32_t)mGlyphs.size(),
+    };
+    CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     GlyphBuffer buf;
@@ -496,6 +612,8 @@ public:
     buf.mGlyphs = &mGlyphs.front();
     aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   RefPtr<ScaledFont> mFont;
@@ -518,10 +636,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(MaskCommand)(mSource, mMask, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   StoredPattern mSource;
@@ -544,10 +668,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(MaskSurfaceCommand)(mSource, mMask, mOffset, mOptions);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
+
+  static const bool AffectsSnapshot = true;
 
 private:
   StoredPattern mSource;
@@ -565,10 +695,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushClipCommand)(mPath);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClip(mPath);
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   RefPtr<Path> mPath;
@@ -583,10 +719,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushClipRectCommand)(mRect);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClipRect(mRect);
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   Rect mRect;
@@ -611,11 +753,17 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PushLayerCommand)(mOpaque, mOpacity, mMask, mMaskTransform, mBounds, mCopyBackground);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushLayer(mOpaque, mOpacity, mMask,
                    mMaskTransform, mBounds, mCopyBackground);
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   bool mOpaque;
@@ -634,10 +782,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PopClipCommand)();
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopClip();
   }
+
+  static const bool AffectsSnapshot = false;
 };
 
 class PopLayerCommand : public DrawingCommand
@@ -648,10 +802,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(PopLayerCommand)();
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopLayer();
   }
+
+  static const bool AffectsSnapshot = true;
 };
 
 class SetTransformCommand : public DrawingCommand
@@ -664,6 +824,10 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(SetTransformCommand)(mTransform);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
   {
     if (aMatrix) {
@@ -672,6 +836,8 @@ public:
       aDT->SetTransform(mTransform);
     }
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   Matrix mTransform;
@@ -687,10 +853,16 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(SetPermitSubpixelAACommand)(mPermitSubpixelAA);
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
   {
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
   }
+
+  static const bool AffectsSnapshot = false;
 
 private:
   bool mPermitSubpixelAA;
@@ -704,14 +876,43 @@ public:
   {
   }
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(FlushCommand)();
+  }
+
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Flush();
   }
+
+  static const bool AffectsSnapshot = false;
 };
 
-} // namespace gfx
+class BlurCommand : public DrawingCommand
+{
+public:
+  explicit BlurCommand(const AlphaBoxBlur& aBlur)
+   : DrawingCommand(CommandType::BLUR)
+   , mBlur(aBlur)
+  {}
 
+  void CloneInto(CaptureCommandList* aList) {
+    CLONE_INTO(BlurCommand)(mBlur);
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const {
+    aDT->Blur(mBlur);
+  }
+
+  static const bool AffectsSnapshot = true;
+
+private:
+  AlphaBoxBlur mBlur;
+};
+
+#undef CLONE_INTO
+
+} // namespace gfx
 } // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWCOMMAND_H_ */

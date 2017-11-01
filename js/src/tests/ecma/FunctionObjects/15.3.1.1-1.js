@@ -21,8 +21,6 @@
 
 */
 var SECTION = "15.3.1.1-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The Function Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -34,66 +32,54 @@ var myfunc = Function();
 myfunc.toString = Object.prototype.toString;
 
 //    not going to test toString here since it is implementation dependent.
-//    new TestCase( SECTION,  "myfunc.toString()",     "function anonymous() { }",    myfunc.toString() );
+//    new TestCase( "myfunc.toString()",     "function anonymous() { }",    myfunc.toString() );
 
 myfunc.toString = Object.prototype.toString;
-new TestCase(   SECTION,
-		"myfunc = Function(); myfunc.toString = Object.prototype.toString; myfunc.toString()",
+new TestCase(   "myfunc = Function(); myfunc.toString = Object.prototype.toString; myfunc.toString()",
 		"[object Function]",
 		myfunc.toString() );
 
-new TestCase( SECTION, 
-	      "myfunc.length",                           
+new TestCase( "myfunc.length",                           
 	      0,                     
 	      myfunc.length );
 
-new TestCase( SECTION, 
-	      "myfunc.prototype.toString()",             
+new TestCase( "myfunc.prototype.toString()",             
 	      "[object Object]",     
 	      myfunc.prototype.toString() );
 
-new TestCase( SECTION, 
-	      "myfunc.prototype.constructor",            
+new TestCase( "myfunc.prototype.constructor",            
 	      myfunc,                
 	      myfunc.prototype.constructor );
 
-new TestCase( SECTION, 
-	      "myfunc.arguments",                        
+new TestCase( "myfunc.arguments",                        
 	      null,                  
 	      myfunc.arguments );
 
-new TestCase( SECTION, 
-	      "var OBJ = new MyObject(true); OBJ.valueOf()",   
+new TestCase( "var OBJ = new MyObject(true); OBJ.valueOf()",   
 	      true,            
 	      eval("var OBJ = new MyObject(true); OBJ.valueOf()") );
 
-new TestCase( SECTION, 
-	      "OBJ.toString()",                          
+new TestCase( "OBJ.toString()",                          
 	      "true",                
 	      OBJ.toString() );
 
-new TestCase( SECTION, 
-	      "OBJ.toString = Object.prototype.toString; OBJ.toString()",
+new TestCase( "OBJ.toString = Object.prototype.toString; OBJ.toString()",
 	      "[object Object]", 
 	      eval("OBJ.toString = Object.prototype.toString; OBJ.toString()") );
 
-new TestCase( SECTION, 
-	      "MyObject.toString = Object.prototype.toString; MyObject.toString()",   
+new TestCase( "MyObject.toString = Object.prototype.toString; MyObject.toString()",   
 	      "[object Function]",  
 	      eval("MyObject.toString = Object.prototype.toString; MyObject.toString()") );
 
-new TestCase( SECTION, 
-	      "MyObject.length",                             
+new TestCase( "MyObject.length",                             
 	      1,     
 	      MyObject.length );
 
-new TestCase( SECTION, 
-	      "MyObject.prototype.constructor",              
+new TestCase( "MyObject.prototype.constructor",              
 	      MyObject,  
 	      MyObject.prototype.constructor );
 
-new TestCase( SECTION, 
-	      "MyObject.arguments",                          
+new TestCase( "MyObject.arguments",                          
 	      null,  
 	      MyObject.arguments );
    

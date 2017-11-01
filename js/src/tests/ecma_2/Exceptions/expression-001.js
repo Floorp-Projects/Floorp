@@ -22,9 +22,7 @@
    Date:               09 september 1998
 */
 var SECTION = "expression-001";
-var VERSION = "JS1_4";
 var TITLE   = "Conditional operator ( ? : )"
-  startTest();
 writeHeaderToLog( SECTION + " " + TITLE );
 
 // the following expression should be an error in JS.
@@ -40,7 +38,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "comma expression in a conditional statement "+
   "(threw "+ exception +")",
   "Passed",

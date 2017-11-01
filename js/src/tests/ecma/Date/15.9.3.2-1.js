@@ -57,7 +57,6 @@ var MINUTES     = 14;
 var SECONDS     = 15;
 var MS          = 16;
 
-//  for TCMS, the gTestcases array must be global.
 var SECTION = "15.9.3.1";
 var TITLE =   "Date( year, month, date, hours, minutes, seconds )";
 
@@ -92,25 +91,25 @@ function addNewTestCase( DateCase, DateString, ResultArray ) {
   adjustResultArray(ResultArray);
 
 
-  new TestCase( SECTION, DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
-  new TestCase( SECTION, DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );
+  new TestCase( DateString+".getTime()", ResultArray[TIME],       DateCase.getTime() );
+  new TestCase( DateString+".valueOf()", ResultArray[TIME],       DateCase.valueOf() );
 
-  new TestCase( SECTION, DateString+".getUTCFullYear()",      ResultArray[UTC_YEAR],   DateCase.getUTCFullYear() );
-  new TestCase( SECTION, DateString+".getUTCMonth()",         ResultArray[UTC_MONTH],  DateCase.getUTCMonth() );
-  new TestCase( SECTION, DateString+".getUTCDate()",          ResultArray[UTC_DATE],   DateCase.getUTCDate() );
-  new TestCase( SECTION, DateString+".getUTCDay()",           ResultArray[UTC_DAY],    DateCase.getUTCDay() );
-  new TestCase( SECTION, DateString+".getUTCHours()",         ResultArray[UTC_HOURS],  DateCase.getUTCHours() );
-  new TestCase( SECTION, DateString+".getUTCMinutes()",       ResultArray[UTC_MINUTES],DateCase.getUTCMinutes() );
-  new TestCase( SECTION, DateString+".getUTCSeconds()",       ResultArray[UTC_SECONDS],DateCase.getUTCSeconds() );
-  new TestCase( SECTION, DateString+".getUTCMilliseconds()",  ResultArray[UTC_MS],     DateCase.getUTCMilliseconds() );
+  new TestCase( DateString+".getUTCFullYear()",      ResultArray[UTC_YEAR],   DateCase.getUTCFullYear() );
+  new TestCase( DateString+".getUTCMonth()",         ResultArray[UTC_MONTH],  DateCase.getUTCMonth() );
+  new TestCase( DateString+".getUTCDate()",          ResultArray[UTC_DATE],   DateCase.getUTCDate() );
+  new TestCase( DateString+".getUTCDay()",           ResultArray[UTC_DAY],    DateCase.getUTCDay() );
+  new TestCase( DateString+".getUTCHours()",         ResultArray[UTC_HOURS],  DateCase.getUTCHours() );
+  new TestCase( DateString+".getUTCMinutes()",       ResultArray[UTC_MINUTES],DateCase.getUTCMinutes() );
+  new TestCase( DateString+".getUTCSeconds()",       ResultArray[UTC_SECONDS],DateCase.getUTCSeconds() );
+  new TestCase( DateString+".getUTCMilliseconds()",  ResultArray[UTC_MS],     DateCase.getUTCMilliseconds() );
 
-  new TestCase( SECTION, DateString+".getFullYear()",         ResultArray[YEAR],       DateCase.getFullYear() );
-  new TestCase( SECTION, DateString+".getMonth()",            ResultArray[MONTH],      DateCase.getMonth() );
-  new TestCase( SECTION, DateString+".getDate()",             ResultArray[DATE],       DateCase.getDate() );
-  new TestCase( SECTION, DateString+".getDay()",              ResultArray[DAY],        DateCase.getDay() );
-  new TestCase( SECTION, DateString+".getHours()",            ResultArray[HOURS],      DateCase.getHours() );
-  new TestCase( SECTION, DateString+".getMinutes()",          ResultArray[MINUTES],    DateCase.getMinutes() );
-  new TestCase( SECTION, DateString+".getSeconds()",          ResultArray[SECONDS],    DateCase.getSeconds() );
-  new TestCase( SECTION, DateString+".getMilliseconds()",     ResultArray[MS],         DateCase.getMilliseconds() );
+  new TestCase( DateString+".getFullYear()",         ResultArray[YEAR],       DateCase.getFullYear() );
+  new TestCase( DateString+".getMonth()",            ResultArray[MONTH],      DateCase.getMonth() );
+  new TestCase( DateString+".getDate()",             ResultArray[DATE],       DateCase.getDate() );
+  new TestCase( DateString+".getDay()",              ResultArray[DAY],        DateCase.getDay() );
+  new TestCase( DateString+".getHours()",            ResultArray[HOURS],      DateCase.getHours() );
+  new TestCase( DateString+".getMinutes()",          ResultArray[MINUTES],    DateCase.getMinutes() );
+  new TestCase( DateString+".getSeconds()",          ResultArray[SECONDS],    DateCase.getSeconds() );
+  new TestCase( DateString+".getMilliseconds()",     ResultArray[MS],         DateCase.getMilliseconds() );
 
 }

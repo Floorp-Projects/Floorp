@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-008";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement: try in a constructor";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Integer( value, exception ) {
@@ -30,7 +28,6 @@ function Integer( value, exception ) {
   }
 
   new TestCase(
-    SECTION,
     "Integer( " + value +" )",
     (exception ? INVALID_INTEGER_VALUE +": " + value : this.value),
     this.value );

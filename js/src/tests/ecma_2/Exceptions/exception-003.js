@@ -15,10 +15,8 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-003";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: TargetError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 Target_1();
@@ -38,7 +36,6 @@ function Target_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "string = new String(\"hi\");"+
       "string.toString = Boolean.prototype.toString" +
       "string.toString() [ exception is " + exception +" ]",

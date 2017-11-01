@@ -11,7 +11,6 @@ DIRS += ['build']
 
 XPIDL_SOURCES += [
     'nsCWebBrowser.idl',
-    'nsICommandHandler.idl',
     'nsIEmbeddingSiteWindow.idl',
     'nsIWebBrowser.idl',
     'nsIWebBrowserChrome.idl',
@@ -20,7 +19,6 @@ XPIDL_SOURCES += [
     'nsIWebBrowserChromeFocus.idl',
     'nsIWebBrowserFocus.idl',
     'nsIWebBrowserSetup.idl',
-    'nsIWebBrowserStream.idl',
 ]
 
 if CONFIG['NS_PRINTING']:
@@ -32,8 +30,6 @@ if CONFIG['NS_PRINTING']:
 XPIDL_MODULE = 'webBrowser_core'
 
 UNIFIED_SOURCES += [
-    'nsCommandHandler.cpp',
-    'nsEmbedStream.cpp',
     'nsWebBrowser.cpp',
     'nsWebBrowserContentPolicy.cpp',
 ]

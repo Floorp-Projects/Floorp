@@ -26,7 +26,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -43,7 +42,6 @@ function test()
   tryThis(s);
 
   reportCompare('No Crash', 'No Crash', '');
-  exitFunc ('test');
 }
 
 

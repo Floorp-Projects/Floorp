@@ -37,8 +37,6 @@
 */
 
 var SECTION = "12.10-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The with statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -47,7 +45,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 // although the scope chain changes, the this value is immutable for a given
 // execution context.
 
-new TestCase( SECTION,
+new TestCase(
 	      "with( new Number() ) { this +'' }",
 	      GLOBAL,
 	      eval("with( new Number() ) { this +'' }") );
@@ -56,32 +54,27 @@ new TestCase( SECTION,
 // global object.
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(true); with (MYOB) { parseInt() }",
   true,
   eval("var MYOB = new WithObject(true); with (MYOB) { parseInt() }") );
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(false); with (MYOB) { NaN }",
   false,
   eval("var MYOB = new WithObject(false); with (MYOB) { NaN }") );
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(NaN); with (MYOB) { Infinity }",
   Number.NaN,
   eval("var MYOB = new WithObject(NaN); with (MYOB) { Infinity }") );
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(false); with (MYOB) { }; Infinity",
   Number.POSITIVE_INFINITY,
   eval("var MYOB = new WithObject(false); with (MYOB) { }; Infinity") );
 
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(0); with (MYOB) { delete Infinity; Infinity }",
   Number.POSITIVE_INFINITY,
   eval("var MYOB = new WithObject(0); with (MYOB) { delete Infinity; Infinity }") );
@@ -89,7 +82,6 @@ new TestCase(
 // let us leave the with block via a break.
 
 new TestCase(
-  SECTION,
   "var MYOB = new WithObject(0); while (true) { with (MYOB) { Infinity; break; } } Infinity",
   Number.POSITIVE_INFINITY,
   eval("var MYOB = new WithObject(0); while (true) { with (MYOB) { Infinity; break; } } Infinity") );

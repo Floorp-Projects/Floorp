@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -25,6 +24,4 @@ function test()
 
   /[\Wb-G]/.exec("");
   reportCompare(expect, actual, summary + ' /[\Wb-G]/.exec("")');
-
-  exitFunc ('test');
 }

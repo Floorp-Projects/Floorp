@@ -24,10 +24,8 @@
 */
 
 var SECTION = "proto_6";
-var VERSION = "JS1_3";
 var TITLE   = "Adding properties to the Prototype Object";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
@@ -57,38 +55,31 @@ Employee.prototype.specialty = "none";
 
 // Pat, the Engineer
 
-new TestCase( SECTION,
-	      "pat.name",
+new TestCase( "pat.name",
 	      "Toonces, Pat",
 	      pat.name );
 
-new TestCase( SECTION,
-	      "pat.dept",
+new TestCase( "pat.dept",
 	      "engineering",
 	      pat.dept );
 
-new TestCase( SECTION,
-	      "pat.projects.length",
+new TestCase( "pat.projects.length",
 	      2,
 	      pat.projects.length );
 
-new TestCase( SECTION,
-	      "pat.projects[0]",
+new TestCase( "pat.projects[0]",
 	      "SpiderMonkey",
 	      pat.projects[0] );
 
-new TestCase( SECTION,
-	      "pat.projects[1]",
+new TestCase( "pat.projects[1]",
 	      "Rhino",
 	      pat.projects[1] );
 
-new TestCase( SECTION,
-	      "pat.machine",
+new TestCase( "pat.machine",
 	      "indy",
 	      pat.machine );
 
-new TestCase( SECTION,
-	      "pat.specialty",
+new TestCase( "pat.specialty",
 	      void 0,
 	      pat.specialty );
 

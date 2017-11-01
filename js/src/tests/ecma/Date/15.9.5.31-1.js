@@ -35,8 +35,6 @@
    Date:               12 november 1997
 */
 var SECTION = "15.9.5.31-1";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog(SECTION +
                  " Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )");
@@ -96,48 +94,47 @@ function addNewTestCase( time, hours, min, sec, ms, DateString, UTCDate, LocalDa
     }
   }
 
-  new TestCase( SECTION, DateString+".getTime()",            UTCDate.value,
+  new TestCase( DateString+".getTime()",            UTCDate.value,
                 DateCase.getTime() );
-  new TestCase( SECTION, DateString+".valueOf()",            UTCDate.value,
+  new TestCase( DateString+".valueOf()",            UTCDate.value,
                 DateCase.valueOf() );
-  new TestCase( SECTION, DateString+".getUTCFullYear()",     UTCDate.year,
+  new TestCase( DateString+".getUTCFullYear()",     UTCDate.year,
                 DateCase.getUTCFullYear() );
-  new TestCase( SECTION, DateString+".getUTCMonth()",        UTCDate.month,
+  new TestCase( DateString+".getUTCMonth()",        UTCDate.month,
                 DateCase.getUTCMonth() );
-  new TestCase( SECTION, DateString+".getUTCDate()",         UTCDate.date,
+  new TestCase( DateString+".getUTCDate()",         UTCDate.date,
                 DateCase.getUTCDate() );
-  new TestCase( SECTION, DateString+".getUTCDay()",          UTCDate.day,
+  new TestCase( DateString+".getUTCDay()",          UTCDate.day,
                 DateCase.getUTCDay() );
-  new TestCase( SECTION, DateString+".getUTCHours()",        UTCDate.hours,
+  new TestCase( DateString+".getUTCHours()",        UTCDate.hours,
                 DateCase.getUTCHours() );
-  new TestCase( SECTION, DateString+".getUTCMinutes()",      UTCDate.minutes,
+  new TestCase( DateString+".getUTCMinutes()",      UTCDate.minutes,
                 DateCase.getUTCMinutes() );
-  new TestCase( SECTION, DateString+".getUTCSeconds()",      UTCDate.seconds,
+  new TestCase( DateString+".getUTCSeconds()",      UTCDate.seconds,
                 DateCase.getUTCSeconds() );
-  new TestCase( SECTION, DateString+".getUTCMilliseconds()", UTCDate.ms,
+  new TestCase( DateString+".getUTCMilliseconds()", UTCDate.ms,
                 DateCase.getUTCMilliseconds() );
 
-  new TestCase( SECTION, DateString+".getFullYear()",        LocalDate.year,
+  new TestCase( DateString+".getFullYear()",        LocalDate.year,
                 DateCase.getFullYear() );
-  new TestCase( SECTION, DateString+".getMonth()",           LocalDate.month,
+  new TestCase( DateString+".getMonth()",           LocalDate.month,
                 DateCase.getMonth() );
-  new TestCase( SECTION, DateString+".getDate()",            LocalDate.date,
+  new TestCase( DateString+".getDate()",            LocalDate.date,
                 DateCase.getDate() );
-  new TestCase( SECTION, DateString+".getDay()",             LocalDate.day,
+  new TestCase( DateString+".getDay()",             LocalDate.day,
                 DateCase.getDay() );
-  new TestCase( SECTION, DateString+".getHours()",           LocalDate.hours,
+  new TestCase( DateString+".getHours()",           LocalDate.hours,
                 DateCase.getHours() );
-  new TestCase( SECTION, DateString+".getMinutes()",         LocalDate.minutes,
+  new TestCase( DateString+".getMinutes()",         LocalDate.minutes,
                 DateCase.getMinutes() );
-  new TestCase( SECTION, DateString+".getSeconds()",         LocalDate.seconds,
+  new TestCase( DateString+".getSeconds()",         LocalDate.seconds,
                 DateCase.getSeconds() );
-  new TestCase( SECTION, DateString+".getMilliseconds()",    LocalDate.ms,
+  new TestCase( DateString+".getMilliseconds()",    LocalDate.ms,
                 DateCase.getMilliseconds() );
 
   DateCase.toString = Object.prototype.toString;
 
-  new TestCase( SECTION,
-                DateString+".toString=Object.prototype.toString;" +
+  new TestCase( DateString+".toString=Object.prototype.toString;" +
                 DateString+".toString()",
                 "[object Date]",
                 DateCase.toString() );

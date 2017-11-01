@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //-----------------------------------------------------------------------------
-var BUGNUMBER = "(none)";
 var summary = '15.4.5.1 - array.length coverage';
 var actual = '';
 var expect = '';
@@ -16,8 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   var a = [];
@@ -55,6 +52,4 @@ function test()
     actual = ex + '';
   }
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

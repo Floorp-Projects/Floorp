@@ -15,7 +15,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary + ': in function');
 
@@ -55,6 +54,4 @@ function test()
                   actualStringPrototypeInvariant,
                   'String.prototype invariant');
   }
- 
-  exitFunc ('test');
 }

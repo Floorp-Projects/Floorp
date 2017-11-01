@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   var { sin, PI } = Math; sin(PI / 2);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

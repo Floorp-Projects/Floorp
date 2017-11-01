@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) slow
+// |reftest| skip slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,17 +16,9 @@ printStatus (summary);
 // stop the test after 60 seconds
 var start = new Date();
 
-if (typeof document != 'undefined')
-{ 
-  // delay test driver end
-  gDelayTestDriverEnd = true;
-  document.write('<iframe onload="onLoad()"><\/iframe>');
-}
-else
-{
-  actual = 'No Crash';
-  reportCompare(expect, actual, summary);
-}
+// delay test driver end
+gDelayTestDriverEnd = true;
+document.write('<iframe onload="onLoad()"><\/iframe>');
 
 function onLoad() 
 {

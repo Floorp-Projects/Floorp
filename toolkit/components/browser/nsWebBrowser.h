@@ -32,10 +32,8 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
-#include "nsIWebBrowserStream.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrintSettings.h"
-#include "nsEmbedStream.h"
 #include "nsIWidgetListener.h"
 
 #include "mozilla/BasePrincipal.h"
@@ -83,7 +81,6 @@ class nsWebBrowser final : public nsIWebBrowser,
                            public nsIWebBrowserPersist,
                            public nsIWebBrowserFocus,
                            public nsIWebProgressListener,
-                           public nsIWebBrowserStream,
                            public nsIWidgetListener,
                            public nsSupportsWeakReference
 {
@@ -105,7 +102,6 @@ public:
   NS_DECL_NSIWEBBROWSERPERSIST
   NS_DECL_NSICANCELABLE
   NS_DECL_NSIWEBBROWSERFOCUS
-  NS_DECL_NSIWEBBROWSERSTREAM
   NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
@@ -156,9 +152,6 @@ protected:
   uint32_t mPersistCurrentState;
   nsresult mPersistResult;
   uint32_t mPersistFlags;
-
-  // stream
-  RefPtr<nsEmbedStream> mStream;
 
   // Weak Reference interfaces...
   nsIWidget* mParentWidget;

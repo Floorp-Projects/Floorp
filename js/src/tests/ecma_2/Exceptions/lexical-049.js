@@ -13,10 +13,8 @@
    Date:               15 september 1997
 */
 var SECTION = "lexical-049";
-var VERSION = "JS1_4";
 var TITLE   = "The Rules of Automatic Semicolon Insertion";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -38,7 +36,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "line breaks within a for expression" +
   " (threw " + exception +")",
   expect,

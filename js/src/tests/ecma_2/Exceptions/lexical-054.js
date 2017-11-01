@@ -15,10 +15,8 @@
 */
 
 var SECTION = "lexical-054";
-var VERSION = "JS1_4";
 var TITLE   = "Examples of Automatic Semicolon Insertion";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -37,7 +35,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "if (a > b)\nelse c = d" +
   " (threw " + exception +")",
   expect,

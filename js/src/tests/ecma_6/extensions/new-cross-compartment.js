@@ -18,10 +18,6 @@ var otherStr = new g.String("foo");
 assertEq(otherStr instanceof g.String, true);
 assertEq(otherStr.valueOf(), "foo");
 
-// THIS IS WRONG.  |new| itself should throw if !IsConstructor(constructor),
-// meaning this global's TypeError should be used.  The problem ultimately is
-// that wrappers conflate callable/constructible, so any old function from
-// another global appears to be both.  Somebody fix bug XXXXXX!
 try
 {
   var constructor = g.parseInt;
@@ -30,8 +26,9 @@ try
 }
 catch (e)
 {
-  assertEq(e instanceof g.TypeError, true,
-           "THIS REALLY SHOULD BE |e instanceof TypeError|");
+  // NOTE: not |g.TypeError|, because |new| itself throws because
+  //       |!IsConstructor(constructor)|.
+  assertEq(e instanceof TypeError, true);
 }
 
 /******************************************************************************/

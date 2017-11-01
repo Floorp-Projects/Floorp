@@ -41,8 +41,6 @@
    Date:               11 september 1997
 */
 var SECTION = "12.6.3-11";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The for..in statement";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -55,7 +53,7 @@ var result = "";
 
 for ( p in Number ) { result += String(p) };
 
-new TestCase( SECTION,
+new TestCase(
 	      "result = \"\"; for ( p in Number ) { result += String(p) };",
 	      "",
 	      result );

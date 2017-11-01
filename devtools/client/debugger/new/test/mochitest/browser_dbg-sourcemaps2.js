@@ -1,11 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+
+function assertBpInGutter(dbg, lineNumber) {
+  const el = findElement(dbg, "breakpoint");
+  const bpLineNumber = +el.querySelector(".CodeMirror-linenumber").innerText;
+  is(bpLineNumber, lineNumber);
+}
+
 // Tests loading sourcemapped sources, setting breakpoints, and
 // stepping in them.
 
 // This source map does not have source contents, so it's fetched separately
-
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   requestLongerTimeout(2);
@@ -28,6 +34,7 @@ add_task(async function() {
     "Breakpoint has correct line"
   );
 
+  assertBpInGutter(dbg, 4);
   invokeInTab("logMessage");
 
   await waitForPaused(dbg);

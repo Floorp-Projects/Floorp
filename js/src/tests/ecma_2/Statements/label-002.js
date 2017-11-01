@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "label-002";
-var VERSION = "ECMA_2";
 var TITLE   = "Labeled statements";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 LabelTest( { p1:"hi,", p2:" norris" }, "hi, norris", " norrishi," );
@@ -36,7 +34,6 @@ function LabelTest( object, expect1, expect2 ) {
 yoohoo:  { for ( property in object ) { result += object[property]; }; break yoohoo };
 
   new TestCase(
-    SECTION,
     "yoohoo: for ( property in object ) { result += object[property]; } break yoohoo }",
     true,
     result == expect1 || result == expect2 );
@@ -48,7 +45,6 @@ function LabelTest2( object, expect1, expect2 ) {
 yoohoo:  { for ( property in object ) { result += object[property]; break yoohoo } }; ;
 
   new TestCase(
-    SECTION,
     "yoohoo: for ( property in object ) { result += object[property]; break yoohoo }}",
     true,
     result == expect1 || result == expect2 );

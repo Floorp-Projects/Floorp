@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) slow
+// |reftest| skip slow
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,21 +23,11 @@ var testFuncTimerId;
 var maxTests = 5;
 var currTest = 0;
 
-if (typeof setTimeout == 'undefined')
-{
-  setTimeout = function() {};
-  clearTimeout = function() {};
-  actual = 'Normal Exit';
-  reportCompare(expect, actual, summary);
-}
-else
-{
-  // delay start until after js-test-driver-end runs.
-  // delay test driver end
-  gDelayTestDriverEnd = true;
+// delay start until after js-test-driver-end runs.
+// delay test driver end
+gDelayTestDriverEnd = true;
 
-  setTimeout(testFuncWatcher, 1000);
-}
+setTimeout(testFuncWatcher, 1000);
 
 function testFuncWatcher()
 {

@@ -11,8 +11,6 @@ var summary = 'In strict mode, setting a read-only property should generate a wa
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-enterFunc (String (BUGNUMBER));
-
 // should throw an error in strict mode
 var actual = '';
 var expect = '"length" is read-only';

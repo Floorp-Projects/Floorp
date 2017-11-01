@@ -55,8 +55,6 @@
 
 
 var SECTION = "15.1.2.5-3";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "unescape(string)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -64,7 +62,7 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 for ( var CHARCODE = 0, NONHEXCHARCODE = 0; CHARCODE < 256; CHARCODE++, NONHEXCHARCODE++ ) {
   NONHEXCHARCODE = getNextNonHexCharCode( NONHEXCHARCODE );
 
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %"+ (ToHexString(CHARCODE)).substring(0,1) +
 		String.fromCharCode( NONHEXCHARCODE ) +" )" +
 		"[where last character is String.fromCharCode("+NONHEXCHARCODE+")]",
@@ -76,7 +74,7 @@ for ( var CHARCODE = 0, NONHEXCHARCODE = 0; CHARCODE < 256; CHARCODE++, NONHEXCH
 for ( var CHARCODE = 0, NONHEXCHARCODE = 0; CHARCODE < 256; CHARCODE++, NONHEXCHARCODE++ ) {
   NONHEXCHARCODE = getNextNonHexCharCode( NONHEXCHARCODE );
 
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %u"+ (ToHexString(CHARCODE)).substring(0,1) +
 		String.fromCharCode( NONHEXCHARCODE ) +" )" +
 		"[where last character is String.fromCharCode("+NONHEXCHARCODE+")]",
@@ -89,7 +87,7 @@ for ( var CHARCODE = 0, NONHEXCHARCODE = 0; CHARCODE < 256; CHARCODE++, NONHEXCH
 for ( var CHARCODE = 0, NONHEXCHARCODE = 0 ; CHARCODE < 65536; CHARCODE+= 54321, NONHEXCHARCODE++ ) {
   NONHEXCHARCODE = getNextNonHexCharCode( NONHEXCHARCODE );
 
-  new TestCase( SECTION,
+  new TestCase(
 		"unescape( %u"+ (ToUnicodeString(CHARCODE)).substring(0,3) +
 		String.fromCharCode( NONHEXCHARCODE ) +" )" +
 		"[where last character is String.fromCharCode("+NONHEXCHARCODE+")]",

@@ -26,8 +26,6 @@
 */
 
 var SECTION = "15.5.4.12-3";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.toUpperCase()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -37,12 +35,12 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 for ( var i = 0x10A0; i <= 0x10FF; i++ ) {
   var U = new Unicode( i );
 /*
-  new TestCase(   SECTION,
+  new TestCase(
   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
   String.fromCharCode(U.upper),
   eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()") );
 */
-  new TestCase(   SECTION,
+  new TestCase(
 		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
 		  U.upper,
 		  eval("var s = new String( String.fromCharCode(i) ); s.toUpperCase().charCodeAt(0)") );
@@ -52,13 +50,11 @@ for ( var i = 0x10A0; i <= 0x10FF; i++ ) {
 // Halfwidth and Fullwidth Forms
 // Range: U+FF00 to U+FFEF
 for ( var i = 0xFF00; i <= 0xFFEF; i++ ) {
-  new TestCase(   SECTION,
-		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
+  new TestCase(   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
 		  eval( "var u = new Unicode( i ); String.fromCharCode(u.upper)" ),
 		  eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()") );
 
-  new TestCase(   SECTION,
-		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
+  new TestCase(   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
 		  eval( "var u = new Unicode( i ); u.upper" ),
 		  eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)") );
 }
@@ -67,13 +63,11 @@ for ( var i = 0xFF00; i <= 0xFFEF; i++ ) {
 // Range: U+3040 to U+309F
 
 for ( var i = 0x3040; i <= 0x309F; i++ ) {
-  new TestCase(   SECTION,
-		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
+  new TestCase(   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()",
 		  eval( "var u = new Unicode( i ); String.fromCharCode(u.upper)" ),
 		  eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase()") );
 
-  new TestCase(   SECTION,
-		  "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
+  new TestCase(   "var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)",
 		  eval( "var u = new Unicode( i ); u.upper" ),
 		  eval("var s = new String( String.fromCharCode("+i+") ); s.toUpperCase().charCodeAt(0)") );
 }

@@ -62,15 +62,12 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   testIllegalRegExps(legalpatterns, illegalflags);
   testIllegalRegExps(illegalpatterns, legalflags);
   testIllegalRegExps(illegalpatterns, illegalflags);
-
-  exitFunc ('test');
 }
 
 

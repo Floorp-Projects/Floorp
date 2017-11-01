@@ -24,10 +24,8 @@
 */
 
 var SECTION = "proto_5";
-var VERSION = "JS1_3";
 var TITLE   = "Logical OR || in Constructors";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
@@ -61,53 +59,43 @@ var pat = new Engineer( "indy" );
 
 var les = new Engineer();
 
-new TestCase( SECTION,
-	      "var pat = new Engineer(\"indy\"); pat.name",
+new TestCase( "var pat = new Engineer(\"indy\"); pat.name",
 	      "",
 	      pat.name );
 
-new TestCase( SECTION,
-	      "pat.dept",
+new TestCase( "pat.dept",
 	      "engineering",
 	      pat.dept );
 
-new TestCase( SECTION,
-	      "pat.projects.length",
+new TestCase( "pat.projects.length",
 	      0,
 	      pat.projects.length );
 
-new TestCase( SECTION,
-	      "pat.machine",
+new TestCase( "pat.machine",
 	      "indy",
 	      pat.machine );
 
-new TestCase( SECTION,
-	      "pat.__proto__ == Engineer.prototype",
+new TestCase( "pat.__proto__ == Engineer.prototype",
 	      true,
 	      pat.__proto__ == Engineer.prototype );
 
-new TestCase( SECTION,
-	      "var les = new Engineer(); les.name",
+new TestCase( "var les = new Engineer(); les.name",
 	      "",
 	      les.name );
 
-new TestCase( SECTION,
-	      "les.dept",
+new TestCase( "les.dept",
 	      "engineering",
 	      les.dept );
 
-new TestCase( SECTION,
-	      "les.projects.length",
+new TestCase( "les.projects.length",
 	      0,
 	      les.projects.length );
 
-new TestCase( SECTION,
-	      "les.machine",
+new TestCase( "les.machine",
 	      "",
 	      les.machine );
 
-new TestCase( SECTION,
-	      "les.__proto__ == Engineer.prototype",
+new TestCase( "les.__proto__ == Engineer.prototype",
 	      true,
 	      les.__proto__ == Engineer.prototype );
 

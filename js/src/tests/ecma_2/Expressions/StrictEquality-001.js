@@ -13,10 +13,8 @@
  *  Date:               4 september 1998
  */
 var SECTION = "StrictEquality-001 - 11.9.6";
-var VERSION = "ECMA_2";
 var TITLE   =  "The strict equality operator ( === )";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 
@@ -65,7 +63,6 @@ function StrictEquality( x, y, expect ) {
   result = ( x === y );
 
   new TestCase(
-    SECTION,
     x +" === " + y,
     expect,
     result );

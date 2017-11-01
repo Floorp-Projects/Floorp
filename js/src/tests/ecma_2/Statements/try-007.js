@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-007";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement:  for-in";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 /**
@@ -84,7 +82,6 @@ function TryForIn( object ) {
   }
 
   new TestCase(
-    SECTION,
     "TryForIn( " + object+ " )",
     (object.exception ? EXCEPTION_STRING +": " + object.value : object.value),
     result );

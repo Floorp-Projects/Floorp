@@ -32,8 +32,6 @@
    Date:               7 october 1997
 */
 var SECTION = "15.4.2.1-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "The Array Constructor:  new Array( item0, item1, ...)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -53,14 +51,12 @@ TEST_STRING += ARGUMENTS + ")";
 TEST_ARRAY = eval( TEST_STRING );
 
 for ( var item = 0; item < TEST_LENGTH; item++ ) {
-  new TestCase( SECTION,
-		"["+item+"]",    
+  new TestCase( "["+item+"]",    
 		item,   
 		TEST_ARRAY[item] );
 }
 
-new TestCase( SECTION,
-	      "new Array( ["+TEST_LENGTH+" arguments] ) +''",   
+new TestCase( "new Array( ["+TEST_LENGTH+" arguments] ) +''",   
 	      ARGUMENTS,
 	      TEST_ARRAY +"" );
 

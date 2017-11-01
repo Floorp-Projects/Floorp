@@ -13,16 +13,12 @@
    Date:               12 november 1997
 */
 var SECTION = "12.9-1-n";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " The return statement");
 
 DESCRIPTION = "return";
-EXPECTED = "error";
 
-new TestCase(   SECTION,
-		"return",
+new TestCase(   "return",
 		"error",
 		eval("return") );
 

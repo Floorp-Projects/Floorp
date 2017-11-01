@@ -19,12 +19,10 @@
    Date:               21 october 1997
 */
 var SECTION = "7.7.1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Null Literals";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION, "null",     null,        null);
+new TestCase( "null",     null,        null);
 
 test();

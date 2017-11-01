@@ -65,7 +65,6 @@ function test(sharedMem) {
 	return v.buffer;
     }
 
-    enterFunc ('test');
     printBugNumber(BUGNUMBER);
     printStatus(summary);
 
@@ -1645,7 +1644,6 @@ function test(sharedMem) {
     gc();
 
     reportCompare(0, 0, 'done.');
-    exitFunc ('test');
 }
 
 test(false);

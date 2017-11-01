@@ -16,7 +16,6 @@ test(Math.pow(2, 16));
 
 function test(length)
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -40,6 +39,4 @@ function test(length)
   actual = f.apply(null, a);
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

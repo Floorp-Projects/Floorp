@@ -23,20 +23,17 @@
    Date:               16 september 1997
 */
 var SECTION = "15.7.4.2-2-n";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Number.prototype.toString()");
 
 DESCRIPTION = "o = new Object(); o.toString = Number.prototype.toString; o.toString()";
-EXPECTED = "error";
 
-new TestCase(SECTION, 
+new TestCase(
 	     "o = new Object(); o.toString = Number.prototype.toString; o.toString()", 
 	     "error",   
 	     eval("o = new Object(); o.toString = Number.prototype.toString; o.toString()") );
 
-//    new TestCase(SECTION,  "o = new String(); o.toString = Number.prototype.toString; o.toString()",  "error",    eval("o = new String(); o.toString = Number.prototype.toString; o.toString()") );
-//    new TestCase(SECTION,  "o = 3; o.toString = Number.prototype.toString; o.toString()",             "error",    eval("o = 3; o.toString = Number.prototype.toString; o.toString()") );
+//    new TestCase("o = new String(); o.toString = Number.prototype.toString; o.toString()",  "error",    eval("o = new String(); o.toString = Number.prototype.toString; o.toString()") );
+//    new TestCase("o = 3; o.toString = Number.prototype.toString; o.toString()",             "error",    eval("o = 3; o.toString = Number.prototype.toString; o.toString()") );
 
 test();

@@ -22,10 +22,8 @@
 */
 
 var SECTION = "proto_2";
-var VERSION = "JS1_3";
 var TITLE   = "new PrototypeObject";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
@@ -62,28 +60,23 @@ var workerbee   = new WorkerBee();
 var salesperson = new SalesPerson();
 var engineer    = new Engineer();
 
-new TestCase( SECTION,
-	      "employee.__proto__ == Employee.prototype",
+new TestCase( "employee.__proto__ == Employee.prototype",
 	      true,
 	      employee.__proto__ == Employee.prototype );
 
-new TestCase( SECTION,
-	      "manager.__proto__ == Manager.prototype",
+new TestCase( "manager.__proto__ == Manager.prototype",
 	      true,
 	      manager.__proto__ == Manager.prototype );
 
-new TestCase( SECTION,
-	      "workerbee.__proto__ == WorkerBee.prototype",
+new TestCase( "workerbee.__proto__ == WorkerBee.prototype",
 	      true,
 	      workerbee.__proto__ == WorkerBee.prototype );
 
-new TestCase( SECTION,
-	      "salesperson.__proto__ == SalesPerson.prototype",
+new TestCase( "salesperson.__proto__ == SalesPerson.prototype",
 	      true,
 	      salesperson.__proto__ == SalesPerson.prototype );
 
-new TestCase( SECTION,
-	      "engineer.__proto__ == Engineer.prototype",
+new TestCase( "engineer.__proto__ == Engineer.prototype",
 	      true,
 	      engineer.__proto__ == Engineer.prototype );
 

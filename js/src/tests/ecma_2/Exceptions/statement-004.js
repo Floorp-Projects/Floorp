@@ -13,10 +13,8 @@
    Date:               11 september 1997
 */
 var SECTION = "statement-004";
-var VERSION = "JS1_4";
 var TITLE   = "The for..in statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -36,7 +34,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "bad left-hand side expression" +
   " (threw " + exception +")",
   expect,

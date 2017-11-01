@@ -14,11 +14,10 @@
  */
 
 var SECTION = "";          // if ECMA test, provide section number
-var VERSION = "ECMA_2";    // Version of JavaScript or ECMA
 var TITLE   = "";          // Provide ECMA section title or description
 var BUGNUMBER = "";        // Provide URL to bugsplat or bugzilla report
 
-startTest();               // leave this alone
+printBugNumber(BUGNUMBER);               // leave this alone
 
 
 /* Calls to AddTestCase here */

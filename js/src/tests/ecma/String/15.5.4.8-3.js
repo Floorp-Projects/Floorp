@@ -62,8 +62,6 @@
 */
 
 var SECTION = "15.5.4.8-3";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "String.prototype.split";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -73,71 +71,58 @@ var EXPECT = new Array();
 
 // this.toString is the empty string.
 
-new TestCase(   SECTION,
-		"var s = new String(); s.split().length",
+new TestCase(   "var s = new String(); s.split().length",
 		1,
 		eval("var s = new String(); s.split().length") );
 
-new TestCase(   SECTION,
-		"var s = new String(); s.split()[0]",
+new TestCase(   "var s = new String(); s.split()[0]",
 		"",
 		eval("var s = new String(); s.split()[0]") );
 
 // this.toString() is the empty string, separator is specified.
 
-new TestCase(   SECTION,
-		"var s = new String(); s.split('').length",
+new TestCase(   "var s = new String(); s.split('').length",
 		0,
 		eval("var s = new String(); s.split('').length") );
 
-new TestCase(   SECTION,
-		"var s = new String(); s.split(' ').length",
+new TestCase(   "var s = new String(); s.split(' ').length",
 		1,
 		eval("var s = new String(); s.split(' ').length") );
 
 // this to string is " "
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split().length",
+new TestCase(   "var s = new String(' '); s.split().length",
 		1,
 		eval("var s = new String(' '); s.split().length") );
 
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split()[0]",
+new TestCase(   "var s = new String(' '); s.split()[0]",
 		" ",
 		eval("var s = new String(' '); s.split()[0]") );
 
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split('').length",
+new TestCase(   "var s = new String(' '); s.split('').length",
 		1,
 		eval("var s = new String(' '); s.split('').length") );
 
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split('')[0]",
+new TestCase(   "var s = new String(' '); s.split('')[0]",
 		" ",
 		eval("var s = new String(' '); s.split('')[0]") );
 
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split(' ').length",
+new TestCase(   "var s = new String(' '); s.split(' ').length",
 		2,
 		eval("var s = new String(' '); s.split(' ').length") );
 
-new TestCase(   SECTION,
-		"var s = new String(' '); s.split(' ')[0]",
+new TestCase(   "var s = new String(' '); s.split(' ')[0]",
 		"",
 		eval("var s = new String(' '); s.split(' ')[0]") );
 
-new TestCase(   SECTION,
-		"\"\".split(\"\").length",
+new TestCase(   "\"\".split(\"\").length",
 		0,
 		("".split("")).length );
 
-new TestCase(   SECTION,
-		"\"\".split(\"x\").length",
+new TestCase(   "\"\".split(\"x\").length",
 		1,
 		("".split("x")).length );
 
-new TestCase(   SECTION,
-		"\"\".split(\"x\")[0]",
+new TestCase(   "\"\".split(\"x\")[0]",
 		"",
 		("".split("x"))[0] );
 

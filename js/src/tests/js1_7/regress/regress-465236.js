@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
   for (let j = 0; j < 2; ++j) null <= null;
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

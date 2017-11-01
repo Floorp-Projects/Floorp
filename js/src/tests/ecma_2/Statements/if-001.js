@@ -16,11 +16,10 @@
  *  Date:               28 August 1998
  */
 var SECTION = "for-001";
-var VERSION = "ECMA_2";
 var TITLE   = "The if  statement";
 var BUGNUMBER="148822";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var a = 0;
@@ -32,7 +31,6 @@ if ( a = b ) {
 }
 
 new TestCase(
-  SECTION,
   "if ( a = b ), where a and b are both equal to 0",
   "passed",
   result );

@@ -13,8 +13,6 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
-startTest();
 var TITLE = 'String.slice';
 
 writeHeaderToLog('Executing script: slice.js');
@@ -83,8 +81,6 @@ function exhaustiveStringSliceTest(testname, a)
 	passed = false;
       }
     }
-  var testCase = new TestCase(SECTION, testname, true, passed);
-  if (passed == false)
-    testCase.reason = reason;
-  return testCase;
+
+  new TestCase(testname, true, passed, reason);
 }

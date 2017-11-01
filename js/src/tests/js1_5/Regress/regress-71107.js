@@ -21,15 +21,12 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   var actual = outer()()();  //call the return of calling the return of outer()
   var expect = 5;
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }
 
 

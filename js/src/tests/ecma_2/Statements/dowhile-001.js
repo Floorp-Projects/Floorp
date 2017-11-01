@@ -15,10 +15,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "dowhile-002";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while with a labeled continue statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 LabeledContinue( 0, 1 );
@@ -37,7 +35,6 @@ woohoo:
   } while ( i < limit );
 
   new TestCase(
-    SECTION,
     "do while ( " + i +" < " + limit +" )",
     expect,
     i );
