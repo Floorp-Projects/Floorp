@@ -289,6 +289,15 @@ namespace TuningDefaults {
     static const float AllocThresholdFactorAvoidInterrupt = 0.9f;
 
     /* no parameter */
+    static const float MallocThresholdGrowFactor = 1.5f;
+
+    /* no parameter */
+    static const float MallocThresholdShrinkFactor = 0.9f;
+
+    /* no parameter */
+    static const size_t MallocThresholdLimit = 1024 * 1024 * 1024;
+
+    /* no parameter */
     static const size_t ZoneAllocDelayBytes = 1024 * 1024;
 
     /* JSGC_DYNAMIC_HEAP_GROWTH */
@@ -1380,7 +1389,7 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
 void
 GCSchedulingTunables::setMaxMallocBytes(size_t value)
 {
-    maxMallocBytes_ = value;
+    maxMallocBytes_ = std::min(value, TuningDefaults::MallocThresholdLimit);
 }
 
 void
@@ -1917,10 +1926,13 @@ MemoryCounter::updateOnGCEnd(const GCSchedulingTunables& tunables, const AutoLoc
     // Update the trigger threshold at the end of GC and adjust the current
     // byte count to reflect bytes allocated since the start of GC.
     MOZ_ASSERT(bytes_ >= bytesAtStartOfGC_);
-    if (shouldTriggerGC(tunables))
-        maxBytes_ *= 2;
-    else
-        maxBytes_ = std::max(tunables.maxMallocBytes(), size_t(maxBytes_ * 0.9));
+    if (shouldTriggerGC(tunables)) {
+        maxBytes_ = std::min(TuningDefaults::MallocThresholdLimit,
+                             size_t(maxBytes_ * TuningDefaults::MallocThresholdGrowFactor));
+    } else {
+        maxBytes_ = std::max(tunables.maxMallocBytes(),
+                             size_t(maxBytes_ * TuningDefaults::MallocThresholdShrinkFactor));
+    }
     bytes_ -= bytesAtStartOfGC_;
     triggered_ = NoTrigger;
 }
