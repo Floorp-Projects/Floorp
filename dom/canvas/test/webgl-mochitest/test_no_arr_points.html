@@ -116,17 +116,8 @@ void main(void) {
 
     checkGLError(ok, info);
 
-    var elemTestFunc = todo; // We fail on most implementations.
-    var checkGLTestFunc = todo;
-    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANGLE ||
-        (DriverInfo.getOS() == DriverInfo.OS.MAC &&
-         DriverInfo.getDriver() == DriverInfo.DRIVER.INTEL) ||
-        DriverInfo.getOS() == DriverInfo.OS.ANDROID)
-    {
-      // These seem to work fine.
-      elemTestFunc = ok;
-      checkGLTestFunc = ok;
-    }
+    var elemTestFunc = ok;
+    var checkGLTestFunc = ok;
     if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANDROID_X86_EMULATOR) {
       // ...but the Android 4.2 x86 emulator environment is different
       elemTestFunc = todo;
