@@ -58,7 +58,8 @@
     "bn-BD": {
         "platforms": [
             "android", 
-            "android-api-16"
+            "android-api-16", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
@@ -489,7 +490,8 @@
     "ne-NP": {
         "platforms": [
             "android", 
-            "android-api-16"
+            "android-api-16", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
