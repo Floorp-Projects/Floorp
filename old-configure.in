@@ -3954,16 +3954,6 @@ if test -n "$MOZ_REFLOW_PERF"; then
 fi
 
 dnl ========================================================
-dnl = Horizon build options - set default preferences for
-dnl   the horizon project. Horizon is a browser built on
-dnl   top of the graphene runtime.
-dnl ========================================================
-if test -n "$MOZ_HORIZON"; then
-    AC_DEFINE(MOZ_HORIZON)
-fi
-AC_SUBST(MOZ_HORIZON)
-
-dnl ========================================================
 dnl = Offer a way to disable the startup cache
 dnl ========================================================
 

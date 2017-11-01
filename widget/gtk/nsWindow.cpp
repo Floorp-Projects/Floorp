@@ -2994,11 +2994,26 @@ nsWindow::GetEventTimeStamp(guint32 aEventTime)
         // In this case too, just return the current timestamp.
         return TimeStamp::Now();
     }
-    CurrentX11TimeGetter* getCurrentTime = GetCurrentTimeGetter();
-    MOZ_ASSERT(getCurrentTime,
-               "Null current time getter despite having a window");
-    return TimeConverter().GetTimeStampFromSystemTime(aEventTime,
-                                                      *getCurrentTime);
+
+    TimeStamp eventTimeStamp;
+
+    if (!mIsX11Display) {
+        // Wayland compositors use monotonic time to set timestamps.
+        int64_t timestampTime = g_get_monotonic_time() / 1000;
+        guint32 refTimeTruncated = guint32(timestampTime);
+
+        timestampTime -= refTimeTruncated - aEventTime;
+        int64_t tick =
+            BaseTimeDurationPlatformUtils::TicksFromMilliseconds(timestampTime);
+        eventTimeStamp = TimeStamp::FromSystemTime(tick);
+    } else {
+        CurrentX11TimeGetter* getCurrentTime = GetCurrentTimeGetter();
+        MOZ_ASSERT(getCurrentTime,
+                   "Null current time getter despite having a window");
+        eventTimeStamp = TimeConverter().GetTimeStampFromSystemTime(aEventTime,
+                                                              *getCurrentTime);
+    }
+    return eventTimeStamp;
 }
 
 mozilla::CurrentX11TimeGetter*

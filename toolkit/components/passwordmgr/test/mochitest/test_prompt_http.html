@@ -29,10 +29,7 @@ let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 runInParent(() => {
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-  Cu.import("resource://gre/modules/Services.jsm");
-
-  let pwmgr = Cc["@mozilla.org/login-manager;1"].
-              getService(Ci.nsILoginManager);
+  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
   let login3A, login3B, login4;
   login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -69,13 +66,13 @@ runInParent(() => {
                                "dedupeUser", "httpsPass", "", "");
 
 
-  pwmgr.addLogin(login3A);
-  pwmgr.addLogin(login3B);
-  pwmgr.addLogin(login4);
-  pwmgr.addLogin(httpUpgradeLogin);
-  pwmgr.addLogin(httpsDowngradeLogin);
-  pwmgr.addLogin(dedupeHttpUpgradeLogin);
-  pwmgr.addLogin(dedupeHttpsUpgradeLogin);
+  Services.logins.addLogin(login3A);
+  Services.logins.addLogin(login3B);
+  Services.logins.addLogin(login4);
+  Services.logins.addLogin(httpUpgradeLogin);
+  Services.logins.addLogin(httpsDowngradeLogin);
+  Services.logins.addLogin(dedupeHttpUpgradeLogin);
+  Services.logins.addLogin(dedupeHttpsUpgradeLogin);
 });
 
 add_task(async function test_iframe() {

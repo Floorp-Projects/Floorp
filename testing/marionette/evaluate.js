@@ -265,7 +265,7 @@ evaluate.toJSON = function(obj, seenEls) {
   if (t == "[object Undefined]" || t == "[object Null]") {
     return null;
 
-  // literals
+  // primitives
   } else if (t == "[object Boolean]" ||
       t == "[object Number]" ||
       t == "[object String]") {
@@ -279,7 +279,7 @@ evaluate.toJSON = function(obj, seenEls) {
   } else if (WebElement.isReference(obj)) {
     return obj;
 
-  // Element, SVGElement, XULElement
+  // Element (HTMLElement, SVGElement, XULElement, &c.)
   } else if (element.isElement(obj)) {
     let webEl = seenEls.add(obj);
     return webEl.toJSON();

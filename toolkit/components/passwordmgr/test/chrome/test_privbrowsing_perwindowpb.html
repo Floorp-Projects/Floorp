@@ -63,7 +63,7 @@ function loadNextTest() {
       break;
 
     case 4:
-      pwmgr.addLogin(login);
+      Services.logins.addLogin(login);
       break;
 
     case 5:
@@ -77,7 +77,7 @@ function loadNextTest() {
       break;
 
     case 7:
-      pwmgr.addLogin(login);
+      Services.logins.addLogin(login);
       break;
 
     case 8:
@@ -152,7 +152,7 @@ function checkTest() {
       popup = getPopup(popupNotifications, "password-change");
       ok(popup, "got popup notification");
       popup.remove();
-      pwmgr.removeLogin(login);
+      Services.logins.removeLogin(login);
       break;
 
     case 7:
@@ -185,7 +185,7 @@ function checkTest() {
       gotPass = iframe.contentDocument.getElementById("pass").textContent;
       is(gotUser, "notifyu1", "Checking submitted username");
       is(gotPass, "notifyp1", "Checking submitted password");
-      pwmgr.removeLogin(login);
+      Services.logins.removeLogin(login);
       break;
 
     default:
@@ -262,15 +262,11 @@ function handleLoad(aEvent) {
   }
 }
 
-var pwmgr = Cc["@mozilla.org/login-manager;1"].
-            getService(Ci.nsILoginManager);
-ok(pwmgr != null, "Access pwmgr");
-
 // We need to make sure no logins have been stored by previous tests
 // for forms in |url|, otherwise the change password notification
 // would turn into a prompt, and the test will fail.
 var url = "http://test2.example.com";
-is(pwmgr.countLogins(url, "", null), 0, "No logins should be stored for " + url);
+is(Services.logins.countLogins(url, "", null), 0, "No logins should be stored for " + url);
 
 var nsLoginInfo = new SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
@@ -318,4 +314,3 @@ SimpleTest.waitForExplicitFinish();
 </pre>
 </body>
 </html>
-

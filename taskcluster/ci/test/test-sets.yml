@@ -112,7 +112,7 @@ qr-talos:
     - talos-g4
     - talos-g5
     - talos-other
-    # - talos-svgr # fails with layers-free
+    - talos-svgr
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
