@@ -116,6 +116,12 @@ nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent, nsIPrintSetti
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsPrintingPromptService::ShowPrinterProperties(mozIDOMWindowProxy *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 //////////////////////////////////////////////////////////////////////
