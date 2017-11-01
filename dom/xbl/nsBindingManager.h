@@ -196,9 +196,9 @@ protected:
   static void PostPAQEventCallback(nsITimer* aTimer, void* aClosure);
 
   // Enumerate each bound content's bindings (including its base bindings)
-  // in mBoundContentSet.
-  using BoundContentBindingCallback = std::function<void (nsXBLBinding*)>;
-  void EnumerateBoundContentBindings(
+  // in mBoundContentSet. Return false from the callback to stop enumeration.
+  using BoundContentBindingCallback = std::function<bool (nsXBLBinding*)>;
+  bool EnumerateBoundContentBindings(
     const BoundContentBindingCallback& aCallback) const;
 
 // MEMBER VARIABLES
