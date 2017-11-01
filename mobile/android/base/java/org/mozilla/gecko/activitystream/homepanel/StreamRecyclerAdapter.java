@@ -139,7 +139,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, new TopPanelRow.OnCardLongClickListener() {
                 @Override
                 public boolean onClick(final TopSite topSite, final int absolutePosition, final int faviconWidth, final int faviconHeight) {
-                    openContextMenu(topSite, absolutePosition, parent, faviconWidth, faviconHeight);
+                    openContextMenuForTopSite(topSite, absolutePosition, parent, faviconWidth, faviconHeight);
                     return true;
                 }
             });
@@ -150,7 +150,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), new WebpageItemRow.OnMenuButtonClickListener() {
                 @Override
                 public void onMenuButtonClicked(final WebpageItemRow row, final int position) {
-                    openContextMenu(row, position, parent, ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
+                    openContextMenuForWebpageItemRow(row, position, parent, ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
                 }
             });
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
@@ -298,7 +298,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         }
 
         final WebpageItemRow highlightItem = (WebpageItemRow) recyclerView.getChildViewHolder(v);
-        openContextMenu(highlightItem, position, recyclerView, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
+        openContextMenuForWebpageItemRow(highlightItem, position, recyclerView, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
         return true;
     }
 
@@ -328,7 +328,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         return true;
     }
 
-    private void openContextMenu(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
+    private void openContextMenuForWebpageItemRow(final WebpageItemRow webpageItemRow, final int position, final View snackbarAnchor,
             @NonNull final String interactionExtra) {
         final WebpageRowModel model = (WebpageRowModel) recyclerViewModel.get(position);
 
@@ -357,7 +357,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
                 webpageItemRow.getTileWidth(), webpageItemRow.getTileHeight());
     }
 
-    private void openContextMenu(final TopSite topSite, final int absolutePosition, final View snackbarAnchor,
+    private void openContextMenuForTopSite(final TopSite topSite, final int absolutePosition, final View snackbarAnchor,
             final int faviconWidth, final int faviconHeight) {
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .forTopSite(topSite)
