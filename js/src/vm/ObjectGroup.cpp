@@ -11,7 +11,6 @@
 #include "jsobj.h"
 
 #include "builtin/DataViewObject.h"
-#include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
@@ -21,6 +20,7 @@
 #include "vm/Shape.h"
 #include "vm/TaggedProto.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

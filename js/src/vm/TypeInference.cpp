@@ -20,7 +20,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
@@ -38,6 +37,8 @@
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Iteration-inl.h"
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

@@ -138,47 +138,6 @@ namespace gc {
 void
 MergeCompartments(JSCompartment* source, JSCompartment* target);
 
-// Functions for checking and updating GC thing pointers that might have been
-// moved by compacting GC. Overloads are also provided that work with Values.
-//
-// IsForwarded    - check whether a pointer refers to an GC thing that has been
-//                  moved.
-//
-// Forwarded      - return a pointer to the new location of a GC thing given a
-//                  pointer to old location.
-//
-// MaybeForwarded - used before dereferencing a pointer that may refer to a
-//                  moved GC thing without updating it. For JSObjects this will
-//                  also update the object's shape pointer if it has been moved
-//                  to allow slots to be accessed.
-
-template <typename T>
-inline bool IsForwarded(T* t);
-inline bool IsForwarded(const JS::Value& value);
-
-template <typename T>
-inline T* Forwarded(T* t);
-
-inline Value Forwarded(const JS::Value& value);
-
-template <typename T>
-inline T MaybeForwarded(T t);
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-
-template <typename T>
-inline bool IsGCThingValidAfterMovingGC(T* t);
-
-template <typename T>
-inline void CheckGCThingAfterMovingGC(T* t);
-
-template <typename T>
-inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t);
-
-inline void CheckValueAfterMovingGC(const JS::Value& value);
-
-#endif // JSGC_HASH_TABLE_CHECKS
-
 enum VerifierType {
     PreBarrierVerifier
 };

@@ -29,8 +29,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/TypeInference.h"
 
-#include "jsobjinlines.h"
-
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
