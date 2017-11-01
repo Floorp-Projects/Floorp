@@ -290,12 +290,6 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
     mCacheEntry = nullptr;
   }
 
-  // If a proxy is removed for a reason other than its owner being
-  // changed, remove the proxy from the loadgroup.
-  if (aStatus != NS_IMAGELIB_CHANGING_OWNER) {
-    proxy->RemoveFromLoadGroup(true);
-  }
-
   return NS_OK;
 }
 
