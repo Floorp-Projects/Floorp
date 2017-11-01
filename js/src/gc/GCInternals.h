@@ -13,6 +13,7 @@
 
 #include "jscntxt.h"
 
+#include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"

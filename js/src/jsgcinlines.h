@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/GCTrace.h"
+#include "gc/RelocationOverlay.h"
 #include "gc/Zone.h"
 
 #include "gc/ArenaList-inl.h"
