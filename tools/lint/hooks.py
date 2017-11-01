@@ -33,9 +33,9 @@ def hg(ui, repo, **kwargs):
     return run_mozlint(hooktype, kwargs.get('pats', []))
 
 
-def git(args=sys.argv[1:]):
+def git():
     hooktype = os.path.basename(__file__)
-    return run_mozlint(hooktype, args[:1])
+    return run_mozlint(hooktype, [])
 
 
 if __name__ == '__main__':
