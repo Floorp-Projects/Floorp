@@ -282,7 +282,6 @@ VRManagerParent::RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint
   nsTArray<VRDisplayInfo> displayInfoArray;
   impl::VRDisplayPuppet* displayPuppet = nullptr;
   VRManager* vm = VRManager::Get();
-  vm->RefreshVRDisplays();
 
   // Get VRDisplayPuppet from VRManager
   vm->GetVRDisplayInfo(displayInfoArray);

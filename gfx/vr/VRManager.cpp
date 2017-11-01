@@ -259,6 +259,23 @@ VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
 void
 VRManager::RefreshVRDisplays(bool aMustDispatch)
 {
+  if (VRListenerThreadHolder::IsInVRListenerThread()) {
+    RefreshVRDisplaysInternal(aMustDispatch);
+  } else {
+   if (VRListenerThreadHolder::IsActive()) {
+     MessageLoop* loop = VRListenerThreadHolder::Loop();
+      loop->PostTask(NewRunnableMethod<bool>(
+        "gfx::VRManager::RefreshVRDisplaysInternal",
+        this, &VRManager::RefreshVRDisplaysInternal, aMustDispatch
+      ));
+   }
+  }
+}
+
+void
+VRManager::RefreshVRDisplaysInternal(bool aMustDispatch)
+{
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
   nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
   mLastVRListenerThreadActiveTime = TimeStamp::Now();
   /** We don't wish to enumerate the same display from multiple managers,
@@ -445,6 +462,14 @@ VRManager::CreateVRTestSystem()
   if (mgr) {
     mManagers.AppendElement(mgr);
     mVRTestSystemCreated = true;
+  }
+
+  // Force to refresh VRPuppet display here
+  // because we need it to setup data early.
+  nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
+  mgr->GetHMDs(displays);
+  for (const auto& display: displays) {
+    mVRDisplays.Put(display->GetDisplayInfo().GetDisplayID(), display);
   }
 }
 

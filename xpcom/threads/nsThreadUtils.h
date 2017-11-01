@@ -344,8 +344,6 @@ SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr)
  */
 extern bool NS_IsInCompositorThread();
 
-extern bool NS_IsInVRThread();
-
 //-----------------------------------------------------------------------------
 // Helpers that work with nsCOMPtr:
 
