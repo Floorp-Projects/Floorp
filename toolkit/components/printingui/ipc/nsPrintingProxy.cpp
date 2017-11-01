@@ -188,6 +188,14 @@ nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy *parent,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsPrintingProxy::ShowPrinterProperties(mozIDOMWindowProxy *parent,
+                                       const char16_t *printerName,
+                                       nsIPrintSettings *printSettings)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
                                    bool aUsePrinterNamePrefix,

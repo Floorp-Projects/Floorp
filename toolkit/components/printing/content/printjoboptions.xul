@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/printjoboptions.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  title="&printJobOptions.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/javascript" src="chrome://global/content/printjoboptions.js"/>
+
+  <stringbundle id="printBundle" src="chrome://global/locale/printPageSetup.properties"/>
+
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+      <row id="jobTitleGroup">
+        <hbox align="center" pack="end">
+          <label id="jobTitleLabel"
+                 value="&jobTitleInput.label;"
+                 accesskey="&jobTitleInput.accesskey;"
+                 control="jobTitleInput"/>
+        </hbox>
+        <textbox id="jobTitleInput" flex="1"/>
+      </row>
+
+      <row id="paperGroup">
+        <hbox align="center" pack="end">
+          <label id="paperLabel"
+                 value="&paperInput.label;"
+                 accesskey="&paperInput.accesskey;"
+                 control="paperList"/>
+        </hbox>
+        <menulist id="paperList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="colorGroup">
+        <hbox align="center" pack="end">
+          <label control="colorRadioGroup" value="&colorGroup.label;"/>
+        </hbox>
+        <radiogroup id="colorRadioGroup" orient="horizontal">
+          <radio id="grayRadio"
+                 label="&grayRadio.label;"
+                 accesskey="&grayRadio.accesskey;"/>
+          <radio id="colorRadio"
+                 label="&colorRadio.label;"
+                 accesskey="&colorRadio.accesskey;"/>
+        </radiogroup>
+      </row>
+    </rows>
+  </grid>
+
+  <grid>
+    <columns>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+       <groupbox flex="1">
+        <caption label="&edgeMarginInput.label;"/>
+        <hbox>
+          <hbox align="center">
+            <label id="topLabel"
+                   value="&topInput.label;"
+                   accesskey="&topInput.accesskey;"
+                   control="topInput"/>
+            <textbox id="topInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="bottomLabel"
+                   value="&bottomInput.label;"
+                   accesskey="&bottomInput.accesskey;"
+                   control="bottomInput"/>
+            <textbox id="bottomInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="leftLabel"
+                   value="&leftInput.label;"
+                   accesskey="&leftInput.accesskey;"
+                   control="leftInput"/>
+            <textbox id="leftInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="rightLabel"
+                   value="&rightInput.label;"
+                   accesskey="&rightInput.accesskey;"
+                   control="rightInput"/>
+            <textbox id="rightInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+        </hbox>
+        </groupbox>
+      </row>
+
+    </rows>
+  </grid>
+
+</dialog>

@@ -19,6 +19,7 @@
 
 // Printing Progress Includes
 #include "nsPrintProgress.h"
+#include "nsPrintProgressParams.h"
 #include "nsIWebProgressListener.h"
 
 class nsIDOMWindow;
@@ -42,6 +43,12 @@ protected:
   virtual ~nsPrintingPromptService();
 
 private:
+  nsresult DoDialog(mozIDOMWindowProxy *aParent,
+                    nsIDialogParamBlock *aParamBlock,
+                    nsIWebBrowserPrint *aWebBrowserPrint,
+                    nsIPrintSettings* aPS,
+                    const char *aChromeURL);
+
   nsCOMPtr<nsIWindowWatcher> mWatcher;
   nsCOMPtr<nsIPrintProgress> mPrintProgress;
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
