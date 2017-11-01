@@ -56,6 +56,12 @@ to Babel locale mapping.
 """
 
 MISSING_LOCALES = {
+    'ia': {
+        'name': "Interlingua",
+        'local_name': "Interlingua",
+        'plural_rule': 'es',
+        'team': 'ia <LL@li.org>\n'
+    },
     'cak': {
         'name': "Kaqchikel",
         'local_name': "Kaqchikel",
