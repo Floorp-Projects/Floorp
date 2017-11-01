@@ -4,65 +4,64 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Portions of this file were originally under the following license:
- *
- * Copyright (C) 2008 Jason Evans <jasone@FreeBSD.org>.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice(s), this list of conditions and the following disclaimer
- *    unmodified other than the allowable addition of one or more
- *    copyright notices.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice(s), this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER(S) BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- ******************************************************************************
- *
- * C++ template implementation of left-leaning red-black trees.
- *
- * All operations are done non-recursively.  Parent pointers are not used, and
- * color bits are stored in the least significant bit of right-child pointers,
- * thus making node linkage as compact as is possible for red-black trees.
- *
- * The RedBlackTree template expects two type arguments: the type of the nodes,
- * containing a RedBlackTreeNode, and a trait providing two methods:
- *  - a GetTreeNode method that returns a reference to the RedBlackTreeNode
- *    corresponding to a given node with the following signature:
- *      static RedBlackTreeNode<T>& GetTreeNode(T*)
- *  - a Compare function with the following signature:
- *      static int Compare(T* aNode, T* aOther)
- *                            ^^^^^
- *                         or aKey
- *
- * Interpretation of comparision function return values:
- *
- *   -1 : aNode <  aOther
- *    0 : aNode == aOther
- *    1 : aNode >  aOther
- *
- * In all cases, the aNode or aKey argument is the first argument to the
- * comparison function, which makes it possible to write comparison functions
- * that treat the first argument specially.
- *
- ******************************************************************************/
+// Portions of this file were originally under the following license:
+//
+// Copyright (C) 2008 Jason Evans <jasone@FreeBSD.org>.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+// 1. Redistributions of source code must retain the above copyright
+//    notice(s), this list of conditions and the following disclaimer
+//    unmodified other than the allowable addition of one or more
+//    copyright notices.
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice(s), this list of conditions and the following disclaimer in
+//    the documentation and/or other materials provided with the
+//    distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) ``AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDER(S) BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// ****************************************************************************
+//
+// C++ template implementation of left-leaning red-black trees.
+//
+// All operations are done non-recursively.  Parent pointers are not used, and
+// color bits are stored in the least significant bit of right-child pointers,
+// thus making node linkage as compact as is possible for red-black trees.
+//
+// The RedBlackTree template expects two type arguments: the type of the nodes,
+// containing a RedBlackTreeNode, and a trait providing two methods:
+//  - a GetTreeNode method that returns a reference to the RedBlackTreeNode
+//    corresponding to a given node with the following signature:
+//      static RedBlackTreeNode<T>& GetTreeNode(T*)
+//  - a Compare function with the following signature:
+//      static int Compare(T* aNode, T* aOther)
+//                            ^^^^^
+//                         or aKey
+//
+// Interpretation of comparision function return values:
+//
+//   -1 : aNode <  aOther
+//    0 : aNode == aOther
+//    1 : aNode >  aOther
+//
+// In all cases, the aNode or aKey argument is the first argument to the
+// comparison function, which makes it possible to write comparison functions
+// that treat the first argument specially.
+//
+// ***************************************************************************
 
 #ifndef RB_H_
 #define RB_H_
@@ -76,12 +75,12 @@ enum NodeColor
   Red = 1,
 };
 
-/* Node structure. */
+// Node structure.
 template <typename T>
 class RedBlackTreeNode
 {
   T* mLeft;
-  /* The lowest bit is the color */
+  // The lowest bit is the color
   T* mRightAndColor;
 
 public:
@@ -129,7 +128,7 @@ public:
   }
 };
 
-/* Tree structure. */
+// Tree structure.
 template<typename T, typename Trait>
 class RedBlackTree
 {
@@ -161,8 +160,8 @@ public:
     return Search(reinterpret_cast<TreeNode*>(aKey));
   }
 
-  /* Find a match if it exists. Otherwise, find the next greater node, if one
-   * exists */
+  // Find a match if it exists. Otherwise, find the next greater node, if one
+  // exists.
   T* SearchOrNext(T* aKey)
   {
     return SearchOrNext(reinterpret_cast<TreeNode*>(aKey));
@@ -178,8 +177,8 @@ public:
     return Remove(reinterpret_cast<TreeNode*>(aNode));
   }
 
-  /* Helper class to avoid having all the tree traversal code further below
-   * have to use Trait::GetTreeNode, adding visual noise. */
+  // Helper class to avoid having all the tree traversal code further below
+  // have to use Trait::GetTreeNode, adding visual noise.
   struct TreeNode : public T
   {
     TreeNode* Left()
@@ -339,29 +338,29 @@ private:
     rbp_i_p->SetRight(nullptr);
     rbp_i_p->SetColor(NodeColor::Black);
     rbp_i_c = mRoot;
-    /* Iteratively search down the tree for the insertion point,
-     * splitting 4-nodes as they are encountered. At the end of each
-     * iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
-     * the tree, assuming a sufficiently deep tree. */
+    // Iteratively search down the tree for the insertion point,
+    // splitting 4-nodes as they are encountered. At the end of each
+    // iteration, rbp_i_g->rbp_i_p->rbp_i_c is a 3-level path down
+    // the tree, assuming a sufficiently deep tree.
     while (rbp_i_c) {
       rbp_i_t = rbp_i_c->Left();
       rbp_i_u = rbp_i_t ? rbp_i_t->Left() : nullptr;
       if (rbp_i_t && rbp_i_u && rbp_i_t->IsRed() && rbp_i_u->IsRed()) {
-        /* rbp_i_c is the top of a logical 4-node, so split it.
-         * This iteration does not move down the tree, due to the
-         * disruptiveness of node splitting.
-         *
-         * Rotate right. */
+        // rbp_i_c is the top of a logical 4-node, so split it.
+        // This iteration does not move down the tree, due to the
+        // disruptiveness of node splitting.
+        //
+        // Rotate right.
         rbp_i_t = RotateRight(rbp_i_c);
-        /* Pass red links up one level. */
+        // Pass red links up one level.
         rbp_i_u = rbp_i_t->Left();
         rbp_i_u->SetColor(NodeColor::Black);
         if (rbp_i_p->Left() == rbp_i_c) {
           rbp_i_p->SetLeft(rbp_i_t);
           rbp_i_c = rbp_i_t;
         } else {
-          /* rbp_i_c was the right child of rbp_i_p, so rotate
-           * left in order to maintain the left-leaning invariant. */
+          // rbp_i_c was the right child of rbp_i_p, so rotate
+          // left in order to maintain the left-leaning invariant.
           MOZ_ASSERT(rbp_i_p->Right() == rbp_i_c);
           rbp_i_p->SetRight(rbp_i_t);
           rbp_i_u = LeanLeft(rbp_i_p);
@@ -392,7 +391,7 @@ private:
         rbp_i_c = rbp_i_c->Right();
       }
     }
-    /* rbp_i_p now refers to the node under which to insert. */
+    // rbp_i_p now refers to the node under which to insert.
     aNode->SetLeft(nullptr);
     aNode->SetRight(nullptr);
     aNode->SetColor(NodeColor::Red);
@@ -407,7 +406,7 @@ private:
     } else {
       rbp_i_p->SetLeft(aNode);
     }
-    /* Update the root and make sure that it is black. */
+    // Update the root and make sure that it is black.
     mRoot = rbp_i_s.addr()->Left();
     mRoot->SetColor(NodeColor::Black);
   }
@@ -425,24 +424,24 @@ private:
     rbp_r_p->SetColor(NodeColor::Black);
     rbp_r_c = mRoot;
     rbp_r_xp = nullptr;
-    /* Iterate down the tree, but always transform 2-nodes to 3- or
-     * 4-nodes in order to maintain the invariant that the current
-     * node is not a 2-node. This allows simple deletion once a leaf
-     * is reached. Handle the root specially though, since there may
-     * be no way to convert it from a 2-node to a 3-node. */
+    // Iterate down the tree, but always transform 2-nodes to 3- or
+    // 4-nodes in order to maintain the invariant that the current
+    // node is not a 2-node. This allows simple deletion once a leaf
+    // is reached. Handle the root specially though, since there may
+    // be no way to convert it from a 2-node to a 3-node.
     rbp_r_cmp = Trait::Compare(aNode, rbp_r_c);
     if (rbp_r_cmp < 0) {
       rbp_r_t = rbp_r_c->Left();
       rbp_r_u = rbp_r_t ? rbp_r_t->Left() : nullptr;
       if ((!rbp_r_t || rbp_r_t->IsBlack()) &&
           (!rbp_r_u || rbp_r_u->IsBlack())) {
-        /* Apply standard transform to prepare for left move. */
+        // Apply standard transform to prepare for left move.
         rbp_r_t = MoveRedLeft(rbp_r_c);
         rbp_r_t->SetColor(NodeColor::Black);
         rbp_r_p->SetLeft(rbp_r_t);
         rbp_r_c = rbp_r_t;
       } else {
-        /* Move left. */
+        // Move left.
         rbp_r_p = rbp_r_c;
         rbp_r_c = rbp_r_c->Left();
       }
@@ -450,7 +449,7 @@ private:
       if (rbp_r_cmp == 0) {
         MOZ_ASSERT(aNode == rbp_r_c);
         if (!rbp_r_c->Right()) {
-          /* Delete root node (which is also a leaf node). */
+          // Delete root node (which is also a leaf node).
           if (rbp_r_c->Left()) {
             rbp_r_t = LeanRight(rbp_r_c);
             rbp_r_t->SetRight(nullptr);
@@ -459,12 +458,12 @@ private:
           }
           rbp_r_p->SetLeft(rbp_r_t);
         } else {
-          /* This is the node we want to delete, but we will
-           * instead swap it with its successor and delete the
-           * successor. Record enough information to do the
-           * swap later. rbp_r_xp is the aNode's parent. */
+          // This is the node we want to delete, but we will
+          // instead swap it with its successor and delete the
+          // successor. Record enough information to do the
+          // swap later. rbp_r_xp is the aNode's parent.
           rbp_r_xp = rbp_r_p;
-          rbp_r_cmp = 1; /* Note that deletion is incomplete. */
+          rbp_r_cmp = 1; // Note that deletion is incomplete.
         }
       }
       if (rbp_r_cmp == 1) {
@@ -472,10 +471,10 @@ private:
                                  rbp_r_c->Right()->Left()->IsBlack())) {
           rbp_r_t = rbp_r_c->Left();
           if (rbp_r_t->IsRed()) {
-            /* Standard transform. */
+            // Standard transform.
             rbp_r_t = MoveRedRight(rbp_r_c);
           } else {
-            /* Root-specific transform. */
+            // Root-specific transform.
             rbp_r_c->SetColor(NodeColor::Red);
             rbp_r_u = rbp_r_t->Left();
             if (rbp_r_u && rbp_r_u->IsRed()) {
@@ -491,7 +490,7 @@ private:
           rbp_r_p->SetLeft(rbp_r_t);
           rbp_r_c = rbp_r_t;
         } else {
-          /* Move right. */
+          // Move right.
           rbp_r_p = rbp_r_c;
           rbp_r_c = rbp_r_c->Right();
         }
@@ -504,9 +503,9 @@ private:
         if (rbp_r_cmp < 0) {
           rbp_r_t = rbp_r_c->Left();
           if (!rbp_r_t) {
-            /* rbp_r_c now refers to the successor node to
-             * relocate, and rbp_r_xp/aNode refer to the
-             * context for the relocation. */
+            // rbp_r_c now refers to the successor node to
+            // relocate, and rbp_r_xp/aNode refer to the
+            // context for the relocation.
             if (rbp_r_xp->Left() == aNode) {
               rbp_r_xp->SetLeft(rbp_r_c);
             } else {
@@ -538,12 +537,12 @@ private:
             rbp_r_c = rbp_r_c->Left();
           }
         } else {
-          /* Check whether to delete this node (it has to be
-           * the correct node and a leaf node). */
+          // Check whether to delete this node (it has to be
+          // the correct node and a leaf node).
           if (rbp_r_cmp == 0) {
             MOZ_ASSERT(aNode == rbp_r_c);
             if (!rbp_r_c->Right()) {
-              /* Delete leaf node. */
+              // Delete leaf node.
               if (rbp_r_c->Left()) {
                 rbp_r_t = LeanRight(rbp_r_c);
                 rbp_r_t->SetRight(nullptr);
@@ -557,11 +556,11 @@ private:
               }
               break;
             }
-            /* This is the node we want to delete, but we
-             * will instead swap it with its successor
-             * and delete the successor. Record enough
-             * information to do the swap later.
-             * rbp_r_xp is aNode's parent. */
+            // This is the node we want to delete, but we
+            // will instead swap it with its successor
+            // and delete the successor. Record enough
+            // information to do the swap later.
+            // rbp_r_xp is aNode's parent.
             rbp_r_xp = rbp_r_p;
           }
           rbp_r_t = rbp_r_c->Right();
@@ -581,7 +580,7 @@ private:
         }
       }
     }
-    /* Update root. */
+    // Update root.
     mRoot = rbp_r_s.addr()->Left();
   }
 
@@ -687,32 +686,29 @@ private:
     return node;
   }
 
-  /*
-   * The iterator simulates recursion via an array of pointers that store the
-   * current path.  This is critical to performance, since a series of calls to
-   * rb_{next,prev}() would require time proportional to (n lg n), whereas this
-   * implementation only requires time proportional to (n).
-   *
-   * Since the iterator caches a path down the tree, any tree modification may
-   * cause the cached path to become invalid. Don't modify the tree during an
-   * iteration.
-   */
+  // The iterator simulates recursion via an array of pointers that store the
+  // current path.  This is critical to performance, since a series of calls to
+  // rb_{next,prev}() would require time proportional to (n lg n), whereas this
+  // implementation only requires time proportional to (n).
+  //
+  // Since the iterator caches a path down the tree, any tree modification may
+  // cause the cached path to become invalid. Don't modify the tree during an
+  // iteration.
 
-  /*
-   * Size the path arrays such that they are always large enough, even if a
-   * tree consumes all of memory.  Since each node must contain a minimum of
-   * two pointers, there can never be more nodes than:
-   *
-   *   1 << ((sizeof(void*)<<3) - (log2(sizeof(void*))+1))
-   *
-   * Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
-   * is:
-   *
-   *   (3 * ((sizeof(void*)<<3) - (log2(sizeof(void*))+1)))
-   *
-   * This works out to a maximum depth of 87 and 180 for 32- and 64-bit
-   * systems, respectively (approximately 348 and 1440 bytes, respectively).
-   */
+
+  // Size the path arrays such that they are always large enough, even if a
+  // tree consumes all of memory.  Since each node must contain a minimum of
+  // two pointers, there can never be more nodes than:
+  //
+  //   1 << ((sizeof(void*)<<3) - (log2(sizeof(void*))+1))
+  //
+  // Since the depth of a tree is limited to 3*lg(#nodes), the maximum depth
+  // is:
+  //
+  //   (3 * ((sizeof(void*)<<3) - (log2(sizeof(void*))+1)))
+  //
+  // This works out to a maximum depth of 87 and 180 for 32- and 64-bit
+  // systems, respectively (approximately 348 and 1440 bytes, respectively).
 public:
   class Iterator
   {
@@ -723,7 +719,7 @@ public:
     explicit Iterator(RedBlackTree<T, Trait>* aTree)
       : mDepth(0)
     {
-      /* Initialize the path to contain the left spine. */
+      // Initialize the path to contain the left spine.
       if (aTree->mRoot) {
         TreeNode* node;
         mPath[mDepth++] = aTree->mRoot;
@@ -773,14 +769,14 @@ public:
     {
       TreeNode* node;
       if ((node = mPath[mDepth - 1]->Right())) {
-        /* The successor is the left-most node in the right subtree. */
+        // The successor is the left-most node in the right subtree.
         mPath[mDepth++] = node;
         while ((node = mPath[mDepth - 1]->Left())) {
           mPath[mDepth++] = node;
         }
       } else {
-        /* The successor is above the current node.  Unwind until a
-         * left-leaning edge is removed from the path, of the path is empty. */
+        // The successor is above the current node.  Unwind until a
+        // left-leaning edge is removed from the path, of the path is empty.
         for (mDepth--; mDepth > 0; mDepth--) {
           if (mPath[mDepth - 1]->Left() == mPath[mDepth]) {
             break;
@@ -794,4 +790,4 @@ public:
   Iterator iter() { return Iterator(this); }
 };
 
-#endif /* RB_H_ */
+#endif // RB_H_

@@ -8,8 +8,8 @@
 #include "mozmemory_wrap.h"
 #include "mozilla/Types.h"
 
-/* Declare malloc implementation functions with the right return and
- * argument types. */
+// Declare malloc implementation functions with the right return and
+// argument types.
 #define MALLOC_DECL(name, return_type, ...) \
   MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
@@ -67,8 +67,8 @@ operator delete[](void* ptr, std::nothrow_t const&)
 }
 #endif
 
-/* strndup and strdup may be defined as macros in string.h, which would
- * clash with the definitions below. */
+// strndup and strdup may be defined as macros in string.h, which would
+// clash with the definitions below.
 #undef strndup
 #undef strdup
 
@@ -147,10 +147,8 @@ asprintf_impl(char **str, const char *fmt, ...)
 #ifdef XP_WIN
 #include <wchar.h>
 
-/*
- *  We also need to provide our own impl of wcsdup so that we don't ask
- *  the CRT for memory from its heap (which will then be unfreeable).
- */
+// We also need to provide our own impl of wcsdup so that we don't ask
+// the CRT for memory from its heap (which will then be unfreeable).
 MOZ_MEMORY_API wchar_t*
 wcsdup_impl(const wchar_t* src)
 {
@@ -166,4 +164,4 @@ _aligned_malloc(size_t size, size_t alignment)
 {
   return memalign_impl(alignment, size);
 }
-#endif /* XP_WIN */
+#endif // XP_WIN
