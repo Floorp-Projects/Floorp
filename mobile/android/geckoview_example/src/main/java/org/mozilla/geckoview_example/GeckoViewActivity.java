@@ -108,7 +108,7 @@ public class GeckoViewActivity extends Activity {
         if (requestCode == REQUEST_FILE_PICKER) {
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mGeckoView.getPromptDelegate();
-            prompt.onFileCallbackResult(resultCode, data);
+            prompt.onFileCallbackResult(this, resultCode, data);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }

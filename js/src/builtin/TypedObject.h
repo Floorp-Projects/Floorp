@@ -707,12 +707,7 @@ class InlineTypedObject : public TypedObject
   public:
     static const size_t MaximumSize = JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
 
-    static gc::AllocKind allocKindForTypeDescriptor(TypeDescr* descr) {
-        size_t nbytes = descr->size();
-        MOZ_ASSERT(nbytes <= MaximumSize);
-
-        return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
-    }
+    static inline gc::AllocKind allocKindForTypeDescriptor(TypeDescr* descr);
 
     uint8_t* inlineTypedMem(const JS::AutoRequireNoGC&) const {
         return inlineTypedMem();

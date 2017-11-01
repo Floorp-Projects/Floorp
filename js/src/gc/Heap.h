@@ -11,8 +11,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
 
 #include <stddef.h>
@@ -24,6 +22,7 @@
 #include "jsutil.h"
 
 #include "ds/BitArray.h"
+#include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
 #include "gc/Memory.h"
 #include "js/GCAPI.h"
@@ -59,175 +58,6 @@ enum InitialHeap : uint8_t {
     DefaultHeap,
     TenuredHeap
 };
-
-/* The GC allocation kinds. */
-// FIXME: uint8_t would make more sense for the underlying type, but causes
-// miscompilations in GCC (fixed in 4.8.5 and 4.9.3). See also bug 1143966.
-enum class AllocKind {
-    FIRST,
-    OBJECT_FIRST = FIRST,
-    FUNCTION = FIRST,
-    FUNCTION_EXTENDED,
-    OBJECT0,
-    OBJECT0_BACKGROUND,
-    OBJECT2,
-    OBJECT2_BACKGROUND,
-    OBJECT4,
-    OBJECT4_BACKGROUND,
-    OBJECT8,
-    OBJECT8_BACKGROUND,
-    OBJECT12,
-    OBJECT12_BACKGROUND,
-    OBJECT16,
-    OBJECT16_BACKGROUND,
-    OBJECT_LIMIT,
-    OBJECT_LAST = OBJECT_LIMIT - 1,
-    SCRIPT,
-    LAZY_SCRIPT,
-    SHAPE,
-    ACCESSOR_SHAPE,
-    BASE_SHAPE,
-    OBJECT_GROUP,
-    FAT_INLINE_STRING,
-    STRING,
-    EXTERNAL_STRING,
-    FAT_INLINE_ATOM,
-    ATOM,
-    SYMBOL,
-    JITCODE,
-    SCOPE,
-    REGEXP_SHARED,
-    LIMIT,
-    LAST = LIMIT - 1
-};
-
-// Macro to enumerate the different allocation kinds supplying information about
-// the trace kind, C++ type and allocation size.
-#define FOR_EACH_OBJECT_ALLOCKIND(D) \
- /* AllocKind              TraceKind      TypeName           SizedType */ \
-    D(FUNCTION,            Object,        JSObject,          JSFunction) \
-    D(FUNCTION_EXTENDED,   Object,        JSObject,          FunctionExtended) \
-    D(OBJECT0,             Object,        JSObject,          JSObject_Slots0) \
-    D(OBJECT0_BACKGROUND,  Object,        JSObject,          JSObject_Slots0) \
-    D(OBJECT2,             Object,        JSObject,          JSObject_Slots2) \
-    D(OBJECT2_BACKGROUND,  Object,        JSObject,          JSObject_Slots2) \
-    D(OBJECT4,             Object,        JSObject,          JSObject_Slots4) \
-    D(OBJECT4_BACKGROUND,  Object,        JSObject,          JSObject_Slots4) \
-    D(OBJECT8,             Object,        JSObject,          JSObject_Slots8) \
-    D(OBJECT8_BACKGROUND,  Object,        JSObject,          JSObject_Slots8) \
-    D(OBJECT12,            Object,        JSObject,          JSObject_Slots12) \
-    D(OBJECT12_BACKGROUND, Object,        JSObject,          JSObject_Slots12) \
-    D(OBJECT16,            Object,        JSObject,          JSObject_Slots16) \
-    D(OBJECT16_BACKGROUND, Object,        JSObject,          JSObject_Slots16)
-
-#define FOR_EACH_NONOBJECT_ALLOCKIND(D) \
- /* AllocKind              TraceKind      TypeName           SizedType */ \
-    D(SCRIPT,              Script,        JSScript,          JSScript) \
-    D(LAZY_SCRIPT,         LazyScript,    js::LazyScript,    js::LazyScript) \
-    D(SHAPE,               Shape,         js::Shape,         js::Shape) \
-    D(ACCESSOR_SHAPE,      Shape,         js::AccessorShape, js::AccessorShape) \
-    D(BASE_SHAPE,          BaseShape,     js::BaseShape,     js::BaseShape) \
-    D(OBJECT_GROUP,        ObjectGroup,   js::ObjectGroup,   js::ObjectGroup) \
-    D(FAT_INLINE_STRING,   String,        JSFatInlineString, JSFatInlineString) \
-    D(STRING,              String,        JSString,          JSString) \
-    D(EXTERNAL_STRING,     String,        JSExternalString,  JSExternalString) \
-    D(FAT_INLINE_ATOM,     String,        js::FatInlineAtom, js::FatInlineAtom) \
-    D(ATOM,                String,        js::NormalAtom,    js::NormalAtom) \
-    D(SYMBOL,              Symbol,        JS::Symbol,        JS::Symbol) \
-    D(JITCODE,             JitCode,       js::jit::JitCode,  js::jit::JitCode) \
-    D(SCOPE,               Scope,         js::Scope,         js::Scope) \
-    D(REGEXP_SHARED,       RegExpShared,  js::RegExpShared,  js::RegExpShared)
-
-#define FOR_EACH_ALLOCKIND(D) \
-    FOR_EACH_OBJECT_ALLOCKIND(D) \
-    FOR_EACH_NONOBJECT_ALLOCKIND(D)
-
-static_assert(int(AllocKind::FIRST) == 0, "Various places depend on AllocKind starting at 0, "
-                                          "please audit them carefully!");
-static_assert(int(AllocKind::OBJECT_FIRST) == 0, "Various places depend on AllocKind::OBJECT_FIRST "
-                                                 "being 0, please audit them carefully!");
-
-inline bool
-IsAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
-}
-
-inline bool
-IsValidAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;
-}
-
-inline bool
-IsObjectAllocKind(AllocKind kind)
-{
-    return kind >= AllocKind::OBJECT_FIRST && kind <= AllocKind::OBJECT_LAST;
-}
-
-inline bool
-IsShapeAllocKind(AllocKind kind)
-{
-    return kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE;
-}
-
-// Returns a sequence for use in a range-based for loop,
-// to iterate over all alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
-AllAllocKinds()
-{
-    return mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT);
-}
-
-// Returns a sequence for use in a range-based for loop,
-// to iterate over all object alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT))
-ObjectAllocKinds()
-{
-    return mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST, AllocKind::OBJECT_LIMIT);
-}
-
-// Returns a sequence for use in a range-based for loop,
-// to iterate over alloc kinds from |first| to |limit|, exclusive.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT))
-SomeAllocKinds(AllocKind first = AllocKind::FIRST, AllocKind limit = AllocKind::LIMIT)
-{
-    MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
-    MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
-    return mozilla::MakeEnumeratedRange(first, limit);
-}
-
-// AllAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
-// with each index corresponding to a particular alloc kind.
-template<typename ValueType> using AllAllocKindArray =
-    mozilla::EnumeratedArray<AllocKind, AllocKind::LIMIT, ValueType>;
-
-// ObjectAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
-// with each index corresponding to a particular object alloc kind.
-template<typename ValueType> using ObjectAllocKindArray =
-    mozilla::EnumeratedArray<AllocKind, AllocKind::OBJECT_LIMIT, ValueType>;
-
-static inline JS::TraceKind
-MapAllocToTraceKind(AllocKind kind)
-{
-    static const JS::TraceKind map[] = {
-#define EXPAND_ELEMENT(allocKind, traceKind, type, sizedType) \
-        JS::TraceKind::traceKind,
-FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
-#undef EXPAND_ELEMENT
-    };
-
-    static_assert(MOZ_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT),
-                  "AllocKind-to-TraceKind mapping must be in sync");
-    return map[size_t(kind)];
-}
-
-/*
- * This must be an upper bound, but we do not need the least upper bound, so
- * we just exclude non-background objects.
- */
-static const size_t MAX_BACKGROUND_FINALIZE_KINDS =
-    size_t(AllocKind::LIMIT) - size_t(AllocKind::OBJECT_LIMIT) / 2;
 
 /* Cells are aligned to CellAlignShift, so the largest tagged null pointer is: */
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;

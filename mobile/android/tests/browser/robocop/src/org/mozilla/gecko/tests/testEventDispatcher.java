@@ -13,6 +13,8 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.os.Parcel;
+
 /**
  * Tests the proper operation of EventDispatcher,
  */
@@ -370,6 +372,19 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         fAssertEquals("Bundle mixed double array has correct length", 2, mixedDoubleArray.length);
         fAssertEquals("Bundle mixed double array index 0 has correct value", 1.0, mixedDoubleArray[0]);
         fAssertEquals("Bundle mixed double array index 1 has correct value", 1.5, mixedDoubleArray[1]);
+
+        final Parcel parcel = Parcel.obtain();
+        bundle.writeToParcel(parcel, 0);
+        bundle.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+
+        final GeckoBundle unparceled = GeckoBundle.CREATOR.createFromParcel(parcel);
+        fAssertEquals("Bundle created from Parcel equals original", bundle, unparceled);
+        unparceled.clear();
+        fAssertEquals("Cleared Bundle is empty", 0, unparceled.size());
+        unparceled.readFromParcel(parcel);
+        fAssertEquals("Bundle read from Parcel equals original", bundle, unparceled);
+        parcel.recycle();
     }
 
     private static GeckoBundle createInnerBundle() {

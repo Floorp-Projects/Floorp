@@ -35,17 +35,52 @@ constexpr char AndroidGamepadManager::OnGamepadChange_t::signature[];
 constexpr char AndroidGamepadManager::Start_t::name[];
 constexpr char AndroidGamepadManager::Start_t::signature[];
 
-auto AndroidGamepadManager::Start() -> void
+auto AndroidGamepadManager::Start(mozilla::jni::Object::Param a0) -> void
 {
-    return mozilla::jni::Method<Start_t>::Call(AndroidGamepadManager::Context(), nullptr);
+    return mozilla::jni::Method<Start_t>::Call(AndroidGamepadManager::Context(), nullptr, a0);
 }
 
 constexpr char AndroidGamepadManager::Stop_t::name[];
 constexpr char AndroidGamepadManager::Stop_t::signature[];
 
-auto AndroidGamepadManager::Stop() -> void
+auto AndroidGamepadManager::Stop(mozilla::jni::Object::Param a0) -> void
 {
-    return mozilla::jni::Method<Stop_t>::Call(AndroidGamepadManager::Context(), nullptr);
+    return mozilla::jni::Method<Stop_t>::Call(AndroidGamepadManager::Context(), nullptr, a0);
+}
+
+const char Clipboard::name[] =
+        "org/mozilla/gecko/Clipboard";
+
+constexpr char Clipboard::ClearText_t::name[];
+constexpr char Clipboard::ClearText_t::signature[];
+
+auto Clipboard::ClearText(mozilla::jni::Object::Param a0) -> void
+{
+    return mozilla::jni::Method<ClearText_t>::Call(Clipboard::Context(), nullptr, a0);
+}
+
+constexpr char Clipboard::GetText_t::name[];
+constexpr char Clipboard::GetText_t::signature[];
+
+auto Clipboard::GetText(mozilla::jni::Object::Param a0) -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetText_t>::Call(Clipboard::Context(), nullptr, a0);
+}
+
+constexpr char Clipboard::HasText_t::name[];
+constexpr char Clipboard::HasText_t::signature[];
+
+auto Clipboard::HasText(mozilla::jni::Object::Param a0) -> bool
+{
+    return mozilla::jni::Method<HasText_t>::Call(Clipboard::Context(), nullptr, a0);
+}
+
+constexpr char Clipboard::SetText_t::name[];
+constexpr char Clipboard::SetText_t::signature[];
+
+auto Clipboard::SetText(mozilla::jni::Object::Param a0, mozilla::jni::String::Param a1) -> void
+{
+    return mozilla::jni::Method<SetText_t>::Call(Clipboard::Context(), nullptr, a0, a1);
 }
 
 const char EventDispatcher::name[] =
@@ -945,9 +980,6 @@ constexpr char GeckoView::Window::Close_t::signature[];
 
 constexpr char GeckoView::Window::DisposeNative_t::name[];
 constexpr char GeckoView::Window::DisposeNative_t::signature[];
-
-constexpr char GeckoView::Window::LoadUri_t::name[];
-constexpr char GeckoView::Window::LoadUri_t::signature[];
 
 constexpr char GeckoView::Window::OnReattach_t::name[];
 constexpr char GeckoView::Window::OnReattach_t::signature[];
@@ -2521,41 +2553,6 @@ constexpr char GeckoServiceChildProcess::GetEditableParent_t::signature[];
 auto GeckoServiceChildProcess::GetEditableParent(int64_t a0, int64_t a1) -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<GetEditableParent_t>::Call(GeckoServiceChildProcess::Context(), nullptr, a0, a1);
-}
-
-const char Clipboard::name[] =
-        "org/mozilla/gecko/util/Clipboard";
-
-constexpr char Clipboard::ClearText_t::name[];
-constexpr char Clipboard::ClearText_t::signature[];
-
-auto Clipboard::ClearText() -> void
-{
-    return mozilla::jni::Method<ClearText_t>::Call(Clipboard::Context(), nullptr);
-}
-
-constexpr char Clipboard::GetText_t::name[];
-constexpr char Clipboard::GetText_t::signature[];
-
-auto Clipboard::GetText() -> mozilla::jni::String::LocalRef
-{
-    return mozilla::jni::Method<GetText_t>::Call(Clipboard::Context(), nullptr);
-}
-
-constexpr char Clipboard::HasText_t::name[];
-constexpr char Clipboard::HasText_t::signature[];
-
-auto Clipboard::HasText() -> bool
-{
-    return mozilla::jni::Method<HasText_t>::Call(Clipboard::Context(), nullptr);
-}
-
-constexpr char Clipboard::SetText_t::name[];
-constexpr char Clipboard::SetText_t::signature[];
-
-auto Clipboard::SetText(mozilla::jni::String::Param a0) -> void
-{
-    return mozilla::jni::Method<SetText_t>::Call(Clipboard::Context(), nullptr, a0);
 }
 
 const char EventCallback::name[] =

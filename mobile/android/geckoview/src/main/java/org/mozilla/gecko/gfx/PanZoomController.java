@@ -5,17 +5,12 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoAppShell;
-
 import android.graphics.PointF;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
 public interface PanZoomController {
-    // Threshold for sending touch move events to content
-    public static final float CLICK_THRESHOLD = 1 / 50f * GeckoAppShell.getDpi();
-
     static class Factory {
         static PanZoomController create(View view) {
             return new NativePanZoomController(view);

@@ -46,13 +46,6 @@ CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress, bool aIsM
   if (aNewProgress & FLAG_LOAD_COMPLETE) {
     MOZ_ASSERT(aIsMultipart || aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
-  if (aNewProgress & FLAG_ONLOAD_BLOCKED) {
-    // No preconditions.
-  }
-  if (aNewProgress & FLAG_ONLOAD_UNBLOCKED) {
-    MOZ_ASSERT(aNewProgress & FLAG_ONLOAD_BLOCKED);
-    MOZ_ASSERT(aIsMultipart || aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
-  }
   if (aNewProgress & FLAG_IS_ANIMATED) {
     // No preconditions; like FLAG_HAS_TRANSPARENCY, we should normally never
     // discover this *after* FLAG_SIZE_AVAILABLE, but unfortunately some corrupt
@@ -333,10 +326,6 @@ SyncNotifyInternal(const T& aObservers,
     notify([](IProgressObserver* aObs) { aObs->Notify(I::SIZE_AVAILABLE); });
   }
 
-  if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    notify([](IProgressObserver* aObs) { aObs->BlockOnload(); });
-  }
-
   if (aHasImage) {
     // OnFrameUpdate
     // If there's any content in this frame at all (always true for
@@ -361,13 +350,6 @@ SyncNotifyInternal(const T& aObservers,
     }
   }
 
-  // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
-  // observers that can fire events when they receive those notifications to do
-  // so then, instead of being forced to wait for UnblockOnload.
-  if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
-    notify([](IProgressObserver* aObs) { aObs->UnblockOnload(); });
-  }
-
   if (aProgress & FLAG_DECODE_COMPLETE) {
     MOZ_ASSERT(aHasImage, "Stopped decoding without ever having an image?");
     notify([](IProgressObserver* aObs) { aObs->Notify(I::DECODE_COMPLETE); });
@@ -387,22 +369,8 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
 {
   MOZ_ASSERT(NS_IsMainThread(), "Use mObservers on main thread only");
 
-  // Don't unblock onload if we're not blocked.
   Progress progress = Difference(aProgress);
-  if (!((mProgress | progress) & FLAG_ONLOAD_BLOCKED)) {
-    progress &= ~FLAG_ONLOAD_UNBLOCKED;
-  }
-
   CheckProgressConsistency(mProgress, mProgress | progress, mIsMultipart);
-
-  // XXX(seth): Hack to work around the fact that some observers have bugs and
-  // need to get onload blocking notifications multiple times. We should fix
-  // those observers and remove this.
-  if ((aProgress & FLAG_DECODE_COMPLETE) &&
-      (mProgress & FLAG_ONLOAD_BLOCKED) &&
-      (mProgress & FLAG_ONLOAD_UNBLOCKED)) {
-    progress |= FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
-  }
 
   // Apply the changes.
   mProgress |= progress;
@@ -449,10 +417,6 @@ ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread(),
              "SyncNotifyState and mObservers are not threadsafe");
   RefPtr<IProgressObserver> kungFuDeathGrip(aObserver);
-
-  if (mProgress & FLAG_ONLOAD_BLOCKED && !(mProgress & FLAG_ONLOAD_UNBLOCKED)) {
-    aObserver->UnblockOnload();
-  }
 
   if (!(mProgress & FLAG_LOAD_COMPLETE)) {
     aObserver->OnLoadComplete(true);

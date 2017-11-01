@@ -641,6 +641,7 @@ GECKOVIEW_AIDLS = \
   org/mozilla/gecko/media/IMediaManager.aidl \
   org/mozilla/gecko/process/IChildProcess.aidl \
   org/mozilla/gecko/process/IProcessManager.aidl \
+  org/mozilla/gecko/util/GeckoBundle.aidl \
   $(NULL)
 
 geckoview_aidl_src_path := $(topsrcdir)/mobile/android/geckoview/src/main/aidl

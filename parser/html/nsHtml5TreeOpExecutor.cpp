@@ -34,6 +34,7 @@
 #include "nsIViewSourceChannel.h"
 #include "xpcpublic.h"
 #include "mozilla/IdleTaskRunner.h"
+#include "nsHtml5AutoPauseUpdate.h"
 
 using namespace mozilla;
 
@@ -57,6 +58,43 @@ class nsHtml5ExecutorReflusher : public Runnable
     }
 };
 
+class MOZ_RAII nsHtml5AutoFlush final
+{
+private:
+  RefPtr<nsHtml5TreeOpExecutor> mExecutor;
+  size_t mOpsToRemove;
+
+public:
+  explicit nsHtml5AutoFlush(nsHtml5TreeOpExecutor* aExecutor)
+    : mExecutor(aExecutor)
+    , mOpsToRemove(aExecutor->OpQueueLength())
+  {
+    mExecutor->BeginFlush();
+    mExecutor->BeginDocUpdate();
+  }
+  ~nsHtml5AutoFlush()
+  {
+    if (mExecutor->IsInDocUpdate()) {
+      mExecutor->EndDocUpdate();
+    } else {
+      // We aren't in an update if nsHtml5AutoPauseUpdate
+      // caused something to terminate the parser.
+      MOZ_RELEASE_ASSERT(
+        mExecutor->IsComplete(),
+        "How do we have mParser but the doc update isn't open?");
+    }
+    mExecutor->EndFlush();
+    mExecutor->RemoveFromStartOfOpQueue(mOpsToRemove);
+  }
+  void SetNumberOfOpsToRemove(size_t aOpsToRemove)
+  {
+    MOZ_ASSERT(aOpsToRemove < mOpsToRemove,
+               "Requested partial clearing of op queue but the number to clear "
+               "wasn't less than the length of the queue.");
+    mOpsToRemove = aOpsToRemove;
+  }
+};
+
 static mozilla::LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nullptr;
 StaticRefPtr<IdleTaskRunner> gBackgroundFlushRunner;
 
@@ -77,7 +115,7 @@ nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
 nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor()
 {
   if (gBackgroundFlushList && isInList()) {
-    mOpQueue.Clear();
+    ClearOpQueue();
     removeFrom(*gBackgroundFlushList);
     if (gBackgroundFlushList->isEmpty()) {
       delete gBackgroundFlushList;
@@ -118,24 +156,12 @@ nsHtml5TreeOpExecutor::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP
 nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
 {
-  if (!aTerminated) {
-    // This is needed to avoid unblocking loads too many times on one hand
-    // and on the other hand to avoid destroying the frame constructor from
-    // within an update batch. See bug 537683.
-    EndDocUpdate();
-    
-    // If the above caused a call to nsIParser::Terminate(), let that call
-    // win.
-    if (!mParser) {
-      return NS_OK;
-    }
-  }
-  
   if (mRunsToCompletion) {
     return NS_OK;
   }
 
-  GetParser()->DropStreamParser();
+  MOZ_RELEASE_ASSERT(!IsInDocUpdate(),
+    "DidBuildModel from inside a doc update.");
 
   // This comes from nsXMLContentSink and nsHTMLContentSink
   // If this parser has been marked as broken, treat the end of parse as
@@ -173,6 +199,8 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated)
   if (mStarted) {
     mDocument->EndLoad();
   }
+
+  GetParser()->DropStreamParser();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
@@ -298,9 +326,9 @@ nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
 {
   nsTArray<nsHtml5SpeculativeLoad> speculativeLoadQueue;
   mStage.MoveSpeculativeLoadsTo(speculativeLoadQueue);
-  const nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
-  const nsHtml5SpeculativeLoad* end = start + speculativeLoadQueue.Length();
-  for (nsHtml5SpeculativeLoad* iter = const_cast<nsHtml5SpeculativeLoad*>(start);
+  nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
+  nsHtml5SpeculativeLoad* end = start + speculativeLoadQueue.Length();
+  for (nsHtml5SpeculativeLoad* iter = start;
        iter < end;
        ++iter) {
     if (MOZ_UNLIKELY(!mParser)) {
@@ -368,7 +396,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
   for (;;) {
     if (!mParser) {
       // Parse has terminated.
-      mOpQueue.Clear(); // clear in order to be able to assert in destructor
+      ClearOpQueue(); // clear in order to be able to assert in destructor
       return;
     }
 
@@ -395,18 +423,20 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 
     if (mReadingFromStage) {
       nsTArray<nsHtml5SpeculativeLoad> speculativeLoadQueue;
+      MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
+                         "mOpQueue modified during flush.");
       mStage.MoveOpsAndSpeculativeLoadsTo(mOpQueue, speculativeLoadQueue);
       // Make sure speculative loads never start after the corresponding
       // normal loads for the same URLs.
-      const nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
-      const nsHtml5SpeculativeLoad* end = start + speculativeLoadQueue.Length();
-      for (nsHtml5SpeculativeLoad* iter = (nsHtml5SpeculativeLoad*)start;
+      nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
+      nsHtml5SpeculativeLoad* end = start + speculativeLoadQueue.Length();
+      for (nsHtml5SpeculativeLoad* iter = start;
            iter < end;
            ++iter) {
         iter->Perform(this);
         if (MOZ_UNLIKELY(!mParser)) {
           // An extension terminated the parser from a HTTP observer.
-          mOpQueue.Clear(); // clear in order to be able to assert in destructor
+          ClearOpQueue(); // clear in order to be able to assert in destructor
           return;
         }
       }
@@ -416,7 +446,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
                                // URLs.
       if (MOZ_UNLIKELY(!mParser)) {
         // An extension terminated the parser from a HTTP observer.
-        mOpQueue.Clear(); // clear in order to be able to assert in destructor
+        ClearOpQueue(); // clear in order to be able to assert in destructor
         return;
       }
       // Not sure if this grip is still needed, but previously, the code
@@ -439,64 +469,65 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       return;
     }
 
-    mFlushState = eInFlush;
 
     nsIContent* scriptElement = nullptr;
     bool interrupted = false;
-    
-    BeginDocUpdate();
+    bool streamEnded = false;
 
-    uint32_t numberOfOpsToFlush = mOpQueue.Length();
+    {
+      // autoFlush clears mOpQueue in its destructor unless
+      // SetNumberOfOpsToRemove is called first, in which case only
+      // some ops from the start of the queue are cleared.
+      nsHtml5AutoFlush autoFlush(this);
 
-    const nsHtml5TreeOperation* first = mOpQueue.Elements();
-    const nsHtml5TreeOperation* last = first + numberOfOpsToFlush - 1;
-    for (nsHtml5TreeOperation* iter = const_cast<nsHtml5TreeOperation*>(first);;) {
-      if (MOZ_UNLIKELY(!mParser)) {
-        // The previous tree op caused a call to nsIParser::Terminate().
-        break;
+      nsHtml5TreeOperation* first = mOpQueue.Elements();
+      nsHtml5TreeOperation* last = first + mOpQueue.Length() - 1;
+      for (nsHtml5TreeOperation* iter = first;; ++iter) {
+        if (MOZ_UNLIKELY(!mParser)) {
+          // The previous tree op caused a call to nsIParser::Terminate().
+          return;
+        }
+        MOZ_ASSERT(IsInDocUpdate(),
+                   "Tried to perform tree op outside update batch.");
+        nsresult rv = iter->Perform(this, &scriptElement, &interrupted, &streamEnded);
+        if (NS_FAILED(rv)) {
+          MarkAsBroken(rv);
+          break;
+        }
+
+        // Be sure not to check the deadline if the last op was just performed.
+        if (MOZ_UNLIKELY(iter == last)) {
+          break;
+        } else if (MOZ_UNLIKELY(interrupted) ||
+                   MOZ_UNLIKELY(nsContentSink::DidProcessATokenImpl() ==
+                                NS_ERROR_HTMLPARSER_INTERRUPTED)) {
+
+          autoFlush.SetNumberOfOpsToRemove((iter - first) + 1);
+
+          nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync();
+          return;
+        }
       }
-      NS_ASSERTION(mFlushState == eInDocUpdate, 
-        "Tried to perform tree op outside update batch.");
-      nsresult rv = iter->Perform(this, &scriptElement, &interrupted);
-      if (NS_FAILED(rv)) {
-        MarkAsBroken(rv);
-        break;
-      }
 
-      // Be sure not to check the deadline if the last op was just performed.
-      if (MOZ_UNLIKELY(iter == last)) {
-        break;
-      } else if (MOZ_UNLIKELY(interrupted) ||
-                 MOZ_UNLIKELY(nsContentSink::DidProcessATokenImpl() ==
-                              NS_ERROR_HTMLPARSER_INTERRUPTED)) {
-        mOpQueue.RemoveElementsAt(0, (iter - first) + 1);
-        
-        EndDocUpdate();
-
-        mFlushState = eNotFlushing;
-
-        #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-          printf("REFLUSH SCHEDULED (executing ops): %d\n", 
-            ++sTimesFlushLoopInterrupted);
-        #endif
-        nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync();
-        return;
-      }
-      ++iter;
-    }
-    
-    mOpQueue.Clear();
-    
-    EndDocUpdate();
-
-    mFlushState = eNotFlushing;
+    } // end autoFlush
 
     if (MOZ_UNLIKELY(!mParser)) {
       // The parse ended already.
       return;
     }
 
-    if (scriptElement) {
+    if (streamEnded) {
+      DidBuildModel(false);
+#ifdef DEBUG
+      if (scriptElement) {
+        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(scriptElement);
+        if (!sele) {
+          MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+        }
+        MOZ_ASSERT(sele->IsMalformed(), "Script wasn't marked as malformed.");
+      }
+#endif
+    } else if (scriptElement) {
       // must be tail call when mFlushState is eNotFlushing
       RunScript(scriptElement);
       
@@ -526,7 +557,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   if (MOZ_UNLIKELY(!mParser)) {
     // The parse has ended.
-    mOpQueue.Clear(); // clear in order to be able to assert in destructor
+    ClearOpQueue(); // clear in order to be able to assert in destructor
     return rv;
   }
   
@@ -535,15 +566,13 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     return rv;
   }
 
-  mFlushState = eInFlush;
-
   // avoid crashing near EOF
   RefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
   RefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
   mozilla::Unused << parserKungFuDeathGrip; // Intentionally not used within function
 
-  NS_ASSERTION(!mReadingFromStage,
-    "Got doc write flush when reading from stage");
+  MOZ_RELEASE_ASSERT(!mReadingFromStage,
+                     "Got doc write flush when reading from stage");
 
 #ifdef DEBUG
   mStage.AssertEmpty();
@@ -551,41 +580,50 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   
   nsIContent* scriptElement = nullptr;
   bool interrupted = false;
-  
-  BeginDocUpdate();
+  bool streamEnded = false;
 
-  uint32_t numberOfOpsToFlush = mOpQueue.Length();
+  {
+    // autoFlush clears mOpQueue in its destructor.
+    nsHtml5AutoFlush autoFlush(this);
 
-  const nsHtml5TreeOperation* start = mOpQueue.Elements();
-  const nsHtml5TreeOperation* end = start + numberOfOpsToFlush;
-  for (nsHtml5TreeOperation* iter = const_cast<nsHtml5TreeOperation*>(start);
+
+  nsHtml5TreeOperation* start = mOpQueue.Elements();
+  nsHtml5TreeOperation* end = start + mOpQueue.Length();
+  for (nsHtml5TreeOperation* iter = start;
        iter < end;
        ++iter) {
-    if (MOZ_UNLIKELY(!mParser)) {
-      // The previous tree op caused a call to nsIParser::Terminate().
-      break;
+      if (MOZ_UNLIKELY(!mParser)) {
+        // The previous tree op caused a call to nsIParser::Terminate().
+        return rv;
+      }
+      NS_ASSERTION(IsInDocUpdate(),
+                   "Tried to perform tree op outside update batch.");
+      rv = iter->Perform(this, &scriptElement, &interrupted, &streamEnded);
+      if (NS_FAILED(rv)) {
+        MarkAsBroken(rv);
+        break;
+      }
     }
-    NS_ASSERTION(mFlushState == eInDocUpdate, 
-      "Tried to perform tree op outside update batch.");
-    rv = iter->Perform(this, &scriptElement, &interrupted);
-    if (NS_FAILED(rv)) {
-      MarkAsBroken(rv);
-      break;
-    }
-  }
 
-  mOpQueue.Clear();
-  
-  EndDocUpdate();
-
-  mFlushState = eNotFlushing;
+  } // autoFlush
 
   if (MOZ_UNLIKELY(!mParser)) {
     // Ending the doc update caused a call to nsIParser::Terminate().
     return rv;
   }
 
-  if (scriptElement) {
+  if (streamEnded) {
+    DidBuildModel(false);
+#ifdef DEBUG
+    if (scriptElement) {
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(scriptElement);
+      if (!sele) {
+        MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+      }
+      MOZ_ASSERT(sele->IsMalformed(), "Script wasn't marked as malformed.");
+    }
+#endif
+  } else if (scriptElement) {
     // must be tail call when mFlushState is eNotFlushing
     RunScript(scriptElement);
   }
@@ -617,7 +655,7 @@ nsHtml5TreeOpExecutor::StartLayout(bool* aInterrupted) {
     return;
   }
 
-  EndDocUpdate();
+  nsHtml5AutoPauseUpdate autoPause(this);
 
   if (MOZ_UNLIKELY(!mParser)) {
     // got terminate
@@ -628,8 +666,6 @@ nsHtml5TreeOpExecutor::StartLayout(bool* aInterrupted) {
 
   if (mParser) {
     *aInterrupted = !GetParser()->IsParserEnabled();
-
-    BeginDocUpdate();
   }
 }
 
@@ -637,12 +673,10 @@ void
 nsHtml5TreeOpExecutor::PauseDocUpdate(bool* aInterrupted) {
   // Pausing the document update allows JS to run, and potentially block
   // further parsing.
-  EndDocUpdate();
+  nsHtml5AutoPauseUpdate autoPause(this);
 
   if (MOZ_LIKELY(mParser)) {
     *aInterrupted = !GetParser()->IsParserEnabled();
-
-    BeginDocUpdate();
   }
 }
 
@@ -667,18 +701,11 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     return;
   }
 
-  NS_ASSERTION(aScriptElement, "No script to run");
+  MOZ_ASSERT(mParser, "Trying to run script with a terminated parser.");
+  MOZ_ASSERT(aScriptElement, "No script to run");
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aScriptElement);
   if (!sele) {
     MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
-    return;
-  }
-  
-  if (!mParser) {
-    NS_ASSERTION(sele->IsMalformed(), "Script wasn't marked as malformed.");
-    // We got here not because of an end tag but because the tree builder
-    // popped an incomplete script element on EOF. Returning here to avoid
-    // calling back into mParser anymore.
     return;
   }
   
@@ -687,8 +714,9 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     NS_ASSERTION(!block, "Defer or async script tried to block.");
     return;
   }
-  
-  NS_ASSERTION(mFlushState == eNotFlushing, "Tried to run script when flushing.");
+
+  MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
+                     "Tried to run script while flushing.");
 
   mReadingFromStage = false;
   
@@ -726,8 +754,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding,
                                             int32_t aSource,
                                             uint32_t aLineNumber)
 {
-  EndDocUpdate();
-
+  nsHtml5AutoPauseUpdate autoPause(this);
   if (MOZ_UNLIKELY(!mParser)) {
     // got terminate
     return;
@@ -760,8 +787,6 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding,
   }
 
   GetParser()->ContinueAfterFailedCharsetSwitch();
-
-  BeginDocUpdate();
 }
 
 void
@@ -825,12 +850,31 @@ nsHtml5TreeOpExecutor::GetParser()
 void
 nsHtml5TreeOpExecutor::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
-  NS_PRECONDITION(mFlushState == eNotFlushing, "mOpQueue modified during tree op execution.");
+  MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
+                     "Ops added to mOpQueue during tree op execution.");
   mOpQueue.AppendElements(Move(aOpQueue));
 }
 
 void
-nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, int32_t aLine)
+nsHtml5TreeOpExecutor::ClearOpQueue()
+{
+  MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
+                     "mOpQueue cleared during tree op execution.");
+  mOpQueue.Clear();
+}
+
+void
+nsHtml5TreeOpExecutor::RemoveFromStartOfOpQueue(size_t aNumberOfOpsToRemove)
+{
+  MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
+                     "Ops removed from mOpQueue during tree op execution.");
+  mOpQueue.RemoveElementsAt(0, aNumberOfOpsToRemove);
+}
+
+void
+nsHtml5TreeOpExecutor::InitializeDocWriteParserState(
+  nsAHtml5TreeBuilderState* aState,
+  int32_t aLine)
 {
   GetParser()->InitializeDocWriteParserState(aState, aLine);
 }

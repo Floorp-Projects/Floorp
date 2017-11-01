@@ -882,9 +882,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     if canonical_suffix in ('.cpp', '.mm'):
                         cxx_sources[variable] = True
                     arglist = [context, list(files), canonical_suffix]
-                    if (variable.startswith('UNIFIED_') and
-                            'FILES_PER_UNIFIED_FILE' in context):
-                        arglist.append(context['FILES_PER_UNIFIED_FILE'])
+                    if variable.startswith('UNIFIED_'):
+                        arglist.append(context.get('FILES_PER_UNIFIED_FILE', 16))
                     obj = cls(*arglist)
                     yield obj
 

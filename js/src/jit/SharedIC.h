@@ -9,6 +9,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsgc.h"
 
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"

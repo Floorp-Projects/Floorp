@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.util;
+package org.mozilla.gecko;
 
 import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ClipboardManager;
 import android.content.ClipData;
@@ -22,19 +22,19 @@ public final class Clipboard {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static String getText() {
+    public static String getText(final Context context) {
         // If we're on the UI thread or the background thread, we have a looper on the thread
         // and can just call this directly. For any other threads, post the call to the
         // background thread.
 
         if (ThreadUtils.isOnUiThread() || ThreadUtils.isOnBackgroundThread()) {
-            return getClipboardTextImpl();
+            return getClipboardTextImpl(context);
         }
 
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                String text = getClipboardTextImpl();
+                String text = getClipboardTextImpl(context);
                 try {
                     sClipboardQueue.put(text != null ? text : "");
                 } catch (InterruptedException ie) { }
@@ -49,16 +49,12 @@ public final class Clipboard {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void setText(final CharSequence text) {
+    public static void setText(final Context context, final CharSequence text) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // In API Level 11 and above, CLIPBOARD_SERVICE returns android.content.ClipboardManager,
                 // which is a subclass of android.text.ClipboardManager.
-                final Context context = GeckoAppShell.getApplicationContext();
-                if (context == null) {
-                    return;
-                }
                 final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                 final ClipData clip = ClipData.newPlainText("Text", text);
                 try {
@@ -77,11 +73,7 @@ public final class Clipboard {
      * @return true if the clipboard is nonempty, false otherwise.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public static boolean hasText() {
-        final Context context = GeckoAppShell.getApplicationContext();
-        if (context == null) {
-            return false;
-        }
+    public static boolean hasText(final Context context) {
         final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         return cm.hasPrimaryClip();
     }
@@ -90,8 +82,8 @@ public final class Clipboard {
      * Deletes all text from the clipboard.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public static void clearText() {
-        setText(null);
+    public static void clearText(final Context context) {
+        setText(context, null);
     }
 
     /**
@@ -100,12 +92,9 @@ public final class Clipboard {
      * present on the thread.
      */
     @SuppressWarnings("deprecation")
-    static String getClipboardTextImpl() {
-        final Context context = GeckoAppShell.getApplicationContext();
-        if (context == null) {
-            return null;
-        }
-        final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+    static String getClipboardTextImpl(final Context context) {
+        final ClipboardManager cm = (ClipboardManager)
+                context.getSystemService(Context.CLIPBOARD_SERVICE);
         if (cm.hasPrimaryClip()) {
             ClipData clip = cm.getPrimaryClip();
             if (clip != null) {

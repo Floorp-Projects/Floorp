@@ -82,13 +82,8 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
         calleeToken = CalleeToToken(state.script());
     }
 
-    // Caller must construct |this| before invoking the function. Legacy
-    // generators can be called with 'new' but when we resume them, the
-    // this-slot and arguments are |undefined| (they are stored in the
-    // CallObject).
-    bool constructingLegacyGen =
-        constructing && CalleeTokenToFunction(calleeToken)->isLegacyGenerator();
-    MOZ_ASSERT_IF(constructing && !constructingLegacyGen,
+    // Caller must construct |this| before invoking the function.
+    MOZ_ASSERT_IF(constructing,
                   maxArgv[0].isObject() || maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
 
     RootedValue result(cx, Int32Value(numActualArgs));
@@ -118,10 +113,7 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
 
     // Jit callers wrap primitive constructor return, except for derived
     // class constructors, which are forced to do it themselves.
-    if (constructing &&
-        result.isPrimitive() &&
-        !constructingLegacyGen)
-    {
+    if (constructing && result.isPrimitive()) {
         MOZ_ASSERT(maxArgv[0].isObject());
         result = maxArgv[0];
     }

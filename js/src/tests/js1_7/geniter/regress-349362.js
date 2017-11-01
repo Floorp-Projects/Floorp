@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  var y = function(){ yield 3};
+  var y = function*(){ yield 3};
   actual = y().toString();
 
   reportCompare(expect, actual, summary);

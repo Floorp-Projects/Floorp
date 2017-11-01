@@ -11,6 +11,7 @@
 #include "js/RootingAPI.h"
 
 namespace js {
+
 struct Class;
 
 // Allocate a new GC thing. After a successful allocation the caller must

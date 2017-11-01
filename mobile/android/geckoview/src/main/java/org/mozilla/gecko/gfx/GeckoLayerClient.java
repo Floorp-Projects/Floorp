@@ -8,7 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;

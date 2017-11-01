@@ -11,7 +11,6 @@ import java.lang.reflect.Proxy;
 
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.util.ActivityUtils;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -134,8 +133,9 @@ class GeckoInputConnection
 
     @Override
     public boolean performContextMenuAction(int id) {
-        Editable editable = getEditable();
-        if (editable == null) {
+        final View view = getView();
+        final Editable editable = getEditable();
+        if (view == null || editable == null) {
             return false;
         }
         int selStart = Selection.getSelectionStart(editable);
@@ -149,18 +149,17 @@ class GeckoInputConnection
                 // If selection is empty, we'll select everything
                 if (selStart == selEnd) {
                     // Fill the clipboard
-                    Clipboard.setText(editable);
+                    Clipboard.setText(view.getContext(), editable);
                     editable.clear();
                 } else {
-                    Clipboard.setText(
-                            editable.toString().substring(
-                                Math.min(selStart, selEnd),
-                                Math.max(selStart, selEnd)));
+                    Clipboard.setText(view.getContext(),
+                                      editable.subSequence(Math.min(selStart, selEnd),
+                                                           Math.max(selStart, selEnd)));
                     editable.delete(selStart, selEnd);
                 }
                 break;
             case android.R.id.paste:
-                commitText(Clipboard.getText(), 1);
+                commitText(Clipboard.getText(view.getContext()), 1);
                 break;
             case android.R.id.copy:
                 // Copy the current selection or the empty string if nothing is selected.
@@ -168,7 +167,7 @@ class GeckoInputConnection
                                     editable.toString().substring(
                                         Math.min(selStart, selEnd),
                                         Math.max(selStart, selEnd));
-                Clipboard.setText(copiedText);
+                Clipboard.setText(view.getContext(), copiedText);
                 break;
         }
         return true;

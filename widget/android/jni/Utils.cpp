@@ -72,12 +72,11 @@ template<> const char ObjectBase<TypedObject<jdoubleArray>, jdoubleArray>::name[
 template<> const char ObjectBase<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
 template<> const char ObjectBase<ByteBuffer, jobject>::name[] = "java/nio/ByteBuffer";
 
-
+JavaVM* sJavaVM;
 JNIEnv* sGeckoThreadEnv;
 
 namespace {
 
-JavaVM* sJavaVM;
 pthread_key_t sThreadEnvKey;
 jclass sOOMErrorClass;
 jobject sClassLoader;

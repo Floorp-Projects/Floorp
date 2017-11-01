@@ -18,12 +18,6 @@ function check(gen, label) {
   assertEq(hits, 1);
 }
 
-g.eval('function f(x) { debugger; yield x; }');
-g.eval('var g = f(2);');
-g.eval('var h = f(3);');
-check(g.g, 'g.g');
-check(g.h, 'g.h');
-
 g.eval('function* f(x) { debugger; yield x; }');
 g.eval('var g = f(2);');
 g.eval('var h = f(3);');

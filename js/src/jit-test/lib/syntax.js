@@ -1153,13 +1153,6 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("(function () 1 ");
   test("(function () 1); ");
 
-  // Legacy generator
-
-  test("function f() { (yield ");
-  test("function f() { (yield 1 ");
-  test("function f() { f(yield ");
-  test("function f() { f(yield 1 ");
-
   // for each...in
 
   enableForEach();

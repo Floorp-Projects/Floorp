@@ -175,16 +175,6 @@ public:
     bool PumpMessageLoop();
 
     // Utility methods.
-    static jstring NewJavaString(JNIEnv* env, const char16_t* string, uint32_t len);
-    static jstring NewJavaString(JNIEnv* env, const nsAString& string);
-    static jstring NewJavaString(JNIEnv* env, const char* string);
-    static jstring NewJavaString(JNIEnv* env, const nsACString& string);
-
-    static jstring NewJavaString(AutoLocalJNIFrame* frame, const char16_t* string, uint32_t len);
-    static jstring NewJavaString(AutoLocalJNIFrame* frame, const nsAString& string);
-    static jstring NewJavaString(AutoLocalJNIFrame* frame, const char* string);
-    static jstring NewJavaString(AutoLocalJNIFrame* frame, const nsACString& string);
-
     static jfieldID GetFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
     static jfieldID GetStaticFieldID(JNIEnv* env, jclass jClass, const char* fieldName, const char* fieldType);
     static jmethodID GetMethodID(JNIEnv* env, jclass jClass, const char* methodName, const char* methodType);

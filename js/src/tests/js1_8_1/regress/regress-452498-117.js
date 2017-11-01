@@ -41,16 +41,6 @@ function test()
 // =====
   (function(){const x = 0, y = delete x;})()
 
-// Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:1710
-// =====
-    try
-    {
-      (function(){(yield []) (function(){with({}){x} }); const x = undefined;})();
-    }
-    catch(ex)
-    {
-    }
-
 // Assertion failure: pnu->pn_lexdef == dn, at ../jsemit.cpp:1817
 // =====
   uneval(function(){arguments = ({ get y(){} }); for(var [arguments] in y ) (x);});

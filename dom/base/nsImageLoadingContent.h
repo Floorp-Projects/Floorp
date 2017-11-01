@@ -14,7 +14,6 @@
 #define nsImageLoadingContent_h__
 
 #include "imgINotificationObserver.h"
-#include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/TimeStamp.h"
@@ -41,8 +40,7 @@ class AsyncEventDispatcher;
 #undef LoadImage
 #endif
 
-class nsImageLoadingContent : public nsIImageLoadingContent,
-                              public imgIOnloadBlocker
+class nsImageLoadingContent : public nsIImageLoadingContent
 {
   template <typename T> using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;
@@ -56,7 +54,6 @@ public:
 
   NS_DECL_IMGINOTIFICATIONOBSERVER
   NS_DECL_NSIIMAGELOADINGCONTENT
-  NS_DECL_IMGIONLOADBLOCKER
 
   // Web IDL binding methods.
   // Note that the XPCOM SetLoadingEnabled, AddObserver, RemoveObserver,
@@ -421,8 +418,6 @@ protected:
   enum {
     // Set if the request needs ResetAnimation called on it.
     REQUEST_NEEDS_ANIMATION_RESET = 0x00000001U,
-    // Set if the request is blocking onload.
-    REQUEST_BLOCKS_ONLOAD = 0x00000002U,
     // Set if the request is currently tracked with the document.
     REQUEST_IS_TRACKED = 0x00000004U,
     // Set if this is an imageset request, such as from <img srcset> or

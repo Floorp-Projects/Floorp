@@ -11,8 +11,6 @@ import java.nio.IntBuffer;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoAccessibility;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -37,6 +35,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.InputDevice;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
@@ -47,6 +46,8 @@ import java.util.List;
  */
 public class LayerView extends FrameLayout {
     private static final String LOGTAG = "GeckoLayerView";
+
+    private static AccessibilityManager sAccessibilityManager;
 
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
@@ -315,8 +316,6 @@ public class LayerView extends FrameLayout {
 
         setFocusable(true);
         setFocusableInTouchMode(true);
-
-        GeckoAccessibility.setDelegate(this);
     }
 
     /**
@@ -382,12 +381,21 @@ public class LayerView extends FrameLayout {
         return false;
     }
 
+    private boolean isAccessibilityEnabled() {
+        if (sAccessibilityManager == null) {
+            sAccessibilityManager = (AccessibilityManager)
+                    getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+        }
+        return sAccessibilityManager.isEnabled() &&
+               sAccessibilityManager.isTouchExplorationEnabled();
+    }
+
     @Override
     public boolean onHoverEvent(MotionEvent event) {
         // If we get a touchscreen hover event, and accessibility is not enabled,
         // don't send it to gecko.
         if (event.getSource() == InputDevice.SOURCE_TOUCHSCREEN &&
-            !GeckoAccessibility.isEnabled()) {
+            !isAccessibilityEnabled()) {
             return false;
         }
 
@@ -773,24 +781,8 @@ public class LayerView extends FrameLayout {
         public void drawFinished();
     }
 
-    @Override
-    public void setOverScrollMode(int overscrollMode) {
-        super.setOverScrollMode(overscrollMode);
-    }
-
-    @Override
-    public int getOverScrollMode() {
-        return super.getOverScrollMode();
-    }
-
     public float getZoomFactor() {
         return getLayerClient().getViewportMetrics().zoomFactor;
-    }
-
-    @Override
-    public void onFocusChanged (boolean gainFocus, int direction, Rect previouslyFocusedRect) {
-        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
-        GeckoAccessibility.onLayerViewFocusChanged(gainFocus);
     }
 
     public void setFullScreenState(FullScreenState state) {

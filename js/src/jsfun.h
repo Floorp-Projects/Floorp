@@ -150,7 +150,6 @@ class JSFunction : public js::NativeObject
                       nonLazyScript()->needsHomeObject()       ||
                       nonLazyScript()->isDerivedClassConstructor() ||
                       isStarGenerator() ||
-                      isLegacyGenerator() ||
                       isAsync(),
                       nonLazyScript()->bodyScope()->hasEnvironment());
 
@@ -519,8 +518,6 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(isSelfHostedBuiltin());
         return js::NotGenerator;
     }
-
-    bool isLegacyGenerator() const { return generatorKind() == js::LegacyGenerator; }
 
     bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
 

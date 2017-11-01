@@ -915,7 +915,7 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver, imgIOnloadBlocker)
+NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver)
 
 nsImageBoxListener::nsImageBoxListener()
 {
@@ -932,24 +932,4 @@ nsImageBoxListener::Notify(imgIRequest *request, int32_t aType, const nsIntRect*
     return NS_OK;
 
   return mFrame->Notify(request, aType, aData);
-}
-
-NS_IMETHODIMP
-nsImageBoxListener::BlockOnload(imgIRequest *aRequest)
-{
-  if (mFrame && mFrame->GetContent() && mFrame->GetContent()->GetUncomposedDoc()) {
-    mFrame->GetContent()->GetUncomposedDoc()->BlockOnload();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageBoxListener::UnblockOnload(imgIRequest *aRequest)
-{
-  if (mFrame && mFrame->GetContent() && mFrame->GetContent()->GetUncomposedDoc()) {
-    mFrame->GetContent()->GetUncomposedDoc()->UnblockOnload(false);
-  }
-
-  return NS_OK;
 }

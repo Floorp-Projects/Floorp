@@ -1,10 +1,10 @@
 // don't panic
 
-f = function() {
+f = function*() {
   x = yield
 }
 rv = f()
-for (a in rv) (function() {})
+for (a of rv) (function() {})
 x = new Proxy({}, (function() {
   return {
     defineProperty: gc

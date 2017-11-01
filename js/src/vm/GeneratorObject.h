@@ -71,7 +71,7 @@ class GeneratorObject : public NativeObject
         return suspend(cx, obj, frame, pc, vp, nvalues);
     }
 
-    static bool finalSuspend(JSContext* cx, HandleObject obj);
+    static void finalSuspend(JSContext* cx, HandleObject obj);
 
     JSFunction& callee() const {
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
@@ -209,14 +209,6 @@ public:
     }
 };
 
-class LegacyGeneratorObject : public GeneratorObject
-{
-  public:
-    static const Class class_;
-
-    static bool close(JSContext* cx, HandleObject obj);
-};
-
 class StarGeneratorObject : public GeneratorObject
 {
   public:
@@ -225,7 +217,7 @@ class StarGeneratorObject : public GeneratorObject
 
 bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
                            HandleValue val, uint32_t resumeKind);
-void SetReturnValueForClosingGenerator(JSContext* cx, AbstractFramePtr frame);
+void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool
 CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v);
@@ -236,7 +228,7 @@ template<>
 inline bool
 JSObject::is<js::GeneratorObject>() const
 {
-    return is<js::LegacyGeneratorObject>() || is<js::StarGeneratorObject>();
+    return is<js::StarGeneratorObject>();
 }
 
 #endif /* vm_GeneratorObject_h */

@@ -12,7 +12,6 @@
 #include "JavaCallbacksSupport.h"
 #include "MediaCodec.h"
 #include "WebrtcMediaCodecVP8VideoCodec.h"
-#include "AndroidJNIWrapper.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
@@ -443,7 +442,7 @@ public:
 
     size_t size = inputImage._length;
 
-    JNIEnv* env = jsjni_GetJNIForThread();
+    JNIEnv* const env = jni::GetEnvForThread();
     jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
     void* directBuffer = env->GetDirectBufferAddress(buffer);
 
@@ -520,7 +519,7 @@ public:
         return NS_OK;
       }
 
-      JNIEnv* env = jsjni_GetJNIForThread();
+      JNIEnv* const env = jni::GetEnvForThread();
       jobject buffer = env->GetObjectArrayElement(mOutputBuffers, outputIndex);
       if (buffer) {
         // The buffer will be null on Android L if we are decoding to a Surface
@@ -582,7 +581,7 @@ public:
   }
 
   jobjectArray GetInputBuffers() {
-    JNIEnv* env = jsjni_GetJNIForThread();
+    JNIEnv* const env = jni::GetEnvForThread();
 
     if (mInputBuffers) {
       env->DeleteGlobalRef(mInputBuffers);
@@ -602,7 +601,7 @@ public:
   }
 
   jobjectArray GetOutputBuffers() {
-    JNIEnv* env = jsjni_GetJNIForThread();
+    JNIEnv* const env = jni::GetEnvForThread();
 
     if (mOutputBuffers) {
       env->DeleteGlobalRef(mOutputBuffers);
@@ -825,7 +824,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
 #endif
 
   if (inputIndex >= 0) {
-    JNIEnv* env = jsjni_GetJNIForThread();
+    JNIEnv* const env = jni::GetEnvForThread();
     jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
     void* directBuffer = env->GetDirectBufferAddress(buffer);
 
@@ -881,7 +880,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
       CSFLogDebug(LOGTAG,  "%s dequeue output buffer return status is %d took %u ms", __FUNCTION__, outputIndex, PR_IntervalToMilliseconds(PR_IntervalNow()-time));
 #endif
 
-      JNIEnv* env = jsjni_GetJNIForThread();
+      JNIEnv* const env = jni::GetEnvForThread();
       jobject buffer = env->GetObjectArrayElement(mOutputBuffers, outputIndex);
       if (buffer) {
         int32_t offset;

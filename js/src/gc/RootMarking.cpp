@@ -26,6 +26,7 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
+#include "gc/Iteration-inl.h"
 #include "gc/Nursery-inl.h"
 
 using namespace js;
