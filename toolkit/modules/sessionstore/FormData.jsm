@@ -207,7 +207,7 @@ var FormDataInternal = {
       }
 
       if (node instanceof Ci.nsIDOMHTMLInputElement ||
-          ChromeUtils.getClassName(node) === "HTMLTextAreaElement" ||
+          node instanceof Ci.nsIDOMHTMLTextAreaElement ||
           node instanceof Ci.nsIDOMXULTextBoxElement) {
         switch (node.type) {
           case "checkbox":

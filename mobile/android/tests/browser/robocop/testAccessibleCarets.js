@@ -46,7 +46,7 @@ function do_promiseTabChangeEvent(tabId, eventType) {
  */
 function isInputOrTextarea(element) {
   return ((element instanceof Ci.nsIDOMHTMLInputElement) ||
-          (ChromeUtils.getClassName(element) === "HTMLTextAreaElement"));
+          (element instanceof Ci.nsIDOMHTMLTextAreaElement));
 }
 
 /**

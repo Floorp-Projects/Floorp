@@ -208,7 +208,7 @@ var ActionBarHandler = {
 
     // Return focused editable text element and its window.
     if (((element instanceof Ci.nsIDOMHTMLInputElement) && element.mozIsTextField(false)) ||
-        (ChromeUtils.getClassName(element) === "HTMLTextAreaElement") ||
+        (element instanceof Ci.nsIDOMHTMLTextAreaElement) ||
         element.isContentEditable) {
       return [element, win];
     }
@@ -743,7 +743,7 @@ var ActionBarHandler = {
 
     // Textarea can contain LF, etc.
     if (this._targetElement &&
-        ChromeUtils.getClassName(this._targetElement) === "HTMLTextAreaElement") {
+        this._targetElement instanceof Ci.nsIDOMHTMLTextAreaElement) {
       let flags = Ci.nsIDocumentEncoder.OutputPreformatted |
         Ci.nsIDocumentEncoder.OutputRaw;
       return selection.QueryInterface(Ci.nsISelectionPrivate).

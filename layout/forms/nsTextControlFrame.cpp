@@ -16,6 +16,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
 #include "nsTextFragment.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsCheckboxRadioFrame.h" //for registering accesskeys
 
@@ -1161,20 +1162,22 @@ nsTextControlFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 
-void
+nsresult
 nsTextControlFrame::GetText(nsString& aText)
 {
+  nsresult rv = NS_OK;
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
   if (IsSingleLineTextControl()) {
     // There will be no line breaks so we can ignore the wrap property.
     txtCtrl->GetTextEditorValue(aText, true);
   } else {
-    HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromContent(mContent);
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
     if (textArea) {
-      textArea->GetValue(aText);
+      rv = textArea->GetValue(aText);
     }
   }
+  return rv;
 }
 
 
