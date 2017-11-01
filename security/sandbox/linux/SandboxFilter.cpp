@@ -1130,10 +1130,11 @@ public:
     case __NR_brk:
     CASES_FOR_geteuid:
       return Allow();
-    case __NR_sched_getparam:
-    case __NR_sched_getscheduler:
     case __NR_sched_get_priority_min:
     case __NR_sched_get_priority_max:
+      return Allow();
+    case __NR_sched_getparam:
+    case __NR_sched_getscheduler:
     case __NR_sched_setscheduler: {
       Arg<pid_t> pid(0);
       return If(pid == 0, Allow())
