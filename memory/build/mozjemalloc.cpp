@@ -252,11 +252,6 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 // Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
 #define QUANTUM_2POW_MIN 4
 
-// sizeof(int) == (1U << SIZEOF_INT_2POW).
-#ifndef SIZEOF_INT_2POW
-#define SIZEOF_INT_2POW 2
-#endif
-
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
 #define CHUNK_2POW_DEFAULT 20
@@ -2227,7 +2222,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
     // Usable allocation found.
     bit = CountTrailingZeroes32(mask);
 
-    regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
+    regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
     MOZ_ASSERT(regind < bin->nregs);
     ret =
       (void*)(((uintptr_t)run) + bin->reg0_offset + (bin->reg_size * regind));
@@ -2245,7 +2240,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
       // Usable allocation found.
       bit = CountTrailingZeroes32(mask);
 
-      regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
+      regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
       MOZ_ASSERT(regind < bin->nregs);
       ret =
         (void*)(((uintptr_t)run) + bin->reg0_offset + (bin->reg_size * regind));
@@ -2353,11 +2348,11 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
   MOZ_DIAGNOSTIC_ASSERT(diff == regind * size);
   MOZ_DIAGNOSTIC_ASSERT(regind < bin->nregs);
 
-  elm = regind >> (SIZEOF_INT_2POW + 3);
+  elm = regind >> (LOG2(sizeof(int)) + 3);
   if (elm < run->regs_minelm) {
     run->regs_minelm = elm;
   }
-  bit = regind - (elm << (SIZEOF_INT_2POW + 3));
+  bit = regind - (elm << (LOG2(sizeof(int)) + 3));
   MOZ_DIAGNOSTIC_ASSERT((run->regs_mask[elm] & (1U << bit)) == 0);
   run->regs_mask[elm] |= (1U << bit);
 #undef SIZE_INV
@@ -2864,13 +2859,13 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   for (i = 0; i < aBin->regs_mask_nelms - 1; i++) {
     run->regs_mask[i] = UINT_MAX;
   }
-  remainder = aBin->nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1);
+  remainder = aBin->nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1);
   if (remainder == 0) {
     run->regs_mask[i] = UINT_MAX;
   } else {
     // The last element has spare bits that need to be unset.
     run->regs_mask[i] =
-      (UINT_MAX >> ((1U << (SIZEOF_INT_2POW + 3)) - remainder));
+      (UINT_MAX >> ((1U << (LOG2(sizeof(int)) + 3)) - remainder));
   }
 
   run->regs_minelm = 0;
@@ -2947,8 +2942,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
   do {
     try_nregs--;
     try_mask_nelms =
-      (try_nregs >> (SIZEOF_INT_2POW + 3)) +
-      ((try_nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1)) ? 1 : 0);
+      (try_nregs >> (LOG2(sizeof(int)) + 3)) +
+      ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
     try_reg0_offset = try_run_size - (try_nregs * bin->reg_size);
   } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
            try_reg0_offset);
@@ -2968,8 +2963,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
     do {
       try_nregs--;
       try_mask_nelms =
-        (try_nregs >> (SIZEOF_INT_2POW + 3)) +
-        ((try_nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1)) ? 1 : 0);
+        (try_nregs >> (LOG2(sizeof(int)) + 3)) +
+        ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
       try_reg0_offset = try_run_size - (try_nregs * bin->reg_size);
     } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
              try_reg0_offset);
@@ -2979,7 +2974,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
 
   MOZ_ASSERT(sizeof(arena_run_t) + (sizeof(unsigned) * (good_mask_nelms - 1)) <=
              good_reg0_offset);
-  MOZ_ASSERT((good_mask_nelms << (SIZEOF_INT_2POW + 3)) >= good_nregs);
+  MOZ_ASSERT((good_mask_nelms << (LOG2(sizeof(int)) + 3)) >= good_nregs);
 
   // Copy final settings.
   bin->run_size = good_run_size;
@@ -3453,8 +3448,8 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   void* addr = (void*)(reg0_addr + regind * size);
 
   // Check if the allocation has been freed.
-  unsigned elm = regind >> (SIZEOF_INT_2POW + 3);
-  unsigned bit = regind - (elm << (SIZEOF_INT_2POW + 3));
+  unsigned elm = regind >> (LOG2(sizeof(int)) + 3);
+  unsigned bit = regind - (elm << (LOG2(sizeof(int)) + 3));
   PtrInfoTag tag =
     ((run->regs_mask[elm] & (1U << bit))) ? TagFreedSmall : TagLiveSmall;
 
