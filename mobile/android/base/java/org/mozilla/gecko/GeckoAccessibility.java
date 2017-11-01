@@ -227,6 +227,13 @@ public class GeckoAccessibility {
             view.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
             view.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
+
+        view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(final View v, final boolean hasFocus) {
+                onLayerViewFocusChanged(hasFocus);
+            }
+        });
     }
 
     public static void setAccessibilityManagerListeners(final Context context) {
