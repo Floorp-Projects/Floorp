@@ -123,6 +123,63 @@ class TestLegacyClick(MarionetteTestCase):
         link.click()
         self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
+    def test_inclusive_descendant(self):
+        self.marionette.navigate(inline("""
+            <select multiple>
+              <option>first
+              <option>second
+              <option>third
+             </select>"""))
+        select = self.marionette.find_element(By.TAG_NAME, "select")
+
+        # This tests that the pointer-interactability test does not
+        # cause an ElementClickInterceptedException.
+        #
+        # At a <select multiple>'s in-view centre point, you might
+        # find a fully rendered <option>.  Marionette should test that
+        # the paint tree at this point _contains_ <option>, not that the
+        # first element of the paint tree is _equal_ to <select>.
+        select.click()
+        self.assertNotEqual(select.get_property("selectedIndex"), -1)
+
+    def test_container_is_select(self):
+        self.marionette.navigate(inline("""
+            <select>
+              <option>foo</option>
+            </select>"""))
+        option = self.marionette.find_element(By.TAG_NAME, "option")
+        option.click()
+        self.assertTrue(option.get_property("selected"))
+
+    def test_container_is_button(self):
+        self.marionette.navigate(inline("""
+          <button onclick="window.clicked = true;">
+            <span><em>foo</em></span>
+          </button>"""))
+        span = self.marionette.find_element(By.TAG_NAME, "span")
+        span.click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
+
+    def test_container_element_outside_view(self):
+        self.marionette.navigate(inline("""
+            <select style="margin-top: 100vh">
+              <option>foo</option>
+            </select>"""))
+        option = self.marionette.find_element(By.TAG_NAME, "option")
+        option.click()
+        self.assertTrue(option.get_property("selected"))
+
+    def test_table_tr(self):
+        self.marionette.navigate(inline("""
+          <table>
+            <tr><td onclick="window.clicked = true;">
+              foo
+            </td></tr>
+          </table>"""))
+        tr = self.marionette.find_element(By.TAG_NAME, "tr")
+        tr.click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
+
 
 class TestClick(TestLegacyClick):
     """Uses WebDriver specification compatible element interactability
@@ -159,9 +216,10 @@ class TestClick(TestLegacyClick):
             }
             </style>
 
-            <div></div>"""))
+            <div onclick="window.clicked = true;"></div>"""))
 
         self.marionette.find_element(By.TAG_NAME, "div").click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_centre_outside_viewport_horizontally(self):
         self.marionette.navigate(inline("""
@@ -179,9 +237,10 @@ class TestClick(TestLegacyClick):
             }
             </style>
 
-            <div></div>"""))
+            <div onclick="window.clicked = true;"></div>"""))
 
         self.marionette.find_element(By.TAG_NAME, "div").click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_centre_outside_viewport(self):
         self.marionette.navigate(inline("""
@@ -200,9 +259,10 @@ class TestClick(TestLegacyClick):
             }
             </style>
 
-            <div></div>"""))
+            <div onclick="window.clicked = true;"></div>"""))
 
         self.marionette.find_element(By.TAG_NAME, "div").click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_css_transforms(self):
         self.marionette.navigate(inline("""
@@ -218,52 +278,15 @@ class TestClick(TestLegacyClick):
             }
             </style>
 
-            <div></div>"""))
+            <div onclick="window.clicked = true;"></div>"""))
 
         self.marionette.find_element(By.TAG_NAME, "div").click()
+        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_input_file(self):
         self.marionette.navigate(inline("<input type=file>"))
         with self.assertRaises(errors.InvalidArgumentException):
             self.marionette.find_element(By.TAG_NAME, "input").click()
-
-    def test_container_for_select(self):
-        self.marionette.navigate(inline("""
-            <select>
-              <option>foo</option>
-            </select>"""))
-        option = self.marionette.find_element(By.TAG_NAME, "option")
-        option.click()
-        self.assertTrue(option.get_property("selected"))
-
-    def test_container_for_button(self):
-        self.marionette.navigate(inline("""
-          <button onclick="window.clicked = true;">
-            <span><em>foo</em></span>
-          </button>"""))
-        span = self.marionette.find_element(By.TAG_NAME, "span")
-        span.click()
-        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
-
-    def test_container_element_outside_view(self):
-        self.marionette.navigate(inline("""
-            <select style="margin-top: 100vh">
-              <option>foo</option>
-            </select>"""))
-        option = self.marionette.find_element(By.TAG_NAME, "option")
-        option.click()
-        self.assertTrue(option.get_property("selected"))
-
-    def test_table_tr(self):
-        self.marionette.navigate(inline("""
-          <table>
-            <tr><td onclick="window.clicked = true;">
-              foo
-            </td></tr>
-          </table>"""))
-        tr = self.marionette.find_element(By.TAG_NAME, "tr")
-        tr.click()
-        self.assertTrue(self.marionette.execute_script("return window.clicked", sandbox=None))
 
     def test_obscured_element(self):
         self.marionette.navigate(obscured_overlay)
@@ -292,23 +315,6 @@ class TestClick(TestLegacyClick):
             button.click()
         self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
 
-    def test_inclusive_descendant(self):
-        self.marionette.navigate(inline("""
-            <select multiple>
-              <option>first
-              <option>second
-              <option>third
-             </select>"""))
-        select = self.marionette.find_element(By.TAG_NAME, "select")
-
-        # This tests that the pointer-interactability test does not
-        # cause an ElementClickInterceptedException.
-        #
-        # At a <select multiple>'s in-view centre point, you might
-        # find a fully rendered <option>.  Marionette should test that
-        # the paint tree at this point _contains_ <option>, not that the
-        # first element of the paint tree is _equal_ to <select>.
-        select.click()
 
 
 class TestClickNavigation(MarionetteTestCase):
