@@ -6,7 +6,6 @@
 
 #include "ImageLogging.h"
 #include "imgRequestProxy.h"
-#include "imgIOnloadBlocker.h"
 #include "imgLoader.h"
 #include "Image.h"
 #include "ImageOps.h"
@@ -1102,60 +1101,6 @@ imgRequestProxy::OnLoadComplete(bool aLastPart)
     mListenerIsStrongRef = false;
     NS_RELEASE(obs);
   }
-}
-
-void
-imgRequestProxy::BlockOnload()
-{
-  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    nsAutoCString name;
-    GetName(name);
-    LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::BlockOnload",
-                        "name", name.get());
-  }
-
-  nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
-  if (!blocker) {
-    return;
-  }
-
-  if (!IsOnEventTarget()) {
-    RefPtr<imgRequestProxy> self(this);
-    DispatchWithTarget(NS_NewRunnableFunction("imgRequestProxy::BlockOnload",
-                                    [self]() -> void {
-      self->BlockOnload();
-    }));
-    return;
-  }
-
-  blocker->BlockOnload(this);
-}
-
-void
-imgRequestProxy::UnblockOnload()
-{
-  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    nsAutoCString name;
-    GetName(name);
-    LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::UnblockOnload",
-                        "name", name.get());
-  }
-
-  nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
-  if (!blocker) {
-    return;
-  }
-
-  if (!IsOnEventTarget()) {
-    RefPtr<imgRequestProxy> self(this);
-    DispatchWithTarget(NS_NewRunnableFunction("imgRequestProxy::UnblockOnload",
-                                    [self]() -> void {
-      self->UnblockOnload();
-    }));
-    return;
-  }
-
-  blocker->UnblockOnload(this);
 }
 
 void

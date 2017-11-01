@@ -381,7 +381,6 @@ NS_IMPL_RELEASE(ImageLoader)
 
 NS_INTERFACE_MAP_BEGIN(ImageLoader)
   NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
-  NS_INTERFACE_MAP_ENTRY(imgIOnloadBlocker)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -490,30 +489,6 @@ ImageLoader::OnFrameUpdate(imgIRequest* aRequest)
   NS_ASSERTION(frameSet, "This should never be null!");
 
   DoRedraw(frameSet, /* aForcePaint = */ false);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageLoader::BlockOnload(imgIRequest* aRequest)
-{
-  if (!mDocument) {
-    return NS_OK;
-  }
-
-  mDocument->BlockOnload();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageLoader::UnblockOnload(imgIRequest* aRequest)
-{
-  if (!mDocument) {
-    return NS_OK;
-  }
-
-  mDocument->UnblockOnload(false);
 
   return NS_OK;
 }
