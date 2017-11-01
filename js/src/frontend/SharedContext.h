@@ -469,7 +469,6 @@ class FunctionBox : public ObjectBox, public SharedContext
                needsHomeObject() ||
                isDerivedClassConstructor() ||
                isStarGenerator() ||
-               isLegacyGenerator() ||
                isAsync();
     }
 
@@ -489,15 +488,14 @@ class FunctionBox : public ObjectBox, public SharedContext
     }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
-    bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
     FunctionAsyncKind asyncKind() const { return AsyncKindFromBits(asyncKindBits_); }
 
     bool needsFinalYield() const {
-        return isStarGenerator() || isLegacyGenerator() || isAsync();
+        return isStarGenerator() || isAsync();
     }
     bool needsDotGeneratorName() const {
-        return isStarGenerator() || isLegacyGenerator() || isAsync();
+        return isStarGenerator() || isAsync();
     }
     bool needsIteratorResult() const {
         return isStarGenerator();
@@ -520,7 +518,7 @@ class FunctionBox : public ObjectBox, public SharedContext
         // A generator kind can be set at initialization, or when "yield" is
         // first seen.  In both cases the transition can only happen from
         // NotGenerator.
-        MOZ_ASSERT(!isStarGenerator() && !isLegacyGenerator());
+        MOZ_ASSERT(!isStarGenerator());
         generatorKindBits_ = GeneratorKindAsBits(kind);
     }
 
@@ -624,7 +622,6 @@ SharedContext::allBindingsClosedOver()
     return bindingsAccessedDynamically() ||
            (isFunctionBox() &&
             (asFunctionBox()->isStarGenerator() ||
-             asFunctionBox()->isLegacyGenerator() ||
              asFunctionBox()->isAsync()));
 }
 

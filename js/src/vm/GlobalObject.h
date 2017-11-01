@@ -77,7 +77,6 @@ class GlobalObject : public NativeObject
         ITERATOR_PROTO,
         ARRAY_ITERATOR_PROTO,
         STRING_ITERATOR_PROTO,
-        LEGACY_GENERATOR_OBJECT_PROTO,
         STAR_GENERATOR_OBJECT_PROTO,
         STAR_GENERATOR_FUNCTION_PROTO,
         STAR_GENERATOR_FUNCTION,
@@ -578,12 +577,6 @@ class GlobalObject : public NativeObject
     }
 
     static NativeObject*
-    getOrCreateLegacyGeneratorObjectPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        return MaybeNativeObject(getOrCreateObject(cx, global, LEGACY_GENERATOR_OBJECT_PROTO,
-                                                   initLegacyGeneratorProto));
-    }
-
-    static NativeObject*
     getOrCreateStarGeneratorObjectPrototype(JSContext* cx, Handle<GlobalObject*> global)
     {
         return MaybeNativeObject(getOrCreateObject(cx, global, STAR_GENERATOR_OBJECT_PROTO,
@@ -771,7 +764,6 @@ class GlobalObject : public NativeObject
     static bool initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in vm/GeneratorObject.cpp.
-    static bool initLegacyGeneratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initStarGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
     static bool initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global);

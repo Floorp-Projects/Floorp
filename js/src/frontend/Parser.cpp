@@ -2129,27 +2129,6 @@ Parser<FullParseHandler, char16_t>::finishLexicalScope(ParseContext::Scope& scop
     return handler.newLexicalScope(*bindings, body);
 }
 
-static bool
-IsArgumentsUsedInLegacyGenerator(JSContext* cx, Scope* scope)
-{
-    JSAtom* argumentsName = cx->names().arguments;
-    for (ScopeIter si(scope); si; si++) {
-        if (si.scope()->is<LexicalScope>()) {
-            // Using a shadowed lexical 'arguments' is okay.
-            for (::BindingIter bi(si.scope()); bi; bi++) {
-                if (bi.name() == argumentsName)
-                    return false;
-            }
-        } else if (si.scope()->is<FunctionScope>()) {
-            // It's an error to use 'arguments' in a legacy generator expression.
-            JSScript* script = si.scope()->as<FunctionScope>().script();
-            return script->isGeneratorExp() && script->isLegacyGenerator();
-        }
-    }
-
-    return false;
-}
-
 template <>
 ParseNode*
 Parser<FullParseHandler, char16_t>::evalBody(EvalSharedContext* evalsc)
@@ -2179,19 +2158,6 @@ Parser<FullParseHandler, char16_t>::evalBody(EvalSharedContext* evalsc)
         body = finishLexicalScope(lexicalScope, body);
         if (!body)
             return nullptr;
-    }
-
-    // It's an error to use 'arguments' in a legacy generator expression.
-    //
-    // If 'arguments' appears free (i.e. not a declared name) or if the
-    // declaration does not shadow the enclosing script's 'arguments'
-    // binding (i.e. not a lexical declaration), check the enclosing
-    // script.
-    if (hasUsedName(context->names().arguments)) {
-        if (IsArgumentsUsedInLegacyGenerator(context, pc->sc()->compilationEnclosingScope())) {
-            error(JSMSG_BAD_GENEXP_BODY, js_arguments_str);
-            return nullptr;
-        }
     }
 
 #ifdef DEBUG
@@ -2783,18 +2749,6 @@ Parser<ParseHandler, CharT>::functionBody(InHandling inHandling, YieldHandling y
         MOZ_ASSERT_IF(!pc->isAsync(), pc->lastYieldOffset == startYieldOffset);
         break;
 
-      case LegacyGenerator:
-        MOZ_ASSERT(pc->lastYieldOffset != startYieldOffset);
-
-        // These should throw while parsing the yield expression.
-        MOZ_ASSERT(kind != Arrow);
-        MOZ_ASSERT(!IsGetterKind(kind));
-        MOZ_ASSERT(!IsSetterKind(kind));
-        MOZ_ASSERT(!IsConstructorKind(kind));
-        MOZ_ASSERT(kind != Method);
-        MOZ_ASSERT(type != ExpressionBody);
-        break;
-
       case StarGenerator:
         MOZ_ASSERT(kind != Arrow);
         MOZ_ASSERT(type == StatementListBody);
@@ -3296,7 +3250,6 @@ Parser<FullParseHandler, char16_t>::skipLazyInnerFunction(ParseNode* pn, uint32_
     // so we can skip over them after accounting for their free variables.
 
     RootedFunction fun(context, handler.nextLazyInnerFunction());
-    MOZ_ASSERT(!fun->isLegacyGenerator());
     FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, Directives(/* strict = */ false),
                                          fun->generatorKind(), fun->asyncKind());
     if (!funbox)
@@ -6693,17 +6646,7 @@ Parser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
             return null();
     }
 
-    Node pn = handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
-    if (!pn)
-        return null();
-
-    /* Disallow "return v;" in legacy generators. */
-    if (pc->isLegacyGenerator() && exprNode) {
-        errorAt(begin, JSMSG_BAD_GENERATOR_RETURN);
-        return null();
-    }
-
-    return pn;
+    return handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename CharT>
@@ -6758,86 +6701,8 @@ Parser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
             return handler.newYieldStarExpression(begin, exprNode);
         return handler.newYieldExpression(begin, exprNode);
       }
-
       case NotGenerator:
-        // We are in code that has not seen a yield, but we are in JS 1.7 or
-        // later.  Try to transition to being a legacy generator.
-        MOZ_ASSERT(tokenStream.versionNumber() >= JSVERSION_1_7);
-        MOZ_ASSERT(pc->lastYieldOffset == ParseContext::NoYieldOffset);
-
-        if (!abortIfSyntaxParser())
-            return null();
-
-        if (!pc->isFunctionBox()) {
-            error(JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return null();
-        }
-
-        if (pc->functionBox()->isArrow()) {
-            errorAt(begin, JSMSG_YIELD_IN_ARROW, js_yield_str);
-            return null();
-        }
-
-        if (pc->functionBox()->function()->isMethod() ||
-            pc->functionBox()->function()->isGetter() ||
-            pc->functionBox()->function()->isSetter())
-        {
-            errorAt(begin, JSMSG_YIELD_IN_METHOD, js_yield_str);
-            return null();
-        }
-
-        if (pc->funHasReturnExpr
-#if JS_HAS_EXPR_CLOSURES
-            || pc->functionBox()->isExprBody()
-#endif
-            )
-        {
-            /* As in Python (see PEP-255), disallow return v; in generators. */
-            errorAt(begin, JSMSG_BAD_FUNCTION_YIELD);
-            return null();
-        }
-
-        pc->functionBox()->setGeneratorKind(LegacyGenerator);
-        addTelemetry(DeprecatedLanguageExtension::LegacyGenerator);
-        if (!warnOnceAboutLegacyGenerator())
-            return null();
-
-        MOZ_FALLTHROUGH;
-
-      case LegacyGenerator:
-      {
-        // We are in a legacy generator: a function that has already seen a
-        // yield.
-        MOZ_ASSERT(pc->isFunctionBox());
-
-        pc->lastYieldOffset = begin;
-
-        // Legacy generators do not require a value.
-        Node exprNode;
-        TokenKind tt = TOK_EOF;
-        if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
-            return null();
-        switch (tt) {
-          case TOK_EOF:
-          case TOK_EOL:
-          case TOK_SEMI:
-          case TOK_RC:
-          case TOK_RB:
-          case TOK_RP:
-          case TOK_COLON:
-          case TOK_COMMA:
-            // No value.
-            exprNode = null();
-            tokenStream.addModifierException(TokenStream::NoneIsOperand);
-            break;
-          default:
-            exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
-            if (!exprNode)
-                return null();
-        }
-
-        return handler.newYieldExpression(begin, exprNode);
-      }
+        break;
     }
 
     MOZ_CRASH("yieldExpr");
@@ -10442,20 +10307,6 @@ ParserBase::warnOnceAboutForEach()
         if (!warning(JSMSG_DEPRECATED_FOR_EACH))
             return false;
         context->compartment()->warnedAboutForEach = true;
-    }
-    return true;
-}
-
-bool
-ParserBase::warnOnceAboutLegacyGenerator()
-{
-    if (context->helperThread())
-        return true;
-
-    if (!context->compartment()->warnedAboutLegacyGenerator) {
-        if (!warning(JSMSG_DEPRECATED_LEGACY_GENERATOR))
-            return false;
-        context->compartment()->warnedAboutLegacyGenerator = true;
     }
     return true;
 }

@@ -401,7 +401,6 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
             bce->maxFixedSlots = nextFrameSlot_;
         MOZ_ASSERT_IF(bce->sc->isFunctionBox() &&
                       (bce->sc->asFunctionBox()->isStarGenerator() ||
-                       bce->sc->asFunctionBox()->isLegacyGenerator() ||
                        bce->sc->asFunctionBox()->isAsync()),
                       bce->maxFixedSlots == 0);
     }
@@ -4834,7 +4833,6 @@ BytecodeEmitter::isRunOnceLambda()
     FunctionBox* funbox = sc->asFunctionBox();
     return !funbox->argumentsHasLocalBinding() &&
            !funbox->isStarGenerator() &&
-           !funbox->isLegacyGenerator() &&
            !funbox->isAsync() &&
            !funbox->function()->explicitName();
 }

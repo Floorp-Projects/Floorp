@@ -228,7 +228,6 @@ GetPropertyDefault(JSContext* cx, HandleObject obj, HandleId id, HandleValue def
 enum class GeneratorStyle
 {
     None,
-    Legacy,
     ES6
 };
 
@@ -1613,14 +1612,11 @@ NodeBuilder::function(ASTType type, TokenPos* pos,
     }
 
     if (isGenerator) {
-        // Distinguish ES6 generators from legacy generators.
-        RootedValue styleVal(cx);
-        JSAtom* styleStr = generatorStyle == GeneratorStyle::ES6
-                           ? Atomize(cx, "es6", 3)
-                           : Atomize(cx, "legacy", 6);
+        MOZ_ASSERT(generatorStyle == GeneratorStyle::ES6);
+        JSAtom* styleStr = Atomize(cx, "es6", 3);
         if (!styleStr)
             return false;
-        styleVal.setString(styleStr);
+        RootedValue styleVal(cx, StringValue(styleStr));
         return newNode(type, pos,
                        "id", id,
                        "params", array,
@@ -3433,8 +3429,6 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     GeneratorStyle generatorStyle =
         pn->pn_funbox->isStarGenerator()
         ? GeneratorStyle::ES6
-        : pn->pn_funbox->isLegacyGenerator()
-        ? GeneratorStyle::Legacy
         : GeneratorStyle::None;
 
     bool isAsync = pn->pn_funbox->isAsync();
