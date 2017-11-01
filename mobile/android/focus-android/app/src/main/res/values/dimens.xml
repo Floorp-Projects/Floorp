@@ -32,6 +32,7 @@
 
     <dimen name="dialogHorizontalPadding">24dp</dimen>
 
+    <dimen name="preference_root_layout_padding">5dp</dimen>
     <dimen name="preference_icon_drawable_size">24dp</dimen>
     <dimen name="preference_drawable_padding">32dp</dimen>
     <dimen name="preference_padding_top">8dp</dimen>

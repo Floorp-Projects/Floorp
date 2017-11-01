@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/preference_root_layout_padding">
+
+    <TextView
+        android:defaultFocusHighlightEnabled="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/search_add_manually_name"
+        android:paddingStart="5dp"
+        android:paddingLeft="5dp"
+        android:paddingTop="@dimen/preference_padding_vertical"/>
+
+    <EditText
+        android:id="@+id/edit_engine_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/search_add_manually_name_hint"
+        android:inputType="text"
+        android:nextFocusDown="@+id/edit_search_string"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/search_add_manually_string"
+        android:paddingStart="5dp"
+        android:paddingLeft="5dp"
+        android:paddingTop="@dimen/preference_padding_vertical"/>
+
+    <EditText
+        android:id="@id/edit_search_string"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/search_add_manually_string_hint"
+        android:nextFocusUp="@id/edit_engine_name"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/search_add_manually_example"
+        android:textColor="@android:color/tertiary_text_dark"
+        android:paddingStart="5dp"
+        android:paddingLeft="5dp"/>
+</LinearLayout>

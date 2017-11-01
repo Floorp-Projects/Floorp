@@ -82,15 +82,25 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             final Intent intent = InfoActivity.getPrivacyNoticeIntent(getActivity());
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
-            final Intent intent = new Intent(getActivity(), SettingsActivity.class);
-            intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings);
-            intent.putExtra(TITLE_RESID_INTENT_EXTRA, R.string.preference_search_installed_search_engines);
+            final Intent intent = getSettingsIntent(getActivity(),
+                    AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual: R.xml.search_engine_settings,
+                    R.string.preference_search_installed_search_engines);
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
-            // TODO: Show add search engine page
+            final Intent intent = getSettingsIntent(getActivity(),
+                    R.xml.manual_add_search_engine,
+                    R.string.tutorial_search_title);
+            startActivity(intent);
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);
+    }
+
+    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId) {
+        final Intent intent = new Intent(context, SettingsActivity.class);
+        intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, fragmentResId);
+        intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
+        return intent;
     }
 
     @Override

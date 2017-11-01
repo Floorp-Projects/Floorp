@@ -80,7 +80,8 @@
         <!-- SettingsActivity title is set dynamically for multilocale support -->
         <activity android:name=".activity.SettingsActivity"
             android:theme="@style/SettingsTheme"
-            android:configChanges="locale" />
+            android:configChanges="locale"
+            android:windowSoftInputMode="adjustPan" />
 
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/InfoTheme"/>
