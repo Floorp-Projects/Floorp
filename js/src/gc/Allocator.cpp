@@ -8,7 +8,6 @@
 
 #include "jscntxt.h"
 
-#include "gc/ArenaList.h"
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
@@ -19,6 +18,7 @@
 
 #include "jsobjinlines.h"
 
+#include "gc/ArenaList-inl.h"
 #include "gc/Heap-inl.h"
 
 using namespace js;

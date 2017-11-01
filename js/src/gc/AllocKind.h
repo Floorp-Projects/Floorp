@@ -191,6 +191,84 @@ FOR_EACH_ALLOCKIND(EXPAND_ELEMENT)
 static const size_t MAX_BACKGROUND_FINALIZE_KINDS =
     size_t(AllocKind::LIMIT) - size_t(AllocKind::OBJECT_LIMIT) / 2;
 
+static inline bool
+IsNurseryAllocable(AllocKind kind)
+{
+    MOZ_ASSERT(IsValidAllocKind(kind));
+    static const bool map[] = {
+        true,      /* AllocKind::FUNCTION */
+        true,      /* AllocKind::FUNCTION_EXTENDED */
+        false,     /* AllocKind::OBJECT0 */
+        true,      /* AllocKind::OBJECT0_BACKGROUND */
+        false,     /* AllocKind::OBJECT2 */
+        true,      /* AllocKind::OBJECT2_BACKGROUND */
+        false,     /* AllocKind::OBJECT4 */
+        true,      /* AllocKind::OBJECT4_BACKGROUND */
+        false,     /* AllocKind::OBJECT8 */
+        true,      /* AllocKind::OBJECT8_BACKGROUND */
+        false,     /* AllocKind::OBJECT12 */
+        true,      /* AllocKind::OBJECT12_BACKGROUND */
+        false,     /* AllocKind::OBJECT16 */
+        true,      /* AllocKind::OBJECT16_BACKGROUND */
+        false,     /* AllocKind::SCRIPT */
+        false,     /* AllocKind::LAZY_SCRIPT */
+        false,     /* AllocKind::SHAPE */
+        false,     /* AllocKind::ACCESSOR_SHAPE */
+        false,     /* AllocKind::BASE_SHAPE */
+        false,     /* AllocKind::OBJECT_GROUP */
+        false,     /* AllocKind::FAT_INLINE_STRING */
+        false,     /* AllocKind::STRING */
+        false,     /* AllocKind::EXTERNAL_STRING */
+        false,     /* AllocKind::FAT_INLINE_ATOM */
+        false,     /* AllocKind::ATOM */
+        false,     /* AllocKind::SYMBOL */
+        false,     /* AllocKind::JITCODE */
+        false,     /* AllocKind::SCOPE */
+        false,     /* AllocKind::REGEXP_SHARED */
+    };
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
+    return map[size_t(kind)];
+}
+
+static inline bool
+IsBackgroundFinalized(AllocKind kind)
+{
+    MOZ_ASSERT(IsValidAllocKind(kind));
+    static const bool map[] = {
+        true,      /* AllocKind::FUNCTION */
+        true,      /* AllocKind::FUNCTION_EXTENDED */
+        false,     /* AllocKind::OBJECT0 */
+        true,      /* AllocKind::OBJECT0_BACKGROUND */
+        false,     /* AllocKind::OBJECT2 */
+        true,      /* AllocKind::OBJECT2_BACKGROUND */
+        false,     /* AllocKind::OBJECT4 */
+        true,      /* AllocKind::OBJECT4_BACKGROUND */
+        false,     /* AllocKind::OBJECT8 */
+        true,      /* AllocKind::OBJECT8_BACKGROUND */
+        false,     /* AllocKind::OBJECT12 */
+        true,      /* AllocKind::OBJECT12_BACKGROUND */
+        false,     /* AllocKind::OBJECT16 */
+        true,      /* AllocKind::OBJECT16_BACKGROUND */
+        false,     /* AllocKind::SCRIPT */
+        true,      /* AllocKind::LAZY_SCRIPT */
+        true,      /* AllocKind::SHAPE */
+        true,      /* AllocKind::ACCESSOR_SHAPE */
+        true,      /* AllocKind::BASE_SHAPE */
+        true,      /* AllocKind::OBJECT_GROUP */
+        true,      /* AllocKind::FAT_INLINE_STRING */
+        true,      /* AllocKind::STRING */
+        true,      /* AllocKind::EXTERNAL_STRING */
+        true,      /* AllocKind::FAT_INLINE_ATOM */
+        true,      /* AllocKind::ATOM */
+        true,      /* AllocKind::SYMBOL */
+        false,     /* AllocKind::JITCODE */
+        true,      /* AllocKind::SCOPE */
+        true,      /* AllocKind::REGEXP_SHARED */
+    };
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
+    return map[size_t(kind)];
+}
+
 } /* namespace gc */
 } /* namespace js */
 

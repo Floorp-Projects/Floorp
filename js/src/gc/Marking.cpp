@@ -34,7 +34,6 @@
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
 #include "vm/NativeObject-inl.h"

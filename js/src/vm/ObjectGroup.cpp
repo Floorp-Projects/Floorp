@@ -20,9 +20,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 #include "vm/TaggedProto.h"
-#include "vm/UnboxedObject.h"
-
-#include "jsobjinlines.h"
 
 #include "vm/UnboxedObject-inl.h"
 
