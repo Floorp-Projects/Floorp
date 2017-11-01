@@ -487,6 +487,12 @@ public:
                           EventStates aState) const;
 
   /**
+   * Returns true if a change in document state might require us to restyle the
+   * document.
+   */
+  bool HasDocumentStateDependency(EventStates aState) const;
+
+  /**
    * Get a new style context that uses the same rules as the given style context
    * but has a different parent.
    *
