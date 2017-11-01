@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
@@ -24,6 +23,4 @@ function test()
   actual = ((0.1).toFixed()).toSource();
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

@@ -46,52 +46,41 @@
 */
 
 var SECTION = "6-1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Source Text";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // encoded quotes should not end a quote
 
-new TestCase(  SECTION,
-	       "var s = 'PAS\\u0022SED'; s",
+new TestCase(  "var s = 'PAS\\u0022SED'; s",
 	       "PAS\"SED",
 	       eval("var s = 'PAS\\u0022SED'; s") );
 
-new TestCase(  SECTION,
-	       'var s = "PAS\\u0022SED"; s',
+new TestCase(  'var s = "PAS\\u0022SED"; s',
 	       "PAS\"SED",
 	       eval('var s = "PAS\\u0022SED"; s') );
 
 
-new TestCase(  SECTION,
-	       "var s = 'PAS\\u0027SED'; s",
+new TestCase(  "var s = 'PAS\\u0027SED'; s",
 	       "PAS\'SED",
 	       eval("var s = 'PAS\\u0027SED'; s") );
 
 
-new TestCase(  SECTION,
-	       'var s = "PAS\\u0027SED"; s',
+new TestCase(  'var s = "PAS\\u0027SED"; s',
 	       "PAS\'SED",
 	       eval('var s = "PAS\\u0027SED"; s') );
 
-var testcase =  new TestCase( SECTION,
-			      'var s="PAS\\u0027SED"; s',
-			      "PAS\'SED",
-			      "" );
 var s = "PAS\u0027SED";
 
-testcase.actual =  s;
+new TestCase( 'var s="PAS\\u0027SED"; s',
+	      "PAS\'SED",
+	      s );
 
-testcase = new TestCase(  SECTION,
-			  'var s = "PAS\\u0022SED"; s',
-			  "PAS\"SED",
-			  "" );
 var s = "PAS\u0022SED";
 
-testcase.actual = s;
-
+new TestCase( 'var s = "PAS\\u0022SED"; s',
+	      "PAS\"SED",
+	      s );
 
 test();
 

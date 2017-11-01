@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -84,7 +83,4 @@ function test()
     try { expect = exp(44); f(44) } catch (e) { print('tried f(44), caught ' + e) }
     reportCompare(expect, actual, summary);
   }
-
-
-  exitFunc ('test');
 }

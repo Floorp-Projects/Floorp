@@ -329,6 +329,58 @@ add_task(async function test_unix_permissions() {
 });
 
 /**
+ * Tests the zone information of the final target once the download finished.
+ */
+add_task(async function test_windows_zoneInformation() {
+  // This test is only executed on Windows, and in order to work correctly it
+  // requires the local user applicaton data directory to be on an NTFS file
+  // system. We use this directory because it is more likely to be on the local
+  // system installation drive, while the temporary directory used by the test
+  // environment is on the same drive as the test sources.
+  if (Services.appinfo.OS != "WINNT") {
+    do_print("Skipping test.");
+    return;
+  }
+
+  let normalTargetFile = FileUtils.getFile("LocalAppData",
+                                           ["xpcshell-download-test.txt"]);
+
+  // The template file name lenght is more than MAX_PATH characters. The final
+  // full path will be shortened to MAX_PATH length by the createUnique call.
+  let longTargetFile = FileUtils.getFile("LocalAppData",
+                                         ["T".repeat(256) + ".txt"]);
+  longTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+  for (let targetFile of [normalTargetFile, longTargetFile]) {
+    try {
+      if (!gUseLegacySaver) {
+        let download = await Downloads.createDownload({
+          source: httpUrl("source.txt"),
+          target: targetFile.path,
+        });
+        await download.start();
+      } else {
+        let download = await promiseStartLegacyDownload(null, { targetFile });
+        await promiseDownloadStopped(download);
+      }
+      await promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
+
+      // Verify that the Alternate Data Stream has been written.
+      let file = await OS.File.open(targetFile.path + ":Zone.Identifier", {},
+                 { winAllowLengthBeyondMaxPathWithCaveats: true });
+      try {
+        do_check_eq(new TextDecoder().decode(await file.read()),
+                    "[ZoneTransfer]\r\nZoneId=3\r\n");
+      } finally {
+        file.close();
+      }
+    } finally {
+      await OS.File.remove(targetFile.path);
+    }
+  }
+});
+
+/**
  * Checks the referrer for downloads.
  */
 add_task(async function test_referrer() {

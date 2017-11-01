@@ -31,8 +31,6 @@ test(new TestObject());
 
 function test(t)
 {
-  enterFunc ("test");
-   
   printStatus ("Basic Getter/ Setter test");
   reportCompare ("<initial y>", t._y, "y prototype check");
 

@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -38,6 +37,4 @@ function test()
       throw "Unexpected exception: "+uneval(e);
   }
   reportCompare(expect, actual, summary + ': 7');
-
-  exitFunc ('test');
 }

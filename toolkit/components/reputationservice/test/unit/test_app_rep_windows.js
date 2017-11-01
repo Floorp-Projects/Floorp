@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
+                                  "resource://testing-common/FileTestUtils.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",
@@ -36,20 +38,6 @@ var gHttpServer = null;
 
 const appRepURLPref = "browser.safebrowsing.downloads.remote.url";
 const remoteEnabledPref = "browser.safebrowsing.downloads.remote.enabled";
-
-/**
- * Returns a reference to a temporary file.  If the file is then created, it
- * will be removed when tests in this file finish.
- */
-function getTempFile(aLeafName) {
-  let file = FileUtils.getFile("TmpD", [aLeafName]);
-  do_register_cleanup(function GTF_cleanup() {
-    if (file.exists()) {
-      file.remove(false);
-    }
-  });
-  return file;
-}
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
@@ -318,7 +306,7 @@ add_task(async function test_signature_whitelists() {
                              "http://localhost:4444/throw");
 
   // Use BackgroundFileSaver to extract the signature on Windows.
-  let destFile = getTempFile(TEST_FILE_NAME_1);
+  let destFile = FileTestUtils.getTempFile(TEST_FILE_NAME_1);
 
   let data = readFileToString("data/signed_win.exe");
   let saver = new BackgroundFileSaverOutputStream();

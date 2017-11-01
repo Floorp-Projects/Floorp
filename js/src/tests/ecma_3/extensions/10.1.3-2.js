@@ -11,9 +11,6 @@
  * SpiderMonkey was crashing on each case below if the parameters had
  * the same name. But duplicate parameter names are permitted by ECMA;
  * see ECMA-262 3rd Edition Final Section 10.1.3
- *
- * NOTE: Rhino does not have toSource() and uneval(); they are non-ECMA
- * extensions to the language. So we include a test for them at the beginning -
  */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -27,21 +24,6 @@ var expect= '';
 var expectedvalues = [];
 var OBJ = new Object();
 var OBJ_TYPE = OBJ.toString();
-
-/*
- * Exit if the implementation doesn't support toSource() or uneval(),
- * since these are non-ECMA extensions to the language -
- */
-try
-{
-  if (!OBJ.toSource || !uneval(OBJ))
-    quit();
-}
-catch(e)
-{
-  quit();
-}
-
 
 /*
  * OK, now begin the test. Just checking that we don't crash on these -
@@ -115,7 +97,6 @@ function addThis()
 
 function test()
 {
-  enterFunc('test');
   printBugNumber(BUGNUMBER);
   printStatus(summary);
 
@@ -123,6 +104,4 @@ function test()
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
   }
-
-  exitFunc ('test');
 }

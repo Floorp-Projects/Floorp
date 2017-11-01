@@ -31,10 +31,8 @@
  */
 
 var SECTION = "ecma_2/String/split-001.js";
-var VERSION = "ECMA_2";
 var TITLE   = "String.prototype.split( regexp, [,limit] )";
 
-startTest();
 
 // the separator is not supplied
 // separator is undefined

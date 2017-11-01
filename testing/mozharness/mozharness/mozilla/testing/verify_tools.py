@@ -58,6 +58,11 @@ class VerifyToolsMixin(object):
 
         dirs = self.query_abs_dirs()
         mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
+        if self.config.get('e10s') == True:
+            mozinfo.update({"e10s": True})
+            # Additional mozinfo properties like "headless" and "coverage" are
+            # also normally updated dynamically in the harness, but neither of
+            # these apply to the test-verify task.
 
         manifests = [
             (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),

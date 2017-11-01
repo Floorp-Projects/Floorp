@@ -1798,6 +1798,10 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     // Loop to construct the match strings. There are two different loops,
     // depending on whether the input is latin1.
     CreateDependentString depStr[2];
+
+    // depStr may refer to failureRestore during generateFallback below,
+    // so this variable must live outside of the block.
+    Label failureRestore;
     {
         Label isLatin1, done;
         masm.branchLatin1String(input, &isLatin1);
@@ -1805,7 +1809,6 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
         Label* failure = &oolEntry;
         Register temp4 = (maybeTemp4 == InvalidReg) ? lastIndex : maybeTemp4;
 
-        Label failureRestore;
         if (maybeTemp4 == InvalidReg) {
             failure = &failureRestore;
 

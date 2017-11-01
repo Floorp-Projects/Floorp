@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -40,5 +39,4 @@ function test()
     actual = ex + '';
   }
   reportCompare(expect, actual, 'new Function("setter/*\n*/");');
-  exitFunc ('test');
 }

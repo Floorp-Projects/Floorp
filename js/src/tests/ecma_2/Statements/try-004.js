@@ -15,10 +15,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "try-004";
-var VERSION = "ECMA_2";
 var TITLE   = "The try statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 TryToCatch( "Math.PI", Math.PI );
@@ -45,7 +43,6 @@ function TryToCatch( value, expect ) {
   }
 
   new TestCase(
-    SECTION,
     "eval( " + value +" )",
     expect,
     result );

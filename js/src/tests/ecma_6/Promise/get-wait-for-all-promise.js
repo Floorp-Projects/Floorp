@@ -1,10 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell) -- needs getSelfHostedValue and drainJobQueue
 
-if (!this.Promise) {
-    this.reportCompare && reportCompare(true,true);
-    quit(0);
-}
-
 function onResolved(val) {
     result = 'resolved with ' + val;
 }

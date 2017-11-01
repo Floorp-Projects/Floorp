@@ -83,8 +83,6 @@
 
 
 var SECTION = "15.4.4.5-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Array.prototype.sort(comparefn)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -126,21 +124,19 @@ function CheckItems( S ) {
   eval( S );
   var E = Sort( A );
 
-  new TestCase(   SECTION,
+  new TestCase(
 		  S +";  A.sort(Compare); A.length",
 		  E.length,
 		  eval( S + "; A.sort(Compare); A.length") );
 
   for ( var i = 0; i < E.length; i++ ) {
     new TestCase(
-      SECTION,
       "A["+i+ "].toString()",
       E[i] +"",
       A[i] +"");
 
     if ( A[i] == void 0 && typeof A[i] == "undefined" ) {
       new TestCase(
-	SECTION,
 	"typeof A["+i+ "]",
 	typeof E[i],
 	typeof A[i] );

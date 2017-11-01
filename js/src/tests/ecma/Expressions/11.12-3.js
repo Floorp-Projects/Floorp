@@ -22,14 +22,11 @@
 */
 
 var SECTION = "11.12-3";
-var VERSION = "ECMA_1";
-startTest();
 writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
 
 // the following expression should NOT be an error in JS.
 
-new TestCase( SECTION,
-	      "var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR",
+new TestCase( "var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR",
 	      "PASSED",
 	      eval("var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR"));
 

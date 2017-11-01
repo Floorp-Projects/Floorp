@@ -28,7 +28,6 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
-#include "nsIWebBrowserStream.h"
 #include "nsIPresShell.h"
 #include "nsIURIContentListener.h"
 #include "nsISHistoryListener.h"
@@ -123,7 +122,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
   NS_INTERFACE_MAP_ENTRY(nsICancelable)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserStream)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -1895,51 +1893,4 @@ nsWebBrowser::SetFocusedElement(nsIDOMElement* aFocusedElement)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->SetFocus(aFocusedElement, 0) : NS_OK;
-}
-
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserStream
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::OpenStream(nsIURI* aBaseURI, const nsACString& aContentType)
-{
-  nsresult rv;
-
-  if (!mStream) {
-    mStream = new nsEmbedStream();
-    mStream->InitOwner(this);
-    rv = mStream->Init();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  return mStream->OpenStream(aBaseURI, aContentType);
-}
-
-
-NS_IMETHODIMP
-nsWebBrowser::AppendToStream(const uint8_t* aData, uint32_t aLen)
-{
-  if (!mStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mStream->AppendToStream(aData, aLen);
-}
-
-NS_IMETHODIMP
-nsWebBrowser::CloseStream()
-{
-  nsresult rv;
-
-  if (!mStream) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = mStream->CloseStream();
-
-  mStream = nullptr;
-
-  return rv;
 }

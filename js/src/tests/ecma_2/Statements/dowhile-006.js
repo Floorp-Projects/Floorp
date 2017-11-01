@@ -15,10 +15,8 @@
  *  Date:               26 August 1998
  */
 var SECTION = "dowhile-006";
-var VERSION = "ECMA_2";
 var TITLE   = "do...while";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DoWhile( new DoWhileObject( false, false, 10 ) );
@@ -76,13 +74,11 @@ outie: {
   }
 
   new TestCase(
-    SECTION,
     "hit code after loop in inner loop",
     ( object.breakIn || object.breakOut ) ? false : true ,
     result1 );
 
   new TestCase(
-    SECTION,
     "hit code after loop in outer loop",
     ( object.breakOut ) ? false : true,
     result2 );

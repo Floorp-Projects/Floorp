@@ -47,8 +47,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.2.1-2";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Property Accessors";
 writeHeaderToLog( SECTION + " "+TITLE );
 
@@ -66,13 +64,11 @@ PROPERTY[p++] = new Property(  true,        true,      "true",    1 );
 PROPERTY[p++] = new Property(  false,       false,      "false",    0 );
 
 for ( var i = 0, RESULT; i < PROPERTY.length; i++ ) {
-  new TestCase( SECTION,
-                PROPERTY[i].object + ".valueOf()",
+  new TestCase( PROPERTY[i].object + ".valueOf()",
                 PROPERTY[i].value,
                 eval( PROPERTY[i].object+ ".valueOf()" ) );
 
-  new TestCase( SECTION,
-                PROPERTY[i].object + ".toString()",
+  new TestCase( PROPERTY[i].object + ".toString()",
                 PROPERTY[i].string,
                 eval( PROPERTY[i].object+ ".toString()" ) );
 

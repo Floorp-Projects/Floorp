@@ -8,8 +8,6 @@ test();
 
 function test()
 {
-  enterFunc ("test");
-
   var EXCEPTION_DATA = "String exception";
   var e;
   var caught = false;
@@ -38,6 +36,4 @@ function test()
     reportCompare('PASS', 'FAIL', "Exception was never caught.");
    
   reportCompare('PASS', 'PASS', 'Basic catchguard test');
-
-  exitFunc ("test");
 }

@@ -25,6 +25,7 @@ add_task(async function() {
 
   invokeInTab("test");
   await waitForPaused(dbg);
+  await waitForMappedScopes(dbg);
 
   is(getScopeNodeLabel(dbg, 1), "sum");
   is(getScopeNodeLabel(dbg, 2), "<this>");

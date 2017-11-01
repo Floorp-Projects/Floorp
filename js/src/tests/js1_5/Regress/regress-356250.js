@@ -19,26 +19,20 @@ test2();
 
 function test1()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   (function() { eval("(function() { })"); })();
 
   reportCompare(expect, actual, summary + ': nested 1');
-
-  exitFunc ('test');
 }
 
 function test2()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   (function () {(function() { eval("(function() { })"); })();})();
 
   reportCompare(expect, actual, summary + ': nested 2');
-
-  exitFunc ('test');
 }

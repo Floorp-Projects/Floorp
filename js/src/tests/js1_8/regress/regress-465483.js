@@ -16,7 +16,6 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
@@ -25,6 +24,4 @@ function test()
   for each (i in [4, 'a', 'b', (void 0)]) print(actual = '' + (i + i));
 
   reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

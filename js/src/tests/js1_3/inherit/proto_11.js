@@ -22,10 +22,8 @@
 */
 
 var SECTION = "proto_11";
-var VERSION = "JS1_3";
 var TITLE   = "Global Information in Constructors";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var idCounter = 1;
@@ -66,18 +64,15 @@ var pat = new Employee( "Toonces, Pat", "Tech Pubs" )
 
 var les = new Engineer( "Morris, Les",  new Array("JavaScript"), "indy" );
 
-new TestCase( SECTION,
-	      "pat.id",
+new TestCase( "pat.id",
 	      5,
 	      pat.id );
 
-new TestCase( SECTION,
-	      "terry.id",
+new TestCase( "terry.id",
 	      6,
 	      terry.id );
 
-new TestCase( SECTION,
-	      "les.id",
+new TestCase( "les.id",
 	      7,
 	      les.id );
 

@@ -31,8 +31,6 @@
    Date:               12 november 1997
 */
 var SECTION = "11.7.2";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + "  The signed right shift operator ( >> )");
 
@@ -43,8 +41,7 @@ for ( power = 0; power <= 32; power++ ) {
   shiftexp = Math.pow( 2, power );
 
   for ( addexp = 0; addexp <= 32; addexp++ ) {
-    new TestCase( SECTION,
-		  shiftexp + " >> " + addexp,
+    new TestCase( shiftexp + " >> " + addexp,
 		  SignedRightShift( shiftexp, addexp ),
 		  shiftexp >> addexp );
   }
@@ -54,8 +51,7 @@ for ( power = 0; power <= 32; power++ ) {
   shiftexp = -Math.pow( 2, power );
 
   for ( addexp = 0; addexp <= 32; addexp++ ) {
-    new TestCase( SECTION,
-		  shiftexp + " >> " + addexp,
+    new TestCase( shiftexp + " >> " + addexp,
 		  SignedRightShift( shiftexp, addexp ),
 		  shiftexp >> addexp );
   }

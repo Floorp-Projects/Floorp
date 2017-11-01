@@ -1,3 +1,4 @@
+// |reftest| skip-if(xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,15 +35,8 @@ function init()
   jsTestDriverEnd();
 }
 
-if (typeof window != 'undefined')
-{
-  // delay test driver end
-  gDelayTestDriverEnd = true;
+// delay test driver end
+gDelayTestDriverEnd = true;
 
-  document.write('<input>');
-  window.addEventListener("load", init, false);
-}
-else
-{
-  reportCompare(expect, actual, summary);
-}
+document.write('<input>');
+window.addEventListener("load", init, false);

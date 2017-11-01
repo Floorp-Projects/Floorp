@@ -39,36 +39,24 @@
    Date:               12 november 1997
 */
 var SECTION = "10.1.4-1";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-new TestCase( "SECTION", "with MyObject, eval should return square of " );
+addTestCase();
 
 test();
 
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
+function addTestCase() {
+   var MYOBJECT = new MyObject();
+   var INPUT = 2;
 
-    var MYOBJECT = new MyObject();
-    var INPUT = 2;
-    gTestcases[gTc].description += "( " + INPUT +" )" ;
+   var actual, expect = Math.pow(INPUT,2);
+   with ( MYOBJECT ) {
+     actual = eval( INPUT );
+   }
 
-    with ( MYOBJECT ) {
-      gTestcases[gTc].actual = eval( INPUT );
-      gTestcases[gTc].expect = Math.pow(INPUT,2);
-    }
-
-    gTestcases[gTc].passed = writeTestCaseResult(
-      gTestcases[gTc].expect,
-      gTestcases[gTc].actual,
-      gTestcases[gTc].description +" = "+
-      gTestcases[gTc].actual );
-
-    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
-  }
-  return ( gTestcases );
+   new TestCase("with MyObject, eval should return square of ( " + INPUT + " )",
+                expect, actual);
 }
 
 function MyObject() {

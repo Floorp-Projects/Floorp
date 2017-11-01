@@ -16,13 +16,10 @@ test();
 
 function test()
 {
-  enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
   y = ({toString: gc}); new Function("y--;")()
 
 			  reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
 }

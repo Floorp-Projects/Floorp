@@ -39,38 +39,26 @@
    Date:               12 november 1997
 */
 var SECTION = "10.1.4-1";
-var VERSION = "ECMA_1";
-startTest();
 
 writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-new TestCase( "SECTION",
-	      "with MyObject, eval should cube INPUT:  " );
+addTestCase();
+
 test();
 
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
+function addTestCase() {
+   var MYOBJECT = new MyObject();
+   var INPUT = 2;
 
-    var MYOBJECT = new MyObject();
-    var INPUT = 2;
-    gTestcases[gTc].description += ( INPUT +"" );
-
-    with ( MYOBJECT ) {
+   var actual, expect = Math.pow(INPUT,3);
+   with ( MYOBJECT ) {
       eval = new Function ( "x", "return(Math.pow(Number(x),3))" );
 
-      gTestcases[gTc].actual = eval( INPUT );
-      gTestcases[gTc].expect = Math.pow(INPUT,3);
-    }
+      actual = eval( INPUT );
+   }
 
-    gTestcases[gTc].passed = writeTestCaseResult(
-      gTestcases[gTc].expect,
-      gTestcases[gTc].actual,
-      gTestcases[gTc].description +" = "+
-      gTestcases[gTc].actual );
-
-    gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
-  }
-  return ( gTestcases );
+   new TestCase("with MyObject, eval should cube INPUT:  (" + INPUT + ")",
+                expect, actual);
 }
 
 function MyObject() {

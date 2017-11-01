@@ -13,8 +13,6 @@
 */
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-var VERSION = 'no version';
-startTest();
 var TITLE = 'String:push,splice,concat,unshift,sort';
 
 writeHeaderToLog('Executing script: general2.js');
@@ -50,10 +48,10 @@ for (i = 0; i < size; i++)
   array2.unshift(array2.pop());
 }
 
-new TestCase( SECTION, "Array.push,pop,shift,unshift,slice,splice", true,String(array1) == String(array2));
+new TestCase( "Array.push,pop,shift,unshift,slice,splice", true,String(array1) == String(array2));
 array1.sort();
 array2.sort();
-new TestCase( SECTION, "Array.sort", true,String(array1) == String(array2));
+new TestCase( "Array.sort", true,String(array1) == String(array2));
 
 test();
 

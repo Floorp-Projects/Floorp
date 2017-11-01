@@ -15,11 +15,10 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-007";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions:  TypeError";
 var BUGNUMBER="318250";
 
-startTest();
+printBugNumber(BUGNUMBER);
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 DefaultValue_1();
@@ -48,7 +47,6 @@ function DefaultValue_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "new MyObject() + new MyObject() [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

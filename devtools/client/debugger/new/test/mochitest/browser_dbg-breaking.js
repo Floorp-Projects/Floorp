@@ -12,6 +12,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "scripts.html", 18);
   reload(dbg);
   await waitForPaused(dbg);
+  await waitForLoadedSource(dbg, "doc-scripts.html");
   assertPausedLocation(dbg);
   await resume(dbg);
 

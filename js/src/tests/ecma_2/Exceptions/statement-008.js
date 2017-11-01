@@ -14,10 +14,8 @@
    Date:               12 november 1997
 */
 var SECTION = "statement-008";
-var VERSION = "JS1_4";
 var TITLE   = "The break in statement";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -32,7 +30,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "break outside of an iteration statement" +
   " (threw " + exception +")",
   expect,

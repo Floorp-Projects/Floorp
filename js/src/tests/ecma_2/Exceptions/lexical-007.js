@@ -23,10 +23,8 @@
    Date:               12 november 1997
 */
 var SECTION = "lexical-005";
-var VERSION = "JS1_4";
 var TITLE   = "Keywords";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -41,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "false = true" +
   " (threw " + exception +")",
   expect,

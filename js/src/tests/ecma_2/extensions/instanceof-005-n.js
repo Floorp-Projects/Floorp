@@ -15,17 +15,14 @@
  *  Date:               2 September 1998
  */
 var SECTION = "instanceof-005-n";
-var VERSION = "ECMA_2";
 var TITLE   = "instanceof"
 
-  startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object_1, object_2, expect ) {
   result = object_1 instanceof object_2;
 
   new TestCase(
-    SECTION,
     "(" + object_1 + ") instanceof " + object_2,
     expect,
     result );
@@ -82,7 +79,6 @@ GenB.name = "B"
 // Identifier is a function, prototype of Identifier is not an object
 
 DESCRIPTION = "Identifier is a function, prototype of Identifier is not an object";
-EXPECTED = "error";
 
 InstanceOf( new GenB(), GenB, "error" );
 

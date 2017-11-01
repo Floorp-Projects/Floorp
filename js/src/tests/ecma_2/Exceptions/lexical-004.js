@@ -24,10 +24,8 @@
 
 */
 var SECTION = "lexical-004";
-var VERSION = "JS1_4";
 var TITLE   = "Keywords";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -42,7 +40,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "var null = true" +
   " (threw " + exception +")",
   expect,

@@ -23,10 +23,8 @@
    Date:               12 november 1997
 */
 var SECTION = "lexical-023.js";
-var VERSION = "ECMA_1";
 var TITLE   = "Future Reserved Words";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var result = "Failed";
@@ -41,7 +39,6 @@ try {
 }
 
 new TestCase(
-  SECTION,
   "try = true" +
   " (threw " + exception +")",
   expect,

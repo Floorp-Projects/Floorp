@@ -18,8 +18,6 @@
 
 
 var SECTION = "15.9.5.4-2-n";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Date.prototype.getTime";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
@@ -27,10 +25,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 var MYDATE = new MyDate( TIME_2000 );
 
 DESCRIPTION = "MYDATE.getTime()";
-EXPECTED = "error";
 
-new TestCase( SECTION,
-	      "MYDATE.getTime()",
+new TestCase( "MYDATE.getTime()",
 	      "error",
 	      eval("MYDATE.getTime()") );
 

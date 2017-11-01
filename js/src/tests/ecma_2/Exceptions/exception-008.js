@@ -15,10 +15,8 @@
  *  Date:               31 August 1998
  */
 var SECTION = "exception-008";
-var VERSION = "js1_4";
 var TITLE   = "Tests for JavaScript Standard Exceptions: SyntaxError";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 Syntax_1();
@@ -36,7 +34,6 @@ function Syntax_1() {
       exception = e.toString();
   } finally {
     new TestCase(
-      SECTION,
       "eval(\"continue\") [ exception is " + exception +" ]",
       "passed:  threw exception",
       result );

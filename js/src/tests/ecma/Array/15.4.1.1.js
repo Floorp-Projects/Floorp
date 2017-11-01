@@ -21,44 +21,35 @@
    Date:               7 october 1997
 */
 var SECTION = "15.4.1.1";
-var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Array Constructor Called as a Function";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-new TestCase( SECTION,
-	      "typeof Array(1,2)",       
+new TestCase( "typeof Array(1,2)",       
 	      "object",          
 	      typeof Array(1,2) );
 
-new TestCase( SECTION,
-	      "(Array(1,2)).toString",   
+new TestCase( "(Array(1,2)).toString",   
 	      Array.prototype.toString,   
 	      (Array(1,2)).toString );
 
-new TestCase( SECTION,
-	      "var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()",
+new TestCase( "var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()",
 	      "[object Array]",
 	      eval("var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()") );
 
-new TestCase( SECTION,
-	      "(Array(1,2)).length",     
+new TestCase( "(Array(1,2)).length",     
 	      2,                 
 	      (Array(1,2)).length );
 
-new TestCase( SECTION,
-	      "var arr = (Array(1,2)); arr[0]", 
+new TestCase( "var arr = (Array(1,2)); arr[0]", 
 	      1,          
 	      eval("var arr = (Array(1,2)); arr[0]") );
 
-new TestCase( SECTION,
-	      "var arr = (Array(1,2)); arr[1]", 
+new TestCase( "var arr = (Array(1,2)); arr[1]", 
 	      2,          
 	      eval("var arr = (Array(1,2)); arr[1]") );
 
-new TestCase( SECTION,
-	      "var arr = (Array(1,2)); String(arr)", 
+new TestCase( "var arr = (Array(1,2)); String(arr)", 
 	      "1,2", 
 	      eval("var arr = (Array(1,2)); String(arr)") );
 

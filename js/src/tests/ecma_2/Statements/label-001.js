@@ -16,10 +16,8 @@
  *  Date:               11 August 1998
  */
 var SECTION = "label-003";
-var VERSION = "ECMA_2";
 var TITLE   = "Labeled statements";
 
-startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 LabelTest(0, 0);
@@ -34,7 +32,6 @@ function LabelTest( limit, expect) {
 woo: for ( var result = 0; result < 1000; result++ ) { if (result == limit) { break woo; } else { continue woo; } };
 
   new TestCase(
-    SECTION,
     "break out of a labeled for loop: "+ limit,
     expect,
     result );
