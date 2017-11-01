@@ -3214,6 +3214,7 @@ dnl = FFmpeg's ffvpx configuration
 dnl ========================================================
 
 MOZ_FFVPX=
+MOZ_FFVPX_FLACONLY=
 case "$CPU_ARCH" in
   x86)
       MOZ_FFVPX=1
@@ -3223,6 +3224,7 @@ case "$CPU_ARCH" in
   ;;
   arm*)
       MOZ_FFVPX=1
+      MOZ_FFVPX_FLACONLY=1
   ;;
 esac
 
@@ -3232,6 +3234,9 @@ if test -n "$MOZ_LIBAV_FFT"; then
 fi
 if test -n "$MOZ_FFVPX"; then
   AC_DEFINE(MOZ_FFVPX)
+fi
+if test -n "$MOZ_FFVPX_FLACONLY"; then
+  AC_DEFINE(MOZ_FFVPX_FLACONLY)
 fi
 
 dnl ========================================================
@@ -4808,6 +4813,7 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_FFVPX)
+AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(VPX_USE_YASM)
 AC_SUBST_LIST(VPX_ASFLAGS)
