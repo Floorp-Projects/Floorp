@@ -248,6 +248,118 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 #endif
 #endif
 
+// ***************************************************************************
+// Structures for chunk headers for chunks used for non-huge allocations.
+
+struct arena_t;
+
+// Each element of the chunk map corresponds to one page within the chunk.
+struct arena_chunk_map_t
+{
+  // Linkage for run trees.  There are two disjoint uses:
+  //
+  // 1) arena_t's tree or available runs.
+  // 2) arena_run_t conceptually uses this linkage for in-use non-full
+  //    runs, rather than directly embedding linkage.
+  RedBlackTreeNode<arena_chunk_map_t> link;
+
+  // Run address (or size) and various flags are stored together.  The bit
+  // layout looks like (assuming 32-bit system):
+  //
+  //   ???????? ???????? ????---- -mckdzla
+  //
+  // ? : Unallocated: Run address for first/last pages, unset for internal
+  //                  pages.
+  //     Small: Run address.
+  //     Large: Run size for first page, unset for trailing pages.
+  // - : Unused.
+  // m : MADV_FREE/MADV_DONTNEED'ed?
+  // c : decommitted?
+  // k : key?
+  // d : dirty?
+  // z : zeroed?
+  // l : large?
+  // a : allocated?
+  //
+  // Following are example bit patterns for the three types of runs.
+  //
+  // r : run address
+  // s : run size
+  // x : don't care
+  // - : 0
+  // [cdzla] : bit set
+  //
+  //   Unallocated:
+  //     ssssssss ssssssss ssss---- --c-----
+  //     xxxxxxxx xxxxxxxx xxxx---- ----d---
+  //     ssssssss ssssssss ssss---- -----z--
+  //
+  //   Small:
+  //     rrrrrrrr rrrrrrrr rrrr---- -------a
+  //     rrrrrrrr rrrrrrrr rrrr---- -------a
+  //     rrrrrrrr rrrrrrrr rrrr---- -------a
+  //
+  //   Large:
+  //     ssssssss ssssssss ssss---- ------la
+  //     -------- -------- -------- ------la
+  //     -------- -------- -------- ------la
+  size_t bits;
+
+// Note that CHUNK_MAP_DECOMMITTED's meaning varies depending on whether
+// MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are defined.
+//
+// If MALLOC_DECOMMIT is defined, a page which is CHUNK_MAP_DECOMMITTED must be
+// re-committed with pages_commit() before it may be touched.  If
+// MALLOC_DECOMMIT is defined, MALLOC_DOUBLE_PURGE may not be defined.
+//
+// If neither MALLOC_DECOMMIT nor MALLOC_DOUBLE_PURGE is defined, pages which
+// are madvised (with either MADV_DONTNEED or MADV_FREE) are marked with
+// CHUNK_MAP_MADVISED.
+//
+// Otherwise, if MALLOC_DECOMMIT is not defined and MALLOC_DOUBLE_PURGE is
+// defined, then a page which is madvised is marked as CHUNK_MAP_MADVISED.
+// When it's finally freed with jemalloc_purge_freed_pages, the page is marked
+// as CHUNK_MAP_DECOMMITTED.
+#define CHUNK_MAP_MADVISED ((size_t)0x40U)
+#define CHUNK_MAP_DECOMMITTED ((size_t)0x20U)
+#define CHUNK_MAP_MADVISED_OR_DECOMMITTED                                      \
+  (CHUNK_MAP_MADVISED | CHUNK_MAP_DECOMMITTED)
+#define CHUNK_MAP_KEY ((size_t)0x10U)
+#define CHUNK_MAP_DIRTY ((size_t)0x08U)
+#define CHUNK_MAP_ZEROED ((size_t)0x04U)
+#define CHUNK_MAP_LARGE ((size_t)0x02U)
+#define CHUNK_MAP_ALLOCATED ((size_t)0x01U)
+};
+
+// Arena chunk header.
+struct arena_chunk_t
+{
+  // Arena that owns the chunk.
+  arena_t* arena;
+
+  // Linkage for the arena's tree of dirty chunks.
+  RedBlackTreeNode<arena_chunk_t> link_dirty;
+
+#ifdef MALLOC_DOUBLE_PURGE
+  // If we're double-purging, we maintain a linked list of chunks which
+  // have pages which have been madvise(MADV_FREE)'d but not explicitly
+  // purged.
+  //
+  // We're currently lazy and don't remove a chunk from this list when
+  // all its madvised pages are recommitted.
+  DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
+#endif
+
+  // Number of dirty pages.
+  size_t ndirty;
+
+  // Map of pages within chunk that keeps track of free/large/small.
+  arena_chunk_map_t map[1]; // Dynamically sized.
+};
+
+// ***************************************************************************
+// Constants defining allocator size classes and behavior.
+
 // Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
 #define QUANTUM_2POW_MIN 4
 
@@ -520,16 +632,6 @@ struct extent_node_t
   ChunkType chunk_type;
 };
 
-template<typename T>
-int
-CompareAddr(T* aAddr1, T* aAddr2)
-{
-  uintptr_t addr1 = reinterpret_cast<uintptr_t>(aAddr1);
-  uintptr_t addr2 = reinterpret_cast<uintptr_t>(aAddr2);
-
-  return (addr1 > addr2) - (addr1 < addr2);
-}
-
 struct ExtentTreeSzTrait
 {
   static RedBlackTreeNode<extent_node_t>& GetTreeNode(extent_node_t* aThis)
@@ -668,86 +770,7 @@ private:
 // ***************************************************************************
 // Arena data structures.
 
-struct arena_t;
 struct arena_bin_t;
-
-// Each element of the chunk map corresponds to one page within the chunk.
-struct arena_chunk_map_t
-{
-  // Linkage for run trees.  There are two disjoint uses:
-  //
-  // 1) arena_t's tree or available runs.
-  // 2) arena_run_t conceptually uses this linkage for in-use non-full
-  //    runs, rather than directly embedding linkage.
-  RedBlackTreeNode<arena_chunk_map_t> link;
-
-  // Run address (or size) and various flags are stored together.  The bit
-  // layout looks like (assuming 32-bit system):
-  //
-  //   ???????? ???????? ????---- -mckdzla
-  //
-  // ? : Unallocated: Run address for first/last pages, unset for internal
-  //                  pages.
-  //     Small: Run address.
-  //     Large: Run size for first page, unset for trailing pages.
-  // - : Unused.
-  // m : MADV_FREE/MADV_DONTNEED'ed?
-  // c : decommitted?
-  // k : key?
-  // d : dirty?
-  // z : zeroed?
-  // l : large?
-  // a : allocated?
-  //
-  // Following are example bit patterns for the three types of runs.
-  //
-  // r : run address
-  // s : run size
-  // x : don't care
-  // - : 0
-  // [cdzla] : bit set
-  //
-  //   Unallocated:
-  //     ssssssss ssssssss ssss---- --c-----
-  //     xxxxxxxx xxxxxxxx xxxx---- ----d---
-  //     ssssssss ssssssss ssss---- -----z--
-  //
-  //   Small:
-  //     rrrrrrrr rrrrrrrr rrrr---- -------a
-  //     rrrrrrrr rrrrrrrr rrrr---- -------a
-  //     rrrrrrrr rrrrrrrr rrrr---- -------a
-  //
-  //   Large:
-  //     ssssssss ssssssss ssss---- ------la
-  //     -------- -------- -------- ------la
-  //     -------- -------- -------- ------la
-  size_t bits;
-
-// Note that CHUNK_MAP_DECOMMITTED's meaning varies depending on whether
-// MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are defined.
-//
-// If MALLOC_DECOMMIT is defined, a page which is CHUNK_MAP_DECOMMITTED must be
-// re-committed with pages_commit() before it may be touched.  If
-// MALLOC_DECOMMIT is defined, MALLOC_DOUBLE_PURGE may not be defined.
-//
-// If neither MALLOC_DECOMMIT nor MALLOC_DOUBLE_PURGE is defined, pages which
-// are madvised (with either MADV_DONTNEED or MADV_FREE) are marked with
-// CHUNK_MAP_MADVISED.
-//
-// Otherwise, if MALLOC_DECOMMIT is not defined and MALLOC_DOUBLE_PURGE is
-// defined, then a page which is madvised is marked as CHUNK_MAP_MADVISED.
-// When it's finally freed with jemalloc_purge_freed_pages, the page is marked
-// as CHUNK_MAP_DECOMMITTED.
-#define CHUNK_MAP_MADVISED ((size_t)0x40U)
-#define CHUNK_MAP_DECOMMITTED ((size_t)0x20U)
-#define CHUNK_MAP_MADVISED_OR_DECOMMITTED                                      \
-  (CHUNK_MAP_MADVISED | CHUNK_MAP_DECOMMITTED)
-#define CHUNK_MAP_KEY ((size_t)0x10U)
-#define CHUNK_MAP_DIRTY ((size_t)0x08U)
-#define CHUNK_MAP_ZEROED ((size_t)0x04U)
-#define CHUNK_MAP_LARGE ((size_t)0x02U)
-#define CHUNK_MAP_ALLOCATED ((size_t)0x01U)
-};
 
 struct ArenaChunkMapLink
 {
@@ -779,32 +802,6 @@ struct ArenaAvailTreeTrait : public ArenaChunkMapLink
                : CompareAddr((aNode->bits & CHUNK_MAP_KEY) ? nullptr : aNode,
                              aOther);
   }
-};
-
-// Arena chunk header.
-struct arena_chunk_t
-{
-  // Arena that owns the chunk.
-  arena_t* arena;
-
-  // Linkage for the arena's tree of dirty chunks.
-  RedBlackTreeNode<arena_chunk_t> link_dirty;
-
-#ifdef MALLOC_DOUBLE_PURGE
-  // If we're double-purging, we maintain a linked list of chunks which
-  // have pages which have been madvise(MADV_FREE)'d but not explicitly
-  // purged.
-  //
-  // We're currently lazy and don't remove a chunk from this list when
-  // all its madvised pages are recommitted.
-  DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
-#endif
-
-  // Number of dirty pages.
-  size_t ndirty;
-
-  // Map of pages within chunk that keeps track of free/large/small.
-  arena_chunk_map_t map[1]; // Dynamically sized.
 };
 
 struct ArenaDirtyChunkTrait
