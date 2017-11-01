@@ -22,7 +22,7 @@ registerCleanupFunction(function() {
  */
 add_task(async function redirector_ignores_override() {
   let overrides = [
-    "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
+    "chrome://browser/content/aboutRobots.xhtml",
     "about:home",
   ];
 
@@ -62,7 +62,7 @@ add_task(async function redirector_ignores_override() {
  */
 add_task(async function override_loads_in_browser() {
   let overrides = [
-    "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
+    "chrome://browser/content/aboutRobots.xhtml",
     "about:home",
     " about:home",
   ];
