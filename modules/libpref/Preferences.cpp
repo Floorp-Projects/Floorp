@@ -3168,7 +3168,7 @@ Preferences::HandleDirty()
       static const int PREF_DELAY_MS = 500;
       NS_DelayedDispatchToCurrentThread(
         mozilla::NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
-                                   sPreferences,
+                                   sPreferences.get(),
                                    &Preferences::SavePrefFileAsynchronous),
         PREF_DELAY_MS);
     }
@@ -3211,7 +3211,7 @@ static const char kPrefFileHeader[] =
   NS_LINEBREAK;
 // clang-format on
 
-Preferences* Preferences::sPreferences = nullptr;
+StaticRefPtr<Preferences> Preferences::sPreferences;
 bool Preferences::sShutdown = false;
 
 // This globally enables or disables OMT pref writing, both sync and async.
@@ -3708,12 +3708,10 @@ Preferences::GetInstanceForService()
   }
 
   sPreferences = new Preferences();
-  NS_ADDREF(sPreferences);
-
   Result<Ok, const char*> res = sPreferences->Init();
   if (res.isErr()) {
+    sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
-    NS_RELEASE(sPreferences);
     return nullptr;
   }
 
@@ -3758,13 +3756,7 @@ Preferences::Shutdown()
 {
   if (!sShutdown) {
     sShutdown = true; // Don't create the singleton instance after here.
-
-    // Don't set sPreferences to nullptr here. The instance may be grabbed by
-    // other modules. The utility methods of Preferences should be available
-    // until the singleton instance actually released.
-    if (sPreferences) {
-      sPreferences->Release();
-    }
+    sPreferences = nullptr;
   }
 }
 
@@ -3782,15 +3774,13 @@ Preferences::Preferences()
 
 Preferences::~Preferences()
 {
-  NS_ASSERTION(sPreferences == this, "Isn't this the singleton instance?");
+  MOZ_ASSERT(!sPreferences);
 
   delete gObserverTable;
   gObserverTable = nullptr;
 
   delete gCacheData;
   gCacheData = nullptr;
-
-  sPreferences = nullptr;
 
   PREF_Cleanup();
 }
