@@ -11,28 +11,42 @@
 #ifndef jsgc_h
 #define jsgc_h
 
-#include "mozilla/Atomics.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
+#include "jsapi.h"
 
-#include "js/GCAPI.h"
-#include "js/SliceBudget.h"
-#include "js/Vector.h"
-#include "threading/ConditionVariable.h"
-#include "threading/Thread.h"
-#include "vm/NativeObject.h"
+#include "gc/AllocKind.h"
+#include "gc/GCEnum.h"
+#include "js/TraceKind.h"
+
+struct JSCompartment;
+struct JSContext;
+class JSObject;
+class JSExternalString;
+class JSFatInlineString;
+struct JSPrincipals;
+class JSScript;
+struct JSRuntime;
+class JSTracer;
+
+namespace JS {
+
+struct Zone;
+
+} // namespace JS
 
 namespace js {
 
-namespace gcstats {
-struct Statistics;
-} // namespace gcstats
+class AccessorShape;
+class FatInlineAtom;
+class FreeOp;
+class NormalAtom;
 
 class Nursery;
 
 namespace gc {
+
+class Arena;
+struct Chunk;
+struct Cell;
 
 /*
  * Map from C++ type to alloc kind for non-object types. JSObject does not have
@@ -97,7 +111,7 @@ IterateHeapUnbarriered(JSContext* cx, void* data,
  * single zone.
  */
 extern void
-IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
+IterateHeapUnbarrieredForZone(JSContext* cx, JS::Zone* zone, void* data,
                               IterateZoneCallback zoneCallback,
                               JSIterateCompartmentCallback compartmentCallback,
                               IterateArenaCallback arenaCallback,
@@ -118,9 +132,6 @@ typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* scrip
 extern void
 IterateScripts(JSContext* cx, JSCompartment* compartment,
                void* data, IterateScriptCallback scriptCallback);
-
-extern void
-FinalizeStringRT(JSRuntime* rt, JSString* str);
 
 JSCompartment*
 NewCompartment(JSContext* cx, JSPrincipals* principals,
@@ -180,9 +191,6 @@ class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC
         suppressGC_--;
     }
 };
-
-JSObject*
-NewMemoryStatisticsObject(JSContext* cx);
 
 const char*
 StateName(State state);

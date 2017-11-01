@@ -33,6 +33,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Move.h"
 
+#include "jsgc.h"
+
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpCharacters.h"
 #include "vm/ErrorReporting.h"
