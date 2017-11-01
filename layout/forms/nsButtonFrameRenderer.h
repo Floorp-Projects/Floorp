@@ -49,7 +49,8 @@ public:
                                                                      nsPresContext* aPresContext,
                                                                      gfxContext* aRenderingContext,
                                                                      const nsRect& aDirtyRect,
-                                                                     const nsRect& aRect);
+                                                                     const nsRect& aRect,
+                                                                     bool* aBorderIsEmpty);
 
   DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                          nsPresContext* aPresContext,

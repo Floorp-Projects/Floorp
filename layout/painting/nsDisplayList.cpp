@@ -5115,6 +5115,7 @@ nsDisplayCaret::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
+  , mBorderIsEmpty(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBorder);
 
@@ -5179,6 +5180,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  mBorderIsEmpty = false;
   nsPoint offset = ToReferenceFrame();
   Maybe<nsCSSBorderRenderer> br =
     nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
@@ -5187,19 +5189,15 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                          nsRect(),
                                          nsRect(offset, mFrame->GetSize()),
                                          mFrame->StyleContext(),
+                                         &mBorderIsEmpty,
                                          mFrame->GetSkipSides());
 
-  const nsStyleBorder *styleBorder = mFrame->StyleContext()->StyleBorder();
-  const nsStyleImage* image = &styleBorder->mBorderImageSource;
   mBorderRenderer = Nothing();
   mBorderImageRenderer = Nothing();
-  if ((!image ||
-       image->GetType() != eStyleImageType_Image ||
-       image->GetType() != eStyleImageType_Gradient) && !br) {
-    return LAYER_NONE;
-  }
-
   if (!br) {
+    if (mBorderIsEmpty) {
+      return LAYER_ACTIVE;
+    }
     return LAYER_NONE;
   }
 
@@ -5243,6 +5241,10 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
+  if (mBorderIsEmpty) {
+    return nullptr;
+  }
+
   if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBorderLayers)) {
     return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
   } else {
