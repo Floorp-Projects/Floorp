@@ -29,11 +29,11 @@ function consoleOpened(HUD) {
   let container = win._container;
 
   // Make sure autocomplete does not walk through generators.
-  let result = container.gen1.next();
+  let result = container.gen1.next().value;
   let completion = JSPropertyProvider(dbgWindow, null, "_container.gen1.");
   isnot(completion.matches.length, 0, "Got matches for gen1");
 
-  is(result + 1, container.gen1.next(), "gen1.next() did not execute");
+  is(result + 1, container.gen1.next().value, "gen1.next() did not execute");
 
   result = container.gen2.next().value;
 
