@@ -158,8 +158,6 @@ using namespace mozilla;
 
 #ifdef XP_WIN
 
-// Some defines from the CRT internal headers that we need here.
-#define _CRT_SPINCOUNT 5000
 #include <io.h>
 #include <windows.h>
 #include <intrin.h>
@@ -1304,7 +1302,7 @@ bool
 Mutex::Init()
 {
 #if defined(XP_WIN)
-  if (!InitializeCriticalSectionAndSpinCount(&mMutex, _CRT_SPINCOUNT)) {
+  if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
     return false;
   }
 #elif defined(XP_DARWIN)
