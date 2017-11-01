@@ -97,7 +97,7 @@ def config_status(config):
     # changes.
     mk = Makefile()
     rule = mk.create_rule()
-    rule.add_targets(["$(OBJDIR)/config.status"])
+    rule.add_targets(["%s/config.status" % config['TOPOBJDIR']])
     rule.add_dependencies(itertools.chain(config['ALL_CONFIGURE_PATHS'],
                                           iter_modules_in_path(config['TOPOBJDIR'],
                                                                config['TOPSRCDIR'])))
