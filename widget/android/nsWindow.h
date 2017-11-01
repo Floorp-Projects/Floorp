@@ -11,7 +11,6 @@
 #include "gfxPoint.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
-#include "AndroidJavaWrappers.h"
 #include "EventDispatcher.h"
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/EventForwards.h"
