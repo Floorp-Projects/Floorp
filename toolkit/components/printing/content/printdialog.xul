@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/printdialog.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  oncancel="return onCancel();"
+  buttoniconaccept="print"
+  title="&printDialog.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/javascript" src="chrome://global/content/printdialog.js"/>
+
+  <stringbundle id="printingBundle" src="chrome://global/locale/printing.properties"/>
+
+  <groupbox>
+    <caption label="&printer.label;"/>
+
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+      </columns>
+
+      <rows>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label id="printerLabel"
+                   value="&printerInput.label;"
+                   accesskey="&printerInput.accesskey;"
+                   control="printerList"/>
+          </hbox>
+          <menulist id="printerList" flex="1" type="description" oncommand="setPrinterDefaultsForSelectedPrinter();"/>
+          <button id="properties"
+                  label="&propertiesButton.label;"
+                  accesskey="&propertiesButton.accesskey;"
+                  icon="properties"
+                  oncommand="displayPropertiesDialog();"/>
+        </row>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label id="descTextLabel" control="descText" value="&descText.label;"/>
+          </hbox>
+          <label id="descText"/>
+          <checkbox id="fileCheck"
+                    checked="false"
+                    label="&fileCheck.label;"
+                    accesskey="&fileCheck.accesskey;"
+                    pack="end"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <hbox>
+    <groupbox flex="1">
+      <caption label="&printrangeGroup.label;"/>
+
+      <radiogroup id="printrangeGroup">
+        <radio id="allpagesRadio"
+               label="&allpagesRadio.label;"
+               accesskey="&allpagesRadio.accesskey;"
+               oncommand="doPrintRange(0)"/>
+        <hbox align="center">
+          <radio id="rangeRadio"
+                 label="&rangeRadio.label;"
+                 accesskey="&rangeRadio.accesskey;"
+                 oncommand="doPrintRange(1)"/>
+          <label id="frompageLabel"
+                 control="frompageInput"
+                 value="&frompageInput.label;"
+                 accesskey="&frompageInput.accesskey;"/>
+          <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+          <label id="topageLabel"
+                 control="topageInput"
+                 value="&topageInput.label;"
+                 accesskey="&topageInput.accesskey;"/>
+          <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+        </hbox>
+        <radio id="selectionRadio"
+               label="&selectionRadio.label;"
+               accesskey="&selectionRadio.accesskey;"
+               oncommand="doPrintRange(2)"/>
+      </radiogroup>
+    </groupbox>
+
+    <groupbox flex="1">
+      <caption label="&copies.label;"/>
+      <hbox align="center">
+        <label control="numCopiesInput"
+               value="&numCopies.label;"
+               accesskey="&numCopies.accesskey;"/>
+        <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+      </hbox>
+    </groupbox>
+  </hbox>
+
+  <groupbox flex="1">
+    <caption label="&printframeGroup.label;" id="printframeGroupLabel"/>
+    <radiogroup id="printframeGroup">
+      <radio id="aslaidoutRadio"
+             label="&aslaidoutRadio.label;"
+             accesskey="&aslaidoutRadio.accesskey;"/>
+      <radio id="selectedframeRadio"
+             label="&selectedframeRadio.label;"
+             accesskey="&selectedframeRadio.accesskey;"/>
+      <radio id="eachframesepRadio"
+             label="&eachframesepRadio.label;"
+             accesskey="&eachframesepRadio.accesskey;"/>
+    </radiogroup>
+  </groupbox>
+
+  <!-- used to store titles and labels -->
+  <data style="display:none;" id="printButton" label="&printButton.label;"/>
+  <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
+
+</dialog>
+
