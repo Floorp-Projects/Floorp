@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PDFiumEngineShim.h"
-
+#include "private/pprio.h"
 
 namespace mozilla {
 namespace widget {
@@ -87,6 +87,10 @@ PDFiumEngineShim::Init(const nsCString& aLibrary)
     mPRLibrary, "FPDF_LoadDocument");
   NS_ENSURE_TRUE(mFPDF_LoadDocument, false);
 
+  mFPDF_LoadCustomDocument = (FPDF_LoadCustomDocument_Pfn)PR_FindFunctionSymbol(
+    mPRLibrary, "FPDF_LoadCustomDocument");
+  NS_ENSURE_TRUE(mFPDF_LoadCustomDocument, false);
+
   mFPDF_CloseDocument = (FPDF_CloseDocument_Pfn)PR_FindFunctionSymbol(
     mPRLibrary, "FPDF_CloseDocument");
   NS_ENSURE_TRUE(mFPDF_CloseDocument, false);
@@ -118,6 +122,40 @@ PDFiumEngineShim::LoadDocument(FPDF_STRING file_path,
 {
   MOZ_ASSERT(mInitialized);
   return mFPDF_LoadDocument(file_path, aPassword);
+}
+
+FPDF_DOCUMENT
+PDFiumEngineShim::LoadDocument(PRFileDesc* aPrfile,
+                               FPDF_BYTESTRING aPassword)
+{
+  MOZ_ASSERT(mInitialized && aPrfile);
+
+  PROffset32 fileLength = PR_Seek64(aPrfile, 0, PR_SEEK_END);
+  if (fileLength == -1) {
+    NS_WARNING("Failed to access the given FD.");
+    return nullptr;
+  }
+
+  FPDF_FILEACCESS fileAccess;
+  fileAccess.m_FileLen = static_cast<unsigned long>(fileLength);
+  fileAccess.m_Param = reinterpret_cast<void*>(aPrfile);
+  fileAccess.m_GetBlock =
+    [](void* param, unsigned long pos, unsigned char* buf, unsigned long size)
+    {
+      PRFileDesc* prfile = reinterpret_cast<PRFileDesc*>(param);
+
+      if (PR_Seek64(prfile, pos, PR_SEEK_SET) != pos) {
+        return 0;
+      }
+
+      if (PR_Read(prfile, buf, size) <= 0) {
+        return 0;
+      }
+
+      return 1;
+    };
+
+  return mFPDF_LoadCustomDocument(&fileAccess, aPassword);
 }
 
 void
