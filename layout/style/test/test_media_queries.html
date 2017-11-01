@@ -647,6 +647,10 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-classic");
   expression_should_not_be_parseable("-moz-windows-glass");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled");
+  expression_should_not_be_parseable("-moz-gtk-csd-available");
+  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button");
+  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button");
+  expression_should_not_be_parseable("-moz-gtk-csd-close-button");
   expression_should_be_parseable("-moz-touch-enabled");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: 0");
@@ -663,6 +667,10 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-classic: 0");
   expression_should_not_be_parseable("-moz-windows-glass: 0");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: 0");
+  expression_should_not_be_parseable("-moz-gtk-csd-available: 0");
+  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 0");
+  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 0");
+  expression_should_not_be_parseable("-moz-gtk-csd-close-button: 0");
   expression_should_be_parseable("-moz-touch-enabled: 0");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: 1");
@@ -679,6 +687,10 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-classic: 1");
   expression_should_not_be_parseable("-moz-windows-glass: 1");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: 1");
+  expression_should_not_be_parseable("-moz-gtk-csd-available: 1");
+  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: 1");
+  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: 1");
+  expression_should_not_be_parseable("-moz-gtk-csd-close-button: 1");
   expression_should_be_parseable("-moz-touch-enabled: 1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: -1");
@@ -696,6 +708,10 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-glass: -1");
   expression_should_not_be_parseable("-moz-touch-enabled: -1");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: -1");
+  expression_should_not_be_parseable("-moz-gtk-csd-available: -1");
+  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: -1");
+  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: -1");
+  expression_should_not_be_parseable("-moz-gtk-csd-close-button: -1");
 
   expression_should_not_be_parseable("-moz-scrollbar-start-backward: true");
   expression_should_not_be_parseable("-moz-scrollbar-start-forward: true");
@@ -712,6 +728,10 @@ function run() {
   expression_should_not_be_parseable("-moz-windows-glass: true");
   expression_should_not_be_parseable("-moz-touch-enabled: true");
   expression_should_not_be_parseable("-moz-swipe-animation-enabled: true");
+  expression_should_not_be_parseable("-moz-gtk-csd-available: true");
+  expression_should_not_be_parseable("-moz-gtk-csd-minimize-button: true");
+  expression_should_not_be_parseable("-moz-gtk-csd-maximize-button: true");
+  expression_should_not_be_parseable("-moz-gtk-csd-close-button: true");
 
   // windows theme media queries
   expression_should_not_be_parseable("-moz-windows-theme: aero");
