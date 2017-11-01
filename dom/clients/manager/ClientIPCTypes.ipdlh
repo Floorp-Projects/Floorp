@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PClientSource;
 include DOMTypes;
 include PBackgroundSharedTypes;
+include IPCServiceWorkerDescriptor;
 include ProtocolTypes;
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using ClientType from "mozilla/dom/ClientIPCUtils.h";
@@ -12,6 +14,10 @@ using VisibilityState from "mozilla/dom/ClientIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
+
+struct ClientSourceConstructorArgs
+{
+};
 
 struct IPCClientInfo
 {
@@ -38,6 +44,23 @@ union IPCClientState
 {
   IPCClientWindowState;
   IPCClientWorkerState;
+};
+
+struct ClientOpenWindowArgs
+{
+};
+
+struct ClientOpConstructorArgs
+{
+};
+
+struct ClientNavigateOpConstructorArgs
+{
+};
+
+union ClientOpResult
+{
+  nsresult;
 };
 
 } // namespace dom
