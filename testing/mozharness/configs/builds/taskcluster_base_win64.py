@@ -2,25 +2,10 @@ import os
 import sys
 
 config = {
-    #########################################################################
-    ######## WINDOWS GENERIC CONFIG KEYS/VAlUES
-    # if you are updating this with custom 64 bit keys/values please add them
-    # below under the '64 bit specific' code block otherwise, update in this
-    # code block and also make sure this is synced between:
-    # - taskcluster_firefox_win32_debug
-    # - taskcluster_firefox_win32_opt
-    # - taskcluster_firefox_win64_debug
-    # - taskcluster_firefox_win64_opt
-    # - taskcluster_firefox_win32_clang
-    # - taskcluster_firefox_win32_clang_debug
-    # - taskcluster_firefox_win64_clang
-    # - taskcluster_firefox_win64_clang_debug
-
     'default_actions': [
         'clone-tools',
         'build',
         'check-test',
-        'update',
     ],
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
@@ -33,14 +18,11 @@ config = {
     'tooltool_bootstrap': 'setup.sh',
     'enable_count_ctors': False,
     'max_build_output_timeout': 60 * 80,
-    #########################################################################
 
 
-     #########################################################################
-     ###### 64 bit specific ######
+    ###### 64 bit specific ######
     'base_name': 'WINNT_6.1_x86-64_%(branch)s',
     'platform': 'win64',
-    'stage_platform': 'win64',
     'publish_nightly_en_US_routes': True,
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
@@ -61,6 +43,4 @@ config = {
         'MINIDUMP_SAVE_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
     'mozconfig_platform': 'win64',
-    'mozconfig_variant': 'nightly',
-    #########################################################################
 }
