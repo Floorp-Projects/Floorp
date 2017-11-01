@@ -36,9 +36,6 @@ const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
 const {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
 const {Preferences} = Cu.import("resource://gre/modules/Preferences.jsm", {});
 
-const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
-const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
-
 // We run tests under two different configurations, from browser.ini and
 // browser-remote.ini. When running from browser-remote.ini, the tests are
 // copied to the sub-directory "test-oop-extensions", which we detect here, and
