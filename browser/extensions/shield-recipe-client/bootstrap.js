@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LogManager",
   "resource://shield-recipe-client/lib/LogManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShieldRecipeClient",
   "resource://shield-recipe-client/lib/ShieldRecipeClient.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PreferenceExperiments",
+  "resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
 
 // Act as both a normal bootstrap.js and a JS module so that we can test
 // startup methods without having to install/uninstall the add-on.
@@ -43,6 +45,8 @@ const log = Log.repository.getLogger(BOOTSTRAP_LOGGER_NAME);
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 log.level = Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn);
 
+let studyPrefsChanged = {};
+
 this.Bootstrap = {
   initShieldPrefs(defaultPrefs) {
     const prefBranch = Services.prefs.getDefaultBranch("");
@@ -64,6 +68,7 @@ this.Bootstrap = {
   },
 
   initExperimentPrefs() {
+    studyPrefsChanged = {};
     const defaultBranch = Services.prefs.getDefaultBranch("");
     const experimentBranch = Services.prefs.getBranch(STARTUP_EXPERIMENT_PREFS_BRANCH);
 
@@ -76,6 +81,30 @@ this.Bootstrap = {
         continue;
       }
 
+      // record the value of the default branch before setting it
+      switch (realPrefType) {
+        case Services.prefs.PREF_STRING:
+          studyPrefsChanged[prefName] = defaultBranch.getCharPref(prefName);
+          break;
+
+        case Services.prefs.PREF_INT:
+          studyPrefsChanged[prefName] = defaultBranch.getIntPref(prefName);
+          break;
+
+        case Services.prefs.PREF_BOOL:
+          studyPrefsChanged[prefName] = defaultBranch.getBoolPref(prefName);
+          break;
+
+        case Services.prefs.PREF_INVALID:
+          studyPrefsChanged[prefName] = null;
+          break;
+
+        default:
+          // This should never happen
+          log.error(`Error getting startup pref ${prefName}; unknown value type ${experimentPrefType}.`);
+      }
+
+      // now set the new default value
       switch (experimentPrefType) {
         case Services.prefs.PREF_STRING:
           defaultBranch.setCharPref(prefName, experimentBranch.getCharPref(prefName));
@@ -104,7 +133,7 @@ this.Bootstrap = {
   observe(subject, topic, data) {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-      ShieldRecipeClient.startup();
+      this.finishStartup();
     }
   },
 
@@ -122,8 +151,13 @@ this.Bootstrap = {
     if (reason === REASON_APP_STARTUP) {
       Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
     } else {
-      ShieldRecipeClient.startup();
+      this.finishStartup();
     }
+  },
+
+  async finishStartup() {
+    await PreferenceExperiments.recordOriginalValues(studyPrefsChanged);
+    ShieldRecipeClient.startup();
   },
 
   async shutdown(data, reason) {
