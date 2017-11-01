@@ -17,18 +17,19 @@ const OMA_DRM_RIGHTS_MIME = "application/vnd.oma.drm.rights+wbxml";
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
-Cu.import("resource://gre/modules/Downloads.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/HelperApps.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "JNI", "resource://gre/modules/JNI.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  HelperApps: "resource://gre/modules/HelperApps.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  RuntimePermissions: "resource://gre/modules/RuntimePermissions.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Snackbars: "resource://gre/modules/Snackbars.jsm",
+  Task: "resource://gre/modules/Task.jsm",
+});
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -241,25 +242,7 @@ HelperAppLauncherDialog.prototype = {
    * around starting from Lollipop.
    */
   _useNewButtonOrder: function() {
-    let useNewButtonOrder = true;
-    let jenv = null;
-
-    try {
-      jenv = JNI.GetForThread();
-      let jAppConstants = JNI.LoadClass(jenv, "org.mozilla.gecko.AppConstants$Versions", {
-        static_fields: [
-          { name: "feature21Plus", sig: "Z" }
-        ],
-      });
-
-      useNewButtonOrder = jAppConstants.feature21Plus;
-    } finally {
-      if (jenv) {
-        JNI.UnloadClasses(jenv);
-      }
-    }
-
-    return useNewButtonOrder;
+    return Services.sysinfo.getPropertyAsUint32("version") >= 21;
   },
 
   _refuseDownload: function(aLauncher) {
