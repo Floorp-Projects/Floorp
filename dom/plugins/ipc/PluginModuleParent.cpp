@@ -2947,6 +2947,9 @@ PluginModuleChromeParent::AnswerGetFileName(const GetFileNameFunc& aFunc,
     case SAVE_FUNC:
         *aResult = GetSaveFileName(&ofn);
         break;
+    default:
+        *aResult = false;
+        break;
     }
     if (*aResult) {
         if (ofn.Flags & OFN_ALLOWMULTISELECT) {
