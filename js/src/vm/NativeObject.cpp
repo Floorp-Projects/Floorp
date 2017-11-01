@@ -498,7 +498,7 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
     // extensibility check if we're, for example, sparsifying frozen objects..
     if (!addDataPropertyInternal(cx, obj, id, slot,
                                  obj->getElementsHeader()->elementAttributes(),
-                                 0, entry, true, keep)) {
+                                 entry, keep)) {
         obj->setDenseElementUnchecked(index, value);
         return false;
     }
@@ -1153,20 +1153,11 @@ NativeObject::freeSlot(JSContext* cx, uint32_t slot)
 
 /* static */ Shape*
 NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj,
-                              jsid idArg, uint32_t slot, unsigned attrs)
-{
-    MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    RootedId id(cx, idArg);
-    return addDataProperty(cx, obj, id, slot, attrs, 0);
-}
-
-/* static */ Shape*
-NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj,
                               HandlePropertyName name, uint32_t slot, unsigned attrs)
 {
     MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     RootedId id(cx, NameToId(name));
-    return addDataProperty(cx, obj, id, slot, attrs, 0);
+    return addDataProperty(cx, obj, id, slot, attrs);
 }
 
 template <AllowGC allowGC>
@@ -1432,7 +1423,7 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     if (AddOrChange == IsAddOrChange::Add) {
         if (Shape::isDataProperty(desc.attributes(), desc.getter(), desc.setter())) {
             shape = NativeObject::addDataProperty(cx, obj, id, SHAPE_INVALID_SLOT,
-                                                  desc.attributes(), 0);
+                                                  desc.attributes());
         } else {
             shape = NativeObject::addAccessorProperty(cx, obj, id, desc.getter(), desc.setter(),
                                                       desc.attributes(), 0);

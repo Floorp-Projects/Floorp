@@ -392,7 +392,7 @@ Shape::searchNoHashify(Shape* start, jsid id)
 
 /* static */ MOZ_ALWAYS_INLINE Shape*
 NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                              uint32_t slot, unsigned attrs, unsigned flags, bool allowDictionary)
+                              uint32_t slot, unsigned attrs)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
@@ -407,7 +407,7 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
-    return addDataPropertyInternal(cx, obj, id, slot, attrs, flags, entry, allowDictionary, keep);
+    return addDataPropertyInternal(cx, obj, id, slot, attrs, entry, keep);
 }
 
 /* static */ MOZ_ALWAYS_INLINE Shape*
