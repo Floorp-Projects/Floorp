@@ -65,6 +65,7 @@ private:
   void Shutdown();
 
   void DispatchVRDisplayInfoUpdate();
+  void RefreshVRDisplaysInternal(bool aMustDispatch);
   void NotifyGamepadChangeEventsToContent(const dom::GamepadChangeEvent& aEvent);
   void NotifyVibrateHapticCompletedToContent(uint32_t aPromiseID);
 
