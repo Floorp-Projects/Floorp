@@ -171,6 +171,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
 
 function DevToolsStartup() {
   this.onEnabledPrefChanged = this.onEnabledPrefChanged.bind(this);
+  this.onWindowReady = this.onWindowReady.bind(this);
 }
 
 DevToolsStartup.prototype = {
@@ -197,8 +198,21 @@ DevToolsStartup.prototype = {
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
     let devtoolsFlag = cmdLine.handleFlag("devtools", false);
 
-    let hasDevToolsFlag = consoleFlag || devtoolsFlag || debuggerFlag;
-    this.setupEnabledPref(hasDevToolsFlag);
+    // handle() can be called after browser startup (e.g. opening links from other apps).
+    let isInitialLaunch = cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
+    if (isInitialLaunch) {
+      // Execute only on first launch of this browser instance.
+      let hasDevToolsFlag = consoleFlag || devtoolsFlag || debuggerFlag;
+      this.setupEnabledPref(hasDevToolsFlag);
+
+      // Store devtoolsFlag to check it later in onWindowReady.
+      this.devtoolsFlag = devtoolsFlag;
+      // Only top level Firefox Windows fire a browser-delayed-startup-finished event
+      Services.obs.addObserver(this.onWindowReady, "browser-delayed-startup-finished");
+
+      // Update menu items when devtools.enabled changes.
+      Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, this.onEnabledPrefChanged);
+    }
 
     if (consoleFlag) {
       this.handleConsoleFlag(cmdLine);
@@ -206,6 +220,7 @@ DevToolsStartup.prototype = {
     if (debuggerFlag) {
       this.handleDebuggerFlag(cmdLine);
     }
+
     let debuggerServerFlag;
     try {
       debuggerServerFlag =
@@ -218,28 +233,29 @@ DevToolsStartup.prototype = {
     if (debuggerServerFlag) {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
+  },
 
-    // Only top level Firefox Windows fire a browser-delayed-startup-finished event
-    let onWindowReady = window => {
-      this.hookWindow(window);
+  /**
+   * Called when receiving the "browser-delayed-startup-finished" event for a new
+   * top-level window.
+   */
+  onWindowReady(window) {
+    this.hookWindow(window);
 
-      if (Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false)) {
-        // Loading devtools-browser will open the developer toolbar by also checking this
-        // pref.
-        this.initDevTools();
-      }
+    if (Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false)) {
+      // Loading devtools-browser will open the developer toolbar by also checking this
+      // pref.
+      this.initDevTools();
+    }
 
-      if (devtoolsFlag) {
-        this.handleDevToolsFlag(window);
-        // This listener is called for all Firefox windows, but we want to execute
-        // that command only once
-        devtoolsFlag = false;
-      }
-      JsonView.initialize();
-    };
-    Services.obs.addObserver(onWindowReady, "browser-delayed-startup-finished");
+    if (this.devtoolsFlag) {
+      this.handleDevToolsFlag(window);
+      // This listener is called for all Firefox windows, but we want to execute
+      // that command only once.
+      this.devtoolsFlag = false;
+    }
 
-    Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, this.onEnabledPrefChanged);
+    JsonView.initialize();
   },
 
   /**
@@ -529,10 +545,23 @@ DevToolsStartup.prototype = {
     }
 
     let url = "about:devtools";
+
+    let params = [];
     if (reason) {
-      url += "?reason=" + encodeURIComponent(reason);
+      params.push("reason=" + encodeURIComponent(reason));
     }
-    gBrowser.selectedTab = gBrowser.addTab(url);
+
+    let selectedBrowser = gBrowser.selectedBrowser;
+    if (selectedBrowser) {
+      params.push("tabid=" + selectedBrowser.outerWindowID);
+    }
+
+    if (params.length > 0) {
+      url += "?" + params.join("&");
+    }
+
+    // Set relatedToCurrent: true to open the tab next to the current one.
+    gBrowser.selectedTab = gBrowser.addTab(url, {relatedToCurrent: true});
   },
 
   handleConsoleFlag: function (cmdLine) {

@@ -67,6 +67,7 @@
 #ifndef RB_H_
 #define RB_H_
 
+#include "mozilla/Alignment.h"
 #include "Utils.h"
 
 enum NodeColor
@@ -177,7 +178,6 @@ public:
     return Remove(reinterpret_cast<TreeNode*>(aNode));
   }
 
-private:
   /* Helper class to avoid having all the tree traversal code further below
    * have to use Trait::GetTreeNode, adding visual noise. */
   struct TreeNode : public T
@@ -223,6 +223,7 @@ private:
     }
   };
 
+private:
   TreeNode* mRoot;
 
   TreeNode* First(TreeNode* aStart)
@@ -327,14 +328,16 @@ private:
 
   void Insert(TreeNode* aNode)
   {
-    TreeNode rbp_i_s;
+    // rbp_i_s is only used as a placeholder for its RedBlackTreeNode. Use
+    // AlignedStorage2 to avoid running the TreeNode base class constructor.
+    mozilla::AlignedStorage2<TreeNode> rbp_i_s;
     TreeNode *rbp_i_g, *rbp_i_p, *rbp_i_c, *rbp_i_t, *rbp_i_u;
     int rbp_i_cmp = 0;
     rbp_i_g = nullptr;
-    rbp_i_s.SetLeft(mRoot);
-    rbp_i_s.SetRight(nullptr);
-    rbp_i_s.SetColor(NodeColor::Black);
-    rbp_i_p = &rbp_i_s;
+    rbp_i_p = rbp_i_s.addr();
+    rbp_i_p->SetLeft(mRoot);
+    rbp_i_p->SetRight(nullptr);
+    rbp_i_p->SetColor(NodeColor::Black);
     rbp_i_c = mRoot;
     /* Iteratively search down the tree for the insertion point,
      * splitting 4-nodes as they are encountered. At the end of each
@@ -405,19 +408,21 @@ private:
       rbp_i_p->SetLeft(aNode);
     }
     /* Update the root and make sure that it is black. */
-    mRoot = rbp_i_s.Left();
+    mRoot = rbp_i_s.addr()->Left();
     mRoot->SetColor(NodeColor::Black);
   }
 
   void Remove(TreeNode* aNode)
   {
-    TreeNode rbp_r_s;
+    // rbp_r_s is only used as a placeholder for its RedBlackTreeNode. Use
+    // AlignedStorage2 to avoid running the TreeNode base class constructor.
+    mozilla::AlignedStorage2<TreeNode> rbp_r_s;
     TreeNode *rbp_r_p, *rbp_r_c, *rbp_r_xp, *rbp_r_t, *rbp_r_u;
     int rbp_r_cmp;
-    rbp_r_s.SetLeft(mRoot);
-    rbp_r_s.SetRight(nullptr);
-    rbp_r_s.SetColor(NodeColor::Black);
-    rbp_r_p = &rbp_r_s;
+    rbp_r_p = rbp_r_s.addr();
+    rbp_r_p->SetLeft(mRoot);
+    rbp_r_p->SetRight(nullptr);
+    rbp_r_p->SetColor(NodeColor::Black);
     rbp_r_c = mRoot;
     rbp_r_xp = nullptr;
     /* Iterate down the tree, but always transform 2-nodes to 3- or
@@ -577,7 +582,7 @@ private:
       }
     }
     /* Update root. */
-    mRoot = rbp_r_s.Left();
+    mRoot = rbp_r_s.addr()->Left();
   }
 
   TreeNode* RotateLeft(TreeNode* aNode)
@@ -728,6 +733,7 @@ public:
       }
     }
 
+    template<typename Iterator>
     class Item
     {
       Iterator* mIterator;
@@ -753,14 +759,14 @@ public:
       }
     };
 
-    Item begin()
+    Item<Iterator> begin()
     {
-      return Item(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
+      return Item<Iterator>(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
     }
 
-    Item end()
+    Item<Iterator> end()
     {
-      return Item(this, nullptr);
+      return Item<Iterator>(this, nullptr);
     }
 
     TreeNode* Next()

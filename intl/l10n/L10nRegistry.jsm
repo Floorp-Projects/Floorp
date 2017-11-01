@@ -78,6 +78,7 @@ Components.utils.importGlobalProperties(["fetch"]); /* globals fetch */
 const L10nRegistry = {
   sources: new Map(),
   ctxCache: new Map(),
+  bootstrap: null,
 
   /**
    * Based on the list of requested languages and resource Ids,
@@ -88,6 +89,9 @@ const L10nRegistry = {
    * @returns {AsyncIterator<MessageContext>}
    */
   async * generateContexts(requestedLangs, resourceIds) {
+    if (this.bootstrap !== null) {
+      await this.bootstrap;
+    }
     const sourcesOrder = Array.from(this.sources.keys()).reverse();
     for (const locale of requestedLangs) {
       yield * generateContextsForLocale(locale, sourcesOrder, resourceIds);

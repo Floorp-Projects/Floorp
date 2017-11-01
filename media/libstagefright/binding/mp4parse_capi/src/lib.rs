@@ -841,7 +841,10 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
                         self.sample_count = next.samples_per_chunk;
                         // Total chunk number in 'stsc' could be different to 'stco',
                         // there could be more chunks at the last 'stsc' record.
-                        ((next.first_chunk - 1) .. next.first_chunk + self.remain_chunk_count -1)
+                        match next.first_chunk.checked_add(self.remain_chunk_count) {
+                            Some(r) => ((next.first_chunk - 1) .. r - 1),
+                            _ => (0 .. 0),
+                        }
                     },
                     _ => (0 .. 0),
                 };

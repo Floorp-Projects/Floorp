@@ -708,12 +708,12 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   return NS_OK;
 }
 
-void
+bool
 nsBindingManager::EnumerateBoundContentBindings(
   const BoundContentBindingCallback& aCallback) const
 {
   if (!mBoundContentSet) {
-    return;
+    return true;
   }
 
   for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
@@ -721,9 +721,13 @@ nsBindingManager::EnumerateBoundContentBindings(
     for (nsXBLBinding* binding = boundContent->GetXBLBinding();
          binding;
          binding = binding->GetBaseBinding()) {
-      aCallback(binding);
+      if (!aCallback(binding)) {
+        return false;
+      }
     }
   }
+
+  return true;
 }
 
 void
@@ -736,6 +740,7 @@ nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
     if (ruleProcessor) {
       (*(aFunc))(ruleProcessor, aData);
     }
+    return true;
   });
 }
 
@@ -775,6 +780,7 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
         rulesChanged = rulesChanged || thisChanged;
       }
     }
+    return true;
   });
 
   return rulesChanged;
@@ -794,6 +800,7 @@ nsBindingManager::UpdateBoundContentBindingsForServo(nsPresContext* aPresContext
     if (styleSet && styleSet->StyleSheetsHaveChanged()) {
       protoBinding->ComputeServoStyleSet(presContext);
     }
+    return true;
   });
 }
 
@@ -802,6 +809,7 @@ nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {
   EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {
     aBinding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
+    return true;
   });
 }
 
@@ -1160,4 +1168,21 @@ nsBindingManager::FindNestedSingleInsertionPoint(nsIContent* aContainer,
   }
 
   return parent;
+}
+
+bool
+nsBindingManager::AnyBindingHasDocumentStateDependency(EventStates aStateMask)
+{
+  MOZ_ASSERT(mDocument->IsStyledByServo());
+
+  bool result = false;
+  EnumerateBoundContentBindings([&](nsXBLBinding* aBinding) {
+    ServoStyleSet* styleSet = aBinding->PrototypeBinding()->GetServoStyleSet();
+    if (styleSet && styleSet->HasDocumentStateDependency(aStateMask)) {
+      result = true;
+      return false;
+    }
+    return true;
+  });
+  return result;
 }

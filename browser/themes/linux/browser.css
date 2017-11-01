@@ -56,6 +56,10 @@
   border-top: none;
 }
 
+#navigator-toolbox > toolbar {
+  padding: 0;
+}
+
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
@@ -68,11 +72,6 @@
   box-shadow: 0 -@navbarTabsShadowSize@ 0 var(--tabs-border);
   /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
-}
-
-#nav-bar {
-  padding-top: 2px;
-  padding-bottom: 2px;
 }
 
 #browser-bottombox {
@@ -537,7 +536,6 @@ html|span.ac-emphasize-text-url {
 
 #TabsToolbar {
   min-height: 0;
-  padding: 0;
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
