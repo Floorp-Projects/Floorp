@@ -30,6 +30,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
 });
 
+function ensureDirectory(path) {
+  let basename = OS.Path.dirname(path);
+  return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
+}
+
 /*
  * Trackers are associated with a single engine and deal with
  * listening for changes to their particular data type.
@@ -58,8 +63,6 @@ this.Tracker = function Tracker(name, engine) {
   this._ignored = [];
   this._storage = new JSONFile({
     path: Utils.jsonFilePath("changes/" + this.file),
-    // We use arrow functions instead of `.bind(this)` so that tests can
-    // easily override these hooks.
     dataPostProcessor: json => this._dataPostProcessor(json),
     beforeSave: () => this._beforeSave(),
   });
@@ -93,8 +96,7 @@ Tracker.prototype = {
 
   // Ensure the Weave storage directory exists before writing the file.
   _beforeSave() {
-    let basename = OS.Path.dirname(this._storage.path);
-    return OS.File.makeDir(basename, { from: OS.Constants.Path.profileDir });
+    return ensureDirectory(this._storage.path);
   },
 
   get changedIDs() {
@@ -765,6 +767,18 @@ Engine.prototype = {
 this.SyncEngine = function SyncEngine(name, service) {
   Engine.call(this, name || "SyncEngine", service);
 
+  this._toFetchStorage = new JSONFile({
+    path: Utils.jsonFilePath("toFetch/" + this.name),
+    dataPostProcessor: json => this._metadataPostProcessor(json),
+    beforeSave: () => this._beforeSaveMetadata(),
+  });
+
+  this._previousFailedStorage = new JSONFile({
+    path: Utils.jsonFilePath("failed/" + this.name),
+    dataPostProcessor: json => this._metadataPostProcessor(json),
+    beforeSave: () => this._beforeSaveMetadata(),
+  });
+
   // Async initializations can be made in the initialize() method.
 
   // The map of ids => metadata for records needing a weak upload.
@@ -812,6 +826,23 @@ SyncEngine.prototype = {
   // Which sortindex to use when retrieving records for this engine.
   _defaultSort: undefined,
 
+  _metadataPostProcessor(json) {
+    if (Array.isArray(json)) {
+      // Pre-`JSONFile` storage stored an array, but `JSONFile` defaults to
+      // an object, so we wrap the array for consistency.
+      return { ids: json };
+    }
+    if (!json.ids) {
+      json.ids = [];
+    }
+    return json;
+  },
+
+  async _beforeSaveMetadata() {
+    await ensureDirectory(this._toFetchStorage.path);
+    await ensureDirectory(this._previousFailedStorage.path);
+  },
+
   // A relative priority to use when computing an order
   // for engines to be synced. Higher-priority engines
   // (lower numbers) are synced first.
@@ -830,8 +861,8 @@ SyncEngine.prototype = {
   downloadBatchSize: DEFAULT_DOWNLOAD_BATCH_SIZE,
 
   async initialize() {
-    await this.loadToFetch();
-    await this.loadPreviousFailed();
+    await this._toFetchStorage.load();
+    await this._previousFailedStorage.load();
     this._log.debug("SyncEngine initialized", this.name);
   },
 
@@ -880,64 +911,22 @@ SyncEngine.prototype = {
   },
 
   get toFetch() {
-    return this._toFetch;
-  },
-  set toFetch(val) {
-    // Coerce the array to a string for more efficient comparison.
-    if (val + "" == this._toFetch) {
-      return;
-    }
-    this._toFetch = val;
-    CommonUtils.namedTimer(function() {
-      try {
-        Async.promiseSpinningly(Utils.jsonSave("toFetch/" + this.name, this, this._toFetch));
-      } catch (error) {
-        this._log.error("Failed to read JSON records to fetch", error);
-      }
-      // Notify our tests that we finished writing the file.
-      Observers.notify("sync-testing:file-saved:toFetch", null, this.name);
-    }, 0, this, "_toFetchDelay");
+    this._toFetchStorage.ensureDataReady();
+    return this._toFetchStorage.data.ids;
   },
 
-  async loadToFetch() {
-    // Initialize to empty if there's no file.
-    this._toFetch = [];
-    let toFetch = await Utils.jsonLoad("toFetch/" + this.name, this);
-    if (toFetch) {
-      this._toFetch = toFetch;
-    }
+  set toFetch(ids) {
+    this._toFetchStorage.data = { ids };
+    this._toFetchStorage.saveSoon();
   },
 
   get previousFailed() {
-    return this._previousFailed;
+    this._previousFailedStorage.ensureDataReady();
+    return this._previousFailedStorage.data.ids;
   },
-  set previousFailed(val) {
-    // Coerce the array to a string for more efficient comparison.
-    if (val + "" == this._previousFailed) {
-      return;
-    }
-    this._previousFailed = val;
-    CommonUtils.namedTimer(function() {
-      Utils.jsonSave("failed/" + this.name, this, this._previousFailed).then(() => {
-        this._log.debug("Successfully wrote previousFailed.");
-      })
-      .catch((error) => {
-        this._log.error("Failed to set previousFailed", error);
-      })
-      .then(() => {
-        // Notify our tests that we finished writing the file.
-        Observers.notify("sync-testing:file-saved:previousFailed", null, this.name);
-      });
-    }, 0, this, "_previousFailedDelay");
-  },
-
-  async loadPreviousFailed() {
-    // Initialize to empty if there's no file
-    this._previousFailed = [];
-    let previousFailed = await Utils.jsonLoad("failed/" + this.name, this);
-    if (previousFailed) {
-      this._previousFailed = previousFailed;
-    }
+  set previousFailed(ids) {
+    this._previousFailedStorage.data = { ids };
+    this._previousFailedStorage.saveSoon();
   },
 
   /*
@@ -1905,6 +1894,12 @@ SyncEngine.prototype = {
     for (let [id, change] of this._modified.entries()) {
       this._tracker.addChangedID(id, change);
     }
+  },
+
+  async finalize() {
+    await super.finalize();
+    await this._toFetchStorage.finalize();
+    await this._previousFailedStorage.finalize();
   },
 };
 
