@@ -37,7 +37,6 @@
 #include "wasm/AsmJS.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseNode-inl.h"
