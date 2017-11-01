@@ -1,5 +1,5 @@
 for (a = 0; a < 13; a++) {
-    (function e() {
+    (function* e() {
         yield eval()
     }())
 }

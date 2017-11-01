@@ -28,7 +28,7 @@
 #include "webrtc/system_wrappers/include/clock.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#include "AndroidJNIWrapper.h"
+#include "AndroidBridge.h"
 #endif
 
 namespace mozilla {
@@ -293,14 +293,13 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
   CSFLogDebug(LOGTAG,  "%s this=%p", __FUNCTION__, this);
 
 #ifdef MOZ_WIDGET_ANDROID
-    jobject context = jsjni_GetGlobalContextRef();
-    // get the JVM
-    JavaVM *jvm = jsjni_GetVM();
+  JavaVM* jvm = mozilla::jni::GetVM();
+  jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
 
-    if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
-      CSFLogError(LOGTAG, "%s Unable to set Android objects", __FUNCTION__);
-      return kMediaConduitSessionNotInited;
-    }
+  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
+    CSFLogError(LOGTAG, "%s Unable to set Android objects", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
 #endif
 
   // Per WebRTC APIs below function calls return nullptr on failure

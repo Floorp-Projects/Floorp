@@ -8680,7 +8680,7 @@ EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
         break;
     }
 
-    if (parser.pc->isStarGenerator() || parser.pc->isLegacyGenerator())
+    if (parser.pc->isStarGenerator())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by generator context");
 
     if (parser.pc->isAsync())

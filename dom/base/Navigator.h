@@ -227,8 +227,6 @@ public:
 
   void GetLanguages(nsTArray<nsString>& aLanguages);
 
-  bool MozE10sEnabled();
-
   StorageManager* Storage();
 
   static void GetAcceptLanguages(nsTArray<nsString>& aLanguages);
@@ -239,8 +237,6 @@ public:
                                   JSObject* aGlobal);
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
-
-  static bool IsE10sEnabled(JSContext* aCx, JSObject* aGlobal);
 
   nsPIDOMWindowInner* GetParentObject() const
   {

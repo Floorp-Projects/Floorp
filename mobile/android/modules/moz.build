@@ -32,7 +32,6 @@ EXTRA_JS_MODULES += [
     'Home.jsm',
     'HomeProvider.jsm',
     'InputWidgetHelper.jsm',
-    'JNI.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
     'NetErrorHelper.jsm',

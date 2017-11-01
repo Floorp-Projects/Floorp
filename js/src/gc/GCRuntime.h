@@ -11,7 +11,8 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 
-#include "jsfriendapi.h"
+#include "jsapi.h"
+#include "jsatom.h"
 
 #include "gc/ArenaList.h"
 #include "gc/AtomMarking.h"
@@ -21,7 +22,6 @@
 #include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
-#include "gc/Tracer.h"
 #include "js/GCAnnotations.h"
 #include "js/UniquePtr.h"
 

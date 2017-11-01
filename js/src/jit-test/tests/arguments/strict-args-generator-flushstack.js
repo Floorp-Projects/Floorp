@@ -4,7 +4,7 @@
  */
 var args;
 
-function upToTen()
+function* upToTen()
 {
   "use strict";
   eval("args = arguments;");
@@ -15,7 +15,7 @@ function upToTen()
 var gen = upToTen();
 
 var i = 0;
-for (var v in gen)
+for (var v of gen)
 {
   assertEq(v, i);
   i++;

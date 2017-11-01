@@ -42,8 +42,8 @@ function test()
 
   reportCompare(expect, actual, summary + ': 2');
 
-  function gen(list) {
-    for each (var test in list) {
+  function* gen(list) {
+    for (var test of list) {
       yield test;
     }
   }
@@ -53,7 +53,7 @@ function test()
   expect = '1,2;3,4;5,6;';
   actual = '';
 
-  for (var [foo, bar] in iter1) {
+  for (var [foo, bar] of iter1) {
     actual += foo + "," + bar + ";";
   }
 
@@ -67,7 +67,7 @@ function test()
 
   try
   {
-    eval('for (var [foo, bar, baz] in iter2) {' +
+    eval('for (var [foo, bar, baz] of iter2) {' +
          'actual += foo + "," + bar + "," + baz + ";";' +
          '}');
   }

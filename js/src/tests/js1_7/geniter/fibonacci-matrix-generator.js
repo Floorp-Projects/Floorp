@@ -13,7 +13,7 @@ printStatus(summary);
  * BEGIN TEST *
  **************/
 
-function fib()
+function* fib()
 {
   var init = [1, 0];
   var mx = [[1, 1], [1, 0]];
@@ -34,19 +34,19 @@ var it = fib();
 
 try
 {
-  if (it.next() != 0)
+  if (it.next().value != 0)
     throw "F_0 failed";
-  if (it.next() != 1)
+  if (it.next().value != 1)
     throw "F_1 failed";
-  if (it.next() != 1)
+  if (it.next().value != 1)
     throw "F_2 failed";
-  if (it.next() != 2)
+  if (it.next().value != 2)
     throw "F_3 failed";
-  if (it.next() != 3)
+  if (it.next().value != 3)
     throw "F_4 failed";
-  if (it.next() != 5)
+  if (it.next().value != 5)
     throw "F_5 failed";
-  if (it.next() != 8)
+  if (it.next().value != 8)
     throw "F_6 failed";
 }
 catch (e)

@@ -625,7 +625,6 @@ struct JSCompartment
     bool                         marked;
     bool                         warnedAboutExprClosure : 1;
     bool                         warnedAboutForEach : 1;
-    bool                         warnedAboutLegacyGenerator : 1;
     uint32_t                     warnedAboutStringGenericsMethods;
 
 #ifdef DEBUG

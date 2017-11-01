@@ -1,6 +1,6 @@
 var t;
 (function () {
-    t = (function() {
+    t = (function*() {
             yield k();
         })();
     function h() {
