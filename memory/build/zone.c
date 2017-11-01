@@ -10,10 +10,9 @@
 #include <mach/mach_types.h>
 #include "mozilla/Assertions.h"
 
-/*
- * Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
- * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
- */
+// Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
+// specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
+
 #define MALLOC_DECL(name, return_type, ...) \
   MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
@@ -24,11 +23,10 @@
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
-/*
- * Definitions of the following structs in malloc/malloc.h might be too old
- * for the built binary to run on newer versions of OSX. So use the newest
- * possible version of those structs.
- */
+// Definitions of the following structs in malloc/malloc.h might be too old
+// for the built binary to run on newer versions of OSX. So use the newest
+// possible version of those structs.
+
 typedef struct _malloc_zone_t {
   void *reserved1;
   void *reserved2;
@@ -102,13 +100,11 @@ extern void malloc_zone_free(malloc_zone_t* zone, void* ptr);
 
 extern void* malloc_zone_realloc(malloc_zone_t* zone, void* ptr, size_t size);
 
-/*
- * The following is a OSX zone allocator implementation.
- * /!\ WARNING. It assumes the underlying malloc implementation's
- * malloc_usable_size returns 0 when the given pointer is not owned by
- * the allocator. Sadly, OSX does call zone_size with pointers not
- * owned by the allocator.
- */
+// The following is a OSX zone allocator implementation.
+// /!\ WARNING. It assumes the underlying malloc implementation's
+// malloc_usable_size returns 0 when the given pointer is not owned by
+// the allocator. Sadly, OSX does call zone_size with pointers not
+// owned by the allocator.
 
 static size_t
 zone_size(malloc_zone_t *zone, const void *ptr)
@@ -206,7 +202,7 @@ zone_valloc(malloc_zone_t *zone, size_t size)
 static void
 zone_destroy(malloc_zone_t *zone)
 {
-  /* This function should never be called. */
+  // This function should never be called.
   MOZ_CRASH();
 }
 
@@ -279,23 +275,23 @@ extern void _malloc_postfork_child(void);
 static void
 zone_force_lock(malloc_zone_t *zone)
 {
-  /* /!\ This calls into mozjemalloc. It works because we're linked in the
-   * same library. */
+  // /!\ This calls into mozjemalloc. It works because we're linked in the
+  // same library.
   _malloc_prefork();
 }
 
 static void
 zone_force_unlock(malloc_zone_t *zone)
 {
-  /* /!\ This calls into mozjemalloc. It works because we're linked in the
-   * same library. */
+  // /!\ This calls into mozjemalloc. It works because we're linked in the
+  // same library.
   _malloc_postfork_child();
 }
 
 static void
 zone_statistics(malloc_zone_t *zone, malloc_statistics_t *stats)
 {
-  /* We make no effort to actually fill the values */
+  // We make no effort to actually fill the values
   stats->blocks_in_use = 0;
   stats->size_in_use = 0;
   stats->max_size_in_use = 0;
@@ -305,15 +301,15 @@ zone_statistics(malloc_zone_t *zone, malloc_statistics_t *stats)
 static boolean_t
 zone_locked(malloc_zone_t *zone)
 {
-  /* Pretend no lock is being held */
+  // Pretend no lock is being held
   return false;
 }
 
 static void
 zone_reinit_lock(malloc_zone_t *zone)
 {
-  /* As of OSX 10.12, this function is only used when force_unlock would
-   * be used if the zone version were < 9. So just use force_unlock. */
+  // As of OSX 10.12, this function is only used when force_unlock would
+  // be used if the zone version were < 9. So just use force_unlock.
   zone_force_unlock(zone);
 }
 
@@ -325,19 +321,17 @@ static malloc_zone_t *get_default_zone()
   malloc_zone_t **zones = NULL;
   unsigned int num_zones = 0;
 
-  /*
-   * On OSX 10.12, malloc_default_zone returns a special zone that is not
-   * present in the list of registered zones. That zone uses a "lite zone"
-   * if one is present (apparently enabled when malloc stack logging is
-   * enabled), or the first registered zone otherwise. In practice this
-   * means unless malloc stack logging is enabled, the first registered
-   * zone is the default.
-   * So get the list of zones to get the first one, instead of relying on
-   * malloc_default_zone.
-   */
+  // On OSX 10.12, malloc_default_zone returns a special zone that is not
+  // present in the list of registered zones. That zone uses a "lite zone"
+  // if one is present (apparently enabled when malloc stack logging is
+  // enabled), or the first registered zone otherwise. In practice this
+  // means unless malloc stack logging is enabled, the first registered
+  // zone is the default.
+  // So get the list of zones to get the first one, instead of relying on
+  // malloc_default_zone.
   if (KERN_SUCCESS != malloc_get_all_zones(0, NULL, (vm_address_t**) &zones,
                                            &num_zones)) {
-    /* Reset the value in case the failure happened after it was set. */
+    // Reset the value in case the failure happened after it was set.
     num_zones = 0;
   }
   if (num_zones) {
@@ -391,42 +385,37 @@ register_zone(void)
 #endif
   zone_introspect.reinit_lock = zone_reinit_lock;
 
-  /*
-   * The default purgeable zone is created lazily by OSX's libc.  It uses
-   * the default zone when it is created for "small" allocations
-   * (< 15 KiB), but assumes the default zone is a scalable_zone.  This
-   * obviously fails when the default zone is the jemalloc zone, so
-   * malloc_default_purgeable_zone is called beforehand so that the
-   * default purgeable zone is created when the default zone is still
-   * a scalable_zone.
-   */
+  // The default purgeable zone is created lazily by OSX's libc.  It uses
+  // the default zone when it is created for "small" allocations
+  // (< 15 KiB), but assumes the default zone is a scalable_zone.  This
+  // obviously fails when the default zone is the jemalloc zone, so
+  // malloc_default_purgeable_zone is called beforehand so that the
+  // default purgeable zone is created when the default zone is still
+  // a scalable_zone.
   malloc_zone_t *purgeable_zone = malloc_default_purgeable_zone();
 
-  /* Register the custom zone.  At this point it won't be the default. */
+  // Register the custom zone.  At this point it won't be the default.
   malloc_zone_register(&zone);
 
   do {
-    /*
-     * Unregister and reregister the default zone.  On OSX >= 10.6,
-     * unregistering takes the last registered zone and places it at the
-     * location of the specified zone.  Unregistering the default zone thus
-     * makes the last registered one the default.  On OSX < 10.6,
-     * unregistering shifts all registered zones.  The first registered zone
-     * then becomes the default.
-     */
+    // Unregister and reregister the default zone.  On OSX >= 10.6,
+    // unregistering takes the last registered zone and places it at the
+    // location of the specified zone.  Unregistering the default zone thus
+    // makes the last registered one the default.  On OSX < 10.6,
+    // unregistering shifts all registered zones.  The first registered zone
+    // then becomes the default.
     malloc_zone_unregister(default_zone);
     malloc_zone_register(default_zone);
-    /*
-     * On OSX 10.6, having the default purgeable zone appear before the default
-     * zone makes some things crash because it thinks it owns the default
-     * zone allocated pointers. We thus unregister/re-register it in order to
-     * ensure it's always after the default zone. On OSX < 10.6, as
-     * unregistering shifts registered zones, this simply removes the purgeable
-     * zone from the list and adds it back at the end, after the default zone.
-     * On OSX >= 10.6, unregistering replaces the purgeable zone with the last
-     * registered zone above, i.e the default zone. Registering it again then
-     * puts it at the end, obviously after the default zone.
-     */
+
+    // On OSX 10.6, having the default purgeable zone appear before the default
+    // zone makes some things crash because it thinks it owns the default
+    // zone allocated pointers. We thus unregister/re-register it in order to
+    // ensure it's always after the default zone. On OSX < 10.6, as
+    // unregistering shifts registered zones, this simply removes the purgeable
+    // zone from the list and adds it back at the end, after the default zone.
+    // On OSX >= 10.6, unregistering replaces the purgeable zone with the last
+    // registered zone above, i.e the default zone. Registering it again then
+    // puts it at the end, obviously after the default zone.
     malloc_zone_unregister(purgeable_zone);
     malloc_zone_register(purgeable_zone);
     default_zone = get_default_zone();
