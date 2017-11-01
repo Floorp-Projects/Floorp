@@ -39,7 +39,7 @@ const TEST_ADDRESS_4 = {
   organization: "World Wide Web Consortium",
 };
 
-const TEST_ADDRESS_FOR_UPDATE = {
+const TEST_ADDRESS_WITH_EMPTY_FIELD = {
   "name": "Tim Berners",
   "street-address": "",
 };
@@ -299,6 +299,12 @@ add_task(async function test_add() {
   do_check_eq(addresses[0].timeLastUsed, 0);
   do_check_eq(addresses[0].timesUsed, 0);
 
+  // Empty string should be deleted before saving.
+  profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_FIELD);
+  let address = profileStorage.addresses.data[2];
+  do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
+  do_check_eq(address["street-address"], undefined);
+
   Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
 });
@@ -333,7 +339,7 @@ add_task(async function test_update() {
   do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Test preserveOldProperties parameter and field with empty string.
-  profileStorage.addresses.update(guid, TEST_ADDRESS_FOR_UPDATE, true);
+  profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_EMPTY_FIELD, true);
   await onChanged;
   await profileStorage._saveImmediately();
 
@@ -347,6 +353,12 @@ add_task(async function test_update() {
   do_check_eq(address["postal-code"], "12345");
   do_check_neq(address.timeLastModified, timeLastModified);
   do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
+
+  // Empty string should be deleted while updating.
+  profileStorage.addresses.update(profileStorage.addresses.data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
+  address = profileStorage.addresses.data[0];
+  do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
+  do_check_eq(address["street-address"], undefined);
 
   Assert.throws(
     () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
