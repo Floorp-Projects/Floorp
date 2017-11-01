@@ -54,12 +54,13 @@ errors = {
 # >
 # > 5. Send a response with status and data as arguments.
 def assert_error(response, error_code):
-    """Verify that the provided wdclient.Response instance described a valid
-    error response as defined by `dfn-send-an-error` and the provided error
-    code.
+    """
+    Verify that the provided webdriver.Response instance described
+    a valid error response as defined by `dfn-send-an-error` and
+    the provided error code.
 
-    :param response: wdclient.Response instance
-    :param error_code: string value of the expected "error code"
+    :param response: ``webdriver.Response`` instance.
+    :param error_code: String value of the expected error code
     """
     assert response.status == errors[error_code]
     assert "value" in response.body
@@ -69,13 +70,13 @@ def assert_error(response, error_code):
 
 
 def assert_success(response, value=None):
-    """Verify that the provided wdclient.Response instance described a valid
-    error response as defined by `dfn-send-an-error` and the provided error
-    code.
+    """
+    Verify that the provided webdriver.Response instance described
+    a valid error response as defined by `dfn-send-an-error` and
+    the provided error code.
 
-    :param response: wdclient.Response instance.
+    :param response: ``webdriver.Response`` instance.
     :param value: Expected value of the response body, if any.
-
     """
     assert response.status == 200, str(response.error)
 
