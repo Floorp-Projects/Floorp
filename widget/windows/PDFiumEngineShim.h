@@ -11,6 +11,7 @@
 
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
+#include "private/pprio.h"
 
 namespace mozilla {
 namespace widget {
@@ -20,7 +21,8 @@ typedef void (STDCALL *FPDF_DestroyLibrary_Pfn)();
 
 typedef FPDF_DOCUMENT (STDCALL *FPDF_LoadDocument_Pfn)(FPDF_STRING file_path,
                                                       FPDF_BYTESTRING password);
-
+typedef FPDF_DOCUMENT (STDCALL *FPDF_LoadCustomDocument_Pfn)(FPDF_FILEACCESS* pFileAccess,
+                                                             FPDF_BYTESTRING password);
 typedef void(STDCALL *FPDF_CloseDocument_Pfn)(FPDF_DOCUMENT aDocument);
 
 typedef int (STDCALL *FPDF_GetPageCount_Pfn)(FPDF_DOCUMENT aDocument);
@@ -55,6 +57,8 @@ public:
 
   FPDF_DOCUMENT LoadDocument(FPDF_STRING file_path,
                              FPDF_BYTESTRING aPassword);
+  FPDF_DOCUMENT LoadDocument(PRFileDesc* aPrfile,
+                             FPDF_BYTESTRING aPassword);
   void CloseDocument(FPDF_DOCUMENT aDocument);
   int GetPageCount(FPDF_DOCUMENT aDocument);
   int GetPageSizeByIndex(FPDF_DOCUMENT aDocument, int aPageIndex,
@@ -77,6 +81,7 @@ private:
   FPDF_InitLibrary_Pfn        mFPDF_InitLibrary;
   FPDF_DestroyLibrary_Pfn     mFPDF_DestroyLibrary;
   FPDF_LoadDocument_Pfn       mFPDF_LoadDocument;
+  FPDF_LoadCustomDocument_Pfn mFPDF_LoadCustomDocument;
   FPDF_CloseDocument_Pfn      mFPDF_CloseDocument;
   FPDF_GetPageCount_Pfn       mFPDF_GetPageCount;
   FPDF_LoadPage_Pfn           mFPDF_LoadPage;
