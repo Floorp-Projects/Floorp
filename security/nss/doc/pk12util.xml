@@ -46,7 +46,7 @@
 
   <refsection id="description">
     <title>Description</title>
-    <para>The PKCS #12 utility, <command>pk12util</command>, enables sharing certificates among any server that supports PKCS#12. The tool can import certificates and keys from PKCS#12 files into security databases, export certificates, and list certificates and keys.</para>
+    <para>The PKCS #12 utility, <command>pk12util</command>, enables sharing certificates among any server that supports PKCS #12. The tool can import certificates and keys from PKCS #12 files into security databases, export certificates, and list certificates and keys.</para>
   </refsection>
   
   <refsection id="options">
@@ -55,17 +55,17 @@
     <variablelist>
       <varlistentry>
         <term>-i p12file</term>
-        <listitem><para>Import keys and certificates from a PKCS#12 file into a security database.</para></listitem>
+        <listitem><para>Import keys and certificates from a PKCS #12 file into a security database.</para></listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-l p12file</term>
-        <listitem><para>List the keys and certificates in PKCS#12 file.</para></listitem>
+        <listitem><para>List the keys and certificates in PKCS #12 file.</para></listitem>
       </varlistentry>
 
       <varlistentry>
         <term>-o p12file</term>
-        <listitem><para>Export keys and certificates from the security database to a PKCS#12 file.</para></listitem>
+        <listitem><para>Export keys and certificates from the security database to a PKCS #12 file.</para></listitem>
       </varlistentry>
     </variablelist>
 
@@ -78,7 +78,7 @@
 
       <varlistentry>
         <term>-C certCipher</term>
-        <listitem><para>Specify the key cert (overall package) encryption algorithm.</para></listitem>
+        <listitem><para>Specify the certiticate encryption algorithm.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -233,7 +233,7 @@
   <refsection id="examples">
     <title>Examples</title>
     <para><command>Importing Keys and Certificates</command></para>
-    <para>The most basic usage of <command>pk12util</command> for importing a certificate or key is the PKCS#12 input file (<option>-i</option>) and some way to specify the security database being accessed (either <option>-d</option> for a directory or <option>-h</option> for a token).
+    <para>The most basic usage of <command>pk12util</command> for importing a certificate or key is the PKCS #12 input file (<option>-i</option>) and some way to specify the security database being accessed (either <option>-d</option> for a directory or <option>-h</option> for a token).
     </para>
     <para>
     pk12util -i p12File [-h tokenname] [-v] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]
@@ -252,7 +252,7 @@ Enter password for PKCS12 file:
 pk12util: PKCS12 IMPORT SUCCESSFUL</programlisting>
 
     <para><command>Exporting Keys and Certificates</command></para>
-    <para>Using the <command>pk12util</command> command to export certificates and keys requires both the name of the certificate to extract from the database (<option>-n</option>) and the PKCS#12-formatted output file to write to. There are optional parameters that can be used to encrypt the file to protect the certificate material.
+    <para>Using the <command>pk12util</command> command to export certificates and keys requires both the name of the certificate to extract from the database (<option>-n</option>) and the PKCS #12-formatted output file to write to. There are optional parameters that can be used to encrypt the file to protect the certificate material.
     </para>
     <para>pk12util -o p12File -n certname [-c keyCipher] [-C certCipher] [-m|--key_len keyLen] [-n|--cert_key_len certKeyLen] [-d [sql:]directory] [-P dbprefix] [-k slotPasswordFile|-K slotPassword] [-w p12filePasswordFile|-W p12filePassword]</para>
     <para>For example:</para>
@@ -304,58 +304,34 @@ Certificate    Friendly Name: Thawte Freemail Member's Thawte Consulting (Pty) L
 
   <refsection id="encryption">
     <title>Password Encryption</title>
-    <para>PKCS#12 provides for not only the protection of the private keys but also the certificate and meta-data associated with the keys. Password-based encryption is used to protect private keys on export to a PKCS#12 file and, optionally, the entire package. If no algorithm is specified, the tool defaults to using <command>PKCS12 V2 PBE with SHA1 and 3KEY Triple DES-cbc</command> for private key encryption. <command>PKCS12 V2 PBE with SHA1 and 40 Bit RC4</command> is the default for the overall package encryption when not in FIPS mode. When in FIPS mode, there is no package encryption.</para>
+    <para>PKCS #12 provides for not only the protection of the private keys but also the certificate and meta-data associated with the keys. Password-based encryption is used to protect private keys on export to a PKCS #12 file and, optionally, the associated certificates. If no algorithm is specified, the tool defaults to using PKCS #12 SHA-1 and 3-key triple DES for private key encryption. When not in FIPS mode, PKCS #12 SHA-1 and 40-bit RC4 is used for certificate encryption. When in FIPS mode, there is no certificate encryption. If certificate encryption is not wanted, specify <userinput>"NONE"</userinput> as the argument of the <option>-C</option> option.</para>
     <para>The private key is always protected with strong encryption by default.</para>
     <para>Several types of ciphers are supported.</para>
     <variablelist>
     
       <varlistentry>
-        <term>Symmetric CBC ciphers for PKCS#5 V2</term>
+        <term>PKCS #5 password-based encryption</term>
         <listitem>
-	     <itemizedlist>
-	       <listitem><para>DES-CBC</para></listitem>
-	       <listitem><para>RC2-CBC</para></listitem>
-	       <listitem><para>RC5-CBCPad</para></listitem>
-	       <listitem><para>DES-EDE3-CBC (the default for key encryption)</para></listitem>
-	       <listitem><para>AES-128-CBC</para></listitem>
-	       <listitem><para>AES-192-CBC</para></listitem>
-	       <listitem><para>AES-256-CBC</para></listitem>
-	       <listitem><para>CAMELLIA-128-CBC</para></listitem>
-	       <listitem><para>CAMELLIA-192-CBC</para></listitem>
-	       <listitem><para>CAMELLIA-256-CBC</para></listitem>
-	     </itemizedlist>
+	  <itemizedlist>
+	    <listitem><para>PBES2 with AES-CBC-Pad as underlying encryption scheme (<userinput>"AES-128-CBC"</userinput>, <userinput>"AES-192-CBC"</userinput>, and <userinput>"AES-256-CBC"</userinput>)</para></listitem>
+	  </itemizedlist>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>PKCS#12 PBE ciphers</term>
+        <term>PKCS #12 password-based encryption</term>
         <listitem>
-	     <itemizedlist>
-	       <listitem><para>PKCS #12 PBE with Sha1 and 128 Bit RC4</para></listitem>
-	       <listitem><para>PKCS #12 PBE with Sha1 and 40 Bit RC4</para></listitem>
-	       <listitem><para>PKCS #12 PBE with Sha1 and Triple DES CBC</para></listitem>
-	       <listitem><para>PKCS #12 PBE with Sha1 and 128 Bit RC2 CBC</para></listitem>
-	       <listitem><para>PKCS #12 PBE with Sha1 and 40 Bit RC2 CBC</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 128 Bit RC4</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 40 Bit RC4 (the default for non-FIPS mode)</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 3KEY Triple DES-cbc</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 2KEY Triple DES-cbc</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 128 Bit RC2 CBC</para></listitem>
-	       <listitem><para>PKCS12 V2 PBE with SHA1 and 40 Bit RC2 CBC</para></listitem>
-	     </itemizedlist>
-        </listitem>
-      </varlistentry>
-        <varlistentry><term>PKCS#5 PBE ciphers</term>
-        <listitem>
-	     <itemizedlist>
-	       <listitem><para>PKCS #5 Password Based Encryption with MD2 and DES CBC</para></listitem>
-	       <listitem><para>PKCS #5 Password Based Encryption with MD5 and DES CBC</para></listitem>
-	       <listitem><para>PKCS #5 Password Based Encryption with SHA1 and DES CBC</para></listitem>
-	     </itemizedlist>
+	  <itemizedlist>
+	    <listitem><para>SHA-1 and 128-bit RC4 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 128 Bit RC4"</userinput> or <userinput>"RC4"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 40-bit RC4 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 40 Bit RC4"</userinput>) (used by default for certificate encryption in non-FIPS mode)</para></listitem>
+	    <listitem><para>SHA-1 and 3-key triple-DES (<userinput>"PKCS #12 V2 PBE With SHA-1 And 3KEY Triple DES-CBC"</userinput> or <userinput>"DES-EDE3-CBC"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 128-bit RC2 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 128 Bit RC2 CBC"</userinput> or <userinput>"RC2-CBC"</userinput>)</para></listitem>
+	    <listitem><para>SHA-1 and 40-bit RC2 (<userinput>"PKCS #12 V2 PBE With SHA-1 And 40 Bit RC2 CBC"</userinput>)</para></listitem>
+	  </itemizedlist>
         </listitem>
       </varlistentry>
     </variablelist>
-    <para>With PKCS#12, the crypto provider may be the soft token module or an external hardware module. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default). If no suitable replacement for the desired algorithm can be found, the tool returns the error <emphasis>no security module can perform the requested operation</emphasis>.</para>
+    <para>With PKCS #12, the crypto provider may be the soft token module or an external hardware module. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default). If no suitable replacement for the desired algorithm can be found, the tool returns the error <emphasis>no security module can perform the requested operation</emphasis>.</para>
   </refsection>
 
 <refsection id="databases"><title>NSS Database Types</title>
@@ -431,6 +407,14 @@ Using the SQLite databases must be manually specified by using the <command>sql:
 	</listitem>
 </itemizedlist>
 </refsection>
+
+  <refsection id="compatibility">
+    <title>Compatibility Notes</title>
+    <para>The exporting behavior of <command>pk12util</command> has changed over time, while importing files exported with older versions of NSS is still supported.</para>
+    <para>Until the 3.30 release, <command>pk12util</command> used the UTF-16 encoding for the PKCS #5 password-based encryption schemes, while the recommendation is to encode passwords in UTF-8 if the used encryption scheme is defined outside of the PKCS #12 standard.</para>
+    <para>Until the 3.31 release, even when <userinput>"AES-128-CBC"</userinput> or <userinput>"AES-192-CBC"</userinput> is given from the command line, <command>pk12util</command> always used 256-bit AES as the underlying encryption scheme.</para>
+    <para>For historical reasons, <command>pk12util</command> accepts password-based encryption schemes not listed in this document.  However, those schemes are not officially supported and may have issues in interoperability with other tools.</para>
+  </refsection>
 
   <refsection id="seealso">
     <title>See Also</title>

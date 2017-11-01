@@ -3,27 +3,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 {
   'includes': [
-    '../coreconf/config.gypi',
+    '../../coreconf/config.gypi',
+    '../../cmd/platlibs.gypi'
   ],
   'targets': [
     {
-      'target_name': 'cpputil',
-      'type': 'static_library',
+      'target_name': 'rsapoptst',
+      'type': 'executable',
       'sources': [
-        'databuffer.cc',
-        'dummy_io.cc',
-        'dummy_io_fwd.cc',
-        'tls_parser.cc',
+        'rsapoptst.c'
       ],
       'dependencies': [
+        '<(DEPTH)/exports.gyp:dbm_exports',
         '<(DEPTH)/exports.gyp:nss_exports',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '<(DEPTH)/cpputil',
-        ],
-      },
-    },
+      ]
+    }
   ],
+  'variables': {
+    'module': 'nss',
+  }
 }
-

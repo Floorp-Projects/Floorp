@@ -456,6 +456,16 @@ of the attribute codes:
       </varlistentry>
 
       <varlistentry>
+        <term>--pss</term>
+        <listitem><para>Restrict the generated certificate (with the <option>-S</option> option) or certificate request (with the <option>-R</option> option) to be used with the RSA-PSS signature scheme. This only works when the private key of the certificate or certificate request is RSA.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--pss-sign</term>
+        <listitem><para>Sign the generated certificate with the RSA-PSS signature scheme (with the <option>-C</option> or <option>-S</option> option). This only works when the private key of the signer's certificate is RSA. If the signer's certificate is restricted to RSA-PSS, it is not necessary to specify this option.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-z noise-file</term>
         <listitem><para>Read a seed value from the specified file to generate a new private and public key pair. This argument makes it possible to use hardware-generated seed values or manually create a value from the keyboard. The minimum file size is 20 bytes.</para></listitem>
       </varlistentry>
