@@ -10,8 +10,8 @@
 
 // Declare malloc implementation functions with the right return and
 // argument types.
-#define MALLOC_DECL(name, return_type, ...) \
-  MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+#define MALLOC_DECL(name, return_type, ...)                                    \
+  MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
@@ -72,10 +72,10 @@ operator delete[](void* ptr, std::nothrow_t const&)
 #undef strndup
 #undef strdup
 
-MOZ_MEMORY_API char *
-strndup_impl(const char *src, size_t len)
+MOZ_MEMORY_API char*
+strndup_impl(const char* src, size_t len)
 {
-  char* dst = (char*) malloc_impl(len + 1);
+  char* dst = (char*)malloc_impl(len + 1);
   if (dst) {
     strncpy(dst, src, len);
     dst[len] = '\0';
@@ -83,8 +83,8 @@ strndup_impl(const char *src, size_t len)
   return dst;
 }
 
-MOZ_MEMORY_API char *
-strdup_impl(const char *src)
+MOZ_MEMORY_API char*
+strdup_impl(const char* src)
 {
   size_t len = strlen(src);
   return strndup_impl(src, len);
@@ -95,9 +95,9 @@ strdup_impl(const char *src)
 #include <stdio.h>
 
 MOZ_MEMORY_API int
-vasprintf_impl(char **str, const char *fmt, va_list ap)
+vasprintf_impl(char** str, const char* fmt, va_list ap)
 {
-  char* ptr, *_ptr;
+  char *ptr, *_ptr;
   int ret;
 
   if (str == NULL || fmt == NULL) {
@@ -130,17 +130,17 @@ vasprintf_impl(char **str, const char *fmt, va_list ap)
 }
 
 MOZ_MEMORY_API int
-asprintf_impl(char **str, const char *fmt, ...)
+asprintf_impl(char** str, const char* fmt, ...)
 {
-   int ret;
-   va_list ap;
-   va_start(ap, fmt);
+  int ret;
+  va_list ap;
+  va_start(ap, fmt);
 
-   ret = vasprintf_impl(str, fmt, ap);
+  ret = vasprintf_impl(str, fmt, ap);
 
-   va_end(ap);
+  va_end(ap);
 
-   return ret;
+  return ret;
 }
 #endif
 
@@ -153,7 +153,7 @@ MOZ_MEMORY_API wchar_t*
 wcsdup_impl(const wchar_t* src)
 {
   size_t len = wcslen(src);
-  wchar_t *dst = (wchar_t*) malloc_impl((len + 1) * sizeof(wchar_t));
+  wchar_t* dst = (wchar_t*)malloc_impl((len + 1) * sizeof(wchar_t));
   if (dst)
     wcsncpy(dst, src, len + 1);
   return dst;
