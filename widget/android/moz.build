@@ -25,7 +25,6 @@ XPIDL_MODULE = 'widget_android'
 EXPORTS += [
     'AndroidBridge.h',
     'AndroidJavaWrappers.h',
-    'AndroidJNIWrapper.h',
     'GeneratedJNINatives.h',
     'GeneratedJNIWrappers.h',
 ]
@@ -42,7 +41,6 @@ UNIFIED_SOURCES += [
     'AndroidContentController.cpp',
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
-    'AndroidJNIWrapper.cpp',
     'AndroidUiThread.cpp',
     'ANRReporter.cpp',
     'EventDispatcher.cpp',

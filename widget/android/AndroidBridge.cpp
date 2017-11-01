@@ -15,7 +15,6 @@
 #include "nsXULAppAPI.h"
 #include <prthread.h>
 #include "AndroidBridge.h"
-#include "AndroidJNIWrapper.h"
 #include "AndroidBridgeUtilities.h"
 #include "nsAlertsUtils.h"
 #include "nsAppShell.h"
