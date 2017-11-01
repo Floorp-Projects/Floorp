@@ -25,6 +25,7 @@
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 

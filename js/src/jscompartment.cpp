@@ -16,7 +16,6 @@
 #include "jsiter.h"
 #include "jswrapper.h"
 
-#include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitOptions.h"
@@ -34,6 +33,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 

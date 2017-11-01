@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 #include "gc/Heap-inl.h"
+#include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 
 namespace js {
