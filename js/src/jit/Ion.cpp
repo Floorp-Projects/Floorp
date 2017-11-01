@@ -2275,7 +2275,6 @@ static bool
 CheckFrame(JSContext* cx, BaselineFrame* frame)
 {
     MOZ_ASSERT(!frame->script()->isStarGenerator());
-    MOZ_ASSERT(!frame->script()->isLegacyGenerator());
     MOZ_ASSERT(!frame->script()->isAsync());
     MOZ_ASSERT(!frame->isDebuggerEvalFrame());
     MOZ_ASSERT(!frame->isEvalFrame());
@@ -2307,7 +2306,7 @@ CheckScript(JSContext* cx, JSScript* script, bool osr)
         return false;
     }
 
-    if (script->isStarGenerator() || script->isLegacyGenerator()) {
+    if (script->isStarGenerator()) {
         TrackAndSpewIonAbort(cx, script, "generator script");
         return false;
     }
