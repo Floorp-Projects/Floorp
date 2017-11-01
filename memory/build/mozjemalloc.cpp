@@ -382,8 +382,7 @@ struct arena_chunk_t
 // Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
 // so over-estimates are okay (up to a point), but under-estimates will
 // negatively affect performance.
-#define CACHELINE_2POW 6
-#define CACHELINE ((size_t)(1U << CACHELINE_2POW))
+static const size_t kCacheLineSize = 64;
 
 // Smallest size class to support.  On Windows the smallest allocation size
 // must be 8 bytes on 32-bit, 16 bytes on 64-bit.  On Linux and Mac, even
@@ -539,7 +538,8 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 #define CHUNK_CEILING(s) (((s) + chunksize_mask) & ~chunksize_mask)
 
 // Return the smallest cacheline multiple that is >= s.
-#define CACHELINE_CEILING(s) (((s) + (CACHELINE - 1)) & ~(CACHELINE - 1))
+#define CACHELINE_CEILING(s)                                                   \
+  (((s) + (kCacheLineSize - 1)) & ~(kCacheLineSize - 1))
 
 // Return the smallest quantum multiple that is >= a.
 #define QUANTUM_CEILING(a) (((a) + quantum_mask) & ~quantum_mask)
@@ -760,7 +760,7 @@ class AddressRadixTree
 // Size of each radix tree node (as a power of 2).
 // This impacts tree depth.
 #ifdef HAVE_64BIT_BUILD
-  static const size_t kNodeSize2Pow = CACHELINE_2POW;
+  static const size_t kNodeSize2Pow = LOG2(kCacheLineSize);
 #else
   static const size_t kNodeSize2Pow = 14;
 #endif
