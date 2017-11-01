@@ -16,7 +16,6 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
@@ -143,6 +142,10 @@ public class Tabs implements BundleEventListener {
     };
 
     private Tabs() {
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+            "Tab:GetNextTabId",
+            null);
+
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "Content:LocationChange",
             "Content:SubframeNavigation",
@@ -542,6 +545,10 @@ public class Tabs implements BundleEventListener {
                     }
                 }
             });
+            return;
+
+        } else if ("Tab:GetNextTabId".equals(event)) {
+            callback.sendSuccess(getNextTabId());
             return;
         }
 
@@ -1118,8 +1125,7 @@ public class Tabs implements BundleEventListener {
     /**
      * Gets the next tab ID.
      */
-    @JNITarget
-    public static int getNextTabId() {
+    private static int getNextTabId() {
         return sTabId.getAndIncrement();
     }
 
