@@ -76,7 +76,7 @@ enum NodeColor
 };
 
 // Node structure.
-template <typename T>
+template<typename T>
 class RedBlackTreeNode
 {
   T* mLeft;
@@ -84,20 +84,14 @@ class RedBlackTreeNode
   T* mRightAndColor;
 
 public:
-  T* Left()
-  {
-    return mLeft;
-  }
+  T* Left() { return mLeft; }
 
-  void SetLeft(T* aValue)
-  {
-    mLeft = aValue;
-  }
+  void SetLeft(T* aValue) { mLeft = aValue; }
 
   T* Right()
   {
-    return reinterpret_cast<T*>(
-      reinterpret_cast<uintptr_t>(mRightAndColor) & uintptr_t(~1));
+    return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(mRightAndColor) &
+                                uintptr_t(~1));
   }
 
   void SetRight(T* aValue)
@@ -108,18 +102,13 @@ public:
 
   NodeColor Color()
   {
-    return static_cast<NodeColor>(reinterpret_cast<uintptr_t>(mRightAndColor) & 1);
+    return static_cast<NodeColor>(reinterpret_cast<uintptr_t>(mRightAndColor) &
+                                  1);
   }
 
-  bool IsBlack()
-  {
-    return Color() == NodeColor::Black;
-  }
+  bool IsBlack() { return Color() == NodeColor::Black; }
 
-  bool IsRed()
-  {
-    return Color() == NodeColor::Red;
-  }
+  bool IsRed() { return Color() == NodeColor::Red; }
 
   void SetColor(NodeColor aColor)
   {
@@ -145,20 +134,11 @@ public:
     return Last(reinterpret_cast<TreeNode*>(aStart));
   }
 
-  T* Next(T* aNode)
-  {
-    return Next(reinterpret_cast<TreeNode*>(aNode));
-  }
+  T* Next(T* aNode) { return Next(reinterpret_cast<TreeNode*>(aNode)); }
 
-  T* Prev(T* aNode)
-  {
-    return Prev(reinterpret_cast<TreeNode*>(aNode));
-  }
+  T* Prev(T* aNode) { return Prev(reinterpret_cast<TreeNode*>(aNode)); }
 
-  T* Search(T* aKey)
-  {
-    return Search(reinterpret_cast<TreeNode*>(aKey));
-  }
+  T* Search(T* aKey) { return Search(reinterpret_cast<TreeNode*>(aKey)); }
 
   // Find a match if it exists. Otherwise, find the next greater node, if one
   // exists.
@@ -167,54 +147,27 @@ public:
     return SearchOrNext(reinterpret_cast<TreeNode*>(aKey));
   }
 
-  void Insert(T* aNode)
-  {
-    Insert(reinterpret_cast<TreeNode*>(aNode));
-  }
+  void Insert(T* aNode) { Insert(reinterpret_cast<TreeNode*>(aNode)); }
 
-  void Remove(T* aNode)
-  {
-    return Remove(reinterpret_cast<TreeNode*>(aNode));
-  }
+  void Remove(T* aNode) { return Remove(reinterpret_cast<TreeNode*>(aNode)); }
 
   // Helper class to avoid having all the tree traversal code further below
   // have to use Trait::GetTreeNode, adding visual noise.
   struct TreeNode : public T
   {
-    TreeNode* Left()
-    {
-      return (TreeNode*)Trait::GetTreeNode(this).Left();
-    }
+    TreeNode* Left() { return (TreeNode*)Trait::GetTreeNode(this).Left(); }
 
-    void SetLeft(T* aValue)
-    {
-      Trait::GetTreeNode(this).SetLeft(aValue);
-    }
+    void SetLeft(T* aValue) { Trait::GetTreeNode(this).SetLeft(aValue); }
 
-    TreeNode* Right()
-    {
-      return (TreeNode*)Trait::GetTreeNode(this).Right();
-    }
+    TreeNode* Right() { return (TreeNode*)Trait::GetTreeNode(this).Right(); }
 
-    void SetRight(T* aValue)
-    {
-      Trait::GetTreeNode(this).SetRight(aValue);
-    }
+    void SetRight(T* aValue) { Trait::GetTreeNode(this).SetRight(aValue); }
 
-    NodeColor Color()
-    {
-      return Trait::GetTreeNode(this).Color();
-    }
+    NodeColor Color() { return Trait::GetTreeNode(this).Color(); }
 
-    bool IsRed()
-    {
-      return Trait::GetTreeNode(this).IsRed();
-    }
+    bool IsRed() { return Trait::GetTreeNode(this).IsRed(); }
 
-    bool IsBlack()
-    {
-      return Trait::GetTreeNode(this).IsBlack();
-    }
+    bool IsBlack() { return Trait::GetTreeNode(this).IsBlack(); }
 
     void SetColor(NodeColor aColor)
     {
@@ -695,7 +648,6 @@ private:
   // cause the cached path to become invalid. Don't modify the tree during an
   // iteration.
 
-
   // Size the path arrays such that they are always large enough, even if a
   // tree consumes all of memory.  Since each node must contain a minimum of
   // two pointers, there can never be more nodes than:
@@ -739,7 +691,8 @@ public:
       Item(Iterator* aIterator, T* aItem)
         : mIterator(aIterator)
         , mItem(aItem)
-      { }
+      {
+      }
 
       bool operator!=(const Item& aOther) const
       {
@@ -760,10 +713,7 @@ public:
       return Item<Iterator>(this, mDepth > 0 ? mPath[mDepth - 1] : nullptr);
     }
 
-    Item<Iterator> end()
-    {
-      return Item<Iterator>(this, nullptr);
-    }
+    Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
     TreeNode* Next()
     {

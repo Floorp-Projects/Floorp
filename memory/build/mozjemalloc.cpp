@@ -200,7 +200,6 @@ getenv(const char* name)
 #endif
 #endif
 
-
 // Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
 // happen to override mmap() and call dlsym() from their overridden
 // mmap(). The problem is that dlsym() calls malloc(), and this ends
@@ -1021,7 +1020,8 @@ public:
   {
     mArenas.Init();
     mPrivateArenas.Init();
-    mDefaultArena = mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
+    mDefaultArena =
+      mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
     if (mDefaultArena) {
       // arena_t constructor sets this to a lower value for thread local
       // arenas; Reset to the default value for the main arena.
@@ -1058,17 +1058,14 @@ public:
       return Item<Iterator>(this, *Tree::Iterator::begin());
     }
 
-    Item<Iterator> end()
-    {
-      return Item<Iterator>(this, nullptr);
-    }
+    Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
     Tree::TreeNode* Next()
     {
       Tree::TreeNode* result = Tree::Iterator::Next();
       if (!result && mNextTree) {
-	new (this) Iterator(mNextTree, nullptr);
-	result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
+        new (this) Iterator(mNextTree, nullptr);
+        result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
       }
       return result;
     }
@@ -4762,7 +4759,8 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   inline return_type MozJemalloc::moz_arena_##name(                            \
     arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))               \
   {                                                                            \
-    BaseAllocator allocator(gArenas.GetById(aArenaId, /* IsPrivate = */ true));\
+    BaseAllocator allocator(                                                   \
+      gArenas.GetById(aArenaId, /* IsPrivate = */ true));                      \
     return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));                   \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
