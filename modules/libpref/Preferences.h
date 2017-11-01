@@ -13,6 +13,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
@@ -406,7 +407,7 @@ private:
   nsCOMPtr<nsIPrefBranch> mRootBranch;
   nsCOMPtr<nsIPrefBranch> mDefaultRootBranch;
 
-  static Preferences* sPreferences;
+  static StaticRefPtr<Preferences> sPreferences;
   static bool sShutdown;
 
   // Init static members. Returns true on success.
