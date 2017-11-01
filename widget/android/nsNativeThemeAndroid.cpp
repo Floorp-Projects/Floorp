@@ -13,6 +13,7 @@
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeAndroid, nsNativeTheme, nsITheme)
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 
 static void
