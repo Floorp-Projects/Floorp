@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 const { BrowserElementWebNavigation } = require("./web-navigation");
@@ -328,8 +328,8 @@ function MessageManagerTunnel(outer, inner) {
   if (outer.isRemoteBrowser) {
     throw new Error("The outer browser must be non-remote.");
   }
-  this.outer = outer;
-  this.inner = inner;
+  this.outerRef = Cu.getWeakReference(outer);
+  this.innerRef = Cu.getWeakReference(inner);
   this.tunneledMessageNames = new Set();
   this.init();
 }
@@ -451,6 +451,10 @@ MessageManagerTunnel.prototype = {
     "resource://devtools/server/child.js"
   ],
 
+  get outer() {
+    return this.outerRef.get();
+  },
+
   get outerParentMM() {
     if (!this.outer[FRAME_LOADER]) {
       return null;
@@ -465,6 +469,10 @@ MessageManagerTunnel.prototype = {
     let docShell = this.outer[FRAME_LOADER].docShell;
     return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
+  },
+
+  get inner() {
+    return this.innerRef.get();
   },
 
   get innerParentMM() {
@@ -622,6 +630,10 @@ MessageManagerTunnel.prototype = {
   _shouldTunnelInnerToOuter(name) {
     return this.INNER_TO_OUTER_MESSAGES.includes(name) ||
            this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix => name.startsWith(prefix));
+  },
+
+  toString() {
+    return "[object MessageManagerTunnel]";
   },
 
 };
