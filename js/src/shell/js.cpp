@@ -3383,7 +3383,7 @@ CooperativeEndWait(JSContext* cx)
 }
 
 static void
-CooperativeYield()
+CooperativeYield(bool terminating = false)
 {
     LockGuard<Mutex> lock(cooperationState->lock);
     MOZ_ASSERT(!cooperationState->idle);
@@ -3392,7 +3392,7 @@ CooperativeYield()
 
     // Wait until another thread takes over control before returning, if there
     // is another thread to do so.
-    if (cooperationState->numThreads) {
+    if (!terminating && cooperationState->numThreads) {
         uint64_t count = cooperationState->yieldCount;
         cooperationState->cvar.wait(lock, [&] { return cooperationState->yieldCount != count; });
     }
@@ -3552,7 +3552,7 @@ WorkerMain(void* arg)
         js_delete(sc);
         if (input->siblingContext) {
             cooperationState->numThreads--;
-            CooperativeYield();
+            CooperativeYield(/* terminating = */ true);
         }
         js_delete(input);
     });
