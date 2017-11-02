@@ -36,6 +36,8 @@ class GeneratorObject : public NativeObject
 
     enum ResumeKind { NEXT, THROW, CLOSE };
 
+    static const Class class_;
+
   private:
     static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc,
                         Value* vp, unsigned nvalues);
@@ -185,10 +187,10 @@ class GeneratorObject : public NativeObject
     bool isAfterYield();
     bool isAfterAwait();
 
-private:
+  private:
     bool isAfterYieldOrAwait(JSOp op);
 
-public:
+  public:
     static size_t offsetOfCalleeSlot() {
         return getFixedSlotOffset(CALLEE_SLOT);
     }
@@ -209,12 +211,6 @@ public:
     }
 };
 
-class StarGeneratorObject : public GeneratorObject
-{
-  public:
-    static const Class class_;
-};
-
 bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
                            HandleValue val, uint32_t resumeKind);
 void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
@@ -223,12 +219,5 @@ MOZ_MUST_USE bool
 CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v);
 
 } // namespace js
-
-template<>
-inline bool
-JSObject::is<js::GeneratorObject>() const
-{
-    return is<js::StarGeneratorObject>();
-}
 
 #endif /* vm_GeneratorObject_h */
