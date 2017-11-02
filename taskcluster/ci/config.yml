@@ -52,3 +52,29 @@ treeherder:
         'p': 'Partial generation'
         'ps': 'Partials signing'
         'Rel': 'Release promotion'
+
+try:
+    # We have a few platforms for which we want to do some "extra" builds, or at
+    # least build-ish things.  Sort of.  Anyway, these other things are implemented
+    # as different "platforms".  These do *not* automatically ride along with "-p
+    # all"
+    ridealong-builds:
+        'android-api-16':
+            - 'android-api-16-l10n'
+        'linux':
+            - 'linux-l10n'
+        'linux64':
+            - 'linux64-l10n'
+            - 'sm-plain'
+            - 'sm-nonunified'
+            - 'sm-arm-sim'
+            - 'sm-arm64-sim'
+            - 'sm-compacting'
+            - 'sm-rootanalysis'
+            - 'sm-package'
+            - 'sm-tsan'
+            - 'sm-asan'
+            - 'sm-mozjs-sys'
+            - 'sm-msan'
+            - 'sm-fuzzing'
+            - 'sm-rust-bindings'
