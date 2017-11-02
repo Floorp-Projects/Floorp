@@ -345,8 +345,6 @@ nsBufferedInputStream::Close()
     };
 #endif
 
-    mAsyncWaitCallback = nullptr;
-
     if (NS_FAILED(rv1)) {
         return rv1;
     }
