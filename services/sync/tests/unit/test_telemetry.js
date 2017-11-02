@@ -588,31 +588,6 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
   }
 });
 
-add_task(async function test_sql_error() {
-  enableValidationPrefs();
-
-  await Service.engineManager.register(SteamEngine);
-  let engine = Service.engineManager.get("steam");
-  engine.enabled = true;
-  let server = await serverForFoo(engine);
-  await SyncTestingInfrastructure(server);
-  engine._sync = function() {
-    // Just grab a DB connection and issue a bogus SQL statement synchronously.
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-    Async.querySpinningly(db.createAsyncStatement("select bar from foo"));
-  };
-  try {
-    _(`test_sql_error: Steam tracker contents: ${
-      JSON.stringify(engine._tracker.changedIDs)}`);
-    let ping = await sync_and_validate_telem(true);
-    let enginePing = ping.engines.find(e => e.name === "steam");
-    deepEqual(enginePing.failureReason, { name: "sqlerror", code: 1 });
-  } finally {
-    await cleanAndGo(engine, server);
-    Service.engineManager.unregister(engine);
-  }
-});
-
 add_task(async function test_no_foreign_engines_in_success_ping() {
   enableValidationPrefs();
 

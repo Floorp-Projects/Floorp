@@ -10,15 +10,17 @@
 #include "CryptoTask.h"
 #include "NSSCertDBTrustDomain.h"
 #include "ScopedNSSTypes.h"
+#include "SharedCertVerifier.h"
 #include "certdb.h"
+#include "cms.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsDataSignatureVerifier.h"
 #include "nsDependentString.h"
 #include "nsHashKeys.h"
 #include "nsIDirectoryEnumerator.h"
@@ -139,8 +141,8 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
 }
 
 // Finds exactly one (signature metadata) JAR entry that matches the given
-// search pattern, and then load it. Fails if there are no matches or if
-// there is more than one match. If bugDigest is not null then on success
+// search pattern, and then loads it. Fails if there are no matches or if
+// there is more than one match. If bufDigest is not null then on success
 // bufDigest will contain the digeset of the entry using the given digest
 // algorithm.
 nsresult
@@ -465,10 +467,10 @@ CheckManifestVersion(const char* & nextLineStart,
 
 // Parses a signature file (SF) based on the JDK 8 JAR Specification.
 //
-// The SF file must contain a SHA1-Digest-Manifest (or, preferrably,
-// SHA256-Digest-Manifest) attribute in the main section. All other sections are
-// ignored. This means that this will NOT parse old-style signature files that
-// have separate digests per entry.
+// The SF file must contain a SHA*-Digest-Manifest attribute in the main
+// section (where the * is either 1 or 256, depending on the given digest
+// algorithm). All other sections are ignored. This means that this will NOT
+// parse old-style signature files that have separate digests per entry.
 // The JDK8 x-Digest-Manifest variant is better because:
 //
 //   (1) It allows us to follow the principle that we should minimize the
@@ -480,11 +482,24 @@ CheckManifestVersion(const char* & nextLineStart,
 //       x-Digest-Manifest instead of multiple x-Digest values.
 //
 // filebuf must be null-terminated. On output, mfDigest will contain the
-// decoded value of SHA1-Digest-Manifest or SHA256-Digest-Manifest, if found,
-// as well as an identifier indicating which algorithm was found.
+// decoded value of the appropriate SHA*-DigestManifest, if found.
 nsresult
-ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
+ParseSF(const char* filebuf, SECOidTag digestAlgorithm,
+        /*out*/ nsAutoCString& mfDigest)
 {
+  const char* digestNameToFind = nullptr;
+  switch (digestAlgorithm) {
+    case SEC_OID_SHA256:
+      digestNameToFind = "sha256-digest-manifest";
+      break;
+    case SEC_OID_SHA1:
+      digestNameToFind = "sha1-digest-manifest";
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("bad argument to ParseSF");
+      return NS_ERROR_FAILURE;
+  }
+
   const char* nextLineStart = filebuf;
   nsresult rv = CheckManifestVersion(nextLineStart,
                                      NS_LITERAL_CSTRING(JAR_SF_HEADER));
@@ -492,9 +507,6 @@ ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
     return rv;
   }
 
-  nsAutoCString savedSHA1Digest;
-  // Search for SHA256-Digest-Manifest and SHA1-Digest-Manifest. Prefer the
-  // former.
   for (;;) {
     nsAutoCString curLine;
     rv = ReadLine(nextLineStart, curLine);
@@ -503,13 +515,8 @@ ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
     }
 
     if (curLine.Length() == 0) {
-      // End of main section (blank line or end-of-file). We didn't find
-      // SHA256-Digest-Manifest, but maybe we found SHA1-Digest-Manifest.
-      if (!savedSHA1Digest.IsEmpty()) {
-        mfDigest.mDigest.Assign(savedSHA1Digest);
-        mfDigest.mAlgorithm = SEC_OID_SHA1;
-        return NS_OK;
-      }
+      // End of main section (blank line or end-of-file). We didn't find the
+      // SHA*-Digest-Manifest we were looking for.
       return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
     }
 
@@ -520,12 +527,11 @@ ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
       return rv;
     }
 
-    if (attrName.LowerCaseEqualsLiteral("sha256-digest-manifest")) {
-      rv = Base64Decode(attrValue, mfDigest.mDigest);
+    if (attrName.EqualsIgnoreCase(digestNameToFind)) {
+      rv = Base64Decode(attrValue, mfDigest);
       if (NS_FAILED(rv)) {
         return rv;
       }
-      mfDigest.mAlgorithm = SEC_OID_SHA256;
 
       // There could be multiple SHA*-Digest-Manifest attributes, which
       // would be an error, but it's better to just skip any erroneous
@@ -538,18 +544,11 @@ ParseSF(const char* filebuf, /*out*/ DigestWithAlgorithm& mfDigest)
       return NS_OK;
     }
 
-    if (attrName.LowerCaseEqualsLiteral("sha1-digest-manifest") &&
-        savedSHA1Digest.IsEmpty()) {
-      rv = Base64Decode(attrValue, savedSHA1Digest);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-
     // ignore unrecognized attributes
   }
 
-  return NS_OK;
+  MOZ_ASSERT_UNREACHABLE("somehow exited loop in ParseSF without returning");
+  return NS_ERROR_FAILURE;
 }
 
 // Parses MANIFEST.MF. The filenames of all entries will be returned in
@@ -702,23 +701,16 @@ ParseMF(const char* filebuf, nsIZipReader* zip, SECOidTag digestAlgorithm,
   return NS_OK;
 }
 
-struct VerifyCertificateContext {
-  AppTrustedRoot trustedRoot;
-  UniqueCERTCertList& builtChain;
-};
-
 nsresult
-VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
+VerifyCertificate(CERTCertificate* signerCert, AppTrustedRoot trustedRoot,
+                  /*out*/ UniqueCERTCertList& builtChain)
 {
-  // TODO: null pinArg is tolerated.
-  if (NS_WARN_IF(!signerCert) || NS_WARN_IF(!voidContext)) {
+  if (NS_WARN_IF(!signerCert)) {
     return NS_ERROR_INVALID_ARG;
   }
-  const VerifyCertificateContext& context =
-    *static_cast<const VerifyCertificateContext*>(voidContext);
-
-  AppTrustDomain trustDomain(context.builtChain, pinArg);
-  nsresult rv = trustDomain.SetTrustedRoot(context.trustedRoot);
+  // TODO: pinArg is null.
+  AppTrustDomain trustDomain(builtChain, nullptr);
+  nsresult rv = trustDomain.SetTrustedRoot(trustedRoot);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -763,23 +755,151 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
   return NS_OK;
 }
 
+// Given a SECOidTag representing a digest algorithm (either SEC_OID_SHA1 or
+// SEC_OID_SHA256), returns the first signerInfo in the given signedData that
+// purports to have been created using that digest algorithm, or nullptr if
+// there is none.
+// The returned signerInfo is owned by signedData, so the caller must ensure
+// that the lifetime of the signerInfo is contained by the lifetime of the
+// signedData.
+NSSCMSSignerInfo*
+GetSignerInfoForDigestAlgorithm(NSSCMSSignedData* signedData,
+                                SECOidTag digestAlgorithm)
+{
+  MOZ_ASSERT(digestAlgorithm == SEC_OID_SHA1 ||
+             digestAlgorithm == SEC_OID_SHA256);
+  if (digestAlgorithm != SEC_OID_SHA1 && digestAlgorithm != SEC_OID_SHA256) {
+    return nullptr;
+  }
+
+  int numSigners = NSS_CMSSignedData_SignerInfoCount(signedData);
+  if (numSigners < 1) {
+    return nullptr;
+  }
+  for (int i = 0; i < numSigners; i++) {
+    NSSCMSSignerInfo* signerInfo =
+      NSS_CMSSignedData_GetSignerInfo(signedData, i);
+    // NSS_CMSSignerInfo_GetDigestAlgTag isn't exported from NSS.
+    SECOidData* digestAlgOID = SECOID_FindOID(&signerInfo->digestAlg.algorithm);
+    if (!digestAlgOID) {
+      continue;
+    }
+    if (digestAlgorithm == digestAlgOID->offset) {
+      return signerInfo;
+    }
+  }
+  return nullptr;
+}
+
 nsresult
 VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
-                const SECItem& detachedDigest,
+                const SECItem& detachedSHA1Digest,
+                const SECItem& detachedSHA256Digest,
+                /*out*/ SECOidTag& digestAlgorithm,
                 /*out*/ UniqueCERTCertList& builtChain)
 {
   // Currently, this function is only called within the CalculateResult() method
   // of CryptoTasks. As such, NSS should not be shut down at this point and the
   // CryptoTask implementation should already hold a nsNSSShutDownPreventionLock.
-  // We acquire a nsNSSShutDownPreventionLock here solely to prove we did to
-  // VerifyCMSDetachedSignatureIncludingCertificate().
-  nsNSSShutDownPreventionLock locker;
-  VerifyCertificateContext context = { trustedRoot, builtChain };
-  // XXX: missing pinArg
-  return VerifyCMSDetachedSignatureIncludingCertificate(buffer, detachedDigest,
-                                                        VerifyCertificate,
-                                                        &context, nullptr,
-                                                        locker);
+
+  if (NS_WARN_IF(!buffer.data || buffer.len == 0 || !detachedSHA1Digest.data ||
+                 detachedSHA1Digest.len == 0 || !detachedSHA256Digest.data ||
+                 detachedSHA256Digest.len == 0)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  UniqueNSSCMSMessage
+    cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
+                                        nullptr, nullptr, nullptr, nullptr,
+                                        nullptr));
+  if (!cmsMsg) {
+    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
+  }
+
+  if (!NSS_CMSMessage_IsSigned(cmsMsg.get())) {
+    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
+  }
+
+  NSSCMSContentInfo* cinfo = NSS_CMSMessage_ContentLevel(cmsMsg.get(), 0);
+  if (!cinfo) {
+    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
+  }
+
+  // We're expecting this to be a PKCS#7 signedData content info.
+  if (NSS_CMSContentInfo_GetContentTypeTag(cinfo)
+        != SEC_OID_PKCS7_SIGNED_DATA) {
+    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
+  }
+
+  // signedData is non-owning
+  NSSCMSSignedData* signedData =
+    static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
+  if (!signedData) {
+    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
+  }
+
+  // Parse the certificates into CERTCertificate objects held in memory so
+  // verifyCertificate will be able to find them during path building.
+  UniqueCERTCertList certs(CERT_NewCertList());
+  if (!certs) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (signedData->rawCerts) {
+    for (size_t i = 0; signedData->rawCerts[i]; ++i) {
+      UniqueCERTCertificate
+        cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                     signedData->rawCerts[i], nullptr, false,
+                                     true));
+      // Skip certificates that fail to parse
+      if (!cert) {
+        continue;
+      }
+
+      if (CERT_AddCertToListTail(certs.get(), cert.get()) != SECSuccess) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      Unused << cert.release(); // Ownership transferred to the cert list.
+    }
+  }
+
+  NSSCMSSignerInfo* signerInfo =
+    GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA256);
+  const SECItem* detachedDigest = &detachedSHA256Digest;
+  digestAlgorithm = SEC_OID_SHA256;
+  if (!signerInfo) {
+    signerInfo = GetSignerInfoForDigestAlgorithm(signedData, SEC_OID_SHA1);
+    if (!signerInfo) {
+      return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
+    }
+    detachedDigest = &detachedSHA1Digest;
+    digestAlgorithm = SEC_OID_SHA1;
+  }
+
+  // Get the end-entity certificate.
+  CERTCertificate* signerCert =
+    NSS_CMSSignerInfo_GetSigningCertificate(signerInfo,
+                                            CERT_GetDefaultCertDB());
+  if (!signerCert) {
+    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
+  }
+
+  nsresult rv = VerifyCertificate(signerCert, trustedRoot, builtChain);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Ensure that the PKCS#7 data OID is present as the PKCS#9 contentType.
+  const char* pkcs7DataOidString = "1.2.840.113549.1.7.1";
+  ScopedAutoSECItem pkcs7DataOid;
+  if (SEC_StringToOID(nullptr, &pkcs7DataOid, pkcs7DataOidString, 0)
+        != SECSuccess) {
+    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
+  }
+
+  return MapSECStatus(
+    NSS_CMSSignerInfo_Verify(signerInfo, const_cast<SECItem*>(detachedDigest),
+                             &pkcs7DataOid));
 }
 
 nsresult
@@ -818,24 +938,39 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   // Signature (SF) file
   nsAutoCString sfFilename;
   ScopedAutoSECItem sfBuffer;
-  Digest sfCalculatedDigest;
   rv = FindAndLoadOneEntry(zip, NS_LITERAL_CSTRING(JAR_SF_SEARCH_STRING),
-                           sfFilename, sfBuffer, SEC_OID_SHA1,
-                           &sfCalculatedDigest);
+                           sfFilename, sfBuffer);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
-  sigBuffer.type = siBuffer;
-  UniqueCERTCertList builtChain;
-  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedDigest.get(),
-                       builtChain);
+  // Calculate both the SHA-1 and SHA-256 hashes of the signature file - we
+  // don't know what algorithm the PKCS#7 signature used.
+  Digest sfCalculatedSHA1Digest;
+  rv = sfCalculatedSHA1Digest.DigestBuf(SEC_OID_SHA1, sfBuffer.data,
+                                        sfBuffer.len - 1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  Digest sfCalculatedSHA256Digest;
+  rv = sfCalculatedSHA256Digest.DigestBuf(SEC_OID_SHA256, sfBuffer.data,
+                                          sfBuffer.len - 1);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  DigestWithAlgorithm mfDigest;
-  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
+  sigBuffer.type = siBuffer;
+  UniqueCERTCertList builtChain;
+  SECOidTag digestToUse;
+  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest.get(),
+                       sfCalculatedSHA256Digest.get(), digestToUse, builtChain);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString mfDigest;
+  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), digestToUse,
+               mfDigest);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -845,7 +980,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   ScopedAutoSECItem manifestBuffer;
   Digest mfCalculatedDigest;
   rv = FindAndLoadOneEntry(zip, NS_LITERAL_CSTRING(JAR_MF_SEARCH_STRING),
-                           mfFilename, manifestBuffer, mfDigest.mAlgorithm,
+                           mfFilename, manifestBuffer, digestToUse,
                            &mfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return rv;
@@ -853,7 +988,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
 
   nsDependentCSubstring calculatedDigest(
     DigestToDependentString(mfCalculatedDigest));
-  if (!mfDigest.mDigest.Equals(calculatedDigest)) {
+  if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
@@ -865,7 +1000,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   nsTHashtable<nsCStringHashKey> items;
 
   rv = ParseMF(BitwiseCast<char*, unsigned char*>(manifestBuffer.data), zip,
-               mfDigest.mAlgorithm, items, buf);
+               digestToUse, items, buf);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1393,25 +1528,40 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
                           + NS_LITERAL_STRING("sf"));
 
   ScopedAutoSECItem sfBuffer;
-  Digest sfCalculatedDigest;
-  rv = LoadOneMetafile(metaDir, sfFilename, sfBuffer, SEC_OID_SHA1,
-                       &sfCalculatedDigest);
+  rv = LoadOneMetafile(metaDir, sfFilename, sfBuffer);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
+  // Calculate both the SHA-1 and SHA-256 hashes of the signature file - we
+  // don't know what algorithm the PKCS#7 signature used.
+  Digest sfCalculatedSHA1Digest;
+  rv = sfCalculatedSHA1Digest.DigestBuf(SEC_OID_SHA1, sfBuffer.data,
+                                        sfBuffer.len - 1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  Digest sfCalculatedSHA256Digest;
+  rv = sfCalculatedSHA256Digest.DigestBuf(SEC_OID_SHA256, sfBuffer.data,
+                                          sfBuffer.len - 1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   sigBuffer.type = siBuffer;
   UniqueCERTCertList builtChain;
-  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedDigest.get(),
-                       builtChain);
+  SECOidTag digestToUse;
+  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedSHA1Digest.get(),
+                       sfCalculatedSHA256Digest.get(), digestToUse, builtChain);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
   // Get the expected manifest hash from the signed .sf file
 
-  DigestWithAlgorithm mfDigest;
-  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), mfDigest);
+  nsAutoCString mfDigest;
+  rv = ParseSF(BitwiseCast<char*, unsigned char*>(sfBuffer.data), digestToUse,
+               mfDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
@@ -1421,7 +1571,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   nsAutoString mfFilename(NS_LITERAL_STRING("manifest.mf"));
   ScopedAutoSECItem manifestBuffer;
   Digest mfCalculatedDigest;
-  rv = LoadOneMetafile(metaDir, mfFilename, manifestBuffer, mfDigest.mAlgorithm,
+  rv = LoadOneMetafile(metaDir, mfFilename, manifestBuffer, digestToUse,
                        &mfCalculatedDigest);
   if (NS_FAILED(rv)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
@@ -1429,7 +1579,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   nsDependentCSubstring calculatedDigest(
     DigestToDependentString(mfCalculatedDigest));
-  if (!mfDigest.mDigest.Equals(calculatedDigest)) {
+  if (!mfDigest.Equals(calculatedDigest)) {
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
   }
 
@@ -1442,7 +1592,7 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
 
   nsTHashtable<nsStringHashKey> items;
   rv = ParseMFUnpacked(BitwiseCast<char*, unsigned char*>(manifestBuffer.data),
-                       aDirectory, mfDigest.mAlgorithm, items, buf);
+                       aDirectory, digestToUse, items, buf);
   if (NS_FAILED(rv)){
     return rv;
   }

@@ -8,26 +8,23 @@
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
   // ReactJS
-  const React = require("devtools/client/shared/vendor/react");
-
-  // Shortcuts
-  const { td, span } = React.DOM;
-  const PropTypes = React.PropTypes;
+  const { Component, DOM: dom, PropTypes } =
+    require("devtools/client/shared/vendor/react");
 
   /**
    * Render the default cell used for toggle buttons
    */
-  let LabelCell = React.createClass({
-    displayName: "LabelCell",
-
+  class LabelCell extends Component {
     // See the TreeView component for details related
     // to the 'member' object.
-    propTypes: {
-      id: PropTypes.string.isRequired,
-      member: PropTypes.object.isRequired
-    },
+    static get propTypes() {
+      return {
+        id: PropTypes.string.isRequired,
+        member: PropTypes.object.isRequired
+      };
+    }
 
-    render: function () {
+    render() {
       let id = this.props.id;
       let member = this.props.member;
       let level = member.level || 0;
@@ -49,16 +46,16 @@ define(function (require, exports, module) {
       }
 
       return (
-        td({
+        dom.td({
           className: "treeLabelCell",
           key: "default",
           style: rowStyle,
           role: "presentation"},
-          span({
+          dom.span({
             className: iconClassList.join(" "),
             role: "presentation"
           }),
-          span({
+          dom.span({
             className: "treeLabel " + member.type + "Label",
             "aria-labelledby": id,
             "data-level": level
@@ -66,7 +63,7 @@ define(function (require, exports, module) {
         )
       );
     }
-  });
+  }
 
   // Exports from this module
   module.exports = LabelCell;
