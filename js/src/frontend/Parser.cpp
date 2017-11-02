@@ -2720,9 +2720,8 @@ Parser<ParseHandler, CharT>::functionBody(InHandling inHandling, YieldHandling y
     } else {
         MOZ_ASSERT(type == ExpressionBody);
 
-        // Async functions are implemented as star generators, and star
-        // generators are assumed to be statement lists, to prepend initial
-        // `yield`.
+        // Async functions are implemented as generators, and generators are
+        // assumed to be statement lists, to prepend initial `yield`.
         Node stmtList = null();
         if (pc->isAsync()) {
             stmtList = handler.newStatementList(pos());
@@ -3366,7 +3365,7 @@ Parser<ParseHandler, CharT>::functionDefinition(Node pn, uint32_t toStringStart,
         // already been created by js::StartOffThreadParseTask, so cx will not
         // be necessary.
         JSContext* cx = context->helperThread() ? nullptr : context;
-        proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
+        proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, context->global());
         if (!proto)
             return null();
     }
@@ -8381,7 +8380,7 @@ Parser<ParseHandler, CharT>::generatorComprehensionLambda(unsigned begin)
     // be necessary.
     RootedObject proto(context);
     JSContext* cx = context->helperThread() ? nullptr : context;
-    proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
+    proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, context->global());
     if (!proto)
         return null();
 

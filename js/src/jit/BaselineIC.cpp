@@ -3452,7 +3452,7 @@ ICCall_IsSuspendedGenerator::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, argVal, &returnFalse);
     masm.unboxObject(argVal, genObj);
 
-    // Check if it's a StarGeneratorObject.
+    // Check if it's a GeneratorObject.
     Register scratch = regs.takeAny();
     masm.branchTestObjClass(Assembler::NotEqual, genObj, scratch, &GeneratorObject::class_,
                             &returnFalse);

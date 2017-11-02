@@ -3457,7 +3457,7 @@ CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleF
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
     if (srcFun->isGenerator() || srcFun->isAsync()) {
-        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
+        cloneProto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
     }
