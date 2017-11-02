@@ -20,8 +20,13 @@ class nsWaylandDisplay : public nsISupports {
 public:
   nsWaylandDisplay(wl_display *aDisplay);
 
+  wl_shm*             GetShm();
+  void                SetShm(wl_shm* aShm)   { mShm = aShm; };
+
   wl_display*         GetDisplay()           { return mDisplay; };
+  wl_event_queue*     GetEventQueue()        { return mEventQueue; };
   gfx::SurfaceFormat  GetSurfaceFormat()     { return mFormat; };
+  bool                DisplayLoop();
   bool                Matches(wl_display *aDisplay);
 
 private:
@@ -29,6 +34,8 @@ private:
 
   PRThread*           mThreadId;
   gfx::SurfaceFormat  mFormat;
+  wl_shm*             mShm;
+  wl_event_queue*     mEventQueue;
   wl_display*         mDisplay;
 };
 
