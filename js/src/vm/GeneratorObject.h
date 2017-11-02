@@ -145,7 +145,7 @@ class GeneratorObject : public NativeObject
         return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32() == YIELD_AND_AWAIT_INDEX_CLOSING;
     }
     bool isSuspended() const {
-        // Note: also update Baseline's IsSuspendedStarGenerator code if this
+        // Note: also update Baseline's IsSuspendedGenerator code if this
         // changes.
         MOZ_ASSERT(!isClosed());
         static_assert(YIELD_AND_AWAIT_INDEX_CLOSING < YIELD_AND_AWAIT_INDEX_RUNNING,
@@ -216,7 +216,7 @@ bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<Generat
 void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool
-CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v);
+CheckGeneratorResumptionValue(JSContext* cx, HandleValue v);
 
 } // namespace js
 
