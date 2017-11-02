@@ -879,7 +879,9 @@ void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
 void ff_vp9dsp_init_aarch64(VP9DSPContext *dsp, int bpp) {}
 void ff_vp9dsp_init_arm(VP9DSPContext *dsp, int bpp) {}
+#if !defined(__arm__)
 void ff_flacdsp_init_arm(FLACDSPContext *c, enum AVSampleFormat fmt, int channels, int bps) {}
+#endif
 #if !defined(HAVE_64BIT_BUILD)
 void ff_flac_decorrelate_indep8_16_sse2(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
 void ff_flac_decorrelate_indep8_32_avx(uint8_t **out, int32_t **in, int channels, int len, int shift) {}

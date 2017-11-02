@@ -7,7 +7,10 @@
 # Due to duplicate file names, we compile libavutil/x86 in its own
 # moz.build file.
 if CONFIG['FFVPX_ASFLAGS']:
-    DIRS += ['x86']
+    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+        DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        DIRS += ['arm']
 
 SharedLibrary('mozavcodec')
 SOURCES += [

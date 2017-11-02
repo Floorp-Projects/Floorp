@@ -3216,22 +3216,18 @@ dnl ========================================================
 MOZ_FFVPX=
 MOZ_FFVPX_FLACONLY=
 case "$CPU_ARCH" in
-  x86)
+  x86|x86_64)
       MOZ_FFVPX=1
-  ;;
-  x86_64)
-      MOZ_FFVPX=1
+      dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
+      FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
   ;;
   arm*)
       MOZ_FFVPX=1
       MOZ_FFVPX_FLACONLY=1
+      FFVPX_ASFLAGS=$VPX_ASFLAGS
   ;;
 esac
 
-dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-if test -n "$MOZ_LIBAV_FFT"; then
-  FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
-fi
 if test -n "$MOZ_FFVPX"; then
   AC_DEFINE(MOZ_FFVPX)
 fi
