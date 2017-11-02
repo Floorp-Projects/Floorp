@@ -38,7 +38,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
             return nullptr;
     }
     RootedNativeObject obj(cx,
-                           NewNativeObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto));
+                           NewNativeObjectWithGivenProto(cx, &GeneratorObject::class_, proto));
     if (!obj)
         return nullptr;
 
@@ -123,12 +123,8 @@ js::GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<Generato
     } else {
         MOZ_ASSERT(resumeKind == GeneratorObject::CLOSE);
 
-        if (genObj->is<StarGeneratorObject>()) {
-            MOZ_ASSERT(arg.isObject());
-            frame.setReturnValue(arg);
-        } else {
-            MOZ_ASSERT(arg.isUndefined());
-        }
+        MOZ_ASSERT(arg.isObject());
+        frame.setReturnValue(arg);
 
         cx->setPendingException(MagicValue(JS_GENERATOR_CLOSING));
         genObj->setClosing();
@@ -187,7 +183,7 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
     }
 }
 
-const Class StarGeneratorObject::class_ = {
+const Class GeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS)
 };
