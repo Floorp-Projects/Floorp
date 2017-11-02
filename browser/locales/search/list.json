@@ -591,6 +591,13 @@
         ]
       }
     },
+    "oc": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-france", "bing", "ddg", "twitter", "wikipedia-oc", "wiktionary-oc"
+        ]
+      }
+    },
     "or": {
       "default": {
         "visibleDefaultEngines": [
@@ -636,7 +643,7 @@
     "ro": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo", "bing", "amazondotcom", "ddg", "wikipediaro"
+          "google", "yahoo", "bing", "amazondotcom", "ddg", "wikipedia-ro"
         ]
       }
     },
