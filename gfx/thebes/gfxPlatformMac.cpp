@@ -113,11 +113,10 @@ gfxPlatformMac::CreatePlatformFontList()
 }
 
 void
-gfxPlatformMac::GetSystemFontList(
+gfxPlatformMac::ReadSystemFontList(
     InfallibleTArray<SystemFontListEntry>* aFontList)
 {
-    gfxMacPlatformFontList::PlatformFontList()->
-        GetSystemFontList(aFontList);
+    gfxMacPlatformFontList::PlatformFontList()->ReadSystemFontList(aFontList);
 }
 
 already_AddRefed<gfxASurface>
