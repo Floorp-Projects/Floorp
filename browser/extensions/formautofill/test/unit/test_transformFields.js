@@ -527,7 +527,6 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
   {
     description: "No normalizable field",
     creditCard: {
-      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
     },
@@ -540,7 +539,6 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
       "cc-name": "Timothy John Berners-Lee",
       "cc-given-name": "John",
       "cc-family-name": "Doe",
-      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
       "cc-name": "Timothy John Berners-Lee",
@@ -551,12 +549,209 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
     creditCard: {
       "cc-given-name": "John",
       "cc-family-name": "Doe",
-      "cc-number": "1234123412341234", // cc-number won't be verified
     },
     expectedResult: {
       "cc-name": "John Doe",
     },
   },
+
+  // Expiration Date
+  {
+    description: "Has \"cc-exp\" formatted \"yyyy-mm\"",
+    creditCard: {
+      "cc-exp": "2022-12",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yyyy/mm\"",
+    creditCard: {
+      "cc-exp": "2022/12",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yyyy-m\"",
+    creditCard: {
+      "cc-exp": "2022-3",
+    },
+    expectedResult: {
+      "cc-exp-month": 3,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yyyy/m\"",
+    creditCard: {
+      "cc-exp": "2022/3",
+    },
+    expectedResult: {
+      "cc-exp-month": 3,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"mm-yyyy\"",
+    creditCard: {
+      "cc-exp": "12-2022",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"mm/yyyy\"",
+    creditCard: {
+      "cc-exp": "12/2022",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"m-yyyy\"",
+    creditCard: {
+      "cc-exp": "3-2022",
+    },
+    expectedResult: {
+      "cc-exp-month": 3,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"m/yyyy\"",
+    creditCard: {
+      "cc-exp": "3/2022",
+    },
+    expectedResult: {
+      "cc-exp-month": 3,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"mm-yy\"",
+    creditCard: {
+      "cc-exp": "12-22",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"mm/yy\"",
+    creditCard: {
+      "cc-exp": "12/22",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yy-mm\"",
+    creditCard: {
+      "cc-exp": "22-12",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yy/mm\"",
+    creditCard: {
+      "cc-exp": "22/12",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"mmyy\"",
+    creditCard: {
+      "cc-exp": "1222",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" formatted \"yymm\"",
+    creditCard: {
+      "cc-exp": "2212",
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has \"cc-exp\" with spaces",
+    creditCard: {
+      "cc-exp": "  2033-11  ",
+    },
+    expectedResult: {
+      "cc-exp-month": 11,
+      "cc-exp-year": 2033,
+    },
+  },
+  {
+    description: "Has invalid \"cc-exp\"",
+    creditCard: {
+      "cc-exp": "99-9999",
+    },
+    expectedResult: {
+      "cc-exp-month": undefined,
+      "cc-exp-year": undefined,
+    },
+  },
+  {
+    description: "Has both \"cc-exp-*\" and \"cc-exp\"",
+    creditCard: {
+      "cc-exp": "2022-12",
+      "cc-exp-month": 3,
+      "cc-exp-year": 2030,
+    },
+    expectedResult: {
+      "cc-exp-month": 3,
+      "cc-exp-year": 2030,
+    },
+  },
+  {
+    description: "Has only \"cc-exp-year\" and \"cc-exp\"",
+    creditCard: {
+      "cc-exp": "2022-12",
+      "cc-exp-year": 2030,
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+  {
+    description: "Has only \"cc-exp-month\" and \"cc-exp\"",
+    creditCard: {
+      "cc-exp": "2022-12",
+      "cc-exp-month": 3,
+    },
+    expectedResult: {
+      "cc-exp-month": 12,
+      "cc-exp-year": 2022,
+    },
+  },
+
+  // Card Number
   {
     description: "Number should be encrypted and masked",
     creditCard: {
