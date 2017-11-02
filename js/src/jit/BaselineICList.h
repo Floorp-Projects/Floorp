@@ -48,7 +48,7 @@ namespace jit {
     _(Call_ScriptedApplyArguments)               \
     _(Call_ScriptedFunCall)                      \
     _(Call_ConstStringSplit)                     \
-    _(Call_IsSuspendedStarGenerator)             \
+    _(Call_IsSuspendedGenerator)                 \
                                                  \
     _(GetElem_Fallback)                          \
     _(SetElem_Fallback)                          \

@@ -36,7 +36,6 @@ const std::string TlsAgent::kServerRsa = "rsa";    // both sign and encrypt
 const std::string TlsAgent::kServerRsaSign = "rsa_sign";
 const std::string TlsAgent::kServerRsaPss = "rsa_pss";
 const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
-const std::string TlsAgent::kServerRsaChain = "rsa_chain";
 const std::string TlsAgent::kServerEcdsa256 = "ecdsa256";
 const std::string TlsAgent::kServerEcdsa384 = "ecdsa384";
 const std::string TlsAgent::kServerEcdsa521 = "ecdsa521";

@@ -34,7 +34,9 @@ class GeneratorObject : public NativeObject
         RESERVED_SLOTS
     };
 
-    enum ResumeKind { NEXT, THROW, CLOSE };
+    enum ResumeKind { NEXT, THROW, RETURN };
+
+    static const Class class_;
 
   private:
     static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc,
@@ -44,7 +46,7 @@ class GeneratorObject : public NativeObject
     static inline ResumeKind getResumeKind(jsbytecode* pc) {
         MOZ_ASSERT(*pc == JSOP_RESUME);
         unsigned arg = GET_UINT16(pc);
-        MOZ_ASSERT(arg <= CLOSE);
+        MOZ_ASSERT(arg <= RETURN);
         return static_cast<ResumeKind>(arg);
     }
 
@@ -53,8 +55,8 @@ class GeneratorObject : public NativeObject
             return NEXT;
         if (atom == cx->names().throw_)
             return THROW;
-        MOZ_ASSERT(atom == cx->names().close);
-        return CLOSE;
+        MOZ_ASSERT(atom == cx->names().return_);
+        return RETURN;
     }
 
     static JSObject* create(JSContext* cx, AbstractFramePtr frame);
@@ -143,7 +145,7 @@ class GeneratorObject : public NativeObject
         return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32() == YIELD_AND_AWAIT_INDEX_CLOSING;
     }
     bool isSuspended() const {
-        // Note: also update Baseline's IsSuspendedStarGenerator code if this
+        // Note: also update Baseline's IsSuspendedGenerator code if this
         // changes.
         MOZ_ASSERT(!isClosed());
         static_assert(YIELD_AND_AWAIT_INDEX_CLOSING < YIELD_AND_AWAIT_INDEX_RUNNING,
@@ -185,10 +187,10 @@ class GeneratorObject : public NativeObject
     bool isAfterYield();
     bool isAfterAwait();
 
-private:
+  private:
     bool isAfterYieldOrAwait(JSOp op);
 
-public:
+  public:
     static size_t offsetOfCalleeSlot() {
         return getFixedSlotOffset(CALLEE_SLOT);
     }
@@ -209,26 +211,13 @@ public:
     }
 };
 
-class StarGeneratorObject : public GeneratorObject
-{
-  public:
-    static const Class class_;
-};
-
-bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
-                           HandleValue val, uint32_t resumeKind);
+bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
+                            HandleValue val, uint32_t resumeKind);
 void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool
-CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v);
+CheckGeneratorResumptionValue(JSContext* cx, HandleValue v);
 
 } // namespace js
-
-template<>
-inline bool
-JSObject::is<js::GeneratorObject>() const
-{
-    return is<js::StarGeneratorObject>();
-}
 
 #endif /* vm_GeneratorObject_h */

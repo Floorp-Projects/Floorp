@@ -731,8 +731,8 @@ InterpretResume(JSContext* cx, HandleObject obj, HandleValue val, HandleProperty
 MOZ_MUST_USE bool
 DebugAfterYield(JSContext* cx, BaselineFrame* frame);
 MOZ_MUST_USE bool
-GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
-                      HandleValue arg, uint32_t resumeKind);
+GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
+                       HandleValue arg, uint32_t resumeKind);
 
 MOZ_MUST_USE bool
 GlobalNameConflictsCheckFromIon(JSContext* cx, HandleScript script);
@@ -893,6 +893,9 @@ TypeOfObject(JSObject* obj, JSRuntime* rt);
 
 bool
 GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval);
+
+void
+CloseIteratorFromIon(JSContext* cx, JSObject* obj);
 
 extern const VMFunction SetObjectElementInfo;
 
