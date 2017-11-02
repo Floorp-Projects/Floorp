@@ -4681,8 +4681,7 @@ pref_InitInitialObjects()
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "nightly") ||
       !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "aurora") ||
-      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") ||
-      developerBuild) {
+      !strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta") || developerBuild) {
     PREF_SetBoolPref(kTelemetryPref, true, true);
   } else {
     PREF_SetBoolPref(kTelemetryPref, false, true);
@@ -4951,13 +4950,13 @@ NotifyObserver(const char* aPref, void* aClosure)
 }
 
 static void
-RegisterPriorityCallback(PrefChangedFunc aCallback,
-                         const char* aPref,
-                         void* aClosure)
+RegisterCallbackHelper(PrefChangedFunc aCallback,
+                       const char* aPref,
+                       void* aClosure,
+                       Preferences::MatchKind aMatchKind,
+                       bool aIsPriority)
 {
-  MOZ_ASSERT(Preferences::IsServiceAvailable());
-
-  ValueObserverHashKey hashKey(aPref, aCallback, Preferences::ExactMatch);
+  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
   RefPtr<ValueObserver> observer;
   gObserverTable->Get(&hashKey, getter_AddRefs(observer));
   if (observer) {
@@ -4965,13 +4964,22 @@ RegisterPriorityCallback(PrefChangedFunc aCallback,
     return;
   }
 
-  observer = new ValueObserver(aPref, aCallback, Preferences::ExactMatch);
+  observer = new ValueObserver(aPref, aCallback, aMatchKind);
   observer->AppendClosure(aClosure);
-  PREF_RegisterCallback(aPref,
-                        NotifyObserver,
-                        static_cast<nsIObserver*>(observer),
-                        /* isPriority */ true);
+  PREF_RegisterCallback(
+    aPref, NotifyObserver, static_cast<nsIObserver*>(observer), aIsPriority);
   gObserverTable->Put(observer, observer);
+}
+
+static void
+RegisterPriorityCallback(PrefChangedFunc aCallback,
+                         const char* aPref,
+                         void* aClosure)
+{
+  MOZ_ASSERT(Preferences::IsServiceAvailable());
+
+  RegisterCallbackHelper(
+    aCallback, aPref, aClosure, Preferences::ExactMatch, /* isPriority */ true);
 }
 
 /* static */ nsresult
@@ -4983,21 +4991,8 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
   MOZ_ASSERT(aCallback);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
-  ValueObserverHashKey hashKey(aPref, aCallback, aMatchKind);
-  RefPtr<ValueObserver> observer;
-  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
-  if (observer) {
-    observer->AppendClosure(aClosure);
-    return NS_OK;
-  }
-
-  observer = new ValueObserver(aPref, aCallback, aMatchKind);
-  observer->AppendClosure(aClosure);
-  PREF_RegisterCallback(aPref,
-                        NotifyObserver,
-                        static_cast<nsIObserver*>(observer),
-                        /* isPriority */ false);
-  gObserverTable->Put(observer, observer);
+  RegisterCallbackHelper(
+    aCallback, aPref, aClosure, aMatchKind, /* isPriority */ false);
   return NS_OK;
 }
 
