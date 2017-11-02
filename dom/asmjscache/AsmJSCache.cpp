@@ -247,7 +247,41 @@ EvictEntries(nsIFile* aDirectory, const nsACString& aGroup,
 class Client
   : public quota::Client
 {
+  static Client* sInstance;
+
+  bool mShutdownRequested;
+
 public:
+  Client();
+
+  static bool
+  IsShuttingDownOnBackgroundThread()
+  {
+    AssertIsOnBackgroundThread();
+
+    if (sInstance) {
+      return sInstance->IsShuttingDown();
+    }
+
+    return QuotaManager::IsShuttingDown();
+  }
+
+  static bool
+  IsShuttingDownOnNonBackgroundThread()
+  {
+    MOZ_ASSERT(!IsOnBackgroundThread());
+
+    return QuotaManager::IsShuttingDown();
+  }
+
+  bool
+  IsShuttingDown() const
+  {
+    AssertIsOnBackgroundThread();
+
+    return mShutdownRequested;
+  }
+
   NS_INLINE_DECL_REFCOUNTING(Client, override)
 
   Type
@@ -291,7 +325,7 @@ public:
   ShutdownWorkThreads() override;
 
 private:
-  ~Client() override = default;
+  ~Client() override;
 };
 
 // FileDescriptorHolder owns a file descriptor and its memory mapping.
@@ -1098,6 +1132,10 @@ AllocEntryParent(OpenMode aOpenMode,
 {
   AssertIsOnBackgroundThread();
 
+  if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
   if (NS_WARN_IF(aPrincipalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
     MOZ_ASSERT(false);
     return nullptr;
@@ -1650,6 +1688,25 @@ CloseEntryForWrite(size_t aSize,
 /*******************************************************************************
  * Client
  ******************************************************************************/
+
+Client* Client::sInstance = nullptr;
+
+Client::Client()
+  : mShutdownRequested(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
+
+  sInstance = this;
+}
+
+Client::~Client()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
+
+  sInstance = nullptr;
+}
 
 Client::Type
 Client::GetType()
