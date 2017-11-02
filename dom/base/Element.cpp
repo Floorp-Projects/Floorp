@@ -1758,7 +1758,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (CustomElementRegistry::IsCustomElementEnabled() && IsInComposedDoc()) {
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
-    if (GetCustomElementData()) {
+    CustomElementData* data = GetCustomElementData();
+    if (data && data->mState == CustomElementData::State::eCustom) {
       nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eConnected, this);
     }
   }
@@ -2085,10 +2086,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
      // Disconnected must be enqueued whenever a connected custom element becomes
      // disconnected.
-    if (CustomElementRegistry::IsCustomElementEnabled() &&
-        GetCustomElementData()) {
-      nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
-                                               this);
+    if (CustomElementRegistry::IsCustomElementEnabled()) {
+      CustomElementData* data  = GetCustomElementData();
+      if (data && data->mState == CustomElementData::State::eCustom) {
+        nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
+                                                 this);
+      }
     }
   }
 
@@ -2770,6 +2773,9 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
             nsContentUtils::GetElementDefinitionIfObservingAttr(this,
                                                                 data->mType,
                                                                 aName)) {
+        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
+                   "AttributeChanged callback should fire only if "
+                   "custom element state is custom");
         RefPtr<nsAtom> oldValueAtom;
         if (oldValue) {
           oldValueAtom = oldValue->GetAsAtom();
@@ -3074,6 +3080,9 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
             nsContentUtils::GetElementDefinitionIfObservingAttr(this,
                                                                 data->mType,
                                                                 aName)) {
+        MOZ_ASSERT(data->mState == CustomElementData::State::eCustom,
+                   "AttributeChanged callback should fire only if "
+                   "custom element state is custom");
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
 
