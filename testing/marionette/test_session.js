@@ -379,7 +379,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("moz:accessibilityChecks"));
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
-  equal(false, caps.get("moz:webdriverClick"));
+  equal(true, caps.get("moz:webdriverClick"));
 
   run_next_test();
 });
@@ -447,7 +447,7 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({timeouts: timeoutsConfig});
   equal(123, caps.get("timeouts").implicit);
 
-  equal(false, caps.get("moz:webdriverClick"));
+  equal(true, caps.get("moz:webdriverClick"));
   caps = fromJSON({"moz:webdriverClick": true});
   equal(true, caps.get("moz:webdriverClick"));
   Assert.throws(() => fromJSON({"moz:webdriverClick": "foo"}));
