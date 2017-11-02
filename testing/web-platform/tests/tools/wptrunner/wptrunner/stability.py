@@ -181,9 +181,10 @@ def run_step(logger, iterations, restart_after_iteration, kwargs_extras, **kwarg
     kwargs.update(kwargs_extras)
 
     def wrap_handler(x):
-        return LogActionFilter(
-            LogLevelFilter(x, "WARNING"),
-            ["log", "process_output"])
+        x = LogLevelFilter(x, "WARNING")
+        if not kwargs["verify_log_full"]:
+            x = LogActionFilter(x, ["log", "process_output"])
+        return x
 
     initial_handlers = logger._state.handlers
     logger._state.handlers = [wrap_handler(handler)
@@ -197,6 +198,8 @@ def run_step(logger, iterations, restart_after_iteration, kwargs_extras, **kwarg
     wptrunner.run_tests(**kwargs)
 
     logger._state.handlers = initial_handlers
+    logger._state.running_tests = set()
+    logger._state.suite_started = False
 
     log.seek(0)
     results, inconsistent = process_results(log, iterations)
