@@ -46,7 +46,6 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 #ifdef MOZ_PEERCONNECTION
 #include "mtransport/runnable_utils.h"
@@ -72,43 +71,15 @@ static LazyLogModule gSCTPLog("SCTP");
 
 #define SCTP_LOG(args) MOZ_LOG(mozilla::gSCTPLog, mozilla::LogLevel::Debug, args)
 
-class DataChannelConnectionShutdown : public nsITimerCallback
-{
-public:
-  explicit DataChannelConnectionShutdown(DataChannelConnection* aConnection)
-    : mConnection(aConnection)
-  {
-    mTimer = NS_NewTimer(); // we'll crash if this fails
-    mTimer->InitWithCallback(this, 30*1000, nsITimer::TYPE_ONE_SHOT);
-  }
-
-  NS_IMETHODIMP Notify(nsITimer* aTimer) override;
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-private:
-  virtual ~DataChannelConnectionShutdown()
-  {
-    mTimer->Cancel();
-  }
-
-  RefPtr<DataChannelConnection> mConnection;
-  nsCOMPtr<nsITimer> mTimer;
-};
-
-class DataChannelShutdown;
-
-StaticRefPtr<DataChannelShutdown> sDataChannelShutdown;
-
 class DataChannelShutdown : public nsIObserver
 {
 public:
-  // This needs to be tied to some object that is guaranteed to be
+  // This needs to be tied to some form object that is guaranteed to be
   // around (singleton likely) unless we want to shutdown sctp whenever
   // we're not using it (and in which case we'd keep a refcnt'd object
   // ref'd by each DataChannelConnection to release the SCTP usrlib via
   // sctp_finish). Right now, the single instance of this class is
-  // owned by the observer service and a StaticRefPtr.
+  // owned by the observer service.
 
   NS_DECL_ISUPPORTS
 
@@ -128,9 +99,14 @@ public:
       (void) rv;
     }
 
+private:
+  // The only instance of DataChannelShutdown is owned by the observer
+  // service, so there is no need to call RemoveObserver here.
+  virtual ~DataChannelShutdown() = default;
+
+public:
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) override
-  {
+                     const char16_t* aData) override {
     // Note: MainThread
     if (strcmp(aTopic, "xpcom-will-shutdown") == 0) {
       LOG(("Shutting down SCTP"));
@@ -147,58 +123,12 @@ public:
                                                     "xpcom-will-shutdown");
       MOZ_ASSERT(rv == NS_OK);
       (void) rv;
-
-      {
-        StaticMutexAutoLock lock(sLock);
-        sConnections = nullptr; // clears as well
-      }
-      sDataChannelShutdown = nullptr;
     }
     return NS_OK;
   }
-
-  void CreateConnectionShutdown(DataChannelConnection* aConnection)
-  {
-    StaticMutexAutoLock lock(sLock);
-    if (!sConnections) {
-      sConnections = new nsTArray<RefPtr<DataChannelConnectionShutdown>>();
-    }
-    sConnections->AppendElement(new DataChannelConnectionShutdown(aConnection));
-  }
-
-  void RemoveConnectionShutdown(DataChannelConnectionShutdown* aConnectionShutdown)
-  {
-    StaticMutexAutoLock lock(sLock);
-    if (sConnections) {
-      sConnections->RemoveElement(aConnectionShutdown);
-    }
-  }
-
-private:
-  // The only instance of DataChannelShutdown is owned by the observer
-  // service, so there is no need to call RemoveObserver here.
-  virtual ~DataChannelShutdown() = default;
-
-  // protects sConnections
-  static StaticMutex sLock;
-  static StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>> sConnections;
 };
 
-StaticMutex DataChannelShutdown::sLock;
-StaticAutoPtr<nsTArray<RefPtr<DataChannelConnectionShutdown>>> DataChannelShutdown::sConnections;
-
 NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
-
-NS_IMPL_ISUPPORTS(DataChannelConnectionShutdown, nsITimerCallback)
-
-NS_IMETHODIMP
-DataChannelConnectionShutdown::Notify(nsITimer* aTimer)
-{
-  // safely release reference to ourself
-  RefPtr<DataChannelConnectionShutdown> grip(this);
-  sDataChannelShutdown->RemoveConnectionShutdown(this);
-  return NS_OK;
-}
 
 OutgoingMsg::OutgoingMsg(struct sctp_sendv_spa &info, const uint8_t *data,
                          size_t length)
@@ -322,12 +252,16 @@ DataChannelConnection::~DataChannelConnection()
   ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
-  MOZ_ASSERT(!mTransportFlow);
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
   if (!IsSTSThread()) {
     ASSERT_WEBRTC(NS_IsMainThread());
+    if (mTransportFlow) {
+      ASSERT_WEBRTC(mSTS);
+      NS_ProxyRelease(
+        "DataChannelConnection::mTransportFlow", mSTS, mTransportFlow.forget());
+    }
 
     if (mInternalIOThread) {
       // Avoid spinning the event thread from here (which if we're mainthread
@@ -392,19 +326,6 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
   LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
 
   disconnect_all();
-
-  // we may have queued packet sends on STS after this; dispatch to ourselves before finishing here
-  // so we can be sure there aren't anymore runnables active that can try to touch the flow.
-  // DON'T use RUN_ON_THREAD, it queue-jumps!
-  mSTS->Dispatch(WrapRunnable(RefPtr<DataChannelConnection>(this),
-                              &DataChannelConnection::DestroyOnSTSFinal),
-                 NS_DISPATCH_NORMAL);
-}
-
-void DataChannelConnection::DestroyOnSTSFinal()
-{
-  mTransportFlow = nullptr;
-  sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
 bool
@@ -463,8 +384,8 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aMa
 
       sctp_initialized = true;
 
-      sDataChannelShutdown = new DataChannelShutdown();
-      sDataChannelShutdown->Init();
+      RefPtr<DataChannelShutdown> shutdown = new DataChannelShutdown();
+      shutdown->Init();
     }
   }
 
