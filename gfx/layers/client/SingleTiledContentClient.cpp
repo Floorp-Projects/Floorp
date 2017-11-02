@@ -7,6 +7,7 @@
 #include "mozilla/layers/SingleTiledContentClient.h"
 
 #include "ClientTiledPaintedLayer.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace layers {
@@ -201,31 +202,32 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     if (!copyableRegion.IsEmpty()) {
       TextureClientAutoLock frontLock(discardedFrontBuffer,
                                       OpenMode::OPEN_READ);
-      if (frontLock.Succeeded()) {
+      Maybe<TextureClientAutoLock> frontOnWhiteLock;
+      if (discardedFrontBufferOnWhite && backBufferOnWhite) {
+        frontOnWhiteLock.emplace(discardedFrontBufferOnWhite, OpenMode::OPEN_READ);
+      }
+
+      // Copy to both backBuffer and backBufferOnWhite if required, or copy to neither.
+      if (frontLock.Succeeded() && (!frontOnWhiteLock || frontOnWhiteLock->Succeeded())) {
         for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
           const gfx::IntRect rect = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
           const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
           discardedFrontBuffer->CopyToTextureClient(backBuffer, &rect, &dest);
         }
 
-        if (discardedFrontBufferOnWhite && backBufferOnWhite) {
-          TextureClientAutoLock frontOnWhiteLock(discardedFrontBufferOnWhite,
-                                                OpenMode::OPEN_READ);
-          if (frontOnWhiteLock.Succeeded()) {
-            for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
-              const gfx::IntRect rect = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
-              const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
-
-              discardedFrontBufferOnWhite->CopyToTextureClient(backBufferOnWhite,
-                                                              &rect, &dest);
-            }
-
-            TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n", &mPaintedLayer, Stringify(copyableRegion).c_str());
-
-            // We don't need to repaint valid content that was just copied.
-            paintRegion.SubOut(copyableRegion);
+        if (frontOnWhiteLock) {
+          for (auto iter = copyableRegion.RectIter(); !iter.Done(); iter.Next()) {
+            const gfx::IntRect rect = iter.Get() - discardedValidRegion.GetBounds().TopLeft();
+            const gfx::IntPoint dest = iter.Get().TopLeft() - mTilingOrigin;
+            discardedFrontBufferOnWhite->CopyToTextureClient(backBufferOnWhite,
+                                                             &rect, &dest);
           }
         }
+
+        TILING_LOG("TILING %p: Region copied from discarded frontbuffer %s\n", &mPaintedLayer, Stringify(copyableRegion).c_str());
+
+        // We don't need to repaint valid content that was just copied.
+        paintRegion.SubOut(copyableRegion);
       }
     }
   }
