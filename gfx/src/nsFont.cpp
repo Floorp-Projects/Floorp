@@ -63,7 +63,8 @@ bool nsFont::Equals(const nsFont& aOther) const
       (variantWidth == aOther.variantWidth) &&
       (alternateValues == aOther.alternateValues) &&
       (featureValueLookup == aOther.featureValueLookup) &&
-      (smoothing == aOther.smoothing)) {
+      (smoothing == aOther.smoothing) &&
+      (fontSmoothingBackgroundColor == aOther.fontSmoothingBackgroundColor)) {
     return true;
   }
   return false;

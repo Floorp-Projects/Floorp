@@ -3064,7 +3064,7 @@ nsTreeBodyFrame::PaintRow(int32_t               aRowIndex,
   // Save the current font smoothing background color in case we change it.
   Color originalColor(aRenderingContext.GetFontSmoothingBackgroundColor());
   aRenderingContext.SetFontSmoothingBackgroundColor(
-    ToDeviceColor(rowContext->StyleUserInterface()->mFontSmoothingBackgroundColor));
+    ToDeviceColor(rowContext->StyleFont()->mFont.fontSmoothingBackgroundColor));
   if (theme && theme->ThemeSupportsWidget(aPresContext, nullptr, appearance)) {
     nsRect dirty;
     dirty.IntersectRect(rowRect, aDirtyRect);

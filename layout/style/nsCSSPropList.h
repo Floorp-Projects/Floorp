@@ -1953,7 +1953,7 @@ CSS_PROP_FONT(
     offsetof(nsStyleFont, mFont.sizeAdjust),
     eStyleAnimType_float)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_USERINTERFACE(
+CSS_PROP_FONT(
     -moz-font-smoothing-background-color,
     _moz_font_smoothing_background_color,
     CSS_PROP_DOMPROP_PREFIXED(FontSmoothingBackgroundColor),
@@ -1963,7 +1963,7 @@ CSS_PROP_USERINTERFACE(
     "",
     VARIANT_HC,
     nullptr,
-    offsetof(nsStyleUserInterface, mFontSmoothingBackgroundColor),
+    offsetof(nsStyleFont, mFont.fontSmoothingBackgroundColor),
     eStyleAnimType_Color)
 #endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(

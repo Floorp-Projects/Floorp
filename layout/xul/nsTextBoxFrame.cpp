@@ -527,7 +527,7 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
     ColorPattern color(ToDeviceColor(c));
     aRenderingContext.SetColor(Color::FromABGR(c));
     aRenderingContext.SetFontSmoothingBackgroundColor(
-        Color::FromABGR(StyleUserInterface()->mFontSmoothingBackgroundColor));
+        Color::FromABGR(StyleFont()->mFont.fontSmoothingBackgroundColor));
 
     nsresult rv = NS_ERROR_FAILURE;
 
