@@ -20,5 +20,6 @@
 
 <!ENTITY  aboutDevtools.enable.learnMoreLink "Learn more about DevTools">
 <!ENTITY  aboutDevtools.enable.installButton "Enable Developer Tools">
+<!ENTITY  aboutDevtools.enable.closeButton "Close this page">
 <!ENTITY  aboutDevtools.welcome.title "Welcome to Firefox Developer Tools!">
 <!ENTITY  aboutDevtools.welcome.message "You’ve successfully enabled DevTools! To get started, explore the Web Developer menu or open the tools with ##INSPECTOR_SHORTCUT##.">
