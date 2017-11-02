@@ -34,7 +34,7 @@ class GeneratorObject : public NativeObject
         RESERVED_SLOTS
     };
 
-    enum ResumeKind { NEXT, THROW, CLOSE };
+    enum ResumeKind { NEXT, THROW, RETURN };
 
     static const Class class_;
 
@@ -46,7 +46,7 @@ class GeneratorObject : public NativeObject
     static inline ResumeKind getResumeKind(jsbytecode* pc) {
         MOZ_ASSERT(*pc == JSOP_RESUME);
         unsigned arg = GET_UINT16(pc);
-        MOZ_ASSERT(arg <= CLOSE);
+        MOZ_ASSERT(arg <= RETURN);
         return static_cast<ResumeKind>(arg);
     }
 
@@ -55,8 +55,8 @@ class GeneratorObject : public NativeObject
             return NEXT;
         if (atom == cx->names().throw_)
             return THROW;
-        MOZ_ASSERT(atom == cx->names().close);
-        return CLOSE;
+        MOZ_ASSERT(atom == cx->names().return_);
+        return RETURN;
     }
 
     static JSObject* create(JSContext* cx, AbstractFramePtr frame);
@@ -211,8 +211,8 @@ class GeneratorObject : public NativeObject
     }
 };
 
-bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
-                           HandleValue val, uint32_t resumeKind);
+bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
+                            HandleValue val, uint32_t resumeKind);
 void SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool

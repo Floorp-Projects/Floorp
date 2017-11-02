@@ -9362,7 +9362,7 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
 bool
 BytecodeEmitter::emitSelfHostedResumeGenerator(ParseNode* pn)
 {
-    // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'close')
+    // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'return')
     if (pn->pn_count != 4) {
         reportError(pn, JSMSG_MORE_ARGS_NEEDED, "resumeGenerator", "1", "s");
         return false;

@@ -62,7 +62,7 @@ function GeneratorReturn(val) {
 
     try {
         var rval = { value: val, done: true };
-        return resumeGenerator(this, rval, "close");
+        return resumeGenerator(this, rval, "return");
     } catch (e) {
         if (!GeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -80,6 +80,6 @@ function InterpretGeneratorResume(gen, val, kind) {
        return resumeGenerator(gen, val, "next");
     if (kind === "throw")
        return resumeGenerator(gen, val, "throw");
-    assert(kind === "close", "Invalid resume kind");
-    return resumeGenerator(gen, val, "close");
+    assert(kind === "return", "Invalid resume kind");
+    return resumeGenerator(gen, val, "return");
 }
