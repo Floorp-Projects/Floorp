@@ -4043,15 +4043,12 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
   nsCOMPtr<nsIContent> rightNodeToJoin = &aRightNode;
   nsCOMPtr<nsINode> parentNode = aRightNode.GetParentNode();
 
-  nsCOMPtr<nsINode> resultNode = nullptr;
-  int32_t resultOffset = -1;
-
+  EditorDOMPoint ret;
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
          AreNodesSameType(leftNodeToJoin, rightNodeToJoin)) {
     uint32_t length = leftNodeToJoin->Length();
 
-    resultNode = rightNodeToJoin;
-    resultOffset = length;
+    ret.Set(rightNodeToJoin, length);
 
     // Do the join
     nsresult rv = JoinNodes(*leftNodeToJoin, *rightNodeToJoin);
@@ -4061,7 +4058,7 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
 
     if (parentNode->GetAsText()) {
       // We've joined all the way down to text nodes, we're done!
-      return EditorDOMPoint(resultNode, resultOffset);
+      return ret;
     }
 
     // Get new left and right nodes, and begin anew
@@ -4078,22 +4075,22 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
       leftNodeToJoin = leftNodeToJoin->GetPreviousSibling();
     }
     if (!leftNodeToJoin) {
-      return EditorDOMPoint(resultNode, resultOffset);
+      return ret;
     }
 
     while (rightNodeToJoin && !IsEditable(rightNodeToJoin)) {
       rightNodeToJoin = rightNodeToJoin->GetNextSibling();
     }
     if (!rightNodeToJoin) {
-      return EditorDOMPoint(resultNode, resultOffset);
+      return ret;
     }
   }
 
-  if (NS_WARN_IF(!resultNode)) {
+  if (NS_WARN_IF(!ret.IsSet())) {
     return EditorDOMPoint();
   }
 
-  return EditorDOMPoint(resultNode, resultOffset);
+  return ret;
 }
 
 void
