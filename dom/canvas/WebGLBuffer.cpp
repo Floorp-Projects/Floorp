@@ -59,7 +59,10 @@ WebGLBuffer::Delete()
 {
     mContext->MakeContextCurrent();
     mContext->gl->fDeleteBuffers(1, &mGLName);
+
     mByteLength = 0;
+    mFetchInvalidator.InvalidateCaches();
+
     mIndexCache = nullptr;
     mIndexRanges.clear();
     LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
@@ -138,8 +141,6 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
 
     const bool sizeChanges = (size != ByteLength());
     if (sizeChanges) {
-        mContext->InvalidateBufferFetching();
-
         gl::GLContext::LocalErrorScope errorScope(*gl);
         gl->fBufferData(target, size, uploadData, usage);
         const auto error = errorScope.GetError();
@@ -157,6 +158,7 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
 
     mUsage = usage;
     mByteLength = size;
+    mFetchInvalidator.InvalidateCaches();
     mIndexCache = Move(newIndexCache);
 
     if (mIndexCache) {
@@ -234,18 +236,18 @@ IndexByteSizeByType(GLenum type)
 }
 
 void
-WebGLBuffer::InvalidateCacheRange(size_t byteOffset, size_t byteLength) const
+WebGLBuffer::InvalidateCacheRange(uint64_t byteOffset, uint64_t byteLength) const
 {
     MOZ_ASSERT(mIndexCache);
 
     std::vector<IndexRange> invalids;
-    const size_t updateBegin = byteOffset;
-    const size_t updateEnd = updateBegin + byteLength;
+    const uint64_t updateBegin = byteOffset;
+    const uint64_t updateEnd = updateBegin + byteLength;
     for (const auto& cur : mIndexRanges) {
         const auto& range = cur.first;
         const auto& indexByteSize = IndexByteSizeByType(range.type);
-        const size_t rangeBegin = range.first * indexByteSize;
-        const size_t rangeEnd = rangeBegin + range.count*indexByteSize;
+        const auto rangeBegin = range.byteOffset * indexByteSize;
+        const auto rangeEnd = rangeBegin + uint64_t(range.indexCount) * indexByteSize;
         if (rangeBegin >= updateEnd || rangeEnd <= updateBegin)
             continue;
         invalids.push_back(range);
@@ -273,48 +275,47 @@ WebGLBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 template<typename T>
-static size_t
-MaxForRange(const void* data, size_t first, size_t count, const uint32_t ignoredVal)
+static Maybe<uint32_t>
+MaxForRange(const void* const start, const uint32_t count,
+            const Maybe<uint32_t>& untypedIgnoredVal)
 {
-    const T ignoredTVal(ignoredVal);
-    T ret = 0;
+    const Maybe<T> ignoredVal = (untypedIgnoredVal ? Some(T(untypedIgnoredVal.value()))
+                                                   : Nothing());
+    Maybe<uint32_t> maxVal;
 
-    auto itr = (const T*)data + first;
+    auto itr = (const T*)start;
     const auto end = itr + count;
 
     for (; itr != end; ++itr) {
         const auto& val = *itr;
-        if (val <= ret)
+        if (ignoredVal && val == ignoredVal.value())
             continue;
 
-        if (val == ignoredTVal)
+        if (maxVal && val <= maxVal.value())
             continue;
 
-        ret = val;
+        maxVal = Some(val);
     }
 
-    return size_t(ret);
+    return maxVal;
 }
 
-const uint32_t kMaxIndexRanges = 256;
+static const uint32_t kMaxIndexRanges = 256;
 
-bool
-WebGLBuffer::ValidateIndexedFetch(GLenum type, uint32_t numFetchable, size_t first,
-                                  size_t count) const
+Maybe<uint32_t>
+WebGLBuffer::GetIndexedFetchMaxVert(const GLenum type, const uint64_t byteOffset,
+                                    const uint32_t indexCount) const
 {
     if (!mIndexCache)
-        return true;
+        return Nothing();
 
-    if (!count)
-        return true;
-
-    const IndexRange range = { type, first, count };
-    auto res = mIndexRanges.insert({ range, size_t(0) });
+    const IndexRange range = { type, byteOffset, indexCount };
+    auto res = mIndexRanges.insert({ range, Nothing() });
     if (mIndexRanges.size() > kMaxIndexRanges) {
         mContext->GeneratePerfWarning("[%p] Clearing mIndexRanges after exceeding %u.",
                                       this, kMaxIndexRanges);
         mIndexRanges.clear();
-        res = mIndexRanges.insert({ range, size_t(0) });
+        res = mIndexRanges.insert({ range, Nothing() });
     }
 
     const auto& itr = res.first;
@@ -323,29 +324,37 @@ WebGLBuffer::ValidateIndexedFetch(GLenum type, uint32_t numFetchable, size_t fir
     auto& maxFetchIndex = itr->second;
     if (didInsert) {
         const auto& data = mIndexCache.get();
-        const uint32_t ignoreVal = (mContext->IsWebGL2() ? UINT32_MAX : 0);
+
+        const auto start = (const uint8_t*)data + byteOffset;
+
+        Maybe<uint32_t> ignoredVal;
+        if (mContext->IsWebGL2()) {
+            ignoredVal = Some(UINT32_MAX);
+        }
 
         switch (type) {
         case LOCAL_GL_UNSIGNED_BYTE:
-            maxFetchIndex = MaxForRange<uint8_t>(data, first, count, ignoreVal);
+            maxFetchIndex = MaxForRange<uint8_t>(start, indexCount, ignoredVal);
             break;
         case LOCAL_GL_UNSIGNED_SHORT:
-            maxFetchIndex = MaxForRange<uint16_t>(data, first, count, ignoreVal);
+            maxFetchIndex = MaxForRange<uint16_t>(start, indexCount, ignoredVal);
             break;
         case LOCAL_GL_UNSIGNED_INT:
-            maxFetchIndex = MaxForRange<uint32_t>(data, first, count, ignoreVal);
+            maxFetchIndex = MaxForRange<uint32_t>(start, indexCount, ignoredVal);
             break;
         default:
             MOZ_CRASH();
         }
-
-        mContext->GeneratePerfWarning("[%p] New range #%u: (0x%04x, %u, %u): %u", this,
-                                      uint32_t(mIndexRanges.size()), type,
-                                      uint32_t(first), uint32_t(count),
-                                      uint32_t(maxFetchIndex));
+        const auto displayMaxVertIndex = maxFetchIndex ? int64_t(maxFetchIndex.value())
+                                                       : -1;
+        mContext->GeneratePerfWarning("[%p] New range #%u: (0x%04x, %" PRIu64 ", %u):"
+                                      " %" PRIi64,
+                                      this, uint32_t(mIndexRanges.size()), range.type,
+                                      range.byteOffset, range.indexCount,
+                                      displayMaxVertIndex);
     }
 
-    return maxFetchIndex < numFetchable;
+    return maxFetchIndex;
 }
 
 ////
