@@ -286,7 +286,7 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
     // Force in data doc, since we already have a style rule
-    ParseStyleAttribute(stringValue, attrValue, true);
+    ParseStyleAttribute(stringValue, nullptr, attrValue, true);
     // Don't bother going through SetInlineStyleDeclaration; we don't
     // want to fire off mutation events or document notifications anyway
     bool oldValueSet;
