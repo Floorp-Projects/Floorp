@@ -183,7 +183,7 @@ PDFViaEMFPrintHelper::DrawPage(HDC aPrinterDC, unsigned int aPageIndex,
 }
 
 bool
-PDFViaEMFPrintHelper::DrawPageToFile(const wchar_t* aFilePath,
+PDFViaEMFPrintHelper::SavePageToFile(const wchar_t* aFilePath,
                                      unsigned int aPageIndex,
                                      int aPageWidth, int aPageHeight)
 {
