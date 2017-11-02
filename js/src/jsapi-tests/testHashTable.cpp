@@ -394,13 +394,12 @@ END_TEST(testHashMapLookupWithDefaultOOM)
 
 BEGIN_TEST(testHashTableMovableEnum)
 {
-    IntSet set;
     CHECK(set.init());
 
     // Exercise returning a hash table Enum object from a function.
 
     CHECK(set.put(1));
-    for (auto e = enumerateSet(set); !e.empty(); e.popFront())
+    for (auto e = enumerateSet(); !e.empty(); e.popFront())
         e.removeFront();
     CHECK(set.count() == 0);
 
@@ -426,7 +425,9 @@ BEGIN_TEST(testHashTableMovableEnum)
     return true;
 }
 
-IntSet::Enum enumerateSet(IntSet& set)
+IntSet set;
+
+IntSet::Enum enumerateSet()
 {
     return IntSet::Enum(set);
 }
