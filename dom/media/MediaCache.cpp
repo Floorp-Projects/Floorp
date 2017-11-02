@@ -1255,6 +1255,23 @@ MediaCache::Update()
       break;
     }
 
+    // Don't evict |destinationBlockIndex| if it is within [cur, end) otherwise
+    // a new channel will be opened to download this block again which is bad.
+    bool inCurrentCachedRange = false;
+    for (BlockOwner& owner : mIndex[destinationBlockIndex].mOwners) {
+      MediaCacheStream* stream = owner.mStream;
+      int64_t end = OffsetToBlockIndexUnchecked(
+        stream->GetCachedDataEndInternal(stream->mStreamOffset));
+      int64_t cur = OffsetToBlockIndexUnchecked(stream->mStreamOffset);
+      if (cur <= owner.mStreamBlock && owner.mStreamBlock < end) {
+        inCurrentCachedRange = true;
+        break;
+      }
+    }
+    if (inCurrentCachedRange) {
+      continue;
+    }
+
     if (IsBlockFree(destinationBlockIndex) ||
         PredictNextUse(now, destinationBlockIndex) > latestPredictedUseForOverflow) {
       // Reuse blocks in the main part of the cache that are less useful than
