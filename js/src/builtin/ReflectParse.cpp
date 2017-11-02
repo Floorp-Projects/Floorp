@@ -3427,7 +3427,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     RootedFunction func(cx, pn->pn_funbox->function());
 
     GeneratorStyle generatorStyle =
-        pn->pn_funbox->isStarGenerator()
+        pn->pn_funbox->isGenerator()
         ? GeneratorStyle::ES6
         : GeneratorStyle::None;
 
