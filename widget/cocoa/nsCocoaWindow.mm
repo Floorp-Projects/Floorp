@@ -888,8 +888,8 @@ nsCocoaWindow::Show(bool bState)
       if (nativeParentWindow && mPopupLevel == ePopupLevelParent) {
         [nativeParentWindow addChildWindow:mWindow
                             ordered:NSWindowAbove];
+        [mWindow setLevel:NSPopUpMenuWindowLevel];
       }
-      SetPopupWindowLevel();
     }
     else {
       NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1377,6 +1377,7 @@ nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   enumerator = [childWindows objectEnumerator];
   while ((child = [enumerator nextObject])) {
     [mWindow addChildWindow:child ordered:NSWindowAbove];
+    [mWindow setLevel:NSPopUpMenuWindowLevel];
   }
 
   // Show the new window.
@@ -2504,12 +2505,14 @@ void nsCocoaWindow::SetPopupWindowLevel()
   // deactivated.
   if (mPopupLevel == ePopupLevelFloating) {
     [mWindow setLevel:NSFloatingWindowLevel];
-  } else {
+    [mWindow setHidesOnDeactivate:YES];
+  }
+  else {
     // Otherwise, this is a top-level or parent popup. Parent popups always
     // appear just above their parent and essentially ignore the level.
     [mWindow setLevel:NSPopUpMenuWindowLevel];
+    [mWindow setHidesOnDeactivate:NO];
   }
-  [mWindow setHidesOnDeactivate:YES];
 }
 
 void
