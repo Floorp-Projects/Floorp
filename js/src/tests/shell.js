@@ -322,7 +322,6 @@
   }
   global.AddTestCase = AddTestCase;
 
-  var testCasesCounter = 0;
   var testCasesArray = [];
 
   function TestCase(d, e, a, r) {
@@ -331,20 +330,12 @@
     this.actual = a;
     this.passed = getTestCaseResult(e, a);
     this.reason = typeof r !== 'undefined' ? String(r) : '';
-    ObjectDefineProperty(
-      testCasesArray,
-      testCasesCounter++,
-      {
-        __proto__: null,
-        value: this,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      }
-    );
+
+    ArrayPush(testCasesArray, this);
   }
   global.TestCase = TestCase;
 
+  TestCase.prototype = ObjectCreate(null);
   TestCase.prototype.testPassed = (function TestCase_testPassed() { return this.passed; });
   TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
   TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
