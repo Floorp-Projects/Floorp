@@ -2595,6 +2595,7 @@ nsDisplayItem* nsDisplayList::RemoveBottom() {
   nsDisplayItem* item = mSentinel.mAbove;
   if (!item)
     return nullptr;
+  MOZ_DIAGNOSTIC_ASSERT(item->mSentinel == 0xDEADBEEFDEADBEEF);
   mSentinel.mAbove = item->mAbove;
   if (item == mTop) {
     // must have been the only item

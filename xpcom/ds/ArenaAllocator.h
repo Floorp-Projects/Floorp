@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <sstream>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/fallible.h"
@@ -131,6 +132,12 @@ public:
         return true;
       }
     }
+    std::stringstream log;
+    log << "Failed to find pointer " << aPtr << " within arena blocks: ";
+    for (ArenaChunk* arena = mHead.next; arena; arena = arena->next) {
+      log << "(" << reinterpret_cast<uintptr_t>(arena + 1) << ", " << arena->header.offset << "), ";
+    }
+    MOZ_CRASH_UNSAFE_OOL(log.str().c_str());
     return false;
   }
 #endif

@@ -12,11 +12,13 @@
 #include "mozilla/RefPtr.h"
 #include "nsPrintfCString.h"
 #include "WebGLActiveInfo.h"
+#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLUniformLocation.h"
 #include "WebGLValidateStrings.h"
+#include "WebGLVertexArray.h"
 
 namespace mozilla {
 
@@ -264,6 +266,10 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         const GLenum baseType = AttribBaseType(elemType);
         const webgl::AttribInfo attrib = {activeInfo, loc, baseType};
         info->attribs.push_back(attrib);
+
+        if (loc == 0) {
+            info->attrib0Active = true;
+        }
     }
 
     // Uniforms (can be basically anything)
@@ -443,6 +449,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog)
     , transformFeedbackBufferMode(prog->mNextLink_TransformFeedbackBufferMode)
+    , attrib0Active(false)
 { }
 
 webgl::LinkedProgramInfo::~LinkedProgramInfo()
@@ -453,6 +460,101 @@ webgl::LinkedProgramInfo::~LinkedProgramInfo()
     for (auto& cur : uniformBlocks) {
         delete cur;
     }
+}
+
+const webgl::CachedDrawFetchLimits*
+webgl::LinkedProgramInfo::GetDrawFetchLimits(const char* const funcName) const
+{
+    const auto& webgl = prog->mContext;
+    const auto& vao = webgl->mBoundVertexArray;
+
+    const auto found = mDrawFetchCache.Find(vao);
+    if (found)
+        return found;
+
+    std::vector<const CacheMapInvalidator*> cacheDeps;
+    cacheDeps.push_back(vao.get());
+    cacheDeps.push_back(&webgl->mGenericVertexAttribTypeInvalidator);
+
+    {
+        // We have to ensure that every enabled attrib array (not just the active ones)
+        // has a non-null buffer.
+        uint32_t i = 0;
+        for (const auto& cur : vao->mAttribs) {
+            if (cur.mEnabled && !cur.mBuf) {
+                webgl->ErrorInvalidOperation("%s: Vertex attrib array %u is enabled but"
+                                             " has no buffer bound.",
+                                             funcName, i);
+                return nullptr;
+            }
+        }
+    }
+
+    bool hasActiveAttrib = false;
+    bool hasActiveDivisor0 = false;
+    webgl::CachedDrawFetchLimits fetchLimits = { UINT64_MAX, UINT64_MAX };
+
+    for (const auto& progAttrib : this->attribs) {
+        const auto& loc = progAttrib.mLoc;
+        if (loc == -1)
+            continue;
+        hasActiveAttrib |= true;
+
+        const auto& attribData = vao->mAttribs[loc];
+        hasActiveDivisor0 |= (attribData.mDivisor == 0);
+
+        GLenum attribDataBaseType;
+        if (attribData.mEnabled) {
+            MOZ_ASSERT(attribData.mBuf);
+            if (attribData.mBuf->IsBoundForTF()) {
+                webgl->ErrorInvalidOperation("%s: Vertex attrib %u's buffer is bound for"
+                                             " transform feedback.",
+                                              funcName, loc);
+                return nullptr;
+            }
+            cacheDeps.push_back(&attribData.mBuf->mFetchInvalidator);
+
+            attribDataBaseType = attribData.BaseType();
+
+            const size_t availBytes = attribData.mBuf->ByteLength();
+            const auto availElems = AvailGroups(availBytes, attribData.ByteOffset(),
+                                                attribData.BytesPerVertex(),
+                                                attribData.ExplicitStride());
+            if (attribData.mDivisor) {
+                const auto availInstances = CheckedInt<uint64_t>(availElems) * attribData.mDivisor;
+                if (availInstances.isValid()) {
+                    fetchLimits.maxInstances = std::min(fetchLimits.maxInstances,
+                                                        availInstances.value());
+                } // If not valid, it overflowed too large, so we're super safe.
+            } else {
+                fetchLimits.maxVerts = std::min(fetchLimits.maxVerts, availElems);
+            }
+        } else {
+            attribDataBaseType = webgl->mGenericVertexAttribTypes[loc];
+        }
+
+        if (attribDataBaseType != progAttrib.mBaseType) {
+            nsCString progType, dataType;
+            WebGLContext::EnumName(progAttrib.mBaseType, &progType);
+            WebGLContext::EnumName(attribDataBaseType, &dataType);
+            webgl->ErrorInvalidOperation("%s: Vertex attrib %u requires data of type %s,"
+                                         " but is being supplied with type %s.",
+                                         funcName, loc, progType.BeginReading(),
+                                         dataType.BeginReading());
+            return nullptr;
+        }
+    }
+
+    if (hasActiveAttrib && !hasActiveDivisor0) {
+        webgl->ErrorInvalidOperation("%s: One active vertex attrib (if any are active)"
+                                     " must have a divisor of 0.",
+                                     funcName);
+        return nullptr;
+    }
+
+    // --
+
+    return mDrawFetchCache.Insert(vao.get(), Move(fetchLimits), Move(cacheDeps));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1069,7 +1171,6 @@ WebGLProgram::LinkProgram()
     }
 
     mContext->MakeContextCurrent();
-    mContext->InvalidateBufferFetching(); // we do it early in this function
     // as some of the validation changes program state
 
     mLinkLog.Truncate();
@@ -1364,8 +1465,6 @@ WebGLProgram::UseProgram() const
     }
 
     mContext->MakeContextCurrent();
-
-    mContext->InvalidateBufferFetching();
 
     mContext->gl->fUseProgram(mGLName);
     return true;

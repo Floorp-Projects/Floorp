@@ -169,7 +169,7 @@ public:
                                     nsAtom*        aAttribute,
                                     int32_t         aModType) override;
 
-  nsresult GetText(nsString& aText);
+  void GetText(nsString& aText);
 
   virtual nsresult PeekOffset(nsPeekOffsetStruct *aPos) override;
 
