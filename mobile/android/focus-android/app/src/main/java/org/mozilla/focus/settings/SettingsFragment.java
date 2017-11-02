@@ -16,8 +16,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuInflater;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
@@ -31,10 +29,9 @@ import org.mozilla.focus.widget.DefaultBrowserPreference;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static final String FRAGMENT_CLASS_INTENT_EXTRA = "extra_fragment_class";
     public static final String PREFERENCES_RESID_INTENT_EXTRA = "extra_preferences_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
-    public static final String MENU_RESID_INTENT_EXTRA = "extra_menu_resid";
-    public static final String ACTIONBAR_ICON_INTENT_EXTRA = "extra_actionbar_icon_resid";
 
     public static final int EXTRA_VALUE_NONE = -1;
 
@@ -49,7 +46,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         // We've checked that this cast is legal in onAttach.
         final ActionBarUpdater updater = (ActionBarUpdater) getActivity();
 
@@ -60,12 +56,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (args != null) {
             prefResId = args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings);
             titleResId = args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings);
-
-            setHasOptionsMenu(args.containsKey(MENU_RESID_INTENT_EXTRA));
-
-            if (args.containsKey(ACTIONBAR_ICON_INTENT_EXTRA)) {
-                updater.updateIcon(args.getInt(ACTIONBAR_ICON_INTENT_EXTRA));
-            }
         }
 
         updater.updateTitle(titleResId);
@@ -78,12 +68,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (!(getActivity() instanceof ActionBarUpdater)) {
             throw new IllegalArgumentException("Parent activity must implement ActionBarUpdater");
         }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        final Bundle args = getArguments();
-        inflater.inflate(args.getInt(MENU_RESID_INTENT_EXTRA), menu);
     }
 
     @Override
@@ -111,11 +95,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
                     R.string.preference_search_installed_search_engines);
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
-            final Intent intent = getSettingsIntent(getActivity(),
+            final Intent intent = getSettingsIntent(getActivity(), ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE,
                     R.xml.manual_add_search_engine,
-                    R.string.tutorial_search_title,
-                    R.drawable.ic_close,
-                    R.menu.menu_search_engine_manual_add);
+                    R.string.tutorial_search_title);
             startActivity(intent);
         }
 
@@ -123,18 +105,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     private static Intent getSettingsIntent(Context context, int prefsResId, int titleResId) {
-        return getSettingsIntent(context, prefsResId, titleResId, EXTRA_VALUE_NONE, EXTRA_VALUE_NONE);
+        return getSettingsIntent(context, EXTRA_VALUE_NONE, prefsResId, titleResId);
     }
 
-    private static Intent getSettingsIntent(Context context, int prefsResId, int titleResId, int actionbarIconResId, int menuResId) {
+    private static Intent getSettingsIntent(Context context, int fragmentClassType, int prefsResId, int titleResId) {
         final Intent intent = new Intent(context, SettingsActivity.class);
         intent.putExtra(PREFERENCES_RESID_INTENT_EXTRA, prefsResId);
         intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
-        if (actionbarIconResId != EXTRA_VALUE_NONE) {
-            intent.putExtra(ACTIONBAR_ICON_INTENT_EXTRA, actionbarIconResId);
-        }
-        if (menuResId != EXTRA_VALUE_NONE) {
-            intent.putExtra(MENU_RESID_INTENT_EXTRA, menuResId);
+
+        if (fragmentClassType != EXTRA_VALUE_NONE) {
+            intent.putExtra(FRAGMENT_CLASS_INTENT_EXTRA, fragmentClassType);
         }
         return intent;
     }

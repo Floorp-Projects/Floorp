@@ -13,6 +13,7 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
+import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment;
 import org.mozilla.focus.settings.SettingsFragment;
 
 public class SettingsActivity extends LocaleAwareAppCompatActivity implements SettingsFragment.ActionBarUpdater {
@@ -39,7 +40,19 @@ public class SettingsActivity extends LocaleAwareAppCompatActivity implements Se
             }
         });
 
-        final PreferenceFragment fragment = new SettingsFragment();
+        final Bundle extras = getIntent().getExtras();
+        final PreferenceFragment fragment;
+        if (extras != null && extras.containsKey(SettingsFragment.FRAGMENT_CLASS_INTENT_EXTRA)) {
+            switch (extras.getInt(SettingsFragment.FRAGMENT_CLASS_INTENT_EXTRA)) {
+                case ManualAddSearchEngineSettingsFragment.FRAGMENT_CLASS_TYPE:
+                    fragment = new ManualAddSearchEngineSettingsFragment();
+                    break;
+                default:
+                    fragment = new SettingsFragment();
+            }
+        } else {
+            fragment = new SettingsFragment();
+        }
         fragment.setArguments(getIntent().getExtras());
 
         getFragmentManager().beginTransaction()
