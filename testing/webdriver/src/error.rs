@@ -201,7 +201,7 @@ impl ErrorStatus {
             NoSuchWindow => NotFound,
             ScriptTimeout => RequestTimeout,
             SessionNotCreated => InternalServerError,
-            StaleElementReference => BadRequest,
+            StaleElementReference => NotFound,
             Timeout => RequestTimeout,
             UnableToCaptureScreen => BadRequest,
             UnableToSetCookie => InternalServerError,
