@@ -11,7 +11,14 @@ graph_config_schema = Schema({
     Required('treeherder'): {
         # Mapping of treeherder group symbols to descriptive names
         Required('group-names'): {basestring: basestring}
-    }
+    },
+    Required('try'): {
+        # We have a few platforms for which we want to do some "extra" builds, or at
+        # least build-ish things.  Sort of.  Anyway, these other things are implemented
+        # as different "platforms".  These do *not* automatically ride along with "-p
+        # all"
+        Required('ridealong-builds', default={}): {basestring: [basestring]},
+    },
 })
 
 
