@@ -31,7 +31,7 @@ import org.mozilla.focus.widget.DefaultBrowserPreference;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String FRAGMENT_RESID_INTENT_EXTRA = "extra_frament_resid";
+    public static final String PREFERENCES_RESID_INTENT_EXTRA = "extra_preferences_resid";
     public static final String TITLE_RESID_INTENT_EXTRA = "extra_title_resid";
     public static final String MENU_RESID_INTENT_EXTRA = "extra_menu_resid";
     public static final String ACTIONBAR_ICON_INTENT_EXTRA = "extra_actionbar_icon_resid";
@@ -58,7 +58,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         int titleResId = R.string.menu_settings;
 
         if (args != null) {
-            prefResId = args.getInt(FRAGMENT_RESID_INTENT_EXTRA, R.xml.settings);
+            prefResId = args.getInt(PREFERENCES_RESID_INTENT_EXTRA, R.xml.settings);
             titleResId = args.getInt(TITLE_RESID_INTENT_EXTRA, R.string.menu_settings);
 
             setHasOptionsMenu(args.containsKey(MENU_RESID_INTENT_EXTRA));
@@ -107,7 +107,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
             final Intent intent = getSettingsIntent(getActivity(),
-                    AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual: R.xml.search_engine_settings,
+                    AppConstants.FLAG_MANUAL_SEARCH_ENGINE ? R.xml.search_engine_settings_featureflag_manual : R.xml.search_engine_settings,
                     R.string.preference_search_installed_search_engines);
             startActivity(intent);
         } else if (preference.getKey().equals(resources.getString(R.string.pref_key_manual_add_search_engine))) {
@@ -122,13 +122,13 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
-    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId) {
-        return getSettingsIntent(context, fragmentResId, titleResId, EXTRA_VALUE_NONE, EXTRA_VALUE_NONE);
+    private static Intent getSettingsIntent(Context context, int prefsResId, int titleResId) {
+        return getSettingsIntent(context, prefsResId, titleResId, EXTRA_VALUE_NONE, EXTRA_VALUE_NONE);
     }
 
-    private static Intent getSettingsIntent(Context context, int fragmentResId, int titleResId, int actionbarIconResId, int menuResId) {
+    private static Intent getSettingsIntent(Context context, int prefsResId, int titleResId, int actionbarIconResId, int menuResId) {
         final Intent intent = new Intent(context, SettingsActivity.class);
-        intent.putExtra(FRAGMENT_RESID_INTENT_EXTRA, fragmentResId);
+        intent.putExtra(PREFERENCES_RESID_INTENT_EXTRA, prefsResId);
         intent.putExtra(TITLE_RESID_INTENT_EXTRA, titleResId);
         if (actionbarIconResId != EXTRA_VALUE_NONE) {
             intent.putExtra(ACTIONBAR_ICON_INTENT_EXTRA, actionbarIconResId);
