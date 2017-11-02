@@ -65,6 +65,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
+using mozilla::dom::SystemFontListEntry;
 
 #if (MOZ_WIDGET_GTK == 2)
 static cairo_user_data_key_t cairo_gdk_drawable_key;
@@ -247,6 +248,13 @@ gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
         aFontList.AppendElement(kFontWenQuanYiMicroHei);
         aFontList.AppendElement(kFontNanumGothic);
     }
+}
+
+void
+gfxPlatformGtk::ReadSystemFontList(
+    InfallibleTArray<SystemFontListEntry>* retValue)
+{
+    gfxFcPlatformFontList::PlatformFontList()->ReadSystemFontList(retValue);
 }
 
 gfxPlatformFontList*

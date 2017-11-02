@@ -442,6 +442,8 @@ child:
 
     async UpdateDictionaryList(nsString[] dictionaries);
 
+    async UpdateFontList(SystemFontListEntry[] fontList);
+
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
@@ -489,7 +491,7 @@ child:
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,
                                     LookAndFeelInt[] lookAndFeelIntCache,
-                                    /* used on MacOSX only: */
+                                    /* used on MacOSX and Linux only: */
                                     SystemFontListEntry[] systemFontList);
 
     // Notify child that last-pb-context-exited notification was observed
