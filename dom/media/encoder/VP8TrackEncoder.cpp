@@ -56,8 +56,9 @@ GetSourceSurface(already_AddRefed<Image> aImg)
   return surf.forget();
 }
 
-VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate)
-  : VideoTrackEncoder(aTrackRate)
+VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate,
+                                 FrameDroppingMode aFrameDroppingMode)
+  : VideoTrackEncoder(aTrackRate, aFrameDroppingMode)
   , mEncodedTimestamp(0)
   , mVPXContext(new vpx_codec_ctx_t())
   , mVPXImageWrapper(new vpx_image_t())
@@ -576,6 +577,10 @@ VP8TrackEncoder::EncodeOperation
 VP8TrackEncoder::GetNextEncodeOperation(TimeDuration aTimeElapsed,
                                         StreamTime aProcessedDuration)
 {
+  if (mFrameDroppingMode == FrameDroppingMode::DISALLOW) {
+    return ENCODE_NORMAL_FRAME;
+  }
+
   int64_t durationInUsec =
     FramesToUsecs(aProcessedDuration, mTrackRate).value();
   if (aTimeElapsed.ToMicroseconds() > (durationInUsec * SKIP_FRAME_RATIO)) {

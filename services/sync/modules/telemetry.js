@@ -699,10 +699,6 @@ class SyncTelemetryImpl {
       return { name: "autherror", from: error.source };
     }
 
-    if (error instanceof Ci.mozIStorageError) {
-      return { name: "sqlerror", code: error.result };
-    }
-
     let httpCode = error.status ||
       (error.response && error.response.status) ||
       error.code;

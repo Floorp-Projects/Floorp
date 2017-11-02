@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, PropTypes } = require("devtools/client/shared/vendor/react");
 const {
   L10N,
   getSnapshotTitle,
@@ -16,17 +16,17 @@ const {
 const { diffingState } = require("../constants");
 const { snapshot: snapshotModel, app: appModel } = require("../models");
 
-module.exports = createClass({
-  displayName: "SnapshotListItem",
-
-  propTypes: {
-    onClick: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
-    onDelete: PropTypes.func.isRequired,
-    item: snapshotModel.isRequired,
-    index: PropTypes.number.isRequired,
-    diffing: appModel.diffing,
-  },
+class SnapshotListItem extends Component {
+  static get propTypes() {
+    return {
+      onClick: PropTypes.func.isRequired,
+      onSave: PropTypes.func.isRequired,
+      onDelete: PropTypes.func.isRequired,
+      item: snapshotModel.isRequired,
+      index: PropTypes.number.isRequired,
+      diffing: appModel.diffing,
+    };
+  }
 
   render() {
     let { item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
@@ -112,4 +112,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = SnapshotListItem;

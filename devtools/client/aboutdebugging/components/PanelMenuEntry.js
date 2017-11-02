@@ -4,23 +4,28 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
-module.exports = createClass({
-  displayName: "PanelMenuEntry",
+class PanelMenuEntry extends Component {
+  static get propTypes() {
+    return {
+      icon: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      selected: PropTypes.bool,
+      selectPanel: PropTypes.func.isRequired
+    };
+  }
 
-  propTypes: {
-    icon: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    selected: PropTypes.bool,
-    selectPanel: PropTypes.func.isRequired
-  },
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+  }
 
   onClick() {
     this.props.selectPanel(this.props.id);
-  },
+  }
 
   render() {
     let { id, name, icon, selected } = this.props;
@@ -38,4 +43,6 @@ module.exports = createClass({
     dom.img({ className: "category-icon", src: icon, role: "presentation" }),
     dom.div({ className: "category-name" }, name));
   }
-});
+}
+
+module.exports = PanelMenuEntry;

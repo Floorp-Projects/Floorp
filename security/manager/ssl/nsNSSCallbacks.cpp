@@ -35,6 +35,7 @@
 #include "sslproto.h"
 
 using namespace mozilla;
+using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
 extern LazyLogModule gPIPNSSLog;

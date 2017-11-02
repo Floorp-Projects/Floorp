@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { debugAddon, isTemporaryID, parseFileUri, uninstallAddon } =
   require("../../modules/addon");
@@ -122,32 +122,39 @@ function warningMessages(warnings = []) {
   });
 }
 
-module.exports = createClass({
-  displayName: "AddonTarget",
+class AddonTarget extends Component {
+  static get propTypes() {
+    return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      debugDisabled: PropTypes.bool,
+      target: PropTypes.shape({
+        addonActor: PropTypes.string.isRequired,
+        addonID: PropTypes.string.isRequired,
+        icon: PropTypes.string,
+        name: PropTypes.string.isRequired,
+        temporarilyInstalled: PropTypes.bool,
+        url: PropTypes.string,
+        warnings: PropTypes.array,
+      }).isRequired
+    };
+  }
 
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    debugDisabled: PropTypes.bool,
-    target: PropTypes.shape({
-      addonActor: PropTypes.string.isRequired,
-      addonID: PropTypes.string.isRequired,
-      icon: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      temporarilyInstalled: PropTypes.bool,
-      url: PropTypes.string,
-      warnings: PropTypes.array,
-    }).isRequired
-  },
+  constructor(props) {
+    super(props);
+    this.debug = this.debug.bind(this);
+    this.uninstall = this.uninstall.bind(this);
+    this.reload = this.reload.bind(this);
+  }
 
   debug() {
     let { target } = this.props;
     debugAddon(target.addonID);
-  },
+  }
 
   uninstall() {
     let { target } = this.props;
     uninstallAddon(target.addonID);
-  },
+  }
 
   reload() {
     let { client, target } = this.props;
@@ -160,7 +167,7 @@ module.exports = createClass({
       throw new Error(
         "Error reloading addon " + target.addonID + ": " + error);
     });
-  },
+  }
 
   render() {
     let { target, debugDisabled } = this.props;
@@ -205,4 +212,6 @@ module.exports = createClass({
       ),
     );
   }
-});
+}
+
+module.exports = AddonTarget;
