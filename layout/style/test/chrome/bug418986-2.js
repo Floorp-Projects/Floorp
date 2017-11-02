@@ -51,6 +51,10 @@ var suppressed_toggles = [
   "-moz-windows-compositor",
   "-moz-windows-default-theme",
   "-moz-windows-glass",
+  "-moz-gtk-csd-available",
+  "-moz-gtk-csd-minimize-button",
+  "-moz-gtk-csd-maximize-button",
+  "-moz-gtk-csd-close-button",
 ];
 
 var toggles_enabled_in_content = [
