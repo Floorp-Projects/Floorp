@@ -4,6 +4,7 @@
 
 import json
 import socket
+import sys
 import time
 
 
@@ -231,10 +232,17 @@ class TcpTransport(object):
             self.sock = None
             raise
 
-        with SocketTimeout(self.sock, 60.0):
-            # first packet is always a JSON Object
-            # which we can use to tell which protocol level we are at
-            raw = self.receive(unmarshal=False)
+        try:
+            with SocketTimeout(self.sock, 60.0):
+                # first packet is always a JSON Object
+                # which we can use to tell which protocol level we are at
+                raw = self.receive(unmarshal=False)
+        except socket.timeout:
+            msg = "Connection attempt failed because no data has been received over the socket: {}"
+            exc, val, tb = sys.exc_info()
+
+            raise exc, msg.format(val), tb
+
         hello = json.loads(raw)
         self.protocol = hello.get("marionetteProtocol", 1)
         self.application_type = hello.get("applicationType")
