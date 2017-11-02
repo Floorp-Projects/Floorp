@@ -3263,7 +3263,7 @@ class ValueObserver final
   : public nsIObserver
   , public ValueObserverHashKey
 {
-  ~ValueObserver() { Preferences::RemoveObserver(this, mPrefName.get()); }
+  ~ValueObserver() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -4993,9 +4993,10 @@ Preferences::RegisterCallback(PrefChangedFunc aCallback,
 
   observer = new ValueObserver(aPref, aCallback, aMatchKind);
   observer->AppendClosure(aClosure);
-  nsresult rv = AddStrongObserver(observer, aPref);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  PREF_RegisterCallback(aPref,
+                        NotifyObserver,
+                        static_cast<nsIObserver*>(observer),
+                        /* isPriority */ false);
   gObserverTable->Put(observer, observer);
   return NS_OK;
 }
@@ -5037,6 +5038,9 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   observer->RemoveClosure(aClosure);
   if (observer->HasNoClosures()) {
     // Delete the callback since its list of closures is empty.
+    MOZ_ALWAYS_SUCCEEDS(
+      PREF_UnregisterCallback(aPref, NotifyObserver, observer));
+
     gObserverTable->Remove(observer);
   }
   return NS_OK;
