@@ -155,6 +155,36 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
   return nullptr;
 }
 
+// https://dom.spec.whatwg.org/#dom-slotable-assignedslot
+HTMLSlotElement*
+nsIContent::GetAssignedSlotByMode() const
+{
+  /**
+   * Get slotable's assigned slot for the result of
+   * find a slot with open flag UNSET [1].
+   *
+   * [1] https://dom.spec.whatwg.org/#assign-a-slot
+   */
+  HTMLSlotElement* slot = GetAssignedSlot();
+  if (!slot) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(GetParent());
+  MOZ_ASSERT(GetParent()->GetShadowRoot());
+
+  /**
+   * Additional check for open flag SET:
+   *   If slotable’s parent’s shadow root's mode is not "open",
+   *   then return null.
+   */
+  if (GetParent()->GetShadowRoot()->IsClosed()) {
+    return nullptr;
+  }
+
+  return slot;
+}
+
 nsINode*
 nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
 {
