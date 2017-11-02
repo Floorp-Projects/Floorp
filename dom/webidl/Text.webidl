@@ -19,7 +19,7 @@ interface Text : CharacterData {
 };
 
 partial interface Text {
-  [Pref="dom.webcomponents.enabled"]
+  [BinaryName="assignedSlotByMode", Pref="dom.webcomponents.enabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
 };
 
