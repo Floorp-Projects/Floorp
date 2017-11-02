@@ -144,6 +144,7 @@ PlatformThread::~PlatformThread() {
 bool PlatformUIThread::InternalInit() {
   // Create an event window for use in generating callbacks to capture
   // objects.
+  CritScope scoped_lock(&cs_);
   if (hwnd_ == NULL) {
     WNDCLASSW wc;
     HMODULE hModule = GetModuleHandle(NULL);
@@ -175,8 +176,13 @@ void PlatformUIThread::RequestCallback() {
 }
 
 bool PlatformUIThread::RequestCallbackTimer(unsigned int milliseconds) {
+  CritScope scoped_lock(&cs_);
   if (!hwnd_) {
-    RTC_DCHECK(!thread_);
+    // There is a condition that thread_ (PlatformUIThread) has been
+    // created but PlatformUIThread::Run() hasn't been run yet (hwnd_ is
+    // null while thread_ is not). If we do RTC_DCHECK(!thread_) here,
+    // it would lead to crash in this condition.
+
     // set timer once thread starts
   } else {
     if (timerid_) {
