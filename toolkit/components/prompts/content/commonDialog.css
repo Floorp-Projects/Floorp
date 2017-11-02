@@ -8,7 +8,7 @@
   max-width: 45em;
 }
 
-#info\.body {
+#infoBody {
   -moz-user-focus: normal;
   -moz-user-select: text;
   cursor: text !important;
