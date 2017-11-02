@@ -3,23 +3,58 @@
   <string name="action_cancel">B-láɁ=y</string>
   <string name="action_ok">ăɁ</string>
   <string name="urlbar_hint">KwàɁn kó wiɁ</string>
+  <string name="teaser">Wí lút tá. KwàɁn. Tedónt. Bí-ré.</string>
+  <string name="feedback_erase">Mté dont na ré ko wíl.</string>
+  <string name="search_hint">KwàɁn lô %1$s</string>
   <string name="menu_share">Tă~làz...</string>
   <string name="menu_open_with_default_browser">Mb-šàlɁ-lá lenɁ %1$s</string>
   <string name="menu_open_with_a_browser">Mb-šàlɁ-lá lenɁ...</string>
   <string name="menu_add_to_home_screen">M-tòb lô yíʔb</string>
+  <string name="menu_whats_new">Ko kùb</string>
   <string name="menu_settings">Thús kùey</string>
   <string name="menu_about">Chò nàk ná</string>
   <string name="menu_help">Lì ché</string>
+  <string name="menu_rights">Ko nákin niél</string>
+  <string name="menu_trackers_blocked_title">TòɁw-ná lô men dè-kè</string>
   <string name="share_dialog_title">Tă~làz leɁn</string>
+  <string name="notification_erase_text">Tób bí lô góš</string>
   <string name="notification_action_open">Mb-šàlɁ lá</string>
+  <string name="notification_action_erase_and_open">Tòb bí ner mb-šàlɁ</string>
+  <string name="shortcut_erase_short_label">Tòb bì</string>
+  <string name="shortcut_erase_long_label">Tób bí lô góš</string>
   <string name="preference_category_search">KwàɁn</string>
   <string name="preference_search_engine_default">b-šèn=ná</string>
   <string name="preference_language">Dizh</string>
+  <string name="preference_privacy_block_ads">TòɁw-ná lô men dè-kè</string>
+  <string name="preference_privacy_block_analytics">TòɁw-ná lô men dè-kè</string>
+  <string name="preference_privacy_block_social">TòɁw-ná lô men dè-kè</string>
+  <string name="preference_privacy_block_content">TòɁw-ná lô men dè-kè</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Lab kùe</string>
   <string name="preference_about">Cho nak kùe %1$s</string>
+  <string name="preference_search_installed_search_engines">Tob yìb kwàɁn</string>
+  <string name="preference_search_restore">bí~rè sá nák ahɁ</string>
+  <string name="preference_search_add2">M-tòb tá thîb yìb kwàɁn</string>
+  <string name="preference_search_remove_title">Kìb yíb kúan</string>
+  <string name="preference_search_remove">Kíb</string>
+  <string name="tutorial_search_title">M-tòb yíʔb-kwàɁn</string>
+  <string name="action_option_add_search_engine">M-tòb yíʔb-kwàɁn</string>
+  <string name="tutorial_search_step3_alternative">3. Tap %1$s</string>
+  <string name="search_add_manually_name">Sá lé kùe</string>
+  <string name="search_add_manually_name_hint">KwàɁn sá lé yíʔb-kwàɁn</string>
+  <string name="search_add_manually_string">KwàɁn nêt lí chèl</string>
+  <string name="search_add_manually_save">Mb-lòɁ sóg</string>
+  <string name="search_add_manually_example">Wí: lemen.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">M-tòb yíʔb-kwàɁn</string>
+  <string name="search_add_confirmation">Dób lá yíʔb-kwàɁn.</string>
   <string name="content_description_clear_input">Tòmbî tòlô</string>
   <string name="content_description_dismiss_input">B-láɁ=y</string>
+  <string name="content_description_erase">Tób bí lô góš</string>
+  <string name="content_description_tab_counter">Lô nó-šàlɁ: %1$s</string>
+  <string name="content_description_open_tab">Mb-šàlɁ lô (lawo)</string>
+  <string name="content_description_close_tab">TòɁw lô (lawo)</string>
+  <string name="accessibility_announcement_loading_finished">Lô nó-šàlɁ</string>
+  <string name="content_description_blocking_switch">TòɁw-ná lô men dè-kè</string>
   <string name="context_menu_paste_go">Lì chopa ner gúa</string>
   <string name="your_rights">Ko nákin niél</string>
   <string name="external_app_prompt_title">Mb-šàlɁ nêt (n̆eza) lenɁ tá thîb app</string>
@@ -38,6 +73,7 @@
   <string name="contextmenu_image_share">Tă~làz xá nie mbòl</string>
   <string name="contextmenu_image_copy">Lí chop nêt (n̆eza) nà mòn</string>
   <string name="contextmenu_image_save">Mb-lòɁ sóg lô mòn</string>
+  <string name="contextmenu_open_in_new_tab">Mb-šàlɁ lô (lawo) kúb</string>
   <string name="firstrun_close_button">ăɁ, gùa!</string>
   <string name="firstrun_skip_button">B-láɁ=y</string>
   <string name="firstrun_next_button">Tá thîb vá</string>
@@ -45,4 +81,8 @@
   <string name="dialog_addtohomescreen_title">M-tòb lô yíʔb</string>
   <string name="dialog_addtohomescreen_action_add">M-tòb</string>
   <string name="dialog_addtohomescreen_action_cancel">B-láɁ=y</string>
+  <string name="dialog_opentab_title">Mb-šàlɁ lô (lawo) kúb lenɁ tré</string>
+  <string name="dialog_opentab_action_open">Mb-šàlɁ lá</string>
+  <string name="tabs_tray_action_erase">Tób bí lô góš</string>
+  <string name="download_firefox">B-là Firefox</string>
 </resources>

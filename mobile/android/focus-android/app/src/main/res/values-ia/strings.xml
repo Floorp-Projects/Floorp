@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Cancellar</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Insere un adresse o face un recerca</string>
+  <string name="teaser">Navigation private automatic.\nNaviga. Elimina. Repete.</string>
+  <string name="feedback_erase">Tu chronologia de navigation ha essite eliminate.</string>
+  <string name="search_hint">Cercar %1$s</string>
+  <string name="menu_share">Compartir…</string>
+  <string name="menu_open_with_default_browser">Aperir con %1$s</string>
+  <string name="menu_open_with_a_browser">Aperir con…</string>
+  <string name="menu_add_to_home_screen">Adder al pagina initial</string>
+  <string name="menu_whats_new">Novitates</string>
+  <string name="menu_settings">Parametros</string>
+  <string name="menu_about">A proposito</string>
+  <string name="menu_help">Adjuta</string>
+  <string name="menu_rights">Tu derectos</string>
+  <string name="menu_trackers_blocked_title">Traciatores blocate</string>
+  <string name="share_dialog_title">Compartir con</string>
+  <string name="notification_erase_text">Eliminar le chronologia de navigation</string>
+  <string name="notification_action_open">Aperir</string>
+  <string name="notification_action_erase_and_open">Eliminar e aperir</string>
+  <string name="shortcut_erase_short_label">Eliminar</string>
+  <string name="shortcut_erase_long_label">Eliminar le chronologia de navigation</string>
+  <string name="text_selection_search_action">Cercar privatemente</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Usante %1$s, tu es al commando.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usa lo como un navigator private&#160;:\n  "<ul>"\n    "<li>Cerca e naviga directemente in le application</li>"\n    "<li>Bloca le traciatores (o actualisa le parametros pro permitter traciatores)</li>"\n    "<li>" &#8220;Eliminar&#8221; pro deler le cookies e tamben le chronologia de recercas e de navigation"</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producite per Mozilla. Nostre mission es promover un Internet san e aperite.<br/>\n<a href="%2$s">Saper plus</a></p>]]></string>
+  <string name="preference_category_search">Cercar</string>
+  <string name="preference_search_engine_default">Predefinite</string>
+  <string name="preference_language">Lingua</string>
+  <string name="preference_language_systemdefault">Valor predefinite per le systema</string>
+  <string name="preference_dialog_title_search_engine">Motor de recerca predefinite</string>
+  <string name="preference_category_privacy">Confidentialitate</string>
+  <string name="preference_privacy_block_ads">Blocar le traciatores de publicitate</string>
+  <string name="preference_privacy_block_analytics">Blocar le traciatores analytic</string>
+  <string name="preference_privacy_block_social">Blocar le traciatores social</string>
+  <string name="preference_privacy_block_content">Blocar le altere traciatores de contento</string>
+  <string name="preference_privacy_secure_mode">Invisibile</string>
+  <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes</string>
+  <string name="preference_category_performance">Rendimento</string>
+  <string name="preference_performance_block_webfonts">Blocar le typos de character de web</string>
+  <string name="preference_performance_block_webfonts_summary">Pote resultar in icones o imagines mancante</string>
+  <string name="preference_performance_block_images">Blocar le imagines</string>
+  <string name="preference_default_browser2">Facer de %1$s tu navigator predefinite</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Inviar datos de uso</string>
+  <string name="preference_mozilla_telemetry_summary">Saper plus</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se effortia a colliger solmente le informationes necessari pro fornir e meliorar %1$s pro totes.</string>
+  <string name="preference_privacy_notice">Advertentia de confidentialitate</string>
+  <string name="preference_about">A proposito de %1$s</string>
+  <string name="preference_search_installed_search_engines">Motores de recerca installate</string>
+  <string name="preference_search_restore">Restaurar le motores de recerca predefinite</string>
+  <string name="preference_search_remove_title">Remover le motores de recerca</string>
+  <string name="preference_search_remove">Remover</string>
+  <string name="tutorial_search_manually_add">Adder manualmente</string>
+  <string name="tutorial_search_title">Adder un motor de recerca</string>
+  <string name="tutorial_search_step1">1. Va al pagina initial del motor de recerca.</string>
+  <string name="tutorial_search_step2">2. Tocca le campo de recerca del motor de recerca.</string>
+  <string name="tutorial_search_step2_alternative">2. Tocca longemente le campo de recerca del motor de recerca.</string>
+  <string name="tutorial_search_step3">3. Tocca le icone del lente de aggrandimento supra le claviero pro adder le motor de recerca.</string>
+  <string name="action_option_add_search_engine">Adder le motor de recerca</string>
+  <string name="tutorial_search_step3_alternative">3. Tocca %1$s</string>
+  <string name="tutorial_search_step4">4. Si tu non vide le lente de aggrandimento, tenta adder manualmente le motor de recerca.</string>
+  <string name="tutorial_search_step4_alternative">4. Si tu non vide %1$s, tenta adder manualmente le motor de recerca.</string>
+  <string name="tutorial_search_finish">COMENCIAR</string>
+  <string name="search_add_hint">Tocca le icone del lente de aggrandimento supra le claviero pro adder iste motor de recerca.</string>
+  <string name="search_add_manually_name">Nomine a monstrar</string>
+  <string name="search_add_manually_name_hint">Nomine del motor de recerca</string>
+  <string name="search_add_manually_string">Catena de recerca a usar</string>
+  <string name="search_add_manually_save">Salvar</string>
+  <string name="search_add_manually_string_hint">Colla o insere le catena de recerca. Si necessari, reimplacia le termino de recerca per: %s.</string>
+  <string name="search_add_manually_example">Exemplo: example.com/search/?q=%s</string>
+  <string name="accessibility_announcement_search">Adder un motor de recerca</string>
+  <string name="search_add_confirmation">Nove motor de recerca addite.</string>
+  <string name="search_add_error">Verifica le catena de recerca e retenta</string>
+  <string name="content_description_clear_input">Vacuar le texto inserite</string>
+  <string name="content_description_dismiss_input">Dimitter</string>
+  <string name="content_description_erase">Elimina le chronologia de navigation</string>
+  <string name="content_description_fab_expand">Expande</string>
+  <string name="content_description_tab_counter">Schedas aperite: %1$s</string>
+  <string name="content_description_open_tab">Aperir un scheda</string>
+  <string name="content_description_close_tab">Clauder un scheda</string>
+  <string name="content_description_lock">Connexion secur</string>
+  <string name="accessibility_announcement_loading">Cargante</string>
+  <string name="accessibility_announcement_loading_finished">Sito web cargate</string>
+  <string name="content_description_menu">Altere optiones</string>
+  <string name="content_description_forward">Naviga in avante</string>
+  <string name="content_description_reload">Recarga le sito web</string>
+  <string name="content_description_back">Naviga a retro</string>
+  <string name="content_description_stop">Cessa le cargamento del sito web</string>
+  <string name="content_description_customtab_exit">Retorna al application previe</string>
+  <string name="content_description_blocking_switch">Bloca le traciatores</string>
+  <string name="context_menu_paste_go">Collar e ir</string>
+  <string name="your_rights">Tu derectos</string>
+  <string name="external_app_prompt_title">Aperir le ligamine in un altere application</string>
+  <string name="external_app_prompt">Tu pote exir de %1$s e aperir le ligamine in %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Cercar un application capace de aperir le ligamine</string>
+  <string name="external_app_prompt_no_app">Nulle application de tu apparato es capace de aperir iste ligamine. Tu pote exir de %1$s pro cercar in %2$s un application capace de facer lo.</string>
+  <string name="external_multiple_apps_matched_exit">Exir del navigation private?</string>
+  <string name="download_snackbar_finished">%1$s finite</string>
+  <string name="download_snackbar_open">Aperir</string>
+  <string name="download_dialog_warning"><![CDATA["Le files discargate "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">non essera delite</b>" quando tu elimina le chronologia de %1$s."]]></string>
+  <string name="download_dialog_title">Discargar le file</string>
+  <string name="download_dialog_action_cancel">Cancellar</string>
+  <string name="download_dialog_action_download">Discargar</string>
+  <string name="errorpage_title">Problema a cargar le pagina</string>
+  <string name="errorpage_refresh">Retenta</string>
+  <string name="error_connectionfailure_title">Incapace de connecter se</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta in alcun instantes.</li>\n<li>Si tu es incapace de cargar qualcunque pagina, verifica le connexion de datos o Wi-Fi de tu apparato mobile.</li>\n</ul>]]></string>
+  <string name="error_timeout_title">Le connexion ha expirate</string>
+  <string name="error_hostLookup_title">Servitor non trovate</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Verifica si le adresse ha errores orthographic, pro exemplo\n          "<strong>ww</strong>".example.com in vice de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si tu es incapace de cargar ulle pagina, verifica le connexion de datos o Wi-Fi de tu apparato.</li>\n</ul>]]></string>
+  <string name="error_malformedURI_title">Le adresse non es valide</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Le adresses web sole esser scribite in le forma "<strong>http://www.example.com/</strong></li>"\n  "<li>"Assecura te que tu usa le barras oblique ascendente (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Le pagina non redirige correctemente</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Iste problema pote esser causate a vices per le inactivation o le refusa de cookies.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Le adresse non ha essite recognoscite</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Pote esser necessari installar altere software pro aperir iste adresse</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Connexion secur fallite</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto pote esser un problema in le configuration del servitor o il pote esser\nalcuno tentante usurpar le servitor.</li>"\n  "<li>Si tu ha connectite a iste servitor correctemente in le passato, le error pote\nesser temporari e tu pote retentar plus tarde.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
+  <string name="error_generic_message">Nos non pote cargar iste pagina pro alcun ration.</string>
+  <string name="contextmenu_link_share">Compartir le ligamine</string>
+  <string name="contextmenu_link_copy">Copiar le adresse del ligamine</string>
+  <string name="contextmenu_image_share">Compartir le imagine</string>
+  <string name="contextmenu_image_copy">Copiar le adresse del imagine</string>
+  <string name="contextmenu_image_save">Salvar le imagine</string>
+  <string name="contextmenu_open_in_new_tab">Aperir le ligamine in un nove scheda</string>
+  <string name="contextmenu_image_warning"><![CDATA["Le imagines salvate e compartite "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">non essera delite</b>" quando tu elimina le chronologia de %1$s."]]></string>
+  <string name="firstrun_defaultbrowser_title">Reinfortia tu confidentialitate</string>
+  <string name="firstrun_defaultbrowser_text2">Porta le navigation private al nivello superior. Bloca publicitates e altere contentos que pote traciar te per le sitos e relentar le tempore de carga del paginas.</string>
+  <string name="firstrun_search_title">Le recerca a tu gusto</string>
+  <string name="firstrun_search_text">Cerca tu qualcosa differente? Elige un altere motor de recerca in le parametros.</string>
+  <string name="firstrun_shortcut_title">Adde accessos directe a tu schermo initial</string>
+  <string name="firstrun_shortcut_text">Retorna a tu sitos favorite in %1$s rapidemente. Selige simplemente \"Adder a tu schermo initial\" ab le menu %1$s.</string>
+  <string name="firstrun_privacy_title">Transforma le confidentialitate in un habito</string>
+  <string name="firstrun_privacy_text">Defini %1$s como tu navigator predefinite e obtene le avantages del navigation private quando tu aperi le paginas web ab altere applicationes.</string>
+  <string name="firstrun_close_button">Certo, io comprende!</string>
+  <string name="firstrun_skip_button">Ignorar</string>
+  <string name="firstrun_next_button">Avante</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Adder al schermo initial</string>
+  <string name="dialog_addtohomescreen_action_add">Adder</string>
+  <string name="dialog_addtohomescreen_action_cancel">Cancellar</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Le accesso directe aperira con le protection contra traciamento inactive</string>
+  <string name="dialog_opentab_title">Aperir le ligamine in le scheda seligite</string>
+  <string name="dialog_opentab_action_open">Aperir</string>
+  <string name="notification_browsing_session_channel_name">Session de navigation private</string>
+  <string name="notification_browsing_session_channel_description">Le notificationes te permitte eliminar tu session %1$s con un tocco. Il non es necessari aperir le application o vider lo que es executate in tu navigator.</string>
+  <string name="tabs_tray_action_erase">Eliminar le historico de navigation</string>
+  <string name="download_firefox">Discargar Firefox</string>
+  <string name="your_rights_content1">%1$s es libere, de codice aperite e facite per Mozilla e altere contributores.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s es distribuite a te sub le terminos del "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licentia public Mozilla</a>" e altere licentias de codice aperite."]]></string>
+  <string name="your_rights_content3"><![CDATA["Il non es concedite a te ulle derectos o licentias al marcas registrate del fundation Mozilla o de ulle tertie, includente le nomines e logotypos de Mozilla, de Firefox o de %1$s. Altere informationes pote esser trovate "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">hic</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Le codice fonte additional pro %1$s es disponibile sub varie altere "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licentias</a>" libere e de codice aperite."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s usa tamben listas de blocage fornite per Disconnect, Inc. como labores separate e independente sub le "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licentia Public GNU v3</a>", e es disponibile "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">hic</a>.]]></string>
+</resources>

@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">ເປີດດ້ວຍ %1$s</string>
   <string name="menu_open_with_a_browser">ເປີດ​ດ້ວຍ …</string>
   <string name="menu_add_to_home_screen">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
+  <string name="menu_whats_new">ສິ່ງໃຫມ່ໆ</string>
   <string name="menu_settings">ການຕັ້ງຄ່າ</string>
   <string name="menu_about">ກ່ຽວກັບ</string>
   <string name="menu_help">ວິທີໃຊ້</string>
@@ -44,6 +45,8 @@
   <string name="preference_mozilla_telemetry2">ສົ່ງຂໍ້ມູນການນຳໃຊ້</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <string name="preference_about">ກ່ຽວກັບ %1$s</string>
+  <string name="preference_search_remove">ລຶບ</string>
+  <string name="search_add_manually_save">ບັນທຶກ</string>
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
@@ -99,6 +102,7 @@
   <string name="contextmenu_open_in_new_tab">ເປີດລີ້ງໃນແທັບໃຫມ່</string>
   <string name="contextmenu_image_warning"><![CDATA["ບັນທຶກໄວ້ ແລະ ໄດ້ແບ່ງປັນຮູບພາບ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" ເມື່ອທ່ານລຶບປະຫວັດການນຳໃຊ້ຂອງ %1$s"]]></string>
   <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
+  <string name="firstrun_search_title">ການຄົ້ນຫາໃນແບບຂອງທ່ານເອງ</string>
   <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
   <string name="firstrun_skip_button">ຂ້າມໄປ</string>
   <string name="firstrun_next_button">ຕໍ່ໄປ</string>
@@ -108,5 +112,6 @@
   <string name="dialog_addtohomescreen_action_cancel">ຍົກເລີກ</string>
   <string name="dialog_opentab_title">ເປີດລີ້ງໃນແທັບທີ່ໄດ້ເລືອກເອົາໄວ້</string>
   <string name="dialog_opentab_action_open">ເປີດ</string>
+  <string name="tabs_tray_action_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
   <string name="download_firefox">ດາວໂຫລດ Firefox</string>
 </resources>

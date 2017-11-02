@@ -31,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Standard søkemotor</string>
   <string name="preference_category_privacy">Personvern</string>
   <string name="preference_privacy_block_ads">Blokker reklamesporarar</string>
+  <string name="preference_privacy_block_ads_summary">Nokre annonsar sporar nettstadbesøk, sjølv om du ikkje klikkar på annonsane</string>
   <string name="preference_privacy_block_analytics">Blokker analysesporarar</string>
+  <string name="preference_privacy_block_analytics_summary">Brukt for å samle inn, analysere og måle aktivitetar som tastetrykk og rulling</string>
   <string name="preference_privacy_block_social">Blokker sosiale media-sporarar</string>
+  <string name="preference_privacy_block_social_summary">Innebygd på nettstader for å spore besøka dine og å vise funksjonalitet som dele-knappar</string>
   <string name="preference_privacy_block_content">Blokker andre innhaldssporarar</string>
+  <string name="preference_privacy_block_content_summary2">Aktivering kan føre til at nokre sider oppfører seg uventa</string>
   <string name="preference_privacy_secure_mode">Løyndemodus</string>
   <string name="preference_privacy_stealth_summary">Gøym nettsider når du vekslar appar</string>
   <string name="preference_category_performance">Yting</string>
@@ -49,6 +53,7 @@
   <string name="preference_about">Om %1$s</string>
   <string name="preference_search_installed_search_engines">Installerte søkjemotorar</string>
   <string name="preference_search_restore">Tilbakestill til standardsøkjemotorar</string>
+  <string name="preference_search_add2">+ Legg til ein annan søkjemotor</string>
   <string name="preference_search_remove_title">Fjern søkjemotorar</string>
   <string name="preference_search_remove">Fjern</string>
   <string name="tutorial_search_manually_add">Legg til manuelt</string>

@@ -10,6 +10,7 @@
   <string name="menu_open_with_default_browser">Agor gyda %1$s</string>
   <string name="menu_open_with_a_browser">Agor gyda…</string>
   <string name="menu_add_to_home_screen">Ychwanegu i\'r sgrin Cartref</string>
+  <string name="menu_whats_new">Be sy\'n Newydd</string>
   <string name="menu_settings">Gosodiadau</string>
   <string name="menu_about">Ynghylch</string>
   <string name="menu_help">Cymorth</string>
@@ -30,9 +31,13 @@
   <string name="preference_dialog_title_search_engine">Chwilio rhagosodedig</string>
   <string name="preference_category_privacy">Preifatrwydd</string>
   <string name="preference_privacy_block_ads">Rhwystro tracwyr hysbysebion</string>
+  <string name="preference_privacy_block_ads_summary">Mae rhai hysbysebion yn tracio ymweliadau â gwefannau, hyd yn oed heb i chi eu clicio</string>
   <string name="preference_privacy_block_analytics">Rhwystro tracwyr dadansoddi</string>
+  <string name="preference_privacy_block_analytics_summary">Yn cael eu defnyddio i gasglu, dadansoddi a mesur gweithgareddau fel tapio a sgrolio</string>
   <string name="preference_privacy_block_social">Rhwystro tracwyr cymdeithasol</string>
+  <string name="preference_privacy_block_social_summary">Wedi eu mewnblannu ar wefannau er mwyn tracio eich ymweliadau ac i ddangos swyddogaethau fel botymau rhannu</string>
   <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
+  <string name="preference_privacy_block_content_summary2">Gall ei alluogi achosi i rai tudalennau i ymddwyn yn rhyfedd</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
   <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth agor apiau</string>
   <string name="preference_category_performance">Perfformiad</string>
@@ -48,6 +53,7 @@
   <string name="preference_about">Ynghylch %1$s</string>
   <string name="preference_search_installed_search_engines">Peiriannau chwilio wedi eu gosod</string>
   <string name="preference_search_restore">Adfer peiriannau chwilio rhagosodedig</string>
+  <string name="preference_search_add2">+ Ychwanegu peiriannau chwilio arall</string>
   <string name="preference_search_remove_title">Tynnu peiriannau chwilio</string>
   <string name="preference_search_remove">Tynnu</string>
   <string name="tutorial_search_manually_add">Ychwanegu â llaw</string>
