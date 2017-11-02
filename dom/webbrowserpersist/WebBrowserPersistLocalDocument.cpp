@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -31,7 +32,6 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLSourceElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -1153,7 +1153,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> nodeAsTextArea = do_QueryInterface(aNodeIn);
+    dom::HTMLTextAreaElement* nodeAsTextArea = dom::HTMLTextAreaElement::FromContent(content);
     if (nodeAsTextArea) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
