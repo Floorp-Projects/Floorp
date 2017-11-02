@@ -1919,6 +1919,8 @@
   "HTTP_PAGE_DNS_LOOKUP_TIME": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
@@ -2030,6 +2032,8 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "description": "HTTP subitem channel: DNS lookup time (ms)"
   },
   "HTTP_SUB_TLS_HANDSHAKE": {
@@ -2790,12 +2794,13 @@
   },
   "SPDY_CONTINUED_HEADERS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "59",
-    "alert_emails": ["necko@mozilla.com"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "bug_numbers": [1324855],
     "kind": "exponential",
     "high": 32000000,
     "n_buckets": 75,
+    "releaseChannelCollection": "opt-out",
     "description": "Size of continued H2 headers in bytes."
   },
   "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
@@ -3642,6 +3647,8 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "description": "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)"
   },
   "DNS_CLEANUP_AGE": {
@@ -3657,6 +3664,8 @@
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "n_buckets": 50,
     "description": "Time for a successful DNS OS resolution (msec)"
   },
@@ -3681,12 +3690,16 @@
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "n_buckets": 50,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
   "DNS_BLACKLIST_COUNT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
     "kind": "linear",
     "high": 21,
     "n_buckets": 20,
