@@ -173,7 +173,7 @@ HttpChannelChild::HttpChannelChild()
   , mKeptAlive(false)
   , mUnknownDecoderInvolved(false)
   , mDivertingToParent(false)
-  , mFlushedForDiversion(false)
+  , mFlushedForDiversion(eNotFlushed)
   , mSuspendSent(false)
   , mSynthesizedResponse(false)
   , mShouldInterceptSubsequentRedirect(false)
@@ -493,7 +493,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
   // stage, as they are set in the listener's OnStartRequest.
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+  MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
     "mFlushedForDiversion should be unset before OnStartRequest!");
   MOZ_RELEASE_ASSERT(!mDivertingToParent,
     "mDivertingToParent should be unset before OnStartRequest!");
@@ -554,7 +554,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
   // stage, as they are set in the listener's OnStartRequest.
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+  MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
     "mFlushedForDiversion should be unset before OnStartRequest!");
   MOZ_RELEASE_ASSERT(!mDivertingToParent,
     "mDivertingToParent should be unset before OnStartRequest!");
@@ -615,8 +615,6 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   DoOnStartRequest(this, mListenerContext);
 }
 
-namespace {
-
 class SyntheticDiversionListener final : public nsIStreamListener
 {
   RefPtr<HttpChannelChild> mChannel;
@@ -644,6 +642,7 @@ public:
                 nsresult aStatus) override
   {
     mChannel->SendDivertOnStopRequest(aStatus);
+    mChannel->MaybeSendDivertComplete();
     return NS_OK;
   }
 
@@ -667,8 +666,6 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(SyntheticDiversionListener, nsIStreamListener);
-
-} // anonymous namespace
 
 void
 HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
@@ -769,7 +766,7 @@ HttpChannelChild::ProcessOnTransportAndData(const nsresult& aChannelStatus,
 {
   LOG(("HttpChannelChild::ProcessOnTransportAndData [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+  MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
                      "Should not be receiving any more callbacks from parent!");
   mEventQ->RunOrEnqueue(new TransportAndDataEvent(this, aChannelStatus,
                                                   aTransportStatus, aData,
@@ -828,7 +825,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
   // For diversion to parent, just SendDivertOnDataAvailable.
   if (mDivertingToParent) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+    MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
       "Should not be processing any more callbacks from parent!");
 
     SendDivertOnDataAvailable(data, offset, count);
@@ -997,7 +994,7 @@ HttpChannelChild::ProcessOnStopRequest(const nsresult& aChannelStatus,
 {
   LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+  MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
     "Should not be receiving any more callbacks from parent!");
 
   mEventQ->RunOrEnqueue(new StopRequestEvent(this, aChannelStatus, aTiming),
@@ -1031,7 +1028,25 @@ HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus)
        static_cast<uint32_t>(aChannelStatus)));
   if (mDivertingToParent) {
     SendDivertOnStopRequest(aChannelStatus);
+    MaybeSendDivertComplete();
   }
+}
+
+void
+HttpChannelChild::MaybeSendDivertComplete()
+{
+  if (mFlushedForDiversion == eNotFlushed) {
+    mFlushedForDiversion = eReadyToBeFlushed;
+    return;
+  }
+
+  if (mFlushedForDiversion == ePendingToBeFlushed) {
+    mFlushedForDiversion = eFlushed;
+    SendDivertComplete();
+    return;
+  }
+
+  MOZ_CRASH("We should not be already in this state!");
 }
 
 void
@@ -1043,10 +1058,11 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mDivertingToParent) {
-    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+    MOZ_RELEASE_ASSERT(mFlushedForDiversion == eNotFlushed,
       "Should not be processing any more callbacks from parent!");
 
     SendDivertOnStopRequest(channelStatus);
+    MaybeSendDivertComplete();
     return;
   }
 
@@ -1846,9 +1862,13 @@ HttpChannelChild::FlushedForDiversion()
   // Once this is set, it should not be unset before HttpChannelChild is taken
   // down. After it is set, no OnStart/OnData/OnStop callbacks should be
   // received from the parent channel, nor dequeued from the ChannelEventQueue.
-  mFlushedForDiversion = true;
 
-  SendDivertComplete();
+  if (mFlushedForDiversion == eReadyToBeFlushed) {
+    mFlushedForDiversion = eFlushed;
+    SendDivertComplete();
+  } else {
+    mFlushedForDiversion = ePendingToBeFlushed;
+  }
 }
 
 void

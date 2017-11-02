@@ -319,9 +319,31 @@ private:
 
   // Once set, OnData and possibly OnStop will be diverted to the parent.
   Atomic<bool, ReleaseAcquire> mDivertingToParent;
-  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
-  // parent channel, nor dequeued from the ChannelEventQueue.
-  Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
+
+  enum FlushedForDiversionEnum {
+    // This is the initial state.
+    eNotFlushed,
+
+    // This is set when SendOnStopRequest() is called and the previous state was
+    // eNotFlushed. FlushedForDiversion() has not been called yet, but when,
+    // eventually, it will be, SendDivertComplete() can immediately called.
+    eReadyToBeFlushed,
+
+    // This is set by FlushedForDiversion() when SetOnStopRequest() has not been
+    // called yet. When finally SetOnStopRequest() will be called,
+    // SendDivertComplete() will be executed as well.
+    ePendingToBeFlushed,
+
+    // This is the final step. No OnStart/OnData/OnStop callbacks should be
+    // received from the parent channel, nor dequeued from the
+    // ChannelEventQueue.
+    eFlushed,
+  };
+
+  // Atomic becuase it can be touched onSocketThread() for debugging reasons
+  // only.
+  Atomic<FlushedForDiversionEnum, ReleaseAcquire> mFlushedForDiversion;
+
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;
@@ -440,6 +462,11 @@ private:
   // Collect telemetry for the successful rate of OMT.
   void CollectOMTTelemetry();
 
+  // When SendDivertOnStopRequest() is called, this method is used to check
+  // mFlushedForDiversion and maybe call SendDivertComplete(). See
+  // mFlushedForDiversion state.
+  void MaybeSendDivertComplete();
+
   // The result of RetargetDeliveryTo for this channel.
   // |notRequested| represents OMT is not requested by the channel owner.
   LABELS_HTTP_CHILD_OMT_STATS mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::notRequested;
@@ -452,6 +479,7 @@ private:
   friend class MaybeDivertOnStopHttpEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
+  friend class SyntheticDiversionListener;
   friend class FailedAsyncOpenEvent;
   friend class Redirect1Event;
   friend class Redirect3Event;
