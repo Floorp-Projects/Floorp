@@ -541,60 +541,6 @@ task_description_schema = Schema({
 TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherder/' \
                            'blob/master/schemas/task-treeherder-config.yml'
 
-GROUP_NAMES = {
-    'cram': 'Cram tests',
-    'mocha': 'Mocha unit tests',
-    'py': 'Python unit tests',
-    'tc': 'Executed by TaskCluster',
-    'tc-A': 'Android Gradle tests executed by TaskCluster',
-    'tc-e10s': 'Executed by TaskCluster with e10s',
-    'tc-Fxfn-l': 'Firefox functional tests (local) executed by TaskCluster',
-    'tc-Fxfn-l-e10s': 'Firefox functional tests (local) executed by TaskCluster with e10s',
-    'tc-Fxfn-r': 'Firefox functional tests (remote) executed by TaskCluster',
-    'tc-Fxfn-r-e10s': 'Firefox functional tests (remote) executed by TaskCluster with e10s',
-    'tc-M': 'Mochitests executed by TaskCluster',
-    'tc-M-e10s': 'Mochitests executed by TaskCluster with e10s',
-    'tc-M-V': 'Mochitests on Valgrind executed by TaskCluster',
-    'tc-R': 'Reftests executed by TaskCluster',
-    'tc-R-e10s': 'Reftests executed by TaskCluster with e10s',
-    'tc-T': 'Talos performance tests executed by TaskCluster',
-    'tc-Tsd': 'Talos performance tests executed by TaskCluster with Stylo disabled',
-    'tc-Tss': 'Talos performance tests executed by TaskCluster with Stylo sequential',
-    'tc-T-e10s': 'Talos performance tests executed by TaskCluster with e10s',
-    'tc-Tsd-e10s': 'Talos performance tests executed by TaskCluster with e10s, Stylo disabled',
-    'tc-Tss-e10s': 'Talos performance tests executed by TaskCluster with e10s, Stylo sequential',
-    'tc-tt-c': 'Telemetry client marionette tests',
-    'tc-tt-c-e10s': 'Telemetry client marionette tests with e10s',
-    'tc-SY-e10s': 'Are we slim yet tests by TaskCluster with e10s',
-    'tc-SYsd-e10s': 'Are we slim yet tests by TaskCluster with e10s, Stylo disabled',
-    'tc-SYss-e10s': 'Are we slim yet tests by TaskCluster with e10s, Stylo sequential',
-    'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
-    'tc-W': 'Web platform tests executed by TaskCluster',
-    'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',
-    'tc-X': 'Xpcshell tests executed by TaskCluster',
-    'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
-    'tc-L10n': 'Localised Repacks executed by Taskcluster',
-    'tc-L10n-Rpk': 'Localized Repackaged Repacks executed by Taskcluster',
-    'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
-    'tc-BMR-L10n': 'Beetmover repackages for locales executed by Taskcluster',
-    'c-Up': 'Balrog submission of complete updates',
-    'tc-cs': 'Checksum signing executed by Taskcluster',
-    'tc-rs': 'Repackage signing executed by Taskcluster',
-    'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
-    'Aries': 'Aries Device Image',
-    'Nexus 5-L': 'Nexus 5-L Device Image',
-    'I': 'Docker Image Builds',
-    'TL': 'Toolchain builds for Linux 64-bits',
-    'TM': 'Toolchain builds for OSX',
-    'TMW': 'Toolchain builds for Windows MinGW',
-    'TW32': 'Toolchain builds for Windows 32-bits',
-    'TW64': 'Toolchain builds for Windows 64-bits',
-    'SM-tc': 'Spidermonkey builds',
-    'pub': 'APK publishing',
-    'p': 'Partial generation',
-    'ps': 'Partials signing',
-    'Rel': 'Release promotion',
-}
 
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
 
@@ -1244,12 +1190,13 @@ def build_task(config, tasks):
             treeherder['machine'] = {'platform': machine_platform}
             treeherder['collection'] = {collection: True}
 
+            group_names = config.graph_config['treeherder']['group-names']
             groupSymbol, symbol = split_symbol(task_th['symbol'])
             if groupSymbol != '?':
                 treeherder['groupSymbol'] = groupSymbol
-                if groupSymbol not in GROUP_NAMES:
+                if groupSymbol not in group_names:
                     raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
-                treeherder['groupName'] = GROUP_NAMES[groupSymbol]
+                treeherder['groupName'] = group_names[groupSymbol]
             treeherder['symbol'] = symbol
             if len(symbol) > 25 or len(groupSymbol) > 25:
                 raise RuntimeError("Treeherder group and symbol names must not be longer than "
