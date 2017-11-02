@@ -61,9 +61,13 @@ protected:
    * document, leave it as a string) and return as nsAttrValue.
    *
    * @param aValue the value to parse
+   * @param aMaybeScriptedPrincipal if available, the scripted principal
+   *        responsible for this attribute value, as passed to
+   *        Element::ParseAttribute.
    * @param aResult the resulting HTMLValue [OUT]
    */
   void ParseStyleAttribute(const nsAString& aValue,
+                           nsIPrincipal* aMaybeScriptedPrincipal,
                            nsAttrValue& aResult,
                            bool aForceInDataDoc);
 
