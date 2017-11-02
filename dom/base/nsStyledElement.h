@@ -68,7 +68,9 @@ protected:
                            bool aForceInDataDoc);
 
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                const nsAString& aValue, nsAttrValue& aResult) override;
+                                const nsAString& aValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
+                                nsAttrValue& aResult) override;
 
   friend class mozilla::dom::Element;
 

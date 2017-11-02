@@ -759,6 +759,7 @@ protected:
     virtual bool ParseAttribute(int32_t aNamespaceID,
                                   nsAtom* aAttribute,
                                   const nsAString& aValue,
+                                  nsIPrincipal* aMaybeScriptedPrincipal,
                                   nsAttrValue& aResult) override;
 
     virtual mozilla::EventListenerManager*

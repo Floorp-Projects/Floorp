@@ -2683,7 +2683,8 @@ Element::SetAttr(int32_t aNamespaceID, nsAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!preparsedAttrValue &&
-      !ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
+      !ParseAttribute(aNamespaceID, aName, aValue, aSubjectPrincipal,
+                      attrValue)) {
     attrValue.SetTo(aValue);
   }
 
@@ -2903,6 +2904,7 @@ bool
 Element::ParseAttribute(int32_t aNamespaceID,
                         nsAtom* aAttribute,
                         const nsAString& aValue,
+                        nsIPrincipal* aMaybeScriptedPrincipal,
                         nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::lang) {
