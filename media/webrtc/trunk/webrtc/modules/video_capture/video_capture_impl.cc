@@ -86,7 +86,6 @@ VideoCaptureImpl::VideoCaptureImpl()
       _requestedCapability(),
       _lastProcessTimeNanos(rtc::TimeNanos()),
       _lastFrameRateCallbackTimeNanos(rtc::TimeNanos()),
-      _dataCallBack(NULL),
       _lastProcessFrameTimeNanos(rtc::TimeNanos()),
       _rotateFrame(kVideoRotation_0),
       apply_rotation_(true) {
@@ -100,7 +99,6 @@ VideoCaptureImpl::VideoCaptureImpl()
 
 VideoCaptureImpl::~VideoCaptureImpl()
 {
-    DeRegisterCaptureDataCallback();
     delete &_apiCs;
 
     if (_deviceUniqueId)
@@ -108,20 +106,34 @@ VideoCaptureImpl::~VideoCaptureImpl()
 }
 
 void VideoCaptureImpl::RegisterCaptureDataCallback(
-    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
-    CriticalSectionScoped cs(&_apiCs);
-    _dataCallBack = dataCallBack;
+  rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
+  CriticalSectionScoped cs(&_apiCs);
+  _dataCallBacks.insert(dataCallBack);
 }
 
-void VideoCaptureImpl::DeRegisterCaptureDataCallback() {
-    CriticalSectionScoped cs(&_apiCs);
-    _dataCallBack = NULL;
+void VideoCaptureImpl::DeRegisterCaptureDataCallback(
+  rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
+  CriticalSectionScoped cs(&_apiCs);
+
+  auto it = _dataCallBacks.find(dataCallBack);
+  if (it != _dataCallBacks.end()) {
+    _dataCallBacks.erase(it);
+  }
 }
+
+int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
+  if (_dataCallBacks.empty()) {
+    return StopCapture();
+  } else {
+    return 0;
+  }
+}
+
 int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
-  if (_dataCallBack) {
-    _dataCallBack->OnFrame(captureFrame);
+  for (auto dataCallBack : _dataCallBacks) {
+    dataCallBack->OnFrame(captureFrame);
   }
 
   return 0;

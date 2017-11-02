@@ -16,6 +16,7 @@
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/modules/include/module.h"
 #include "webrtc/modules/video_capture/video_capture_defines.h"
+#include <set>
 
 #if defined(ANDROID)
 #include <jni.h>
@@ -84,14 +85,19 @@ class VideoCaptureModule: public rtc::RefCountInterface {
     virtual uint32_t NumberOfDevices() = 0;
     virtual int32_t Refresh() = 0;
     virtual void DeviceChange() {
-     if (_inputCallBack)
-      _inputCallBack->OnDeviceChange();
+      for (auto inputCallBack : _inputCallBacks) {
+        inputCallBack->OnDeviceChange();
+      }
     }
-    virtual void RegisterVideoInputFeedBack(VideoInputFeedBack& callBack) {
-     _inputCallBack = &callBack;
+    virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      _inputCallBacks.insert(callBack);
     }
-    virtual void DeRegisterVideoInputFeedBack() {
-     _inputCallBack = NULL;
+
+    virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      auto it = _inputCallBacks.find(callBack);
+      if (it != _inputCallBacks.end()) {
+        _inputCallBacks.erase(it);
+      }
     }
 
     // Returns the available capture devices.
@@ -145,7 +151,7 @@ class VideoCaptureModule: public rtc::RefCountInterface {
 
     virtual ~DeviceInfo() {}
    private:
-    VideoInputFeedBack* _inputCallBack = NULL;
+    std::set<VideoInputFeedBack*> _inputCallBacks;
   };
 
   //   Register capture data callback
@@ -153,11 +159,14 @@ class VideoCaptureModule: public rtc::RefCountInterface {
       rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
 
   //  Remove capture data callback
-  virtual void DeRegisterCaptureDataCallback() = 0;
+  virtual void DeRegisterCaptureDataCallback(
+      rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
 
   // Start capture device
   virtual int32_t StartCapture(
       const VideoCaptureCapability& capability) = 0;
+
+  virtual int32_t StopCaptureIfAllClientsClose() = 0;
 
   virtual int32_t StopCapture() = 0;
 
