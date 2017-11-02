@@ -189,9 +189,9 @@ const Class GeneratorObject::class_ = {
 };
 
 static const JSFunctionSpec star_generator_methods[] = {
-    JS_SELF_HOSTED_FN("next", "StarGeneratorNext", 1, 0),
-    JS_SELF_HOSTED_FN("throw", "StarGeneratorThrow", 1, 0),
-    JS_SELF_HOSTED_FN("return", "StarGeneratorReturn", 1, 0),
+    JS_SELF_HOSTED_FN("next", "GeneratorNext", 1, 0),
+    JS_SELF_HOSTED_FN("throw", "GeneratorThrow", 1, 0),
+    JS_SELF_HOSTED_FN("return", "GeneratorReturn", 1, 0),
     JS_FS_END
 };
 
