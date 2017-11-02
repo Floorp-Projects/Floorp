@@ -60,7 +60,7 @@ class RequestListEmptyNotice extends Component {
         ),
         span(null, RELOAD_NOTICE_3)
       ),
-      div({ className: "notice-perf-message" },
+      div({ className: "notice-perf-message empty-notice-element" },
         span(null, PERFORMANCE_NOTICE_1),
         button({
           title: PERFORMANCE_NOTICE_3,
