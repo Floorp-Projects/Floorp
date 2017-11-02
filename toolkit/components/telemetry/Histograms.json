@@ -13030,15 +13030,6 @@
     "n_values": 6,
     "description": "Number of revoke actions on permissions in the control center, keyed by permission id. Values represent the permission type that was revoked. (0=unknown, 1=permanently allowed, 2=permanently blocked, 3=temporarily allowed, 4=temporarily blocked)"
   },
-  "JS_AOT_USAGE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["luke@mozilla.com", "bbouvier@mozilla.com"],
-    "bug_numbers": [1288778],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
-  },
   "TIME_TO_FIRST_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["hkirschner@mozilla.com"],
