@@ -44,7 +44,7 @@ html|input.empty {
   color: graytext;
 }
 
-@media (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   :root:not(.winxp) html|input.empty {
     font-style: italic;
   }
