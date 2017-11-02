@@ -1598,7 +1598,8 @@ nsIDocument::nsIDocument()
     mIncCounters(),
     mUserHasInteracted(false),
     mServoRestyleRootDirtyBits(0),
-    mThrowOnDynamicMarkupInsertionCounter(0)
+    mThrowOnDynamicMarkupInsertionCounter(0),
+    mIgnoreOpensDuringUnloadCounter(0)
 {
   SetIsInDocument();
   for (auto& cnt : mIncCounters) {
