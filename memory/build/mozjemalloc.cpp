@@ -574,6 +574,50 @@ struct ExtentTreeBoundsTrait : public ExtentTreeTrait
   }
 };
 
+// Describe size classes to which allocations are rounded up to.
+// TODO: add large and huge types when the arena allocation code
+// changes in a way that allows it to be beneficial.
+class SizeClass
+{
+public:
+  enum ClassType
+  {
+    Tiny,
+    Quantum,
+    SubPage,
+  };
+
+  explicit inline SizeClass(size_t aSize)
+  {
+    if (aSize < small_min) {
+      mType = Tiny;
+      mSize = std::max(RoundUpPow2(aSize), size_t(1U << TINY_MIN_2POW));
+    } else if (aSize <= small_max) {
+      mType = Quantum;
+      mSize = QUANTUM_CEILING(aSize);
+    } else if (aSize <= bin_maxclass) {
+      mType = SubPage;
+      mSize = RoundUpPow2(aSize);
+    } else {
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Invalid size");
+    }
+  }
+
+  SizeClass& operator=(const SizeClass& aOther) = default;
+
+  bool operator==(const SizeClass& aOther) { return aOther.mSize == mSize; }
+
+  size_t Size() { return mSize; }
+
+  ClassType Type() { return mType; }
+
+  SizeClass Next() { return SizeClass(mSize + 1); }
+
+private:
+  ClassType mType;
+  size_t mSize;
+};
+
 // ***************************************************************************
 // Radix tree data structures.
 //
@@ -2984,23 +3028,22 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
   void* ret;
   arena_bin_t* bin;
   arena_run_t* run;
+  SizeClass sizeClass(aSize);
+  aSize = sizeClass.Size();
 
-  if (aSize < small_min) {
-    // Tiny.
-    aSize = RoundUpPow2(aSize);
-    if (aSize < (1U << TINY_MIN_2POW)) {
-      aSize = 1U << TINY_MIN_2POW;
-    }
-    bin = &mBins[FloorLog2(aSize >> TINY_MIN_2POW)];
-  } else if (aSize <= small_max) {
-    // Quantum-spaced.
-    aSize = QUANTUM_CEILING(aSize);
-    bin = &mBins[ntbins + (aSize >> QUANTUM_2POW_MIN) - 1];
-  } else {
-    // Sub-page.
-    aSize = RoundUpPow2(aSize);
-    bin = &mBins[ntbins + nqbins +
-                 (FloorLog2(aSize >> SMALL_MAX_2POW_DEFAULT) - 1)];
+  switch (sizeClass.Type()) {
+    case SizeClass::Tiny:
+      bin = &mBins[FloorLog2(aSize >> TINY_MIN_2POW)];
+      break;
+    case SizeClass::Quantum:
+      bin = &mBins[ntbins + (aSize >> QUANTUM_2POW_MIN) - 1];
+      break;
+    case SizeClass::SubPage:
+      bin = &mBins[ntbins + nqbins +
+                   (FloorLog2(aSize >> SMALL_MAX_2POW_DEFAULT) - 1)];
+      break;
+    default:
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
   }
   MOZ_DIAGNOSTIC_ASSERT(aSize == bin->mSizeClass);
 
@@ -3686,22 +3729,15 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   size_t copysize;
 
   // Try to avoid moving the allocation.
-  if (aSize < small_min) {
-    if (aOldSize < small_min &&
-        (RoundUpPow2(aSize) >> (TINY_MIN_2POW + 1) ==
-         RoundUpPow2(aOldSize) >> (TINY_MIN_2POW + 1))) {
-      goto IN_PLACE; // Same size class.
-    }
-  } else if (aSize <= small_max) {
-    if (aOldSize >= small_min && aOldSize <= small_max &&
-        (QUANTUM_CEILING(aSize) >> QUANTUM_2POW_MIN) ==
-          (QUANTUM_CEILING(aOldSize) >> QUANTUM_2POW_MIN)) {
-      goto IN_PLACE; // Same size class.
-    }
-  } else if (aSize <= bin_maxclass) {
-    if (aOldSize > small_max && aOldSize <= bin_maxclass &&
-        RoundUpPow2(aSize) == RoundUpPow2(aOldSize)) {
-      goto IN_PLACE; // Same size class.
+  if (aSize <= bin_maxclass) {
+    if (aOldSize <= bin_maxclass && SizeClass(aSize) == SizeClass(aOldSize)) {
+      if (aSize < aOldSize) {
+        memset(
+          (void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
+      } else if (opt_zero && aSize > aOldSize) {
+        memset((void*)(uintptr_t(aPtr) + aOldSize), 0, aSize - aOldSize);
+      }
+      return aPtr;
     }
   } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
     MOZ_ASSERT(aSize > bin_maxclass);
@@ -3731,13 +3767,6 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   }
   idalloc(aPtr);
   return ret;
-IN_PLACE:
-  if (aSize < aOldSize) {
-    memset((void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
-  } else if (opt_zero && aSize > aOldSize) {
-    memset((void*)(uintptr_t(aPtr) + aOldSize), 0, aSize - aOldSize);
-  }
-  return aPtr;
 }
 
 static inline void*
@@ -3781,45 +3810,26 @@ arena_t::arena_t()
 
   // Initialize bins.
   prev_run_size = pagesize;
+  SizeClass sizeClass(1);
 
-  // (2^n)-spaced tiny bins.
-  for (i = 0; i < ntbins; i++) {
+  for (i = 0;; i++) {
     bin = &mBins[i];
     bin->mCurrentRun = nullptr;
     bin->mNonFullRuns.Init();
 
-    bin->mSizeClass = (1ULL << (TINY_MIN_2POW + i));
+    bin->mSizeClass = sizeClass.Size();
 
     prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
 
     bin->mNumRuns = 0;
+
+    // SizeClass doesn't want sizes larger than bin_maxclass for now.
+    if (sizeClass.Size() == bin_maxclass) {
+      break;
+    }
+    sizeClass = sizeClass.Next();
   }
-
-  // Quantum-spaced bins.
-  for (; i < ntbins + nqbins; i++) {
-    bin = &mBins[i];
-    bin->mCurrentRun = nullptr;
-    bin->mNonFullRuns.Init();
-
-    bin->mSizeClass = quantum * (i - ntbins + 1);
-
-    prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
-
-    bin->mNumRuns = 0;
-  }
-
-  // (2^n)-spaced sub-page bins.
-  for (; i < ntbins + nqbins + nsbins; i++) {
-    bin = &mBins[i];
-    bin->mCurrentRun = nullptr;
-    bin->mNonFullRuns.Init();
-
-    bin->mSizeClass = (small_max << (i - (ntbins + nqbins) + 1));
-
-    prev_run_size = arena_bin_run_size_calc(bin, prev_run_size);
-
-    bin->mNumRuns = 0;
-  }
+  MOZ_ASSERT(i == ntbins + nqbins + nsbins - 1);
 
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mMagic = ARENA_MAGIC;
@@ -4476,24 +4486,9 @@ template<>
 inline size_t
 MozJemalloc::malloc_good_size(size_t aSize)
 {
-  // This duplicates the logic in imalloc(), arena_malloc() and
-  // arena_t::MallocSmall().
-  if (aSize < small_min) {
-    // Small (tiny).
-    aSize = RoundUpPow2(aSize);
-
-    // We omit the #ifdefs from arena_t::MallocSmall() --
-    // it can be inaccurate with its size in some cases, but this
-    // function must be accurate.
-    if (aSize < (1U << TINY_MIN_2POW)) {
-      aSize = (1U << TINY_MIN_2POW);
-    }
-  } else if (aSize <= small_max) {
-    // Small (quantum-spaced).
-    aSize = QUANTUM_CEILING(aSize);
-  } else if (aSize <= bin_maxclass) {
-    // Small (sub-page).
-    aSize = RoundUpPow2(aSize);
+  if (aSize <= bin_maxclass) {
+    // Small
+    aSize = SizeClass(aSize).Size();
   } else if (aSize <= arena_maxclass) {
     // Large.
     aSize = PAGE_CEILING(aSize);
