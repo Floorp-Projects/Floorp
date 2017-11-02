@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 const DominatorTreeItem = createFactory(require("./DominatorTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
@@ -13,15 +13,15 @@ const models = require("../models");
 /**
  * The list of individuals in a census group.
  */
-module.exports = createClass({
-  displayName: "Individuals",
-
-  propTypes: {
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    onFocus: PropTypes.func.isRequired,
-    individuals: models.individuals,
-    dominatorTree: models.dominatorTreeModel,
-  },
+class Individuals extends Component {
+  static get propTypes() {
+    return {
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      onFocus: PropTypes.func.isRequired,
+      individuals: models.individuals,
+      dominatorTree: models.dominatorTreeModel,
+    };
+  }
 
   render() {
     const {
@@ -57,4 +57,6 @@ module.exports = createClass({
       itemHeight: TREE_ROW_HEIGHT,
     });
   }
-});
+}
+
+module.exports = Individuals;

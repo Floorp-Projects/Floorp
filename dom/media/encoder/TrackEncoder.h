@@ -385,10 +385,15 @@ protected:
   bool mDirectConnected;
 };
 
+enum class FrameDroppingMode {
+  ALLOW, // Allowed to drop frames to keep up under load
+  DISALLOW, // Must not drop any frames, even if it means we will OOM
+};
+
 class VideoTrackEncoder : public TrackEncoder
 {
 public:
-  explicit VideoTrackEncoder(TrackRate aTrackRate)
+  VideoTrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode)
     : TrackEncoder(aTrackRate)
     , mFrameWidth(0)
     , mFrameHeight(0)
@@ -396,6 +401,7 @@ public:
     , mDisplayHeight(0)
     , mEncodedTicks(0)
     , mVideoBitrate(0)
+    , mFrameDroppingMode(aFrameDroppingMode)
   {
     mLastChunk.mDuration = 0;
   }
@@ -551,6 +557,12 @@ protected:
   TimeStamp mSuspendTime;
 
   uint32_t mVideoBitrate;
+
+  /**
+   * ALLOW to drop frames under load.
+   * DISALLOW to encode all frames, mainly for testing.
+   */
+  FrameDroppingMode mFrameDroppingMode;
 };
 
 } // namespace mozilla

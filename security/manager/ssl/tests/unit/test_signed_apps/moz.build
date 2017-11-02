@@ -23,20 +23,39 @@ def SignedAppFile(name, flags):
         files = files[part]
     files += ['!%s' % name]
 
+# Except for unusual testcases (unknown issuer, unsigned app, empty
+# signerInfos), the naming scheme is as follows:
+# app_mf{-1,-256}_sf{-1,-256}_p7{-1,-256}.zip, where:
+# "mf" refers to the manifest file, "sf" refers to the signature file,
+# and "p7" refers to the pkcs#7 file. The "{-1,-256}" indicates which
+# hash algorithms are present in the corresponding file (both may be
+# present).
+# For example, "app_mf-1_sf-1-256_p7-256.zip" means that the manifest
+# file has sha-1 hashes, the signature file has sha-1 hashes and sha-256
+# hashes, and the pkcs#7 file only has sha-256.
+#
 # Temporarily disabled. See bug 1256495.
 #signed_app_files = (
-#    ['signed_app.zip', '-m', 'sha1', '-s', 'sha1'],
-#    ['unknown_issuer_app.zip', '-i', 'unknown issuer', '-m', 'sha1', '-s', 'sha1'],
+#    ['unknown_issuer_app.zip', '-i', 'unknown issuer'],
 #    ['unsigned_app.zip', '-n'],
-#    ['signed_app_sha256.zip'],
-#    ['signed_app_sha1_and_sha256.zip', '-m', 'sha256', '-m', 'sha1', '-s', 'sha256', '-s', 'sha1'],
-#    ['signed_app_sha256_manifest.zip', '-s', 'sha1'],
-#    ['signed_app_sha256_signature_file.zip', '-m', 'sha1'],
-#    ['sha1_and_sha256_manifest_sha1_signature_file.zip', '-m', 'sha256', '-m', 'sha1', '-s', 'sha1'],
-#    ['sha1_and_sha256_manifest_sha256_signature_file.zip', '-m', 'sha256', '-m', 'sha1'],
-#    ['sha1_manifest_sha1_and_sha256_signature_file.zip', '-m', 'sha1', '-s', 'sha1', '-s', 'sha256'],
-#    ['sha256_manifest_sha1_and_sha256_signature_file.zip', '-s', 'sha1', '-s', 'sha256'],
+#    ['empty_signerInfos.zip', '-e'],
 #)
 #
 #for signed_app_file_params in signed_app_files:
 #    SignedAppFile(signed_app_file_params[0], signed_app_file_params[1:])
+#
+#for mf_algs in [['1'], ['256'], ['1', '256']]:
+#    for sf_algs in [['1'], ['256'], ['1', '256']]:
+#        for p7_algs in [['1'], ['256'], ['1', '256']]:
+#            filename = "app_mf-%s_sf-%s_p7-%s.zip" % ('-'.join(mf_algs), '-'.join(sf_algs), '-'.join(p7_algs))
+#            args = []
+#            for mf_alg in mf_algs:
+#                args.append('-m')
+#                args.append('sha%s' % mf_alg)
+#            for sf_alg in sf_algs:
+#                args.append('-s')
+#                args.append('sha%s' % sf_alg)
+#            for p7_alg in p7_algs:
+#                args.append('-p')
+#                args.append('sha%s' % p7_alg)
+#            SignedAppFile(filename, args)

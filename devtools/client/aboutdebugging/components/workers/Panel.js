@@ -8,7 +8,7 @@ loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const { Ci } = require("chrome");
-const { createClass, createFactory, DOM: dom, PropTypes } =
+const { Component, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { getWorkerForms } = require("../../modules/worker");
 const Services = require("Services");
@@ -34,24 +34,25 @@ const MORE_INFO_URL = "https://developer.mozilla.org/en-US/docs/Tools/about%3Ade
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 const MULTI_OPTOUT_PREF = "dom.ipc.multiOptOut";
 
-module.exports = createClass({
-  displayName: "WorkersPanel",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    id: PropTypes.string.isRequired
-  },
-
-  getInitialState() {
+class WorkersPanel extends Component {
+  static get propTypes() {
     return {
-      workers: {
-        service: [],
-        shared: [],
-        other: []
-      },
-      processCount: 1,
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      id: PropTypes.string.isRequired
     };
-  },
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.updateMultiE10S = this.updateMultiE10S.bind(this);
+    this.updateWorkers = this.updateWorkers.bind(this);
+    this.getRegistrationForWorker = this.getRegistrationForWorker.bind(this);
+    this.isE10S = this.isE10S.bind(this);
+    this.renderServiceWorkersError = this.renderServiceWorkersError.bind(this);
+
+    this.state = this.initialState;
+  }
 
   componentDidMount() {
     let client = this.props.client;
@@ -77,7 +78,7 @@ module.exports = createClass({
 
     this.updateMultiE10S();
     this.updateWorkers();
-  },
+  }
 
   componentWillUnmount() {
     let client = this.props.client;
@@ -88,17 +89,28 @@ module.exports = createClass({
 
     Services.prefs.removeObserver(PROCESS_COUNT_PREF, this.updateMultiE10S);
     Services.prefs.removeObserver(MULTI_OPTOUT_PREF, this.updateMultiE10S);
-  },
+  }
+
+  get initialState() {
+    return {
+      workers: {
+        service: [],
+        shared: [],
+        other: []
+      },
+      processCount: 1,
+    };
+  }
 
   updateMultiE10S() {
     // We watch the pref but set the state based on
     // nsIXULRuntime.maxWebProcessCount.
     let processCount = Services.appinfo.maxWebProcessCount;
     this.setState({ processCount });
-  },
+  }
 
   updateWorkers() {
-    let workers = this.getInitialState().workers;
+    let workers = this.initialState.workers;
 
     getWorkerForms(this.props.client).then(forms => {
       forms.registrations.forEach(form => {
@@ -156,7 +168,7 @@ module.exports = createClass({
 
       this.setState({ workers });
     });
-  },
+  }
 
   getRegistrationForWorker(form, registrations) {
     for (let registration of registrations) {
@@ -165,11 +177,11 @@ module.exports = createClass({
       }
     }
     return null;
-  },
+  }
 
   isE10S() {
     return Services.appinfo.browserTabsRemoteAutostart;
-  },
+  }
 
   renderServiceWorkersError() {
     let isWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(window);
@@ -200,7 +212,7 @@ module.exports = createClass({
         Strings.GetStringFromName("configurationIsNotCompatible.learnMore")
       ),
     );
-  },
+  }
 
   render() {
     let { client, id } = this.props;
@@ -255,4 +267,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = WorkersPanel;

@@ -8,7 +8,7 @@
 
 "use strict";
 
-const { DOM, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { DOM, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tabs = createFactory(require("devtools/client/shared/components/tabs/Tabs").Tabs);
 
 const Menu = require("devtools/client/framework/menu");
@@ -20,37 +20,50 @@ const { div } = DOM;
 /**
  * Renders Tabbar component.
  */
-let Tabbar = createClass({
-  displayName: "Tabbar",
+class Tabbar extends Component {
+  static get propTypes() {
+    return {
+      children: PropTypes.array,
+      menuDocument: PropTypes.object,
+      onSelect: PropTypes.func,
+      showAllTabsMenu: PropTypes.bool,
+      activeTabId: PropTypes.string,
+      renderOnlySelected: PropTypes.bool,
+    };
+  }
 
-  propTypes: {
-    children: PropTypes.array,
-    menuDocument: PropTypes.object,
-    onSelect: PropTypes.func,
-    showAllTabsMenu: PropTypes.bool,
-    activeTabId: PropTypes.string,
-    renderOnlySelected: PropTypes.bool,
-  },
-
-  getDefaultProps: function () {
+  static get defaultProps() {
     return {
       menuDocument: window.parent.document,
       showAllTabsMenu: false,
     };
-  },
+  }
 
-  getInitialState: function () {
-    let { activeTabId, children = [] } = this.props;
+  constructor(props, context) {
+    super(props, context);
+    let { activeTabId, children = [] } = props;
     let tabs = this.createTabs(children);
     let activeTab = tabs.findIndex((tab, index) => tab.id === activeTabId);
 
-    return {
+    this.state = {
       activeTab: activeTab === -1 ? 0 : activeTab,
       tabs,
     };
-  },
 
-  componentWillReceiveProps: function (nextProps) {
+    this.createTabs = this.createTabs.bind(this);
+    this.addTab = this.addTab.bind(this);
+    this.toggleTab = this.toggleTab.bind(this);
+    this.removeTab = this.removeTab.bind(this);
+    this.select = this.select.bind(this);
+    this.getTabIndex = this.getTabIndex.bind(this);
+    this.getTabId = this.getTabId.bind(this);
+    this.getCurrentTabId = this.getCurrentTabId.bind(this);
+    this.onTabChanged = this.onTabChanged.bind(this);
+    this.onAllTabsMenuClick = this.onAllTabsMenuClick.bind(this);
+    this.renderTab = this.renderTab.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
     let { activeTabId, children = [] } = nextProps;
     let tabs = this.createTabs(children);
     let activeTab = tabs.findIndex((tab, index) => tab.id === activeTabId);
@@ -62,9 +75,9 @@ let Tabbar = createClass({
         tabs,
       });
     }
-  },
+  }
 
-  createTabs: function (children) {
+  createTabs(children) {
     return children
       .filter((panel) => panel)
       .map((panel, index) =>
@@ -74,11 +87,11 @@ let Tabbar = createClass({
           title: panel.props.title,
         })
       );
-  },
+  }
 
   // Public API
 
-  addTab: function (id, title, selected = false, panel, url, index = -1) {
+  addTab(id, title, selected = false, panel, url, index = -1) {
     let tabs = this.state.tabs.slice();
 
     if (index >= 0) {
@@ -100,9 +113,9 @@ let Tabbar = createClass({
         this.props.onSelect(id);
       }
     });
-  },
+  }
 
-  toggleTab: function (tabId, isVisible) {
+  toggleTab(tabId, isVisible) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -116,9 +129,9 @@ let Tabbar = createClass({
     this.setState(Object.assign({}, this.state, {
       tabs: tabs,
     }));
-  },
+  }
 
-  removeTab: function (tabId) {
+  removeTab(tabId) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -137,9 +150,9 @@ let Tabbar = createClass({
       tabs,
       activeTab,
     }));
-  },
+  }
 
-  select: function (tabId) {
+  select(tabId) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -154,11 +167,11 @@ let Tabbar = createClass({
         this.props.onSelect(tabId);
       }
     });
-  },
+  }
 
   // Helpers
 
-  getTabIndex: function (tabId) {
+  getTabIndex(tabId) {
     let tabIndex = -1;
     this.state.tabs.forEach((tab, index) => {
       if (tab.id === tabId) {
@@ -166,19 +179,19 @@ let Tabbar = createClass({
       }
     });
     return tabIndex;
-  },
+  }
 
-  getTabId: function (index) {
+  getTabId(index) {
     return this.state.tabs[index].id;
-  },
+  }
 
-  getCurrentTabId: function () {
+  getCurrentTabId() {
     return this.state.tabs[this.state.activeTab].id;
-  },
+  }
 
   // Event Handlers
 
-  onTabChanged: function (index) {
+  onTabChanged(index) {
     this.setState({
       activeTab: index
     });
@@ -186,9 +199,9 @@ let Tabbar = createClass({
     if (this.props.onSelect) {
       this.props.onSelect(this.state.tabs[index].id);
     }
-  },
+  }
 
-  onAllTabsMenuClick: function (event) {
+  onAllTabsMenuClick(event) {
     let menu = new Menu();
     let target = event.target;
 
@@ -214,11 +227,11 @@ let Tabbar = createClass({
       { doc: this.props.menuDocument });
 
     return menu;
-  },
+  }
 
   // Rendering
 
-  renderTab: function (tab) {
+  renderTab(tab) {
     if (typeof tab.panel === "function") {
       return tab.panel({
         key: tab.id,
@@ -229,9 +242,9 @@ let Tabbar = createClass({
     }
 
     return tab.panel;
-  },
+  }
 
-  render: function () {
+  render() {
     let tabs = this.state.tabs.map((tab) => this.renderTab(tab));
 
     return (
@@ -247,7 +260,7 @@ let Tabbar = createClass({
         )
       )
     );
-  },
-});
+  }
+}
 
 module.exports = Tabbar;

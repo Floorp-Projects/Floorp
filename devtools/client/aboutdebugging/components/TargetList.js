@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -18,19 +18,19 @@ const LocaleCompare = (a, b) => {
   return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 };
 
-module.exports = createClass({
-  displayName: "TargetList",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    debugDisabled: PropTypes.bool,
-    error: PropTypes.node,
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string,
-    sort: PropTypes.bool,
-    targetClass: PropTypes.func.isRequired,
-    targets: PropTypes.arrayOf(PropTypes.object).isRequired
-  },
+class TargetList extends Component {
+  static get propTypes() {
+    return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      debugDisabled: PropTypes.bool,
+      error: PropTypes.node,
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+      sort: PropTypes.bool,
+      targetClass: PropTypes.func.isRequired,
+      targets: PropTypes.arrayOf(PropTypes.object).isRequired
+    };
+  }
 
   render() {
     let { client, debugDisabled, error, targetClass, targets, sort } = this.props;
@@ -52,5 +52,7 @@ module.exports = createClass({
 
     return dom.div({ id: this.props.id, className: "targets" },
       dom.h2(null, this.props.name), content);
-  },
-});
+  }
+}
+
+module.exports = TargetList;

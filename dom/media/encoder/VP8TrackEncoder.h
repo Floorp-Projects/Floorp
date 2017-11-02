@@ -27,8 +27,9 @@ class VP8TrackEncoder : public VideoTrackEncoder
     ENCODE_I_FRAME, // The next frame will be encoded as I-Frame.
     SKIP_FRAME, // Skip the next frame.
   };
+
 public:
-  explicit VP8TrackEncoder(TrackRate aTrackRate);
+  VP8TrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode);
   virtual ~VP8TrackEncoder();
 
   already_AddRefed<TrackMetadataBase> GetMetadata() final override;

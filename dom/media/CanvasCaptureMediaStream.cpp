@@ -70,6 +70,17 @@ public:
     }
   }
 
+  void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent aEvent) override
+  {
+    if (aEvent == MediaStreamGraphEvent::EVENT_REMOVED) {
+      EndStream();
+      mSourceStream->EndAllTrackAndFinish();
+
+      MutexAutoLock lock(mMutex);
+      mImage = nullptr;
+    }
+  }
+
 protected:
   ~StreamListener() { }
 

@@ -176,25 +176,20 @@ add_task(async function test_null_title() {
 
 add_task(async function test_invalid_records() {
   _("Make sure we handle invalid URLs in places databases gracefully.");
-  let connection = PlacesUtils.history
-                              .QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let stmt = connection.createAsyncStatement(
-    "INSERT INTO moz_places "
-  + "(url, url_hash, title, rev_host, visit_count, last_visit_date) "
-  + "VALUES ('invalid-uri', hash('invalid-uri'), 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")"
-  );
-  Async.querySpinningly(stmt);
-  stmt.finalize();
-  // Add the corresponding visit to retain database coherence.
-  stmt = connection.createAsyncStatement(
-    "INSERT INTO moz_historyvisits "
-  + "(place_id, visit_date, visit_type, session) "
-  + "VALUES ((SELECT id FROM moz_places WHERE url_hash = hash('invalid-uri') AND url = 'invalid-uri'), "
-  + TIMESTAMP3 + ", " + Ci.nsINavHistoryService.TRANSITION_TYPED + ", 1)"
-  );
-  Async.querySpinningly(stmt);
-  stmt.finalize();
+  await PlacesUtils.withConnectionWrapper("test_invalid_record", async function(db) {
+    await db.execute(
+      "INSERT INTO moz_places "
+      + "(url, url_hash, title, rev_host, visit_count, last_visit_date) "
+      + "VALUES ('invalid-uri', hash('invalid-uri'), 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")"
+    );
+    // Add the corresponding visit to retain database coherence.
+    await db.execute(
+      "INSERT INTO moz_historyvisits "
+      + "(place_id, visit_date, visit_type, session) "
+      + "VALUES ((SELECT id FROM moz_places WHERE url_hash = hash('invalid-uri') AND url = 'invalid-uri'), "
+      + TIMESTAMP3 + ", " + Ci.nsINavHistoryService.TRANSITION_TYPED + ", 1)"
+    );
+  });
   do_check_attribute_count((await store.getAllIDs()), 4);
 
   _("Make sure we report records with invalid URIs.");
