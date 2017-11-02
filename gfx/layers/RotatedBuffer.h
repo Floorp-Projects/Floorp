@@ -338,7 +338,7 @@ public:
   virtual TextureClient* GetClient() const override { return mClient; }
   virtual TextureClient* GetClientOnWhite() const override { return mClientOnWhite; }
 
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
     return new RemoteRotatedBuffer {
       mClient, mClientOnWhite,
       mTarget, mTargetOnWhite,
@@ -397,7 +397,7 @@ public:
   virtual gfx::DrawTarget* GetDTBuffer() const override;
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const override;
 
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
     return new DrawTargetRotatedBuffer {
         mTarget, mTargetOnWhite,
         mBufferRect, mBufferRotation
@@ -438,7 +438,7 @@ public:
   virtual gfx::DrawTarget* GetDTBuffer() const override { return nullptr; }
   virtual gfx::DrawTarget* GetDTBufferOnWhite() const override { return nullptr; }
 
-  virtual RefPtr<RotatedBuffer> ShallowCopy() const {
+  virtual RefPtr<RotatedBuffer> ShallowCopy() const override {
     return nullptr;
   }
 
