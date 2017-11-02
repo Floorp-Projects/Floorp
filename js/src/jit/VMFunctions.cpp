@@ -1835,6 +1835,12 @@ GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval)
     return true;
 }
 
+void
+CloseIteratorFromIon(JSContext* cx, JSObject* obj)
+{
+    CloseIterator(obj);
+}
+
 typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
                                    HandleValue, HandleValue, bool);
 const VMFunction SetObjectElementInfo =
