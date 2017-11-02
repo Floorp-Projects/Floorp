@@ -1191,9 +1191,6 @@ class AutoAssertNoException
     }
 };
 
-/* Exposed intrinsics for the JITs. */
-bool intrinsic_IsSuspendedStarGenerator(JSContext* cx, unsigned argc, Value* vp);
-
 class MOZ_RAII AutoLockForExclusiveAccess
 {
     JSRuntime* runtime;

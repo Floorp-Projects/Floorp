@@ -834,7 +834,7 @@ intrinsic_SetCanonicalName(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-intrinsic_StarGeneratorObjectIsClosed(JSContext* cx, unsigned argc, Value* vp)
+intrinsic_GeneratorObjectIsClosed(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
@@ -846,7 +846,7 @@ intrinsic_StarGeneratorObjectIsClosed(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-js::intrinsic_IsSuspendedStarGenerator(JSContext* cx, unsigned argc, Value* vp)
+js::intrinsic_IsSuspendedGenerator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
@@ -2376,10 +2376,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallStringIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<StringIteratorObject>>,     2,0),
 
-    JS_FN("IsStarGeneratorObject",
+    JS_FN("IsGeneratorObject",
           intrinsic_IsInstanceOfBuiltin<GeneratorObject>,               1,0),
-    JS_FN("StarGeneratorObjectIsClosed", intrinsic_StarGeneratorObjectIsClosed, 1,0),
-    JS_FN("IsSuspendedStarGenerator",intrinsic_IsSuspendedStarGenerator,1,0),
+    JS_FN("GeneratorObjectIsClosed", intrinsic_GeneratorObjectIsClosed, 1,0),
+    JS_FN("IsSuspendedGenerator",    intrinsic_IsSuspendedGenerator,    1,0),
 
     JS_FN("GeneratorIsRunning",      intrinsic_GeneratorIsRunning,      1,0),
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
@@ -2449,7 +2449,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallTypedArrayMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<TypedArrayObject>>, 2, 0),
 
-    JS_FN("CallStarGeneratorMethodIfWrapped",
+    JS_FN("CallGeneratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<GeneratorObject>>, 2, 0),
 
     JS_INLINABLE_FN("IsMapObject", intrinsic_IsInstanceOfBuiltin<MapObject>, 1, 0,
