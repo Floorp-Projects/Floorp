@@ -69,11 +69,11 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
  *        - hud: the webconsole
  *        - messages: Array[Object]. An array of messages to match.
             Current supported options:
- *            - text: Exact text match in .message-body
+ *            - text: Partial text match in .message-body
  */
 function waitForMessages({ hud, messages }) {
   return new Promise(resolve => {
-    let numMatched = 0;
+    const matchedMessages = [];
     let receivedLog = hud.ui.on("new-messages",
       function messagesReceived(e, newMessages) {
         for (let message of messages) {
@@ -84,22 +84,36 @@ function waitForMessages({ hud, messages }) {
           for (let newMessage of newMessages) {
             let messageBody = newMessage.node.querySelector(".message-body");
             if (messageBody.textContent.includes(message.text)) {
-              numMatched++;
+              matchedMessages.push(newMessage);
               message.matched = true;
-              info("Matched a message with text: " + message.text +
-                ", still waiting for " + (messages.length - numMatched) + " messages");
+              const messagesLeft = messages.length - matchedMessages.length;
+              info(`Matched a message with text: "${message.text}", ` + (messagesLeft > 0
+                ? `still waiting for ${messagesLeft} messages.`
+                : `all messages received.`)
+              );
               break;
             }
           }
 
-          if (numMatched === messages.length) {
+          if (matchedMessages.length === messages.length) {
             hud.ui.off("new-messages", messagesReceived);
-            resolve(receivedLog);
+            resolve(matchedMessages);
             return;
           }
         }
       });
   });
+}
+
+/**
+ * Wait for a single message in the web console output, resolving once it is received.
+ *
+ * @param {Object} hud : the webconsole
+ * @param {String} text : text included in .message-body
+ */
+async function waitForMessage(hud, text) {
+  const messages = await waitForMessages({hud, messages: [{text}]});
+  return messages[0];
 }
 
 /**
