@@ -27,6 +27,7 @@
 #include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
+#include <set>
 
 using namespace webrtc::videocapturemodule;
 
@@ -173,7 +174,8 @@ public:
   virtual int32_t Release() const override;
   //Call backs
   virtual void RegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
-  virtual void DeRegisterCaptureDataCallback() override;
+  virtual void DeRegisterCaptureDataCallback(rtc::VideoSinkInterface<VideoFrame> *dataCallback) override;
+  virtual int32_t StopCaptureIfAllClientsClose() override;
 
   virtual int32_t SetCaptureRotation(VideoRotation rotation) override;
   virtual bool SetApplyRotation(bool enable) override;
@@ -213,7 +215,7 @@ private:
 
   CriticalSectionWrapper& _callBackCs;
 
-  rtc::VideoSinkInterface<VideoFrame>* _dataCallBack;
+  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
 
   int64_t _incomingFrameTimesNanos[kFrameRateCountHistorySize];// timestamp for local captured frames
   VideoRotation _rotateFrame; //Set if the frame should be rotated by the capture module.
