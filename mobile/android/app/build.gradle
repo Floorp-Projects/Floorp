@@ -208,7 +208,8 @@ android {
         androidTest {
             java {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
-                srcDir "${topsrcdir}/mobile/android/tests/background/junit3/src"
+                // Bug 1229149 tracks pushing this into a :services Gradle project.
+                srcDir "${topsrcdir}/mobile/android/services/src/androidTest/java"
                 srcDir "${topsrcdir}/mobile/android/tests/browser/junit3/src"
             }
             res {
