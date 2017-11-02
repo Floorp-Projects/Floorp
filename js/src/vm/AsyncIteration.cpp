@@ -465,10 +465,10 @@ js::AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
 
     // 11.4.3.5 steps 12-14, 16-20.
     HandlePropertyName funName = completionKind == CompletionKind::Normal
-                                 ? cx->names().StarGeneratorNext
+                                 ? cx->names().GeneratorNext
                                  : completionKind == CompletionKind::Throw
-                                 ? cx->names().StarGeneratorThrow
-                                 : cx->names().StarGeneratorReturn;
+                                 ? cx->names().GeneratorThrow
+                                 : cx->names().GeneratorReturn;
     FixedInvokeArgs<1> args(cx);
     args[0].set(argument);
     RootedValue result(cx);

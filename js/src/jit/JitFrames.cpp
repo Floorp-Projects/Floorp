@@ -139,7 +139,7 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
 
     if (cx->isExceptionPending()) {
         if (tn->kind == JSTRY_FOR_IN)
-            UnwindIteratorForException(cx, iterObject);
+            CloseIterator(iterObject);
         else
             IteratorCloseForException(cx, iterObject);
     } else {
@@ -429,14 +429,8 @@ ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame, EnvironmentI
             uint8_t* stackPointer;
             BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer, &stackPointer);
             Value iterValue(*reinterpret_cast<Value*>(stackPointer));
-            RootedObject iterObject(cx, &iterValue.toObject());
-            if (!UnwindIteratorForException(cx, iterObject)) {
-                // See comment in the JSTRY_FOR_IN case in Interpreter.cpp's
-                // ProcessTryNotes.
-                SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
-                MOZ_ASSERT(**pc == JSOP_ENDITER);
-                return false;
-            }
+            JSObject* iterObject = &iterValue.toObject();
+            CloseIterator(iterObject);
             break;
           }
 

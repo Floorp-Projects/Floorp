@@ -60,6 +60,14 @@ extern SECItem *DSAU_DecodeDerSigToLen(const SECItem *item, unsigned int len);
 extern SGNContext *SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *privKey);
 
 /*
+** Create a new signature context from an algorithmID.
+**      "alg" the signature algorithm to use
+**	"privKey" the private key to use
+*/
+extern SGNContext *SGN_NewContextWithAlgorithmID(SECAlgorithmID *alg,
+                                                 SECKEYPrivateKey *privKey);
+
+/*
 ** Destroy a signature-context object
 **	"cx" the object
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
@@ -106,6 +114,21 @@ extern SECStatus SEC_SignData(SECItem *result,
                               SECKEYPrivateKey *pk, SECOidTag algid);
 
 /*
+** Sign a single block of data using private key encryption and given
+** signature/hash algorithm with parameters from an algorithmID.
+**	"result" the final signature data (memory is allocated)
+**	"buf" the input data to sign
+**	"len" the amount of data to sign
+**	"pk" the private key to encrypt with
+**	"algid" the signature/hash algorithm to sign with
+**		(must be compatible with the key type).
+*/
+extern SECStatus SEC_SignDataWithAlgorithmID(SECItem *result,
+                                             const unsigned char *buf, int len,
+                                             SECKEYPrivateKey *pk,
+                                             SECAlgorithmID *algid);
+
+/*
 ** Sign a pre-digested block of data using private key encryption, encoding
 **  The given signature/hash algorithm.
 **	"result" the final signature data (memory is allocated)
@@ -132,6 +155,27 @@ extern SECStatus SEC_DerSignData(PLArenaPool *arena, SECItem *result,
                                  SECKEYPrivateKey *pk, SECOidTag algid);
 
 /*
+** DER sign a single block of data using private key encryption and
+** the given signature/hash algorithm with parameters from an
+** algorithmID. This routine first computes a digital signature using
+** SEC_SignData, then wraps it with an CERTSignedData and then der
+** encodes the result.
+**	"arena" is the memory arena to use to allocate data from
+** 	"result" the final der encoded data (memory is allocated)
+** 	"buf" the input data to sign
+** 	"len" the amount of data to sign
+** 	"pk" the private key to encrypt with
+**	"algid" the signature/hash algorithm to sign with
+**		(must be compatible with the key type).
+*/
+extern SECStatus SEC_DerSignDataWithAlgorithmID(PLArenaPool *arena,
+                                                SECItem *result,
+                                                const unsigned char *buf,
+                                                int len,
+                                                SECKEYPrivateKey *pk,
+                                                SECAlgorithmID *algid);
+
+/*
 ** Destroy a signed-data object.
 **	"sd" the object
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
@@ -145,6 +189,23 @@ extern void SEC_DestroySignedData(CERTSignedData *sd, PRBool freeit);
 */
 extern SECOidTag SEC_GetSignatureAlgorithmOidTag(KeyType keyType,
                                                  SECOidTag hashAlgTag);
+
+/*
+** Create algorithm parameters for signing. Return a new item
+** allocated from arena, or NULL on failure.
+**	"arena" is the memory arena to use to allocate data from
+**	"result" the encoded parameters (memory is allocated)
+**	"signAlgTag" is the signing algorithm
+**	"hashAlgTag" is the preferred hash algorithm
+**	"params" is the default parameters
+**	"key" is the private key
+*/
+extern SECItem *SEC_CreateSignatureAlgorithmParameters(PLArenaPool *arena,
+                                                       SECItem *result,
+                                                       SECOidTag signAlgTag,
+                                                       SECOidTag hashAlgTag,
+                                                       const SECItem *params,
+                                                       const SECKEYPrivateKey *key);
 
 /****************************************/
 /*

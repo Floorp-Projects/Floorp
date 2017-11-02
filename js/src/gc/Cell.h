@@ -42,7 +42,7 @@ TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const
 namespace gc {
 
 class Arena;
-enum class AllocKind;
+enum class AllocKind : uint8_t;
 struct Chunk;
 class TenuredCell;
 

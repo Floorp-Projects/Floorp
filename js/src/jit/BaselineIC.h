@@ -1298,13 +1298,13 @@ class ICCall_ConstStringSplit : public ICMonitoredStub
    };
 };
 
-class ICCall_IsSuspendedStarGenerator : public ICStub
+class ICCall_IsSuspendedGenerator : public ICStub
 {
     friend class ICStubSpace;
 
   protected:
-    explicit ICCall_IsSuspendedStarGenerator(JitCode* stubCode)
-      : ICStub(ICStub::Call_IsSuspendedStarGenerator, stubCode)
+    explicit ICCall_IsSuspendedGenerator(JitCode* stubCode)
+      : ICStub(ICStub::Call_IsSuspendedGenerator, stubCode)
     {}
 
   public:
@@ -1314,10 +1314,10 @@ class ICCall_IsSuspendedStarGenerator : public ICStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::Call_IsSuspendedStarGenerator, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::Call_IsSuspendedGenerator, Engine::Baseline)
         {}
         ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICCall_IsSuspendedStarGenerator>(space, getStubCode());
+            return newStub<ICCall_IsSuspendedGenerator>(space, getStubCode());
         }
    };
 };

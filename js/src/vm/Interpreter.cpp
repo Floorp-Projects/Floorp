@@ -1270,16 +1270,8 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             DebugOnly<jsbytecode*> pc = regs.fp()->script()->main() + tn->start + tn->length;
             MOZ_ASSERT(JSOp(*pc) == JSOP_ENDITER);
             Value* sp = regs.spForStackDepth(tn->stackDepth);
-            RootedObject obj(cx, &sp[-1].toObject());
-            if (!UnwindIteratorForException(cx, obj)) {
-                // We should only settle on the note only if
-                // UnwindIteratorForException itself threw, as
-                // onExceptionUnwind should be called anew with the new
-                // location of the throw (the iterator). Indeed, we must
-                // settle to avoid infinitely handling the same exception.
-                SettleOnTryNote(cx, tn, ei, regs);
-                return ErrorReturnContinuation;
-            }
+            JSObject* obj = &sp[-1].toObject();
+            CloseIterator(obj);
             break;
           }
 
@@ -1985,7 +1977,6 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
-CASE(JSOP_ITERNEXT)
 CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
@@ -2280,11 +2271,8 @@ CASE(JSOP_ENDITER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 1);
     COUNT_COVERAGE();
-    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
-    bool ok = CloseIterator(cx, obj);
+    CloseIterator(&REGS.sp[-1].toObject());
     REGS.sp--;
-    if (!ok)
-        goto error;
 }
 END_CASE(JSOP_ENDITER)
 
@@ -2294,6 +2282,13 @@ CASE(JSOP_ISGENCLOSING)
     PUSH_BOOLEAN(b);
 }
 END_CASE(JSOP_ISGENCLOSING)
+
+CASE(JSOP_ITERNEXT)
+{
+    // Ion relies on this.
+    MOZ_ASSERT(REGS.sp[-1].isString());
+}
+END_CASE(JSOP_ITERNEXT)
 
 CASE(JSOP_DUP)
 {
