@@ -195,7 +195,7 @@ impl DeviceInterfaceDetailData {
             return None;
         }
 
-        let mut data = unsafe { libc::malloc(size) as PSP_DEVICE_INTERFACE_DETAIL_DATA_W };
+        let data = unsafe { libc::malloc(size) as PSP_DEVICE_INTERFACE_DETAIL_DATA_W };
         if data.is_null() {
             return None;
         }
