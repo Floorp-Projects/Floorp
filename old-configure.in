@@ -3221,9 +3221,11 @@ case "$CPU_ARCH" in
       dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
       FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
   ;;
-  arm*)
+  arm*|aarch64)
       MOZ_FFVPX=1
       MOZ_FFVPX_FLACONLY=1
+      dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
+      dnl aarch 64 FLAC decoder for now will be C only.
       FFVPX_ASFLAGS=$VPX_ASFLAGS
   ;;
 esac
