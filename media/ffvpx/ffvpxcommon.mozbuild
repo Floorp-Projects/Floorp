@@ -27,7 +27,7 @@ if CONFIG['FFVPX_ASFLAGS']:
             '-Pconfig_darwin64.asm',
             '-DPREFIX'
         ]
-    elif CONFIG['CPU_ARCH'] != 'arm':
+    elif CONFIG['CPU_ARCH'] != 'arm' and CONFIG['CPU_ARCH'] != 'aarch4':
         USE_YASM = True
         # Default to unix, similar to how ASFLAGS setup works in configure.in
         ASFLAGS += ['-Pconfig_unix64.asm']
