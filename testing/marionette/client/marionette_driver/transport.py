@@ -135,13 +135,17 @@ class TcpTransport(object):
 
     @property
     def socket_timeout(self):
+        if self.sock:
+            return self.sock.gettimeout()
+
         return self._socket_timeout
 
     @socket_timeout.setter
     def socket_timeout(self, value):
+        self._socket_timeout = value
+
         if self.sock:
             self.sock.settimeout(value)
-        self._socket_timeout = value
 
     def _unmarshal(self, packet):
         msg = None
@@ -227,7 +231,7 @@ class TcpTransport(object):
             self.sock = None
             raise
 
-        with SocketTimeout(self.sock, 2.0):
+        with SocketTimeout(self.sock, 60.0):
             # first packet is always a JSON Object
             # which we can use to tell which protocol level we are at
             raw = self.receive(unmarshal=False)
