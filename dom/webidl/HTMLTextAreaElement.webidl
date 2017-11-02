@@ -46,9 +46,9 @@ interface HTMLTextAreaElement : HTMLElement {
 
   [Constant]
   readonly attribute DOMString type;
-  [CEReactions, SetterThrows, Pure]
+  [CEReactions, Throws, Pure]
            attribute DOMString defaultValue;
-  [CEReactions, TreatNullAs=EmptyString] attribute DOMString value;
+  [CEReactions, SetterThrows, TreatNullAs=EmptyString] attribute DOMString value;
   readonly attribute unsigned long textLength;
 
   readonly attribute boolean willValidate;
@@ -78,8 +78,7 @@ interface HTMLTextAreaElement : HTMLElement {
 };
 
 partial interface HTMLTextAreaElement {
-  // Mirrored chrome-only Mozilla extensions to nsIDOMHTMLTextAreaElement.
-  // Please make sure to update this list of nsIDOMHTMLTextAreaElement changes.
+  // Chrome-only Mozilla extensions
 
   [Throws, ChromeOnly]
   readonly attribute XULControllers controllers;

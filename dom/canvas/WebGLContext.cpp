@@ -112,10 +112,6 @@ WebGLContext::WebGLContext()
     , mNumPerfWarnings(0)
     , mMaxAcceptableFBStatusInvals(gfxPrefs::WebGLMaxAcceptableFBStatusInvals())
     , mDataAllocGLCallCount(0)
-    , mBufferFetchingIsVerified(false)
-    , mBufferFetchingHasPerVertex(false)
-    , mMaxFetchedVertices(0)
-    , mMaxFetchedInstances(0)
     , mBypassShaderValidation(false)
     , mEmptyTFO(0)
     , mContextLossHandler(this)
@@ -183,8 +179,6 @@ WebGLContext::WebGLContext()
     }
 
     mLastUseIndex = 0;
-
-    InvalidateBufferFetching();
 
     mDisableFragHighP = false;
 
@@ -2303,6 +2297,27 @@ Intersect(const int32_t srcSize, const int32_t read0, const int32_t readSize,
     return true;
 }
 
+// --
+
+uint64_t
+AvailGroups(const uint64_t totalAvailItems, const uint64_t firstItemOffset,
+            const uint32_t groupSize, const uint32_t groupStride)
+{
+    MOZ_ASSERT(groupSize && groupStride);
+    MOZ_ASSERT(groupSize <= groupStride);
+
+    if (totalAvailItems <= firstItemOffset)
+        return 0;
+    const size_t availItems = totalAvailItems - firstItemOffset;
+
+    size_t availGroups     = availItems / groupStride;
+    const size_t tailItems = availItems % groupStride;
+    if (tailItems >= groupSize) {
+        availGroups += 1;
+    }
+    return availGroups;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 CheckedUint32
@@ -2418,8 +2433,7 @@ WebGLContext::ValidateArrayBufferView(const char* funcName,
     return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XPCOM goop
+////
 
 void
 WebGLContext::UpdateMaxDrawBuffers()
@@ -2433,6 +2447,9 @@ WebGLContext::UpdateMaxDrawBuffers()
     //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
     mGLMaxDrawBuffers = std::min(mGLMaxDrawBuffers, mGLMaxColorAttachments);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// XPCOM goop
 
 void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,

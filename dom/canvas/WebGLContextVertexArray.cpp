@@ -21,8 +21,6 @@ WebGLContext::BindVertexArray(WebGLVertexArray* array)
     if (array && !ValidateObject("bindVertexArrayObject", *array))
         return;
 
-    InvalidateBufferFetching();
-
     MakeContextCurrent();
 
     if (mBoundVertexArray) {

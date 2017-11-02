@@ -34,6 +34,7 @@
 #endif
 
 // Local
+#include "CacheMap.h"
 #include "WebGLContextLossHandler.h"
 #include "WebGLContextUnchecked.h"
 #include "WebGLFormats.h"
@@ -293,6 +294,7 @@ class WebGLContext
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionVertexArray;
     friend class WebGLMemoryTracker;
+    friend struct webgl::LinkedProgramInfo;
     friend struct webgl::UniformBlockInfo;
 
     enum {
@@ -1390,20 +1392,11 @@ public:
     void VertexAttribDivisor(GLuint index, GLuint divisor);
 
 private:
-    // Cache the max number of vertices and instances that can be read from
-    // bound VBOs (result of ValidateBuffers).
-    bool mBufferFetchingIsVerified;
-    bool mBufferFetchingHasPerVertex;
-    uint32_t mMaxFetchedVertices;
-    uint32_t mMaxFetchedInstances;
-    bool mBufferFetch_IsAttrib0Active;
-
-    bool DrawArrays_check(const char* funcName, GLenum mode, GLint first,
-                          GLsizei vertCount, GLsizei instanceCount);
-    bool DrawElements_check(const char* funcName, GLenum mode, GLsizei vertCount,
-                            GLenum type, WebGLintptr byteOffset,
-                            GLsizei instanceCount);
-    bool DrawInstanced_check(const char* info);
+    bool DrawArrays_check(const char* funcName, GLint first, GLsizei vertCount,
+                          GLsizei instanceCount, Maybe<uint32_t>* out_lastVert);
+    bool DrawElements_check(const char* funcName, GLsizei indexCount, GLenum type,
+                            WebGLintptr byteOffset, GLsizei instanceCount,
+                            Maybe<uint32_t>* out_lastVert);
     void Draw_cleanup(const char* funcName);
 
     void VertexAttrib1fv_base(GLuint index, uint32_t arrayLength,
@@ -1415,7 +1408,6 @@ private:
     void VertexAttrib4fv_base(GLuint index, uint32_t arrayLength,
                               const GLfloat* ptr);
 
-    bool ValidateBufferFetching(const char* info);
     bool BindArrayAttribToLocation0(WebGLProgram* prog);
 
 // -----------------------------------------------------------------------------
@@ -1424,14 +1416,6 @@ protected:
     WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need() const;
     bool DoFakeVertexAttrib0(const char* funcName, GLuint vertexCount);
     void UndoFakeVertexAttrib0();
-
-    inline void InvalidateBufferFetching()
-    {
-        mBufferFetchingIsVerified = false;
-        mBufferFetchingHasPerVertex = false;
-        mMaxFetchedVertices = 0;
-        mMaxFetchedInstances = 0;
-    }
 
     CheckedUint32 mGeneration;
 
@@ -1927,6 +1911,7 @@ protected:
     // useful to vertex shaders, but is global state.
     UniquePtr<GLenum[]> mGenericVertexAttribTypes;
     uint8_t mGenericVertexAttrib0Data[sizeof(float) * 4];
+    CacheMapInvalidator mGenericVertexAttribTypeInvalidator;
 
     GLuint mFakeVertexAttrib0BufferObject;
     size_t mFakeVertexAttrib0BufferObjectSize;
@@ -2188,6 +2173,10 @@ private:
 bool
 Intersect(int32_t srcSize, int32_t read0, int32_t readSize, int32_t* out_intRead0,
           int32_t* out_intWrite0, int32_t* out_intSize);
+
+uint64_t
+AvailGroups(uint64_t totalAvailItems, uint64_t firstItemOffset, uint32_t groupSize,
+            uint32_t groupStride);
 
 ////
 

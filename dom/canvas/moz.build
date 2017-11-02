@@ -94,6 +94,7 @@ SOURCES += [
 
 # WebGL Sources
 UNIFIED_SOURCES += [
+    'CacheMap.cpp',
     'TexUnpackBlob.cpp',
     'WebGL1Context.cpp',
     'WebGL2Context.cpp',
