@@ -168,9 +168,9 @@ ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
 
-EXTRA_DEPS += $(DEFFILE)
-
 endif # !GNU_CC
+
+EXTRA_DEPS += $(DEFFILE)
 
 endif # WINNT
 
