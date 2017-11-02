@@ -187,6 +187,18 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         if 'MOZ_SIGNING_SERVERS' in os.environ:
             repack_env['MOZ_SIGN_CMD'] = \
                 subprocess.list2cmdline(self.query_moz_sign_cmd(formats=['jar']))
+
+        if self.query_is_nightly() or self.query_is_nightly_promotion():
+            if self.query_is_nightly():
+                # nightly promotion needs to set update_channel but not do all the 'IS_NIGHTLY'
+                # automation parts like uploading symbols for now
+                env["IS_NIGHTLY"] = "yes"
+            # in branch_specifics.py we might set update_channel explicitly
+            if c.get('update_channel'):
+                env["MOZ_UPDATE_CHANNEL"] = c['update_channel']
+            else:  # let's just give the generic channel based on branch
+                env["MOZ_UPDATE_CHANNEL"] = "nightly-%s" % (c['branch'],)
+
         self.repack_env = repack_env
         return self.repack_env
 
