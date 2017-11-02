@@ -17,6 +17,12 @@ const MESSAGES = {
   SystemMenu: "menu-message",
 };
 
+const ABOUTDEVTOOLS_STRINGS = "chrome://devtools-shim/locale/aboutdevtools.properties";
+const aboutDevtoolsBundle = Services.strings.createBundle(ABOUTDEVTOOLS_STRINGS);
+
+const KEY_SHORTCUTS_STRINGS = "chrome://devtools-shim/locale/key-shortcuts.properties";
+const keyShortcutsBundle = Services.strings.createBundle(KEY_SHORTCUTS_STRINGS);
+
 // URL constructor doesn't support about: scheme,
 // we have to use http in order to have working searchParams.
 let url = new URL(window.location.href.replace("about:", "http://"));
@@ -24,10 +30,8 @@ let reason = url.searchParams.get("reason");
 let tabid = parseInt(url.searchParams.get("tabid"), 10);
 
 function getToolboxShortcut() {
-  const bundleUrl = "chrome://devtools-shim/locale/key-shortcuts.properties";
-  const bundle = Services.strings.createBundle(bundleUrl);
   const modifier = Services.appinfo.OS == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+";
-  return modifier + bundle.GetStringFromName("toggleToolbox.commandkey");
+  return modifier + keyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey");
 }
 
 function onInstallButtonClick() {
@@ -49,6 +53,88 @@ function updatePage() {
     welcomePage.setAttribute("hidden", "true");
     installPage.removeAttribute("hidden");
   }
+}
+
+/**
+ * Array of descriptors for features displayed on about:devtools.
+ * Each feature should contain:
+ * - icon: the name of the image to use
+ * - title: the key of the localized title (from aboutdevtools.properties)
+ * - desc: the key of the localized description (from aboutdevtools.properties)
+ * - link: the MDN documentation link
+ */
+const features = [
+  {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-inspector.svg",
+    title: "features.inspector.title",
+    desc: "features.inspector.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Page_Inspector",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-console.svg",
+    title: "features.console.title",
+    desc: "features.console.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Web_Console",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-debugger.svg",
+    title: "features.debugger.title",
+    desc: "features.debugger.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Debugger",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-network.svg",
+    title: "features.network.title",
+    desc: "features.network.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Network_Monitor",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-storage.svg",
+    title: "features.storage.title",
+    desc: "features.storage.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Storage_Inspector",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-responsive.svg",
+    title: "features.responsive.title",
+    desc: "features.responsive.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Responsive_Design_Mode",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-visualediting.svg",
+    title: "features.visualediting.title",
+    desc: "features.visualediting.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Style_Editor",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-performance.svg",
+    title: "features.performance.title",
+    desc: "features.performance.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Performance",
+  }, {
+    icon: "chrome://devtools-shim/content/aboutdevtools/images/feature-memory.svg",
+    title: "features.memory.title",
+    desc: "features.memory.desc",
+    link: "https://developer.mozilla.org/docs/Tools/Memory",
+  },
+];
+
+/**
+ * Helper to create a DOM element to represent a DevTools feature.
+ */
+function createFeatureEl(feature) {
+  let li = document.createElement("li");
+  li.classList.add("feature");
+  let learnMore = aboutDevtoolsBundle.GetStringFromName("features.learnMore");
+
+  let {icon, link, title, desc} = feature;
+  title = aboutDevtoolsBundle.GetStringFromName(title);
+  desc = aboutDevtoolsBundle.GetStringFromName(desc);
+  // eslint-disable-next-line no-unsanitized/property
+  li.innerHTML =
+    `<a class="feature-link" href="${link}" target="_blank">
+       <img class="feature-icon" src="${icon}"/>
+     </a>
+     <h3 class="feature-name">${title}</h3>
+     <p class="feature-desc">
+       ${desc}
+       <a class="external feature-link" href="${link}" target="_blank">${learnMore}</a>
+     </p>`;
+
+  return li;
 }
 
 window.addEventListener("load", function () {
@@ -75,6 +161,11 @@ window.addEventListener("load", function () {
   document.getElementById("install").addEventListener("click", onInstallButtonClick);
   document.getElementById("close").addEventListener("click", onCloseButtonClick);
   Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, updatePage);
+
+  let featuresContainer = document.querySelector(".features-list");
+  for (let feature of features) {
+    featuresContainer.appendChild(createFeatureEl(feature));
+  }
 
   // Update the current page based on the current value of DEVTOOLS_ENABLED_PREF.
   updatePage();
