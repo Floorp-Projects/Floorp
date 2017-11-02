@@ -399,6 +399,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvUpdateDictionaryList(InfallibleTArray<nsString>&& aDictionaries) override;
 
+  virtual mozilla::ipc::IPCResult RecvUpdateFontList(InfallibleTArray<SystemFontListEntry>&& aFontList) override;
+
   virtual mozilla::ipc::IPCResult RecvUpdateAppLocales(nsTArray<nsCString>&& aAppLocales) override;
   virtual mozilla::ipc::IPCResult RecvUpdateRequestedLocales(nsTArray<nsCString>&& aRequestedLocales) override;
 
@@ -751,7 +753,7 @@ private:
 
   // Temporary storage for a list of available fonts, passed from the
   // parent process and used to initialize gfx in the child. Currently used
-  // only on MacOSX.
+  // only on MacOSX and Linux.
   InfallibleTArray<mozilla::dom::SystemFontListEntry> mFontList;
   // Temporary storage for nsXPLookAndFeel flags.
   nsTArray<LookAndFeelInt> mLookAndFeelCache;

@@ -2542,6 +2542,14 @@ ContentChild::RecvUpdateDictionaryList(InfallibleTArray<nsString>&& aDictionarie
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvUpdateFontList(InfallibleTArray<SystemFontListEntry>&& aFontList)
+{
+  mFontList = Move(aFontList);
+  gfxPlatform::GetPlatform()->UpdateFontList();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvUpdateAppLocales(nsTArray<nsCString>&& aAppLocales)
 {
   LocaleService::GetInstance()->AssignAppLocales(aAppLocales);
