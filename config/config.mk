@@ -136,7 +136,6 @@ PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
 
 # determine debug-related options
 _DEBUG_ASFLAGS :=
-_DEBUG_LDFLAGS :=
 
 ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   ifeq ($(AS),$(YASM))
@@ -150,37 +149,9 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   else
     _DEBUG_ASFLAGS += $(MOZ_DEBUG_FLAGS)
   endif
-  _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 endif
 
 ASFLAGS += $(_DEBUG_ASFLAGS)
-OS_LDFLAGS += $(_DEBUG_LDFLAGS)
-
-# XXX: What does this? Bug 482434 filed for better explanation.
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-ifndef MOZ_DEBUG
-
-# MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
-# Used for generating an optimized build with debugging symbols.
-# Used in the Windows nightlies to generate symbols for crash reporting.
-ifdef MOZ_DEBUG_SYMBOLS
-OS_LDFLAGS += -DEBUG
-endif
-
-#
-# Handle DMD in optimized builds.
-#
-ifdef MOZ_DMD
-OS_LDFLAGS = -DEBUG
-endif # MOZ_DMD
-
-ifdef MOZ_OPTIMIZE
-OS_LDFLAGS += -OPT:REF,ICF
-endif # MOZ_OPTIMIZE
-
-endif # MOZ_DEBUG
-
-endif # WINNT && !GNU_CC
 
 #
 # Build using PIC by default
@@ -217,9 +188,6 @@ endif
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
-# linker
-OS_LDFLAGS += $(LINKER_LDFLAGS)
-
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
 	-f $(MOZ_JAR_MAKER_FILE_FORMAT) \
@@ -251,11 +219,7 @@ INCLUDES = \
 
 include $(MOZILLA_DIR)/config/static-checking-config.mk
 
-LDFLAGS		= $(OS_LDFLAGS) $(PGO_LDFLAGS) $(MOZBUILD_LDFLAGS) $(MOZ_FIX_LINK_PATHS) $(MK_LDFLAGS)
-
-ifdef MOZ_OPTIMIZE
-LDFLAGS		+= $(MOZ_OPTIMIZE_LDFLAGS)
-endif # MOZ_OPTIMIZE
+LDFLAGS		= $(COMPUTED_LDFLAGS) $(PGO_LDFLAGS) $(MK_LDFLAGS)
 
 COMPILE_CFLAGS	= $(COMPUTED_CFLAGS) $(PGO_CFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)
 COMPILE_CXXFLAGS = $(COMPUTED_CXXFLAGS) $(PGO_CFLAGS) $(_DEPEND_CFLAGS) $(MK_COMPILE_DEFINES)

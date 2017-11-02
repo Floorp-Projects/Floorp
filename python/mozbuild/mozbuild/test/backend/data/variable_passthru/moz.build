@@ -9,5 +9,4 @@ RESFILE = 'bar.res'
 RCINCLUDE = 'bar.rc'
 DEFFILE = 'baz.def'
 
-LDFLAGS += ['-ld flag with spaces', '-x']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']

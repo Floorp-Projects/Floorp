@@ -328,12 +328,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'DEFFILE': [
                 'DEFFILE := baz.def',
             ],
-            'MOZBUILD_LDFLAGS': [
-                "MOZBUILD_LDFLAGS += '-ld flag with spaces'",
-                'MOZBUILD_LDFLAGS += -x',
-                'MOZBUILD_LDFLAGS += -DELAYLOAD:foo.dll',
-                'MOZBUILD_LDFLAGS += -DELAYLOAD:bar.dll',
-            ],
             'WIN32_EXE_LDFLAGS': [
                 'WIN32_EXE_LDFLAGS += -subsystem:console',
             ],
