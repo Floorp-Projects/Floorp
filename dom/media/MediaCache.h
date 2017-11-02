@@ -339,9 +339,7 @@ public:
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
   // stream.
-  // This can fail when aWhence is NS_SEEK_END and no stream length
-  // is known.
-  nsresult Seek(int32_t aWhence, int64_t aOffset);
+  nsresult Seek(int64_t aOffset);
   int64_t Tell();
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
