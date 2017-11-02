@@ -17984,9 +17984,20 @@ QuotaClient::ShutdownWorkThreads()
 
   mShutdownRequested = true;
 
+  // Shutdown maintenance thread pool (this spins the event loop until all
+  // threads are gone). This should release any maintenance related quota
+  // objects.
   if (mMaintenanceThreadPool) {
     mMaintenanceThreadPool->Shutdown();
     mMaintenanceThreadPool = nullptr;
+  }
+
+  // Let any runnables dispatched from dying maintenance threads to be
+  // processed. This should release any maintenance related directory locks.
+  if (mCurrentMaintenance) {
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+      return !mCurrentMaintenance;
+    }));
   }
 
   RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
@@ -18312,7 +18323,8 @@ Maintenance::Start()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State::Initial);
 
-  if (IsAborted()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsAborted()) {
     return NS_ERROR_ABORT;
   }
 
@@ -18336,7 +18348,8 @@ Maintenance::CreateIndexedDatabaseManager()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::CreateIndexedDatabaseManager);
 
-  if (IsAborted()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      IsAborted()) {
     return NS_ERROR_ABORT;
   }
 
@@ -18361,7 +18374,8 @@ Maintenance::OpenDirectory()
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(QuotaManager::Get());
 
-  if (IsAborted()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsAborted()) {
     return NS_ERROR_ABORT;
   }
 
@@ -18385,7 +18399,8 @@ Maintenance::DirectoryOpen()
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(mDirectoryLock);
 
-  if (IsAborted()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsAborted()) {
     return NS_ERROR_ABORT;
   }
 
@@ -18415,7 +18430,8 @@ Maintenance::DirectoryWork()
   // We have to find all database files that match any persistence type and any
   // origin. We ignore anything out of the ordinary for now.
 
-  if (IsAborted()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      IsAborted()) {
     return NS_ERROR_ABORT;
   }
 
@@ -18754,6 +18770,11 @@ Maintenance::BeginDatabaseMaintenance()
     }
   };
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsAborted()) {
+    return NS_ERROR_ABORT;
+  }
+
   RefPtr<nsThreadPool> threadPool;
 
   for (DirectoryInfo& directoryInfo : mDirectoryInfos) {
@@ -18940,6 +18961,11 @@ DatabaseMaintenance::PerformMaintenanceOnDatabase()
     }
   };
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      mMaintenance->IsAborted()) {
+    return;
+  }
+
   nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
@@ -18955,10 +18981,6 @@ DatabaseMaintenance::PerformMaintenanceOnDatabase()
   }
 
   AutoClose autoClose(connection);
-
-  if (mMaintenance->IsAborted()) {
-    return;
-  }
 
   AutoProgressHandler progressHandler(mMaintenance);
   if (NS_WARN_IF(NS_FAILED(progressHandler.Register(connection)))) {
@@ -18978,17 +19000,9 @@ DatabaseMaintenance::PerformMaintenanceOnDatabase()
     return;
   }
 
-  if (mMaintenance->IsAborted()) {
-    return;
-  }
-
   MaintenanceAction maintenanceAction;
   rv = DetermineMaintenanceAction(connection, databaseFile, &maintenanceAction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  if (mMaintenance->IsAborted()) {
     return;
   }
 
@@ -19017,6 +19031,11 @@ DatabaseMaintenance::CheckIntegrity(mozIStorageConnection* aConnection,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(aOk);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      mMaintenance->IsAborted()) {
+    return NS_ERROR_ABORT;
+  }
 
   nsresult rv;
 
@@ -19134,6 +19153,11 @@ DatabaseMaintenance::DetermineMaintenanceAction(
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aMaintenanceAction);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      mMaintenance->IsAborted()) {
+    return NS_ERROR_ABORT;
+  }
 
   int32_t schemaVersion;
   nsresult rv = aConnection->GetSchemaVersion(&schemaVersion);
@@ -19344,6 +19368,11 @@ DatabaseMaintenance::IncrementalVacuum(mozIStorageConnection* aConnection)
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aConnection);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      mMaintenance->IsAborted()) {
+    return;
+  }
+
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA incremental_vacuum;"
   ));
@@ -19360,6 +19389,11 @@ DatabaseMaintenance::FullVacuum(mozIStorageConnection* aConnection,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aConnection);
   MOZ_ASSERT(aDatabaseFile);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      mMaintenance->IsAborted()) {
+    return;
+  }
 
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "VACUUM;"
