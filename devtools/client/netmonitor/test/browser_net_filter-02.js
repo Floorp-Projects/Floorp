@@ -162,13 +162,13 @@ add_task(function* () {
     "The network details panel should be visible after toggle button was pressed.");
 
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   info("Testing html filtering.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-html-button"));
   testFilterButtons(monitor, "html");
-  yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 9);
@@ -177,7 +177,7 @@ add_task(function* () {
 
   info("Testing html filtering again.");
   testFilterButtons(monitor, "html");
-  yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Performing more requests.");
   wait = waitForNetworkEvents(monitor, 9);
@@ -186,15 +186,15 @@ add_task(function* () {
 
   info("Testing html filtering again.");
   testFilterButtons(monitor, "html");
-  yield testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-                      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Resetting filters.");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".requests-list-filter-all-button"));
   testFilterButtons(monitor, "all");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   yield teardown(monitor);
 
@@ -205,16 +205,7 @@ add_task(function* () {
     return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
   }
 
-  function* testContents(visibility) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
-      requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
-      EventUtils.synthesizeMouse(requestsListStatus, 0, 0, { type: "mousemove" },
-        monitor.panelWin);
-      yield waitUntil(() => requestsListStatus.title != null);
-    }
-
+  function testContents(visibility) {
     isnot(getSelectedRequest(store.getState()), null,
       "There should still be a selected item after filtering.");
     is(getSelectedIndex(store.getState()), 0,

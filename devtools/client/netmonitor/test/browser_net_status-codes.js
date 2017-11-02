@@ -111,14 +111,6 @@ add_task(function* () {
    * request list items to requestItems array.
    */
   function* verifyRequests() {
-    let requestListItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestListItems) {
-      requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
-    }
-
     info("Verifying requests contain correct information.");
     let index = 0;
     for (let request of REQUEST_DATA) {

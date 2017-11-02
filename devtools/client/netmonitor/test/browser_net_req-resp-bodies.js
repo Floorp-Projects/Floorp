@@ -29,7 +29,7 @@ add_task(function* () {
   });
   yield wait;
 
-  yield verifyRequest(0);
+  verifyRequest(0);
 
   // Switch to the webconsole.
   let onWebConsole = monitor.toolbox.once("webconsole-selected");
@@ -53,18 +53,11 @@ add_task(function* () {
   });
   yield wait;
 
-  yield verifyRequest(1);
+  verifyRequest(1);
 
   return teardown(monitor);
 
-  function* verifyRequest(index) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
-      requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-      yield waitUntil(() => requestsListStatus.title);
-    }
+  function verifyRequest(index) {
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
