@@ -96,12 +96,6 @@ add_task(function* () {
 
   let index = 0;
   for (let request of REQUEST_DATA) {
-    let requestItem = document.querySelectorAll(".request-list-item")[index];
-    requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".requests-list-status");
-    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
-    yield waitUntil(() => requestsListStatus.title);
-
     info("Verifying request #" + index);
     yield verifyRequestItemTarget(
       document,
