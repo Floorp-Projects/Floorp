@@ -14,6 +14,7 @@
 #include "gfxFontFeatures.h"
 #include "gfxFontVariations.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
+#include "nsColor.h"                    // for nsColor and NS_RGBA
 #include "nsCoord.h"                    // for nscoord
 #include "nsStringFwd.h"                // for nsAString
 #include "nsString.h"               // for nsString
@@ -72,6 +73,10 @@ struct nsFont {
 
   // Smoothing - controls subpixel-antialiasing (currently OSX only)
   uint8_t smoothing = NS_FONT_SMOOTHING_AUTO;
+
+  // The estimated background color behind the text. Enables a special
+  // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
+  nscolor fontSmoothingBackgroundColor = NS_RGBA(0,0,0,0);
 
   // The weight of the font; see gfxFontConstants.h.
   uint16_t weight = NS_FONT_WEIGHT_NORMAL;

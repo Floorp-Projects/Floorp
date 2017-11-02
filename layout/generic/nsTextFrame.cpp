@@ -7093,7 +7093,7 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   params.contextPaint = aParams.contextPaint;
   params.callbacks = aParams.callbacks;
   aParams.context->SetFontSmoothingBackgroundColor(
-    Color::FromABGR(StyleUserInterface()->mFontSmoothingBackgroundColor));
+    Color::FromABGR(StyleFont()->mFont.fontSmoothingBackgroundColor));
   DrawText(range, textBaselinePt, params);
   aParams.context->SetFontSmoothingBackgroundColor(Color());
 }
