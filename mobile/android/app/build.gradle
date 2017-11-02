@@ -208,7 +208,6 @@ android {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
                 srcDir "${topsrcdir}/mobile/android/tests/background/junit3/src"
                 srcDir "${topsrcdir}/mobile/android/tests/browser/junit3/src"
-                srcDir "${topsrcdir}/mobile/android/tests/javaddons/src"
             }
             res {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/res"
