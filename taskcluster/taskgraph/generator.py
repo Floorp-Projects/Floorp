@@ -258,7 +258,7 @@ class TaskGraphGenerator(object):
                                     Graph(set(all_tasks.keys()), set()))
         for fltr in self.filters:
             old_len = len(target_task_set.graph.nodes)
-            target_tasks = set(fltr(target_task_set, self.parameters))
+            target_tasks = set(fltr(target_task_set, self.parameters, graph_config))
             target_task_set = TaskGraph(
                 {l: all_tasks[l] for l in target_tasks},
                 Graph(target_tasks, set()))
