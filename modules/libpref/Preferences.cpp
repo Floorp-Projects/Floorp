@@ -4971,8 +4971,11 @@ RegisterCallbackHelper(PrefChangedFunc aCallback,
   gObserverTable->Put(observer, observer);
 }
 
+// RegisterVarCacheCallback uses high priority callbacks to ensure that cache
+// observers are called prior to ordinary pref observers. Doing this ensures
+// that ordinary observers will never get stale values from cache variables.
 static void
-RegisterPriorityCallback(PrefChangedFunc aCallback,
+RegisterVarCacheCallback(PrefChangedFunc aCallback,
                          const char* aPref,
                          void* aClosure)
 {
@@ -5041,10 +5044,6 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   return NS_OK;
 }
 
-// We insert cache observers using RegisterPriorityCallback to ensure they are
-// called prior to ordinary pref observers. Doing this ensures that ordinary
-// observers will never get stale values from cache variables.
-
 static void
 BoolVarChanged(const char* aPref, void* aClosure)
 {
@@ -5075,7 +5074,7 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(BoolVarChanged, aPref, data);
+  RegisterVarCacheCallback(BoolVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5102,7 +5101,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(IntVarChanged, aPref, data);
+  RegisterVarCacheCallback(IntVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5129,7 +5128,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(UintVarChanged, aPref, data);
+  RegisterVarCacheCallback(UintVarChanged, aPref, data);
   return NS_OK;
 }
 
@@ -5158,7 +5157,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(AtomicUintVarChanged<Order>, aPref, data);
+  RegisterVarCacheCallback(AtomicUintVarChanged<Order>, aPref, data);
   return NS_OK;
 }
 
@@ -5191,7 +5190,7 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
   CacheDataAppendElement(data);
-  RegisterPriorityCallback(FloatVarChanged, aPref, data);
+  RegisterVarCacheCallback(FloatVarChanged, aPref, data);
   return NS_OK;
 }
 
