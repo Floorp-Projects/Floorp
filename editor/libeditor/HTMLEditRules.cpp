@@ -7364,8 +7364,7 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
     }
   }
 
-  nsCOMPtr<nsINode> resultNode = &aNodeRight;
-  int32_t resultOffset = aNodeLeft.Length();
+  EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
 
   // Separate join rules for differing blocks
   if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.GetAsText()) {
@@ -7374,7 +7373,7 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorDOMPoint();
     }
-    return EditorDOMPoint(resultNode, resultOffset);
+    return ret;
   }
 
   // Remember the last left child, and first right child
@@ -7414,7 +7413,7 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
     }
     return JoinNodesSmart(*lastLeft, *firstRight);
   }
-  return EditorDOMPoint(resultNode, resultOffset);
+  return ret;
 }
 
 Element*
