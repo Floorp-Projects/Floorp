@@ -140,7 +140,10 @@ class TestLegacyClick(MarionetteTestCase):
         # the paint tree at this point _contains_ <option>, not that the
         # first element of the paint tree is _equal_ to <select>.
         select.click()
-        self.assertNotEqual(select.get_property("selectedIndex"), -1)
+
+        # Bug 1413821 - Click does not select an option on Android
+        if self.marionette.session_capabilities["browserName"] != "fennec":
+            self.assertNotEqual(select.get_property("selectedIndex"), -1)
 
     def test_container_is_select(self):
         self.marionette.navigate(inline("""
