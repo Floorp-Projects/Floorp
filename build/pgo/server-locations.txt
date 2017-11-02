@@ -277,6 +277,9 @@ https://fail-handshake.example.com:443                            privileged,fai
 https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity
 https://sha256ee.example.com:443                                  privileged,cert=sha256_end_entity
 
+# Hosts for Symantec distrust warning tests
+https://symantec-not-whitelisted-before-cutoff.example.com:443    privileged,cert=symantec_affected
+
 # Hosts for ssl3/rc4 console warning tests
 https://ssl3.example.com:443        privileged,ssl3
 https://rc4.example.com:443         privileged,rc4
