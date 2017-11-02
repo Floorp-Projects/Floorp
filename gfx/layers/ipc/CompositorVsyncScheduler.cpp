@@ -133,35 +133,16 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
     mCurrentCompositeTask = task;
     ScheduleTask(task.forget(), 0);
   }
-  if (mCurrentVRListenerTask == nullptr && VRListenerThreadHolder::IsActive()) {
-    const TimeDuration timeout = TimeDuration::FromSeconds(45);
-    VRManager* vm = VRManager::Get();
-    TimeStamp activeTime(vm->GetLastVRListenerThreadActiveTime());
-
-    // Shutdown VR listener thread when no VR content in 45 sec. Shutdown threads
-    // only allows to be run at the main thread.
-    if (!activeTime.IsNull() && ((aCompositeTimestamp - activeTime) > timeout)) {
-      RefPtr<Runnable> runnable = NewRunnableMethod(
-        "layers::CompositorVsyncScheduler::ShutdownVRListenerThread",
-        this, &CompositorVsyncScheduler::ShutdownVRListenerThread);
-      NS_DispatchToMainThread(runnable.forget());
-    } else {
-      RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod<TimeStamp>(
-        "layers::CompositorVsyncScheduler::DispatchVREvents",
-        this,
-        &CompositorVsyncScheduler::DispatchVREvents,
-        aCompositeTimestamp);
-      mCurrentVRListenerTask = task;
-      MOZ_ASSERT(VRListenerThreadHolder::Loop());
-      VRListenerThreadHolder::Loop()->PostTask(Move(task.forget()));
-    }
+  if (mCurrentVRListenerTask == nullptr && VRListenerThreadHolder::Loop()) {
+    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod<TimeStamp>(
+      "layers::CompositorVsyncScheduler::DispatchVREvents",
+      this,
+      &CompositorVsyncScheduler::DispatchVREvents,
+      aCompositeTimestamp);
+    mCurrentVRListenerTask = task;
+    MOZ_ASSERT(VRListenerThreadHolder::Loop());
+    VRListenerThreadHolder::Loop()->PostDelayedTask(Move(task.forget()), 0);
   }
-}
-
-void
-CompositorVsyncScheduler::ShutdownVRListenerThread()
-{
-  VRListenerThreadHolder::Shutdown();
 }
 
 void
