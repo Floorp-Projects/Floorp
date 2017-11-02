@@ -49,6 +49,10 @@ job-template:
          android-api-16-nightly:
            in-tree: android-build
          win.*: null
+   secrets:
+      by-build-platform:
+         default: false
+         android-api-16-nightly: true
    toolchains:
       by-build-platform:
          default: []
@@ -171,7 +175,8 @@ job-template:
          by-build-platform:
             default: ['clone-locales', 'list-locales', 'setup', 'repack',
                       'submit-to-balrog', 'summary']
-            android-api-16-nightly: ['clone-locales', 'list-locales', 'setup', 'repack',
+            android-api-16-nightly: ['get-secrets',
+                                     'clone-locales', 'list-locales', 'setup', 'repack',
                                      'upload-repacks', 'submit-to-balrog', 'summary']
       script:
          by-build-platform:
