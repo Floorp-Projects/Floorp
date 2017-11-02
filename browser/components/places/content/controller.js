@@ -1328,14 +1328,18 @@ PlacesController.prototype = {
           transactions = [...transactions, ...newTransactions];
         }
 
-        await PlacesUIUtils.batchUpdatesForNode(this._view.result, transactions.length, async () => {
-          await PlacesTransactions.batch(async () => {
-            for (let transaction of transactions) {
-              let guid = await transaction.transact();
-              itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
-            }
+        // Note: this._view may be a view or the tree element.
+        let resultForBatching = getResultForBatching(this._view);
+
+        await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+          transactions.length, async () => {
+            await PlacesTransactions.batch(async () => {
+              for (let transaction of transactions) {
+                let guid = await transaction.transact();
+                itemsToSelect.push(await PlacesUtils.promiseItemId(guid));
+              }
+            });
           });
-        });
       }
     } else {
       let transactions = [];
@@ -1609,9 +1613,8 @@ var PlacesControllerDragHelper = {
    * @param {Object} insertionPoint The insertion point where the items should
    *                                be dropped.
    * @param {Object} dt             The dataTransfer information for the drop.
-   * @param {Object} view           The tree view where this object is being
-   *                                dropped to. This allows batching to take
-   *                                place.
+   * @param {Object} view           The view or the tree element. This allows
+   *                                batching to take place.
    */
   async onDrop(insertionPoint, dt, view) {
     let doCopy = ["copy", "link"].includes(dt.dropEffect);
@@ -1723,9 +1726,11 @@ var PlacesControllerDragHelper = {
       return;
     }
     if (PlacesUIUtils.useAsyncTransactions) {
-      await PlacesUIUtils.batchUpdatesForNode(view && view.result, transactions.length, async () => {
-        await PlacesTransactions.batch(transactions);
-      });
+      let resultForBatching = getResultForBatching(view);
+      await PlacesUIUtils.batchUpdatesForNode(resultForBatching,
+        transactions.length, async () => {
+          await PlacesTransactions.batch(transactions);
+        });
     } else {
       let txn = new PlacesAggregatedTransaction("DropItems", transactions);
       PlacesUtils.transactionManager.doTransaction(txn);
@@ -1808,6 +1813,30 @@ function goDoPlacesCommand(aCommand) {
   let controller = doGetPlacesControllerForCommand(aCommand);
   if (controller && controller.isCommandEnabled(aCommand))
     controller.doCommand(aCommand);
+}
+
+/**
+ * This gets the most appropriate item for using for batching. In the case of multiple
+ * views being related, the method returns the most expensive result to batch.
+ * For example, if it detects the left-hand library pane, then it will look for
+ * and return the reference to the right-hand pane.
+ *
+ * @param {Object} viewOrElement The item to check.
+ * @return {Object} Will return the best result node to batch, or null
+ *                  if one could not be found.
+ */
+function getResultForBatching(viewOrElement) {
+  if (viewOrElement && viewOrElement instanceof Ci.nsIDOMElement &&
+      viewOrElement.id === "placesList") {
+    // Note: fall back to the existing item if we can't find the right-hane pane.
+    viewOrElement = document.getElementById("placeContent") || viewOrElement;
+  }
+
+  if (viewOrElement && viewOrElement.result) {
+    return viewOrElement.result;
+  }
+
+  return null;
 }
 
 /**
