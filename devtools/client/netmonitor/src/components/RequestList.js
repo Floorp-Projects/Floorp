@@ -13,7 +13,6 @@ const {
 // Components
 const RequestListContent = createFactory(require("./RequestListContent"));
 const RequestListEmptyNotice = createFactory(require("./RequestListEmptyNotice"));
-const RequestListHeader = createFactory(require("./RequestListHeader"));
 const StatusBar = createFactory(require("./StatusBar"));
 
 const { div } = DOM;
@@ -27,9 +26,8 @@ function RequestList({
 }) {
   return (
     div({ className: "request-list-container" },
-      RequestListHeader(),
       isEmpty ? RequestListEmptyNotice({connector}) : RequestListContent({connector}),
-      StatusBar({connector}),
+      StatusBar(),
     )
   );
 }
@@ -37,7 +35,6 @@ function RequestList({
 RequestList.displayName = "RequestList";
 
 RequestList.propTypes = {
-  connector: PropTypes.object.isRequired,
   isEmpty: PropTypes.bool.isRequired,
 };
 

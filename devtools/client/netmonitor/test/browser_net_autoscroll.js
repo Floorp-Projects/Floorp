@@ -5,6 +5,7 @@
 
 /**
  * Bug 863102 - Automatically scroll down upon new network requests.
+ * edited to account for changes made to fix Bug 1360457
  */
 add_task(function* () {
   requestLongerTimeout(4);
@@ -27,10 +28,9 @@ add_task(function* () {
   yield waitForScroll();
   ok(true, "Scrolled to bottom on overflow.");
 
-  // (2) Now set the scroll position to the first item and check
-  // that additional requests do not change the scroll position.
-  let firstNode = requestsContainer.firstChild;
-  firstNode.scrollIntoView();
+  // (2) Now scroll to the top and check that additional requests
+  // do not change the scroll position.
+  requestsContainer.scrollTop = 0;
   yield waitSomeTime();
   ok(!scrolledToBottom(requestsContainer), "Not scrolled to bottom.");
   // save for comparison later
@@ -47,12 +47,15 @@ add_task(function* () {
   yield waitForScroll();
   ok(true, "Still scrolled to bottom.");
 
-  // (4) Now select an item in the list and check that additional requests
-  // do not change the scroll position.
+  // (4) Now select the first item in the list
+  // and check that additional requests do not change the scroll position
+  // from just below the headers.
   store.dispatch(Actions.selectRequestByIndex(0));
   yield waitForNetworkEvents(monitor, 8);
   yield waitSomeTime();
-  is(requestsContainer.scrollTop, 0, "Did not scroll.");
+  let requestsContainerHeaders = requestsContainer.firstChild;
+  let headersHeight = requestsContainerHeaders.offsetHeight;
+  is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
 
   // Done: clean up.
   return teardown(monitor);
