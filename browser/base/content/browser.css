@@ -1172,6 +1172,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 
 #BMB_bookmarksPopup:not([animate="false"]) {
   opacity: 0;
+  will-change: transform; /* workaround for bug 1414033 */
   transform: translateY(-70px);
   transition-property: transform, opacity;
   transition-duration: 0.18s, 0.18s;
