@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
-  "AsyncResource",
-  "Resource"
-];
+this.EXPORTED_SYMBOLS = ["Resource"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cr = Components.results;
-var Cu = Components.utils;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -29,10 +23,10 @@ const DEFAULT_LOAD_FLAGS =
   Ci.nsIRequest.LOAD_ANONYMOUS;
 
 /*
- * AsyncResource represents a remote network resource, identified by a URI.
+ * Resource represents a remote network resource, identified by a URI.
  * Create an instance like so:
  *
- *   let resource = new AsyncResource("http://foobar.com/path/to/resource");
+ *   let resource = new Resource("http://foobar.com/path/to/resource");
  *
  * The 'resource' object has the following methods to issue HTTP requests
  * of the corresponding HTTP methods:
@@ -50,7 +44,7 @@ const DEFAULT_LOAD_FLAGS =
  * passed (=undefined) when an error occurs. Note that this is independent of
  * the status of the HTTP response.
  */
-this.AsyncResource = function AsyncResource(uri) {
+this.Resource = function Resource(uri) {
   this._log = Log.repository.getLogger(this._logName);
   this._log.level =
     Log.Level[Svc.Prefs.get("log.logger.network.resources")];
@@ -58,10 +52,10 @@ this.AsyncResource = function AsyncResource(uri) {
   this._headers = {};
   this._onComplete = Utils.bind2(this, this._onComplete);
 };
-AsyncResource.prototype = {
-  _logName: "Sync.AsyncResource",
+Resource.prototype = {
+  _logName: "Sync.Resource",
 
-  // ** {{{ AsyncResource.serverTime }}} **
+  // ** {{{ Resource.serverTime }}} **
   //
   // Caches the latest server timestamp (X-Weave-Timestamp header).
   serverTime: null,
@@ -77,7 +71,7 @@ AsyncResource.prototype = {
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
 
-  // ** {{{ AsyncResource.headers }}} **
+  // ** {{{ Resource.headers }}} **
   //
   // Headers to be included when making a request for the resource.
   // Note: Header names should be all lower case, there's no explicit
@@ -95,7 +89,7 @@ AsyncResource.prototype = {
     return Object.keys(this.headers);
   },
 
-  // ** {{{ AsyncResource.uri }}} **
+  // ** {{{ Resource.uri }}} **
   //
   // URI representing this resource.
   get uri() {
@@ -108,7 +102,7 @@ AsyncResource.prototype = {
       this._uri = value;
   },
 
-  // ** {{{ AsyncResource.spec }}} **
+  // ** {{{ Resource.spec }}} **
   //
   // Get the string representation of the URI.
   get spec() {
@@ -117,7 +111,7 @@ AsyncResource.prototype = {
     return null;
   },
 
-  // ** {{{ AsyncResource.data }}} **
+  // ** {{{ Resource.data }}} **
   //
   // Get and set the data encapulated in the resource.
   _data: null,
@@ -128,7 +122,7 @@ AsyncResource.prototype = {
     this._data = value;
   },
 
-  // ** {{{ AsyncResource._createRequest }}} **
+  // ** {{{ Resource._createRequest }}} **
   //
   // This method returns a new IO Channel for requests to be made
   // through. It is never called directly, only {{{_doRequest}}} uses it
@@ -348,10 +342,6 @@ AsyncResource.prototype = {
   }
 };
 
-// TODO: We still export both "Resource" and "AsyncRecourse" as the same
-// object, but we should decide on one and unify all references.
-this.Resource = AsyncResource;
-
 // = ChannelListener =
 //
 // This object implements the {{{nsIStreamListener}}} interface
@@ -378,7 +368,7 @@ ChannelListener.prototype = {
 
     // Save the latest server timestamp when possible.
     try {
-      AsyncResource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
+      Resource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
     } catch (ex) {}
 
     this._log.trace("onStartRequest: " + channel.requestMethod + " " +

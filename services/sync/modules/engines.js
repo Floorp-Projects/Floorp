@@ -1442,7 +1442,7 @@ SyncEngine.prototype = {
     let locallyModified = this._modified.has(item.id);
 
     // TODO Handle clock drift better. Tracked in bug 721181.
-    let remoteAge = AsyncResource.serverTime - item.modified;
+    let remoteAge = Resource.serverTime - item.modified;
     let localAge  = locallyModified ?
       (Date.now() / 1000 - this._modified.getModifiedTimestamp(item.id)) : null;
     let remoteIsNewer = remoteAge < localAge;

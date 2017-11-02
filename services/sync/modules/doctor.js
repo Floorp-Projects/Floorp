@@ -247,7 +247,7 @@ this.Doctor = {
   // functions used so tests can mock them
   _now() {
     // We use the server time, which is SECONDS
-    return AsyncResource.serverTime;
+    return Resource.serverTime;
   },
 
   _getRepairRequestor(name) {
