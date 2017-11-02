@@ -8,7 +8,7 @@
 
 loader.lazyImporter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-const { createClass, DOM: dom } =
+const { Component, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 const { Ci } = require("chrome");
@@ -22,8 +22,11 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 const Strings = Services.strings.createBundle("chrome://devtools/locale/aboutdebugging.properties");
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
 
-module.exports = createClass({
-  displayName: "multiE10SWarning",
+class multiE10SWarning extends Component {
+  constructor(props) {
+    super(props);
+    this.onUpdatePreferenceClick = this.onUpdatePreferenceClick.bind(this);
+  }
 
   onUpdatePreferenceClick() {
     let message = Strings.GetStringFromName("multiProcessWarningConfirmUpdate2");
@@ -34,7 +37,7 @@ module.exports = createClass({
       // Restart the browser.
       Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
     }
-  },
+  }
 
   render() {
     return dom.div(
@@ -58,5 +61,7 @@ module.exports = createClass({
         Strings.GetStringFromName("multiProcessWarningUpdateLink2")
       )
     );
-  },
-});
+  }
+}
+
+module.exports = multiE10SWarning;

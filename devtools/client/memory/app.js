@@ -6,7 +6,7 @@
 
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { appinfo } = require("Services");
-const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { censusDisplays, labelDisplays, treeMapDisplays, diffingState, viewState } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
@@ -51,20 +51,30 @@ const SnapshotListItem = createFactory(require("./components/SnapshotListItem"))
 const Heap = createFactory(require("./components/Heap"));
 const { app: appModel } = require("./models");
 
-const MemoryApp = createClass({
-  displayName: "MemoryApp",
+class MemoryApp extends Component {
+  static get propTypes() {
+    return appModel;
+  }
 
-  propTypes: appModel,
+  static get childContextTypes() {
+    return {
+      front: PropTypes.any,
+      heapWorker: PropTypes.any,
+      toolbox: PropTypes.any,
+    };
+  }
 
-  childContextTypes: {
-    front: PropTypes.any,
-    heapWorker: PropTypes.any,
-    toolbox: PropTypes.any,
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {};
-  },
+  }
+
+  constructor(props) {
+    super(props);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this._getCensusDisplays = this._getCensusDisplays.bind(this);
+    this._getLabelDisplays = this._getLabelDisplays.bind(this);
+    this._getTreeMapDisplays = this._getTreeMapDisplays.bind(this);
+  }
 
   getChildContext() {
     return {
@@ -72,18 +82,18 @@ const MemoryApp = createClass({
       heapWorker: this.props.heapWorker,
       toolbox: this.props.toolbox,
     };
-  },
+  }
 
   componentDidMount() {
     // Attach the keydown listener directly to the window. When an element that
     // has the focus (such as a tree node) is removed from the DOM, the focus
     // falls back to the body.
     window.addEventListener("keydown", this.onKeyDown);
-  },
+  }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.onKeyDown);
-  },
+  }
 
   onKeyDown(e) {
     let { snapshots, dispatch, heapWorker } = this.props;
@@ -106,7 +116,7 @@ const MemoryApp = createClass({
       let nextSnapshotId = snapshots[nextIndex].id;
       dispatch(selectSnapshotAndRefresh(heapWorker, nextSnapshotId));
     }
-  },
+  }
 
   _getCensusDisplays() {
     const customDisplays = getCustomCensusDisplays();
@@ -120,7 +130,7 @@ const MemoryApp = createClass({
       censusDisplays.allocationStack,
       censusDisplays.invertedAllocationStack,
     ].concat(custom);
-  },
+  }
 
   _getLabelDisplays() {
     const customDisplays = getCustomLabelDisplays();
@@ -133,7 +143,7 @@ const MemoryApp = createClass({
       labelDisplays.coarseType,
       labelDisplays.allocationStack,
     ].concat(custom);
-  },
+  }
 
   _getTreeMapDisplays() {
     const customDisplays = getCustomTreeMapDisplays();
@@ -145,7 +155,7 @@ const MemoryApp = createClass({
     return [
       treeMapDisplays.coarseType
     ].concat(custom);
-  },
+  }
 
   render() {
     let {
@@ -317,8 +327,8 @@ const MemoryApp = createClass({
         )
       )
     );
-  },
-});
+  }
+}
 
 /**
  * Passed into react-redux's `connect` method that is called on store change

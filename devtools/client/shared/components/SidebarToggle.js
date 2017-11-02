@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { DOM, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM, Component, PropTypes } = require("devtools/client/shared/vendor/react");
 
 // Shortcuts
 const { button } = DOM;
@@ -15,35 +15,39 @@ const { button } = DOM;
  * Sidebar toggle button. This button is used to exapand
  * and collapse Sidebar.
  */
-var SidebarToggle = createClass({
-  displayName: "SidebarToggle",
-
-  propTypes: {
-    // Set to true if collapsed.
-    collapsed: PropTypes.bool.isRequired,
-    // Tooltip text used when the button indicates expanded state.
-    collapsePaneTitle: PropTypes.string.isRequired,
-    // Tooltip text used when the button indicates collapsed state.
-    expandPaneTitle: PropTypes.string.isRequired,
-    // Click callback
-    onClick: PropTypes.func.isRequired,
-  },
-
-  getInitialState: function () {
+class SidebarToggle extends Component {
+  static get propTypes() {
     return {
-      collapsed: this.props.collapsed,
+      // Set to true if collapsed.
+      collapsed: PropTypes.bool.isRequired,
+      // Tooltip text used when the button indicates expanded state.
+      collapsePaneTitle: PropTypes.string.isRequired,
+      // Tooltip text used when the button indicates collapsed state.
+      expandPaneTitle: PropTypes.string.isRequired,
+      // Click callback
+      onClick: PropTypes.func.isRequired,
     };
-  },
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      collapsed: props.collapsed,
+    };
+
+    this.onClick = this.onClick.bind(this);
+  }
 
   // Events
 
-  onClick: function (event) {
+  onClick(event) {
     this.props.onClick(event);
-  },
+  }
 
   // Rendering
 
-  render: function () {
+  render() {
     let title = this.state.collapsed ?
       this.props.expandPaneTitle :
       this.props.collapsePaneTitle;
@@ -61,6 +65,6 @@ var SidebarToggle = createClass({
       })
     );
   }
-});
+}
 
 module.exports = SidebarToggle;

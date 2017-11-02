@@ -5,7 +5,7 @@
 "use strict";
 
 const React = require("devtools/client/shared/vendor/react");
-const { DOM: dom, createClass, createFactory, PropTypes } = React;
+const { DOM: dom, Component, createFactory, PropTypes } = React;
 
 const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
@@ -97,158 +97,176 @@ const NUMBER_OF_OFFSCREEN_ITEMS = 1;
  *       }
  *     });
  */
-module.exports = createClass({
-  displayName: "Tree",
+class Tree extends Component {
+  static get propTypes() {
+    return {
+      // Required props
 
-  propTypes: {
-    // Required props
+      // A function to get an item's parent, or null if it is a root.
+      //
+      // Type: getParent(item: Item) -> Maybe<Item>
+      //
+      // Example:
+      //
+      //     // The parent of this item is stored in its `parent` property.
+      //     getParent: item => item.parent
+      getParent: PropTypes.func.isRequired,
 
-    // A function to get an item's parent, or null if it is a root.
-    //
-    // Type: getParent(item: Item) -> Maybe<Item>
-    //
-    // Example:
-    //
-    //     // The parent of this item is stored in its `parent` property.
-    //     getParent: item => item.parent
-    getParent: PropTypes.func.isRequired,
+      // A function to get an item's children.
+      //
+      // Type: getChildren(item: Item) -> [Item]
+      //
+      // Example:
+      //
+      //     // This item's children are stored in its `children` property.
+      //     getChildren: item => item.children
+      getChildren: PropTypes.func.isRequired,
 
-    // A function to get an item's children.
-    //
-    // Type: getChildren(item: Item) -> [Item]
-    //
-    // Example:
-    //
-    //     // This item's children are stored in its `children` property.
-    //     getChildren: item => item.children
-    getChildren: PropTypes.func.isRequired,
+      // A function which takes an item and ArrowExpander component instance and
+      // returns a component, or text, or anything else that React considers
+      // renderable.
+      //
+      // Type: renderItem(item: Item,
+      //                  depth: Number,
+      //                  isFocused: Boolean,
+      //                  arrow: ReactComponent,
+      //                  isExpanded: Boolean) -> ReactRenderable
+      //
+      // Example:
+      //
+      //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+      //       let className = "my-tree-item";
+      //       if (isFocused) {
+      //         className += " focused";
+      //       }
+      //       return dom.div(
+      //         {
+      //           className,
+      //           style: { marginLeft: depth * 10 + "px" }
+      //         },
+      //         arrow,
+      //         dom.span({ className: "my-tree-item-label" }, item.label)
+      //       );
+      //     },
+      renderItem: PropTypes.func.isRequired,
 
-    // A function which takes an item and ArrowExpander component instance and
-    // returns a component, or text, or anything else that React considers
-    // renderable.
-    //
-    // Type: renderItem(item: Item,
-    //                  depth: Number,
-    //                  isFocused: Boolean,
-    //                  arrow: ReactComponent,
-    //                  isExpanded: Boolean) -> ReactRenderable
-    //
-    // Example:
-    //
-    //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
-    //       let className = "my-tree-item";
-    //       if (isFocused) {
-    //         className += " focused";
-    //       }
-    //       return dom.div(
-    //         {
-    //           className,
-    //           style: { marginLeft: depth * 10 + "px" }
-    //         },
-    //         arrow,
-    //         dom.span({ className: "my-tree-item-label" }, item.label)
-    //       );
-    //     },
-    renderItem: PropTypes.func.isRequired,
+      // A function which returns the roots of the tree (forest).
+      //
+      // Type: getRoots() -> [Item]
+      //
+      // Example:
+      //
+      //     // In this case, we only have one top level, root item. You could
+      //     // return multiple items if you have many top level items in your
+      //     // tree.
+      //     getRoots: () => [this.props.rootOfMyTree]
+      getRoots: PropTypes.func.isRequired,
 
-    // A function which returns the roots of the tree (forest).
-    //
-    // Type: getRoots() -> [Item]
-    //
-    // Example:
-    //
-    //     // In this case, we only have one top level, root item. You could
-    //     // return multiple items if you have many top level items in your
-    //     // tree.
-    //     getRoots: () => [this.props.rootOfMyTree]
-    getRoots: PropTypes.func.isRequired,
+      // A function to get a unique key for the given item. This helps speed up
+      // React's rendering a *TON*.
+      //
+      // Type: getKey(item: Item) -> String
+      //
+      // Example:
+      //
+      //     getKey: item => `my-tree-item-${item.uniqueId}`
+      getKey: PropTypes.func.isRequired,
 
-    // A function to get a unique key for the given item. This helps speed up
-    // React's rendering a *TON*.
-    //
-    // Type: getKey(item: Item) -> String
-    //
-    // Example:
-    //
-    //     getKey: item => `my-tree-item-${item.uniqueId}`
-    getKey: PropTypes.func.isRequired,
+      // A function to get whether an item is expanded or not. If an item is not
+      // expanded, then it must be collapsed.
+      //
+      // Type: isExpanded(item: Item) -> Boolean
+      //
+      // Example:
+      //
+      //     isExpanded: item => item.expanded,
+      isExpanded: PropTypes.func.isRequired,
 
-    // A function to get whether an item is expanded or not. If an item is not
-    // expanded, then it must be collapsed.
-    //
-    // Type: isExpanded(item: Item) -> Boolean
-    //
-    // Example:
-    //
-    //     isExpanded: item => item.expanded,
-    isExpanded: PropTypes.func.isRequired,
+      // The height of an item in the tree including margin and padding, in
+      // pixels.
+      itemHeight: PropTypes.number.isRequired,
 
-    // The height of an item in the tree including margin and padding, in
-    // pixels.
-    itemHeight: PropTypes.number.isRequired,
+      // Optional props
 
-    // Optional props
+      // The currently focused item, if any such item exists.
+      focused: PropTypes.any,
 
-    // The currently focused item, if any such item exists.
-    focused: PropTypes.any,
+      // Handle when a new item is focused.
+      onFocus: PropTypes.func,
 
-    // Handle when a new item is focused.
-    onFocus: PropTypes.func,
+      // The depth to which we should automatically expand new items.
+      autoExpandDepth: PropTypes.number,
 
-    // The depth to which we should automatically expand new items.
-    autoExpandDepth: PropTypes.number,
+      // Note: the two properties below are mutually exclusive. Only one of the
+      // label properties is necessary.
+      // ID of an element whose textual content serves as an accessible label for
+      // a tree.
+      labelledby: PropTypes.string,
+      // Accessibility label for a tree widget.
+      label: PropTypes.string,
 
-    // Note: the two properties below are mutually exclusive. Only one of the
-    // label properties is necessary.
-    // ID of an element whose textual content serves as an accessible label for
-    // a tree.
-    labelledby: PropTypes.string,
-    // Accessibility label for a tree widget.
-    label: PropTypes.string,
+      // Optional event handlers for when items are expanded or collapsed. Useful
+      // for dispatching redux events and updating application state, maybe lazily
+      // loading subtrees from a worker, etc.
+      //
+      // Type:
+      //     onExpand(item: Item)
+      //     onCollapse(item: Item)
+      //
+      // Example:
+      //
+      //     onExpand: item => dispatchExpandActionToRedux(item)
+      onExpand: PropTypes.func,
+      onCollapse: PropTypes.func,
+    };
+  }
 
-    // Optional event handlers for when items are expanded or collapsed. Useful
-    // for dispatching redux events and updating application state, maybe lazily
-    // loading subtrees from a worker, etc.
-    //
-    // Type:
-    //     onExpand(item: Item)
-    //     onCollapse(item: Item)
-    //
-    // Example:
-    //
-    //     onExpand: item => dispatchExpandActionToRedux(item)
-    onExpand: PropTypes.func,
-    onCollapse: PropTypes.func,
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       autoExpandDepth: AUTO_EXPAND_DEPTH,
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       scroll: 0,
       height: window.innerHeight,
       seen: new Set(),
     };
-  },
+
+    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
+    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
+    this._onScroll = oncePerAnimationFrame(this._onScroll).bind(this);
+    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
+    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
+    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
+
+    this._autoExpand = this._autoExpand.bind(this);
+    this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
+    this._updateHeight = this._updateHeight.bind(this);
+    this._dfs = this._dfs.bind(this);
+    this._dfsFromRoots = this._dfsFromRoots.bind(this);
+    this._focus = this._focus.bind(this);
+    this._onBlur = this._onBlur.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
+  }
 
   componentDidMount() {
     window.addEventListener("resize", this._updateHeight);
     this._autoExpand();
     this._updateHeight();
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     this._autoExpand();
     this._updateHeight();
-  },
+  }
 
   componentWillUnmount() {
     window.removeEventListener("resize", this._updateHeight);
-  },
+  }
 
   _autoExpand() {
     if (!this.props.autoExpandDepth) {
@@ -279,7 +297,7 @@ module.exports = createClass({
     for (let i = 0; i < length; i++) {
       autoExpand(roots[i], 0);
     }
-  },
+  }
 
   _preventArrowKeyScrolling(e) {
     switch (e.key) {
@@ -298,7 +316,7 @@ module.exports = createClass({
           }
         }
     }
-  },
+  }
 
   /**
    * Updates the state's height based on clientHeight.
@@ -307,7 +325,7 @@ module.exports = createClass({
     this.setState({
       height: this.refs.tree.clientHeight
     });
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search from item.
@@ -332,7 +350,7 @@ module.exports = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search over the whole forest.
@@ -347,7 +365,7 @@ module.exports = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Expands current row.
@@ -355,7 +373,7 @@ module.exports = createClass({
    * @param {Object} item
    * @param {Boolean} expandAllChildren
    */
-  _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
+  _onExpand(item, expandAllChildren) {
     if (this.props.onExpand) {
       this.props.onExpand(item);
 
@@ -367,18 +385,18 @@ module.exports = createClass({
         }
       }
     }
-  }),
+  }
 
   /**
    * Collapses current row.
    *
    * @param {Object} item
    */
-  _onCollapse: oncePerAnimationFrame(function (item) {
+  _onCollapse(item) {
     if (this.props.onCollapse) {
       this.props.onCollapse(item);
     }
-  }),
+  }
 
   /**
    * Sets the passed in item to be the focused item.
@@ -411,14 +429,14 @@ module.exports = createClass({
     if (this.props.onFocus) {
       this.props.onFocus(item);
     }
-  },
+  }
 
   /**
    * Sets the state to have no focused item.
    */
   _onBlur() {
     this._focus(0, undefined);
-  },
+  }
 
   /**
    * Fired on a scroll within the tree's container, updates
@@ -426,12 +444,12 @@ module.exports = createClass({
    *
    * @param {Event} e
    */
-  _onScroll: oncePerAnimationFrame(function (e) {
+  _onScroll(e) {
     this.setState({
       scroll: Math.max(this.refs.tree.scrollTop, 0),
       height: this.refs.tree.clientHeight
     });
-  }),
+  }
 
   /**
    * Handles key down events in the tree's container.
@@ -476,12 +494,12 @@ module.exports = createClass({
         }
         break;
     }
-  },
+  }
 
   /**
    * Sets the previous node relative to the currently focused item, to focused.
    */
-  _focusPrevNode: oncePerAnimationFrame(function () {
+  _focusPrevNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the previous node in the DFS, if it exists. If it
     // doesn't exist, we're at the first node already.
@@ -505,13 +523,13 @@ module.exports = createClass({
     }
 
     this._focus(prevIndex, prev);
-  }),
+  }
 
   /**
    * Handles the down arrow key which will focus either the next child
    * or sibling row.
    */
-  _focusNextNode: oncePerAnimationFrame(function () {
+  _focusNextNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the next node in the DFS, if it exists. If it
     // doesn't exist, we're at the last node already.
@@ -530,13 +548,13 @@ module.exports = createClass({
     if (i + 1 < traversal.length) {
       this._focus(i + 1, traversal[i + 1].item);
     }
-  }),
+  }
 
   /**
    * Handles the left arrow key, going back up to the current rows'
    * parent row.
    */
-  _focusParentNode: oncePerAnimationFrame(function () {
+  _focusParentNode() {
     const parent = this.props.getParent(this.props.focused);
     if (!parent) {
       return;
@@ -552,7 +570,7 @@ module.exports = createClass({
     }
 
     this._focus(parentIndex, parent);
-  }),
+  }
 
   render() {
     const traversal = this._dfsFromRoots();
@@ -656,28 +674,28 @@ module.exports = createClass({
       nodes
     );
   }
-});
+}
 
 /**
  * An arrow that displays whether its node is expanded (▼) or collapsed
  * (▶). When its node has no children, it is hidden.
  */
-const ArrowExpander = createFactory(createClass({
-  displayName: "ArrowExpander",
-
-  propTypes: {
-    item: PropTypes.any.isRequired,
-    visible: PropTypes.bool.isRequired,
-    expanded: PropTypes.bool.isRequired,
-    onCollapse: PropTypes.func.isRequired,
-    onExpand: PropTypes.func.isRequired,
-  },
+class ArrowExpanderClass extends Component {
+  static get propTypes() {
+    return {
+      item: PropTypes.any.isRequired,
+      visible: PropTypes.bool.isRequired,
+      expanded: PropTypes.bool.isRequired,
+      onCollapse: PropTypes.func.isRequired,
+      onExpand: PropTypes.func.isRequired,
+    };
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item !== nextProps.item
       || this.props.visible !== nextProps.visible
       || this.props.expanded !== nextProps.expanded;
-  },
+  }
 
   render() {
     const attrs = {
@@ -699,24 +717,26 @@ const ArrowExpander = createFactory(createClass({
 
     return dom.div(attrs);
   }
-}));
+}
 
-const TreeNode = createFactory(createClass({
-  propTypes: {
-    id: PropTypes.any.isRequired,
-    focused: PropTypes.bool.isRequired,
-    item: PropTypes.any.isRequired,
-    expanded: PropTypes.bool.isRequired,
-    hasChildren: PropTypes.bool.isRequired,
-    onExpand: PropTypes.func.isRequired,
-    index: PropTypes.number.isRequired,
-    first: PropTypes.bool,
-    last: PropTypes.bool,
-    onClick: PropTypes.func,
-    onCollapse: PropTypes.func.isRequired,
-    depth: PropTypes.number.isRequired,
-    renderItem: PropTypes.func.isRequired,
-  },
+class TreeNodeClass extends Component {
+  static get propTypes() {
+    return {
+      id: PropTypes.any.isRequired,
+      focused: PropTypes.bool.isRequired,
+      item: PropTypes.any.isRequired,
+      expanded: PropTypes.bool.isRequired,
+      hasChildren: PropTypes.bool.isRequired,
+      onExpand: PropTypes.func.isRequired,
+      index: PropTypes.number.isRequired,
+      first: PropTypes.bool,
+      last: PropTypes.bool,
+      onClick: PropTypes.func,
+      onCollapse: PropTypes.func.isRequired,
+      depth: PropTypes.number.isRequired,
+      renderItem: PropTypes.func.isRequired,
+    };
+  }
 
   render() {
     const arrow = ArrowExpander({
@@ -769,7 +789,10 @@ const TreeNode = createFactory(createClass({
                             this.props.expanded),
     );
   }
-}));
+}
+
+const ArrowExpander = createFactory(ArrowExpanderClass);
+const TreeNode = createFactory(TreeNodeClass);
 
 /**
  * Create a function that calls the given function `fn` only once per animation
@@ -794,3 +817,5 @@ function oncePerAnimationFrame(fn) {
     });
   };
 }
+
+module.exports = Tree;

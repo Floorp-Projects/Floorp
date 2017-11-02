@@ -18,7 +18,10 @@ public class BookmarkUtils {
      * full bookmark management features(full-page dialog, bookmark/folder modification, etc.)
      */
     public static boolean isEnabled(Context context) {
-        return AppConstants.NIGHTLY_BUILD &&
-                       SwitchBoard.isInExperiment(context, Experiments.FULL_BOOKMARK_MANAGEMENT);
+        final boolean initialized = SwitchBoard.hasExperimentValues(context, Experiments.FULL_BOOKMARK_MANAGEMENT);
+        if (!initialized) {
+            return true;
+        }
+        return SwitchBoard.isInExperiment(context, Experiments.FULL_BOOKMARK_MANAGEMENT);
     }
 }

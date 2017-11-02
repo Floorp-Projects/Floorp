@@ -6,7 +6,7 @@
 
 const {
   DOM: dom,
-  createClass,
+  Component,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
@@ -50,41 +50,43 @@ function stringifyLabel(label, id) {
   return `${sanitized.join(" › ")} @ 0x${id.toString(16)}`;
 }
 
-module.exports = createClass({
-  displayName: "ShortestPaths",
+class ShortestPaths extends Component {
+  static get propTypes() {
+    return {
+      graph: PropTypes.shape({
+        nodes: PropTypes.arrayOf(PropTypes.object),
+        edges: PropTypes.arrayOf(PropTypes.object),
+      }),
+    };
+  }
 
-  propTypes: {
-    graph: PropTypes.shape({
-      nodes: PropTypes.arrayOf(PropTypes.object),
-      edges: PropTypes.arrayOf(PropTypes.object),
-    }),
-  },
-
-  getInitialState() {
-    return { zoom: null };
-  },
+  constructor(props) {
+    super(props);
+    this.state = { zoom: null };
+    this._renderGraph = this._renderGraph.bind(this);
+  }
 
   componentDidMount() {
     if (this.props.graph) {
       this._renderGraph(this.refs.container, this.props.graph);
     }
-  },
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.graph != nextProps.graph;
-  },
+  }
 
   componentDidUpdate() {
     if (this.props.graph) {
       this._renderGraph(this.refs.container, this.props.graph);
     }
-  },
+  }
 
   componentWillUnmount() {
     if (this.state.zoom) {
       this.state.zoom.on("zoom", null);
     }
-  },
+  }
 
   _renderGraph(container, { nodes, edges }) {
     if (!container.firstChild) {
@@ -144,7 +146,7 @@ module.exports = createClass({
 
     const layout = dagreD3.layout();
     renderer.layout(layout).run(graph, target);
-  },
+  }
 
   render() {
     let contents;
@@ -182,5 +184,7 @@ module.exports = createClass({
       ),
       contents
     );
-  },
-});
+  }
+}
+
+module.exports = ShortestPaths;
