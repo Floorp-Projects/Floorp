@@ -40,8 +40,8 @@ public:
     virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
     void
-    GetSystemFontList(InfallibleTArray<mozilla::dom::SystemFontListEntry>*
-                      aFontList) override;
+    ReadSystemFontList(InfallibleTArray<mozilla::dom::SystemFontListEntry>*
+                       aFontList) override;
 
     bool IsFontFormatSupported(uint32_t aFormatFlags) override;
 
