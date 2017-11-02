@@ -56,8 +56,6 @@ public:
   void PluginCrashed(const nsAString& pluginDumpID,
                      const nsAString& browserDumpID);
 
-  static bool RunPluginOOP(const nsPluginTag *aPluginTag);
-
   nsresult Shutdown();
 
   static nsresult RetainStream(NPStream *pstream, nsISupports **aRetainedPeer);

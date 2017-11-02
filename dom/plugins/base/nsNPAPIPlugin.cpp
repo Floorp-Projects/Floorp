@@ -76,9 +76,6 @@
 #include "mozilla/PluginLibrary.h"
 using mozilla::PluginLibrary;
 
-#include "mozilla/PluginPRLibrary.h"
-using mozilla::PluginPRLibrary;
-
 #include "mozilla/plugins/PluginModuleParent.h"
 using mozilla::plugins::PluginModuleChromeParent;
 using mozilla::plugins::PluginModuleContentParent;
@@ -204,12 +201,6 @@ nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
   host->PluginCrashed(this, pluginDumpID, browserDumpID);
 }
 
-bool
-nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
-{
-  return true;
-}
-
 inline PluginLibrary*
 GetNewPluginLibrary(nsPluginTag *aPluginTag)
 {
@@ -223,10 +214,7 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
     return PluginModuleContentParent::LoadModule(aPluginTag->mId, aPluginTag);
   }
 
-  if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
-  }
-  return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
+  return PluginModuleChromeParent::LoadModule(aPluginTag->mFullPath.get(), aPluginTag->mId, aPluginTag);
 }
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
