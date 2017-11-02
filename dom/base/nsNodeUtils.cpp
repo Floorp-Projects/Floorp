@@ -470,12 +470,12 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       CustomElementDefinition* definition = nullptr;
       RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
       if (nsContentUtils::IsCustomElementName(tagAtom)) {
+        elem->SetCustomElementData(new CustomElementData(tagAtom));
         definition =
           nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
                                                         nodeInfo->LocalName(),
                                                         nodeInfo->NamespaceID());
         if (definition) {
-          elem->SetCustomElementData(new CustomElementData(tagAtom));
           nsContentUtils::EnqueueUpgradeReaction(elem, definition);
         }
       } else {
@@ -484,14 +484,14 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         nsAutoString extension;
         if (elem->GetAttr(kNameSpaceID_None, nsGkAtoms::is, extension) &&
             !extension.IsEmpty()) {
+          RefPtr<nsAtom> typeAtom = NS_Atomize(extension);
+          elem->SetCustomElementData(new CustomElementData(typeAtom));
           definition =
             nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
                                                           nodeInfo->LocalName(),
                                                           nodeInfo->NamespaceID(),
                                                           &extension);
           if (definition) {
-            RefPtr<nsAtom> typeAtom = NS_Atomize(extension);
-            elem->SetCustomElementData(new CustomElementData(typeAtom));
             nsContentUtils::EnqueueUpgradeReaction(elem, definition);
           }
         }
@@ -536,7 +536,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
         // shadow-including inclusive descendants that is custom.
         Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
         if (element) {
-          RefPtr<CustomElementData> data = element->GetCustomElementData();
+          CustomElementData* data = element->GetCustomElementData();
           if (data && data->mState == CustomElementData::State::eCustom) {
             LifecycleAdoptedCallbackArgs args = {
               oldDoc,
