@@ -31,4 +31,10 @@
     <dimen name="adaptive_icon_drawable_dimen">108dp</dimen> <!-- Specified in AdaptiveIconDrawable docs. -->
 
     <dimen name="dialogHorizontalPadding">24dp</dimen>
+
+    <dimen name="preference_drawable_padding">32dp</dimen>
+    <dimen name="preference_padding_top">8dp</dimen>
+    <dimen name="preference_padding_horizontal">16dp</dimen>
+    <dimen name="preference_padding_vertical">12dp</dimen>
+    <dimen name="preference_row_height">48dp</dimen>
 </resources>

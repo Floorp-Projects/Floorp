@@ -4,8 +4,14 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/radio_button"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="15dp"
+    android:layout_height="@dimen/preference_row_height"
     android:background="@drawable/preference_search_engine_background"
-    android:foreground="?android:attr/selectableItemBackground"/>
+    android:button="@null"
+    android:drawablePadding="@dimen/preference_drawable_padding"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:paddingBottom="@dimen/preference_padding_vertical"
+    android:paddingEnd="@dimen/preference_padding_horizontal"
+    android:paddingStart="@dimen/preference_padding_horizontal"
+    android:paddingTop="@dimen/preference_padding_vertical" />

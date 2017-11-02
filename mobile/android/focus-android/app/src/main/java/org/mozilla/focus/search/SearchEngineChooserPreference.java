@@ -76,7 +76,7 @@ public class SearchEngineChooserPreference extends Preference implements RadioGr
     private static RadioButton makeRadioButtonFromSearchEngine(SearchEngine engine, LayoutInflater layoutInflater, Resources res) {
         final RadioButton radioButton = (RadioButton) layoutInflater.inflate(R.layout.search_engine_radio_button, null);
         radioButton.setText(engine.getName());
-        radioButton.setButtonDrawable(new BitmapDrawable(res, engine.getIcon()));
+        radioButton.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(res, engine.getIcon()), null, null, null);
         return radioButton;
     }
 }

@@ -58,4 +58,6 @@
     <color name="add_to_homescreen_icon_background">#4C0074</color>
 
     <color name="firefoxInstallHint">@color/photonMagenta70</color>
+
+    <color name="preference_row_selected">#414146</color>
 </resources>
