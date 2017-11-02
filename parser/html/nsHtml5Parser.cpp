@@ -153,7 +153,7 @@ nsHtml5Parser::UnblockParser()
   if (MOZ_LIKELY(mBlocked > 0)) {
     mBlocked--;
   }
-  if (MOZ_LIKELY(mBlocked == 0)) {
+  if (MOZ_LIKELY(mBlocked == 0) && mExecutor) {
     mExecutor->ContinueInterruptedParsingAsync();
   }
 }
@@ -161,7 +161,9 @@ nsHtml5Parser::UnblockParser()
 NS_IMETHODIMP_(void)
 nsHtml5Parser::ContinueInterruptedParsingAsync()
 {
-  mExecutor->ContinueInterruptedParsingAsync();
+  if (mExecutor) {
+    mExecutor->ContinueInterruptedParsingAsync();
+  }
 }
 
 NS_IMETHODIMP_(bool)

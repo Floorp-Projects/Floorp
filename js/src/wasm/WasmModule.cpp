@@ -1220,9 +1220,6 @@ Module::instantiate(JSContext* cx,
             return false;
     }
 
-    uint32_t mode = uint32_t(metadata().isAsmJS() ? Telemetry::ASMJS : Telemetry::WASM);
-    cx->runtime()->addTelemetry(JS_TELEMETRY_AOT_USAGE, mode);
-
     JSUseCounter useCounter = metadata().isAsmJS() ? JSUseCounter::ASMJS : JSUseCounter::WASM;
     cx->runtime()->setUseCounter(instance, useCounter);
 
