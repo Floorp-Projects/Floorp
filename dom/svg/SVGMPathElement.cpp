@@ -119,11 +119,14 @@ bool
 SVGMPathElement::ParseAttribute(int32_t aNamespaceID,
                                 nsAtom* aAttribute,
                                 const nsAString& aValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 nsAttrValue& aResult)
 {
   bool returnVal =
     SVGMPathElementBase::ParseAttribute(aNamespaceID, aAttribute,
-                                          aValue, aResult);
+                                          aValue,
+                                          aMaybeScriptedPrincipal,
+                                          aResult);
   if ((aNamespaceID == kNameSpaceID_XLink ||
        aNamespaceID == kNameSpaceID_None ) &&
       aAttribute == nsGkAtoms::href &&
