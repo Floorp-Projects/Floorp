@@ -549,14 +549,14 @@ mozilla::ipc::IPCResult
 ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
                                             const StructuredCloneData& aInitialData,
                                             nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-                                            nsTArray<FontFamilyListEntry>&& aFontFamilyList)
+                                            nsTArray<SystemFontListEntry>&& aFontList)
 {
   if (!sShutdownCanary) {
     return IPC_OK();
   }
 
   mLookAndFeelCache = Move(aLookAndFeelIntCache);
-  mFontFamilies = Move(aFontFamilyList);
+  mFontList = Move(aFontList);
   gfx::gfxVars::SetValuesForInitialize(aXPCOMInit.gfxNonDefaultVarUpdates());
   InitXPCOM(aXPCOMInit, aInitialData);
   InitGraphicsDeviceData(aXPCOMInit.contentDeviceData());

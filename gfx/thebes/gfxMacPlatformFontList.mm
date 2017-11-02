@@ -76,6 +76,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using mozilla::dom::SystemFontListEntry;
 using mozilla::dom::FontFamilyListEntry;
 
 // indexes into the NSArray objects that the Cocoa font manager returns
@@ -1056,8 +1057,8 @@ gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
 }
 
 void
-gfxMacPlatformFontList::GetSystemFontFamilyList(
-    InfallibleTArray<FontFamilyListEntry>* aList)
+gfxMacPlatformFontList::GetSystemFontList(
+    InfallibleTArray<SystemFontListEntry>* aList)
 {
     // Note: We rely on the records for mSystemTextFontFamilyName and
     // mSystemDisplayFontFamilyName (if present) being *before* the main
@@ -1101,25 +1102,28 @@ gfxMacPlatformFontList::InitFontListForPlatform()
         // querying Core Text again in the child.
         mozilla::dom::ContentChild* cc =
             mozilla::dom::ContentChild::GetSingleton();
-        for (auto f : cc->SystemFontFamilyList()) {
-            switch (f.entryType()) {
+        for (SystemFontListEntry& fle : cc->SystemFontList()) {
+            MOZ_ASSERT(fle.type() ==
+                       SystemFontListEntry::Type::TFontFamilyListEntry);
+            FontFamilyListEntry& ffe(fle);
+            switch (ffe.entryType()) {
             case kStandardFontFamily:
-                AddFamily(f.familyName(), false);
+                AddFamily(ffe.familyName(), false);
                 break;
             case kHiddenSystemFontFamily:
-                AddFamily(f.familyName(), true);
+                AddFamily(ffe.familyName(), true);
                 break;
             case kTextSizeSystemFontFamily:
-                mSystemTextFontFamilyName = f.familyName();
+                mSystemTextFontFamilyName = ffe.familyName();
                 break;
             case kDisplaySizeSystemFontFamily:
-                mSystemDisplayFontFamilyName = f.familyName();
+                mSystemDisplayFontFamilyName = ffe.familyName();
                 mUseSizeSensitiveSystemFont = true;
                 break;
             }
         }
         // The ContentChild doesn't need the font list any longer.
-        cc->SystemFontFamilyList().Clear();
+        cc->SystemFontList().Clear();
     }
 
     // If this is the chrome process, or if for some reason we failed to get
