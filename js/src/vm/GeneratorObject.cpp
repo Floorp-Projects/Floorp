@@ -20,7 +20,7 @@ using namespace js;
 JSObject*
 GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT(frame.script()->isStarGenerator() || frame.script()->isAsync());
+    MOZ_ASSERT(frame.script()->isGenerator() || frame.script()->isAsync());
     MOZ_ASSERT(frame.script()->nfixed() == 0);
 
     Rooted<GlobalObject*> global(cx, cx->global());
@@ -62,7 +62,7 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
     Rooted<GeneratorObject*> genObj(cx, &obj->as<GeneratorObject>());
     MOZ_ASSERT(!genObj->hasExpressionStack() || genObj->isExpressionStackEmpty());
     MOZ_ASSERT_IF(*pc == JSOP_AWAIT, genObj->callee().isAsync());
-    MOZ_ASSERT_IF(*pc == JSOP_YIELD, genObj->callee().isStarGenerator());
+    MOZ_ASSERT_IF(*pc == JSOP_YIELD, genObj->callee().isGenerator());
 
     ArrayObject* stack = nullptr;
     if (nvalues > 0) {
