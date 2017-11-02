@@ -17,6 +17,7 @@ struct HandlerInfo {
   bool isMIMEInfo;
   nsString description;
   bool alwaysAskBeforeHandling;
+  nsCString[] extensions;
   HandlerApp preferredApplicationHandler;
   HandlerApp[] possibleApplicationHandlers;
   long preferredAction;
