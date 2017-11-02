@@ -57,6 +57,9 @@ class WithFakeKind(TaskGraphGenerator):
                 config.update(cfg)
             yield FakeKind(kind_name, '/fake', config)
 
+    def _load_graph_config(self):
+        return {}
+
 
 class FakeParameters(dict):
     strict = True
