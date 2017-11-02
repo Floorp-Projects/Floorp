@@ -68,6 +68,10 @@ fn build_jsapi_bindings() {
         .rust_target(bindgen::RustTarget::Stable_1_19)
         .header("./etc/wrapper.hpp")
         .raw_line("pub use self::root::*;")
+        // Translate every enum with the "rustified enum" strategy. We should
+        // investigate switching to the "constified module" strategy, which has
+        // similar ergonomics but avoids some potential Rust UB footguns.
+        .rustified_enum(".*")
         .enable_cxx_namespaces();
 
     if cfg!(feature = "debugmozjs") {
@@ -92,15 +96,15 @@ fn build_jsapi_bindings() {
     }
 
     for ty in WHITELIST_TYPES {
-        builder = builder.whitelisted_type(ty);
+        builder = builder.whitelist_type(ty);
     }
 
     for var in WHITELIST_VARS {
-        builder = builder.whitelisted_var(var);
+        builder = builder.whitelist_var(var);
     }
 
     for func in WHITELIST_FUNCTIONS {
-        builder = builder.whitelisted_function(func);
+        builder = builder.whitelist_function(func);
     }
 
     for ty in OPAQUE_TYPES {
@@ -108,7 +112,7 @@ fn build_jsapi_bindings() {
     }
 
     for ty in BLACKLIST_TYPES {
-        builder = builder.hide_type(ty);
+        builder = builder.blacklist_type(ty);
     }
 
     let bindings = builder.generate()
