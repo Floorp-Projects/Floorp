@@ -108,6 +108,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
 
+    ProfileAutocomplete.lastProfileAutoCompleteFocusedInput = focusedInput;
     // Fallback to form-history if ...
     //   - specified autofill feature is pref off.
     //   - no profile can fill the currently-focused input.
@@ -120,7 +121,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       formHistory.startSearch(searchString, searchParam, previousResult, {
         onSearchResult: (search, result) => {
           listener.onSearchResult(this, result);
-          ProfileAutocomplete.setProfileAutoCompleteResult(result);
+          ProfileAutocomplete.lastProfileAutoCompleteResult = result;
         },
       });
       return;
@@ -160,7 +161,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                                       {isSecure});
       }
       listener.onSearchResult(this, result);
-      ProfileAutocomplete.setProfileAutoCompleteResult(result);
+      ProfileAutocomplete.lastProfileAutoCompleteResult = result;
     });
   },
 
@@ -168,7 +169,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * Stops an asynchronous search that is in progress
    */
   stopSearch() {
-    ProfileAutocomplete.setProfileAutoCompleteResult(null);
+    ProfileAutocomplete.lastProfileAutoCompleteResult = null;
     this.forceStop = true;
   },
 
@@ -205,8 +206,8 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AutofillProfileAutoComplete
 let ProfileAutocomplete = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  _lastAutoCompleteResult: null,
-  _lastAutoCompleteFocusedInput: null,
+  lastProfileAutoCompleteResult: null,
+  lastProfileAutoCompleteFocusedInput: null,
   _registered: false,
   _factory: null,
 
@@ -236,15 +237,6 @@ let ProfileAutocomplete = {
     this._lastAutoCompleteResult = null;
 
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
-  },
-
-  getProfileAutoCompleteResult() {
-    return this._lastAutoCompleteResult;
-  },
-
-  setProfileAutoCompleteResult(result) {
-    this._lastAutoCompleteResult = result;
-    this._lastAutoCompleteFocusedInput = formFillController.focusedInput;
   },
 
   observe(subject, topic, data) {
@@ -287,19 +279,19 @@ let ProfileAutocomplete = {
 
     let selectedIndex = this._getSelectedIndex(focusedInput.ownerGlobal);
     if (selectedIndex == -1 ||
-        !this._lastAutoCompleteResult ||
-        this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+        !this.lastProfileAutoCompleteResult ||
+        this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
       return;
     }
 
-    let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
+    let profile = JSON.parse(this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex));
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
     formHandler.autofillFormFields(profile, focusedInput);
   },
 
   _clearProfilePreview() {
-    let focusedInput = formFillController.focusedInput || this._lastAutoCompleteFocusedInput;
+    let focusedInput = formFillController.focusedInput || this.lastProfileAutoCompleteFocusedInput;
     if (!focusedInput || !FormAutofillContent.getFormDetails(focusedInput)) {
       return;
     }
@@ -316,12 +308,12 @@ let ProfileAutocomplete = {
       return;
     }
 
-    if (!this._lastAutoCompleteResult ||
-        this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+    if (!this.lastProfileAutoCompleteResult ||
+        this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
       return;
     }
 
-    let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
+    let profile = JSON.parse(this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex));
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
     formHandler.previewFormFields(profile, focusedInput);
@@ -516,7 +508,7 @@ var FormAutofillContent = {
   previewProfile(doc) {
     let docWin = doc.ownerGlobal;
     let selectedIndex = ProfileAutocomplete._getSelectedIndex(docWin);
-    let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
+    let lastAutoCompleteResult = ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = formFillController.focusedInput;
     let mm = this._messageManagerFromWindow(docWin);
 
@@ -544,6 +536,11 @@ var FormAutofillContent = {
     }
   },
 
+  onPopupClosed() {
+    ProfileAutocomplete._clearProfilePreview();
+    ProfileAutocomplete.lastProfileAutoCompleteResult = null;
+  },
+
   _markAsAutofillField(field) {
     // Since Form Autofill popup is only for input element, any non-Input
     // element should be excluded here.
@@ -563,10 +560,11 @@ var FormAutofillContent = {
   },
 
   _onKeyDown(e) {
-    let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
+    let lastAutoCompleteResult = ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = formFillController.focusedInput;
 
-    if (e.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN || !lastAutoCompleteResult || !focusedInput) {
+    if (e.keyCode != Ci.nsIDOMKeyEvent.DOM_VK_RETURN || !lastAutoCompleteResult ||
+        !focusedInput || focusedInput != ProfileAutocomplete.lastProfileAutoCompleteFocusedInput) {
       return;
     }
 
