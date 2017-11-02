@@ -11,5 +11,4 @@ RESFILE = 'bar.res'
 RCINCLUDE = 'bar.rc'
 DEFFILE = 'baz.def'
 
-LDFLAGS += ['-framework Foo', '-x']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']
