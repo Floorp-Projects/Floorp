@@ -180,6 +180,7 @@ def resolve_files():
                 dstpath = '%s/%s' % (entry['dstdir'], p)
                 yield dstpath.encode('utf-8'), f
 
+
 def resolve_files_and_hash(manifest):
     """Resolve files and hash their data.
 
