@@ -58,8 +58,8 @@ window.dialog {
 .alert-icon,
 .error-icon,
 .question-icon {
-  width: 64px;
-  height: 64px;
+  width: 32px;
+  height: 32px;
   margin: 6px;
   margin-inline-end: 20px;
 }

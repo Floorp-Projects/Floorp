@@ -131,7 +131,7 @@ var whitelist = [
   // Bug 1343837
   {file: "chrome://global/content/findUtils.js"},
   // Bug 1348362
-  {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux", "win"]},
+  {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux"]},
   // Bug 1348525
   {file: "chrome://global/skin/splitter/grip-bottom.gif", platforms: ["linux"]},
   {file: "chrome://global/skin/splitter/grip-left.gif", platforms: ["linux"]},
