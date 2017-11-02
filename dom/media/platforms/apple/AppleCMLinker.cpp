@@ -8,6 +8,8 @@
 
 #include "AppleCMLinker.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Logging.h"
+#include "PlatformDecoderModule.h"
 #include "nsDebug.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))

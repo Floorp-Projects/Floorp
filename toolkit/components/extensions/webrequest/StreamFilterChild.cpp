@@ -134,6 +134,7 @@ StreamFilterChild::Disconnect(ErrorResult& aRv)
     mState = State::Disconnecting;
     mNextState = State::Disconnected;
 
+    WriteBufferedData();
     SendDisconnect();
     break;
 
@@ -474,6 +475,16 @@ StreamFilterChild::FlushBufferedData()
     UniquePtr<BufferedData> data(mBufferedData.popFirst());
 
     EmitData(data->mData);
+  }
+}
+
+void
+StreamFilterChild::WriteBufferedData()
+{
+  while (!mBufferedData.isEmpty()) {
+    UniquePtr<BufferedData> data(mBufferedData.popFirst());
+
+    SendWrite(data->mData);
   }
 }
 

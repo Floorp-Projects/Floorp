@@ -10,6 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
 
+#include "CacheMap.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLVertexAttribData.h"
@@ -17,11 +18,15 @@
 namespace mozilla {
 
 class WebGLVertexArrayFake;
+namespace webgl {
+struct LinkedProgramInfo;
+}
 
 class WebGLVertexArray
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
+    , public CacheMapInvalidator
 {
 public:
     static WebGLVertexArray* Create(WebGLContext* webgl);
@@ -66,6 +71,7 @@ protected:
     friend class WebGLContext;
     friend class WebGLVertexArrayFake;
     friend class WebGL2Context;
+    friend struct webgl::LinkedProgramInfo;
 };
 
 } // namespace mozilla

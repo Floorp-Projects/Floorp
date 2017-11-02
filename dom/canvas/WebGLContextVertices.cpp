@@ -82,6 +82,7 @@ WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfl
     ////
 
     mGenericVertexAttribTypes[index] = LOCAL_GL_FLOAT;
+    mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
         const float data[4] = { x, y, z, w };
@@ -113,6 +114,7 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
     ////
 
     mGenericVertexAttribTypes[index] = LOCAL_GL_INT;
+    mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
         const int32_t data[4] = { x, y, z, w };
@@ -144,6 +146,7 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
     ////
 
     mGenericVertexAttribTypes[index] = LOCAL_GL_UNSIGNED_INT;
+    mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     if (!index) {
         const uint32_t data[4] = { x, y, z, w };
@@ -163,12 +166,12 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
         return;
 
     MakeContextCurrent();
-    InvalidateBufferFetching();
 
     gl->fEnableVertexAttribArray(index);
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->mAttribs[index].mEnabled = true;
+    mBoundVertexArray->InvalidateCaches();
 }
 
 void
@@ -181,7 +184,6 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
         return;
 
     MakeContextCurrent();
-    InvalidateBufferFetching();
 
     if (index || !gl->IsCompatibilityProfile()) {
         gl->fDisableVertexAttribArray(index);
@@ -189,6 +191,7 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
 
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->mAttribs[index].mEnabled = false;
+    mBoundVertexArray->InvalidateCaches();
 }
 
 JS::Value
@@ -425,8 +428,7 @@ WebGLContext::VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuin
 
     WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
     vd.VertexAttribPointer(isFuncInt, buffer, size, type, normalized, stride, byteOffset);
-
-    InvalidateBufferFetching();
+    mBoundVertexArray->InvalidateCaches();
 }
 
 ////////////////////////////////////////
@@ -441,11 +443,8 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
         return;
 
     MOZ_ASSERT(mBoundVertexArray);
-
-    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-    vd.mDivisor = divisor;
-
-    InvalidateBufferFetching();
+    mBoundVertexArray->mAttribs[index].mDivisor = divisor;
+    mBoundVertexArray->InvalidateCaches();
 
     MakeContextCurrent();
 

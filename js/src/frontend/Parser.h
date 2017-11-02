@@ -839,6 +839,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label);
 
+    // Indicate if the next token (tokenized as Operand) is |in| or |of|.  If
+    // so, consume it.
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
@@ -866,9 +868,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool finishFunction(bool isStandaloneFunction = false);
     bool leaveInnerFunction(ParseContext* outerpc);
 
-    bool matchOrInsertSemicolonHelper(TokenStream::Modifier modifier);
-    bool matchOrInsertSemicolonAfterExpression();
-    bool matchOrInsertSemicolonAfterNonExpression();
+    bool matchOrInsertSemicolon();
 
   public:
     enum FunctionCallBehavior {

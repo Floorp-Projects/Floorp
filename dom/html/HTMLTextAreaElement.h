@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLTextAreaElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
 #include "nsIControllers.h"
 #include "nsIDOMNSEditableElement.h"
@@ -39,7 +38,6 @@ namespace dom {
 class HTMLFormSubmission;
 
 class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
-                                  public nsIDOMHTMLTextAreaElement,
                                   public nsITextControlElement,
                                   public nsIDOMNSEditableElement,
                                   public nsStubMutationObserver,
@@ -54,6 +52,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTextAreaElement, textarea)
+
   virtual int32_t TabIndexDefault() override;
 
   // Element
@@ -61,9 +61,6 @@ public:
   {
     return true;
   }
-
-  // nsIDOMHTMLTextAreaElement
-  NS_DECL_NSIDOMHTMLTEXTAREAELEMENT
 
   // nsIDOMNSEditableElement
   NS_IMETHOD GetEditor(nsIEditor** aEditor) override
@@ -237,12 +234,18 @@ public:
       SetHTMLIntAttr(nsGkAtoms::minlength, aMinLength, aError);
     }
   }
-  // XPCOM GetName is fine
+  void GetName(nsAString& aName)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aName);
+  }
   void SetName(const nsAString& aName, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aError);
   }
-  // XPCOM GetPlaceholder is fine
+  void GetPlaceholder(nsAString& aPlaceholder)
+  {
+    GetHTMLAttr(nsGkAtoms::placeholder, aPlaceholder);
+  }
   void SetPlaceholder(const nsAString& aPlaceholder, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::placeholder, aPlaceholder, aError);
@@ -279,22 +282,27 @@ public:
     uint32_t rows = aRows ? aRows : DEFAULT_ROWS_TEXTAREA;
     SetUnsignedIntAttr(nsGkAtoms::rows, rows, DEFAULT_ROWS_TEXTAREA, aError);
   }
-  // XPCOM GetWrap is fine
+  void GetWrap(nsAString& aWrap)
+  {
+    GetHTMLAttr(nsGkAtoms::wrap, aWrap);
+  }
   void SetWrap(const nsAString& aWrap, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::wrap, aWrap, aError);
   }
-  // XPCOM GetType is fine
-  // XPCOM GetDefaultValue is fine
+  void GetType(nsAString& aType);
+  void GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError);
   void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError);
-  // XPCOM GetValue/SetValue are fine
+  void GetValue(nsAString& aValue);
+  void SetValue(const nsAString& aValue, ErrorResult& aError);
+
   uint32_t GetTextLength();
 
   // Override SetCustomValidity so we update our state properly when it's called
   // via bindings.
   void SetCustomValidity(const nsAString& aError);
 
-  // XPCOM Select is fine
+  void Select();
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aError);
   void SetSelectionStart(const Nullable<uint32_t>& aSelectionStart, ErrorResult& aError);
   Nullable<uint32_t> GetSelectionEnd(ErrorResult& aError);
@@ -303,6 +311,9 @@ public:
   void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aError);
   void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd, const Optional<nsAString>& aDirecton, ErrorResult& aError);
   nsIControllers* GetControllers(ErrorResult& aError);
+  // XPCOM adapter function widely used throughout code, leaving it as is.
+  nsresult GetControllers(nsIControllers** aResult);
+
   nsIEditor* GetEditor()
   {
     return mState.GetTextEditor();

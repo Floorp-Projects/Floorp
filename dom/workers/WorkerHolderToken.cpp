@@ -96,13 +96,16 @@ WorkerHolderToken::Notify(Status aStatus)
     return true;
   }
 
-  mShuttingDown = true;
-
   // Start the asynchronous destruction of our actors.  These will call back
   // into RemoveActor() once the actor is destroyed.
-  for (uint32_t i = 0; i < mListenerList.Length(); ++i) {
-    mListenerList[i]->WorkerShuttingDown();
+  nsTObserverArray<Listener*>::ForwardIterator iter(mListenerList);
+  while (iter.HasMore()) {
+    iter.GetNext()->WorkerShuttingDown();
   }
+
+  // Set this after calling WorkerShuttingDown() on listener list in case
+  // one callback triggers another listener to be added.
+  mShuttingDown = true;
 
   return true;
 }

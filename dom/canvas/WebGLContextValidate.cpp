@@ -753,6 +753,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     mGenericVertexAttribTypes.reset(new GLenum[mGLMaxVertexAttribs]);
     std::fill_n(mGenericVertexAttribTypes.get(), mGLMaxVertexAttribs, LOCAL_GL_FLOAT);
+    mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
     static const float kDefaultGenericVertexAttribData[4] = { 0, 0, 0, 1 };
     memcpy(mGenericVertexAttrib0Data, kDefaultGenericVertexAttribData,
