@@ -2598,7 +2598,7 @@ DebugEnvironments::addDebugEnvironment(JSContext* cx, const EnvironmentIter& ei,
     MOZ_ASSERT(cx->compartment() == debugEnv->compartment());
     // Generators should always have environments.
     MOZ_ASSERT_IF(ei.scope().is<FunctionScope>(),
-                  !ei.scope().as<FunctionScope>().canonicalFunction()->isStarGenerator() &&
+                  !ei.scope().as<FunctionScope>().canonicalFunction()->isGenerator() &&
                   !ei.scope().as<FunctionScope>().canonicalFunction()->isAsync());
 
     if (!CanUseDebugEnvironmentMaps(cx))
@@ -2745,7 +2745,7 @@ DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame)
         if (!frame.environmentChain()->is<CallObject>())
             return;
 
-        if (frame.callee()->isStarGenerator() || frame.callee()->isAsync())
+        if (frame.callee()->isGenerator() || frame.callee()->isAsync())
             return;
 
         CallObject& callobj = frame.environmentChain()->as<CallObject>();
@@ -2879,7 +2879,7 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
             continue;
 
         if (frame.isFunctionFrame()) {
-            if (frame.callee()->isStarGenerator() || frame.callee()->isAsync())
+            if (frame.callee()->isGenerator() || frame.callee()->isAsync())
                 continue;
         }
 
@@ -3043,7 +3043,7 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
     if (ei.scope().is<FunctionScope>()) {
         RootedFunction callee(cx, ei.scope().as<FunctionScope>().canonicalFunction());
         // Generators should always reify their scopes.
-        MOZ_ASSERT(!callee->isStarGenerator() && !callee->isAsync());
+        MOZ_ASSERT(!callee->isGenerator() && !callee->isAsync());
 
         JS::ExposeObjectToActiveJS(callee);
         Rooted<CallObject*> callobj(cx, CallObject::createHollowForDebug(cx, callee));
