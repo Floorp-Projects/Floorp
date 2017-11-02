@@ -1,3 +1,9 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #ifndef frontend_ParseContext_h
 #define frontend_ParseContext_h
 
@@ -620,13 +626,15 @@ class ParseContext : public Nestable<ParseContext>
         return sc_->isFunctionBox() && sc_->asFunctionBox()->useAsmOrInsideUseAsm();
     }
 
-    // An ES6 generator is marked as a "star generator" before its body is parsed.
+    // A generator is marked as a generator before its body is parsed.
     GeneratorKind generatorKind() const {
-        return sc_->isFunctionBox() ? sc_->asFunctionBox()->generatorKind() : NotGenerator;
+        return sc_->isFunctionBox()
+               ? sc_->asFunctionBox()->generatorKind()
+               : GeneratorKind::NotGenerator;
     }
 
-    bool isStarGenerator() const {
-        return generatorKind() == StarGenerator;
+    bool isGenerator() const {
+        return generatorKind() == GeneratorKind::Generator;
     }
 
     bool isAsync() const {
@@ -634,7 +642,7 @@ class ParseContext : public Nestable<ParseContext>
     }
 
     bool needsDotGeneratorName() const {
-        return isStarGenerator() || isAsync();
+        return isGenerator() || isAsync();
     }
 
     FunctionAsyncKind asyncKind() const {

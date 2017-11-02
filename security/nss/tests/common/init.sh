@@ -63,6 +63,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         DBPASSDIR=${HOSTDIR}/dbpass
         ECCURVES_DIR=${HOSTDIR}/eccurves
         DISTRUSTDIR=${HOSTDIR}/distrust
+        RSAPSSDIR=${HOSTDIR}/rsapss
 
         SERVER_CADIR=${HOSTDIR}/serverCA
         CLIENT_CADIR=${HOSTDIR}/clientCA
@@ -540,6 +541,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_IMPLICIT_INIT="ImplicitInit.$version"
     D_CERT_EXTENSTIONS="CertExtensions.$version"
     D_DISTRUST="Distrust.$version"
+    D_RSAPSS="RSAPSS.$version"
 
     # we need relative pathnames of these files abd directories, since our
     # tools can't handle the unix style absolut pathnames on cygnus
