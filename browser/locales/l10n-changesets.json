@@ -724,6 +724,16 @@
         ], 
         "revision": "default"
     }, 
+    "oc": {
+        "platforms": [
+            "linux", 
+            "linux64", 
+            "macosx64", 
+            "win32", 
+            "win64"
+        ], 
+        "revision": "default"
+    }, 
     "or": {
         "platforms": [
             "linux", 
