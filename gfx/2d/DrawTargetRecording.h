@@ -30,7 +30,7 @@ public:
 
   virtual void DetachAllSnapshots() override;
 
-  virtual IntSize GetSize() override { return mFinalDT->GetSize(); }
+  virtual IntSize GetSize() override { return mSize; }
 
   /* Ensure that the DrawTarget backend has flushed all drawing operations to
    * this draw target. This must be called before using the backing surface of
