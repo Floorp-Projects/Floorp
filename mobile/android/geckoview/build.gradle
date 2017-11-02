@@ -55,7 +55,8 @@ android {
         // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,
         // either by diffing the processed files or by generating the output from a single source.
         buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
-        buildConfigField 'String', "MOZ_APP_ABI", "\"${mozconfig.substs.TARGET_XPCOM_ABI}\"";
+        // This should really come from the included binaries, but that's not easy.
+        buildConfigField 'String', "MOZ_APP_ABI", mozconfig.substs['COMPILE_ENVIRONMENT'] ? "\"${ mozconfig.substs.TARGET_XPCOM_ABI}\"" : '"arm-eabi-gcc3"';
         buildConfigField 'String', "MOZ_APP_BASENAME", "\"${mozconfig.substs.MOZ_APP_BASENAME}\"";
 
         // For the benefit of future archaeologists:
