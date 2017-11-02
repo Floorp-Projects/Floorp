@@ -38,15 +38,13 @@ mozharness_run_schema = Schema({
     # testing/mozharness/configs and using forward slashes even on Windows
     Required('config'): [basestring],
 
-    # any additional actions to pass to the mozharness command; not supported
-    # on Windows
+    # any additional actions to pass to the mozharness command
     Optional('actions'): [basestring],
 
-    # any additional options (without leading --) to be passed to mozharness;
-    # not supported on Windows
+    # any additional options (without leading --) to be passed to mozharness
     Optional('options'): [basestring],
 
-    # --custom-build-variant-cfg value (not supported on Windows)
+    # --custom-build-variant-cfg value
     Optional('custom-build-variant-cfg'): basestring,
 
     # Extra metadata to use toward the workspace caching.

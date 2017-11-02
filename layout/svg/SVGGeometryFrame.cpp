@@ -543,7 +543,10 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 #endif
 
-    FillRule fillRule = nsSVGUtils::ToFillRule(StyleSVG()->mFillRule);
+    FillRule fillRule = nsSVGUtils::ToFillRule(
+        (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD)
+      ? StyleSVG()->mClipRule
+      : StyleSVG()->mFillRule);
     RefPtr<Path> pathInUserSpace = element->GetOrBuildPath(*tmpDT, fillRule);
     if (!pathInUserSpace) {
       return bbox;

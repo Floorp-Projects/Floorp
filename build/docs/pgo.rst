@@ -12,16 +12,12 @@ faster.
 How PGO Builds Work
 ===================
 
-The supported interface for invoking a PGO build is to evaluate the
-*build* target of client.mk with *MOZ_PGO* defined. e.g.::
+The supported interface for invoking a PGO build is to invoke the build system
+with ``MOZ_PGO`` defined. e.g.::
 
-    $ make -f client.mk MOZ_PGO=1
+    $ MOZ_PGO=1 ./mach build
 
-This is equivalent to::
-
-    $ make -f client.mk profiledbuild
-
-Which is roughly equivalent to:
+This is roughly equivalent to::
 
 #. Perform a build with *MOZ_PROFILE_GENERATE=1* and *MOZ_PGO_INSTRUMENTED=1*
 #. Package with *MOZ_PGO_INSTRUMENTED=1*

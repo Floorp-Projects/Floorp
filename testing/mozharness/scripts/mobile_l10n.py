@@ -426,26 +426,28 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
     def _setup_configure(self, buildid=None):
         dirs = self.query_abs_dirs()
         env = self.query_repack_env()
-        make = self.query_exe("make")
-        if self.run_command_m([make, "-f", "client.mk", "configure"],
+
+        mach = os.path.join(dirs['abs_mozilla_dir'], 'mach')
+
+        if self.run_command_m([sys.executable, mach, 'configure'],
                               cwd=dirs['abs_mozilla_dir'],
                               env=env,
                               error_list=MakefileErrorList):
             self.fatal("Configure failed!")
 
-        # Run 'make export' in objdir/config to get nsinstall
-        self.run_command_m([make, 'export'],
-                           cwd=os.path.join(dirs['abs_objdir'], 'config'),
-                           env=env,
-                           error_list=MakefileErrorList,
-                           halt_on_failure=True)
+        # Invoke the build system to get nsinstall and buildid.h.
+        targets = [
+            'config/export',
+            'buildid.h',
+        ]
 
-        # Run 'make buildid.h' in objdir/ to get the buildid.h file
-        cmd = [make, 'buildid.h']
+        # Force the buildid if one is defined.
         if buildid:
-            cmd.append('MOZ_BUILD_DATE=%s' % str(buildid))
-        self.run_command_m(cmd,
-                           cwd=dirs['abs_objdir'],
+            env = dict(env)
+            env['MOZ_BUILD_DATE'] = str(buildid)
+
+        self.run_command_m([sys.executable, mach, 'build'] + targets,
+                           cwd=dirs['abs_mozilla_dir'],
                            env=env,
                            error_list=MakefileErrorList,
                            halt_on_failure=True)

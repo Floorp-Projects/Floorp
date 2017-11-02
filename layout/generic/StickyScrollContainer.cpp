@@ -285,7 +285,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   const nsPoint normalPosition = firstCont->GetNormalPosition();
 
   // Bottom and top
-  if (stick.YMost() != nscoord_MAX/2) {
+  if (stick.YMost() != (nscoord_MAX + (nscoord_MIN/2))) {
     aOuter->SetTopEdge(contain.y - stick.YMost());
     aInner->SetTopEdge(normalPosition.y - stick.YMost());
   }
@@ -296,7 +296,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   }
 
   // Right and left
-  if (stick.XMost() != nscoord_MAX/2) {
+  if (stick.XMost() != (nscoord_MAX + (nscoord_MIN/2))) {
     aOuter->SetLeftEdge(contain.x - stick.XMost());
     aInner->SetLeftEdge(normalPosition.x - stick.XMost());
   }
