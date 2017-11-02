@@ -10,7 +10,9 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include "nss.h"
 #include "secport.h"
+#include "secutil.h"
 #include "ssl.h"
 
 int
@@ -19,6 +21,43 @@ main(int argc, char **argv)
     const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
     int i;
     int errCount = 0;
+    SECStatus rv;
+    PRErrorCode err;
+    char *certDir = NULL;
+
+    /* load policy from $SSL_DIR/pkcs11.txt, for testing */
+    certDir = SECU_DefaultSSLDir();
+    if (certDir) {
+        rv = NSS_Init(certDir);
+    } else {
+        rv = NSS_NoDB_Init(NULL);
+    }
+    if (rv != SECSuccess) {
+        err = PR_GetError();
+        ++errCount;
+        fprintf(stderr, "NSS_Init failed: %s\n", PORT_ErrorToString(err));
+        goto out;
+    }
+
+    /* apply policy */
+    rv = NSS_SetAlgorithmPolicy(SEC_OID_APPLY_SSL_POLICY, NSS_USE_POLICY_IN_SSL, 0);
+    if (rv != SECSuccess) {
+        err = PR_GetError();
+        ++errCount;
+        fprintf(stderr, "NSS_SetAlgorithmPolicy failed: %s\n",
+                PORT_ErrorToString(err));
+        goto out;
+    }
+
+    /* update the default cipher suites according to the policy */
+    rv = SSL_OptionSetDefault(SSL_SECURITY, PR_TRUE);
+    if (rv != SECSuccess) {
+        err = PR_GetError();
+        ++errCount;
+        fprintf(stderr, "SSL_OptionSetDefault failed: %s\n",
+                PORT_ErrorToString(err));
+        goto out;
+    }
 
     fputs("This version of libSSL supports these cipher suites:\n\n", stdout);
 
@@ -58,5 +97,14 @@ main(int argc, char **argv)
                 info.isFIPS ? "FIPS" : "",
                 info.nonStandard ? "nonStandard" : "");
     }
+
+out:
+    rv = NSS_Shutdown();
+    if (rv != SECSuccess) {
+        err = PR_GetError();
+        ++errCount;
+        fprintf(stderr, "NSS_Shutdown failed: %s\n", PORT_ErrorToString(err));
+    }
+
     return errCount;
 }

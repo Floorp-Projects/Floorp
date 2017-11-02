@@ -937,8 +937,8 @@ DebugAfterYield(JSContext* cx, BaselineFrame* frame)
 }
 
 bool
-GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
-                      HandleValue arg, uint32_t resumeKind)
+GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
+                       HandleValue arg, uint32_t resumeKind)
 {
     // Set the frame's pc to the current resume pc, so that frame iterators
     // work. This function always returns false, so we're guaranteed to enter
@@ -948,7 +948,7 @@ GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObjec
     frame->setOverridePc(script->offsetToPC(offset));
 
     MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
-    MOZ_ALWAYS_FALSE(js::GeneratorThrowOrClose(cx, frame, genObj, arg, resumeKind));
+    MOZ_ALWAYS_FALSE(js::GeneratorThrowOrReturn(cx, frame, genObj, arg, resumeKind));
     return false;
 }
 
@@ -1833,6 +1833,12 @@ GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval)
         return false;
     rval.setObjectOrNull(proto);
     return true;
+}
+
+void
+CloseIteratorFromIon(JSContext* cx, JSObject* obj)
+{
+    CloseIterator(obj);
 }
 
 typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,

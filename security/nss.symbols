@@ -718,6 +718,9 @@ __PK11_SetCertificateNickname
 NSS_SecureMemcmpZero
 PORT_ZAllocAlignedOffset_Util
 CERT_FindCertByNicknameOrEmailAddrCX
+SECKEY_GetPrivateKeyType
+SEC_DerSignDataWithAlgorithmID
+SEC_CreateSignatureAlgorithmParameters
 # These symbols are not used by Firefox itself, but are used by Java's security
 # libraries, which in turn are used by Java applets/plugins/etc.  Provide them
 # to make Java code happy.

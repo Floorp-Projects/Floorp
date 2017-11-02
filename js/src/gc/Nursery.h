@@ -65,7 +65,7 @@ struct Cell;
 class MinorCollectionTracer;
 class RelocationOverlay;
 struct TenureCountCache;
-enum class AllocKind;
+enum class AllocKind : uint8_t;
 class TenuredCell;
 } /* namespace gc */
 

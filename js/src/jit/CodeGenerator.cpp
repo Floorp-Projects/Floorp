@@ -9291,9 +9291,9 @@ CodeGenerator::visitIsNoIterAndBranch(LIsNoIterAndBranch* lir)
         masm.jump(ifFalse);
 }
 
-typedef bool (*CloseIteratorFn)(JSContext*, HandleObject);
-static const VMFunction CloseIteratorInfo =
-    FunctionInfo<CloseIteratorFn>(CloseIterator, "CloseIterator");
+typedef void (*CloseIteratorFromIonFn)(JSContext*, JSObject*);
+static const VMFunction CloseIteratorFromIonInfo =
+    FunctionInfo<CloseIteratorFromIonFn>(CloseIteratorFromIon, "CloseIteratorFromIon");
 
 void
 CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
@@ -9303,7 +9303,7 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     const Register temp2 = ToRegister(lir->temp2());
     const Register temp3 = ToRegister(lir->temp3());
 
-    OutOfLineCode* ool = oolCallVM(CloseIteratorInfo, lir, ArgList(obj), StoreNothing());
+    OutOfLineCode* ool = oolCallVM(CloseIteratorFromIonInfo, lir, ArgList(obj), StoreNothing());
 
     LoadNativeIterator(masm, obj, temp1, ool->entry());
 

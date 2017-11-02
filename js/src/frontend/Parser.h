@@ -172,8 +172,8 @@ class ParserBase : public StrictModeGetter
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     // Determine whether |yield| is a valid name in the current context.
-    bool yieldExpressionsSupported() {
-        return pc->isStarGenerator();
+    bool yieldExpressionsSupported() const {
+        return pc->isGenerator();
     }
 
     virtual bool strictMode() { return pc->sc()->strict(); }

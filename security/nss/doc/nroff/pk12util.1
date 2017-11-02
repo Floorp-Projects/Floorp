@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: PK12UTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  5 June 2014
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 27 October 2017
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "PK12UTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
+.TH "PK12UTIL" "1" "27 October 2017" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,24 +39,24 @@ This documentation is still work in progress\&. Please contribute to the initial
 .SH "DESCRIPTION"
 .PP
 The PKCS #12 utility,
-\fBpk12util\fR, enables sharing certificates among any server that supports PKCS#12\&. The tool can import certificates and keys from PKCS#12 files into security databases, export certificates, and list certificates and keys\&.
+\fBpk12util\fR, enables sharing certificates among any server that supports PKCS #12\&. The tool can import certificates and keys from PKCS #12 files into security databases, export certificates, and list certificates and keys\&.
 .SH "OPTIONS AND ARGUMENTS"
 .PP
 \fBOptions\fR
 .PP
 \-i p12file
 .RS 4
-Import keys and certificates from a PKCS#12 file into a security database\&.
+Import keys and certificates from a PKCS #12 file into a security database\&.
 .RE
 .PP
 \-l p12file
 .RS 4
-List the keys and certificates in PKCS#12 file\&.
+List the keys and certificates in PKCS #12 file\&.
 .RE
 .PP
 \-o p12file
 .RS 4
-Export keys and certificates from the security database to a PKCS#12 file\&.
+Export keys and certificates from the security database to a PKCS #12 file\&.
 .RE
 .PP
 \fBArguments\fR
@@ -68,7 +68,7 @@ Specify the key encryption algorithm\&.
 .PP
 \-C certCipher
 .RS 4
-Specify the key cert (overall package) encryption algorithm\&.
+Specify the certiticate encryption algorithm\&.
 .RE
 .PP
 \-d [sql:]directory
@@ -432,7 +432,7 @@ Specify the pkcs #12 file password\&.
 .PP
 The most basic usage of
 \fBpk12util\fR
-for importing a certificate or key is the PKCS#12 input file (\fB\-i\fR) and some way to specify the security database being accessed (either
+for importing a certificate or key is the PKCS #12 input file (\fB\-i\fR) and some way to specify the security database being accessed (either
 \fB\-d\fR
 for a directory or
 \fB\-h\fR
@@ -467,7 +467,7 @@ pk12util: PKCS12 IMPORT SUCCESSFUL
 .PP
 Using the
 \fBpk12util\fR
-command to export certificates and keys requires both the name of the certificate to extract from the database (\fB\-n\fR) and the PKCS#12\-formatted output file to write to\&. There are optional parameters that can be used to encrypt the file to protect the certificate material\&.
+command to export certificates and keys requires both the name of the certificate to extract from the database (\fB\-n\fR) and the PKCS #12\-formatted output file to write to\&. There are optional parameters that can be used to encrypt the file to protect the certificate material\&.
 .PP
 pk12util \-o p12File \-n certname [\-c keyCipher] [\-C certCipher] [\-m|\-\-key_len keyLen] [\-n|\-\-cert_key_len certKeyLen] [\-d [sql:]directory] [\-P dbprefix] [\-k slotPasswordFile|\-K slotPassword] [\-w p12filePasswordFile|\-W p12filePassword]
 .PP
@@ -559,17 +559,17 @@ Certificate    Friendly Name: Thawte Freemail Member\*(Aqs Thawte Consulting (Pt
 .\}
 .SH "PASSWORD ENCRYPTION"
 .PP
-PKCS#12 provides for not only the protection of the private keys but also the certificate and meta\-data associated with the keys\&. Password\-based encryption is used to protect private keys on export to a PKCS#12 file and, optionally, the entire package\&. If no algorithm is specified, the tool defaults to using
-\fBPKCS12 V2 PBE with SHA1 and 3KEY Triple DES\-cbc\fR
-for private key encryption\&.
-\fBPKCS12 V2 PBE with SHA1 and 40 Bit RC4\fR
-is the default for the overall package encryption when not in FIPS mode\&. When in FIPS mode, there is no package encryption\&.
+PKCS #12 provides for not only the protection of the private keys but also the certificate and meta\-data associated with the keys\&. Password\-based encryption is used to protect private keys on export to a PKCS #12 file and, optionally, the associated certificates\&. If no algorithm is specified, the tool defaults to using PKCS #12 SHA\-1 and 3\-key triple DES for private key encryption\&. When not in FIPS mode, PKCS #12 SHA\-1 and 40\-bit RC4 is used for certificate encryption\&. When in FIPS mode, there is no certificate encryption\&. If certificate encryption is not wanted, specify
+\fB"NONE"\fR
+as the argument of the
+\fB\-C\fR
+option\&.
 .PP
 The private key is always protected with strong encryption by default\&.
 .PP
 Several types of ciphers are supported\&.
 .PP
-Symmetric CBC ciphers for PKCS#5 V2
+PKCS #5 password\-based encryption
 .RS 4
 .sp
 .RS 4
@@ -580,110 +580,13 @@ Symmetric CBC ciphers for PKCS#5 V2
 .sp -1
 .IP \(bu 2.3
 .\}
-DES\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-RC2\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-RC5\-CBCPad
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-DES\-EDE3\-CBC (the default for key encryption)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-AES\-128\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-AES\-192\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-AES\-256\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-CAMELLIA\-128\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-CAMELLIA\-192\-CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-CAMELLIA\-256\-CBC
+PBES2 with AES\-CBC\-Pad as underlying encryption scheme (\fB"AES\-128\-CBC"\fR,
+\fB"AES\-192\-CBC"\fR, and
+\fB"AES\-256\-CBC"\fR)
 .RE
 .RE
 .PP
-PKCS#12 PBE ciphers
+PKCS #12 password\-based encryption
 .RS 4
 .sp
 .RS 4
@@ -694,7 +597,9 @@ PKCS#12 PBE ciphers
 .sp -1
 .IP \(bu 2.3
 .\}
-PKCS #12 PBE with Sha1 and 128 Bit RC4
+SHA\-1 and 128\-bit RC4 (\fB"PKCS #12 V2 PBE With SHA\-1 And 128 Bit RC4"\fR
+or
+\fB"RC4"\fR)
 .RE
 .sp
 .RS 4
@@ -705,7 +610,7 @@ PKCS #12 PBE with Sha1 and 128 Bit RC4
 .sp -1
 .IP \(bu 2.3
 .\}
-PKCS #12 PBE with Sha1 and 40 Bit RC4
+SHA\-1 and 40\-bit RC4 (\fB"PKCS #12 V2 PBE With SHA\-1 And 40 Bit RC4"\fR) (used by default for certificate encryption in non\-FIPS mode)
 .RE
 .sp
 .RS 4
@@ -716,7 +621,9 @@ PKCS #12 PBE with Sha1 and 40 Bit RC4
 .sp -1
 .IP \(bu 2.3
 .\}
-PKCS #12 PBE with Sha1 and Triple DES CBC
+SHA\-1 and 3\-key triple\-DES (\fB"PKCS #12 V2 PBE With SHA\-1 And 3KEY Triple DES\-CBC"\fR
+or
+\fB"DES\-EDE3\-CBC"\fR)
 .RE
 .sp
 .RS 4
@@ -727,7 +634,9 @@ PKCS #12 PBE with Sha1 and Triple DES CBC
 .sp -1
 .IP \(bu 2.3
 .\}
-PKCS #12 PBE with Sha1 and 128 Bit RC2 CBC
+SHA\-1 and 128\-bit RC2 (\fB"PKCS #12 V2 PBE With SHA\-1 And 128 Bit RC2 CBC"\fR
+or
+\fB"RC2\-CBC"\fR)
 .RE
 .sp
 .RS 4
@@ -738,114 +647,11 @@ PKCS #12 PBE with Sha1 and 128 Bit RC2 CBC
 .sp -1
 .IP \(bu 2.3
 .\}
-PKCS #12 PBE with Sha1 and 40 Bit RC2 CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 128 Bit RC4
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 40 Bit RC4 (the default for non\-FIPS mode)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 3KEY Triple DES\-cbc
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 2KEY Triple DES\-cbc
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 128 Bit RC2 CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS12 V2 PBE with SHA1 and 40 Bit RC2 CBC
+SHA\-1 and 40\-bit RC2 (\fB"PKCS #12 V2 PBE With SHA\-1 And 40 Bit RC2 CBC"\fR)
 .RE
 .RE
 .PP
-PKCS#5 PBE ciphers
-.RS 4
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS #5 Password Based Encryption with MD2 and DES CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS #5 Password Based Encryption with MD5 and DES CBC
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-PKCS #5 Password Based Encryption with SHA1 and DES CBC
-.RE
-.RE
-.PP
-With PKCS#12, the crypto provider may be the soft token module or an external hardware module\&. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default)\&. If no suitable replacement for the desired algorithm can be found, the tool returns the error
+With PKCS #12, the crypto provider may be the soft token module or an external hardware module\&. If the cryptographic module does not support the requested algorithm, then the next best fit will be selected (usually the default)\&. If no suitable replacement for the desired algorithm can be found, the tool returns the error
 \fIno security module can perform the requested operation\fR\&.
 .SH "NSS DATABASE TYPES"
 .PP
@@ -987,6 +793,27 @@ For an engineering draft on the changes in the shared NSS databases, see the NSS
 .\}
 https://wiki\&.mozilla\&.org/NSS_Shared_DB
 .RE
+.SH "COMPATIBILITY NOTES"
+.PP
+The exporting behavior of
+\fBpk12util\fR
+has changed over time, while importing files exported with older versions of NSS is still supported\&.
+.PP
+Until the 3\&.30 release,
+\fBpk12util\fR
+used the UTF\-16 encoding for the PKCS #5 password\-based encryption schemes, while the recommendation is to encode passwords in UTF\-8 if the used encryption scheme is defined outside of the PKCS #12 standard\&.
+.PP
+Until the 3\&.31 release, even when
+\fB"AES\-128\-CBC"\fR
+or
+\fB"AES\-192\-CBC"\fR
+is given from the command line,
+\fBpk12util\fR
+always used 256\-bit AES as the underlying encryption scheme\&.
+.PP
+For historical reasons,
+\fBpk12util\fR
+accepts password\-based encryption schemes not listed in this document\&. However, those schemes are not officially supported and may have issues in interoperability with other tools\&.
 .SH "SEE ALSO"
 .PP
 certutil (1)

@@ -9,14 +9,6 @@
 namespace mozilla {
 namespace dom {
 
-WebAuthnTransactionChild::WebAuthnTransactionChild()
-{
-  // Retain a reference so the task object isn't deleted without IPDL's
-  // knowledge. The reference will be released by
-  // mozilla::ipc::BackgroundChildImpl::DeallocPWebAuthnTransactionChild.
-  NS_ADDREF_THIS();
-}
-
 mozilla::ipc::IPCResult
 WebAuthnTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
                                               nsTArray<uint8_t>&& aRegBuffer)
