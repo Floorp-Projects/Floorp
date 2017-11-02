@@ -1057,7 +1057,7 @@ gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
 }
 
 void
-gfxMacPlatformFontList::GetSystemFontList(
+gfxMacPlatformFontList::ReadSystemFontList(
     InfallibleTArray<SystemFontListEntry>* aList)
 {
     // Note: We rely on the records for mSystemTextFontFamilyName and
