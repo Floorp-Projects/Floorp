@@ -163,7 +163,6 @@ $(foreach name,$(TEST_PKGS_TARGZ),$(eval $(call package_archive,$(name),tar.gz))
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 stage-all: stage-android
-stage-all: stage-instrumentation-tests
 endif
 
 # Prepare _tests before any of the other staging/packaging steps.
@@ -247,9 +246,6 @@ stage-steeplechase: make-stage-dir
 	cp -RL $(DIST)/xpi-stage/specialpowers $(PKG_STAGE)/steeplechase
 	cp -RL $(topsrcdir)/testing/profiles/prefs_general.js $(PKG_STAGE)/steeplechase
 
-stage-instrumentation-tests: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/instrumentation stage-package
-
 TEST_EXTENSIONS := \
     specialpowers@mozilla.org.xpi \
 	$(NULL)
@@ -281,7 +277,6 @@ check::
   stage-jstests \
   stage-android \
   stage-steeplechase \
-  stage-instrumentation-tests \
   test-packages-manifest \
   check \
   $(NULL)
