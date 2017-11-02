@@ -317,11 +317,12 @@ public:
                             CharacterDataChangeInfo* aInfo);
 
   // If aContent is a text node that has been optimized away due to being
-  // whitespace next to a block boundary (or for some other reason), stop
-  // doing that and create a frame for it if it should have one. This recreates
-  // frames so be careful (although this should not change actual layout).
-  // Returns the frame for aContent if there is one.
-  nsIFrame* EnsureFrameForTextNode(nsGenericDOMDataNode* aContent);
+  // whitespace next to a block boundary (or for some other reason), ensure that
+  // a frame for it is created the next time frames are flushed, if it can
+  // possibly have a frame at all.
+  //
+  // Returns whether there are chances for the frame to be unsuppressed.
+  bool EnsureFrameForTextNodeIsCreatedAfterFlush(nsGenericDOMDataNode* aContent);
 
   // Generate the child frames and process bindings
   void GenerateChildFrames(nsContainerFrame* aFrame);

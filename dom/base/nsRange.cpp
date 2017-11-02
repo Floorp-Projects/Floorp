@@ -3212,21 +3212,26 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
 static nsTextFrame*
 GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
 {
-  nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
-  if (presShell) {
-    presShell->FrameConstructor()->EnsureFrameForTextNode(
-        static_cast<nsGenericDOMDataNode*>(aContent));
-
-    if (aFlushLayout) {
-      aContent->OwnerDoc()->FlushPendingNotifications(FlushType::Layout);
-    }
-
-    nsIFrame* frame = aContent->GetPrimaryFrame();
-    if (frame && frame->IsTextFrame()) {
-      return static_cast<nsTextFrame*>(frame);
-    }
+  nsIDocument* doc = aContent->OwnerDoc();
+  nsIPresShell* presShell = doc->GetShell();
+  if (!presShell) {
+    return nullptr;
   }
-  return nullptr;
+
+  const bool frameWillBeUnsuppressed =
+    presShell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
+      static_cast<nsGenericDOMDataNode*>(aContent));
+  if (aFlushLayout) {
+    doc->FlushPendingNotifications(FlushType::Layout);
+  } else if (frameWillBeUnsuppressed) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (!frame || !frame->IsTextFrame()) {
+    return nullptr;
+  }
+  return static_cast<nsTextFrame*>(frame);
 }
 
 static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,

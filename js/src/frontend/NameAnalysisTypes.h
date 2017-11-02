@@ -36,7 +36,7 @@ class EnvironmentCoordinate
         MOZ_ASSERT(JOF_OPTYPE(JSOp(*pc)) == JOF_ENVCOORD);
     }
 
-    EnvironmentCoordinate() {}
+    EnvironmentCoordinate() = default;
 
     void setHops(uint32_t hops) {
         MOZ_ASSERT(hops < ENVCOORD_HOPS_LIMIT);

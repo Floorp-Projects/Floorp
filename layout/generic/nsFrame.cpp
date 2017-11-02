@@ -53,6 +53,7 @@
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSClipPathInstance.h"
 
 #include "nsFrameTraversal.h"
 #include "nsRange.h"
@@ -77,6 +78,7 @@
 #include "nsDisplayList.h"
 #include "nsSVGIntegrationUtils.h"
 #include "SVGObserverUtils.h"
+#include "nsSVGMaskFrame.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -2519,6 +2521,109 @@ WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   }
 }
 
+// Try to compute a clip rect to bound the contents of the mask item
+// that will be built for |aMaskedFrame|. If we're not able to compute
+// one, return an empty Maybe.
+// The returned clip rect, if there is one, is relative to |aMaskedFrame|.
+static Maybe<nsRect>
+ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
+                       bool aHandleOpacity)
+{
+  const nsStyleSVGReset* svgReset = aMaskedFrame->StyleSVGReset();
+
+  nsSVGUtils::MaskUsage maskUsage;
+  nsSVGUtils::DetermineMaskUsage(aMaskedFrame, aHandleOpacity, maskUsage);
+
+  nsPoint offsetToUserSpace = nsLayoutUtils::ComputeOffsetToUserSpace(aBuilder, aMaskedFrame);
+  int32_t devPixelRatio = aMaskedFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxPoint devPixelOffsetToUserSpace = nsLayoutUtils::PointToGfxPoint(
+      offsetToUserSpace, devPixelRatio);
+  gfxMatrix cssToDevMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(aMaskedFrame);
+
+  nsPoint toReferenceFrame;
+  aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
+
+  Maybe<gfxRect> combinedClip;
+  if (maskUsage.shouldApplyBasicShape) {
+    Rect result = nsCSSClipPathInstance::GetBoundingRectForBasicShapeClip(
+        aMaskedFrame, svgReset->mClipPath);
+    combinedClip = Some(ThebesRect(result));
+  } else if (maskUsage.shouldApplyClipPath) {
+    gfxRect result = nsSVGUtils::GetBBox(aMaskedFrame,
+        nsSVGUtils::eBBoxIncludeClipped |
+        nsSVGUtils::eBBoxIncludeFill |
+        nsSVGUtils::eBBoxIncludeMarkers);
+    combinedClip = Some(cssToDevMatrix.TransformBounds(result));
+  } else {
+    // The code for this case is adapted from ComputeMaskGeometry().
+
+    nsRect borderArea(toReferenceFrame, aMaskedFrame->GetSize());
+    borderArea -= offsetToUserSpace;
+
+    // Use an infinite dirty rect to pass into nsCSSRendering::
+    // GetImageLayerClip() because we don't have an actual dirty rect to
+    // pass in. This is fine because the only time GetImageLayerClip() will
+    // not intersect the incoming dirty rect with something is in the "NoClip"
+    // case, and we handle that specially.
+    nsRect dirtyRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
+
+    nsIFrame* firstFrame = nsLayoutUtils::FirstContinuationOrIBSplitSibling(aMaskedFrame);
+    SVGObserverUtils::EffectProperties effectProperties =
+        SVGObserverUtils::GetEffectProperties(firstFrame);
+    nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
+
+    for (uint32_t i = 0; i < maskFrames.Length(); ++i) {
+      gfxRect clipArea;
+      if (maskFrames[i]) {
+        clipArea = maskFrames[i]->GetMaskArea(aMaskedFrame);
+        clipArea = cssToDevMatrix.TransformBounds(clipArea);
+      } else {
+        const auto& layer = svgReset->mMask.mLayers[i];
+        if (layer.mClip == StyleGeometryBox::NoClip) {
+          return Nothing();
+        }
+
+        nsCSSRendering::ImageLayerClipState clipState;
+        nsCSSRendering::GetImageLayerClip(layer, aMaskedFrame,
+                                          *aMaskedFrame->StyleBorder(),
+                                          borderArea, dirtyRect,
+                                          false /* aWillPaintBorder */,
+                                          devPixelRatio, &clipState);
+        clipArea = clipState.mDirtyRectInDevPx;
+      }
+      combinedClip = UnionMaybeRects(combinedClip, Some(clipArea));
+    }
+  }
+  if (combinedClip) {
+    if (combinedClip->IsEmpty()) {
+      // *clipForMask might be empty if all mask references are not resolvable
+      // or the size of them are empty. We still need to create a transparent mask
+      // before bug 1276834 fixed, so don't clip ctx by an empty rectangle for for
+      // now.
+      return Nothing();
+    }
+
+    // Convert to user space.
+    *combinedClip += devPixelOffsetToUserSpace;
+
+    // Round the clip out. In FrameLayerBuilder we round clips to nearest
+    // pixels, and if we have a really thin clip here, that can cause the
+    // clip to become empty if we didn't round out here.
+    // The rounding happens in coordinates that are relative to the reference
+    // frame, which matches what FrameLayerBuilder does.
+    combinedClip->RoundOut();
+
+    // Convert to app units.
+    nsRect result = nsLayoutUtils::RoundGfxRectToAppRect(*combinedClip, devPixelRatio);
+
+    // The resulting clip is relative to the reference frame, but the caller
+    // expects it to be relative to the masked frame, so adjust it.
+    result -= toReferenceFrame;
+    return Some(result);
+  }
+  return Nothing();
+}
+
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              nsDisplayList*        aList,
@@ -2733,6 +2838,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     clipState.Clear();
   }
 
+  Maybe<nsRect> clipForMask;
+  if (usingMask) {
+    clipForMask = ComputeClipForMaskItem(aBuilder, this, !useOpacity);
+  }
+
   nsDisplayListCollection set(aBuilder);
   {
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
@@ -2745,6 +2855,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     Maybe<nsRect> contentClip =
       GetClipPropClipRect(disp, effects, GetSize());
+
+    if (usingMask) {
+      contentClip = IntersectMaybeRects(contentClip, clipForMask);
+    }
 
     if (contentClip) {
       aBuilder->IntersectDirtyRect(*contentClip);
@@ -2954,10 +3068,22 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (usingMask) {
       DisplayListClipState::AutoSaveRestore maskClipState(aBuilder);
       maskClipState.ClearUpToASR(containerItemASR);
+      // The mask should move with aBuilder->CurrentActiveScrolledRoot(), so
+      // that's the ASR we prefer to use for the mask item. However, we can
+      // only do this if the mask if clipped with respect to that ASR, because
+      // an item always needs to have finite bounds with respect to its ASR.
+      // If we weren't able to compute a clip for the mask, we fall back to
+      // using containerItemASR, which is the lowest common ancestor clip of
+      // the mask's contents. That's not entirely crrect, but it satisfies
+      // the base requirement of the ASR system (that items have finite bounds
+      // wrt. their ASR).
+      const ActiveScrolledRoot* maskASR = clipForMask.isSome()
+                                        ? aBuilder->CurrentActiveScrolledRoot()
+                                        : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop(
-          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList,
-                                       !useOpacity, containerItemASR));
+          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList, !useOpacity,
+                                       maskASR));
     }
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling

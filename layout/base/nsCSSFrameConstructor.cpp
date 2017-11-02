@@ -8955,22 +8955,31 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
   rootFrame->InvalidateFrameSubtree();
 }
 
-nsIFrame*
-nsCSSFrameConstructor::EnsureFrameForTextNode(nsGenericDOMDataNode* aContent)
+bool
+nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
+  nsGenericDOMDataNode* aContent)
 {
-  if (aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
-      !mAlwaysCreateFramesForIgnorableWhitespace) {
-    // Text frame may have been suppressed. Disable suppression and signal
-    // that a flush should be performed. We do this on a document-wide
-    // basis so that pages that repeatedly query metrics for
-    // collapsed-whitespace text nodes don't trigger pathological behavior.
-    mAlwaysCreateFramesForIgnorableWhitespace = true;
-    nsAutoScriptBlocker blocker;
-    BeginUpdate();
-    ReconstructDocElementHierarchy(InsertionKind::Sync);
-    EndUpdate();
+  if (!aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE)) {
+    return false;
   }
-  return aContent->GetPrimaryFrame();
+
+  if (mAlwaysCreateFramesForIgnorableWhitespace) {
+    return false;
+  }
+
+  // Text frame may have been suppressed. Disable suppression and signal that a
+  // flush should be performed. We do this on a document-wide basis so that
+  // pages that repeatedly query metrics for collapsed-whitespace text nodes
+  // don't trigger pathological behavior.
+  mAlwaysCreateFramesForIgnorableWhitespace = true;
+  Element* root = mDocument->GetRootElement();
+  if (!root) {
+    return false;
+  }
+
+  RestyleManager()->PostRestyleEvent(
+    root, nsRestyleHint(0), nsChangeHint_ReconstructFrame);
+  return true;
 }
 
 void

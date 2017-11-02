@@ -491,12 +491,12 @@ this.CrashSubmit = {
     try {
       dirIter = new OS.File.DirectoryIterator(pendingDir);
     } catch (ex) {
-      if (ex.becauseNoSuchFile) {
-        return ids;
-      }
-
       Cu.reportError(ex);
       throw ex;
+    }
+
+    if (!(await dirIter.exists())) {
+      return ids;
     }
 
     try {

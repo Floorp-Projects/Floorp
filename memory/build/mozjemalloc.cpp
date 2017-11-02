@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 8; c-basic-offset: 8; indent-tabs-mode: t -*- */
-/* vim:set softtabstop=8 shiftwidth=8 noet: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -107,18 +107,44 @@
 
 #include "mozmemory_wrap.h"
 #include "mozjemalloc.h"
+#include "mozjemalloc_types.h"
+
+#include <cstring>
+#include <cerrno>
+#ifdef XP_WIN
+#include <io.h>
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
+#ifdef XP_DARWIN
+#include <libkern/OSAtomic.h>
+#include <mach/mach_init.h>
+#include <mach/vm_map.h>
+#endif
+
 #include "mozilla/Atomics.h"
 #include "mozilla/Alignment.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
+// Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
+// instead of the one defined here; use only MozTagAnonymousMemory().
+#include "mozilla/TaggedAnonymousMemory.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
+#include "rb.h"
 #include "Utils.h"
+
+using namespace mozilla;
 
 // On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
 // operating system.  If we release 1MB of live pages with MADV_DONTNEED, our
@@ -144,26 +170,11 @@
 #define MALLOC_DOUBLE_PURGE
 #endif
 
-#include <sys/types.h>
-
-#include <errno.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <algorithm>
-
-using namespace mozilla;
+#ifdef XP_WIN
+#define MALLOC_DECOMMIT
+#endif
 
 #ifdef XP_WIN
-
-// Some defines from the CRT internal headers that we need here.
-#define _CRT_SPINCOUNT 5000
-#include <io.h>
-#include <windows.h>
-#include <intrin.h>
-
 #define STDERR_FILENO 2
 
 // Implement getenv without using malloc.
@@ -181,59 +192,13 @@ getenv(const char* name)
 
   return nullptr;
 }
-
-#if defined(_WIN64)
-typedef long long ssize_t;
-#else
-typedef long ssize_t;
-#endif
-
-#define MALLOC_DECOMMIT
 #endif
 
 #ifndef XP_WIN
-#ifndef XP_SOLARIS
-#include <sys/cdefs.h>
-#endif
-#include <sys/mman.h>
 #ifndef MADV_FREE
 #define MADV_FREE MADV_DONTNEED
 #endif
-#ifndef MAP_NOSYNC
-#define MAP_NOSYNC 0
 #endif
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#if !defined(XP_SOLARIS) && !defined(ANDROID)
-#include <sys/sysctl.h>
-#endif
-#include <sys/uio.h>
-
-#include <errno.h>
-#include <limits.h>
-#include <pthread.h>
-#include <sched.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#ifdef XP_DARWIN
-#include <libkern/OSAtomic.h>
-#include <mach/mach_error.h>
-#include <mach/mach_init.h>
-#include <mach/vm_map.h>
-#include <malloc/malloc.h>
-#endif
-
-#endif
-
-#include "mozilla/ThreadLocal.h"
-#include "mozjemalloc_types.h"
 
 // Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
 // happen to override mmap() and call dlsym() from their overridden
@@ -283,18 +248,8 @@ _mmap(void* addr, size_t length, int prot, int flags, int fd, off_t offset)
 #endif
 #endif
 
-// Size of stack-allocated buffer passed to strerror_r().
-#define STRERROR_BUF 64
-
 // Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
 #define QUANTUM_2POW_MIN 4
-
-#include "rb.h"
-
-// sizeof(int) == (1U << SIZEOF_INT_2POW).
-#ifndef SIZEOF_INT_2POW
-#define SIZEOF_INT_2POW 2
-#endif
 
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
@@ -1065,7 +1020,8 @@ public:
   {
     mArenas.Init();
     mPrivateArenas.Init();
-    mDefaultArena = mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
+    mDefaultArena =
+      mLock.Init() ? CreateArena(/* IsPrivate = */ false) : nullptr;
     if (mDefaultArena) {
       // arena_t constructor sets this to a lower value for thread local
       // arenas; Reset to the default value for the main arena.
@@ -1102,17 +1058,14 @@ public:
       return Item<Iterator>(this, *Tree::Iterator::begin());
     }
 
-    Item<Iterator> end()
-    {
-      return Item<Iterator>(this, nullptr);
-    }
+    Item<Iterator> end() { return Item<Iterator>(this, nullptr); }
 
     Tree::TreeNode* Next()
     {
       Tree::TreeNode* result = Tree::Iterator::Next();
       if (!result && mNextTree) {
-	new (this) Iterator(mNextTree, nullptr);
-	result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
+        new (this) Iterator(mNextTree, nullptr);
+        result = reinterpret_cast<Tree::TreeNode*>(*Tree::Iterator::begin());
       }
       return result;
     }
@@ -1287,12 +1240,6 @@ _malloc_message(const char* p, Args... args)
   _malloc_message(args...);
 }
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/TaggedAnonymousMemory.h"
-  // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
-  // instead of the one defined here; use only MozTagAnonymousMemory().
-
 #ifdef ANDROID
 // Android's pthread.h does not declare pthread_atfork() until SDK 21.
 extern "C" MOZ_EXPORT int
@@ -1310,7 +1257,7 @@ bool
 Mutex::Init()
 {
 #if defined(XP_WIN)
-  if (!InitializeCriticalSectionAndSpinCount(&mMutex, _CRT_SPINCOUNT)) {
+  if (!InitializeCriticalSectionAndSpinCount(&mMutex, 5000)) {
     return false;
   }
 #elif defined(XP_DARWIN)
@@ -1593,7 +1540,7 @@ static void
 pages_unmap(void* aAddr, size_t aSize)
 {
   if (munmap(aAddr, aSize) == -1) {
-    char buf[STRERROR_BUF];
+    char buf[64];
 
     if (strerror_r(errno, buf, sizeof(buf)) == 0) {
       _malloc_message(
@@ -2272,7 +2219,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
     // Usable allocation found.
     bit = CountTrailingZeroes32(mask);
 
-    regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
+    regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
     MOZ_ASSERT(regind < bin->nregs);
     ret =
       (void*)(((uintptr_t)run) + bin->reg0_offset + (bin->reg_size * regind));
@@ -2290,7 +2237,7 @@ arena_run_reg_alloc(arena_run_t* run, arena_bin_t* bin)
       // Usable allocation found.
       bit = CountTrailingZeroes32(mask);
 
-      regind = ((i << (SIZEOF_INT_2POW + 3)) + bit);
+      regind = ((i << (LOG2(sizeof(int)) + 3)) + bit);
       MOZ_ASSERT(regind < bin->nregs);
       ret =
         (void*)(((uintptr_t)run) + bin->reg0_offset + (bin->reg_size * regind));
@@ -2398,11 +2345,11 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
   MOZ_DIAGNOSTIC_ASSERT(diff == regind * size);
   MOZ_DIAGNOSTIC_ASSERT(regind < bin->nregs);
 
-  elm = regind >> (SIZEOF_INT_2POW + 3);
+  elm = regind >> (LOG2(sizeof(int)) + 3);
   if (elm < run->regs_minelm) {
     run->regs_minelm = elm;
   }
-  bit = regind - (elm << (SIZEOF_INT_2POW + 3));
+  bit = regind - (elm << (LOG2(sizeof(int)) + 3));
   MOZ_DIAGNOSTIC_ASSERT((run->regs_mask[elm] & (1U << bit)) == 0);
   run->regs_mask[elm] |= (1U << bit);
 #undef SIZE_INV
@@ -2909,13 +2856,13 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   for (i = 0; i < aBin->regs_mask_nelms - 1; i++) {
     run->regs_mask[i] = UINT_MAX;
   }
-  remainder = aBin->nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1);
+  remainder = aBin->nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1);
   if (remainder == 0) {
     run->regs_mask[i] = UINT_MAX;
   } else {
     // The last element has spare bits that need to be unset.
     run->regs_mask[i] =
-      (UINT_MAX >> ((1U << (SIZEOF_INT_2POW + 3)) - remainder));
+      (UINT_MAX >> ((1U << (LOG2(sizeof(int)) + 3)) - remainder));
   }
 
   run->regs_minelm = 0;
@@ -2992,8 +2939,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
   do {
     try_nregs--;
     try_mask_nelms =
-      (try_nregs >> (SIZEOF_INT_2POW + 3)) +
-      ((try_nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1)) ? 1 : 0);
+      (try_nregs >> (LOG2(sizeof(int)) + 3)) +
+      ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
     try_reg0_offset = try_run_size - (try_nregs * bin->reg_size);
   } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
            try_reg0_offset);
@@ -3013,8 +2960,8 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
     do {
       try_nregs--;
       try_mask_nelms =
-        (try_nregs >> (SIZEOF_INT_2POW + 3)) +
-        ((try_nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1)) ? 1 : 0);
+        (try_nregs >> (LOG2(sizeof(int)) + 3)) +
+        ((try_nregs & ((1U << (LOG2(sizeof(int)) + 3)) - 1)) ? 1 : 0);
       try_reg0_offset = try_run_size - (try_nregs * bin->reg_size);
     } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
              try_reg0_offset);
@@ -3024,7 +2971,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
 
   MOZ_ASSERT(sizeof(arena_run_t) + (sizeof(unsigned) * (good_mask_nelms - 1)) <=
              good_reg0_offset);
-  MOZ_ASSERT((good_mask_nelms << (SIZEOF_INT_2POW + 3)) >= good_nregs);
+  MOZ_ASSERT((good_mask_nelms << (LOG2(sizeof(int)) + 3)) >= good_nregs);
 
   // Copy final settings.
   bin->run_size = good_run_size;
@@ -3498,8 +3445,8 @@ MozJemalloc::jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo)
   void* addr = (void*)(reg0_addr + regind * size);
 
   // Check if the allocation has been freed.
-  unsigned elm = regind >> (SIZEOF_INT_2POW + 3);
-  unsigned bit = regind - (elm << (SIZEOF_INT_2POW + 3));
+  unsigned elm = regind >> (LOG2(sizeof(int)) + 3);
+  unsigned bit = regind - (elm << (LOG2(sizeof(int)) + 3));
   PtrInfoTag tag =
     ((run->regs_mask[elm] & (1U << bit))) ? TagFreedSmall : TagLiveSmall;
 
@@ -4812,7 +4759,8 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   inline return_type MozJemalloc::moz_arena_##name(                            \
     arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__))               \
   {                                                                            \
-    BaseAllocator allocator(gArenas.GetById(aArenaId, /* IsPrivate = */ true));\
+    BaseAllocator allocator(                                                   \
+      gArenas.GetById(aArenaId, /* IsPrivate = */ true));                      \
     return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));                   \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE

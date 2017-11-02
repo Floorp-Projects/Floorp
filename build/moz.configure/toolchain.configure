@@ -57,6 +57,18 @@ def yasm_version(yasm):
     return Version(version)
 
 
+@depends(yasm_version)
+def yasm_major_version(yasm_version):
+    return str(yasm_version.major)
+
+
+@depends(yasm_version)
+def yasm_minor_version(yasm_version):
+    return str(yasm_version.minor)
+
+
+set_config('YASM_MAJOR_VERSION', yasm_major_version)
+set_config('YASM_MINOR_VERSION', yasm_minor_version)
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
 add_old_configure_assignment('_YASM_MAJOR_VERSION',
