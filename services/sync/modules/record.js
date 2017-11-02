@@ -721,7 +721,7 @@ Collection.prototype = {
       throw new Error("getBatched is unimplemented for guid-only GETs");
     }
 
-    // _onComplete and _onProgress are reset after each `get` by AsyncResource.
+    // _onComplete and _onProgress are reset after each `get` by Resource.
     let { _onComplete, _onProgress } = this;
     let recordBuffer = [];
     let resp;

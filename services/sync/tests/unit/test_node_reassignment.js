@@ -16,7 +16,6 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 
 add_task(async function setup() {
-  Log.repository.getLogger("Sync.AsyncResource").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level  = Log.Level.Trace;
   Log.repository.getLogger("Sync.Resource").level      = Log.Level.Trace;
   Log.repository.getLogger("Sync.RESTRequest").level   = Log.Level.Trace;

@@ -56,7 +56,7 @@ add_task(async function test_resource_logs_content_length_mismatch() {
 add_task(async function test_async_resource_logs_content_length_mismatch() {
   _("Issuing request.");
   let httpServer = httpd_setup({"/content": contentHandler});
-  let asyncResource = new AsyncResource(httpServer.baseURI + "/content");
+  let asyncResource = new Resource(httpServer.baseURI + "/content");
 
   let warnMessages = getWarningMessages(asyncResource._log);
 

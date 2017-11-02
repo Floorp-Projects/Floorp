@@ -432,7 +432,7 @@ ClientEngine.prototype = {
           names.add(record.name);
           continue;
         }
-        let remoteAge = AsyncResource.serverTime - this._incomingClients[id];
+        let remoteAge = Resource.serverTime - this._incomingClients[id];
         if (remoteAge > STALE_CLIENT_REMOTE_AGE) {
           this._log.info(`Hiding stale client ${id} with age ${remoteAge}`);
           record.stale = true;
