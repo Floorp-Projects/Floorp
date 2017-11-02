@@ -86,18 +86,8 @@ class FuzzyParser(BaseTryParser):
           'default': False,
           'help': "Update fzf before running.",
           }],
-        [['--full'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Use the full set of tasks as input to fzf (instead of "
-                  "target tasks).",
-          }],
-        [['-p', '--parameters'],
-         {'default': None,
-          'help': "Use the given parameters.yml to generate tasks, "
-                  "defaults to latest parameters.yml from mozilla-central",
-          }],
     ]
+    common_groups = ['push', 'task', 'preset']
     templates = ['artifact', 'env', 'rebuild']
 
 
