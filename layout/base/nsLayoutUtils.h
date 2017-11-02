@@ -3044,7 +3044,10 @@ public:
    * @param aOverflow the total size of the thing we're rendering
    * @param aPrerenderSize how large of an area we're willing to render
    * @return A rectangle that includes |aDirtyRect|, is clamped to |aOverflow|,
-   *         and is no larger than |aPrerenderSize|.
+   *         and is no larger than |aPrerenderSize| (unless |aPrerenderSize|
+   *         is smaller than |aDirtyRect|, in which case the returned rect
+   *         will still include |aDirtyRect| and thus be larger than
+   *         |aPrerenderSize|).
    */
   static nsRect ComputePartialPrerenderArea(const nsRect& aDirtyRect,
                                             const nsRect& aOverflow,
@@ -3065,6 +3068,9 @@ public:
 
   static nsRect ComputeGeometryBox(nsIFrame* aFrame,
                                    StyleGeometryBox aGeometryBox);
+
+  static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
+                                          nsIFrame* aFrame);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

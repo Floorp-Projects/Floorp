@@ -407,6 +407,7 @@ class Onboarding {
     registerNewTelemetrySession({
       page: this._window.location.href,
       session_key: this._session_key,
+      tour_type: this._tourType,
     });
     telemetry({
       event: "onboarding-session-begin",

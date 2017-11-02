@@ -15,13 +15,10 @@
 #include "mozilla/dom/VREventObserver.h"
 #include "mozilla/dom/WindowBinding.h" // for FrameRequestCallback
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/VRServiceTest.h"
 #include "mozilla/layers/SyncObject.h"
-
-using layers::TextureClient;
 
 namespace {
 const nsTArray<RefPtr<dom::VREventObserver>>::index_type kNoIndex =
@@ -153,8 +150,6 @@ VRManagerChild::DeferredDestroy(RefPtr<VRManagerChild> aVRManagerChild)
 void
 VRManagerChild::Destroy()
 {
-  mTexturesWaitingRecycled.Clear();
-
   // Keep ourselves alive until everything has been shut down
   RefPtr<VRManagerChild> selfRef = this;
 
@@ -294,36 +289,6 @@ VRManagerChild::CreateVRServiceTestController(const nsCString& aID, dom::Promise
   SendCreateVRServiceTestController(aID, mPromiseID);
   mPromiseList.Put(mPromiseID, aPromise);
   ++mPromiseID;
-}
-
-mozilla::ipc::IPCResult
-VRManagerChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
-{
-  for (InfallibleTArray<AsyncParentMessageData>::index_type i = 0; i < aMessages.Length(); ++i) {
-    const AsyncParentMessageData& message = aMessages[i];
-
-    switch (message.type()) {
-      case AsyncParentMessageData::TOpNotifyNotUsed: {
-        const OpNotifyNotUsed& op = message.get_OpNotifyNotUsed();
-        NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
-        break;
-      }
-      default:
-        NS_ERROR("unknown AsyncParentMessageData type");
-        return IPC_FAIL_NO_REASON(this);
-    }
-  }
-  return IPC_OK();
-}
-
-void
-VRManagerChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
-{
-  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
-  if (!client) {
-    return;
-  }
-  mTexturesWaitingRecycled.Remove(aTextureId);
 }
 
 PVRLayerChild*

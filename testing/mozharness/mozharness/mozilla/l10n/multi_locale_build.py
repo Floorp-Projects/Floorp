@@ -127,9 +127,10 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
         self.copyfile(os.path.join(dirs['abs_work_dir'], c['mozconfig']),
                       os.path.join(dirs['abs_mozilla_dir'], 'mozconfig'),
                       error_level=FATAL)
-        command = "make -f client.mk build"
+
+        mach = os.path.join(dirs['abs_mozilla_dir'], 'mach')
         env = self.query_env()
-        if self._process_command(command=command,
+        if self._process_command(command=[sys.executable, mach, 'build'],
                                  cwd=dirs['abs_mozilla_dir'],
                                  env=env, error_list=MakefileErrorList):
             self.fatal("Erroring out after the build failed.")

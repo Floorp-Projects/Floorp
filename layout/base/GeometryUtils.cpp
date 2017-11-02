@@ -35,18 +35,18 @@ static nsIFrame*
 GetFrameForNode(nsINode* aNode, GeometryNodeType aType)
 {
   nsIDocument* doc = aNode->OwnerDoc();
-  doc->FlushPendingNotifications(FlushType::Layout);
-  switch (aType) {
-  case GEOMETRY_NODE_ELEMENT:
-    return aNode->AsContent()->GetPrimaryFrame();
-  case GEOMETRY_NODE_TEXT: {
-    nsIPresShell* presShell = doc->GetShell();
-    if (presShell) {
-      return presShell->FrameConstructor()->EnsureFrameForTextNode(
+  if (aType == GEOMETRY_NODE_TEXT) {
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->FrameConstructor()->EnsureFrameForTextNodeIsCreatedAfterFlush(
           static_cast<nsGenericDOMDataNode*>(aNode));
     }
-    return nullptr;
   }
+  doc->FlushPendingNotifications(FlushType::Layout);
+
+  switch (aType) {
+  case GEOMETRY_NODE_TEXT:
+  case GEOMETRY_NODE_ELEMENT:
+    return aNode->AsContent()->GetPrimaryFrame();
   case GEOMETRY_NODE_DOCUMENT: {
     nsIPresShell* presShell = doc->GetShell();
     return presShell ? presShell->GetRootFrame() : nullptr;

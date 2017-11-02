@@ -4,22 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Build a mozilla application.
+# Defines main targets for driving the Firefox build system.
 #
-# To build a tree,
-#    1. hg clone ssh://hg.mozilla.org/mozilla-central mozilla
-#    2. cd mozilla
-#    3. create your .mozconfig file with
-#       ac_add_options --enable-application=browser
-#    4. gmake -f client.mk
-#
-# Other targets (gmake -f client.mk [targets...]),
-#    build
-#    clean (realclean is now the same as clean)
-#    distclean
-#
-# See http://developer.mozilla.org/en/docs/Build_Documentation for 
-# more information.
+# This make file should not be invoked directly. Instead, use
+# `mach` (likely `mach build`) for invoking the build system.
 #
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
@@ -63,11 +51,7 @@ SH := /bin/sh
 PERL ?= perl
 PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
 
-CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
-ifdef CONFIG_GUESS_SCRIPT
-  CONFIG_GUESS := $(shell $(CONFIG_GUESS_SCRIPT))
-endif
-
+CONFIG_GUESS := $(shell $(TOPSRCDIR)/build/autoconf/config.guess)
 
 ####################################
 # Sanity checks
@@ -189,9 +173,6 @@ clobber clobber_all: clean
 # helper target for mobile
 build_and_deploy: build package install
 
-# Do everything from scratch
-everything: clean build
-
 ####################################
 # Profile-Guided Optimization
 #  This is up here so that this is usable in multi-pass builds, where you
@@ -231,7 +212,6 @@ endif
 
 MAKEFILE      = $(wildcard $(OBJDIR)/Makefile)
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
-CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
 EXTRA_CONFIG_DEPS := \
   $(TOPSRCDIR)/aclocal.m4 \
@@ -367,17 +347,13 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout \
-    real_checkout \
+.PHONY: \
     realbuild \
     build \
     profiledbuild \
-    pull_all \
     build_all \
     clobber \
     clobber_all \
-    pull_and_build_all \
-    everything \
     configure \
     preflight_all \
     postflight_all \

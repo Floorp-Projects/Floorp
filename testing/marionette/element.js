@@ -849,25 +849,28 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Container element of |el|.
  */
 element.getContainer = function(el) {
-  if (el.localName != "option") {
-    return el;
+
+  function findAncestralElement(startNode, validAncestors) {
+    let node = startNode;
+    while (node.parentNode) {
+      node = node.parentNode;
+      if (validAncestors.includes(node.localName)) {
+        return node;
+      }
+    }
+
+    return startNode;
   }
 
-  function validContext(ctx) {
-    return ctx.localName == "datalist" || ctx.localName == "select";
-  }
-
-  // does <option> have a valid context,
+  // Does <option> have a valid context,
   // meaning is it a child of <datalist> or <select>?
-  let parent = el;
-  while (parent.parentNode && !validContext(parent)) {
-    parent = parent.parentNode;
+  if (el.localName === "option") {
+    return findAncestralElement(el, ["datalist", "select"]);
   }
 
-  if (!validContext(parent)) {
-    return el;
-  }
-  return parent;
+  // Child nodes of button will not be part of the element tree for
+  // elementsFromPoint until bug 1089326 is fixed.
+  return findAncestralElement(el, ["button"]);
 };
 
 /**
@@ -893,9 +896,17 @@ element.getContainer = function(el) {
  */
 element.isInView = function(el) {
   let originalPointerEvents = el.style.pointerEvents;
+
   try {
     el.style.pointerEvents = "auto";
     const tree = element.getPointerInteractablePaintTree(el);
+
+    // Bug 1413493 - <tr> is not part of the returned paint tree yet. As
+    // workaround check the visibility based on the first contained cell.
+    if (el.localName === "tr" && el.cells && el.cells.length > 0) {
+      return tree.includes(el.cells[0]);
+    }
+
     return tree.includes(el);
   } finally {
     el.style.pointerEvents = originalPointerEvents;

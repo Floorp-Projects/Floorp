@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+import sys
 
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 from mach.decorators import (
@@ -46,7 +47,7 @@ class WebPlatformTestsRunnerSetup(object):
         if kwargs["webdriver_binary"] is None:
             kwargs["webdriver_binary"] = os.path.join(self.context.bin_dir, "geckodriver")
 
-        kwargs = wptcommandline.check_args(kwargs)
+        return wptcommandline.check_args(kwargs)
 
     def kwargs_wptrun(self, kwargs):
         raise NotImplementedError
