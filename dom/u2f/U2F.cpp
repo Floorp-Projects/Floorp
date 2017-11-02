@@ -182,13 +182,16 @@ ExecuteCallback(T& aResp, Maybe<nsMainThreadPtrHandle<C>>& aCb)
     return;
   }
 
-  ErrorResult error;
-  aCb.ref()->Call(aResp, error);
-  NS_WARNING_ASSERTION(!error.Failed(), "dom::U2F::Promise callback failed");
-  error.SuppressException(); // Useful exceptions already emitted
-
+  // reset callback earlier to allow reentry from callback.
+  nsMainThreadPtrHandle<C> callback(aCb.ref());
   aCb.reset();
   MOZ_ASSERT(aCb.isNothing());
+  MOZ_ASSERT(!!callback);
+
+  ErrorResult error;
+  callback->Call(aResp, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "dom::U2F::Promise callback failed");
+  error.SuppressException(); // Useful exceptions already emitted
 }
 
 U2F::U2F(nsPIDOMWindowInner* aParent)
@@ -313,8 +316,10 @@ U2F::Register(const nsAString& aAppId,
               RegisterResponse response;
               response.Init(aResponse);
 
-              ExecuteCallback(response, localCb);
+              // U2F could be reentered from microtask-checkpoint while calling
+              // ExecuteCallback(), so we should mark Complete() earlier.
               localReqHolder.Complete();
+              ExecuteCallback(response, localCb);
           },
           [&localCb, &localReqHolder](ErrorCode aErrorCode) {
               MOZ_LOG(gU2FLog, LogLevel::Debug,
@@ -323,8 +328,10 @@ U2F::Register(const nsAString& aAppId,
               RegisterResponse response;
               response.mErrorCode.Construct(static_cast<uint32_t>(aErrorCode));
 
-              ExecuteCallback(response, localCb);
+              // U2F could be reentered from microtask-checkpoint while calling
+              // ExecuteCallback(), so we should mark Complete() earlier.
               localReqHolder.Complete();
+              ExecuteCallback(response, localCb);
           })
   ->Track(mPromiseHolder);
 }
@@ -390,8 +397,10 @@ U2F::Sign(const nsAString& aAppId,
               SignResponse response;
               response.Init(aResponse);
 
-              ExecuteCallback(response, localCb);
+              // U2F could be reentered from microtask-checkpoint while calling
+              // ExecuteCallback(), so we should mark Complete() earlier.
               localReqHolder.Complete();
+              ExecuteCallback(response, localCb);
           },
           [&localCb, &localReqHolder](ErrorCode aErrorCode) {
               MOZ_LOG(gU2FLog, LogLevel::Debug,
@@ -400,8 +409,10 @@ U2F::Sign(const nsAString& aAppId,
               SignResponse response;
               response.mErrorCode.Construct(static_cast<uint32_t>(aErrorCode));
 
-              ExecuteCallback(response, localCb);
+              // U2F could be reentered from microtask-checkpoint while calling
+              // ExecuteCallback(), so we should mark Complete() earlier.
               localReqHolder.Complete();
+              ExecuteCallback(response, localCb);
           })
   ->Track(mPromiseHolder);
 }

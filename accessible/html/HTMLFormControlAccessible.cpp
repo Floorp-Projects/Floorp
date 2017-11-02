@@ -15,7 +15,7 @@
 
 #include "nsContentList.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "nsIDOMHTMLTextAreaElement.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 #include "nsIEditor.h"
 #include "nsIFormControl.h"
 #include "nsIPersistentProperties2.h"
@@ -345,7 +345,7 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
   if (NativeState() & states::PROTECTED)    // Don't return password text!
     return;
 
-  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mContent));
+  HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromContent(mContent);
   if (textArea) {
     textArea->GetValue(aValue);
     return;

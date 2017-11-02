@@ -340,7 +340,6 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
                                ServoStyleContext* aParentContext,
                                LazyComputeBehavior aMayCompute)
 {
-  RefPtr<ServoStyleContext> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
     PreTraverseSync();
     return ResolveStyleLazilyInternal(

@@ -1824,6 +1824,7 @@ class nsDisplayItemLink {
 protected:
   nsDisplayItemLink() : mAbove(nullptr) {}
   nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
+  uint64_t mSentinel = 0xDEADBEEFDEADBEEF;
   nsDisplayItem* mAbove;
 
   friend class nsDisplayList;

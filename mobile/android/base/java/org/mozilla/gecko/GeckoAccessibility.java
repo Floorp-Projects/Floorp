@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
@@ -236,6 +237,7 @@ public class GeckoAccessibility {
         });
     }
 
+    @TargetApi(19)
     public static void setAccessibilityManagerListeners(final Context context) {
         AccessibilityManager accessibilityManager =
             (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);

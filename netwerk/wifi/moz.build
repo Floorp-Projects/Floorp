@@ -17,11 +17,6 @@ UNIFIED_SOURCES += [
     'nsWifiMonitor.cpp',
 ]
 
-if CONFIG['MOZ_ENABLE_DBUS']:
-    EXPORTS.mozilla += [
-        'DBusHelpers.h',
-    ]
-
 if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'nsWifiScannerMac.cpp',

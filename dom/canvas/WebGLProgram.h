@@ -17,6 +17,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 
+#include "CacheMap.h"
 #include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 
@@ -75,6 +76,11 @@ struct UniformBlockInfo final
     { }
 };
 
+struct CachedDrawFetchLimits final {
+    uint64_t maxVerts;
+    uint64_t maxInstances;
+};
+
 struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
     , public SupportsWeakPtr<LinkedProgramInfo>
@@ -99,10 +105,21 @@ struct LinkedProgramInfo final
 
     mutable std::vector<size_t> componentsPerTFVert;
 
+    bool attrib0Active;
+
     //////
 
     // The maps for the frag data names to the translated names.
     std::map<nsCString, const nsCString> fragDataMap;
+
+    //////
+
+    mutable CacheMap<const WebGLVertexArray*,
+                     CachedDrawFetchLimits> mDrawFetchCache;
+
+    const CachedDrawFetchLimits* GetDrawFetchLimits(const char* funcName) const;
+
+    //////
 
     explicit LinkedProgramInfo(WebGLProgram* prog);
     ~LinkedProgramInfo();
