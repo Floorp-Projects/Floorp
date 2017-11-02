@@ -23,7 +23,7 @@ function test() {
     "There should be one error logged when parsing.");
   is(parser.errors[0].name, "SyntaxError",
     "The correct exception was caught.");
-  is(parser.errors[0].message, "missing ; before statement",
+  is(parser.errors[0].message, "unexpected token: \'+\'",
     "The correct exception was caught.");
 
   finish();

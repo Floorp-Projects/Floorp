@@ -2872,7 +2872,7 @@ Parser<ParseHandler, CharT>::matchOrInsertSemicolon()
          *        tried to insert semicolon here
          *
          * Detect this situation and throw an understandable error.  Otherwise
-         * we'd throw a confusing "missing ; before statement" error.
+         * we'd throw a confusing "unexpected token: (unexpected token)" error.
          */
         if (!pc->isAsync() && tokenStream.currentToken().type == TOK_AWAIT) {
             error(JSMSG_AWAIT_OUTSIDE_ASYNC);
@@ -2885,7 +2885,7 @@ Parser<ParseHandler, CharT>::matchOrInsertSemicolon()
 
         /* Advance the scanner for proper error location reporting. */
         tokenStream.consumeKnownToken(tt, TokenStream::Operand);
-        error(JSMSG_SEMI_BEFORE_STMNT);
+        error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(tt));
         return false;
     }
     bool matched;

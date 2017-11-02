@@ -91,7 +91,7 @@ function test()
   var x = 1;
   var y = 1;
   code   = '(x\n)-- y';
-  expect = 'SyntaxError: missing ; before statement';
+  expect = 'SyntaxError: unexpected token: identifier';
 
   try
   {
@@ -105,7 +105,7 @@ function test()
   reportCompare(expect, actual, summary + ': ' + code);
 
   code   = '(x)-- y';
-  expect = 'SyntaxError: missing ; before statement';
+  expect = 'SyntaxError: unexpected token: identifier';
 
   try
   {
