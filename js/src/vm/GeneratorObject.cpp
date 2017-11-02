@@ -114,14 +114,14 @@ js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame)
 }
 
 bool
-js::GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> genObj,
-                          HandleValue arg, uint32_t resumeKind)
+js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> genObj,
+                           HandleValue arg, uint32_t resumeKind)
 {
     if (resumeKind == GeneratorObject::THROW) {
         cx->setPendingException(arg);
         genObj->setRunning();
     } else {
-        MOZ_ASSERT(resumeKind == GeneratorObject::CLOSE);
+        MOZ_ASSERT(resumeKind == GeneratorObject::RETURN);
 
         MOZ_ASSERT(arg.isObject());
         frame.setReturnValue(arg);
@@ -175,8 +175,8 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
         return true;
 
       case THROW:
-      case CLOSE:
-        return GeneratorThrowOrClose(cx, activation.regs().fp(), genObj, arg, resumeKind);
+      case RETURN:
+        return GeneratorThrowOrReturn(cx, activation.regs().fp(), genObj, arg, resumeKind);
 
       default:
         MOZ_CRASH("bad resumeKind");

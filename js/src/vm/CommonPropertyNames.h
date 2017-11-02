@@ -66,7 +66,6 @@
     macro(caseFirst, caseFirst, "caseFirst") \
     macro(catch, catch_, "catch") \
     macro(class, class_, "class") \
-    macro(close, close, "close") \
     macro(Collator, Collator, "Collator") \
     macro(collections, collections, "collections") \
     macro(columnNumber, columnNumber, "columnNumber") \
