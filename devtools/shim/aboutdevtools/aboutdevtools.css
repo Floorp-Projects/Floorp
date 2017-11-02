@@ -84,10 +84,15 @@ p {
   margin: 1em 20px;
 }
 
-.installpage-link {
+.feature-link {
+  display: block;
+}
+
+.external,
+.external:hover,
+.external:visited,
+.external:hover:active {
   color: var(--blue-60);
-  -moz-context-properties: fill;
-  fill: var(--blue-60);
 }
 
 .external::after {
@@ -103,6 +108,9 @@ p {
   background-image: url(images/external-link.svg);
   background-repeat: no-repeat;
   background-size: 16px 16px;
+
+  -moz-context-properties: fill;
+  fill: var(--blue-60);
 }
 
 .title {
@@ -201,7 +209,9 @@ footer {
 .footer-link {
   display: block;
   margin-top: 10px;
-  -moz-context-properties: fill;
+}
+
+.footer-link::after {
   fill: var(--white);
 }
 
