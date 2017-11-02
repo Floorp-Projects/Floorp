@@ -557,7 +557,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
   */
   _now() {
     // We use the server time, which is SECONDS
-    return AsyncResource.serverTime;
+    return Resource.serverTime;
   }
 }
 
