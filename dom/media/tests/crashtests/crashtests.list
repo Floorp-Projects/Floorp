@@ -19,4 +19,4 @@ load 1281695.html
 load 1306476.html
 load 1348381.html
 load 1367930_1.html
-skip-if(Android) load 1367930_2.html
+load 1367930_2.html
