@@ -885,11 +885,9 @@ nsCocoaWindow::Show(bool bState)
       // appear above the parent and move when the parent does. Setting this
       // needs to happen after the _setWindowNumber calls above, otherwise the
       // window doesn't focus properly.
-      if (nativeParentWindow && mPopupLevel == ePopupLevelParent) {
+      if (nativeParentWindow && mPopupLevel == ePopupLevelParent)
         [nativeParentWindow addChildWindow:mWindow
                             ordered:NSWindowAbove];
-      }
-      SetPopupWindowLevel();
     }
     else {
       NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2504,12 +2502,14 @@ void nsCocoaWindow::SetPopupWindowLevel()
   // deactivated.
   if (mPopupLevel == ePopupLevelFloating) {
     [mWindow setLevel:NSFloatingWindowLevel];
-  } else {
+    [mWindow setHidesOnDeactivate:YES];
+  }
+  else {
     // Otherwise, this is a top-level or parent popup. Parent popups always
     // appear just above their parent and essentially ignore the level.
     [mWindow setLevel:NSPopUpMenuWindowLevel];
+    [mWindow setHidesOnDeactivate:NO];
   }
-  [mWindow setHidesOnDeactivate:YES];
 }
 
 void
