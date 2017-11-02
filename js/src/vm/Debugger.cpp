@@ -1592,8 +1592,8 @@ CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleVa
         // function violate the iterator protocol. The return value from
         // such a frame must have the form { done: <bool>, value: <anything> }.
         RootedFunction callee(cx, frame.callee());
-        if (callee->isStarGenerator()) {
-            if (!CheckStarGeneratorResumptionValue(cx, vp)) {
+        if (callee->isGenerator()) {
+            if (!CheckGeneratorResumptionValue(cx, vp)) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_YIELD);
                 return false;
             }
@@ -5375,7 +5375,7 @@ static bool
 DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isGeneratorFunction)", args, obj, script);
-    args.rval().setBoolean(script->isStarGenerator());
+    args.rval().setBoolean(script->isGenerator());
     return true;
 }
 
@@ -7648,7 +7648,7 @@ DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
 DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame)
 {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-    return referent.hasScript() && referent.script()->isStarGenerator();
+    return referent.hasScript() && referent.script()->isGenerator();
 }
 
 /* static */ bool
@@ -9962,7 +9962,7 @@ DebuggerObject::isGeneratorFunction() const
     MOZ_ASSERT(isDebuggeeFunction());
 
     JSFunction* fun = RemoveAsyncWrapper(&referent()->as<JSFunction>());
-    return fun->isStarGenerator();
+    return fun->isGenerator();
 }
 
 bool

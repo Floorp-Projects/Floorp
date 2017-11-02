@@ -700,7 +700,7 @@ EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
     if (!EnsureConstructor(cx, global, JSProto_RegExp))
         return false; // needed by regular expression literals
 
-    if (!GlobalObject::initStarGenerators(cx, global))
+    if (!GlobalObject::initGenerators(cx, global))
         return false; // needed by function*() {} and generator comprehensions
 
     if (kind == ParseTaskKind::Module && !GlobalObject::ensureModulePrototypesCreated(cx, global))
@@ -1720,9 +1720,9 @@ GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void
 }
 
 JSObject*
-GlobalObject::getStarGeneratorFunctionPrototype()
+GlobalObject::getGeneratorFunctionPrototype()
 {
-    const Value& v = getReservedSlot(STAR_GENERATOR_FUNCTION_PROTO);
+    const Value& v = getReservedSlot(GENERATOR_FUNCTION_PROTO);
     return v.isObject() ? &v.toObject() : nullptr;
 }
 
@@ -1745,7 +1745,7 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
         // different function object, so the IdentifyStandardPrototype trick
         // below won't work.  Just special-case it.
         GlobalObject* parseGlobal = &parseTask->parseGlobal->as<GlobalObject>();
-        JSObject* parseTaskStarGenFunctionProto = parseGlobal->getStarGeneratorFunctionPrototype();
+        JSObject* parseTaskGenFunctionProto = parseGlobal->getGeneratorFunctionPrototype();
 
         // Module objects don't have standard prototypes either.
         JSObject* moduleProto = parseGlobal->maybeGetModulePrototype();
@@ -1770,8 +1770,8 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
                 MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
                            key == JSProto_Function || key == JSProto_RegExp);
                 newProto = GetBuiltinPrototypePure(global, key);
-            } else if (protoObj == parseTaskStarGenFunctionProto) {
-                newProto = global->getStarGeneratorFunctionPrototype();
+            } else if (protoObj == parseTaskGenFunctionProto) {
+                newProto = global->getGeneratorFunctionPrototype();
             } else if (protoObj == moduleProto) {
                 newProto = global->getModulePrototype();
             } else if (protoObj == importEntryProto) {

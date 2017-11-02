@@ -318,6 +318,13 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     key->version.data[0] = 0;
     /* 3.  Set the public exponent */
     SECITEM_TO_MPINT(*publicExponent, &e);
+#ifndef NSS_FIPS_DISABLED
+    /* check the exponent size  we  */
+    if (mp_cmp_d(&e, 0x10001) < 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        goto cleanup;
+    }
+#endif
     kiter = 0;
     max_attempts = 5 * (keySizeInBits / 2); /* FIPS 186-4 B.3.3 steps 4.7 and 5.8 */
     do {
