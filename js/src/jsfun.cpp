@@ -426,7 +426,7 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     if (isAsyncGenerator)
         objProto = GlobalObject::getOrCreateAsyncGeneratorPrototype(cx, global);
     else if (isGenerator)
-        objProto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
+        objProto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, global);
     else
         objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
     if (!objProto)
@@ -572,7 +572,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 {
     enum FirstWordFlag {
         HasAtom             = 0x1,
-        HasStarGeneratorProto = 0x2,
+        HasGeneratorProto   = 0x2,
         IsLazy              = 0x4,
         HasSingletonType    = 0x8
     };
@@ -596,7 +596,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
             firstword |= HasAtom;
 
         if (fun->isGenerator() || fun->isAsync())
-            firstword |= HasStarGeneratorProto;
+            firstword |= HasGeneratorProto;
 
         if (fun->isInterpretedLazy()) {
             // Encode a lazy script.
@@ -636,12 +636,12 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 
     if (mode == XDR_DECODE) {
         RootedObject proto(cx);
-        if (firstword & HasStarGeneratorProto) {
+        if (firstword & HasGeneratorProto) {
             // If we are off thread, the generator meta-objects have
             // already been created by js::StartOffThreadParseTask, so
             // JSContext* will not be necessary.
             JSContext* context = cx->helperThread() ? nullptr : cx;
-            proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(context, cx->global());
+            proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(context, cx->global());
             if (!proto)
                 return false;
         }
@@ -1894,7 +1894,7 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     // functions and async generators.
     RootedObject defaultProto(cx);
     if (isGenerator || isAsync) {
-        defaultProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, global);
+        defaultProto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, global);
         if (!defaultProto)
             return false;
     }
@@ -2146,7 +2146,7 @@ NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
 {
     RootedObject cloneProto(cx, proto);
     if (!proto && (fun->isGenerator() || fun->isAsync())) {
-        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
+        cloneProto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
     }

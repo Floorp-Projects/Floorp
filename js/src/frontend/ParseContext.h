@@ -626,7 +626,7 @@ class ParseContext : public Nestable<ParseContext>
         return sc_->isFunctionBox() && sc_->asFunctionBox()->useAsmOrInsideUseAsm();
     }
 
-    // An ES6 generator is marked as a "star generator" before its body is parsed.
+    // A generator is marked as a generator before its body is parsed.
     GeneratorKind generatorKind() const {
         return sc_->isFunctionBox()
                ? sc_->asFunctionBox()->generatorKind()

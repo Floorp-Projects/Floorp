@@ -33,7 +33,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
         return nullptr;
     RootedObject proto(cx, pval.isObject() ? &pval.toObject() : nullptr);
     if (!proto) {
-        proto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
+        proto = GlobalObject::getOrCreateGeneratorObjectPrototype(cx, global);
         if (!proto)
             return nullptr;
     }
@@ -188,7 +188,7 @@ const Class GeneratorObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS)
 };
 
-static const JSFunctionSpec star_generator_methods[] = {
+static const JSFunctionSpec generator_methods[] = {
     JS_SELF_HOSTED_FN("next", "GeneratorNext", 1, 0),
     JS_SELF_HOSTED_FN("throw", "GeneratorThrow", 1, 0),
     JS_SELF_HOSTED_FN("return", "GeneratorReturn", 1, 0),
@@ -205,9 +205,9 @@ js::NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*>
 }
 
 /* static */ bool
-GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
+GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global)
 {
-    if (global->getReservedSlot(STAR_GENERATOR_OBJECT_PROTO).isObject())
+    if (global->getReservedSlot(GENERATOR_OBJECT_PROTO).isObject())
         return true;
 
     RootedObject iteratorProto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
@@ -219,7 +219,7 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
                                                                                  iteratorProto));
     if (!genObjectProto)
         return false;
-    if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods) ||
+    if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, generator_methods) ||
         !DefineToStringTag(cx, genObjectProto, cx->names().Generator))
     {
         return false;
@@ -252,14 +252,14 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
         return false;
     }
 
-    global->setReservedSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
-    global->setReservedSlot(STAR_GENERATOR_FUNCTION, ObjectValue(*genFunction));
-    global->setReservedSlot(STAR_GENERATOR_FUNCTION_PROTO, ObjectValue(*genFunctionProto));
+    global->setReservedSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
+    global->setReservedSlot(GENERATOR_FUNCTION, ObjectValue(*genFunction));
+    global->setReservedSlot(GENERATOR_FUNCTION_PROTO, ObjectValue(*genFunctionProto));
     return true;
 }
 
 MOZ_MUST_USE bool
-js::CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v)
+js::CheckGeneratorResumptionValue(JSContext* cx, HandleValue v)
 {
     // yield/return value should be an Object.
     if (!v.isObject())
