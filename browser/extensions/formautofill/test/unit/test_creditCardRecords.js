@@ -28,6 +28,12 @@ const TEST_CREDIT_CARD_3 = {
   "cc-exp-year": 2000,
 };
 
+const TEST_CREDIT_CARD_WITH_EMPTY_FIELD = {
+  "cc-name": "",
+  "cc-number": "1234123412341234",
+  "cc-exp-month": 1,
+};
+
 const TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR = {
   "cc-number": "1234123412341234",
   "cc-exp-month": 1,
@@ -170,6 +176,12 @@ add_task(async function test_add() {
   do_check_eq(creditCards[0].timeLastUsed, 0);
   do_check_eq(creditCards[0].timesUsed, 0);
 
+  // Empty string should be deleted before saving.
+  profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_EMPTY_FIELD);
+  let creditCard = profileStorage.creditCards.data[2];
+  do_check_eq(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
+  do_check_eq(creditCard["cc-name"], undefined);
+
   Assert.throws(() => profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
 });
@@ -201,6 +213,12 @@ add_task(async function test_update() {
   do_check_eq(creditCard["cc-name"], undefined);
   do_check_neq(creditCard.timeLastModified, timeLastModified);
   do_check_credit_card_matches(creditCard, TEST_CREDIT_CARD_3);
+
+  // Empty string should be deleted while updating.
+  profileStorage.creditCards.update(profileStorage.creditCards.data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_FIELD);
+  creditCard = profileStorage.creditCards.data[0];
+  do_check_eq(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
+  do_check_eq(creditCard["cc-name"], undefined);
 
   Assert.throws(
     () => profileStorage.creditCards.update("INVALID_GUID", TEST_CREDIT_CARD_3),

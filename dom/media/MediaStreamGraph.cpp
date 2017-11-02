@@ -59,6 +59,8 @@ enum SourceMediaStream::TrackCommands : uint32_t {
 
 /**
  * A hash table containing the graph instances, one per document.
+ *
+ * The key is a hash of nsPIDOMWindowInner, see `WindowToHash`.
  */
 static nsDataHashtable<nsUint32HashKey, MediaStreamGraphImpl*> gGraphs;
 
@@ -1589,6 +1591,19 @@ public:
       // teardown and just leak, for safety.
       return NS_OK;
     }
+
+    for (MediaStream* stream : mGraph->AllStreams()) {
+      // Clean up all MediaSegments since we cannot release Images too
+      // late during shutdown. Also notify listeners that they were removed
+      // so they can clean up any gfx resources.
+      if (SourceMediaStream* source = stream->AsSourceStream()) {
+        // Finishing a SourceStream prevents new data from being appended.
+        source->Finish();
+      }
+      stream->GetStreamTracks().Clear();
+      stream->RemoveAllListenersImpl();
+    }
+
     mGraph->mForceShutdownTicket = nullptr;
 
     // We can't block past the final LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
@@ -1601,21 +1616,11 @@ public:
       mGraph->Destroy();
     } else {
       // The graph is not empty.  We must be in a forced shutdown, or a
-      // non-realtime graph that has finished processing.  Some later
-      // AppendMessage will detect that the manager has been emptied, and
+      // non-realtime graph that has finished processing. Some later
+      // AppendMessage will detect that the graph has been emptied, and
       // delete it.
       NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
                    "Not in forced shutdown?");
-      for (MediaStream* stream : mGraph->AllStreams()) {
-        // Clean up all MediaSegments since we cannot release Images too
-        // late during shutdown.
-        if (SourceMediaStream* source = stream->AsSourceStream()) {
-          // Finishing a SourceStream prevents new data from being appended.
-          source->Finish();
-        }
-        stream->GetStreamTracks().Clear();
-      }
-
       mGraph->mLifecycleState =
         MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION;
     }
@@ -2074,11 +2079,23 @@ MediaStream::EnsureTrack(TrackID aTrackId)
 void
 MediaStream::RemoveAllListenersImpl()
 {
-  for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
-    RefPtr<MediaStreamListener> listener = mListeners[i].forget();
-    listener->NotifyEvent(GraphImpl(), MediaStreamGraphEvent::EVENT_REMOVED);
+  GraphImpl()->AssertOnGraphThreadOrNotRunning();
+
+  auto streamListeners(mListeners);
+  for (auto& l : streamListeners) {
+    l->NotifyEvent(GraphImpl(), MediaStreamGraphEvent::EVENT_REMOVED);
   }
   mListeners.Clear();
+
+  auto trackListeners(mTrackListeners);
+  for (auto& l : trackListeners) {
+    l.mListener->NotifyRemoved();
+  }
+  mTrackListeners.Clear();
+
+  if (SourceMediaStream* source = AsSourceStream()) {
+    source->RemoveAllDirectListeners();
+  }
 }
 
 void
@@ -3119,6 +3136,18 @@ SourceMediaStream::EndAllTrackAndFinish()
   // we will call NotifyEvent() to let GetUserMedia know
 }
 
+void
+SourceMediaStream::RemoveAllDirectListeners()
+{
+  GraphImpl()->AssertOnGraphThreadOrNotRunning();
+
+  auto directListeners(mDirectTrackListeners);
+  for (auto& l : directListeners) {
+    l.mListener->NotifyDirectListenerUninstalled();
+  }
+  mDirectTrackListeners.Clear();
+}
+
 SourceMediaStream::~SourceMediaStream()
 {
 }
@@ -3495,20 +3524,27 @@ uint32_t WindowToHash(nsPIDOMWindowInner* aWindow)
 }
 
 MediaStreamGraph*
+MediaStreamGraph::GetInstanceIfExists(nsPIDOMWindowInner* aWindow)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Main thread only");
+
+  uint32_t hashkey = WindowToHash(aWindow);
+
+  MediaStreamGraphImpl* graph = nullptr;
+  gGraphs.Get(hashkey, &graph);
+  return graph;
+}
+
+MediaStreamGraph*
 MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequested,
                               nsPIDOMWindowInner* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
-  MediaStreamGraphImpl* graph = nullptr;
+  MediaStreamGraphImpl* graph =
+    static_cast<MediaStreamGraphImpl*>(GetInstanceIfExists(aWindow));
 
-  // We hash the nsPIDOMWindowInner to form a key to the gloabl
-  // MediaStreamGraph hashtable. Effectively, this means there is a graph per
-  // document.
-
-  uint32_t hashkey = WindowToHash(aWindow);
-
-  if (!gGraphs.Get(hashkey, &graph)) {
+  if (!graph) {
     if (!gMediaStreamGraphShutdownBlocker) {
 
       class Blocker : public media::ShutdownBlocker
@@ -3556,6 +3592,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
                                      CubebUtils::PreferredSampleRate(),
                                      mainThread);
 
+    uint32_t hashkey = WindowToHash(aWindow);
     gGraphs.Put(hashkey, graph);
 
     LOG(LogLevel::Debug,

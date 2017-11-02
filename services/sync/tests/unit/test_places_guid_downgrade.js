@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/history.js");
@@ -118,33 +117,31 @@ add_task(async function test_history_guids() {
     dump("tbguid: " + tbguid + "\n");
 
     _("History: Verify GUIDs are added to the guid column.");
-    let connection = PlacesUtils.history
-                                .QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
-    let stmt = connection.createAsyncStatement(
-      "SELECT id FROM moz_places WHERE guid = :guid");
-
-    stmt.params.guid = fxguid;
-    let result = Async.querySpinningly(stmt, ["id"]);
+    let db = await PlacesUtils.promiseDBConnection();
+    let result = await db.execute(
+      "SELECT id FROM moz_places WHERE guid = :guid",
+      {guid: fxguid}
+    );
     do_check_eq(result.length, 1);
 
-    stmt.params.guid = tbguid;
-    result = Async.querySpinningly(stmt, ["id"]);
+    result = await db.execute(
+      "SELECT id FROM moz_places WHERE guid = :guid",
+      {guid: tbguid}
+    );
     do_check_eq(result.length, 1);
-    stmt.finalize();
 
     _("History: Verify GUIDs weren't added to annotations.");
-    stmt = connection.createAsyncStatement(
-      "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid");
-
-    stmt.params.guid = fxguid;
-    result = Async.querySpinningly(stmt, ["guid"]);
+    result = await db.execute(
+      "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid",
+      {guid: fxguid}
+    );
     do_check_eq(result.length, 0);
 
-    stmt.params.guid = tbguid;
-    result = Async.querySpinningly(stmt, ["guid"]);
+    result = await db.execute(
+      "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid",
+      {guid: tbguid}
+    );
     do_check_eq(result.length, 0);
-    stmt.finalize();
   }
 
   await new Promise((resolve, reject) => {
@@ -177,35 +174,33 @@ add_task(async function test_bookmark_guids() {
   let tbguid = await store.GUIDForId(tbid);
 
   _("Bookmarks: Verify GUIDs are added to the guid column.");
-  let connection = PlacesUtils.history
-                              .QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  let stmt = connection.createAsyncStatement(
-    "SELECT id FROM moz_bookmarks WHERE guid = :guid");
-
-  stmt.params.guid = fxguid;
-  let result = Async.querySpinningly(stmt, ["id"]);
+  let db = await PlacesUtils.promiseDBConnection();
+  let result = await db.execute(
+    "SELECT id FROM moz_bookmarks WHERE guid = :guid",
+    {guid: fxguid}
+  );
   do_check_eq(result.length, 1);
-  do_check_eq(result[0].id, fxid);
+  do_check_eq(result[0].getResultByName("id"), fxid);
 
-  stmt.params.guid = tbguid;
-  result = Async.querySpinningly(stmt, ["id"]);
+  result = await db.execute(
+    "SELECT id FROM moz_bookmarks WHERE guid = :guid",
+    {guid: tbguid}
+  );
   do_check_eq(result.length, 1);
-  do_check_eq(result[0].id, tbid);
-  stmt.finalize();
+  do_check_eq(result[0].getResultByName("id"), tbid);
 
   _("Bookmarks: Verify GUIDs weren't added to annotations.");
-  stmt = connection.createAsyncStatement(
-    "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid");
-
-  stmt.params.guid = fxguid;
-  result = Async.querySpinningly(stmt, ["guid"]);
+  result = await db.execute(
+    "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
+    {guid: fxguid}
+  );
   do_check_eq(result.length, 0);
 
-  stmt.params.guid = tbguid;
-  result = Async.querySpinningly(stmt, ["guid"]);
+  result = await db.execute(
+    "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
+    {guid: tbguid}
+  );
   do_check_eq(result.length, 0);
-  stmt.finalize();
 });
 
 function run_test() {
