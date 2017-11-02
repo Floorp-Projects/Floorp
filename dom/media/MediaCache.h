@@ -339,7 +339,6 @@ public:
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
   // stream.
-  nsresult Seek(int64_t aOffset);
   int64_t Tell();
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
@@ -432,6 +431,9 @@ private:
   // bytes read successfully or an error code if any failure.
   Result<uint32_t, nsresult> ReadBlockFromCache(int64_t aOffset,
                                                 Span<char> aBuffer);
+
+  // Non-main thread only.
+  nsresult Seek(int64_t aOffset);
 
   // Returns the end of the bytes starting at the given offset
   // which are in cache.

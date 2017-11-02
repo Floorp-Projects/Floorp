@@ -2415,18 +2415,18 @@ MediaCacheStream::SetPlaybackRate(uint32_t aBytesPerSecond)
 nsresult
 MediaCacheStream::Seek(int64_t aOffset)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+  MOZ_ASSERT(!NS_IsMainThread());
+  mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  if (!IsOffsetAllowed(aOffset)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
   if (mClosed) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
+
   int64_t oldOffset = mStreamOffset;
-  int64_t newOffset = aOffset;
-  if (!IsOffsetAllowed(newOffset)) {
-    return NS_ERROR_FAILURE;
-  }
-  mStreamOffset = newOffset;
+  mStreamOffset = aOffset;
   LOG("Stream %p Seek to %" PRId64, this, mStreamOffset);
   mMediaCache->NoteSeek(this, oldOffset);
   mMediaCache->QueueUpdate();
