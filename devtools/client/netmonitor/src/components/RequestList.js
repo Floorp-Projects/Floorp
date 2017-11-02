@@ -26,8 +26,8 @@ function RequestList({
 }) {
   return (
     div({ className: "request-list-container" },
-      isEmpty ? RequestListEmptyNotice({ connector }) : RequestListContent({ connector }),
-      StatusBar({ connector }),
+      isEmpty ? RequestListEmptyNotice({connector}) : RequestListContent({connector}),
+      StatusBar(),
     )
   );
 }
