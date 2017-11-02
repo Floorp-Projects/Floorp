@@ -366,7 +366,7 @@ session.Capabilities = class extends Map {
       ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
       ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
-      ["moz:webdriverClick", false],
+      ["moz:webdriverClick", true],
     ]);
   }
 

@@ -7,9 +7,11 @@
 
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIBidiKeyboard.h"
+#include "nsIStringBundle.h"
 #include "nsTArray.h"
 #ifdef XP_WIN
 #include "WinUtils.h"
@@ -135,6 +137,27 @@ WidgetUtils::SendBidiKeyboardInfoToContent()
   for (uint32_t i = 0; i < children.Length(); i++) {
     Unused << children[i]->SendBidiKeyboardNotify(rtl, bidiKeyboards);
   }
+}
+
+// static
+void
+WidgetUtils::GetBrandShortName(nsAString& aBrandName)
+{
+    aBrandName.Truncate();
+
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    if (bundleService) {
+        bundleService->CreateBundle(
+            "chrome://branding/locale/brand.properties",
+            getter_AddRefs(bundle));
+    }
+
+    if (bundle) {
+        bundle->GetStringFromName("brandShortName", aBrandName);
+    }
 }
 
 } // namespace widget
