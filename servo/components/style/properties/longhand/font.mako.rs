@@ -1042,8 +1042,7 @@ ${helpers.single_keyword_system("font-variant-caps",
         // changes using the font_size_keyword. We also need to do this to
         // handle mathml scriptlevel changes
         let kw_inherited_size = context.builder.font_size_keyword.map(|(kw, ratio, offset)| {
-            let len = SpecifiedValue::Keyword(kw, ratio, offset).to_computed_value(context);
-            context.maybe_zoom_text(len.0).into()
+            SpecifiedValue::Keyword(kw, ratio, offset).to_computed_value(context)
         });
         let parent_kw;
         let device = context.builder.device;
@@ -1068,10 +1067,9 @@ ${helpers.single_keyword_system("font-variant-caps",
     pub fn cascade_initial_font_size(context: &mut Context) {
         // font-size's default ("medium") does not always
         // compute to the same value and depends on the font
-        let computed = context.maybe_zoom_text(
-                            longhands::font_size::get_initial_specified_value()
-                                .to_computed_value(context).0
-                        ).into();
+        let computed =
+            longhands::font_size::get_initial_specified_value()
+                .to_computed_value(context);
         context.builder.mutate_font().set_font_size(computed);
         % if product == "gecko":
             let device = context.builder.device;
