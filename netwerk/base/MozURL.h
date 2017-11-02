@@ -5,8 +5,11 @@
 #ifndef mozURL_h__
 #define mozURL_h__
 
-#include "rust-url-capi/src/rust-url-capi.h"
 #include "mozilla/UniquePtr.h"
+
+extern "C" {
+struct rusturl;
+}
 
 namespace mozilla {
 namespace net {
@@ -62,7 +65,7 @@ private:
   virtual ~MozURL() {}
   struct FreeRustURL
   {
-    void operator()(rusturl* aPtr) { rusturl_free(aPtr); }
+    void operator()(rusturl* aPtr);
   };
   mozilla::UniquePtr<rusturl, FreeRustURL> mURL;
 
@@ -111,12 +114,7 @@ public:
     // if (NS_SUCCEEDED(rv)) { /* use url2 */ }
     nsresult GetStatus() { return mStatus; }
   private:
-    explicit Mutator(MozURL* url)
-      : mURL(rusturl_clone(url->mURL.get()))
-      , mFinalized(false)
-      , mStatus(NS_OK)
-    {
-    }
+    explicit Mutator(MozURL* url);
     mozilla::UniquePtr<rusturl, FreeRustURL> mURL;
     bool mFinalized;
     nsresult mStatus;

@@ -194,6 +194,8 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     PLArenaPool *arena;
     void *extHandle;
     SECItem signedReq = { siBuffer, NULL, 0 };
+    SECAlgorithmID signAlg;
+    SECItem *params = NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) {
@@ -211,11 +213,25 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 
     /* Change cert type to RSA-PSS, if desired. */
     if (pssCertificate) {
+        params = SEC_CreateSignatureAlgorithmParameters(arena,
+                                                        NULL,
+                                                        SEC_OID_PKCS1_RSA_PSS_SIGNATURE,
+                                                        hashAlgTag,
+                                                        NULL,
+                                                        privk);
+        if (!params) {
+            PORT_FreeArena(arena, PR_FALSE);
+            SECKEY_DestroySubjectPublicKeyInfo(spki);
+            SECU_PrintError(progName, "unable to create RSA-PSS parameters");
+            return SECFailure;
+        }
+
         spki->algorithm.parameters.data = NULL;
         rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
-                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE, 0);
+                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE, params);
         if (rv != SECSuccess) {
             PORT_FreeArena(arena, PR_FALSE);
+            SECKEY_DestroySubjectPublicKeyInfo(spki);
             SECU_PrintError(progName, "unable to set algorithm ID");
             return SECFailure;
         }
@@ -256,16 +272,34 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         return SECFailure;
     }
 
-    /* Sign the request */
-    signAlgTag = SEC_GetSignatureAlgorithmOidTag(keyType, hashAlgTag);
-    if (signAlgTag == SEC_OID_UNKNOWN) {
-        PORT_FreeArena(arena, PR_FALSE);
-        SECU_PrintError(progName, "unknown Key or Hash type");
-        return SECFailure;
+    PORT_Memset(&signAlg, 0, sizeof(signAlg));
+    if (pssCertificate) {
+        rv = SECOID_SetAlgorithmID(arena, &signAlg,
+                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE, params);
+        if (rv != SECSuccess) {
+            PORT_FreeArena(arena, PR_FALSE);
+            SECU_PrintError(progName, "unable to set algorithm ID");
+            return SECFailure;
+        }
+    } else {
+        signAlgTag = SEC_GetSignatureAlgorithmOidTag(keyType, hashAlgTag);
+        if (signAlgTag == SEC_OID_UNKNOWN) {
+            PORT_FreeArena(arena, PR_FALSE);
+            SECU_PrintError(progName, "unknown Key or Hash type");
+            return SECFailure;
+        }
+        rv = SECOID_SetAlgorithmID(arena, &signAlg, signAlgTag, 0);
+        if (rv != SECSuccess) {
+            PORT_FreeArena(arena, PR_FALSE);
+            SECU_PrintError(progName, "unable to set algorithm ID");
+            return SECFailure;
+        }
     }
 
-    rv = SEC_DerSignData(arena, &signedReq, encoding->data, encoding->len,
-                         privk, signAlgTag);
+    /* Sign the request */
+    rv = SEC_DerSignDataWithAlgorithmID(arena, &signedReq,
+                                        encoding->data, encoding->len,
+                                        privk, &signAlg);
     if (rv) {
         PORT_FreeArena(arena, PR_FALSE);
         SECU_PrintError(progName, "signing of data failed");
@@ -1183,6 +1217,8 @@ luC(enum usage_level ul, const char *command)
         "   -o output-cert");
     FPS "%-20s Self sign\n",
         "   -x");
+    FPS "%-20s Sign the certificate with RSA-PSS (the issuer key must be rsa)\n",
+        "   --pss-sign");
     FPS "%-20s Cert serial number\n",
         "   -m serial-number");
     FPS "%-20s Time Warp\n",
@@ -1516,6 +1552,8 @@ luR(enum usage_level ul, const char *command)
         "   -h token-name");
     FPS "%-20s Key size in bits, RSA keys only (min %d, max %d, default %d)\n",
         "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+    FPS "%-20s Create a certificate request restricted to RSA-PSS (rsa only)\n",
+        "   --pss");
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
         "   -q pqgfile");
     FPS "%-20s Elliptic curve name (ec only)\n",
@@ -1693,6 +1731,8 @@ luS(enum usage_level ul, const char *command)
         "   -h token-name");
     FPS "%-20s Key size in bits, RSA keys only (min %d, max %d, default %d)\n",
         "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+    FPS "%-20s Create a certificate restricted to RSA-PSS (rsa only)\n",
+        "   --pss");
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
         "   -q pqgfile");
     FPS "%-20s Elliptic curve name (ec only)\n",
@@ -1701,6 +1741,8 @@ luS(enum usage_level ul, const char *command)
         "");
     FPS "%-20s Self sign\n",
         "   -x");
+    FPS "%-20s Sign the certificate with RSA-PSS (the issuer key must be rsa)\n",
+        "   --pss-sign");
     FPS "%-20s Cert serial number\n",
         "   -m serial-number");
     FPS "%-20s Time Warp\n",
@@ -1865,46 +1907,119 @@ MakeV1Cert(CERTCertDBHandle *handle,
 }
 
 static SECStatus
+SetSignatureAlgorithm(PLArenaPool *arena,
+                      SECAlgorithmID *signAlg,
+                      SECAlgorithmID *spkiAlg,
+                      SECOidTag hashAlgTag,
+                      SECKEYPrivateKey *privKey,
+                      PRBool pssSign)
+{
+    SECStatus rv;
+
+    if (pssSign ||
+        SECOID_GetAlgorithmTag(spkiAlg) == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
+        SECItem *srcParams;
+        SECItem *params;
+
+        if (SECOID_GetAlgorithmTag(spkiAlg) == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
+            srcParams = &spkiAlg->parameters;
+        } else {
+            /* If the issuer's public key is RSA, the parameter field
+             * of the SPKI should be NULL, which can't be used as a
+             * basis of RSA-PSS parameters. */
+            srcParams = NULL;
+        }
+        params = SEC_CreateSignatureAlgorithmParameters(arena,
+                                                        NULL,
+                                                        SEC_OID_PKCS1_RSA_PSS_SIGNATURE,
+                                                        hashAlgTag,
+                                                        srcParams,
+                                                        privKey);
+        if (!params) {
+            SECU_PrintError(progName, "Could not create RSA-PSS parameters");
+            return SECFailure;
+        }
+        rv = SECOID_SetAlgorithmID(arena, signAlg,
+                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE,
+                                   params);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "Could not set signature algorithm id.");
+            return rv;
+        }
+    } else {
+        KeyType keyType = SECKEY_GetPrivateKeyType(privKey);
+        SECOidTag algID;
+
+        algID = SEC_GetSignatureAlgorithmOidTag(keyType, hashAlgTag);
+        if (algID == SEC_OID_UNKNOWN) {
+            SECU_PrintError(progName, "Unknown key or hash type for issuer.");
+            return SECFailure;
+        }
+        rv = SECOID_SetAlgorithmID(arena, signAlg, algID, 0);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "Could not set signature algorithm id.");
+            return rv;
+        }
+    }
+    return SECSuccess;
+}
+
+static SECStatus
 SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
          SECOidTag hashAlgTag,
          SECKEYPrivateKey *privKey, char *issuerNickName,
-         int certVersion, void *pwarg)
+         int certVersion, PRBool pssSign, void *pwarg)
 {
     SECItem der;
     SECKEYPrivateKey *caPrivateKey = NULL;
     SECStatus rv;
     PLArenaPool *arena;
-    SECOidTag algID;
+    CERTCertificate *issuer;
     void *dummy;
-
-    if (!selfsign) {
-        CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
-        if ((CERTCertificate *)NULL == issuer) {
-            SECU_PrintError(progName, "unable to find issuer with nickname %s",
-                            issuerNickName);
-            return SECFailure;
-        }
-
-        privKey = caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
-        CERT_DestroyCertificate(issuer);
-        if (caPrivateKey == NULL) {
-            SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
-            return SECFailure;
-        }
-    }
 
     arena = cert->arena;
 
-    algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, hashAlgTag);
-    if (algID == SEC_OID_UNKNOWN) {
-        fprintf(stderr, "Unknown key or hash type for issuer.");
+    if (selfsign) {
+        issuer = cert;
+    } else {
+        issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
+        if ((CERTCertificate *)NULL == issuer) {
+            SECU_PrintError(progName, "unable to find issuer with nickname %s",
+                            issuerNickName);
+            rv = SECFailure;
+            goto done;
+        }
+        privKey = caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
+        if (caPrivateKey == NULL) {
+            SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
+            rv = SECFailure;
+            CERT_DestroyCertificate(issuer);
+            goto done;
+        }
+    }
+
+    if (pssSign &&
+        (SECKEY_GetPrivateKeyType(privKey) != rsaKey &&
+         SECKEY_GetPrivateKeyType(privKey) != rsaPssKey)) {
+        SECU_PrintError(progName, "unable to create RSA-PSS signature with key %s",
+                        issuerNickName);
         rv = SECFailure;
+        if (!selfsign) {
+            CERT_DestroyCertificate(issuer);
+        }
         goto done;
     }
 
-    rv = SECOID_SetAlgorithmID(arena, &cert->signature, algID, 0);
+    rv = SetSignatureAlgorithm(arena,
+                               &cert->signature,
+                               &issuer->subjectPublicKeyInfo.algorithm,
+                               hashAlgTag,
+                               privKey,
+                               pssSign);
+    if (!selfsign) {
+        CERT_DestroyCertificate(issuer);
+    }
     if (rv != SECSuccess) {
-        fprintf(stderr, "Could not set signature algorithm id.");
         goto done;
     }
 
@@ -1923,7 +2038,8 @@ SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
-            return SECFailure;
+            rv = SECFailure;
+            goto done;
     }
 
     der.len = 0;
@@ -1936,7 +2052,8 @@ SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
         goto done;
     }
 
-    rv = SEC_DerSignData(arena, &cert->derCert, der.data, der.len, privKey, algID);
+    rv = SEC_DerSignDataWithAlgorithmID(arena, &cert->derCert, der.data, der.len,
+                                        privKey, &cert->signature);
     if (rv != SECSuccess) {
         fprintf(stderr, "Could not sign encoded certificate data.\n");
         /* result allocated out of the arena, it will be freed
@@ -1969,6 +2086,7 @@ CreateCert(
     certutilExtnList extnList,
     const char *extGeneric,
     int certVersion,
+    PRBool pssSign,
     SECItem *certDER)
 {
     void *extHandle = NULL;
@@ -2029,7 +2147,7 @@ CreateCert(
 
         rv = SignCert(handle, subjectCert, selfsign, hashAlgTag,
                       *selfsignprivkey, issuerNickName,
-                      certVersion, pwarg);
+                      certVersion, pssSign, pwarg);
         if (rv != SECSuccess)
             break;
 
@@ -2352,6 +2470,7 @@ enum certutilOpts {
     opt_GenericExtensions,
     opt_NewNickname,
     opt_Pss,
+    opt_PssSign,
     opt_Help
 };
 
@@ -2472,6 +2591,8 @@ static const secuCommandFlag options_init[] =
         "new-n" },
       { /* opt_Pss                 */ 0, PR_FALSE, 0, PR_FALSE,
         "pss" },
+      { /* opt_PssSign             */ 0, PR_FALSE, 0, PR_FALSE,
+        "pss-sign" },
     };
 #define NUM_OPTIONS ((sizeof options_init) / (sizeof options_init[0]))
 
@@ -3363,6 +3484,25 @@ certutil_main(int argc, char **argv, PRBool initialize)
         }
     }
 
+    /* --pss-sign is to sign a certificate with RSA-PSS, even if the
+     * issuer's key is an RSA key.  If the key is an RSA-PSS key, the
+     * generated signature is always RSA-PSS. */
+    if (certutil.options[opt_PssSign].activated) {
+        if (!certutil.commands[cmd_CreateNewCert].activated &&
+            !certutil.commands[cmd_CreateAndAddCert].activated) {
+            PR_fprintf(PR_STDERR,
+                       "%s -%c: --pss-sign only works with -C or -S.\n",
+                       progName, commandToRun);
+            return 255;
+        }
+        if (keytype != rsaKey) {
+            PR_fprintf(PR_STDERR,
+                       "%s -%c: --pss-sign only works with RSA keys.\n",
+                       progName, commandToRun);
+            return 255;
+        }
+    }
+
     /* If we need a list of extensions convert the flags into list format */
     if (certutil.commands[cmd_CertReq].activated ||
         certutil.commands[cmd_CreateAndAddCert].activated ||
@@ -3500,6 +3640,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
                         (certutil.options[opt_GenericExtensions].activated ? certutil.options[opt_GenericExtensions].arg
                                                                            : NULL),
                         certVersion,
+                        certutil.options[opt_PssSign].activated,
                         &certDER);
         if (rv)
             goto shutdown;

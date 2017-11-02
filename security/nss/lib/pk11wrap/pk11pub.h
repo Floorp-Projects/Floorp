@@ -831,6 +831,10 @@ SECStatus PK11_LinkGenericObject(PK11GenericObject *list,
                                  PK11GenericObject *object);
 SECStatus PK11_DestroyGenericObjects(PK11GenericObject *object);
 SECStatus PK11_DestroyGenericObject(PK11GenericObject *object);
+PK11GenericObject *PK11_CreateManagedGenericObject(PK11SlotInfo *slot,
+                                                   const CK_ATTRIBUTE *pTemplate,
+                                                   int count, PRBool token);
+/* deprecated */
 PK11GenericObject *PK11_CreateGenericObject(PK11SlotInfo *slot,
                                             const CK_ATTRIBUTE *pTemplate,
                                             int count, PRBool token);
