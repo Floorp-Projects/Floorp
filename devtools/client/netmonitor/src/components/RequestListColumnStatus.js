@@ -33,9 +33,8 @@ class RequestListColumnStatus extends Component {
   }
 
   render() {
-    let { item } = this.props;
-    let { fromCache, fromServiceWorker, status, statusText } = item;
-    let code;
+    let { fromCache, fromServiceWorker, status, statusText } = this.props.item;
+    let code, title;
 
     if (status) {
       if (fromCache) {
@@ -45,41 +44,31 @@ class RequestListColumnStatus extends Component {
       } else {
         code = status;
       }
+
+      if (statusText) {
+        if (fromCache && fromServiceWorker) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.cachedworker",
+            status, statusText);
+        } else if (fromCache) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.cached",
+            status, statusText);
+        } else if (fromServiceWorker) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.worker",
+            status, statusText);
+        } else {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.simple",
+            status, statusText);
+        }
+      }
     }
 
     return (
-      div({
-        className: "requests-list-column requests-list-status",
-        onMouseOver: function ({ target }) {
-          if (status && statusText && !target.title) {
-            target.title = getColumnTitle(item);
-          }
-        },
-      },
-      div({ className: "requests-list-status-icon", "data-code": code }),
+      div({ className: "requests-list-column requests-list-status", title },
+        div({ className: "requests-list-status-icon", "data-code": code }),
         div({ className: "requests-list-status-code" }, status)
       )
     );
   }
-}
-
-function getColumnTitle(item) {
-  let { fromCache, fromServiceWorker, status, statusText } = item;
-  let title;
-  if (fromCache && fromServiceWorker) {
-    title = L10N.getFormatStr("netmonitor.status.tooltip.cachedworker",
-      status, statusText);
-  } else if (fromCache) {
-    title = L10N.getFormatStr("netmonitor.status.tooltip.cached",
-      status, statusText);
-  } else if (fromServiceWorker) {
-    title = L10N.getFormatStr("netmonitor.status.tooltip.worker",
-      status, statusText);
-  } else {
-    title = L10N.getFormatStr("netmonitor.status.tooltip.simple",
-      status, statusText);
-  }
-  return title;
 }
 
 module.exports = RequestListColumnStatus;

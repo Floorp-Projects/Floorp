@@ -158,199 +158,190 @@ add_task(function* () {
 
   // Test running flag once requests finish running
   setFreetextFilter("is:running");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test cached flag
   setFreetextFilter("is:from-cache");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   setFreetextFilter("is:cached");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   // Test negative cached flag
   setFreetextFilter("-is:from-cache");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   setFreetextFilter("-is:cached");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   // Test status-code flag
   setFreetextFilter("status-code:200");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   // Test status-code negative flag
   setFreetextFilter("-status-code:200");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   // Test mime-type flag
   setFreetextFilter("mime-type:HtmL");
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test mime-type negative flag
   setFreetextFilter("-mime-type:HtmL");
-  yield testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Test method flag
   setFreetextFilter("method:get");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   // Test unmatched method flag
   setFreetextFilter("method:post");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test scheme flag (all requests are http)
   setFreetextFilter("scheme:http");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("scheme:https");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test regex filter
   setFreetextFilter("regexp:content.*?Sam");
-  yield testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test set-cookie-name flag
   setFreetextFilter("set-cookie-name:name2");
-  yield testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-name:not-existing");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test set-cookie-value flag
   setFreetextFilter("set-cookie-value:value2");
-  yield testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-value:not-existing");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test set-cookie-domain flag
   setFreetextFilter("set-cookie-domain:.example.com");
-  yield testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-domain:.foo.example.com");
-  yield testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-domain:.not-existing.example.com");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test size
   setFreetextFilter("size:-1");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("size:0");
-  yield testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 1]);
+  testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 1]);
 
   setFreetextFilter("size:34");
-  yield testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 0]);
 
   // Testing the lower bound
   setFreetextFilter("size:9.659k");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   // Testing the actual value
   setFreetextFilter("size:10989");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   // Testing the upper bound
   setFreetextFilter("size:11.804k");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   // Test transferred
   setFreetextFilter("transferred:200");
-  yield testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 0]);
+  testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 0]);
 
   setFreetextFilter("transferred:234");
-  yield testContents([1, 0, 1, 0, 0, 0, 0, 0, 0, 1]);
+  testContents([1, 0, 1, 0, 0, 0, 0, 0, 0, 1]);
 
   setFreetextFilter("transferred:248");
-  yield testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 1]);
+  testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 1]);
 
   // Test larger-than
   setFreetextFilter("larger-than:-1");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("larger-than:0");
-  yield testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
+  testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:33");
-  yield testContents([0, 0, 1, 1, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 1, 1, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:34");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:10.73k");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:10.732k");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test transferred-larger-than
   setFreetextFilter("transferred-larger-than:-1");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("transferred-larger-than:214");
-  yield testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 1]);
+  testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 1]);
 
   setFreetextFilter("transferred-larger-than:247");
-  yield testContents([0, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("transferred-larger-than:248");
-  yield testContents([0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+  testContents([0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("transferred-larger-than:10.73k");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test cause
   setFreetextFilter("cause:xhr");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("cause:script");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test has-response-header
   setFreetextFilter("has-response-header:Content-Type");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("has-response-header:Last-Modified");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test remote-ip
   setFreetextFilter("remote-ip:127.0.0.1");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("remote-ip:192.168.1.2");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test domain
   setFreetextFilter("domain:example.com");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("domain:wrongexample.com");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test protocol
   setFreetextFilter("protocol:http/1");
-  yield testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("protocol:http/2");
-  yield testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   // Test mixing flags
   setFreetextFilter("-mime-type:HtmL status-code:200");
-  yield testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 0]);
+  testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   yield teardown(monitor);
 
-  function* testContents(visibility) {
-    let requestItems = document.querySelectorAll(".request-list-item");
-    for (let requestItem of requestItems) {
-      requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
-      EventUtils.synthesizeMouse(requestsListStatus, 0, 0, { type: "mousemove" },
-        monitor.panelWin);
-      yield waitUntil(() => requestsListStatus.title);
-    }
-
+  function testContents(visibility) {
     const items = getSortedRequests(store.getState());
     const visibleItems = getDisplayedRequests(store.getState());
 
