@@ -39,7 +39,7 @@ const ErrorDocs = {
   JSMSG_NO_PROPERTIES: "No_properties",
   JSMSG_ALREADY_HAS_PRAGMA: "Already_has_pragma",
   JSMSG_BAD_RETURN_OR_YIELD: "Bad_return_or_yield",
-  JSMSG_SEMI_BEFORE_STMNT: "Missing_semicolon_before_statement",
+  JSMSG_UNEXPECTED_TOKEN_NO_EXPECT: "Missing_semicolon_before_statement",
   JSMSG_OVER_RECURSED: "Too_much_recursion",
   JSMSG_BRACKET_AFTER_LIST: "Missing_bracket_after_list",
   JSMSG_PAREN_AFTER_ARGS: "Missing_parenthesis_after_argument_list",

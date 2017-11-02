@@ -36,12 +36,12 @@ function test() {
 
   is(parser.errors[0].name, "SyntaxError",
     "The correct first exception was caught.");
-  is(parser.errors[0].message, "missing ; before statement",
+  is(parser.errors[0].message, "unexpected token: \'+\'",
     "The correct first exception was caught.");
 
   is(parser.errors[1].name, "SyntaxError",
     "The correct second exception was caught.");
-  is(parser.errors[1].message, "missing ; before statement",
+  is(parser.errors[1].message, "unexpected token: \'+\'",
     "The correct second exception was caught.");
 
   is(parsed.scriptCount, 1,

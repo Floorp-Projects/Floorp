@@ -577,7 +577,7 @@ add_task(function* format_errors() {
     eval("javascript syntax error");
   } catch (e) {
     str = pFormat.format(e);
-    do_check_true(str.includes("SyntaxError: missing ;"));
+    do_check_true(str.includes("SyntaxError: unexpected token"));
     // Make sure we identified it as an Error and formatted the error location as
     // lineNumber:columnNumber.
     do_check_true(str.includes(":1:11)"));
