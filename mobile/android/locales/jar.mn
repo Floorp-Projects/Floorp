@@ -25,7 +25,6 @@
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
   locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
-  locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/devicePrompt.properties  (%chrome/devicePrompt.properties)
   locale/@AB_CD@/browser/pippki.properties        (%chrome/pippki.properties)
   locale/@AB_CD@/browser/sync.properties          (%chrome/sync.properties)
