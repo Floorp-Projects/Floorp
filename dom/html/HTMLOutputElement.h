@@ -39,8 +39,10 @@ public:
   nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                  bool aPreallocateChildren) const override;
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                        const nsAString& aValue, nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
 

@@ -4459,6 +4459,7 @@ HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
                                       nsAtom* aAttribute,
                                       const nsAString& aValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsAttrValue& aResult)
 {
   // Mappings from 'preload' attribute strings to an enumeration.
@@ -4484,7 +4485,7 @@ bool HTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                              aResult);
+                                              aMaybeScriptedPrincipal, aResult);
 }
 
 void HTMLMediaElement::DoneCreatingElement()

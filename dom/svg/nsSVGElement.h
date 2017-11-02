@@ -355,7 +355,9 @@ protected:
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                const nsAString& aValue, nsAttrValue& aResult) override;
+                                const nsAString& aValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
+                                nsAttrValue& aResult) override;
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsAtom* aAttribute,
                                               const nsAString& aValue);

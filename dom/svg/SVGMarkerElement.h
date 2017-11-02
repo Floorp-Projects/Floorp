@@ -151,6 +151,7 @@ protected:
 
   virtual bool ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAString& aValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
                                 nsAttrValue& aResult) override;
 
   void SetParentCoordCtxProvider(SVGViewportElement *aContext);
