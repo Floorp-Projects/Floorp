@@ -339,9 +339,9 @@ public:
     /**
      * Fill aFontList with a list of SystemFontListEntry records for the
      * available fonts on the platform; used to pass the list from chrome to
-     * content process. Currently implemented only on MacOSX.
+     * content process. Currently implemented only on MacOSX and Linux.
      */
-    virtual void GetSystemFontList(
+    virtual void ReadSystemFontList(
       InfallibleTArray<mozilla::dom::SystemFontListEntry>* aFontList)
     { }
 
