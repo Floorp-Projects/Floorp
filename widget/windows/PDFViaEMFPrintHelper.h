@@ -55,7 +55,7 @@ public:
                 int aPageWidth, int aPageHeight);
 
   /** Convert a specified PDF page to EMF and save it to file. */
-  bool DrawPageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
+  bool SavePageToFile(const wchar_t* aFilePath, unsigned int aPageIndex,
                       int aPageWidth, int aPageHeight);
 
   /** Create a share memory and serialize the EMF content into it. */
