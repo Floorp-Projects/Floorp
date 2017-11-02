@@ -12629,11 +12629,8 @@ IonBuilder::jsop_iternext()
     MDefinition* def = current->pop();
     MOZ_ASSERT(def->type() == MIRType::Value);
 
-    // The value should be a string in most cases. Legacy generators can return
-    // non-string values, so in that case bailout and give up Ion compilation
-    // of the script.
-    MInstruction* unbox = MUnbox::New(alloc(), def, MIRType::String, MUnbox::Fallible,
-                                      Bailout_IterNextNonString);
+    // The value must be a string.
+    MInstruction* unbox = MUnbox::New(alloc(), def, MIRType::String, MUnbox::Infallible);
     current->add(unbox);
     current->push(unbox);
 
