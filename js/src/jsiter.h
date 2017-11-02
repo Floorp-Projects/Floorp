@@ -182,11 +182,8 @@ NewEmptyPropertyIterator(JSContext* cx, unsigned flags);
 JSObject*
 ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp);
 
-bool
-CloseIterator(JSContext* cx, HandleObject iterObj);
-
-bool
-UnwindIteratorForException(JSContext* cx, HandleObject obj);
+void
+CloseIterator(JSObject* obj);
 
 bool
 IteratorCloseForException(JSContext* cx, HandleObject obj);

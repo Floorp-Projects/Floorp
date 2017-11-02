@@ -894,6 +894,9 @@ TypeOfObject(JSObject* obj, JSRuntime* rt);
 bool
 GetPrototypeOf(JSContext* cx, HandleObject target, MutableHandleValue rval);
 
+void
+CloseIteratorFromIon(JSContext* cx, JSObject* obj);
+
 extern const VMFunction SetObjectElementInfo;
 
 } // namespace jit
