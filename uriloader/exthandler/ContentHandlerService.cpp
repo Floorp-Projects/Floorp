@@ -3,6 +3,7 @@
 #include "ContentChild.h"
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
+#include "nsIStringEnumerator.h"
 
 using mozilla::dom::ContentChild;
 using mozilla::dom::PHandlerServiceChild;
@@ -63,9 +64,33 @@ ContentHandlerService::nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo,
       happs.AppendElement(HandlerApp(name, detailedDescription));
     }
   }
+
+  nsTArray<nsCString> extensions;
+
+  if (isMIMEInfo) {
+    nsCOMPtr<nsIUTF8StringEnumerator> extensionsIter;
+    mimeInfo->GetFileExtensions(getter_AddRefs(extensionsIter));
+    if (extensionsIter) {
+      bool hasMore = false;
+      while (NS_SUCCEEDED(extensionsIter->HasMore(&hasMore)) && hasMore) {
+        nsAutoCString extension;
+        if (NS_SUCCEEDED(extensionsIter->GetNext(extension))) {
+          extensions.AppendElement(Move(extension));
+        }
+      }
+    }
+  }
+
   nsHandlerInfoAction action;
   aInfo->GetPreferredAction(&action);
-  HandlerInfo info(type, isMIMEInfo, description, alwaysAskBeforeHandling, happ, happs, action);
+  HandlerInfo info(type,
+                   isMIMEInfo,
+                   description,
+                   alwaysAskBeforeHandling,
+                   Move(extensions),
+                   happ,
+                   happs,
+                   action);
   *aHandlerInfo = info;
 }
 
@@ -104,7 +129,7 @@ NS_IMETHODIMP RemoteHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequesto
 
 NS_IMPL_ISUPPORTS(RemoteHandlerApp, nsIHandlerApp)
 
-static inline void CopyHanderInfoTonsIHandlerInfo(HandlerInfo info, nsIHandlerInfo* aHandlerInfo)
+static inline void CopyHanderInfoTonsIHandlerInfo(const HandlerInfo& info, nsIHandlerInfo* aHandlerInfo)
 {
   HandlerApp preferredApplicationHandler = info.preferredApplicationHandler();
   nsCOMPtr<nsIHandlerApp> preferredApp(new RemoteHandlerApp(preferredApplicationHandler));
@@ -112,7 +137,26 @@ static inline void CopyHanderInfoTonsIHandlerInfo(HandlerInfo info, nsIHandlerIn
   nsCOMPtr<nsIMutableArray> possibleHandlers;
   aHandlerInfo->GetPossibleApplicationHandlers(getter_AddRefs(possibleHandlers));
   possibleHandlers->AppendElement(preferredApp);
+
+  if (info.isMIMEInfo()) {
+    const auto& fileExtensions = info.extensions();
+    bool first = true;
+    nsAutoCString extensionsStr;
+    for (const auto& extension : fileExtensions) {
+      if (!first) {
+        extensionsStr.Append(',');
+      }
+
+      extensionsStr.Append(extension);
+      first = false;
+    }
+
+    nsCOMPtr<nsIMIMEInfo> mimeInfo(do_QueryInterface(aHandlerInfo));
+    MOZ_ASSERT(mimeInfo, "parent and child don't agree on whether this is a MIME info");
+    mimeInfo->SetFileExtensions(extensionsStr);
+  }
 }
+
 ContentHandlerService::~ContentHandlerService()
 {
 }
@@ -129,10 +173,10 @@ NS_IMETHODIMP ContentHandlerService::Enumerate(nsISimpleEnumerator * *_retval)
 
 NS_IMETHODIMP ContentHandlerService::FillHandlerInfo(nsIHandlerInfo *aHandlerInfo, const nsACString & aOverrideType)
 {
-  HandlerInfo info;
+  HandlerInfo info, returnedInfo;
   nsIHandlerInfoToHandlerInfo(aHandlerInfo, &info);
-  mHandlerServiceChild->SendFillHandlerInfo(info, nsCString(aOverrideType), &info);
-  CopyHanderInfoTonsIHandlerInfo(info, aHandlerInfo);
+  mHandlerServiceChild->SendFillHandlerInfo(info, nsCString(aOverrideType), &returnedInfo);
+  CopyHanderInfoTonsIHandlerInfo(returnedInfo, aHandlerInfo);
   return NS_OK;
 }
 
