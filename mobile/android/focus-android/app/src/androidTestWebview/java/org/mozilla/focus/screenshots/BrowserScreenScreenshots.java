@@ -82,11 +82,15 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotsOfBrowsingScreen() throws Exception {
+        Screengrab.screenshot("Ignore_Browsingscreen");
         takeScreenshotsOfBrowsingView();
         takeScreenshotsOfMenu();
         takeScreenshotsOfOpenWithAndShare();
         takeAddToHomeScreenScreenshot();
+        takeScreenshotofInsecureCon();
+        takeScreenshotOfFindDialog();
         takeScreenshotOfTabsTrayAndErase();
+        takeScreenshotofSecureCon();
     }
 
     private void takeScreenshotsOfBrowsingView() {
@@ -155,13 +159,14 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
     private void takeAddToHomeScreenScreenshot() throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
 
-        assertTrue(TestHelper.AddtoHSmenuItem.waitForExists(waitingTime));
+        TestHelper.AddtoHSmenuItem.waitForExists(waitingTime);
         TestHelper.AddtoHSmenuItem.click();
 
-        assertTrue(TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime));
+        TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime);
         Screengrab.screenshot("AddtoHSDialog");
 
-        TestHelper.AddtoHSCancelBtn.click();
+        device.pressBack();
+        device.pressBack();
         Assert.assertTrue(TestHelper.browserURLbar.waitForExists(waitingTime));
     }
 
@@ -203,5 +208,46 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         device.wait(Until.findObject(By.res(TestHelper.getAppName(), "snackbar_text")), waitingTime);
 
         Screengrab.screenshot("YourBrowsingHistoryHasBeenErased");
+    }
+
+    private void takeScreenshotOfFindDialog() throws Exception {
+        UiObject findinpageMenuItem = device.findObject(new UiSelector()
+                .resourceId(TestHelper.getAppName() + ":id/find_in_page")
+                .enabled(true));
+        UiObject findinpageCloseBtn = device.findObject(new UiSelector()
+                .resourceId(TestHelper.getAppName() + ":id/close_find_in_page")
+                .enabled(true));
+
+        TestHelper.menuButton.perform(click());
+        findinpageMenuItem.waitForExists(waitingTime);
+        findinpageMenuItem.click();
+
+        findinpageCloseBtn.waitForExists(waitingTime);
+        Screengrab.screenshot("Find_In_Page_Dialog");
+        findinpageCloseBtn.click();
+    }
+
+    private void takeScreenshotofInsecureCon() throws Exception {
+
+        TestHelper.securityInfoIcon.click();
+        TestHelper.identityState.waitForExists(waitingTime);
+        Screengrab.screenshot("insecure_connection");
+        device.pressBack();
+    }
+
+    // This test requires external internet connection
+    private void takeScreenshotofSecureCon() throws Exception {
+
+        // take the security info of google.com for https connection
+        onView(withId(R.id.urlView))
+                .check(matches(isDisplayed()))
+                .check(matches(hasFocus()))
+                .perform(click(), replaceText("www.google.com"), pressImeActionButton());
+        TestHelper.waitForWebContent();
+        TestHelper.progressBar.waitUntilGone(waitingTime);
+        TestHelper.securityInfoIcon.click();
+        TestHelper.identityState.waitForExists(waitingTime);
+        Screengrab.screenshot("secure_connection");
+        device.pressBack();
     }
 }

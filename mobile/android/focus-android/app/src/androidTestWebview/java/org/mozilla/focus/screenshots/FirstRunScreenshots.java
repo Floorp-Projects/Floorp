@@ -33,11 +33,12 @@ public class FirstRunScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotsOfFirstrun() throws UiObjectNotFoundException {
+        Screengrab.screenshot("Ignore_FirstRun");
         assertTrue(device.findObject(new UiSelector()
                 .text(getString(R.string.firstrun_defaultbrowser_title))
                 .enabled(true)
         ).waitForExists(waitingTime));
-
+        device.waitForIdle();
         Screengrab.screenshot("Onboarding_1_View");
         TestHelper.nextBtn.click();
 

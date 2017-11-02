@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is the template for our Screengrabfile used in automation.
+# tools/taskcluster/generate_screengrab_config.py will read this
+# file and generate the final configuration that we use inside
+# a taskcluster task.
+
+app_package_name 'org.mozilla.focus.debug'
+use_tests_in_packages ['org.mozilla.focus.screenshots']
+
+app_apk_path 'app/build/outputs/apk/focusWebviewUniversal/debug/app-focus-webview-universal-debug.apk'
+tests_apk_path 'app/build/outputs/apk/androidTest/focusWebviewUniversal/debug/app-focus-webview-universal-debug-androidTest.apk'
+
+# 67 locales
+locales ['af','am','an','anp','ar', 'ast', 'az', 'bg', 'bn-BD', 'bn-IN', 'bs','ca',
+         'cak','cs', 'cy', 'da','de', 'dsb', 'el', 'eo', 'es-AR', 'es-CL', 'es-ES', 'es-MX',
+         'eu','fa', 'fi','fr', 'fy-NL','ga-IE', 'gu-IN','he', 'hi-IN','hr', 'hsb', 'hu',
+         'hy-AM', 'ia','id', 'it', 'ixl', 'ja', 'ka', 'kab', 'kk', 'ko', 'kw', 'lo', 'lt',
+         'lv','meh','mix', 'ms', 'my','nb-NO', 'ne-NP', 'nl', 'nn-NO','oc', 'pai', 'pl',
+         'pt-BR', 'ro', 'ru', 'sk', 'sl', 'sq', 'sr', 'sv-SE', 'ta', 'te', 'th', 'tr','trs',
+         'tsz', 'tt', 'uk', 'ur', 'vi','wo','zam','zh-CN', 'zh-TW','en-CA']
+
+# Clear all previous screenshots locally. Technically not needed in automation.
+# But it's easier to debug this on a local device if there are no old screenshots
+# hanging around.
+clear_previous_screenshots true
+
+exit_on_test_failure false

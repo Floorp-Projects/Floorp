@@ -149,7 +149,8 @@ public final class TestHelper {
             .resourceId(getAppName() + ":id/add_to_homescreen")
             .enabled(true));
     public static UiObject AddtoHSCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId(getAppName() + ":id/addtohomescreen_dialog_cancel")
+            .className("android.widget.Button")
+            .instance(0)
             .enabled(true));
     public static UiObject AddtoHSOKBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/addtohomescreen_dialog_add")
@@ -163,6 +164,13 @@ public final class TestHelper {
     public static UiObject savedNotification = TestHelper.mDevice.findObject(new UiSelector()
             .text("Download complete.")
             .resourceId("android:id/text")
+            .enabled(true));
+
+    public static UiObject securityInfoIcon = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/security_info")
+            .enabled(true));
+    public static UiObject identityState = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/site_identity_state")
             .enabled(true));
 
     /********* Main View Menu Item Locators ***********/

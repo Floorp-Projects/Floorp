@@ -66,6 +66,7 @@ abstract class ScreenshotTest {
 
     @After
     public void tearDownIdlingResources() {
+        device.waitForIdle();
         IdlingRegistry.getInstance().unregister(loadingIdlingResource);
     }
 

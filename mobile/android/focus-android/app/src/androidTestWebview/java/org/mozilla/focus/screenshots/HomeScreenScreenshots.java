@@ -37,6 +37,7 @@ public class HomeScreenScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotOfHomeScreen() {
+        Screengrab.screenshot("Ignore");
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()));

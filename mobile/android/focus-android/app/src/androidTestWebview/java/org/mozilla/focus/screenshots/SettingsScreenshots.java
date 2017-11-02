@@ -34,7 +34,7 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withKey;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
@@ -179,10 +179,11 @@ public class SettingsScreenshots extends ScreenshotTest {
         Screengrab.screenshot("Autocomplete_Add_Custom_URL_Error_Popup");
 
         onView(withId(R.id.domainView))
-                .perform(typeText("screenshot.com"), closeSoftKeyboard());
+                .perform(replaceText("screenshot.com"), closeSoftKeyboard());
         onView(withId(R.id.save))
                 .perform(click());
         Screengrab.screenshot("Autocomplete_Add_Custom_URL_Saved_Popup");
+        device.waitForIdle();
         onView(withText(addCustomURLAction))
                 .check(matches(isDisplayed()));
 
