@@ -33,7 +33,6 @@ class JSAPITestString {
     const char* begin() const { return chars.begin(); }
     const char* end() const { return chars.end(); }
     size_t length() const { return chars.length(); }
-    void clear() { chars.clearAndFree(); }
 
     JSAPITestString& operator +=(const char* s) {
         if (!chars.append(s, strlen(s)))
