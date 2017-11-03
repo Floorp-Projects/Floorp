@@ -1614,9 +1614,13 @@ HTMLMediaElement::MozDumpDebugInfo()
     return nullptr;
   }
   if (mDecoder) {
-    mDecoder->DumpDebugInfo();
+    mDecoder->DumpDebugInfo()->Then(mAbstractMainThread,
+                                    __func__,
+                                    promise.get(),
+                                    &Promise::MaybeResolveWithUndefined);
+  } else {
+    promise->MaybeResolveWithUndefined();
   }
-  promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
