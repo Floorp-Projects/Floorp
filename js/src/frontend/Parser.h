@@ -189,52 +189,9 @@ class ParserBase : public StrictModeGetter
 
     bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
 
-    /* Report the given error at the current offset. */
-    void error(unsigned errorNumber, ...);
-    void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
-
-    /* Report the given error at the given offset. */
-    void errorAt(uint32_t offset, unsigned errorNumber, ...);
-    void errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                          unsigned errorNumber, ...);
-
-    /*
-     * Handle a strict mode error at the current offset.  Report an error if in
-     * strict mode code, or warn if not, using the given error number and
-     * arguments.
-     */
-    MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
-
-    /*
-     * Handle a strict mode error at the given offset.  Report an error if in
-     * strict mode code, or warn if not, using the given error number and
-     * arguments.
-     */
-    MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...);
-
-    /* Report the given warning at the current offset. */
-    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
-
-    /* Report the given warning at the given offset. */
-    MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
-
-    /*
-     * If extra warnings are enabled, report the given warning at the current
-     * offset.
-     */
-    MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...);
-
-    /*
-     * If extra warnings are enabled, report the given warning at the given
-     * offset.
-     */
-    MOZ_MUST_USE bool extraWarningAt(uint32_t offset, unsigned errorNumber, ...);
-
     bool isValidStrictBinding(PropertyName* name);
 
     void addTelemetry(DeprecatedLanguageExtension e);
-
-    bool warnOnceAboutExprClosure();
 
     bool hasValidSimpleStrictParameterNames();
 
@@ -495,6 +452,49 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
                                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     void trace(JSTracer* trc);
+
+    /* Report the given error at the current offset. */
+    void error(unsigned errorNumber, ...);
+    void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
+
+    /* Report the given error at the given offset. */
+    void errorAt(uint32_t offset, unsigned errorNumber, ...);
+    void errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                          unsigned errorNumber, ...);
+
+    /*
+     * Handle a strict mode error at the current offset.  Report an error if in
+     * strict mode code, or warn if not, using the given error number and
+     * arguments.
+     */
+    MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
+
+    /*
+     * Handle a strict mode error at the given offset.  Report an error if in
+     * strict mode code, or warn if not, using the given error number and
+     * arguments.
+     */
+    MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...);
+
+    /* Report the given warning at the current offset. */
+    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
+
+    /* Report the given warning at the given offset. */
+    MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
+
+    bool warnOnceAboutExprClosure();
+
+    /*
+     * If extra warnings are enabled, report the given warning at the current
+     * offset.
+     */
+    MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...);
+
+    /*
+     * If extra warnings are enabled, report the given warning at the given
+     * offset.
+     */
+    MOZ_MUST_USE bool extraWarningAt(uint32_t offset, unsigned errorNumber, ...);
 
   private:
     Parser* thisForCtor() { return this; }
