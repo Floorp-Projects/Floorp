@@ -89,4 +89,4 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Disability Access APIs")
+    BUG_COMPONENT = ("Core", "IPC: MSCOM")
