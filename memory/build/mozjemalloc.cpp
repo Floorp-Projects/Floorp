@@ -759,11 +759,11 @@ class AddressRadixTree
 // Size of each radix tree node (as a power of 2).
 // This impacts tree depth.
 #ifdef HAVE_64BIT_BUILD
-  static const size_t kNodeSize2Pow = LOG2(kCacheLineSize);
+  static const size_t kNodeSize = kCacheLineSize;
 #else
-  static const size_t kNodeSize2Pow = 14;
+  static const size_t kNodeSize = 16_KiB;
 #endif
-  static const size_t kBitsPerLevel = kNodeSize2Pow - LOG2(sizeof(void*));
+  static const size_t kBitsPerLevel = LOG2(kNodeSize) - LOG2(sizeof(void*));
   static const size_t kBitsAtLevel1 =
     (Bits % kBitsPerLevel) ? Bits % kBitsPerLevel : kBitsPerLevel;
   static const size_t kHeight = (Bits + kBitsPerLevel - 1) / kBitsPerLevel;
