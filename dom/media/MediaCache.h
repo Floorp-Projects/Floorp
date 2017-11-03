@@ -428,7 +428,8 @@ private:
   // Read data from the cache block specified by aOffset. Return the number of
   // bytes read successfully or an error code if any failure.
   Result<uint32_t, nsresult> ReadBlockFromCache(int64_t aOffset,
-                                                Span<char> aBuffer);
+                                                Span<char> aBuffer,
+                                                bool aNoteBlockUsage = false);
 
   // Non-main thread only.
   nsresult Seek(int64_t aOffset);
