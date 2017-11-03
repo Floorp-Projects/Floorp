@@ -381,6 +381,13 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
 {
     GetVariationsForCTFont(mCTFont, aOutVariations);
 
+    wr::FontInstanceOptions options;
+    options.render_mode = wr::FontRenderMode::Subpixel;
+    options.subpx_dir = wr::SubpixelDirection::Horizontal;
+    options.synthetic_italics = false;
+    options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
+    *aOutOptions = Some(options);
+
     wr::FontInstancePlatformOptions platformOptions;
     platformOptions.font_smoothing = mUseFontSmoothing;
     *aOutPlatformOptions = Some(platformOptions);
