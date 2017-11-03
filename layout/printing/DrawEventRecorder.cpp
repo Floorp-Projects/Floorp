@@ -19,6 +19,12 @@ DrawEventRecorderPRFileDesc::RecordEvent(const gfx::RecordedEvent& aEvent)
   Flush();
 }
 
+DrawEventRecorderPRFileDesc::DrawEventRecorderPRFileDesc(const char* aFilename)
+{
+  mOutputStream.Open(aFilename);
+  WriteHeader(mOutputStream);
+}
+
 DrawEventRecorderPRFileDesc::~DrawEventRecorderPRFileDesc()
 {
   if (IsOpen()) {
@@ -39,11 +45,11 @@ DrawEventRecorderPRFileDesc::IsOpen()
 }
 
 void
-DrawEventRecorderPRFileDesc::OpenFD(PRFileDesc* aFd)
+DrawEventRecorderPRFileDesc::OpenNew(const char* aFilename)
 {
   MOZ_ASSERT(!IsOpen());
 
-  mOutputStream.OpenFD(aFd);
+  mOutputStream.Open(aFilename);
   WriteHeader(mOutputStream);
 }
 

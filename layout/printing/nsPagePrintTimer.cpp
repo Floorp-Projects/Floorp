@@ -145,8 +145,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
 
   if (mDocViewerPrint) {
     bool donePrePrint = true;
-    // Don't start to pre-print if we're waiting on the parent still.
-    if (mPrintEngine && !mWaitingForRemotePrint) {
+    if (mPrintEngine) {
       donePrePrint = mPrintEngine->PrePrintPage();
     }
 

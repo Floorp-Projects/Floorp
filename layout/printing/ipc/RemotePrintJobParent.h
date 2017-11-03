@@ -8,13 +8,11 @@
 #define mozilla_layout_RemotePrintJobParent_h
 
 #include "mozilla/layout/PRemotePrintJobParent.h"
-#include "mozilla/layout/printing/DrawEventRecorder.h"
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/RecordedEvent.h"
 
 class nsDeviceContext;
 class nsIPrintSettings;
@@ -36,7 +34,7 @@ public:
                                               const int32_t& aStartPage,
                                               const int32_t& aEndPage) final;
 
-  mozilla::ipc::IPCResult RecvProcessPage() final;
+  mozilla::ipc::IPCResult RecvProcessPage(const nsCString& aPageFileName) final;
 
   mozilla::ipc::IPCResult RecvFinalizePrint() final;
 
@@ -72,15 +70,12 @@ private:
                                  const int32_t& aStartPage,
                                  const int32_t& aEndPage);
 
-  nsresult PrepareNextPageFD(FileDescriptor* aFd);
-
-  nsresult PrintPage(PRFileDescStream& aRecording);
+  nsresult PrintPage(const nsCString& aPageFileName);
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   RefPtr<nsDeviceContext> mPrintDeviceContext;
   UniquePtr<PrintTranslator> mPrintTranslator;
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
-  PRFileDescStream mCurrentPageStream;
 };
 
 } // namespace layout
