@@ -108,10 +108,12 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
 ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              Float aSize,
+                             const Color &aFontSmoothingBackgroundColor,
                              bool aUseFontSmoothing,
                              bool aOwnsFont)
   : ScaledFontBase(aUnscaledFont, aSize)
   , mFont(aFont)
+  , mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
   , mUseFontSmoothing(aUseFontSmoothing)
 {
   if (!sSymbolLookupDone) {
@@ -521,7 +523,7 @@ UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
   }
 
   RefPtr<ScaledFontMac> scaledFont =
-    new ScaledFontMac(fontRef, this, aGlyphSize, true, fontRef != mFont);
+    new ScaledFontMac(fontRef, this, aGlyphSize, Color(), true, fontRef != mFont);
 
   if (!scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";

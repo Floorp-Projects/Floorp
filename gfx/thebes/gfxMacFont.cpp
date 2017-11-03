@@ -31,6 +31,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
       mCGFont(nullptr),
       mCTFont(nullptr),
       mFontFace(nullptr),
+      mFontSmoothingBackgroundColor(aFontStyle->fontSmoothingBackgroundColor),
       mVariationFont(aFontEntry->HasVariations())
 {
     mApplySyntheticBold = aNeedsBold;
@@ -524,6 +525,7 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
             Factory::CreateScaledFontForMacFont(GetCGFontRef(),
                                                 GetUnscaledFont(),
                                                 GetAdjustedSize(),
+                                                Color::FromABGR(mFontSmoothingBackgroundColor),
                                                 !mStyle.useGrayscaleAntialiasing);
         if (!mAzureScaledFont) {
             return nullptr;

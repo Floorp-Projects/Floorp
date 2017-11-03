@@ -135,6 +135,10 @@ struct gfxFontStyle {
     // in order to get correct glyph shapes.)
     uint32_t languageOverride;
 
+    // The estimated background color behind the text. Enables a special
+    // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
+    nscolor fontSmoothingBackgroundColor;
+
     // The weight of the font: 100, 200, ... 900.
     uint16_t weight;
 
@@ -217,7 +221,8 @@ struct gfxFontStyle {
             (alternateValues == other.alternateValues) &&
             (featureValueLookup == other.featureValueLookup) &&
             (variationSettings == other.variationSettings) &&
-            (languageOverride == other.languageOverride);
+            (languageOverride == other.languageOverride) &&
+            (fontSmoothingBackgroundColor == other.fontSmoothingBackgroundColor);
     }
 };
 
