@@ -226,7 +226,7 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
 
 // Helper to handle torn-down inner windows.
 static inline nsresult
-SetParentToWindow(nsGlobalWindow *win, JSObject **parent)
+SetParentToWindow(nsGlobalWindowInner *win, JSObject **parent)
 {
   MOZ_ASSERT(win);
   MOZ_ASSERT(win->IsInnerWindow());
@@ -1077,7 +1077,7 @@ nsDOMConstructor::PreCreate(JSContext *cx, JSObject *globalObj, JSObject **paren
     return NS_OK;
   }
 
-  nsGlobalWindow *win = nsGlobalWindow::Cast(owner);
+  nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(owner);
   return SetParentToWindow(win, parentObj);
 }
 

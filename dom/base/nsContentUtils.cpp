@@ -4739,7 +4739,8 @@ nsContentUtils::GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
     return nullptr;
   }
 
-  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(aOuterWindowId);
+  RefPtr<nsGlobalWindowOuter> window =
+    nsGlobalWindow::GetOuterWindowWithId(aOuterWindowId);
   if (!window) {
     return nullptr;
   }
@@ -9891,7 +9892,7 @@ nsContentUtils::IsSpecificAboutPage(JSObject* aGlobal, const char* aUri)
   MOZ_ASSERT(strncmp(aUri, "about:", 6) == 0);
 
   // Make sure the global is a window
-  nsGlobalWindow* win = xpc::WindowGlobalOrNull(aGlobal);
+  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aGlobal);
   if (!win) {
     return false;
   }
@@ -10733,7 +10734,8 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
       // something else.
       return nullptr;
     }
-    RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
+    RefPtr<nsGlobalWindowOuter> window =
+      nsGlobalWindow::GetOuterWindowWithId(outerWindowId);
     if (!window) {
       return nullptr;
     }

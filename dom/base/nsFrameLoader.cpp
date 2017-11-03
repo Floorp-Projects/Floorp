@@ -1602,7 +1602,7 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
 #ifdef XP_WIN
   // Native plugin windows used by this remote content need to be reparented.
   if (nsPIDOMWindowOuter* newWin = ourDoc->GetWindow()) {
-    RefPtr<nsIWidget> newParent = nsGlobalWindow::Cast(newWin)->GetMainWidget();
+    RefPtr<nsIWidget> newParent = nsGlobalWindowOuter::Cast(newWin)->GetMainWidget();
     const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
       aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
     for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
@@ -3840,7 +3840,7 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
     return success ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  nsGlobalWindow* outerWindow =
+  nsGlobalWindowOuter* outerWindow =
     nsGlobalWindow::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
     return NS_ERROR_FAILURE;

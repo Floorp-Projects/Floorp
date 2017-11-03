@@ -579,7 +579,7 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
 
 nsresult
 PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                               nsGlobalWindow* aWindow,
+                               nsGlobalWindowInner* aWindow,
                                const PeerConnectionConfiguration& aConfiguration,
                                nsISupports* aThread)
 {
@@ -744,7 +744,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return;
   }
 
-  res = Initialize(aObserver, &aWindow, converted, aThread);
+  res = Initialize(aObserver, aWindow.AssertInner(), converted, aThread);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;

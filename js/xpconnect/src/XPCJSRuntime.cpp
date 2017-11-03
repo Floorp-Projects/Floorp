@@ -531,7 +531,7 @@ CompilationScope()
     return XPCJSRuntime::Get()->CompilationScope();
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
@@ -539,10 +539,10 @@ WindowOrNull(JSObject* aObj)
 
     nsGlobalWindow* win = nullptr;
     UNWRAP_NON_WRAPPER_OBJECT(Window, aObj, win);
-    return win;
+    return static_cast<nsGlobalWindowInner*>(win);
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 WindowGlobalOrNull(JSObject* aObj)
 {
     MOZ_ASSERT(aObj);
@@ -551,7 +551,7 @@ WindowGlobalOrNull(JSObject* aObj)
     return WindowOrNull(glob);
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 AddonWindowOrNull(JSObject* aObj)
 {
     if (!IsInAddonScope(aObj))
@@ -571,7 +571,7 @@ AddonWindowOrNull(JSObject* aObj)
     return WindowOrNull(mainGlobal);
 }
 
-nsGlobalWindow*
+nsGlobalWindowInner*
 CurrentWindowOrNull(JSContext* cx)
 {
     JSObject* glob = JS::CurrentGlobalOrNull(cx);

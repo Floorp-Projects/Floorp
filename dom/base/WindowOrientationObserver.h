@@ -9,7 +9,7 @@
 
 #include "mozilla/HalScreenConfiguration.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -18,14 +18,14 @@ class WindowOrientationObserver final :
   public mozilla::hal::ScreenConfigurationObserver
 {
 public:
-  explicit WindowOrientationObserver(nsGlobalWindow* aGlobalWindow);
+  explicit WindowOrientationObserver(nsGlobalWindowInner* aGlobalWindow);
   ~WindowOrientationObserver();
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
   static int16_t OrientationAngle();
 
 private:
   // Weak pointer, instance is owned by mWindow.
-  nsGlobalWindow* MOZ_NON_OWNING_REF mWindow;
+  nsGlobalWindowInner* MOZ_NON_OWNING_REF mWindow;
   uint16_t mAngle;
 };
 

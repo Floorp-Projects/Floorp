@@ -1016,7 +1016,7 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
 {
   if (aOuterWindow) {
     mTimeoutManager =
-      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindow::Cast(AsInner()));
+      MakeUnique<mozilla::dom::TimeoutManager>(*nsGlobalWindowInner::Cast(AsInner()));
   }
 }
 
@@ -5023,7 +5023,7 @@ nsGlobalWindow::GetMenubar(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mMenubar) {
-    mMenubar = new MenubarProp(this);
+    mMenubar = new MenubarProp(AssertInner());
   }
 
   return mMenubar;
@@ -5035,7 +5035,7 @@ nsGlobalWindow::GetToolbar(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mToolbar) {
-    mToolbar = new ToolbarProp(this);
+    mToolbar = new ToolbarProp(AssertInner());
   }
 
   return mToolbar;
@@ -5047,7 +5047,7 @@ nsGlobalWindow::GetLocationbar(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mLocationbar) {
-    mLocationbar = new LocationbarProp(this);
+    mLocationbar = new LocationbarProp(AssertInner());
   }
   return mLocationbar;
 }
@@ -5058,7 +5058,7 @@ nsGlobalWindow::GetPersonalbar(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mPersonalbar) {
-    mPersonalbar = new PersonalbarProp(this);
+    mPersonalbar = new PersonalbarProp(AssertInner());
   }
   return mPersonalbar;
 }
@@ -5069,7 +5069,7 @@ nsGlobalWindow::GetStatusbar(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mStatusbar) {
-    mStatusbar = new StatusbarProp(this);
+    mStatusbar = new StatusbarProp(AssertInner());
   }
   return mStatusbar;
 }
@@ -5080,7 +5080,7 @@ nsGlobalWindow::GetScrollbars(ErrorResult& aError)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mScrollbars) {
-    mScrollbars = new ScrollbarsProp(this);
+    mScrollbars = new ScrollbarsProp(AssertInner());
   }
 
   return mScrollbars;
@@ -9245,7 +9245,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
                          ? nullptr
                          : callerInnerWin->GetOuterWindowInternal(),
                          origin,
-                         this,
+                         AssertOuter(),
                          providedPrincipal,
                          callerInnerWin
                          ? callerInnerWin->GetDoc()
@@ -10693,7 +10693,7 @@ nsGlobalWindow::EnableGamepadUpdates()
   if (mHasGamepad) {
     RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     if (gamepadManager) {
-      gamepadManager->AddListener(this);
+      gamepadManager->AddListener(AssertInner());
     }
   }
 }
@@ -10706,7 +10706,7 @@ nsGlobalWindow::DisableGamepadUpdates()
   if (mHasGamepad) {
     RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     if (gamepadManager) {
-      gamepadManager->RemoveListener(this);
+      gamepadManager->RemoveListener(AssertInner());
     }
   }
 }
@@ -10717,7 +10717,7 @@ nsGlobalWindow::EnableVRUpdates()
   MOZ_ASSERT(IsInnerWindow());
 
   if (mHasVREvents && !mVREventObserver) {
-    mVREventObserver = new VREventObserver(this);
+    mVREventObserver = new VREventObserver(AssertInner());
   }
 }
 
@@ -11444,7 +11444,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   }
 #endif
   else if (aIID.Equals(NS_GET_IID(nsIDOMWindowUtils))) {
-    nsGlobalWindow* outer = GetOuterWindowInternal();
+    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
     NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
 
     if (!mWindowUtils) {
@@ -13120,7 +13120,7 @@ nsGlobalWindow::SetTimeoutOrInterval(JSContext *aCx, Function& aFunction,
   }
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, this, aFunction, aArguments, aError);
+    NS_CreateJSTimeoutHandler(aCx, AssertInner(), aFunction, aArguments, aError);
   if (!handler) {
     return 0;
   }
@@ -13148,7 +13148,7 @@ nsGlobalWindow::SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
   }
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, this, aHandler, aError);
+    NS_CreateJSTimeoutHandler(aCx, AssertInner(), aHandler, aError);
   if (!handler) {
     return 0;
   }
@@ -13541,7 +13541,7 @@ nsGlobalWindow::EnableOrientationChangeListener()
   if (!nsContentUtils::ShouldResistFingerprinting(mDocShell) &&
       !mOrientationChangeObserver) {
     mOrientationChangeObserver =
-      MakeUnique<WindowOrientationObserver>(this);
+      MakeUnique<WindowOrientationObserver>(AssertInner());
   }
 }
 

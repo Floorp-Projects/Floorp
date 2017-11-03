@@ -3093,7 +3093,7 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
     return;
   }
 
-  auto* window = nsGlobalWindow::Cast(w.get());
+  auto* window = nsGlobalWindowInner::Cast(w.get());
   dom::Navigator* navigator = window->Navigator();
   if (!navigator) {
     return;

@@ -90,7 +90,7 @@ AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
 static nsresult
 NonJSSizeOfTab(nsPIDOMWindowOuter* aWindow, size_t* aDomSize, size_t* aStyleSize, size_t* aOtherSize)
 {
-  nsGlobalWindow* window = nsGlobalWindow::Cast(aWindow);
+  nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
 
   nsTabSizes sizes;
   nsresult rv = AddNonJSSizeOfWindowAndItsDescendents(window, &sizes);

@@ -212,7 +212,7 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
         if (elm) {
           elm->MarkForCC();
         }
-        static_cast<nsGlobalWindow*>(win.get())->AsInner()->
+        static_cast<nsGlobalWindowInner*>(win.get())->AsInner()->
           TimeoutManager().UnmarkGrayTimers();
       }
     } else if (aPrepareForCC) {

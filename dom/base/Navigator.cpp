@@ -1446,7 +1446,7 @@ Navigator::GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads,
     return;
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->SetHasGamepadEventListener(true);
   win->GetGamepads(aGamepads);
 }
@@ -1468,7 +1468,7 @@ Navigator::GetVRDisplays(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->NotifyVREventListenerAdded();
 
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
@@ -1505,7 +1505,7 @@ Navigator::GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const
   if (!mWindow || !mWindow->GetDocShell()) {
     return;
   }
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   nsTArray<RefPtr<VRDisplay>> displays;
   if (win->UpdateVRDisplays(displays)) {
     for (auto display : displays) {
@@ -1521,7 +1521,7 @@ Navigator::NotifyVRDisplaysUpdated()
 {
   // Synchronize the VR devices and resolve the promises in
   // mVRGetDisplaysPromises
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
 
   nsTArray<RefPtr<VRDisplay>> vrDisplays;
   if (win->UpdateVRDisplays(vrDisplays)) {
@@ -1546,7 +1546,7 @@ VRServiceTest*
 Navigator::RequestVRServiceTest()
 {
   // Ensure that the Mock VR devices are not released prematurely
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->NotifyVREventListenerAdded();
 
   if (!mVRServiceTest) {
@@ -1558,21 +1558,21 @@ Navigator::RequestVRServiceTest()
 bool
 Navigator::IsWebVRContentDetected() const
 {
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   return win->IsVRContentDetected();
 }
 
 bool
 Navigator::IsWebVRContentPresenting() const
 {
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   return win->IsVRContentPresenting();
 }
 
 void
 Navigator::RequestVRPresentation(VRDisplay& aDisplay)
 {
-  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   win->DispatchVRDisplayActivate(aDisplay.DisplayId(), VRDisplayEventReason::Requested);
 }
 
