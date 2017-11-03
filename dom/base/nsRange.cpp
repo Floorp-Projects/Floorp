@@ -3823,36 +3823,21 @@ IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
 
 void
 nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
-                             nsIContent* aStartContainer, uint32_t aStartOffset,
-                             nsIContent* aEndContainer, uint32_t aEndOffset)
+                             nsIContent* aNode)
 {
   InnerTextAccumulator result(aValue);
-  nsIContent* currentNode = aStartContainer;
-  TreeTraversalState currentState = AFTER_NODE;
-  if (aStartContainer->IsNodeOfType(nsINode::eTEXT)) {
-    auto t = static_cast<nsGenericDOMDataNode*>(aStartContainer);
-    if (aStartContainer == aEndContainer) {
-      AppendTransformedText(result, t, aStartOffset, aEndOffset);
-      return;
-    }
-    AppendTransformedText(result, t, aStartOffset, t->TextLength());
-  } else {
-    if (uint32_t(aStartOffset) < aStartContainer->GetChildCount()) {
-      currentNode = aStartContainer->GetChildAt(aStartOffset);
-      currentState = AT_NODE;
-    }
+
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+    auto t = static_cast<nsGenericDOMDataNode*>(aNode);
+    AppendTransformedText(result, t, 0, t->Length());
+    return;
   }
 
-  nsIContent* endNode = aEndContainer;
+  nsIContent* currentNode = aNode->GetFirstChild();
+  TreeTraversalState currentState = AT_NODE;
+
+  nsIContent* endNode = aNode->GetLastChild();
   TreeTraversalState endState = AFTER_NODE;
-  if (aEndContainer->IsNodeOfType(nsINode::eTEXT)) {
-    endState = AT_NODE;
-  } else {
-    if (aEndOffset < aEndContainer->GetChildCount()) {
-      endNode = aEndContainer->GetChildAt(aEndOffset);
-      endState = AT_NODE;
-    }
-  }
 
   while (currentNode != endNode || currentState != endState) {
     nsIFrame* f = currentNode->GetPrimaryFrame();
@@ -3911,10 +3896,6 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     }
   }
 
-  if (aEndContainer->IsNodeOfType(nsINode::eTEXT)) {
-    nsGenericDOMDataNode* t = static_cast<nsGenericDOMDataNode*>(aEndContainer);
-    AppendTransformedText(result, t, 0, aEndOffset);
-  }
   // Do not flush trailing line breaks! Required breaks at the end of the text
   // are suppressed.
 }
