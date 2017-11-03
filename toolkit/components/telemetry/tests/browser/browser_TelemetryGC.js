@@ -37,35 +37,37 @@ function check(entries) {
     ok(entries[f].length <= 2, "not too many GCs");
 
     for (let gc of entries[f]) {
-      ok(gc !== null, "GC is non-null");
+      isnot(gc, null, "GC is non-null");
 
       foundGCs++;
 
-      ok(Object.keys(gc).length <= 25, "number of keys in GC is not too large");
+      ok(Object.keys(gc).length <= 30, "number of keys in GC is not too large");
 
       // Sanity check the GC data.
+      ok("status" in gc, "status field present");
+      is(gc.status, "completed", "status field correct");
       ok("total_time" in gc, "total_time field present");
       ok("max_pause" in gc, "max_pause field present");
 
-      ok("slices" in gc, "slices field present");
-      ok(Array.isArray(gc.slices), "slices is an array");
-      ok(gc.slices.length > 0, "slices array non-empty");
-      ok(gc.slices.length <= 4, "slices array is not too long");
+      ok("slices_list" in gc, "slices_list field present");
+      ok(Array.isArray(gc.slices_list), "slices_list is an array");
+      ok(gc.slices_list.length > 0, "slices_list array non-empty");
+      ok(gc.slices_list.length <= 4, "slices_list array is not too long");
 
       ok("totals" in gc, "totals field present");
-      ok(typeof(gc.totals) == "object", "totals is an object");
+      is(typeof(gc.totals), "object", "totals is an object");
       ok(Object.keys(gc.totals).length <= 65, "totals array is not too long");
 
       // Make sure we don't skip any big objects.
       for (let key in gc) {
-        if (key != "slices" && key != "totals") {
-          ok(typeof(gc[key]) != "object", `${key} property should be primitive`);
+        if (key != "slices_list" && key != "totals") {
+          isnot(typeof(gc[key]), "object", `${key} property should be primitive`);
         }
       }
 
       let phases = new Set();
 
-      for (let slice of gc.slices) {
+      for (let slice of gc.slices_list) {
         ok(Object.keys(slice).length <= 15, "slice is not too large");
 
         ok("pause" in slice, "pause field present in slice");
@@ -75,7 +77,7 @@ function check(entries) {
         // Make sure we don't skip any big objects.
         for (let key in slice) {
           if (key != "times") {
-            ok(typeof(slice[key]) != "object", `${key} property should be primitive`);
+            isnot(typeof(slice[key]), "object", `${key} property should be primitive`);
           }
         }
 
@@ -83,14 +85,14 @@ function check(entries) {
 
         for (let phase in slice.times) {
           phases.add(phase);
-          ok(typeof(slice.times[phase]) == "number", `${phase} property should be a number`);
+          is(typeof(slice.times[phase]), "number", `${phase} property should be a number`);
         }
       }
 
       let totals = gc.totals;
       // Make sure we don't skip any big objects.
       for (let phase in totals) {
-        ok(typeof(totals[phase]) == "number", `${phase} property should be a number`);
+        is(typeof(totals[phase]), "number", `${phase} property should be a number`);
       }
 
       for (let phase of phases) {

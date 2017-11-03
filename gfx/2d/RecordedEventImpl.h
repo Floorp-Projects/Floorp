@@ -1077,7 +1077,7 @@ public:
                                    const FontVariation* aVariations, uint32_t aNumVariations,
                                    void* aBaton)
   {
-    auto recordedScaledFontCreation = static_cast<RecordedScaledFontCreation*>(aBaton);
+    auto recordedScaledFontCreation = static_cast<RecordedScaledFontCreationByIndex*>(aBaton);
     recordedScaledFontCreation->SetFontInstanceData(aData, aSize, aVariations, aNumVariations);
   }
 
@@ -1098,7 +1098,8 @@ public:
   virtual std::string GetName() const { return "ScaledFont Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 
-  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize);
+  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize,
+                           const FontVariation* aVariations, uint32_t aNumVariations);
 
 private:
   friend class RecordedEvent;
@@ -3038,9 +3039,11 @@ RecordedScaledFontCreationByIndex::OutputSimpleEventInfo(std::stringstream &aStr
 }
 
 inline void
-RecordedScaledFontCreationByIndex::SetFontInstanceData(const uint8_t *aData, uint32_t aSize)
+RecordedScaledFontCreationByIndex::SetFontInstanceData(const uint8_t *aData, uint32_t aSize,
+                                                const FontVariation* aVariations, uint32_t aNumVariations)
 {
   mInstanceData.assign(aData, aData + aSize);
+  mVariations.assign(aVariations, aVariations + aNumVariations);
 }
 
 template<class S>
