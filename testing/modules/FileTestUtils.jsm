@@ -17,10 +17,12 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 Cu.import("resource://gre/modules/DownloadPaths.jsm", this);
 Cu.import("resource://gre/modules/FileUtils.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/Assert.jsm", this);
 
 let gFileCounter = 1;
+let gPathsToRemove = [];
 
 this.FileTestUtils = {
   /**
@@ -50,7 +52,52 @@ this.FileTestUtils = {
     let file = this._globalTemporaryDirectory.clone();
     file.append(leafName);
     Assert.ok(!file.exists(), "Sanity check the temporary file doesn't exist.");
+
+    // Since directory iteration on Windows may not see files that have just
+    // been created, keep track of the known file names to be removed.
+    gPathsToRemove.push(file.path);
     return file;
+  },
+
+  /**
+   * Attemps to remove the given file or directory recursively, in a way that
+   * works even on Windows, where race conditions may occur in the file system
+   * when creating and removing files at the pace of the test suites.
+   *
+   * The function may fail silently if access is denied. This means that it
+   * should only be used to clean up temporary files, rather than for cases
+   * where the removal is part of a test and must be guaranteed.
+   *
+   * @param path
+   *        String representing the path to remove.
+   * @param isDir [optional]
+   *        Indicates whether this is a directory. If not specified, this will
+   *        be determined by querying the file system.
+   */
+  async tolerantRemove(path, isDir) {
+    try {
+      if (isDir === undefined) {
+        isDir = (await OS.File.stat(path)).isDir;
+      }
+      if (isDir) {
+        // The test created a directory, remove its contents recursively. The
+        // deletion may still fail with an access denied error on Windows if any
+        // of the files in the folder were recently deleted.
+        await OS.File.removeDir(path);
+      } else {
+        // This is the usual case of a test file that has to be removed.
+        await OS.File.remove(path);
+      }
+    } catch (ex) {
+      // On Windows, we may get an access denied error instead of a no such file
+      // error if the file existed before, and was recently deleted. There is no
+      // way to distinguish this from an access list issue because checking for
+      // the file existence would also result in the same error.
+      if (!(ex instanceof OS.File.Error) ||
+          !(ex.becauseNoSuchFile || ex.becauseAccessDenied)) {
+        throw ex;
+      }
+    }
   },
 };
 
@@ -58,17 +105,31 @@ this.FileTestUtils = {
  * Returns a reference to a global temporary directory that will be deleted
  * when all tests terminate.
  */
-XPCOMUtils.defineLazyGetter(FileTestUtils, "_globalTemporaryDirectory", () => {
-  // While previous test runs should have deleted their temporary directories,
-  // on Windows they might still be pending deletion on the physical file
-  // system. This makes a simple nsIFile.createUnique call unreliable, and we
-  // have to use a random number to make a collision unlikely.
-  let randomNumber = Math.floor(Math.random() * 1000000);
-  let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
-  dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  AsyncShutdown.profileBeforeChange.addBlocker("Removing test files", () => {
-    // Note that this may fail if any test leaves inaccessible files behind.
-    dir.remove(true);
+XPCOMUtils.defineLazyGetter(FileTestUtils, "_globalTemporaryDirectory",
+  function () {
+    // While previous test runs should have deleted their temporary directories,
+    // on Windows they might still be pending deletion on the physical file
+    // system. This makes a simple nsIFile.createUnique call unreliable, and we
+    // have to use a random number to make a collision unlikely.
+    let randomNumber = Math.floor(Math.random() * 1000000);
+    let dir = FileUtils.getFile("TmpD", ["testdir-" + randomNumber]);
+    dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    AsyncShutdown.profileBeforeChange.addBlocker("Removing test files",
+      async () => {
+        // Remove the files we know about first.
+        for (let path of gPathsToRemove) {
+          await this.tolerantRemove(path);
+        }
+        // Detect any extra files, like the ".part" files of downloads.
+        let iterator = new OS.File.DirectoryIterator(dir.path);
+        try {
+          await iterator.forEach(entry => this.tolerantRemove(entry.path,
+                                                              entry.isDir));
+        } finally {
+          iterator.close();
+        }
+        // This will fail if any test leaves inaccessible files behind.
+        await OS.File.removeEmptyDir(dir.path);
+      });
+    return dir;
   });
-  return dir;
-});
