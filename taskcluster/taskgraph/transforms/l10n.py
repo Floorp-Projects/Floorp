@@ -107,13 +107,6 @@ l10n_description_schema = Schema({
 
     Optional('toolchains'): _by_platform([basestring]),
 
-    # The set of secret names to which the task has access; these are prefixed
-    # with `project/releng/gecko/{treeherder.kind}/level-{level}/`.  Setting
-    # this will enable any worker features required and set the task's scopes
-    # appropriately.  `true` here means ['*'], all secrets.  Not supported on
-    # Windows
-    Required('secrets', default=False): _by_platform(Any(bool, [basestring])),
-
     # Information for treeherder
     Required('treeherder'): {
         # Platform to display the task on in treeherder
@@ -258,7 +251,6 @@ def handle_keyed_by(config, jobs):
         "description",
         "run-time",
         "docker-image",
-        "secrets",
         "toolchains",
         "tooltool",
         "env",
@@ -393,7 +385,6 @@ def make_job_description(config, jobs):
                 'script': job['mozharness']['script'],
                 'actions': job['mozharness']['actions'],
                 'options': job['mozharness']['options'],
-                'secrets': job['secrets'],
             },
             'attributes': job['attributes'],
             'treeherder': {
