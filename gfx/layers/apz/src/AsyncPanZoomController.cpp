@@ -1592,10 +1592,10 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan()
   // null before calling DispatchFling(). This is necessary because Destroy(),
   // which nulls out mTreeManager, could be called concurrently.
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    FlingHandoffState handoffState{flingVelocity,
-                                  GetCurrentTouchBlock()->GetOverscrollHandoffChain(),
-                                  false /* not handoff */,
-                                  GetCurrentTouchBlock()->GetScrolledApzc()};
+    const FlingHandoffState handoffState{flingVelocity,
+                                         GetCurrentTouchBlock()->GetOverscrollHandoffChain(),
+                                         false /* not handoff */,
+                                         GetCurrentTouchBlock()->GetScrolledApzc()};
     treeManagerLocal->DispatchFling(this, handoffState);
   }
   return nsEventStatus_eConsumeNoDefault;
@@ -2787,20 +2787,25 @@ RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHand
   return result;
 }
 
-void AsyncPanZoomController::AcceptFling(FlingHandoffState& aHandoffState) {
+ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& aHandoffState) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  if (!IsPannable()) {
+    return aHandoffState.mVelocity;
+  }
 
   // We may have a pre-existing velocity for whatever reason (for example,
   // a previously handed off fling). We don't want to clobber that.
   APZC_LOG("%p accepting fling with velocity %s\n", this,
            Stringify(aHandoffState.mVelocity).c_str());
+  ParentLayerPoint residualVelocity = aHandoffState.mVelocity;
   if (mX.CanScroll()) {
     mX.SetVelocity(mX.GetVelocity() + aHandoffState.mVelocity.x);
-    aHandoffState.mVelocity.x = 0;
+    residualVelocity.x = 0;
   }
   if (mY.CanScroll()) {
     mY.SetVelocity(mY.GetVelocity() + aHandoffState.mVelocity.y);
-    aHandoffState.mVelocity.y = 0;
+    residualVelocity.y = 0;
   }
 
   // If there's a scroll snap point near the predicted fling destination,
@@ -2816,16 +2821,8 @@ void AsyncPanZoomController::AcceptFling(FlingHandoffState& aHandoffState) {
         aHandoffState.mScrolledApzc);
     StartAnimation(fling);
   }
-}
 
-bool AsyncPanZoomController::AttemptFling(FlingHandoffState& aHandoffState) {
-  // If we are pannable, take over the fling ourselves.
-  if (IsPannable()) {
-    AcceptFling(aHandoffState);
-    return true;
-  }
-
-  return false;
+  return residualVelocity;
 }
 
 void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
@@ -2833,13 +2830,13 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelo
                                                    const RefPtr<const AsyncPanZoomController>& aScrolledApzc) {
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
   if (treeManagerLocal) {
-    FlingHandoffState handoffState{aVelocity,
-                                   aOverscrollHandoffChain,
-                                   true /* handoff */,
-                                   aScrolledApzc};
-    treeManagerLocal->DispatchFling(this, handoffState);
-    if (!IsZero(handoffState.mVelocity) && IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
-      mOverscrollEffect->HandleFlingOverscroll(handoffState.mVelocity);
+    const FlingHandoffState handoffState{aVelocity,
+                                         aOverscrollHandoffChain,
+                                         true /* handoff */,
+                                         aScrolledApzc};
+    ParentLayerPoint residualVelocity = treeManagerLocal->DispatchFling(this, handoffState);
+    if (!IsZero(residualVelocity) && IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
+      mOverscrollEffect->HandleFlingOverscroll(residualVelocity);
     }
   }
 }
