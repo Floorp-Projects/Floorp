@@ -26,8 +26,6 @@
 
 #include "jstypes.h"
 
-#include "mozmemory.h"
-
 /* The public JS engine namespace. */
 namespace JS {}
 
@@ -366,33 +364,22 @@ struct MOZ_RAII JS_PUBLIC_DATA(AutoEnterOOMUnsafeRegion)
 
 } /* namespace js */
 
-// Malloc allocation.
-
-namespace js {
-
-extern JS_PUBLIC_DATA(arena_id_t) MallocArena;
-
-extern void InitMallocAllocator();
-extern void ShutDownMallocAllocator();
-
-} /* namespace js */
-
 static inline void* js_malloc(size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();
-    return moz_arena_malloc(js::MallocArena, bytes);
+    return malloc(bytes);
 }
 
 static inline void* js_calloc(size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();
-    return moz_arena_calloc(js::MallocArena, bytes, 1);
+    return calloc(bytes, 1);
 }
 
 static inline void* js_calloc(size_t nmemb, size_t size)
 {
     JS_OOM_POSSIBLY_FAIL();
-    return moz_arena_calloc(js::MallocArena, nmemb, size);
+    return calloc(nmemb, size);
 }
 
 static inline void* js_realloc(void* p, size_t bytes)
@@ -403,18 +390,19 @@ static inline void* js_realloc(void* p, size_t bytes)
     MOZ_ASSERT(bytes != 0);
 
     JS_OOM_POSSIBLY_FAIL();
-    return moz_arena_realloc(js::MallocArena, p, bytes);
+    return realloc(p, bytes);
 }
 
 static inline void js_free(void* p)
 {
-    // TODO: This should call |moz_arena_free(js::MallocArena, p)| but we
-    // currently can't enforce that all memory freed here was allocated by
-    // js_malloc().
     free(p);
 }
 
-JS_PUBLIC_API(char*) js_strdup(const char* s);
+static inline char* js_strdup(const char* s)
+{
+    JS_OOM_POSSIBLY_FAIL();
+    return strdup(s);
+}
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
 #include <new>

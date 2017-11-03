@@ -45,7 +45,6 @@ void JSAPITest::uninit()
         destroyContext();
         cx = nullptr;
     }
-    msgs.clear();
 }
 
 bool JSAPITest::exec(const char* bytes, const char* filename, int lineno)
