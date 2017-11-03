@@ -59,6 +59,12 @@ public:
 
   Result<nsString, nsresult> GetURL(const nsAString& aPath) const;
 
+  void RegisterContentScript(WebExtensionContentScript& script,
+                             ErrorResult& aRv);
+
+  void UnregisterContentScript(const WebExtensionContentScript& script,
+                               ErrorResult& aRv);
+
   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false) const
   {
     return mHostPermissions && mHostPermissions->Matches(aURI, aExplicit);
@@ -99,7 +105,6 @@ public:
   {
     aCSP = mContentSecurityPolicy;
   }
-
 
   already_AddRefed<MatchPatternSet> AllowedOrigins()
   {

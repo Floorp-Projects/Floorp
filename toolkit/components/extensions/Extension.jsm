@@ -1273,6 +1273,7 @@ this.Extension = class extends ExtensionData {
       resourceURL: this.resourceURL,
       baseURL: this.baseURI.spec,
       contentScripts: this.contentScripts,
+      registeredContentScripts: new Map(),
       webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       localeData: this.localeData.serialize(),
@@ -1334,7 +1335,15 @@ this.Extension = class extends ExtensionData {
     if (!data["Extension:Extensions"]) {
       data["Extension:Extensions"] = [];
     }
+
     let serial = this.serialize();
+
+    // Map of the programmatically registered content script definitions
+    // (by string scriptId), used in ext-contentScripts.js to propagate
+    // the registered content scripts to the child content processes
+    // (e.g. when a new content process starts after a content process crash).
+    this.registeredContentScripts = serial.registeredContentScripts;
+
     data["Extension:Extensions"].push(serial);
 
     return this.broadcast("Extension:Startup", serial).then(() => {

@@ -538,7 +538,7 @@
           "js": {
             "type": "array",
             "optional": true,
-            "description": "The list of CSS files to inject",
+            "description": "The list of JS files to inject",
             "items": { "$ref": "ExtensionURL" }
           },
           "all_frames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},

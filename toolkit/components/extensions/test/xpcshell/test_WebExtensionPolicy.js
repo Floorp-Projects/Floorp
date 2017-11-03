@@ -4,7 +4,7 @@
 
 const {newURI} = Services.io;
 
-add_task(async function test_WebExtensinonPolicy() {
+add_task(async function test_WebExtensionPolicy() {
   const id = "foo@bar.baz";
   const uuid = "ca9d3f23-125c-4b24-abfc-1ca2692b0610";
 
@@ -137,4 +137,101 @@ add_task(async function test_WebExtensinonPolicy() {
 
     policy.active = false;
   }
+});
+
+add_task(async function test_WebExtensionPolicy_registerContentScripts() {
+  const id = "foo@bar.baz";
+  const uuid = "77a7b9d3-e73c-4cf3-97fb-1824868fe00f";
+
+  const id2 = "foo-2@bar.baz";
+  const uuid2 = "89383c45-7db4-4999-83f7-f4cc246372cd";
+
+  const baseURL = "file:///foo/";
+
+  const mozExtURL = `moz-extension://${uuid}/`;
+  const mozExtURL2 = `moz-extension://${uuid2}/`;
+
+  let policy = new WebExtensionPolicy({
+    id,
+    mozExtensionHostname: uuid,
+    baseURL,
+    localizeCallback() {},
+    allowedOrigins: new MatchPatternSet([]),
+    permissions: ["<all_urls>"],
+  });
+
+  let policy2 = new WebExtensionPolicy({
+    id: id2,
+    mozExtensionHostname: uuid2,
+    baseURL,
+    localizeCallback() {},
+    allowedOrigins: new MatchPatternSet([]),
+    permissions: ["<all_urls>"],
+  });
+
+  let script1 = new WebExtensionContentScript(policy, {
+    run_at: "document_end",
+    js: [`${mozExtURL}/registered-content-script.js`],
+    matches: new MatchPatternSet(["http://localhost/data/*"]),
+  });
+
+  let script2 = new WebExtensionContentScript(policy, {
+    run_at: "document_end",
+    css: [`${mozExtURL}/registered-content-style.css`],
+    matches: new MatchPatternSet(["http://localhost/data/*"]),
+  });
+
+  let script3 = new WebExtensionContentScript(policy2, {
+    run_at: "document_end",
+    css: [`${mozExtURL2}/registered-content-style.css`],
+    matches: new MatchPatternSet(["http://localhost/data/*"]),
+  });
+
+  deepEqual(policy.contentScripts, [], "The policy contentScripts is initially empty");
+
+  policy.registerContentScript(script1);
+
+  deepEqual(policy.contentScripts, [script1],
+            "script1 has been added to the policy contentScripts");
+
+  Assert.throws(
+    () => policy.registerContentScript(script1),
+    (e) => e.result == Cr.NS_ERROR_ILLEGAL_VALUE,
+    "Got the expected NS_ERROR_ILLEGAL_VALUE when trying to register a script more than once");
+
+  Assert.throws(
+    () => policy.registerContentScript(script3),
+    (e) => e.result == Cr.NS_ERROR_ILLEGAL_VALUE,
+    "Got the expected NS_ERROR_ILLEGAL_VALUE when trying to register a script related to " +
+    "a different extension");
+
+  Assert.throws(
+    () => policy.unregisterContentScript(script3),
+    (e) => e.result == Cr.NS_ERROR_ILLEGAL_VALUE,
+    "Got the expected NS_ERROR_ILLEGAL_VALUE when trying to unregister a script related to " +
+    "a different extension");
+
+  deepEqual(policy.contentScripts, [script1], "script1 has not been added twice");
+
+  policy.registerContentScript(script2);
+
+  deepEqual(policy.contentScripts, [script1, script2],
+            "script2 has the last item of the policy contentScripts array");
+
+  policy.unregisterContentScript(script1);
+
+  deepEqual(policy.contentScripts, [script2],
+            "script1 has been removed from the policy contentscripts");
+
+  Assert.throws(
+    () => policy.unregisterContentScript(script1),
+    (e) => e.result == Cr.NS_ERROR_ILLEGAL_VALUE,
+    "Got the expected NS_ERROR_ILLEGAL_VALUE when trying to unregister a script more than once");
+
+  deepEqual(policy.contentScripts, [script2],
+            "the policy contentscripts is unmodified when unregistering an unknown contentScript");
+
+  policy.unregisterContentScript(script2);
+
+  deepEqual(policy.contentScripts, [], "script2 has been removed from the policy contentScripts");
 });
