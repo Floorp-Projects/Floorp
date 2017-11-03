@@ -75,7 +75,8 @@ public:
     // nsIDocumentTransformer interface
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) override;
     NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsIDocument* aLoaderDocument) override;
-    NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) override;
+    NS_IMETHOD SetSourceContentModel(nsIDocument* aDocument,
+                                     const nsTArray<nsCOMPtr<nsIContent>>& aSource) override;
     NS_IMETHOD CancelLoads() override {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
                                      const nsString& aNamespace) override;
@@ -136,7 +137,7 @@ public:
     void reportError(nsresult aResult, const char16_t *aErrorText,
                      const char16_t *aSourceText);
 
-    nsIDOMNode *GetSourceContentModel()
+    nsINode *GetSourceContentModel()
     {
         return mSource;
     }
@@ -169,7 +170,7 @@ private:
     nsIDocument* mStylesheetDocument; // weak
     nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
 
-    nsCOMPtr<nsIDOMNode> mSource;
+    nsCOMPtr<nsINode> mSource;
     nsresult mTransformResult;
     nsresult mCompileResult;
     nsString mErrorText, mSourceText;
