@@ -1,4 +1,9 @@
 #
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
 # SNMPv2c message syntax
 #
 # ASN.1 source from:
@@ -6,10 +11,10 @@
 #
 from pyasn1.type import univ, namedtype, namedval
 
+
 class Message(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('version', univ.Integer(namedValues = namedval.NamedValues(('version-2c', 1)))),
+        namedtype.NamedType('version', univ.Integer(namedValues=namedval.NamedValues(('version-2c', 1)))),
         namedtype.NamedType('community', univ.OctetString()),
         namedtype.NamedType('data', univ.Any())
-        )
-
+    )
