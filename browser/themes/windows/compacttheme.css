@@ -102,20 +102,20 @@
    * show the tabs toolbar background color inside tabs. */
   .tabbrowser-tab {
     background-color: var(--chrome-background-color) !important;
-    border-top: 1px solid var(--tabs-border);
+    border-top: 1px solid var(--tabs-border-color);
     background-clip: padding-box;
   }
 
   /* The top border on top of the tab background is replaced
-   * by the slightly transparent outside tabs-border. */
+   * by the slightly transparent outside tabs-border-color. */
   .tab-background {
     border-top-style: none !important;
   }
 
   /* The border at the end of the tab strip is replaced
-   * by the slightly transparent outside tabs-border. */
+   * by the slightly transparent outside tabs-border-color. */
   .tabbrowser-tab[last-visible-tab] {
-    border-inline-end: 1px solid var(--tabs-border);
+    border-inline-end: 1px solid var(--tabs-border-color);
   }
 
   .tabbrowser-tab[last-visible-tab]::after {
