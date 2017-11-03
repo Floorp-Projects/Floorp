@@ -2082,10 +2082,14 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
 
     endPoint = startPoint + currentVelocity;
 
+    RefPtr<AsyncPanZoomController> prevApzc = (startIndex > 0)
+                                            ? chain->GetApzcAtIndex(startIndex - 1)
+                                            : nullptr;
+
     // Only transform when current apzc can be transformed with previous
-    if (startIndex > 0) {
+    if (prevApzc) {
       if (!TransformDisplacement(this,
-                                 chain->GetApzcAtIndex(startIndex - 1),
+                                 prevApzc,
                                  current,
                                  startPoint,
                                  endPoint)) {
@@ -2093,10 +2097,18 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
       }
     }
 
-    FlingHandoffState transformedHandoffState = aHandoffState;
-    transformedHandoffState.mVelocity = (endPoint - startPoint);
+    ParentLayerPoint availableVelocity = (endPoint - startPoint);
+    ParentLayerPoint residualVelocity;
 
-    ParentLayerPoint residualVelocity = current->AttemptFling(transformedHandoffState);
+    FlingHandoffState transformedHandoffState = aHandoffState;
+    transformedHandoffState.mVelocity = availableVelocity;
+
+    // Obey overscroll-behavior.
+    if (prevApzc) {
+      residualVelocity += prevApzc->AdjustHandoffVelocityForOverscrollBehavior(transformedHandoffState.mVelocity);
+    }
+
+    residualVelocity += current->AttemptFling(transformedHandoffState);
 
     // If there's no residual velocity, there's nothing more to hand off.
     if (IsZero(residualVelocity)) {
@@ -2105,13 +2117,16 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
 
     // If any of the velocity available to be handed off was consumed,
     // subtract the proportion of consumed velocity from finalResidualVelocity.
-    if (!FuzzyEqualsAdditive(transformedHandoffState.mVelocity.x,
+    // Note: it's important to compare |residualVelocity| to |availableVelocity|
+    // here and not to |transformedHandoffState.mVelocity|, since the latter
+    // may have been modified by AdjustHandoffVelocityForOverscrollBehavior().
+    if (!FuzzyEqualsAdditive(availableVelocity.x,
                              residualVelocity.x, COORDINATE_EPSILON)) {
-      finalResidualVelocity.x *= (residualVelocity.x / transformedHandoffState.mVelocity.x);
+      finalResidualVelocity.x *= (residualVelocity.x / availableVelocity.x);
     }
-    if (!FuzzyEqualsAdditive(transformedHandoffState.mVelocity.y,
+    if (!FuzzyEqualsAdditive(availableVelocity.y,
                              residualVelocity.y, COORDINATE_EPSILON)) {
-      finalResidualVelocity.y *= (residualVelocity.y / transformedHandoffState.mVelocity.y);
+      finalResidualVelocity.y *= (residualVelocity.y / availableVelocity.y);
     }
 
     currentVelocity = residualVelocity;
