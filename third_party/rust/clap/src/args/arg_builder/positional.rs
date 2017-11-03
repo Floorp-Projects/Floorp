@@ -6,19 +6,18 @@ use std::result::Result as StdResult;
 use std::ffi::{OsStr, OsString};
 use std::mem;
 
-// Third Party
-use vec_map::{self, VecMap};
-
 // Internal
 use Arg;
-use args::{ArgSettings, Base, Valued, AnyArg, DispOrder};
+use args::{AnyArg, ArgSettings, Base, DispOrder, Valued};
 use INTERNAL_ERROR_MSG;
+use map::{self, VecMap};
 
 #[allow(missing_debug_implementations)]
 #[doc(hidden)]
 #[derive(Clone, Default)]
 pub struct PosBuilder<'n, 'e>
-    where 'n: 'e
+where
+    'n: 'e,
 {
     pub b: Base<'n, 'e>,
     pub v: Valued<'n, 'e>,
@@ -40,16 +39,18 @@ impl<'n, 'e> PosBuilder<'n, 'e> {
             v: Valued::from(a),
             index: idx,
         };
-        if a.v.max_vals.is_some() || a.v.min_vals.is_some() ||
-           (a.v.num_vals.is_some() && a.v.num_vals.unwrap() > 1) {
+        if a.v.max_vals.is_some() || a.v.min_vals.is_some()
+            || (a.v.num_vals.is_some() && a.v.num_vals.unwrap() > 1)
+        {
             pb.b.settings.set(ArgSettings::Multiple);
         }
         pb
     }
 
     pub fn from_arg(mut a: Arg<'n, 'e>, idx: u64) -> Self {
-        if a.v.max_vals.is_some() || a.v.min_vals.is_some() ||
-           (a.v.num_vals.is_some() && a.v.num_vals.unwrap() > 1) {
+        if a.v.max_vals.is_some() || a.v.min_vals.is_some()
+            || (a.v.num_vals.is_some() && a.v.num_vals.unwrap() > 1)
+        {
             a.b.settings.set(ArgSettings::Multiple);
         }
         PosBuilder {
@@ -73,14 +74,22 @@ impl<'n, 'e> PosBuilder<'n, 'e> {
 
     pub fn name_no_brackets(&self) -> Cow<str> {
         debugln!("PosBuilder::name_no_brackets;");
+        let mut delim = String::new();
+        delim.push(if self.is_set(ArgSettings::RequireDelimiter) {
+            self.v.val_delim.expect(INTERNAL_ERROR_MSG)
+        } else {
+            ' '
+        });
         if let Some(ref names) = self.v.val_names {
             debugln!("PosBuilder:name_no_brackets: val_names={:#?}", names);
             if names.len() > 1 {
-                Cow::Owned(names
-                               .values()
-                               .map(|n| format!("<{}>", n))
-                               .collect::<Vec<_>>()
-                               .join(" "))
+                Cow::Owned(
+                    names
+                        .values()
+                        .map(|n| format!("<{}>", n))
+                        .collect::<Vec<_>>()
+                        .join(&*delim),
+                )
             } else {
                 Cow::Borrowed(names.values().next().expect(INTERNAL_ERROR_MSG))
             }
@@ -93,19 +102,29 @@ impl<'n, 'e> PosBuilder<'n, 'e> {
 
 impl<'n, 'e> Display for PosBuilder<'n, 'e> {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        if let Some(ref names) = self.v.val_names {
-            try!(write!(f,
-                        "{}",
-                        names
-                            .values()
-                            .map(|n| format!("<{}>", n))
-                            .collect::<Vec<_>>()
-                            .join(" ")));
+        let mut delim = String::new();
+        delim.push(if self.is_set(ArgSettings::RequireDelimiter) {
+            self.v.val_delim.expect(INTERNAL_ERROR_MSG)
         } else {
-            try!(write!(f, "<{}>", self.b.name));
+            ' '
+        });
+        if let Some(ref names) = self.v.val_names {
+            write!(
+                f,
+                "{}",
+                names
+                    .values()
+                    .map(|n| format!("<{}>", n))
+                    .collect::<Vec<_>>()
+                    .join(&*delim)
+            )?;
+        } else {
+            write!(f, "<{}>", self.b.name)?;
         }
-        if self.b.settings.is_set(ArgSettings::Multiple) && (self.v.val_names.is_none() || self.v.val_names.as_ref().unwrap().len() == 1) {
-            try!(write!(f, "..."));
+        if self.b.settings.is_set(ArgSettings::Multiple)
+            && (self.v.val_names.is_none() || self.v.val_names.as_ref().unwrap().len() == 1)
+        {
+            write!(f, "...")?;
         }
 
         Ok(())
@@ -141,10 +160,16 @@ impl<'n, 'e> AnyArg<'n, 'e> for PosBuilder<'n, 'e> {
     fn takes_value(&self) -> bool { true }
     fn help(&self) -> Option<&'e str> { self.b.help }
     fn long_help(&self) -> Option<&'e str> { self.b.long_help }
-    fn default_vals_ifs(&self) -> Option<vec_map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
+    fn default_vals_ifs(&self) -> Option<map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
         self.v.default_vals_ifs.as_ref().map(|vm| vm.values())
     }
     fn default_val(&self) -> Option<&'e OsStr> { self.v.default_val }
+    fn env<'s>(&'s self) -> Option<(&'n OsStr, Option<&'s OsString>)> {
+        self.v
+            .env
+            .as_ref()
+            .map(|&(key, ref value)| (key, value.as_ref()))
+    }
     fn longest_filter(&self) -> bool { true }
     fn aliases(&self) -> Option<Vec<&'e str>> { None }
 }
@@ -161,7 +186,7 @@ impl<'n, 'e> PartialEq for PosBuilder<'n, 'e> {
 mod test {
     use args::settings::ArgSettings;
     use super::PosBuilder;
-    use vec_map::VecMap;
+    use map::VecMap;
 
     #[test]
     fn display_mult() {

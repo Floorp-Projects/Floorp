@@ -69,6 +69,12 @@ mod imp {
         inner: Box<mz_stream>,
     }
 
+    impl ::std::fmt::Debug for StreamWrapper{
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error>{
+            write!(f, "StreamWrapper")
+        }
+    }
+
     impl Default for StreamWrapper {
         fn default() -> StreamWrapper {
             StreamWrapper {
@@ -103,6 +109,12 @@ mod imp {
 
     pub struct StreamWrapper {
         inner: mz_stream,
+    }
+
+    impl ::std::fmt::Debug for StreamWrapper{
+        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error>{
+            write!(f, "StreamWrapper")
+        }
     }
 
     impl Default for StreamWrapper {

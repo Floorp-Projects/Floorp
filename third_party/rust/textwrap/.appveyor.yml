@@ -1,19 +1,6 @@
 environment:
   matrix:
-  - TOOLCHAIN: 1.8.0
-    FEATURES: ""
   - TOOLCHAIN: stable
-    FEATURES: ""
-  - TOOLCHAIN: beta
-    FEATURES: ""
-  - TOOLCHAIN: nightly
-    FEATURES: ""
-
-  - TOOLCHAIN: 1.13.0
-    FEATURES: "hyphenation"
-  - TOOLCHAIN: stable
-    FEATURES: "hyphenation"
-  - TOOLCHAIN: beta
     FEATURES: "hyphenation"
   - TOOLCHAIN: nightly
     FEATURES: "hyphenation"

@@ -665,6 +665,7 @@ pub struct OwnedKeyValueList {
 
 impl OwnedKeyValueList {
     /// New `OwnedKeyValueList` node with an existing parent
+    #[deprecated]
     pub fn new(values: Box<ser::SyncMultiSerialize>, parent: OwnedKeyValueList) -> Self {
         OwnedKeyValueList {
             inner: Arc::new(OwnedKeyValueListInner {
@@ -675,6 +676,7 @@ impl OwnedKeyValueList {
     }
 
     /// New `OwnedKeyValue` node without a parent (root)
+    #[deprecated]
     pub fn root(values: Option<Box<ser::SyncMultiSerialize>>) -> Self {
         OwnedKeyValueList {
             inner: Arc::new(OwnedKeyValueListInner {
@@ -689,8 +691,19 @@ impl OwnedKeyValueList {
     /// Since `OwnedKeyValueList` is just a chain of `SyncMultiSerialize` instances: each
     /// containing one more more `OwnedKeyValue`, it's possible to iterate through the whole list
     /// group-by-group with `parent()` and `values()`.
+    #[deprecated(note="&Option<...> is a stupid type to return. Use `get_parent` for now.")]
     pub fn parent(&self) -> &Option<OwnedKeyValueList> {
         &self.inner.parent
+    }
+
+    /// Get the previous element on the chain of values
+    ///
+    /// Since `OwnedKeyValueList` is just a chain of `SyncMultiSerialize` instances: each
+    /// containing one more more `OwnedKeyValue`, it's possible to iterate through the whole list
+    /// group-by-group with `parent()` and `values()`.
+    #[deprecated]
+    pub fn previous(&self) -> Option<OwnedKeyValueList> {
+        self.inner.parent.clone()
     }
 
     /// Get the head node `SyncMultiSerialize` values

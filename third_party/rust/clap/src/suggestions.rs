@@ -58,15 +58,16 @@ pub fn did_you_mean_flag_suffix<'z, T, I>(arg: &str, longs: I, subcommands: &'z 
 
                 if let Some(candidate) = did_you_mean(arg, opts) {
                     let suffix = format!(
-                        "\n\tDid you mean to put '--{}' after the subcommand '{}'?",
-                        Format::Good(arg),
-                        Format::Good(candidate));
+                        "\n\tDid you mean to put '{}{}' after the subcommand '{}'?",
+                        Format::Good("--"),
+                        Format::Good(candidate),
+                        Format::Good(subcommand.get_name()));
                     return (suffix, Some(candidate));
                 }
             }
         }
     }
-    return (String::new(), None)
+    (String::new(), None)
 }
 
 /// Returns a suffix that can be empty, or is the standard 'did you mean' phrase
