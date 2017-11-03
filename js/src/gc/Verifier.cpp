@@ -561,14 +561,28 @@ HeapCheckTracerBase::traceHeap(AutoLockForExclusiveAccess& lock)
     return !oom;
 }
 
+static const char*
+GetCellColorName(Cell* cell)
+{
+    if (cell->isMarkedBlack())
+        return "black";
+    if (cell->isMarkedGray())
+        return "gray";
+    return "white";
+}
+
 void
 HeapCheckTracerBase::dumpCellInfo(Cell* cell)
 {
     auto kind = cell->getTraceKind();
-    fprintf(stderr, "%s", GCTraceKindToAscii(kind));
-    if (kind == JS::TraceKind::Object)
-        fprintf(stderr, " %s", static_cast<JSObject*>(cell)->getClass()->name);
+    JSObject* obj = kind == JS::TraceKind::Object ? static_cast<JSObject*>(cell) : nullptr;
+
+    fprintf(stderr, "%s %s", GetCellColorName(cell), GCTraceKindToAscii(kind));
+    if (obj)
+        fprintf(stderr, " %s", obj->getClass()->name);
     fprintf(stderr, " %p", cell);
+    if (obj)
+        fprintf(stderr, " (compartment %p)", obj->compartment());
 }
 
 void
@@ -670,10 +684,16 @@ CheckGrayMarkingTracer::checkCell(Cell* cell)
 
     if (parent->isMarkedBlack() && cell->isMarkedGray()) {
         failures++;
+
         fprintf(stderr, "Found black to gray edge to ");
         dumpCellInfo(cell);
         fprintf(stderr, "\n");
         dumpCellPath();
+
+        if (cell->getTraceKind() == JS::TraceKind::Object) {
+            fprintf(stderr, "\n");
+            DumpObject(static_cast<JSObject*>(cell), stderr);
+        }
     }
 }
 
