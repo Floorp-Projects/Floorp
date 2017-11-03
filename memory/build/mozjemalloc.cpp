@@ -59,8 +59,7 @@
 //   |=====================================|
 //   | Category | Subcategory    |    Size |
 //   |=====================================|
-//   | Small    | Tiny           |       2 |
-//   |          |                |       4 |
+//   | Small    | Tiny           |       4 |
 //   |          |                |       8 |
 //   |          |----------------+---------|
 //   |          | Quantum-spaced |      16 |
@@ -372,9 +371,6 @@ struct arena_chunk_t
 // ***************************************************************************
 // Constants defining allocator size classes and behavior.
 
-// Minimum alignment of non-tiny allocations is 2^QUANTUM_2POW_MIN bytes.
-#define QUANTUM_2POW_MIN 4
-
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
 #define CHUNK_2POW_DEFAULT 20
@@ -388,31 +384,36 @@ static const size_t kCacheLineSize = 64;
 // must be 8 bytes on 32-bit, 16 bytes on 64-bit.  On Linux and Mac, even
 // malloc(1) must reserve a word's worth of memory (see Mozilla bug 691003).
 #ifdef XP_WIN
-#define TINY_MIN_2POW (sizeof(void*) == 8 ? 4 : 3)
+static const size_t kMinTinyClass = sizeof(void*) * 2;
 #else
-#define TINY_MIN_2POW (sizeof(void*) == 8 ? 3 : 2)
+static const size_t kMinTinyClass = sizeof(void*);
 #endif
 
-// Maximum size class that is a multiple of the quantum, but not (necessarily)
-// a power of 2.  Above this size, allocations are rounded up to the nearest
-// power of 2.
-#define SMALL_MAX_2POW_DEFAULT 9
-#define SMALL_MAX_DEFAULT (1U << SMALL_MAX_2POW_DEFAULT)
+// Maximum tiny size class.
+static const size_t kMaxTinyClass = 8;
 
-// Various quantum-related settings.
-#define QUANTUM_DEFAULT (size_t(1) << QUANTUM_2POW_MIN)
-static const size_t quantum = QUANTUM_DEFAULT;
-static const size_t quantum_mask = QUANTUM_DEFAULT - 1;
+// Amount (quantum) separating quantum-spaced size classes.
+static const size_t kQuantum = 16;
+static const size_t kQuantumMask = kQuantum - 1;
 
-// Various bin-related settings.
-static const size_t small_min = (QUANTUM_DEFAULT >> 1) + 1;
-static const size_t small_max = size_t(SMALL_MAX_DEFAULT);
+// Smallest quantum-spaced size classes. It could actually also be labelled a
+// tiny allocation, and is spaced as such from the largest tiny size class.
+// Tiny classes being powers of 2, this is twice as large as the largest of
+// them.
+static const size_t kMinQuantumClass = kMaxTinyClass * 2;
+
+// Largest quantum-spaced size classes.
+static const size_t kMaxQuantumClass = 512;
+
+static_assert(kMaxQuantumClass % kQuantum == 0,
+              "kMaxQuantumClass is not a multiple of kQuantum");
 
 // Number of (2^n)-spaced tiny bins.
-static const unsigned ntbins = unsigned(QUANTUM_2POW_MIN - TINY_MIN_2POW);
+static const unsigned ntbins =
+  unsigned(LOG2(kMinQuantumClass) - LOG2(kMinTinyClass));
 
 // Number of quantum-spaced bins.
-static const unsigned nqbins = unsigned(SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN);
+static const unsigned nqbins = unsigned(kMaxQuantumClass / kQuantum);
 
 #define CHUNKSIZE_DEFAULT ((size_t)1 << CHUNK_2POW_DEFAULT)
 static const size_t chunksize = CHUNKSIZE_DEFAULT;
@@ -458,24 +459,27 @@ static size_t pagesize;
 #define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
 #endif
 
-DECLARE_GLOBAL(size_t, pagesize_mask)
-DECLARE_GLOBAL(uint8_t, pagesize_2pow)
+DECLARE_GLOBAL(size_t, gMaxSubPageClass)
 DECLARE_GLOBAL(uint8_t, nsbins)
-DECLARE_GLOBAL(size_t, bin_maxclass)
+DECLARE_GLOBAL(uint8_t, pagesize_2pow)
+DECLARE_GLOBAL(size_t, pagesize_mask)
 DECLARE_GLOBAL(size_t, chunk_npages)
 DECLARE_GLOBAL(size_t, arena_chunk_header_npages)
-DECLARE_GLOBAL(size_t, arena_maxclass)
+DECLARE_GLOBAL(size_t, gMaxLargeClass)
 
 DEFINE_GLOBALS
-DEFINE_GLOBAL(size_t) pagesize_mask = pagesize - 1;
-DEFINE_GLOBAL(uint8_t) pagesize_2pow = GLOBAL_LOG2(pagesize);
+// Largest sub-page size class.
+DEFINE_GLOBAL(size_t) gMaxSubPageClass = pagesize / 2;
+
+// Max size class for bins.
+#define gMaxBinClass gMaxSubPageClass
 
 // Number of (2^n)-spaced sub-page bins.
 DEFINE_GLOBAL(uint8_t)
-nsbins = pagesize_2pow - SMALL_MAX_2POW_DEFAULT - 1;
+nsbins = GLOBAL_LOG2(gMaxSubPageClass) - LOG2(kMaxQuantumClass);
 
-// Max size class for bins.
-DEFINE_GLOBAL(size_t) bin_maxclass = pagesize >> 1;
+DEFINE_GLOBAL(uint8_t) pagesize_2pow = GLOBAL_LOG2(pagesize);
+DEFINE_GLOBAL(size_t) pagesize_mask = pagesize - 1;
 
 // Number of pages in a chunk.
 DEFINE_GLOBAL(size_t) chunk_npages = chunksize >> pagesize_2pow;
@@ -490,15 +494,15 @@ arena_chunk_header_npages =
 
 // Max size class for arenas.
 DEFINE_GLOBAL(size_t)
-arena_maxclass = chunksize - (arena_chunk_header_npages << pagesize_2pow);
+gMaxLargeClass = chunksize - (arena_chunk_header_npages << pagesize_2pow);
 
 // Various sanity checks that regard configuration.
 GLOBAL_ASSERT(1ULL << pagesize_2pow == pagesize,
               "Page size is not a power of two");
-GLOBAL_ASSERT(quantum >= sizeof(void*));
-GLOBAL_ASSERT(quantum <= pagesize);
+GLOBAL_ASSERT(kQuantum >= sizeof(void*));
+GLOBAL_ASSERT(kQuantum <= pagesize);
 GLOBAL_ASSERT(chunksize >= pagesize);
-GLOBAL_ASSERT(quantum * 4 <= chunksize);
+GLOBAL_ASSERT(kQuantum * 4 <= chunksize);
 END_GLOBALS
 
 // Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
@@ -542,7 +546,7 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
   (((s) + (kCacheLineSize - 1)) & ~(kCacheLineSize - 1))
 
 // Return the smallest quantum multiple that is >= a.
-#define QUANTUM_CEILING(a) (((a) + quantum_mask) & ~quantum_mask)
+#define QUANTUM_CEILING(a) (((a) + (kQuantumMask)) & ~(kQuantumMask))
 
 // Return the smallest pagesize multiple that is >= s.
 #define PAGE_CEILING(s) (((s) + pagesize_mask) & ~pagesize_mask)
@@ -712,13 +716,13 @@ public:
 
   explicit inline SizeClass(size_t aSize)
   {
-    if (aSize < small_min) {
+    if (aSize <= kMaxTinyClass) {
       mType = Tiny;
-      mSize = std::max(RoundUpPow2(aSize), size_t(1U << TINY_MIN_2POW));
-    } else if (aSize <= small_max) {
+      mSize = std::max(RoundUpPow2(aSize), kMinTinyClass);
+    } else if (aSize <= kMaxQuantumClass) {
       mType = Quantum;
       mSize = QUANTUM_CEILING(aSize);
-    } else if (aSize <= bin_maxclass) {
+    } else if (aSize <= gMaxSubPageClass) {
       mType = SubPage;
       mSize = RoundUpPow2(aSize);
     } else {
@@ -2246,8 +2250,8 @@ choose_arena(size_t size)
   // library version, libc's malloc is used by TLS allocation, which
   // introduces a bootstrapping issue.
 
-  // Only use a thread local arena for small sizes.
-  if (size <= small_max) {
+  // Only use a thread local arena for quantum and tiny sizes.
+  if (size <= kMaxQuantumClass) {
     ret = thread_arena.get();
   }
 
@@ -2325,10 +2329,10 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
 //
 // becomes
 //
-//   (X * size_invs[(D >> QUANTUM_2POW_MIN) - 3]) >> SIZE_INV_SHIFT
+//   (X * size_invs[(D / kQuantum) - 3]) >> SIZE_INV_SHIFT
 
 #define SIZE_INV_SHIFT 21
-#define SIZE_INV(s) (((1U << SIZE_INV_SHIFT) / (s << QUANTUM_2POW_MIN)) + 1)
+#define SIZE_INV(s) (((1U << SIZE_INV_SHIFT) / (s * kQuantum)) + 1)
   // clang-format off
   static const unsigned size_invs[] = {
     SIZE_INV(3),
@@ -2378,9 +2382,8 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
       // table.  Use real division.
       regind = diff / size;
     }
-  } else if (size <=
-             ((sizeof(size_invs) / sizeof(unsigned)) << QUANTUM_2POW_MIN) + 2) {
-    regind = size_invs[(size >> QUANTUM_2POW_MIN) - 3] * diff;
+  } else if (size <= ((sizeof(size_invs) / sizeof(unsigned)) * kQuantum) + 2) {
+    regind = size_invs[(size / kQuantum) - 3] * diff;
     regind >>= SIZE_INV_SHIFT;
   } else {
     // size_invs isn't large enough to handle this size class, so
@@ -2545,16 +2548,16 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
   for (i = 0; i < arena_chunk_header_npages; i++) {
     aChunk->map[i].bits = 0;
   }
-  aChunk->map[i].bits = arena_maxclass | flags;
+  aChunk->map[i].bits = gMaxLargeClass | flags;
   for (i++; i < chunk_npages - 1; i++) {
     aChunk->map[i].bits = flags;
   }
-  aChunk->map[chunk_npages - 1].bits = arena_maxclass | flags;
+  aChunk->map[chunk_npages - 1].bits = gMaxLargeClass | flags;
 
 #ifdef MALLOC_DECOMMIT
   // Start out decommitted, in order to force a closer correspondence
   // between dirty pages and committed untouched pages.
-  pages_decommit(run, arena_maxclass);
+  pages_decommit(run, gMaxLargeClass);
 #endif
   mStats.committed += arena_chunk_header_npages;
 
@@ -2602,7 +2605,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
   arena_chunk_map_t* mapelm;
   arena_chunk_map_t key;
 
-  MOZ_ASSERT(aSize <= arena_maxclass);
+  MOZ_ASSERT(aSize <= gMaxLargeClass);
   MOZ_ASSERT((aSize & pagesize_mask) == 0);
 
   // Search the arena's chunks for the lowest best fit.
@@ -2817,7 +2820,7 @@ arena_t::DallocRun(arena_run_t* aRun, bool aDirty)
 
   // Deallocate chunk if it is now completely unused.
   if ((chunk->map[arena_chunk_header_npages].bits &
-       (~pagesize_mask | CHUNK_MAP_ALLOCATED)) == arena_maxclass) {
+       (~pagesize_mask | CHUNK_MAP_ALLOCATED)) == gMaxLargeClass) {
     DeallocChunk(chunk);
   }
 
@@ -2956,8 +2959,8 @@ arena_t::MallocBinHard(arena_bin_t* aBin)
 // Calculate bin->mRunSize such that it meets the following constraints:
 //
 //   *) bin->mRunSize >= min_run_size
-//   *) bin->mRunSize <= arena_maxclass
-//   *) bin->mRunSize <= RUN_MAX_SMALL
+//   *) bin->mRunSize <= gMaxLargeClass
+//   *) bin->mRunSize <= gMaxBinClass
 //   *) run header overhead <= RUN_MAX_OVRHD (or header overhead relaxed).
 //
 // bin->mRunNumRegions, bin->mRunNumRegionsMask, and bin->mRunFirstRegionOffset are
@@ -2970,7 +2973,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
   unsigned try_nregs, try_mask_nelms, try_reg0_offset;
 
   MOZ_ASSERT(min_run_size >= pagesize);
-  MOZ_ASSERT(min_run_size <= arena_maxclass);
+  MOZ_ASSERT(min_run_size <= gMaxLargeClass);
 
   // Calculate known-valid settings before entering the mRunSize
   // expansion loop, so that the first part of the loop always copies
@@ -3012,7 +3015,7 @@ arena_bin_run_size_calc(arena_bin_t* bin, size_t min_run_size)
       try_reg0_offset = try_run_size - (try_nregs * bin->mSizeClass);
     } while (sizeof(arena_run_t) + (sizeof(unsigned) * (try_mask_nelms - 1)) >
              try_reg0_offset);
-  } while (try_run_size <= arena_maxclass &&
+  } while (try_run_size <= gMaxLargeClass &&
            RUN_MAX_OVRHD * (bin->mSizeClass << 3) > RUN_MAX_OVRHD_RELAX &&
            (try_reg0_offset << RUN_BFP) > RUN_MAX_OVRHD * try_run_size);
 
@@ -3040,14 +3043,14 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
 
   switch (sizeClass.Type()) {
     case SizeClass::Tiny:
-      bin = &mBins[FloorLog2(aSize >> TINY_MIN_2POW)];
+      bin = &mBins[FloorLog2(aSize / kMinTinyClass)];
       break;
     case SizeClass::Quantum:
-      bin = &mBins[ntbins + (aSize >> QUANTUM_2POW_MIN) - 1];
+      bin = &mBins[ntbins + (aSize / kQuantum) - 1];
       break;
     case SizeClass::SubPage:
-      bin = &mBins[ntbins + nqbins +
-                   (FloorLog2(aSize >> SMALL_MAX_2POW_DEFAULT) - 1)];
+      bin =
+        &mBins[ntbins + nqbins + (FloorLog2(aSize / kMaxQuantumClass) - 1)];
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
@@ -3115,9 +3118,9 @@ arena_t::Malloc(size_t aSize, bool aZero)
 {
   MOZ_DIAGNOSTIC_ASSERT(mMagic == ARENA_MAGIC);
   MOZ_ASSERT(aSize != 0);
-  MOZ_ASSERT(QUANTUM_CEILING(aSize) <= arena_maxclass);
+  MOZ_ASSERT(QUANTUM_CEILING(aSize) <= gMaxLargeClass);
 
-  return (aSize <= bin_maxclass) ? MallocSmall(aSize, aZero)
+  return (aSize <= gMaxBinClass) ? MallocSmall(aSize, aZero)
                                  : MallocLarge(aSize, aZero);
 }
 
@@ -3126,7 +3129,7 @@ imalloc(size_t aSize, bool aZero, arena_t* aArena)
 {
   MOZ_ASSERT(aSize != 0);
 
-  if (aSize <= arena_maxclass) {
+  if (aSize <= gMaxLargeClass) {
     aArena = aArena ? aArena : choose_arena(aSize);
     return aArena->Malloc(aSize, aZero);
   }
@@ -3219,7 +3222,7 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
   }
 
   if (ceil_size <= pagesize ||
-      (aAlignment <= pagesize && ceil_size <= arena_maxclass)) {
+      (aAlignment <= pagesize && ceil_size <= gMaxLargeClass)) {
     aArena = aArena ? aArena : choose_arena(aSize);
     ret = aArena->Malloc(ceil_size, false);
   } else {
@@ -3260,7 +3263,7 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
       run_size = (aAlignment << 1) - pagesize;
     }
 
-    if (run_size <= arena_maxclass) {
+    if (run_size <= gMaxLargeClass) {
       aArena = aArena ? aArena : choose_arena(aSize);
       ret = aArena->Palloc(aAlignment, ceil_size, run_size);
     } else if (aAlignment <= chunksize) {
@@ -3736,8 +3739,8 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
   size_t copysize;
 
   // Try to avoid moving the allocation.
-  if (aSize <= bin_maxclass) {
-    if (aOldSize <= bin_maxclass && SizeClass(aSize) == SizeClass(aOldSize)) {
+  if (aSize <= gMaxBinClass) {
+    if (aOldSize <= gMaxBinClass && SizeClass(aSize) == SizeClass(aOldSize)) {
       if (aSize < aOldSize) {
         memset(
           (void*)(uintptr_t(aPtr) + aSize), kAllocPoison, aOldSize - aSize);
@@ -3746,8 +3749,8 @@ arena_ralloc(void* aPtr, size_t aSize, size_t aOldSize, arena_t* aArena)
       }
       return aPtr;
     }
-  } else if (aOldSize > bin_maxclass && aOldSize <= arena_maxclass) {
-    MOZ_ASSERT(aSize > bin_maxclass);
+  } else if (aOldSize > gMaxBinClass && aOldSize <= gMaxLargeClass) {
+    MOZ_ASSERT(aSize > gMaxBinClass);
     if (arena_ralloc_large(aPtr, aSize, aOldSize)) {
       return aPtr;
     }
@@ -3786,7 +3789,7 @@ iralloc(void* aPtr, size_t aSize, arena_t* aArena)
 
   oldsize = isalloc(aPtr);
 
-  return (aSize <= arena_maxclass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
+  return (aSize <= gMaxLargeClass) ? arena_ralloc(aPtr, aSize, oldsize, aArena)
                                    : huge_ralloc(aPtr, aSize, oldsize);
 }
 
@@ -3830,8 +3833,8 @@ arena_t::arena_t()
 
     bin->mNumRuns = 0;
 
-    // SizeClass doesn't want sizes larger than bin_maxclass for now.
-    if (sizeClass.Size() == bin_maxclass) {
+    // SizeClass doesn't want sizes larger than gMaxSubPageClass for now.
+    if (sizeClass.Size() == gMaxSubPageClass) {
       break;
     }
     sizeClass = sizeClass.Next();
@@ -3972,7 +3975,7 @@ huge_ralloc(void* aPtr, size_t aSize, size_t aOldSize)
   size_t copysize;
 
   // Avoid moving the allocation if the size class would not change.
-  if (aOldSize > arena_maxclass &&
+  if (aOldSize > gMaxLargeClass &&
       CHUNK_CEILING(aSize) == CHUNK_CEILING(aOldSize)) {
     size_t psize = PAGE_CEILING(aSize);
     if (aSize < aOldSize) {
@@ -4473,10 +4476,10 @@ template<>
 inline size_t
 MozJemalloc::malloc_good_size(size_t aSize)
 {
-  if (aSize <= bin_maxclass) {
+  if (aSize <= gMaxSubPageClass) {
     // Small
     aSize = SizeClass(aSize).Size();
-  } else if (aSize <= arena_maxclass) {
+  } else if (aSize <= gMaxLargeClass) {
     // Large.
     aSize = PAGE_CEILING(aSize);
   } else {
@@ -4513,9 +4516,9 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
   // Gather runtime settings.
   aStats->opt_junk = opt_junk;
   aStats->opt_zero = opt_zero;
-  aStats->quantum = quantum;
-  aStats->small_max = small_max;
-  aStats->large_max = arena_maxclass;
+  aStats->quantum = kQuantum;
+  aStats->small_max = kMaxQuantumClass;
+  aStats->large_max = gMaxLargeClass;
   aStats->chunksize = chunksize;
   aStats->page_size = pagesize;
   aStats->dirty_max = opt_dirty_max;
