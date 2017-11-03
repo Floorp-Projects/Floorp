@@ -1,0 +1,17 @@
+When looking for a linker, 32-bit clang-cl.exe wants to use the 32-bit-native link.exe located in Hostx86/x86, but this executable does not exist in our releng package, because we only use 64-bit-host toolchains.
+
+This patch makes clang-cl use the Hostx64/x86 linker instead. Ideally we wouldn't be using 32-bit clang-cl.exe in the first place. Bug 1414287 is on file to do so and remove this hack.
+
+diff --git a/clang/lib/Driver/ToolChains/MSVC.cpp b/clang/lib/Driver/ToolChains/MSVC.cpp
+--- a/clang/lib/Driver/ToolChains/MSVC.cpp
++++ b/clang/lib/Driver/ToolChains/MSVC.cpp
+@@ -817,8 +816,7 @@
+   switch (Type) {
+   case SubDirectoryType::Bin:
+     if (VSLayout == ToolsetLayout::VS2017OrNewer) {
+-      const bool HostIsX64 =
+-          llvm::Triple(llvm::sys::getProcessTriple()).isArch64Bit();
++      const bool HostIsX64 = true;
+       const char *const HostName = HostIsX64 ? "HostX64" : "HostX86";
+       llvm::sys::path::append(Path, "bin", HostName, SubdirName);
+     } else { // OlderVS or DevDivInternal
