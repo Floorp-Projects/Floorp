@@ -2351,10 +2351,7 @@ SelectorMatchesTree(Element* aPrevElement,
   MOZ_ASSERT(!aSelector || !aSelector->IsPseudoElement());
   nsCSSSelector* selector = aSelector;
   Element* prevElement = aPrevElement;
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool xblChildrenMatched = false;
-#endif
 
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
@@ -2406,7 +2403,6 @@ SelectorMatchesTree(Element* aPrevElement,
           aTreeMatchContext.PopStyleScopeForSelectorMatching(element);
         }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
         // Compatibility hack: First try matching this selector as though the
         // <xbl:children> element wasn't in the tree to allow old selectors
         // were written before <xbl:children> participated in CSS selector
@@ -2416,13 +2412,20 @@ SelectorMatchesTree(Element* aPrevElement,
           xblChildrenMatched |=
             SelectorMatchesTree(element, selector, aTreeMatchContext, aFlags);
 
+#ifndef EARLY_BETA_OR_EARLIER
+          if (xblChildrenMatched) {
+            // It matched, don't try matching on the <xbl:children> element at
+            // all.
+            return true;
+          }
+#endif
+
           // We want to reset mCurrentStyleScope on aTreeMatchContext
           // back to its state before the SelectorMatchesTree call, in
           // case that call happens to traverse past the style scope element
           // and sets it to null.
           aTreeMatchContext.mCurrentStyleScope = styleScope;
         }
-#endif
       }
     }
     if (!element) {
