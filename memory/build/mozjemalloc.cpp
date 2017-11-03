@@ -1001,10 +1001,7 @@ private:
 
   void DeallocChunk(arena_chunk_t* aChunk);
 
-  arena_run_t* AllocRun(arena_bin_t* aBin,
-                        size_t aSize,
-                        bool aLarge,
-                        bool aZero);
+  arena_run_t* AllocRun(size_t aSize, bool aLarge, bool aZero);
 
   void DallocRun(arena_run_t* aRun, bool aDirty);
 
@@ -2605,7 +2602,7 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
 }
 
 arena_run_t*
-arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
+arena_t::AllocRun(size_t aSize, bool aLarge, bool aZero)
 {
   arena_run_t* run;
   arena_chunk_map_t* mapelm;
@@ -2896,7 +2893,7 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   // No existing runs have any space available.
 
   // Allocate a new run.
-  run = AllocRun(aBin, aBin->mRunSize, false, false);
+  run = AllocRun(aBin->mRunSize, false, false);
   if (!run) {
     return nullptr;
   }
@@ -3082,7 +3079,7 @@ arena_t::MallocLarge(size_t aSize, bool aZero)
 
   {
     MutexAutoLock lock(mLock);
-    ret = AllocRun(nullptr, aSize, true, aZero);
+    ret = AllocRun(aSize, true, aZero);
     if (!ret) {
       return nullptr;
     }
@@ -3136,7 +3133,7 @@ arena_t::Palloc(size_t aAlignment, size_t aSize, size_t aAllocSize)
 
   {
     MutexAutoLock lock(mLock);
-    ret = AllocRun(nullptr, aAllocSize, true, false);
+    ret = AllocRun(aAllocSize, true, false);
     if (!ret) {
       return nullptr;
     }
