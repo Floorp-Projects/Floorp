@@ -664,9 +664,12 @@ already_AddRefed<ScaledFont>
 Factory::CreateScaledFontForMacFont(CGFontRef aCGFont,
                                     const RefPtr<UnscaledFont>& aUnscaledFont,
                                     Float aSize,
+                                    const Color& aFontSmoothingBackgroundColor,
                                     bool aUseFontSmoothing)
 {
-  return MakeAndAddRef<ScaledFontMac>(aCGFont, aUnscaledFont, aSize, aUseFontSmoothing);
+  return MakeAndAddRef<ScaledFontMac>(
+    aCGFont, aUnscaledFont, aSize,
+    aFontSmoothingBackgroundColor, aUseFontSmoothing);
 }
 #endif
 

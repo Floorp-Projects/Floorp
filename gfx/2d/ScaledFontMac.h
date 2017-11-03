@@ -42,7 +42,9 @@ class ScaledFontMac : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
-  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize, bool aUseFontSmoothing = true, bool aOwnsFont = false);
+  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                const Color &aFontSmoothingBackgroundColor = Color(),
+                bool aUseFontSmoothing = true, bool aOwnsFont = false);
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
@@ -59,6 +61,8 @@ public:
 
   bool CanSerialize() override { return true; }
 
+  Color FontSmoothingBackgroundColor() { return mFontSmoothingBackgroundColor; }
+
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* GetCairoFontFace() override;
 #endif
@@ -67,6 +71,7 @@ private:
   friend class DrawTargetSkia;
   CGFontRef mFont;
   CTFontRef mCTFont; // only created if CTFontDrawGlyphs is available, otherwise null
+  Color mFontSmoothingBackgroundColor;
   bool mUseFontSmoothing;
 
   typedef void (CTFontDrawGlyphsFuncT)(CTFontRef,

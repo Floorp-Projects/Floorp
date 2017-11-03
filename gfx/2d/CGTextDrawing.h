@@ -43,20 +43,16 @@ ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
 
 static bool
 SetFontSmoothingBackgroundColor(CGContextRef aCGContext, CGColorSpaceRef aColorSpace,
-                                const GlyphRenderingOptions* aRenderingOptions)
+                                const Color& aFontSmoothingBackgroundColor)
 {
-  if (aRenderingOptions) {
-    Color fontSmoothingBackgroundColor =
-      static_cast<const GlyphRenderingOptionsCG*>(aRenderingOptions)->FontSmoothingBackgroundColor();
-    if (fontSmoothingBackgroundColor.a > 0) {
-      CGContextSetFontSmoothingBackgroundColorFunc setFontSmoothingBGColorFunc =
-        GetCGContextSetFontSmoothingBackgroundColorFunc();
-      if (setFontSmoothingBGColorFunc) {
-        CGColorRef color = ColorToCGColor(aColorSpace, fontSmoothingBackgroundColor);
-        setFontSmoothingBGColorFunc(aCGContext, color);
-        CGColorRelease(color);
-        return true;
-      }
+  if (aFontSmoothingBackgroundColor.a > 0) {
+    CGContextSetFontSmoothingBackgroundColorFunc setFontSmoothingBGColorFunc =
+      GetCGContextSetFontSmoothingBackgroundColorFunc();
+    if (setFontSmoothingBGColorFunc) {
+      CGColorRef color = ColorToCGColor(aColorSpace, aFontSmoothingBackgroundColor);
+      setFontSmoothingBGColorFunc(aCGContext, color);
+      CGColorRelease(color);
+      return true;
     }
   }
 

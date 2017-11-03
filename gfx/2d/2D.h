@@ -1564,7 +1564,7 @@ public:
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont>
     CreateScaledFontForMacFont(CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                               bool aUseFontSmoothing = true);
+                               const Color& aFontSmoothingBackgroundColor, bool aUseFontSmoothing = true);
 #endif
 
   /**
