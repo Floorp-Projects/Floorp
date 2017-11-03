@@ -67,10 +67,6 @@ if ('multi' == System.env.AB_CD) {
     // dependency chain to fail, since multi isn't a real locale.  To avoid
     // this, if Gradle is invoked with AB_CD=multi, we don't invoke Make at all.
     task generateCodeAndResources()
-} else if (System.env.IS_LANGUAGE_REPACK == '1') {
-    // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and handle resource
-    // and code generation themselves.
-    task generateCodeAndResources()
 } else {
     task generateCodeAndResources(type:Exec) {
         workingDir "${topobjdir}"
