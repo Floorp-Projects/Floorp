@@ -386,6 +386,22 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
     }
   }
 
+#ifdef DEBUG
+  char *bloatLog = PR_GetEnv("XPCOM_MEM_BLOAT_LOG");
+  // XPCOM_MEM_BLOAT_LOG has the format
+  // /tmp/tmpd0YzFZ.mozrunner/runtests_leaks.log
+  // but stores into /tmp/tmpd0YzFZ.mozrunner/runtests_leaks_tab_pid3411.log
+  // So cut the .log part and whitelist the prefix.
+  if (bloatLog != nullptr) {
+    size_t bloatLen = strlen(bloatLog);
+    if (bloatLen >= 4) {
+      nsAutoCString bloatStr(bloatLog);
+      bloatStr.Truncate(bloatLen - 4);
+      policy->AddPrefix(rdwrcr, bloatStr.get());
+    }
+  }
+#endif
+
   mCommonContentPolicy.reset(policy);
 #endif
 }
