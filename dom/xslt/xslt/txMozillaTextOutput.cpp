@@ -158,7 +158,7 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     NS_ASSERTION(mDocument, "Need document");
 
     // Reset and set up document
-    URIUtils::ResetWithSource(mDocument, aSourceDocument);
+    URIUtils::ResetWithSource(mDocument, source);
     // Only do this after resetting the document to ensure we have the
     // correct principal.
     mDocument->SetScriptHandlingObject(sgo);

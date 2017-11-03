@@ -811,7 +811,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, int32_t aNsID,
     mNodeInfoManager = mDocument->NodeInfoManager();
 
     // Reset and set up the document
-    URIUtils::ResetWithSource(mDocument, aSourceDocument);
+    URIUtils::ResetWithSource(mDocument, source);
 
     // Make sure we set the script handling object after resetting with the
     // source, so that we have the right principal.
