@@ -1002,16 +1002,14 @@ private:
 public:
   /**
    * Attempt a fling with the velocity specified in |aHandoffState|.
-   * If we are not pannable, the fling is handed off to the next APZC in
-   * the handoff chain via mTreeManager->DispatchFling().
-   * Returns true iff. the entire velocity of the fling was consumed by
-   * this APZC. |aHandoffState.mVelocity| is modified to contain any
-   * unused, residual velocity.
    * |aHandoffState.mIsHandoff| should be true iff. the fling was handed off
    * from a previous APZC, and determines whether acceleration is applied
    * to the fling.
+   * We only accept the fling in the direction(s) in which we are pannable.
+   * Returns the "residual velocity", i.e. the portion of
+   * |aHandoffState.mVelocity| that this APZC did not consume.
    */
-  bool AttemptFling(FlingHandoffState& aHandoffState);
+  ParentLayerPoint AttemptFling(const FlingHandoffState& aHandoffState);
 
 private:
   friend class AndroidFlingAnimation;
@@ -1043,9 +1041,6 @@ private:
                              const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
-
-  // Helper function used by AttemptFling().
-  void AcceptFling(FlingHandoffState& aHandoffState);
 
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
