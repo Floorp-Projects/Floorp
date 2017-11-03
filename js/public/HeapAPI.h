@@ -24,6 +24,12 @@ namespace gc {
 
 struct Cell;
 
+/*
+ * The low bit is set so this should never equal a normal pointer, and the high
+ * bit is set so this should never equal the upper 32 bits of a 64-bit pointer.
+ */
+const uint32_t Relocated = uintptr_t(0xbad0bad1);
+
 const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
