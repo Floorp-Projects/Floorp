@@ -12,7 +12,7 @@
 
 [package]
 name = "clap"
-version = "2.25.0"
+version = "2.27.1"
 authors = ["Kevin K. <kbknapp@gmail.com>"]
 exclude = ["examples/*", "clap-test/*", "tests/*", "benches/*", "*.png", "clap-perf/*", "*.dot"]
 description = "A simple to use, efficient, and full featured  Command Line Argument Parser\n"
@@ -23,6 +23,8 @@ keywords = ["argument", "command", "arg", "parser", "parse"]
 categories = ["command-line-interface"]
 license = "MIT"
 repository = "https://github.com/kbknapp/clap-rs.git"
+[package.metadata.docs.rs]
+features = ["doc"]
 [profile.test]
 opt-level = 1
 lto = false
@@ -60,43 +62,41 @@ lto = true
 debug = false
 debug-assertions = false
 rpath = false
+[dependencies.bitflags]
+version = "0.9"
+
+[dependencies.clippy]
+version = "~0.0.166"
+optional = true
+
 [dependencies.ansi_term]
 version = "0.9.0"
 optional = true
 
-[dependencies.term_size]
-version = "0.3.0"
+[dependencies.vec_map]
+version = "0.8"
 optional = true
 
-[dependencies.textwrap]
+[dependencies.strsim]
 version = "0.6.0"
-
-[dependencies.yaml-rust]
-version = "0.3.5"
 optional = true
-
-[dependencies.unicode-width]
-version = "0.1.4"
 
 [dependencies.atty]
 version = "0.2.2"
 optional = true
 
-[dependencies.vec_map]
-version = "0.8"
+[dependencies.unicode-width]
+version = "0.1.4"
 
-[dependencies.clippy]
-version = "~0.0.131"
+[dependencies.textwrap]
+version = "0.9.0"
+
+[dependencies.term_size]
+version = "0.3.0"
 optional = true
 
-[dependencies.unicode-segmentation]
-version = "~1.1.0"
-
-[dependencies.bitflags]
-version = "0.9"
-
-[dependencies.strsim]
-version = "0.6.0"
+[dependencies.yaml-rust]
+version = "0.3.5"
 optional = true
 [dev-dependencies.regex]
 version = "0.2"
@@ -104,14 +104,23 @@ version = "0.2"
 [dev-dependencies.lazy_static]
 version = "0.2"
 
+[dev-dependencies.version-sync]
+version = "0.3"
+
 [features]
-unstable = []
-default = ["suggestions", "color", "wrap_help"]
-color = ["ansi_term", "atty"]
-yaml = ["yaml-rust"]
-no_cargo = []
-wrap_help = ["term_size"]
-suggestions = ["strsim"]
-nightly = []
 debug = []
+no_cargo = []
+yaml = ["yaml-rust"]
+nightly = []
+color = ["ansi_term", "atty"]
+suggestions = ["strsim"]
+default = ["suggestions", "color", "vec_map"]
+wrap_help = ["term_size", "textwrap/term_size"]
 lints = ["clippy"]
+unstable = []
+doc = ["yaml"]
+[badges.appveyor]
+repository = "kbknapp/clap-rs"
+
+[badges.travis-ci]
+repository = "kbknapp/clap-rs"
