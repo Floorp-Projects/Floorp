@@ -372,11 +372,11 @@ FormAutofillParent.prototype = {
         }
       }
 
-      if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record, true)) {
+      if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
         this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
 
         FormAutofillDoorhanger.show(target, "update").then((state) => {
-          let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record, true);
+          let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
           switch (state) {
             case "create":
               if (!changedGUIDs.length) {
