@@ -149,11 +149,11 @@ private:
   EpochQueue mEpochs;
   size_t mNumEvents = 0;
 
-  // Number of SchedulerGroups that must be processed before we prioritize an
-  // active tab. This field is designed to guarantee a 1:1 interleaving between
+  // Number of SchedulerGroups that must be processed before we prioritize a
+  // visible tab. This field is designed to guarantee a 1:1 interleaving between
   // foreground and background SchedulerGroups. For details, see its usage in
   // LabeledEventQueue.cpp.
-  int64_t mAvoidActiveTabCount = 0;
+  int64_t mAvoidVisibleTabCount = 0;
 };
 
 } // namespace mozilla
