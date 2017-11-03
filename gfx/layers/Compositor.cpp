@@ -623,6 +623,18 @@ Compositor::SetDispAcquireFence(Layer* aLayer)
 {
 }
 
+void
+Compositor::UnlockAfterComposition(TextureHost* aTexture)
+{
+  TextureSourceProvider::UnlockAfterComposition(aTexture);
+
+  // If this is being called after we shutdown the compositor, we must finish
+  // read unlocking now to prevent a cycle.
+  if (IsDestroyed()) {
+    ReadUnlockTextures();
+  }
+}
+
 bool
 Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
 {
