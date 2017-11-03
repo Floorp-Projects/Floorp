@@ -210,17 +210,11 @@ ClientPaintedLayer::PaintOffMainThread()
   uint32_t flags = GetPaintFlags();
 
   PaintState state = mContentClient->BeginPaint(this, flags | ContentClient::PAINT_ASYNC);
-  bool didUpdate = false;
-
-  if (state.mBufferState) {
-    PaintThread::Get()->PrepareBuffer(state.mBufferState);
-    didUpdate = true;
-  }
-
   if (!UpdatePaintRegion(state)) {
     return false;
   }
 
+  bool didUpdate = false;
   RotatedBuffer::DrawIterator iter;
 
   // Debug Protip: Change to BorrowDrawTargetForPainting if using sync OMTP.

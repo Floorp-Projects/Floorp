@@ -113,20 +113,6 @@ StreamFilterChild::Resume(ErrorResult& aRv)
     break;
 
   case State::Resuming:
-    switch (mNextState) {
-    case State::Suspending:
-      mNextState = State::Resuming;
-      break;
-
-    case State::TransferringData:
-      break;
-
-    default:
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    break;
-
   case State::TransferringData:
     break;
 
@@ -156,9 +142,8 @@ StreamFilterChild::Disconnect(ErrorResult& aRv)
   case State::Resuming:
     switch (mNextState) {
     case State::Suspended:
-    case State::Suspending:
     case State::Resuming:
-    case State::TransferringData:
+    case State::Disconnecting:
       mNextState = State::Disconnecting;
       break;
 
@@ -166,6 +151,10 @@ StreamFilterChild::Disconnect(ErrorResult& aRv)
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
+    break;
+
+  case State::Disconnecting:
+  case State::Disconnected:
     break;
 
   default:
@@ -189,18 +178,7 @@ StreamFilterChild::Close(ErrorResult& aRv)
 
   case State::Suspending:
   case State::Resuming:
-    switch (mNextState) {
-    case State::Suspended:
-    case State::Suspending:
-    case State::Resuming:
-    case State::TransferringData:
-      mNextState = State::Closing;
-      break;
-
-    default:
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
+    mNextState = State::Closing;
     break;
 
   case State::Closing:
@@ -245,8 +223,6 @@ StreamFilterChild::SetNextState()
 
   case State::Disconnecting:
     mNextState = State::Disconnected;
-
-    WriteBufferedData();
     SendDisconnect();
     break;
 

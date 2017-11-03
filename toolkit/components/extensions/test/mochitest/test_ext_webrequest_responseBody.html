@@ -187,7 +187,7 @@ const TASKS = [
           filter.disconnect();
           checkState("disconnected");
 
-          for (let method of ["suspend", "resume", "close", "disconnect"]) {
+          for (let method of ["suspend", "resume", "close"]) {
             browser.test.assertThrows(
               () => {
                 filter[method]();
@@ -202,63 +202,8 @@ const TASKS = [
             },
             /.*/,
             `(${num}): write() should throw while disconnected`);
-
-          resolve();
-        }
-      };
-
-      filter.onerror = event => {
-        browser.test.fail(`(${num}): Got unexpected error event: ${filter.error}`);
-      };
-    },
-    verify(response) {
-      is(response, PARTS.join(""), "Got expected final HTML");
-    },
-  },
-  {
-    url: "slow_response.sjs",
-    task(filter, resolve, num) {
-      let encoder = new TextEncoder("utf-8");
-
-      filter.onstop = event => {
-        browser.test.fail(`(${num}): Got unexpected onStop event while disconnected`);
-      };
-
-      let n = 0;
-      filter.ondata = async event => {
-        n++;
-
-        filter.write(event.data);
-
-        if (n == 3) {
-          filter.suspend();
-          await new Promise(resolve => setTimeout(resolve, TIMEOUT));
-          filter.resume();
-          filter.suspend();
-
-          await new Promise(resolve => setTimeout(resolve, TIMEOUT));
-
-          filter.resume();
-          await new Promise(resolve => setTimeout(resolve, 0));
-          filter.suspend();
 
           filter.disconnect();
-
-          for (let method of ["suspend", "resume", "close", "disconnect"]) {
-            browser.test.assertThrows(
-              () => {
-                filter[method]();
-              },
-              /.*/,
-              `(${num}): ${method}() should throw while disconnected`);
-          }
-
-          browser.test.assertThrows(
-            () => {
-              filter.write(encoder.encode("Foo bar"));
-            },
-            /.*/,
-            `(${num}): write() should throw while disconnected`);
 
           resolve();
         }
