@@ -55,9 +55,9 @@ interface Document : Node {
   [Pure]
   Element? getElementById(DOMString elementId);
 
-  [NewObject, Throws]
+  [CEReactions, NewObject, Throws]
   Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
-  [NewObject, Throws]
+  [CEReactions, NewObject, Throws]
   Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (ElementCreationOptions or DOMString) options);
   [NewObject]
   DocumentFragment createDocumentFragment();
