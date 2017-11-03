@@ -3992,8 +3992,6 @@ KillWorkerThreads(JSContext* cx)
         thread->join();
     }
 
-    workerThreads.clearAndFree();
-
     js_delete(workerThreadsLock);
     workerThreadsLock = nullptr;
 
@@ -4929,12 +4927,12 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
-    if (!argv.append(js_strdup(sArgv[0])))
+    if (!argv.append(strdup(sArgv[0])))
         return false;
 
     // Propagate selected flags from the current shell
     for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-        char* cstr = js_strdup(sPropagatedFlags[i]);
+        char* cstr = strdup(sPropagatedFlags[i]);
         if (!cstr || !argv.append(cstr))
             return false;
     }
@@ -5755,7 +5753,6 @@ ShutdownBufferStreams()
     state->shutdown = true;
     while (!state->jobs.empty())
         state.wait(/* jobs empty */);
-    state->jobs.clearAndFree();
 }
 
 static bool
@@ -8655,12 +8652,6 @@ main(int argc, char** argv, char** envp)
     SetOutputFile("JS_STDOUT", &rcStdout, &gOutFile);
     SetOutputFile("JS_STDERR", &rcStderr, &gErrFile);
 
-    // Start the engine.
-    if (!JS_Init())
-        return 1;
-
-    auto shutdownEngine = MakeScopeExit([]() { JS_ShutDown(); });
-
     OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
 
     op.setDescription("The SpiderMonkey shell provides a command line interface to the "
@@ -8884,6 +8875,10 @@ main(int argc, char** argv, char** envp)
     if (op.getBoolOption("no-threads"))
         js::DisableExtraThreads();
 
+    // Start the engine.
+    if (!JS_Init())
+        return 1;
+
     if (!InitSharedArrayBufferMailbox())
         return 1;
 
@@ -8984,5 +8979,6 @@ main(int argc, char** argv, char** envp)
     DestructSharedArrayBufferMailbox();
 
     JS_DestroyContext(cx);
+    JS_ShutDown();
     return result;
 }
