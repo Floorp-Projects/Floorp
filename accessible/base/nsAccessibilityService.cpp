@@ -250,6 +250,24 @@ New_HTMLTableHeaderCellIfScope(nsIContent* aContent, Accessible* aContext)
   return nullptr;
 }
 
+#ifdef MOZ_XUL
+static Accessible*
+New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
+                                        Accessible* aContext)
+{
+  if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
+    return new XULToolbarButtonAccessible(aContent, aContext->Document());
+  }
+
+  // Don't include nameless images in accessible tree.
+  if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
+    return nullptr;
+  }
+
+  return new ImageAccessibleWrap(aContent, aContext->Document());
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Markup maps array.
 
@@ -269,10 +287,22 @@ static const MarkupMapInfo sMarkupMapList[] = {
   #include "MarkupMap.h"
 };
 
+#ifdef MOZ_XUL
+#define XULMAP(atom, new_func) \
+  { &nsGkAtoms::atom, new_func },
+
+static const XULMarkupMapInfo sXULMapList[] = {
+  #include "XULMap.h"
+};
+#endif
+
 #undef Attr
 #undef AttrFromDOM
 #undef AttrFromDOMIf
 #undef MARKUPMAP
+#ifdef MOZ_XUL
+#undef XULMAP
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
@@ -285,6 +315,9 @@ uint32_t nsAccessibilityService::gConsumers = 0;
 
 nsAccessibilityService::nsAccessibilityService() :
   DocManager(), FocusManager(), mMarkupMaps(ArrayLength(sMarkupMapList))
+#ifdef MOZ_XUL
+  , mXULMarkupMaps(ArrayLength(sXULMapList))
+#endif
 {
 }
 
@@ -1162,9 +1195,20 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
       }
     }
 
+#ifdef MOZ_XUL
+    // Prefer to use XUL to decide if and what kind of accessible to create.
+    const XULMarkupMapInfo* xulMap =
+      mXULMarkupMaps.Get(content->NodeInfo()->NameAtom());
+    if (xulMap && xulMap->new_func) {
+      newAcc = xulMap->new_func(content, aContext);
+    }
+#endif
+
     // XBL bindings may use @role attribute to point the accessible type
     // they belong to.
-    newAcc = CreateAccessibleByType(content, document);
+    if (!newAcc) {
+      newAcc = CreateAccessibleByType(content, document);
+    }
 
     // Any XUL box can be used as tabpanel, make sure we create a proper
     // accessible for it.
@@ -1275,6 +1319,11 @@ nsAccessibilityService::Init()
 
   for (uint32_t i = 0; i < ArrayLength(sMarkupMapList); i++)
     mMarkupMaps.Put(*sMarkupMapList[i].tag, &sMarkupMapList[i]);
+
+#ifdef MOZ_XUL
+  for (uint32_t i = 0; i < ArrayLength(sXULMapList); i++)
+    mXULMarkupMaps.Put(*sXULMapList[i].tag, &sXULMapList[i]);
+#endif
 
 #ifdef A11Y_LOG
   logging::CheckEnv();
@@ -1420,19 +1469,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
   } else if (role.EqualsLiteral("xul:groupbox")) {
       accessible = new XULGroupboxAccessible(aContent, aDoc);
-
-  } else if (role.EqualsLiteral("xul:image")) {
-    if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
-      accessible = new XULToolbarButtonAccessible(aContent, aDoc);
-
-    } else {
-      // Don't include nameless images in accessible tree.
-      if (!aContent->HasAttr(kNameSpaceID_None,
-                             nsGkAtoms::tooltiptext))
-        return nullptr;
-
-      accessible = new ImageAccessibleWrap(aContent, aDoc);
-    }
 
   } else if (role.EqualsLiteral("xul:link")) {
     accessible = new XULLinkAccessible(aContent, aDoc);
