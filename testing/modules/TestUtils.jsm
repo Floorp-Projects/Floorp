@@ -142,14 +142,4 @@ this.TestUtils = {
       }, interval);
     });
   },
-
-  shuffle(array) {
-    let results = [];
-    for (let i = 0; i < array.length; ++i) {
-      let randomIndex = Math.floor(Math.random() * (i + 1));
-      results[i] = results[randomIndex];
-      results[randomIndex] = array[i];
-    }
-    return results;
-  },
 };
