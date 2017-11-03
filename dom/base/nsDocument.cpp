@@ -2505,10 +2505,10 @@ nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
   // extension principal, in the case of extension content scripts).
   auto* basePrin = BasePrincipal::Cast(aPrincipal);
   if (basePrin->Is<ExpandedPrincipal>()) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Should never try to create a document with "
+                                 "an expanded principal");
+
     auto* expanded = basePrin->As<ExpandedPrincipal>();
-
-    MOZ_ASSERT(expanded->WhiteList().Length() > 0);
-
     return do_AddRef(expanded->WhiteList().LastElement());
   }
 

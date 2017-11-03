@@ -13,6 +13,7 @@
 #include "nsIStandardURL.h"
 
 #include "ContentPrincipal.h"
+#include "ExpandedPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsIURIWithPrincipal.h"
 #include "NullPrincipal.h"
@@ -355,6 +356,17 @@ BasePrincipal::AddonHasPermission(const nsAtom* aPerm)
     return policy->HasPermission(aPerm);
   }
   return false;
+}
+
+nsIPrincipal*
+BasePrincipal::PrincipalToInherit(nsIURI* aRequestedURI,
+                                  bool aAllowIfInheritsPrincipal)
+{
+  if (Is<ExpandedPrincipal>()) {
+    return As<ExpandedPrincipal>()->PrincipalToInherit(aRequestedURI,
+                                                       aAllowIfInheritsPrincipal);
+  }
+  return this;
 }
 
 already_AddRefed<BasePrincipal>
