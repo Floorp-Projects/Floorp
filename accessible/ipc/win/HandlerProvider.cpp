@@ -9,8 +9,10 @@
 #include "mozilla/a11y/HandlerProvider.h"
 
 #include "Accessible2_3.h"
+#include "AccessibleDocument.h"
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
+#include "AccessibleTableCell.h"
 #include "HandlerData.h"
 #include "HandlerData_i.c"
 #include "mozilla/Assertions.h"
@@ -340,8 +342,20 @@ REFIID
 HandlerProvider::GetEffectiveOutParamIid(REFIID aCallIid,
                                          ULONG aCallMethod)
 {
-  if (aCallIid == IID_IAccessibleTable || aCallIid == IID_IAccessibleTable2) {
-    return IID_IAccessible2_3;
+  if (aCallIid == IID_IAccessibleTable ||
+      aCallIid == IID_IAccessibleTable2 ||
+      aCallIid == IID_IAccessibleDocument ||
+      aCallIid == IID_IAccessibleTableCell ||
+      aCallIid == IID_IAccessibleRelation) {
+    return NEWEST_IA2_IID;
+  }
+
+  // IAccessible2_2::accessibleWithCaret
+  static_assert(&NEWEST_IA2_IID == &IID_IAccessible2_3,
+                "You have modified NEWEST_IA2_IID. This code needs updating.");
+  if ((aCallIid == IID_IAccessible2_2 || aCallIid == IID_IAccessible2_3) &&
+      aCallMethod == 47) {
+    return NEWEST_IA2_IID;
   }
 
   MOZ_ASSERT(false);

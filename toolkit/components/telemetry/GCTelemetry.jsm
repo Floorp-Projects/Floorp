@@ -52,8 +52,8 @@ class GCData {
 
     data.timestamp = fixup(data.timestamp);
 
-    for (let i = 0; i < data.slices.length; i++) {
-      let slice = data.slices[i];
+    for (let i = 0; i < data.slices_list.length; i++) {
+      let slice = data.slices_list[i];
       slice.start_timestamp = fixup(slice.start_timestamp);
       slice.end_timestamp = fixup(slice.end_timestamp);
     }
@@ -110,7 +110,7 @@ class GCData {
 // make sure to update the JSON schema at:
 // https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/telemetry/main.schema.json
 // You should also adjust browser_TelemetryGC.js.
-const MAX_GC_KEYS = 25;
+const MAX_GC_KEYS = 30;
 const MAX_SLICES = 4;
 const MAX_SLICE_KEYS = 15;
 const MAX_PHASES = 65;
@@ -127,26 +127,26 @@ function limitProperties(obj, count) {
 
 function limitSize(data) {
   // Store the number of slices so we know if we lost any at the end.
-  data.num_slices = data.slices.length;
+  data.num_slices = data.slices_list.length;
 
-  data.slices.sort((a, b) => b.pause - a.pause);
+  data.slices_list.sort((a, b) => b.pause - a.pause);
 
-  if (data.slices.length > MAX_SLICES) {
+  if (data.slices_list.length > MAX_SLICES) {
     // Make sure we always keep the first slice since it has the
     // reason the GC was started.
-    let firstSliceIndex = data.slices.findIndex(s => s.slice == 0);
+    let firstSliceIndex = data.slices_list.findIndex(s => s.slice == 0);
     if (firstSliceIndex >= MAX_SLICES) {
-      data.slices[MAX_SLICES - 1] = data.slices[firstSliceIndex];
+      data.slices_list[MAX_SLICES - 1] = data.slices_list[firstSliceIndex];
     }
 
-    data.slices.length = MAX_SLICES;
+    data.slices_list.length = MAX_SLICES;
   }
 
-  data.slices.sort((a, b) => a.slice - b.slice);
+  data.slices_list.sort((a, b) => a.slice - b.slice);
 
   limitProperties(data, MAX_GC_KEYS);
 
-  for (let slice of data.slices) {
+  for (let slice of data.slices_list) {
     limitProperties(slice, MAX_SLICE_KEYS);
     limitProperties(slice.times, MAX_PHASES);
   }
