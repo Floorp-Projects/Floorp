@@ -318,6 +318,41 @@ class TestClick(TestLegacyClick):
             button.click()
         self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
 
+    def test_preventDefault(self):
+        self.marionette.navigate(inline("""
+            <button>click me</button>
+            <script>
+              let button = document.querySelector("button");
+              button.addEventListener("click", event => event.preventDefault());
+            </script>
+        """))
+        button = self.marionette.find_element(By.TAG_NAME, "button")
+        # should not time out
+        button.click()
+
+    def test_stopPropagation(self):
+        self.marionette.navigate(inline("""
+            <button>click me</button>
+            <script>
+              let button = document.querySelector("button");
+              button.addEventListener("click", event => event.stopPropagation());
+            </script>
+        """))
+        button = self.marionette.find_element(By.TAG_NAME, "button")
+        # should not time out
+        button.click()
+
+    def test_stopImmediatePropagation(self):
+        self.marionette.navigate(inline("""
+            <button>click me</button>
+            <script>
+              let button = document.querySelector("button");
+              button.addEventListener("click", event => event.stopImmediatePropagation());
+            </script>
+        """))
+        button = self.marionette.find_element(By.TAG_NAME, "button")
+        # should not time out
+        button.click()
 
 
 class TestClickNavigation(MarionetteTestCase):
