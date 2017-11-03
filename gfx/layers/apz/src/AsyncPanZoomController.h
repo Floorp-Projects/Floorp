@@ -1011,6 +1011,8 @@ public:
    */
   ParentLayerPoint AttemptFling(const FlingHandoffState& aHandoffState);
 
+  ParentLayerPoint AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const;
+
 private:
   friend class AndroidFlingAnimation;
   friend class AutoscrollAnimation;
