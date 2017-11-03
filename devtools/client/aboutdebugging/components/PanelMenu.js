@@ -4,23 +4,23 @@
 
 "use strict";
 
-const { createClass, createFactory, DOM: dom, PropTypes } =
+const { Component, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const PanelMenuEntry = createFactory(require("./PanelMenuEntry"));
 
-module.exports = createClass({
-  displayName: "PanelMenu",
-
-  propTypes: {
-    panels: PropTypes.arrayOf(PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      icon: PropTypes.string.isRequired,
-      component: PropTypes.func.isRequired
-    })).isRequired,
-    selectPanel: PropTypes.func.isRequired,
-    selectedPanelId: PropTypes.string
-  },
+class PanelMenu extends Component {
+  static get propTypes() {
+    return {
+      panels: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+        icon: PropTypes.string.isRequired,
+        component: PropTypes.func.isRequired
+      })).isRequired,
+      selectPanel: PropTypes.func.isRequired,
+      selectedPanelId: PropTypes.string
+    };
+  }
 
   render() {
     let { panels, selectedPanelId, selectPanel } = this.props;
@@ -37,5 +37,7 @@ module.exports = createClass({
 
     // "categories" id used for styling purposes
     return dom.div({ id: "categories", role: "tablist" }, panelLinks);
-  },
-});
+  }
+}
+
+module.exports = PanelMenu;

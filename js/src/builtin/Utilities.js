@@ -53,10 +53,6 @@
 //
 // Symbol is a bare constructor without properties or methods.
 var std_Symbol = Symbol;
-// WeakMap is a bare constructor without properties or methods.
-var std_WeakMap = WeakMap;
-// StopIteration is a bare constructor without properties or methods.
-var std_StopIteration = StopIteration;
 
 
 /********** List specification type **********/

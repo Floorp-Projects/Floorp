@@ -256,24 +256,39 @@ check_abi()
     fi
     popd
 
+    ABI_PROBLEM_FOUND=0
     ABI_REPORT=${OUTPUTDIR}/abi-diff.txt
     rm -f ${ABI_REPORT}
     PREVDIST=${HGDIR}/baseline/dist
     NEWDIST=${HGDIR}/dist
     ALL_SOs="libfreebl3.so libfreeblpriv3.so libnspr4.so libnss3.so libnssckbi.so libnssdbm3.so libnsssysinit.so libnssutil3.so libplc4.so libplds4.so libsmime3.so libsoftokn3.so libssl3.so"
     for SO in ${ALL_SOs}; do
-        if [ ! -f nss/automation/abi-check/expected-report-$SO.txt ]; then
-            touch nss/automation/abi-check/expected-report-$SO.txt
+        if [ ! -f ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt ]; then
+            touch ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt
         fi
         abidiff --hd1 $PREVDIST/public/ --hd2 $NEWDIST/public \
             $PREVDIST/*/lib/$SO $NEWDIST/*/lib/$SO \
-            > nss/automation/abi-check/new-report-$SO.txt
-        diff -u nss/automation/abi-check/expected-report-$SO.txt \
-                nss/automation/abi-check/new-report-$SO.txt >> ${ABI_REPORT}
+            > ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt
+        if [ $? -ne 0 ]; then
+            ABI_PROBLEM_FOUND=1
+        fi
+        if [ ! -f ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt ]; then
+            ABI_PROBLEM_FOUND=1
+        fi
+
+        diff -wB -u ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt \
+                ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt >> ${ABI_REPORT}
+        if [ ! -f ${ABI_REPORT} ]; then
+            ABI_PROBLEM_FOUND=1
+        fi
     done
 
     if [ -s ${ABI_REPORT} ]; then
         print_log "FAILED: there are new unexpected ABI changes"
+        cat ${ABI_REPORT}
+        return 1
+    elif [ $ABI_PROBLEM_FOUND -ne 0 ]; then
+        print_log "FAILED: failure executing the ABI checks"
         cat ${ABI_REPORT}
         return 1
     fi

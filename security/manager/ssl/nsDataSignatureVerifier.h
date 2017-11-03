@@ -5,7 +5,6 @@
 #ifndef nsDataSignatureVerifier_h
 #define nsDataSignatureVerifier_h
 
-#include "certt.h"
 #include "nsIDataSignatureVerifier.h"
 #include "nsNSSShutDown.h"
 
@@ -32,16 +31,5 @@ private:
   // Nothing to release.
   virtual void virtualDestroyNSSReference() override {}
 };
-
-namespace mozilla {
-
-nsresult VerifyCMSDetachedSignatureIncludingCertificate(
-  const SECItem& buffer, const SECItem& detachedDigest,
-  nsresult (*verifyCertificate)(CERTCertificate* cert, void* context,
-                                void* pinArg),
-  void* verifyCertificateContext, void* pinArg,
-  const nsNSSShutDownPreventionLock& proofOfLock);
-
-} // namespace mozilla
 
 #endif // nsDataSignatureVerifier_h

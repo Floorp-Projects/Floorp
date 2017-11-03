@@ -4,16 +4,16 @@
 
 "use strict";
 
-const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
 const models = require("../models");
 
-module.exports = createClass({
-  displayName: "CensusHeader",
-
-  propTypes: {
-    diffing: models.diffingModel,
-  },
+class CensusHeader extends Component {
+  static get propTypes() {
+    return {
+      diffing: models.diffingModel,
+    };
+  }
 
   render() {
     let individualsCell;
@@ -71,4 +71,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = CensusHeader;

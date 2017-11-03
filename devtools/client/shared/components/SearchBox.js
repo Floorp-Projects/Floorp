@@ -6,31 +6,36 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const AutocompletePopup = createFactory(require("devtools/client/shared/components/AutoCompletePopup"));
 
-/**
- * A generic search box component for use across devtools
- */
-module.exports = createClass({
-  displayName: "SearchBox",
-
-  propTypes: {
-    delay: PropTypes.number,
-    keyShortcut: PropTypes.string,
-    onChange: PropTypes.func,
-    placeholder: PropTypes.string,
-    type: PropTypes.string,
-    autocompleteProvider: PropTypes.func,
-  },
-
-  getInitialState() {
+class SearchBox extends Component {
+  static get propTypes() {
     return {
+      delay: PropTypes.number,
+      keyShortcut: PropTypes.string,
+      onChange: PropTypes.func,
+      placeholder: PropTypes.string,
+      type: PropTypes.string,
+      autocompleteProvider: PropTypes.func,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       value: "",
       focused: false,
     };
-  },
+
+    this.onChange = this.onChange.bind(this);
+    this.onClearButtonClick = this.onClearButtonClick.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+    this.onBlur = this.onBlur.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+  }
 
   componentDidMount() {
     if (!this.props.keyShortcut) {
@@ -44,7 +49,7 @@ module.exports = createClass({
       event.preventDefault();
       this.refs.input.focus();
     });
-  },
+  }
 
   componentWillUnmount() {
     if (this.shortcuts) {
@@ -55,7 +60,7 @@ module.exports = createClass({
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-  },
+  }
 
   onChange() {
     if (this.state.value !== this.refs.input.value) {
@@ -81,20 +86,20 @@ module.exports = createClass({
       this.searchTimeout = null;
       this.props.onChange(this.state.value);
     }, this.props.delay);
-  },
+  }
 
   onClearButtonClick() {
     this.refs.input.value = "";
     this.onChange();
-  },
+  }
 
   onFocus() {
     this.setState({ focused: true });
-  },
+  }
 
   onBlur() {
     this.setState({ focused: false });
-  },
+  }
 
   onKeyDown(e) {
     let { autocomplete } = this.refs;
@@ -131,7 +136,7 @@ module.exports = createClass({
         autocomplete.jumpToBottom();
         break;
     }
-  },
+  }
 
   render() {
     let {
@@ -175,4 +180,6 @@ module.exports = createClass({
       })
     );
   }
-});
+}
+
+module.exports = SearchBox;

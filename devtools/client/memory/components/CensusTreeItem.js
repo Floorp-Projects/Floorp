@@ -6,7 +6,7 @@
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const {
   DOM: dom,
-  createClass,
+  Component,
   createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
@@ -15,22 +15,27 @@ const Frame = createFactory(require("devtools/client/shared/components/Frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 const models = require("../models");
 
-module.exports = createClass({
-  displayName: "CensusTreeItem",
+class CensusTreeItem extends Component {
+  static get propTypes() {
+    return {
+      arrow: PropTypes.any,
+      depth: PropTypes.number.isRequired,
+      diffing: models.app.diffing,
+      expanded: PropTypes.bool.isRequired,
+      focused: PropTypes.bool.isRequired,
+      getPercentBytes: PropTypes.func.isRequired,
+      getPercentCount: PropTypes.func.isRequired,
+      inverted: PropTypes.bool,
+      item: PropTypes.object.isRequired,
+      onViewIndividuals: PropTypes.func.isRequired,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+    };
+  }
 
-  propTypes: {
-    arrow: PropTypes.any,
-    depth: PropTypes.number.isRequired,
-    diffing: models.app.diffing,
-    expanded: PropTypes.bool.isRequired,
-    focused: PropTypes.bool.isRequired,
-    getPercentBytes: PropTypes.func.isRequired,
-    getPercentCount: PropTypes.func.isRequired,
-    inverted: PropTypes.bool,
-    item: PropTypes.object.isRequired,
-    onViewIndividuals: PropTypes.func.isRequired,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-  },
+  constructor(props) {
+    super(props);
+    this.toLabel = this.toLabel.bind(this);
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item
@@ -38,7 +43,7 @@ module.exports = createClass({
       || this.props.expanded != nextProps.expanded
       || this.props.focused != nextProps.focused
       || this.props.diffing != nextProps.diffing;
-  },
+  }
 
   toLabel(name, linkToDebugger) {
     if (isSavedFrame(name)) {
@@ -63,7 +68,7 @@ module.exports = createClass({
     }
 
     return String(name);
-  },
+  }
 
   render() {
     let {
@@ -150,5 +155,7 @@ module.exports = createClass({
         this.toLabel(item.name, onViewSourceInDebugger)
       )
     );
-  },
-});
+  }
+}
+
+module.exports = CensusTreeItem;

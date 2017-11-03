@@ -13,11 +13,11 @@ const {
   drawRect,
   drawRoundedRect,
   getBoundsFromPoints,
-  getCanvasPosition,
   getCurrentMatrix,
   getPathDescriptionFromPoints,
   getPointsFromDiagonal,
   updateCanvasElement,
+  updateCanvasPosition,
 } = require("./utils/canvas");
 const {
   CanvasFrameAnonymousContentHelper,
@@ -176,12 +176,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       y: 0
     };
 
-    // Calling `getCanvasPosition` anyway since the highlighter could be initialized
+    // Calling `updateCanvasPosition` anyway since the highlighter could be initialized
     // on a page that has scrolled already.
-    let { canvasX, canvasY } = getCanvasPosition(this._canvasPosition, this._scroll,
-      this.win, this._winDimensions);
-    this._canvasPosition.x = canvasX;
-    this._canvasPosition.y = canvasY;
+    updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
+      this._winDimensions);
   }
 
   _buildMarkup() {
@@ -772,7 +770,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * to give the illusion that it always covers the viewport.
    */
   _scrollUpdate() {
-    let { hasUpdated } = getCanvasPosition(this._canvasPosition, this._scroll, this.win,
+    let hasUpdated = updateCanvasPosition(this._canvasPosition, this._scroll, this.win,
       this._winDimensions);
 
     if (hasUpdated) {

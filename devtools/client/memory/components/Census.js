@@ -4,24 +4,24 @@
 
 "use strict";
 
-const { createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("devtools/client/shared/components/Tree"));
 const CensusTreeItem = createFactory(require("./CensusTreeItem"));
 const { TREE_ROW_HEIGHT } = require("../constants");
 const { censusModel, diffingModel } = require("../models");
 
-module.exports = createClass({
-  displayName: "Census",
-
-  propTypes: {
-    census: censusModel,
-    onExpand: PropTypes.func.isRequired,
-    onCollapse: PropTypes.func.isRequired,
-    onFocus: PropTypes.func.isRequired,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    onViewIndividuals: PropTypes.func.isRequired,
-    diffing: diffingModel,
-  },
+class Census extends Component {
+  static get propTypes() {
+    return {
+      census: censusModel,
+      onExpand: PropTypes.func.isRequired,
+      onCollapse: PropTypes.func.isRequired,
+      onFocus: PropTypes.func.isRequired,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      onViewIndividuals: PropTypes.func.isRequired,
+      diffing: diffingModel,
+    };
+  }
 
   render() {
     let {
@@ -77,4 +77,6 @@ module.exports = createClass({
       itemHeight: TREE_ROW_HEIGHT,
     });
   }
-});
+}
+
+module.exports = Census;
