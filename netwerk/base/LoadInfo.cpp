@@ -73,6 +73,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
+  , mServiceWorkerTaintingSynthesized(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
   , mIsHSTSPriming(false)
@@ -266,6 +267,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
+  , mServiceWorkerTaintingSynthesized(false)
   , mForceHSTSPriming(false)
   , mMixedContentWouldBlock(false)
   , mIsHSTSPriming(false)
@@ -347,6 +349,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mForcePreflight(rhs.mForcePreflight)
   , mIsPreflight(rhs.mIsPreflight)
   , mLoadTriggeredFromExternal(rhs.mLoadTriggeredFromExternal)
+  , mServiceWorkerTaintingSynthesized(rhs.mServiceWorkerTaintingSynthesized)
   , mForceHSTSPriming(rhs.mForceHSTSPriming)
   , mMixedContentWouldBlock(rhs.mMixedContentWouldBlock)
   , mIsHSTSPriming(rhs.mIsHSTSPriming)
@@ -384,6 +387,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aForcePreflight,
                    bool aIsPreflight,
                    bool aLoadTriggeredFromExternal,
+                   bool aServiceWorkerTaintingSynthesized,
                    bool aForceHSTSPriming,
                    bool aMixedContentWouldBlock,
                    bool aIsHSTSPriming,
@@ -415,6 +419,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mForcePreflight(aForcePreflight)
   , mIsPreflight(aIsPreflight)
   , mLoadTriggeredFromExternal(aLoadTriggeredFromExternal)
+  , mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized)
   , mForceHSTSPriming (aForceHSTSPriming)
   , mMixedContentWouldBlock(aMixedContentWouldBlock)
   , mIsHSTSPriming(aIsHSTSPriming)
@@ -1060,6 +1065,14 @@ LoadInfo::GetLoadTriggeredFromExternal(bool* aLoadTriggeredFromExternal)
 }
 
 NS_IMETHODIMP
+LoadInfo::GetServiceWorkerTaintingSynthesized(bool* aServiceWorkerTaintingSynthesized)
+{
+  MOZ_ASSERT(aServiceWorkerTaintingSynthesized);
+  *aServiceWorkerTaintingSynthesized = mServiceWorkerTaintingSynthesized;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetForceHSTSPriming(bool* aForceHSTSPriming)
 {
   *aForceHSTSPriming = mForceHSTSPriming;
@@ -1131,6 +1144,12 @@ NS_IMETHODIMP
 LoadInfo::MaybeIncreaseTainting(uint32_t aTainting)
 {
   NS_ENSURE_ARG(aTainting <= TAINTING_OPAQUE);
+
+  // Skip if the tainting has been set by the service worker.
+  if (mServiceWorkerTaintingSynthesized) {
+    return NS_OK;
+  }
+
   LoadTainting tainting = static_cast<LoadTainting>(aTainting);
   if (tainting > mTainting) {
     mTainting = tainting;
@@ -1143,6 +1162,9 @@ LoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting)
 {
   MOZ_DIAGNOSTIC_ASSERT(aTainting <= LoadTainting::Opaque);
   mTainting = aTainting;
+
+  // Flag to prevent the tainting from being increased.
+  mServiceWorkerTaintingSynthesized = true;
 }
 
 NS_IMETHODIMP
