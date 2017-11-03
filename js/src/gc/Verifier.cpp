@@ -656,7 +656,7 @@ js::gc::CheckHeapAfterGC(JSRuntime* rt)
 
 #endif /* JSGC_HASH_TABLE_CHECKS */
 
-#ifdef DEBUG
+#if defined(JS_GC_ZEAL) || defined(DEBUG)
 
 class CheckGrayMarkingTracer final : public HeapCheckTracerBase
 {
@@ -723,4 +723,4 @@ js::CheckGrayMarkingState(JSRuntime* rt)
     return tracer.check(session.lock);
 }
 
-#endif // DEBUG
+#endif // defined(JS_GC_ZEAL) || defined(DEBUG)
