@@ -1057,6 +1057,9 @@ function DoAssertionCheck()
 
 function URIsEqualIgnoringHash(uri1, uri2)
 {
+    if (!uri2) {
+        return false;
+    }
     let hashIndex1 = uri1.indexOf("#");
     if (hashIndex1 > -1) {
         uri1 = uri1.substr(0, hashIndex1);
