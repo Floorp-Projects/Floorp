@@ -4,8 +4,9 @@
 
 "use strict";
 
-const React = require("devtools/client/shared/vendor/react");
-const { DOM: dom, Component, createFactory, PropTypes } = React;
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const Frame = createFactory(require("./Frame"));
 

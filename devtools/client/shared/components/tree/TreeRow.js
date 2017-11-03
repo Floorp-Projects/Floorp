@@ -7,10 +7,11 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
-  const { Component, createFactory, PropTypes } = React;
+  const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
-  const { tr } = React.DOM;
+  const { tr } = dom;
 
   // Tree
   const TreeCell = createFactory(require("./TreeCell"));
