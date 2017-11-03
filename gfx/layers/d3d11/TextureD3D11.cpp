@@ -764,7 +764,7 @@ CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
 already_AddRefed<DrawTarget>
 D3D11TextureData::BorrowDrawTarget()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread() || PaintThread::IsOnPaintThread());
 
   if (!mDrawTarget && mTexture) {
     // This may return a null DrawTarget
