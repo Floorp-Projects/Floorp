@@ -10,35 +10,33 @@
     <script>
       var foo1 = "globalFoo";
 
-      var foo1Obj = {
+      var foo1Obj = Object.assign(Object.create(null), {
         prop1: "111",
         prop2: {
           prop21: "212121"
         }
-      };
+      });
 
-      function firstCall()
-      {
+      function firstCall() {
         var foo2 = "fooFirstCall";
 
-        var foo2Obj = {
-          prop1: {
+        var foo2Obj = Object.assign(Object.create(null), {
+          prop1: Object.assign(Object.create(null), {
             prop11: "111111"
-          }
-        };
+          })
+        });
 
         secondCall();
       }
 
-      function secondCall()
-      {
+      function secondCall() {
         var foo3 = "fooSecondCall";
 
-        var foo3Obj = {
-          prop1: {
+        var foo3Obj = Object.assign(Object.create(null), {
+          prop1: Object.assign(Object.create(null), {
             prop11: "313131"
-          }
-        };
+          })
+        });
 
         debugger;
       }
