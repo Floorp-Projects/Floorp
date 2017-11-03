@@ -20,6 +20,7 @@
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/HeapAPI.h"
 #include "js/Utility.h"
 
 #if JS_STACK_GROWTH_DIRECTION > 0
