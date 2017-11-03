@@ -217,22 +217,6 @@ protected:
   // monitor.
   MediaStreamGraphImpl* mGraphImpl;
 
-  // This enum specifies the wait state of the driver.
-  enum WaitState {
-    // RunThread() is running normally
-    WAITSTATE_RUNNING,
-    // RunThread() is paused waiting for its next iteration, which will
-    // happen soon
-    WAITSTATE_WAITING_FOR_NEXT_ITERATION,
-    // RunThread() is paused indefinitely waiting for something to change
-    WAITSTATE_WAITING_INDEFINITELY,
-    // Something has signaled RunThread() to wake up immediately,
-    // but it hasn't done so yet
-    WAITSTATE_WAKING_UP
-  };
-  // This must be access with the monitor.
-  WaitState mWaitState;
-
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
   // during the initialization.
@@ -316,6 +300,23 @@ private:
   // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
+
+  // This enum specifies the wait state of the driver.
+  enum WaitState {
+    // RunThread() is running normally
+    WAITSTATE_RUNNING,
+    // RunThread() is paused waiting for its next iteration, which will
+    // happen soon
+    WAITSTATE_WAITING_FOR_NEXT_ITERATION,
+    // RunThread() is paused indefinitely waiting for something to change
+    WAITSTATE_WAITING_INDEFINITELY,
+    // Something has signaled RunThread() to wake up immediately,
+    // but it hasn't done so yet
+    WAITSTATE_WAKING_UP
+  };
+  // This must be access with the monitor.
+  WaitState mWaitState;
+
   // This is true if this SystemClockDriver runs the graph because we could not
   // open an audio stream.
   bool mIsFallback;
