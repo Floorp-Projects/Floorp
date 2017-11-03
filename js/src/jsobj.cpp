@@ -3411,7 +3411,7 @@ dumpValue(const Value& v, js::GenericPrinter& out)
     else if (v.isDouble())
         out.printf("%g", v.toDouble());
     else if (v.isString())
-        v.toString()->dump(out);
+        v.toString()->dumpNoNewline(out);
     else if (v.isSymbol())
         v.toSymbol()->dump(out);
     else if (v.isObject() && v.toObject().is<JSFunction>()) {
@@ -3492,37 +3492,41 @@ static void
 DumpProperty(const NativeObject* obj, Shape& shape, js::GenericPrinter& out)
 {
     jsid id = shape.propid();
-    uint8_t attrs = shape.attributes();
+    if (JSID_IS_ATOM(id))
+        JSID_TO_ATOM(id)->dumpCharsNoNewline(out);
+    else if (JSID_IS_INT(id))
+       out.printf("%d", JSID_TO_INT(id));
+    else if (JSID_IS_SYMBOL(id))
+        JSID_TO_SYMBOL(id)->dump(out);
+    else
+        out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
 
-    out.printf("    ((js::Shape*) %p) ", (void*) &shape);
-    if (attrs & JSPROP_ENUMERATE) out.put("enumerate ");
-    if (attrs & JSPROP_READONLY) out.put("readonly ");
-    if (attrs & JSPROP_PERMANENT) out.put("permanent ");
+    if (shape.isDataProperty()) {
+        out.printf(": ");
+        dumpValue(obj->getSlot(shape.maybeSlot()), out);
+    }
+
+    out.printf(" (shape %p", (void*) &shape);
+
+    uint8_t attrs = shape.attributes();
+    if (attrs & JSPROP_ENUMERATE) out.put(" enumerate");
+    if (attrs & JSPROP_READONLY) out.put(" readonly");
+    if (attrs & JSPROP_PERMANENT) out.put(" permanent");
 
     if (shape.hasGetterValue())
-        out.printf("getterValue=%p ", (void*) shape.getterObject());
+        out.printf(" getterValue %p", shape.getterObject());
     else if (!shape.hasDefaultGetter())
-        out.printf("getterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
+        out.printf(" getterOp %p", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
 
     if (shape.hasSetterValue())
-        out.printf("setterValue=%p ", (void*) shape.setterObject());
+        out.printf(" setterValue %p", shape.setterObject());
     else if (!shape.hasDefaultSetter())
-        out.printf("setterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
+        out.printf(" setterOp %p", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
 
-    if (JSID_IS_ATOM(id) || JSID_IS_INT(id) || JSID_IS_SYMBOL(id))
-        dumpValue(js::IdToValue(id), out);
-    else
-        out.printf("unknown jsid %p", (void*) JSID_BITS(id));
+    if (shape.isDataProperty())
+        out.printf(" slot %d", shape.maybeSlot());
 
-    uint32_t slot = shape.isDataProperty() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
-    out.printf(": slot %d", slot);
-    if (shape.isDataProperty()) {
-        out.put(" = ");
-        dumpValue(obj->getSlot(slot), out);
-    } else if (slot != SHAPE_INVALID_SLOT) {
-        out.printf(" (INVALID!)");
-    }
-    out.putChar('\n');
+    out.printf(")\n");
 }
 
 bool
@@ -3542,19 +3546,20 @@ JSObject::dump(js::GenericPrinter& out) const
 {
     const JSObject* obj = this;
     JSObject* globalObj = &global();
-    out.printf("object %p from global %p [%s]\n", (void*) obj,
-            (void*) globalObj, globalObj->getClass()->name);
+    out.printf("object %p\n", obj);
+    out.printf("  global %p [%s]\n", globalObj, globalObj->getClass()->name);
+
     const Class* clasp = obj->getClass();
-    out.printf("class %p %s\n", (const void*)clasp, clasp->name);
+    out.printf("  class %p %s\n", clasp, clasp->name);
 
     if (obj->hasLazyGroup()) {
-        out.put("lazy group\n");
+        out.put("  lazy group\n");
     } else {
         const ObjectGroup* group = obj->group();
-        out.printf("group %p\n", (const void*)group);
+        out.printf("  group %p\n", group);
     }
 
-    out.put("flags:");
+    out.put("  flags:");
     if (obj->isDelegate()) out.put(" delegate");
     if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) out.put(" not_extensible");
     if (obj->maybeHasInterestingSymbolProperty()) out.put(" maybe_has_interesting_symbol");
@@ -3567,8 +3572,8 @@ JSObject::dump(js::GenericPrinter& out) const
     if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable())
         out.put(" immutable_prototype");
 
-    if (obj->isNative()) {
-        const NativeObject* nobj = &obj->as<NativeObject>();
+    const NativeObject* nobj = obj->isNative() ? &obj->as<NativeObject>() : nullptr;
+    if (nobj) {
         if (nobj->inDictionaryMode())
             out.put(" inDictionaryMode");
         if (nobj->hasShapeTable())
@@ -3579,24 +3584,12 @@ JSObject::dump(js::GenericPrinter& out) const
             out.put(" indexed");
         if (nobj->wasNewScriptCleared())
             out.put(" new_script_cleared");
+    } else {
+        out.put(" not_native\n");
     }
     out.putChar('\n');
 
-    if (obj->isNative()) {
-        const NativeObject* nobj = &obj->as<NativeObject>();
-        uint32_t slots = nobj->getDenseInitializedLength();
-        if (slots) {
-            out.put("elements\n");
-            for (uint32_t i = 0; i < slots; i++) {
-                out.printf(" %3d: ", i);
-                dumpValue(nobj->getDenseElement(i), out);
-                out.putChar('\n');
-                out.flush();
-            }
-        }
-    }
-
-    out.put("proto ");
+    out.put("  proto ");
     TaggedProto proto = obj->taggedProto();
     if (proto.isDynamic())
         out.put("<dynamic>");
@@ -3604,39 +3597,44 @@ JSObject::dump(js::GenericPrinter& out) const
         dumpValue(ObjectOrNullValue(proto.toObjectOrNull()), out);
     out.putChar('\n');
 
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
-        out.printf("private %p\n", obj->as<NativeObject>().getPrivate());
+    if (nobj) {
+        if (clasp->flags & JSCLASS_HAS_PRIVATE)
+            out.printf("  private %p\n", nobj->getPrivate());
 
-    if (!obj->isNative())
-        out.put("not native\n");
+        uint32_t reserved = JSCLASS_RESERVED_SLOTS(clasp);
+        if (reserved) {
+            out.printf("  reserved slots:\n");
+            for (uint32_t i = 0; i < reserved; i++) {
+                out.printf("    %3d ", i);
+                out.put(": ");
+                dumpValue(nobj->getSlot(i), out);
+                out.putChar('\n');
+            }
+        }
 
-    uint32_t reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
-    uint32_t slots = obj->isNative() ? obj->as<NativeObject>().slotSpan() : 0;
-    uint32_t stop = obj->isNative() ? reservedEnd : slots;
-    if (stop > 0)
-        out.printf(obj->isNative() ? "reserved slots:\n" : "slots:\n");
-    for (uint32_t i = 0; i < stop; i++) {
-        out.printf(" %3d ", i);
-        if (i < reservedEnd)
-            out.printf("(reserved) ");
-        out.put("= ");
-        dumpValue(obj->as<NativeObject>().getSlot(i), out);
-        out.putChar('\n');
-    }
-
-    if (obj->isNative()) {
-        out.put("properties:\n");
+        out.put("  properties:\n");
         Vector<Shape*, 8, SystemAllocPolicy> props;
-        for (Shape::Range<NoGC> r(obj->as<NativeObject>().lastProperty()); !r.empty(); r.popFront()) {
+        for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
             if (!props.append(&r.front())) {
                 out.printf("(OOM while appending properties)\n");
                 break;
             }
         }
-        for (size_t i = props.length(); i-- != 0;)
-            DumpProperty(&obj->as<NativeObject>(), *props[i], out);
+        for (size_t i = props.length(); i-- != 0;) {
+            out.printf("    ");
+            DumpProperty(nobj, *props[i], out);
+        }
+
+        uint32_t slots = nobj->getDenseInitializedLength();
+        if (slots) {
+            out.put("  elements:\n");
+            for (uint32_t i = 0; i < slots; i++) {
+                out.printf("    %3d: ", i);
+                dumpValue(nobj->getDenseElement(i), out);
+                out.putChar('\n');
+            }
+        }
     }
-    out.putChar('\n');
 }
 
 // For debuggers.
