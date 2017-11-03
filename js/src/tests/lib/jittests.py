@@ -327,6 +327,10 @@ class JitTest:
 
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
+
+        if self.allow_unhandlable_oom or self.expect_crash:
+            cmd += ['--suppress-minidump']
+
         return cmd
 
     # The test runner expects this to be set to give to get_command.
