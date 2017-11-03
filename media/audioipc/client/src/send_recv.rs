@@ -1,65 +1,67 @@
+use cubeb_core::Error;
+use cubeb_core::ffi;
+
+#[doc(hidden)]
+pub fn _err<E>(e: E) -> Error
+where
+    E: Into<Option<ffi::cubeb_error_code>>
+{
+    match e.into() {
+        Some(e) => unsafe { Error::from_raw(e) },
+        None => Error::new()
+    }
+}
+
 #[macro_export]
 macro_rules! send_recv {
-    ($conn:expr, $smsg:ident => $rmsg:ident) => {{
-        send_recv!(__send $conn, $smsg);
-        send_recv!(__recv $conn, $rmsg)
+    ($rpc:expr, $smsg:ident => $rmsg:ident) => {{
+        let resp = send_recv!(__send $rpc, $smsg);
+        send_recv!(__recv resp, $rmsg)
     }};
-    ($conn:expr, $smsg:ident => $rmsg:ident()) => {{
-        send_recv!(__send $conn, $smsg);
-        send_recv!(__recv $conn, $rmsg __result)
+    ($rpc:expr, $smsg:ident => $rmsg:ident()) => {{
+        let resp = send_recv!(__send $rpc, $smsg);
+        send_recv!(__recv resp, $rmsg __result)
     }};
-    ($conn:expr, $smsg:ident($($a:expr),*) => $rmsg:ident) => {{
-        send_recv!(__send $conn, $smsg, $($a),*);
-        send_recv!(__recv $conn, $rmsg)
+    ($rpc:expr, $smsg:ident($($a:expr),*) => $rmsg:ident) => {{
+        let resp = send_recv!(__send $rpc, $smsg, $($a),*);
+        send_recv!(__recv resp, $rmsg)
     }};
-    ($conn:expr, $smsg:ident($($a:expr),*) => $rmsg:ident()) => {{
-        send_recv!(__send $conn, $smsg, $($a),*);
-        send_recv!(__recv $conn, $rmsg __result)
+    ($rpc:expr, $smsg:ident($($a:expr),*) => $rmsg:ident()) => {{
+        let resp = send_recv!(__send $rpc, $smsg, $($a),*);
+        send_recv!(__recv resp, $rmsg __result)
     }};
     //
-    (__send $conn:expr, $smsg:ident) => ({
-        let r = $conn.send(ServerMessage::$smsg);
-        if r.is_err() {
-            debug!("send error - got={:?}", r);
-            return Err(ErrorCode::Error.into());
-        }
+    (__send $rpc:expr, $smsg:ident) => ({
+        $rpc.call(ServerMessage::$smsg)
     });
-    (__send $conn:expr, $smsg:ident, $($a:expr),*) => ({
-        let r = $conn.send(ServerMessage::$smsg($($a),*));
-        if r.is_err() {
-            debug!("send error - got={:?}", r);
-            return Err(ErrorCode::Error.into());
-        }
+    (__send $rpc:expr, $smsg:ident, $($a:expr),*) => ({
+        $rpc.call(ServerMessage::$smsg($($a),*))
     });
-    (__recv $conn:expr, $rmsg:ident) => ({
-        match $conn.receive() {
+    (__recv $resp:expr, $rmsg:ident) => ({
+        match $resp.wait() {
             Ok(ClientMessage::$rmsg) => Ok(()),
-            // Macro can see ErrorCode but not Error? I don't understand.
-            // ::cubeb_core::Error is fragile but this isn't general purpose code.
-            Ok(ClientMessage::Error(e)) => Err(unsafe { ::cubeb_core::Error::from_raw(e) }),
+            Ok(ClientMessage::Error(e)) => Err($crate::send_recv::_err(e)),
             Ok(m) => {
-                debug!("receive unexpected message - got={:?}", m);
-                Err(ErrorCode::Error.into())
+                debug!("received wrong message - got={:?}", m);
+                Err($crate::send_recv::_err(None))
             },
             Err(e) => {
-                debug!("receive error - got={:?}", e);
-                Err(ErrorCode::Error.into())
+                debug!("received error from rpc - got={:?}", e);
+                Err($crate::send_recv::_err(None))
             },
         }
     });
-    (__recv $conn:expr, $rmsg:ident __result) => ({
-        match $conn.receive() {
+    (__recv $resp:expr, $rmsg:ident __result) => ({
+        match $resp.wait() {
             Ok(ClientMessage::$rmsg(v)) => Ok(v),
-            // Macro can see ErrorCode but not Error? I don't understand.
-            // ::cubeb_core::Error is fragile but this isn't general purpose code.
-            Ok(ClientMessage::Error(e)) => Err(unsafe { ::cubeb_core::Error::from_raw(e) }),
+            Ok(ClientMessage::Error(e)) => Err($crate::send_recv::_err(e)),
             Ok(m) => {
-                debug!("receive unexpected message - got={:?}", m);
-                Err(ErrorCode::Error.into())
+                debug!("received wrong message - got={:?}", m);
+                Err($crate::send_recv::_err(None))
             },
             Err(e) => {
-                debug!("receive error - got={:?}", e);
-                Err(ErrorCode::Error.into())
+                debug!("received error - got={:?}", e);
+                Err($crate::send_recv::_err(None))
             },
         }
     })
