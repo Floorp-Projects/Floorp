@@ -22,7 +22,7 @@ using namespace gfx;
  * window.onvrdisplaydeactivate, window.onvrdisplayconnected,
  * window.onvrdisplaydisconnected, and window.onvrdisplaypresentchange.
  */
-VREventObserver::VREventObserver(nsGlobalWindow* aGlobalWindow)
+VREventObserver::VREventObserver(nsGlobalWindowInner* aGlobalWindow)
   : mWindow(aGlobalWindow)
   , mIs2DView(true)
   , mHasReset(false)

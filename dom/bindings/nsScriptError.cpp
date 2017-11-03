@@ -61,7 +61,7 @@ nsScriptErrorBase::InitializeOnMainThread()
     MOZ_ASSERT(!mInitializedOnMainThread);
 
     if (mInnerWindowID) {
-        nsGlobalWindow* window =
+        nsGlobalWindowInner* window =
           nsGlobalWindow::GetInnerWindowWithId(mInnerWindowID);
         if (window) {
             nsPIDOMWindowOuter* outer = window->GetOuterWindow();

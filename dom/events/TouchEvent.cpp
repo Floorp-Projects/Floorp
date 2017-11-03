@@ -171,7 +171,7 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   nsIDocShell* docShell = nullptr;
   if (aGlobal) {
-    nsGlobalWindow* win = xpc::WindowOrNull(aGlobal);
+    nsGlobalWindowInner* win = xpc::WindowOrNull(aGlobal);
     if (win) {
       docShell = win->GetDocShell();
     }
