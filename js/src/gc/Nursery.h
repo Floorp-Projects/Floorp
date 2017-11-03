@@ -170,6 +170,10 @@ class Nursery
     void disable();
     bool isEnabled() const { return maxChunkCount() != 0; }
 
+    void enableStrings();
+    void disableStrings();
+    bool canAllocateStrings() const { return canAllocateStrings_; }
+
     /* Return true if no allocations have been made since the last collection. */
     bool isEmpty() const;
 
@@ -385,7 +389,10 @@ class Nursery
     mozilla::TimeDuration profileThreshold_;
     bool enableProfiling_;
 
-    /* Report ObjectGroups with at lest this many instances tenured. */
+    /* Whether we will nursery-allocate strings. */
+    bool canAllocateStrings_;
+
+    /* Report ObjectGroups with at least this many instances tenured. */
     int64_t reportTenurings_;
 
     /*
