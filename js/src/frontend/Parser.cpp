@@ -588,8 +588,9 @@ FunctionBox::initWithEnclosingScope(Scope* enclosingScope)
     computeInWith(enclosingScope);
 }
 
+template <class ParseHandler, typename CharT>
 void
-ParserBase::error(unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::error(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -601,8 +602,10 @@ ParserBase::error(unsigned errorNumber, ...)
     va_end(args);
 }
 
+template <class ParseHandler, typename CharT>
 void
-ParserBase::errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber,
+                                            ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -616,8 +619,9 @@ ParserBase::errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, 
     va_end(args);
 }
 
+template <class ParseHandler, typename CharT>
 void
-ParserBase::errorAt(uint32_t offset, unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::errorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -629,9 +633,10 @@ ParserBase::errorAt(uint32_t offset, unsigned errorNumber, ...)
     va_end(args);
 }
 
+template <class ParseHandler, typename CharT>
 void
-ParserBase::errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
-                             unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                              unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -645,8 +650,9 @@ ParserBase::errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
     va_end(args);
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::warning(unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -660,8 +666,9 @@ ParserBase::warning(unsigned errorNumber, ...)
     return result;
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::warningAt(uint32_t offset, unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::warningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -678,8 +685,9 @@ ParserBase::warningAt(uint32_t offset, unsigned errorNumber, ...)
     return result;
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::extraWarning(unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::extraWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -691,8 +699,9 @@ ParserBase::extraWarning(unsigned errorNumber, ...)
     return result;
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -704,8 +713,9 @@ ParserBase::extraWarningAt(uint32_t offset, unsigned errorNumber, ...)
     return result;
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::strictModeError(unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::strictModeError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -718,8 +728,9 @@ ParserBase::strictModeError(unsigned errorNumber, ...)
     return res;
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
+Parser<ParseHandler, CharT>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -9860,8 +9871,9 @@ ParserBase::addTelemetry(DeprecatedLanguageExtension e)
     context->compartment()->addTelemetry(getFilename(), e);
 }
 
+template <class ParseHandler, typename CharT>
 bool
-ParserBase::warnOnceAboutExprClosure()
+Parser<ParseHandler, CharT>::warnOnceAboutExprClosure()
 {
 #ifndef RELEASE_OR_BETA
     if (context->helperThread())
