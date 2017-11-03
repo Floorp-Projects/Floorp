@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 #include "nsIContentPolicy.idl"
 
+interface nsIChannel;
 interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
@@ -298,6 +299,13 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(PrincipalToInherit)]
   nsIPrincipal binaryPrincipalToInherit();
+
+  /**
+   * Finds the correct principal to inherit for the given channel, based on
+   * the values of PrincipalToInherit and TriggeringPrincipal.
+   */
+  [noscript, notxpcom, nostdcall]
+  nsIPrincipal FindPrincipalToInherit(in nsIChannel aChannel);
 
   /**
    * This is the ownerDocument of the LoadingNode. Unless the LoadingNode

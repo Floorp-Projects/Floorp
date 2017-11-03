@@ -508,6 +508,26 @@ LoadInfo::PrincipalToInherit()
   return mPrincipalToInherit;
 }
 
+nsIPrincipal*
+LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel)
+{
+  if (mPrincipalToInherit) {
+    return mPrincipalToInherit;
+  }
+
+  nsCOMPtr<nsIURI> uri = mResultPrincipalURI;
+  if (!uri) {
+    Unused << aChannel->GetOriginalURI(getter_AddRefs(uri));
+  }
+
+  bool dataInherits = mSecurityFlags & (SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
+                                        SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                                        SEC_REQUIRE_CORS_DATA_INHERITS);
+
+  auto prin = BasePrincipal::Cast(mTriggeringPrincipal);
+  return prin->PrincipalToInherit(uri, dataInherits);
+}
+
 NS_IMETHODIMP
 LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
 {
