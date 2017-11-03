@@ -7,6 +7,7 @@ toolkit.jar:
     content/extensions/schemas/alarms.json
     content/extensions/schemas/browser_settings.json
     content/extensions/schemas/clipboard.json
+    content/extensions/schemas/content_scripts.json
     content/extensions/schemas/contextual_identities.json
     content/extensions/schemas/cookies.json
     content/extensions/schemas/downloads.json

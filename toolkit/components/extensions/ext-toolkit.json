@@ -32,6 +32,14 @@
       ["clipboard"]
     ]
   },
+  "contentScripts": {
+    "url": "chrome://extensions/content/ext-contentScripts.js",
+    "schema": "chrome://extensions/content/schemas/content_scripts.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["contentScripts"]
+    ]
+  },
   "contextualIdentities": {
     "url": "chrome://extensions/content/ext-contextualIdentities.js",
     "schema": "chrome://extensions/content/schemas/contextual_identities.json",
