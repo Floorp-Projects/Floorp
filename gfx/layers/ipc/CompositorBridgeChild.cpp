@@ -1194,34 +1194,6 @@ CompositorBridgeChild::FlushAsyncPaints()
 }
 
 void
-CompositorBridgeChild::NotifyBeginAsyncPrepareBuffer(CapturedBufferState* aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MonitorAutoLock lock(mPaintLock);
-
-  // We must not be waiting for paints (or buffer copying) to complete yet. This
-  // would imply we started a new paint without waiting for a previous one, which
-  // could lead to incorrect rendering or IPDL deadlocks.
-  MOZ_ASSERT(!mIsDelayingForAsyncPaints);
-
-  mOutstandingAsyncPaints++;
-
-  // Mark texture clients that they are being used for async painting, and
-  // make sure we hold them alive on the main thread.
-  aState->GetTextureClients(mTextureClientsForAsyncPaint);
-}
-
-void
-CompositorBridgeChild::NotifyFinishedAsyncPrepareBuffer(CapturedBufferState* aState)
-{
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
-
-  MonitorAutoLock lock(mPaintLock);
-  mOutstandingAsyncPaints--;
-}
-
-void
 CompositorBridgeChild::NotifyBeginAsyncPaint(CapturedPaintState* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
