@@ -275,6 +275,8 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle,
   if (smoothing == NS_FONT_SMOOTHING_GRAYSCALE) {
     aStyle->useGrayscaleAntialiasing = true;
   }
+
+  aStyle->fontSmoothingBackgroundColor = fontSmoothingBackgroundColor;
 }
 
 void nsFont::AddFontVariationsToStyle(gfxFontStyle *aStyle) const
