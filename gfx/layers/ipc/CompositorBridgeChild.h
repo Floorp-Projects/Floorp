@@ -45,7 +45,6 @@ class CompositorManagerChild;
 class CompositorOptions;
 class TextureClient;
 class TextureClientPool;
-class CapturedBufferState;
 class CapturedPaintState;
 struct FrameMetrics;
 
@@ -227,14 +226,6 @@ public:
   // previous frames have been flushed. The main thread blocks until the
   // operation completes.
   void FlushAsyncPaints();
-
-  // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to begin preparing a buffer asynchronously.
-  void NotifyBeginAsyncPrepareBuffer(CapturedBufferState* aState);
-
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished an asynchronous buffer prepare.
-  void NotifyFinishedAsyncPrepareBuffer(CapturedBufferState* aState);
 
   // Must only be called from the main thread. Notifies the CompositorBridge
   // that the paint thread is going to begin painting asynchronously.

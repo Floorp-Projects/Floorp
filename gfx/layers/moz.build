@@ -223,7 +223,6 @@ EXPORTS.mozilla.layers += [
     'PaintThread.h',
     'PersistentBufferProvider.h',
     'RenderTrace.h',
-    'RotatedBuffer.h',
     'ShareableCanvasRenderer.h',
     'SourceSurfaceSharedData.h',
     'SourceSurfaceVolatileData.h',
