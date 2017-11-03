@@ -497,8 +497,8 @@ class JSString : public js::gc::Cell
         return *(JSAtom*)this;
     }
 
-    // Used for distinguishing strings from objects in the nursery. 'cell' must
-    // be in the nursery.
+    // Used for distinguishing strings from objects in the nursery. The caller
+    // must ensure that cell is in the nursery (and not forwarded).
     MOZ_ALWAYS_INLINE
     static bool nurseryCellIsString(js::gc::Cell* cell) {
         MOZ_ASSERT(!cell->isTenured());
