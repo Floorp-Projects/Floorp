@@ -468,10 +468,9 @@ impl FrameBuilder {
             root_node.local_clip_rect = viewport_clip;
         }
 
-        if let Some(clip_id) = clip_scroll_tree.topmost_scrolling_node_id {
-            if let Some(root_node) = clip_scroll_tree.nodes.get_mut(&clip_id) {
-                root_node.local_clip_rect = viewport_clip;
-            }
+        let clip_id = clip_scroll_tree.topmost_scrolling_node_id();
+        if let Some(root_node) = clip_scroll_tree.nodes.get_mut(&clip_id) {
+            root_node.local_clip_rect = viewport_clip;
         }
     }
 
@@ -479,6 +478,7 @@ impl FrameBuilder {
         &mut self,
         pipeline_id: PipelineId,
         viewport_size: &LayerSize,
+        content_size: &LayerSize,
         clip_scroll_tree: &mut ClipScrollTree,
     ) -> ClipId {
         let viewport_rect = LayerRect::new(LayerPoint::zero(), *viewport_size);
@@ -493,7 +493,20 @@ impl FrameBuilder {
             clip_scroll_tree,
         );
 
-        clip_scroll_tree.root_reference_frame_id
+        let topmost_scrolling_node_id = ClipId::root_scroll_node(pipeline_id);
+        clip_scroll_tree.topmost_scrolling_node_id = topmost_scrolling_node_id;
+
+        self.add_scroll_frame(
+            topmost_scrolling_node_id,
+            clip_scroll_tree.root_reference_frame_id,
+            pipeline_id,
+            &viewport_rect,
+            content_size,
+            ScrollSensitivity::ScriptAndInputEvents,
+            clip_scroll_tree,
+        );
+
+        topmost_scrolling_node_id
     }
 
     pub fn add_clip_node(
@@ -1128,6 +1141,7 @@ impl FrameBuilder {
             font.font_key,
             font.size,
             *color,
+            font.bg_color,
             render_mode,
             font.subpx_dir,
             font.platform_options,
