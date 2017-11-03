@@ -75,3 +75,12 @@ COMPILE_FLAGS['CLANG_PLUGIN'] = []
 COMPILE_FLAGS['OPTIMIZE'] = []
 COMPILE_FLAGS['DEBUG'] = []
 COMPILE_FLAGS['OS_COMPILE_CXXFLAGS'] = []
+
+LINK_FLAGS['OS'] = CONFIG['LLVM_LDFLAGS'] + CONFIG['CLANG_LDFLAGS']
+# The ldflags above override most other categories.
+for var in ('LINKER', 'OPTIMIZE'):
+    LINK_FLAGS[var] = []
+
+if CONFIG['HOST_OS_ARCH'] == 'Linux' and CONFIG['OS_ARCH'] == 'Darwin':
+    # Don't pass OSX linker arguments.
+    LINK_FLAGS['FIX_LINK_PATHS'] = []

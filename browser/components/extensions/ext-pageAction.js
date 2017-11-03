@@ -67,7 +67,7 @@ this.pageAction = class extends ExtensionAPI {
       this.browserPageAction = PageActions.addAction(new PageActions.Action({
         id: widgetId,
         title: this.defaults.title,
-        iconURL: this.defaults.icon,
+        iconURL: this.getIconData(this.defaults.icon),
         shownInUrlbar: true,
         disabled: true,
         onCommand: (event, buttonNode) => {
@@ -137,12 +137,21 @@ this.pageAction = class extends ExtensionAPI {
     if (typeof(tabData.icon) == "string") {
       iconURL = IconDetails.escapeUrl(tabData.icon);
     } else {
-      iconURL = Object.entries(tabData.icon).reduce((memo, [size, url]) => {
-        memo[size] = IconDetails.escapeUrl(url);
-        return memo;
-      }, {});
+      iconURL = this.getIconData(tabData.icon);
     }
     this.browserPageAction.setIconURL(iconURL, window);
+  }
+
+  getIconData(icons) {
+    let getIcon = size => {
+      let {icon} = IconDetails.getPreferredIcon(icons, this.extension, size);
+      // TODO: implement theme based icon for pageAction (Bug 1398156)
+      return IconDetails.escapeUrl(icon);
+    };
+    return {
+      "16": getIcon(16),
+      "32": getIcon(32),
+    };
   }
 
   /**
