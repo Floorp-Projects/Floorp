@@ -67,6 +67,13 @@ struct MarkupMapInfo {
   MarkupAttrInfo attrs[4];
 };
 
+#ifdef MOZ_XUL
+struct XULMarkupMapInfo {
+  nsStaticAtom** tag;
+  New_Accessible* new_func;
+};
+#endif
+
 } // namespace a11y
 } // namespace mozilla
 
@@ -311,6 +318,9 @@ private:
   static uint32_t gConsumers;
 
   nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::MarkupMapInfo*> mMarkupMaps;
+#ifdef MOZ_XUL
+  nsDataHashtable<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*> mXULMarkupMaps;
+#endif
 
   friend nsAccessibilityService* GetAccService();
   friend nsAccessibilityService* GetOrCreateAccService(uint32_t);
