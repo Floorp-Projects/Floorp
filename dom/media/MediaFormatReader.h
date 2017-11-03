@@ -194,7 +194,6 @@ public:
   // cases like MSE.
   bool UseBufferingHeuristics() const { return mTrackDemuxersMayBlock; }
 
-  void ResolveSetCDMPromiseIfDone(TrackType aTrack);
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
   // Returns a string describing the state of the decoder data.
@@ -794,8 +793,11 @@ private:
   // Used in bug 1393399 for telemetry.
   const MediaDecoderOwnerID mMediaDecoderOwnerID;
 
+  bool ResolveSetCDMPromiseIfDone(TrackType aTrack);
+  void PrepareToSetCDMForTrack(TrackType aTrack);
   MozPromiseHolder<SetCDMPromise> mSetCDMPromise;
   TrackSet mSetCDMForTracks{};
+  bool IsDecoderWaitingForCDM(TrackType aTrack);
 };
 
 } // namespace mozilla
