@@ -427,7 +427,7 @@ add_task(withMockExperiments(withMockPreferences(async function(experiments, moc
     preferenceName: "fake.preference",
     preferenceValue: "experimentvalue",
     preferenceType: "string",
-    previousPreferenceValue: undefined,
+    previousPreferenceValue: null,
     preferenceBranchType: "user",
   });
 
@@ -690,6 +690,101 @@ decorate_task(
     await Assert.rejects(
       PreferenceExperiments.saveStartupPrefs(),
       "saveStartupPrefs throws if an experiment has an invalid preference value type",
+    );
+  },
+);
+
+// test that default branch prefs restore to the right value if the default pref changes
+decorate_task(
+  withMockExperiments,
+  withMockPreferences,
+  withStub(PreferenceExperiments, "startObserver"),
+  withStub(PreferenceExperiments, "stopObserver"),
+  async function testDefaultBranchStop(mockExperiments, mockPreferences, stopObserverStub) {
+    const prefName = "fake.preference";
+    mockPreferences.set(prefName, "old version's value", "default");
+
+    // start an experiment
+    await PreferenceExperiments.start({
+      name: "test",
+      branch: "branch",
+      preferenceName: prefName,
+      preferenceValue: "experiment value",
+      preferenceBranchType: "default",
+      preferenceType: "string",
+    });
+
+    is(
+      Services.prefs.getCharPref(prefName),
+      "experiment value",
+      "Starting an experiment should change the pref",
+    );
+
+    // Now pretend that firefox has updated and restarted to a version
+    // where the built-default value of fake.preference is something
+    // else. Bootstrap has run and changed the pref to the
+    // experimental value, and produced the call to
+    // recordOriginalValues below.
+    PreferenceExperiments.recordOriginalValues({ [prefName]: "new version's value" });
+    is(
+      Services.prefs.getCharPref(prefName),
+      "experiment value",
+      "Recording original values shouldn't affect the preference."
+    );
+
+    // Now stop the experiment. It should revert to the new version's default, not the old.
+    await PreferenceExperiments.stop("test");
+    is(
+      Services.prefs.getCharPref(prefName),
+      "new version's value",
+      "Preference should revert to new default",
+    );
+  },
+);
+
+// test that default branch prefs restore to the right value if the preference is removed
+decorate_task(
+  withMockExperiments,
+  withMockPreferences,
+  withStub(PreferenceExperiments, "startObserver"),
+  withStub(PreferenceExperiments, "stopObserver"),
+  async function testDefaultBranchStop(mockExperiments, mockPreferences, stopObserverStub) {
+    const prefName = "fake.preference";
+    mockPreferences.set(prefName, "old version's value", "default");
+
+    // start an experiment
+    await PreferenceExperiments.start({
+      name: "test",
+      branch: "branch",
+      preferenceName: prefName,
+      preferenceValue: "experiment value",
+      preferenceBranchType: "default",
+      preferenceType: "string",
+    });
+
+    is(
+      Services.prefs.getCharPref(prefName),
+      "experiment value",
+      "Starting an experiment should change the pref",
+    );
+
+    // Now pretend that firefox has updated and restarted to a version
+    // where fake.preference has been removed in the default pref set.
+    // Bootstrap has run and changed the pref to the experimental
+    // value, and produced the call to recordOriginalValues below.
+    PreferenceExperiments.recordOriginalValues({ [prefName]: null });
+    is(
+      Services.prefs.getCharPref(prefName),
+      "experiment value",
+      "Recording original values shouldn't affect the preference."
+    );
+
+    // Now stop the experiment. It should remove the preference
+    await PreferenceExperiments.stop("test");
+    is(
+      Services.prefs.getCharPref(prefName, "DEFAULT"),
+      "DEFAULT",
+      "Preference should be absent",
     );
   },
 );

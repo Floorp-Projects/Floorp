@@ -89,7 +89,7 @@ var FormAutofillFrameScript = {
         break;
       }
       case "FormAutoComplete:PopupClosed": {
-        FormAutofillContent.previewProfile(doc);
+        FormAutofillContent.onPopupClosed();
         chromeEventHandler.removeEventListener("keydown", FormAutofillContent._onKeyDown,
                                                {capturing: true});
         break;

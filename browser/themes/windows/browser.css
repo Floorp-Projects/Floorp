@@ -966,7 +966,11 @@ notification[value="translation"] {
 
   notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker,
   notification[value="translation"] menulist > .menulist-dropmarker {
-    list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
+    list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  }
+  notification[value="translation"] menulist > .menulist-dropmarker > .dropmarker-icon {
+    width: 11px;
+    height: 11px;
   }
 
   notification[value="translation"] button > .button-box,

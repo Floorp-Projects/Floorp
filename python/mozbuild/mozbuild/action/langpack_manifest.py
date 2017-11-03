@@ -18,6 +18,7 @@ import io
 import datetime
 import requests
 import mozversioncontrol
+import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestLocale,
@@ -267,18 +268,19 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
                 chrome_entries
             )
         elif isinstance(entry, ManifestLocale):
+            entry_path = os.path.join(
+                os.path.relpath(
+                    os.path.dirname(path),
+                    base_path
+                ),
+                entry.relpath
+            )
             chrome_entries.append({
                 'type': 'locale',
                 'alias': entry.name,
                 'locale': entry.id,
                 'platforms': convert_entry_flags_to_platform_codes(entry.flags),
-                'path': os.path.join(
-                    os.path.relpath(
-                        os.path.dirname(path),
-                        base_path
-                    ),
-                    entry.relpath
-                )
+                'path': mozpath.normsep(entry_path)
             })
         else:
             raise Exception('Unknown type {0}'.format(entry.name))

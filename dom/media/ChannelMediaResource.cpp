@@ -744,9 +744,10 @@ ChannelMediaResource::Resume()
       if (totalLength < 0 || GetOffset() < totalLength) {
         // There is (or may be) data to read, so start reading it.
         // Need to recreate the channel.
-        Seek(mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset(),
-             false);
+        int64_t offset =
+          mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset();
         mPendingSeekOffset = -1;
+        Seek(offset, false);
         element->DownloadResumed();
       } else {
         // The channel remains dead. Do not notify DownloadResumed() which
