@@ -12,6 +12,7 @@
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
+#include "MediaPromiseDefs.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
 #include "mozilla/CORSMode.h"
@@ -1332,12 +1333,13 @@ protected:
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
-  bool DetachExistingMediaKeys(DetailedPromise* aPromise);
-  bool TryRemoveMediaKeysAssociation(DetailedPromise* aPromise);
+  bool DetachExistingMediaKeys();
+  bool TryRemoveMediaKeysAssociation();
   void RemoveMediaKeys();
-  bool AttachNewMediaKeys(DetailedPromise* aPromise);
+  bool AttachNewMediaKeys();
   bool TryMakeAssociationWithCDM(CDMProxy* aProxy);
-  void MakeAssociationWithCDMResolved(DetailedPromise* aPromise);
+  void MakeAssociationWithCDMResolved();
+  void SetCDMProxyFailure(const MediaResult& aResult);
   void ResetSetMediaKeysTempVariables();
 
   // The current decoder. Load() has been called on this decoder.
@@ -1543,8 +1545,11 @@ protected:
   // Encrypted Media Extension media keys.
   RefPtr<MediaKeys> mMediaKeys;
   RefPtr<MediaKeys> mIncomingMediaKeys;
+  // The dom promise is used for HTMLMediaElement::SetMediaKeys.
+  RefPtr<DetailedPromise> mSetMediaKeysDOMPromise;
   // Used to indicate if the MediaKeys attaching operation is on-going or not.
   bool mAttachingMediaKey;
+  MozPromiseRequestHolder<SetCDMPromise> mSetCDMRequest;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;

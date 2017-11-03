@@ -12,6 +12,7 @@
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
+#include "MediaPromiseDefs.h"
 #include "MediaResource.h"
 #include "MediaStatistics.h"
 #include "MediaStreamGraph.h"
@@ -355,7 +356,7 @@ private:
     return mAbstractMainThread;
   }
 
-  void SetCDMProxy(CDMProxy* aProxy);
+  RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
   void EnsureTelemetryReported();
 
