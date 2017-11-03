@@ -351,6 +351,7 @@ public:
 #endif
     virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
+    virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
     void SetDrawsInTitlebar(bool aState) override;
 
     // HiDPI scale conversion
