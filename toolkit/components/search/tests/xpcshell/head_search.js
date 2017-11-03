@@ -254,14 +254,14 @@ function isUSTimezone() {
 
 const kDefaultenginenamePref = "browser.search.defaultenginename";
 const kTestEngineName = "Test search engine";
-const REQ_LOCALES_CHANGED_TOPIC = "intl:requested-locales-changed";
+const kLocalePref = "general.useragent.locale";
 
 function getDefaultEngineName(isUS) {
   const nsIPLS = Ci.nsIPrefLocalizedString;
   // Copy the logic from nsSearchService
   let pref = kDefaultenginenamePref;
   if (isUS === undefined)
-    isUS = Services.locale.getRequestedLocale() == "en-US" && isUSTimezone();
+    isUS = Services.prefs.getCharPref(kLocalePref) == "en-US" && isUSTimezone();
   if (isUS) {
     pref += ".US";
   }
@@ -509,7 +509,7 @@ function asyncReInit() {
   let promise = waitForSearchNotification("reinit-complete");
 
   Services.search.QueryInterface(Ci.nsIObserver)
-          .observe(null, REQ_LOCALES_CHANGED_TOPIC, null);
+          .observe(null, "nsPref:changed", kLocalePref);
 
   return promise;
 }
