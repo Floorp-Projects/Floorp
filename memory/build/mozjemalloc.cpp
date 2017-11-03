@@ -404,12 +404,12 @@ static const size_t kMaxQuantumClass = 512;
 static_assert(kMaxQuantumClass % kQuantum == 0,
               "kMaxQuantumClass is not a multiple of kQuantum");
 
-// Number of (2^n)-spaced tiny bins.
-static const unsigned ntbins =
-  unsigned(LOG2(kMinQuantumClass) - LOG2(kMinTinyClass));
+// Number of (2^n)-spaced tiny classes.
+static const size_t kNumTinyClasses =
+  LOG2(kMinQuantumClass) - LOG2(kMinTinyClass);
 
-// Number of quantum-spaced bins.
-static const unsigned nqbins = unsigned(kMaxQuantumClass / kQuantum);
+// Number of quantum-spaced classes.
+static const size_t kNumQuantumClasses = kMaxQuantumClass / kQuantum;
 
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
@@ -457,7 +457,7 @@ static size_t gPageSize;
 #endif
 
 DECLARE_GLOBAL(size_t, gMaxSubPageClass)
-DECLARE_GLOBAL(uint8_t, nsbins)
+DECLARE_GLOBAL(uint8_t, gNumSubPageClasses)
 DECLARE_GLOBAL(uint8_t, gPageSize2Pow)
 DECLARE_GLOBAL(size_t, gPageSizeMask)
 DECLARE_GLOBAL(size_t, gChunkNumPages)
@@ -473,7 +473,7 @@ DEFINE_GLOBAL(size_t) gMaxSubPageClass = gPageSize / 2;
 
 // Number of (2^n)-spaced sub-page bins.
 DEFINE_GLOBAL(uint8_t)
-nsbins = GLOBAL_LOG2(gMaxSubPageClass) - LOG2(kMaxQuantumClass);
+gNumSubPageClasses = GLOBAL_LOG2(gMaxSubPageClass) - LOG2(kMaxQuantumClass);
 
 DEFINE_GLOBAL(uint8_t) gPageSize2Pow = GLOBAL_LOG2(gPageSize);
 DEFINE_GLOBAL(size_t) gPageSizeMask = gPageSize - 1;
@@ -1054,8 +1054,9 @@ public:
   {
     MOZ_ASSERT(aCount == sizeof(arena_t));
     // Allocate enough space for trailing bins.
-    return base_alloc(aCount +
-                      (sizeof(arena_bin_t) * (ntbins + nqbins + nsbins - 1)));
+    return base_alloc(
+      aCount + (sizeof(arena_bin_t) * (kNumTinyClasses + kNumQuantumClasses +
+                                       gNumSubPageClasses - 1)));
   }
 
   void operator delete(void*) = delete;
@@ -2343,7 +2344,8 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
   unsigned diff, regind, elm, bit;
 
   MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
-  static_assert(((sizeof(size_invs)) / sizeof(unsigned)) + 3 >= nqbins,
+  static_assert(((sizeof(size_invs)) / sizeof(unsigned)) + 3 >=
+                  kNumQuantumClasses,
                 "size_invs doesn't have enough values");
 
   // Avoid doing division with a variable divisor if possible.  Using
@@ -3040,11 +3042,11 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
       bin = &mBins[FloorLog2(aSize / kMinTinyClass)];
       break;
     case SizeClass::Quantum:
-      bin = &mBins[ntbins + (aSize / kQuantum) - 1];
+      bin = &mBins[kNumTinyClasses + (aSize / kQuantum) - 1];
       break;
     case SizeClass::SubPage:
-      bin =
-        &mBins[ntbins + nqbins + (FloorLog2(aSize / kMaxQuantumClass) - 1)];
+      bin = &mBins[kNumTinyClasses + kNumQuantumClasses +
+                   (FloorLog2(aSize / kMaxQuantumClass) - 1)];
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
@@ -3833,7 +3835,8 @@ arena_t::arena_t()
     }
     sizeClass = sizeClass.Next();
   }
-  MOZ_ASSERT(i == ntbins + nqbins + nsbins - 1);
+  MOZ_ASSERT(i ==
+             kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses - 1);
 
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   mMagic = ARENA_MAGIC;
@@ -4567,7 +4570,8 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
 
       arena_dirty = arena->mNumDirty << gPageSize2Pow;
 
-      for (j = 0; j < ntbins + nqbins + nsbins; j++) {
+      for (j = 0; j < kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses;
+           j++) {
         arena_bin_t* bin = &arena->mBins[j];
         size_t bin_unused = 0;
 
