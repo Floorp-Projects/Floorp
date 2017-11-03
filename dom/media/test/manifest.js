@@ -1630,8 +1630,6 @@ function MediaTestManager() {
   // Instead MediaTestManager will manage timeout of each test.
   SimpleTest.requestLongerTimeout(1000);
 
-  this.hasTimeout = false;
-
   // Return how many seconds elapsed since |begin|.
   function elapsedTime(begin) {
     var end = new Date();
@@ -1683,10 +1681,10 @@ function MediaTestManager() {
     this.numTestsRunning++;
     this.handlers[token] = handler;
 
-    var onTimeout = () => {
-      this.hasTimeout = true;
+    var onTimeout = async () => {
       ok(false, "Test timed out!");
       info(`${token} timed out!`);
+      await dumpDebugInfoForToken(token);
       this.finished(token);
     };
     // Default timeout to 180s for each test.
@@ -1752,9 +1750,6 @@ function MediaTestManager() {
       if (this.onFinished) {
         this.onFinished();
       }
-      if (this.hasTimeout) {
-        dumpDebugInfo();
-      }
       var onCleanup = () => {
         var end = new Date();
         SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
@@ -1787,6 +1782,20 @@ function mediaTestCleanup(callback) {
 // B2G emulator and Android 2.3 are condidered slow platforms
 function isSlowPlatform() {
   return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
+}
+
+async function dumpDebugInfoForToken(token) {
+  for (let v of document.getElementsByTagName("video")) {
+    if (token === v.token) {
+      return v.mozDumpDebugInfo();
+    }
+  }
+  for (let a of document.getElementsByTagName("audio")) {
+    if (token === a.token) {
+      return a.mozDumpDebugInfo();
+    }
+  }
+  return Promise.resolve();
 }
 
 function dumpDebugInfo() {
