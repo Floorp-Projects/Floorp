@@ -371,10 +371,6 @@ struct arena_chunk_t
 // ***************************************************************************
 // Constants defining allocator size classes and behavior.
 
-// Size and alignment of memory chunks that are allocated by the OS's virtual
-// memory system.
-#define CHUNK_2POW_DEFAULT 20
-
 // Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
 // so over-estimates are okay (up to a point), but under-estimates will
 // negatively affect performance.
@@ -415,9 +411,10 @@ static const unsigned ntbins =
 // Number of quantum-spaced bins.
 static const unsigned nqbins = unsigned(kMaxQuantumClass / kQuantum);
 
-#define CHUNKSIZE_DEFAULT ((size_t)1 << CHUNK_2POW_DEFAULT)
-static const size_t chunksize = CHUNKSIZE_DEFAULT;
-static const size_t chunksize_mask = CHUNKSIZE_DEFAULT - 1;
+// Size and alignment of memory chunks that are allocated by the OS's virtual
+// memory system.
+static const size_t kChunkSize = 1_MiB;
+static const size_t kChunkSizeMask = kChunkSize - 1;
 
 #ifdef MALLOC_STATIC_PAGESIZE
 // VM page size. It must divide the runtime CPU page size or the code
@@ -482,7 +479,7 @@ DEFINE_GLOBAL(uint8_t) pagesize_2pow = GLOBAL_LOG2(pagesize);
 DEFINE_GLOBAL(size_t) pagesize_mask = pagesize - 1;
 
 // Number of pages in a chunk.
-DEFINE_GLOBAL(size_t) chunk_npages = chunksize >> pagesize_2pow;
+DEFINE_GLOBAL(size_t) chunk_npages = kChunkSize >> pagesize_2pow;
 
 // Number of pages necessary for a chunk header.
 DEFINE_GLOBAL(size_t)
@@ -494,22 +491,20 @@ arena_chunk_header_npages =
 
 // Max size class for arenas.
 DEFINE_GLOBAL(size_t)
-gMaxLargeClass = chunksize - (arena_chunk_header_npages << pagesize_2pow);
+gMaxLargeClass = kChunkSize - (arena_chunk_header_npages << pagesize_2pow);
 
 // Various sanity checks that regard configuration.
 GLOBAL_ASSERT(1ULL << pagesize_2pow == pagesize,
               "Page size is not a power of two");
 GLOBAL_ASSERT(kQuantum >= sizeof(void*));
 GLOBAL_ASSERT(kQuantum <= pagesize);
-GLOBAL_ASSERT(chunksize >= pagesize);
-GLOBAL_ASSERT(kQuantum * 4 <= chunksize);
+GLOBAL_ASSERT(kChunkSize >= pagesize);
+GLOBAL_ASSERT(kQuantum * 4 <= kChunkSize);
 END_GLOBALS
 
-// Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
+// Recycle at most 128 MiB of chunks. This means we retain at most
 // 6.25% of the process address space on a 32-bit OS for later use.
-#define CHUNK_RECYCLE_LIMIT 128
-
-static const size_t gRecycleLimit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
+static const size_t gRecycleLimit = 128_MiB;
 
 // The current amount of recycled bytes, updated atomically.
 static Atomic<size_t, ReleaseAcquire> gRecycledSize;
@@ -539,7 +534,7 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 #define RUN_MAX_OVRHD_RELAX 0x00001800U
 
 // Return the smallest chunk multiple that is >= s.
-#define CHUNK_CEILING(s) (((s) + chunksize_mask) & ~chunksize_mask)
+#define CHUNK_CEILING(s) (((s) + kChunkSizeMask) & ~kChunkSizeMask)
 
 // Return the smallest cacheline multiple that is >= s.
 #define CACHELINE_CEILING(s)                                                   \
@@ -1164,7 +1159,7 @@ static ArenaCollection gArenas;
 
 // ******
 // Chunks.
-static AddressRadixTree<(sizeof(void*) << 3) - CHUNK_2POW_DEFAULT> gChunkRTree;
+static AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)> gChunkRTree;
 
 // Protects chunk-related data structures.
 static Mutex chunks_mtx;
@@ -1386,14 +1381,14 @@ Mutex::Unlock()
 static inline arena_chunk_t*
 GetChunkForPtr(const void* aPtr)
 {
-  return (arena_chunk_t*)(uintptr_t(aPtr) & ~chunksize_mask);
+  return (arena_chunk_t*)(uintptr_t(aPtr) & ~kChunkSizeMask);
 }
 
 // Return the chunk offset of address a.
 static inline size_t
 GetChunkOffsetForPtr(const void* aPtr)
 {
-  return (size_t)(uintptr_t(aPtr) & chunksize_mask);
+  return (size_t)(uintptr_t(aPtr) & kChunkSizeMask);
 }
 
 static inline const char*
@@ -1413,14 +1408,14 @@ pages_decommit(void* aAddr, size_t aSize)
   // to VirtualAlloc and recycled, so decommitting the entire region in one
   // go may not be valid. However, since we allocate at least a chunk at a
   // time, we may touch any region in chunksized increments.
-  size_t pages_size = std::min(aSize, chunksize - GetChunkOffsetForPtr(aAddr));
+  size_t pages_size = std::min(aSize, kChunkSize - GetChunkOffsetForPtr(aAddr));
   while (aSize > 0) {
     if (!VirtualFree(aAddr, pages_size, MEM_DECOMMIT)) {
       MOZ_CRASH();
     }
     aAddr = (void*)((uintptr_t)aAddr + pages_size);
     aSize -= pages_size;
-    pages_size = std::min(aSize, chunksize);
+    pages_size = std::min(aSize, kChunkSize);
   }
 #else
   if (mmap(
@@ -1441,14 +1436,14 @@ pages_commit(void* aAddr, size_t aSize)
   // to VirtualAlloc and recycled, so committing the entire region in one
   // go may not be valid. However, since we allocate at least a chunk at a
   // time, we may touch any region in chunksized increments.
-  size_t pages_size = std::min(aSize, chunksize - GetChunkOffsetForPtr(aAddr));
+  size_t pages_size = std::min(aSize, kChunkSize - GetChunkOffsetForPtr(aAddr));
   while (aSize > 0) {
     if (!VirtualAlloc(aAddr, pages_size, MEM_COMMIT, PAGE_READWRITE)) {
       return false;
     }
     aAddr = (void*)((uintptr_t)aAddr + pages_size);
     aSize -= pages_size;
-    pages_size = std::min(aSize, chunksize);
+    pages_size = std::min(aSize, kChunkSize);
   }
 #else
   if (mmap(aAddr,
@@ -1472,7 +1467,7 @@ base_pages_alloc(size_t minsize)
 
   MOZ_ASSERT(minsize != 0);
   csize = CHUNK_CEILING(minsize);
-  base_pages = chunk_alloc(csize, chunksize, true);
+  base_pages = chunk_alloc(csize, kChunkSize, true);
   if (!base_pages) {
     return true;
   }
@@ -1642,7 +1637,7 @@ pages_map(void* aAddr, size_t aSize)
   uintptr_t hint;
   void* region = MAP_FAILED;
   for (hint = start; region == MAP_FAILED && hint + aSize <= end;
-       hint += chunksize) {
+       hint += kChunkSize) {
     region = mmap((void*)hint,
                   aSize,
                   PROT_READ | PROT_WRITE,
@@ -1930,12 +1925,12 @@ pages_purge(void* addr, size_t length, bool force_zero)
   // to VirtualAlloc and recycled, so resetting the entire region in one
   // go may not be valid. However, since we allocate at least a chunk at a
   // time, we may touch any region in chunksized increments.
-  size_t pages_size = std::min(length, chunksize - GetChunkOffsetForPtr(addr));
+  size_t pages_size = std::min(length, kChunkSize - GetChunkOffsetForPtr(addr));
   while (length > 0) {
     VirtualAlloc(addr, pages_size, MEM_RESET, PAGE_READWRITE);
     addr = (void*)((uintptr_t)addr + pages_size);
     length -= pages_size;
-    pages_size = std::min(length, chunksize);
+    pages_size = std::min(length, kChunkSize);
   }
   return force_zero;
 #else
@@ -1959,7 +1954,7 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
 {
   extent_node_t key;
 
-  size_t alloc_size = aSize + aAlignment - chunksize;
+  size_t alloc_size = aSize + aAlignment - kChunkSize;
   // Beware size_t wrap-around.
   if (alloc_size < aSize) {
     return nullptr;
@@ -2039,7 +2034,7 @@ chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed)
 // awkward to recycle allocations of varying sizes. Therefore we only allow
 // recycling when the size equals the chunksize, unless deallocation is entirely
 // disabled.
-#define CAN_RECYCLE(size) (size == chunksize)
+#define CAN_RECYCLE(size) (size == kChunkSize)
 #else
 #define CAN_RECYCLE(size) true
 #endif
@@ -2056,9 +2051,9 @@ chunk_alloc(size_t aSize, size_t aAlignment, bool aBase, bool* aZeroed)
   void* ret = nullptr;
 
   MOZ_ASSERT(aSize != 0);
-  MOZ_ASSERT((aSize & chunksize_mask) == 0);
+  MOZ_ASSERT((aSize & kChunkSizeMask) == 0);
   MOZ_ASSERT(aAlignment != 0);
-  MOZ_ASSERT((aAlignment & chunksize_mask) == 0);
+  MOZ_ASSERT((aAlignment & kChunkSizeMask) == 0);
 
   // Base allocations can't be fulfilled by recycling because of
   // possible deadlock or infinite recursion.
@@ -2182,7 +2177,7 @@ chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType)
   MOZ_ASSERT(aChunk);
   MOZ_ASSERT(GetChunkOffsetForPtr(aChunk) == 0);
   MOZ_ASSERT(aSize != 0);
-  MOZ_ASSERT((aSize & chunksize_mask) == 0);
+  MOZ_ASSERT((aSize & kChunkSizeMask) == 0);
 
   gChunkRTree.Unset(aChunk);
 
@@ -2531,7 +2526,7 @@ arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed)
   size_t flags =
     aZeroed ? CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED : CHUNK_MAP_MADVISED;
 
-  mStats.mapped += chunksize;
+  mStats.mapped += kChunkSize;
 
   aChunk->arena = this;
 
@@ -2585,8 +2580,8 @@ arena_t::DeallocChunk(arena_chunk_t* aChunk)
     }
 #endif
 
-    chunk_dealloc((void*)mSpare, chunksize, ARENA_CHUNK);
-    mStats.mapped -= chunksize;
+    chunk_dealloc((void*)mSpare, kChunkSize, ARENA_CHUNK);
+    mStats.mapped -= kChunkSize;
     mStats.committed -= arena_chunk_header_npages;
   }
 
@@ -2630,7 +2625,7 @@ arena_t::AllocRun(arena_bin_t* aBin, size_t aSize, bool aLarge, bool aZero)
     // the run.
     bool zeroed;
     arena_chunk_t* chunk =
-      (arena_chunk_t*)chunk_alloc(chunksize, chunksize, false, &zeroed);
+      (arena_chunk_t*)chunk_alloc(kChunkSize, kChunkSize, false, &zeroed);
     if (!chunk) {
       return nullptr;
     }
@@ -3266,7 +3261,7 @@ ipalloc(size_t aAlignment, size_t aSize, arena_t* aArena)
     if (run_size <= gMaxLargeClass) {
       aArena = aArena ? aArena : choose_arena(aSize);
       ret = aArena->Palloc(aAlignment, ceil_size, run_size);
-    } else if (aAlignment <= chunksize) {
+    } else if (aAlignment <= kChunkSize) {
       ret = huge_malloc(ceil_size, false);
     } else {
       ret = huge_palloc(ceil_size, aAlignment, false);
@@ -3878,7 +3873,7 @@ ArenaCollection::CreateArena(bool aIsPrivate)
 static void*
 huge_malloc(size_t size, bool zero)
 {
-  return huge_palloc(size, chunksize, zero);
+  return huge_palloc(size, kChunkSize, zero);
 }
 
 static void*
@@ -4519,7 +4514,7 @@ MozJemalloc::jemalloc_stats(jemalloc_stats_t* aStats)
   aStats->quantum = kQuantum;
   aStats->small_max = kMaxQuantumClass;
   aStats->large_max = gMaxLargeClass;
-  aStats->chunksize = chunksize;
+  aStats->chunksize = kChunkSize;
   aStats->page_size = pagesize;
   aStats->dirty_max = opt_dirty_max;
 
