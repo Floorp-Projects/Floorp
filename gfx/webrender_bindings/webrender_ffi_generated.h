@@ -818,15 +818,37 @@ struct WrImageDescriptor {
 
 typedef ExternalImageType WrExternalImageBufferType;
 
+// Represents RGBA screen colors with one byte per channel.
+//
+// If the alpha value `a` is 255 the color is opaque.
+struct ColorU {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t a;
+
+  bool operator==(const ColorU& aOther) const {
+    return r == aOther.r &&
+           g == aOther.g &&
+           b == aOther.b &&
+           a == aOther.a;
+  }
+};
+
 struct FontInstanceOptions {
   FontRenderMode render_mode;
   SubpixelDirection subpx_dir;
   bool synthetic_italics;
+  // When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
+  // the text will be rendered with bg_color.r/g/b as an opaque estimated
+  // background color.
+  ColorU bg_color;
 
   bool operator==(const FontInstanceOptions& aOther) const {
     return render_mode == aOther.render_mode &&
            subpx_dir == aOther.subpx_dir &&
-           synthetic_italics == aOther.synthetic_italics;
+           synthetic_italics == aOther.synthetic_italics &&
+           bg_color == aOther.bg_color;
   }
 };
 
