@@ -89,7 +89,7 @@ nsresult
 MediaEngineTabVideoSource::InitRunnable::Run()
 {
   if (mVideoSource->mWindowId != -1) {
-    nsGlobalWindow* globalWindow =
+    nsGlobalWindowOuter* globalWindow =
       nsGlobalWindow::GetOuterWindowWithId(mVideoSource->mWindowId);
     if (!globalWindow) {
       // We can't access the window, just send a blacked out screen.

@@ -154,13 +154,13 @@ class IDBFactory;
 } // namespace mozilla
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
+NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindowInner *aWindow,
                           mozilla::dom::Function& aFunction,
                           const mozilla::dom::Sequence<JS::Value>& aArguments,
                           mozilla::ErrorResult& aError);
 
 extern already_AddRefed<nsIScriptTimeoutHandler>
-NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
+NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindowInner *aWindow,
                           const nsAString& aExpression,
                           mozilla::ErrorResult& aError);
 
@@ -307,6 +307,9 @@ public:
   static nsGlobalWindow* Cast(mozIDOMWindowProxy* aWin) {
     return Cast(nsPIDOMWindowOuter::From(aWin));
   }
+
+  nsGlobalWindowInner* AssertInner();
+  nsGlobalWindowOuter* AssertOuter();
 
   // public methods
   nsPIDOMWindowOuter* GetPrivateParent();
@@ -2188,6 +2191,20 @@ inline bool
 nsGlobalWindow::IsFrame()
 {
   return GetParentInternal() != nullptr;
+}
+
+inline nsGlobalWindowInner*
+nsGlobalWindow::AssertInner()
+{
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+  return static_cast<nsGlobalWindowInner*>(this);
+}
+
+inline nsGlobalWindowOuter*
+nsGlobalWindow::AssertOuter()
+{
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+  return static_cast<nsGlobalWindowOuter*>(this);
 }
 
 /* factory function */

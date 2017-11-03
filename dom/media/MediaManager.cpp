@@ -1041,7 +1041,7 @@ public:
   Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    nsGlobalWindow* globalWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+    nsGlobalWindowInner* globalWindow = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
     nsPIDOMWindowInner* window = globalWindow ? globalWindow->AsInner() : nullptr;
 
     // We're on main-thread, and the windowlist can only
@@ -2152,7 +2152,7 @@ static bool IsFullyActive(nsPIDOMWindowInner* aWindow)
       return true;
     }
     nsCOMPtr<Element> frameElement =
-      nsGlobalWindow::Cast(context)->GetRealFrameElementOuter();
+      nsGlobalWindowOuter::Cast(context)->GetRealFrameElementOuter();
     if (!frameElement) {
       return false;
     }
@@ -2268,7 +2268,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   }
 
   nsCOMPtr<nsIPrincipal> principal =
-    nsGlobalWindow::Cast(aWindow)->GetPrincipal();
+    nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
     return NS_ERROR_FAILURE;
   }
@@ -2718,7 +2718,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
   // 3. Anonymize the raw list with the origin-key.
 
   nsCOMPtr<nsIPrincipal> principal =
-    nsGlobalWindow::Cast(window)->GetPrincipal();
+    nsGlobalWindowInner::Cast(window)->GetPrincipal();
   MOZ_ASSERT(principal);
 
   ipc::PrincipalInfo principalInfo;
@@ -4194,7 +4194,7 @@ GetUserMediaNotificationEvent::Run()
     break;
   }
 
-  RefPtr<nsGlobalWindow> window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
+  RefPtr<nsGlobalWindowInner> window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   return MediaManager::NotifyRecordingStatusChange(window->AsInner(), msg);

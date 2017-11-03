@@ -395,7 +395,7 @@ int32_t gDisableOpenClickDelay;
 
 } // anonymous namespace
 
-TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
+TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow)
   : mWindow(aWindow),
     mExecutor(new TimeoutExecutor(this)),
     mNormalTimeouts(*this),
@@ -1194,7 +1194,7 @@ class ThrottleTimeoutsCallback final : public nsITimerCallback
                                      , public nsINamed
 {
 public:
-  explicit ThrottleTimeoutsCallback(nsGlobalWindow* aWindow)
+  explicit ThrottleTimeoutsCallback(nsGlobalWindowInner* aWindow)
     : mWindow(aWindow)
   {
     MOZ_DIAGNOSTIC_ASSERT(aWindow->IsInnerWindow());
@@ -1215,7 +1215,7 @@ private:
 private:
   // The strong reference here keeps the Window and hence the TimeoutManager
   // object itself alive.
-  RefPtr<nsGlobalWindow> mWindow;
+  RefPtr<nsGlobalWindowInner> mWindow;
 };
 
 NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback, nsINamed)

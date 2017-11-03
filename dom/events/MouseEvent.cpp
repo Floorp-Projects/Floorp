@@ -116,7 +116,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
                            nsIDOMEventTarget* aRelatedTarget)
 {
   MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
-                             nsGlobalWindow::Cast(aView), aDetail,
+                             nsGlobalWindowInner::Cast(aView), aDetail,
                              aScreenX, aScreenY,
                              aClientX, aClientY,
                              aCtrlKey, aAltKey, aShiftKey,

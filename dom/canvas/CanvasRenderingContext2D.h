@@ -31,7 +31,7 @@
 #include "Layers.h"
 #include "nsBidi.h"
 
-class nsGlobalWindow;
+class nsGlobalWindowInner;
 class nsXULElement;
 
 namespace mozilla {
