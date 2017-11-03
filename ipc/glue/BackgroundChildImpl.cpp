@@ -662,8 +662,8 @@ BackgroundChildImpl::GetMessageSchedulerGroups(const Message& aMsg, SchedulerGro
   if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
     MOZ_ASSERT(NS_IsMainThread());
     aGroups.Clear();
-    if (dom::TabChild::HasActiveTabs()) {
-      for (auto iter = dom::TabChild::GetActiveTabs().ConstIter();
+    if (dom::TabChild::HasVisibleTabs()) {
+      for (auto iter = dom::TabChild::GetVisibleTabs().ConstIter();
            !iter.Done(); iter.Next()) {
         aGroups.Put(iter.Get()->GetKey()->TabGroup());
       }
