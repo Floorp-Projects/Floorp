@@ -171,21 +171,21 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
     return nullptr;
   }
 
-  // Move active tabs to the front of the queue. The mAvoidActiveTabCount field
-  // prevents us from preferentially processing events from active tabs twice in
+  // Move visible tabs to the front of the queue. The mAvoidVisibleTabCount field
+  // prevents us from preferentially processing events from visible tabs twice in
   // a row. This scheme is designed to prevent starvation.
-  if (TabChild::HasActiveTabs() && mAvoidActiveTabCount <= 0) {
-    for (auto iter = TabChild::GetActiveTabs().ConstIter();
+  if (TabChild::HasVisibleTabs() && mAvoidVisibleTabCount <= 0) {
+    for (auto iter = TabChild::GetVisibleTabs().ConstIter();
          !iter.Done(); iter.Next()) {
       SchedulerGroup* group = iter.Get()->GetKey()->TabGroup();
       if (!group->isInList() || group == sCurrentSchedulerGroup) {
         continue;
       }
 
-      // For each active tab we move to the front of the queue, we have to
-      // process two SchedulerGroups (the active tab and another one, presumably
-      // a background group) before we prioritize active tabs again.
-      mAvoidActiveTabCount += 2;
+      // For each visible tab we move to the front of the queue, we have to
+      // process two SchedulerGroups (the visible tab and another one, presumably
+      // a background group) before we prioritize visible tabs again.
+      mAvoidVisibleTabCount += 2;
 
       // We move |group| right before sCurrentSchedulerGroup and then set
       // sCurrentSchedulerGroup to group.
@@ -200,7 +200,7 @@ LabeledEventQueue::GetEvent(EventPriority* aPriority,
   SchedulerGroup* firstGroup = sCurrentSchedulerGroup;
   SchedulerGroup* group = firstGroup;
   do {
-    mAvoidActiveTabCount--;
+    mAvoidVisibleTabCount--;
 
     RunnableEpochQueue& queue = group->GetQueue(mPriority);
 
