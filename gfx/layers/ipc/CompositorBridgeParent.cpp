@@ -1477,6 +1477,7 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
 #endif
     }
     nsCString failureReason;
+    MOZ_ASSERT(!gfxVars::UseWebRender() || aBackendHints[i] == LayersBackend::LAYERS_BASIC);
     if (compositor && compositor->Initialize(&failureReason)) {
       if (failureReason.IsEmpty()){
         failureReason = "SUCCESS";
