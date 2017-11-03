@@ -47,10 +47,9 @@ pub struct ClipScrollTree {
     /// this ID is not valid, which is indicated by ```node``` being empty.
     pub root_reference_frame_id: ClipId,
 
-    /// The topmost scrolling node that we have, which is decided by the first scrolling node
-    /// to be added to the tree. This is really only useful for Servo, so we should figure out
-    /// a good way to remove it in the future.
-    pub topmost_scrolling_node_id: Option<ClipId>,
+    /// The root scroll node which is the first child of the root reference frame.
+    /// Initially this ID is not valid, which is indicated by ```nodes``` being empty.
+    pub topmost_scrolling_node_id: ClipId,
 
     /// A set of pipelines which should be discarded the next time this
     /// tree is drained.
@@ -83,7 +82,7 @@ impl ClipScrollTree {
             pending_scroll_offsets: FastHashMap::default(),
             currently_scrolling_node_id: None,
             root_reference_frame_id: ClipId::root_reference_frame(dummy_pipeline),
-            topmost_scrolling_node_id: None,
+            topmost_scrolling_node_id: ClipId::root_scroll_node(dummy_pipeline),
             current_new_node_item: 1,
             pipelines_to_discard: FastHashSet::default(),
         }
@@ -94,6 +93,13 @@ impl ClipScrollTree {
         debug_assert!(!self.nodes.is_empty());
         debug_assert!(self.nodes.contains_key(&self.root_reference_frame_id));
         self.root_reference_frame_id
+    }
+
+    pub fn topmost_scrolling_node_id(&self) -> ClipId {
+        // TODO(mrobinson): We should eventually make this impossible to misuse.
+        debug_assert!(!self.nodes.is_empty());
+        debug_assert!(self.nodes.contains_key(&self.topmost_scrolling_node_id));
+        self.topmost_scrolling_node_id
     }
 
     pub fn collect_nodes_bouncing_back(&self) -> FastHashSet<ClipId> {
@@ -133,6 +139,11 @@ impl ClipScrollTree {
                 None
             }
         })
+    }
+
+    pub fn find_scrolling_node_at_point(&self, cursor: &WorldPoint) -> ClipId {
+        self.find_scrolling_node_at_point_in_node(cursor, self.root_reference_frame_id())
+            .unwrap_or(self.topmost_scrolling_node_id())
     }
 
     pub fn is_point_clipped_in_for_node(
@@ -250,17 +261,11 @@ impl ClipScrollTree {
             return false;
         }
 
-        let topmost_scrolling_node_id = match self.topmost_scrolling_node_id {
-            Some(id) => id,
-            None => return false,
-        };
-
-        let scrolling_node = self.find_scrolling_node_at_point_in_node(
-            &cursor,
-            self.root_reference_frame_id()
-        ).unwrap_or(topmost_scrolling_node_id);;
-
-        let clip_id = match (phase, scrolling_node, self.currently_scrolling_node_id) {
+        let clip_id = match (
+            phase,
+            self.find_scrolling_node_at_point(&cursor),
+            self.currently_scrolling_node_id,
+        ) {
             (ScrollEventPhase::Start, scroll_node_at_point_id, _) => {
                 self.currently_scrolling_node_id = Some(scroll_node_at_point_id);
                 scroll_node_at_point_id
@@ -278,6 +283,7 @@ impl ClipScrollTree {
             (_, _, None) => return false,
         };
 
+        let topmost_scrolling_node_id = self.topmost_scrolling_node_id();
         let non_root_overscroll = if clip_id != topmost_scrolling_node_id {
             self.nodes.get(&clip_id).unwrap().is_overscrolling()
         } else {
@@ -480,10 +486,6 @@ impl ClipScrollTree {
     }
 
     pub fn add_node(&mut self, node: ClipScrollNode, id: ClipId) {
-        if let NodeType::ScrollFrame(..) = node.node_type {
-            self.topmost_scrolling_node_id.get_or_insert(id);
-        }
-
         // When the parent node is None this means we are adding the root.
         match node.parent {
             Some(parent_id) => self.nodes.get_mut(&parent_id).unwrap().add_child(id),

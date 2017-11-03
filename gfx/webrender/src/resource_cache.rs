@@ -351,6 +351,7 @@ impl ResourceCache {
             render_mode,
             subpx_dir,
             synthetic_italics,
+            bg_color,
             ..
         } = options.unwrap_or_default();
         assert!(render_mode != FontRenderMode::Bitmap);
@@ -358,6 +359,7 @@ impl ResourceCache {
             font_key,
             glyph_size,
             ColorF::new(0.0, 0.0, 0.0, 1.0),
+            bg_color,
             render_mode,
             subpx_dir,
             platform_options,
