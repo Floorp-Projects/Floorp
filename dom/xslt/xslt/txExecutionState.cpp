@@ -17,9 +17,9 @@
 const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult
-txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
+txLoadedDocumentsHash::init(const txXPathNode& aSource)
 {
-    mSourceDocument = aSourceDocument;
+    mSourceDocument = txXPathNodeUtils::getOwnerDocument(aSource);
 
     nsAutoString baseURI;
     nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
@@ -27,7 +27,14 @@ txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
         return rv;
     }
 
-    PutEntry(baseURI)->mDocument = mSourceDocument;
+    // Technically the hash holds documents, but we allow any node that we're transforming
+    // from. In particular, the document() function uses this hash and it can return the
+    // source document, but if we're transforming from a document fragment (through
+    // txMozillaXSLTProcessor::SetSourceContentModel/txMozillaXSLTProcessor::DoTransform)
+    // or from another type of node (through txMozillaXSLTProcessor::TransformToDocument
+    // or txMozillaXSLTProcessor::TransformToFragment) it makes more sense to return the
+    // real root of the source tree, which is the node where the transform started.
+    PutEntry(baseURI)->mDocument = txXPathNativeNode::createXPathNode(txXPathNativeNode::getNode(aSource));
     return NS_OK;
 }
 
@@ -116,7 +123,7 @@ txExecutionState::init(const txXPathNode& aNode,
     mOutputHandler->startDocument();
 
     // Set up loaded-documents-hash
-    rv = mLoadedDocuments.init(txXPathNodeUtils::getOwnerDocument(aNode));
+    rv = mLoadedDocuments.init(aNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Init members
