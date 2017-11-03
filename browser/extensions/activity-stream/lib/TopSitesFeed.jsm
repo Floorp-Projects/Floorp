@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+  "resource://gre/modules/PageThumbs.jsm");
 
 const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
@@ -36,7 +38,13 @@ this.TopSitesFeed = class TopSitesFeed {
         !(oldOptions.numItems >= newOptions.numItems));
     this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links",
       ["favicon", "faviconSize", "screenshot"]);
+    PageThumbs.addExpirationFilter(this);
   }
+
+  uninit() {
+    PageThumbs.removeExpirationFilter(this);
+  }
+
   _dedupeKey(site) {
     return site && site.hostname;
   }
@@ -55,6 +63,11 @@ this.TopSitesFeed = class TopSitesFeed {
         DEFAULT_TOP_SITES.push(site);
       }
     }
+  }
+
+  filterForThumbnailExpiration(callback) {
+    const {rows} = this.store.getState().TopSites;
+    callback(rows.map(site => site.url));
   }
 
   async getLinksWithDefaults(action) {
@@ -260,6 +273,9 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.TOP_SITES_ADD:
         this.add(action);
+        break;
+      case at.UNINIT:
+        this.uninit();
         break;
     }
   }

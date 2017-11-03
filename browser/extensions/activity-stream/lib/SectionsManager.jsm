@@ -32,6 +32,11 @@ const BUILT_IN_SECTIONS = {
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
     title: {id: "header_recommended_by", values: {provider: options.provider_name}},
+    disclaimer: {
+      text: {id: options.disclaimer_text || "section_disclaimer_topstories"},
+      link: {href: options.disclaimer_link, id: options.disclaimer_linktext || "section_disclaimer_topstories_linktext"},
+      button: {id: options.disclaimer_buttontext || "section_disclaimer_topstories_buttontext"}
+    },
     maxRows: 1,
     availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     infoOption: {
@@ -151,8 +156,15 @@ const SectionsManager = {
     }
   },
 
+  /**
+   * Save metadata to places db and add a visit for that URL.
+   */
   updateBookmarkMetadata({url}) {
-    this.sections.forEach(section => {
+    this.sections.forEach((section, id) => {
+      if (id === "highlights") {
+        // Skip Highlights cards, we already have that metadata.
+        return;
+      }
       if (section.rows) {
         section.rows.forEach(card => {
           if (card.url === url && card.description && card.title && card.image) {
@@ -161,6 +173,12 @@ const SectionsManager = {
               title: card.title,
               description: card.description,
               previewImageURL: card.image
+            });
+            // Highlights query skips bookmarks with no visits.
+            PlacesUtils.history.insert({
+              url,
+              title: card.title,
+              visits: [{}]
             });
           }
         });
