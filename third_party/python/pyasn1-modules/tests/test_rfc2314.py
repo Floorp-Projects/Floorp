@@ -1,7 +1,23 @@
-#!/bin/sh
+#
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
+import sys
+from pyasn1.codec.der import decoder as der_decoder
+from pyasn1.codec.der import encoder as der_encoder
 
-pkcs10dump.py <<EOT
------BEGIN CERTIFICATE REQUEST-----
+from pyasn1_modules import rfc2314, pem
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
+
+class CertificationRequestTestCase(unittest.TestCase):
+    pem_text = """\
 MIIDATCCAekCAQAwgZkxCzAJBgNVBAYTAlJVMRYwFAYDVQQIEw1Nb3Njb3cgUmVn
 aW9uMQ8wDQYDVQQHEwZNb3Njb3cxGjAYBgNVBAoTEVNOTVAgTGFib3JhdG9yaWVz
 MQwwCgYDVQQLFANSJkQxFTATBgNVBAMTDHNubXBsYWJzLmNvbTEgMB4GCSqGSIb3
@@ -19,6 +35,23 @@ Nv8sBmp9I1GdhGg52DIaWwL4t9O5WUHgfHSJpPxZ/zMP2qIsdPJ+8o19BbXRlufc
 WdApGGm0BePdLqboW1Yv70WRRFFD8sxeT7Yw4qrJojdnq0xMHPGfKpf6dJsqWkHk
 b5DRbjil1Zt9pJuF680S9wtBzSi0hsMHXR9TzS7HpMjykL2nmCVY6A78MZapsCzn
 GGbx7DI=
------END CERTIFICATE REQUEST-----
-EOT
+"""
 
+    def setUp(self):
+        self.asn1Spec = rfc2314.CertificationRequest()
+
+    def testDerCodec(self):
+
+        substrate = pem.readBase64fromText(self.pem_text)
+
+        asn1Object, rest = der_decoder.decode(substrate, asn1Spec=self.asn1Spec)
+
+        assert not rest
+        assert asn1Object.prettyPrint()
+        assert der_encoder.encode(asn1Object) == substrate
+
+
+suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite)
