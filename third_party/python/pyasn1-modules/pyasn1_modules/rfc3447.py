@@ -1,4 +1,9 @@
 #
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
 # PKCS#1 syntax
 #
 # ASN.1 source from:
@@ -6,19 +11,22 @@
 #
 # Sample captures could be obtained with "openssl genrsa" command
 #
+from pyasn1.type import constraint, namedval
 from pyasn1_modules.rfc2437 import *
+
 
 class OtherPrimeInfo(univ.Sequence):
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('prime', univ.Integer()),
         namedtype.NamedType('exponent', univ.Integer()),
         namedtype.NamedType('coefficient', univ.Integer())
-        )
+    )
+
 
 class OtherPrimeInfos(univ.SequenceOf):
     componentType = OtherPrimeInfo()
-    subtypeSpec = univ.SequenceOf.subtypeSpec + \
-                  constraint.ValueSizeConstraint(1, MAX)
+    subtypeSpec = univ.SequenceOf.subtypeSpec + constraint.ValueSizeConstraint(1, MAX)
+
 
 class RSAPrivateKey(univ.Sequence):
     componentType = namedtype.NamedTypes(
