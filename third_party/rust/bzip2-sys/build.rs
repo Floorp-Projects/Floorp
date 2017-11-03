@@ -1,9 +1,10 @@
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 
 fn main() {
-    let mut cfg = gcc::Config::new();
+    let mut cfg = cc::Build::new();
+    cfg.warnings(false);
 
     if env::var("TARGET").unwrap().contains("windows") {
         cfg.define("_WIN32", None);
