@@ -803,17 +803,6 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
-{
-    MOZ_ASSERT(aCurrentJSStack, "bad param");
-
-    nsCOMPtr<nsIStackFrame> currentStack = dom::GetCurrentJSStack();
-    currentStack.forget(aCurrentJSStack);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
                                        nsIXPCFunctionThisTranslator* aTranslator)
 {
