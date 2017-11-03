@@ -34,15 +34,17 @@ function test_toplevel_data_image_svg() {
   const DATA_SVG =
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij4KICA8cGF0aCBkPSJNOCwxMkwzLDcsNCw2bDQsNCw0LTQsMSwxWiIgZmlsbD0iIzZBNkE2QSIgLz4KPC9zdmc+Cg==";
   let win2 = window.open(DATA_SVG);
-  let wrappedWin2 = SpecialPowers.wrap(win2);
-  setTimeout(function () {
-    isnot(wrappedWin2.document.documentElement.localName, "svg",
-          "Loading data:image/svg+xml should be blocked");
-    wrappedWin2.close();
-    SimpleTest.finish();
-  }, 1000);
+  // Unfortunately we can't detect whether the window was closed using some event,
+  // hence we are constantly polling till we see that win == null.
+  // Test times out on failure.
+  var win2Closed = setInterval(function() {
+    if (win2 == null || win2.closed) {
+      clearInterval(win2Closed);
+      ok(true, "Loading data:image/svg+xml should be blocked");
+      SimpleTest.finish();
+    }
+  }, 200);
 }
-
 // fire up the tests
 test_toplevel_data_image();
 
