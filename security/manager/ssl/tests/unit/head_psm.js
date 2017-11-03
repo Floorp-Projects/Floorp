@@ -50,6 +50,7 @@ const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE + 21;
 const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE + 30;
 const SEC_ERROR_CA_CERT_INVALID                         = SEC_ERROR_BASE + 36;
 const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION              = SEC_ERROR_BASE + 41;
+const SEC_ERROR_PKCS7_BAD_SIGNATURE                     = SEC_ERROR_BASE + 47;
 const SEC_ERROR_INADEQUATE_KEY_USAGE                    = SEC_ERROR_BASE + 90;
 const SEC_ERROR_INADEQUATE_CERT_TYPE                    = SEC_ERROR_BASE + 91;
 const SEC_ERROR_CERT_NOT_IN_NAME_SPACE                  = SEC_ERROR_BASE + 112;

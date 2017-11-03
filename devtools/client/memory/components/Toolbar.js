@@ -4,46 +4,46 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component, PropTypes } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
 const models = require("../models");
 const { viewState } = require("../constants");
 
-module.exports = createClass({
-  displayName: "Toolbar",
-
-  propTypes: {
-    censusDisplays: PropTypes.arrayOf(PropTypes.shape({
-      displayName: PropTypes.string.isRequired,
-    })).isRequired,
-    censusDisplay: PropTypes.shape({
-      displayName: PropTypes.string.isRequired,
-    }).isRequired,
-    onTakeSnapshotClick: PropTypes.func.isRequired,
-    onImportClick: PropTypes.func.isRequired,
-    onClearSnapshotsClick: PropTypes.func.isRequired,
-    onCensusDisplayChange: PropTypes.func.isRequired,
-    onToggleRecordAllocationStacks: PropTypes.func.isRequired,
-    allocations: models.allocations,
-    filterString: PropTypes.string,
-    setFilterString: PropTypes.func.isRequired,
-    diffing: models.diffingModel,
-    onToggleDiffing: PropTypes.func.isRequired,
-    view: models.view.isRequired,
-    onViewChange: PropTypes.func.isRequired,
-    labelDisplays: PropTypes.arrayOf(PropTypes.shape({
-      displayName: PropTypes.string.isRequired,
-    })).isRequired,
-    labelDisplay: PropTypes.shape({
-      displayName: PropTypes.string.isRequired,
-    }).isRequired,
-    onLabelDisplayChange: PropTypes.func.isRequired,
-    treeMapDisplays: PropTypes.arrayOf(PropTypes.shape({
-      displayName: PropTypes.string.isRequired,
-    })).isRequired,
-    onTreeMapDisplayChange: PropTypes.func.isRequired,
-    snapshots: PropTypes.arrayOf(models.snapshot).isRequired,
-  },
+class Toolbar extends Component {
+  static get propTypes() {
+    return {
+      censusDisplays: PropTypes.arrayOf(PropTypes.shape({
+        displayName: PropTypes.string.isRequired,
+      })).isRequired,
+      censusDisplay: PropTypes.shape({
+        displayName: PropTypes.string.isRequired,
+      }).isRequired,
+      onTakeSnapshotClick: PropTypes.func.isRequired,
+      onImportClick: PropTypes.func.isRequired,
+      onClearSnapshotsClick: PropTypes.func.isRequired,
+      onCensusDisplayChange: PropTypes.func.isRequired,
+      onToggleRecordAllocationStacks: PropTypes.func.isRequired,
+      allocations: models.allocations,
+      filterString: PropTypes.string,
+      setFilterString: PropTypes.func.isRequired,
+      diffing: models.diffingModel,
+      onToggleDiffing: PropTypes.func.isRequired,
+      view: models.view.isRequired,
+      onViewChange: PropTypes.func.isRequired,
+      labelDisplays: PropTypes.arrayOf(PropTypes.shape({
+        displayName: PropTypes.string.isRequired,
+      })).isRequired,
+      labelDisplay: PropTypes.shape({
+        displayName: PropTypes.string.isRequired,
+      }).isRequired,
+      onLabelDisplayChange: PropTypes.func.isRequired,
+      treeMapDisplays: PropTypes.arrayOf(PropTypes.shape({
+        displayName: PropTypes.string.isRequired,
+      })).isRequired,
+      onTreeMapDisplayChange: PropTypes.func.isRequired,
+      snapshots: PropTypes.arrayOf(models.snapshot).isRequired,
+    };
+  }
 
   render() {
     let {
@@ -298,4 +298,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = Toolbar;

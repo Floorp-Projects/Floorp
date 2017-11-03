@@ -5,20 +5,20 @@
 /* eslint-env browser */
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const { Component, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
 
 const Services = require("Services");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-module.exports = createClass({
-  displayName: "AddonsInstallError",
-
-  propTypes: {
-    error: PropTypes.string,
-    retryInstall: PropTypes.func,
-  },
+class AddonsInstallError extends Component {
+  static get propTypes() {
+    return {
+      error: PropTypes.string,
+      retryInstall: PropTypes.func,
+    };
+  }
 
   render() {
     if (!this.props.error) {
@@ -36,4 +36,6 @@ module.exports = createClass({
         { className: "addons-install-retry", onClick: this.props.retryInstall },
         Strings.GetStringFromName("retryTemporaryInstall")));
   }
-});
+}
+
+module.exports = AddonsInstallError;

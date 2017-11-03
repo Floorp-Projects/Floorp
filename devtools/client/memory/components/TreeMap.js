@@ -4,33 +4,36 @@
 
 "use strict";
 
-const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, Component } = require("devtools/client/shared/vendor/react");
 const { treeMapModel } = require("../models");
 const startVisualization = require("./tree-map/start");
 
-module.exports = createClass({
-  displayName: "TreeMap",
+class TreeMap extends Component {
+  static get propTypes() {
+    return {
+      treeMap: treeMapModel
+    };
+  }
 
-  propTypes: {
-    treeMap: treeMapModel
-  },
-
-  getInitialState() {
-    return {};
-  },
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this._stopVisualization = this._stopVisualization.bind(this);
+    this._startVisualization = this._startVisualization.bind(this);
+  }
 
   componentDidMount() {
     const { treeMap } = this.props;
     if (treeMap && treeMap.report) {
       this._startVisualization();
     }
-  },
+  }
 
   shouldComponentUpdate(nextProps) {
     const oldTreeMap = this.props.treeMap;
     const newTreeMap = nextProps.treeMap;
     return oldTreeMap !== newTreeMap;
-  },
+  }
 
   componentDidUpdate(prevProps) {
     this._stopVisualization();
@@ -38,27 +41,27 @@ module.exports = createClass({
     if (this.props.treeMap && this.props.treeMap.report) {
       this._startVisualization();
     }
-  },
+  }
 
   componentWillUnmount() {
     if (this.state.stopVisualization) {
       this.state.stopVisualization();
     }
-  },
+  }
 
   _stopVisualization() {
     if (this.state.stopVisualization) {
       this.state.stopVisualization();
       this.setState({ stopVisualization: null });
     }
-  },
+  }
 
   _startVisualization() {
     const { container } = this.refs;
     const { report } = this.props.treeMap;
     const stopVisualization = startVisualization(container, report);
     this.setState({ stopVisualization });
-  },
+  }
 
   render() {
     return dom.div(
@@ -68,4 +71,6 @@ module.exports = createClass({
       }
     );
   }
-});
+}
+
+module.exports = TreeMap;

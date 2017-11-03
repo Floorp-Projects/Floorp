@@ -25,61 +25,67 @@
 
 const {
   DOM: dom,
-  createClass,
+  Component,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { assert } = require("devtools/shared/DevToolsUtils");
 
-module.exports = createClass({
-  displayName: "HSplitBox",
+class HSplitBox extends Component {
+  static get propTypes() {
+    return {
+      // The contents of the start pane.
+      start: PropTypes.any.isRequired,
 
-  propTypes: {
-    // The contents of the start pane.
-    start: PropTypes.any.isRequired,
+      // The contents of the end pane.
+      end: PropTypes.any.isRequired,
 
-    // The contents of the end pane.
-    end: PropTypes.any.isRequired,
+      // The relative width of the start pane, expressed as a number between 0 and
+      // 1. The relative width of the end pane is 1 - startWidth. For example,
+      // with startWidth = .5, both panes are of equal width; with startWidth =
+      // .25, the start panel will take up 1/4 width and the end panel will take
+      // up 3/4 width.
+      startWidth: PropTypes.number,
 
-    // The relative width of the start pane, expressed as a number between 0 and
-    // 1. The relative width of the end pane is 1 - startWidth. For example,
-    // with startWidth = .5, both panes are of equal width; with startWidth =
-    // .25, the start panel will take up 1/4 width and the end panel will take
-    // up 3/4 width.
-    startWidth: PropTypes.number,
+      // A minimum css width value for the start and end panes.
+      minStartWidth: PropTypes.any,
+      minEndWidth: PropTypes.any,
 
-    // A minimum css width value for the start and end panes.
-    minStartWidth: PropTypes.any,
-    minEndWidth: PropTypes.any,
+      // A callback fired when the user drags the splitter to resize the relative
+      // pane widths. The function is passed the startWidth value that would put
+      // the splitter underneath the users mouse.
+      onResize: PropTypes.func.isRequired,
+    };
+  }
 
-    // A callback fired when the user drags the splitter to resize the relative
-    // pane widths. The function is passed the startWidth value that would put
-    // the splitter underneath the users mouse.
-    onResize: PropTypes.func.isRequired,
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       startWidth: 0.5,
       minStartWidth: "20px",
       minEndWidth: "20px",
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       mouseDown: false
     };
-  },
+
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this._onMouseUp = this._onMouseUp.bind(this);
+    this._onMouseMove = this._onMouseMove.bind(this);
+  }
 
   componentDidMount() {
     document.defaultView.top.addEventListener("mouseup", this._onMouseUp);
     document.defaultView.top.addEventListener("mousemove", this._onMouseMove);
-  },
+  }
 
   componentWillUnmount() {
     document.defaultView.top.removeEventListener("mouseup", this._onMouseUp);
     document.defaultView.top.removeEventListener("mousemove", this._onMouseMove);
-  },
+  }
 
   _onMouseDown(event) {
     if (event.button !== 0) {
@@ -88,7 +94,7 @@ module.exports = createClass({
 
     this.setState({ mouseDown: true });
     event.preventDefault();
-  },
+  }
 
   _onMouseUp(event) {
     if (event.button !== 0 || !this.state.mouseDown) {
@@ -97,7 +103,7 @@ module.exports = createClass({
 
     this.setState({ mouseDown: false });
     event.preventDefault();
-  },
+  }
 
   _onMouseMove(event) {
     if (!this.state.mouseDown) {
@@ -113,7 +119,7 @@ module.exports = createClass({
     this.props.onResize(relative / width);
 
     event.preventDefault();
-  },
+  }
 
   render() {
     /* eslint-disable no-shadow */
@@ -149,4 +155,6 @@ module.exports = createClass({
       )
     );
   }
-});
+}
+
+module.exports = HSplitBox;

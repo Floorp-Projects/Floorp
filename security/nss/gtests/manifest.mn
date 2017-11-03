@@ -21,6 +21,7 @@ ifneq ($(NSS_BUILD_UTIL_ONLY),1)
 NSS_SRCDIRS = \
 	certdb_gtest \
 	certhigh_gtest \
+	cryptohi_gtest \
 	der_gtest \
 	pk11_gtest \
 	softoken_gtest \

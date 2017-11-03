@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'TestBufferedInputStream.cpp',
     'TestHeaders.cpp',
     'TestHttpAuthUtils.cpp',
     'TestMozURL.cpp',
@@ -15,6 +16,11 @@ UNIFIED_SOURCES += [
 
 TEST_DIRS += [
     'parse-ftp',
+]
+
+LOCAL_INCLUDES += [
+    '/netwerk/base',
+    '/xpcom/tests/gtest',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -5,18 +5,18 @@
 "use strict";
 
 const React = require("devtools/client/shared/vendor/react");
-const { DOM: dom, createClass, createFactory, PropTypes } = React;
+const { DOM: dom, Component, createFactory, PropTypes } = React;
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const Frame = createFactory(require("./Frame"));
 
 const l10n = new LocalizationHelper("devtools/client/locales/webconsole.properties");
 
-const AsyncFrame = createFactory(createClass({
-  displayName: "AsyncFrame",
-
-  propTypes: {
-    asyncCause: PropTypes.string.isRequired
-  },
+class AsyncFrameClass extends Component {
+  static get propTypes() {
+    return {
+      asyncCause: PropTypes.string.isRequired
+    };
+  }
 
   render() {
     let { asyncCause } = this.props;
@@ -26,18 +26,18 @@ const AsyncFrame = createFactory(createClass({
       l10n.getFormatStr("stacktrace.asyncStack", asyncCause)
     );
   }
-}));
+}
 
-const StackTrace = createClass({
-  displayName: "StackTrace",
-
-  propTypes: {
-    stacktrace: PropTypes.array.isRequired,
-    onViewSourceInDebugger: PropTypes.func.isRequired,
-    onViewSourceInScratchpad: PropTypes.func,
-    // Service to enable the source map feature.
-    sourceMapService: PropTypes.object,
-  },
+class StackTrace extends Component {
+  static get propTypes() {
+    return {
+      stacktrace: PropTypes.array.isRequired,
+      onViewSourceInDebugger: PropTypes.func.isRequired,
+      onViewSourceInScratchpad: PropTypes.func,
+      // Service to enable the source map feature.
+      sourceMapService: PropTypes.object,
+    };
+  }
 
   render() {
     let {
@@ -77,6 +77,8 @@ const StackTrace = createClass({
 
     return dom.div({ className: "stack-trace" }, frames);
   }
-});
+}
+
+const AsyncFrame = createFactory(AsyncFrameClass);
 
 module.exports = StackTrace;

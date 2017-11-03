@@ -229,79 +229,6 @@ function getBoundsFromPoints(points) {
 }
 
 /**
- * Calculates and returns the <canvas>'s position in accordance with the page's scroll,
- * document's size, canvas size, and viewport's size. This is called when a page's scroll
- * is detected.
- *
- * @param  {Object} canvasPosition
- *         A pointer object {x, y} representing the <canvas> position to the top left
- *         corner of the page.
- * @param  {Object} scrollPosition
- *         A pointer object {x, y} representing the window's pageXOffset and pageYOffset.
- * @param  {Window} window
- *         The window object.
- * @param  {Object} windowDimensions
- *         An object {width, height} representing the window's dimensions for the
- *         `window` given.
- * @return {Object} An object with the following properties:
- *         - {Boolean} hasUpdated
- *           true if the <canvas> position was updated and false otherwise.
- *         - {Number} canvasX
- *           The canvas' x position.
- *         - {Number} canvasY
- *           The canvas' y position.
- */
-function getCanvasPosition(canvasPosition, scrollPosition, window, windowDimensions) {
-  let { x: canvasX, y: canvasY } = canvasPosition;
-  let { x: scrollX, y: scrollY } = scrollPosition;
-  let cssCanvasSize = CANVAS_SIZE / window.devicePixelRatio;
-  let viewportSize = getViewportDimensions(window);
-  let { height, width } = windowDimensions;
-  let canvasWidth = cssCanvasSize;
-  let canvasHeight = cssCanvasSize;
-  let hasUpdated = false;
-
-  // Those values indicates the relative horizontal and vertical space the page can
-  // scroll before we have to reposition the <canvas>; they're 1/4 of the delta between
-  // the canvas' size and the viewport's size: that's because we want to consider both
-  // sides (top/bottom, left/right; so 1/2 for each side) and also we don't want to
-  // shown the edges of the canvas in case of fast scrolling (to avoid showing undraw
-  // areas, therefore another 1/2 here).
-  let bufferSizeX = (canvasWidth - viewportSize.width) >> 2;
-  let bufferSizeY = (canvasHeight - viewportSize.height) >> 2;
-
-  // Defines the boundaries for the canvas.
-  let leftBoundary = 0;
-  let rightBoundary = width - canvasWidth;
-  let topBoundary = 0;
-  let bottomBoundary = height - canvasHeight;
-
-  // Defines the thresholds that triggers the canvas' position to be updated.
-  let leftThreshold = scrollX - bufferSizeX;
-  let rightThreshold = scrollX - canvasWidth + viewportSize.width + bufferSizeX;
-  let topThreshold = scrollY - bufferSizeY;
-  let bottomThreshold = scrollY - canvasHeight + viewportSize.height + bufferSizeY;
-
-  if (canvasX < rightBoundary && canvasX < rightThreshold) {
-    canvasX = Math.min(leftThreshold, rightBoundary);
-    hasUpdated = true;
-  } else if (canvasX > leftBoundary && canvasX > leftThreshold) {
-    canvasX = Math.max(rightThreshold, leftBoundary);
-    hasUpdated = true;
-  }
-
-  if (canvasY < bottomBoundary && canvasY < bottomThreshold) {
-    canvasY = Math.min(topThreshold, bottomBoundary);
-    hasUpdated = true;
-  } else if (canvasY > topBoundary && canvasY > topThreshold) {
-    canvasY = Math.max(bottomThreshold, topBoundary);
-    hasUpdated = true;
-  }
-
-  return { canvasX, canvasY, hasUpdated };
-}
-
-/**
  * Returns the current matrices for both canvas drawing and SVG taking into account the
  * following transformations, in this order:
  *   1. The scale given by the display pixel ratio.
@@ -427,14 +354,85 @@ function updateCanvasElement(canvas, canvasPosition, devicePixelRatio) {
   canvas.getCanvasContext("2d").clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 }
 
+/**
+ * Calculates and returns the <canvas>'s position in accordance with the page's scroll,
+ * document's size, canvas size, and viewport's size. This is called when a page's scroll
+ * is detected.
+ *
+ * @param  {Object} canvasPosition
+ *         A pointer object {x, y} representing the <canvas> position to the top left
+ *         corner of the page.
+ * @param  {Object} scrollPosition
+ *         A pointer object {x, y} representing the window's pageXOffset and pageYOffset.
+ * @param  {Window} window
+ *         The window object.
+ * @param  {Object} windowDimensions
+ *         An object {width, height} representing the window's dimensions for the
+ *         `window` given.
+ * @return {Boolean} true if the <canvas> position was updated and false otherwise.
+ */
+function updateCanvasPosition(canvasPosition, scrollPosition, window, windowDimensions) {
+  let { x: canvasX, y: canvasY } = canvasPosition;
+  let { x: scrollX, y: scrollY } = scrollPosition;
+  let cssCanvasSize = CANVAS_SIZE / window.devicePixelRatio;
+  let viewportSize = getViewportDimensions(window);
+  let { height, width } = windowDimensions;
+  let canvasWidth = cssCanvasSize;
+  let canvasHeight = cssCanvasSize;
+  let hasUpdated = false;
+
+  // Those values indicates the relative horizontal and vertical space the page can
+  // scroll before we have to reposition the <canvas>; they're 1/4 of the delta between
+  // the canvas' size and the viewport's size: that's because we want to consider both
+  // sides (top/bottom, left/right; so 1/2 for each side) and also we don't want to
+  // shown the edges of the canvas in case of fast scrolling (to avoid showing undraw
+  // areas, therefore another 1/2 here).
+  let bufferSizeX = (canvasWidth - viewportSize.width) >> 2;
+  let bufferSizeY = (canvasHeight - viewportSize.height) >> 2;
+
+  // Defines the boundaries for the canvas.
+  let leftBoundary = 0;
+  let rightBoundary = width - canvasWidth;
+  let topBoundary = 0;
+  let bottomBoundary = height - canvasHeight;
+
+  // Defines the thresholds that triggers the canvas' position to be updated.
+  let leftThreshold = scrollX - bufferSizeX;
+  let rightThreshold = scrollX - canvasWidth + viewportSize.width + bufferSizeX;
+  let topThreshold = scrollY - bufferSizeY;
+  let bottomThreshold = scrollY - canvasHeight + viewportSize.height + bufferSizeY;
+
+  if (canvasX < rightBoundary && canvasX < rightThreshold) {
+    canvasX = Math.min(leftThreshold, rightBoundary);
+    hasUpdated = true;
+  } else if (canvasX > leftBoundary && canvasX > leftThreshold) {
+    canvasX = Math.max(rightThreshold, leftBoundary);
+    hasUpdated = true;
+  }
+
+  if (canvasY < bottomBoundary && canvasY < bottomThreshold) {
+    canvasY = Math.min(topThreshold, bottomBoundary);
+    hasUpdated = true;
+  } else if (canvasY > topBoundary && canvasY > topThreshold) {
+    canvasY = Math.max(bottomThreshold, topBoundary);
+    hasUpdated = true;
+  }
+
+  // Update the canvas position with the calculated canvasX and canvasY positions.
+  canvasPosition.x = canvasX;
+  canvasPosition.y = canvasY;
+
+  return hasUpdated;
+}
+
 exports.CANVAS_SIZE = CANVAS_SIZE;
 exports.drawBubbleRect = drawBubbleRect;
 exports.drawLine = drawLine;
 exports.drawRect = drawRect;
 exports.drawRoundedRect = drawRoundedRect;
 exports.getBoundsFromPoints = getBoundsFromPoints;
-exports.getCanvasPosition = getCanvasPosition;
 exports.getCurrentMatrix = getCurrentMatrix;
 exports.getPathDescriptionFromPoints = getPathDescriptionFromPoints;
 exports.getPointsFromDiagonal = getPointsFromDiagonal;
 exports.updateCanvasElement = updateCanvasElement;
+exports.updateCanvasPosition = updateCanvasPosition;

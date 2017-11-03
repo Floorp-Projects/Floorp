@@ -31,7 +31,7 @@ class WebMVP8TrackEncoder: public VP8TrackEncoder
 {
 public:
   explicit WebMVP8TrackEncoder(TrackRate aTrackRate = 90000)
-    : VP8TrackEncoder(aTrackRate) {}
+    : VP8TrackEncoder(aTrackRate, FrameDroppingMode::DISALLOW) {}
 
   bool TestVP8Creation(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                        int32_t aDisplayHeight)

@@ -187,7 +187,7 @@ ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script, jsbytecod
      * Sub2 lets us continue to distinguish the two subclasses and any extra
      * properties added to those prototype objects.
      */
-    if (script->isStarGenerator() || script->isAsync())
+    if (script->isGenerator() || script->isAsync())
         return false;
     if (JSOp(*pc) != JSOP_NEW)
         return false;

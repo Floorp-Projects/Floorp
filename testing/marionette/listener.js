@@ -1304,12 +1304,12 @@ function getActiveElement() {
  */
 function clickElement(msg) {
   let {commandID, webElRef, pageTimeout} = msg.json;
-  let webEl = WebElement.fromJSON(webElRef);
-  let el = seenEls.get(webEl, curContainer.frame);
 
   try {
-    let loadEventExpected = true;
+    let webEl = WebElement.fromJSON(webElRef);
+    let el = seenEls.get(webEl, curContainer.frame);
 
+    let loadEventExpected = true;
     let target = getElementAttribute(el, "target");
 
     if (target === "_blank") {
@@ -1323,7 +1323,6 @@ function clickElement(msg) {
           capabilities.get("moz:webdriverClick")
       );
     }, commandID, pageTimeout, loadEventExpected, true);
-
   } catch (e) {
     sendError(e, commandID);
   }

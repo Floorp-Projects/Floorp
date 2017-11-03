@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_U2FTransactionChild_h
 #define mozilla_dom_U2FTransactionChild_h
 
-#include "mozilla/dom/PWebAuthnTransactionChild.h"
+#include "mozilla/dom/WebAuthnTransactionChildBase.h"
 
 /*
  * Child process IPC implementation for U2F API. Receives results of U2F
@@ -18,12 +18,9 @@
 namespace mozilla {
 namespace dom {
 
-class U2FTransactionChild final : public PWebAuthnTransactionChild
+class U2FTransactionChild final : public WebAuthnTransactionChildBase
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(U2FTransactionChild);
-  U2FTransactionChild();
-
   mozilla::ipc::IPCResult
   RecvConfirmRegister(const uint64_t& aTransactionId,
                       nsTArray<uint8_t>&& aRegBuffer) override;
@@ -37,9 +34,6 @@ public:
   RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;
 
   void ActorDestroy(ActorDestroyReason why) override;
-
-private:
-  ~U2FTransactionChild() = default;
 };
 
 }

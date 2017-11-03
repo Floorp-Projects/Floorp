@@ -107,7 +107,7 @@ class SessionNotCreatedException(WebDriverException):
 
 
 class StaleElementReferenceException(WebDriverException):
-    http_status = 400
+    http_status = 404
     status_code = "stale element reference"
 
 

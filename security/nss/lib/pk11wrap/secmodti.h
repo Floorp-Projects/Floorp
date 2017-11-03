@@ -175,6 +175,7 @@ struct PK11GenericObjectStr {
     PK11GenericObject *next;
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE objectID;
+    PRBool owner;
 };
 
 #define MAX_TEMPL_ATTRS 16 /* maximum attributes in template */

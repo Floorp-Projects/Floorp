@@ -17,6 +17,9 @@ KeyType seckey_GetKeyType(SECOidTag pubKeyOid);
 SECStatus sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
                            const SECItem *param, SECOidTag *encalg, SECOidTag *hashalg);
 
+SECStatus sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
+                                      const SECKEYRSAPSSParams *params);
+
 SEC_END_PROTOS
 
 #endif /* _KEYHI_H_ */

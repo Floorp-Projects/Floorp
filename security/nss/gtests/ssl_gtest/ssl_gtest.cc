@@ -6,6 +6,7 @@
 #include <cstdlib>
 
 #include "test_io.h"
+#include "databuffer.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -28,6 +29,7 @@ int main(int argc, char** argv) {
       ++i;
     } else if (!strcmp(argv[i], "-v")) {
       g_ssl_gtest_verbose = true;
+      nss_test::DataBuffer::SetLogLimit(16384);
     }
   }
 

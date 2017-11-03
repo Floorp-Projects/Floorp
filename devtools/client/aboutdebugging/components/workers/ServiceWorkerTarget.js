@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { debugWorker } = require("../../modules/worker");
 const Services = require("Services");
@@ -17,36 +17,50 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-module.exports = createClass({
-  displayName: "ServiceWorkerTarget",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    debugDisabled: PropTypes.bool,
-    target: PropTypes.shape({
-      active: PropTypes.bool,
-      fetch: PropTypes.bool.isRequired,
-      icon: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      url: PropTypes.string,
-      scope: PropTypes.string.isRequired,
-      // registrationActor can be missing in e10s.
-      registrationActor: PropTypes.string,
-      workerActor: PropTypes.string
-    }).isRequired
-  },
-
-  getInitialState() {
+class ServiceWorkerTarget extends Component {
+  static get propTypes() {
     return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      debugDisabled: PropTypes.bool,
+      target: PropTypes.shape({
+        active: PropTypes.bool,
+        fetch: PropTypes.bool.isRequired,
+        icon: PropTypes.string,
+        name: PropTypes.string.isRequired,
+        url: PropTypes.string,
+        scope: PropTypes.string.isRequired,
+        // registrationActor can be missing in e10s.
+        registrationActor: PropTypes.string,
+        workerActor: PropTypes.string
+      }).isRequired
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       pushSubscription: null
     };
-  },
+
+    this.debug = this.debug.bind(this);
+    this.push = this.push.bind(this);
+    this.start = this.start.bind(this);
+    this.unregister = this.unregister.bind(this);
+    this.onPushSubscriptionModified = this.onPushSubscriptionModified.bind(this);
+    this.updatePushSubscription = this.updatePushSubscription.bind(this);
+    this.isRunning = this.isRunning.bind(this);
+    this.isActive = this.isActive.bind(this);
+    this.getServiceWorkerStatus = this.getServiceWorkerStatus.bind(this);
+    this.renderButtons = this.renderButtons.bind(this);
+    this.renderUnregisterLink = this.renderUnregisterLink.bind(this);
+  }
 
   componentDidMount() {
     let { client } = this.props;
     client.addListener("push-subscription-modified", this.onPushSubscriptionModified);
     this.updatePushSubscription();
-  },
+  }
 
   componentDidUpdate(oldProps, oldState) {
     let wasActive = oldProps.target.active;
@@ -56,12 +70,12 @@ module.exports = createClass({
       // subscription change by updating it now.
       this.updatePushSubscription();
     }
-  },
+  }
 
   componentWillUnmount() {
     let { client } = this.props;
     client.removeListener("push-subscription-modified", this.onPushSubscriptionModified);
-  },
+  }
 
   debug() {
     if (!this.isRunning()) {
@@ -71,7 +85,7 @@ module.exports = createClass({
 
     let { client, target } = this.props;
     debugWorker(client, target.workerActor);
-  },
+  }
 
   push() {
     if (!this.isActive() || !this.isRunning()) {
@@ -86,7 +100,7 @@ module.exports = createClass({
       to: target.workerActor,
       type: "push"
     });
-  },
+  }
 
   start() {
     if (!this.isActive() || this.isRunning()) {
@@ -99,7 +113,7 @@ module.exports = createClass({
       to: target.registrationActor,
       type: "start"
     });
-  },
+  }
 
   unregister() {
     let { client, target } = this.props;
@@ -107,14 +121,14 @@ module.exports = createClass({
       to: target.registrationActor,
       type: "unregister"
     });
-  },
+  }
 
   onPushSubscriptionModified(type, data) {
     let { target } = this.props;
     if (data.from === target.registrationActor) {
       this.updatePushSubscription();
     }
-  },
+  }
 
   updatePushSubscription() {
     if (!this.props.target.registrationActor) {
@@ -129,16 +143,16 @@ module.exports = createClass({
     }, ({ subscription }) => {
       this.setState({ pushSubscription: subscription });
     });
-  },
+  }
 
   isRunning() {
     // We know the target is running if it has a worker actor.
     return !!this.props.target.workerActor;
-  },
+  }
 
   isActive() {
     return this.props.target.active;
-  },
+  }
 
   getServiceWorkerStatus() {
     if (this.isActive() && this.isRunning()) {
@@ -150,7 +164,7 @@ module.exports = createClass({
     // ACTIVE state. Unable to know the actual state ("installing", "waiting"), we
     // display a custom state "registering" for now. See Bug 1153292.
     return "registering";
-  },
+  }
 
   renderButtons() {
     let pushButton = dom.button({
@@ -179,7 +193,7 @@ module.exports = createClass({
       return debugButton;
     }
     return startButton;
-  },
+  }
 
   renderUnregisterLink() {
     if (!this.isActive()) {
@@ -191,7 +205,7 @@ module.exports = createClass({
       onClick: this.unregister,
       className: "unregister-link",
     }, Strings.GetStringFromName("unregister"));
-  },
+  }
 
   render() {
     let { target } = this.props;
@@ -240,4 +254,6 @@ module.exports = createClass({
       this.renderButtons()
     );
   }
-});
+}
+
+module.exports = ServiceWorkerTarget;

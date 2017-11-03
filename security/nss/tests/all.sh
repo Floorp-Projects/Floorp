@@ -130,14 +130,20 @@ run_tests()
 }
 
 ########################## run_cycle_standard ##########################
-# run test suites with defaults settings (no PKIX, no sharedb)
+# run test suites with dbm database (no PKIX, no sharedb)
 ########################################################################
 run_cycle_standard()
 {
     TEST_MODE=STANDARD
 
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP=
+    TESTS_SKIP="cipher libpkix sdr ocsp pkits"
+
+    NSS_DEFAULT_DB_TYPE="dbm"
+    export NSS_DEFAULT_DB_TYPE
+
+    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
+    NSS_SSL_RUN=`echo "${NSS_SSL_RUN}" | sed -e "s/cov//g" -e "s/auth//g"`
 
     run_tests
 }
@@ -162,7 +168,12 @@ run_cycle_pkix()
 
     TESTS="${ALL_TESTS}"
     TESTS_SKIP="cipher dbtests sdr crmf smime merge multinit"
+
     NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
+    export -n NSS_SSL_RUN
+
+    # use the default format
+    export -n NSS_DEFAULT_DB_TYPE
 
     run_tests
 }
@@ -231,10 +242,10 @@ run_cycle_shared_db()
 
     # run the tests for native sharedb support
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher libpkix dbupgrade sdr ocsp pkits"
+    TESTS_SKIP="dbupgrade"
 
-    NSS_SSL_TESTS=`echo "${NSS_SSL_TESTS}" | sed -e "s/normal//g" -e "s/fips//g" -e "s/_//g"`
-    NSS_SSL_RUN=`echo "${NSS_SSL_RUN}" | sed -e "s/cov//g" -e "s/auth//g"`
+    export -n NSS_SSL_TESTS
+    export -n NSS_SSL_RUN
 
     run_tests
 }

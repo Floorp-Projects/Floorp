@@ -23,10 +23,12 @@ INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
             -I$(CORE_DEPTH)/gtests/common \
             -I$(CORE_DEPTH)/cpputil
 
-REQUIRES = nspr nss libdbm gtest
+REQUIRES = nspr nss libdbm gtest cpputil
 
 PROGRAM = pk11_gtest
 
-EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) $(EXTRA_OBJS) \
-             $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX)
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)cpputil.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
+             $(NULL)
 

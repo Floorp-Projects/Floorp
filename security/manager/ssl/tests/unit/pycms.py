@@ -10,14 +10,20 @@ the desired properties.
 
 The specification format is as follows:
 
-hash:<hex string>
+sha1:<hex string>
+sha256:<hex string>
 signer:
 <pycert specification>
 
-hash is the value that will be put in the messageDigest attribute in
-each SignerInfo of the signerInfos field of the SignedData.
+Eith or both of sha1 and sha256 may be specified. The value of
+each hash directive is what will be put in the messageDigest
+attribute of the SignerInfo that corresponds to the signature
+algorithm defined by the hash algorithm and key type of the
+default key. Together, these comprise the signerInfos field of
+the SignedData. If neither hash is specified, the signerInfos
+will be an empty SET (i.e. there will be no actual signature
+information).
 The certificate specification must come last.
-Currently only SHA-1 is supported.
 """
 
 from pyasn1.codec.der import decoder
@@ -52,7 +58,8 @@ class CMS(object):
     generating a CMS message"""
 
     def __init__(self, paramStream):
-        self.hash = ''
+        self.sha1 = ''
+        self.sha256 = ''
         signerSpecification = StringIO.StringIO()
         readingSignerSpecification = False
         for line in paramStream.readlines():
@@ -60,8 +67,10 @@ class CMS(object):
                 print >>signerSpecification, line.strip()
             elif line.strip() == 'signer:':
                 readingSignerSpecification = True
-            elif line.startswith('hash:'):
-                self.hash = line.strip()[len('hash:'):]
+            elif line.startswith('sha1:'):
+                self.sha1 = line.strip()[len('sha1:'):]
+            elif line.startswith('sha256:'):
+                self.sha256 = line.strip()[len('sha256:'):]
             else:
                 raise UnknownDirectiveError(line.strip())
         signerSpecification.seek(0)
@@ -97,11 +106,15 @@ class CMS(object):
         """Given a pykey hash algorithm identifier, builds an
         AlgorithmIdentifier for use with pyasn1."""
         if pykeyHash == pykey.HASH_SHA1:
-            algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-            algorithmIdentifier['algorithm'] = univ.ObjectIdentifier('1.3.14.3.2.26')
-            algorithmIdentifier['parameters'] = univ.Null()
-            return algorithmIdentifier
-        raise pykey.UnknownHashAlgorithmError(pykeyHash)
+            oidString = '1.3.14.3.2.26'
+        elif pykeyHash == pykey.HASH_SHA256:
+            oidString = '2.16.840.1.101.3.4.2.1'
+        else:
+            raise pykey.UnknownHashAlgorithmError(pykeyHash)
+        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
+        algorithmIdentifier['algorithm'] = univ.ObjectIdentifier(oidString)
+        algorithmIdentifier['parameters'] = univ.Null()
+        return algorithmIdentifier
 
     def buildSignerInfo(self, certificate, pykeyHash, digestValue):
         """Given a pyasn1 certificate, a pykey hash identifier
@@ -157,7 +170,12 @@ class CMS(object):
 
         signerInfos = rfc2315.SignerInfos()
 
-        signerInfos[0] = self.buildSignerInfo(certificate, pykey.HASH_SHA1, self.hash)
+        if len(self.sha1) > 0:
+            signerInfos[len(signerInfos)] = self.buildSignerInfo(certificate,
+                pykey.HASH_SHA1, self.sha1)
+        if len(self.sha256) > 0:
+            signerInfos[len(signerInfos)] = self.buildSignerInfo(certificate,
+                pykey.HASH_SHA256, self.sha256)
         signedData['signerInfos'] = signerInfos
 
         encoded = encoder.encode(signedData)

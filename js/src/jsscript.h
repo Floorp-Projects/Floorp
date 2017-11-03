@@ -752,17 +752,19 @@ class ScriptSourceObject : public NativeObject
     static const uint32_t RESERVED_SLOTS = 4;
 };
 
-enum GeneratorKind { NotGenerator, StarGenerator };
+enum class GeneratorKind : bool { NotGenerator, Generator };
 enum FunctionAsyncKind { SyncFunction, AsyncFunction };
 
 static inline unsigned
-GeneratorKindAsBits(GeneratorKind generatorKind) {
+GeneratorKindAsBit(GeneratorKind generatorKind)
+{
     return static_cast<unsigned>(generatorKind);
 }
 
 static inline GeneratorKind
-GeneratorKindFromBits(unsigned val) {
-    MOZ_ASSERT(val <= StarGenerator);
+GeneratorKindFromBit(unsigned val)
+{
+    MOZ_ASSERT(val <= unsigned(GeneratorKind::Generator));
     return static_cast<GeneratorKind>(val);
 }
 
@@ -1033,7 +1035,7 @@ class JSScript : public js::gc::TenuredCell
     uint8_t         hasArrayBits:ARRAY_KIND_BITS;
 
     // The GeneratorKind of the script.
-    uint8_t         generatorKindBits_:2;
+    uint8_t         generatorKind_:1;
 
     // 1-bit fields.
 
@@ -1443,14 +1445,14 @@ class JSScript : public js::gc::TenuredCell
     }
 
     js::GeneratorKind generatorKind() const {
-        return js::GeneratorKindFromBits(generatorKindBits_);
+        return js::GeneratorKindFromBit(generatorKind_);
     }
-    bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
+    bool isGenerator() const { return generatorKind() == js::GeneratorKind::Generator; }
     void setGeneratorKind(js::GeneratorKind kind) {
         // A script only gets its generator kind set as part of initialization,
         // so it can only transition from not being a generator.
-        MOZ_ASSERT(!isStarGenerator());
-        generatorKindBits_ = GeneratorKindAsBits(kind);
+        MOZ_ASSERT(!isGenerator());
+        generatorKind_ = GeneratorKindAsBit(kind);
     }
 
     js::FunctionAsyncKind asyncKind() const {
@@ -1612,7 +1614,7 @@ class JSScript : public js::gc::TenuredCell
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) && !hasInnerFunctions_ && !types_ &&
-               !isStarGenerator() && !isAsync() &&
+               !isGenerator() && !isAsync() &&
                !isDefaultClassConstructor() &&
                !hasBaselineScript() && !hasAnyIonScript() &&
                !doNotRelazify_;
@@ -1834,7 +1836,7 @@ class JSScript : public js::gc::TenuredCell
     bool hasTrynotes() const     { return hasArray(TRYNOTES); }
     bool hasScopeNotes() const   { return hasArray(SCOPENOTES); }
     bool hasYieldAndAwaitOffsets() const {
-        return isStarGenerator() || isAsync();
+        return isGenerator() || isAsync();
     }
 
 #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
@@ -2129,7 +2131,7 @@ class LazyScript : public gc::TenuredCell
 
         uint32_t numInnerFunctions : NumInnerFunctionsBits;
 
-        uint32_t generatorKindBits : 2;
+        uint32_t generatorKind : 1;
 
         // N.B. These are booleans but need to be uint32_t to pack correctly on MSVC.
         // If you add another boolean here, make sure to initialze it in
@@ -2253,15 +2255,15 @@ class LazyScript : public gc::TenuredCell
         return (GCPtrFunction*)&closedOverBindings()[numClosedOverBindings()];
     }
 
-    GeneratorKind generatorKind() const { return GeneratorKindFromBits(p_.generatorKindBits); }
+    GeneratorKind generatorKind() const { return GeneratorKindFromBit(p_.generatorKind); }
 
-    bool isStarGenerator() const { return generatorKind() == StarGenerator; }
+    bool isGenerator() const { return generatorKind() == GeneratorKind::Generator; }
 
     void setGeneratorKind(GeneratorKind kind) {
         // A script only gets its generator kind set as part of initialization,
         // so it can only transition from NotGenerator.
-        MOZ_ASSERT(!isStarGenerator());
-        p_.generatorKindBits = GeneratorKindAsBits(kind);
+        MOZ_ASSERT(!isGenerator());
+        p_.generatorKind = GeneratorKindAsBit(kind);
     }
 
     FunctionAsyncKind asyncKind() const {

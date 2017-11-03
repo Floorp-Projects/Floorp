@@ -360,6 +360,9 @@ public:
 
   double CurrentTime();
 
+  static already_AddRefed<dom::Promise>
+  CountUnderlyingStreams(const dom::GlobalObject& aGlobal, ErrorResult& aRv);
+
   void GetId(nsAString& aID) const;
 
   void GetAudioTracks(nsTArray<RefPtr<AudioStreamTrack> >& aTracks) const;

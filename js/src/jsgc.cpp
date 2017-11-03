@@ -359,7 +359,7 @@ const AllocKind gc::slotsToThingKind[] = {
 static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
               "We have defined a slot count for each kind.");
 
-#define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType) \
+#define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
     static_assert(sizeof(sizedType) >= SortedArenaList::MinThingSize, \
                   #sizedType " is smaller than SortedArenaList::MinThingSize!"); \
     static_assert(sizeof(sizedType) >= sizeof(FreeSpan), \
@@ -372,7 +372,7 @@ FOR_EACH_ALLOCKIND(CHECK_THING_SIZE);
 #undef CHECK_THING_SIZE
 
 const uint32_t Arena::ThingSizes[] = {
-#define EXPAND_THING_SIZE(allocKind, traceKind, type, sizedType) \
+#define EXPAND_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
     sizeof(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_THING_SIZE)
 #undef EXPAND_THING_SIZE
@@ -386,7 +386,7 @@ FreeSpan ArenaLists::placeholder;
 #define OFFSET(type) uint32_t(ArenaHeaderSize + (ArenaSize - ArenaHeaderSize) % sizeof(type))
 
 const uint32_t Arena::FirstThingOffsets[] = {
-#define EXPAND_FIRST_THING_OFFSET(allocKind, traceKind, type, sizedType) \
+#define EXPAND_FIRST_THING_OFFSET(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
     OFFSET(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_FIRST_THING_OFFSET)
 #undef EXPAND_FIRST_THING_OFFSET
@@ -397,7 +397,7 @@ FOR_EACH_ALLOCKIND(EXPAND_FIRST_THING_OFFSET)
 #define COUNT(type) uint32_t((ArenaSize - ArenaHeaderSize) / sizeof(type))
 
 const uint32_t Arena::ThingsPerArena[] = {
-#define EXPAND_THINGS_PER_ARENA(allocKind, traceKind, type, sizedType) \
+#define EXPAND_THINGS_PER_ARENA(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
     COUNT(sizedType),
 FOR_EACH_ALLOCKIND(EXPAND_THINGS_PER_ARENA)
 #undef EXPAND_THINGS_PER_ARENA
@@ -641,7 +641,7 @@ FinalizeArenas(FreeOp* fop,
                ArenaLists::KeepArenasEnum keepArenas)
 {
     switch (thingKind) {
-#define EXPAND_CASE(allocKind, traceKind, type, sizedType) \
+#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
       case AllocKind::allocKind: \
         return FinalizeTypedArenas<type>(fop, src, dest, thingKind, budget, keepArenas);
 FOR_EACH_ALLOCKIND(EXPAND_CASE)
@@ -1127,7 +1127,7 @@ static const char*
 AllocKindName(AllocKind kind)
 {
     static const char* names[] = {
-#define EXPAND_THING_NAME(allocKind, _1, _2, _3) \
+#define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5) \
         #allocKind,
 FOR_EACH_ALLOCKIND(EXPAND_THING_NAME)
 #undef EXPAND_THING_NAME
@@ -2483,7 +2483,7 @@ UpdateArenaPointers(MovingTracer* trc, Arena* arena)
     AllocKind kind = arena->getAllocKind();
 
     switch (kind) {
-#define EXPAND_CASE(allocKind, traceKind, type, sizedType) \
+#define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
       case AllocKind::allocKind: \
         UpdateArenaPointersTyped<type>(trc, arena, JS::TraceKind::traceKind); \
         return;
@@ -3833,7 +3833,7 @@ static const char*
 AllocKindToAscii(AllocKind kind)
 {
     switch(kind) {
-#define MAKE_CASE(allocKind, traceKind, type, sizedType) \
+#define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
       case AllocKind:: allocKind: return #allocKind;
 FOR_EACH_ALLOCKIND(MAKE_CASE)
 #undef MAKE_CASE
