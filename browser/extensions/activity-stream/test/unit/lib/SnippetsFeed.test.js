@@ -4,6 +4,7 @@ const {GlobalOverrider} = require("test/unit/utils");
 
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const searchData = {searchEngineIdentifier: "google", engines: ["searchEngine-google", "searchEngine-bing"]};
+const signUpUrl = "https://accounts.firefox.com/signup?service=sync&context=fx_desktop_v3&entrypoint=snippets";
 
 let overrider = new GlobalOverrider();
 
@@ -12,15 +13,16 @@ describe("SnippetsFeed", () => {
   let clock;
   beforeEach(() => {
     clock = sinon.useFakeTimers();
+    sandbox = sinon.sandbox.create();
     overrider.set({
       ProfileAge: class ProfileAge {
         constructor() {
           this.created = Promise.resolve(0);
           this.reset = Promise.resolve(WEEK_IN_MS);
         }
-      }
+      },
+      fxAccounts: {promiseAccountsSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}
     });
-    sandbox = sinon.sandbox.create();
   });
   afterEach(() => {
     clock.restore();
@@ -99,10 +101,17 @@ describe("SnippetsFeed", () => {
     assert.equal(action.type, at.SNIPPETS_DATA);
     assert.deepEqual(action.data, {selectedSearchEngine: searchData});
   });
-  it("should open Firefox Accounts", () => {
+  it("should call showFirefoxAccounts", () => {
+    const feed = new SnippetsFeed();
+    const browser = {};
+    sandbox.spy(feed, "showFirefoxAccounts");
+    feed.onAction({type: at.SHOW_FIREFOX_ACCOUNTS, _target: {browser}});
+    assert.calledWith(feed.showFirefoxAccounts, browser);
+  });
+  it("should open Firefox Accounts", async () => {
     const feed = new SnippetsFeed();
     const browser = {loadURI: sinon.spy()};
-    feed.onAction({type: at.SHOW_FIREFOX_ACCOUNTS, _target: {browser}});
-    assert.calledWith(browser.loadURI, "about:accounts?action=signup&entrypoint=snippets");
+    await feed.showFirefoxAccounts(browser);
+    assert.calledWith(browser.loadURI, signUpUrl);
   });
 });
