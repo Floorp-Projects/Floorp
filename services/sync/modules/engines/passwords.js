@@ -77,6 +77,8 @@ PasswordEngine.prototype = {
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
 
+  applyIncomingBatchSize: PASSWORDS_STORE_BATCH_SIZE,
+
   syncPriority: 2,
 
   async _syncFinish() {
