@@ -1332,6 +1332,14 @@ protected:
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
+  bool DetachExistingMediaKeys(DetailedPromise* aPromise);
+  bool TryRemoveMediaKeysAssociation(DetailedPromise* aPromise);
+  void RemoveMediaKeys();
+  bool AttachNewMediaKeys(DetailedPromise* aPromise);
+  bool TryMakeAssociationWithCDM(CDMProxy* aProxy);
+  void MakeAssociationWithCDMResolved(DetailedPromise* aPromise);
+  void ResetSetMediaKeysTempVariables();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
@@ -1534,6 +1542,9 @@ protected:
 
   // Encrypted Media Extension media keys.
   RefPtr<MediaKeys> mMediaKeys;
+  RefPtr<MediaKeys> mIncomingMediaKeys;
+  // Used to indicate if the MediaKeys attaching operation is on-going or not.
+  bool mAttachingMediaKey;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
