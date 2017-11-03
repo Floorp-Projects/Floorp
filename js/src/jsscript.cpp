@@ -341,7 +341,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         FunctionHasThisBinding,
         FunctionHasExtraBodyVarScope,
         IsGeneratorExp,
-        IsStarGenerator,
+        IsGenerator,
         IsAsync,
         HasRest,
         IsExprBody,
@@ -456,8 +456,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             scriptBits |= (1 << OwnSource);
         if (script->isGeneratorExp())
             scriptBits |= (1 << IsGeneratorExp);
-        if (script->isStarGenerator())
-            scriptBits |= (1 << IsStarGenerator);
+        if (script->isGenerator())
+            scriptBits |= (1 << IsGenerator);
         if (script->asyncKind() == AsyncFunction)
             scriptBits |= (1 << IsAsync);
         if (script->hasRest())
@@ -629,8 +629,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             script->isDerivedClassConstructor_ = true;
         if (scriptBits & (1 << IsDefaultClassConstructor))
             script->isDefaultClassConstructor_ = true;
-        if (scriptBits & (1 << IsStarGenerator))
-            script->setGeneratorKind(StarGenerator);
+        if (scriptBits & (1 << IsGenerator))
+            script->setGeneratorKind(GeneratorKind::Generator);
         if (scriptBits & (1 << IsAsync))
             script->setAsyncKind(AsyncFunction);
         if (scriptBits & (1 << HasRest))
@@ -2980,7 +2980,7 @@ JSScript::initFromModuleContext(JSContext* cx, HandleScript script,
     script->funLength_ = 0;
 
     script->isGeneratorExp_ = false;
-    script->setGeneratorKind(NotGenerator);
+    script->setGeneratorKind(GeneratorKind::NotGenerator);
 
     // Since modules are only run once, mark the script so that initializers
     // created within it may be given more precise types.
@@ -3456,8 +3456,8 @@ CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleF
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
-    if (srcFun->isStarGenerator() || srcFun->isAsync()) {
-        cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
+    if (srcFun->isGenerator() || srcFun->isAsync()) {
+        cloneProto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
     }
@@ -4196,7 +4196,7 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
     if (script->needsArgsObj())
         return true;
 
-    MOZ_ASSERT(!script->isStarGenerator());
+    MOZ_ASSERT(!script->isGenerator());
     MOZ_ASSERT(!script->isAsync());
 
     script->needsArgsObj_ = true;
@@ -4385,7 +4385,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     p.isExprBody = false;
     p.numClosedOverBindings = closedOverBindings.length();
     p.numInnerFunctions = innerFunctions.length();
-    p.generatorKindBits = GeneratorKindAsBits(NotGenerator);
+    p.generatorKind = GeneratorKindAsBit(GeneratorKind::NotGenerator);
     p.strict = false;
     p.bindingsAccessedDynamically = false;
     p.hasDebuggerStatement = false;

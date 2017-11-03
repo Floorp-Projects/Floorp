@@ -676,7 +676,33 @@ ssl_crl_ssl()
   html "</TABLE><BR>"
 }
 
-############################## ssl_cov #################################
+############################# setup_policy #############################
+# local shell function to create policy configuration
+########################################################################
+setup_policy()
+{
+  policy="$1"
+  OUTFILE=${P_R_CLIENTDIR}/pkcs11.txt
+  cat > "$OUTFILE" << ++EOF++
+library=
+name=NSS Internal PKCS #11 Module
+parameters=configdir='./client' certPrefix='' keyPrefix='' secmod='secmod.db' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription=''
+NSS=Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SEED,SHA256,SHA512] askpw=any timeout=30})
+++EOF++
+  echo "config=${policy}" >> "$OUTFILE"
+  echo "" >> "$OUTFILE"
+  echo "library=${DIST}/${OBJDIR}/lib/libnssckbi.so" >> "$OUTFILE"
+  cat >> "$OUTFILE" << ++EOF++
+name=RootCerts
+NSS=trustOrder=100
+++EOF++
+
+  echo "******************************Testing with: "
+  cat ${P_R_CLIENTDIR}/pkcs11.txt
+  echo "******************************"
+}
+
+############################## ssl_policy ##############################
 # local shell function to perform SSL Policy tests
 ########################################################################
 ssl_policy()
@@ -688,16 +714,14 @@ ssl_policy()
   sparam="$CIPHER_SUITES"
 
   if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
-      return;
+      html_failed "${SCRIPTNAME}: ${P_R_CLIENTDIR} is not initialized"
+      return 1;
   fi
 
   echo "Saving pkcs11.txt"
   cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
 
   start_selfserv # Launch the server
-
-  VMIN="ssl3"
-  VMAX="tls1.2"
 
   ignore_blank_lines ${SSLPOLICY} | \
   while read value ectype testmax param policy testname
@@ -721,24 +745,7 @@ ssl_policy()
 
           # load the policy
           policy=`echo ${policy} | sed -e 's;_; ;g'`
-
-          cat  > ${P_R_CLIENTDIR}/pkcs11.txt << ++EOF++
-library=
-name=NSS Internal PKCS #11 Module
-parameters=configdir='./client' certPrefix='' keyPrefix='' secmod='secmod.db' flags= updatedir='' updateCertPrefix='' updateKeyPrefix='' updateid='' updateTokenDescription=''
-NSS=Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={slotFlags=[RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES,Camellia,SEED,SHA256,SHA512] askpw=any timeout=30})
-++EOF++
-          echo "config=${policy}" >> ${P_R_CLIENTDIR}/pkcs11.txt
-          echo "" >> ${P_R_CLIENTDIR}/pkcs11.txt
-          echo "library=${DIST}/${OBJDIR}/lib/libnssckbi.so" >> ${P_R_CLIENTDIR}/pkcs11.txt >> ${P_R_CLIENTDIR}/pkcs11.txt
-          cat  >> ${P_R_CLIENTDIR}/pkcs11.txt << ++EOF++
-name=RootCerts
-NSS=trustOrder=100
-++EOF++
-
-          echo "******************************Testing with: "
-	  cat ${P_R_CLIENTDIR}/pkcs11.txt
-          echo "******************************"
+          setup_policy "$policy"
 
           echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -c ${param} -V ${VMIN}:${VMAX} ${CLIENT_OPTIONS} \\"
           echo "        -f -d ${P_R_CLIENTDIR} $verbose -w nss < ${REQUEST_FILE}"
@@ -764,6 +771,54 @@ NSS=trustOrder=100
   kill_selfserv
   html "</TABLE><BR>"
 }
+
+list_enabled_suites()
+{
+  echo "SSL_DIR=${P_R_CLIENTDIR} ${BINDIR}/listsuites"
+  SSL_DIR="${P_R_CLIENTDIR}" ${BINDIR}/listsuites | tail -n+3 | \
+      sed -n -e '/^TLS_/h' -e '/^ .*Enabled.*/{g;p}' | sed 's/:$//'
+}
+
+############################## ssl_policy_listsuites ###################
+# local shell function to perform SSL Policy tests, using listsuites
+########################################################################
+ssl_policy_listsuites()
+{
+  #verbose="-v"
+  html_head "SSL POLICY LISTSUITES $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+  testname=""
+  sparam="$CIPHER_SUITES"
+
+  if [ ! -f "${P_R_CLIENTDIR}/pkcs11.txt" ] ; then
+      html_failed "${SCRIPTNAME}: ${P_R_CLIENTDIR} is not initialized"
+      return 1;
+  fi
+
+  echo "Saving pkcs11.txt"
+  cp ${P_R_CLIENTDIR}/pkcs11.txt ${P_R_CLIENTDIR}/pkcs11.txt.sav
+
+  # Disallow all explicitly
+  setup_policy "disallow=all" 
+  RET_EXP=1
+  list_enabled_suites | grep '^TLS_'
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
+  # Disallow RSA in key exchange explicitly
+  setup_policy "disallow=rsa/ssl-key-exchange"
+  RET_EXP=1
+  list_enabled_suites | grep '^TLS_RSA_'
+  RET=$?
+  html_msg $RET $RET_EXP "${testname}" \
+           "produced a returncode of $RET, expected is $RET_EXP"
+
+  cp ${P_R_CLIENTDIR}/pkcs11.txt.sav ${P_R_CLIENTDIR}/pkcs11.txt
+
+  html "</TABLE><BR>"
+}
+
 ############################# is_revoked ###############################
 # local shell function to check if certificate is revoked
 ########################################################################
@@ -1150,7 +1205,8 @@ ssl_run_tests()
         case "${SSL_TEST}" in
         "policy")
             if [ "${TEST_MODE}" = "SHARED_DB" ] ; then
-	        ssl_policy
+                ssl_policy_listsuites
+                ssl_policy
             fi
             ;;
         "crl")

@@ -93,7 +93,7 @@ pkits_init()
   ${BINDIR}/certutil -N -d ${PKITSdb} -f ${PKITSdb}/pw
 
   ${BINDIR}/certutil -A -n TrustAnchorRootCertificate -t "C,C,C" -i \
-      $certs/TrustAnchorRootCertificate.crt -d $PKITSdb
+      $certs/TrustAnchorRootCertificate.crt -d $PKITSdb -f ${PKITSdb}/pw
   if [ -z "$NSS_NO_PKITS_CRLS" ]; then
     ${BINDIR}/crlutil -I -i $crls/TrustAnchorRootCRL.crl -d ${PKITSdb} -f ${PKITSdb}/pw
   else

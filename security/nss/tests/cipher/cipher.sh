@@ -107,6 +107,21 @@ cipher_gcm()
   done < ${GCM_TXT}
 }
 
+###################### cipher_rsa_populate ############################
+# Test the ability to reconstruct rsa private key reconstruction
+# also test the PK11GenericObject interface 
+###################################################################
+cipher_rsa_populate()
+{
+  TESTNAME="RSA Reconstruct Private Keys Test"
+  echo "$SCRIPTNAME: $TESTNAME --------------------------------"
+  echo "rsapoptst -t all -r 10"
+# skip e_d_q. It isn't reliable, and can return incorrect data. e_d_q should
+# be turned off.
+  ${PROFTOOL} ${BINDIR}/rsapoptst -t e_n_p,d_n_q,d_p_q,e_d_n -r 10
+  html_msg $? 0 "$TESTNAME"
+}
+
 ############################## cipher_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -136,5 +151,6 @@ fi
 # Skip cipher_gcm if this is a softoken only build.
 if [ "${NSS_BUILD_SOFTOKEN_ONLY}" != "1" ]; then
     cipher_gcm
+    cipher_rsa_populate
 fi
 cipher_cleanup

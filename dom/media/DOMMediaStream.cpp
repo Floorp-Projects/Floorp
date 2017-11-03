@@ -10,6 +10,7 @@
 #include "AudioStreamTrack.h"
 #include "Layers.h"
 #include "MediaStreamGraph.h"
+#include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "VideoStreamTrack.h"
 #include "mozilla/dom/AudioNode.h"
@@ -20,6 +21,7 @@
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackEvent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/media/MediaUtils.h"
@@ -27,6 +29,7 @@
 #include "nsIScriptError.h"
 #include "nsIUUIDGenerator.h"
 #include "nsPIDOMWindow.h"
+#include "nsProxyRelease.h"
 #include "nsRFPService.h"
 #include "nsServiceManagerUtils.h"
 
@@ -338,9 +341,8 @@ public:
   explicit PlaybackTrackListener(DOMMediaStream* aStream) :
     mStream(aStream) {}
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaybackTrackListener,
-                                           MediaStreamTrackConsumer)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlaybackTrackListener)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PlaybackTrackListener)
 
   void NotifyEnded(MediaStreamTrack* aTrack) override
   {
@@ -364,15 +366,9 @@ protected:
   RefPtr<DOMMediaStream> mStream;
 };
 
-NS_IMPL_ADDREF_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                         MediaStreamTrackConsumer)
-NS_IMPL_RELEASE_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                          MediaStreamTrackConsumer)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream::PlaybackTrackListener)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackConsumer)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMMediaStream::PlaybackTrackListener,
-                                   MediaStreamTrackConsumer,
-                                   mStream)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::PlaybackTrackListener, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::PlaybackTrackListener, Release)
+NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::PlaybackTrackListener, mStream)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
 
@@ -578,6 +574,68 @@ DOMMediaStream::CurrentTime()
   }
   return nsRFPService::ReduceTimePrecisionAsSecs(mPlaybackStream->
     StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime));
+}
+
+already_AddRefed<Promise>
+DOMMediaStream::CountUnderlyingStreams(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!window) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!go) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<Promise> p = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MediaStreamGraph* graph = MediaStreamGraph::GetInstanceIfExists(window);
+  if (!graph) {
+    p->MaybeResolve(0);
+    return p.forget();
+  }
+
+  auto* graphImpl = static_cast<MediaStreamGraphImpl*>(graph);
+
+  class Counter : public ControlMessage
+  {
+  public:
+    Counter(MediaStreamGraphImpl* aGraph,
+            const RefPtr<Promise>& aPromise)
+      : ControlMessage(nullptr)
+      , mGraph(aGraph)
+      , mPromise(MakeAndAddRef<nsMainThreadPtrHolder<Promise>>("DOMMediaStream::Counter::mPromise", aPromise))
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+
+    void Run() override
+    {
+      nsMainThreadPtrHandle<Promise>& promise = mPromise;
+      uint32_t streams = mGraph->mStreams.Length() +
+                         mGraph->mSuspendedStreams.Length();
+      mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NewRunnableFrom([promise, streams]() mutable {
+          promise->MaybeResolve(streams);
+          return NS_OK;
+        }));
+    }
+
+  private:
+    // mGraph owns this Counter instance and decides its lifetime.
+    MediaStreamGraphImpl* mGraph;
+    nsMainThreadPtrHandle<Promise> mPromise;
+  };
+  graphImpl->AppendMessage(MakeUnique<Counter>(graphImpl, p));
+
+  return p.forget();
 }
 
 void

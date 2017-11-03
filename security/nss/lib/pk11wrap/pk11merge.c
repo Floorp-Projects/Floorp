@@ -1258,6 +1258,7 @@ pk11_newMergeLogNode(PLArenaPool *arena,
     /* initialize it */
     obj->slot = slot;
     obj->objectID = id;
+    obj->owner = PR_FALSE;
 
     newLog->object = obj;
     newLog->error = error;

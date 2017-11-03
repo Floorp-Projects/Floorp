@@ -13,10 +13,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://tps/logger.jsm");
 Cu.import("resource://services-common/async.js");
 
-var DumpHistory = function TPS_History__DumpHistory() {
+var DumpHistory = async function TPS_History__DumpHistory() {
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
   let root = PlacesUtils.history.executeQuery(query, options).root;
@@ -25,7 +26,7 @@ var DumpHistory = function TPS_History__DumpHistory() {
   for (var i = 0; i < root.childCount; i++) {
     let node = root.getChild(i);
     let uri = node.uri;
-    let curvisits = HistoryEntry._getVisits(uri);
+    let curvisits = await PlacesSyncUtils.history.fetchVisitsForURL(uri);
     for (var visit of curvisits) {
       Logger.logInfo("URI: " + uri + ", type=" + visit.type + ", date=" + visit.date, true);
     }
@@ -40,50 +41,6 @@ var DumpHistory = function TPS_History__DumpHistory() {
  * Contains methods for manipulating browser history entries.
  */
 var HistoryEntry = {
-  /**
-   * _db
-   *
-   * Returns the DBConnection object for the history service.
-   */
-  get _db() {
-    return PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-  },
-
-  /**
-   * _visitStm
-   *
-   * Return the SQL statement for getting history visit information
-   * from the moz_historyvisits table.  Borrowed from Weave's
-   * history.js.
-   */
-  get _visitStm() {
-    let stm = this._db.createStatement(
-      "SELECT visit_type type, visit_date date " +
-      "FROM moz_historyvisits " +
-      "WHERE place_id = (" +
-        "SELECT id " +
-        "FROM moz_places " +
-        "WHERE url_hash = hash(:url) AND url = :url) " +
-      "ORDER BY date DESC LIMIT 20");
-    this.__defineGetter__("_visitStm", () => stm);
-    return stm;
-  },
-
-  /**
-   * _getVisits
-   *
-   * Gets history information about visits to a given uri.
-   *
-   * @param uri The uri to get visits for
-   * @return an array of objects with 'date' and 'type' properties,
-   * corresponding to the visits in the history database for the
-   * given uri
-   */
-  _getVisits: function HistStore__getVisits(uri) {
-    this._visitStm.params.url = uri;
-    return Async.querySpinningly(this._visitStm, ["date", "type"]);
-  },
-
   /**
    * Add
    *
@@ -138,11 +95,11 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return true if all the visits for the uri are found, otherwise false
    */
-  Find(item, usSinceEpoch) {
+  async Find(item, usSinceEpoch) {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
-    let curvisits = this._getVisits(item.uri);
+    let curvisits = await PlacesSyncUtils.history.fetchVisitsForURL(item.uri);
     for (let visit of curvisits) {
       for (let itemvisit of item.visits) {
         let expectedDate = itemvisit.date * 60 * 60 * 1000 * 1000

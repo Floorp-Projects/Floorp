@@ -29,7 +29,25 @@ TEST_P(TlsConnectGeneric, ServerAuthBigRsa) {
 }
 
 TEST_P(TlsConnectGeneric, ServerAuthRsaChain) {
-  Reset(TlsAgent::kServerRsaChain);
+  Reset("rsa_chain");
+  Connect();
+  CheckKeys();
+  size_t chain_length;
+  EXPECT_TRUE(client_->GetPeerChainLength(&chain_length));
+  EXPECT_EQ(2UL, chain_length);
+}
+
+TEST_P(TlsConnectGeneric, ServerAuthRsaPssChain) {
+  Reset("rsa_pss_chain");
+  Connect();
+  CheckKeys();
+  size_t chain_length;
+  EXPECT_TRUE(client_->GetPeerChainLength(&chain_length));
+  EXPECT_EQ(2UL, chain_length);
+}
+
+TEST_P(TlsConnectGeneric, ServerAuthRsaCARsaPssChain) {
+  Reset("rsa_ca_rsa_pss_chain");
   Connect();
   CheckKeys();
   size_t chain_length;

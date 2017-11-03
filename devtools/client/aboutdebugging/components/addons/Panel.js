@@ -6,7 +6,7 @@
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { Management } = require("resource://gre/modules/Extension.jsm");
-const { createFactory, createClass, DOM: dom, PropTypes } =
+const { createFactory, Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
@@ -27,20 +27,29 @@ const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 const WEB_EXT_URL = "https://developer.mozilla.org/Add-ons" +
                     "/WebExtensions/Getting_started_with_web-ext";
 
-module.exports = createClass({
-  displayName: "AddonsPanel",
-
-  propTypes: {
-    client: PropTypes.instanceOf(DebuggerClient).isRequired,
-    id: PropTypes.string.isRequired
-  },
-
-  getInitialState() {
+class AddonsPanel extends Component {
+  static get propTypes() {
     return {
+      client: PropTypes.instanceOf(DebuggerClient).isRequired,
+      id: PropTypes.string.isRequired
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
       extensions: [],
       debugDisabled: false,
     };
-  },
+
+    this.updateDebugStatus = this.updateDebugStatus.bind(this);
+    this.updateAddonsList = this.updateAddonsList.bind(this);
+    this.onInstalled = this.onInstalled.bind(this);
+    this.onUninstalled = this.onUninstalled.bind(this);
+    this.onEnabled = this.onEnabled.bind(this);
+    this.onDisabled = this.onDisabled.bind(this);
+  }
 
   componentDidMount() {
     AddonManager.addAddonListener(this);
@@ -55,7 +64,7 @@ module.exports = createClass({
 
     this.updateDebugStatus();
     this.updateAddonsList();
-  },
+  }
 
   componentWillUnmount() {
     AddonManager.removeAddonListener(this);
@@ -65,7 +74,7 @@ module.exports = createClass({
       this.updateDebugStatus);
     Services.prefs.removeObserver(REMOTE_ENABLED_PREF,
       this.updateDebugStatus);
-  },
+  }
 
   updateDebugStatus() {
     let debugDisabled =
@@ -73,7 +82,7 @@ module.exports = createClass({
       !Services.prefs.getBoolPref(REMOTE_ENABLED_PREF);
 
     this.setState({ debugDisabled });
-  },
+  }
 
   updateAddonsList() {
     this.props.client.listAddons()
@@ -95,35 +104,35 @@ module.exports = createClass({
       }, error => {
         throw new Error("Client error while listing addons: " + error);
       });
-  },
+  }
 
   /**
    * Mandatory callback as AddonManager listener.
    */
   onInstalled() {
     this.updateAddonsList();
-  },
+  }
 
   /**
    * Mandatory callback as AddonManager listener.
    */
   onUninstalled() {
     this.updateAddonsList();
-  },
+  }
 
   /**
    * Mandatory callback as AddonManager listener.
    */
   onEnabled() {
     this.updateAddonsList();
-  },
+  }
 
   /**
    * Mandatory callback as AddonManager listener.
    */
   onDisabled() {
     this.updateAddonsList();
-  },
+  }
 
   render() {
     let { client, id } = this.props;
@@ -177,4 +186,6 @@ module.exports = createClass({
       })
     ));
   }
-});
+}
+
+module.exports = AddonsPanel;

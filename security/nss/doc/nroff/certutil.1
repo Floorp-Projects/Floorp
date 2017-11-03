@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  8 September 2016
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 27 October 2017
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "8 September 2016" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "27 October 2017" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -371,9 +371,9 @@ Read an alternate PQG value from the specified file when generating DSA key pair
 \fBcertutil\fR
 generates its own PQG value\&. PQG files are created with a separate DSA utility\&.
 .sp
-Elliptic curve name is one of the ones from nistp256, nistp384, nistp521, curve25519.
+Elliptic curve name is one of the ones from nistp256, nistp384, nistp521, curve25519\&.
 .sp
-If a token is available that supports more curves, the foolowing curves are supported as well: sect163k1, nistk163, sect163r1, sect163r2, nistb163,  sect193r1, sect193r2, sect233k1, nistk233, sect233r1, nistb233, sect239k1, sect283k1, nistk283, sect283r1, nistb283, sect409k1, nistk409, sect409r1, nistb409,  sect571k1, nistk571, sect571r1, nistb571, secp160k1, secp160r1, secp160r2, secp192k1, secp192r1, nistp192,  secp224k1, secp224r1, nistp224, secp256k1, secp256r1, secp384r1, secp521r1, prime192v1, prime192v2, prime192v3, prime239v1, prime239v2, prime239v3, c2pnb163v1, c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1, c2tnb191v2, c2tnb191v3, c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3, c2pnb272w1, c2pnb304w1, c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1, secp112r2, secp128r1, secp128r2, sect113r1, sect113r2, sect131r1, sect131r2
+If a token is available that supports more curves, the foolowing curves are supported as well: sect163k1, nistk163, sect163r1, sect163r2, nistb163, sect193r1, sect193r2, sect233k1, nistk233, sect233r1, nistb233, sect239k1, sect283k1, nistk283, sect283r1, nistb283, sect409k1, nistk409, sect409r1, nistb409, sect571k1, nistk571, sect571r1, nistb571, secp160k1, secp160r1, secp160r2, secp192k1, secp192r1, nistp192, secp224k1, secp224r1, nistp224, secp256k1, secp256r1, secp384r1, secp521r1, prime192v1, prime192v2, prime192v3, prime239v1, prime239v2, prime239v3, c2pnb163v1, c2pnb163v2, c2pnb163v3, c2pnb176v1, c2tnb191v1, c2tnb191v2, c2tnb191v3, c2pnb208w1, c2tnb239v1, c2tnb239v2, c2tnb239v3, c2pnb272w1, c2pnb304w1, c2tnb359w1, c2pnb368w1, c2tnb431r1, secp112r1, secp112r2, secp128r1, secp128r2, sect113r1, sect113r2, sect131r1, sect131r2
 .RE
 .PP
 \-r
@@ -607,6 +607,24 @@ to generate the signature for a certificate being created or added to a database
 \-y exp
 .RS 4
 Set an alternate exponent value to use in generating a new RSA public key for the database, instead of the default value of 65537\&. The available alternate values are 3 and 17\&.
+.RE
+.PP
+\-\-pss
+.RS 4
+Restrict the generated certificate (with the
+\fB\-S\fR
+option) or certificate request (with the
+\fB\-R\fR
+option) to be used with the RSA\-PSS signature scheme\&. This only works when the private key of the certificate or certificate request is RSA\&.
+.RE
+.PP
+\-\-pss\-sign
+.RS 4
+Sign the generated certificate with the RSA\-PSS signature scheme (with the
+\fB\-C\fR
+or
+\fB\-S\fR
+option)\&. This only works when the private key of the signer\*(Aqs certificate is RSA\&. If the signer\*(Aqs certificate is restricted to RSA\-PSS, it is not necessary to specify this option\&.
 .RE
 .PP
 \-z noise\-file
@@ -1512,7 +1530,8 @@ There are ways to narrow the keys listed in the search results:
 .IP \(bu 2.3
 .\}
 To return a specific key, use the
-\fB\-n\fR\fIname\fR
+\fB\-n\fR
+\fIname\fR
 argument with the name of the key\&.
 .RE
 .sp
@@ -1525,7 +1544,8 @@ argument with the name of the key\&.
 .IP \(bu 2.3
 .\}
 If there are multiple security devices loaded, then the
-\fB\-h\fR\fItokenname\fR
+\fB\-h\fR
+\fItokenname\fR
 argument can search a specific token or all tokens\&.
 .RE
 .sp
@@ -1538,7 +1558,8 @@ argument can search a specific token or all tokens\&.
 .IP \(bu 2.3
 .\}
 If there are multiple key types available, then the
-\fB\-k\fR\fIkey\-type\fR
+\fB\-k\fR
+\fIkey\-type\fR
 argument can search a specific type of key, like RSA, DSA, or ECC\&.
 .RE
 .PP

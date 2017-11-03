@@ -313,10 +313,12 @@ class AutofillRecords {
   add(record, {sourceSync = false} = {}) {
     this.log.debug("add:", record);
 
+    let recordToSave = this._cloneAndCleanUp(record);
+
     if (sourceSync) {
       // Remove tombstones for incoming items that were changed on another
       // device. Local deletions always lose to avoid data loss.
-      let index = this._findIndexByGUID(record.guid, {
+      let index = this._findIndexByGUID(recordToSave.guid, {
         includeDeleted: true,
       });
       if (index > -1) {
@@ -324,31 +326,24 @@ class AutofillRecords {
         if (existing.deleted) {
           this.data.splice(index, 1);
         } else {
-          throw new Error(`Record ${record.guid} already exists`);
+          throw new Error(`Record ${recordToSave.guid} already exists`);
         }
       }
-      let recordToSave = this._clone(record);
-      return this._saveRecord(recordToSave, {sourceSync});
+    } else if (!recordToSave.deleted) {
+      this._normalizeRecord(recordToSave);
+
+      recordToSave.guid = this._generateGUID();
+      recordToSave.version = this.version;
+
+      // Metadata
+      let now = Date.now();
+      recordToSave.timeCreated = now;
+      recordToSave.timeLastModified = now;
+      recordToSave.timeLastUsed = 0;
+      recordToSave.timesUsed = 0;
     }
 
-    if (record.deleted) {
-      return this._saveRecord(record);
-    }
-
-    let recordToSave = this._clone(record);
-    this._normalizeRecord(recordToSave);
-
-    recordToSave.guid = this._generateGUID();
-    recordToSave.version = this.version;
-
-    // Metadata
-    let now = Date.now();
-    recordToSave.timeCreated = now;
-    recordToSave.timeLastModified = now;
-    recordToSave.timeLastUsed = 0;
-    recordToSave.timesUsed = 0;
-
-    return this._saveRecord(recordToSave);
+    return this._saveRecord(recordToSave, {sourceSync});
   }
 
   _saveRecord(record, {sourceSync = false} = {}) {
@@ -428,7 +423,7 @@ class AutofillRecords {
         newValue = oldValue;
       }
 
-      if (!newValue) {
+      if (newValue === undefined || newValue === "") {
         delete recordFound[field];
       } else {
         recordFound[field] = newValue;

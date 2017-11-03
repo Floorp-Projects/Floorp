@@ -5,22 +5,12 @@
 #include "nsDataSignatureVerifier.h"
 
 #include "ScopedNSSTypes.h"
-#include "SharedCertVerifier.h"
-#include "cms.h"
-#include "cryptohi.h"
-#include "keyhi.h"
 #include "mozilla/Base64.h"
-#include "mozilla/Casting.h"
-#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
-#include "nsNSSComponent.h"
 #include "nsString.h"
-#include "pkix/pkixnss.h"
-#include "pkix/pkixtypes.h"
 #include "secerr.h"
 
 using namespace mozilla;
-using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
@@ -134,117 +124,3 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
 
   return NS_OK;
 }
-
-namespace mozilla {
-
-nsresult
-VerifyCMSDetachedSignatureIncludingCertificate(
-  const SECItem& buffer, const SECItem& detachedDigest,
-  nsresult (*verifyCertificate)(CERTCertificate* cert, void* context,
-                                void* pinArg),
-  void* verifyCertificateContext, void* pinArg,
-  const nsNSSShutDownPreventionLock& /*proofOfLock*/)
-{
-  // XXX: missing pinArg is tolerated.
-  if (NS_WARN_IF(!buffer.data && buffer.len > 0) ||
-      NS_WARN_IF(!detachedDigest.data && detachedDigest.len > 0) ||
-      (!verifyCertificate) ||
-      NS_WARN_IF(!verifyCertificateContext)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  UniqueNSSCMSMessage
-    cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
-                                        nullptr, nullptr, nullptr, nullptr,
-                                        nullptr));
-  if (!cmsMsg) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-
-  if (!NSS_CMSMessage_IsSigned(cmsMsg.get())) {
-    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
-  }
-
-  NSSCMSContentInfo* cinfo = NSS_CMSMessage_ContentLevel(cmsMsg.get(), 0);
-  if (!cinfo) {
-    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
-  }
-
-  // We're expecting this to be a PKCS#7 signedData content info.
-  if (NSS_CMSContentInfo_GetContentTypeTag(cinfo)
-        != SEC_OID_PKCS7_SIGNED_DATA) {
-    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
-  }
-
-  // signedData is non-owning
-  NSSCMSSignedData* signedData =
-    static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
-  if (!signedData) {
-    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
-  }
-
-  // Set digest value.
-  if (NSS_CMSSignedData_SetDigestValue(signedData, SEC_OID_SHA1,
-                                       const_cast<SECItem*>(&detachedDigest))) {
-    return NS_ERROR_CMS_VERIFY_BAD_DIGEST;
-  }
-
-  // Parse the certificates into CERTCertificate objects held in memory so
-  // verifyCertificate will be able to find them during path building.
-  UniqueCERTCertList certs(CERT_NewCertList());
-  if (!certs) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (signedData->rawCerts) {
-    for (size_t i = 0; signedData->rawCerts[i]; ++i) {
-      UniqueCERTCertificate
-        cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                     signedData->rawCerts[i], nullptr, false,
-                                     true));
-      // Skip certificates that fail to parse
-      if (!cert) {
-        continue;
-      }
-
-      if (CERT_AddCertToListTail(certs.get(), cert.get()) != SECSuccess) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      Unused << cert.release(); // Ownership transferred to the cert list.
-    }
-  }
-
-  // Get the end-entity certificate.
-  int numSigners = NSS_CMSSignedData_SignerInfoCount(signedData);
-  if (NS_WARN_IF(numSigners != 1)) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-  // signer is non-owning.
-  NSSCMSSignerInfo* signer = NSS_CMSSignedData_GetSignerInfo(signedData, 0);
-  if (NS_WARN_IF(!signer)) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-  CERTCertificate* signerCert =
-    NSS_CMSSignerInfo_GetSigningCertificate(signer, CERT_GetDefaultCertDB());
-  if (!signerCert) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-
-  nsresult rv = verifyCertificate(signerCert, verifyCertificateContext, pinArg);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // See NSS_CMSContentInfo_GetContentTypeOID, which isn't exported from NSS.
-  SECOidData* contentTypeOidData =
-    SECOID_FindOID(&signedData->contentInfo.contentType);
-  if (!contentTypeOidData) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-
-  return MapSECStatus(NSS_CMSSignerInfo_Verify(signer,
-                         const_cast<SECItem*>(&detachedDigest),
-                         &contentTypeOidData->oid));
-}
-
-} // namespace mozilla

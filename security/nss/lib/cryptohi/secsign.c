@@ -22,10 +22,11 @@ struct SGNContextStr {
     void *hashcx;
     const SECHashObject *hashobj;
     SECKEYPrivateKey *key;
+    SECItem *params;
 };
 
-SGNContext *
-SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
+static SGNContext *
+sgn_NewContext(SECOidTag alg, SECItem *params, SECKEYPrivateKey *key)
 {
     SGNContext *cx;
     SECOidTag hashalg, signalg;
@@ -40,7 +41,7 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
      * it may just support CKM_SHA1_RSA_PKCS and/or CKM_MD5_RSA_PKCS.
      */
     /* we have a private key, not a public key, so don't pass it in */
-    rv = sec_DecodeSigAlg(NULL, alg, NULL, &signalg, &hashalg);
+    rv = sec_DecodeSigAlg(NULL, alg, params, &signalg, &hashalg);
     if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         return 0;
@@ -49,7 +50,8 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 
     /* verify our key type */
     if (key->keyType != keyType &&
-        !((key->keyType == dsaKey) && (keyType == fortezzaKey))) {
+        !((key->keyType == dsaKey) && (keyType == fortezzaKey)) &&
+        !((key->keyType == rsaKey) && (keyType == rsaPssKey))) {
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         return 0;
     }
@@ -59,8 +61,22 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
         cx->hashalg = hashalg;
         cx->signalg = signalg;
         cx->key = key;
+        cx->params = params;
     }
     return cx;
+}
+
+SGNContext *
+SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
+{
+    return sgn_NewContext(alg, NULL, key);
+}
+
+SGNContext *
+SGN_NewContextWithAlgorithmID(SECAlgorithmID *alg, SECKEYPrivateKey *key)
+{
+    SECOidTag tag = SECOID_GetAlgorithmTag(alg);
+    return sgn_NewContext(tag, &alg->parameters, key);
 }
 
 void
@@ -148,6 +164,7 @@ SGN_End(SGNContext *cx, SECItem *result)
 
     result->data = 0;
     digder.data = 0;
+    sigitem.data = 0;
 
     /* Finish up digest function */
     if (cx->hashcx == NULL) {
@@ -156,7 +173,8 @@ SGN_End(SGNContext *cx, SECItem *result)
     }
     (*cx->hashobj->end)(cx->hashcx, digest, &part1, sizeof(digest));
 
-    if (privKey->keyType == rsaKey) {
+    if (privKey->keyType == rsaKey &&
+        cx->signalg != SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
 
         arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
         if (!arena) {
@@ -200,26 +218,65 @@ SGN_End(SGNContext *cx, SECItem *result)
         goto loser;
     }
 
-    rv = PK11_Sign(privKey, &sigitem, &digder);
-    if (rv != SECSuccess) {
-        PORT_Free(sigitem.data);
-        sigitem.data = NULL;
-        goto loser;
+    if (cx->signalg == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
+        CK_RSA_PKCS_PSS_PARAMS mech;
+        SECItem mechItem = { siBuffer, (unsigned char *)&mech, sizeof(mech) };
+
+        PORT_Memset(&mech, 0, sizeof(mech));
+
+        if (cx->params && cx->params->data) {
+            SECKEYRSAPSSParams params;
+
+            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+            if (!arena) {
+                rv = SECFailure;
+                goto loser;
+            }
+
+            PORT_Memset(&params, 0, sizeof(params));
+            rv = SEC_QuickDERDecodeItem(arena, &params,
+                                        SECKEY_RSAPSSParamsTemplate,
+                                        cx->params);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            rv = sec_RSAPSSParamsToMechanism(&mech, &params);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+        } else {
+            mech.hashAlg = CKM_SHA_1;
+            mech.mgf = CKG_MGF1_SHA1;
+            mech.sLen = digder.len;
+        }
+        rv = PK11_SignWithMechanism(privKey, CKM_RSA_PKCS_PSS, &mechItem,
+                                    &sigitem, &digder);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+    } else {
+        rv = PK11_Sign(privKey, &sigitem, &digder);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     }
 
     if ((cx->signalg == SEC_OID_ANSIX9_DSA_SIGNATURE) ||
         (cx->signalg == SEC_OID_ANSIX962_EC_PUBLIC_KEY)) {
         /* DSAU_EncodeDerSigWithLen works for DSA and ECDSA */
         rv = DSAU_EncodeDerSigWithLen(result, &sigitem, sigitem.len);
-        PORT_Free(sigitem.data);
         if (rv != SECSuccess)
             goto loser;
+        SECITEM_FreeItem(&sigitem, PR_FALSE);
     } else {
         result->len = sigitem.len;
         result->data = sigitem.data;
     }
 
 loser:
+    if (rv != SECSuccess) {
+        SECITEM_FreeItem(&sigitem, PR_FALSE);
+    }
     SGN_DestroyDigestInfo(di);
     if (arena != NULL) {
         PORT_FreeArena(arena, PR_FALSE);
@@ -229,18 +286,14 @@ loser:
 
 /************************************************************************/
 
-/*
-** Sign a block of data returning in result a bunch of bytes that are the
-** signature. Returns zero on success, an error code on failure.
-*/
-SECStatus
-SEC_SignData(SECItem *res, const unsigned char *buf, int len,
-             SECKEYPrivateKey *pk, SECOidTag algid)
+static SECStatus
+sec_SignData(SECItem *res, const unsigned char *buf, int len,
+             SECKEYPrivateKey *pk, SECOidTag algid, SECItem *params)
 {
     SECStatus rv;
     SGNContext *sgn;
 
-    sgn = SGN_NewContext(algid, pk);
+    sgn = sgn_NewContext(algid, params, pk);
 
     if (sgn == NULL)
         return SECFailure;
@@ -258,6 +311,25 @@ SEC_SignData(SECItem *res, const unsigned char *buf, int len,
 loser:
     SGN_DestroyContext(sgn, PR_TRUE);
     return rv;
+}
+
+/*
+** Sign a block of data returning in result a bunch of bytes that are the
+** signature. Returns zero on success, an error code on failure.
+*/
+SECStatus
+SEC_SignData(SECItem *res, const unsigned char *buf, int len,
+             SECKEYPrivateKey *pk, SECOidTag algid)
+{
+    return sec_SignData(res, buf, len, pk, algid, NULL);
+}
+
+SECStatus
+SEC_SignDataWithAlgorithmID(SECItem *res, const unsigned char *buf, int len,
+                            SECKEYPrivateKey *pk, SECAlgorithmID *algid)
+{
+    SECOidTag tag = SECOID_GetAlgorithmTag(algid);
+    return sec_SignData(res, buf, len, pk, tag, &algid->parameters);
 }
 
 /************************************************************************/
@@ -294,10 +366,10 @@ const SEC_ASN1Template CERT_SignedDataTemplate[] =
 
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedDataTemplate)
 
-SECStatus
-SEC_DerSignData(PLArenaPool *arena, SECItem *result,
+static SECStatus
+sec_DerSignData(PLArenaPool *arena, SECItem *result,
                 const unsigned char *buf, int len, SECKEYPrivateKey *pk,
-                SECOidTag algID)
+                SECOidTag algID, SECItem *params)
 {
     SECItem it;
     CERTSignedData sd;
@@ -339,7 +411,7 @@ SEC_DerSignData(PLArenaPool *arena, SECItem *result,
     }
 
     /* Sign input buffer */
-    rv = SEC_SignData(&it, buf, len, pk, algID);
+    rv = sec_SignData(&it, buf, len, pk, algID, params);
     if (rv)
         goto loser;
 
@@ -349,7 +421,7 @@ SEC_DerSignData(PLArenaPool *arena, SECItem *result,
     sd.data.len = len;
     sd.signature.data = it.data;
     sd.signature.len = it.len << 3; /* convert to bit string */
-    rv = SECOID_SetAlgorithmID(arena, &sd.signatureAlgorithm, algID, 0);
+    rv = SECOID_SetAlgorithmID(arena, &sd.signatureAlgorithm, algID, params);
     if (rv)
         goto loser;
 
@@ -360,6 +432,24 @@ SEC_DerSignData(PLArenaPool *arena, SECItem *result,
 loser:
     PORT_Free(it.data);
     return rv;
+}
+
+SECStatus
+SEC_DerSignData(PLArenaPool *arena, SECItem *result,
+                const unsigned char *buf, int len, SECKEYPrivateKey *pk,
+                SECOidTag algID)
+{
+    return sec_DerSignData(arena, result, buf, len, pk, algID, NULL);
+}
+
+SECStatus
+SEC_DerSignDataWithAlgorithmID(PLArenaPool *arena, SECItem *result,
+                               const unsigned char *buf, int len,
+                               SECKEYPrivateKey *pk,
+                               SECAlgorithmID *algID)
+{
+    SECOidTag tag = SECOID_GetAlgorithmTag(algID);
+    return sec_DerSignData(arena, result, buf, len, pk, tag, &algID->parameters);
 }
 
 SECStatus
@@ -508,4 +598,227 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
             break;
     }
     return sigTag;
+}
+
+static SECItem *
+sec_CreateRSAPSSParameters(PLArenaPool *arena,
+                           SECItem *result,
+                           SECOidTag hashAlgTag,
+                           const SECItem *params,
+                           const SECKEYPrivateKey *key)
+{
+    SECKEYRSAPSSParams pssParams;
+    int modBytes, hashLength;
+    unsigned long saltLength;
+    SECStatus rv;
+
+    if (key->keyType != rsaKey && key->keyType != rsaPssKey) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return NULL;
+    }
+
+    PORT_Memset(&pssParams, 0, sizeof(pssParams));
+
+    if (params && params->data) {
+        /* The parameters field should either be empty or contain
+         * valid RSA-PSS parameters */
+        PORT_Assert(!(params->len == 2 &&
+                      params->data[0] == SEC_ASN1_NULL &&
+                      params->data[1] == 0));
+        rv = SEC_QuickDERDecodeItem(arena, &pssParams,
+                                    SECKEY_RSAPSSParamsTemplate,
+                                    params);
+        if (rv != SECSuccess) {
+            return NULL;
+        }
+    }
+
+    if (pssParams.trailerField.data) {
+        unsigned long trailerField;
+
+        rv = SEC_ASN1DecodeInteger((SECItem *)&pssParams.trailerField,
+                                   &trailerField);
+        if (rv != SECSuccess) {
+            return NULL;
+        }
+        if (trailerField != 1) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return NULL;
+        }
+    }
+
+    modBytes = PK11_GetPrivateModulusLen((SECKEYPrivateKey *)key);
+
+    /* Determine the hash algorithm to use, based on hashAlgTag and
+     * pssParams.hashAlg; there are four cases */
+    if (hashAlgTag != SEC_OID_UNKNOWN) {
+        if (pssParams.hashAlg) {
+            if (SECOID_GetAlgorithmTag(pssParams.hashAlg) != hashAlgTag) {
+                PORT_SetError(SEC_ERROR_INVALID_ARGS);
+                return NULL;
+            }
+        }
+    } else if (hashAlgTag == SEC_OID_UNKNOWN) {
+        if (pssParams.hashAlg) {
+            hashAlgTag = SECOID_GetAlgorithmTag(pssParams.hashAlg);
+        } else {
+            /* Find a suitable hash algorithm based on the NIST recommendation */
+            if (modBytes <= 384) { /* 128, in NIST 800-57, Part 1 */
+                hashAlgTag = SEC_OID_SHA256;
+            } else if (modBytes <= 960) { /* 192, NIST 800-57, Part 1 */
+                hashAlgTag = SEC_OID_SHA384;
+            } else {
+                hashAlgTag = SEC_OID_SHA512;
+            }
+        }
+    }
+
+    if (hashAlgTag != SEC_OID_SHA1 && hashAlgTag != SEC_OID_SHA224 &&
+        hashAlgTag != SEC_OID_SHA256 && hashAlgTag != SEC_OID_SHA384 &&
+        hashAlgTag != SEC_OID_SHA512) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return NULL;
+    }
+
+    /* Now that the hash algorithm is decided, check if it matches the
+     * existing parameters if any */
+    if (pssParams.maskAlg) {
+        SECAlgorithmID maskHashAlg;
+
+        if (SECOID_GetAlgorithmTag(pssParams.maskAlg) != SEC_OID_PKCS1_MGF1) {
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
+        }
+
+        if (pssParams.maskAlg->parameters.data == NULL) {
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
+        }
+
+        PORT_Memset(&maskHashAlg, 0, sizeof(maskHashAlg));
+        rv = SEC_QuickDERDecodeItem(arena, &maskHashAlg,
+                                    SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
+                                    &pssParams.maskAlg->parameters);
+        if (rv != SECSuccess) {
+            return NULL;
+        }
+
+        /* Following the recommendation in RFC 4055, assume the hash
+         * algorithm identical to pssParam.hashAlg */
+        if (SECOID_GetAlgorithmTag(&maskHashAlg) != hashAlgTag) {
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            return NULL;
+        }
+    }
+
+    hashLength = HASH_ResultLenByOidTag(hashAlgTag);
+
+    if (pssParams.saltLength.data) {
+        rv = SEC_ASN1DecodeInteger((SECItem *)&pssParams.saltLength,
+                                   &saltLength);
+        if (rv != SECSuccess) {
+            return NULL;
+        }
+
+        /* The specified salt length is too long */
+        if (saltLength > modBytes - hashLength - 2) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return NULL;
+        }
+    }
+
+    /* Fill in the parameters */
+    if (pssParams.hashAlg) {
+        if (hashAlgTag == SEC_OID_SHA1) {
+            /* Omit hashAlg if the the algorithm is SHA-1 (default) */
+            pssParams.hashAlg = NULL;
+        }
+    } else {
+        if (hashAlgTag != SEC_OID_SHA1) {
+            pssParams.hashAlg = PORT_ArenaZAlloc(arena, sizeof(SECAlgorithmID));
+            if (!pssParams.hashAlg) {
+                return NULL;
+            }
+            rv = SECOID_SetAlgorithmID(arena, pssParams.hashAlg, hashAlgTag,
+                                       NULL);
+            if (rv != SECSuccess) {
+                return NULL;
+            }
+        }
+    }
+
+    if (pssParams.maskAlg) {
+        if (hashAlgTag == SEC_OID_SHA1) {
+            /* Omit maskAlg if the the algorithm is SHA-1 (default) */
+            pssParams.maskAlg = NULL;
+        }
+    } else {
+        if (hashAlgTag != SEC_OID_SHA1) {
+            SECItem *hashAlgItem;
+
+            PORT_Assert(pssParams.hashAlg != NULL);
+
+            hashAlgItem = SEC_ASN1EncodeItem(arena, NULL, pssParams.hashAlg,
+                                             SEC_ASN1_GET(SECOID_AlgorithmIDTemplate));
+            if (!hashAlgItem) {
+                return NULL;
+            }
+            pssParams.maskAlg = PORT_ArenaZAlloc(arena, sizeof(SECAlgorithmID));
+            if (!pssParams.maskAlg) {
+                return NULL;
+            }
+            rv = SECOID_SetAlgorithmID(arena, pssParams.maskAlg,
+                                       SEC_OID_PKCS1_MGF1, hashAlgItem);
+            if (rv != SECSuccess) {
+                return NULL;
+            }
+        }
+    }
+
+    if (pssParams.saltLength.data) {
+        if (saltLength == 20) {
+            /* Omit the salt length if it is the default */
+            pssParams.saltLength.data = NULL;
+        }
+    } else {
+        /* Find a suitable length from the hash algorithm and modulus bits */
+        saltLength = PR_MIN(hashLength, modBytes - hashLength - 2);
+
+        if (saltLength != 20 &&
+            !SEC_ASN1EncodeInteger(arena, &pssParams.saltLength, saltLength)) {
+            return NULL;
+        }
+    }
+
+    if (pssParams.trailerField.data) {
+        /* Omit trailerField if the value is 1 (default) */
+        pssParams.trailerField.data = NULL;
+    }
+
+    return SEC_ASN1EncodeItem(arena, result,
+                              &pssParams, SECKEY_RSAPSSParamsTemplate);
+}
+
+SECItem *
+SEC_CreateSignatureAlgorithmParameters(PLArenaPool *arena,
+                                       SECItem *result,
+                                       SECOidTag signAlgTag,
+                                       SECOidTag hashAlgTag,
+                                       const SECItem *params,
+                                       const SECKEYPrivateKey *key)
+{
+    switch (signAlgTag) {
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
+            return sec_CreateRSAPSSParameters(arena, result,
+                                              hashAlgTag, params, key);
+
+        default:
+            if (params == NULL)
+                return NULL;
+            if (result == NULL)
+                result = SECITEM_AllocItem(arena, NULL, 0);
+            if (SECITEM_CopyItem(arena, result, params) != SECSuccess)
+                return NULL;
+            return result;
+    }
 }

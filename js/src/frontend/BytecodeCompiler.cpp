@@ -730,7 +730,8 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
         scope = &cx->global()->emptyGlobalScope();
 
     BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, scope);
-    return compiler.compileStandaloneFunction(fun, NotGenerator, SyncFunction, parameterListEnd);
+    return compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator, SyncFunction,
+                                              parameterListEnd);
 }
 
 bool
@@ -742,7 +743,8 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
-    return compiler.compileStandaloneFunction(fun, StarGenerator, SyncFunction, parameterListEnd);
+    return compiler.compileStandaloneFunction(fun, GeneratorKind::Generator, SyncFunction,
+                                              parameterListEnd);
 }
 
 bool
@@ -754,7 +756,8 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
-    return compiler.compileStandaloneFunction(fun, NotGenerator, AsyncFunction, parameterListEnd);
+    return compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator, AsyncFunction,
+                                              parameterListEnd);
 }
 
 bool
@@ -766,5 +769,6 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
     BytecodeCompiler compiler(cx, cx->tempLifoAlloc(), options, srcBuf, emptyGlobalScope);
-    return compiler.compileStandaloneFunction(fun, StarGenerator, AsyncFunction, parameterListEnd);
+    return compiler.compileStandaloneFunction(fun, GeneratorKind::Generator, AsyncFunction,
+                                              parameterListEnd);
 }

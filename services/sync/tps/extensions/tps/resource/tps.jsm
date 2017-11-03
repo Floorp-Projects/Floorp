@@ -414,11 +414,11 @@ var TPS = {
             HistoryEntry.Delete(entry, this._usSinceEpoch);
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue(HistoryEntry.Find(entry, this._usSinceEpoch),
+            Logger.AssertTrue((await HistoryEntry.Find(entry, this._usSinceEpoch)),
               "Uri visits not found in history database");
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(!HistoryEntry.Find(entry, this._usSinceEpoch),
+            Logger.AssertTrue(!(await HistoryEntry.Find(entry, this._usSinceEpoch)),
               "Uri visits found in history database, but they shouldn't be");
             break;
           default:
@@ -428,7 +428,7 @@ var TPS = {
       Logger.logPass("executing action " + action.toUpperCase() +
                      " on history");
     } catch (e) {
-      DumpHistory();
+      await DumpHistory();
       throw (e);
     }
   },

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MozURL.h"
+#include "rust-url-capi/src/rust-url-capi.h"
 
 namespace mozilla {
 namespace net {
@@ -107,6 +108,13 @@ MozURL::GetOrigin(nsACString& aOrigin)
 
 // MozURL::Mutator
 
+MozURL::Mutator::Mutator(MozURL* url)
+  : mURL(rusturl_clone(url->mURL.get()))
+  , mFinalized(false)
+  , mStatus(NS_OK)
+{
+}
+
 // This macro ensures that the mutator is still valid, meaning it hasn't been
 // finalized, and none of the setters have returned an error code.
 #define ENSURE_VALID()                          \
@@ -204,6 +212,12 @@ MozURL::Mutator::SetPort(int32_t aPort)
   ENSURE_VALID();
   mStatus = rusturl_set_port_no(mURL.get(), aPort);
   return *this;
+}
+
+void
+MozURL::FreeRustURL::operator()(rusturl* aPtr)
+{
+  rusturl_free(aPtr);
 }
 
 } // namespace net

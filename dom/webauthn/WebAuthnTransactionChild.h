@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_WebAuthnTransactionChild_h
 #define mozilla_dom_WebAuthnTransactionChild_h
 
-#include "mozilla/dom/PWebAuthnTransactionChild.h"
+#include "mozilla/dom/WebAuthnTransactionChildBase.h"
 
 /*
  * Child process IPC implementation for WebAuthn API. Receives results of
@@ -19,12 +19,9 @@
 namespace mozilla {
 namespace dom {
 
-class WebAuthnTransactionChild final : public PWebAuthnTransactionChild
+class WebAuthnTransactionChild final : public WebAuthnTransactionChildBase
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(WebAuthnTransactionChild);
-  WebAuthnTransactionChild();
-
   mozilla::ipc::IPCResult
   RecvConfirmRegister(const uint64_t& aTransactionId,
                       nsTArray<uint8_t>&& aRegBuffer) override;
@@ -38,9 +35,6 @@ public:
   RecvAbort(const uint64_t& aTransactionId, const nsresult& aError) override;
 
   void ActorDestroy(ActorDestroyReason why) override;
-
-private:
-  ~WebAuthnTransactionChild() = default;
 };
 
 }

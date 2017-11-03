@@ -167,61 +167,6 @@ this.Async = {
     return callback;
   },
 
-  // Prototype for mozIStorageCallback, used in querySpinningly.
-  // This allows us to define the handle* functions just once rather
-  // than on every querySpinningly invocation.
-  _storageCallbackPrototype: {
-    results: null,
-
-    // These are set by queryAsync.
-    names: null,
-    syncCb: null,
-
-    handleResult: function handleResult(results) {
-      if (!this.names) {
-        return;
-      }
-      if (!this.results) {
-        this.results = [];
-      }
-      let row;
-      while ((row = results.getNextRow()) != null) {
-        let item = {};
-        for (let name of this.names) {
-          item[name] = row.getResultByName(name);
-        }
-        this.results.push(item);
-      }
-    },
-    handleError: function handleError(error) {
-      this.syncCb.throw(error);
-    },
-    handleCompletion: function handleCompletion(reason) {
-
-      // If we got an error, handleError will also have been called, so don't
-      // call the callback! We never cancel statements, so we don't need to
-      // address that quandary.
-      if (reason == REASON_ERROR)
-        return;
-
-      // If we were called with column names but didn't find any results,
-      // the calling code probably still expects an array as a return value.
-      if (this.names && !this.results) {
-        this.results = [];
-      }
-      this.syncCb(this.results);
-    }
-  },
-
-  querySpinningly: function querySpinningly(query, names) {
-    // 'Synchronously' asyncExecute, fetching all results by name.
-    let storageCallback = Object.create(Async._storageCallbackPrototype);
-    storageCallback.names = names;
-    storageCallback.syncCb = Async.makeSyncCallback();
-    query.executeAsync(storageCallback);
-    return Async.waitForSyncCallback(storageCallback.syncCb);
-  },
-
   promiseSpinningly(promise) {
     let cb = Async.makeSpinningCallback();
     promise.then(result => {

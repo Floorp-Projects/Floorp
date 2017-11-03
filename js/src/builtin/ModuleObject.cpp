@@ -1071,11 +1071,10 @@ ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject 
             return false;
 
         if (fun->isAsync()) {
-            if (fun->isStarGenerator()) {
+            if (fun->isGenerator())
                 obj = WrapAsyncGenerator(cx, obj.as<JSFunction>());
-            } else {
+            else
                 obj = WrapAsyncFunction(cx, obj.as<JSFunction>());
-            }
         }
 
         if (!obj)

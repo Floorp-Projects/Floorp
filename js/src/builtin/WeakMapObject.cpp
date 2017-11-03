@@ -74,8 +74,8 @@ WeakMap_get_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-bool
-js::WeakMap_get(JSContext* cx, unsigned argc, Value* vp)
+static bool
+WeakMap_get(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsWeakMap, WeakMap_get_impl>(cx, args);
@@ -130,8 +130,8 @@ WeakMap_set_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-bool
-js::WeakMap_set(JSContext* cx, unsigned argc, Value* vp)
+static bool
+WeakMap_set(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsWeakMap, WeakMap_set_impl>(cx, args);
@@ -295,8 +295,8 @@ static const JSFunctionSpec weak_map_methods[] = {
     JS_FS_END
 };
 
-static JSObject*
-InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
+JSObject*
+js::InitWeakMapClass(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
 
@@ -314,27 +314,12 @@ InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
-    if (defineMembers) {
-        if (!DefinePropertiesAndFunctions(cx, proto, nullptr, weak_map_methods))
-            return nullptr;
-        if (!DefineToStringTag(cx, proto, cx->names().WeakMap))
-            return nullptr;
-    }
+    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, weak_map_methods))
+        return nullptr;
+    if (!DefineToStringTag(cx, proto, cx->names().WeakMap))
+        return nullptr;
 
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, proto))
         return nullptr;
     return proto;
 }
-
-JSObject*
-js::InitWeakMapClass(JSContext* cx, HandleObject obj)
-{
-    return InitWeakMapClass(cx, obj, true);
-}
-
-JSObject*
-js::InitBareWeakMapCtor(JSContext* cx, HandleObject obj)
-{
-    return InitWeakMapClass(cx, obj, false);
-}
-

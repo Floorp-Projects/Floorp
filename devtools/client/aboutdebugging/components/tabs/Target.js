@@ -6,29 +6,34 @@
 
 "use strict";
 
-const { createClass, DOM: dom, PropTypes } =
+const { Component, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
-module.exports = createClass({
-  displayName: "TabTarget",
+class TabTarget extends Component {
+  static get propTypes() {
+    return {
+      target: PropTypes.shape({
+        icon: PropTypes.string,
+        outerWindowID: PropTypes.number.isRequired,
+        title: PropTypes.string,
+        url: PropTypes.string.isRequired
+      }).isRequired
+    };
+  }
 
-  propTypes: {
-    target: PropTypes.shape({
-      icon: PropTypes.string,
-      outerWindowID: PropTypes.number.isRequired,
-      title: PropTypes.string,
-      url: PropTypes.string.isRequired
-    }).isRequired
-  },
+  constructor(props) {
+    super(props);
+    this.debug = this.debug.bind(this);
+  }
 
   debug() {
     let { target } = this.props;
     window.open("about:devtools-toolbox?type=tab&id=" + target.outerWindowID);
-  },
+  }
 
   render() {
     let { target } = this.props;
@@ -50,4 +55,6 @@ module.exports = createClass({
       }, Strings.GetStringFromName("debug"))
     );
   }
-});
+}
+
+module.exports = TabTarget;

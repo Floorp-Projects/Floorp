@@ -23,7 +23,7 @@ static const struct test_args test_array[] = {
     { "d_n_q", 0x02, "private exponent, modulus, prime2" },
     { "d_p_q", 0x04, "private exponent, prime1, prime2" },
     { "e_d_q", 0x08, "public exponent, private exponent, prime2" },
-    { "e_d_n", 0x10, "public exponent, private exponent, moduls" }
+    { "e_d_n", 0x10, "public exponent, private exponent, modulus" }
 };
 static const int test_array_size =
     (sizeof(test_array) / sizeof(struct test_args));
@@ -58,6 +58,7 @@ const static CK_ATTRIBUTE rsaTemplate[] = {
     { CKA_TOKEN, NULL, 0 },
     { CKA_SENSITIVE, NULL, 0 },
     { CKA_PRIVATE, NULL, 0 },
+    { CKA_ID, NULL, 0 },
     { CKA_MODULUS, NULL, 0 },
     { CKA_PUBLIC_EXPONENT, NULL, 0 },
     { CKA_PRIVATE_EXPONENT, NULL, 0 },
@@ -123,46 +124,77 @@ fail:
 
 #define ATTR_STRING(x) getNameFromAttribute(x)
 
-void
-dumpTemplate(CK_ATTRIBUTE *template, int start, int end)
+static void
+dumphex(FILE *file, const unsigned char *cpval, int start, int end)
 {
-    int i, j;
-    for (i = 0; i < end; i++) {
+    int i;
+    for (i = start; i < end; i++) {
+        if ((i % 16) == 0)
+            fprintf(file, "\n ");
+        fprintf(file, " %02x", cpval[i]);
+    }
+    return;
+}
+
+void
+dumpTemplate(FILE *file, const CK_ATTRIBUTE *template, int start, int end)
+{
+    int i;
+    for (i = start; i < end; i++) {
         unsigned char cval;
         CK_ULONG ulval;
-        unsigned char *cpval;
+        const unsigned char *cpval;
 
-        fprintf(stderr, "%s:", ATTR_STRING(template[i].type));
+        fprintf(file, "%s:", ATTR_STRING(template[i].type));
         switch (template[i].ulValueLen) {
             case 1:
                 cval = *(unsigned char *)template[i].pValue;
                 switch (cval) {
                     case 0:
-                        fprintf(stderr, " false");
+                        fprintf(file, " false");
                         break;
                     case 1:
-                        fprintf(stderr, " true");
+                        fprintf(file, " true");
                         break;
                     default:
-                        fprintf(stderr, " %d (=0x%02x,'%c')", cval, cval, cval);
+                        fprintf(file, " %d (=0x%02x,'%c')", cval, cval, cval);
                         break;
                 }
                 break;
             case sizeof(CK_ULONG):
                 ulval = *(CK_ULONG *)template[i].pValue;
-                fprintf(stderr, " %ld (=0x%04lx)", ulval, ulval);
+                fprintf(file, " %ld (=0x%04lx)", ulval, ulval);
                 break;
             default:
-                cpval = (unsigned char *)template[i].pValue;
-                for (j = 0; j < template[i].ulValueLen; j++) {
-                    if ((j % 16) == 0)
-                        fprintf(stderr, "\n ");
-                    fprintf(stderr, " %02x", cpval[j]);
-                }
+                cpval = (const unsigned char *)template[i].pValue;
+                dumphex(file, cpval, 0, template[i].ulValueLen);
                 break;
         }
-        fprintf(stderr, "\n");
+        fprintf(file, "\n");
     }
+}
+
+void
+dumpItem(FILE *file, const SECItem *item)
+{
+    const unsigned char *cpval;
+
+    if (item == NULL) {
+        fprintf(file, " pNULL ");
+        return;
+    }
+    if (item->data == NULL) {
+        fprintf(file, " NULL ");
+        return;
+    }
+    if (item->len == 0) {
+        fprintf(file, " Empty ");
+        return;
+    }
+    cpval = item->data;
+    dumphex(file, cpval, 0, item->len);
+    fprintf(file, " ");
+    return;
 }
 
 PRBool
@@ -191,6 +223,9 @@ rsaKeysAreEqual(PK11ObjectType srcType, void *src,
     }
 
     for (i = 0; i < RSA_ATTRIBUTES; i++) {
+        if (srcTemplate[i].type == CKA_ID) {
+            continue; /* we purposefully make the CKA_ID different */
+        }
         if (srcTemplate[i].ulValueLen != destTemplate[i].ulValueLen) {
             printf("key->%s not equal src_len = %ld, dest_len=%ld\n",
                    ATTR_STRING(srcTemplate[i].type),
@@ -204,18 +239,22 @@ rsaKeysAreEqual(PK11ObjectType srcType, void *src,
     }
     if (!areEqual) {
         fprintf(stderr, "original key:\n");
-        dumpTemplate(srcTemplate, 0, RSA_ATTRIBUTES);
+        dumpTemplate(stderr, srcTemplate, 0, RSA_ATTRIBUTES);
         fprintf(stderr, "created key:\n");
-        dumpTemplate(destTemplate, 0, RSA_ATTRIBUTES);
+        dumpTemplate(stderr, destTemplate, 0, RSA_ATTRIBUTES);
     }
+    resetTemplate(srcTemplate, 0, RSA_ATTRIBUTES);
+    resetTemplate(destTemplate, 0, RSA_ATTRIBUTES);
     return areEqual;
 }
 
 static int exp_exp_prime_fail_count = 0;
 
+#define LEAK_ID 0xf
+
 static int
 doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
-                  int mask, void *pwarg)
+                  int mask, int round, void *pwarg)
 {
     SECKEYPrivateKey *rsaPrivKey;
     SECKEYPublicKey *rsaPubKey;
@@ -227,7 +266,10 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
     CK_OBJECT_CLASS obj_class = CKO_PRIVATE_KEY;
     CK_KEY_TYPE key_type = CKK_RSA;
     CK_BBOOL ck_false = CK_FALSE;
+    CK_BYTE cka_id[2] = { 0, 0 };
     int failed = 0;
+    int leak_found;      /* did we find the expected leak */
+    int expect_leak = 0; /* are we expecting a leak? */
 
     rsaParams.pe = exponent;
     rsaParams.keySizeInBits = keySize;
@@ -259,11 +301,15 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
     tstTemplate[3].ulValueLen = sizeof(ck_false);
     tstTemplate[4].pValue = &ck_false;
     tstTemplate[4].ulValueLen = sizeof(ck_false);
-    tstHeaderCount = 5;
+    tstTemplate[5].pValue = &cka_id[0];
+    tstTemplate[5].ulValueLen = sizeof(cka_id);
+    tstHeaderCount = 6;
+    cka_id[0] = round;
 
     if (mask & 1) {
         printf("%s\n", test_array[1].description);
         resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+        cka_id[1] = 0;
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount, CKA_PUBLIC_EXPONENT);
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
@@ -271,10 +317,10 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount + 2, CKA_PRIME_1);
 
-        tstPrivKey = PK11_CreateGenericObject(slot, tstTemplate,
-                                              tstHeaderCount +
-                                                  3,
-                                              PR_FALSE);
+        tstPrivKey = PK11_CreateManagedGenericObject(slot, tstTemplate,
+                                                     tstHeaderCount +
+                                                         3,
+                                                     PR_FALSE);
         if (tstPrivKey == NULL) {
             fprintf(stderr, "RSA Populate failed: pubExp mod p\n");
             failed = 1;
@@ -290,6 +336,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         printf("%s\n", test_array[2].description);
         /* test the basic2 case, public exponent, modulus, prime2 */
         resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+        cka_id[1] = 1;
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount, CKA_PUBLIC_EXPONENT);
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
@@ -299,10 +346,10 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         /* test with q in the prime1 position */
         tstTemplate[tstHeaderCount + 2].type = CKA_PRIME_1;
 
-        tstPrivKey = PK11_CreateGenericObject(slot, tstTemplate,
-                                              tstHeaderCount +
-                                                  3,
-                                              PR_FALSE);
+        tstPrivKey = PK11_CreateManagedGenericObject(slot, tstTemplate,
+                                                     tstHeaderCount +
+                                                         3,
+                                                     PR_FALSE);
         if (tstPrivKey == NULL) {
             fprintf(stderr, "RSA Populate failed: pubExp mod q\n");
             failed = 1;
@@ -318,6 +365,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         printf("%s\n", test_array[3].description);
         /* test the medium case, private exponent, prime1, prime2 */
         resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+        cka_id[1] = 2;
 
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount, CKA_PRIVATE_EXPONENT);
@@ -329,10 +377,10 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         tstTemplate[tstHeaderCount + 2].type = CKA_PRIME_1;
         tstTemplate[tstHeaderCount + 1].type = CKA_PRIME_2;
 
-        tstPrivKey = PK11_CreateGenericObject(slot, tstTemplate,
-                                              tstHeaderCount +
-                                                  3,
-                                              PR_FALSE);
+        tstPrivKey = PK11_CreateManagedGenericObject(slot, tstTemplate,
+                                                     tstHeaderCount +
+                                                         3,
+                                                     PR_FALSE);
         if (tstPrivKey == NULL) {
             fprintf(stderr, "RSA Populate failed: privExp p q\n");
             failed = 1;
@@ -348,6 +396,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         printf("%s\n", test_array[4].description);
         /* test the advanced case, public exponent, private exponent, prime2 */
         resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+        cka_id[1] = 3;
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount, CKA_PRIVATE_EXPONENT);
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
@@ -355,10 +404,10 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount + 2, CKA_PRIME_2);
 
-        tstPrivKey = PK11_CreateGenericObject(slot, tstTemplate,
-                                              tstHeaderCount +
-                                                  3,
-                                              PR_FALSE);
+        tstPrivKey = PK11_CreateManagedGenericObject(slot, tstTemplate,
+                                                     tstHeaderCount +
+                                                         3,
+                                                     PR_FALSE);
         if (tstPrivKey == NULL) {
             fprintf(stderr, "RSA Populate failed: pubExp privExp q\n");
             fprintf(stderr, " this is expected periodically. It means we\n");
@@ -373,11 +422,12 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         if (tstPrivKey)
             PK11_DestroyGenericObject(tstPrivKey);
     }
-    if (mask & 16) {
+    if (mask & 0x10) {
         printf("%s\n", test_array[5].description);
         /* test the advanced case2, public exponent, private exponent, modulus
          */
         resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+        cka_id[1] = LEAK_ID;
 
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount, CKA_PRIVATE_EXPONENT);
@@ -386,6 +436,7 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
         copyAttribute(PK11_TypePrivKey, rsaPrivKey, tstTemplate,
                       tstHeaderCount + 2, CKA_MODULUS);
 
+        /* purposefully use the old version. This will create a leak */
         tstPrivKey = PK11_CreateGenericObject(slot, tstTemplate,
                                               tstHeaderCount +
                                                   3,
@@ -398,8 +449,58 @@ doRSAPopulateTest(unsigned int keySize, unsigned long exponent,
             fprintf(stderr, "RSA Populate key mismatch: pubExp privExp mod\n");
             failed = 1;
         }
+        expect_leak = 1;
         if (tstPrivKey)
             PK11_DestroyGenericObject(tstPrivKey);
+    }
+    resetTemplate(tstTemplate, tstHeaderCount, RSA_ATTRIBUTES);
+    SECKEY_DestroyPrivateKey(rsaPrivKey);
+    SECKEY_DestroyPublicKey(rsaPubKey);
+
+    /* make sure we didn't leak */
+    leak_found = 0;
+    tstPrivKey = PK11_FindGenericObjects(slot, CKO_PRIVATE_KEY);
+    if (tstPrivKey) {
+        SECStatus rv;
+        PK11GenericObject *thisKey;
+        int i;
+
+        fprintf(stderr, "Leaking keys...\n");
+        for (i = 0, thisKey = tstPrivKey; thisKey; i++,
+            thisKey = PK11_GetNextGenericObject(thisKey)) {
+            SECItem id = { 0, NULL, 0 };
+
+            rv = PK11_ReadRawAttribute(PK11_TypeGeneric, thisKey,
+                                       CKA_ID, &id);
+            if (rv != SECSuccess) {
+                fprintf(stderr, "Key %d: couldn't read CKA_ID: %s\n",
+                        i, PORT_ErrorToString(PORT_GetError()));
+                continue;
+            }
+            fprintf(stderr, "id = { ");
+            dumpItem(stderr, &id);
+            fprintf(stderr, "};");
+            if (id.data[1] == LEAK_ID) {
+                fprintf(stderr, " ---> leak expected\n");
+                if (id.data[0] == round)
+                    leak_found = 1;
+            } else {
+                if (id.len != sizeof(cka_id)) {
+                    fprintf(stderr,
+                            " ---> ERROR unexpected leak in generated key\n");
+                } else {
+                    fprintf(stderr,
+                            " ---> ERROR unexpected leak in constructed key\n");
+                }
+                failed = 1;
+            }
+            SECITEM_FreeItem(&id, PR_FALSE);
+        }
+        PK11_DestroyGenericObjects(tstPrivKey);
+    }
+    if (expect_leak && !leak_found) {
+        fprintf(stderr, "ERROR expected leak not found\n");
+        failed = 1;
     }
 
     PK11_FreeSlot(slot);
@@ -517,7 +618,7 @@ main(int argc, char **argv)
     exp_exp_prime_fail_count = 0;
     for (i = 0; i < repeat; i++) {
         printf("Running RSA Populate test run %d\n", i);
-        ret = doRSAPopulateTest(keySize, exponent, mask, NULL);
+        ret = doRSAPopulateTest(keySize, exponent, mask, i, NULL);
         if (ret != 0) {
             i++;
             break;
@@ -530,6 +631,10 @@ main(int argc, char **argv)
         printf(" pub priv prime test:  %d failures out of %d runs (%f %%)\n",
                exp_exp_prime_fail_count, i,
                (((double)exp_exp_prime_fail_count) * 100.0) / (double)i);
+    }
+    if (NSS_Shutdown() != SECSuccess) {
+        fprintf(stderr, "Shutdown failed\n");
+        ret = -1;
     }
     return ret;
 }

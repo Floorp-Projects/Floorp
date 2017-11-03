@@ -24,96 +24,111 @@ from mozpack.mozjar import (
 )
 import mozpack.path as mozpath
 
+SDK_RELEASE = '10.0.15063.0'
 
-# mozpack.match patterns for files under "Microsoft Visual Studio 14.0".
-VS_PATTERNS = [
+PATTERNS = [
     {
-        'pattern': 'DIA SDK/bin/**',
-        'ignore': (
-            'DIA SDK/bin/arm/**',
-        ),
+        'srcdir': '%(vs_path)s/DIA SDK',
+        'dstdir': 'DIA SDK',
+        'files': [
+            {
+                'pattern': 'bin/**',
+                'ignore': (
+                    'bin/arm/**',
+                ),
+            },
+            {
+                'pattern': 'idl/**',
+            },
+            {
+                'pattern': 'include/**',
+            },
+            {
+                'pattern': 'lib/**',
+                'ignore': (
+                    'lib/arm/**',
+                ),
+            },
+        ],
     },
     {
-        'pattern': 'DIA SDK/idl/**',
+        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.11.25503',
+        'dstdir': 'VC',
+        'files': [
+            # ATL is needed by Breakpad.
+            {
+                'pattern': 'atlmfc/include/**',
+            },
+            {
+                'pattern': 'atlmfc/lib/x86/atls.*',
+            },
+            {
+                'pattern': 'atlmfc/lib/x64/atls.*',
+            },
+            {
+                'pattern': 'bin/Hostx64/**',
+            },
+            # 32-bit PGO-instrumented builds require 32-bit pgort140.dll.
+            {
+                'pattern': 'bin/Hostx86/x86/pgort140.dll',
+            },
+            {
+                'pattern': 'include/**',
+            },
+            {
+                'pattern': 'lib/**',
+                'ignore': (
+                    'lib/onecore/**',
+                    'lib/x64/store/**',
+                    'lib/x86/store/**',
+                ),
+            },
+        ],
     },
     {
-        'pattern': 'DIA SDK/include/**',
+        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.11.25325',
+        'dstdir': 'VC/redist',
+        'files': [
+            {
+                'pattern': 'x64/Microsoft.VC141.CRT/**',
+            },
+            {
+                'pattern': 'x86/Microsoft.VC141.CRT/**',
+            },
+        ],
     },
     {
-        'pattern': 'DIA SDK/lib/**',
-        'ignore': (
-            'DIA SDK/lib/arm/**',
-        ),
-    },
-    # ATL is needed by Breakpad.
-    {
-        'pattern': 'VC/atlmfc/include/**',
-    },
-    {
-        'pattern': 'VC/atlmfc/lib/atls.*',
-    },
-    {
-        'pattern': 'VC/atlmfc/lib/amd64/atls.*',
-    },
-    {
-        'pattern': 'VC/bin/**',
-        # We only care about compiling on amd64 for amd64 or x86 targets.
-        'ignore': (
-            'VC/bin/amd64_arm/**',
-            'VC/bin/arm/**',
-            'VC/bin/x86_arm/**',
-            'VC/bin/x86_amd64/**',
-        ),
-    },
-    {
-        'pattern': 'VC/include/**',
-    },
-    {
-        'pattern': 'VC/lib/**',
-        'ignore': (
-            'VC/lib/arm/**',
-            'VC/lib/onecore/**',
-            'VC/lib/store/**',
-        ),
-    },
-    {
-        'pattern': 'VC/redist/x64/Microsoft.VC140.CRT/**',
-    },
-    {
-        'pattern': 'VC/redist/x86/Microsoft.VC140.CRT/**',
-    },
-]
-
-SDK_RELEASE = '10.0.14393.0'
-
-# Files from the Windows 10 SDK to install.
-SDK_PATTERNS = [
-    {
-        'pattern': 'bin/x64/**',
-    },
-    {
-        'pattern': 'Include/%s/**' % SDK_RELEASE,
-    },
-    {
-        'pattern': 'Lib/%s/ucrt/x64/**' % SDK_RELEASE,
-    },
-    {
-        'pattern': 'Lib/%s/ucrt/x86/**' % SDK_RELEASE,
-    },
-    {
-        'pattern': 'Lib/%s/um/x64/**' % SDK_RELEASE,
-    },
-    {
-        'pattern': 'Lib/%s/um/x86/**' % SDK_RELEASE,
-    },
-    {
-        'pattern': 'Redist/D3D/**',
-    },
-    {
-        'pattern': 'Redist/ucrt/DLLs/x64/**',
-    },
-    {
-        'pattern': 'Redist/ucrt/DLLs/x86/**',
+        'srcdir': '%(sdk_path)s',
+        'dstdir': 'SDK',
+        'files': [
+            {
+                'pattern': 'bin/%s/x64/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Include/%s/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Lib/%s/ucrt/x64/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Lib/%s/ucrt/x86/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Lib/%s/um/x64/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Lib/%s/um/x86/**' % SDK_RELEASE,
+            },
+            {
+                'pattern': 'Redist/D3D/**',
+            },
+            {
+                'pattern': 'Redist/ucrt/DLLs/x64/**',
+            },
+            {
+                'pattern': 'Redist/ucrt/DLLs/x86/**',
+            },
+        ],
     },
 ]
 
@@ -128,15 +143,20 @@ def find_vs_paths():
         raise Exception('No "ProgramFiles(x86)" environment variable. '
                         'Not running on 64-bit Windows?')
 
-    vs_path = os.path.join(pf, 'Microsoft Visual Studio 14.0')
+    vs_path = os.path.join(pf, 'Microsoft Visual Studio', '2017', 'Community')
     if not os.path.exists(vs_path):
-        raise Exception('%s does not exist; Visual Studio 2015 not installed?' %
+        raise Exception('%s does not exist; Visual Studio 2017 not installed?' %
                         vs_path)
 
     sdk_path = os.path.join(pf, 'Windows Kits', '10')
     if not os.path.exists(sdk_path):
         raise Exception('%s does not exist; Windows 10 SDK not installed?' %
                         sdk_path)
+
+    sdk_fullver_path = os.path.join(sdk_path, 'Include', SDK_RELEASE)
+    if not os.path.exists(sdk_fullver_path):
+        raise Exception('%s does not exist; Wrong SDK version installed?' %
+                        sdk_fullver_path)
 
     return vs_path, sdk_path
 
@@ -149,19 +169,16 @@ def resolve_files():
     """
     vs_path, sdk_path = find_vs_paths()
 
-    for entry in VS_PATTERNS:
-        finder = FileFinder(vs_path, ignore=entry.get('ignore', []))
-        for p, f in finder.find(entry['pattern']):
-            assert p.startswith(('VC/', 'DIA SDK/'))
-
-            yield p.encode('utf-8'), f
-
-    for entry in SDK_PATTERNS:
-        finder = FileFinder(sdk_path, ignore=entry.get('ignore', []))
-        for p, f in finder.find(entry['pattern']):
-            relpath = 'SDK/%s' % p
-
-            yield relpath.encode('utf-8'), f
+    for entry in PATTERNS:
+        fullpath = entry['srcdir'] % {
+            'vs_path': vs_path,
+            'sdk_path': sdk_path,
+        }
+        for pattern in entry['files']:
+            finder = FileFinder(fullpath, ignore=pattern.get('ignore', []))
+            for p, f in finder.find(pattern['pattern']):
+                dstpath = '%s/%s' % (entry['dstdir'], p)
+                yield dstpath.encode('utf-8'), f
 
 
 def resolve_files_and_hash(manifest):
@@ -201,7 +218,7 @@ def write_zip(zip_path, prefix=None):
     if isinstance(prefix, unicode): # noqa Special case for Python 2
         prefix = prefix.encode('utf-8')
 
-    with JarWriter(file=zip_path, optimize=False, compress=5) as zip:
+    with JarWriter(file=zip_path, optimize=False, compress_level=5) as zip:
         manifest = {}
         for p, data, mode in resolve_files_and_hash(manifest):
             print(p)

@@ -404,7 +404,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        toStringEnd;
     uint16_t        length;
 
-    uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
+    uint8_t         generatorKind_;         /* The GeneratorKind of this function. */
     uint8_t         asyncKindBits_;         /* The FunctionAsyncKind of this function. */
 
     bool            isGenexpLambda:1;       /* lambda from generator expression */
@@ -468,7 +468,7 @@ class FunctionBox : public ObjectBox, public SharedContext
         return hasExtensibleScope() ||
                needsHomeObject() ||
                isDerivedClassConstructor() ||
-               isStarGenerator() ||
+               isGenerator() ||
                isAsync();
     }
 
@@ -487,18 +487,18 @@ class FunctionBox : public ObjectBox, public SharedContext
         return usesArguments && usesApply && usesThis && !usesReturn;
     }
 
-    GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
-    bool isStarGenerator() const { return generatorKind() == StarGenerator; }
+    GeneratorKind generatorKind() const { return GeneratorKindFromBit(generatorKind_); }
+    bool isGenerator() const { return generatorKind() == GeneratorKind::Generator; }
     FunctionAsyncKind asyncKind() const { return AsyncKindFromBits(asyncKindBits_); }
 
     bool needsFinalYield() const {
-        return isStarGenerator() || isAsync();
+        return isGenerator() || isAsync();
     }
     bool needsDotGeneratorName() const {
-        return isStarGenerator() || isAsync();
+        return isGenerator() || isAsync();
     }
     bool needsIteratorResult() const {
-        return isStarGenerator();
+        return isGenerator();
     }
 
     bool isAsync() const { return asyncKind() == AsyncFunction; }
@@ -512,14 +512,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isExprBody() const { return isExprBody_; }
     void setIsExprBody() {
         isExprBody_ = true;
-    }
-
-    void setGeneratorKind(GeneratorKind kind) {
-        // A generator kind can be set at initialization, or when "yield" is
-        // first seen.  In both cases the transition can only happen from
-        // NotGenerator.
-        MOZ_ASSERT(!isStarGenerator());
-        generatorKindBits_ = GeneratorKindAsBits(kind);
     }
 
     bool hasExtensibleScope()        const { return funCxFlags.hasExtensibleScope; }
@@ -621,7 +613,7 @@ SharedContext::allBindingsClosedOver()
 {
     return bindingsAccessedDynamically() ||
            (isFunctionBox() &&
-            (asFunctionBox()->isStarGenerator() ||
+            (asFunctionBox()->isGenerator() ||
              asFunctionBox()->isAsync()));
 }
 

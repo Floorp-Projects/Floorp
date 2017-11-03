@@ -510,7 +510,11 @@ cert_all_CA()
 #	dsaroot.cert in $CLIENT_CADIR and in $SERVER_CADIR is one of the last 
 #	in the chain
 
-
+#
+#       Create RSA-PSS version of TestCA
+	ALL_CU_SUBJECT="CN=NSS Test CA (RSA-PSS), O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	cert_rsa_pss_CA $CADIR TestCA-rsa-pss -x "CTu,CTu,CTu" ${D_CA} "1" SHA256
+	rm $CLIENT_CADIR/rsapssroot.cert $SERVER_CADIR/rsapssroot.cert
 
 
 #
@@ -627,7 +631,7 @@ CERTSCRIPT
 ################################ cert_dsa_CA #############################
 # local shell function to build the Temp. Certificate Authority (CA)
 # used for testing purposes, creating  a CA Certificate and a root cert
-# This is the ECC version of cert_CA.
+# This is the DSA version of cert_CA.
 ##########################################################################
 cert_dsa_CA()
 {
@@ -638,7 +642,7 @@ cert_dsa_CA()
   DOMAIN=$5
   CERTSERIAL=$6
 
-  echo "$SCRIPTNAME: Creating an DSA CA Certificate $NICKNAME =========================="
+  echo "$SCRIPTNAME: Creating a DSA CA Certificate $NICKNAME =========================="
 
   if [ ! -d "${CUR_CADIR}" ]; then
       mkdir -p "${CUR_CADIR}"
@@ -651,7 +655,7 @@ cert_dsa_CA()
 	LPROFILE="multiaccess:${DOMAIN}"
   fi
 
-  ################# Creating an DSA CA Cert ###############################
+  ################# Creating a DSA CA Cert ###############################
   #
   CU_ACTION="Creating DSA CA Cert $NICKNAME "
   CU_SUBJECT=$ALL_CU_SUBJECT
@@ -685,6 +689,79 @@ CERTSCRIPT
       Exit 7 "Fatal - failed to export dsa root cert"
   fi
   cp dsaroot.cert ${NICKNAME}.ca.cert
+}
+
+
+
+
+
+################################ cert_rsa_pss_CA #############################
+# local shell function to build the Temp. Certificate Authority (CA)
+# used for testing purposes, creating  a CA Certificate and a root cert
+# This is the RSA-PSS version of cert_CA.
+##########################################################################
+cert_rsa_pss_CA()
+{
+  CUR_CADIR=$1
+  NICKNAME=$2
+  SIGNER=$3
+  TRUSTARG=$4
+  DOMAIN=$5
+  CERTSERIAL=$6
+  HASHALG=$7
+
+  echo "$SCRIPTNAME: Creating an RSA-PSS CA Certificate $NICKNAME =========================="
+
+  if [ ! -d "${CUR_CADIR}" ]; then
+      mkdir -p "${CUR_CADIR}"
+  fi
+  cd ${CUR_CADIR}
+  pwd
+
+  LPROFILE=.
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+	LPROFILE="multiaccess:${DOMAIN}"
+  fi
+
+  HASHOPT=
+  if [ -n "$HASHALG" ]; then
+        HASHOPT="-Z $HASHALG"
+  fi
+
+  ################# Creating an RSA-PSS CA Cert ###############################
+  #
+  CU_ACTION="Creating RSA-PSS CA Cert $NICKNAME "
+  CU_SUBJECT=$ALL_CU_SUBJECT
+  certu -S -n $NICKNAME -k rsa --pss $HASHOPT -t $TRUSTARG -v 600 $SIGNER \
+    -d ${LPROFILE} -1 -2 -5 -f ${R_PWFILE} -z ${R_NOISE_FILE} \
+    -m $CERTSERIAL 2>&1 <<CERTSCRIPT
+5
+6
+9
+n
+y
+-1
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+  if [ "$RET" -ne 0 ]; then
+      echo "return value is $RET"
+      Exit 6 "Fatal - failed to create RSA-PSS CA cert"
+  fi
+
+  ################# Exporting RSA-PSS Root Cert ###############################
+  #
+  CU_ACTION="Exporting RSA-PSS Root Cert"
+  certu -L -n  $NICKNAME -r -d ${LPROFILE} -o rsapssroot.cert
+  if [ "$RET" -ne 0 ]; then
+      Exit 7 "Fatal - failed to export RSA-PSS root cert"
+  fi
+  cp rsapssroot.cert ${NICKNAME}.ca.cert
 }
 
 
@@ -1260,6 +1337,10 @@ MODSCRIPT
   CU_ACTION="Setting invalid database password in FIPS mode"
   RETEXPECTED=255
   certu -W -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -@ "${R_FIPSBADPWFILE}" 2>&1
+  CU_ACTION="Attempt to generate a key with exponent of 3 (too small)"
+  certu -G -k rsa -g 2048 -y 3 -d "${PROFILEDIR}" -z ${R_NOISE_FILE} -f "${R_FIPSPWFILE}" 
+  CU_ACTION="Attempt to generate a key with exponent of 17 (too small)"
+  certu -G -k rsa -g 2048 -y 17 -d "${PROFILEDIR}" -z ${R_NOISE_FILE} -f "${R_FIPSPWFILE}" 
   RETEXPECTED=0
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
@@ -1268,6 +1349,20 @@ MODSCRIPT
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
   fi
+
+}
+
+########################## cert_rsa_exponent #################################
+# local shell function to verify small rsa exponent can be used (only
+# run if FIPS has not been turned on in the build).
+##############################################################################
+cert_rsa_exponent()
+{
+  echo "$SCRIPTNAME: Verify that small RSA exponents still work  =============="
+  CU_ACTION="Attempt to generate a key with exponent of 3"
+  certu -G -k rsa -g 2048 -y 3 -d "${CLIENTDIR}" -z ${R_NOISE_FILE} -f "${R_PWFILE}" 
+  CU_ACTION="Attempt to generate a key with exponent of 17"
+  certu -G -k rsa -g 2048 -y 17 -d "${CLIENTDIR}" -z ${R_NOISE_FILE} -f "${R_PWFILE}" 
 }
 
 ############################## cert_eccurves ###########################
@@ -1955,6 +2050,263 @@ cert_test_implicit_db_init()
   certu -A -n ca -t 'C,C,C' -d ${P_R_IMPLICIT_INIT_DIR} -i "${SERVER_CADIR}/serverCA.ca.cert"
 }
 
+check_sign_algo()
+{
+  certu -L -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}" | \
+      sed -n '/^ *Data:/,/^$/{
+/^        Signature Algorithm/,/^ *Salt Length/s/^        //p
+}' > ${TMP}/signalgo.txt
+
+  diff ${TMP}/signalgo.exp ${TMP}/signalgo.txt
+  RET=$?
+  if [ "$RET" -ne 0 ]; then
+      CERTFAILED=$RET
+      html_failed "${CU_ACTION} ($RET) "
+      cert_log "ERROR: ${CU_ACTION} failed $RET"
+  else
+      html_passed "${CU_ACTION}"
+  fi
+}
+
+cert_test_rsapss()
+{
+  TEMPFILES="$TEMPFILES ${TMP}/signalgo.exp ${TMP}/signalgo.txt"
+
+  cert_init_cert "${RSAPSSDIR}" "RSA-PSS Test Cert" 1000 "${D_RSAPSS}"
+
+  CU_ACTION="Initialize Cert DB"
+  certu -N -d "${PROFILEDIR}" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Import RSA CA Cert"
+  certu -A -n "TestCA" -t "C,," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${R_CADIR}/TestCA.ca.cert" 2>&1
+
+  CU_ACTION="Import RSA-PSS CA Cert"
+  certu -A -n "TestCA-rsa-pss" -t "C,," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${R_CADIR}/TestCA-rsa-pss.ca.cert" 2>&1
+
+  CU_ACTION="Verify RSA-PSS CA Cert"
+  certu -V -u L -e -n "TestCA-rsa-pss" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+
+  # Subject certificate: RSA
+  # Issuer certificate: RSA
+  # Signature: RSA-PSS (explicit, with --pss-sign)
+  CERTNAME="TestUser-rsa-pss1"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA" --pss-sign -m 200 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA
+  # Issuer certificate: RSA
+  # Signature: RSA-PSS (explict, with --pss-sign -Z SHA512)
+  CERTNAME="TestUser-rsa-pss2"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA" --pss-sign -Z SHA512 -m 201 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-512
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-512
+        Salt Length: 64 (0x40)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA
+  # Issuer certificate: RSA-PSS
+  # Signature: RSA-PSS
+  CERTNAME="TestUser-rsa-pss3"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA-rsa-pss" -m 202 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA-PSS
+  # Issuer certificate: RSA
+  # Signature: RSA-PSS (explicit, with --pss-sign)
+  CERTNAME="TestUser-rsa-pss4"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA" --pss-sign -m 203 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA-PSS
+  # Issuer certificate: RSA-PSS
+  # Signature: RSA-PSS (explicit, with --pss-sign)
+  CERTNAME="TestUser-rsa-pss5"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA-rsa-pss" --pss-sign -m 204 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA-PSS
+  # Issuer certificate: RSA-PSS
+  # Signature: RSA-PSS (implicit, without --pss-sign)
+  CERTNAME="TestUser-rsa-pss6"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA-rsa-pss" -m 205 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+
+  # Subject certificate: RSA-PSS
+  # Issuer certificate: RSA-PSS
+  # Signature: RSA-PSS (with conflicting hash algorithm)
+  CERTNAME="TestUser-rsa-pss7"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  RETEXPECTED=255
+  certu -C -c "TestCA-rsa-pss" --pss-sign -Z SHA512 -m 206 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+  RETEXPECTED=0
+
+  # Subject certificate: RSA-PSS
+  # Issuer certificate: RSA-PSS
+  # Signature: RSA-PSS (with compatible hash algorithm)
+  CERTNAME="TestUser-rsa-pss8"
+
+  CU_ACTION="Generate Cert Request for $CERTNAME"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" --pss -o req  2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request"
+  certu -C -c "TestCA-rsa-pss" --pss-sign -Z SHA256 -m 207 -v 60 -d "${P_R_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" "$1" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert"
+  certu -A -n "$CERTNAME" -t ",," -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+
+  CU_ACTION="Verify $CERTNAME's Cert"
+  certu -V -u V -e -n "$CERTNAME" -d "${PROFILEDIR}" -f "${R_PWFILE}"
+  cat > ${TMP}/signalgo.exp <<EOF
+Signature Algorithm: PKCS #1 RSA-PSS Signature
+    Parameters:
+        Hash algorithm: SHA-256
+        Mask algorithm: PKCS #1 MGF1 Mask Generation Function
+        Mask hash algorithm: SHA-256
+        Salt Length: 32 (0x20)
+EOF
+  check_sign_algo
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1978,12 +2330,20 @@ cert_smime_client
 if [[ -n "$NSS_TEST_ENABLE_FIPS" ]]; then
     cert_fips
 fi
+# We currently have difficulties to know if the build is a non-FIPS build,
+# because of differences between the "make" and "gyp" build systems.
+# As soon as we have a reliable way to detect that based on a variable,
+# we should enable the following test call. See bug 1409516.
+# if SYMBOL_THAT_TELLS_US_FIPS_IS_DISABLED
+#   cert_rsa_exponent
+# fi
 cert_eccurves
 cert_extensions
 cert_san_and_generic_extensions
 cert_test_password
 cert_test_distrust
 cert_test_ocspresp
+cert_test_rsapss
 
 if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
     cert_crl_ssl

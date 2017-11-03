@@ -1505,6 +1505,7 @@ PK11_FindGenericObjects(PK11SlotInfo *slot, CK_OBJECT_CLASS objClass)
         /* initialize it */
         obj->slot = PK11_ReferenceSlot(slot);
         obj->objectID = objectIDs[i];
+        obj->owner = PR_FALSE;
         obj->next = NULL;
         obj->prev = NULL;
 
@@ -1585,6 +1586,9 @@ PK11_DestroyGenericObject(PK11GenericObject *object)
 
     PK11_UnlinkGenericObject(object);
     if (object->slot) {
+        if (object->owner) {
+            PK11_DestroyObject(object->slot, object->objectID);
+        }
         PK11_FreeSlot(object->slot);
     }
     PORT_Free(object);
@@ -1626,8 +1630,9 @@ PK11_DestroyGenericObjects(PK11GenericObject *objects)
  * Hand Create a new object and return the Generic object for our new object.
  */
 PK11GenericObject *
-PK11_CreateGenericObject(PK11SlotInfo *slot, const CK_ATTRIBUTE *pTemplate,
-                         int count, PRBool token)
+pk11_CreateGenericObjectHelper(PK11SlotInfo *slot,
+                               const CK_ATTRIBUTE *pTemplate,
+                               int count, PRBool token, PRBool owner)
 {
     CK_OBJECT_HANDLE objectID;
     PK11GenericObject *obj;
@@ -1651,9 +1656,38 @@ PK11_CreateGenericObject(PK11SlotInfo *slot, const CK_ATTRIBUTE *pTemplate,
     /* initialize it */
     obj->slot = PK11_ReferenceSlot(slot);
     obj->objectID = objectID;
+    obj->owner = owner;
     obj->next = NULL;
     obj->prev = NULL;
     return obj;
+}
+
+/* This is the classic interface. Applications would call this function to
+ * create new object that would not be destroyed later. This lead to resource
+ * leaks (and thus memory leaks in the PKCS #11 module).  To solve this we have
+ * a new interface that automatically marks objects created on the fly to be 
+ * destroyed later. 
+ * The old interface is preserved because applications like Mozilla purposefully
+ * leak the reference to be found later with PK11_FindGenericObjects. New 
+ * applications should use the new interface PK11_CreateManagedGenericObject */
+PK11GenericObject *
+PK11_CreateGenericObject(PK11SlotInfo *slot, const CK_ATTRIBUTE *pTemplate,
+                         int count, PRBool token)
+{
+    return pk11_CreateGenericObjectHelper(slot, pTemplate, count, token,
+                                          PR_FALSE);
+}
+
+/* Use this interface. It will automatically destroy any temporary objects 
+ * (token = PR_FALSE) when the PK11GenericObject is freed. Permanent objects still 
+ * need to be destroyed by hand with PK11_DestroyTokenObject.
+ */
+PK11GenericObject *
+PK11_CreateManagedGenericObject(PK11SlotInfo *slot,
+                                const CK_ATTRIBUTE *pTemplate, int count, PRBool token)
+{
+    return pk11_CreateGenericObjectHelper(slot, pTemplate, count, token,
+                                          !token);
 }
 
 /*
