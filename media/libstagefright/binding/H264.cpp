@@ -962,7 +962,7 @@ H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
 /* static */ uint8_t
 H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData)
 {
-  if (!aExtraData) {
+  if (!aExtraData || aExtraData->IsEmpty()) {
     return 0;
   }
 
