@@ -345,8 +345,12 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         matrix._32 = 0;
         matrix._33 = 1;
         matrix._34 = 0;
-        matrix._41 = array->Item(5).GetFloatValue();
-        matrix._42 = array->Item(6).GetFloatValue();
+        matrix._41 = ProcessTranslatePart(array->Item(5), contextIfGecko,
+                                          aPresContext, conditions,
+                                          &aRefBox, &TransformReferenceBox::Width);
+        matrix._42 = ProcessTranslatePart(array->Item(6), contextIfGecko,
+                                          aPresContext, conditions,
+                                          &aRefBox, &TransformReferenceBox::Height);
         matrix._43 = 0;
         matrix._44 = 1;
         aFunctions.AppendElement(TransformMatrix(matrix));
@@ -367,9 +371,15 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         matrix._32 = array->Item(10).GetFloatValue();
         matrix._33 = array->Item(11).GetFloatValue();
         matrix._34 = array->Item(12).GetFloatValue();
-        matrix._41 = array->Item(13).GetFloatValue();
-        matrix._42 = array->Item(14).GetFloatValue();
-        matrix._43 = array->Item(15).GetFloatValue();
+        matrix._41 = ProcessTranslatePart(array->Item(13), contextIfGecko,
+                                          aPresContext, conditions,
+                                          &aRefBox, &TransformReferenceBox::Width);
+        matrix._42 = ProcessTranslatePart(array->Item(14), contextIfGecko,
+                                          aPresContext, conditions,
+                                          &aRefBox, &TransformReferenceBox::Height);
+        matrix._43 = ProcessTranslatePart(array->Item(15), contextIfGecko,
+                                          aPresContext, conditions,
+                                          &aRefBox, nullptr);
         matrix._44 = array->Item(16).GetFloatValue();
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
