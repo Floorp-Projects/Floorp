@@ -14,11 +14,7 @@ def DevToolsModules(*modules):
     its own directory.  Subdirectories should use their own moz.build.
 
     By following this pattern, there's less magic to require() and resource://
-    paths, since they now match the source tree.
-
-    Currently `DevToolsModules` can only be called once per moz.build, so we
-    build a list manually above.  Bug 1198013 tracks fixing this to make it more
-    like other moz.build constructs.'''
+    paths, since they now match the source tree.'''
 
     for m in modules:
         if '/' in m:
