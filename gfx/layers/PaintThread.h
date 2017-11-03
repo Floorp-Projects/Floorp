@@ -12,7 +12,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/layers/TextureClient.h"
-#include "RotatedBuffer.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -59,56 +58,6 @@ protected:
   virtual ~CapturedPaintState() {}
 };
 
-// Holds the key operations for a ContentClient to prepare
-// its buffers for painting
-class CapturedBufferState final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CapturedBufferState)
-public:
-  struct Copy {
-    Copy(RefPtr<RotatedBuffer> aSource,
-         RefPtr<RotatedBuffer> aDestination,
-         gfx::IntRect aBounds)
-      : mSource(aSource)
-      , mDestination(aDestination)
-      , mBounds(aBounds)
-    {}
-
-    bool CopyBuffer();
-
-    RefPtr<RotatedBuffer> mSource;
-    RefPtr<RotatedBuffer> mDestination;
-    gfx::IntRect mBounds;
-  };
-
-  struct Unrotate {
-    Unrotate(RotatedBuffer::Parameters aParameters,
-             RefPtr<RotatedBuffer> aBuffer)
-      : mParameters(aParameters)
-      , mBuffer(aBuffer)
-    {}
-
-    bool UnrotateBuffer();
-
-    RotatedBuffer::Parameters mParameters;
-    RefPtr<RotatedBuffer> mBuffer;
-  };
-
-  /**
-   * Prepares the rotated buffers for painting by copying a previous frame
-   * into the buffer and/or unrotating the pixels and returns whether the
-   * operations were successful. If this fails a new buffer should be created
-   * for the frame.
-   */
-  bool PrepareBuffer();
-  void GetTextureClients(nsTArray<RefPtr<TextureClient>>& aTextureClients);
-
-  Maybe<Copy> mBufferCopy;
-  Maybe<Unrotate> mBufferUnrotate;
-
-protected:
-  ~CapturedBufferState() {}
-};
-
 typedef bool (*PrepDrawTargetForPaintingCallback)(CapturedPaintState* aPaintState);
 
 class CompositorBridgeChild;
@@ -130,8 +79,6 @@ public:
   // before any new painting occurs, as there can't be any async paints queued
   // or running while this is executing.
   void BeginLayerTransaction();
-
-  void PrepareBuffer(CapturedBufferState* aState);
 
   void PaintContents(CapturedPaintState* aState,
                      PrepDrawTargetForPaintingCallback aCallback);
@@ -163,8 +110,6 @@ private:
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
 
-  void AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
-                          CapturedBufferState* aState);
   void AsyncPaintContents(CompositorBridgeChild* aBridge,
                           CapturedPaintState* aState,
                           PrepDrawTargetForPaintingCallback aCallback);
