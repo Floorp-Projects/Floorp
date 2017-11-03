@@ -2029,25 +2029,22 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
   }
 }
 
-void
+ParentLayerPoint
 APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
-                               FlingHandoffState& aHandoffState)
+                               const FlingHandoffState& aHandoffState)
 {
   // If immediate handoff is disallowed, do not allow handoff beyond the
   // single APZC that's scrolled by the input block that triggered this fling.
   if (aHandoffState.mIsHandoff &&
       !gfxPrefs::APZAllowImmediateHandoff() &&
       aHandoffState.mScrolledApzc == aPrev) {
-    return;
+    return aHandoffState.mVelocity;
   }
 
   const OverscrollHandoffChain* chain = aHandoffState.mChain;
   RefPtr<AsyncPanZoomController> current;
   uint32_t overscrollHandoffChainLength = chain->Length();
   uint32_t startIndex;
-
-  // This will store any velocity left over after the entire handoff.
-  ParentLayerPoint finalResidualVelocity = aHandoffState.mVelocity;
 
   // The fling's velocity needs to be transformed from the screen coordinates
   // of |aPrev| to the screen coordinates of |next|. To transform a velocity
@@ -2065,64 +2062,63 @@ APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
     // IndexOf will return aOverscrollHandoffChain->Length() if
     // |aPrev| is not found.
     if (startIndex >= overscrollHandoffChainLength) {
-      return;
+      return aHandoffState.mVelocity;
     }
   } else {
     startIndex = 0;
   }
 
+  // This will store any velocity left over after the entire handoff.
+  ParentLayerPoint finalResidualVelocity = aHandoffState.mVelocity;
+
+  ParentLayerPoint currentVelocity = aHandoffState.mVelocity;
   for (; startIndex < overscrollHandoffChainLength; startIndex++) {
     current = chain->GetApzcAtIndex(startIndex);
 
-    // Make sure the apcz about to be handled can be handled
+    // Make sure the apzc about to be handled can be handled
     if (current == nullptr || current->IsDestroyed()) {
-      return;
+      break;
     }
 
-    endPoint = startPoint + aHandoffState.mVelocity;
+    endPoint = startPoint + currentVelocity;
 
-    // Only transform when current apcz can be transformed with previous
+    // Only transform when current apzc can be transformed with previous
     if (startIndex > 0) {
       if (!TransformDisplacement(this,
                                  chain->GetApzcAtIndex(startIndex - 1),
                                  current,
                                  startPoint,
                                  endPoint)) {
-        return;
-      }
-    }
-
-    ParentLayerPoint transformedVelocity = endPoint - startPoint;
-    aHandoffState.mVelocity = transformedVelocity;
-
-    if (current->AttemptFling(aHandoffState)) {
-      // Coming out of AttemptFling(), the handoff state's velocity is the
-      // residual velocity after attempting to fling |current|.
-      ParentLayerPoint residualVelocity = aHandoffState.mVelocity;
-
-      // If there's no residual velocity, there's nothing more to hand off.
-      if (IsZero(residualVelocity)) {
-        finalResidualVelocity = ParentLayerPoint();
         break;
       }
-
-      // If there is residual velocity, subtract the proportion of used
-      // velocity from finalResidualVelocity and continue handoff along the
-      // chain.
-      if (!FuzzyEqualsAdditive(transformedVelocity.x,
-                               residualVelocity.x, COORDINATE_EPSILON)) {
-        finalResidualVelocity.x *= (residualVelocity.x / transformedVelocity.x);
-      }
-      if (!FuzzyEqualsAdditive(transformedVelocity.y,
-                               residualVelocity.y, COORDINATE_EPSILON)) {
-        finalResidualVelocity.y *= (residualVelocity.y / transformedVelocity.y);
-      }
     }
+
+    FlingHandoffState transformedHandoffState = aHandoffState;
+    transformedHandoffState.mVelocity = (endPoint - startPoint);
+
+    ParentLayerPoint residualVelocity = current->AttemptFling(transformedHandoffState);
+
+    // If there's no residual velocity, there's nothing more to hand off.
+    if (IsZero(residualVelocity)) {
+      return ParentLayerPoint();
+    }
+
+    // If any of the velocity available to be handed off was consumed,
+    // subtract the proportion of consumed velocity from finalResidualVelocity.
+    if (!FuzzyEqualsAdditive(transformedHandoffState.mVelocity.x,
+                             residualVelocity.x, COORDINATE_EPSILON)) {
+      finalResidualVelocity.x *= (residualVelocity.x / transformedHandoffState.mVelocity.x);
+    }
+    if (!FuzzyEqualsAdditive(transformedHandoffState.mVelocity.y,
+                             residualVelocity.y, COORDINATE_EPSILON)) {
+      finalResidualVelocity.y *= (residualVelocity.y / transformedHandoffState.mVelocity.y);
+    }
+
+    currentVelocity = residualVelocity;
   }
 
-  // Set the handoff state's velocity to any residual velocity left over
-  // after the entire handoff process.
-  aHandoffState.mVelocity = finalResidualVelocity;
+  // Return any residual velocity left over after the entire handoff process.
+  return finalResidualVelocity;
 }
 
 bool
