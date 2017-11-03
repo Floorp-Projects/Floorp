@@ -1,23 +1,21 @@
 const {shortURL} = require("lib/ShortURL.jsm");
 const {GlobalOverrider} = require("test/unit/utils");
 
+const puny = "xn--kpry57d";
+const idn = "台灣";
+
 describe("shortURL", () => {
   let globals;
   let IDNStub;
-  let getPublicSuffixStub;
-  let newURIStub;
+  let getPublicSuffixFromHostStub;
 
   beforeEach(() => {
-    IDNStub = sinon.stub().callsFake(id => id);
-    getPublicSuffixStub = sinon.stub().returns("com");
-    newURIStub = sinon.stub().callsFake(id => id);
+    IDNStub = sinon.stub().callsFake(host => host.replace(puny, idn));
+    getPublicSuffixFromHostStub = sinon.stub().returns("com");
 
     globals = new GlobalOverrider();
     globals.set("IDNService", {convertToDisplayIDN: IDNStub});
-    globals.set("Services", {
-      eTLD: {getPublicSuffix: getPublicSuffixStub},
-      io: {newURI: newURIStub}
-    });
+    globals.set("Services", {eTLD: {getPublicSuffixFromHost: getPublicSuffixFromHostStub}});
   });
 
   afterEach(() => {
@@ -30,23 +28,21 @@ describe("shortURL", () => {
     assert.equal(shortURL({}), "");
   });
 
+  it("should return the 'url' if not a valid url", () => {
+    const checkInvalid = url => assert.equal(shortURL({url}), url);
+    checkInvalid(true);
+    checkInvalid("something");
+    checkInvalid("http:");
+    checkInvalid("http::double");
+    checkInvalid("http://badport:65536/");
+  });
+
   it("should remove the eTLD", () => {
     assert.equal(shortURL({url: "http://com.blah.com"}), "com.blah");
   });
 
-  it("should call convertToDisplayIDN when calling shortURL", () => {
-    const hostname = shortURL({url: "http://com.blah.com"});
-
-    assert.calledOnce(IDNStub);
-    assert.calledWithExactly(IDNStub, hostname, {});
-  });
-
-  it("should call getPublicSuffix", () => {
-    shortURL({url: "http://bar.com"});
-
-    assert.calledWithExactly(newURIStub, "http://bar.com");
-    assert.calledOnce(newURIStub);
-    assert.calledOnce(getPublicSuffixStub);
+  it("should convert host to idn when calling shortURL", () => {
+    assert.equal(shortURL({url: `http://${puny}.blah.com`}), `${idn}.blah`);
   });
 
   it("should get the hostname from .url", () => {
@@ -61,23 +57,43 @@ describe("shortURL", () => {
     assert.equal(shortURL({url: "HTTP://FOO.COM"}), "foo");
   });
 
+  it("should not include the port", () => {
+    assert.equal(shortURL({url: "http://foo.com:8888"}), "foo");
+  });
+
   it("should return hostname for localhost", () => {
-    getPublicSuffixStub.throws("insufficient domain levels");
+    getPublicSuffixFromHostStub.throws("insufficient domain levels");
 
     assert.equal(shortURL({url: "http://localhost:8000/"}), "localhost");
   });
 
-  it("should fallback to link title if it exists", () => {
-    const link = {
-      url: "file:///Users/voprea/Work/activity-stream/logs/coverage/system-addon/report-html/index.html",
-      title: "Code coverage report"
-    };
+  it("should return hostname for ip address", () => {
+    getPublicSuffixFromHostStub.throws("host is ip address");
 
-    assert.equal(shortURL(link), link.title);
+    assert.equal(shortURL({url: "http://127.0.0.1/foo"}), "127.0.0.1");
   });
 
-  it("should return the url if no title is provided", () => {
-    const url = "file://foo/bar.txt";
-    assert.equal(shortURL({url}), url);
+  it("should return etld for www.gov.uk (www-only non-etld)", () => {
+    getPublicSuffixFromHostStub.returns("gov.uk");
+
+    assert.equal(shortURL({url: "https://www.gov.uk/countersigning"}), "gov.uk");
+  });
+
+  it("should return idn etld for www-only non-etld", () => {
+    getPublicSuffixFromHostStub.returns(puny);
+
+    assert.equal(shortURL({url: `https://www.${puny}/foo`}), idn);
+  });
+
+  it("should return not the protocol for file:", () => {
+    assert.equal(shortURL({url: "file:///foo/bar.txt"}), "/foo/bar.txt");
+  });
+
+  it("should return not the protocol for about:", () => {
+    assert.equal(shortURL({url: "about:newtab"}), "newtab");
+  });
+
+  it("should fall back to full url as a last resort", () => {
+    assert.equal(shortURL({url: "about:"}), "about:");
   });
 });

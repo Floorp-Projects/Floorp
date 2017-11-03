@@ -45,7 +45,7 @@ add_task(async function test_all_packaged_locales() {
       const locale = file.replace("/", "");
       if (locale !== "static") {
         const url = await getUrlForLocale(locale);
-        Assert[locale === "en-US" ? "equal" : "notEqual"](url, DEFAULT_URL);
+        Assert[locale === "en-US" ? "equal" : "notEqual"](url, DEFAULT_URL, `can reference "${locale}" files`);
       }
     }
   }

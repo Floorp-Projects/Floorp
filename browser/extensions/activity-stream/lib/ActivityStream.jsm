@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 // common case to avoid the overhead of wrapping and detecting lazy loading.
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {DefaultPrefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
-const {LocalizationFeed} = Cu.import("resource://activity-stream/lib/LocalizationFeed.jsm", {});
 const {ManualMigration} = Cu.import("resource://activity-stream/lib/ManualMigration.jsm", {});
 const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", {});
 const {SectionsFeed} = Cu.import("resource://activity-stream/lib/SectionsManager.jsm", {});
@@ -64,6 +63,7 @@ const PREFS_CONFIG = new Map([
       stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       stories_referrer: "https://getpocket.com/recommendations",
       info_link: "https://www.mozilla.org/privacy/firefox/#pocketstories",
+      disclaimer_link: "https://getpocket.cdn.mozilla.net/firefox/new_tab_learn_more",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       show_spocs: false,
       personalized: false
@@ -113,18 +113,6 @@ const PREFS_CONFIG = new Map([
     title: "Number of Top Sites to display",
     value: 6
   }],
-  ["impressionStats.clicked", {
-    title: "GUIDs of clicked Top stories items",
-    value: "[]"
-  }],
-  ["impressionStats.blocked", {
-    title: "GUIDs of blocked Top stories items",
-    value: "[]"
-  }],
-  ["impressionStats.pocketed", {
-    title: "GUIDs of pocketed Top stories items",
-    value: "[]"
-  }],
   ["telemetry", {
     title: "Enable system error and usage data collection",
     value: true,
@@ -141,17 +129,15 @@ const PREFS_CONFIG = new Map([
   ["section.topstories.collapsed", {
     title: "Collapse the Top Stories section",
     value: false
+  }],
+  ["section.topstories.showDisclaimer", {
+    title: "Boolean flag that decides whether or not to show the topstories disclaimer.",
+    value: true
   }]
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
 const FEEDS_DATA = [
-  {
-    name: "localization",
-    factory: () => new LocalizationFeed(),
-    title: "Initialize strings and detect locale for Activity Stream",
-    value: true
-  },
   {
     name: "migration",
     factory: () => new ManualMigration(),
