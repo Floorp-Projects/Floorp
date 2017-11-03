@@ -107,6 +107,7 @@ FormEngine.prototype = {
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
+  applyIncomingBatchSize: FORMS_STORE_BATCH_SIZE,
 
   syncPriority: 6,
 

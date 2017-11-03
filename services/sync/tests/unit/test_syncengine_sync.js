@@ -665,29 +665,125 @@ add_task(async function test_processIncoming_resume_toFetch() {
 });
 
 
+add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
+  _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
+
+  // Engine that doesn't like the first and last record it's given.
+  const APPLY_BATCH_SIZE = 10;
+  let engine = makeRotaryEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = async function(records) {
+    let failed1 = records.shift();
+    let failed2 = records.pop();
+    await this._applyIncomingBatch(records);
+    return [failed1.id, failed2.id];
+  };
+
+  // Let's create less than a batch worth of server side records.
+  let collection = new ServerCollection();
+  for (let i = 0; i < APPLY_BATCH_SIZE - 1; i++) {
+    let id = "record-no-" + i;
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
+    collection.insert(id, payload);
+  }
+
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/rotary": collection.handler()
+  });
+
+  await SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
+  try {
+
+    // Confirm initial environment
+    do_check_empty(engine._store.items);
+
+    await engine._syncStartup();
+    await engine._processIncoming();
+
+    // Records have been applied and the expected failures have failed.
+    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE - 1 - 2);
+    do_check_eq(engine.toFetch.length, 0);
+    do_check_eq(engine.previousFailed.length, 2);
+    do_check_eq(engine.previousFailed[0], "record-no-0");
+    do_check_eq(engine.previousFailed[1], "record-no-8");
+
+  } finally {
+    await cleanAndGo(engine, server);
+  }
+});
+
+
+add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
+  _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
+
+  const APPLY_BATCH_SIZE = 10;
+
+  // Engine that applies records in batches.
+  let engine = makeRotaryEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
+  let batchCalls = 0;
+  engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
+  engine._store.applyIncomingBatch = async function(records) {
+    batchCalls += 1;
+    do_check_eq(records.length, APPLY_BATCH_SIZE);
+    await this._applyIncomingBatch.apply(this, arguments);
+  };
+
+  // Let's create three batches worth of server side records.
+  let collection = new ServerCollection();
+  for (let i = 0; i < APPLY_BATCH_SIZE * 3; i++) {
+    let id = "record-no-" + i;
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
+    collection.insert(id, payload);
+  }
+
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/rotary": collection.handler()
+  });
+
+  await SyncTestingInfrastructure(server);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
+  try {
+
+    // Confirm initial environment
+    do_check_empty(engine._store.items);
+
+    await engine._syncStartup();
+    await engine._processIncoming();
+
+    // Records have been applied in 3 batches.
+    do_check_eq(batchCalls, 3);
+    do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE * 3);
+
+  } finally {
+    await cleanAndGo(engine, server);
+  }
+});
+
+
 add_task(async function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
 
+  const APPLY_BATCH_SIZE = 5;
   const NUMBER_OF_RECORDS = 15;
 
   // Engine that fails the first record.
   let engine = makeRotaryEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
   engine._store.applyIncomingBatch = async function(records) {
-    let recordsToApply = [], recordsToFail = [];
-    for (let record of records) {
-      if (record.id == "record-no-0") {
-        recordsToFail.push(record);
-      } else if (records.length == NUMBER_OF_RECORDS &&
-                 (record.id == "record-no-5" || record.id == "record-no-10")) {
-        // Fail records 5 and 10 during the first sync.
-        recordsToFail.push(record);
-      } else {
-        recordsToApply.push(record);
-      }
-    }
-    await engine._store._applyIncomingBatch(recordsToApply);
-    return recordsToFail.map(record => record.id);
+    await engine._store._applyIncomingBatch(records.slice(1));
+    return [records[0].id];
   };
 
   // Create a batch of server side records.
@@ -765,28 +861,18 @@ add_task(async function test_processIncoming_notify_count() {
 
 add_task(async function test_processIncoming_previousFailed() {
   _("Ensure that failed records are retried.");
+  Svc.Prefs.set("client.type", "mobile");
 
+  const APPLY_BATCH_SIZE = 4;
   const NUMBER_OF_RECORDS = 14;
 
   // Engine that fails the first 2 records.
   let engine = makeRotaryEngine();
+  engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
   engine._store.applyIncomingBatch = async function(records) {
-    let recordsToApply = [], recordsToFail = [];
-    for (let record of records) {
-      if (record.id == "record-no-0" || record.id == "record-no-1" ||
-          record.id == "record-no-8" || record.id == "record-no-9") {
-        recordsToFail.push(record);
-      } else if (records.length == NUMBER_OF_RECORDS &&
-                 (record.id == "record-no-4" || record.id == "record-no-5" ||
-                  record.id == "record-no-12" || record.id == "record-no-13")) {
-        recordsToFail.push(record);
-      } else {
-        recordsToApply.push(record);
-      }
-    }
-    await engine._store._applyIncomingBatch(recordsToApply);
-    return recordsToFail.map(record => record.id);
+    await engine._store._applyIncomingBatch(records.slice(2));
+    return [records[0].id, records[1].id];
   };
 
   // Create a batch of server side records.
@@ -885,6 +971,7 @@ add_task(async function test_processIncoming_failed_records() {
                          "record-no-" + (2 + APPLY_BATCH_SIZE * 3),
                          "record-no-" + (1 + APPLY_BATCH_SIZE * 3)];
   let engine = makeRotaryEngine();
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
 
   engine.__reconcile = engine._reconcile;
   engine._reconcile = async function _reconcile(record) {
