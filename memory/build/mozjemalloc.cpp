@@ -1024,10 +1024,6 @@ private:
                    size_t aNewSize,
                    bool dirty);
 
-  inline void* MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun);
-
-  void* MallocBinHard(arena_bin_t* aBin);
-
   arena_run_t* GetNonFullBinRun(arena_bin_t* aBin);
 
   inline void* MallocSmall(size_t aSize, bool aZero);
@@ -2936,36 +2932,6 @@ arena_t::GetNonFullBinRun(arena_bin_t* aBin)
   return run;
 }
 
-// bin->mCurrentRun must have space available before this function is called.
-void*
-arena_t::MallocBinEasy(arena_bin_t* aBin, arena_run_t* aRun)
-{
-  void* ret;
-
-  MOZ_DIAGNOSTIC_ASSERT(aRun->mMagic == ARENA_RUN_MAGIC);
-  MOZ_DIAGNOSTIC_ASSERT(aRun->mNumFree > 0);
-
-  ret = arena_run_reg_alloc(aRun, aBin);
-  MOZ_DIAGNOSTIC_ASSERT(ret);
-  aRun->mNumFree--;
-
-  return ret;
-}
-
-// Re-fill aBin->mCurrentRun, then call arena_t::MallocBinEasy().
-void*
-arena_t::MallocBinHard(arena_bin_t* aBin)
-{
-  aBin->mCurrentRun = GetNonFullBinRun(aBin);
-  if (!aBin->mCurrentRun) {
-    return nullptr;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(aBin->mCurrentRun->mMagic == ARENA_RUN_MAGIC);
-  MOZ_DIAGNOSTIC_ASSERT(aBin->mCurrentRun->mNumFree > 0);
-
-  return MallocBinEasy(aBin, aBin->mCurrentRun);
-}
-
 void
 arena_bin_t::Init(SizeClass aSizeClass)
 {
@@ -3074,12 +3040,18 @@ arena_t::MallocSmall(size_t aSize, bool aZero)
 
   {
     MutexAutoLock lock(mLock);
-    if ((run = bin->mCurrentRun) && run->mNumFree > 0) {
-      ret = MallocBinEasy(bin, run);
-    } else {
-      ret = MallocBinHard(bin);
+    run = bin->mCurrentRun;
+    if (MOZ_UNLIKELY(!run || run->mNumFree == 0)) {
+      run = bin->mCurrentRun = GetNonFullBinRun(bin);
     }
-
+    if (MOZ_UNLIKELY(!run)) {
+      return nullptr;
+    }
+    MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
+    MOZ_DIAGNOSTIC_ASSERT(run->mNumFree > 0);
+    ret = arena_run_reg_alloc(run, bin);
+    MOZ_DIAGNOSTIC_ASSERT(ret);
+    run->mNumFree--;
     if (!ret) {
       return nullptr;
     }
