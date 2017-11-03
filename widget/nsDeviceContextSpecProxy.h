@@ -54,16 +54,11 @@ public:
 private:
   ~nsDeviceContextSpecProxy() {}
 
-  nsresult CreateUniqueTempPath(nsACString& aFilePath);
-
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintSession> mPrintSession;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<mozilla::layout::RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::layout::DrawEventRecorderPRFileDesc> mRecorder;
-  nsCOMPtr<nsIFile> mRecordingDir;
-  nsCOMPtr<nsIUUIDGenerator> mUuidGenerator;
-  nsCString mRecordingFileName;
 };
 
 #endif // nsDeviceContextSpecProxy_h

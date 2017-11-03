@@ -19,6 +19,8 @@
 #include "nsIPrintSettings.h"
 #include "nsIWebProgressListener.h"
 #include "PrintTranslator.h"
+#include "private/pprio.h"
+#include "nsAnonymousTemporaryFile.h"
 
 namespace mozilla {
 namespace layout {
@@ -38,14 +40,21 @@ RemotePrintJobParent::RecvInitializePrint(const nsString& aDocumentTitle,
   nsresult rv = InitializePrintDevice(aDocumentTitle, aPrintToFile, aStartPage,
                                       aEndPage);
   if (NS_FAILED(rv)) {
-    Unused << SendPrintInitializationResult(rv);
+    Unused << SendPrintInitializationResult(rv, FileDescriptor());
     Unused << Send__delete__(this);
     return IPC_OK();
   }
 
   mPrintTranslator.reset(new PrintTranslator(mPrintDeviceContext));
-  Unused << SendPrintInitializationResult(NS_OK);
+  FileDescriptor fd;
+  rv = PrepareNextPageFD(&fd);
+  if (NS_FAILED(rv)) {
+    Unused << SendPrintInitializationResult(rv, FileDescriptor());
+    Unused << Send__delete__(this);
+    return IPC_OK();
+  }
 
+  Unused << SendPrintInitializationResult(NS_OK, fd);
   return IPC_OK();
 }
 
@@ -82,22 +91,49 @@ RemotePrintJobParent::InitializePrintDevice(const nsString& aDocumentTitle,
   return NS_OK;
 }
 
-mozilla::ipc::IPCResult
-RemotePrintJobParent::RecvProcessPage(const nsCString& aPageFileName)
+nsresult
+RemotePrintJobParent::PrepareNextPageFD(FileDescriptor* aFd)
 {
-  nsresult rv = PrintPage(aPageFileName);
+  PRFileDesc* prFd = nullptr;
+  nsresult rv = NS_OpenAnonymousTemporaryFile(&prFd);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  *aFd = FileDescriptor(
+    FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prFd)));
+  mCurrentPageStream.OpenFD(prFd);
+  return NS_OK;
+}
+
+mozilla::ipc::IPCResult
+RemotePrintJobParent::RecvProcessPage()
+{
+  if (!mCurrentPageStream.IsOpen()) {
+    Unused << SendAbortPrint(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  mCurrentPageStream.Seek(0, PR_SEEK_SET);
+  nsresult rv = PrintPage(mCurrentPageStream);
+  mCurrentPageStream.Close();
 
   if (NS_FAILED(rv)) {
     Unused << SendAbortPrint(rv);
-  } else {
-    Unused << SendPageProcessed();
+    return IPC_OK();
   }
 
+  FileDescriptor fd;
+  rv = PrepareNextPageFD(&fd);
+  if (NS_FAILED(rv)) {
+    Unused << SendAbortPrint(rv);
+    return IPC_OK();
+  }
+
+  Unused << SendPageProcessed(fd);
   return IPC_OK();
 }
 
 nsresult
-RemotePrintJobParent::PrintPage(const nsCString& aPageFileName)
+RemotePrintJobParent::PrintPage(PRFileDescStream& aRecording)
 {
   MOZ_ASSERT(mPrintDeviceContext);
 
@@ -105,39 +141,11 @@ RemotePrintJobParent::PrintPage(const nsCString& aPageFileName)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  nsCOMPtr<nsIFile> recordingFile;
-  rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                              getter_AddRefs(recordingFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = recordingFile->AppendNative(aPageFileName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsAutoCString recordingPath;
-  rv = recordingFile->GetNativePath(recordingPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  PRFileDescStream recording;
-  recording.Open(recordingPath.get());
-  MOZ_ASSERT(recording.IsOpen());
-  if (!mPrintTranslator->TranslateRecording(recording)) {
+  if (!mPrintTranslator->TranslateRecording(aRecording)) {
     return NS_ERROR_FAILURE;
   }
 
   rv = mPrintDeviceContext->EndPage();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  recording.Close();
-  rv = recordingFile->Remove(/* recursive= */ false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
