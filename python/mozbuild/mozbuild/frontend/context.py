@@ -344,6 +344,56 @@ class HostCompileFlags(BaseCompileFlags):
         return optimize_flags
 
 
+class LinkFlags(BaseCompileFlags):
+    def __init__(self, context):
+        self._context = context
+
+        self.flag_variables = (
+            ('OS', self._os_ldflags(), ('LDFLAGS',)),
+            ('LINKER', context.config.substs.get('LINKER_LDFLAGS'),
+             ('LDFLAGS',)),
+            ('DEFFILE', None, ('LDFLAGS',)),
+            ('MOZBUILD', None, ('LDFLAGS',)),
+            ('FIX_LINK_PATHS', context.config.substs.get('MOZ_FIX_LINK_PATHS'),
+             ('LDFLAGS',)),
+            ('OPTIMIZE', (context.config.substs.get('MOZ_OPTIMIZE_LDFLAGS', []) if
+                          context.config.substs.get('MOZ_OPTIMIZE') else []),
+             ('LDFLAGS',)),
+        )
+        BaseCompileFlags.__init__(self, context)
+
+    def _os_ldflags(self):
+        flags = self._context.config.substs.get('OS_LDFLAGS', [])[:]
+
+        if (self._context.config.substs.get('MOZ_DEBUG') or
+            self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
+            flags += self._context.config.substs.get('MOZ_DEBUG_LDFLAGS', [])
+
+        # TODO: This is pretty convoluted, and isn't really a per-context thing,
+        # configure would be a better place to aggregate these.
+        if all([self._context.config.substs.get('OS_ARCH') == 'WINNT',
+                not self._context.config.substs.get('GNU_CC'),
+                not self._context.config.substs.get('MOZ_DEBUG')]):
+
+            # MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
+            # Used for generating an optimized build with debugging symbols.
+            # Used in the Windows nightlies to generate symbols for crash reporting.
+            if self._context.config.substs.get('MOZ_DEBUG_SYMBOLS'):
+                flags.append('-DEBUG')
+
+
+            if self._context.config.substs.get('MOZ_DMD'):
+                # On Windows Opt DMD builds we actually override everything
+                # from OS_LDFLAGS. Bug 1413728 is on file to figure out whether
+                # this is necessary.
+                flags = ['-DEBUG']
+
+            if self._context.config.substs.get('MOZ_OPTIMIZE'):
+                flags.append('-OPT:REF,ICF')
+
+        return flags
+
+
 class CompileFlags(BaseCompileFlags):
     def __init__(self, context):
         main_src_dir = mozpath.dirname(context.main_path)
@@ -1906,6 +1956,11 @@ VARIABLES = {
         directly.
         """),
 
+    'LINK_FLAGS': (LinkFlags, dict,
+        """Recipe for linker flags for this context. Not to be manipulated
+        directly.
+        """),
+
     'CFLAGS': (List, list,
         """Flags passed to the C compiler for all of the C source files
            declared in this directory.
@@ -2356,6 +2411,7 @@ SPECIAL_VARIABLES = {
         This variable may go away once the transition away from Makefiles is
         complete.
         """),
+
 }
 
 # Deprecation hints.

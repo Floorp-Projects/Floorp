@@ -7,6 +7,8 @@
 #ifndef mozilla_layout_printing_DrawEventRecorder_h
 #define mozilla_layout_printing_DrawEventRecorder_h
 
+#include <memory>
+
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/RecordingTypes.h"
 #include "prio.h"
@@ -15,18 +17,28 @@ namespace mozilla {
 namespace layout {
 
 class PRFileDescStream : public mozilla::gfx::EventStream {
+  // Most writes, as seen in the print IPC use case, are very small (<32 bytes),
+  // with a small number of very large (>40KB) writes. Writes larger than this
+  // value are not buffered.
+  static const size_t kBufferSize = 1024;
 public:
-  PRFileDescStream() : mFd(nullptr), mGood(true) {}
+  PRFileDescStream() : mFd(nullptr), mBuffer(nullptr), mBufferPos(0),
+                       mGood(true) {}
 
   void OpenFD(PRFileDesc* aFd) {
     MOZ_ASSERT(!IsOpen());
     mFd = aFd;
     mGood = true;
+    mBuffer.reset(new uint8_t[kBufferSize]);
+    mBufferPos = 0;
   }
 
   void Close() {
+    Flush();
     PR_Close(mFd);
     mFd = nullptr;
+    mBuffer.reset();
+    mBufferPos = 0;
   }
 
   bool IsOpen() {
@@ -34,23 +46,46 @@ public:
   }
 
   void Flush() {
-    // For std::ostream this flushes any internal buffers. PRFileDesc's IO isn't
-    // buffered, so nothing to do here.
+    // We need to be API compatible with std::ostream, and so we silently handle
+    // flushes on a closed FD.
+    if (IsOpen() && mBufferPos > 0) {
+      PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
+      mBufferPos = 0;
+    }
   }
 
   void Seek(PRInt32 aOffset, PRSeekWhence aWhence) {
+    Flush();
     PR_Seek(mFd, aOffset, aWhence);
   }
 
   void write(const char* aData, size_t aSize) {
-    // We need to be API compatible with std::ostream, and so we silently handle
-    // writes on a closed FD.
+    // See comment in Flush().
     if (IsOpen()) {
-      PR_Write(mFd, static_cast<const void*>(aData), aSize);
+      // If we're writing more data than could ever fit in our buffer, flush the
+      // buffer and write directly.
+      if (aSize > kBufferSize) {
+        Flush();
+        PR_Write(mFd, static_cast<const void*>(aData), aSize);
+      // If our write could fit in our buffer, but doesn't because the buffer is
+      // partially full, write to the buffer, flush the buffer, and then write
+      // the rest of the data to the buffer.
+      } else if (aSize > AvailableBufferSpace()) {
+        size_t length = AvailableBufferSpace();
+        WriteToBuffer(aData, length);
+        Flush();
+
+        MOZ_ASSERT(aSize <= kBufferSize);
+        WriteToBuffer(aData + length, aSize - length);
+      // Write fits in the buffer.
+      } else {
+        WriteToBuffer(aData, aSize);
+      }
     }
   }
 
   void read(char* aOut, size_t aSize) {
+    Flush();
     PRInt32 res = PR_Read(mFd, static_cast<void*>(aOut), aSize);
     mGood = res >= 0 && ((size_t)res == aSize);
   }
@@ -60,7 +95,19 @@ public:
   }
 
 private:
+  size_t AvailableBufferSpace() {
+    return kBufferSize - mBufferPos;
+  }
+
+  void WriteToBuffer(const char* aData, size_t aSize) {
+    MOZ_ASSERT(aSize <= AvailableBufferSpace());
+    memcpy(mBuffer.get() + mBufferPos, aData, aSize);
+    mBufferPos += aSize;
+  }
+
   PRFileDesc* mFd;
+  std::unique_ptr<uint8_t[]> mBuffer;
+  size_t mBufferPos;
   bool mGood;
 };
 

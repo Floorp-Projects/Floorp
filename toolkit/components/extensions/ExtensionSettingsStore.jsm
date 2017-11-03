@@ -359,6 +359,27 @@ this.ExtensionSettingsStore = {
   },
 
   /**
+   * Mark a setting as being controlled by a user's choice. This will disable all of
+   * the extension defined values for the extension.
+   *
+   * @param {string} type The type of the setting.
+   * @param {string} key The key of the setting.
+   */
+  setByUser(type, key) {
+    let {precedenceList} = (_store.data[type] && _store.data[type][key]) || {};
+    if (!precedenceList) {
+      // The setting for this key does not exist. Nothing to do.
+      return;
+    }
+
+    for (let item of precedenceList) {
+      item.enabled = false;
+    }
+
+    _store.saveSoon();
+  },
+
+  /**
    * Retrieves all settings from the store for a given extension.
    *
    * @param {Extension} extension The extension for which a settings are being retrieved.
@@ -452,16 +473,6 @@ this.ExtensionSettingsStore = {
     return topItem.installDate > addon.installDate.valueOf() ?
       "controlled_by_other_extensions" :
       "controllable_by_this_extension";
-  },
-
-  // Return the id of the controlling extension or null if no extension is
-  // controlling this setting.
-  getTopExtensionId(type, key) {
-    let item = getTopItem(type, key);
-    if (item) {
-      return item.id;
-    }
-    return null;
   },
 
   /**

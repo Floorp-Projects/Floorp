@@ -14,7 +14,6 @@ android-test/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-test
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/unittest
             path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
@@ -61,7 +60,6 @@ android-lint/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-lint
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/lint/lint-results-officialPhotonDebug.html
             path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialPhotonDebug.html
@@ -120,7 +118,6 @@ android-checkstyle/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/checkstyle/checkstyle.html
             path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
@@ -172,7 +169,6 @@ android-findbugs/opt:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
             path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialPhotonDebug-output.html

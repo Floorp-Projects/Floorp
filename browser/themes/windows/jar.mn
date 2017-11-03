@@ -10,12 +10,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/menuPanel-customize.png
-  skin/classic/browser/menuPanel-customize@2x.png
-  skin/classic/browser/menuPanel-exit.png
-  skin/classic/browser/menuPanel-exit@2x.png
-  skin/classic/browser/menuPanel-help.png
-  skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/pageInfo.css
@@ -25,7 +19,6 @@ browser.jar:
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
@@ -80,5 +73,3 @@ browser.jar:
 % override chrome://browser/skin/feeds/audioFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/videoFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/videoFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png
-
-% override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1

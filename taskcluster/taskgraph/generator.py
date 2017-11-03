@@ -257,7 +257,13 @@ class TaskGraphGenerator(object):
         # include all docker-image build tasks here, in case they are needed for a graph morph
         docker_image_tasks = set(t.label for t in full_task_graph.tasks.itervalues()
                                  if t.attributes['kind'] == 'docker-image')
-        target_graph = full_task_graph.graph.transitive_closure(target_tasks | docker_image_tasks)
+        # include all tasks with `always_target` set
+        always_target_tasks = set(t.label for t in full_task_graph.tasks.itervalues()
+                                  if t.attributes.get('always_target'))
+        logger.info('Adding %d tasks with `always_target` attribute' % (
+                    len(always_target_tasks) - len(always_target_tasks & target_tasks)))
+        target_graph = full_task_graph.graph.transitive_closure(
+            target_tasks | docker_image_tasks | always_target_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes},
             target_graph)

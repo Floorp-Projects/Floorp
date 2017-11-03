@@ -264,15 +264,19 @@ add_task(async function testDetailsObjects() {
   let browserActionWidget = getBrowserActionWidget(extension);
 
   let tests = await extension.awaitMessage("ready");
+
+  // The initial icon should be the default icon since no icon is in the manifest.
+  const DEFAULT_ICON = "chrome://browser/content/extension.svg";
+  let browserActionButton = browserActionWidget.forWindow(window).node;
+  let pageActionImage = document.getElementById(pageActionId);
+  is(getListStyleImage(browserActionButton), DEFAULT_ICON, `browser action has the correct default image`);
+  is(getListStyleImage(pageActionImage), DEFAULT_ICON, `page action has the correct default image`);
+
   for (let test of tests) {
     extension.sendMessage("setIcon", test);
     await extension.awaitMessage("iconSet");
 
     await promiseAnimationFrame();
-
-    let browserActionButton = browserActionWidget.forWindow(window).node;
-    let pageActionImage = document.getElementById(pageActionId);
-
 
     // Test icon sizes in the toolbar/urlbar.
     for (let resolution of Object.keys(test.resolutions)) {

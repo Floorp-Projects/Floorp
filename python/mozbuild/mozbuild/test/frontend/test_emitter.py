@@ -188,8 +188,6 @@ class TestEmitterBasic(unittest.TestCase):
             'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
             'DEFFILE': 'baz.def',
-            'MOZBUILD_LDFLAGS': ['-framework Foo', '-x', '-DELAYLOAD:foo.dll',
-                                 '-DELAYLOAD:bar.dll'],
             'WIN32_EXE_LDFLAGS': ['-subsystem:console'],
         }
 
@@ -203,7 +201,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('compile-flags', extra_substs={
             'WARNINGS_AS_ERRORS': '-Werror',
         })
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], reader.config.substs['STL_FLAGS'])
         self.assertEqual(flags.flags['VISIBILITY'], reader.config.substs['VISIBILITY_FLAGS'])
@@ -216,7 +214,7 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_DEBUG_FLAGS': '-g',
             'MOZ_DEBUG_SYMBOLS': '1',
         })
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['DEBUG'], ['-g'])
 
@@ -225,16 +223,70 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_DEBUG_FLAGS': '-g',
             'MOZ_DEBUG_SYMBOLS': '',
         })
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['DEBUG'], [])
+
+    def test_link_flags(self):
+        reader = self.reader('link-flags', extra_substs={
+            'OS_LDFLAGS': ['-Wl,rpath-link=/usr/lib'],
+            'LINKER_LDFLAGS': ['-fuse-ld=gold'],
+            'MOZ_OPTIMIZE': '',
+            'MOZ_OPTIMIZE_LDFLAGS': ['-Wl,-dead_strip'],
+            'MOZ_DEBUG_LDFLAGS': ['-framework ExceptionHandling'],
+        })
+        sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertEqual(ldflags.flags['OS'], reader.config.substs['OS_LDFLAGS'])
+        self.assertEqual(ldflags.flags['LINKER'], reader.config.substs['LINKER_LDFLAGS'])
+        self.assertEqual(ldflags.flags['MOZBUILD'], ['-Wl,-U_foo', '-framework Foo', '-x'])
+        self.assertEqual(ldflags.flags['OPTIMIZE'], [])
+
+    def test_debug_ldflags(self):
+        reader = self.reader('link-flags', extra_substs={
+            'MOZ_DEBUG_SYMBOLS': '1',
+            'MOZ_DEBUG_LDFLAGS': ['-framework ExceptionHandling'],
+        })
+        sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertEqual(ldflags.flags['OS'],
+                         reader.config.substs['MOZ_DEBUG_LDFLAGS'])
+
+    def test_windows_opt_link_flags(self):
+        reader = self.reader('link-flags', extra_substs={
+            'OS_ARCH': 'WINNT',
+            'GNU_CC': '',
+            'MOZ_OPTIMIZE': '1',
+            'MOZ_DEBUG_SYMBOLS': '1',
+            'MOZ_OPTIMIZE_FLAGS': [],
+            'MOZ_OPTIMIZE_LDFLAGS': [],
+        })
+        sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertIn('-DEBUG', ldflags.flags['OS'])
+        self.assertIn('-OPT:REF,ICF', ldflags.flags['OS'])
+
+    def test_windows_dmd_link_flags(self):
+        reader = self.reader('link-flags', extra_substs={
+            'OS_ARCH': 'WINNT',
+            'GNU_CC': '',
+            'MOZ_DMD': '1',
+            'MOZ_DEBUG_SYMBOLS': '1',
+            'MOZ_OPTIMIZE': '1',
+            'MOZ_OPTIMIZE_FLAGS': [],
+            'OS_LDFLAGS': ['-Wl,-U_foo'],
+        })
+        sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
+        self.assertIsInstance(ldflags, ComputedFlags)
+        self.assertEqual(ldflags.flags['OS'],
+                         ['-DEBUG', '-OPT:REF,ICF'])
 
     def test_host_compile_flags(self):
         reader = self.reader('host-compile-flags', extra_substs={
             'HOST_CXXFLAGS': ['-Wall', '-Werror'],
             'HOST_CFLAGS': ['-Werror', '-Wall'],
         })
-        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['HOST_CXXFLAGS'], reader.config.substs['HOST_CXXFLAGS'])
         self.assertEqual(flags.flags['HOST_CFLAGS'], reader.config.substs['HOST_CFLAGS'])
@@ -248,7 +300,7 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_OPTIMIZE': '',
             'MOZ_OPTIMIZE_FLAGS': ['-O2'],
         })
-        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['HOST_OPTIMIZE'], [])
 
@@ -257,7 +309,7 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_OPTIMIZE': '1',
             'MOZ_OPTIMIZE_FLAGS': ['-O2'],
         })
-        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['HOST_OPTIMIZE'], ['-O2'])
 
@@ -268,7 +320,7 @@ class TestEmitterBasic(unittest.TestCase):
             'HOST_OPTIMIZE_FLAGS': ['-O3'],
             'CROSS_COMPILE': '1',
         })
-        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['HOST_OPTIMIZE'], ['-O3'])
 
@@ -277,7 +329,7 @@ class TestEmitterBasic(unittest.TestCase):
             'OS_ARCH': 'WINNT',
             'MOZ_DEBUG': '1',
         })
-        sources, flags, lib, target_flags = self.read_topsrcdir(reader)
+        sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['RTL'], ['-MDd'])
 
@@ -301,7 +353,7 @@ class TestEmitterBasic(unittest.TestCase):
             'MOZ_ZLIB_CFLAGS': ['-I/zlib/path'],
             'MOZ_PIXMAN_CFLAGS': ['-I/pixman/path'],
         })
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], [])
         self.assertEqual(flags.flags['VISIBILITY'], [])
@@ -316,19 +368,19 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_disable_stl_wrapping(self):
         reader = self.reader('disable-stl-wrapping')
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['STL'], [])
 
     def test_visibility_flags(self):
         reader = self.reader('visibility-flags')
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['VISIBILITY'], [])
 
     def test_defines_in_flags(self):
         reader = self.reader('compile-defines')
-        defines, sources, lib, flags = self.read_topsrcdir(reader)
+        defines, sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['LIBRARY_DEFINES'],
                          ['-DMOZ_LIBRARY_DEFINE=MOZ_TEST'])
@@ -343,7 +395,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_includes_in_flags(self):
         reader = self.reader('compile-includes')
-        defines, sources, lib, flags = self.read_topsrcdir(reader)
+        defines, sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
         self.assertEqual(flags.flags['BASE_INCLUDES'],
                          ['-I%s' % reader.config.topsrcdir,
@@ -357,7 +409,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('allow-compiler-warnings', extra_substs={
             'WARNINGS_AS_ERRORS': '-Werror',
         })
-        sources, lib, flags = self.read_topsrcdir(reader)
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], [])
 
     def test_use_yasm(self):
@@ -543,15 +595,16 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('program')
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 4)
+        self.assertEqual(len(objs), 5)
         self.assertIsInstance(objs[0], ComputedFlags)
-        self.assertIsInstance(objs[1], Program)
-        self.assertIsInstance(objs[2], SimpleProgram)
+        self.assertIsInstance(objs[1], ComputedFlags)
+        self.assertIsInstance(objs[2], Program)
         self.assertIsInstance(objs[3], SimpleProgram)
+        self.assertIsInstance(objs[4], SimpleProgram)
 
-        self.assertEqual(objs[1].program, 'test_program.prog')
-        self.assertEqual(objs[2].program, 'test_program1.prog')
-        self.assertEqual(objs[3].program, 'test_program2.prog')
+        self.assertEqual(objs[2].program, 'test_program.prog')
+        self.assertEqual(objs[3].program, 'test_program1.prog')
+        self.assertEqual(objs[4].program, 'test_program2.prog')
 
     def test_test_manifest_missing_manifest(self):
         """A missing manifest file should result in an error."""
@@ -936,7 +989,8 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
 
         libraries = [o for o in objs if isinstance(o,StaticLibrary)]
-        library_flags = [o for o in objs if isinstance(o, ComputedFlags)]
+        library_flags = [o for o in objs if isinstance(o, ComputedFlags)
+                         and 'LIBRARY_DEFINES' in o.flags]
         expected = {
             'liba': '-DIN_LIBA',
             'libb': '-DIN_LIBA -DIN_LIBB',
@@ -962,6 +1016,8 @@ class TestEmitterBasic(unittest.TestCase):
         # The second to last object is a Linkable.
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
+        ld_flags = objs.pop()
+        self.assertIsInstance(ld_flags, ComputedFlags)
         self.assertEqual(len(objs), 6)
         for o in objs:
             self.assertIsInstance(o, Sources)
@@ -1018,7 +1074,7 @@ class TestEmitterBasic(unittest.TestCase):
         # The second to last object is a Linkable.
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
-        self.assertEqual(len(objs), 6)
+        self.assertEqual(len(objs), 7)
 
         generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
         self.assertEqual(len(generated_sources), 6)
@@ -1052,8 +1108,11 @@ class TestEmitterBasic(unittest.TestCase):
         linkable = objs.pop()
         self.assertTrue(linkable.cxx_link)
         # This objdir will also generate host flags.
-        flags = objs.pop()
-        self.assertIsInstance(flags, ComputedFlags)
+        host_flags = objs.pop()
+        self.assertIsInstance(host_flags, ComputedFlags)
+        # ...and ldflags.
+        ldflags = objs.pop()
+        self.assertIsInstance(ldflags, ComputedFlags)
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, HostSources)
@@ -1078,8 +1137,8 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
 
         # The last object is a Linkable, the second to last ComputedFlags,
-        # ignore them.
-        objs = objs[:-2]
+        # followed by ldflags, ignore them.
+        objs = objs[:-3]
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, UnifiedSources)
@@ -1105,8 +1164,8 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
 
         # The last object is a Linkable, the second to last ComputedFlags,
-        # ignore them.
-        objs = objs[:-2]
+        # followed by ldflags, ignore them.
+        objs = objs[:-3]
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, UnifiedSources)
@@ -1332,8 +1391,9 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
         self.assertIsInstance(objs[0], TestHarnessFiles)
         self.assertIsInstance(objs[1], VariablePassthru)
-        self.assertIsInstance(objs[2], SharedLibrary)
-        self.assertIsInstance(objs[3], ComputedFlags)
+        self.assertIsInstance(objs[2], ComputedFlags)
+        self.assertIsInstance(objs[3], SharedLibrary)
+        self.assertIsInstance(objs[4], ComputedFlags)
         for path, files in objs[0].files.walk():
             for f in files:
                 self.assertEqual(str(f), '!libfoo.so')
@@ -1342,9 +1402,10 @@ class TestEmitterBasic(unittest.TestCase):
     def test_symbols_file(self):
         """Test that SYMBOLS_FILE works"""
         reader = self.reader('test-symbols-file')
-        genfile, shlib, flags = self.read_topsrcdir(reader)
+        genfile, ldflags, shlib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(genfile, GeneratedFile)
         self.assertIsInstance(flags, ComputedFlags)
+        self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(shlib, SharedLibrary)
         # This looks weird but MockConfig sets DLL_{PREFIX,SUFFIX} and
         # the reader method in this class sets OS_TARGET=WINNT.
@@ -1353,11 +1414,12 @@ class TestEmitterBasic(unittest.TestCase):
     def test_symbols_file_objdir(self):
         """Test that a SYMBOLS_FILE in the objdir works"""
         reader = self.reader('test-symbols-file-objdir')
-        genfile, shlib, flags = self.read_topsrcdir(reader)
+        genfile, ldflags, shlib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(genfile, GeneratedFile)
         self.assertEqual(genfile.script,
                          mozpath.join(reader.config.topsrcdir, 'foo.py'))
         self.assertIsInstance(flags, ComputedFlags)
+        self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(shlib, SharedLibrary)
         self.assertEqual(shlib.symbols_file, 'foo.symbols')
 

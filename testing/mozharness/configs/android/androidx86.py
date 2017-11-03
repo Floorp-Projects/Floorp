@@ -84,6 +84,14 @@ config = {
                 "--flavor=chrome",
             ],
         },
+        "geckoview": {
+            "run_filename": "rungeckoview.py",
+            "testsdir": "mochitest",
+            "options": [
+                "--utility-path=%(utility_path)s",
+                "--symbols-path=%(symbols_path)s",
+            ],
+        },
     },  # end suite_definitions
     "download_minidump_stackwalk": True,
     "default_blob_upload_servers": [
