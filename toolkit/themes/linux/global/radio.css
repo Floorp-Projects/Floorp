@@ -12,29 +12,17 @@
 
 radio {
   -moz-appearance: radio-container;
+  -moz-box-align: center;
   margin: 2px 4px;
-  border-left: 2px transparent;
-  border-right: 2px transparent;
 }
 
-/* With native theming on, the spacer-box paints the radio mark and includes
-   the spacing to the right, so that oversized radio images can slop over
-   into the space.
+radio:hover {
+  color: -moz-buttonhovertext;
+}
 
-   If we need to disable radio button theming, the spacer box no longer paints
-   the radio mark, but its fallback CSS border supplies the padding between
-   the mark and the label.  The xul:image then takes over painting the radio
-   mark. */
-
-.radio-spacer-box {
+.radio-check {
   -moz-appearance: radio;
-  -moz-box-align: center;
   margin: 2px;
-  border-right: 2px solid transparent;
-}
-
-.radio-label-center-box {
-  -moz-box-align: center;
 }
 
 .radio-label-box {
@@ -51,60 +39,14 @@ radio {
 
 /* ..... focused state ..... */
 
-radio[focused="true"] > .radio-label-center-box > .radio-label-box {
-  border: 1px dotted ThreeDDarkShadow;
+radio[focused="true"] > .radio-label-box {
+  /* Native theming should take care of this but it appears to be broken with
+     some Gtk themes. Bug 1312169. */
+  outline: 1px dotted;
 }
 
 /* ..... disabled state ..... */
 
-radio[disabled="true"] > .radio-spacer-box > .radio-check-box1 {
-  background-color: -moz-Dialog;
-}
-
 radio[disabled="true"] {
   color: GrayText;
-}
-
-/* ::::: checkmark image ::::: */
-
-.radio-check-box1 {
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
-  border-radius: 50%;
-  min-width: 12px;
-  min-height: 12px;
-  background-color: -moz-Field;
-}
-
-.radio-check-box2 {
-  border-top: 1px solid ThreeDDarkShadow;
-  border-right: 1px solid ThreeDLightShadow;
-  border-bottom: 1px solid ThreeDLightShadow;
-  border-left: 1px solid ThreeDDarkShadow;
-  border-radius: 50%;
-  padding: 2px;
-  width: 4px;
-  height: 4px;
-  list-style-image: none;
-}
-
-radio:not([disabled="true"]):hover {
-  color: -moz-buttonhovertext;
-  text-shadow: none;
-}
-
-radio:hover:active > .radio-spacer-box > .radio-check-box1 {
-  background-color: -moz-Dialog;
-}
-
-/* ..... selected state ..... */
-
-radio[selected="true"] > .radio-spacer-box > .radio-check-box1 > .radio-check-box2 {
-  list-style-image: url("chrome://global/skin/radio/radio-check.gif");
-}
-
-radio[selected="true"][disabled="true"] > .radio-spacer-box > .radio-check-box1 > .radio-check-box2 {
-  list-style-image: url("chrome://global/skin/radio/radio-check-dis.gif") !important
 }
