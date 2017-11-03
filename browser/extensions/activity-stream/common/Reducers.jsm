@@ -6,9 +6,6 @@
 const {actionTypes: at} = Components.utils.import("resource://activity-stream/common/Actions.jsm", {});
 const {Dedupe} = Components.utils.import("resource://activity-stream/common/Dedupe.jsm", {});
 
-// Locales that should be displayed RTL
-const RTL_LIST = ["ar", "he", "fa", "ur"];
-
 const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 
@@ -18,12 +15,6 @@ const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
     initialized: false,
-    // The locale of the browser
-    locale: "",
-    // Localized strings with defaults
-    strings: null,
-    // The text direction for the locale
-    textDirection: "",
     // The version of the system-addon
     version: null
   },
@@ -56,17 +47,6 @@ function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case at.INIT:
       return Object.assign({}, prevState, action.data || {}, {initialized: true});
-    case at.LOCALE_UPDATED: {
-      if (!action.data) {
-        return prevState;
-      }
-      let {locale, strings} = action.data;
-      return Object.assign({}, prevState, {
-        locale,
-        strings,
-        textDirection: RTL_LIST.indexOf(locale.split("-")[0]) >= 0 ? "rtl" : "ltr"
-      });
-    }
     default:
       return prevState;
   }

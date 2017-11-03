@@ -90,6 +90,20 @@ describe("ActionCreators", () => {
         assert.isFalse(au.isSendToContent(ac.BroadcastToContent({type: "FOO"})));
       });
     });
+    describe("isFromMain", () => {
+      it("should return true if action is SendToContent", () => {
+        const newAction = ac.SendToContent({type: "FOO"}, "foo123");
+        assert.isTrue(au.isFromMain(newAction));
+      });
+      it("should return true if action is BroadcastToContent", () => {
+        const newAction = ac.BroadcastToContent({type: "FOO"});
+        assert.isTrue(au.isFromMain(newAction));
+      });
+      it("should return false if action is SendToMain", () => {
+        const newAction = ac.SendToMain({type: "FOO"});
+        assert.isFalse(au.isFromMain(newAction));
+      });
+    });
   });
   describe("BroadcastToContent", () => {
     it("should create the right action", () => {
