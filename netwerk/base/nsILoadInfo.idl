@@ -634,6 +634,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean loadTriggeredFromExternal;
 
   /**
+   * True if the tainting has been set by the service worker.
+   */
+  [noscript, infallible] readonly attribute boolean serviceWorkerTaintingSynthesized;
+
+  /**
    * Whenever a channel gets redirected, append the redirect history entry of
    * the channel which contains principal referrer and remote address [before
    * the channels got redirected] to the loadinfo, so that at every point this
