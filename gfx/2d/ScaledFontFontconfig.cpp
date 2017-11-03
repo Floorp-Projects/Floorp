@@ -253,6 +253,7 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
   options.render_mode = wr::FontRenderMode::Alpha;
   options.subpx_dir = wr::SubpixelDirection::Horizontal;
   options.synthetic_italics = false;
+  options.bg_color = wr::ToColorU(Color());
 
   wr::FontInstancePlatformOptions platformOptions;
   platformOptions.flags = 0;

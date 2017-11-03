@@ -314,6 +314,7 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
       aaMode == AntialiasMode::NONE ? wr::FontRenderMode::Mono : wr::FontRenderMode::Alpha;
     options.subpx_dir = wr::SubpixelDirection::Horizontal;
     options.synthetic_italics = false;
+    options.bg_color = wr::ToColorU(Color());
     *aOutOptions = Some(options);
   }
 
