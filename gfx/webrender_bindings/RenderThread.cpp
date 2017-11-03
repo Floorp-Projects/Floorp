@@ -23,7 +23,7 @@ static StaticRefPtr<RenderThread> sRenderThread;
 
 RenderThread::RenderThread(base::Thread* aThread)
   : mThread(aThread)
-  , mPendingFrameCountMapLock("RenderThread.mPendingFrameCountMapLock")
+  , mFrameCountMapLock("RenderThread.mFrameCountMapLock")
   , mRenderTextureMapLock("RenderThread.mRenderTextureMapLock")
   , mHasShutdown(false)
 {
@@ -117,8 +117,8 @@ RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRender
 
   mRenderers[aWindowId] = Move(aRenderer);
 
-  MutexAutoLock lock(mPendingFrameCountMapLock);
-  mPendingFrameCounts.Put(AsUint64(aWindowId), 0);
+  MutexAutoLock lock(mFrameCountMapLock);
+  mPendingFrameCounts.Put(AsUint64(aWindowId), FrameCount());
 }
 
 void
@@ -132,7 +132,7 @@ RenderThread::RemoveRenderer(wr::WindowId aWindowId)
 
   mRenderers.erase(aWindowId);
 
-  MutexAutoLock lock(mPendingFrameCountMapLock);
+  MutexAutoLock lock(mFrameCountMapLock);
   mPendingFrameCounts.Remove(AsUint64(aWindowId));
 }
 
@@ -265,46 +265,77 @@ RenderThread::Resume(wr::WindowId aWindowId)
   return renderer->Resume();
 }
 
-uint32_t
-RenderThread::GetPendingFrameCount(wr::WindowId aWindowId)
+bool
+RenderThread::TooManyPendingFrames(wr::WindowId aWindowId)
 {
-  MutexAutoLock lock(mPendingFrameCountMapLock);
-  uint32_t count = 0;
-  MOZ_ASSERT(mPendingFrameCounts.Get(AsUint64(aWindowId), &count));
-  mPendingFrameCounts.Get(AsUint64(aWindowId), &count);
-  return count;
+  const int64_t maxFrameCount = 1;
+
+  // Too many pending frames if pending frames exit more than maxFrameCount
+  // or if RenderBackend is still processing a frame.
+
+  MutexAutoLock lock(mFrameCountMapLock);
+  FrameCount count;
+  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+    MOZ_ASSERT(false);
+    return true;
+  }
+
+  if (count.mPendingCount > maxFrameCount) {
+    return true;
+  }
+  MOZ_ASSERT(count.mPendingCount >= count.mRenderingCount);
+  return count.mPendingCount > count.mRenderingCount;
 }
 
 void
 RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
 {
-  MutexAutoLock lock(mPendingFrameCountMapLock);
+  MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
-  uint32_t oldCount = 0;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &oldCount)) {
+  FrameCount count;
+  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
     MOZ_ASSERT(false);
     return;
   }
   // Update pending frame count.
-  mPendingFrameCounts.Put(AsUint64(aWindowId), oldCount + 1);
+  count.mPendingCount = count.mPendingCount + 1;
+  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
+}
+
+void
+RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
+{
+  MutexAutoLock lock(mFrameCountMapLock);
+  // Get the old count.
+  FrameCount count;
+  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  // Update rendering frame count.
+  count.mRenderingCount = count.mRenderingCount + 1;
+  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
 }
 
 void
 RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
 {
-  MutexAutoLock lock(mPendingFrameCountMapLock);
+  MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
-  uint32_t oldCount = 0;
-  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &oldCount)) {
+  FrameCount count;
+  if (!mPendingFrameCounts.Get(AsUint64(aWindowId), &count)) {
     MOZ_ASSERT(false);
     return;
   }
-  MOZ_ASSERT(oldCount > 0);
-  if (oldCount <= 0) {
+  MOZ_ASSERT(count.mPendingCount > 0);
+  MOZ_ASSERT(count.mRenderingCount > 0);
+  if (count.mPendingCount <= 0) {
     return;
   }
-  // Update pending frame count.
-  mPendingFrameCounts.Put(AsUint64(aWindowId), oldCount - 1);
+  // Update frame counts.
+  count.mPendingCount = count.mPendingCount - 1;
+  count.mRenderingCount = count.mRenderingCount - 1;
+  mPendingFrameCounts.Put(AsUint64(aWindowId), count);
 }
 
 void
@@ -379,6 +410,7 @@ extern "C" {
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
 {
+  mozilla::wr::RenderThread::Get()->IncRenderingFrameCount(aWindowId);
   mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
 }
 

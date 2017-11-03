@@ -6,6 +6,12 @@
 
 #include "vm/DateTime.h"
 
+#if defined(XP_WIN)
+#include "mozilla/UniquePtr.h"
+
+#include <cstdlib>
+#include <cstring>
+#endif /* defined(XP_WIN) */
 #include <time.h>
 
 #include "jsutil.h"
@@ -14,7 +20,10 @@
 #include "threading/ExclusiveData.h"
 #if ENABLE_INTL_API
 #include "unicode/timezone.h"
+#if defined(XP_WIN)
+#include "unicode/unistr.h"
 #endif
+#endif /* ENABLE_INTL_API */
 #include "vm/MutexIDs.h"
 
 using mozilla::UnspecifiedNaN;
@@ -334,13 +343,87 @@ JS::ResetTimeZone()
 #endif
 }
 
+#if defined(XP_WIN)
+static bool
+IsOlsonCompatibleWindowsTimeZoneId(const char* tz)
+{
+    // ICU ignores the TZ environment variable on Windows and instead directly
+    // invokes Win API functions to retrieve the current time zone. But since
+    // we're still using the POSIX-derived localtime_s() function on Windows
+    // and localtime_s() does return a time zone adjusted value based on the
+    // TZ environment variable, we need to manually adjust the default ICU
+    // time zone if TZ is set.
+    //
+    // Windows supports the following format for TZ: tzn[+|-]hh[:mm[:ss]][dzn]
+    // where "tzn" is the time zone name for standard time, the time zone
+    // offset is positive for time zones west of GMT, and "dzn" is the
+    // optional time zone name when daylight savings are observed. Daylight
+    // savings are always based on the U.S. daylight saving rules, that means
+    // for example it's not possible to use "TZ=CET-1CEST" to select the IANA
+    // time zone "CET".
+    //
+    // When comparing this restricted format for TZ to all IANA time zone
+    // names, the following time zones are in the intersection of what's
+    // supported by Windows and is also a valid IANA time zone identifier.
+    //
+    // Even though the time zone offset is marked as mandatory on MSDN, it
+    // appears it defaults to zero when omitted. This in turn means we can
+    // also allow the time zone identifiers "UCT", "UTC", and "GMT".
+
+    static const char* const allowedIds[] = {
+        // From tzdata's "northamerica" file:
+        "EST5EDT",
+        "CST6CDT",
+        "MST7MDT",
+        "PST8PDT",
+
+        // From tzdata's "backward" file:
+        "GMT+0",
+        "GMT-0",
+        "GMT0",
+        "UCT",
+        "UTC",
+
+        // From tzdata's "etcetera" file:
+        "GMT",
+    };
+    for (const auto& allowedId : allowedIds) {
+        if (std::strcmp(allowedId, tz) == 0)
+            return true;
+    }
+    return false;
+}
+#endif
+
 void
 js::ResyncICUDefaultTimeZone()
 {
 #if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
     auto guard = IcuTimeZoneState->lock();
     if (guard.get() == IcuTimeZoneStatus::NeedsUpdate) {
-        icu::TimeZone::recreateDefault();
+        bool recreate = true;
+#if defined(XP_WIN)
+        // If TZ is set and its value is valid under Windows' and IANA's time
+        // zone identifier rules, update the ICU default time zone to use this
+        // value.
+        const char* tz = std::getenv("TZ");
+        if (tz && IsOlsonCompatibleWindowsTimeZoneId(tz)) {
+            icu::UnicodeString tzid(tz, -1, US_INV);
+            mozilla::UniquePtr<icu::TimeZone> newTimeZone(icu::TimeZone::createTimeZone(tzid));
+            MOZ_ASSERT(newTimeZone);
+            if (*newTimeZone != icu::TimeZone::getUnknown()) {
+                // adoptDefault() takes ownership of the time zone.
+                icu::TimeZone::adoptDefault(newTimeZone.release());
+                recreate = false;
+            }
+        } else {
+            // If |tz| isn't a supported time zone identifier, use the default
+            // Windows time zone for ICU.
+            // TODO: Handle invalid time zone identifiers (bug 342068).
+        }
+#endif
+        if (recreate)
+            icu::TimeZone::recreateDefault();
         guard.get() = IcuTimeZoneStatus::Valid;
     }
 #endif

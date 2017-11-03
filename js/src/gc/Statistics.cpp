@@ -554,6 +554,14 @@ Statistics::renderNurseryJson(JSRuntime* rt) const
 UniqueChars
 Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 {
+    /*
+     * The format of the JSON message is specified by the GCMajorMarkerPayload
+     * type in perf.html
+     * https://github.com/devtools-html/perf.html/blob/master/src/types/markers.js#L62
+     *
+     * All the properties listed here are created within the timings property
+     * of the GCMajor marker.
+     */
     if (aborted)
         return DuplicateString("{status:\"aborted\"}"); // May return nullptr
 
@@ -563,10 +571,11 @@ Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
     JSONPrinter json(printer);
 
     json.beginObject();
+    json.property("status", "completed");
     formatJsonDescription(timestamp, json);
 
     if (includeSlices) {
-        json.beginListProperty("slices");
+        json.beginListProperty("slices_list");
         for (unsigned i = 0; i < slices_.length(); i++)
             formatJsonSlice(i, json);
         json.endList();
@@ -610,11 +619,13 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS);
 
     json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_));
-    json.property("allocated", uint64_t(preBytes) / 1024 / 1024);
+    json.property("allocated", uint64_t(preBytes)/1024/1024);
+    json.property("allocated_bytes", preBytes);
     json.property("added_chunks", getCount(STAT_NEW_CHUNK));
     json.property("removed_chunks", getCount(STAT_DESTROY_CHUNK));
     json.property("major_gc_number", startingMajorGCNumber);
     json.property("minor_gc_number", startingMinorGCNumber);
+    json.property("slice_number", startingSliceNumber);
 }
 
 void
@@ -880,6 +891,7 @@ Statistics::beginGC(JSGCInvocationKind kind)
 
     preBytes = runtime->gc.usage.gcBytes();
     startingMajorGCNumber = runtime->gc.majorGCCount();
+    startingSliceNumber = runtime->gc.gcNumber();
 }
 
 void
