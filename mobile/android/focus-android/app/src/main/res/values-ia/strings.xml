@@ -49,6 +49,7 @@
   <string name="preference_about">A proposito de %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de recerca installate</string>
   <string name="preference_search_restore">Restaurar le motores de recerca predefinite</string>
+  <string name="preference_search_add2">Adder un altere motor de recerca</string>
   <string name="preference_search_remove_title">Remover le motores de recerca</string>
   <string name="preference_search_remove">Remover</string>
   <string name="tutorial_search_manually_add">Adder manualmente</string>

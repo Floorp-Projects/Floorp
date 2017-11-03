@@ -33,7 +33,7 @@
   <string name="preference_privacy_block_ads">Спиране на следене от реклами</string>
   <string name="preference_privacy_block_ads_summary">Някои реклами проследяват посещенията, даже и да не натискате върху рекламите</string>
   <string name="preference_privacy_block_analytics">Спиране на следене с цел анализ</string>
-  <string name="preference_privacy_block_analytics_summary">Използват го, за да събират, анализират и измерват дейности като докосване и скролиране</string>
+  <string name="preference_privacy_block_analytics_summary">Използват го, за да събират, анализират и измерват дейности като докосване и плъзгане</string>
   <string name="preference_privacy_block_social">Спиране на следене от социални мрежи</string>
   <string name="preference_privacy_block_social_summary">Вградени в сайтове, за да ви проследява и да показва функционални елементи, като например бутони за споделяне</string>
   <string name="preference_privacy_block_content">Спиране на следене през друго съдържание</string>
@@ -41,7 +41,7 @@
   <string name="preference_privacy_secure_mode">Невидим</string>
   <string name="preference_privacy_stealth_summary">Скриване на страниците при превключване на приложения</string>
   <string name="preference_category_performance">Производителност</string>
-  <string name="preference_performance_block_webfonts">Спиране на уебшрифтовете</string>
+  <string name="preference_performance_block_webfonts">Спиране на уеб шрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
   <string name="preference_performance_block_images">Спиране на изображенията</string>
   <string name="preference_default_browser2">Избиране на %1$s като стандартен четец</string>
