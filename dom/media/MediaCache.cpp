@@ -2462,7 +2462,9 @@ MediaCacheStream::ReadPartialBlock(int64_t aOffset, Span<char> aBuffer)
 }
 
 Result<uint32_t, nsresult>
-MediaCacheStream::ReadBlockFromCache(int64_t aOffset, Span<char> aBuffer)
+MediaCacheStream::ReadBlockFromCache(int64_t aOffset,
+                                     Span<char> aBuffer,
+                                     bool aNoteBlockUsage)
 {
   mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
   MOZ_ASSERT(IsOffsetAllowed(aOffset));
@@ -2501,6 +2503,11 @@ MediaCacheStream::ReadBlockFromCache(int64_t aOffset, Span<char> aBuffer)
     return mozilla::Err(rv);
   }
 
+  if (aNoteBlockUsage) {
+    mMediaCache->NoteBlockUsage(
+      this, cacheBlock, aOffset, mCurrentMode, TimeStamp::Now());
+  }
+
   return bytesRead;
 }
 
@@ -2522,105 +2529,73 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   // monitor to be notified to avoid reading at the wrong position.
   auto streamOffset = mStreamOffset;
 
-  uint32_t count = 0;
+  // The buffer we are about to fill.
+  auto buffer = MakeSpan<char>(aBuffer, aCount);
+
   // Read one block (or part of a block) at a time
-  while (count < aCount) {
+  while (!buffer.IsEmpty()) {
     if (mClosed) {
       return NS_ERROR_ABORT;
     }
 
-    int32_t streamBlock = OffsetToBlockIndex(streamOffset);
-    if (streamBlock < 0) {
+    if (!IsOffsetAllowed(streamOffset)) {
       LOGE("Stream %p invalid offset=%" PRId64, this, streamOffset);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    uint32_t offsetInStreamBlock = uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
-    int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
-
-    if (mStreamLength >= 0) {
+    if (mStreamLength >= 0 && streamOffset >= mStreamLength) {
       // Don't try to read beyond the end of the stream
-      int64_t bytesRemaining = mStreamLength - streamOffset;
-      if (bytesRemaining <= 0) {
-        // Get out of here and return NS_OK
-        break;
-      }
-      size = std::min(size, bytesRemaining);
-      // Clamp size until 64-bit file size issues are fixed.
-      size = std::min(size, int64_t(INT32_MAX));
+      break;
     }
 
-    int32_t cacheBlock =
-      size_t(streamBlock) < mBlocks.Length() ? mBlocks[streamBlock] : -1;
-    if (cacheBlock < 0) {
-      // We don't have a complete cached block here.
+    Result<uint32_t, nsresult> rv =
+      ReadBlockFromCache(streamOffset, buffer, true /* aNoteBlockUsage */);
+    if (rv.isErr()) {
+      return rv.unwrapErr();
+    }
 
-      // See if the data is available in the partial cache block of any
-      // stream reading this resource. We need to do this in case there is
-      // another stream with this resource that has all the data to the end of
-      // the stream but the data doesn't end on a block boundary.
-      MediaCacheStream* streamWithPartialBlock = nullptr;
-      MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
-      while (MediaCacheStream* stream = iter.Next()) {
-        if (OffsetToBlockIndexUnchecked(stream->mChannelOffset) ==
-              streamBlock &&
-            streamOffset < stream->mChannelOffset &&
-            stream->mChannelOffset == stream->mStreamLength) {
-          streamWithPartialBlock = stream;
-          break;
-        }
-      }
-      if (streamWithPartialBlock) {
-        // We can just use the data in mPartialBlockBuffer. In fact we should
-        // use it rather than waiting for the block to fill and land in
-        // the cache.
-        int64_t bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - streamOffset);
-        // Clamp bytes until 64-bit file size issues are fixed.
-        bytes = std::min(bytes, int64_t(INT32_MAX));
-        MOZ_ASSERT(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
-        memcpy(aBuffer + count,
-               streamWithPartialBlock->mPartialBlockBuffer.get() +
-                 offsetInStreamBlock,
-               bytes);
-        if (mCurrentMode == MODE_METADATA) {
-          streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
-        }
-        streamOffset += bytes;
-        count += bytes;
-        // Break for we've reached EOS and have nothing more to read.
-        break;
-      }
-
-      if (mStreamOffset != streamOffset) {
-        // Updat mStreamOffset before we drop the lock. We need to run
-        // Update() again since stream reading strategy might have changed.
-        mStreamOffset = streamOffset;
-        mMediaCache->QueueUpdate();
-      }
-
-      // No data has been read yet, so block
-      mon.Wait();
+    uint32_t bytes = rv.unwrap();
+    if (bytes > 0) {
+      // Got data from the cache successfully. Read next block.
+      streamOffset += bytes;
+      buffer = buffer.From(bytes);
       continue;
     }
 
-    mMediaCache->NoteBlockUsage(
-      this, cacheBlock, streamOffset, mCurrentMode, TimeStamp::Now());
-
-    int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
-    int32_t bytes;
-    MOZ_ASSERT(size >= 0 && size <= INT32_MAX, "Size out of range.");
-    nsresult rv = mMediaCache->ReadCacheFile(
-      offset, aBuffer + count, int32_t(size), &bytes);
-    if (NS_FAILED(rv)) {
-      nsCString name;
-      GetErrorName(rv, name);
-      LOGE("Stream %p ReadCacheFile failed, rv=%s", this, name.Data());
-      return rv;
+    // See if we can use the data in the partial block of any stream reading
+    // this resource. Note we use the partial block only when it is completed,
+    // that is reaching EOS.
+    bool foundDataInPartialBlock = false;
+    MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
+    while (MediaCacheStream* stream = iter.Next()) {
+      if (OffsetToBlockIndexUnchecked(stream->mChannelOffset) ==
+            OffsetToBlockIndexUnchecked(streamOffset) &&
+          stream->mChannelOffset == stream->mStreamLength) {
+        uint32_t bytes = stream->ReadPartialBlock(streamOffset, buffer);
+        streamOffset += bytes;
+        buffer = buffer.From(bytes);
+        foundDataInPartialBlock = true;
+        break;
+      }
     }
-    streamOffset += bytes;
-    count += bytes;
+    if (foundDataInPartialBlock) {
+      // Break for we've reached EOS.
+      break;
+    }
+
+    if (mStreamOffset != streamOffset) {
+      // Update mStreamOffset before we drop the lock. We need to run
+      // Update() again since stream reading strategy might have changed.
+      mStreamOffset = streamOffset;
+      mMediaCache->QueueUpdate();
+    }
+
+    // No data to read, so block
+    mon.Wait();
+    continue;
   }
 
+  uint32_t count = buffer.Elements() - aBuffer;
   *aBytes = count;
   if (count == 0) {
     return NS_OK;
