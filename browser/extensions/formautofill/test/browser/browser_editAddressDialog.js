@@ -34,32 +34,41 @@ add_task(async function test_saveAddress() {
         ok(true, "Edit address dialog is closed");
         resolve();
       }, {once: true});
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["given-name"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["additional-name"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["family-name"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1.organization, {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["street-address"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level2"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["address-level1"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1["postal-code"], {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1.country, {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1.email, {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey(TEST_ADDRESS_1.tel, {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      EventUtils.synthesizeKey("VK_TAB", {}, win);
-      info("saving address");
-      EventUtils.synthesizeKey("VK_RETURN", {}, win);
+      let doc = win.document;
+      // Verify labels
+      is(doc.querySelector("#address-level1-container > span").textContent, "State",
+                           "US address-level1 label should be 'State'");
+      is(doc.querySelector("#postal-code-container > span").textContent, "Zip Code",
+                           "US postal-code label should be 'Zip Code'");
+      // Input address info and verify move through form with tab keys
+      const keyInputs = [
+        "VK_TAB",
+        TEST_ADDRESS_1["given-name"],
+        "VK_TAB",
+        TEST_ADDRESS_1["additional-name"],
+        "VK_TAB",
+        TEST_ADDRESS_1["family-name"],
+        "VK_TAB",
+        TEST_ADDRESS_1.organization,
+        "VK_TAB",
+        TEST_ADDRESS_1["street-address"],
+        "VK_TAB",
+        TEST_ADDRESS_1["address-level2"],
+        "VK_TAB",
+        TEST_ADDRESS_1["address-level1"],
+        "VK_TAB",
+        TEST_ADDRESS_1["postal-code"],
+        "VK_TAB",
+        TEST_ADDRESS_1.country,
+        "VK_TAB",
+        TEST_ADDRESS_1.email,
+        "VK_TAB",
+        TEST_ADDRESS_1.tel,
+        "VK_TAB",
+        "VK_TAB",
+        "VK_RETURN",
+      ];
+      keyInputs.forEach(input => EventUtils.synthesizeKey(input, {}, win));
     }, {once: true});
   });
   let addresses = await getAddresses();
@@ -94,4 +103,110 @@ add_task(async function test_editAddress() {
 
   addresses = await getAddresses();
   is(addresses.length, 0, "Address storage is empty");
+});
+
+add_task(async function test_saveAddressCA() {
+  await new Promise(resolve => {
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL);
+    win.addEventListener("load", () => {
+      win.addEventListener("unload", () => {
+        ok(true, "Edit address dialog is closed");
+        resolve();
+      }, {once: true});
+      let doc = win.document;
+      // Change country to verify labels
+      doc.querySelector("#country").focus();
+      EventUtils.synthesizeKey("Canada", {}, win);
+      is(doc.querySelector("#address-level1-container > span").textContent, "Province",
+                           "CA address-level1 label should be 'Province'");
+      is(doc.querySelector("#postal-code-container > span").textContent, "Postal Code",
+                           "CA postal-code label should be 'Postal Code'");
+      // Input address info and verify move through form with tab keys
+      doc.querySelector("#given-name").focus();
+      const keyInputs = [
+        TEST_ADDRESS_CA_1["given-name"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["additional-name"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["family-name"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1.organization,
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["street-address"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["address-level2"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["address-level1"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1["postal-code"],
+        "VK_TAB",
+        TEST_ADDRESS_CA_1.country,
+        "VK_TAB",
+        TEST_ADDRESS_CA_1.email,
+        "VK_TAB",
+        TEST_ADDRESS_CA_1.tel,
+        "VK_TAB",
+        "VK_TAB",
+        "VK_RETURN",
+      ];
+      keyInputs.forEach(input => EventUtils.synthesizeKey(input, {}, win));
+    }, {once: true});
+  });
+  let addresses = await getAddresses();
+  for (let [fieldName, fieldValue] of Object.entries(TEST_ADDRESS_CA_1)) {
+    is(addresses[0][fieldName], fieldValue, "check " + fieldName);
+  }
+  await removeAllRecords();
+});
+
+add_task(async function test_saveAddressDE() {
+  await new Promise(resolve => {
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL);
+    win.addEventListener("load", () => {
+      win.addEventListener("unload", () => {
+        ok(true, "Edit address dialog is closed");
+        resolve();
+      }, {once: true});
+      let doc = win.document;
+      // Change country to verify labels
+      doc.querySelector("#country").focus();
+      EventUtils.synthesizeKey("Germany", {}, win);
+      is(doc.querySelector("#postal-code-container > span").textContent, "Postal Code",
+                           "DE postal-code label should be 'Postal Code'");
+      is(doc.querySelector("#address-level1-container").style.display, "none",
+                           "DE address-level1 should be hidden");
+      // Input address info and verify move through form with tab keys
+      doc.querySelector("#given-name").focus();
+      const keyInputs = [
+        TEST_ADDRESS_DE_1["given-name"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1["additional-name"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1["family-name"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1.organization,
+        "VK_TAB",
+        TEST_ADDRESS_DE_1["street-address"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1["postal-code"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1["address-level2"],
+        "VK_TAB",
+        TEST_ADDRESS_DE_1.country,
+        "VK_TAB",
+        TEST_ADDRESS_DE_1.email,
+        "VK_TAB",
+        TEST_ADDRESS_DE_1.tel,
+        "VK_TAB",
+        "VK_TAB",
+        "VK_RETURN",
+      ];
+      keyInputs.forEach(input => EventUtils.synthesizeKey(input, {}, win));
+    }, {once: true});
+  });
+  let addresses = await getAddresses();
+  for (let [fieldName, fieldValue] of Object.entries(TEST_ADDRESS_DE_1)) {
+    is(addresses[0][fieldName], fieldValue, "check " + fieldName);
+  }
+  await removeAllRecords();
 });
