@@ -1485,6 +1485,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioTrackList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeys)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncomingMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedVideoStreamTrack)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPlayPromises)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSeekDOMPromise)
@@ -1514,6 +1515,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioTrackList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVideoTrackList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaKeys)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncomingMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectedVideoStreamTrack)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPlayPromises)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSeekDOMPromise)
@@ -3985,6 +3987,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPlaybackRate(1.0),
     mPreservesPitch(true),
     mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
+    mAttachingMediaKey(false),
     mCurrentPlayRangeStart(-1.0),
     mLoadedDataFired(false),
     mAutoplaying(true),
@@ -7015,6 +7018,142 @@ HTMLMediaElement::ContainsRestrictedContent()
   return GetMediaKeys() != nullptr;
 }
 
+void
+HTMLMediaElement::RemoveMediaKeys()
+{
+  LOG(LogLevel::Debug, ("%s", __func__));
+  // 5.2.3 Stop using the CDM instance represented by the mediaKeys attribute
+  // to decrypt media data and remove the association with the media element.
+  mMediaKeys->Unbind();
+  mMediaKeys = nullptr;
+}
+
+bool
+HTMLMediaElement::TryRemoveMediaKeysAssociation(DetailedPromise* aPromise)
+{
+  MOZ_ASSERT(mMediaKeys);
+  LOG(LogLevel::Debug, ("%s", __func__));
+  // 5.2.1 If the user agent or CDM do not support removing the association,
+  // let this object's attaching media keys value be false and reject promise
+  // with a new DOMException whose name is NotSupportedError.
+  // 5.2.2 If the association cannot currently be removed, let this object's
+  // attaching media keys value be false and reject promise with a new
+  // DOMException whose name is InvalidStateError.
+  if (mDecoder) {
+    // We don't support swapping out the MediaKeys once we've started to
+    // setup the playback pipeline. Note this also means we don't need to worry
+    // about handling disassociating the MediaKeys from the MediaDecoder.
+    aPromise->MaybeReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING(
+        "Can't change MediaKeys on HTMLMediaElement after load has started"));
+    return false;
+  }
+  RemoveMediaKeys();
+
+  // 5.2.4 If the preceding step failed, let this object's attaching media
+  // keys value be false and reject promise with a new DOMException whose
+  // name is the appropriate error name.
+  return true;
+}
+
+bool
+HTMLMediaElement::DetachExistingMediaKeys(DetailedPromise* aPromise)
+{
+  LOG(LogLevel::Debug, ("%s", __func__));
+  // 5.1 If mediaKeys is not null, CDM instance represented by mediaKeys is
+  // already in use by another media element, and the user agent is unable
+  // to use it with this element, let this object's attaching media keys
+  // value be false and reject promise with a new DOMException whose name
+  // is QuotaExceededError.
+  if (mIncomingMediaKeys && mIncomingMediaKeys->IsBoundToMediaElement()) {
+    aPromise->MaybeReject(
+      NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
+      NS_LITERAL_CSTRING(
+        "MediaKeys object is already bound to another HTMLMediaElement"));
+    return false;
+  }
+
+  // 5.2 If the mediaKeys attribute is not null, run the following steps:
+  if (mMediaKeys) {
+    return TryRemoveMediaKeysAssociation(aPromise);
+  }
+  return true;
+}
+
+void
+HTMLMediaElement::MakeAssociationWithCDMResolved(DetailedPromise* aPromise)
+{
+  LOG(LogLevel::Debug, ("%s", __func__));
+
+  // 5.4 Set the mediaKeys attribute to mediaKeys.
+  mMediaKeys = mIncomingMediaKeys;
+  // 5.5 Let this object's attaching media keys value be false.
+  ResetSetMediaKeysTempVariables();
+  // 5.6 Resolve promise.
+  aPromise->MaybeResolveWithUndefined();
+}
+
+bool
+HTMLMediaElement::TryMakeAssociationWithCDM(CDMProxy* aProxy)
+{
+  MOZ_ASSERT(aProxy);
+  LOG(LogLevel::Debug, ("%s", __func__));
+  // 5.3.3 Queue a task to run the "Attempt to Resume Playback If Necessary"
+  // algorithm on the media element.
+  // Note: Setting the CDMProxy on the MediaDecoder will unblock playback.
+  if (mDecoder) {
+    mDecoder->SetCDMProxy(aProxy);
+  }
+  return true;
+}
+
+bool
+HTMLMediaElement::AttachNewMediaKeys(DetailedPromise* aPromise)
+{
+  LOG(LogLevel::Debug,
+      ("%s incoming MediaKeys(%p)", __func__, mIncomingMediaKeys.get()));
+
+  // 5.3. If mediaKeys is not null, run the following steps:
+  if (mIncomingMediaKeys) {
+    auto cdmProxy = mIncomingMediaKeys->GetCDMProxy();
+    if (!cdmProxy) {
+      aPromise->MaybeReject(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING(
+          "CDM crashed before binding MediaKeys object to HTMLMediaElement"));
+      return false;
+    }
+
+    // 5.3.1 Associate the CDM instance represented by mediaKeys with the
+    // media element for decrypting media data.
+    if (NS_FAILED(mIncomingMediaKeys->Bind(this))) {
+      // 5.3.2 If the preceding step failed, run the following steps:
+
+      // 5.3.2.1 Set the mediaKeys attribute to null.
+      mMediaKeys = nullptr;
+      // 5.3.2.2 Let this object's attaching media keys value be false.
+      ResetSetMediaKeysTempVariables();
+      // 5.3.2.3 Reject promise with a new DOMException whose name is
+      // the appropriate error name.
+      aPromise->MaybeReject(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING(
+          "Failed to bind MediaKeys object to HTMLMediaElement"));
+      return false;
+    }
+    return TryMakeAssociationWithCDM(cdmProxy);
+  }
+  return true;
+}
+
+void
+HTMLMediaElement::ResetSetMediaKeysTempVariables()
+{
+  mAttachingMediaKey = false;
+  mIncomingMediaKeys = nullptr;
+}
+
 already_AddRefed<Promise>
 HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
                                ErrorResult& aRv)
@@ -7050,85 +7189,34 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
 
   // 2. If this object's attaching media keys value is true, return a
   // promise rejected with a new DOMException whose name is InvalidStateError.
-  // 3. Let this object's attaching media keys value be true.
-  // 4. Let promise be a new promise.
-  // 5. Run the following steps in parallel:
-
-  // 5.1 If mediaKeys is not null, CDM instance represented by mediaKeys is
-  // already in use by another media element, and the user agent is unable
-  // to use it with this element, let this object's attaching media keys
-  // value be false and reject promise with a new DOMException whose name
-  // is QuotaExceededError.
-  if (aMediaKeys && aMediaKeys->IsBoundToMediaElement()) {
-    promise->MaybeReject(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
-      NS_LITERAL_CSTRING("MediaKeys object is already bound to another HTMLMediaElement"));
+  if (mAttachingMediaKey) {
+    promise->MaybeReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("A MediaKeys object is in attaching operation."));
     return promise.forget();
   }
 
-  // 5.2 If the mediaKeys attribute is not null, run the following steps:
-  if (mMediaKeys) {
-    // 5.2.1 If the user agent or CDM do not support removing the association,
-    // let this object's attaching media keys value be false and reject promise
-    // with a new DOMException whose name is NotSupportedError.
+  // 3. Let this object's attaching media keys value be true.
+  mAttachingMediaKey = true;
+  mIncomingMediaKeys = aMediaKeys;
 
-    // 5.2.2 If the association cannot currently be removed, let this object's
-    // attaching media keys value be false and reject promise with a new
-    // DOMException whose name is InvalidStateError.
-    if (mDecoder) {
-      // We don't support swapping out the MediaKeys once we've started to
-      // setup the playback pipeline. Note this also means we don't need to worry
-      // about handling disassociating the MediaKeys from the MediaDecoder.
-      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("Can't change MediaKeys on HTMLMediaElement after load has started"));
-      return promise.forget();
-    }
+  // 4. Let promise be a new promise.
+  // 5. Run the following steps in parallel:
 
-    // 5.2.3 Stop using the CDM instance represented by the mediaKeys attribute
-    // to decrypt media data and remove the association with the media element.
-    mMediaKeys->Unbind();
-    mMediaKeys = nullptr;
-
-    // 5.2.4 If the preceding step failed, let this object's attaching media
-    // keys value be false and reject promise with a new DOMException whose
-    // name is the appropriate error name.
+  // 5.1 & 5.2
+  if (!DetachExistingMediaKeys(promise)) {
+    ResetSetMediaKeysTempVariables();
+    return promise.forget();
   }
 
-  // 5.3. If mediaKeys is not null, run the following steps:
-  if (aMediaKeys) {
-    if (!aMediaKeys->GetCDMProxy()) {
-      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-        NS_LITERAL_CSTRING("CDM crashed before binding MediaKeys object to HTMLMediaElement"));
-      return promise.forget();
-    }
-
-    // 5.3.1 Associate the CDM instance represented by mediaKeys with the
-    // media element for decrypting media data.
-    if (NS_FAILED(aMediaKeys->Bind(this))) {
-      // 5.3.2 If the preceding step failed, run the following steps:
-      // 5.3.2.1 Set the mediaKeys attribute to null.
-      mMediaKeys = nullptr;
-      // 5.3.2.2 Let this object's attaching media keys value be false.
-      // 5.3.2.3 Reject promise with a new DOMException whose name is
-      // the appropriate error name.
-      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                           NS_LITERAL_CSTRING("Failed to bind MediaKeys object to HTMLMediaElement"));
-      return promise.forget();
-    }
-    // 5.3.3 Queue a task to run the "Attempt to Resume Playback If Necessary"
-    // algorithm on the media element.
-    // Note: Setting the CDMProxy on the MediaDecoder will unblock playback.
-    if (mDecoder) {
-      mDecoder->SetCDMProxy(aMediaKeys->GetCDMProxy());
-    }
+  // 5.3
+  if (!AttachNewMediaKeys(promise)) {
+    ResetSetMediaKeysTempVariables();
+    return promise.forget();
   }
 
-  // 5.4 Set the mediaKeys attribute to mediaKeys.
-  mMediaKeys = aMediaKeys;
-
-  // 5.5 Let this object's attaching media keys value be false.
-
-  // 5.6 Resolve promise.
-  promise->MaybeResolveWithUndefined();
+  // 5.4, 5.5, 5.6
+  MakeAssociationWithCDMResolved(promise);
 
   // 6. Return promise.
   return promise.forget();
