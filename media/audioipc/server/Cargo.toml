@@ -1,7 +1,10 @@
 [package]
 name = "audioipc-server"
-version = "0.1.0"
-authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+version = "0.2.0"
+authors = [
+        "Matthew Gregan <kinetik@flim.org>",
+        "Dan Glastonbury <dan.glastonbury@gmail.com>"
+        ]
 description = "Remote cubeb server"
 
 [dependencies]
@@ -12,9 +15,11 @@ bytes = "0.4"
 lazycell = "^0.4"
 libc = "0.2"
 log = "^0.3.6"
-mio = "0.6.7"
-mio-uds = "0.6.4"
 slab = "0.3.0"
+# rayon-core in Gecko uses futures 0.1.13
+futures = "=0.1.13"
+tokio-core = "0.1"
+tokio-uds = "0.1.7"
 
 [dependencies.error-chain]
 version = "0.11.0"
