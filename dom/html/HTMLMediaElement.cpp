@@ -1605,12 +1605,19 @@ HTMLMediaElement::MozRequestDebugInfo(ErrorResult& aRv)
   return promise.forget();
 }
 
-void
+already_AddRefed<Promise>
 HTMLMediaElement::MozDumpDebugInfo()
 {
+  ErrorResult rv;
+  RefPtr<Promise> promise = CreateDOMPromise(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return nullptr;
+  }
   if (mDecoder) {
     mDecoder->DumpDebugInfo();
   }
+  promise->MaybeResolveWithUndefined();
+  return promise.forget();
 }
 
 void
