@@ -1,6 +1,23 @@
-#!/bin/sh
+#
+# This file is part of pyasn1-modules software.
+#
+# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# License: http://pyasn1.sf.net/license.html
+#
+import sys
+from pyasn1.codec.der import decoder as der_decoder
+from pyasn1.codec.der import encoder as der_encoder
 
-cmpdump.py <<EOT
+from pyasn1_modules import rfc4210, pem
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
+
+class PKIMessageTestCase(unittest.TestCase):
+    pem_text = """\
 MIITuTCCARECAQKkWTBXMQswCQYDVQQGEwJUUjEQMA4GA1UEChMHRS1HdXZlbjEUMBIGA1UECxML
 VHJ1c3RDZW50ZXIxIDAeBgNVBAMTF1JTQSBTZWN1cml0eSBDTVAgU2VydmVypC0wKzELMAkGA1UE
 BhMCVFIxHDAaBgNVBAMME1ZhbGltby1WZXR0b3ItMTdEZWOgERgPMjAxMjA1MDMxMTE2MTdaoQ8w
@@ -90,4 +107,23 @@ vnCx2LfBn1wf1u7q30p/GgMVX+mR3QHs7feGewEjlkxuEyLVVD+uBwWCT6zcad17oaAyXV5RV28L
 vH0WNg6pFUpwOP0l+nIOqqCBhAOBgQBAtTB5Qd18sTxEKhSzRiN2OycFPrqoqlZZTHBohe8bE2D4
 Xc1ejkFWUEvQivkqJxCD6C7I37xgDaq8DZnaczIBxbPkY0QMdeL4MiEqlw/tlrJGrWoC5Twb0t/m
 JA5RSwQoMDYTj2WrwtM/nsP12T39or4JRZhlLSM43IaTwEBtQw==
-EOT
+"""
+
+    def setUp(self):
+        self.asn1Spec = rfc4210.PKIMessage()
+
+    def testDerCodec(self):
+
+        substrate = pem.readBase64fromText(self.pem_text)
+
+        asn1Object, rest = der_decoder.decode(substrate, asn1Spec=self.asn1Spec)
+
+        assert not rest
+        assert asn1Object.prettyPrint()
+        assert der_encoder.encode(asn1Object) == substrate
+
+
+suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite)
