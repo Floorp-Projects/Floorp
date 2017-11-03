@@ -89,9 +89,22 @@ async function withMerchantTab({browser = gBrowser, url = BLANK_PAGE_URL} = {
   });
 }
 
+/**
+ * Load the privileged payment dialog wrapper document in a new tab and run the
+ * task function.
+ *
+ * @param {string} requestId of the PaymentRequest
+ * @param {Function} taskFn to run in the dialog with the frame as an argument.
+ * @returns {Promise} which resolves when the dialog document is loaded
+ */
 function withNewDialogFrame(requestId, taskFn) {
   async function dialogTabTask(dialogBrowser) {
     let paymentRequestFrame = dialogBrowser.contentDocument.getElementById("paymentRequestFrame");
+    // Ensure the inner frame is loaded
+    await spawnPaymentDialogTask(paymentRequestFrame, async function ensureLoaded() {
+      await ContentTaskUtils.waitForCondition(() => content.document.readyState == "complete",
+                                              "Waiting for the unprivileged frame to load");
+    })
     await taskFn(paymentRequestFrame);
   }
 
@@ -102,12 +115,31 @@ function withNewDialogFrame(requestId, taskFn) {
   return BrowserTestUtils.withNewTab(args, dialogTabTask);
 }
 
+/**
+ * Spawn a content task inside the inner unprivileged frame of a privileged Payment Request dialog.
+ *
+ * @param {string} requestId
+ * @param {Function} contentTaskFn
+ * @param {object?} [args = null] for the content task
+ * @returns {Promise}
+ */
 function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
   return withNewDialogFrame(requestId, async function spawnTaskInNewDialog_tabTask(reqFrame) {
     await spawnPaymentDialogTask(reqFrame, contentTaskFn, args);
   });
 }
 
+/**
+ * Open a merchant tab with the given merchantTaskFn to create a PaymentRequest
+ * and then open the associated PaymentRequest dialog in a new tab and run the
+ * associated dialogTaskFn. The same taskArgs are passed to both functions.
+ *
+ * @param {Function} merchantTaskFn
+ * @param {Function} dialogTaskFn
+ * @param {Object} taskArgs
+ * @param {Object} options
+ * @param {string} options.origin
+ */
 async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskArgs, {
   origin = "https://example.com",
 } = {
@@ -116,7 +148,7 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
   await withMerchantTab({
     url: origin + BLANK_PAGE_PATH,
   }, async merchBrowser => {
-    await ContentTask.spawn(merchBrowser, taskArgs, PTU.ContentTasks.createRequest);
+    await ContentTask.spawn(merchBrowser, taskArgs, merchantTaskFn);
 
     const requests = getPaymentRequests();
     is(requests.length, 1, "Should have one payment request");
