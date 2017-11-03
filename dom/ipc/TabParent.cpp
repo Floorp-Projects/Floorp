@@ -173,6 +173,7 @@ TabParent::TabParent(nsIContentParent* aManager,
 #endif
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
+  , mRenderingLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
   , mIsMouseEnterIntoWidgetEventSuppressed(false)
@@ -2902,14 +2903,11 @@ TabParent::GetUseAsyncPanZoom(bool* useAsyncPanZoom)
 NS_IMETHODIMP
 TabParent::SetDocShellIsActive(bool isActive)
 {
-  // Increment the epoch so that layer tree updates from previous
-  // SetDocShellIsActive requests are ignored.
-  mLayerTreeEpoch++;
-
   // docshell is consider prerendered only if not active yet
   mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
-  Unused << SendSetDocShellIsActive(isActive, mPreserveLayers, mLayerTreeEpoch);
+  RenderLayers(isActive);
+  Unused << SendSetDocShellIsActive(isActive);
 
   // update active accessible documents on windows
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
@@ -2932,13 +2930,6 @@ TabParent::SetDocShellIsActive(bool isActive)
   // changing of the process priority.
   ProcessPriorityManager::TabActivityChanged(this, isActive);
 
-  // Ask the child to repaint using the PHangMonitor channel/thread (which may
-  // be less congested).
-  if (isActive) {
-    ContentParent* cp = Manager()->AsContentParent();
-    cp->ForceTabPaint(this, mLayerTreeEpoch);
-  }
-
   return NS_OK;
 }
 
@@ -2953,6 +2944,37 @@ NS_IMETHODIMP
 TabParent::GetIsPrerendered(bool* aIsPrerendered)
 {
   *aIsPrerendered = mIsPrerendered;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::RenderLayers(bool aEnabled)
+{
+  if (aEnabled == mRenderingLayers) {
+    return NS_OK;
+  }
+
+  // Preserve layers means that attempts to stop rendering layers
+  // will be ignored.
+  if (!aEnabled && mPreserveLayers) {
+    return NS_OK;
+  }
+
+  mRenderingLayers = aEnabled;
+
+  // Increment the epoch so that layer tree updates from previous
+  // RenderLayers requests are ignored.
+  mLayerTreeEpoch++;
+
+  Unused << SendRenderLayers(aEnabled, mLayerTreeEpoch);
+
+  // Ask the child to repaint using the PHangMonitor channel/thread (which may
+  // be less congested).
+  if (aEnabled) {
+    ContentParent* cp = Manager()->AsContentParent();
+    cp->ForceTabPaint(this, mLayerTreeEpoch);
+  }
+
   return NS_OK;
 }
 
