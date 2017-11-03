@@ -2339,24 +2339,13 @@ arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin, void* ptr, size_t size)
     SIZE_INV(20),SIZE_INV(21), SIZE_INV(22), SIZE_INV(23),
     SIZE_INV(24),SIZE_INV(25), SIZE_INV(26), SIZE_INV(27),
     SIZE_INV(28),SIZE_INV(29), SIZE_INV(30), SIZE_INV(31)
-#if (QUANTUM_2POW_MIN < 4)
-    ,
-    SIZE_INV(32), SIZE_INV(33), SIZE_INV(34), SIZE_INV(35),
-    SIZE_INV(36), SIZE_INV(37), SIZE_INV(38), SIZE_INV(39),
-    SIZE_INV(40), SIZE_INV(41), SIZE_INV(42), SIZE_INV(43),
-    SIZE_INV(44), SIZE_INV(45), SIZE_INV(46), SIZE_INV(47),
-    SIZE_INV(48), SIZE_INV(49), SIZE_INV(50), SIZE_INV(51),
-    SIZE_INV(52), SIZE_INV(53), SIZE_INV(54), SIZE_INV(55),
-    SIZE_INV(56), SIZE_INV(57), SIZE_INV(58), SIZE_INV(59),
-    SIZE_INV(60), SIZE_INV(61), SIZE_INV(62), SIZE_INV(63)
-#endif
   };
   // clang-format on
   unsigned diff, regind, elm, bit;
 
   MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
-  MOZ_ASSERT(((sizeof(size_invs)) / sizeof(unsigned)) + 3 >=
-             (SMALL_MAX_DEFAULT >> QUANTUM_2POW_MIN));
+  static_assert(((sizeof(size_invs)) / sizeof(unsigned)) + 3 >= nqbins,
+                "size_invs doesn't have enough values");
 
   // Avoid doing division with a variable divisor if possible.  Using
   // actual division here can reduce allocator throughput by over 20%!
