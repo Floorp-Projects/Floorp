@@ -579,6 +579,7 @@ public:
    */
   void MakeVisible();
   void MakeHidden();
+  bool IsVisible();
 
   void OnDocShellActivated(bool aIsActive);
 
@@ -802,9 +803,9 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 
-  virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive,
-                                                          const bool& aIsHidden,
-                                                          const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive) override;
+
+  virtual mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverEpoch) override;
 
   virtual mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                                     const bool& aForDocumentNavigation) override;
@@ -895,8 +896,7 @@ private:
                           const ScrollableLayerGuid& aGuid,
                           const uint64_t& aInputBlockId);
 
-  void InternalSetDocShellIsActive(bool aIsActive,
-                                   bool aPreserveLayers);
+  void InternalSetDocShellIsActive(bool aIsActive);
 
   bool CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCompositorChild);
 
@@ -986,7 +986,6 @@ private:
   bool mCoalesceMouseMoveEvents;
 
   bool mPendingDocShellIsActive;
-  bool mPendingDocShellPreserveLayers;
   bool mPendingDocShellReceivedMessage;
   uint32_t mPendingDocShellBlockers;
 
