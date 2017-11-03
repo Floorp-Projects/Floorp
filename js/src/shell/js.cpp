@@ -8862,6 +8862,7 @@ main(int argc, char** argv, char** envp)
         || !op.addStringOption('\0', "module-load-path", "DIR", "Set directory to load modules from")
         || !op.addBoolOption('\0', "no-async-stacks", "Disable async stacks")
         || !op.addMultiStringOption('\0', "dll", "LIBRARY", "Dynamically load LIBRARY")
+        || !op.addBoolOption('\0', "suppress-minidump", "Suppress crash minidumps")
     )
     {
         return EXIT_FAILURE;
@@ -8918,6 +8919,9 @@ main(int argc, char** argv, char** envp)
         loader.load(path);
         dllPaths.popFront();
     }
+
+    if (op.getBoolOption("suppress-minidump"))
+        js::NoteIntentionalCrash();
 
     if (!InitSharedArrayBufferMailbox())
         return 1;
