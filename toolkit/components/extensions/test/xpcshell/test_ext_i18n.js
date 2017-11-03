@@ -11,11 +11,10 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
-var originalReqLocales = Services.locale.getRequestedLocales();
-
 do_register_cleanup(() => {
   Preferences.reset("intl.accept_languages");
-  Services.locale.setRequestedLocales(originalReqLocales);
+  Preferences.reset("intl.locale.matchOS");
+  Preferences.reset("general.useragent.locale");
 });
 
 
@@ -219,8 +218,9 @@ add_task(async function test_i18n_negotiation() {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
+  Preferences.set("intl.locale.matchOS", false);
   for (let [lang, msg] of [["en-US", "English."], ["jp", "\u65e5\u672c\u8a9e"]]) {
-    Services.locale.setRequestedLocales([lang]);
+    Preferences.set("general.useragent.locale", lang);
 
     let extension = ExtensionTestUtils.loadExtension(extensionData);
     await extension.startup();
@@ -232,7 +232,7 @@ add_task(async function test_i18n_negotiation() {
 
     await extension.unload();
   }
-  Services.locale.setRequestedLocales(originalReqLocales);
+  Preferences.reset("general.useragent.locale");
 
   await contentPage.close();
 });
@@ -377,7 +377,7 @@ add_task(async function test_get_ui_language() {
 
   // We don't currently have a good way to mock this.
   if (false) {
-    Services.locale.setRequestedLocales(["he"]);
+    Preferences.set("general.useragent.locale", "he");
 
     extension.sendMessage(["expect-results", "he"]);
 
