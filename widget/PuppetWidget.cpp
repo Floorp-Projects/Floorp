@@ -612,7 +612,7 @@ PuppetWidget::CreateRemoteLayerManager(const std::function<bool(LayerManager*)>&
 {
   RefPtr<LayerManager> lm;
   MOZ_ASSERT(mTabChild);
-  if (gfxVars::UseWebRender()) {
+  if (mTabChild->GetCompositorOptions().UseWebRender()) {
     lm = new WebRenderLayerManager(this);
   } else {
     lm = new ClientLayerManager(this);
