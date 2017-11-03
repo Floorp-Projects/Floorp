@@ -18,7 +18,6 @@
 #include "mozIStorageService.h"
 
 class nsIMemoryReporter;
-class nsIXPConnect;
 struct sqlite3_vfs;
 
 namespace mozilla {
@@ -58,12 +57,6 @@ public:
   NS_DECL_MOZISTORAGESERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
-
-  /**
-   * Obtains an already AddRefed pointer to XPConnect.  This is used by
-   * language helpers.
-   */
-  static already_AddRefed<nsIXPConnect> getXPConnect();
 
   /**
    * Obtains the cached data for the toolkit.storage.synchronous preference.
@@ -157,11 +150,6 @@ private:
   void minimizeMemory();
 
   /**
-   * Shuts down the storage service, freeing all of the acquired resources.
-   */
-  void shutdown();
-
-  /**
    * Lazily creates and returns a collation created from the application's
    * locale that all statements of all Connections of this Service may use.
    * Since the collation's lifetime is that of the Service and no statement may
@@ -184,8 +172,6 @@ private:
   nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
 
   static Service *gService;
-
-  static nsIXPConnect *sXPConnect;
 
   static int32_t sSynchronousPref;
   static int32_t sDefaultPageSize;
