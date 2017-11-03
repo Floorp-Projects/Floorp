@@ -63,8 +63,9 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
       !StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/svg+xml"))) {
     return true;
   }
-  // Whitelist data: PDFs
-  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/pdf"))) {
+  // Whitelist data: PDFs and JSON
+  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/pdf")) ||
+      StringBeginsWith(filePath, NS_LITERAL_CSTRING("application/json"))) {
     return true;
   }
   // Redirecting to a toplevel data: URI is not allowed, hence we make
