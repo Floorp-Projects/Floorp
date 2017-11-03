@@ -230,14 +230,16 @@ impl ClipScrollNode {
         self.children.push(child);
     }
 
-    pub fn apply_old_scrolling_state(&mut self, new_scrolling: &ScrollingState) {
+    pub fn apply_old_scrolling_state(&mut self, old_scrolling_state: &ScrollingState) {
         match self.node_type {
             NodeType::ScrollFrame(ref mut scrolling) => {
                 let scroll_sensitivity = scrolling.scroll_sensitivity;
-                *scrolling = *new_scrolling;
+                let scrollable_size = scrolling.scrollable_size;
+                *scrolling = *old_scrolling_state;
                 scrolling.scroll_sensitivity = scroll_sensitivity;
+                scrolling.scrollable_size = scrollable_size;
             }
-            _ if new_scrolling.offset != LayerVector2D::zero() => {
+            _ if old_scrolling_state.offset != LayerVector2D::zero() => {
                 warn!("Tried to scroll a non-scroll node.")
             }
             _ => {}
