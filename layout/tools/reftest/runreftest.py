@@ -796,14 +796,15 @@ class RefTest(object):
                                                  binary=options.app,
                                                  cmdargs=cmdargs,
                                                  env=browserEnv,
-                                                 # We generally want the JS harness or marionette to handle
-                                                 # timeouts if they can.
-                                                 # The default JS harness timeout is currently 300 seconds
-                                                 # (default value of options.timeout).
-                                                 # The default Marionette socket timeout is currently 360 seconds.
-                                                 # Give the JS harness extra time to deal with its own timeouts
-                                                 # and try to usually exceed the 360 second marionette socket
-                                                 # timeout.
+                                                 # We generally want the JS harness or marionette
+                                                 # to handle timeouts if they can.
+                                                 # The default JS harness timeout is currently
+                                                 # 300 seconds (default options.timeout).
+                                                 # The default Marionette socket timeout is
+                                                 # currently 360 seconds.
+                                                 # Give the JS harness extra time to deal with
+                                                 # its own timeouts and try to usually exceed
+                                                 # the 360 second marionette socket timeout.
                                                  # See bug 479518 and bug 1414063.
                                                  timeout=options.timeout + 70.0,
                                                  symbolsPath=options.symbolsPath,
