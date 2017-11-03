@@ -1056,14 +1056,6 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData,
   return newSurf.forget();
 }
 
-#ifdef XP_DARWIN
-already_AddRefed<GlyphRenderingOptions>
-Factory::CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor)
-{
-  return MakeAndAddRef<GlyphRenderingOptionsCG>(aFontSmoothingBackgroundColor);
-}
-#endif
-
 already_AddRefed<DataSourceSurface>
 Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  SurfaceFormat aFormat,

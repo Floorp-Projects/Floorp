@@ -1255,8 +1255,7 @@ bool
 DrawTargetSkia::FillGlyphsWithCG(ScaledFont *aFont,
                                  const GlyphBuffer &aBuffer,
                                  const Pattern &aPattern,
-                                 const DrawOptions &aOptions,
-                                 const GlyphRenderingOptions *aRenderingOptions)
+                                 const DrawOptions &aOptions)
 {
   MOZ_ASSERT(aFont->GetType() == FontType::MAC);
   MOZ_ASSERT(aPattern.GetType() == PatternType::COLOR);
@@ -1353,8 +1352,7 @@ DrawTargetSkia::DrawGlyphs(ScaledFont* aFont,
                            const GlyphBuffer& aBuffer,
                            const Pattern& aPattern,
                            const StrokeOptions* aStrokeOptions,
-                           const DrawOptions& aOptions,
-                           const GlyphRenderingOptions* aRenderingOptions)
+                           const DrawOptions& aOptions)
 {
   if (!CanDrawFont(aFont)) {
     return;
@@ -1485,10 +1483,9 @@ void
 DrawTargetSkia::FillGlyphs(ScaledFont* aFont,
                            const GlyphBuffer& aBuffer,
                            const Pattern& aPattern,
-                           const DrawOptions& aOptions,
-                           const GlyphRenderingOptions* aRenderingOptions)
+                           const DrawOptions& aOptions)
 {
-  DrawGlyphs(aFont, aBuffer, aPattern, nullptr, aOptions, aRenderingOptions);
+  DrawGlyphs(aFont, aBuffer, aPattern, nullptr, aOptions);
 }
 
 void
@@ -1496,10 +1493,9 @@ DrawTargetSkia::StrokeGlyphs(ScaledFont* aFont,
                              const GlyphBuffer& aBuffer,
                              const Pattern& aPattern,
                              const StrokeOptions& aStrokeOptions,
-                             const DrawOptions& aOptions,
-                             const GlyphRenderingOptions* aRenderingOptions)
+                             const DrawOptions& aOptions)
 {
-  DrawGlyphs(aFont, aBuffer, aPattern, &aStrokeOptions, aOptions, aRenderingOptions);
+  DrawGlyphs(aFont, aBuffer, aPattern, &aStrokeOptions, aOptions);
 }
 
 void
