@@ -370,12 +370,6 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
     return false;
   }
 
-  if (!mBorderRenderer) {
-    // empty border, nothing to do
-    MOZ_ASSERT(mBorderIsEmpty);
-    return true;
-  }
-
   // This is really a combination of paint box shadow inner +
   // paint border.
   nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
@@ -386,7 +380,13 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                                  visible,
                                                                  mFrame,
                                                                  buttonRect);
-  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+
+  if (mBorderRenderer) {
+    mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+  } else {
+    // empty border, nothing to do
+    MOZ_ASSERT(mBorderIsEmpty);
+  }
 
   return true;
 }
