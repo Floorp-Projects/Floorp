@@ -40,6 +40,7 @@ public class LocaleListPreference extends ListPreference {
         // On an Android 8.0 device those languages are not known and we need to add the names
         // manually. Loading the resources at runtime works without problems though.
         languageCodeToNameMap.put("cak", "Kaqchikel");
+        languageCodeToNameMap.put("ia", "Interlingua");
         languageCodeToNameMap.put("meh", "Tu´un savi ñuu Yasi'í Yuku Iti");
         languageCodeToNameMap.put("mix", "Tu'un savi");
         languageCodeToNameMap.put("trs", "Triqui");
