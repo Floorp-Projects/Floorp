@@ -1,6 +1,6 @@
 [package]
 name = "audioipc"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
         "Matthew Gregan <kinetik@flim.org>",
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
@@ -11,13 +11,18 @@ description = "Remote Cubeb IPC"
 cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
 bincode = "0.8"
 bytes = "0.4"
+# rayon-core in Gecko uses futures 0.1.13
+futures = "=0.1.13"
+iovec = "0.1"
 libc = "0.2"
 log = "^0.3.6"
 memmap = "0.5.2"
-mio = "0.6.7"
-mio-uds = "0.6.4"
+scoped-tls = "0.1"
 serde = "1.*.*"
 serde_derive = "1.*.*"
+tokio-core = "0.1"
+tokio-io = "0.1"
+tokio-uds = "0.1.7"
 
 [dependencies.error-chain]
 version = "0.11.0"

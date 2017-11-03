@@ -6,6 +6,7 @@
 use cubeb_core::{self, ffi};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::os::unix::io::RawFd;
 use std::ptr;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -169,17 +170,21 @@ fn dup_str(s: *const c_char) -> Option<Vec<u8>> {
 
 fn opt_str(v: Option<Vec<u8>>) -> *const c_char {
     match v {
-        Some(v) => {
-            match CString::new(v) {
-                Ok(s) => s.into_raw(),
-                Err(_) => {
-                    debug!("Failed to convert bytes to CString");
-                    ptr::null()
-                },
+        Some(v) => match CString::new(v) {
+            Ok(s) => s.into_raw(),
+            Err(_) => {
+                debug!("Failed to convert bytes to CString");
+                ptr::null()
             }
         },
-        None => ptr::null(),
+        None => ptr::null()
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StreamCreate {
+    pub token: usize,
+    pub fds: [RawFd; 3]
 }
 
 // Client -> Server messages.
@@ -207,10 +212,7 @@ pub enum ServerMessage {
     StreamGetLatency(usize),
     StreamSetVolume(usize, f32),
     StreamSetPanning(usize, f32),
-    StreamGetCurrentDevice(usize),
-
-    StreamDataCallback(isize),
-    StreamStateCallback
+    StreamGetCurrentDevice(usize)
 }
 
 // Server -> Client messages.
@@ -227,9 +229,7 @@ pub enum ClientMessage {
     ContextPreferredChannelLayout(ffi::cubeb_channel_layout),
     ContextEnumeratedDevices(Vec<DeviceInfo>),
 
-    StreamCreated(usize), /*(RawFd)*/
-    StreamCreatedInputShm, /*(RawFd)*/
-    StreamCreatedOutputShm, /*(RawFd)*/
+    StreamCreated(StreamCreate),
     StreamDestroyed,
 
     StreamStarted,
@@ -241,8 +241,47 @@ pub enum ClientMessage {
     StreamPanningSet,
     StreamCurrentDevice(Device),
 
-    StreamDataCallback(isize, usize),
-    StreamStateCallback(ffi::cubeb_state),
-
     Error(ffi::cubeb_error_code)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum CallbackReq {
+    Data(isize, usize),
+    State(ffi::cubeb_state)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum CallbackResp {
+    Data(isize),
+    State
+}
+
+pub trait AssocRawFd {
+    fn fd(&self) -> Option<[RawFd; 3]> {
+        None
+    }
+    fn take_fd<F>(&mut self, _: F)
+    where
+        F: FnOnce() -> Option<[RawFd; 3]>
+    {
+    }
+}
+
+impl AssocRawFd for ServerMessage {}
+impl AssocRawFd for ClientMessage {
+    fn fd(&self) -> Option<[RawFd; 3]> {
+        match *self {
+            ClientMessage::StreamCreated(ref data) => Some(data.fds),
+            _ => None
+        }
+    }
+
+    fn take_fd<F>(&mut self, f: F)
+    where
+        F: FnOnce() -> Option<[RawFd; 3]>
+    {
+        if let ClientMessage::StreamCreated(ref mut data) = *self {
+            data.fds = f().unwrap();
+        }
+    }
 }
