@@ -529,6 +529,7 @@ class JSString : public js::gc::TenuredCell
 #ifdef DEBUG
     void dump(); // Debugger-friendly stderr dump.
     void dump(js::GenericPrinter& out);
+    void dumpNoNewline(js::GenericPrinter& out);
     void dumpCharsNoNewline(js::GenericPrinter& out);
     void dumpRepresentation(js::GenericPrinter& out, int indent) const;
     void dumpRepresentationHeader(js::GenericPrinter& out, int indent, const char* subclass) const;
