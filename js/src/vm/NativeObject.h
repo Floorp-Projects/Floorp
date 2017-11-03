@@ -1401,8 +1401,7 @@ class NativeObject : public ShapedObject
     }
 
     void setPrivateGCThing(gc::Cell* cell) {
-        MOZ_ASSERT_IF(IsMarkedBlack(this),
-                      !JS::GCThingIsMarkedGray(JS::GCCellPtr(cell, cell->getTraceKind())));
+        MOZ_ASSERT_IF(IsMarkedBlack(this), !cell->isMarkedGray());
         void** pprivate = &privateRef(numFixedSlots());
         privateWriteBarrierPre(pprivate);
         *pprivate = reinterpret_cast<void*>(cell);
