@@ -7,9 +7,11 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  const { cloneElement, Component, createFactory, DOM: dom, PropTypes } =
+  const { cloneElement, Component, createFactory } =
     require("devtools/client/shared/vendor/react");
   const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+  const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+  const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   // Reps
   const { ObjectProvider } = require("./ObjectProvider");
