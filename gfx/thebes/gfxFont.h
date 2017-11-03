@@ -2298,7 +2298,6 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
     gfxFont::Spacing        *spacing;
     gfxTextRunDrawCallbacks *callbacks;
     mozilla::SVGContextPaint *runContextPaint;
-    mozilla::gfx::Color      fontSmoothingBGColor;
     mozilla::gfx::Float      direction;
     double                   devPerApp;
     nscolor                  textStrokeColor;
