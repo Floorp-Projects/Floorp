@@ -21,23 +21,6 @@
 namespace mozilla {
 namespace gfx {
 
-class GlyphRenderingOptionsCG : public GlyphRenderingOptions
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsCG, override)
-
-  explicit GlyphRenderingOptionsCG(const Color &aFontSmoothingBackgroundColor)
-    : mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
-  {}
-
-  const Color &FontSmoothingBackgroundColor() const { return mFontSmoothingBackgroundColor; }
-
-  virtual FontType GetType() const override { return FontType::MAC; }
-
-private:
-  Color mFontSmoothingBackgroundColor;
-};
-
 class ScaledFontMac : public ScaledFontBase
 {
 public:

@@ -538,15 +538,6 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
     return scaledFont.forget();
 }
 
-already_AddRefed<GlyphRenderingOptions>
-gfxMacFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
-{
-    if (aRunParams) {
-        return Factory::CreateCGGlyphRenderingOptions(aRunParams->fontSmoothingBGColor);
-    }
-    return nullptr;
-}
-
 void
 gfxMacFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                    FontCacheSizes* aSizes) const
