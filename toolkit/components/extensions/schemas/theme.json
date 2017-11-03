@@ -80,6 +80,18 @@
               "toolbar_field_text": {
                 "type": "string",
                 "optional": true
+              },
+              "toolbar_top_separator": {
+                "type": "string",
+                "optional": true
+              },
+              "toolbar_bottom_separator": {
+                "type": "string",
+                "optional": true
+              },
+              "toolbar_vertical_separator": {
+                "type": "string",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }
