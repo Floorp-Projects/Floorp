@@ -2,12 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// This verifies that localized properties work as expected
+
+const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
+const PREF_SELECTED_LOCALE = "general.useragent.locale";
+
+
 function run_test() {
   do_test_pending();
 
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  Services.locale.setRequestedLocales(["fr-FR"]);
+  Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
 
   startupManager();
 
@@ -81,7 +88,7 @@ function run_test_4() {
 
 // Test that changing locale works
 function run_test_5() {
-  Services.locale.setRequestedLocales(["de-DE"]);
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de-DE");
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
@@ -96,7 +103,7 @@ function run_test_5() {
 
 // Test that missing locales use the fallbacks
 function run_test_6() {
-  Services.locale.setRequestedLocales(["nl-NL"]);
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(addon) {
@@ -125,7 +132,7 @@ function run_test_7() {
 
 // Test that the prefs will override localized values from the manifest
 function run_test_8() {
-  Services.locale.setRequestedLocales(["fr-FR"]);
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {

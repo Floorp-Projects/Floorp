@@ -163,15 +163,15 @@ add_task(async function test_setup() {
   Services.prefs.setCharPref("urlclassifier.downloadAllowTable",
                              "goog-downloadwhite-digest256");
   // SendRemoteQueryInternal needs locale preference.
-  let originalReqLocales = Services.locale.getRequestedLocales();
-  Services.locale.setRequestedLocales(["en-US"]);
+  let locale = Services.prefs.getCharPref("general.useragent.locale");
+  Services.prefs.setCharPref("general.useragent.locale", "en-US");
 
   do_register_cleanup(function() {
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
     Services.prefs.clearUserPref("urlclassifier.downloadAllowTable");
-    Services.locale.setRequestedLocales(originalReqLocales);
+    Services.prefs.setCharPref("general.useragent.locale", locale);
   });
 
   gHttpServer = new HttpServer();

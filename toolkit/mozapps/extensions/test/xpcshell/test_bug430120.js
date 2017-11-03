@@ -9,6 +9,7 @@ const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
+const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const CATEGORY_UPDATE_TIMER           = "update-timer";
 
 // Get the HTTP server.
@@ -120,7 +121,7 @@ function run_test() {
   defaults.setCharPref(PREF_APP_UPDATE_CHANNEL, "updatechannel");
   defaults.setCharPref(PREF_APP_DISTRIBUTION, "distribution");
   defaults.setCharPref(PREF_APP_DISTRIBUTION_VERSION, "distribution-version");
-  Services.locale.setRequestedLocales(["locale"]);
+  defaults.setCharPref(PREF_GENERAL_USERAGENT_LOCALE, "locale");
 
   // This should correctly escape everything
   Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:" + gPort + "/2?" +
