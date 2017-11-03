@@ -1,3 +1,5 @@
-include CHANGES README LICENSE THANKS TODO
-recursive-include test *.py
-recursive-include doc *.html
+include *.rst *.md
+recursive-include tests *.py
+recursive-include doc Makefile *.rst conf.py
+prune doc/build
+prune doc/source/.templates
