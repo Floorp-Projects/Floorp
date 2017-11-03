@@ -207,8 +207,7 @@ nsUnknownContentTypeDialog.prototype = {
                    bundle.GetStringFromName("badPermissions"));
   },
 
-  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFileName,
-                                     aSuggestedFileExtension, aForcePrompt) {
+  promptForSaveToFileAsync: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
     var result = null;
 
     this.mLauncher = aLauncher;
@@ -261,8 +260,7 @@ nsUnknownContentTypeDialog.prototype = {
           let defaultFolder = new FileUtils.File(preferredDir);
 
           try {
-            result = this.validateLeafName(defaultFolder, aDefaultFileName,
-                                           aSuggestedFileExtension);
+            result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
           }
           catch (ex) {
             // When the default download directory is write-protected,
@@ -286,7 +284,7 @@ nsUnknownContentTypeDialog.prototype = {
       var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       var windowTitle = bundle.GetStringFromName("saveDialogTitle");
       picker.init(parent, windowTitle, nsIFilePicker.modeSave);
-      picker.defaultString = this.getFinalLeafName(aDefaultFileName);
+      picker.defaultString = aDefaultFile;
 
       if (aSuggestedFileExtension) {
         // aSuggestedFileExtension includes the period, so strip it
