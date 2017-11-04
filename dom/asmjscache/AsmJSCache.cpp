@@ -443,6 +443,7 @@ public:
     mPrincipalInfo(aPrincipalInfo),
     mOpenMode(aOpenMode),
     mWriteParams(aWriteParams),
+    mOperationMayProceed(true),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
     mActorDestroyed(false),
@@ -485,6 +486,22 @@ private:
     MOZ_ASSERT(!IsOnOwningThread());
   }
 
+  bool
+  IsActorDestroyed() const
+  {
+    AssertIsOnOwningThread();
+
+    return mActorDestroyed;
+  }
+
+  // May be called on any thread, but you should call IsActorDestroyed() if
+  // you know you're on the background thread because it is slightly faster.
+  bool
+  OperationMayProceed() const
+  {
+    return mOperationMayProceed;
+  }
+
   // This method is called on the owning thread when the JS engine is finished
   // reading/writing the cache entry.
   void
@@ -497,6 +514,7 @@ private:
     mState = eFinished;
 
     MOZ_ASSERT(mOpened);
+    mOpened = false;
 
     FinishOnOwningThread();
 
@@ -562,12 +580,14 @@ private:
   {
     AssertIsOnOwningThread();
 
-    // If shutdown just started, the QuotaManager may have been deleted.
-    QuotaManager* qm = QuotaManager::Get();
-    if (!qm) {
+    if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+        IsActorDestroyed()) {
       Fail();
       return;
     }
+
+    QuotaManager* qm = QuotaManager::Get();
+    MOZ_ASSERT(qm);
 
     nsresult rv = qm->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
@@ -589,23 +609,30 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(!mActorDestroyed);
+    MOZ_ASSERT(mOperationMayProceed);
 
     mActorDestroyed = true;
+    mOperationMayProceed = false;
 
-    // Assume ActorDestroy can happen at any time, so probe the current state to
-    // determine what needs to happen.
-
-    if (mState == eFinished) {
-      return;
-    }
+    // Assume ActorDestroy can happen at any time, so we can't probe the
+    // current state since mState can be modified on any thread (only one
+    // thread at a time based on the state machine).
+    // However we can use mOpened which is only touched on the owning thread.
+    // If mOpened is true, we can also modify mState since we are guaranteed
+    // that there are no pending runnables which would probe mState to decide
+    // what code needs to run (there shouldn't be any running runnables on
+    // other threads either).
 
     if (mOpened) {
       Close();
-    } else {
-      Fail();
+
+      MOZ_ASSERT(mState == eFinished);
     }
 
-    MOZ_ASSERT(mState == eFinished);
+    // We don't have to call Fail() if mOpened is not true since it means that
+    // either nothing has been initialized yet, so nothing to cleanup or there
+    // are pending runnables that will detect that the actor has been destroyed
+    // and call Fail().
   }
 
   mozilla::ipc::IPCResult
@@ -616,6 +643,11 @@ private:
     MOZ_ASSERT(mState == eWaitingToOpenCacheFileForRead);
     MOZ_ASSERT(mOpenMode == eOpenForRead);
     MOZ_ASSERT(!mOpened);
+
+    if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread())) {
+      Fail();
+      return IPC_OK();
+    }
 
     switch (aResponse.type()) {
       case OpenMetadataForReadResponse::TAsmJSCacheResult: {
@@ -681,6 +713,8 @@ private:
   nsCOMPtr<nsIFile> mDirectory;
   nsCOMPtr<nsIFile> mMetadataFile;
   Metadata mMetadata;
+
+  Atomic<bool> mOperationMayProceed;
 
   // State initialized during eWaitingToOpenCacheFileForRead
   unsigned mModuleIndex;
@@ -942,6 +976,12 @@ ParentRunnable::Run()
     case eInitial: {
       MOZ_ASSERT(NS_IsMainThread());
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
+
       rv = InitOnMainThread();
       if (NS_FAILED(rv)) {
         FailOnNonOwningThread();
@@ -957,7 +997,8 @@ ParentRunnable::Run()
     case eWaitingToFinishInit: {
       AssertIsOnOwningThread();
 
-      if (QuotaManager::IsShuttingDown()) {
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
         Fail();
         return NS_OK;
       }
@@ -976,6 +1017,12 @@ ParentRunnable::Run()
     case eWaitingToOpenDirectory: {
       AssertIsOnOwningThread();
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
+
       if (NS_WARN_IF(!QuotaManager::Get())) {
         Fail();
         return NS_OK;
@@ -987,6 +1034,12 @@ ParentRunnable::Run()
 
     case eReadyToReadMetadata: {
       AssertIsOnIOThread();
+
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
 
       rv = ReadMetadata();
       if (NS_FAILED(rv)) {
@@ -1016,6 +1069,12 @@ ParentRunnable::Run()
       AssertIsOnOwningThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
+
       mState = eWaitingToOpenCacheFileForRead;
 
       // Metadata is now open.
@@ -1031,6 +1090,12 @@ ParentRunnable::Run()
       AssertIsOnIOThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
 
+      if (NS_WARN_IF(Client::IsShuttingDownOnNonBackgroundThread()) ||
+          !OperationMayProceed()) {
+        FailOnNonOwningThread();
+        return NS_OK;
+      }
+
       rv = OpenCacheFileForRead();
       if (NS_FAILED(rv)) {
         FailOnNonOwningThread();
@@ -1044,6 +1109,12 @@ ParentRunnable::Run()
 
     case eSendingCacheFile: {
       AssertIsOnOwningThread();
+
+      if (NS_WARN_IF(Client::IsShuttingDownOnBackgroundThread()) ||
+          IsActorDestroyed()) {
+        Fail();
+        return NS_OK;
+      }
 
       mState = eOpened;
 
