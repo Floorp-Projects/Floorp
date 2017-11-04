@@ -17,20 +17,8 @@
 
 class nsIWidget;
 
-#ifdef MOZ_ENABLE_SKIA_PDF
-namespace mozilla {
-namespace widget {
-class PDFViaEMFPrintHelper;
-}
-}
-#endif
-
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec
 {
-#ifdef MOZ_ENABLE_SKIA_PDF
-  typedef mozilla::widget::PDFViaEMFPrintHelper PDFViaEMFPrintHelper;
-#endif
-
 public:
   nsDeviceContextSpecWin();
 
@@ -40,8 +28,8 @@ public:
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,
                            int32_t          aStartPage,
-                           int32_t          aEndPage) override;
-  NS_IMETHOD EndDocument() override;
+                           int32_t          aEndPage) override { return NS_OK; }
+  NS_IMETHOD EndDocument() override { return NS_OK; }
   NS_IMETHOD BeginPage() override { return NS_OK; }
   NS_IMETHOD EndPage() override { return NS_OK; }
 
@@ -80,19 +68,11 @@ protected:
   int16_t mOutputFormat = nsIPrintSettings::kOutputFormatNative;
 
 #ifdef MOZ_ENABLE_SKIA_PDF
-  void  FinishPrintViaPDF();
-  void  CleanupPrintViaPDF();
 
   // This variable is independant of nsIPrintSettings::kOutputFormatPDF.
   // It controls both whether normal printing is done via PDF using Skia and
   // whether print-to-PDF uses Skia.
   bool mPrintViaSkPDF;
-  nsCOMPtr<nsIFile> mPDFTempFile;
-  HDC mDC;
-  bool mPrintViaPDFInProgress;
-  mozilla::UniquePtr<PDFViaEMFPrintHelper> mPDFPrintHelper;
-  int mPDFPageCount;
-  int mPDFCurrentPageNum;
 #endif
 };
 
