@@ -419,7 +419,8 @@ nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
 
 NS_IMETHODIMP
 nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                     const nsAString& aValue)
+                                     const nsAString& aValue,
+                                     nsIPrincipal* aSubjectPrincipal)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -433,7 +434,8 @@ nsComputedDOMStyle::GetCssText(nsAString& aCssText)
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::SetCssText(const nsAString& aCssText)
+nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
+                               nsIPrincipal* aSubjectPrincipal)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -1208,7 +1210,8 @@ nsComputedDOMStyle::GetPropertyPriority(const nsAString& aPropertyName,
 NS_IMETHODIMP
 nsComputedDOMStyle::SetProperty(const nsAString& aPropertyName,
                                 const nsAString& aValue,
-                                const nsAString& aPriority)
+                                const nsAString& aPriority,
+                                nsIPrincipal* aSubjectPrincipal)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
