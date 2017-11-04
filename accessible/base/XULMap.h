@@ -2,11 +2,4 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMElement.idl"
-#include "nsIDOMXULElement.idl"
-
-[scriptable, uuid(0a391077-c509-49d2-af73-72e2114edd65)]
-interface nsIDOMXULImageElement : nsISupports {
-  attribute DOMString src;
-};
-
+XULMAP(image, New_MaybeImageOrToolbarButtonAccessible)

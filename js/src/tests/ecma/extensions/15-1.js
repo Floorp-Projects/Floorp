@@ -33,7 +33,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
   new TestCase( "Number.prototype.__proto__",   Object.prototype,   Number.prototype.__proto__ );
 //    new TestCase( "Math.prototype.__proto__",     Object.prototype,   Math.prototype.__proto__ );
 new TestCase( "Date.prototype.__proto__",     Object.prototype,   Date.prototype.__proto__ );
-new TestCase( "TestCase.prototype.__proto__", Object.prototype,   TestCase.prototype.__proto__ );
 
 new TestCase( "MyObject.prototype.__proto__", Object.prototype,   MyObject.prototype.__proto__ );
 */
@@ -44,7 +43,6 @@ new TestCase( "Boolean.prototype.__proto__ == Object.prototype",  true,   Boolea
 new TestCase( "Number.prototype.__proto__ == Object.prototype",   true,   Number.prototype.__proto__ == Object.prototype );
 //    new TestCase( "Math.prototype.__proto__ == Object.prototype",     true,   Math.prototype.__proto__ == Object.prototype );
 new TestCase( "Date.prototype.__proto__ == Object.prototype",     true,   Date.prototype.__proto__ == Object.prototype );
-new TestCase( "TestCase.prototype.__proto__ == Object.prototype", true,   TestCase.prototype.__proto__ == Object.prototype );
 
 new TestCase( "MyObject.prototype.__proto__ == Object.prototype", true,   MyObject.prototype.__proto__ == Object.prototype );
 

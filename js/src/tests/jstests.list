@@ -475,9 +475,6 @@ skip script test262/language/expressions/class/async-gen-method-static-yield-sta
 # Tests disabled due to issues in test262 importer script #
 ###########################################################
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1346080
-skip script test262/intl402/PluralRules/prototype/select/tainting.js
-
 # test262 importer merges all includes in a per directory shell.js file, breaking this harness test case.
 skip script test262/harness/detachArrayBuffer.js
 

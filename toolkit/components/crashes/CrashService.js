@@ -64,6 +64,10 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
             gRunningProcesses.delete(process);
             resolve();
             break;
+          case "process-failed":
+            gRunningProcesses.delete(process);
+            reject();
+            break;
           default:
             reject(new Error("Unexpected topic received " + topic));
             break;
@@ -131,7 +135,9 @@ function processExtraFile(extraPath) {
       // to re-escape them into '\\n' again so that the fields holding JSON
       // strings are valid.
       [ "TelemetryEnvironment", "StackTraces" ].forEach(field => {
-        keyValuePairs[field] = keyValuePairs[field].replace(/\n/g, "n");
+        if (field in keyValuePairs) {
+          keyValuePairs[field] = keyValuePairs[field].replace(/\n/g, "n");
+        }
       });
 
       return keyValuePairs;
@@ -234,7 +240,12 @@ CrashService.prototype = Object.freeze({
       case "quit-application":
         gQuitting = true;
         gRunningProcesses.forEach((process) => {
-          process.kill();
+          try {
+            process.kill();
+          } catch (e) {
+            // If the process has already quit then kill() fails, but since
+            // this failure is benign it is safe to silently ignore it.
+          }
           Services.obs.notifyObservers(null, "test-minidump-analyzer-killed");
         });
         break;

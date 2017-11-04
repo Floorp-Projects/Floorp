@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 #include "nsIContentPolicy.idl"
 
+interface nsIChannel;
 interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
@@ -298,6 +299,13 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(PrincipalToInherit)]
   nsIPrincipal binaryPrincipalToInherit();
+
+  /**
+   * Finds the correct principal to inherit for the given channel, based on
+   * the values of PrincipalToInherit and TriggeringPrincipal.
+   */
+  [noscript, notxpcom, nostdcall]
+  nsIPrincipal FindPrincipalToInherit(in nsIChannel aChannel);
 
   /**
    * This is the ownerDocument of the LoadingNode. Unless the LoadingNode
@@ -597,6 +605,13 @@ interface nsILoadInfo : nsISupports
    *
    */
   [infallible] attribute boolean initialSecurityCheckDone;
+
+  /**
+   * Returns true if the load was triggered from an external application
+   * (e.g. Thunderbird). Please note that this flag will only ever be true
+   * if the load is of TYPE_DOCUMENT. 
+   */
+  [infallible] attribute boolean loadTriggeredFromExternal;
 
   /**
    * Whenever a channel gets redirected, append the redirect history entry of
