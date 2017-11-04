@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "es-CL",
+    "strings": {
+      "newtab_page_title": "Nueva pestaña",
+      "default_label_loading": "Cargando…",
+      "header_top_sites": "Sitios frecuentes",
+      "header_stories": "Historias populares",
+      "header_highlights": "Destacados",
+      "header_visit_again": "Volver a visitar",
+      "header_bookmarks": "Marcadores recientes",
+      "header_recommended_by": "Recomendado por {provider}",
+      "header_bookmarks_placeholder": "Todavía no tienes marcadores.",
+      "header_stories_from": "de",
+      "type_label_visited": "Visitado",
+      "type_label_bookmarked": "Marcado",
+      "type_label_synced": "Sacado de otro dispositivo",
+      "type_label_recommended": "Popular",
+      "type_label_open": "Abrir",
+      "type_label_topic": "Tema",
+      "type_label_now": "Ahora",
+      "menu_action_bookmark": "Marcador",
+      "menu_action_remove_bookmark": "Remover marcador",
+      "menu_action_copy_address": "Copiar dirección",
+      "menu_action_email_link": "Enviar enlace por correo",
+      "menu_action_open_new_window": "Abrir en una nueva ventana",
+      "menu_action_open_private_window": "Abrir en una nueva ventana privada",
+      "menu_action_dismiss": "Descartar",
+      "menu_action_delete": "Eliminar del historial",
+      "menu_action_pin": "Fijar",
+      "menu_action_unpin": "Soltar",
+      "confirm_history_delete_p1": "¿Estás seguro de que quieres eliminar cada instancia de esta página de tu historial?",
+      "confirm_history_delete_notice_p2": "Esta acción no puede ser deshecha.",
+      "menu_action_save_to_pocket": "Guardar en Pocket",
+      "search_for_something_with": "Buscar {search_term} con:",
+      "search_button": "Buscar",
+      "search_header": "Búsqueda de {search_engine_name}",
+      "search_web_placeholder": "Buscar en la Web",
+      "search_settings": "Cambiar ajustes de búsqueda",
+      "section_info_option": "Info",
+      "section_info_send_feedback": "Enviar comentario",
+      "section_info_privacy_notice": "Aviso de privacidad",
+      "welcome_title": "Bienvenido a la nueva pestaña",
+      "welcome_body": "Firefox usará este espacio para mostrarte los marcadores, artículos, videos y páginas visitadas recientemente más relevantes, para que puedas regresar a ellos de una.",
+      "welcome_label": "Identificando tus destacados",
+      "time_label_less_than_minute": "<1m",
+      "time_label_minute": "{number}m",
+      "time_label_hour": "{number}h",
+      "time_label_day": "{number}d",
+      "settings_pane_button_label": "Personaliza tu página de Nueva pestaña",
+      "settings_pane_header": "Preferencias de Nueva pestaña",
+      "settings_pane_body2": "Elige qué es lo que ves en esta página.",
+      "settings_pane_search_header": "Buscar",
+      "settings_pane_search_body": "Busca en la Web desde tu nueva pestaña.",
+      "settings_pane_topsites_header": "Sitios frecuentes",
+      "settings_pane_topsites_body": "Accede a los sitios que más visitas.",
+      "settings_pane_topsites_options_showmore": "Mostrar dos filas",
+      "settings_pane_bookmarks_header": "Marcadores recientes",
+      "settings_pane_bookmarks_body": "Tus marcadores recién creados en un lugar accesible.",
+      "settings_pane_visit_again_header": "Volver a visitar",
+      "settings_pane_visit_again_body": "Firefox te mostrará partes de tu historial de navegación que podrías querer recordar o volver a visitar.",
+      "settings_pane_highlights_header": "Destacados",
+      "settings_pane_highlights_body2": "Encuentra tu camino de regreso a las cosas interesantes que ya has visitado o marcado.",
+      "settings_pane_highlights_options_bookmarks": "Marcadores",
+      "settings_pane_highlights_options_visited": "Sitios visitados",
+      "settings_pane_snippets_header": "Fragmentos",
+      "settings_pane_snippets_body": "Lee breves y dulces actualizaciones de Mozilla sobre Firefox, la cultura de internet y un meme aleatorio ocasional.",
+      "settings_pane_done_button": "Hecho",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Editar",
+      "edit_topsites_button_label": "Personaliza tu sección de sitios frecuentes",
+      "edit_topsites_showmore_button": "Mostrar más",
+      "edit_topsites_showless_button": "Mostrar menos",
+      "edit_topsites_done_button": "Hecho",
+      "edit_topsites_pin_button": "Fijar este sitio",
+      "edit_topsites_unpin_button": "Soltar este sitio",
+      "edit_topsites_edit_button": "Editar este sitio",
+      "edit_topsites_dismiss_button": "Sacar este sitio",
+      "edit_topsites_add_button": "Añadir",
+      "topsites_form_add_header": "Nuevo sitio frecuente",
+      "topsites_form_edit_header": "Editar sitio frecuente",
+      "topsites_form_title_placeholder": "Ingresar un título",
+      "topsites_form_url_placeholder": "Escribe o pega una URL",
+      "topsites_form_add_button": "Añadir",
+      "topsites_form_save_button": "Guardar",
+      "topsites_form_cancel_button": "Cancelar",
+      "topsites_form_url_validation": "URL válida requerida",
+      "pocket_read_more": "Temas populares:",
+      "pocket_read_even_more": "Ver más historias",
+      "pocket_feedback_header": "Lo mejor de la web, revisado por más de 25 millones de personas.",
+      "pocket_description": "Descubre contenido de alta calidad que de otra forma te perderías, con la ayuda de Pocket, ahora parte de Mozilla.",
+      "highlights_empty_state": "Empieza a navegar, y nosotros te mostraremos aquí algunos de los mejores artículos, videos y otras páginas que hayas visitado recientemente o marcado.",
+      "topstories_empty_state": "Te has puesto al día. Revisa más tarde para ver más historias de {provider}. ¿No puedes esperar? Selecciona un tema popular para encontrar más historias de todo el mundo.",
+      "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",
+      "manual_migration_cancel_button": "No, gracias",
+      "manual_migration_import_button": "Importar ahora"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

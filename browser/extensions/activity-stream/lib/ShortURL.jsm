@@ -22,13 +22,12 @@ function handleIDNHost(hostname) {
 }
 
 /**
- * Get the effective top level domain of a host.
- * @param {string} host The host to be analyzed.
- * @return {str} The suffix or empty string if there's no suffix.
+ * Returns the public suffix of a URL or empty string in case of error.
+ * @param {string} url The url to be analyzed.
  */
-function getETLD(host) {
+function getETLD(url) {
   try {
-    return Services.eTLD.getPublicSuffixFromHost(host);
+    return Services.eTLD.getPublicSuffix(Services.io.newURI(url));
   } catch (err) {
     return "";
   }
@@ -36,38 +35,28 @@ function getETLD(host) {
 
 this.getETLD = getETLD;
 
-/**
+  /**
  * shortURL - Creates a short version of a link's url, used for display purposes
  *            e.g. {url: http://www.foosite.com}  =>  "foosite"
  *
  * @param  {obj} link A link object
  *         {str} link.url (required)- The url of the link
+ *         {str} link.title (optional) - The title of the link
  * @return {str}   A short url
  */
-this.shortURL = function shortURL({url}) {
-  if (!url) {
+this.shortURL = function shortURL(link) {
+  if (!link.url) {
     return "";
   }
 
-  // Make sure we have a valid / parseable url
-  let parsed;
-  try {
-    parsed = new URL(url);
-  } catch (ex) {
-    // Not entirely sure what we have, but just give it back
-    return url;
-  }
-
-  // Clean up the url (lowercase hostname via URL and remove www.)
-  const hostname = parsed.hostname.replace(/^www\./i, "");
-
   // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
-  const eTLD = getETLD(hostname);
+  const eTLD = getETLD(link.url);
   const eTLDExtra = eTLD.length > 0 ? -(eTLD.length + 1) : Infinity;
 
-  // Ideally get the short eTLD-less host but fall back to longer url parts
-  return handleIDNHost(hostname.slice(0, eTLDExtra) || hostname) ||
-    parsed.pathname || parsed.href;
+  // Clean up the url and fallback to page title or url if necessary
+  const hostname = (new URL(link.url).hostname).replace(/^www\./i, "");
+  return handleIDNHost(hostname.slice(0, eTLDExtra).toLowerCase()) ||
+    link.title || link.url;
 };
 
 this.EXPORTED_SYMBOLS = ["shortURL", "getETLD"];

@@ -20,7 +20,6 @@ describe("Highlights Feed", () => {
   let filterAdultStub;
   let sectionsManagerStub;
   let shortURLStub;
-  let fakePageThumbs;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -40,13 +39,8 @@ describe("Highlights Feed", () => {
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
-    fakePageThumbs = {
-      addExpirationFilter: sinon.stub(),
-      removeExpirationFilter: sinon.stub()
-    };
 
     globals.set("NewTabUtils", fakeNewTabUtils);
-    globals.set("PageThumbs", fakePageThumbs);
     ({HighlightsFeed, SECTION_ID} = injector({
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
@@ -78,9 +72,6 @@ describe("Highlights Feed", () => {
     it("should create a HighlightsFeed", () => {
       assert.instanceOf(feed, HighlightsFeed);
     });
-    it("should register a expiration filter", () => {
-      assert.calledOnce(fakePageThumbs.addExpirationFilter);
-    });
     it("should call SectionsManager.onceInitialized on INIT", () => {
       feed.onAction({type: at.INIT});
       assert.calledOnce(sectionsManagerStub.onceInitialized);
@@ -94,38 +85,6 @@ describe("Highlights Feed", () => {
       feed.fetchHighlights = sinon.spy();
       feed.postInit();
       assert.calledOnce(feed.fetchHighlights);
-    });
-  });
-  describe("#filterForThumbnailExpiration", () => {
-    it("should pass rows.urls to the callback provided", () => {
-      const rows = [{url: "foo.com"}, {"url": "bar.com"}];
-      feed.store.state.Sections = [{rows, initialized: true}];
-      const stub = sinon.stub();
-
-      feed.filterForThumbnailExpiration(stub);
-
-      assert.calledOnce(stub);
-      assert.calledWithExactly(stub, rows.map(r => r.url));
-    });
-    it("should include preview_image_url (if present) in the callback results", () => {
-      const rows = [{url: "foo.com"}, {"url": "bar.com", "preview_image_url": "bar.jpg"}];
-      feed.store.state.Sections = [{rows, initialized: true}];
-      const stub = sinon.stub();
-
-      feed.filterForThumbnailExpiration(stub);
-
-      assert.calledOnce(stub);
-      assert.calledWithExactly(stub, ["foo.com", "bar.com", "bar.jpg"]);
-    });
-    it("should pass an empty array if not initialized", () => {
-      const rows = [{url: "foo.com"}, {"url": "bar.com"}];
-      feed.store.state.Sections = [{rows, initialized: false}];
-      const stub = sinon.stub();
-
-      feed.filterForThumbnailExpiration(stub);
-
-      assert.calledOnce(stub);
-      assert.calledWithExactly(stub, []);
     });
   });
   describe("#fetchHighlights", () => {
@@ -328,10 +287,6 @@ describe("Highlights Feed", () => {
       feed.onAction({type: at.UNINIT});
       assert.calledOnce(sectionsManagerStub.disableSection);
       assert.calledWith(sectionsManagerStub.disableSection, SECTION_ID);
-    });
-    it("should remove the expiration filter", () => {
-      feed.onAction({type: at.UNINIT});
-      assert.calledOnce(fakePageThumbs.removeExpirationFilter);
     });
   });
   describe("#onAction", () => {

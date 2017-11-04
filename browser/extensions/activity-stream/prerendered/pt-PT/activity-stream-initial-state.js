@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "pt-PT",
+    "strings": {
+      "newtab_page_title": "Novo separador",
+      "default_label_loading": "A carregar…",
+      "header_top_sites": "Sites mais visitados",
+      "header_stories": "Histórias principais",
+      "header_highlights": "Destaques",
+      "header_visit_again": "Visitar novamente",
+      "header_bookmarks": "Marcadores recentes",
+      "header_recommended_by": "Recomendado por {provider}",
+      "header_bookmarks_placeholder": "Ainda não tem quaisquer marcadores.",
+      "header_stories_from": "de",
+      "type_label_visited": "Visitados",
+      "type_label_bookmarked": "Guardados nos marcadores",
+      "type_label_synced": "Sincronizado a partir de outro dispositivo",
+      "type_label_recommended": "Tendência",
+      "type_label_open": "Abertos",
+      "type_label_topic": "Tópico",
+      "type_label_now": "Agora",
+      "menu_action_bookmark": "Adicionar aos marcadores",
+      "menu_action_remove_bookmark": "Remover marcador",
+      "menu_action_copy_address": "Copiar endereço",
+      "menu_action_email_link": "Enviar ligação por email…",
+      "menu_action_open_new_window": "Abrir em nova janela",
+      "menu_action_open_private_window": "Abrir em nova janela privada",
+      "menu_action_dismiss": "Dispensar",
+      "menu_action_delete": "Apagar do histórico",
+      "menu_action_pin": "Afixar",
+      "menu_action_unpin": "Desafixar",
+      "confirm_history_delete_p1": "Tem a certeza de que deseja apagar todas as instâncias desta página do seu histórico?",
+      "confirm_history_delete_notice_p2": "Esta ação não pode ser desfeita.",
+      "menu_action_save_to_pocket": "Guardar no Pocket",
+      "search_for_something_with": "Pesquisar por {search_term} com:",
+      "search_button": "Pesquisar",
+      "search_header": "Pesquisa {search_engine_name}",
+      "search_web_placeholder": "Pesquisar na Web",
+      "search_settings": "Alterar definições de pesquisa",
+      "section_info_option": "Informação",
+      "section_info_send_feedback": "Enviar feedback",
+      "section_info_privacy_notice": "Aviso de privacidade",
+      "welcome_title": "Bem-vindo ao novo separador",
+      "welcome_body": "O Firefox irá utilizar este espaço para lhe mostrar os seus marcadores, artigos, vídeos, e páginas mais relevantes que visitou recentemente, para que possa regressar a estes mais facilmente.",
+      "welcome_label": "A identificar os seus destaques",
+      "time_label_less_than_minute": "<1m",
+      "time_label_minute": "{number}m",
+      "time_label_hour": "{number}h",
+      "time_label_day": "{number}d",
+      "settings_pane_button_label": "Personalizar a sua página de novo separador",
+      "settings_pane_header": "Preferências de novo separador",
+      "settings_pane_body2": "Escolha o que vê nesta página.",
+      "settings_pane_search_header": "Pesquisa",
+      "settings_pane_search_body": "Pesquise na Web a partir do seu novo separador.",
+      "settings_pane_topsites_header": "Sites mais visitados",
+      "settings_pane_topsites_body": "Aceda aos websites que mais visita.",
+      "settings_pane_topsites_options_showmore": "Mostrar duas linhas",
+      "settings_pane_bookmarks_header": "Marcadores recentes",
+      "settings_pane_bookmarks_body": "Os seus marcadores recém-criados num único local acessível.",
+      "settings_pane_visit_again_header": "Visitar novamente",
+      "settings_pane_visit_again_body": "O Firefox irá mostrar-lhe partes do seu histórico de navegação que pode querer relembrar ou voltar a aceder.",
+      "settings_pane_highlights_header": "Destaques",
+      "settings_pane_highlights_body2": "Encontre o seu caminho de volta a coisas interessantes que visitou recentemente ou adicionou aos marcadores.",
+      "settings_pane_highlights_options_bookmarks": "Marcadores",
+      "settings_pane_highlights_options_visited": "Sites visitados",
+      "settings_pane_snippets_header": "Excertos",
+      "settings_pane_snippets_body": "Leia atualizações curtas da Mozilla acerca do Firefox, cultura da internet, e o ocasional meme aleatório.",
+      "settings_pane_done_button": "Feito",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Editar",
+      "edit_topsites_button_label": "Personalizar a sua secção de sites mais visitados",
+      "edit_topsites_showmore_button": "Mostrar mais",
+      "edit_topsites_showless_button": "Mostrar menos",
+      "edit_topsites_done_button": "Feito",
+      "edit_topsites_pin_button": "Afixar este site",
+      "edit_topsites_unpin_button": "Desafixar este site",
+      "edit_topsites_edit_button": "Editar este site",
+      "edit_topsites_dismiss_button": "Descartar este site",
+      "edit_topsites_add_button": "Adicionar",
+      "topsites_form_add_header": "Novo site mais visitado",
+      "topsites_form_edit_header": "Editar site mais visitado",
+      "topsites_form_title_placeholder": "Digite um título",
+      "topsites_form_url_placeholder": "Digite ou cole um URL",
+      "topsites_form_add_button": "Adicionar",
+      "topsites_form_save_button": "Guardar",
+      "topsites_form_cancel_button": "Cancelar",
+      "topsites_form_url_validation": "URL válido requerido",
+      "pocket_read_more": "Tópicos populares:",
+      "pocket_read_even_more": "Ver mais histórias",
+      "pocket_feedback_header": "O melhor da web, com curadoria de mais de 25 milhões de pessoas.",
+      "pocket_description": "Descubra conteúdo de alta qualidade que podia de outra maneira perder, com a ajuda do Pocket, agora parte da Mozilla.",
+      "highlights_empty_state": "Comece a navegar, e iremos mostrar-lhe alguns dos ótimos artigos, vídeos, e outras páginas que visitou recentemente ou adicionou aos marcadores aqui.",
+      "topstories_empty_state": "Já apanhou tudo. Verifique mais tarde para mais histórias principais de {provider}. Não pode esperar? Selecione um tópico popular para encontrar mais boas histórias de toda a web.",
+      "manual_migration_explanation2": "Experimente o Firefox com marcadores, histórico e palavras-passe de outro navegador.",
+      "manual_migration_cancel_button": "Não obrigado",
+      "manual_migration_import_button": "Importar agora"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

@@ -13,44 +13,37 @@ const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-str
  */
 this.NewTabInit = class NewTabInit {
   constructor() {
-    this._repliedEarlyTabs = new Map();
+    this._queue = new Set();
   }
   reply(target) {
-    // Skip this reply if we already replied to an early tab
-    if (this._repliedEarlyTabs.get(target)) {
-      return;
-    }
-
     const action = {type: at.NEW_TAB_INITIAL_STATE, data: this.store.getState()};
     this.store.dispatch(ac.SendToContent(action, target));
-
-    // Remember that this early tab has already gotten a rehydration response in
-    // case it thought we lost its initial REQUEST and asked again
-    if (this._repliedEarlyTabs.has(target)) {
-      this._repliedEarlyTabs.set(target, true);
-    }
   }
   onAction(action) {
     switch (action.type) {
       case at.NEW_TAB_STATE_REQUEST:
+        // If localization hasn't been loaded yet, we should wait for it.
+        if (!this.store.getState().App.strings) {
+          this._queue.add(action.meta.fromTarget);
+          return;
+        }
         this.reply(action.meta.fromTarget);
         break;
-      case at.NEW_TAB_INIT:
-        // Initialize data for early tabs that might REQUEST twice
-        if (action.data.simulated) {
-          this._repliedEarlyTabs.set(action.data.portID, false);
+      case at.LOCALE_UPDATED:
+        // If the queue is full because we were waiting for strings,
+        // dispatch them now.
+        if (this._queue.size > 0 && this.store.getState().App.strings) {
+          this._queue.forEach(target => this.reply(target));
+          this._queue.clear();
         }
-
+        break;
+      case at.NEW_TAB_INIT:
         if (action.data.url === "about:home") {
           const prefs = this.store.getState().Prefs.values;
           if (prefs["aboutHome.autoFocus"] && prefs.showSearch) {
             action.data.browser.focus();
           }
         }
-        break;
-      case at.NEW_TAB_UNLOAD:
-        // Clean up for any tab (no-op if not an early tab)
-        this._repliedEarlyTabs.delete(action.meta.fromTarget);
         break;
     }
   }

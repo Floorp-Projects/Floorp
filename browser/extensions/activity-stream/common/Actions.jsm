@@ -33,6 +33,7 @@ for (const type of [
   "DIALOG_OPEN",
   "DISABLE_ONBOARDING",
   "INIT",
+  "LOCALE_UPDATED",
   "MIGRATION_CANCEL",
   "MIGRATION_COMPLETED",
   "MIGRATION_START",
@@ -254,13 +255,6 @@ this.actionUtils = {
       return true;
     }
     return false;
-  },
-  isFromMain(action) {
-    if (!action.meta) {
-      return false;
-    }
-    return action.meta.from === MAIN_MESSAGE_TYPE &&
-      action.meta.to === CONTENT_MESSAGE_TYPE;
   },
   getPortIdOfSender(action) {
     return (action.meta && action.meta.fromTarget) || null;

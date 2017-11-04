@@ -1,5 +1,5 @@
 const initStore = require("content-src/lib/init-store");
-const {MERGE_STORE_ACTION, EARLY_QUEUED_ACTIONS, rehydrationMiddleware, queueEarlyMessageMiddleware} = initStore;
+const {MERGE_STORE_ACTION, rehydrationMiddleware} = initStore;
 const {GlobalOverrider, addNumberReducer} = require("test/unit/utils");
 const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
 
@@ -106,55 +106,6 @@ describe("initStore", () => {
       const action = ac.SendToContent({type: "FOO"}, 123);
       rehydrationMiddleware(store)(next)(action);
       assert.calledWith(next, action);
-    });
-  });
-  describe("queueEarlyMessageMiddleware", () => {
-    it("should allow all local actions to go through", () => {
-      const action = {type: "FOO"};
-      const next = sinon.spy();
-
-      queueEarlyMessageMiddleware(store)(next)(action);
-
-      assert.calledWith(next, action);
-    });
-    it("should allow action to main that does not belong to EARLY_QUEUED_ACTIONS to go through", () => {
-      const action = ac.SendToMain({type: "FOO"});
-      const next = sinon.spy();
-
-      queueEarlyMessageMiddleware(store)(next)(action);
-
-      assert.calledWith(next, action);
-    });
-    it(`should line up EARLY_QUEUED_ACTIONS only let them go through after it receives the action from main`, () => {
-      EARLY_QUEUED_ACTIONS.forEach(actionType => {
-        const testStore = initStore({number: addNumberReducer});
-        const next = sinon.spy();
-        const action = ac.SendToMain({type: actionType});
-        const fromMainAction = ac.SendToContent({type: "FOO"}, 123);
-
-        // Early actions should be added to the queue
-        queueEarlyMessageMiddleware(testStore)(next)(action);
-        queueEarlyMessageMiddleware(testStore)(next)(action);
-
-        assert.notCalled(next);
-        assert.equal(testStore._earlyActionQueue.length, 2);
-        next.reset();
-
-        // Receiving action from main would empty the queue
-        queueEarlyMessageMiddleware(testStore)(next)(fromMainAction);
-
-        assert.calledThrice(next);
-        assert.equal(next.firstCall.args[0], fromMainAction);
-        assert.equal(next.secondCall.args[0], action);
-        assert.equal(next.thirdCall.args[0], action);
-        assert.equal(testStore._earlyActionQueue.length, 0);
-        next.reset();
-
-        // New action should go through immediately
-        queueEarlyMessageMiddleware(testStore)(next)(action);
-        assert.calledOnce(next);
-        assert.calledWith(next, action);
-      });
     });
   });
 });

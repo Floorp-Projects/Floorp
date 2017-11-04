@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "ka",
+    "strings": {
+      "newtab_page_title": "ახალი ჩანართი",
+      "default_label_loading": "იტვირთება…",
+      "header_top_sites": "რჩეული საიტები",
+      "header_stories": "რჩეული სტატიები",
+      "header_highlights": "მნიშვნელოვანი საიტები",
+      "header_visit_again": "ხელახლა ნახვა",
+      "header_bookmarks": "ბოლოს ჩანიშნულები",
+      "header_recommended_by": "რეკომენდებულია {provider}-ის მიერ",
+      "header_bookmarks_placeholder": "სანიშნეები ჯერ არაა დამატებული.",
+      "header_stories_from": "-იდან",
+      "type_label_visited": "მონახულებული",
+      "type_label_bookmarked": "ჩანიშნული",
+      "type_label_synced": "სხვა მოწყობილობიდან დასინქრონებული",
+      "type_label_recommended": "პოპულარული",
+      "type_label_open": "გახსნა",
+      "type_label_topic": "თემა",
+      "type_label_now": "ახლა",
+      "menu_action_bookmark": "ჩანიშვნა",
+      "menu_action_remove_bookmark": "სანიშნეებიდან ამოღება",
+      "menu_action_copy_address": "მისამართის დაკოპირება",
+      "menu_action_email_link": "ბმულის გაგზავნა…",
+      "menu_action_open_new_window": "ახალ ფანჯარაში გახსნა",
+      "menu_action_open_private_window": "ახალ პირად ფანჯარაში გახსნა",
+      "menu_action_dismiss": "დახურვა",
+      "menu_action_delete": "ისტორიიდან ამოშლა",
+      "menu_action_pin": "მიმაგრება",
+      "menu_action_unpin": "მოხსნა",
+      "confirm_history_delete_p1": "ნამდვილად გსურთ, ამ გვერდის ყველა ჩანაწერის ისტორიიდან ამოშლა?",
+      "confirm_history_delete_notice_p2": "ეს ქმედება შეუქცევადია.",
+      "menu_action_save_to_pocket": "Pocket-ში შენახვა",
+      "search_for_something_with": "{search_term} -ის ძიება:",
+      "search_button": "ძიება",
+      "search_header": "{search_engine_name} -ში ძიება",
+      "search_web_placeholder": "ინტერნეტში ძიება",
+      "search_settings": "ძიების პარამეტრების შეცვლა",
+      "section_info_option": "ინფორმაცია",
+      "section_info_send_feedback": "უკუკავშირი",
+      "section_info_privacy_notice": "პირადი მონაცემების დაცვა",
+      "welcome_title": "მოგესალმებით ახალ ჩანართზე",
+      "welcome_body": "Firefox ამ სივრცეს გამოიყენებს თქვენთვის ყველაზე საჭირო სანიშნეების, სტატიების, ვიდეოებისა და ბოლოს მონახულებული გვერდებისთვის, რომ ადვილად შეძლოთ მათზე დაბრუნება.",
+      "welcome_label": "მნიშვნელოვანი საიტების დადგენა",
+      "time_label_less_than_minute": "<1წთ",
+      "time_label_minute": "{number}წთ",
+      "time_label_hour": "{number}სთ",
+      "time_label_day": "{number}დღე",
+      "settings_pane_button_label": "მოირგეთ ახალი ჩანართის გვერდი",
+      "settings_pane_header": "ახალი ჩანართის პარამეტრები",
+      "settings_pane_body2": "მიუთითეთ, რისი ხილვა გსურთ ამ გვერდზე.",
+      "settings_pane_search_header": "ძიება",
+      "settings_pane_search_body": "ძიება ინტერნეტში ახალი ჩანართიდან.",
+      "settings_pane_topsites_header": "რჩეული საიტები",
+      "settings_pane_topsites_body": "წვდომა ხშირად მონახულებულ საიტებთან.",
+      "settings_pane_topsites_options_showmore": "ორ რიგად ჩვენება",
+      "settings_pane_bookmarks_header": "ბოლოს ჩანიშნულები",
+      "settings_pane_bookmarks_body": "ახლად შექმნილი სანიშნეები, ერთი ხელის გაწვდენაზე.",
+      "settings_pane_visit_again_header": "ხელახლა ნახვა",
+      "settings_pane_visit_again_body": "Firefox გაჩვენებთ მონახულებული გვერდების ისტორიიდან იმას, რისი გახსენებაც ან რაზე დაბრუნებაც გენდომებათ.",
+      "settings_pane_highlights_header": "მნიშვნელოვანი საიტები",
+      "settings_pane_highlights_body2": "მარტივად დაუბრუნდით ბოლოს მონახულებულ, ან ჩანიშნულ გვერდებს.",
+      "settings_pane_highlights_options_bookmarks": "სანიშნეები",
+      "settings_pane_highlights_options_visited": "მონახულებული საიტები",
+      "settings_pane_snippets_header": "ცნობები",
+      "settings_pane_snippets_body": "გაეცანით მოკლე, საინტერესო სიახლეებს Mozilla-სგან, Firefox-ის, ინტერნეტ სამყაროს მიღწევებისა და სხვა დასამახსოვრებელი ფაქტების შესახებ.",
+      "settings_pane_done_button": "მზადაა",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "ჩასწორება",
+      "edit_topsites_button_label": "მოირგეთ რჩეული საიტების განყოფილება",
+      "edit_topsites_showmore_button": "მეტის გამოჩენა",
+      "edit_topsites_showless_button": "ნაკლების გამოჩენა",
+      "edit_topsites_done_button": "მზადაა",
+      "edit_topsites_pin_button": "საიტის მიმაგრება",
+      "edit_topsites_unpin_button": "მიმაგრების მოხსნა",
+      "edit_topsites_edit_button": "საიტის ჩასწორება",
+      "edit_topsites_dismiss_button": "საიტის დამალვა",
+      "edit_topsites_add_button": "დამატება",
+      "topsites_form_add_header": "ახალი საიტი რჩეულებში",
+      "topsites_form_edit_header": "რჩეული საიტების ჩასწორება",
+      "topsites_form_title_placeholder": "სათაურის შეყვანა",
+      "topsites_form_url_placeholder": "აკრიფეთ ან ჩასვით URL",
+      "topsites_form_add_button": "დამატება",
+      "topsites_form_save_button": "შენახვა",
+      "topsites_form_cancel_button": "გაუქმება",
+      "topsites_form_url_validation": "საჭიროა მართებული URL",
+      "pocket_read_more": "პოპულარული თემები:",
+      "pocket_read_even_more": "მეტი სიახლის ნახვა",
+      "pocket_feedback_header": "საუკეთესოები ინტერნეტიდან, 25 მილიონზე მეტი ადამიანის მიერ არჩეული.",
+      "pocket_description": "გაეცანით ინტერნეტში არსებულ მაღალი ხარისხის მასალას Pocket-ის საშუალებით, რომელიც ახლა უკვე Mozilla-ს ნაწილს წარმოადგენს.",
+      "highlights_empty_state": "დაიწყეთ გვერდების დათვალიერება და აქ გამოჩნდება თქვენი რჩეული სტატიები, ვიდეოები და ბოლოს მონახულებული, ან ჩანიშნული საიტები.",
+      "topstories_empty_state": "უკვე ყველაფერი წაკითხული გაქვთ. {provider}-იდან ახალი რჩეული სტატიების მისაღებად, მოგვიანებით შემოიარეთ. თუ ვერ ითმენთ, აირჩიეთ რომელიმე მოთხოვნადი თემა, ახალი საინტერესო სტატიების მოსაძიებლად.",
+      "manual_migration_explanation2": "გადმოიტანეთ სხვა ბრაუზერებიდან თქვენი სანიშნეები, ისტორია და პაროლები Firefox-ში.",
+      "manual_migration_cancel_button": "არა, გმადლობთ",
+      "manual_migration_import_button": "ახლავე გადმოტანა"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};
