@@ -36,9 +36,10 @@ typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
                         const TxfmParam *txfm_param);
 using libaom_test::FhtFunc;
 
-typedef std::tr1::tuple<FdctFunc, IdctFunc, int, aom_bit_depth_t, int>
+typedef std::tr1::tuple<FdctFunc, IdctFunc, TX_TYPE, aom_bit_depth_t, int>
     Dct4x4Param;
-typedef std::tr1::tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t, int> Ht4x4Param;
+typedef std::tr1::tuple<FhtFunc, IhtFunc, TX_TYPE, aom_bit_depth_t, int>
+    Ht4x4Param;
 
 void fdct4x4_ref(const int16_t *in, tran_low_t *out, int stride,
                  TxfmParam * /*txfm_param*/) {
@@ -211,119 +212,139 @@ using std::tr1::make_tuple;
 
 INSTANTIATE_TEST_CASE_P(C, Trans4x4DCT,
                         ::testing::Values(make_tuple(&aom_fdct4x4_c,
-                                                     &aom_idct4x4_16_add_c, 0,
-                                                     AOM_BITS_8, 16)));
+                                                     &aom_idct4x4_16_add_c,
+                                                     DCT_DCT, AOM_BITS_8, 16)));
 
 #if CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     DISABLED_C, Trans4x4HT,
-    ::testing::Values(make_tuple(&fht4x4_12, &iht4x4_12, 0, AOM_BITS_12, 16),
-                      make_tuple(&fht4x4_12, &iht4x4_12, 1, AOM_BITS_12, 16),
-                      make_tuple(&fht4x4_12, &iht4x4_12, 2, AOM_BITS_12, 16),
-                      make_tuple(&fht4x4_12, &iht4x4_12, 3, AOM_BITS_12, 16)));
+    ::testing::Values(
+        make_tuple(&fht4x4_12, &iht4x4_12, DCT_DCT, AOM_BITS_12, 16),
+        make_tuple(&fht4x4_12, &iht4x4_12, ADST_DCT, AOM_BITS_12, 16),
+        make_tuple(&fht4x4_12, &iht4x4_12, DCT_ADST, AOM_BITS_12, 16),
+        make_tuple(&fht4x4_12, &iht4x4_12, ADST_ADST, AOM_BITS_12, 16)));
 
 INSTANTIATE_TEST_CASE_P(
     C, Trans4x4HT,
     ::testing::Values(
-        make_tuple(&fht4x4_10, &iht4x4_10, 0, AOM_BITS_10, 16),
-        make_tuple(&fht4x4_10, &iht4x4_10, 1, AOM_BITS_10, 16),
-        make_tuple(&fht4x4_10, &iht4x4_10, 2, AOM_BITS_10, 16),
-        make_tuple(&fht4x4_10, &iht4x4_10, 3, AOM_BITS_10, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 0, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 1, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 2, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 3, AOM_BITS_8, 16)));
+        make_tuple(&fht4x4_10, &iht4x4_10, DCT_DCT, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, ADST_DCT, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, DCT_ADST, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, ADST_ADST, AOM_BITS_10, 16),
+        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, DCT_DCT, AOM_BITS_8,
+                   16),
+        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, ADST_DCT, AOM_BITS_8,
+                   16),
+        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, DCT_ADST, AOM_BITS_8,
+                   16),
+        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, ADST_ADST, AOM_BITS_8,
+                   16)));
 #else
 INSTANTIATE_TEST_CASE_P(
     C, Trans4x4HT,
-    ::testing::Values(
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 0, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 1, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 2, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 3, AOM_BITS_8, 16)));
+    ::testing::Values(make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, DCT_DCT,
+                                 AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, ADST_DCT,
+                                 AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, DCT_ADST,
+                                 AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, ADST_ADST,
+                                 AOM_BITS_8, 16)));
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     C, Trans4x4WHT,
-    ::testing::Values(
-        make_tuple(&av1_highbd_fwht4x4_c, &iwht4x4_10, 0, AOM_BITS_10, 16),
-        make_tuple(&av1_highbd_fwht4x4_c, &iwht4x4_12, 0, AOM_BITS_12, 16),
-        make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_c, 0, AOM_BITS_8, 16)));
+    ::testing::Values(make_tuple(&av1_highbd_fwht4x4_c, &iwht4x4_10, DCT_DCT,
+                                 AOM_BITS_10, 16),
+                      make_tuple(&av1_highbd_fwht4x4_c, &iwht4x4_12, DCT_DCT,
+                                 AOM_BITS_12, 16),
+                      make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_c, DCT_DCT,
+                                 AOM_BITS_8, 16)));
 #else
 INSTANTIATE_TEST_CASE_P(C, Trans4x4WHT,
                         ::testing::Values(make_tuple(&av1_fwht4x4_c,
-                                                     &aom_iwht4x4_16_add_c, 0,
-                                                     AOM_BITS_8, 16)));
+                                                     &aom_iwht4x4_16_add_c,
+                                                     DCT_DCT, AOM_BITS_8, 16)));
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if HAVE_NEON_ASM && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(NEON, Trans4x4DCT,
                         ::testing::Values(make_tuple(&aom_fdct4x4_c,
                                                      &aom_idct4x4_16_add_neon,
-                                                     0, AOM_BITS_8, 16)));
+                                                     DCT_DCT, AOM_BITS_8, 16)));
 #endif  // HAVE_NEON_ASM && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_NEON && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     NEON, Trans4x4HT,
-    ::testing::Values(
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon, 0, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon, 1, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon, 2, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon, 3, AOM_BITS_8, 16)));
+    ::testing::Values(make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon,
+                                 DCT_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon,
+                                 ADST_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon,
+                                 DCT_ADST, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_neon,
+                                 ADST_ADST, AOM_BITS_8, 16)));
 #endif  // HAVE_NEON && !CONFIG_HIGHBITDEPTH
 
-#if HAVE_SSE2
+#if HAVE_SSE2 && !CONFIG_DAALA_DCT4
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans4x4WHT,
-    ::testing::Values(make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_c, 0,
+    ::testing::Values(make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_c, DCT_DCT,
                                  AOM_BITS_8, 16),
-                      make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_sse2, 0,
-                                 AOM_BITS_8, 16)));
+                      make_tuple(&av1_fwht4x4_c, &aom_iwht4x4_16_add_sse2,
+                                 DCT_DCT, AOM_BITS_8, 16)));
 #endif
 
 #if HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(SSE2, Trans4x4DCT,
                         ::testing::Values(make_tuple(&aom_fdct4x4_sse2,
                                                      &aom_idct4x4_16_add_sse2,
-                                                     0, AOM_BITS_8, 16)));
+                                                     DCT_DCT, AOM_BITS_8, 16)));
+#if !CONFIG_DAALA_DCT4
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans4x4HT,
-    ::testing::Values(make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2, 0,
-                                 AOM_BITS_8, 16),
-                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2, 1,
-                                 AOM_BITS_8, 16),
-                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2, 2,
-                                 AOM_BITS_8, 16),
-                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2, 3,
-                                 AOM_BITS_8, 16)));
+    ::testing::Values(make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2,
+                                 DCT_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2,
+                                 ADST_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2,
+                                 DCT_ADST, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_sse2,
+                                 ADST_ADST, AOM_BITS_8, 16)));
+#endif  // !CONFIG_DAALA_DCT4
 #endif  // HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
 
-#if HAVE_SSE2 && CONFIG_HIGHBITDEPTH
+#if HAVE_SSE2 && CONFIG_HIGHBITDEPTH && !CONFIG_DAALA_DCT4
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans4x4HT,
-    ::testing::Values(
-        make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c, 0, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c, 1, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c, 2, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c, 3, AOM_BITS_8, 16)));
-#endif  // HAVE_SSE2 && CONFIG_HIGHBITDEPTH
+    ::testing::Values(make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c,
+                                 DCT_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c,
+                                 ADST_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c,
+                                 DCT_ADST, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_sse2, &av1_iht4x4_16_add_c,
+                                 ADST_ADST, AOM_BITS_8, 16)));
+#endif  // HAVE_SSE2 && CONFIG_HIGHBITDEPTH && !CONFIG_DAALA_DCT4
 
 #if HAVE_MSA && !CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(MSA, Trans4x4DCT,
                         ::testing::Values(make_tuple(&aom_fdct4x4_msa,
-                                                     &aom_idct4x4_16_add_msa, 0,
-                                                     AOM_BITS_8, 16)));
-#if !CONFIG_EXT_TX
+                                                     &aom_idct4x4_16_add_msa,
+                                                     DCT_DCT, AOM_BITS_8, 16)));
+#if !CONFIG_EXT_TX && !CONFIG_DAALA_DCT4
 INSTANTIATE_TEST_CASE_P(
     MSA, Trans4x4HT,
-    ::testing::Values(
-        make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa, 0, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa, 1, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa, 2, AOM_BITS_8, 16),
-        make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa, 3, AOM_BITS_8,
-                   16)));
-#endif  // !CONFIG_EXT_TX
+    ::testing::Values(make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa,
+                                 DCT_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa,
+                                 ADST_DCT, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa,
+                                 DCT_ADST, AOM_BITS_8, 16),
+                      make_tuple(&av1_fht4x4_msa, &av1_iht4x4_16_add_msa,
+                                 ADST_ADST, AOM_BITS_8, 16)));
+#endif  // !CONFIG_EXT_TX && && !CONFIG_DAALA_DCT4
 #endif  // HAVE_MSA && !CONFIG_HIGHBITDEPTH
 }  // namespace

@@ -57,14 +57,10 @@ MarkupContainer.prototype = {
 
     this._onMouseDown = this._onMouseDown.bind(this);
     this._onToggle = this._onToggle.bind(this);
-    this._onMouseUp = this._onMouseUp.bind(this);
-    this._onMouseMove = this._onMouseMove.bind(this);
     this._onKeyDown = this._onKeyDown.bind(this);
 
     // Binding event listeners
     this.elt.addEventListener("mousedown", this._onMouseDown);
-    this.win.addEventListener("mouseup", this._onMouseUp, true);
-    this.win.addEventListener("mousemove", this._onMouseMove, true);
     this.elt.addEventListener("dblclick", this._onToggle);
     if (this.expander) {
       this.expander.addEventListener("click", this._onToggle);
@@ -524,14 +520,17 @@ MarkupContainer.prototype = {
     if (isLeftClick && this.isDraggable()) {
       this._isPreDragging = true;
       this._dragStartY = event.pageY;
+      this.markup._draggedContainer = this;
     }
   },
 
   /**
    * On mouse up, stop dragging.
+   * This handler is called from the markup view, to reduce number of listeners.
    */
-  _onMouseUp: Task.async(function* () {
+  onMouseUp: Task.async(function* () {
     this._isPreDragging = false;
+    this.markup._draggedContainer = null;
 
     if (this.isDragging) {
       this.cancelDragging();
@@ -550,8 +549,9 @@ MarkupContainer.prototype = {
 
   /**
    * On mouse move, move the dragged element and indicate the drop target.
+   * This handler is called from the markup view, to reduce number of listeners.
    */
-  _onMouseMove: function (event) {
+  onMouseMove: function (event) {
     // If this is the first move after mousedown, only start dragging after the
     // mouse has travelled a few pixels and then indicate the start position.
     let initialDiff = Math.abs(event.pageY - this._dragStartY);
@@ -722,9 +722,9 @@ MarkupContainer.prototype = {
     this.elt.removeEventListener("mousedown", this._onMouseDown);
     this.elt.removeEventListener("dblclick", this._onToggle);
     this.tagLine.removeEventListener("keydown", this._onKeyDown, true);
-    if (this.win) {
-      this.win.removeEventListener("mouseup", this._onMouseUp, true);
-      this.win.removeEventListener("mousemove", this._onMouseMove, true);
+
+    if (this.markup._draggedContainer === this) {
+      this.markup._draggedContainer = null;
     }
 
     this.win = null;

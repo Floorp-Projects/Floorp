@@ -2304,6 +2304,20 @@ enum SelectorMatchesTreeFlags {
   eMatchOnConditionalRestyleAncestor = 0x2,
 };
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#define ASSERT_XBL_CHILDREN_HACK() do {                                     \
+  if (MOZ_UNLIKELY(xblChildrenMatched)) {                                   \
+    nsAutoString selectorString;                                            \
+    aSelector->ToString(selectorString, nullptr, false);                    \
+    MOZ_CRASH_UNSAFE_PRINTF("XBL compat hack matched, please file a bug "   \
+                            "blocking bug 1374247. Selector: %s",           \
+                            NS_ConvertUTF16toUTF8(selectorString).get());   \
+  }                                                                         \
+} while (0)
+#else
+#define ASSERT_XBL_CHILDREN_HACK() do { /* nothing */ } while (0)
+#endif
+
 static bool
 SelectorMatchesTree(Element* aPrevElement,
                     nsCSSSelector* aSelector,
@@ -2313,6 +2327,8 @@ SelectorMatchesTree(Element* aPrevElement,
   MOZ_ASSERT(!aSelector || !aSelector->IsPseudoElement());
   nsCSSSelector* selector = aSelector;
   Element* prevElement = aPrevElement;
+  bool xblChildrenMatched = false;
+
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
                  selector->mNext->mOperator != char16_t(0),
@@ -2322,6 +2338,7 @@ SelectorMatchesTree(Element* aPrevElement,
     // current style scope, we don't need to match any further.
     if (aTreeMatchContext.mForScopedStyle &&
         !aTreeMatchContext.IsWithinStyleScopeForSelectorMatching()) {
+      ASSERT_XBL_CHILDREN_HACK();
       return false;
     }
 
@@ -2368,12 +2385,17 @@ SelectorMatchesTree(Element* aPrevElement,
         // matching to work.
         if (selector->mOperator == '>' && element->IsActiveChildrenElement()) {
           Element* styleScope = aTreeMatchContext.mCurrentStyleScope;
-          if (SelectorMatchesTree(element, selector, aTreeMatchContext,
-                                  aFlags)) {
+          xblChildrenMatched |=
+            SelectorMatchesTree(element, selector, aTreeMatchContext, aFlags);
+
+#ifndef EARLY_BETA_OR_EARLIER
+          if (xblChildrenMatched) {
             // It matched, don't try matching on the <xbl:children> element at
             // all.
             return true;
           }
+#endif
+
           // We want to reset mCurrentStyleScope on aTreeMatchContext
           // back to its state before the SelectorMatchesTree call, in
           // case that call happens to traverse past the style scope element
@@ -2383,6 +2405,7 @@ SelectorMatchesTree(Element* aPrevElement,
       }
     }
     if (!element) {
+      ASSERT_XBL_CHILDREN_HACK();
       return false;
     }
     if ((aFlags & eMatchOnConditionalRestyleAncestor) &&
@@ -2449,6 +2472,7 @@ SelectorMatchesTree(Element* aPrevElement,
       // for adjacent sibling and child combinators, if we didn't find
       // a match, we're done
       if (!NS_IS_GREEDY_OPERATOR(selector->mOperator)) {
+        ASSERT_XBL_CHILDREN_HACK();
         return false;  // parent was required to match
       }
     }
@@ -2456,6 +2480,8 @@ SelectorMatchesTree(Element* aPrevElement,
   }
   return true; // all the selectors matched.
 }
+
+#undef ASSERT_XBL_CHILDREN_HACK
 
 static inline
 void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,

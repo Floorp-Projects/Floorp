@@ -32,6 +32,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
     let proc = await Subprocess.call({
       command: firefoxExe,
       arguments: firefoxArgs.concat(args),
+      // Disable leak detection to avoid intermittent failure bug 1331152.
+      environmentAppend: true,
+      environment: {
+        ASAN_OPTIONS: "detect_leaks=0:quarantine_size=50331648:malloc_context_size=5",
+      },
     });
     let stdout;
     while ((stdout = await proc.stdout.readString())) {

@@ -22,6 +22,16 @@ extern "C" {
 
 #undef MAX_SB_SIZE
 
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+#define TWO_MODE
+#endif
+
+#if CONFIG_NCOBMC || CONFIG_NCOBMC_ADAPT_WEIGHT
+#define NC_MODE_INFO 1
+#else
+#define NC_MODE_INFO 0
+#endif
+
 // Max superblock size
 #if CONFIG_EXT_PARTITION
 #define MAX_SB_SIZE_LOG2 7
@@ -57,15 +67,44 @@ extern "C" {
 #define MAX_TILE_ROWS 1024
 #define MAX_TILE_COLS 1024
 #else
+#if CONFIG_MAX_TILE
+#define MAX_TILE_ROWS 64
+#define MAX_TILE_COLS 64
+#else
 #define MAX_TILE_ROWS 4
 #define MAX_TILE_COLS 64
+#endif
 #endif  // CONFIG_EXT_TILE
 
 #if CONFIG_VAR_TX
 #define MAX_VARTX_DEPTH 2
+#define SQR_VARTX_DEPTH_INIT 0
+#define RECT_VARTX_DEPTH_INIT 0
 #endif
 
 #define MI_SIZE_64X64 (64 >> MI_SIZE_LOG2)
+
+#if CONFIG_LOOPFILTER_LEVEL
+// 4 frame filter levels: y plane vertical, y plane horizontal,
+// u plane, and v plane
+#define FRAME_LF_COUNT 4
+#define DEFAULT_DELTA_LF_MULTI 0
+#endif  // CONFIG_LOOPFILTER_LEVEL
+
+#if CONFIG_LPF_SB
+#define LPF_DELTA_BITS 3
+#define LPF_STEP 2
+#define DELTA_RANGE (1 << LPF_DELTA_BITS)
+#define MAX_LPF_OFFSET (LPF_STEP * ((1 << LPF_DELTA_BITS) - 1))
+
+#define LPF_REUSE_CONTEXT 2
+#define LPF_DELTA_CONTEXT DELTA_RANGE
+#define LPF_SIGN_CONTEXT 2
+
+// Half of maximum loop filter length (15-tap)
+#define FILT_BOUNDARY_OFFSET 8
+#define FILT_BOUNDARY_MI_OFFSET (FILT_BOUNDARY_OFFSET >> MI_SIZE_LOG2)
+#endif  // CONFIG_LPF_SB
 
 // Bitstream profiles indicated by 2-3 bits in the uncompressed header.
 // 00: Profile 0.  8-bit 4:2:0 only.
@@ -113,6 +152,12 @@ typedef enum ATTRIBUTE_PACKED {
   BLOCK_16X4,
   BLOCK_8X32,
   BLOCK_32X8,
+  BLOCK_16X64,
+  BLOCK_64X16,
+#if CONFIG_EXT_PARTITION
+  BLOCK_32X128,
+  BLOCK_128X32,
+#endif  // CONFIG_EXT_PARTITION
   BLOCK_SIZES_ALL,
   BLOCK_SIZES = BLOCK_4X16,
   BLOCK_INVALID = 255,
@@ -125,10 +170,10 @@ typedef enum {
   PARTITION_VERT,
   PARTITION_SPLIT,
 #if CONFIG_EXT_PARTITION_TYPES
-  PARTITION_HORZ_A,  // HORZ split and the left partition is split again
-  PARTITION_HORZ_B,  // HORZ split and the right partition is split again
-  PARTITION_VERT_A,  // VERT split and the top partition is split again
-  PARTITION_VERT_B,  // VERT split and the bottom partition is split again
+  PARTITION_HORZ_A,  // HORZ split and the top partition is split again
+  PARTITION_HORZ_B,  // HORZ split and the bottom partition is split again
+  PARTITION_VERT_A,  // VERT split and the left partition is split again
+  PARTITION_VERT_B,  // VERT split and the right partition is split again
   PARTITION_HORZ_4,  // 4:1 horizontal partition
   PARTITION_VERT_4,  // 4:1 vertical partition
   EXT_PARTITION_TYPES,
@@ -142,6 +187,7 @@ typedef char PARTITION_CONTEXT;
 #define PARTITION_BLOCK_SIZES (4 + CONFIG_EXT_PARTITION)
 #define PARTITION_CONTEXTS_PRIMARY (PARTITION_BLOCK_SIZES * PARTITION_PLOFFSET)
 #if CONFIG_UNPOISON_PARTITION_CTX
+#define INVALID_PARTITION_CTX (-1)
 #define PARTITION_CONTEXTS \
   (PARTITION_CONTEXTS_PRIMARY + 2 * PARTITION_BLOCK_SIZES)
 #else
@@ -158,14 +204,18 @@ typedef enum ATTRIBUTE_PACKED {
   TX_16X16,  // 16x16 transform
   TX_32X32,  // 32x32 transform
 #if CONFIG_TX64X64
-  TX_64X64,           // 64x64 transform
+  TX_64X64,  // 64x64 transform
+#endif       // CONFIG_TX64X64
+  TX_4X8,    // 4x8 transform
+  TX_8X4,    // 8x4 transform
+  TX_8X16,   // 8x16 transform
+  TX_16X8,   // 16x8 transform
+  TX_16X32,  // 16x32 transform
+  TX_32X16,  // 32x16 transform
+#if CONFIG_TX64X64
+  TX_32X64,           // 32x64 transform
+  TX_64X32,           // 64x32 transform
 #endif                // CONFIG_TX64X64
-  TX_4X8,             // 4x8 transform
-  TX_8X4,             // 8x4 transform
-  TX_8X16,            // 8x16 transform
-  TX_16X8,            // 16x8 transform
-  TX_16X32,           // 16x32 transform
-  TX_32X16,           // 32x16 transform
   TX_4X16,            // 4x16 transform
   TX_16X4,            // 16x4 transform
   TX_8X32,            // 8x32 transform
@@ -182,6 +232,10 @@ typedef enum ATTRIBUTE_PACKED {
 
 #define MAX_TX_DEPTH (TX_SIZES - TX_SIZE_CTX_MIN)
 
+#if CONFIG_CTX1D
+#define MAX_HVTX_SIZE (1 << 5)
+#endif  // CONFIG_CTX1D
+
 #define MAX_TX_SIZE_LOG2 (5 + CONFIG_TX64X64)
 #define MAX_TX_SIZE (1 << MAX_TX_SIZE_LOG2)
 #define MIN_TX_SIZE_LOG2 2
@@ -192,11 +246,9 @@ typedef enum ATTRIBUTE_PACKED {
 #define MAX_TX_BLOCKS_IN_MAX_SB_LOG2 ((MAX_SB_SIZE_LOG2 - MAX_TX_SIZE_LOG2) * 2)
 #define MAX_TX_BLOCKS_IN_MAX_SB (1 << MAX_TX_BLOCKS_IN_MAX_SB_LOG2)
 
-#define MAX_NUM_TXB (1 << (MAX_SB_SIZE_LOG2 - MIN_TX_SIZE_LOG2))
-
-#if CONFIG_NCOBMC_ADAPT_WEIGHT && CONFIG_MOTION_VAR
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
 typedef enum ATTRIBUTE_PACKED {
-  NO_OVERLAP,
+  NCOBMC_MODE_0,
   NCOBMC_MODE_1,
   NCOBMC_MODE_2,
   NCOBMC_MODE_3,
@@ -204,20 +256,33 @@ typedef enum ATTRIBUTE_PACKED {
   NCOBMC_MODE_5,
   NCOBMC_MODE_6,
   NCOBMC_MODE_7,
-  NCOBMC_MODE_8,
-  MAX_NCOBMC_MODES
-} NCOBMC_MODE;
-// #define MAX_INTRPL_MODES 9
+  ALL_NCOBMC_MODES,
+#ifdef TWO_MODE
+  MAX_NCOBMC_MODES = NCOBMC_MODE_1 + 1,
+#else
+  MAX_NCOBMC_MODES = ALL_NCOBMC_MODES,
 #endif
+  NO_OVERLAP = MAX_NCOBMC_MODES + 1
+} NCOBMC_MODE;
+
+typedef enum {
+  ADAPT_OVERLAP_BLOCK_8X8,
+  ADAPT_OVERLAP_BLOCK_16X16,
+  ADAPT_OVERLAP_BLOCK_32X32,
+  ADAPT_OVERLAP_BLOCK_64X64,
+  ADAPT_OVERLAP_BLOCKS,
+  ADAPT_OVERLAP_BLOCK_INVALID = 255
+} ADAPT_OVERLAP_BLOCK;
+#endif  // CONFIG_NCOBMC_ADAPT_WEIGHT
 
 // frame transform mode
 typedef enum {
-  ONLY_4X4 = 0,     // only 4x4 transform used
-  ALLOW_8X8 = 1,    // allow block transform size up to 8x8
-  ALLOW_16X16 = 2,  // allow block transform size up to 16x16
-  ALLOW_32X32 = 3,  // allow block transform size up to 32x32
+  ONLY_4X4,     // only 4x4 transform used
+  ALLOW_8X8,    // allow block transform size up to 8x8
+  ALLOW_16X16,  // allow block transform size up to 16x16
+  ALLOW_32X32,  // allow block transform size up to 32x32
 #if CONFIG_TX64X64
-  ALLOW_64X64 = 4,  // allow block transform size up to 64x64
+  ALLOW_64X64,  // allow block transform size up to 64x64
 #endif
   TX_MODE_SELECT,  // transform specified for each block
   TX_MODES,
@@ -225,33 +290,33 @@ typedef enum {
 
 // 1D tx types
 typedef enum {
-  DCT_1D = 0,
-  ADST_1D = 1,
-  FLIPADST_1D = 2,
-  IDTX_1D = 3,
+  DCT_1D,
+  ADST_1D,
+  FLIPADST_1D,
+  IDTX_1D,
   // TODO(sarahparker) need to eventually put something here for the
   // mrc experiment to make this work with the ext-tx pruning functions
-  TX_TYPES_1D = 4,
+  TX_TYPES_1D,
 } TX_TYPE_1D;
 
 typedef enum {
-  DCT_DCT = 0,    // DCT  in both horizontal and vertical
-  ADST_DCT = 1,   // ADST in vertical, DCT in horizontal
-  DCT_ADST = 2,   // DCT  in vertical, ADST in horizontal
-  ADST_ADST = 3,  // ADST in both directions
+  DCT_DCT,    // DCT  in both horizontal and vertical
+  ADST_DCT,   // ADST in vertical, DCT in horizontal
+  DCT_ADST,   // DCT  in vertical, ADST in horizontal
+  ADST_ADST,  // ADST in both directions
 #if CONFIG_EXT_TX
-  FLIPADST_DCT = 4,
-  DCT_FLIPADST = 5,
-  FLIPADST_FLIPADST = 6,
-  ADST_FLIPADST = 7,
-  FLIPADST_ADST = 8,
-  IDTX = 9,
-  V_DCT = 10,
-  H_DCT = 11,
-  V_ADST = 12,
-  H_ADST = 13,
-  V_FLIPADST = 14,
-  H_FLIPADST = 15,
+  FLIPADST_DCT,
+  DCT_FLIPADST,
+  FLIPADST_FLIPADST,
+  ADST_FLIPADST,
+  FLIPADST_ADST,
+  IDTX,
+  V_DCT,
+  H_DCT,
+  V_ADST,
+  H_ADST,
+  V_FLIPADST,
+  H_FLIPADST,
 #endif  // CONFIG_EXT_TX
 #if CONFIG_MRC_TX
   MRC_DCT,  // DCT in both directions with mrc based bitmask
@@ -260,6 +325,28 @@ typedef enum {
 } TX_TYPE;
 
 #if CONFIG_EXT_TX
+typedef enum {
+  // DCT only
+  EXT_TX_SET_DCTONLY,
+  // DCT + Identity only
+  EXT_TX_SET_DCT_IDTX,
+#if CONFIG_MRC_TX
+  // DCT + MRC_DCT
+  EXT_TX_SET_MRC_DCT,
+  // DCT + MRC_DCT + IDTX
+  EXT_TX_SET_MRC_DCT_IDTX,
+#endif  // CONFIG_MRC_TX
+  // Discrete Trig transforms w/o flip (4) + Identity (1)
+  EXT_TX_SET_DTT4_IDTX,
+  // Discrete Trig transforms w/o flip (4) + Identity (1) + 1D Hor/vert DCT (2)
+  EXT_TX_SET_DTT4_IDTX_1DDCT,
+  // Discrete Trig transforms w/ flip (9) + Identity (1) + 1D Hor/Ver DCT (2)
+  EXT_TX_SET_DTT9_IDTX_1DDCT,
+  // Discrete Trig transforms w/ flip (9) + Identity (1) + 1D Hor/Ver (6)
+  EXT_TX_SET_ALL16,
+  EXT_TX_SET_TYPES
+} TxSetType;
+
 #define IS_2D_TRANSFORM(tx_type) (tx_type < IDTX)
 #else
 #define IS_2D_TRANSFORM(tx_type) 1
@@ -304,14 +391,9 @@ typedef enum {
   AOM_LAST3_FLAG = 1 << 2,
   AOM_GOLD_FLAG = 1 << 3,
   AOM_BWD_FLAG = 1 << 4,
-#if CONFIG_ALTREF2
   AOM_ALT2_FLAG = 1 << 5,
   AOM_ALT_FLAG = 1 << 6,
   AOM_REFFRAME_ALL = (1 << 7) - 1
-#else  // !CONFIG_ALTREF2
-  AOM_ALT_FLAG = 1 << 5,
-  AOM_REFFRAME_ALL = (1 << 6) - 1
-#endif  // CONFIG_ALTREF2
 #else   // !CONFIG_EXT_REFS
   AOM_GOLD_FLAG = 1 << 1,
   AOM_ALT_FLAG = 1 << 2,
@@ -323,28 +405,56 @@ typedef enum {
 #define USE_UNI_COMP_REFS 1
 
 typedef enum {
-  UNIDIR_COMP_REFERENCE = 0,
-  BIDIR_COMP_REFERENCE = 1,
-  COMP_REFERENCE_TYPES = 2,
+  UNIDIR_COMP_REFERENCE,
+  BIDIR_COMP_REFERENCE,
+  COMP_REFERENCE_TYPES,
 } COMP_REFERENCE_TYPE;
 #else  // !CONFIG_EXT_COMP_REFS
 #define USE_UNI_COMP_REFS 0
 #endif  // CONFIG_EXT_COMP_REFS
 
-typedef enum { PLANE_TYPE_Y = 0, PLANE_TYPE_UV = 1, PLANE_TYPES } PLANE_TYPE;
+typedef enum { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } PLANE_TYPE;
 
 #if CONFIG_CFL
-// TODO(ltrudeau) this should change based on QP size
-#define CB_ALPHABET_SIZE 4
-#define CR_ALPHABET_SIZE 4
-#define CFL_ALPHABET_SIZE (CB_ALPHABET_SIZE * CR_ALPHABET_SIZE)
-#define CFL_MAGS_SIZE 7
+#define CFL_ALPHABET_SIZE_LOG2 4
+#define CFL_ALPHABET_SIZE (1 << CFL_ALPHABET_SIZE_LOG2)
+#define CFL_MAGS_SIZE ((2 << CFL_ALPHABET_SIZE_LOG2) + 1)
+#define CFL_IDX_U(idx) (idx >> CFL_ALPHABET_SIZE_LOG2)
+#define CFL_IDX_V(idx) (idx & (CFL_ALPHABET_SIZE - 1))
 
-typedef enum { CFL_PRED_U = 0, CFL_PRED_V = 1, CFL_PRED_PLANES } CFL_PRED_TYPE;
-typedef enum { CFL_SIGN_NEG = 0, CFL_SIGN_POS = 1, CFL_SIGNS } CFL_SIGN_TYPE;
+typedef enum { CFL_PRED_U, CFL_PRED_V, CFL_PRED_PLANES } CFL_PRED_TYPE;
+
+typedef enum {
+  CFL_SIGN_ZERO,
+  CFL_SIGN_NEG,
+  CFL_SIGN_POS,
+  CFL_SIGNS
+} CFL_SIGN_TYPE;
+
+// CFL_SIGN_ZERO,CFL_SIGN_ZERO is invalid
+#define CFL_JOINT_SIGNS (CFL_SIGNS * CFL_SIGNS - 1)
+// CFL_SIGN_U is equivalent to (js + 1) / 3 for js in 0 to 8
+#define CFL_SIGN_U(js) (((js + 1) * 11) >> 5)
+// CFL_SIGN_V is equivalent to (js + 1) % 3 for js in 0 to 8
+#define CFL_SIGN_V(js) ((js + 1) - CFL_SIGNS * CFL_SIGN_U(js))
+
+// There is no context when the alpha for a given plane is zero.
+// So there are 2 fewer contexts than joint signs.
+#define CFL_ALPHA_CONTEXTS (CFL_JOINT_SIGNS + 1 - CFL_SIGNS)
+#define CFL_CONTEXT_U(js) (js + 1 - CFL_SIGNS)
+// Also, the contexts are symmetric under swapping the planes.
+#define CFL_CONTEXT_V(js) \
+  (CFL_SIGN_V(js) * CFL_SIGNS + CFL_SIGN_U(js) - CFL_SIGNS)
 #endif
 
-#if CONFIG_PALETTE
+typedef enum {
+  PALETTE_MAP,
+#if CONFIG_MRC_TX
+  MRC_MAP,
+#endif  // CONFIG_MRC_TX
+  COLOR_MAP_TYPES,
+} COLOR_MAP_TYPE;
+
 typedef enum {
   TWO_COLORS,
   THREE_COLORS,
@@ -367,33 +477,29 @@ typedef enum {
   PALETTE_COLOR_EIGHT,
   PALETTE_COLORS
 } PALETTE_COLOR;
-#endif  // CONFIG_PALETTE
 
 // Note: All directional predictors must be between V_PRED and D63_PRED (both
 // inclusive).
 typedef enum ATTRIBUTE_PACKED {
-  DC_PRED,    // Average of above and left pixels
-  V_PRED,     // Vertical
-  H_PRED,     // Horizontal
-  D45_PRED,   // Directional 45  deg = round(arctan(1/1) * 180/pi)
-  D135_PRED,  // Directional 135 deg = 180 - 45
-  D117_PRED,  // Directional 117 deg = 180 - 63
-  D153_PRED,  // Directional 153 deg = 180 - 27
-  D207_PRED,  // Directional 207 deg = 180 + 27
-  D63_PRED,   // Directional 63  deg = round(arctan(2/1) * 180/pi)
-#if CONFIG_ALT_INTRA
+  DC_PRED,      // Average of above and left pixels
+  V_PRED,       // Vertical
+  H_PRED,       // Horizontal
+  D45_PRED,     // Directional 45  deg = round(arctan(1/1) * 180/pi)
+  D135_PRED,    // Directional 135 deg = 180 - 45
+  D117_PRED,    // Directional 117 deg = 180 - 63
+  D153_PRED,    // Directional 153 deg = 180 - 27
+  D207_PRED,    // Directional 207 deg = 180 + 27
+  D63_PRED,     // Directional 63  deg = round(arctan(2/1) * 180/pi)
   SMOOTH_PRED,  // Combination of horizontal and vertical interpolation
 #if CONFIG_SMOOTH_HV
   SMOOTH_V_PRED,  // Vertical interpolation
   SMOOTH_H_PRED,  // Horizontal interpolation
 #endif            // CONFIG_SMOOTH_HV
-#endif            // CONFIG_ALT_INTRA
   TM_PRED,        // True-motion
   NEARESTMV,
   NEARMV,
   ZEROMV,
   NEWMV,
-#if CONFIG_EXT_INTER
 #if CONFIG_COMPOUND_SINGLEREF
   // Single ref compound modes
   SR_NEAREST_NEARMV,
@@ -411,7 +517,6 @@ typedef enum ATTRIBUTE_PACKED {
   NEW_NEARMV,
   ZERO_ZEROMV,
   NEW_NEWMV,
-#endif  // CONFIG_EXT_INTER
   MB_MODE_COUNT,
   INTRA_MODES = TM_PRED + 1,     // TM_PRED has to be the last intra mode.
   INTRA_INVALID = MB_MODE_COUNT  // For uv_mode in inter blocks
@@ -421,23 +526,22 @@ typedef enum ATTRIBUTE_PACKED {
 // TODO(ltrudeau) Do we really want to pack this?
 // TODO(ltrudeau) Do we match with PREDICTION_MODE?
 typedef enum ATTRIBUTE_PACKED {
-  UV_DC_PRED,    // Average of above and left pixels
-  UV_V_PRED,     // Vertical
-  UV_H_PRED,     // Horizontal
-  UV_D45_PRED,   // Directional 45  deg = round(arctan(1/1) * 180/pi)
-  UV_D135_PRED,  // Directional 135 deg = 180 - 45
-  UV_D117_PRED,  // Directional 117 deg = 180 - 63
-  UV_D153_PRED,  // Directional 153 deg = 180 - 27
-  UV_D207_PRED,  // Directional 207 deg = 180 + 27
-  UV_D63_PRED,   // Directional 63  deg = round(arctan(2/1) * 180/pi)
-#if CONFIG_ALT_INTRA
+  UV_DC_PRED,      // Average of above and left pixels
+  UV_V_PRED,       // Vertical
+  UV_H_PRED,       // Horizontal
+  UV_D45_PRED,     // Directional 45  deg = round(arctan(1/1) * 180/pi)
+  UV_D135_PRED,    // Directional 135 deg = 180 - 45
+  UV_D117_PRED,    // Directional 117 deg = 180 - 63
+  UV_D153_PRED,    // Directional 153 deg = 180 - 27
+  UV_D207_PRED,    // Directional 207 deg = 180 + 27
+  UV_D63_PRED,     // Directional 63  deg = round(arctan(2/1) * 180/pi)
   UV_SMOOTH_PRED,  // Combination of horizontal and vertical interpolation
 #if CONFIG_SMOOTH_HV
   UV_SMOOTH_V_PRED,  // Vertical interpolation
   UV_SMOOTH_H_PRED,  // Horizontal interpolation
 #endif               // CONFIG_SMOOTH_HV
-#endif               // CONFIG_ALT_INTRA
   UV_TM_PRED,        // True-motion
+  UV_CFL_PRED,       // Chroma-from-Luma
   UV_INTRA_MODES,
   UV_MODE_INVALID,  // For uv_mode in inter blocks
 } UV_PREDICTION_MODE;
@@ -449,47 +553,35 @@ typedef enum ATTRIBUTE_PACKED {
 #endif  // CONFIG_CFL
 
 typedef enum {
-  SIMPLE_TRANSLATION = 0,
+  SIMPLE_TRANSLATION,
 #if CONFIG_MOTION_VAR
   OBMC_CAUSAL,  // 2-sided OBMC
-#endif          // CONFIG_MOTION_VAR
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+  NCOBMC_ADAPT_WEIGHT,
+#endif  // CONFIG_NCOBMC_ADAPT_WEIGHT
+#endif  // CONFIG_MOTION_VAR
 #if CONFIG_WARPED_MOTION
   WARPED_CAUSAL,  // 2-sided WARPED
 #endif            // CONFIG_WARPED_MOTION
-#if CONFIG_NCOBMC_ADAPT_WEIGHT
-  NCOBMC_ADAPT_WEIGHT,
-#endif
   MOTION_MODES
+#if CONFIG_NCOBMC_ADAPT_WEIGHT && CONFIG_WARPED_MOTION
+  ,
+  OBMC_FAMILY_MODES = NCOBMC_ADAPT_WEIGHT + 1
+#endif
 } MOTION_MODE;
 
-#if CONFIG_NCOBMC_ADAPT_WEIGHT
-typedef enum {
-  ADAPT_OVERLAP_BLOCK_8X8,
-  ADAPT_OVERLAP_BLOCK_16X16,
-  ADAPT_OVERLAP_BLOCK_32X32,
-  ADAPT_OVERLAP_BLOCK_64X64,
-  ADAPT_OVERLAP_BLOCKS,
-  ADAPT_OVERLAP_BLOCK_INVALID = 255
-} ADAPT_OVERLAP_BLOCK;
-#endif
-
-#if CONFIG_EXT_INTER
 #if CONFIG_INTERINTRA
 typedef enum {
-  II_DC_PRED = 0,
+  II_DC_PRED,
   II_V_PRED,
   II_H_PRED,
-#if CONFIG_ALT_INTRA
   II_SMOOTH_PRED,
-#else
-  II_TM_PRED,
-#endif  // CONFIG_ALT_INTRA
   INTERINTRA_MODES
 } INTERINTRA_MODE;
 #endif
 
 typedef enum {
-  COMPOUND_AVERAGE = 0,
+  COMPOUND_AVERAGE,
 #if CONFIG_WEDGE
   COMPOUND_WEDGE,
 #endif  // CONFIG_WEDGE
@@ -498,7 +590,6 @@ typedef enum {
 #endif  // CONFIG_COMPOUND_SEGMENT
   COMPOUND_TYPES,
 } COMPOUND_TYPE;
-#endif  // CONFIG_EXT_INTER
 
 // TODO(huisu): Consider adding FILTER_SMOOTH_PRED to "FILTER_INTRA_MODE".
 #if CONFIG_FILTER_INTRA
@@ -523,13 +614,11 @@ typedef enum {
 
 #define INTER_MODES (1 + NEWMV - NEARESTMV)
 
-#if CONFIG_EXT_INTER
 #if CONFIG_COMPOUND_SINGLEREF
 #define INTER_SINGLEREF_COMP_MODES (1 + SR_NEW_NEWMV - SR_NEAREST_NEARMV)
 #endif  // CONFIG_COMPOUND_SINGLEREF
 
 #define INTER_COMPOUND_MODES (1 + NEW_NEWMV - NEAREST_NEARESTMV)
-#endif  // CONFIG_EXT_INTER
 
 #define SKIP_CONTEXTS 3
 
@@ -553,7 +642,6 @@ typedef enum {
 #define SKIP_NEARESTMV_SUB8X8_OFFSET 11
 
 #define INTER_MODE_CONTEXTS 7
-#if CONFIG_DELTA_Q
 #define DELTA_Q_SMALL 3
 #define DELTA_Q_PROBS (DELTA_Q_SMALL)
 #define DEFAULT_DELTA_Q_RES 4
@@ -561,7 +649,6 @@ typedef enum {
 #define DELTA_LF_SMALL 3
 #define DELTA_LF_PROBS (DELTA_LF_SMALL)
 #define DEFAULT_DELTA_LF_RES 2
-#endif
 #endif
 
 /* Segment Feature Masks */
@@ -583,9 +670,9 @@ typedef enum {
 #define UNI_COMP_REF_CONTEXTS 3
 #endif  // CONFIG_EXT_COMP_REFS
 
-#if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+#if CONFIG_COMPOUND_SINGLEREF
 #define COMP_INTER_MODE_CONTEXTS 4
-#endif  // CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+#endif  // CONFIG_COMPOUND_SINGLEREF
 
 #if CONFIG_VAR_TX
 #define TXFM_PARTITION_CONTEXTS ((TX_SIZES - TX_8X8) * 6 - 2)
@@ -601,14 +688,8 @@ typedef uint8_t TXFM_CONTEXT;
 #define LAST3_FRAME 3
 #define GOLDEN_FRAME 4
 #define BWDREF_FRAME 5
-
-#if CONFIG_ALTREF2
 #define ALTREF2_FRAME 6
 #define ALTREF_FRAME 7
-#else  // !CONFIG_ALTREF2
-#define ALTREF_FRAME 6
-#endif  // CONFIG_ALTREF2
-
 #define LAST_REF_FRAMES (LAST3_FRAME - LAST_FRAME + 1)
 #else  // !CONFIG_EXT_REFS
 #define GOLDEN_FRAME 2
@@ -651,9 +732,9 @@ typedef enum {
 
 #if CONFIG_LOOP_RESTORATION
 typedef enum {
-  RESTORE_NONE = 0,
-  RESTORE_WIENER = 1,
-  RESTORE_SGRPROJ = 2,
+  RESTORE_NONE,
+  RESTORE_WIENER,
+  RESTORE_SGRPROJ,
   RESTORE_SWITCHABLE,
   RESTORE_SWITCHABLE_TYPES = RESTORE_SWITCHABLE,
   RESTORE_TYPES,
@@ -662,7 +743,7 @@ typedef enum {
 
 #if CONFIG_FRAME_SUPERRES
 #define SUPERRES_SCALE_BITS 3
-#define SUPERRES_SCALE_NUMERATOR_MIN 8
+#define SUPERRES_SCALE_DENOMINATOR_MIN 8
 #endif  // CONFIG_FRAME_SUPERRES
 
 #if CONFIG_LPF_DIRECT
@@ -677,6 +758,27 @@ typedef enum {
   FILTER_DEGREES,
 } FILTER_DEGREE;
 #endif  // CONFIG_LPF_DIRECT
+
+#if CONFIG_OBU
+// R19
+typedef enum {
+  OBU_SEQUENCE_HEADER = 1,
+  OBU_TD = 2,
+  OBU_FRAME_HEADER = 3,
+  OBU_TILE_GROUP = 4,
+  OBU_METADATA = 5,
+  OBU_PADDING = 15,
+} OBU_TYPE;
+#endif
+
+#if CONFIG_LGT_FROM_PRED
+#define LGT_SIZES 2
+// Note: at least one of LGT_FROM_PRED_INTRA and LGT_FROM_PRED_INTER must be 1
+#define LGT_FROM_PRED_INTRA 1
+#define LGT_FROM_PRED_INTER 1
+// LGT_SL_INTRA: LGTs with a mode-dependent first self-loop and a break point
+#define LGT_SL_INTRA 0
+#endif  // CONFIG_LGT_FROM_PRED
 
 #ifdef __cplusplus
 }  // extern "C"

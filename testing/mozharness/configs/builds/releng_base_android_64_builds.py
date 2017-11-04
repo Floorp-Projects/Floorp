@@ -18,6 +18,7 @@ config = {
     ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
+    'max_build_output_timeout': 0,
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     # mock shtuff
@@ -124,4 +125,15 @@ config = {
                       ],
     'src_mozconfig': 'mobile/android/config/mozconfigs/android/nightly',
     #########################################################################
+
+    # It's not obvious, but postflight_build is after packaging, so the Gecko
+    # binaries are in the object directory, ready to be packaged into the
+    # GeckoView AAR.
+    'postflight_build_mach_commands': [
+        ['gradle',
+         'geckoview:assembleWithGeckoBinaries',
+         'geckoview_example:assembleWithGeckoBinaries',
+         'uploadArchives',
+        ],
+    ],
 }

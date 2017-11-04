@@ -370,6 +370,9 @@ CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth)
 
   // Step 4.2 Execute any events that were waiting for a stable state.
   ProcessStableStateQueue();
+
+  // This should be a fast test so that it won't affect the next task processing.
+  IsIdleGCTaskNeeded();
 }
 
 void
@@ -377,6 +380,36 @@ CycleCollectedJSContext::AfterProcessMicrotask()
 {
   MOZ_ASSERT(mJSContext);
   AfterProcessMicrotask(RecursionDepth());
+}
+
+void CycleCollectedJSContext::IsIdleGCTaskNeeded()
+{
+  class IdleTimeGCTaskRunnable : public mozilla::IdleRunnable
+  {
+  public:
+    using mozilla::IdleRunnable::IdleRunnable;
+
+  public:
+    NS_IMETHOD Run() override
+    {
+      CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
+      if (ccrt) {
+        ccrt->RunIdleTimeGCTask();
+      }
+      return NS_OK;
+    }
+
+    nsresult Cancel() override
+    {
+      return NS_OK;
+    }
+  };
+
+  if (Runtime()->IsIdleGCTaskNeeded()) {
+    nsCOMPtr<nsIRunnable> gc_task = new IdleTimeGCTaskRunnable();
+    NS_IdleDispatchToCurrentThread(gc_task.forget());
+    Runtime()->SetPendingIdleGCTask();
+  }
 }
 
 void

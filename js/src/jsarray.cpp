@@ -2207,6 +2207,9 @@ js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp)
             }
         }
 
+        // We can omit the type update when neither collecting the elements
+        // nor calling the default comparator can execute a (getter) function
+        // that might run user code.
         ShouldUpdateTypes updateTypes = !extraIndexed && (allStrings || allInts)
                                         ? ShouldUpdateTypes::DontUpdate
                                         : ShouldUpdateTypes::Update;

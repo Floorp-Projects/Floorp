@@ -469,7 +469,7 @@ StringFromCharCode(JSContext* cx, int32_t code)
     if (StaticStrings::hasUnit(c))
         return cx->staticStrings().getUnit(c);
 
-    return NewStringCopyN<CanGC>(cx, &c, 1);
+    return NewStringCopyNDontDeflate<CanGC>(cx, &c, 1);
 }
 
 JSString*

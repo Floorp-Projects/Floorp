@@ -159,7 +159,7 @@ IPCBlobInputStream::~IPCBlobInputStream()
 NS_IMETHODIMP
 IPCBlobInputStream::Available(uint64_t* aLength)
 {
-  // We don't have a remoteStream yet. Let's return the full known size.
+  // We don't have a remoteStream yet: let's return 0.
   if (mState == eInit || mState == ePending) {
     *aLength = 0;
     return NS_OK;

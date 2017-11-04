@@ -1,0 +1,56 @@
+"use strict";
+
+// This test checks whether applied WebExtension themes that attempt to change
+// the separator colors are applied properly.
+
+add_task(async function test_support_separator_properties() {
+  const SEPARATOR_TOP_COLOR = "#ff00ff";
+  const SEPARATOR_VERTICAL_COLOR = "#9400ff";
+  const SEPARATOR_BOTTOM_COLOR = "#3366cc";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "headerURL": "image1.png",
+        },
+        "colors": {
+          "accentcolor": ACCENT_COLOR,
+          "textcolor": TEXT_COLOR,
+          "toolbar_top_separator": SEPARATOR_TOP_COLOR,
+          "toolbar_vertical_separator": SEPARATOR_VERTICAL_COLOR,
+          "toolbar_bottom_separator": SEPARATOR_BOTTOM_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  await extension.startup();
+
+  let navbar = document.querySelector("#nav-bar");
+  Assert.ok(
+    window.getComputedStyle(navbar).boxShadow.includes(
+      `rgb(${hexToRGB(SEPARATOR_TOP_COLOR).join(", ")})`
+    ),
+    "Top separator color properly set"
+  );
+
+  let mainWin = document.querySelector("#main-window");
+  Assert.equal(
+    window.getComputedStyle(mainWin).getPropertyValue("--urlbar-separator-color"),
+    SEPARATOR_VERTICAL_COLOR,
+    "Vertical separator color properly set"
+  );
+
+  let toolbox = document.querySelector("#navigator-toolbox");
+  Assert.equal(
+    window.getComputedStyle(toolbox, ":after").borderBottomColor,
+    `rgb(${hexToRGB(SEPARATOR_BOTTOM_COLOR).join(", ")})`,
+    "Bottom separator color properly set"
+  );
+
+  await extension.unload();
+});

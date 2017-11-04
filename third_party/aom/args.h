@@ -57,6 +57,7 @@ int arg_parse_int(const struct arg *arg);
 struct aom_rational arg_parse_rational(const struct arg *arg);
 int arg_parse_enum(const struct arg *arg);
 int arg_parse_enum_or_int(const struct arg *arg);
+int arg_parse_list(const struct arg *arg, int *list, int n);
 #ifdef __cplusplus
 }  // extern "C"
 #endif

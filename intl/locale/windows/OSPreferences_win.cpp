@@ -17,18 +17,27 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 {
   MOZ_ASSERT(aLocaleList.IsEmpty());
 
-  WCHAR locale[LOCALE_NAME_MAX_LENGTH];
-  if (NS_WARN_IF(!LCIDToLocaleName(LOCALE_SYSTEM_DEFAULT, locale,
-                                   LOCALE_NAME_MAX_LENGTH, 0))) {
-    return false;
+  ULONG numLanguages = 0;
+  DWORD cchLanguagesBuffer = 0;
+  BOOL ok = GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &numLanguages,
+                                        nullptr, &cchLanguagesBuffer);
+  if (ok) {
+    AutoTArray<WCHAR, 64> locBuffer;
+    locBuffer.SetCapacity(cchLanguagesBuffer);
+    ok = GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &numLanguages,
+                                     locBuffer.Elements(), &cchLanguagesBuffer);
+    if (ok) {
+      NS_LossyConvertUTF16toASCII loc(locBuffer.Elements());
+
+      // We will only take the first locale from the returned list, because
+      // we do not support real fallback chains for RequestedLocales yet.
+      if (CanonicalizeLanguageTag(loc)) {
+        aLocaleList.AppendElement(loc);
+        return true;
+      }
+    }
   }
 
-  NS_LossyConvertUTF16toASCII loc(locale);
-
-  if (CanonicalizeLanguageTag(loc)) {
-    aLocaleList.AppendElement(loc);
-    return true;
-  }
   return false;
 }
 

@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="resource://devtools/client/shared/components/reps/reps.css"/>
     <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/Tabs.css"/>
     <link rel="stylesheet" href="resource://devtools/client/shared/components/tabs/TabBar.css"/>
+    <link rel="stylesheet" href="resource://devtools/client/shared/components/NotificationBox.css"/>
     <link rel="stylesheet" href="chrome://devtools/content/netmonitor/src/assets/styles/netmonitor.css"/>
 
     <script src="chrome://devtools/content/shared/theme-switching.js"></script>
@@ -22,15 +23,14 @@
     <div id="app-wrapper" class="theme-body">
       <div id="output-container" role="document" aria-live="polite"></div>
       <div id="jsterm-wrapper">
-        <div id="webconsole-notificationbox">
-          <div class="jsterm-input-container" style="direction:ltr">
-            <div class="jsterm-stack-node">
-              <textarea class="jsterm-complete-node devtools-monospace"
-                       tabindex="-1"></textarea>
-              <textarea class="jsterm-input-node devtools-monospace"
-                       rows="1" tabindex="0"
-                       aria-autocomplete="list"></textarea>
-            </div>
+        <div id="webconsole-notificationbox"></div>
+        <div class="jsterm-input-container" style="direction:ltr">
+          <div class="jsterm-stack-node">
+            <textarea class="jsterm-complete-node devtools-monospace"
+                      tabindex="-1"></textarea>
+            <textarea class="jsterm-input-node devtools-monospace"
+                      rows="1" tabindex="0"
+                      aria-autocomplete="list"></textarea>
           </div>
         </div>
       </div>

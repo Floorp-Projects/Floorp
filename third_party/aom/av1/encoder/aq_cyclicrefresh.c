@@ -39,7 +39,7 @@ struct CYCLIC_REFRESH {
   // RD mult. parameters for segment 1.
   int rdmult;
   // Cyclic refresh map.
-  signed char *map;
+  int8_t *map;
   // Map of the last q a block was coded at.
   uint8_t *last_coded_q_map;
   // Thresholds applied to the projected rate/distortion of the coding block,
@@ -397,6 +397,7 @@ static void cyclic_refresh_update_map(AV1_COMP *const cpi) {
   // Set the segmentation map: cycle through the superblocks, starting at
   // cr->mb_index, and stopping when either block_count blocks have been found
   // to be refreshed, or we have passed through whole frame.
+  if (cr->sb_index >= sbs_in_frame) cr->sb_index = 0;
   assert(cr->sb_index < sbs_in_frame);
   i = cr->sb_index;
   cr->target_num_seg_blocks = 0;

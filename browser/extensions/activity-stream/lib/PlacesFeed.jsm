@@ -100,13 +100,21 @@ class BookmarksObserver extends Observer {
    * @param  {str} title
    * @param  {int} dateAdded
    * @param  {str} guid      The unique id of the bookmark
+   * @param  {str} parent guid
+   * @param  {int} source    Used to distinguish bookmarks made by different
+   *                         actions: sync, bookmarks import, other.
    */
   onItemAdded(...args) {
     const type = args[3];
-    if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK) {
+    const source = args[9];
+    const uri = args[4];
+    // Skips items that are not bookmarks (like folders), about:* pages or
+    // default bookmarks, added when the profile is created.
+    if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
+        source === PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE ||
+        (uri.scheme !== "http" && uri.scheme !== "https")) {
       return;
     }
-    const uri = args[4];
     const bookmarkTitle = args[5];
     const dateAdded = args[6];
     const bookmarkGuid = args[7];

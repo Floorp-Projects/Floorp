@@ -23,7 +23,8 @@
 #define CONFIG_COEFFICIENT_RANGE_CHECKING 1
 #define AV1_DCT_GTEST
 #include "av1/encoder/dct.c"
-#if CONFIG_DAALA_DCT4 || CONFIG_DAALA_DCT8
+#if CONFIG_DAALA_DCT4 || CONFIG_DAALA_DCT8 || CONFIG_DAALA_DCT16 || \
+    CONFIG_DAALA_DCT32
 #include "av1/common/daala_tx.c"
 #endif
 

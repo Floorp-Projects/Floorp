@@ -199,10 +199,14 @@ geckodriver supports a number of [capabilities]:
 Firefox capabilities
 ====================
 
-geckodriver also supports a capability named `moz:firefoxOptions`
-which takes Firefox-specific options.
-This must be a dictionary
-and may contain any of the following fields:
+geckodriver also supports capabilities with the `moz:` prefix, which can
+be used to define Firefox-specific capabilities.
+
+moz:firefoxOptions
+------------------
+
+A dictionary used to define options which control how Firefox gets started
+and run. It may contain any of the following fields:
 
 <table>
  <thead>
@@ -275,6 +279,25 @@ and may contain any of the following fields:
    string, a boolean or an integer.
  </tr>
 </table>
+
+moz:webdriverClick
+------------------
+
+A boolean value to indicate which kind of interactability checks to run
+when performing a click on elements. For Firefoxen prior to version 58.0 some
+legacy code as imported from an older version of [FirefoxDriver] was in use.
+
+With Firefox 58 the interactability checks as required by the [WebDriver]
+specification are enabled by default. This means geckodriver will additionally
+check if an element is obscured by another when clicking.
+
+Because of this change in behaviour, we are aware that some extra errors could
+be returned. In most cases the test in question might have to be updated
+so it's conform with the new checks. But if the problem is located in
+geckodriver, then please raise an issue in the [issue tracker].
+
+To temporarily disable the WebDriver conformant checks use `false` as value
+for this capability.
 
 
 `log` object
@@ -559,6 +582,7 @@ alongside _firefox-bin_.
 [errors]: https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html
 [Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
 [WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[FirefoxDriver]: https://github.com/SeleniumHQ/selenium/wiki/FirefoxDriver
 [Marionette]: http://searchfox.org/mozilla-central/source/testing/marionette/README
 [Firefox CI]: https://treeherder.mozilla.org/
 [mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options

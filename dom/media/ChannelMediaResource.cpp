@@ -31,7 +31,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mReopenOnError(false)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mChannel)
+  , mSuspendAgent(mChannel, mCacheStream)
 {
 }
 
@@ -44,7 +44,7 @@ ChannelMediaResource::ChannelMediaResource(
   , mReopenOnError(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
-  , mSuspendAgent(mChannel)
+  , mSuspendAgent(mChannel, mCacheStream)
 {
 }
 
@@ -165,9 +165,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+  MOZ_DIAGNOSTIC_ASSERT(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  MOZ_DIAGNOSTIC_ASSERT(element);
+
   nsresult status;
   nsresult rv = aRequest->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -522,8 +523,9 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
 
   // Tell the media element that we are fetching data from a channel.
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+  MOZ_DIAGNOSTIC_ASSERT(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
+  MOZ_DIAGNOSTIC_ASSERT(element);
   element->DownloadResumed();
 
   return NS_OK;
@@ -532,6 +534,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
 nsresult
 ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   // Always use a byte range request even if we're reading from the start
@@ -548,11 +551,10 @@ ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Send Accept header for video and audio types only (Bug 489071)
-    NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
     MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+    MOZ_DIAGNOSTIC_ASSERT(owner);
     dom::HTMLMediaElement* element = owner->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+    MOZ_DIAGNOSTIC_ASSERT(element);
     element->SetRequestHeaders(hc);
   } else {
     NS_ASSERTION(aOffset == 0, "Don't know how to seek on this channel type");
@@ -602,8 +604,10 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   // which will recreate the channel. This way, if all of the media data
   // is already in the cache we don't create an unnecessary HTTP channel
   // and perform a useless HTTP transaction.
-  resource->mSuspendAgent.Suspend();
   resource->mCacheStream.InitAsClone(&mCacheStream);
+  // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
+  // until InitAsClone() is done.
+  resource->mSuspendAgent.Suspend();
   resource->mChannelStatistics.Stop();
 
   return resource.forget();
@@ -682,15 +686,9 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
   }
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  if (!owner) {
-    // Shutting down; do nothing.
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
-  if (!element) {
-    // Shutting down; do nothing.
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(element);
 
   if (mChannel && aCloseImmediately && mCacheStream.IsTransportSeekable()) {
     CloseChannel();
@@ -716,15 +714,9 @@ ChannelMediaResource::Resume()
   }
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  if (!owner) {
-    // Shutting down; do nothing.
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
-  if (!element) {
-    // Shutting down; do nothing.
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(element);
 
   if (mSuspendAgent.Resume()) {
     if (mChannel) {
@@ -744,9 +736,10 @@ ChannelMediaResource::Resume()
       if (totalLength < 0 || GetOffset() < totalLength) {
         // There is (or may be) data to read, so start reading it.
         // Need to recreate the channel.
-        Seek(mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset(),
-             false);
+        int64_t offset =
+          mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset();
         mPendingSeekOffset = -1;
+        Seek(offset, false);
         element->DownloadResumed();
       } else {
         // The channel remains dead. Do not notify DownloadResumed() which
@@ -767,15 +760,10 @@ ChannelMediaResource::RecreateChannel()
     (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  if (!owner) {
-    // The decoder is being shut down, so don't bother opening a new channel
-    return NS_ERROR_ABORT;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
-  if (!element) {
-    // The decoder is being shut down, so don't bother opening a new channel
-    return NS_ERROR_ABORT;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(element);
+
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
@@ -1034,7 +1022,11 @@ ChannelSuspendAgent::Suspend()
 {
   MOZ_ASSERT(NS_IsMainThread());
   SuspendInternal();
-  return (++mSuspendCount == 1);
+  if (++mSuspendCount == 1) {
+    mCacheStream.NotifyClientSuspended(true);
+    return true;
+  }
+  return false;
 }
 
 void
@@ -1056,13 +1048,13 @@ ChannelSuspendAgent::Resume()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsSuspended(), "Resume without suspend!");
-  --mSuspendCount;
 
-  if (mSuspendCount == 0) {
+  if (--mSuspendCount == 0) {
     if (mChannel && mIsChannelSuspended) {
       mChannel->Resume();
       mIsChannelSuspended = false;
     }
+    mCacheStream.NotifyClientSuspended(false);
     return true;
   }
   return false;

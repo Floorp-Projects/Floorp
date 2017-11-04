@@ -32,6 +32,7 @@ void av1_highbd_convolve_2d_ssse3(const uint16_t *src, int src_stride,
   int i, j;
   const int fo_vert = filter_params_y->taps / 2 - 1;
   const int fo_horiz = filter_params_x->taps / 2 - 1;
+  const int do_average = conv_params->do_average;
   const uint16_t *const src_ptr = src - fo_vert * src_stride - fo_horiz;
 
   /* Horizontal filter */
@@ -185,9 +186,15 @@ void av1_highbd_convolve_2d_ssse3(const uint16_t *src, int src_stride,
 
         // Accumulate values into the destination buffer
         __m128i *const p = (__m128i *)&dst[i * dst_stride + j];
-        _mm_storeu_si128(p, _mm_add_epi32(_mm_loadu_si128(p), res_lo_round));
-        _mm_storeu_si128(p + 1,
-                         _mm_add_epi32(_mm_loadu_si128(p + 1), res_hi_round));
+        if (do_average) {
+          _mm_storeu_si128(p + 0,
+                           _mm_add_epi32(_mm_loadu_si128(p + 0), res_lo_round));
+          _mm_storeu_si128(p + 1,
+                           _mm_add_epi32(_mm_loadu_si128(p + 1), res_hi_round));
+        } else {
+          _mm_storeu_si128(p + 0, res_lo_round);
+          _mm_storeu_si128(p + 1, res_hi_round);
+        }
       }
     }
   }
@@ -204,6 +211,7 @@ void av1_highbd_convolve_2d_ssse3(const uint16_t *src, int src_stride,
   int im_h = h + filter_params_y->taps - 1;
   int im_stride = MAX_SB_SIZE;
   int i, j;
+  const int do_average = conv_params->do_average;
   const int fo_vert = filter_params_y->taps / 2 - 1;
   const int fo_horiz = filter_params_x->taps / 2 - 1;
   const uint16_t *const src_ptr = src - fo_vert * src_stride - fo_horiz;
@@ -362,9 +370,15 @@ void av1_highbd_convolve_2d_ssse3(const uint16_t *src, int src_stride,
 
         // Accumulate values into the destination buffer
         __m128i *const p = (__m128i *)&dst[i * dst_stride + j];
-        _mm_storeu_si128(p, _mm_add_epi32(_mm_loadu_si128(p), res_lo_round));
-        _mm_storeu_si128(p + 1,
-                         _mm_add_epi32(_mm_loadu_si128(p + 1), res_hi_round));
+        if (do_average) {
+          _mm_storeu_si128(p + 0,
+                           _mm_add_epi32(_mm_loadu_si128(p + 0), res_lo_round));
+          _mm_storeu_si128(p + 1,
+                           _mm_add_epi32(_mm_loadu_si128(p + 1), res_hi_round));
+        } else {
+          _mm_storeu_si128(p + 0, res_lo_round);
+          _mm_storeu_si128(p + 1, res_hi_round);
+        }
       }
     }
   }

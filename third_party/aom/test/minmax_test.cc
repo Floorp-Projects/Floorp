@@ -108,10 +108,10 @@ TEST_P(MinMaxTest, CompareReferenceAndVaryStride) {
       int min_ref, max_ref, min, max;
       reference_minmax(a, a_stride, b, b_stride, &min_ref, &max_ref);
       ASM_REGISTER_STATE_CHECK(mm_func_(a, a_stride, b, b_stride, &min, &max));
-      EXPECT_EQ(max_ref, max) << "when a_stride = " << a_stride
-                              << " and b_stride = " << b_stride;
-      EXPECT_EQ(min_ref, min) << "when a_stride = " << a_stride
-                              << " and b_stride = " << b_stride;
+      EXPECT_EQ(max_ref, max)
+          << "when a_stride = " << a_stride << " and b_stride = " << b_stride;
+      EXPECT_EQ(min_ref, min)
+          << "when a_stride = " << a_stride << " and b_stride = " << b_stride;
     }
   }
 }

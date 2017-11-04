@@ -542,3 +542,27 @@ android.applicationVariants.all { variant ->
         }
     }
 }
+
+android.applicationVariants.all { variant ->
+    def processResourcesTask = tasks["process${variant.name.capitalize()}Resources"]
+    def assembleTask = tasks["assemble${variant.name.capitalize()}"]
+
+    def dumpTask = task("dump${variant.name.capitalize()}RTxt", type: Copy) {
+        from "${project.buildDir}/intermediates/symbols"
+        into "${project.buildDir}/R/symbols-${System.env.AB_CD}"
+        include "**/R.txt"
+
+        includeEmptyDirs = false
+
+        // Force task to run.
+        outputs.upToDateWhen { false }
+
+        rename { filename ->
+            filename.replace 'R.txt', "R-${new Date().format('yyyyMMddHHmmssSSS')}.txt"
+        }
+
+        dependsOn processResourcesTask
+    }
+
+    assembleTask.dependsOn dumpTask
+}
