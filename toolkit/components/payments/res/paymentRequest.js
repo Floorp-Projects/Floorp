@@ -11,7 +11,7 @@
 "use strict";
 
 let PaymentRequest = {
-  request: null,
+  requestId: null,
 
   init() {
     // listen to content
@@ -57,6 +57,7 @@ let PaymentRequest = {
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
+        requestId: this.requestId,
         messageType,
       }, detail),
     });
@@ -64,20 +65,11 @@ let PaymentRequest = {
   },
 
   onChromeToContent({detail}) {
-    let {messageType} = detail;
+    let {messageType, requestId} = detail;
 
     switch (messageType) {
       case "showPaymentRequest": {
-        this.request = detail.request;
-
-        let hostNameEl = document.getElementById("host-name");
-        hostNameEl.textContent = this.request.topLevelPrincipal.URI.displayHost;
-
-        let totalItem = this.request.paymentDetails.totalItem;
-        let totalEl = document.getElementById("total");
-        totalEl.querySelector(".value").textContent = totalItem.amount.value;
-        totalEl.querySelector(".currency").textContent = totalItem.amount.currency;
-        totalEl.querySelector(".label").textContent = totalItem.label;
+        this.requestId = requestId;
         break;
       }
     }

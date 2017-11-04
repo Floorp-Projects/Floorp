@@ -13,47 +13,24 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 let PaymentDialog = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
-  request: null,
 
-  init(requestId, frame) {
-    if (!requestId || typeof(requestId) != "string") {
-      throw new Error("Invalid PaymentRequest ID");
-    }
-    this.request = paymentSrv.getPaymentRequestById(requestId);
-
-    if (!this.request) {
-      throw new Error(`PaymentRequest not found: ${requestId}`);
-    }
-
+  init(frame) {
     this.frame = frame;
     this.mm = frame.frameLoader.messageManager;
-
-    XPCOMUtils.defineLazyGetter(this, "log", () => {
-      let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
-      return new ConsoleAPI({
-        maxLogLevelPref: "dom.payments.loglevel",
-        prefix: `paymentDialog (${requestId})`,
-      });
-    });
-
-    this.log.debug("init:", this.request);
     this.mm.addMessageListener("paymentContentToChrome", this);
     this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
-    this.frame.src = "resource://payments/paymentRequest.xhtml";
   },
 
-  createShowResponse({acceptStatus, methodName = "", data = null,
+  createShowResponse({requestId, acceptStatus, methodName = "", data = null,
                       payerName = "", payerEmail = "", payerPhone = ""}) {
     let showResponse = this.createComponentInstance(Ci.nsIPaymentShowActionResponse);
     let methodData = this.createComponentInstance(Ci.nsIGeneralResponseData);
 
-    showResponse.init(this.request.requestId,
+    showResponse.init(requestId,
                       acceptStatus,
                       methodName,
                       methodData,
@@ -85,8 +62,9 @@ let PaymentDialog = {
     return component.createInstance(componentInterface);
   },
 
-  onPaymentCancel() {
+  onPaymentCancel(requestId) {
     const showResponse = this.createShowResponse({
+      requestId,
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
     });
     paymentSrv.respondPayment(showResponse);
@@ -94,30 +72,18 @@ let PaymentDialog = {
   },
 
   receiveMessage({data}) {
-    let {messageType} = data;
+    let {messageType, requestId} = data;
 
     switch (messageType) {
       case "initializeRequest": {
-        let requestSerialized = JSON.parse(JSON.stringify(this.request));
-
-        // Manually serialize the nsIPrincipal.
-        let displayHost = this.request.topLevelPrincipal.URI.displayHost;
-        requestSerialized.topLevelPrincipal = {
-          URI: {
-            displayHost,
-          },
-        };
-
         this.mm.sendAsyncMessage("paymentChromeToContent", {
           messageType: "showPaymentRequest",
-          data: {
-            request: requestSerialized,
-          },
+          data: window.arguments[0],
         });
         break;
       }
       case "paymentCancel": {
-        this.onPaymentCancel();
+        this.onPaymentCancel(requestId);
         break;
       }
     }
@@ -125,5 +91,4 @@ let PaymentDialog = {
 };
 
 let frame = document.getElementById("paymentRequestFrame");
-let requestId = (new URLSearchParams(window.location.search)).get("requestId");
-PaymentDialog.init(requestId, frame);
+PaymentDialog.init(frame);
