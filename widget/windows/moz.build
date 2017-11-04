@@ -30,6 +30,7 @@ EXPORTS.mozilla.widget += [
     'PDFiumProcessParent.h',
     'PDFViaEMFPrintHelper.h',
     'WinCompositorWidget.h',
+    'WindowsEMF.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
     'WinNativeEventData.h',

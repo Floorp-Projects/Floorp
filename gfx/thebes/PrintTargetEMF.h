@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_PRINTTARGETEMF_H
 
 #include "PrintTargetSkPDF.h"
+#include "mozilla/ipc/Shmem.h"
 
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
@@ -52,6 +53,8 @@ public:
 
   already_AddRefed<DrawTarget>
   GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
+
+  void ConvertToEMFDone(const nsresult& aResult, mozilla::ipc::Shmem&& aEMF);
 
 private:
   PrintTargetEMF(HDC aDC, const IntSize& aSize);
