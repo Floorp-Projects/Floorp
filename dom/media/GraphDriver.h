@@ -146,9 +146,6 @@ public:
   void SetNextDriver(GraphDriver* aNextDriver);
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
-  /* Return whether we have been scheduled to start. */
-  bool Scheduled();
-
   /**
    * If we are running a real time graph, get the current time stamp to schedule
    * video frames. This has to be reimplemented by real time drivers.
@@ -252,9 +249,6 @@ protected:
   // driver at the end of this iteration.
   // This must be accessed using the {Set,Get}NextDriver methods.
   RefPtr<GraphDriver> mNextDriver;
-  // This is initially false, but set to true as soon the driver has been
-  // scheduled to start through GraphDriver::Start().
-  bool mScheduled;
   virtual ~GraphDriver()
   { }
 };
@@ -558,6 +552,14 @@ private:
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
   Atomic<bool> mMicrophoneActive;
+  /* Indication of whether a fallback SystemClockDriver should be started if
+   * StateCallback() receives an error.  No mutex need be held during access.
+   * The transition to true happens before cubeb_stream_start() is called.
+   * After transitioning to false on the last DataCallback(), the stream is
+   * not accessed from another thread until the graph thread either signals
+   * main thread cleanup or dispatches an event to switch to another
+   * driver. */
+  bool mShouldFallbackIfError;
   /* True if this driver was created from a driver created because of a previous
    * AudioCallbackDriver failure. */
   bool mFromFallback;
