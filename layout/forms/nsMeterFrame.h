@@ -26,7 +26,7 @@ public:
   explicit nsMeterFrame(nsStyleContext* aContext);
   virtual ~nsMeterFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   virtual void Reflow(nsPresContext*           aCX,
                       ReflowOutput&     aDesiredSize,
