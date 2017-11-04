@@ -6,24 +6,28 @@ use std::result::Result as StdResult;
 use std::ffi::{OsStr, OsString};
 use std::mem;
 
-// Third Party
-use vec_map::{self, VecMap};
-
 // Internal
 use Arg;
-use args::{ArgSettings, Base, Switched, AnyArg, DispOrder};
+use args::{AnyArg, ArgSettings, Base, DispOrder, Switched};
+use map::{self, VecMap};
 
 #[derive(Default, Clone, Debug)]
 #[doc(hidden)]
 pub struct FlagBuilder<'n, 'e>
-    where 'n: 'e
+where
+    'n: 'e,
 {
     pub b: Base<'n, 'e>,
     pub s: Switched<'e>,
 }
 
 impl<'n, 'e> FlagBuilder<'n, 'e> {
-    pub fn new(name: &'n str) -> Self { FlagBuilder { b: Base::new(name), ..Default::default() } }
+    pub fn new(name: &'n str) -> Self {
+        FlagBuilder {
+            b: Base::new(name),
+            ..Default::default()
+        }
+    }
 }
 
 impl<'a, 'b, 'z> From<&'z Arg<'a, 'b>> for FlagBuilder<'a, 'b> {
@@ -47,9 +51,9 @@ impl<'a, 'b> From<Arg<'a, 'b>> for FlagBuilder<'a, 'b> {
 impl<'n, 'e> Display for FlagBuilder<'n, 'e> {
     fn fmt(&self, f: &mut Formatter) -> Result {
         if let Some(l) = self.s.long {
-            try!(write!(f, "--{}", l));
+            write!(f, "--{}", l)?;
         } else {
-            try!(write!(f, "-{}", self.s.short.unwrap()));
+            write!(f, "-{}", self.s.short.unwrap())?;
         }
 
         Ok(())
@@ -82,13 +86,15 @@ impl<'n, 'e> AnyArg<'n, 'e> for FlagBuilder<'n, 'e> {
     fn long_help(&self) -> Option<&'e str> { self.b.long_help }
     fn val_terminator(&self) -> Option<&'e str> { None }
     fn default_val(&self) -> Option<&'e OsStr> { None }
-    fn default_vals_ifs(&self) -> Option<vec_map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
+    fn default_vals_ifs(&self) -> Option<map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
         None
     }
+    fn env<'s>(&'s self) -> Option<(&'n OsStr, Option<&'s OsString>)> { None }
     fn longest_filter(&self) -> bool { self.s.long.is_some() }
     fn aliases(&self) -> Option<Vec<&'e str>> {
         if let Some(ref aliases) = self.s.aliases {
-            let vis_aliases: Vec<_> = aliases.iter()
+            let vis_aliases: Vec<_> = aliases
+                .iter()
                 .filter_map(|&(n, v)| if v { Some(n) } else { None })
                 .collect();
             if vis_aliases.is_empty() {
@@ -107,9 +113,7 @@ impl<'n, 'e> DispOrder for FlagBuilder<'n, 'e> {
 }
 
 impl<'n, 'e> PartialEq for FlagBuilder<'n, 'e> {
-    fn eq(&self, other: &FlagBuilder<'n, 'e>) -> bool {
-        self.b == other.b
-    }
+    fn eq(&self, other: &FlagBuilder<'n, 'e>) -> bool { self.b == other.b }
 }
 
 #[cfg(test)]
@@ -144,8 +148,12 @@ mod test {
     fn flagbuilder_display_multiple_aliases() {
         let mut f = FlagBuilder::new("flg");
         f.s.short = Some('f');
-        f.s.aliases =
-            Some(vec![("alias_not_visible", false), ("f2", true), ("f3", true), ("f4", true)]);
+        f.s.aliases = Some(vec![
+            ("alias_not_visible", false),
+            ("f2", true),
+            ("f3", true),
+            ("f4", true),
+        ]);
         assert_eq!(&*format!("{}", f), "-f");
     }
 }

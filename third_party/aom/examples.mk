@@ -199,6 +199,26 @@ set_maps.SRCS                      += video_writer.h video_writer.c
 set_maps.SRCS                      += aom_ports/msvc.h
 set_maps.GUID                       = ECB2D24D-98B8-4015-A465-A4AF3DCC145F
 set_maps.DESCRIPTION                = Set active and ROI maps
+ifeq ($(CONFIG_EXT_TILE),yes)
+EXAMPLES-$(CONFIG_AV1_ENCODER)     += lightfield_encoder.c
+lightfield_encoder.SRCS            += ivfenc.h ivfenc.c
+lightfield_encoder.SRCS            += tools_common.h tools_common.c
+lightfield_encoder.SRCS            += video_common.h
+lightfield_encoder.SRCS            += video_writer.h video_writer.c
+lightfield_encoder.SRCS            += aom_ports/msvc.h
+lightfield_encoder.GUID             = 73494FA6-4AF9-4763-8FBB-265C92402FD8
+lightfield_encoder.DESCRIPTION      = Lightfield encoder loop
+EXAMPLES-$(CONFIG_AV1_DECODER)     += lightfield_decoder.c
+lightfield_decoder.SRCS            += ivfdec.h ivfdec.c
+lightfield_decoder.SRCS            += tools_common.h tools_common.c
+lightfield_decoder.SRCS            += video_common.h
+lightfield_decoder.SRCS            += video_reader.h video_reader.c
+lightfield_decoder.SRCS            += aom_ports/mem_ops.h
+lightfield_decoder.SRCS            += aom_ports/mem_ops_aligned.h
+lightfield_decoder.SRCS            += aom_ports/msvc.h
+lightfield_decoder.GUID             = D3BBF1E9-2427-450D-BBFF-B2843C1D44CC
+lightfield_decoder.DESCRIPTION      = lightfield decoder loop
+endif
 ifeq ($(CONFIG_AV1_ENCODER),yes)
 ifeq ($(CONFIG_AV1_DECODER),yes)
 EXAMPLES-$(CONFIG_AV1_ENCODER)     += aom_cx_set_ref.c

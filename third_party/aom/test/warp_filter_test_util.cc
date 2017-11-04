@@ -21,9 +21,9 @@ namespace AV1WarpFilter {
 ::testing::internal::ParamGenerator<WarpTestParam> BuildParams(
     warp_affine_func filter) {
   const WarpTestParam params[] = {
-    make_tuple(4, 4, 50000, filter),  make_tuple(8, 8, 50000, filter),
-    make_tuple(64, 64, 1000, filter), make_tuple(4, 16, 20000, filter),
-    make_tuple(32, 8, 10000, filter),
+    make_tuple(4, 4, 100, filter),   make_tuple(8, 8, 100, filter),
+    make_tuple(64, 64, 100, filter), make_tuple(4, 16, 100, filter),
+    make_tuple(32, 8, 100, filter),
   };
   return ::testing::ValuesIn(params);
 }
@@ -113,34 +113,76 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
   ConvolveParams conv_params = get_conv_params(0, 0, 0);
-
-  // Generate an input block and extend its borders horizontally
-  for (i = 0; i < h; ++i)
-    for (j = 0; j < w; ++j) input[i * stride + j] = rnd_.Rand8();
-  for (i = 0; i < h; ++i) {
-    memset(input + i * stride - border, input[i * stride], border);
-    memset(input + i * stride + w, input[i * stride + (w - 1)], border);
-  }
+#if CONFIG_CONVOLVE_ROUND
+  int32_t *dsta = new int32_t[output_n];
+  int32_t *dstb = new int32_t[output_n];
+#endif
 
   for (i = 0; i < num_iters; ++i) {
+    // Generate an input block and extend its borders horizontally
+    for (int r = 0; r < h; ++r)
+      for (int c = 0; c < w; ++c) input[r * stride + c] = rnd_.Rand8();
+    for (int r = 0; r < h; ++r) {
+      memset(input + r * stride - border, input[r * stride], border);
+      memset(input + r * stride + w, input[r * stride + (w - 1)], border);
+    }
+#if CONFIG_CONVOLVE_ROUND
+    const int use_no_round = rnd_.Rand8() & 1;
+#endif
     for (sub_x = 0; sub_x < 2; ++sub_x)
       for (sub_y = 0; sub_y < 2; ++sub_y) {
         generate_model(mat, &alpha, &beta, &gamma, &delta);
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          // Prepare two copies of the destination
+          for (j = 0; j < out_w * out_h; ++j) {
+            int32_t v = rnd_.Rand16();
+            dsta[j] = v;
+            dstb[j] = v;
+          }
+          conv_params = get_conv_params_no_round(0, 0, 0, dsta, out_w);
+        } else {
+          conv_params = get_conv_params(0, 0, 0);
+        }
+#endif
         av1_warp_affine_c(mat, input, w, h, stride, output, 32, 32, out_w,
                           out_h, out_w, sub_x, sub_y, &conv_params, alpha, beta,
                           gamma, delta);
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          conv_params = get_conv_params_no_round(0, 0, 0, dstb, out_w);
+        }
+#endif
         test_impl(mat, input, w, h, stride, output2, 32, 32, out_w, out_h,
                   out_w, sub_x, sub_y, &conv_params, alpha, beta, gamma, delta);
 
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          for (j = 0; j < out_w * out_h; ++j)
+            ASSERT_EQ(dsta[j], dstb[j])
+                << "Pixel mismatch at index " << j << " = (" << (j % out_w)
+                << ", " << (j / out_w) << ") on iteration " << i;
+        } else {
+          for (j = 0; j < out_w * out_h; ++j)
+            ASSERT_EQ(output[j], output2[j])
+                << "Pixel mismatch at index " << j << " = (" << (j % out_w)
+                << ", " << (j / out_w) << ") on iteration " << i;
+        }
+#else
         for (j = 0; j < out_w * out_h; ++j)
           ASSERT_EQ(output[j], output2[j])
               << "Pixel mismatch at index " << j << " = (" << (j % out_w)
               << ", " << (j / out_w) << ") on iteration " << i;
+#endif
       }
   }
   delete[] input_;
   delete[] output;
   delete[] output2;
+#if CONFIG_CONVOLVE_ROUND
+  delete[] dsta;
+  delete[] dstb;
+#endif
 }
 }  // namespace AV1WarpFilter
 
@@ -149,14 +191,14 @@ namespace AV1HighbdWarpFilter {
 
 ::testing::internal::ParamGenerator<HighbdWarpTestParam> GetDefaultParams() {
   const HighbdWarpTestParam defaultParams[] = {
-    make_tuple(4, 4, 50000, 8),   make_tuple(8, 8, 50000, 8),
-    make_tuple(64, 64, 1000, 8),  make_tuple(4, 16, 20000, 8),
-    make_tuple(32, 8, 10000, 8),  make_tuple(4, 4, 50000, 10),
-    make_tuple(8, 8, 50000, 10),  make_tuple(64, 64, 1000, 10),
-    make_tuple(4, 16, 20000, 10), make_tuple(32, 8, 10000, 10),
-    make_tuple(4, 4, 50000, 12),  make_tuple(8, 8, 50000, 12),
-    make_tuple(64, 64, 1000, 12), make_tuple(4, 16, 20000, 12),
-    make_tuple(32, 8, 10000, 12),
+    make_tuple(4, 4, 100, 8),    make_tuple(8, 8, 100, 8),
+    make_tuple(64, 64, 100, 8),  make_tuple(4, 16, 100, 8),
+    make_tuple(32, 8, 100, 8),   make_tuple(4, 4, 100, 10),
+    make_tuple(8, 8, 100, 10),   make_tuple(64, 64, 100, 10),
+    make_tuple(4, 16, 100, 10),  make_tuple(32, 8, 100, 10),
+    make_tuple(4, 4, 100, 12),   make_tuple(8, 8, 100, 12),
+    make_tuple(64, 64, 100, 12), make_tuple(4, 16, 100, 12),
+    make_tuple(32, 8, 100, 12),
   };
   return ::testing::ValuesIn(defaultParams);
 }
@@ -250,39 +292,82 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
   ConvolveParams conv_params = get_conv_params(0, 0, 0);
-
-  // Generate an input block and extend its borders horizontally
-  for (i = 0; i < h; ++i)
-    for (j = 0; j < w; ++j) input[i * stride + j] = rnd_.Rand16() & mask;
-  for (i = 0; i < h; ++i) {
-    for (j = 0; j < border; ++j) {
-      input[i * stride - border + j] = input[i * stride];
-      input[i * stride + w + j] = input[i * stride + (w - 1)];
-    }
-  }
+#if CONFIG_CONVOLVE_ROUND
+  int32_t *dsta = new int32_t[output_n];
+  int32_t *dstb = new int32_t[output_n];
+#endif
 
   for (i = 0; i < num_iters; ++i) {
+    // Generate an input block and extend its borders horizontally
+    for (int r = 0; r < h; ++r)
+      for (int c = 0; c < w; ++c) input[r * stride + c] = rnd_.Rand16() & mask;
+    for (int r = 0; r < h; ++r) {
+      for (int c = 0; c < border; ++c) {
+        input[r * stride - border + c] = input[r * stride];
+        input[r * stride + w + c] = input[r * stride + (w - 1)];
+      }
+    }
+#if CONFIG_CONVOLVE_ROUND
+    const int use_no_round = rnd_.Rand8() & 1;
+#endif
     for (sub_x = 0; sub_x < 2; ++sub_x)
       for (sub_y = 0; sub_y < 2; ++sub_y) {
         generate_model(mat, &alpha, &beta, &gamma, &delta);
-
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          // Prepare two copies of the destination
+          for (j = 0; j < out_w * out_h; ++j) {
+            int32_t v = rnd_.Rand16();
+            dsta[j] = v;
+            dstb[j] = v;
+          }
+          conv_params = get_conv_params_no_round(0, 0, 0, dsta, out_w);
+        } else {
+          conv_params = get_conv_params(0, 0, 0);
+        }
+#endif
         av1_highbd_warp_affine_c(mat, input, w, h, stride, output, 32, 32,
                                  out_w, out_h, out_w, sub_x, sub_y, bd,
                                  &conv_params, alpha, beta, gamma, delta);
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          // TODO(angiebird): Change this to test_impl once we have SIMD
+          // implementation
+          conv_params = get_conv_params_no_round(0, 0, 0, dstb, out_w);
+        }
+#endif
         test_impl(mat, input, w, h, stride, output2, 32, 32, out_w, out_h,
                   out_w, sub_x, sub_y, bd, &conv_params, alpha, beta, gamma,
                   delta);
 
+#if CONFIG_CONVOLVE_ROUND
+        if (use_no_round) {
+          for (j = 0; j < out_w * out_h; ++j)
+            ASSERT_EQ(dsta[j], dstb[j])
+                << "Pixel mismatch at index " << j << " = (" << (j % out_w)
+                << ", " << (j / out_w) << ") on iteration " << i;
+        } else {
+          for (j = 0; j < out_w * out_h; ++j)
+            ASSERT_EQ(output[j], output2[j])
+                << "Pixel mismatch at index " << j << " = (" << (j % out_w)
+                << ", " << (j / out_w) << ") on iteration " << i;
+        }
+#else
         for (j = 0; j < out_w * out_h; ++j)
           ASSERT_EQ(output[j], output2[j])
               << "Pixel mismatch at index " << j << " = (" << (j % out_w)
               << ", " << (j / out_w) << ") on iteration " << i;
+#endif
       }
   }
 
   delete[] input_;
   delete[] output;
   delete[] output2;
+#if CONFIG_CONVOLVE_ROUND
+  delete[] dsta;
+  delete[] dstb;
+#endif
 }
 }  // namespace AV1HighbdWarpFilter
 #endif  // CONFIG_HIGHBITDEPTH

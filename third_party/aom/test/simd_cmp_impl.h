@@ -371,10 +371,10 @@ typedef struct {
   fptr simd;
 } mapping;
 
-#define MAP(name)                                                      \
-  {                                                                    \
-    #name, reinterpret_cast < fptr > (c_##name),                       \
-                                      reinterpret_cast < fptr > (name) \
+#define MAP(name)                                                              \
+  {                                                                            \
+    #name,                                                                     \
+        reinterpret_cast < fptr > (c_##name), reinterpret_cast < fptr > (name) \
   }
 
 const mapping m[] = { MAP(v64_sad_u8),

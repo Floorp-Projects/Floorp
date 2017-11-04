@@ -40,6 +40,10 @@ LIBAOM_TEST_DATA-$(CONFIG_AV1_ENCODER) += tacomasmallcameramovement_640_480_30.y
 LIBAOM_TEST_DATA-$(CONFIG_AV1_ENCODER) += thaloundeskmtg_640_480_30.yuv
 endif  # CONFIG_ENCODE_PERF_TESTS
 
+ifeq ($(CONFIG_EXT_TILE),yes)
+LIBAOM_TEST_DATA-$(CONFIG_AV1_ENCODER) += vase10x10.yuv
+endif  # CONFIG_EXT_TILE
+
 # sort and remove duplicates
 LIBAOM_TEST_DATA-yes := $(sort $(LIBAOM_TEST_DATA-yes))
 

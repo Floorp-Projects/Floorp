@@ -18,6 +18,7 @@
 #include "./av1_rtcd.h"
 #include "./aom_dsp_rtcd.h"
 #include "test/acm_random.h"
+#include "test/av1_txfm_test.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
@@ -29,19 +30,6 @@
 using libaom_test::ACMRandom;
 
 namespace {
-const double kInvSqrt2 = 0.707106781186547524400844362104;
-
-void reference_idct_1d(const double *in, double *out, int size) {
-  for (int n = 0; n < size; ++n) {
-    out[n] = 0;
-    for (int k = 0; k < size; ++k) {
-      if (k == 0)
-        out[n] += kInvSqrt2 * in[k] * cos(PI * (2 * n + 1) * k / (2 * size));
-      else
-        out[n] += in[k] * cos(PI * (2 * n + 1) * k / (2 * size));
-    }
-  }
-}
 
 typedef void (*IdctFunc)(const tran_low_t *in, tran_low_t *out);
 
@@ -65,7 +53,7 @@ class TransTestBase {
       }
 
       inv_txfm_(input, output);
-      reference_idct_1d(ref_input, ref_output, txfm_size_);
+      libaom_test::reference_idct_1d(ref_input, ref_output, txfm_size_);
 
       for (int ni = 0; ni < txfm_size_; ++ni) {
         EXPECT_LE(

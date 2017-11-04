@@ -668,7 +668,12 @@ impl RenderApi {
         );
     }
 
-    /// Does a hit test as the given point
+    /// Does a hit test on display items in the specified document, at the given
+    /// point. If a pipeline_id is specified, it is used to further restrict the
+    /// hit results so that only items inside that pipeline are matched. If the
+    /// HitTestFlags argument contains the FIND_ALL flag, then the vector of hit
+    /// results will contain all display items that match, ordered from front
+    /// to back.
     pub fn hit_test(&self,
                     document_id: DocumentId,
                     pipeline_id: Option<PipelineId>,

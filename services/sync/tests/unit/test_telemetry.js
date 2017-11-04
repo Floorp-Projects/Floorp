@@ -616,7 +616,7 @@ add_task(async function test_events() {
 
   await SyncTestingInfrastructure(server);
   try {
-    let serverTime = AsyncResource.serverTime;
+    let serverTime = Resource.serverTime;
     Service.recordTelemetryEvent("object", "method", "value", { foo: "bar" });
     let ping = await wait_for_ping(() => Service.sync(), true, true);
     equal(ping.events.length, 1);

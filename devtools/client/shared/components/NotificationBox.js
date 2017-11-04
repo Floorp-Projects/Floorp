@@ -134,7 +134,7 @@ class NotificationBox extends Component {
       image: image,
       priority: priority,
       type: type,
-      buttons: buttons,
+      buttons: Array.isArray(buttons) ? buttons : [],
       eventCallback: eventCallback,
     });
 
@@ -152,7 +152,9 @@ class NotificationBox extends Component {
    * Remove specific notification from the list.
    */
   removeNotification(notification) {
-    this.close(this.state.notifications.get(notification.value));
+    if (notification) {
+      this.close(this.state.notifications.get(notification.value));
+    }
   }
 
   /**
@@ -229,6 +231,7 @@ class NotificationBox extends Component {
       div({
         key: notification.value,
         className: "notification",
+        "data-key": notification.value,
         "data-type": notification.type},
         div({className: "notificationInner"},
           div({className: "details"},

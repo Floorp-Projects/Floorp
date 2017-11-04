@@ -38,6 +38,10 @@
 #if CONFIG_CFL
 #include "av1/common/cfl.h"
 #endif
+#if CONFIG_HASH_ME
+// TODO(youzhou@microsoft.com): Encoder only. Move it out of common
+#include "av1/encoder/hash_motion.h"
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,7 +64,13 @@ extern "C" {
 #define FRAME_ID_NUMBERS_PRESENT_FLAG 1
 #define FRAME_ID_LENGTH_MINUS7 8         // Allows frame id up to 2^15-1
 #define DELTA_FRAME_ID_LENGTH_MINUS2 12  // Allows frame id deltas up to 2^14-1
-#endif
+#endif                                   // CONFIG_REFERENCE_BUFFER
+
+#if CONFIG_NO_FRAME_CONTEXT_SIGNALING
+#define FRAME_CONTEXTS (FRAME_BUFFERS + 1)
+// Extra frame context which is always kept at default values
+#define FRAME_CONTEXT_DEFAULTS (FRAME_CONTEXTS - 1)
+#else
 
 #if CONFIG_EXT_REFS
 #define FRAME_CONTEXTS_LOG2 3
@@ -69,6 +79,7 @@ extern "C" {
 #endif
 
 #define FRAME_CONTEXTS (1 << FRAME_CONTEXTS_LOG2)
+#endif  // CONFIG_NO_FRAME_CONTEXT_SIGNALING
 
 #define NUM_PING_PONG_BUFFERS 2
 
@@ -79,11 +90,13 @@ typedef enum {
   REFERENCE_MODES = 3,
 } REFERENCE_MODE;
 
+#if !CONFIG_NO_FRAME_CONTEXT_SIGNALING
 typedef enum {
   RESET_FRAME_CONTEXT_NONE = 0,
   RESET_FRAME_CONTEXT_CURRENT = 1,
   RESET_FRAME_CONTEXT_ALL = 2,
 } RESET_FRAME_CONTEXT_MODE;
+#endif
 
 typedef enum {
   /**
@@ -98,6 +111,14 @@ typedef enum {
   REFRESH_FRAME_CONTEXT_BACKWARD,
 } REFRESH_FRAME_CONTEXT_MODE;
 
+#if CONFIG_MFMV
+#define MFMV_STACK_SIZE INTER_REFS_PER_FRAME
+
+typedef struct {
+  int_mv mfmv[INTER_REFS_PER_FRAME][MFMV_STACK_SIZE];
+} TPL_MV_REF;
+#endif
+
 typedef struct {
   int_mv mv[2];
   int_mv pred_mv[2];
@@ -106,14 +127,38 @@ typedef struct {
 
 typedef struct {
   int ref_count;
+
+#if CONFIG_FRAME_MARKER
+  int cur_frame_offset;
+  int lst_frame_offset;
+  int alt_frame_offset;
+  int gld_frame_offset;
+#if CONFIG_EXT_REFS
+  int lst2_frame_offset;
+  int lst3_frame_offset;
+  int bwd_frame_offset;
+  int alt2_frame_offset;
+#endif
+#endif  // CONFIG_FRAME_MARKER
+
+#if CONFIG_MFMV
+  TPL_MV_REF *tpl_mvs;
+#endif
   MV_REF *mvs;
   int mi_rows;
   int mi_cols;
+  // Width and height give the size of the buffer (before any upscaling, unlike
+  // the sizes that can be derived from the buf structure)
+  int width;
+  int height;
 #if CONFIG_GLOBAL_MOTION
   WarpedMotionParams global_motion[TOTAL_REFS_PER_FRAME];
 #endif  // CONFIG_GLOBAL_MOTION
   aom_codec_frame_buffer_t raw_frame_buffer;
   YV12_BUFFER_CONFIG buf;
+#if CONFIG_HASH_ME
+  hash_table hash_table;
+#endif
 #if CONFIG_TEMPMV_SIGNALING
   uint8_t intra_only;
 #endif
@@ -150,13 +195,29 @@ typedef struct BufferPool {
   InternalFrameBufferList int_frame_buffers;
 } BufferPool;
 
+#if CONFIG_LV_MAP
+typedef struct {
+  int base_ctx_table[2 /*row*/][2 /*col*/][2 /*sig_map*/]
+                    [BASE_CONTEXT_POSITION_NUM + 1];
+} LV_MAP_CTX_TABLE;
+typedef int BASE_CTX_TABLE[2 /*col*/][2 /*sig_map*/]
+                          [BASE_CONTEXT_POSITION_NUM + 1];
+#endif
+
+#if CONFIG_REFERENCE_BUFFER
+/* Initial version of sequence header structure */
+typedef struct SequenceHeader {
+  int frame_id_numbers_present_flag;
+  int frame_id_length_minus7;
+  int delta_frame_id_length_minus2;
+} SequenceHeader;
+#endif  // CONFIG_REFERENCE_BUFFER
+
 typedef struct AV1Common {
   struct aom_internal_error_info error;
   aom_color_space_t color_space;
-#if CONFIG_COLORSPACE_HEADERS
   aom_transfer_function_t transfer_function;
   aom_chroma_sample_position_t chroma_sample_position;
-#endif
   int color_range;
   int width;
   int height;
@@ -211,21 +272,24 @@ typedef struct AV1Common {
   uint8_t last_intra_only;
 
   int allow_high_precision_mv;
+#if CONFIG_AMVR
+  int seq_mv_precision_level;        // 0 the default in AOM, 1 only integer, 2
+                                     // adaptive
+  int cur_frame_mv_precision_level;  // 0 the default in AOM, 1 only integer
+#endif
 
-#if CONFIG_PALETTE || CONFIG_INTRABC
   int allow_screen_content_tools;
-#endif  // CONFIG_PALETTE || CONFIG_INTRABC
-#if CONFIG_EXT_INTER
 #if CONFIG_INTERINTRA
   int allow_interintra_compound;
 #endif  // CONFIG_INTERINTRA
 #if CONFIG_WEDGE || CONFIG_COMPOUND_SEGMENT
   int allow_masked_compound;
 #endif  // CONFIG_WEDGE || CONFIG_COMPOUND_SEGMENT
-#endif  // CONFIG_EXT_INTER
 
+#if !CONFIG_NO_FRAME_CONTEXT_SIGNALING
   // Flag signaling which frame contexts should be reset to default values.
   RESET_FRAME_CONTEXT_MODE reset_frame_context;
+#endif
 
   // MBs, mb_rows/cols is in 16-pixel units; mi_rows/cols is in
   // MODE_INFO (8-pixel) units.
@@ -304,9 +368,8 @@ typedef struct AV1Common {
 
   loop_filter_info_n lf_info;
 #if CONFIG_FRAME_SUPERRES
-  // The numerator of the superres scale; the denominator is fixed.
-  uint8_t superres_scale_numerator;
-  uint8_t superres_kf_scale_numerator;
+  // The denominator of the superres scale; the numerator is fixed.
+  uint8_t superres_scale_denominator;
   int superres_upscaled_width;
   int superres_upscaled_height;
 #endif  // CONFIG_FRAME_SUPERRES
@@ -343,8 +406,14 @@ typedef struct AV1Common {
   FRAME_CONTEXT *fc;              /* this frame entropy */
   FRAME_CONTEXT *frame_contexts;  // FRAME_CONTEXTS
   FRAME_CONTEXT *pre_fc;          // Context referenced in this frame
+#if !CONFIG_NO_FRAME_CONTEXT_SIGNALING
   unsigned int frame_context_idx; /* Context to use/update */
+#endif
   FRAME_COUNTS counts;
+
+#if CONFIG_FRAME_MARKER
+  unsigned int frame_offset;
+#endif
 
   unsigned int current_video_frame;
   BITSTREAM_PROFILE profile;
@@ -355,9 +424,30 @@ typedef struct AV1Common {
 
   int error_resilient_mode;
 
-  int log2_tile_cols, log2_tile_rows;  // Used in non-large_scale_tile_coding.
   int tile_cols, tile_rows;
-  int tile_width, tile_height;  // In MI units
+  int last_tile_cols, last_tile_rows;
+
+#if CONFIG_MAX_TILE
+  int min_log2_tile_cols;
+  int max_log2_tile_cols;
+  int max_log2_tile_rows;
+  int min_log2_tile_rows;
+  int min_log2_tiles;
+  int max_tile_width_sb;
+  int max_tile_height_sb;
+  int uniform_tile_spacing_flag;
+  int log2_tile_cols;                        // only valid for uniform tiles
+  int log2_tile_rows;                        // only valid for uniform tiles
+  int tile_col_start_sb[MAX_TILE_COLS + 1];  // valid for 0 <= i <= tile_cols
+  int tile_row_start_sb[MAX_TILE_ROWS + 1];  // valid for 0 <= i <= tile_rows
+#if CONFIG_DEPENDENT_HORZTILES
+  int tile_row_independent[MAX_TILE_ROWS];  // valid for 0 <= i <  tile_rows
+#endif
+#else
+  int log2_tile_cols, log2_tile_rows;  // Used in non-large_scale_tile_coding.
+  int tile_width, tile_height;         // In MI units
+#endif  // CONFIG_MAX_TILE
+
 #if CONFIG_EXT_TILE
   unsigned int large_scale_tile;
   unsigned int single_tile_decoding;
@@ -407,15 +497,14 @@ typedef struct AV1Common {
   int mib_size;        // Size of the superblock in units of MI blocks
   int mib_size_log2;   // Log 2 of above.
 #if CONFIG_CDEF
-  int cdef_dering_damping;
-  int cdef_clpf_damping;
+  int cdef_pri_damping;
+  int cdef_sec_damping;
   int nb_cdef_strengths;
   int cdef_strengths[CDEF_MAX_STRENGTHS];
   int cdef_uv_strengths[CDEF_MAX_STRENGTHS];
   int cdef_bits;
 #endif
 
-#if CONFIG_DELTA_Q
   int delta_q_present_flag;
   // Resolution of delta quant
   int delta_q_res;
@@ -423,29 +512,39 @@ typedef struct AV1Common {
   int delta_lf_present_flag;
   // Resolution of delta lf level
   int delta_lf_res;
-#endif
+#if CONFIG_LOOPFILTER_LEVEL
+  // This is a flag for number of deltas of loop filter level
+  // 0: use 1 delta, for y_vertical, y_horizontal, u, and v
+  // 1: use separate deltas for each filter level
+  int delta_lf_multi;
+#endif  // CONFIG_LOOPFILTER_LEVEL
 #endif
   int num_tg;
 #if CONFIG_REFERENCE_BUFFER
+  SequenceHeader seq_params;
   int current_frame_id;
   int ref_frame_id[REF_FRAMES];
   int valid_for_referencing[REF_FRAMES];
   int refresh_mask;
   int invalid_delta_frame_id_minus1;
-#endif
+#endif  // CONFIG_REFERENCE_BUFFER
 #if CONFIG_ANS && ANS_MAX_SYMBOLS
   int ans_window_size_log2;
 #endif
-} AV1_COMMON;
-
-#if CONFIG_REFERENCE_BUFFER
-/* Initial version of sequence header structure */
-typedef struct SequenceHeader {
-  int frame_id_numbers_present_flag;
-  int frame_id_length_minus7;
-  int delta_frame_id_length_minus2;
-} SequenceHeader;
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+  NCOBMC_KERNELS ncobmc_kernels[ADAPT_OVERLAP_BLOCKS][ALL_NCOBMC_MODES];
+  uint8_t *ncobmcaw_buf[4];
 #endif
+#if CONFIG_LV_MAP
+  LV_MAP_CTX_TABLE coeff_ctx_table;
+#endif
+#if CONFIG_LPF_SB
+  int final_lpf_encode;
+#endif
+#if CONFIG_ADAPT_SCAN
+  int use_adapt_scan;
+#endif
+} AV1_COMMON;
 
 // TODO(hkuang): Don't need to lock the whole pool after implementing atomic
 // frame reference count.
@@ -507,15 +606,57 @@ static INLINE void ref_cnt_fb(RefCntBuffer *bufs, int *idx, int new_idx) {
   bufs[new_idx].ref_count++;
 }
 
+#if CONFIG_TEMPMV_SIGNALING
+// Returns 1 if this frame might use mvs from some previous frame. This
+// function doesn't consider whether prev_frame is actually suitable (see
+// frame_can_use_prev_frame_mvs for that)
+static INLINE int frame_might_use_prev_frame_mvs(const AV1_COMMON *cm) {
+  return !cm->error_resilient_mode && !cm->intra_only;
+}
+
+// Returns 1 if this frame really can use MVs from some previous frame.
+static INLINE int frame_can_use_prev_frame_mvs(const AV1_COMMON *cm) {
+  return (frame_might_use_prev_frame_mvs(cm) && cm->last_show_frame &&
+          cm->prev_frame && !cm->prev_frame->intra_only &&
+          cm->width == cm->prev_frame->width &&
+          cm->height == cm->prev_frame->height);
+}
+#endif
+
+static INLINE void ensure_mv_buffer(RefCntBuffer *buf, AV1_COMMON *cm) {
+  if (buf->mvs == NULL || buf->mi_rows < cm->mi_rows ||
+      buf->mi_cols < cm->mi_cols) {
+    aom_free(buf->mvs);
+    buf->mi_rows = cm->mi_rows;
+    buf->mi_cols = cm->mi_cols;
+#if CONFIG_TMV
+    CHECK_MEM_ERROR(cm, buf->mvs,
+                    (MV_REF *)aom_calloc(
+                        ((cm->mi_rows + 1) >> 1) * ((cm->mi_cols + 1) >> 1),
+                        sizeof(*buf->mvs)));
+#else
+    CHECK_MEM_ERROR(
+        cm, buf->mvs,
+        (MV_REF *)aom_calloc(cm->mi_rows * cm->mi_cols, sizeof(*buf->mvs)));
+#endif  // CONFIG_TMV
+
+#if CONFIG_MFMV
+    aom_free(buf->tpl_mvs);
+    CHECK_MEM_ERROR(
+        cm, buf->tpl_mvs,
+        (TPL_MV_REF *)aom_calloc((cm->mi_rows + MAX_MIB_SIZE) * cm->mi_stride,
+                                 sizeof(*buf->tpl_mvs)));
+#endif
+  }
+}
+
 #if CONFIG_VAR_REFS
 #define LAST_IS_VALID(cm) ((cm)->frame_refs[LAST_FRAME - 1].is_valid)
 #define LAST2_IS_VALID(cm) ((cm)->frame_refs[LAST2_FRAME - 1].is_valid)
 #define LAST3_IS_VALID(cm) ((cm)->frame_refs[LAST3_FRAME - 1].is_valid)
 #define GOLDEN_IS_VALID(cm) ((cm)->frame_refs[GOLDEN_FRAME - 1].is_valid)
 #define BWDREF_IS_VALID(cm) ((cm)->frame_refs[BWDREF_FRAME - 1].is_valid)
-#if CONFIG_ALTREF2
 #define ALTREF2_IS_VALID(cm) ((cm)->frame_refs[ALTREF2_FRAME - 1].is_valid)
-#endif  // CONFIG_ALTREF2
 #define ALTREF_IS_VALID(cm) ((cm)->frame_refs[ALTREF_FRAME - 1].is_valid)
 
 #define L_OR_L2(cm) (LAST_IS_VALID(cm) || LAST2_IS_VALID(cm))
@@ -526,10 +667,8 @@ static INLINE void ref_cnt_fb(RefCntBuffer *bufs, int *idx, int new_idx) {
 #define L3_OR_G(cm) (LAST3_IS_VALID(cm) || GOLDEN_IS_VALID(cm))
 #define L3_AND_G(cm) (LAST3_IS_VALID(cm) && GOLDEN_IS_VALID(cm))
 
-#if CONFIG_ALTREF2
 #define BWD_OR_ALT2(cm) (BWDREF_IS_VALID(cm) || ALTREF2_IS_VALID(cm))
 #define BWD_AND_ALT2(cm) (BWDREF_IS_VALID(cm) && ALTREF2_IS_VALID(cm))
-#endif  // CONFIG_ALTREF2
 #define BWD_OR_ALT(cm) (BWDREF_IS_VALID(cm) || ALTREF_IS_VALID(cm))
 #define BWD_AND_ALT(cm) (BWDREF_IS_VALID(cm) && ALTREF_IS_VALID(cm))
 #endif  // CONFIG_VAR_REFS
@@ -545,6 +684,15 @@ static INLINE int mi_rows_aligned_to_sb(const AV1_COMMON *cm) {
 static INLINE int frame_is_intra_only(const AV1_COMMON *const cm) {
   return cm->frame_type == KEY_FRAME || cm->intra_only;
 }
+
+#if CONFIG_CFL
+#if CONFIG_CHROMA_SUB8X8 && CONFIG_DEBUG
+static INLINE void cfl_clear_sub8x8_val(CFL_CTX *cfl) {
+  memset(cfl->sub8x8_val, 0, sizeof(cfl->sub8x8_val));
+}
+#endif  // CONFIG_CHROMA_SUB8X8 && CONFIG_DEBUG
+void cfl_init(CFL_CTX *cfl, AV1_COMMON *cm);
+#endif  // CONFIG_CFL
 
 static INLINE void av1_init_macroblockd(AV1_COMMON *cm, MACROBLOCKD *xd,
 #if CONFIG_PVQ
@@ -602,11 +750,12 @@ static INLINE void set_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col) {
   for (i = 0; i < MAX_MB_PLANE; ++i) {
     struct macroblockd_plane *const pd = &xd->plane[i];
 #if CONFIG_CHROMA_SUB8X8
-    if (xd->mi[0]->mbmi.sb_type < BLOCK_8X8) {
-      // Offset the buffer pointer
-      if (pd->subsampling_y && (mi_row & 0x01)) row_offset = mi_row - 1;
-      if (pd->subsampling_x && (mi_col & 0x01)) col_offset = mi_col - 1;
-    }
+    // Offset the buffer pointer
+    const BLOCK_SIZE bsize = xd->mi[0]->mbmi.sb_type;
+    if (pd->subsampling_y && (mi_row & 0x01) && (mi_size_high[bsize] == 1))
+      row_offset = mi_row - 1;
+    if (pd->subsampling_x && (mi_col & 0x01) && (mi_size_wide[bsize] == 1))
+      col_offset = mi_col - 1;
 #endif
     int above_idx = col_offset << (MI_SIZE_LOG2 - tx_size_wide_log2[0]);
     int left_idx = (row_offset & MAX_MIB_MASK)
@@ -713,7 +862,14 @@ static INLINE aom_cdf_prob *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx,
                                            int block) {
   const PREDICTION_MODE above = av1_above_block_mode(mi, above_mi, block);
   const PREDICTION_MODE left = av1_left_block_mode(mi, left_mi, block);
+
+#if CONFIG_KF_CTX
+  int above_ctx = intra_mode_context[above];
+  int left_ctx = intra_mode_context[left];
+  return tile_ctx->kf_y_cdf[above_ctx][left_ctx];
+#else
   return tile_ctx->kf_y_cdf[above][left];
+#endif
 }
 
 static INLINE void update_partition_context(MACROBLOCKD *xd, int mi_row,
@@ -796,14 +952,54 @@ static INLINE BLOCK_SIZE scale_chroma_bsize(BLOCK_SIZE bsize, int subsampling_x,
 }
 #endif
 
+static INLINE aom_cdf_prob cdf_element_prob(const aom_cdf_prob *cdf,
+                                            size_t element) {
+  assert(cdf != NULL);
+#if !CONFIG_ANS
+  return (element > 0 ? cdf[element - 1] : CDF_PROB_TOP) - cdf[element];
+#else
+  return cdf[element] - (element > 0 ? cdf[element - 1] : 0);
+#endif
+}
+
+static INLINE void partition_gather_horz_alike(aom_cdf_prob *out,
+                                               const aom_cdf_prob *const in) {
+  out[0] = CDF_PROB_TOP;
+  out[0] -= cdf_element_prob(in, PARTITION_HORZ);
+  out[0] -= cdf_element_prob(in, PARTITION_SPLIT);
+#if CONFIG_EXT_PARTITION_TYPES
+  out[0] -= cdf_element_prob(in, PARTITION_HORZ_A);
+  out[0] -= cdf_element_prob(in, PARTITION_HORZ_B);
+  out[0] -= cdf_element_prob(in, PARTITION_VERT_A);
+#endif
+  out[0] = AOM_ICDF(out[0]);
+  out[1] = AOM_ICDF(CDF_PROB_TOP);
+}
+
+static INLINE void partition_gather_vert_alike(aom_cdf_prob *out,
+                                               const aom_cdf_prob *const in) {
+  out[0] = CDF_PROB_TOP;
+  out[0] -= cdf_element_prob(in, PARTITION_VERT);
+  out[0] -= cdf_element_prob(in, PARTITION_SPLIT);
+#if CONFIG_EXT_PARTITION_TYPES
+  out[0] -= cdf_element_prob(in, PARTITION_HORZ_A);
+  out[0] -= cdf_element_prob(in, PARTITION_VERT_A);
+  out[0] -= cdf_element_prob(in, PARTITION_VERT_B);
+#endif
+  out[0] = AOM_ICDF(out[0]);
+  out[1] = AOM_ICDF(CDF_PROB_TOP);
+}
+
 #if CONFIG_EXT_PARTITION_TYPES
 static INLINE void update_ext_partition_context(MACROBLOCKD *xd, int mi_row,
                                                 int mi_col, BLOCK_SIZE subsize,
                                                 BLOCK_SIZE bsize,
                                                 PARTITION_TYPE partition) {
   if (bsize >= BLOCK_8X8) {
+#if !CONFIG_EXT_PARTITION_TYPES_AB
     const int hbs = mi_size_wide[bsize] / 2;
     BLOCK_SIZE bsize2 = get_subsize(bsize, PARTITION_SPLIT);
+#endif
     switch (partition) {
       case PARTITION_SPLIT:
         if (bsize != BLOCK_8X8) break;
@@ -814,6 +1010,30 @@ static INLINE void update_ext_partition_context(MACROBLOCKD *xd, int mi_row,
       case PARTITION_VERT_4:
         update_partition_context(xd, mi_row, mi_col, subsize, bsize);
         break;
+#if CONFIG_EXT_PARTITION_TYPES_AB
+      case PARTITION_HORZ_A:
+        update_partition_context(xd, mi_row, mi_col,
+                                 get_subsize(bsize, PARTITION_HORZ_4), subsize);
+        update_partition_context(xd, mi_row + mi_size_high[bsize] / 2, mi_col,
+                                 subsize, subsize);
+        break;
+      case PARTITION_HORZ_B:
+        update_partition_context(xd, mi_row, mi_col, subsize, subsize);
+        update_partition_context(xd, mi_row + mi_size_high[bsize] / 2, mi_col,
+                                 get_subsize(bsize, PARTITION_HORZ_4), subsize);
+        break;
+      case PARTITION_VERT_A:
+        update_partition_context(xd, mi_row, mi_col,
+                                 get_subsize(bsize, PARTITION_VERT_4), subsize);
+        update_partition_context(xd, mi_row, mi_col + mi_size_wide[bsize] / 2,
+                                 subsize, subsize);
+        break;
+      case PARTITION_VERT_B:
+        update_partition_context(xd, mi_row, mi_col, subsize, subsize);
+        update_partition_context(xd, mi_row, mi_col + mi_size_wide[bsize] / 2,
+                                 get_subsize(bsize, PARTITION_VERT_4), subsize);
+        break;
+#else
       case PARTITION_HORZ_A:
         update_partition_context(xd, mi_row, mi_col, bsize2, subsize);
         update_partition_context(xd, mi_row + hbs, mi_col, subsize, subsize);
@@ -830,6 +1050,7 @@ static INLINE void update_ext_partition_context(MACROBLOCKD *xd, int mi_row,
         update_partition_context(xd, mi_row, mi_col, subsize, subsize);
         update_partition_context(xd, mi_row, mi_col + hbs, bsize2, subsize);
         break;
+#endif
       default: assert(0 && "Invalid partition type");
     }
   }
@@ -842,7 +1063,6 @@ static INLINE int partition_plane_context(const MACROBLOCKD *xd, int mi_row,
                                           int has_rows, int has_cols,
 #endif
                                           BLOCK_SIZE bsize) {
-#if CONFIG_UNPOISON_PARTITION_CTX
   const PARTITION_CONTEXT *above_ctx = xd->above_seg_context + mi_col;
   const PARTITION_CONTEXT *left_ctx =
       xd->left_seg_context + (mi_row & MAX_MIB_MASK);
@@ -853,6 +1073,7 @@ static INLINE int partition_plane_context(const MACROBLOCKD *xd, int mi_row,
   assert(b_width_log2_lookup[bsize] == b_height_log2_lookup[bsize]);
   assert(bsl >= 0);
 
+#if CONFIG_UNPOISON_PARTITION_CTX
   if (has_rows && has_cols)
     return (left * 2 + above) + bsl * PARTITION_PLOFFSET;
   else if (has_rows && !has_cols)
@@ -860,18 +1081,8 @@ static INLINE int partition_plane_context(const MACROBLOCKD *xd, int mi_row,
   else if (!has_rows && has_cols)
     return PARTITION_CONTEXTS_PRIMARY + PARTITION_BLOCK_SIZES + bsl;
   else
-    return PARTITION_CONTEXTS;  // Bogus context, forced SPLIT
+    return INVALID_PARTITION_CTX;  // Bogus context, forced SPLIT
 #else
-  const PARTITION_CONTEXT *above_ctx = xd->above_seg_context + mi_col;
-  const PARTITION_CONTEXT *left_ctx =
-      xd->left_seg_context + (mi_row & MAX_MIB_MASK);
-  // Minimum partition point is 8x8. Offset the bsl accordingly.
-  const int bsl = mi_width_log2_lookup[bsize] - mi_width_log2_lookup[BLOCK_8X8];
-  int above = (*above_ctx >> bsl) & 1, left = (*left_ctx >> bsl) & 1;
-
-  assert(b_width_log2_lookup[bsize] == b_height_log2_lookup[bsize]);
-  assert(bsl >= 0);
-
   return (left * 2 + above) + bsl * PARTITION_PLOFFSET;
 #endif
 }
@@ -997,18 +1208,22 @@ static INLINE void txfm_partition_update(TXFM_CONTEXT *above_ctx,
 }
 
 static INLINE TX_SIZE get_sqr_tx_size(int tx_dim) {
-  TX_SIZE tx_size;
   switch (tx_dim) {
 #if CONFIG_EXT_PARTITION
     case 128:
-#endif
+#endif  // CONFIG_EXT_PARTITION
     case 64:
-    case 32: tx_size = TX_32X32; break;
-    case 16: tx_size = TX_16X16; break;
-    case 8: tx_size = TX_8X8; break;
-    default: tx_size = TX_4X4;
+#if CONFIG_TX64X64
+      return TX_64X64;
+#else
+      return TX_32X32;
+#endif  // CONFIG_TX64X64
+      break;
+    case 32: return TX_32X32; break;
+    case 16: return TX_16X16; break;
+    case 8: return TX_8X8; break;
+    default: return TX_4X4;
   }
-  return tx_size;
 }
 
 static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx,
@@ -1035,49 +1250,114 @@ static INLINE int txfm_partition_context(TXFM_CONTEXT *above_ctx,
 }
 #endif
 
+// Compute the next partition in the direction of the sb_type stored in the mi
+// array, starting with bsize.
 static INLINE PARTITION_TYPE get_partition(const AV1_COMMON *const cm,
                                            int mi_row, int mi_col,
                                            BLOCK_SIZE bsize) {
-  if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols) {
-    return PARTITION_INVALID;
-  } else {
-    const int offset = mi_row * cm->mi_stride + mi_col;
-    MODE_INFO **mi = cm->mi_grid_visible + offset;
-    const MB_MODE_INFO *const mbmi = &mi[0]->mbmi;
-    const int bsl = b_width_log2_lookup[bsize];
-    const PARTITION_TYPE partition = partition_lookup[bsl][mbmi->sb_type];
-#if !CONFIG_EXT_PARTITION_TYPES
-    return partition;
+  if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols) return PARTITION_INVALID;
+
+  const int offset = mi_row * cm->mi_stride + mi_col;
+  MODE_INFO **mi = cm->mi_grid_visible + offset;
+  const BLOCK_SIZE subsize = mi[0]->mbmi.sb_type;
+
+  if (subsize == bsize) return PARTITION_NONE;
+
+  const int bhigh = mi_size_high[bsize];
+  const int bwide = mi_size_wide[bsize];
+  const int sshigh = mi_size_high[subsize];
+  const int sswide = mi_size_wide[subsize];
+
+#if CONFIG_EXT_PARTITION_TYPES
+  if (bsize > BLOCK_8X8 && mi_row + bwide / 2 < cm->mi_rows &&
+      mi_col + bhigh / 2 < cm->mi_cols) {
+    // In this case, the block might be using an extended partition
+    // type.
+    const MB_MODE_INFO *const mbmi_right = &mi[bwide / 2]->mbmi;
+    const MB_MODE_INFO *const mbmi_below = &mi[bhigh / 2 * cm->mi_stride]->mbmi;
+
+    if (sswide == bwide) {
+#if CONFIG_EXT_PARTITION_TYPES_AB
+      // Smaller height but same width. Is PARTITION_HORZ, PARTITION_HORZ_4,
+      // PARTITION_HORZ_A or PARTITION_HORZ_B.
+      if (sshigh * 2 == bhigh)
+        return (mbmi_below->sb_type == subsize) ? PARTITION_HORZ
+                                                : PARTITION_HORZ_B;
+      assert(sshigh * 4 == bhigh);
+      return (mbmi_below->sb_type == subsize) ? PARTITION_HORZ_4
+                                              : PARTITION_HORZ_A;
 #else
-    const int hbs = mi_size_wide[bsize] / 2;
+      // Smaller height but same width. Is PARTITION_HORZ_4, PARTITION_HORZ or
+      // PARTITION_HORZ_B. To distinguish the latter two, check if the lower
+      // half was split.
+      if (sshigh * 4 == bhigh) return PARTITION_HORZ_4;
+      assert(sshigh * 2 == bhigh);
 
-    assert(cm->mi_grid_visible[offset] == &cm->mi[offset]);
+      if (mbmi_below->sb_type == subsize)
+        return PARTITION_HORZ;
+      else
+        return PARTITION_HORZ_B;
+#endif
+    } else if (sshigh == bhigh) {
+#if CONFIG_EXT_PARTITION_TYPES_AB
+      // Smaller width but same height. Is PARTITION_VERT, PARTITION_VERT_4,
+      // PARTITION_VERT_A or PARTITION_VERT_B.
+      if (sswide * 2 == bwide)
+        return (mbmi_right->sb_type == subsize) ? PARTITION_VERT
+                                                : PARTITION_VERT_B;
+      assert(sswide * 4 == bwide);
+      return (mbmi_right->sb_type == subsize) ? PARTITION_VERT_4
+                                              : PARTITION_VERT_A;
+#else
+      // Smaller width but same height. Is PARTITION_VERT_4, PARTITION_VERT or
+      // PARTITION_VERT_B. To distinguish the latter two, check if the right
+      // half was split.
+      if (sswide * 4 == bwide) return PARTITION_VERT_4;
+      assert(sswide * 2 == bhigh);
 
-    if (partition == PARTITION_HORZ_4 || partition == PARTITION_VERT_4)
-      return partition;
+      if (mbmi_right->sb_type == subsize)
+        return PARTITION_VERT;
+      else
+        return PARTITION_VERT_B;
+#endif
+    } else {
+#if !CONFIG_EXT_PARTITION_TYPES_AB
+      // Smaller width and smaller height. Might be PARTITION_SPLIT or could be
+      // PARTITION_HORZ_A or PARTITION_VERT_A. If subsize isn't halved in both
+      // dimensions, we immediately know this is a split (which will recurse to
+      // get to subsize). Otherwise look down and to the right. With
+      // PARTITION_VERT_A, the right block will have height bhigh; with
+      // PARTITION_HORZ_A, the lower block with have width bwide. Otherwise
+      // it's PARTITION_SPLIT.
+      if (sswide * 2 != bwide || sshigh * 2 != bhigh) return PARTITION_SPLIT;
 
-    if (partition != PARTITION_NONE && bsize > BLOCK_8X8 &&
-        mi_row + hbs < cm->mi_rows && mi_col + hbs < cm->mi_cols) {
-      const BLOCK_SIZE h = get_subsize(bsize, PARTITION_HORZ_A);
-      const BLOCK_SIZE v = get_subsize(bsize, PARTITION_VERT_A);
-      const MB_MODE_INFO *const mbmi_right = &mi[hbs]->mbmi;
-      const MB_MODE_INFO *const mbmi_below = &mi[hbs * cm->mi_stride]->mbmi;
-      if (mbmi->sb_type == h) {
-        return mbmi_below->sb_type == h ? PARTITION_HORZ : PARTITION_HORZ_B;
-      } else if (mbmi->sb_type == v) {
-        return mbmi_right->sb_type == v ? PARTITION_VERT : PARTITION_VERT_B;
-      } else if (mbmi_below->sb_type == h) {
-        return PARTITION_HORZ_A;
-      } else if (mbmi_right->sb_type == v) {
-        return PARTITION_VERT_A;
-      } else {
-        return PARTITION_SPLIT;
-      }
+      if (mi_size_wide[mbmi_below->sb_type] == bwide) return PARTITION_HORZ_A;
+      if (mi_size_high[mbmi_right->sb_type] == bhigh) return PARTITION_VERT_A;
+#endif
+
+      return PARTITION_SPLIT;
     }
-
-    return partition;
-#endif  // !CONFIG_EXT_PARTITION_TYPES
   }
+#endif
+  const int vert_split = sswide < bwide;
+  const int horz_split = sshigh < bhigh;
+  const int split_idx = (vert_split << 1) | horz_split;
+  assert(split_idx != 0);
+
+  static const PARTITION_TYPE base_partitions[4] = {
+    PARTITION_INVALID, PARTITION_HORZ, PARTITION_VERT, PARTITION_SPLIT
+  };
+
+  return base_partitions[split_idx];
+}
+
+static INLINE void set_use_reference_buffer(AV1_COMMON *const cm, int use) {
+#if CONFIG_REFERENCE_BUFFER
+  cm->seq_params.frame_id_numbers_present_flag = use;
+#else
+  (void)cm;
+  (void)use;
+#endif
 }
 
 static INLINE void set_sb_size(AV1_COMMON *const cm, BLOCK_SIZE sb_size) {
@@ -1104,6 +1384,17 @@ static INLINE int all_lossless(const AV1_COMMON *cm, const MACROBLOCKD *xd) {
     all_lossless = xd->lossless[0];
   }
   return all_lossless;
+}
+
+static INLINE int use_compressed_header(const AV1_COMMON *cm) {
+  (void)cm;
+#if CONFIG_RESTRICT_COMPRESSED_HDR && CONFIG_NEW_MULTISYMBOL
+  return 0;
+#elif CONFIG_RESTRICT_COMPRESSED_HDR
+  return cm->refresh_frame_context == REFRESH_FRAME_CONTEXT_FORWARD;
+#else
+  return 1;
+#endif  // CONFIG_RESTRICT_COMPRESSED_HDR && CONFIG_NEW_MULTISYMBOL
 }
 
 #ifdef __cplusplus

@@ -20,6 +20,7 @@ extern "C" {
 #include "./aom_config.h"
 #include "aom/aom_integer.h"
 #include "aom_dsp/bitwriter.h"
+#include "aom_dsp/bitwriter_buffer.h"
 
 // Codes a symbol v in [-2^mag_bits, 2^mag_bits]
 // mag_bits is number of bits for magnitude. The alphabet is of size
@@ -52,6 +53,10 @@ void aom_write_primitive_refsubexpfin(aom_writer *w, uint16_t n, uint16_t k,
 void aom_write_signed_primitive_refsubexpfin(aom_writer *w, uint16_t n,
                                              uint16_t k, int16_t ref,
                                              int16_t v);
+
+void aom_wb_write_signed_primitive_refsubexpfin(struct aom_write_bit_buffer *wb,
+                                                uint16_t n, uint16_t k,
+                                                int16_t ref, int16_t v);
 
 // Functions that counts bits for the above primitives
 int aom_count_primitive_symmetric(int16_t v, unsigned int mag_bits);

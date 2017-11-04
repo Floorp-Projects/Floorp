@@ -372,21 +372,21 @@ typedef struct aom_codec_enc_cfg {
    */
   unsigned int rc_resize_mode;
 
-  /*!\brief Frame resize numerator.
+  /*!\brief Frame resize denominator.
    *
-   * The numerator for resize to use, assuming 16 as the denominator.
+   * The denominator for resize to use, assuming 8 as the numerator.
    *
-   * Valid numerators are  8 - 16 for now.
+   * Valid denominators are  8 - 16 for now.
    */
-  unsigned int rc_resize_numerator;
+  unsigned int rc_resize_denominator;
 
-  /*!\brief Keyframe resize numerator.
+  /*!\brief Keyframe resize denominator.
    *
-   * The numerator for resize to use, assuming 16 as the denominator.
+   * The denominator for resize to use, assuming 8 as the numerator.
    *
-   * Valid numerators are  8 - 16 for now.
+   * Valid denominators are  8 - 16 for now.
    */
-  unsigned int rc_resize_kf_numerator;
+  unsigned int rc_resize_kf_denominator;
 
   /*!\brief Frame super-resolution scaling mode.
    *
@@ -394,32 +394,50 @@ typedef struct aom_codec_enc_cfg {
    * upscaling after the encode/decode process. Taking control of upscaling and
    * using restoration filters should allow it to outperform normal resizing.
    *
-   * Mode 0 is SUPERRES_NONE, mode 1 is SUPERRES_FIXED, and mode 2 is
-   * SUPERRES_DYNAMIC.
+   * Mode 0 is SUPERRES_NONE, mode 1 is SUPERRES_FIXED, mode 2 is
+   * SUPERRES_RANDOM and mode 3 is SUPERRES_QTHRESH.
    */
   unsigned int rc_superres_mode;
 
-  /*!\brief Frame super-resolution numerator.
+  /*!\brief Frame super-resolution denominator.
    *
-   * The numerator for superres to use. If fixed it will only change if the
+   * The denominator for superres to use. If fixed it will only change if the
    * cumulative scale change over resizing and superres is greater than 1/2;
    * this forces superres to reduce scaling.
    *
-   * Valid numerators are 8 to 16.
+   * Valid denominators are 8 to 16.
    *
-   * Ignored by SUPERRES_DYNAMIC.
+   * Used only by SUPERRES_FIXED.
    */
-  unsigned int rc_superres_numerator;
+  unsigned int rc_superres_denominator;
 
-  /*!\brief Keyframe super-resolution numerator.
+  /*!\brief Keyframe super-resolution denominator.
    *
-   * The numerator for superres to use. If fixed it will only change if the
+   * The denominator for superres to use. If fixed it will only change if the
    * cumulative scale change over resizing and superres is greater than 1/2;
    * this forces superres to reduce scaling.
    *
-   * Valid numerators are 8 - 16 for now.
+   * Valid denominators are 8 - 16 for now.
    */
-  unsigned int rc_superres_kf_numerator;
+  unsigned int rc_superres_kf_denominator;
+
+  /*!\brief Frame super-resolution q threshold.
+   *
+   * The q level threshold after which superres is used.
+   * Valid values are 1 to 63.
+   *
+   * Used only by SUPERRES_QTHRESH
+   */
+  unsigned int rc_superres_qthresh;
+
+  /*!\brief Keyframe super-resolution q threshold.
+   *
+   * The q level threshold after which superres is used for key frames.
+   * Valid values are 1 to 63.
+   *
+   * Used only by SUPERRES_QTHRESH
+   */
+  unsigned int rc_superres_kf_qthresh;
 
   /*!\brief Rate control algorithm to use.
    *
@@ -601,6 +619,48 @@ typedef struct aom_codec_enc_cfg {
    * implies a large-scale tile coding.
    */
   unsigned int large_scale_tile;
+
+  /*!\brief Number of explicit tile widths specified
+   *
+   * This value indicates the number of tile widths specified
+   * A value of 0 implies no tile widths are specified.
+   * Tile widths are given in the array tile_widths[]
+   */
+  int tile_width_count;
+
+  /*!\brief Number of explicit tile heights specified
+   *
+   * This value indicates the number of tile heights specified
+   * A value of 0 implies no tile heights are specified.
+   * Tile heights are given in the array tile_heights[]
+   */
+  int tile_height_count;
+
+/*!\brief Maximum number of tile widths in tile widths array
+ *
+ * This define gives the maximum number of elements in the tile_widths array.
+ */
+#define MAX_TILE_WIDTHS 64  // maximum tile width array length
+
+  /*!\brief Array of specified tile widths
+   *
+   * This array specifies tile widths (and may be empty)
+   * The number of widths specified is given by tile_width_count
+   */
+  int tile_widths[MAX_TILE_WIDTHS];
+
+/*!\brief Maximum number of tile heights in tile heights array.
+ *
+ * This define gives the maximum number of elements in the tile_heights array.
+ */
+#define MAX_TILE_HEIGHTS 64  // maximum tile height array length
+
+  /*!\brief Array of specified tile heights
+   *
+   * This array specifies tile heights (and may be empty)
+   * The number of heights specified is given by tile_height_count
+   */
+  int tile_heights[MAX_TILE_HEIGHTS];
 } aom_codec_enc_cfg_t; /**< alias for struct aom_codec_enc_cfg */
 
 /*!\brief Initialize an encoder instance
@@ -616,7 +676,7 @@ typedef struct aom_codec_enc_cfg {
  *
  * \param[in]    ctx     Pointer to this instance's context.
  * \param[in]    iface   Pointer to the algorithm interface to use.
- * \param[in]    cfg     Configuration to use, if known. May be NULL.
+ * \param[in]    cfg     Configuration to use, if known.
  * \param[in]    flags   Bitfield of AOM_CODEC_USE_* flags
  * \param[in]    ver     ABI version number. Must be set to
  *                       AOM_ENCODER_ABI_VERSION
@@ -646,7 +706,7 @@ aom_codec_err_t aom_codec_enc_init_ver(aom_codec_ctx_t *ctx,
  *
  * \param[in]    ctx     Pointer to this instance's context.
  * \param[in]    iface   Pointer to the algorithm interface to use.
- * \param[in]    cfg     Configuration to use, if known. May be NULL.
+ * \param[in]    cfg     Configuration to use, if known.
  * \param[in]    num_enc Total number of encoders.
  * \param[in]    flags   Bitfield of AOM_CODEC_USE_* flags
  * \param[in]    dsf     Pointer to down-sampling factors.

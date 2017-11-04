@@ -142,7 +142,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   simulateMessagesForExistingTabs() {
     // Some pages might have already loaded, so we won't get the usual message
     for (const target of this.channel.messagePorts) {
-      const simulatedMsg = {target};
+      const simulatedMsg = {target: Object.assign({simulated: true}, target)};
       this.onNewTabInit(simulatedMsg);
       if (target.loaded) {
         this.onNewTabLoad(simulatedMsg);
