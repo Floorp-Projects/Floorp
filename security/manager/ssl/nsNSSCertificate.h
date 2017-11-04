@@ -6,6 +6,8 @@
 #ifndef nsNSSCertificate_h
 #define nsNSSCertificate_h
 
+#include <functional>
+
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "nsCOMPtr.h"
