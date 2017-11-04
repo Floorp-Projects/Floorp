@@ -11,14 +11,16 @@
 "use strict";
 
 let PaymentRequest = {
-  requestId: null,
+  request: null,
+  domReadyPromise: null,
 
   init() {
     // listen to content
     window.addEventListener("paymentChromeToContent", this);
 
-    // listen to user events
-    window.addEventListener("DOMContentLoaded", this, {once: true});
+    this.domReadyPromise = new Promise(function dcl(resolve) {
+      window.addEventListener("DOMContentLoaded", resolve, {once: true});
+    }).then(this.handleEvent.bind(this));
 
     // This scope is now ready to listen to the initialization data
     this.sendMessageToChrome("initializeRequest");
@@ -57,7 +59,6 @@ let PaymentRequest = {
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
-        requestId: this.requestId,
         messageType,
       }, detail),
     });
@@ -65,11 +66,12 @@ let PaymentRequest = {
   },
 
   onChromeToContent({detail}) {
-    let {messageType, requestId} = detail;
+    let {messageType} = detail;
 
     switch (messageType) {
       case "showPaymentRequest": {
-        this.requestId = requestId;
+        this.request = detail.request;
+        this.onShowPaymentRequest();
         break;
       }
     }
@@ -81,6 +83,20 @@ let PaymentRequest = {
 
     window.addEventListener("unload", this, {once: true});
     this.sendMessageToChrome("paymentDialogReady");
+  },
+
+  async onShowPaymentRequest() {
+    // Handle getting called before the DOM is ready.
+    await this.domReadyPromise;
+
+    let hostNameEl = document.getElementById("host-name");
+    hostNameEl.textContent = this.request.topLevelPrincipal.URI.displayHost;
+
+    let totalItem = this.request.paymentDetails.totalItem;
+    let totalEl = document.getElementById("total");
+    totalEl.querySelector(".value").textContent = totalItem.amount.value;
+    totalEl.querySelector(".currency").textContent = totalItem.amount.currency;
+    totalEl.querySelector(".label").textContent = totalItem.label;
   },
 
   onCancel() {

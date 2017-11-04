@@ -21,7 +21,7 @@ describe("TelemetryFeed", () => {
   let browser = {getAttribute() { return "true"; }};
   let store = {
     dispatch() {},
-    getState() { return {App: {version: "1.0.0", locale: "en-US"}}; }
+    getState() { return {App: {version: "1.0.0"}}; }
   };
   let instance;
   let clock;
@@ -36,11 +36,8 @@ describe("TelemetryFeed", () => {
   const {
     TelemetryFeed,
     USER_PREFS_ENCODING,
-    IMPRESSION_STATS_RESET_TIME,
-    TELEMETRY_PREF,
-    PREF_IMPRESSION_STATS_CLICKED,
-    PREF_IMPRESSION_STATS_BLOCKED,
-    PREF_IMPRESSION_STATS_POCKETED
+    PREF_IMPRESSION_ID,
+    TELEMETRY_PREF
   } = injector({"common/PerfService.jsm": {perfService}});
 
   beforeEach(() => {
@@ -70,6 +67,14 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(Services.obs.addObserver);
       assert.calledWithExactly(Services.obs.addObserver,
         instance.browserOpenNewtabStart, "browser-open-newtab-start");
+    });
+    it("should create impression id if none exists", () => {
+      assert.equal(instance._impressionId, FAKE_UUID);
+    });
+    it("should set impression id if it exists", () => {
+      FakePrefs.prototype.prefs = {};
+      FakePrefs.prototype.prefs[PREF_IMPRESSION_ID] = "fakeImpressionId";
+      assert.equal(new TelemetryFeed()._impressionId, "fakeImpressionId");
     });
     describe("telemetry pref changes from false to true", () => {
       beforeEach(() => {
@@ -159,6 +164,26 @@ describe("TelemetryFeed", () => {
                          "highlights_data_late_by_ms", 20);
       assert.propertyVal(instance.sessions.get("foo").perf,
                          "topsites_data_late_by_ms", 10);
+    });
+    it("should be a valid ping with the topsites_icon_stats perf", () => {
+      // Add a session
+      const portID = "foo";
+      const session = instance.addSession(portID, "about:home");
+      instance.saveSessionPerfData("foo", {
+        topsites_icon_stats: {
+          "screenshot_with_icon": 2,
+          "screenshot": 1,
+          "tippytop": 2,
+          "rich_icon": 1,
+          "no_image": 0
+        }
+      });
+
+      // Create a ping referencing the session
+      const ping = instance.createSessionEndEvent(session);
+      assert.validate(ping, SessionPing);
+      assert.propertyVal(instance.sessions.get("foo").perf.topsites_icon_stats,
+        "screenshot_with_icon", 2);
     });
   });
 
@@ -382,19 +407,6 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "source", "POCKET");
       assert.propertyVal(ping, "tiles", tiles);
     });
-    it("should empty all the user specific IDs in the ping", async () => {
-      const tiles = [{id: 10001, pos: 2}];
-      const incognito = true;
-      const action = ac.ImpressionStats({source: "POCKET", incognito, tiles, click: 0});
-      const ping = await instance.createImpressionStats(action);
-
-      assert.validate(ping, ImpressionStatsPing);
-      assert.propertyVal(ping, "click", 0);
-      assert.propertyVal(ping, "tiles", tiles);
-      assert.propertyVal(ping, "client_id", "n/a");
-      assert.propertyVal(ping, "session_id", "n/a");
-      assert.isUndefined(ping.incognito);
-    });
     it("should create a valid click ping", async () => {
       const tiles = [{id: 10001, pos: 2}];
       const action = ac.ImpressionStats({source: "POCKET", tiles, click: 0});
@@ -541,32 +553,9 @@ describe("TelemetryFeed", () => {
         instance.browserOpenNewtabStart, "browser-open-newtab-start");
     });
   });
-  describe("#resetImpressionStats", () => {
-    beforeEach(() => {
-      FakePrefs.prototype.prefs = {};
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_CLICKED] = "[10000]";
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_BLOCKED] = "[10001]";
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_POCKETED] = "[10002]";
-    });
-    it("should reset all the GUID sets for impression stats", () => {
-      const lastResetTime = instance._impressionStatsLastReset;
-      // Haven't restored the clock yet, we have to manually tick the clock.
-      clock.tick(IMPRESSION_STATS_RESET_TIME);
-
-      instance.resetImpressionStats();
-
-      for (const key of Object.keys(instance._impressionStats)) {
-        assert.equal(instance._impressionStats[key].size, 0);
-      }
-      assert.isAbove(instance._impressionStatsLastReset, lastResetTime);
-    });
-  });
   describe("#onAction", () => {
     beforeEach(() => {
       FakePrefs.prototype.prefs = {};
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_CLICKED] = "[]";
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_BLOCKED] = "[]";
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_STATS_POCKETED] = "[]";
     });
     it("should call .init() on an INIT action", () => {
       const stub = sandbox.stub(instance, "init");
@@ -660,51 +649,6 @@ describe("TelemetryFeed", () => {
       assert.calledWith(eventCreator, action);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
-    it("should call .resetImpressionStats on a SYSTEM_TICK action", () => {
-      const resetImpressionStats = sandbox.stub(instance, "resetImpressionStats");
-
-      instance.onAction({type: at.SYSTEM_TICK});
-
-      assert.notCalled(resetImpressionStats);
-
-      clock.tick(IMPRESSION_STATS_RESET_TIME);
-
-      instance.onAction({type: at.SYSTEM_TICK});
-      assert.calledOnce(resetImpressionStats);
-    });
-    it("should not send two click pings for the same article", async () => {
-      const sendEvent = sandbox.stub(instance, "sendEvent");
-      const tiles = [{id: 10001, pos: 2}];
-      const data = {tiles, click: 0};
-      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
-
-      instance.onAction(action);
-      instance.onAction(action);
-
-      assert.calledOnce(sendEvent);
-    });
-    it("should not send two block pings for the same article", async () => {
-      const sendEvent = sandbox.stub(instance, "sendEvent");
-      const tiles = [{id: 10001, pos: 2}];
-      const data = {tiles, block: 0};
-      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
-
-      instance.onAction(action);
-      instance.onAction(action);
-
-      assert.calledOnce(sendEvent);
-    });
-    it("should not send two save to pocket pings for the same article", async () => {
-      const sendEvent = sandbox.stub(instance, "sendEvent");
-      const tiles = [{id: 10001, pos: 2}];
-      const data = {tiles, pocket: 0};
-      const action = {type: at.TELEMETRY_IMPRESSION_STATS, data};
-
-      instance.onAction(action);
-      instance.onAction(action);
-
-      assert.calledOnce(sendEvent);
-    });
     it("should call .handlePagePrerendered on a PAGE_PRERENDERED action", () => {
       const session = {perf: {}};
       sandbox.stub(instance.sessions, "get").returns(session);
@@ -752,83 +696,6 @@ describe("TelemetryFeed", () => {
       }));
 
       assert.ok(!session.perf.is_preloaded);
-    });
-  });
-});
-
-describe("PersistentGuidSet", () => {
-  const {PersistentGuidSet} = injector({});
-
-  afterEach(() => {
-    FakePrefs.prototype.prefs = {};
-  });
-  describe("#init", () => {
-    it("should initialized empty", () => {
-      let guidSet;
-
-      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
-
-      assert.equal(guidSet.size, 0);
-      assert.deepEqual(guidSet.items(), []);
-    });
-    it("should initialized from pref", () => {
-      let guidSet;
-
-      FakePrefs.prototype.prefs = {"test.guidSet": JSON.stringify([10000])};
-      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
-
-      assert.equal(guidSet.size, 1);
-      assert.isTrue(guidSet.has(10000));
-      assert.deepEqual(guidSet.items(), [10000]);
-    });
-    it("should initialized empty with invalid pref", () => {
-      let guidSet;
-
-      FakePrefs.prototype.prefs = {"test.guidSet": 10000};
-      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
-
-      assert.equal(guidSet.size, 0);
-      assert.deepEqual(guidSet.items(), []);
-    });
-  });
-  describe("#save", () => {
-    it("should save the new GUID", () => {
-      let guidSet;
-      let prefs = new FakePrefs();
-
-      guidSet = new PersistentGuidSet(prefs, "test.guidSet");
-      guidSet.save("10000");
-      guidSet.save("10001");
-
-      assert.equal(guidSet.size, 2);
-      assert.deepEqual(guidSet.items(), ["10000", "10001"]);
-      assert.equal(prefs.get("test.guidSet"), "[\"10000\",\"10001\"]");
-    });
-    it("should not save the same GUID twice", () => {
-      let guidSet;
-      let prefs = new FakePrefs();
-
-      guidSet = new PersistentGuidSet(prefs, "test.guidSet");
-      guidSet.save("10000");
-
-      assert.isFalse(guidSet.save("10000"));
-      assert.equal(guidSet.size, 1);
-      assert.deepEqual(guidSet.items(), ["10000"]);
-      assert.equal(prefs.get("test.guidSet"), "[\"10000\"]");
-    });
-  });
-  describe("#clear", () => {
-    it("should clear the GUID set", () => {
-      let guidSet;
-
-      guidSet = new PersistentGuidSet(new FakePrefs(), "test.guidSet");
-      guidSet.save("10000");
-      guidSet.save("10001");
-
-      assert.equal(guidSet.size, 2);
-      guidSet.clear();
-      assert.equal(guidSet.size, 0);
-      assert.deepEqual(guidSet.items(), []);
     });
   });
 });

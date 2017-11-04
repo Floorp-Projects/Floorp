@@ -5,17 +5,17 @@ use std::result::Result as StdResult;
 use std::ffi::{OsStr, OsString};
 use std::mem;
 
-// Third Party
-use vec_map::{self, VecMap};
-
 // Internal
-use args::{ArgSettings, AnyArg, Base, Switched, Valued, Arg, DispOrder};
+use args::{AnyArg, Arg, ArgSettings, Base, DispOrder, Switched, Valued};
+use map::{self, VecMap};
+use INTERNAL_ERROR_MSG;
 
 #[allow(missing_debug_implementations)]
 #[doc(hidden)]
 #[derive(Default, Clone)]
 pub struct OptBuilder<'n, 'e>
-    where 'n: 'e
+where
+    'n: 'e,
 {
     pub b: Base<'n, 'e>,
     pub s: Switched<'e>,
@@ -23,7 +23,12 @@ pub struct OptBuilder<'n, 'e>
 }
 
 impl<'n, 'e> OptBuilder<'n, 'e> {
-    pub fn new(name: &'n str) -> Self { OptBuilder { b: Base::new(name), ..Default::default() } }
+    pub fn new(name: &'n str) -> Self {
+        OptBuilder {
+            b: Base::new(name),
+            ..Default::default()
+        }
+    }
 }
 
 impl<'n, 'e, 'z> From<&'z Arg<'n, 'e>> for OptBuilder<'n, 'e> {
@@ -57,44 +62,51 @@ impl<'n, 'e> Display for OptBuilder<'n, 'e> {
         };
         // Write the name such --long or -l
         if let Some(l) = self.s.long {
-            try!(write!(f, "--{}{}", l, sep));
+            write!(f, "--{}{}", l, sep)?;
         } else {
-            try!(write!(f, "-{}{}", self.s.short.unwrap(), sep));
+            write!(f, "-{}{}", self.s.short.unwrap(), sep)?;
         }
+        let delim = if self.is_set(ArgSettings::RequireDelimiter) {
+            self.v.val_delim.expect(INTERNAL_ERROR_MSG)
+        } else {
+            ' '
+        };
 
         // Write the values such as <name1> <name2>
         if let Some(ref vec) = self.v.val_names {
             let mut it = vec.iter().peekable();
             while let Some((_, val)) = it.next() {
-                try!(write!(f, "<{}>", val));
+                write!(f, "<{}>", val)?;
                 if it.peek().is_some() {
-                    try!(write!(f, " "));
+                    write!(f, "{}", delim)?;
                 }
             }
             let num = vec.len();
             if self.is_set(ArgSettings::Multiple) && num == 1 {
-                try!(write!(f, "..."));
+                write!(f, "...")?;
             }
         } else if let Some(num) = self.v.num_vals {
             let mut it = (0..num).peekable();
             while let Some(_) = it.next() {
-                try!(write!(f, "<{}>", self.b.name));
+                write!(f, "<{}>", self.b.name)?;
                 if it.peek().is_some() {
-                    try!(write!(f, " "));
+                    write!(f, "{}", delim)?;
                 }
             }
             if self.is_set(ArgSettings::Multiple) && num == 1 {
-                try!(write!(f, "..."));
+                write!(f, "...")?;
             }
         } else {
-            try!(write!(f,
-                        "<{}>{}",
-                        self.b.name,
-                        if self.is_set(ArgSettings::Multiple) {
-                            "..."
-                        } else {
-                            ""
-                        }));
+            write!(
+                f,
+                "<{}>{}",
+                self.b.name,
+                if self.is_set(ArgSettings::Multiple) {
+                    "..."
+                } else {
+                    ""
+                }
+            )?;
         }
 
         Ok(())
@@ -131,13 +143,20 @@ impl<'n, 'e> AnyArg<'n, 'e> for OptBuilder<'n, 'e> {
     fn help(&self) -> Option<&'e str> { self.b.help }
     fn long_help(&self) -> Option<&'e str> { self.b.long_help }
     fn default_val(&self) -> Option<&'e OsStr> { self.v.default_val }
-    fn default_vals_ifs(&self) -> Option<vec_map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
+    fn default_vals_ifs(&self) -> Option<map::Values<(&'n str, Option<&'e OsStr>, &'e OsStr)>> {
         self.v.default_vals_ifs.as_ref().map(|vm| vm.values())
+    }
+    fn env<'s>(&'s self) -> Option<(&'n OsStr, Option<&'s OsString>)> {
+        self.v
+            .env
+            .as_ref()
+            .map(|&(key, ref value)| (key, value.as_ref()))
     }
     fn longest_filter(&self) -> bool { true }
     fn aliases(&self) -> Option<Vec<&'e str>> {
         if let Some(ref aliases) = self.s.aliases {
-            let vis_aliases: Vec<_> = aliases.iter()
+            let vis_aliases: Vec<_> = aliases
+                .iter()
                 .filter_map(|&(n, v)| if v { Some(n) } else { None })
                 .collect();
             if vis_aliases.is_empty() {
@@ -156,16 +175,14 @@ impl<'n, 'e> DispOrder for OptBuilder<'n, 'e> {
 }
 
 impl<'n, 'e> PartialEq for OptBuilder<'n, 'e> {
-    fn eq(&self, other: &OptBuilder<'n, 'e>) -> bool {
-        self.b == other.b
-    }
+    fn eq(&self, other: &OptBuilder<'n, 'e>) -> bool { self.b == other.b }
 }
 
 #[cfg(test)]
 mod test {
     use args::settings::ArgSettings;
     use super::OptBuilder;
-    use vec_map::VecMap;
+    use map::VecMap;
 
     #[test]
     fn optbuilder_display1() {
@@ -216,8 +233,12 @@ mod test {
     fn optbuilder_display_multiple_aliases() {
         let mut o = OptBuilder::new("opt");
         o.s.long = Some("option");
-        o.s.aliases =
-            Some(vec![("als_not_visible", false), ("als2", true), ("als3", true), ("als4", true)]);
+        o.s.aliases = Some(vec![
+            ("als_not_visible", false),
+            ("als2", true),
+            ("als3", true),
+            ("als4", true),
+        ]);
         assert_eq!(&*format!("{}", o), "--option <opt>");
     }
 }

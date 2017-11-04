@@ -371,20 +371,16 @@ impl FontContext {
     fn gamma_correct_pixels(
         &self,
         pixels: &mut Vec<u8>,
-        width: usize,
-        height: usize,
         render_mode: FontRenderMode,
         color: ColorU,
     ) {
         // Then convert back to gamma corrected values.
         match render_mode {
             FontRenderMode::Alpha => {
-                self.gamma_lut
-                    .preblend_grayscale_bgra(pixels, width, height, color);
+                self.gamma_lut.preblend_grayscale(pixels, color);
             }
             FontRenderMode::Subpixel => {
-                self.gamma_lut
-                    .preblend_bgra(pixels, width, height, color);
+                self.gamma_lut.preblend(pixels, color);
             }
             _ => {} // Again, give mono untouched since only the alpha matters.
         }
@@ -595,35 +591,28 @@ impl FontContext {
                 // We explicitly do not do this for grayscale AA ("Alpha without
                 // smoothing" or Mono) because those rendering modes are not
                 // gamma-aware in CoreGraphics.
-                self.gamma_lut.coregraphics_convert_to_linear_bgra(
+                self.gamma_lut.coregraphics_convert_to_linear(
                     &mut rasterized_pixels,
-                    metrics.rasterized_width as usize,
-                    metrics.rasterized_height as usize,
                 );
             }
 
-            for i in 0 .. metrics.rasterized_height {
-                let current_height = (i * metrics.rasterized_width * 4) as usize;
-                let end_row = current_height + (metrics.rasterized_width as usize * 4);
+            for pixel in rasterized_pixels.chunks_mut(4) {
+                if invert {
+                    pixel[0] = 255 - pixel[0];
+                    pixel[1] = 255 - pixel[1];
+                    pixel[2] = 255 - pixel[2];
+                }
 
-                for pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
-                    if invert {
-                        pixel[0] = 255 - pixel[0];
-                        pixel[1] = 255 - pixel[1];
-                        pixel[2] = 255 - pixel[2];
-                    }
-
-                    // Set alpha to the value of the green channel. For grayscale
-                    // text, all three channels have the same value anyway.
-                    // For subpixel text, the mask's alpha only makes a difference
-                    // when computing the destination alpha on destination pixels
-                    // that are not completely opaque. Picking an alpha value
-                    // that's somehow based on the mask at least ensures that text
-                    // blending doesn't modify the destination alpha on pixels where
-                    // the mask is entirely zero.
-                    pixel[3] = pixel[1];
-                } // end row
-            } // end height
+                // Set alpha to the value of the green channel. For grayscale
+                // text, all three channels have the same value anyway.
+                // For subpixel text, the mask's alpha only makes a difference
+                // when computing the destination alpha on destination pixels
+                // that are not completely opaque. Picking an alpha value
+                // that's somehow based on the mask at least ensures that text
+                // blending doesn't modify the destination alpha on pixels where
+                // the mask is entirely zero.
+                pixel[3] = pixel[1];
+            }
 
             if smooth {
                 // Convert back from linear space into device space, and perform
@@ -632,8 +621,6 @@ impl FontContext {
                 // into grayscale AA.
                 self.gamma_correct_pixels(
                     &mut rasterized_pixels,
-                    metrics.rasterized_width as usize,
-                    metrics.rasterized_height as usize,
                     font.render_mode,
                     font.color,
                 );

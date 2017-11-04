@@ -9,9 +9,6 @@ use std::path::PathBuf;
 use std::slice::Iter;
 use std::iter::Peekable;
 
-// Third Party
-use vec_map::{self, VecMap};
-
 // Internal
 use INTERNAL_ERROR_MSG;
 use INVALID_UTF8;
@@ -32,6 +29,7 @@ use suggestions;
 use app::settings::AppSettings as AS;
 use app::validator::Validator;
 use app::usage;
+use map::{self, VecMap};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 #[doc(hidden)]
@@ -98,12 +96,12 @@ impl<'a, 'b> Parser<'a, 'b>
     }
 
     pub fn gen_completions_to<W: Write>(&mut self, for_shell: Shell, buf: &mut W) {
-        if !self.is_set(AS::Propogated) {
-            self.propogate_help_version();
+        if !self.is_set(AS::Propagated) {
+            self.propagate_help_version();
             self.build_bin_names();
-            self.propogate_globals();
-            self.propogate_settings();
-            self.set(AS::Propogated);
+            self.propagate_globals();
+            self.propagate_settings();
+            self.set(AS::Propagated);
         }
 
         ComplGen::new(self).generate(for_shell, buf)
@@ -368,12 +366,12 @@ impl<'a, 'b> Parser<'a, 'b>
         self.subcommands.push(subcmd);
     }
 
-    pub fn propogate_settings(&mut self) {
-        debugln!("Parser::propogate_settings: self={}, g_settings={:#?}",
+    pub fn propagate_settings(&mut self) {
+        debugln!("Parser::propagate_settings: self={}, g_settings={:#?}",
                  self.meta.name,
                  self.g_settings);
         for sc in &mut self.subcommands {
-            debugln!("Parser::propogate_settings: sc={}, settings={:#?}, g_settings={:#?}",
+            debugln!("Parser::propagate_settings: sc={}, settings={:#?}, g_settings={:#?}",
                      sc.p.meta.name,
                      sc.p.settings,
                      sc.p.g_settings);
@@ -395,7 +393,7 @@ impl<'a, 'b> Parser<'a, 'b>
                 sc.p.meta.term_w = self.meta.term_w;
                 sc.p.meta.max_w = self.meta.max_w;
             }
-            sc.p.propogate_settings();
+            sc.p.propagate_settings();
         }
     }
 
@@ -475,10 +473,7 @@ impl<'a, 'b> Parser<'a, 'b>
 
     #[inline]
     pub fn has_visible_subcommands(&self) -> bool {
-        if self.subcommands.is_empty() {
-            return false;
-        }
-        self.subcommands.iter().any(|s| !s.p.is_set(AS::Hidden))
+        self.has_subcommands() && self.subcommands.iter().filter(|sc| sc.p.meta.name != "help").any(|sc| !sc.p.is_set(AS::Hidden))
     }
 
     #[inline]
@@ -612,7 +607,7 @@ impl<'a, 'b> Parser<'a, 'b>
         true
     }
 
-    pub fn propogate_globals(&mut self) {
+    pub fn propagate_globals(&mut self) {
         for sc in &mut self.subcommands {
             // We have to create a new scope in order to tell rustc the borrow of `sc` is
             // done and to recursively call this method
@@ -621,7 +616,7 @@ impl<'a, 'b> Parser<'a, 'b>
                     sc.p.add_arg_ref(a);
                 }
             }
-            sc.p.propogate_globals();
+            sc.p.propagate_globals();
         }
     }
 
@@ -853,17 +848,22 @@ impl<'a, 'b> Parser<'a, 'b>
             if !self.is_set(AS::TrailingValues) {
                 // Does the arg match a subcommand name, or any of it's aliases (if defined)
                 {
-                    let (is_match, sc_name) = self.possible_subcommand(&arg_os);
-                    debugln!("Parser::get_matches_with: possible_sc={:?}, sc={:?}",
-                             is_match,
-                             sc_name);
-                    if is_match {
-                        let sc_name = sc_name.expect(INTERNAL_ERROR_MSG);
-                        if sc_name == "help" && self.is_set(AS::NeedsSubcommandHelp) {
-                            try!(self.parse_help_subcommand(it));
+                    match needs_val_of {
+                        ParseResult::Opt(_) | ParseResult::Pos(_) =>(),
+                        _ => {
+                            let (is_match, sc_name) = self.possible_subcommand(&arg_os);
+                            debugln!("Parser::get_matches_with: possible_sc={:?}, sc={:?}",
+                                    is_match,
+                                    sc_name);
+                            if is_match {
+                                let sc_name = sc_name.expect(INTERNAL_ERROR_MSG);
+                                if sc_name == "help" && self.is_set(AS::NeedsSubcommandHelp) {
+                                    self.parse_help_subcommand(it)?;
+                                }
+                                subcmd_name = Some(sc_name.to_owned());
+                                break;
+                            }
                         }
-                        subcmd_name = Some(sc_name.to_owned());
-                        break;
                     }
                 }
 
@@ -875,12 +875,12 @@ impl<'a, 'b> Parser<'a, 'b>
                                 .find(|o| o.b.name == name)
                                 .expect(INTERNAL_ERROR_MSG);
                             // get the OptBuilder so we can check the settings
-                            needs_val_of = try!(self.add_val_to_arg(arg, &arg_os, matcher));
+                            needs_val_of = self.add_val_to_arg(arg, &arg_os, matcher)?;
                             // get the next value from the iterator
                             continue;
                     }
                 } else if arg_os.starts_with(b"--") {
-                    needs_val_of = try!(self.parse_long_arg(matcher, &arg_os));
+                    needs_val_of = self.parse_long_arg(matcher, &arg_os)?;
                     debugln!("Parser:get_matches_with: After parse_long_arg {:?}",
                              needs_val_of);
                     match needs_val_of {
@@ -893,7 +893,7 @@ impl<'a, 'b> Parser<'a, 'b>
                     // Try to parse short args like normal, if AllowLeadingHyphen or
                     // AllowNegativeNumbers is set, parse_short_arg will *not* throw
                     // an error, and instead return Ok(None)
-                    needs_val_of = try!(self.parse_short_arg(matcher, &arg_os));
+                    needs_val_of = self.parse_short_arg(matcher, &arg_os)?;
                     // If it's None, we then check if one of those two AppSettings was set
                     debugln!("Parser:get_matches_with: After parse_short_arg {:?}",
                              needs_val_of);
@@ -1015,8 +1015,8 @@ impl<'a, 'b> Parser<'a, 'b>
                                        name: sc_name,
                                        matches: sc_m.into(),
                                    });
-            } else if !(self.is_set(AS::AllowLeadingHyphen) ||
-                        self.is_set(AS::AllowNegativeNumbers)) &&
+            } else if !((self.is_set(AS::AllowLeadingHyphen) ||
+                        self.is_set(AS::AllowNegativeNumbers)) && arg_os.starts_with(b"-")) &&
                       !self.is_set(AS::InferSubcommands) {
                 return Err(Error::unknown_argument(&*arg_os.to_string_lossy(),
                                                    "",
@@ -1047,6 +1047,13 @@ impl<'a, 'b> Parser<'a, 'b>
                                                                   .unwrap_or(&self.meta.name),
                                                               self.color()));
                 }
+            } else {
+                return Err(Error::unknown_argument(&*arg_os.to_string_lossy(),
+                                                   "",
+                                                   &*usage::create_error_usage(self,
+                                                                               matcher,
+                                                                               None),
+                                                   self.color()));
             }
         }
 
@@ -1059,7 +1066,7 @@ impl<'a, 'b> Parser<'a, 'b>
                     .name
                     .clone()
             };
-            try!(self.parse_subcommand(&*sc_name, matcher, it));
+            self.parse_subcommand(&*sc_name, matcher, it)?;
         } else if self.is_set(AS::SubcommandRequired) {
             let bn = self.meta.bin_name.as_ref().unwrap_or(&self.meta.name);
             return Err(Error::missing_subcommand(bn,
@@ -1068,7 +1075,7 @@ impl<'a, 'b> Parser<'a, 'b>
         } else if self.is_set(AS::SubcommandRequiredElseHelp) {
             debugln!("Parser::get_matches_with: SubcommandRequiredElseHelp=true");
             let mut out = vec![];
-            try!(self.write_help_err(&mut out));
+            self.write_help_err(&mut out)?;
             return Err(Error {
                            message: String::from_utf8_lossy(&*out).into_owned(),
                            kind: ErrorKind::MissingArgumentOrSubcommand,
@@ -1080,11 +1087,11 @@ impl<'a, 'b> Parser<'a, 'b>
     }
 
 
-    fn propogate_help_version(&mut self) {
-        debugln!("Parser::propogate_help_version;");
+    fn propagate_help_version(&mut self) {
+        debugln!("Parser::propagate_help_version;");
         self.create_help_and_version();
         for sc in &mut self.subcommands {
-            sc.p.propogate_help_version();
+            sc.p.propagate_help_version();
         }
     }
 
@@ -1167,7 +1174,7 @@ impl<'a, 'b> Parser<'a, 'b>
             debugln!("Parser::parse_subcommand: About to parse sc={}",
                      sc.p.meta.name);
             debugln!("Parser::parse_subcommand: sc settings={:#?}", sc.p.settings);
-            try!(sc.p.get_matches_with(&mut sc_matcher, it));
+            sc.p.get_matches_with(&mut sc_matcher, it)?;
             matcher.subcommand(SubCommand {
                                    name: sc.p.meta.name.clone(),
                                    matches: sc_matcher.into(),
@@ -1337,16 +1344,14 @@ impl<'a, 'b> Parser<'a, 'b>
         Ok(())
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(let_and_return))]
     fn use_long_help(&self) -> bool {
-        let ul = self.flags.iter().any(|f| f.b.long_help.is_some()) ||
+        self.meta.long_about.is_some() ||
+                 self.flags.iter().any(|f| f.b.long_help.is_some()) ||
                  self.opts.iter().any(|o| o.b.long_help.is_some()) ||
                  self.positionals.values().any(|p| p.b.long_help.is_some()) ||
                  self.subcommands
                      .iter()
-                     .any(|s| s.p.meta.long_about.is_some());
-        debugln!("Parser::use_long_help: ret={:?}", ul);
-        ul
+                     .any(|s| s.p.meta.long_about.is_some())
     }
 
     fn _help(&self, mut use_long: bool) -> Error {
@@ -1356,7 +1361,7 @@ impl<'a, 'b> Parser<'a, 'b>
         match Help::write_parser_help(&mut buf, self, use_long) {
             Err(e) => e,
             _ => Error {
-                message: unsafe { String::from_utf8_unchecked(buf) },
+                message: String::from_utf8(buf).unwrap_or_default(),
                 kind: ErrorKind::HelpDisplayed,
                 info: None,
             }
@@ -1399,7 +1404,7 @@ impl<'a, 'b> Parser<'a, 'b>
             debugln!("Parser::parse_long_arg: Found valid opt '{}'",
                      opt.to_string());
             self.settings.set(AS::ValidArgFound);
-            let ret = try!(self.parse_opt(val, opt, val.is_some(), matcher));
+            let ret = self.parse_opt(val, opt, val.is_some(), matcher)?;
             if self.cache.map_or(true, |name| name != opt.b.name) {
                 arg_post_processing!(self, opt, matcher);
                 self.cache = Some(opt.b.name);
@@ -1412,9 +1417,9 @@ impl<'a, 'b> Parser<'a, 'b>
             self.settings.set(AS::ValidArgFound);
             // Only flags could be help or version, and we need to check the raw long
             // so this is the first point to check
-            try!(self.check_for_help_and_version_str(arg));
+            self.check_for_help_and_version_str(arg)?;
 
-            try!(self.parse_flag(flag, matcher));
+            self.parse_flag(flag, matcher)?;
 
             // Handle conflicts, requirements, etc.
             // if self.cache.map_or(true, |name| name != flag.b.name) {
@@ -1486,7 +1491,7 @@ impl<'a, 'b> Parser<'a, 'b>
                 };
 
                 // Default to "we're expecting a value later"
-                let ret = try!(self.parse_opt(val, opt, false, matcher));
+                let ret = self.parse_opt(val, opt, false, matcher)?;
 
                 if self.cache.map_or(true, |name| name != opt.b.name) {
                     arg_post_processing!(self, opt, matcher);
@@ -1498,8 +1503,8 @@ impl<'a, 'b> Parser<'a, 'b>
                 debugln!("Parser::parse_short_arg:iter:{}: Found valid flag", c);
                 self.settings.set(AS::ValidArgFound);
                 // Only flags can be help or version
-                try!(self.check_for_help_and_version_char(c));
-                ret = try!(self.parse_flag(flag, matcher));
+                self.check_for_help_and_version_char(c)?;
+                ret = self.parse_flag(flag, matcher)?;
 
                 // Handle conflicts, requirements, overrides, etc.
                 // Must be called here due to mutablilty
@@ -1529,13 +1534,17 @@ impl<'a, 'b> Parser<'a, 'b>
         debugln!("Parser::parse_opt; opt={}, val={:?}", opt.b.name, val);
         debugln!("Parser::parse_opt; opt.settings={:?}", opt.b.settings);
         let mut has_eq = false;
+        let no_val = val.is_none();
+        let empty_vals = opt.is_set(ArgSettings::EmptyValues);
+        let min_vals_zero = opt.v.min_vals.unwrap_or(1) == 0;
+        let needs_eq = opt.is_set(ArgSettings::RequireEquals);
 
         debug!("Parser::parse_opt; Checking for val...");
         if let Some(fv) = val {
             has_eq = fv.starts_with(&[b'=']) || had_eq;
             let v = fv.trim_left_matches(b'=');
-            if !opt.is_set(ArgSettings::EmptyValues) &&
-               (v.len_() == 0 || (opt.is_set(ArgSettings::RequireEquals) && !has_eq)) {
+            if !empty_vals &&
+               (v.len_() == 0 || (needs_eq && !has_eq)) {
                 sdebugln!("Found Empty - Error");
                 return Err(Error::empty_value(opt,
                                               &*usage::create_error_usage(self, matcher, None),
@@ -1545,8 +1554,8 @@ impl<'a, 'b> Parser<'a, 'b>
             debugln!("Parser::parse_opt: {:?} contains '='...{:?}",
                      fv,
                      fv.starts_with(&[b'=']));
-            try!(self.add_val_to_arg(opt, v, matcher));
-        } else if opt.is_set(ArgSettings::RequireEquals) && !opt.is_set(ArgSettings::EmptyValues) {
+            self.add_val_to_arg(opt, v, matcher)?;
+        } else if needs_eq && !(empty_vals || min_vals_zero) {
             sdebugln!("None, but requires equals...Error");
             return Err(Error::empty_value(opt,
                                           &*usage::create_error_usage(self, matcher, None),
@@ -1561,10 +1570,12 @@ impl<'a, 'b> Parser<'a, 'b>
         self.groups_for_arg(opt.b.name)
             .and_then(|vec| Some(matcher.inc_occurrences_of(&*vec)));
 
-        if val.is_none() ||
-           !has_eq &&
-           (opt.is_set(ArgSettings::Multiple) && !opt.is_set(ArgSettings::RequireDelimiter) &&
-            matcher.needs_more_vals(opt)) {
+        let needs_delim = opt.is_set(ArgSettings::RequireDelimiter);
+        let mult = opt.is_set(ArgSettings::Multiple);
+        if no_val && min_vals_zero && !has_eq && needs_eq {
+            debugln!("Parser::parse_opt: More arg vals not required...");
+            return Ok(ParseResult::ValuesDone);
+        } else if no_val || (mult && !needs_delim) && !has_eq && matcher.needs_more_vals(opt) {
             debugln!("Parser::parse_opt: More arg vals required...");
             return Ok(ParseResult::Opt(opt.b.name));
         }
@@ -1586,11 +1597,11 @@ impl<'a, 'b> Parser<'a, 'b>
         if !(self.is_set(AS::TrailingValues) && self.is_set(AS::DontDelimitTrailingValues)) {
             if let Some(delim) = arg.val_delim() {
                 if val.is_empty_() {
-                    Ok(try!(self.add_single_val_to_arg(arg, val, matcher)))
+                    Ok(self.add_single_val_to_arg(arg, val, matcher)?)
                 } else {
                     let mut iret = ParseResult::ValuesDone;
                     for v in val.split(delim as u32 as u8) {
-                        iret = try!(self.add_single_val_to_arg(arg, v, matcher));
+                        iret = self.add_single_val_to_arg(arg, v, matcher)?;
                     }
                     // If there was a delimiter used, we're not looking for more values
                     if val.contains_byte(delim as u32 as u8) ||
@@ -1679,7 +1690,7 @@ impl<'a, 'b> Parser<'a, 'b>
 
     // Prints the version to the user and exits if quit=true
     fn print_version<W: Write>(&self, w: &mut W, use_long: bool) -> ClapResult<()> {
-        try!(self.write_version(w, use_long));
+        self.write_version(w, use_long)?;
         w.flush().map_err(Error::from)
     }
 
@@ -1724,21 +1735,38 @@ impl<'a, 'b> Parser<'a, 'b>
     }
 
     pub fn add_defaults(&mut self, matcher: &mut ArgMatcher<'a>) -> ClapResult<()> {
+        debugln!("Parser::add_defaults;");
         macro_rules! add_val {
             (@default $_self:ident, $a:ident, $m:ident) => {
                 if let Some(ref val) = $a.v.default_val {
-                    if $m.get($a.b.name).is_none() {
-                        try!($_self.add_val_to_arg($a, OsStr::new(val), $m));
+                    debugln!("Parser::add_defaults:iter:{}: has default vals", $a.b.name);
+                    if $m.get($a.b.name).map(|ma| ma.vals.len()).map(|len| len == 0).unwrap_or(false) {
+                        debugln!("Parser::add_defaults:iter:{}: has no user defined vals", $a.b.name);
+                        $_self.add_val_to_arg($a, OsStr::new(val), $m)?;
+
+                        if $_self.cache.map_or(true, |name| name != $a.name()) {
+                            arg_post_processing!($_self, $a, $m);
+                            $_self.cache = Some($a.name());
+                        }
+                    } else if $m.get($a.b.name).is_some() {
+                        debugln!("Parser::add_defaults:iter:{}: has user defined vals", $a.b.name);
+                    } else {
+                        debugln!("Parser::add_defaults:iter:{}: wasn't used", $a.b.name);
+
+                        $_self.add_val_to_arg($a, OsStr::new(val), $m)?;
 
                         if $_self.cache.map_or(true, |name| name != $a.name()) {
                             arg_post_processing!($_self, $a, $m);
                             $_self.cache = Some($a.name());
                         }
                     }
+                } else {
+                    debugln!("Parser::add_defaults:iter:{}: doesn't have default vals", $a.b.name);
                 }
             };
             ($_self:ident, $a:ident, $m:ident) => {
                 if let Some(ref vm) = $a.v.default_vals_ifs {
+                    sdebugln!(" has conditional defaults");
                     let mut done = false;
                     if $m.get($a.b.name).is_none() {
                         for &(arg, val, default) in vm.values() {
@@ -1752,7 +1780,7 @@ impl<'a, 'b> Parser<'a, 'b>
                                 false
                             };
                             if add {
-                                try!($_self.add_val_to_arg($a, OsStr::new(default), $m));
+                                $_self.add_val_to_arg($a, OsStr::new(default), $m)?;
                                 if $_self.cache.map_or(true, |name| name != $a.name()) {
                                     arg_post_processing!($_self, $a, $m);
                                     $_self.cache = Some($a.name());
@@ -1766,8 +1794,48 @@ impl<'a, 'b> Parser<'a, 'b>
                     if done {
                         continue; // outer loop (outside macro)
                     }
+                } else {
+                    sdebugln!(" doesn't have conditional defaults");
                 }
                 add_val!(@default $_self, $a, $m)
+            };
+        }
+
+        for o in &self.opts {
+            debug!("Parser::add_defaults:iter:{}:", o.b.name);
+            add_val!(self, o, matcher);
+        }
+        for p in self.positionals.values() {
+            debug!("Parser::add_defaults:iter:{}:", p.b.name);
+            add_val!(self, p, matcher);
+        }
+        Ok(())
+    }
+    
+    pub fn add_env(&mut self, matcher: &mut ArgMatcher<'a>) -> ClapResult<()> {
+        macro_rules! add_val {
+            ($_self:ident, $a:ident, $m:ident) => {
+                if let Some(ref val) = $a.v.env {
+                    if $m.get($a.b.name).map(|ma| ma.vals.len()).map(|len| len == 0).unwrap_or(false) {
+                        if let Some(ref val) = val.1 {
+                            $_self.add_val_to_arg($a, OsStr::new(val), $m)?;
+
+                            if $_self.cache.map_or(true, |name| name != $a.name()) {
+                                arg_post_processing!($_self, $a, $m);
+                                $_self.cache = Some($a.name());
+                            }
+                        }
+                    } else {
+                        if let Some(ref val) = val.1 {
+                            $_self.add_val_to_arg($a, OsStr::new(val), $m)?;
+
+                            if $_self.cache.map_or(true, |name| name != $a.name()) {
+                                arg_post_processing!($_self, $a, $m);
+                                $_self.cache = Some($a.name());
+                            }
+                        }
+                    }
+                }
             };
         }
 
@@ -1784,7 +1852,7 @@ impl<'a, 'b> Parser<'a, 'b>
 
     pub fn opts(&self) -> Iter<OptBuilder<'a, 'b>> { self.opts.iter() }
 
-    pub fn positionals(&self) -> vec_map::Values<PosBuilder<'a, 'b>> { self.positionals.values() }
+    pub fn positionals(&self) -> map::Values<PosBuilder<'a, 'b>> { self.positionals.values() }
 
     pub fn subcommands(&self) -> Iter<App> { self.subcommands.iter() }
 

@@ -19,24 +19,40 @@ void range_check_func(int32_t stage, const int32_t *input, const int32_t *buf,
   const int64_t maxValue = (1LL << (bit - 1)) - 1;
   const int64_t minValue = -(1LL << (bit - 1));
 
+  int in_range = 1;
+
   for (int i = 0; i < size; ++i) {
     if (buf[i] < minValue || buf[i] > maxValue) {
-      fprintf(stderr, "Error: coeffs contain out-of-range values\n");
-      fprintf(stderr, "stage: %d\n", stage);
-      fprintf(stderr, "node: %d\n", i);
-      fprintf(stderr, "allowed range: [%" PRId64 ";%" PRId64 "]\n", minValue,
-              maxValue);
-      fprintf(stderr, "coeffs: ");
-
-      fprintf(stderr, "[");
-      for (int j = 0; j < size; j++) {
-        if (j > 0) fprintf(stderr, ", ");
-        fprintf(stderr, "%d", input[j]);
-      }
-      fprintf(stderr, "]\n");
-      assert(0);
+      in_range = 0;
     }
   }
+
+  if (!in_range) {
+    fprintf(stderr, "Error: coeffs contain out-of-range values\n");
+    fprintf(stderr, "stage: %d\n", stage);
+    fprintf(stderr, "allowed range: [%" PRId64 ";%" PRId64 "]\n", minValue,
+            maxValue);
+
+    fprintf(stderr, "coeffs: ");
+
+    fprintf(stderr, "[");
+    for (int j = 0; j < size; j++) {
+      if (j > 0) fprintf(stderr, ", ");
+      fprintf(stderr, "%d", input[j]);
+    }
+    fprintf(stderr, "]\n");
+
+    fprintf(stderr, "   buf: ");
+
+    fprintf(stderr, "[");
+    for (int j = 0; j < size; j++) {
+      if (j > 0) fprintf(stderr, ", ");
+      fprintf(stderr, "%d", buf[j]);
+    }
+    fprintf(stderr, "]\n\n");
+  }
+
+  assert(in_range);
 }
 
 #define range_check(stage, input, buf, size, bit) \
@@ -1577,6 +1593,16 @@ void av1_iidentity32_c(const int32_t *input, int32_t *output,
   for (int i = 0; i < 32; ++i) output[i] = input[i] * 4;
   range_check(0, input, output, 32, stage_range[0]);
 }
+
+#if CONFIG_TX64X64
+void av1_iidentity64_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range) {
+  (void)cos_bit;
+  for (int i = 0; i < 64; ++i)
+    output[i] = (int32_t)dct_const_round_shift(input[i] * 4 * Sqrt2);
+  range_check(0, input, output, 64, stage_range[0]);
+}
+#endif  // CONFIG_TX64X64
 #endif  // CONFIG_EXT_TX
 
 #if CONFIG_TX64X64

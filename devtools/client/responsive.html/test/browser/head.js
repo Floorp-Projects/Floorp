@@ -381,3 +381,43 @@ function* testUserAgent(ui, expected) {
   });
   is(ua, expected, `UA should be set to ${expected}`);
 }
+
+/**
+ * Assuming the device modal is open and the device adder form is shown, this helper
+ * function adds `device` via the form, saves it, and waits for it to appear in the store.
+ */
+function addDeviceInModal(ui, device) {
+  let { toolWindow } = ui;
+  let { store, document } = ui.toolWindow;
+  let React = toolWindow.require("devtools/client/shared/vendor/react");
+  let { Simulate } = React.addons.TestUtils;
+
+  let nameInput = document.querySelector("#device-adder-name input");
+  let [ widthInput, heightInput ] = document.querySelectorAll("#device-adder-size input");
+  let pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
+  let userAgentInput = document.querySelector("#device-adder-user-agent input");
+  let touchInput = document.querySelector("#device-adder-touch input");
+
+  nameInput.value = device.name;
+  Simulate.change(nameInput);
+  widthInput.value = device.width;
+  Simulate.change(widthInput);
+  Simulate.blur(widthInput);
+  heightInput.value = device.height;
+  Simulate.change(heightInput);
+  Simulate.blur(heightInput);
+  pixelRatioInput.value = device.pixelRatio;
+  Simulate.change(pixelRatioInput);
+  userAgentInput.value = device.userAgent;
+  Simulate.change(userAgentInput);
+  touchInput.checked = device.touch;
+  Simulate.change(touchInput);
+
+  let existingCustomDevices = store.getState().devices.custom.length;
+  let adderSave = document.querySelector("#device-adder-save");
+  let saved = waitUntilState(store, state =>
+    state.devices.custom.length == existingCustomDevices + 1
+  );
+  Simulate.click(adderSave);
+  return saved;
+}

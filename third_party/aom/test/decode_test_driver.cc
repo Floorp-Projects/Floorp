@@ -59,14 +59,15 @@ void DecoderTest::HandlePeekResult(Decoder *const decoder,
     /* Vp8's implementation of PeekStream returns an error if the frame you
      * pass it is not a keyframe, so we only expect AOM_CODEC_OK on the first
      * frame, which must be a keyframe. */
-    if (video->frame_number() == 0)
-      ASSERT_EQ(AOM_CODEC_OK, res_peek) << "Peek return failed: "
-                                        << aom_codec_err_to_string(res_peek);
+    if (video->frame_number() == 0) {
+      ASSERT_EQ(AOM_CODEC_OK, res_peek)
+          << "Peek return failed: " << aom_codec_err_to_string(res_peek);
+    }
   } else {
     /* The Av1 implementation of PeekStream returns an error only if the
      * data passed to it isn't a valid Av1 chunk. */
-    ASSERT_EQ(AOM_CODEC_OK, res_peek) << "Peek return failed: "
-                                      << aom_codec_err_to_string(res_peek);
+    ASSERT_EQ(AOM_CODEC_OK, res_peek)
+        << "Peek return failed: " << aom_codec_err_to_string(res_peek);
   }
 }
 

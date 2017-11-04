@@ -667,8 +667,8 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aBorderArea,
                                      nsStyleContext* aStyleContext,
-                                     Sides aSkipSides,
-                                     bool* aOutBorderIsEmpty)
+                                     bool* aOutBorderIsEmpty,
+                                     Sides aSkipSides)
 {
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
@@ -678,8 +678,8 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
     return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                                aForFrame, aDirtyRect,
                                                aBorderArea, *styleBorder,
-                                               aStyleContext, aSkipSides,
-                                               aOutBorderIsEmpty);
+                                               aStyleContext, aOutBorderIsEmpty,
+                                               aSkipSides);
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
@@ -692,7 +692,7 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
   return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                              aForFrame, aDirtyRect, aBorderArea,
                                              newStyleBorder, aStyleContext,
-                                             aSkipSides, aOutBorderIsEmpty);
+                                             aOutBorderIsEmpty, aSkipSides);
 }
 
 
@@ -708,6 +708,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
 {
   // First try to draw a normal border
   {
+    bool borderIsEmpty = false;
     Maybe<nsCSSBorderRenderer> br =
       nsCSSRendering::CreateBorderRenderer(aForFrame->PresContext(),
                                            nullptr,
@@ -715,7 +716,11 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
                                            nsRect(),
                                            aBorderArea,
                                            aForFrame->StyleContext(),
+                                           &borderIsEmpty,
                                            aForFrame->GetSkipSides());
+    if (borderIsEmpty) {
+      return true;
+    }
 
     if (br) {
       if (!br->CanCreateWebRenderCommands()) {
@@ -984,8 +989,8 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                     const nsRect& aBorderArea,
                                                     const nsStyleBorder& aStyleBorder,
                                                     nsStyleContext* aStyleContext,
-                                                    Sides aSkipSides,
-                                                    bool* aOutBorderIsEmpty)
+                                                    bool* aOutBorderIsEmpty,
+                                                    Sides aSkipSides)
 {
   const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
   if (displayData->mAppearance) {

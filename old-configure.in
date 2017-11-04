@@ -3214,21 +3214,27 @@ dnl = FFmpeg's ffvpx configuration
 dnl ========================================================
 
 MOZ_FFVPX=
+MOZ_FFVPX_FLACONLY=
 case "$CPU_ARCH" in
-  x86)
+  x86|x86_64)
       MOZ_FFVPX=1
+      dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
+      FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
   ;;
-  x86_64)
+  arm*|aarch64)
       MOZ_FFVPX=1
+      MOZ_FFVPX_FLACONLY=1
+      dnl Use same conditional as MOZ_LIBVPX to enable FFmpeg's ffvpx assembly decoder.
+      dnl aarch 64 FLAC decoder for now will be C only.
+      FFVPX_ASFLAGS=$VPX_ASFLAGS
   ;;
 esac
 
-dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-if test -n "$MOZ_LIBAV_FFT"; then
-  FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
-fi
 if test -n "$MOZ_FFVPX"; then
   AC_DEFINE(MOZ_FFVPX)
+fi
+if test -n "$MOZ_FFVPX_FLACONLY"; then
+  AC_DEFINE(MOZ_FFVPX_FLACONLY)
 fi
 
 dnl ========================================================
@@ -4805,6 +4811,7 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_FFVPX)
+AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(VPX_USE_YASM)
 AC_SUBST_LIST(VPX_ASFLAGS)

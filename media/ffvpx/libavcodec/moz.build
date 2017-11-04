@@ -7,64 +7,70 @@
 # Due to duplicate file names, we compile libavutil/x86 in its own
 # moz.build file.
 if CONFIG['FFVPX_ASFLAGS']:
-    DIRS += ['x86']
+    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+        DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'arm':
+        DIRS += ['arm']
 
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
-    'audioconvert.c',
     'avpacket.c',
-    'avpicture.c',
-    'bitstream.c',
-    'bitstream_filter.c',
     'bitstream_filters.c',
     'bsf.c',
     'codec_desc.c',
     'decode.c',
     'dummy_funcs.c',
     'flac.c',
-    'flac_parser.c',
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',
-    'golomb.c',
-    'h264pred.c',
-    'imgconvert.c',
     'log2_tab.c',
-    'mathtables.c',
     'null_bsf.c',
     'options.c',
     'parser.c',
-    'profiles.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
-    'qsv_api.c',
-    'raw.c',
-    'resample.c',
-    'resample2.c',
-    'reverse.c',
     'utils.c',
-    'videodsp.c',
     'vorbis_parser.c',
-    'vp56rac.c',
-    'vp8.c',
-    'vp8_parser.c',
-    'vp8dsp.c',
-    'vp9.c',
-    'vp9_parser.c',
-    'vp9block.c',
-    'vp9data.c',
-    'vp9dsp.c',
-    'vp9dsp_10bpp.c',
-    'vp9dsp_12bpp.c',
-    'vp9dsp_8bpp.c',
-	'vp9lpf.c',
-	'vp9mvs.c',
-	'vp9prob.c',
-	'vp9recon.c',
     'xiph.c'
 ]
+
+if not CONFIG['MOZ_FFVPX_FLACONLY']:
+    SOURCES += [
+        'audioconvert.c',
+        'avpicture.c',
+        'bitstream.c',
+        'bitstream_filter.c',
+        'golomb.c',
+        'h264pred.c',
+        'imgconvert.c',
+        'mathtables.c',
+        'profiles.c',
+        'qsv_api.c',
+        'raw.c',
+        'resample.c',
+        'resample2.c',
+        'reverse.c',
+        'videodsp.c',
+        'vp56rac.c',
+        'vp8.c',
+        'vp8_parser.c',
+        'vp8dsp.c',
+        'vp9.c',
+        'vp9_parser.c',
+        'vp9block.c',
+        'vp9data.c',
+        'vp9dsp.c',
+        'vp9dsp_10bpp.c',
+        'vp9dsp_12bpp.c',
+        'vp9dsp_8bpp.c',
+        'vp9lpf.c',
+        'vp9mvs.c',
+        'vp9prob.c',
+        'vp9recon.c'
+    ]
 
 SYMBOLS_FILE = 'avcodec.symbols'
 NoVisibilityFlags()

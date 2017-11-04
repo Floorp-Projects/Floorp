@@ -407,6 +407,11 @@ void aom_convolve_avg_dspr2(const uint8_t *src, ptrdiff_t src_stride,
   uint32_t tp1, tp2, tn1;
   uint32_t tp3, tp4, tn2;
 
+  (void)filter_x;
+  (void)filter_x_stride;
+  (void)filter_y;
+  (void)filter_y_stride;
+
   /* prefetch data to cache memory */
   prefetch_load(src);
   prefetch_load(src + 32);

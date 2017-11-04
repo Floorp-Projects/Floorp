@@ -202,7 +202,7 @@ class Toolbar extends Component {
               className: "devtools-checkbox",
               type: "checkbox",
               checked: persistentLogsEnabled,
-              onClick: togglePersistentLogs,
+              onChange: togglePersistentLogs,
             }),
             ENABLE_PERSISTENT_LOGS_LABEL
           ),
@@ -216,7 +216,7 @@ class Toolbar extends Component {
               className: "devtools-checkbox",
               type: "checkbox",
               checked: browserCacheDisabled,
-              onClick: toggleBrowserCache,
+              onChange: toggleBrowserCache,
             }),
             DISABLE_CACHE_LABEL,
           ),

@@ -330,8 +330,8 @@ nsDisplayButtonBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                          nsRect(),
                                          nsRect(offset, mFrame->GetSize()),
                                          mFrame->StyleContext(),
-                                         mFrame->GetSkipSides(),
-                                         &mBorderIsEmpty);
+                                         &mBorderIsEmpty,
+                                         mFrame->GetSkipSides());
     if (!br) {
       if (mBorderIsEmpty) {
         return LAYER_ACTIVE;
@@ -370,12 +370,6 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
     return false;
   }
 
-  if (!mBorderRenderer) {
-    // empty border, nothing to do
-    MOZ_ASSERT(mBorderIsEmpty);
-    return true;
-  }
-
   // This is really a combination of paint box shadow inner +
   // paint border.
   nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
@@ -386,7 +380,13 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                                                  visible,
                                                                  mFrame,
                                                                  buttonRect);
-  mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+
+  if (mBorderRenderer) {
+    mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+  } else {
+    // empty border, nothing to do
+    MOZ_ASSERT(mBorderIsEmpty);
+  }
 
   return true;
 }
@@ -520,8 +520,13 @@ nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
     const nsStyleDisplay *disp = mFrame->StyleDisplay();
     if (!mFrame->IsThemed(disp) ||
         !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+      bool borderIsEmpty = false;
       nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
-      br = mBFR->CreateInnerFocusBorderRenderer(aBuilder, presContext, nullptr, mVisibleRect, r);
+      br = mBFR->CreateInnerFocusBorderRenderer(aBuilder, presContext, nullptr,
+                                                mVisibleRect, r, &borderIsEmpty);
+      if (borderIsEmpty) {
+        return LAYER_ACTIVE;
+      }
     }
   }
 
@@ -552,6 +557,11 @@ nsDisplayButtonForeground::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
   ContainerLayerParameters parameter;
   if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
     return false;
+  }
+
+  // empty border, nothing to do
+  if (!mBorderRenderer) {
+    return true;
   }
 
   mBorderRenderer->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
@@ -634,7 +644,8 @@ nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
   nsPresContext* aPresContext,
   gfxContext* aRenderingContext,
   const nsRect& aDirtyRect,
-  const nsRect& aRect)
+  const nsRect& aRect,
+  bool* aBorderIsEmpty)
 {
   if (mInnerFocusStyle) {
     nsRect rect;
@@ -646,7 +657,8 @@ nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
                                                 mFrame,
                                                 aDirtyRect,
                                                 rect,
-                                                mInnerFocusStyle);
+                                                mInnerFocusStyle,
+                                                aBorderIsEmpty);
   }
 
   return Nothing();

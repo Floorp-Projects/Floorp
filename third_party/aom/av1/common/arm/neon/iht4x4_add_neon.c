@@ -148,13 +148,13 @@ void av1_iht4x4_16_add_neon(const tran_low_t *input, uint8_t *dest,
 
   TRANSPOSE4X4(&q8s16, &q9s16);
 
-  int tx_type = txfm_param->tx_type;
+  const TX_TYPE tx_type = txfm_param->tx_type;
   switch (tx_type) {
-    case 0:  // idct_idct is not supported. Fall back to C
+    case DCT_DCT:  // idct_idct is not supported. Fall back to C
       av1_iht4x4_16_add_c(input, dest, dest_stride, txfm_param);
       return;
       break;
-    case 1:  // iadst_idct
+    case ADST_DCT:  // iadst_idct
       // generate constants
       GENERATE_COSINE_CONSTANTS(&d0s16, &d1s16, &d2s16);
       GENERATE_SINE_CONSTANTS(&d3s16, &d4s16, &d5s16, &q3s16);
@@ -168,7 +168,7 @@ void av1_iht4x4_16_add_neon(const tran_low_t *input, uint8_t *dest,
       // then transform columns
       IADST4x4_1D(&d3s16, &d4s16, &d5s16, &q3s16, &q8s16, &q9s16);
       break;
-    case 2:  // idct_iadst
+    case DCT_ADST:  // idct_iadst
       // generate constantsyy
       GENERATE_COSINE_CONSTANTS(&d0s16, &d1s16, &d2s16);
       GENERATE_SINE_CONSTANTS(&d3s16, &d4s16, &d5s16, &q3s16);
@@ -182,7 +182,7 @@ void av1_iht4x4_16_add_neon(const tran_low_t *input, uint8_t *dest,
       // then transform columns
       IDCT4x4_1D(&d0s16, &d1s16, &d2s16, &q8s16, &q9s16);
       break;
-    case 3:  // iadst_iadst
+    case ADST_ADST:  // iadst_iadst
       // generate constants
       GENERATE_SINE_CONSTANTS(&d3s16, &d4s16, &d5s16, &q3s16);
 

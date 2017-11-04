@@ -52,10 +52,9 @@ extern "C" {
 #define UNLIKELY(v) (v)
 #endif
 
-#if CONFIG_AOM_QM
 typedef uint16_t qm_val_t;
 #define AOM_QM_BITS 5
-#endif
+
 #if CONFIG_HIGHBITDEPTH
 // Note:
 // tran_low_t  is the datatype used for final transform coefficients.
@@ -75,6 +74,10 @@ static INLINE uint8_t clip_pixel(int val) {
 }
 
 static INLINE int clamp(int value, int low, int high) {
+  return value < low ? low : (value > high ? high : value);
+}
+
+static INLINE uint32_t clamp32u(uint32_t value, uint32_t low, uint32_t high) {
   return value < low ? low : (value > high ? high : value);
 }
 

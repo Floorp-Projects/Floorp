@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="http://test1.mochi.test:8888/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+// Test that if we can capture a video frame while playing clear content after
+// removing the MediaKeys object which was used for a previous encrypted content
+// playback on the same video element
+function startTest(test, token)
+{
+  manager.started(token);
+  var sessions = [];
+  function onSessionCreated(session) {
+    sessions.push(session);
+  }
+
+  function closeSessions() {
+    let p = new EMEPromise;
+    Promise.all(sessions.map(s => s.close()))
+    .then(p.resolve, p.reject);
+    return p.promise;
+  }
+
+  let v = document.createElement("video");
+  document.body.appendChild(v);
+
+  let finish = new EMEPromise;
+
+  function onVideoEnded(ev) {
+    ok(true, TimeStamp(token) + " (ENCRYPTED) content playback ended.");
+    v.removeEventListener("ended", onVideoEnded);
+
+    function playClearVideo() {
+      var p1 = once(v, 'ended', (e) => {
+        ok(true, TimeStamp(token) + " (CLEAR) content playback ended.");
+        console.log(" bipbop.mp4 playback ended !!");
+      });
+      var p2 = once(v, 'loadeddata', (e) => {
+        ok(true, TimeStamp(token) + " Receiving event 'loadeddata' for (CLEAR) content.");
+        canvasElem = document.createElement('canvas');
+        document.body.appendChild(canvasElem);
+        ctx2d = canvasElem.getContext('2d');
+
+        var gotTypeError = false;
+        try {
+          ctx2d.drawImage(v, 0, 0);
+        } catch (e) {
+          if (e instanceof TypeError) {
+            gotTypeError = true;
+          }
+        }
+        ok(!gotTypeError, TimeStamp(token) + " Canvas2D context drawImage succeed.")
+      });
+      v.src = 'bipbop_225w_175kbps.mp4';
+      v.play();
+      Promise.all([p1, p2, closeSessions()]).then(() => {
+        manager.finished(token);
+      }, () => {
+        ok(false, TimeStamp(token) + " Something wrong.");
+        manager.finished(token);
+      });
+    }
+
+    Promise.all(sessions.map(s => s.close()))
+    .then(() => {
+      v.setMediaKeys(null)
+      .then(() => {
+        ok(true, TimeStamp(token) + " Setting MediaKeys to null.");
+        playClearVideo();
+      }, () => {
+        ok(false, TimeStamp(token) + " Setting MediaKeys to null.");
+      });;
+    });
+  }
+
+  v.addEventListener("ended", onVideoEnded);
+
+  // Create a MediaKeys object and set to HTMLMediaElement then start the playback.
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token)])
+  .then(values => {
+    let initData = values[0];
+    v.play();
+    initData.map(ev => {
+      let session = v.mediaKeys.createSession();
+      onSessionCreated(session);
+      MakeRequest(test, token, ev, session);
+    });
+  })
+  .then(() => {
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+}
+
+function beginTest() {
+  manager.runTests(gEMETests, startTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

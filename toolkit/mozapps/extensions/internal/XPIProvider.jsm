@@ -212,7 +212,6 @@ const TYPE_ALIASES = {
 
 const CHROME_TYPES = new Set([
   "extension",
-  "locale",
   "experiment",
 ]);
 
@@ -4211,11 +4210,6 @@ this.XPIProvider = {
 
     let activeAddon = this.activeAddons.get(aId);
 
-    // Locales only contain chrome and can't have bootstrap scripts
-    if (aType == "locale") {
-      return;
-    }
-
     logger.debug("Loading bootstrap scope from " + aFile.path);
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
@@ -4346,10 +4340,6 @@ this.XPIProvider = {
         }
         aExtraParams.instanceID = this.activeAddons.get(aAddon.id).instanceID;
       }
-
-      // Nothing to call for locales
-      if (aAddon.type == "locale")
-        return;
 
       let method = undefined;
       let scope = activeAddon.bootstrapScope;

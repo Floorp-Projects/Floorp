@@ -807,6 +807,7 @@ class CargoProvider(MachCommandBase):
         crates_and_roots = {
             'gkrust': 'toolkit/library/rust',
             'gkrust-gtest': 'toolkit/library/gtest/rust',
+            'js': 'js/rust',
             'mozjs_sys': 'js/src',
             'geckodriver': 'testing/geckodriver',
         }

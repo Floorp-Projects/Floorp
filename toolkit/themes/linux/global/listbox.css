@@ -13,11 +13,6 @@
 listbox {
   -moz-appearance: listbox;
   margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
@@ -27,10 +22,6 @@ listbox[disabled="true"] {
 }
 
 /* ::::: listitem ::::: */
-
-listitem {
-  border: 1px solid transparent;
-}
 
 listbox:focus > listitem[selected="true"][current="true"] {
   outline: 1px dotted #F3D982;
@@ -56,43 +47,16 @@ listbox:focus > listitem[selected="true"] {
 listheader { 
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
-  padding: 0 2px;
-}
-
-listheader:hover {
-  color: -moz-buttonhovertext;
-}
-
-listheader[sortable="true"]:hover:active {
-  color: ButtonText;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow transparent;
-  -moz-border-bottom-colors: ThreeDShadow transparent;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  padding-inline-start: 3px;
-  padding-inline-end: 1px;
 }
 
 .listheader-icon {
   margin-inline-end: 2px;
 }
 
-.listheader-icon[sortable="true"]:hover:active {
-  margin-inline-end: 1px;
-}
-
 .listheader-label {
-  margin: 0px !important;
+  margin: 0 !important;
 }
 
 /* ..... sort direction icon ..... */
@@ -104,11 +68,11 @@ listheader[sortable="true"]:hover:active {
 /* ::::: listcell ::::: */
 
 .listcell-label {
-  margin: 0px !important;
-  padding-top: 0px;
+  margin: 0 !important;
+  padding-top: 0;
   padding-bottom: 1px;
   padding-inline-start: 4px;
-  padding-inline-end: 0px;
+  padding-inline-end: 0;
   white-space: nowrap;
 }
 
@@ -125,9 +89,7 @@ listheader[sortable="true"]:hover:active {
 .listcell-check {
   -moz-appearance: checkbox;
   -moz-box-align: center;
-  margin: 0px 2px;
-  border: 1px solid -moz-DialogText;
+  margin: 0 2px;
   min-width: 13px;
   min-height: 13px;
-  background: -moz-Field no-repeat 50% 50%;
 }

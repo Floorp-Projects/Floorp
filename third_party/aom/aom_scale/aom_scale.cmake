@@ -30,7 +30,7 @@ function (setup_aom_scale_targets)
 
   if (HAVE_DSPR2)
     add_intrinsics_object_library("" "dspr2" "aom_scale"
-                                  "AOM_SCALE_INTRIN_DSPR2" "aom_scale")
+                                  "AOM_SCALE_INTRIN_DSPR2" "aom")
   endif ()
 
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_scale PARENT_SCOPE)

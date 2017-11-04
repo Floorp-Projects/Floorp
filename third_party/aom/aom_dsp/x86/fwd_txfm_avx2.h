@@ -15,21 +15,21 @@
 #include "./aom_config.h"
 
 static INLINE void storeu_output_avx2(const __m256i *coeff, tran_low_t *out) {
-#if CONFIG_HIGHBITDEPTH
-  const __m256i zero = _mm256_setzero_si256();
-  const __m256i sign = _mm256_cmpgt_epi16(zero, *coeff);
+  if (sizeof(tran_low_t) == 4) {
+    const __m256i zero = _mm256_setzero_si256();
+    const __m256i sign = _mm256_cmpgt_epi16(zero, *coeff);
 
-  __m256i x0 = _mm256_unpacklo_epi16(*coeff, sign);
-  __m256i x1 = _mm256_unpackhi_epi16(*coeff, sign);
+    __m256i x0 = _mm256_unpacklo_epi16(*coeff, sign);
+    __m256i x1 = _mm256_unpackhi_epi16(*coeff, sign);
 
-  __m256i y0 = _mm256_permute2x128_si256(x0, x1, 0x20);
-  __m256i y1 = _mm256_permute2x128_si256(x0, x1, 0x31);
+    __m256i y0 = _mm256_permute2x128_si256(x0, x1, 0x20);
+    __m256i y1 = _mm256_permute2x128_si256(x0, x1, 0x31);
 
-  _mm256_storeu_si256((__m256i *)out, y0);
-  _mm256_storeu_si256((__m256i *)(out + 8), y1);
-#else
-  _mm256_storeu_si256((__m256i *)out, *coeff);
-#endif
+    _mm256_storeu_si256((__m256i *)out, y0);
+    _mm256_storeu_si256((__m256i *)(out + 8), y1);
+  } else {
+    _mm256_storeu_si256((__m256i *)out, *coeff);
+  }
 }
 
 #endif  // AOM_DSP_X86_FWD_TXFM_AVX2_H

@@ -11,9 +11,9 @@
 
 #include <assert.h>
 
-#include "aom_scale/yv12config.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
+#include "aom_scale/yv12config.h"
 
 /****************************************************************************
 *  Exports
@@ -35,7 +35,7 @@ int aom_free_frame_buffer(YV12_BUFFER_CONFIG *ybf) {
     }
 
 #if CONFIG_HIGHBITDEPTH && CONFIG_GLOBAL_MOTION
-    if (ybf->y_buffer_8bit) free(ybf->y_buffer_8bit);
+    if (ybf->y_buffer_8bit) aom_free(ybf->y_buffer_8bit);
 #endif
 
     /* buffer_alloc isn't accessed by most functions.  Rather y_buffer,
@@ -168,9 +168,12 @@ int aom_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height,
                                    aom_byte_align);
 
 #if CONFIG_HIGHBITDEPTH && CONFIG_GLOBAL_MOTION
-    if (ybf->y_buffer_8bit) {
-      free(ybf->y_buffer_8bit);
-      ybf->y_buffer_8bit = NULL;
+    if (use_highbitdepth) {
+      if (ybf->y_buffer_8bit) aom_free(ybf->y_buffer_8bit);
+      ybf->y_buffer_8bit = (uint8_t *)aom_memalign(32, (size_t)yplane_size);
+      if (!ybf->y_buffer_8bit) return -1;
+    } else {
+      assert(!ybf->y_buffer_8bit);
     }
 #endif
 

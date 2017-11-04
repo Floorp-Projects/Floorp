@@ -67,18 +67,7 @@ struct ConvolveFunctions {
 
 typedef std::tr1::tuple<int, int, const ConvolveFunctions *> ConvolveParam;
 
-#if CONFIG_AV1 && CONFIG_EXT_PARTITION
-#define ALL_SIZES(convolve_fn)                                            \
-  make_tuple(128, 64, &convolve_fn), make_tuple(64, 128, &convolve_fn),   \
-      make_tuple(128, 128, &convolve_fn), make_tuple(4, 4, &convolve_fn), \
-      make_tuple(8, 4, &convolve_fn), make_tuple(4, 8, &convolve_fn),     \
-      make_tuple(8, 8, &convolve_fn), make_tuple(16, 8, &convolve_fn),    \
-      make_tuple(8, 16, &convolve_fn), make_tuple(16, 16, &convolve_fn),  \
-      make_tuple(32, 16, &convolve_fn), make_tuple(16, 32, &convolve_fn), \
-      make_tuple(32, 32, &convolve_fn), make_tuple(64, 32, &convolve_fn), \
-      make_tuple(32, 64, &convolve_fn), make_tuple(64, 64, &convolve_fn)
-#else
-#define ALL_SIZES(convolve_fn)                                            \
+#define ALL_SIZES_64(convolve_fn)                                         \
   make_tuple(4, 4, &convolve_fn), make_tuple(8, 4, &convolve_fn),         \
       make_tuple(4, 8, &convolve_fn), make_tuple(8, 8, &convolve_fn),     \
       make_tuple(16, 8, &convolve_fn), make_tuple(8, 16, &convolve_fn),   \
@@ -86,6 +75,13 @@ typedef std::tr1::tuple<int, int, const ConvolveFunctions *> ConvolveParam;
       make_tuple(16, 32, &convolve_fn), make_tuple(32, 32, &convolve_fn), \
       make_tuple(64, 32, &convolve_fn), make_tuple(32, 64, &convolve_fn), \
       make_tuple(64, 64, &convolve_fn)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION
+#define ALL_SIZES(convolve_fn)                                          \
+  make_tuple(128, 64, &convolve_fn), make_tuple(64, 128, &convolve_fn), \
+      make_tuple(128, 128, &convolve_fn), ALL_SIZES_64(convolve_fn)
+#else
+#define ALL_SIZES ALL_SIZES_64
 #endif  // CONFIG_AV1 && CONFIG_EXT_PARTITION
 
 // Reference 8-tap subpixel filter, slightly modified to fit into this test.
@@ -414,7 +410,9 @@ class ConvolveTest : public ::testing::TestWithParam<ConvolveParam> {
 
   void CheckGuardBlocks() {
     for (int i = 0; i < kOutputBufferSize; ++i) {
-      if (IsIndexInBorder(i)) EXPECT_EQ(255, output_[i]);
+      if (IsIndexInBorder(i)) {
+        EXPECT_EQ(255, output_[i]);
+      }
     }
   }
 
@@ -1282,9 +1280,9 @@ const ConvolveFunctions convolve12_avx2(
     wrap_convolve8_horiz_c_12, wrap_convolve8_avg_horiz_c_12,
     wrap_convolve8_vert_c_12, wrap_convolve8_avg_vert_c_12, wrap_convolve8_c_12,
     wrap_convolve8_avg_c_12, 12);
-const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES(convolve8_avx2),
-                                               ALL_SIZES(convolve10_avx2),
-                                               ALL_SIZES(convolve12_avx2) };
+const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES_64(convolve8_avx2),
+                                               ALL_SIZES_64(convolve10_avx2),
+                                               ALL_SIZES_64(convolve12_avx2) };
 #else
 const ConvolveFunctions convolve8_avx2(
     aom_convolve_copy_c, aom_convolve_avg_c, aom_convolve8_horiz_avx2,
@@ -1293,7 +1291,7 @@ const ConvolveFunctions convolve8_avx2(
     aom_scaled_horiz_c, aom_scaled_avg_horiz_c, aom_scaled_vert_c,
     aom_scaled_avg_vert_c, aom_scaled_2d_c, aom_scaled_avg_2d_c, 0);
 
-const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES(convolve8_avx2) };
+const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES_64(convolve8_avx2) };
 #endif  // CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(AVX2, ConvolveTest,
                         ::testing::ValuesIn(kArrayConvolve8_avx2));
@@ -1317,10 +1315,10 @@ const ConvolveFunctions convolve8_neon(
     aom_scaled_avg_vert_c, aom_scaled_2d_c, aom_scaled_avg_2d_c, 0);
 #endif  // HAVE_NEON_ASM
 
-const ConvolveParam kArrayConvolve8_neon[] = { ALL_SIZES(convolve8_neon) };
+const ConvolveParam kArrayConvolve8_neon[] = { ALL_SIZES_64(convolve8_neon) };
 INSTANTIATE_TEST_CASE_P(NEON, ConvolveTest,
                         ::testing::ValuesIn(kArrayConvolve8_neon));
-#endif  // HAVE_NEON
+#endif  // HAVE_NEON && !(CONFIG_AV1 && CONFIG_EXT_PARTITION)
 
 // TODO(any): Make DSPR2 versions support 128x128 128x64 64x128 block sizes
 #if HAVE_DSPR2 && !(CONFIG_AV1 && CONFIG_EXT_PARTITION)
@@ -1331,10 +1329,10 @@ const ConvolveFunctions convolve8_dspr2(
     aom_scaled_horiz_c, aom_scaled_avg_horiz_c, aom_scaled_vert_c,
     aom_scaled_avg_vert_c, aom_scaled_2d_c, aom_scaled_avg_2d_c, 0);
 
-const ConvolveParam kArrayConvolve8_dspr2[] = { ALL_SIZES(convolve8_dspr2) };
+const ConvolveParam kArrayConvolve8_dspr2[] = { ALL_SIZES_64(convolve8_dspr2) };
 INSTANTIATE_TEST_CASE_P(DSPR2, ConvolveTest,
                         ::testing::ValuesIn(kArrayConvolve8_dspr2));
-#endif  // HAVE_DSPR2
+#endif  // HAVE_DSPR2 && !(CONFIG_AV1 && CONFIG_EXT_PARTITION)
 
 // TODO(any): Make MSA versions support 128x128 128x64 64x128 block sizes
 #if HAVE_MSA && !(CONFIG_AV1 && CONFIG_EXT_PARTITION)
@@ -1345,8 +1343,8 @@ const ConvolveFunctions convolve8_msa(
     aom_scaled_horiz_c, aom_scaled_avg_horiz_c, aom_scaled_vert_c,
     aom_scaled_avg_vert_c, aom_scaled_2d_c, aom_scaled_avg_2d_c, 0);
 
-const ConvolveParam kArrayConvolve8_msa[] = { ALL_SIZES(convolve8_msa) };
+const ConvolveParam kArrayConvolve8_msa[] = { ALL_SIZES_64(convolve8_msa) };
 INSTANTIATE_TEST_CASE_P(MSA, ConvolveTest,
                         ::testing::ValuesIn(kArrayConvolve8_msa));
-#endif  // HAVE_MSA
+#endif  // HAVE_MSA && !(CONFIG_AV1 && CONFIG_EXT_PARTITION)
 }  // namespace

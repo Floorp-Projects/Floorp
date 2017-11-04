@@ -66,13 +66,29 @@ void get_txfm1d_type(TX_TYPE txfm2d_type, TYPE_TXFM *type0, TYPE_TXFM *type1) {
 
 double invSqrt2 = 1 / pow(2, 0.5);
 
+double dct_matrix(double n, double k, int size) {
+  return cos(M_PI * (2 * n + 1) * k / (2 * size));
+}
+
 void reference_dct_1d(const double *in, double *out, int size) {
   for (int k = 0; k < size; ++k) {
     out[k] = 0;
     for (int n = 0; n < size; ++n) {
-      out[k] += in[n] * cos(M_PI * (2 * n + 1) * k / (2 * size));
+      out[k] += in[n] * dct_matrix(n, k, size);
     }
     if (k == 0) out[k] = out[k] * invSqrt2;
+  }
+}
+
+void reference_idct_1d(const double *in, double *out, int size) {
+  for (int k = 0; k < size; ++k) {
+    out[k] = 0;
+    for (int n = 0; n < size; ++n) {
+      if (n == 0)
+        out[k] += invSqrt2 * in[n] * dct_matrix(k, n, size);
+      else
+        out[k] += in[n] * dct_matrix(k, n, size);
+    }
   }
 }
 
@@ -161,4 +177,20 @@ template void fliplr<double>(double *dest, int stride, int length);
 template void flipud<double>(double *dest, int stride, int length);
 template void fliplrud<double>(double *dest, int stride, int length);
 
+int bd_arr[BD_NUM] = { 8, 10, 12 };
+int8_t low_range_arr[BD_NUM] = { 16, 32, 32 };
+int8_t high_range_arr[BD_NUM] = { 32, 32, 32 };
+
+void txfm_stage_range_check(const int8_t *stage_range, int stage_num,
+                            const int8_t *cos_bit, int low_range,
+                            int high_range) {
+  for (int i = 0; i < stage_num; ++i) {
+    EXPECT_LE(stage_range[i], low_range);
+  }
+  for (int i = 0; i < stage_num - 1; ++i) {
+    // make sure there is no overflow while doing half_btf()
+    EXPECT_LE(stage_range[i] + cos_bit[i], high_range);
+    EXPECT_LE(stage_range[i + 1] + cos_bit[i], high_range);
+  }
+}
 }  // namespace libaom_test
