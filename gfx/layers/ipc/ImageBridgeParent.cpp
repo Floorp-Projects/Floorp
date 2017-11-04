@@ -69,13 +69,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   , mCompositorThreadHolder(CompositorThreadHolder::GetSingleton())
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // creates the map only if it has not been created already, so it is safe
-  // with several bridges
-  {
-    MonitorAutoLock lock(*sImageBridgesLock);
-    sImageBridges[aChildProcessId] = this;
-  }
   SetOtherProcessId(aChildProcessId);
 }
 
@@ -86,9 +79,16 @@ ImageBridgeParent::~ImageBridgeParent()
 /* static */ ImageBridgeParent*
 ImageBridgeParent::CreateSameProcess()
 {
+  base::ProcessId pid = base::GetCurrentProcId();
   RefPtr<ImageBridgeParent> parent =
-    new ImageBridgeParent(CompositorThreadHolder::Loop(), base::GetCurrentProcId());
+    new ImageBridgeParent(CompositorThreadHolder::Loop(), pid);
   parent->mSelfRef = parent;
+
+  {
+    MonitorAutoLock lock(*sImageBridgesLock);
+    MOZ_RELEASE_ASSERT(sImageBridges.count(pid) == 0);
+    sImageBridges[pid] = parent;
+  }
 
   sImageBridgeParentSingleton = parent;
   return parent;
@@ -257,6 +257,28 @@ ImageBridgeParent::Bind(Endpoint<PImageBridgeParent>&& aEndpoint)
   if (!aEndpoint.Bind(this))
     return;
   mSelfRef = this;
+
+  // If the child process ID was reused by the OS before the ImageBridgeParent
+  // object was destroyed, we need to clean it up first.
+  RefPtr<ImageBridgeParent> oldActor;
+  {
+    MonitorAutoLock lock(*sImageBridgesLock);
+    ImageBridgeMap::const_iterator i = sImageBridges.find(OtherPid());
+    if (i != sImageBridges.end()) {
+      oldActor = i->second;
+    }
+  }
+
+  // We can't hold the lock during Close because it erases itself from the map.
+  if (oldActor) {
+    MOZ_RELEASE_ASSERT(!oldActor->mClosed);
+    oldActor->Close();
+  }
+
+  {
+    MonitorAutoLock lock(*sImageBridgesLock);
+    sImageBridges[OtherPid()] = this;
+  }
 }
 
 mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose()

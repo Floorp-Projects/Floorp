@@ -2500,32 +2500,6 @@ XMLHttpRequestMainThread::CreateChannel()
     }
   }
 
-  // Using the provided principal as the triggeringPrincipal is fine, since we
-  // want to be able to access any of the origins that the principal has access
-  // to during the security checks, but we don't want a document to inherit an
-  // expanded principal, so in that case we need to select the principal in the
-  // expanded principal's whitelist that can load our URL as principalToInherit.
-  nsCOMPtr<nsIPrincipal> resultingDocumentPrincipal(mPrincipal);
-  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(mPrincipal);
-  if (ep) {
-    MOZ_ASSERT(!(secFlags & nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS));
-    bool dataInherits = (secFlags &
-      (nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) != 0;
-    for (const auto& principal : ep->WhiteList()) {
-      if (NS_SUCCEEDED(principal->CheckMayLoad(mRequestURL, false, dataInherits))) {
-        resultingDocumentPrincipal = principal;
-        break;
-      }
-    }
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (loadInfo) {
-    rv = loadInfo->SetPrincipalToInherit(resultingDocumentPrincipal);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 

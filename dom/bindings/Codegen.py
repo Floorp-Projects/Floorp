@@ -11398,7 +11398,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                                     len(arguments), resultVar=resultVar,
                                     objectName="proxy")
 
-        if operation.isSetter() or operation.isCreator():
+        if operation.isSetter():
             # arguments[0] is the index or name of the item that we're setting.
             argument = arguments[1]
             info = getJSToNativeConversionInfo(
@@ -11825,8 +11825,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter:
-            if self.descriptor.operations['IndexedCreator'] is not indexedSetter:
-                raise TypeError("Can't handle creator that's different from the setter")
             set += fill(
                 """
                 uint32_t index = GetArrayIndexFromId(cx, id);
@@ -11857,8 +11855,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle a named setter on an interface "
                                 "that has unforgeables.  Figure out how that "
                                 "should work!")
-            if self.descriptor.operations['NamedCreator'] is not namedSetter:
-                raise TypeError("Can't handle creator that's different from the setter")
             # If we support indexed properties, we won't get down here for
             # indices, so we can just do our setter unconditionally here.
             set += fill(
@@ -12337,9 +12333,6 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
             if self.descriptor.supportsIndexedProperties():
                 raise ValueError("In interface " + self.descriptor.name + ": " +
                                  "Can't cope with [OverrideBuiltins] and an indexed getter")
-            if self.descriptor.operations['NamedCreator'] is not namedSetter:
-                raise ValueError("In interface " + self.descriptor.name + ": " +
-                                 "Can't cope with named setter that is not also a named creator")
             if self.descriptor.hasUnforgeableMembers:
                 raise ValueError("In interface " + self.descriptor.name + ": " +
                                  "Can't cope with [OverrideBuiltins] and unforgeable members")
@@ -12354,10 +12347,6 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
         # ahead and call it and have done.
         indexedSetter = self.descriptor.operations['IndexedSetter']
         if indexedSetter is not None:
-            if self.descriptor.operations['IndexedCreator'] is not indexedSetter:
-                raise ValueError("In interface " + self.descriptor.name + ": " +
-                                 "Can't cope with indexed setter that is not " +
-                                 "also an indexed creator")
             setIndexed = fill(
                 """
                 uint32_t index = GetArrayIndexFromId(cx, id);
@@ -15015,9 +15004,6 @@ class CGBindingImplClass(CGClass):
         # Now do the special operations
         def appendSpecialOperation(name, op):
             if op is None:
-                return
-            if name == "IndexedCreator" or name == "NamedCreator":
-                # These are identical to the setters
                 return
             assert len(op.signatures()) == 1
             returnType, args = op.signatures()[0]

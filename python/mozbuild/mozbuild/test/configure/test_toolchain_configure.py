@@ -252,7 +252,7 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
         '__STDC_VERSION__': False,
         '__cplusplus': '201103L',
     },
-    '-fms-compatibility-version=19.00.24213': VS('19.00.24213')[None],
+    '-fms-compatibility-version=19.11.25547': VS('19.11.25547')[None],
 }
 
 CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
@@ -895,16 +895,16 @@ class WindowsToolchainTest(BaseToolchainTest):
     )
     CLANG_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=gnu99',
-               '-fms-compatibility-version=19.00.24213'],
-        version='19.00.24213',
+               '-fms-compatibility-version=19.11.25547'],
+        version='19.11.25547',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C',
     )
     CLANGXX_CL_3_9_RESULT = CompilerResult(
         flags=['-Xclang', '-std=c++14',
-               '-fms-compatibility-version=19.00.24213'],
-        version='19.00.24213',
+               '-fms-compatibility-version=19.11.25547'],
+        version='19.11.25547',
         type='clang-cl',
         compiler='/usr/bin/clang-cl',
         language='C++',
