@@ -76,6 +76,12 @@ private:
 
   nsresult PrintPage(PRFileDescStream& aRecording);
 
+  /**
+   * Called to notify our corresponding RemotePrintJobChild once we've
+   * finished printing a page.
+   */
+  void PageDone(nsresult aResult);
+
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   RefPtr<nsDeviceContext> mPrintDeviceContext;
   UniquePtr<PrintTranslator> mPrintTranslator;
