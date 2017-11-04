@@ -37,8 +37,26 @@ PDFiumChild::RecvConvertToEMF(const FileDescriptor& aFD,
 {
   MOZ_ASSERT(aFD.IsValid() && aPageWidth != 0 && aPageHeight != 0);
 
-  // TBD: Initiate PDFium library.
+  PDFViaEMFPrintHelper convertor;
+  if (NS_FAILED(convertor.OpenDocument(aFD))) {
+    Unused << SendConvertToEMFDone(NS_ERROR_FAILURE, ipc::Shmem());
+    return IPC_OK();
+  }
 
+  MOZ_ASSERT(convertor.GetPageCount() == 1, "we assume each given PDF contains"                                        "one page only");
+
+  ipc::Shmem smem;
+  if (!convertor.SavePageToBuffer(0, aPageWidth, aPageHeight, smem, this)) {
+    Unused << SendConvertToEMFDone(NS_ERROR_FAILURE, smem);
+    return IPC_OK();
+  }
+
+  if (!smem.IsReadable()) {
+    Unused << SendConvertToEMFDone(NS_ERROR_FAILURE, smem);
+    return IPC_OK();
+  }
+
+  Unused << SendConvertToEMFDone(NS_OK, smem);
   return IPC_OK();
 }
 
