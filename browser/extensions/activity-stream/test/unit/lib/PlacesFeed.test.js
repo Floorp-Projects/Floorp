@@ -5,10 +5,6 @@ const {actionTypes: at} = require("common/Actions.jsm");
 
 const FAKE_BOOKMARK = {bookmarkGuid: "xi31", bookmarkTitle: "Foo", dateAdded: 123214232, url: "foo.com"};
 const TYPE_BOOKMARK = 0; // This is fake, for testing
-const SOURCES = {
-  DEFAULT: 0,
-  IMPORT_REPLACE: 3
-};
 
 const BLOCKED_EVENT = "newtab-linkBlocked"; // The event dispatched in NewTabUtils when a link is blocked;
 
@@ -29,17 +25,8 @@ describe("PlacesFeed", () => {
       }
     });
     globals.set("PlacesUtils", {
-      history: {
-        addObserver: sandbox.spy(),
-        removeObserver: sandbox.spy(),
-        insert: sandbox.stub()
-      },
-      bookmarks: {
-        TYPE_BOOKMARK,
-        addObserver: sandbox.spy(),
-        removeObserver: sandbox.spy(),
-        SOURCES
-      }
+      history: {addObserver: sandbox.spy(), removeObserver: sandbox.spy()},
+      bookmarks: {TYPE_BOOKMARK, addObserver: sandbox.spy(), removeObserver: sandbox.spy()}
     });
     globals.set("Pocket", {savePage: sandbox.spy()});
     global.Components.classes["@mozilla.org/browser/nav-history-service;1"] = {
@@ -80,6 +67,7 @@ describe("PlacesFeed", () => {
     assert.calledOnce(feed.store.dispatch);
     assert.equal(feed.store.dispatch.firstCall.args[0].type, action.type);
   });
+
   describe("#onAction", () => {
     it("should add bookmark, history, blocked observers on INIT", () => {
       feed.onAction({type: at.INIT});
@@ -240,57 +228,16 @@ describe("PlacesFeed", () => {
     describe("#onItemAdded", () => {
       beforeEach(() => {
       });
-      it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data - http", async () => {
+      it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data", async () => {
         // Yes, onItemAdded has at least 8 arguments. See function definition for docs.
         const args = [null, null, null, TYPE_BOOKMARK,
-          {spec: FAKE_BOOKMARK.url, scheme: "http"}, FAKE_BOOKMARK.bookmarkTitle,
+          {spec: FAKE_BOOKMARK.url}, FAKE_BOOKMARK.bookmarkTitle,
           FAKE_BOOKMARK.dateAdded,
-          FAKE_BOOKMARK.bookmarkGuid,
-          "",
-          SOURCES.DEFAULT
+          FAKE_BOOKMARK.bookmarkGuid
         ];
         await observer.onItemAdded(...args);
 
         assert.calledWith(dispatch, {type: at.PLACES_BOOKMARK_ADDED, data: FAKE_BOOKMARK});
-      });
-      it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data - https", async () => {
-        // Yes, onItemAdded has at least 8 arguments. See function definition for docs.
-        const args = [null, null, null, TYPE_BOOKMARK,
-          {spec: FAKE_BOOKMARK.url, scheme: "https"}, FAKE_BOOKMARK.bookmarkTitle,
-          FAKE_BOOKMARK.dateAdded,
-          FAKE_BOOKMARK.bookmarkGuid,
-          "",
-          SOURCES.DEFAULT
-        ];
-        await observer.onItemAdded(...args);
-
-        assert.calledWith(dispatch, {type: at.PLACES_BOOKMARK_ADDED, data: FAKE_BOOKMARK});
-      });
-      it("should not dispatch a PLACES_BOOKMARK_ADDED action - not http/https", async () => {
-        // Yes, onItemAdded has at least 8 arguments. See function definition for docs.
-        const args = [null, null, null, TYPE_BOOKMARK,
-          {spec: FAKE_BOOKMARK.url, scheme: "places"}, FAKE_BOOKMARK.bookmarkTitle,
-          FAKE_BOOKMARK.dateAdded,
-          FAKE_BOOKMARK.bookmarkGuid,
-          "",
-          SOURCES.DEFAULT
-        ];
-        await observer.onItemAdded(...args);
-
-        assert.notCalled(dispatch);
-      });
-      it("should not dispatch a PLACES_BOOKMARK_ADDED action - has IMPORT_REPLACE source", async () => {
-        // Yes, onItemAdded has at least 8 arguments. See function definition for docs.
-        const args = [null, null, null, TYPE_BOOKMARK,
-          {spec: FAKE_BOOKMARK.url, scheme: "http"}, FAKE_BOOKMARK.bookmarkTitle,
-          FAKE_BOOKMARK.dateAdded,
-          FAKE_BOOKMARK.bookmarkGuid,
-          "",
-          SOURCES.IMPORT_REPLACE
-        ];
-        await observer.onItemAdded(...args);
-
-        assert.notCalled(dispatch);
       });
       it("should ignore events that are not of TYPE_BOOKMARK", async () => {
         const args = [null, null, null, "nottypebookmark"];

@@ -33,9 +33,7 @@ overrider.set({
   Services: {
     locale: {
       getAppLocalesAsLangTags() {},
-      getRequestedLocale() {
-        return "en-US";
-      },
+      getRequestedLocale() {},
       negotiateLanguages() {}
     },
     urlFormatter: {formatURL: str => str},

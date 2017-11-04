@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "tr",
+    "strings": {
+      "newtab_page_title": "Yeni Sekme",
+      "default_label_loading": "Yükleniyor…",
+      "header_top_sites": "Sık Kullanılan Siteler",
+      "header_stories": "İlginç Yazılar",
+      "header_highlights": "Öne Çıkanlar",
+      "header_visit_again": "Yeniden Ziyaret Edin",
+      "header_bookmarks": "Son Yer imleri",
+      "header_recommended_by": "{provider} öneriyor",
+      "header_bookmarks_placeholder": "Henüz hiç yer iminiz yok.",
+      "header_stories_from": "kaynak:",
+      "type_label_visited": "Ziyaret etmiştiniz",
+      "type_label_bookmarked": "Yer imlerinizde",
+      "type_label_synced": "Başka bir cihazdan eşitlendi",
+      "type_label_recommended": "Popüler",
+      "type_label_open": "Açık",
+      "type_label_topic": "Konu",
+      "type_label_now": "Şimdi",
+      "menu_action_bookmark": "Yer imlerine ekle",
+      "menu_action_remove_bookmark": "Yer imini sil",
+      "menu_action_copy_address": "Adresi kopyala",
+      "menu_action_email_link": "Bağlantıyı e-postayla gönder…",
+      "menu_action_open_new_window": "Yeni pencerede aç",
+      "menu_action_open_private_window": "Yeni gizli pencerede aç",
+      "menu_action_dismiss": "Kapat",
+      "menu_action_delete": "Geçmişten sil",
+      "menu_action_pin": "Sabitle",
+      "menu_action_unpin": "Sabitleneni kaldır",
+      "confirm_history_delete_p1": "Bu sayfanın tüm kayıtlarını geçmişinizden silmek istediğinizden emin misiniz?",
+      "confirm_history_delete_notice_p2": "Bu işlem geri alınamaz.",
+      "menu_action_save_to_pocket": "Pocket’a kaydet",
+      "search_for_something_with": "{search_term} terimini şununla ara:",
+      "search_button": "Ara",
+      "search_header": "{search_engine_name} Araması",
+      "search_web_placeholder": "Web’de ara",
+      "search_settings": "Arama ayarlarını değiştir",
+      "section_info_option": "Bilgi",
+      "section_info_send_feedback": "Görüş gönder",
+      "section_info_privacy_notice": "Gizlilik bildirimi",
+      "welcome_title": "Yeni sekmeye hoş geldiniz",
+      "welcome_body": "Firefox son zamanlarda ziyaret ettiğiniz ve sık kullandığınız yer imlerini, makaleleri, videoları ve sayfaları onlara tekrar kolayca geri dönebilmeniz için bu alanda gösterecektir.",
+      "welcome_label": "Öne Çıkanlar'ınızı tanıyın",
+      "time_label_less_than_minute": "<1 dk",
+      "time_label_minute": "{number} dk",
+      "time_label_hour": "{number} sa",
+      "time_label_day": "{number} g",
+      "settings_pane_button_label": "Yeni Sekme sayfanızı özelleştirin",
+      "settings_pane_header": "Yeni Sekme Tercihleri",
+      "settings_pane_body2": "Bu sayfada görmek istediklerinizi seçin.",
+      "settings_pane_search_header": "Arama",
+      "settings_pane_search_body": "Yeni sekme üzerinden web’de arama yapın.",
+      "settings_pane_topsites_header": "Sık kullanılan siteler",
+      "settings_pane_topsites_body": "En sık ziyaret ettiğiniz web sitelerine erişin.",
+      "settings_pane_topsites_options_showmore": "İki satır göster",
+      "settings_pane_bookmarks_header": "Son Yer İmleri",
+      "settings_pane_bookmarks_body": "Yeni eklediğiniz yer imlerini bir araya topladık.",
+      "settings_pane_visit_again_header": "Yeniden Ziyaret Edin",
+      "settings_pane_visit_again_body": "Firefox, gezinti geçmişinizden hatırlamak veya yeniden ziyaret etmek isteyebileceğiniz sayfaları burada gösterecek.",
+      "settings_pane_highlights_header": "Öne çıkanlar",
+      "settings_pane_highlights_body2": "Son zamanlarda baktığınız veya yer imlerinize eklediğiniz ilginç şeyleri yeniden keşfedin.",
+      "settings_pane_highlights_options_bookmarks": "Yer imleri",
+      "settings_pane_highlights_options_visited": "Ziyaret ettiğim siteler",
+      "settings_pane_snippets_header": "Duyurular",
+      "settings_pane_snippets_body": "Firefox, internet kültürü ve önemli gelişmeler hakkında Mozilla’dan gelen kısa güncelleme notlarını okuyun.",
+      "settings_pane_done_button": "Tamam",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Düzenle",
+      "edit_topsites_button_label": "Sık Kullanılan Siteler bölümünü özelleştirin",
+      "edit_topsites_showmore_button": "Daha fazla göster",
+      "edit_topsites_showless_button": "Daha az göster",
+      "edit_topsites_done_button": "Tamam",
+      "edit_topsites_pin_button": "Bu siteyi sabitle",
+      "edit_topsites_unpin_button": "Siteyi sabitlikten çıkar",
+      "edit_topsites_edit_button": "Bu siteyi düzenle",
+      "edit_topsites_dismiss_button": "Bu siteyi görmezden gel",
+      "edit_topsites_add_button": "Ekle",
+      "topsites_form_add_header": "Yeni sık kullanılan site",
+      "topsites_form_edit_header": "Sık kullanılan siteyi düzenle",
+      "topsites_form_title_placeholder": "Başlık yazın",
+      "topsites_form_url_placeholder": "Adres yazın ve yapıştırın",
+      "topsites_form_add_button": "Ekle",
+      "topsites_form_save_button": "Kaydet",
+      "topsites_form_cancel_button": "İptal",
+      "topsites_form_url_validation": "Geçerli bir adres gerekli",
+      "pocket_read_more": "Popüler konular:",
+      "pocket_read_even_more": "Daha fazla yazı göster",
+      "pocket_feedback_header": "25 milyon kişinin katkılarıyla, web’in en iyileri.",
+      "pocket_description": "Mozilla ailesinin yeni üyesi Pocket’ın yardımıyla, gözünüzden kaçabilecek kaliteli içerikleri keşfedin.",
+      "highlights_empty_state": "Gezinmeye başlayın. Son zamanlarda baktığınız veya yer imlerinize eklediğiniz bazı güzel makaleleri, videoları ve diğer sayfaları burada göstereceğiz.",
+      "topstories_empty_state": "Hepsini bitirdiniz. Yeni {provider} haberleri için daha fazla yine gelin. Beklemek istemiyor musunuz? İlginç yazılara ulaşmak için popüler konulardan birini seçebilirsiniz.",
+      "manual_migration_explanation2": "Öteki tarayıcılarınızdaki yer imlerinizi, geçmişinizi ve parolalarınızı Firefox’a aktarabilirsiniz.",
+      "manual_migration_cancel_button": "Gerek yok",
+      "manual_migration_import_button": "Olur, aktaralım"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

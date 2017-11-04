@@ -69,9 +69,6 @@ const TileSchema = Joi.object().keys({
 
 const ImpressionStatsPing = Joi.object().keys(Object.assign({}, baseKeys, {
   source: Joi.string().required(),
-  impression_id: Joi.string().required(),
-  client_id: Joi.valid("n/a").required(),
-  session_id: Joi.valid("n/a").required(),
   action: Joi.valid("activity_stream_impression_stats").required(),
   tiles: Joi.array().items(TileSchema).required(),
   click: Joi.number().integer(),
@@ -120,15 +117,6 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
     // and is therefore just showing placeholder screenshots.
     topsites_first_painted_ts: Joi.number().positive()
       .notes(["server counter", "server counter alert"]),
-
-    // Information about the quality of TopSites images and icons.
-    topsites_icon_stats: Joi.object().keys({
-      rich_icon: Joi.number(),
-      screenshot: Joi.number(),
-      screenshot_with_icon: Joi.number(),
-      tippytop: Joi.number(),
-      no_image: Joi.number()
-    }),
 
     // When the page itself receives an event that document.visibilityState
     // == visible.

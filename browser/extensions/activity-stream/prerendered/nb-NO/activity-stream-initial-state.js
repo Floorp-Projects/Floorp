@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "nb-NO",
+    "strings": {
+      "newtab_page_title": "Ny fane",
+      "default_label_loading": "Laster …",
+      "header_top_sites": "Mest besøkte nettsider",
+      "header_stories": "Hovedsakene",
+      "header_highlights": "Høydepunkter",
+      "header_visit_again": "Besøk igjen",
+      "header_bookmarks": "Nylige bokmerker",
+      "header_recommended_by": "Anbefalt av {provider}",
+      "header_bookmarks_placeholder": "Du har ingen bokmerker enda.",
+      "header_stories_from": "fra",
+      "type_label_visited": "Besøkt",
+      "type_label_bookmarked": "Bokmerket",
+      "type_label_synced": "Synkronisert fra annen enhet",
+      "type_label_recommended": "Trender",
+      "type_label_open": "Åpne",
+      "type_label_topic": "Emne",
+      "type_label_now": "Nå",
+      "menu_action_bookmark": "Bokmerke",
+      "menu_action_remove_bookmark": "Fjern bokmerke",
+      "menu_action_copy_address": "Kopier adresse",
+      "menu_action_email_link": "Send lenke på e-post …",
+      "menu_action_open_new_window": "Åpne i nytt vindu",
+      "menu_action_open_private_window": "Åpne i nytt privat vindu",
+      "menu_action_dismiss": "Avslå",
+      "menu_action_delete": "Slett fra historikk",
+      "menu_action_pin": "Fest",
+      "menu_action_unpin": "Løsne",
+      "confirm_history_delete_p1": "Er du sikker på at du vil slette alle forekomster av denne siden fra historikken?",
+      "confirm_history_delete_notice_p2": "Denne handlingen kan ikke angres.",
+      "menu_action_save_to_pocket": "Lagre til Pocket",
+      "search_for_something_with": "Søk etter {search_term} med:",
+      "search_button": "Søk",
+      "search_header": "{search_engine_name}-søk",
+      "search_web_placeholder": "Søk på nettet",
+      "search_settings": "Endre søkeinnstillinger",
+      "section_info_option": "Informasjon",
+      "section_info_send_feedback": "Send tilbakemelding",
+      "section_info_privacy_notice": "Personvernbestemmelser",
+      "welcome_title": "Velkommen til ny fane",
+      "welcome_body": "Firefox vil bruke denne plassen til å vise deg de mest relevante bokmerkene, artiklene, videoene og sidene du nettopp har besøkt, slik at du enkelt kan finne tilbake til de.",
+      "welcome_label": "Identifiserer dine høydepunkter",
+      "time_label_less_than_minute": "<1 m",
+      "time_label_minute": "{number} m",
+      "time_label_hour": "{number} t",
+      "time_label_day": "{number} d",
+      "settings_pane_button_label": "Tilpass siden for Ny fane",
+      "settings_pane_header": "Innstillinger for Ny fane",
+      "settings_pane_body2": "Velg hva du ser på denne siden.",
+      "settings_pane_search_header": "Søk",
+      "settings_pane_search_body": "Søk på nettet fra din nye fane.",
+      "settings_pane_topsites_header": "Mest besøkte",
+      "settings_pane_topsites_body": "Tilgang til nettsidene du besøker mest.",
+      "settings_pane_topsites_options_showmore": "Vis to rader",
+      "settings_pane_bookmarks_header": "Nylige bokmerker",
+      "settings_pane_bookmarks_body": "De nyeste bokmerkene dine på en plass.",
+      "settings_pane_visit_again_header": "Besøk igjen",
+      "settings_pane_visit_again_body": "Firefox viser deg deler av din surfehistorikk som du kanskje ønsker å huske eller komme tilbake til.",
+      "settings_pane_highlights_header": "Høydepunkter",
+      "settings_pane_highlights_body2": "Finn veien tilbake til interessante ting du nylig har besøkt eller bokmerket.",
+      "settings_pane_highlights_options_bookmarks": "Bokmerker",
+      "settings_pane_highlights_options_visited": "Besøkte nettsteder",
+      "settings_pane_snippets_header": "Snutter",
+      "settings_pane_snippets_body": "Les korte nyheter fra Mozilla om Firefox, internettkultur og fra tid til annen en tilfeldig meme.",
+      "settings_pane_done_button": "Ferdig",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Rediger",
+      "edit_topsites_button_label": "Tilpass seksjonen Mest besøkte",
+      "edit_topsites_showmore_button": "Vis mer",
+      "edit_topsites_showless_button": "Vis mindre",
+      "edit_topsites_done_button": "Ferdig",
+      "edit_topsites_pin_button": "Fest nettsiden",
+      "edit_topsites_unpin_button": "Frigjør denne nettsiden",
+      "edit_topsites_edit_button": "Rediger denne nettsiden",
+      "edit_topsites_dismiss_button": "Avvis denne nettsiden",
+      "edit_topsites_add_button": "Legg til",
+      "topsites_form_add_header": "Nytt toppsted",
+      "topsites_form_edit_header": "Rediger toppsted",
+      "topsites_form_title_placeholder": "Oppgi en tittel",
+      "topsites_form_url_placeholder": "Skriv eller lim inn en URL",
+      "topsites_form_add_button": "Legg til",
+      "topsites_form_save_button": "Lagre",
+      "topsites_form_cancel_button": "Avbryt",
+      "topsites_form_url_validation": "Gyldig URL er nødvendig",
+      "pocket_read_more": "Populære emner:",
+      "pocket_read_even_more": "Vis flere saker",
+      "pocket_feedback_header": "Det beste av nettet, kurert av over 25 millioner mennesker.",
+      "pocket_description": "Oppdag høykvalitetsinnhold som du ellers ville gå glipp av, ved hjelp av Pocket, som nå er en del av Mozilla.",
+      "highlights_empty_state": "Begynn å surfe, og vi viser noen av de beste artiklene, videoer og andre sider du nylig har besøkt eller bokmerket her.",
+      "topstories_empty_state": "Du har tatt igjen. Kom tilbake senere for flere topphistorier fra {provider}. Kan du ikke vente? Velg et populært emne for å finne flere gode artikler fra hele Internett.",
+      "manual_migration_explanation2": "Prøv Firefox med bokmerkene, historikk og passord fra en annen nettleser.",
+      "manual_migration_cancel_button": "Nei takk",
+      "manual_migration_import_button": "Importer nå"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};

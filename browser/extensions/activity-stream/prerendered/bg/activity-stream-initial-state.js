@@ -1,0 +1,162 @@
+// Note - this is a generated file.
+  window.gActivityStreamPrerenderedState = {
+  "TopSites": {
+    "initialized": false,
+    "rows": [],
+    "editForm": {
+      "visible": false,
+      "site": null
+    }
+  },
+  "App": {
+    "initialized": false,
+    "locale": "bg",
+    "strings": {
+      "newtab_page_title": "Нов раздел",
+      "default_label_loading": "Зареждане…",
+      "header_top_sites": "Най-посещавани",
+      "header_stories": "Популярни",
+      "header_highlights": "Акценти",
+      "header_visit_again": "Посещаване",
+      "header_bookmarks": "Последни отметки",
+      "header_recommended_by": "Препоръчано от {provider}",
+      "header_bookmarks_placeholder": "Все още нямате отметки.",
+      "header_stories_from": "от",
+      "type_label_visited": "Посетена",
+      "type_label_bookmarked": "Отметната",
+      "type_label_synced": "Синхронизирана от друго устройство",
+      "type_label_recommended": "Тенденции",
+      "type_label_open": "Отваряне",
+      "type_label_topic": "Тема",
+      "type_label_now": "Сега",
+      "menu_action_bookmark": "Отметка",
+      "menu_action_remove_bookmark": "Премахване на отметка",
+      "menu_action_copy_address": "Копиране на адрес",
+      "menu_action_email_link": "Препратка по ел. поща…",
+      "menu_action_open_new_window": "Отваряне в раздел",
+      "menu_action_open_private_window": "Отваряне в поверителен прозорец",
+      "menu_action_dismiss": "Отхвърляне",
+      "menu_action_delete": "Премахване от историята",
+      "menu_action_pin": "Закачане",
+      "menu_action_unpin": "Откачане",
+      "confirm_history_delete_p1": "Сигурни ли сте, че желаете да премахнете страницата навсякъде от историята?",
+      "confirm_history_delete_notice_p2": "Действието е необратимо.",
+      "menu_action_save_to_pocket": "Запазване в Pocket",
+      "search_for_something_with": "Търсене на {search_term} с:",
+      "search_button": "Търсене",
+      "search_header": "Търсене с {search_engine_name}",
+      "search_web_placeholder": "Търсене в интернет",
+      "search_settings": "Настройки на търсене",
+      "section_info_option": "Информация",
+      "section_info_send_feedback": "Обратна връзка",
+      "section_info_privacy_notice": "Политика на поверителност",
+      "welcome_title": "Добре дошли в нов раздел",
+      "welcome_body": "Firefox ще използва това място, за да ви покаже най-подходящите отметки, статии, видео и страници, които сте посетили наскоро, така че да ги намерите пак лесно.",
+      "welcome_label": "Търсене на акценти",
+      "time_label_less_than_minute": "<1м",
+      "time_label_minute": "{number} м",
+      "time_label_hour": "{number} ч",
+      "time_label_day": "{number} д",
+      "settings_pane_button_label": "Настройки на новия раздел",
+      "settings_pane_header": "Настройки на нов раздел",
+      "settings_pane_body2": "Изберете какво да виждате на тази страница.",
+      "settings_pane_search_header": "Търсене",
+      "settings_pane_search_body": "Търсете в мрежата от нов раздел.",
+      "settings_pane_topsites_header": "Най-посещавани",
+      "settings_pane_topsites_body": "Достъп до сайтовете, които посещавате най-често.",
+      "settings_pane_topsites_options_showmore": "Показване на два реда",
+      "settings_pane_bookmarks_header": "Последни отметки",
+      "settings_pane_bookmarks_body": "Всички нови отметки на едно място.",
+      "settings_pane_visit_again_header": "Посещаване",
+      "settings_pane_visit_again_body": "Firefox ще ви показва части от вашата история на разглеждане, към която бихте желали да се върнете или запомните.",
+      "settings_pane_highlights_header": "Акценти",
+      "settings_pane_highlights_body2": "Намерете интересните неща, които скоро сте посетили или отметнали.",
+      "settings_pane_highlights_options_bookmarks": "Отметки",
+      "settings_pane_highlights_options_visited": "Посетени страници",
+      "settings_pane_snippets_header": "Изрезки",
+      "settings_pane_snippets_body": "Четете кратки и радостни новини от Mozilla относно Firefox, интернет-културата и случайни мемета.",
+      "settings_pane_done_button": "Готово",
+      "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
+      "edit_topsites_button_text": "Редактиране",
+      "edit_topsites_button_label": "Настройки на най-посещаваните",
+      "edit_topsites_showmore_button": "Повече",
+      "edit_topsites_showless_button": "По-малко",
+      "edit_topsites_done_button": "Готово",
+      "edit_topsites_pin_button": "Закачане",
+      "edit_topsites_unpin_button": "Премахване от закачените",
+      "edit_topsites_edit_button": "Редактиране",
+      "edit_topsites_dismiss_button": "Изтриване",
+      "edit_topsites_add_button": "Добавяне",
+      "topsites_form_add_header": "Нов най-посещаван сайт",
+      "topsites_form_edit_header": "Редактиране на най-посещаван сайт",
+      "topsites_form_title_placeholder": "Заглавие",
+      "topsites_form_url_placeholder": "Адрес",
+      "topsites_form_add_button": "Добавяне",
+      "topsites_form_save_button": "Запазване",
+      "topsites_form_cancel_button": "Отказ",
+      "topsites_form_url_validation": "Необходим е валиден URL",
+      "pocket_read_more": "Популярни теми:",
+      "pocket_read_even_more": "Повече статии",
+      "pocket_feedback_header": "Най-доброто от интернет, подбрано от над 25 милиона души.",
+      "pocket_description": "Открийте висококачествено съдържание, което иначе може да пропуснете, с помощта на Pocket, вече част от Mozilla.",
+      "highlights_empty_state": "Разглеждайте и тук ще ви покажем някои от най-добрите статии, видео и други страници, които сте посетили или отметнали наскоро.",
+      "topstories_empty_state": "Разгледахте всичко. Проверете по-късно за повече истории от {provider}. Нямате търпение? Изберете популярна тема, за да откриете повече истории из цялата Мрежа.",
+      "manual_migration_explanation2": "Опитайте Firefox с отметките, историята и паролите от друг четец.",
+      "manual_migration_cancel_button": "Не, благодаря",
+      "manual_migration_import_button": "Внасяне"
+    },
+    "textDirection": "ltr",
+    "version": null
+  },
+  "Snippets": {
+    "initialized": false
+  },
+  "Prefs": {
+    "initialized": true,
+    "values": {
+      "migrationExpired": true,
+      "showTopSites": true,
+      "showSearch": true,
+      "topSitesCount": 6,
+      "collapseTopSites": false,
+      "section.highlights.collapsed": false,
+      "section.topstories.collapsed": false,
+      "feeds.section.topstories": true,
+      "feeds.section.highlights": true
+    }
+  },
+  "Dialog": {
+    "visible": false,
+    "data": {}
+  },
+  "Sections": [
+    {
+      "title": {
+        "id": "header_recommended_by",
+        "values": {
+          "provider": "Pocket"
+        }
+      },
+      "rows": [],
+      "order": 1,
+      "enabled": true,
+      "icon": "pocket",
+      "id": "topstories",
+      "initialized": false
+    },
+    {
+      "title": {
+        "id": "header_highlights"
+      },
+      "rows": [],
+      "order": 2,
+      "enabled": true,
+      "id": "highlights",
+      "icon": "highlights",
+      "initialized": false
+    }
+  ],
+  "PreferencesPane": {
+    "visible": false
+  }
+};
