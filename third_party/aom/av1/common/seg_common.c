@@ -16,10 +16,18 @@
 #include "av1/common/seg_common.h"
 #include "av1/common/quant_common.h"
 
+#if CONFIG_LOOPFILTER_LEVEL
+static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 1, 1, 0, 0 };
+
+static const int seg_feature_data_max[SEG_LVL_MAX] = {
+  MAXQ, MAX_LOOP_FILTER, MAX_LOOP_FILTER, MAX_LOOP_FILTER, 0
+};
+#else
 static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 0, 0 };
 
 static const int seg_feature_data_max[SEG_LVL_MAX] = { MAXQ, MAX_LOOP_FILTER, 3,
                                                        0 };
+#endif  // CONFIG_LOOPFILTER_LEVEL
 
 // These functions provide access to new segment level features.
 // Eventually these function may be "optimized out" but for the moment,
@@ -46,10 +54,11 @@ int av1_is_segfeature_signed(SEG_LVL_FEATURES feature_id) {
 
 void av1_set_segdata(struct segmentation *seg, int segment_id,
                      SEG_LVL_FEATURES feature_id, int seg_data) {
-  assert(seg_data <= seg_feature_data_max[feature_id]);
   if (seg_data < 0) {
     assert(seg_feature_data_signed[feature_id]);
     assert(-seg_data <= seg_feature_data_max[feature_id]);
+  } else {
+    assert(seg_data <= seg_feature_data_max[feature_id]);
   }
 
   seg->feature_data[segment_id][feature_id] = seg_data;

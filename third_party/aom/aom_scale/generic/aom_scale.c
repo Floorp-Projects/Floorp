@@ -476,54 +476,30 @@ void aom_scale_frame(YV12_BUFFER_CONFIG *src, YV12_BUFFER_CONFIG *dst,
                      unsigned int hscale, unsigned int hratio,
                      unsigned int vscale, unsigned int vratio,
                      unsigned int interlaced) {
-  int i;
-  int dw = (hscale - 1 + src->y_width * hratio) / hscale;
-  int dh = (vscale - 1 + src->y_height * vratio) / vscale;
+  const int dw = (hscale - 1 + src->y_width * hratio) / hscale;
+  const int dh = (vscale - 1 + src->y_height * vratio) / vscale;
 
-  /* call our internal scaling routines!! */
-  Scale2D((unsigned char *)src->y_buffer, src->y_stride, src->y_width,
-          src->y_height, (unsigned char *)dst->y_buffer, dst->y_stride, dw, dh,
-          temp_area, temp_height, hscale, hratio, vscale, vratio, interlaced);
+  for (int plane = 0; plane < 3; ++plane) {
+    const int is_uv = plane > 0;
+    const int plane_dw = dw >> is_uv;
+    const int plane_dh = dh >> is_uv;
 
-  if (dw < (int)dst->y_width)
-    for (i = 0; i < dh; ++i)
-      memset(dst->y_buffer + i * dst->y_stride + dw - 1,
-             dst->y_buffer[i * dst->y_stride + dw - 2], dst->y_width - dw + 1);
+    Scale2D((unsigned char *)src->buffers[plane], src->strides[is_uv],
+            src->widths[is_uv], src->heights[is_uv],
+            (unsigned char *)dst->buffers[plane], dst->strides[is_uv], plane_dw,
+            plane_dh, temp_area, temp_height, hscale, hratio, vscale, vratio,
+            interlaced);
 
-  if (dh < (int)dst->y_height)
-    for (i = dh - 1; i < (int)dst->y_height; ++i)
-      memcpy(dst->y_buffer + i * dst->y_stride,
-             dst->y_buffer + (dh - 2) * dst->y_stride, dst->y_width + 1);
+    if (plane_dw < dst->widths[is_uv])
+      for (int i = 0; i < plane_dh; ++i)
+        memset(dst->buffers[plane] + i * dst->strides[is_uv] + plane_dw - 1,
+               dst->buffers[plane][i * dst->strides[is_uv] + plane_dw - 2],
+               dst->widths[is_uv] - plane_dw + 1);
 
-  Scale2D((unsigned char *)src->u_buffer, src->uv_stride, src->uv_width,
-          src->uv_height, (unsigned char *)dst->u_buffer, dst->uv_stride,
-          dw / 2, dh / 2, temp_area, temp_height, hscale, hratio, vscale,
-          vratio, interlaced);
-
-  if (dw / 2 < (int)dst->uv_width)
-    for (i = 0; i < dst->uv_height; ++i)
-      memset(dst->u_buffer + i * dst->uv_stride + dw / 2 - 1,
-             dst->u_buffer[i * dst->uv_stride + dw / 2 - 2],
-             dst->uv_width - dw / 2 + 1);
-
-  if (dh / 2 < (int)dst->uv_height)
-    for (i = dh / 2 - 1; i < (int)dst->y_height / 2; ++i)
-      memcpy(dst->u_buffer + i * dst->uv_stride,
-             dst->u_buffer + (dh / 2 - 2) * dst->uv_stride, dst->uv_width);
-
-  Scale2D((unsigned char *)src->v_buffer, src->uv_stride, src->uv_width,
-          src->uv_height, (unsigned char *)dst->v_buffer, dst->uv_stride,
-          dw / 2, dh / 2, temp_area, temp_height, hscale, hratio, vscale,
-          vratio, interlaced);
-
-  if (dw / 2 < (int)dst->uv_width)
-    for (i = 0; i < dst->uv_height; ++i)
-      memset(dst->v_buffer + i * dst->uv_stride + dw / 2 - 1,
-             dst->v_buffer[i * dst->uv_stride + dw / 2 - 2],
-             dst->uv_width - dw / 2 + 1);
-
-  if (dh / 2 < (int)dst->uv_height)
-    for (i = dh / 2 - 1; i < (int)dst->y_height / 2; ++i)
-      memcpy(dst->v_buffer + i * dst->uv_stride,
-             dst->v_buffer + (dh / 2 - 2) * dst->uv_stride, dst->uv_width);
+    if (plane_dh < dst->heights[is_uv])
+      for (int i = plane_dh - 1; i < dst->heights[is_uv]; ++i)
+        memcpy(dst->buffers[plane] + i * dst->strides[is_uv],
+               dst->buffers[plane] + (plane_dh - 2) * dst->strides[is_uv],
+               dst->widths[is_uv] + 1);
+  }
 }

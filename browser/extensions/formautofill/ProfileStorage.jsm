@@ -1116,6 +1116,10 @@ class AutofillRecords {
   _migrateRecord(record) {
     let hasChanges = false;
 
+    if (record.deleted) {
+      return hasChanges;
+    }
+
     if (!record.version || isNaN(record.version) || record.version < 1) {
       this.log.warn("Invalid record version:", record.version);
 
@@ -1195,6 +1199,10 @@ class Addresses extends AutofillRecords {
     //       computed fields)
 
     let hasNewComputedFields = false;
+
+    if (address.deleted) {
+      return hasNewComputedFields;
+    }
 
     // Compute name
     if (!("name" in address)) {
@@ -1458,6 +1466,10 @@ class CreditCards extends AutofillRecords {
     //       computed fields)
 
     let hasNewComputedFields = false;
+
+    if (creditCard.deleted) {
+      return hasNewComputedFields;
+    }
 
     // Compute split names
     if (!("cc-given-name" in creditCard)) {

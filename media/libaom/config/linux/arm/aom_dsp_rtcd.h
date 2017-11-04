@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+void aom_blend_a64_d32_mask_c(int32_t *dst, uint32_t dst_stride, const int32_t *src0, uint32_t src0_stride, const int32_t *src1, uint32_t src1_stride, const uint8_t *mask, uint32_t mask_stride, int h, int w, int suby, int subx);
+#define aom_blend_a64_d32_mask aom_blend_a64_d32_mask_c
+
 void aom_blend_a64_hmask_c(uint8_t *dst, uint32_t dst_stride, const uint8_t *src0, uint32_t src0_stride, const uint8_t *src1, uint32_t src1_stride, const uint8_t *mask, int h, int w);
 #define aom_blend_a64_hmask aom_blend_a64_hmask_c
 
@@ -44,6 +47,24 @@ void aom_comp_mask_upsampled_pred_c(uint8_t *comp_pred, const uint8_t *pred, int
 void aom_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
 void aom_convolve8_neon(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
 RTCD_EXTERN void (*aom_convolve8)(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+
+void aom_convolve8_add_src_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src aom_convolve8_add_src_c
+
+void aom_convolve8_add_src_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_hip aom_convolve8_add_src_hip_c
+
+void aom_convolve8_add_src_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_horiz aom_convolve8_add_src_horiz_c
+
+void aom_convolve8_add_src_horiz_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_horiz_hip aom_convolve8_add_src_horiz_hip_c
+
+void aom_convolve8_add_src_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_vert aom_convolve8_add_src_vert_c
+
+void aom_convolve8_add_src_vert_hip_c(const uint16_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
+#define aom_convolve8_add_src_vert_hip aom_convolve8_add_src_vert_hip_c
 
 void aom_convolve8_avg_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
 void aom_convolve8_avg_neon(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h);
@@ -1245,6 +1266,24 @@ void aom_highbd_comp_mask_upsampled_pred_c(uint16_t *comp_pred, const uint8_t *p
 void aom_highbd_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
 #define aom_highbd_convolve8 aom_highbd_convolve8_c
 
+void aom_highbd_convolve8_add_src_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src aom_highbd_convolve8_add_src_c
+
+void aom_highbd_convolve8_add_src_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_hip aom_highbd_convolve8_add_src_hip_c
+
+void aom_highbd_convolve8_add_src_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_horiz aom_highbd_convolve8_add_src_horiz_c
+
+void aom_highbd_convolve8_add_src_horiz_hip_c(const uint8_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_horiz_hip aom_highbd_convolve8_add_src_horiz_hip_c
+
+void aom_highbd_convolve8_add_src_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_vert aom_highbd_convolve8_add_src_vert_c
+
+void aom_highbd_convolve8_add_src_vert_hip_c(const uint16_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
+#define aom_highbd_convolve8_add_src_vert_hip aom_highbd_convolve8_add_src_vert_hip_c
+
 void aom_highbd_convolve8_avg_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h, int bps);
 #define aom_highbd_convolve8_avg aom_highbd_convolve8_avg_c
 
@@ -2244,52 +2283,40 @@ void aom_iwht4x4_1_add_c(const tran_low_t *input, uint8_t *dest, int dest_stride
 #define aom_iwht4x4_1_add aom_iwht4x4_1_add_c
 
 void aom_lpf_horizontal_4_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_horizontal_4_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_horizontal_4)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_horizontal_4 aom_lpf_horizontal_4_c
 
 void aom_lpf_horizontal_4_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-void aom_lpf_horizontal_4_dual_neon(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-RTCD_EXTERN void (*aom_lpf_horizontal_4_dual)(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
+#define aom_lpf_horizontal_4_dual aom_lpf_horizontal_4_dual_c
 
 void aom_lpf_horizontal_8_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_horizontal_8_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_horizontal_8)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_horizontal_8 aom_lpf_horizontal_8_c
 
 void aom_lpf_horizontal_8_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-void aom_lpf_horizontal_8_dual_neon(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-RTCD_EXTERN void (*aom_lpf_horizontal_8_dual)(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
+#define aom_lpf_horizontal_8_dual aom_lpf_horizontal_8_dual_c
 
 void aom_lpf_horizontal_edge_16_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_horizontal_edge_16_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_horizontal_edge_16)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_horizontal_edge_16 aom_lpf_horizontal_edge_16_c
 
 void aom_lpf_horizontal_edge_8_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_horizontal_edge_8_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_horizontal_edge_8)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_horizontal_edge_8 aom_lpf_horizontal_edge_8_c
 
 void aom_lpf_vertical_16_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_vertical_16_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_vertical_16)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_vertical_16 aom_lpf_vertical_16_c
 
 void aom_lpf_vertical_16_dual_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_vertical_16_dual_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_vertical_16_dual)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_vertical_16_dual aom_lpf_vertical_16_dual_c
 
 void aom_lpf_vertical_4_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_vertical_4_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_vertical_4)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_vertical_4 aom_lpf_vertical_4_c
 
 void aom_lpf_vertical_4_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-void aom_lpf_vertical_4_dual_neon(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-RTCD_EXTERN void (*aom_lpf_vertical_4_dual)(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
+#define aom_lpf_vertical_4_dual aom_lpf_vertical_4_dual_c
 
 void aom_lpf_vertical_8_c(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-void aom_lpf_vertical_8_neon(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
-RTCD_EXTERN void (*aom_lpf_vertical_8)(uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+#define aom_lpf_vertical_8 aom_lpf_vertical_8_c
 
 void aom_lpf_vertical_8_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-void aom_lpf_vertical_8_dual_neon(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
-RTCD_EXTERN void (*aom_lpf_vertical_8_dual)(uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1);
+#define aom_lpf_vertical_8_dual aom_lpf_vertical_8_dual_c
 
 unsigned int aom_masked_sad16x16_c(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, const uint8_t *second_pred, const uint8_t *msk, int msk_stride, int invert_mask);
 #define aom_masked_sad16x16 aom_masked_sad16x16_c
@@ -3126,30 +3153,6 @@ static void setup_rtcd_internal(void)
     if (flags & HAS_NEON) aom_int_pro_col = aom_int_pro_col_neon;
     aom_int_pro_row = aom_int_pro_row_c;
     if (flags & HAS_NEON) aom_int_pro_row = aom_int_pro_row_neon;
-    aom_lpf_horizontal_4 = aom_lpf_horizontal_4_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_4 = aom_lpf_horizontal_4_neon;
-    aom_lpf_horizontal_4_dual = aom_lpf_horizontal_4_dual_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_4_dual = aom_lpf_horizontal_4_dual_neon;
-    aom_lpf_horizontal_8 = aom_lpf_horizontal_8_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_8 = aom_lpf_horizontal_8_neon;
-    aom_lpf_horizontal_8_dual = aom_lpf_horizontal_8_dual_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_8_dual = aom_lpf_horizontal_8_dual_neon;
-    aom_lpf_horizontal_edge_16 = aom_lpf_horizontal_edge_16_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_edge_16 = aom_lpf_horizontal_edge_16_neon;
-    aom_lpf_horizontal_edge_8 = aom_lpf_horizontal_edge_8_c;
-    if (flags & HAS_NEON) aom_lpf_horizontal_edge_8 = aom_lpf_horizontal_edge_8_neon;
-    aom_lpf_vertical_16 = aom_lpf_vertical_16_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_16 = aom_lpf_vertical_16_neon;
-    aom_lpf_vertical_16_dual = aom_lpf_vertical_16_dual_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_16_dual = aom_lpf_vertical_16_dual_neon;
-    aom_lpf_vertical_4 = aom_lpf_vertical_4_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_4 = aom_lpf_vertical_4_neon;
-    aom_lpf_vertical_4_dual = aom_lpf_vertical_4_dual_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_4_dual = aom_lpf_vertical_4_dual_neon;
-    aom_lpf_vertical_8 = aom_lpf_vertical_8_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_8 = aom_lpf_vertical_8_neon;
-    aom_lpf_vertical_8_dual = aom_lpf_vertical_8_dual_c;
-    if (flags & HAS_NEON) aom_lpf_vertical_8_dual = aom_lpf_vertical_8_dual_neon;
     aom_minmax_8x8 = aom_minmax_8x8_c;
     if (flags & HAS_NEON) aom_minmax_8x8 = aom_minmax_8x8_neon;
     aom_mse16x16 = aom_mse16x16_c;

@@ -6,11 +6,11 @@ use std::ffi::{OsString, OsStr};
 use osstringext::OsStrExt3;
 #[cfg(not(target_os="windows"))]
 use std::os::unix::ffi::OsStrExt;
-
+use std::env;
 
 #[cfg(feature = "yaml")]
 use yaml_rust::Yaml;
-use vec_map::VecMap;
+use map::VecMap;
 
 use usage_parser::UsageParser;
 use args::settings::ArgSettings;
@@ -128,6 +128,7 @@ impl<'a, 'b> Arg<'a, 'b> {
                 "default_value" => yaml_to_str!(a, v, default_value),
                 "default_value_if" => yaml_tuple3!(a, v, default_value_if),
                 "default_value_ifs" => yaml_tuple3!(a, v, default_value_if),
+                "env" => yaml_to_str!(a, v, env),
                 "value_names" => yaml_vec_or_str!(v, a, value_name),
                 "groups" => yaml_vec_or_str!(v, a, group),
                 "requires" => yaml_vec_or_str!(v, a, requires),
@@ -1507,7 +1508,7 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// assert!(res.is_ok()); // We didn't use --other=special, so "cfg" wasn't required
     /// ```
     ///
-    /// Setting [`Arg::required_if(arg, val)`] and having `arg` used with a vaue of `val` but *not*
+    /// Setting [`Arg::required_if(arg, val)`] and having `arg` used with a value of `val` but *not*
     /// using this arg is an error.
     ///
     /// ```rust
@@ -1591,7 +1592,7 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// ```
     ///
     /// Setting [`Arg::required_ifs(&[(arg, val)])`] and having any of the `arg`s used with it's
-    /// vaue of `val` but *not* using this arg is an error.
+    /// value of `val` but *not* using this arg is an error.
     ///
     /// ```rust
     /// # use clap::{App, Arg, ErrorKind};
@@ -1890,11 +1891,11 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// **WARNING:**
     ///
     /// Setting `multiple(true)` for an [option] with no other details, allows multiple values
-    /// **and** multiple occurrences because it isn't possible to have more occurrences than values for
-    /// options. Because multiple values are allowed, `--option val1 val2 val3` is perfectly valid,
-    /// be careful when designing a CLI where positional arguments are expected after a option which
-    /// accepts multiple values, as `clap` will continue parsing *values* until it reaches the max
-    /// or specific number of values defined, or another flag or option.
+    /// **and** multiple occurrences because it isn't possible to have more occurrences than values 
+    /// for options. Because multiple values are allowed, `--option val1 val2 val3` is perfectly 
+    /// valid, be careful when designing a CLI where positional arguments are expected after a 
+    /// option which accepts multiple values, as `clap` will continue parsing *values* until it 
+    /// reaches the max or specific number of values defined, or another flag or option.
     ///
     /// **Pro Tip**:
     ///
@@ -1902,6 +1903,36 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// occurrence. To do this use [`Arg::number_of_values(1)`] in coordination with
     /// [`Arg::multiple(true)`].
     ///
+    /// **WARNING:**
+    /// 
+    /// When using args with `multiple(true)` on [options] or [positionals] (i.e. those args that
+    /// accept values) and [subcommands], one needs to consider the posibility of an argument value
+    /// being the same as a valid subcommand. By default `clap` will parse the argument in question
+    /// as a value *only if* a value is possible at that moment. Otherwise it will be parsed as a
+    /// subcommand. In effect, this means using `multiple(true)` with no additional parameters and
+    /// a possible value that coincides with a subcommand name, the subcommand cannot be called 
+    /// unless another argument is passed first.
+    /// 
+    /// As an example, consider a CLI with an option `--ui-paths=<paths>...` and subcommand `signer`
+    /// 
+    /// The following would be parsed as values to `--ui-paths`.
+    /// 
+    /// ```notrust
+    /// $ program --ui-paths path1 path2 signer
+    /// ```
+    /// 
+    /// This is because `--ui-paths` accepts multiple values. `clap` will continue parsing values
+    /// until another argument is reached and it knows `--ui-paths` is done.
+    /// 
+    /// By adding additional parameters to `--ui-paths` we can solve this issue. Consider adding
+    /// [`Arg::number_of_values(1)`] as discussed above. The following are all valid, and `signer` 
+    /// is parsed as both a subcommand and a value in the second case.
+    /// 
+    /// ```notrust
+    /// $ program --ui-paths path1 signer
+    /// $ program --ui-paths path1 --ui-paths signer signer
+    /// ```
+    /// 
     /// # Examples
     ///
     /// ```rust
@@ -2035,6 +2066,9 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// assert_eq!(res.unwrap_err().kind, ErrorKind::UnknownArgument);
     /// ```
     /// [option]: ./struct.Arg.html#method.takes_value
+    /// [options]: ./struct.Arg.html#method.takes_value
+    /// [subcommands]: ./struct.SubCommand.html
+    /// [positionals]: ./struct.Arg.html#method.index
     /// [`Arg::number_of_values(1)`]: ./struct.Arg.html#method.number_of_values
     /// [`Arg::multiple(true)`]: ./struct.Arg.html#method.multiple
     pub fn multiple(self, multi: bool) -> Self {
@@ -2054,7 +2088,7 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// **NOTE:** This setting only applies to [options] and [positional arguments]
     ///
     /// **NOTE:** When the terminator is passed in on the command line, it is **not** stored as one
-    /// of the vaues
+    /// of the values
     ///
     /// # Examples
     ///
@@ -2098,14 +2132,10 @@ impl<'a, 'b> Arg<'a, 'b> {
 
     /// Specifies that an argument can be matched to all child [`SubCommand`]s.
     ///
-    /// **NOTE:** Global arguments *only* propagate down, **not** up (to parent commands)
-    ///
-    /// **NOTE:** Global arguments *cannot* be [required].
-    ///
-    /// **NOTE:** Global arguments, when matched, *only* exist in the command's matches that they
-    /// were matched to. For example, if you defined a `--flag` global argument in the top most
-    /// parent command, but the user supplied the arguments `top cmd1 cmd2 --flag` *only* `cmd2`'s
-    /// [`ArgMatches`] would return `true` if tested for [`ArgMatches::is_present("flag")`].
+    /// **NOTE:** Global arguments *only* propagate down, **not** up (to parent commands), however
+    /// their values once a user uses them will be propagated back up to parents. In effect, this 
+    /// means one should *define* all global arguments at the top level, however it doesn't matter 
+    /// where the user *uses* the global argument.
     ///
     /// # Examples
     ///
@@ -3014,7 +3044,7 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// **NOTE:** If the user *does not* use this argument at runtime [`ArgMatches::is_present`] will
     /// still return `true`. If you wish to determine whether the argument was used at runtime or
     /// not, consider [`ArgMatches::occurrences_of`] which will return `0` if the argument was *not*
-    /// used at runtmie.
+    /// used at runtime.
     ///
     /// **NOTE:** This setting is perfectly compatible with [`Arg::default_value_if`] but slightly
     /// different. `Arg::default_value` *only* takes affect when the user has not provided this arg
@@ -3308,6 +3338,119 @@ impl<'a, 'b> Arg<'a, 'b> {
         for &(arg, val, default) in ifs {
             self = self.default_value_if_os(arg, val, default);
         }
+        self
+    }
+
+    /// Specifies that if the value is not passed in as an argument, that it should be retrieved
+    /// from the environment, if available. If it is not present in the environment, then default
+    /// rules will apply.
+    /// 
+    /// **NOTE:** If the user *does not* use this argument at runtime, [`ArgMatches::occurrences_of`]
+    /// will return `0` even though the [`ArgMatches::value_of`] will return the default specified.
+    ///
+    /// **NOTE:** If the user *does not* use this argument at runtime [`ArgMatches::is_present`] will
+    /// return `true` if the variable is present in the environemnt . If you wish to determine whether
+    /// the argument was used at runtime or not, consider [`ArgMatches::occurrences_of`] which will
+    /// return `0` if the argument was *not* used at runtime.
+    /// 
+    /// **NOTE:** This implicitly sets [`Arg::takes_value(true)`].
+    /// 
+    /// **NOTE:** If [`Arg::multiple(true)`] is set then [`Arg::use_delimiter(true)`] should also be
+    /// set. Otherwise, only a single argument will be returned from the environment variable. The
+    /// default delimiter is `,` and follows all the other delimiter rules.
+    ///  
+    /// # Examples
+    /// 
+    /// In this example, we show the variable coming from the environment:
+    /// 
+    /// ```rust
+    /// # use std::env;
+    /// # use clap::{App, Arg};
+    ///
+    /// env::set_var("MY_FLAG", "env");
+    ///  
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("flag")
+    ///         .long("flag")
+    ///         .env("MY_FLAG"))
+    ///     .get_matches_from(vec![
+    ///         "prog"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("flag"), Some("env"));
+    /// ```
+    /// 
+    /// In this example, we show the variable coming from an option on the CLI:
+    /// 
+    /// ```rust
+    /// # use std::env;
+    /// # use clap::{App, Arg};
+    ///
+    /// env::set_var("MY_FLAG", "env");
+    ///  
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("flag")
+    ///         .long("flag")
+    ///         .env("MY_FLAG"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "--flag", "opt"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("flag"), Some("opt"));
+    /// ```
+    /// 
+    /// In this example, we show the variable coming from the environment even with the
+    /// presence of a default:
+    /// 
+    /// ```rust
+    /// # use std::env;
+    /// # use clap::{App, Arg};
+    ///
+    /// env::set_var("MY_FLAG", "env");
+    ///  
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("flag")
+    ///         .long("flag")
+    ///         .env("MY_FLAG")
+    ///         .default_value("default"))
+    ///     .get_matches_from(vec![
+    ///         "prog"
+    ///     ]);
+    ///
+    /// assert_eq!(m.value_of("flag"), Some("env"));
+    /// ```
+    /// 
+    /// In this example, we show the use of multiple values in a single environment variable:
+    /// 
+    /// ```rust
+    /// # use std::env;
+    /// # use clap::{App, Arg};
+    ///
+    /// env::set_var("MY_FLAG_MULTI", "env1,env2");
+    ///  
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("flag")
+    ///         .long("flag")
+    ///         .env("MY_FLAG_MULTI")
+    ///         .multiple(true)
+    ///         .use_delimiter(true))
+    ///     .get_matches_from(vec![
+    ///         "prog"
+    ///     ]);
+    ///
+    /// assert_eq!(m.values_of("flag").unwrap().collect::<Vec<_>>(), vec!["env1", "env2"]);
+    /// ```
+    pub fn env(self, name: &'a str) -> Self {
+        self.env_os(OsStr::new(name))
+    }
+
+    /// Specifies that if the value is not passed in as an argument, that it should be retrieved
+    /// from the environment if available in the exact same manner as [`Arg::env`] only using
+    /// [`OsStr`]s instead.
+    pub fn env_os(mut self, name: &'a OsStr) -> Self {
+        self.setb(ArgSettings::TakesValue);
+
+        self.v.env = Some((name, env::var_os(name)));
         self
     }
 

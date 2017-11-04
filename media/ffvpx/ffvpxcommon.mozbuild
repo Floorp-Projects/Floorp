@@ -9,9 +9,8 @@ ASFLAGS += CONFIG['FFVPX_ASFLAGS']
 ASFLAGS += ['-I%s/media/ffvpx' % TOPSRCDIR]
 
 if CONFIG['FFVPX_ASFLAGS']:
-    USE_YASM = True
-
     if CONFIG['OS_ARCH'] == 'WINNT':
+        USE_YASM = True
        # Fix inline symbols and math defines for windows.
         DEFINES['_USE_MATH_DEFINES'] = True
         DEFINES['inline'] = "__inline"
@@ -22,24 +21,27 @@ if CONFIG['FFVPX_ASFLAGS']:
         else:
             ASFLAGS += ['-Pconfig_win64.asm']
     elif CONFIG['OS_ARCH'] == 'Darwin':
+        USE_YASM = True
         # 32/64-bit macosx assemblers need to prefix symbols with an underscore.
         ASFLAGS += [
             '-Pconfig_darwin64.asm',
             '-DPREFIX'
         ]
-    else:
+    elif CONFIG['CPU_ARCH'] != 'arm' and CONFIG['CPU_ARCH'] != 'aarch4':
+        USE_YASM = True
         # Default to unix, similar to how ASFLAGS setup works in configure.in
         ASFLAGS += ['-Pconfig_unix64.asm']
-    # default disabled components
-    ASFLAGS += ['-Pdefaults_disabled.asm']
 
-    if int(CONFIG['YASM_MAJOR_VERSION']) == 1 and int(CONFIG['YASM_MINOR_VERSION']) < 2:
-        DEFINES['YASM_MISSING_AVX2'] = True
-        ASFLAGS += [
-            '-DHAVE_AVX2=0',
-            '-DHAVE_AVX2_INTERNAL=0',
-            '-DHAVE_AVX2_EXTERNAL=0',
-        ]
+    if USE_YASM:
+        # default disabled components
+        ASFLAGS += ['-Pdefaults_disabled.asm']
+        if int(CONFIG['YASM_MAJOR_VERSION']) == 1 and int(CONFIG['YASM_MINOR_VERSION']) < 2:
+            DEFINES['YASM_MISSING_AVX2'] = True
+            ASFLAGS += [
+                '-DHAVE_AVX2=0',
+                '-DHAVE_AVX2_INTERNAL=0',
+                '-DHAVE_AVX2_EXTERNAL=0',
+            ]
 
 
 LOCAL_INCLUDES += ['/media/ffvpx']

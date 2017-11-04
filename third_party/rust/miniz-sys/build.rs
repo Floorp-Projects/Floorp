@@ -1,8 +1,8 @@
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 
 fn main() {
-    gcc::compile_library("libminiz.a", &["miniz.c"]);
+    cc::Build::new().file("miniz.c").compile("miniz");
     println!("cargo:root={}", env::var("OUT_DIR").unwrap());
 }

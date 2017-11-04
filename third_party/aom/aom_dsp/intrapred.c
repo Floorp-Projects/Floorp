@@ -16,6 +16,7 @@
 #include "./aom_dsp_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
+#include "aom_dsp/intrapred_common.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/bitops.h"
 
@@ -179,7 +180,6 @@ static INLINE void h_predictor(uint8_t *dst, ptrdiff_t stride, int bw, int bh,
   }
 }
 
-#if CONFIG_ALT_INTRA
 static INLINE int abs_diff(int a, int b) { return (a > b) ? a - b : b - a; }
 
 static INLINE uint16_t paeth_predictor_single(uint16_t left, uint16_t top,
@@ -207,40 +207,6 @@ static INLINE void paeth_predictor(uint8_t *dst, ptrdiff_t stride, int bw,
     dst += stride;
   }
 }
-
-// Weights are quadratic from '1' to '1 / block_size', scaled by
-// 2^sm_weight_log2_scale.
-static const int sm_weight_log2_scale = 8;
-
-#if CONFIG_TX64X64
-// max(block_size_wide[BLOCK_LARGEST], block_size_high[BLOCK_LARGEST])
-#define MAX_BLOCK_DIM 64
-#else
-#define MAX_BLOCK_DIM 32
-#endif  // CONFIG_TX64X64
-
-static const uint8_t sm_weight_arrays[2 * MAX_BLOCK_DIM] = {
-  // Unused, because we always offset by bs, which is at least 2.
-  0, 0,
-  // bs = 2
-  255, 128,
-  // bs = 4
-  255, 149, 85, 64,
-  // bs = 8
-  255, 197, 146, 105, 73, 50, 37, 32,
-  // bs = 16
-  255, 225, 196, 170, 145, 123, 102, 84, 68, 54, 43, 33, 26, 20, 17, 16,
-  // bs = 32
-  255, 240, 225, 210, 196, 182, 169, 157, 145, 133, 122, 111, 101, 92, 83, 74,
-  66, 59, 52, 45, 39, 34, 29, 25, 21, 17, 14, 12, 10, 9, 8, 8,
-#if CONFIG_TX64X64
-  // bs = 64
-  255, 248, 240, 233, 225, 218, 210, 203, 196, 189, 182, 176, 169, 163, 156,
-  150, 144, 138, 133, 127, 121, 116, 111, 106, 101, 96, 91, 86, 82, 77, 73, 69,
-  65, 61, 57, 54, 50, 47, 44, 41, 38, 35, 32, 29, 27, 25, 22, 20, 18, 16, 15,
-  13, 12, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 4,
-#endif  // CONFIG_TX64X64
-};
 
 // Some basic checks on weights for smooth predictor.
 #define sm_weights_sanity_checks(weights_w, weights_h, weights_scale, \
@@ -343,21 +309,6 @@ static INLINE void smooth_h_predictor(uint8_t *dst, ptrdiff_t stride, int bw,
   }
 }
 #endif  // CONFIG_SMOOTH_HV
-
-#else
-
-static INLINE void tm_predictor(uint8_t *dst, ptrdiff_t stride, int bw, int bh,
-                                const uint8_t *above, const uint8_t *left) {
-  int r, c;
-  int ytop_left = above[-1];
-
-  for (r = 0; r < bh; r++) {
-    for (c = 0; c < bw; c++)
-      dst[c] = clip_pixel(left[r] + above[c] - ytop_left);
-    dst += stride;
-  }
-}
-#endif  // CONFIG_ALT_INTRA
 
 static INLINE void dc_128_predictor(uint8_t *dst, ptrdiff_t stride, int bw,
                                     int bh, const uint8_t *above,
@@ -794,7 +745,6 @@ void aom_highbd_d153_predictor_2x2_c(uint16_t *dst, ptrdiff_t stride,
   DST(1, 1) = AVG3(J, I, X);
 }
 
-#if CONFIG_ALT_INTRA
 static INLINE void highbd_paeth_predictor(uint16_t *dst, ptrdiff_t stride,
                                           int bw, int bh, const uint16_t *above,
                                           const uint16_t *left, int bd) {
@@ -901,23 +851,7 @@ static INLINE void highbd_smooth_h_predictor(uint16_t *dst, ptrdiff_t stride,
     dst += stride;
   }
 }
-#endif
-
-#else
-static INLINE void highbd_tm_predictor(uint16_t *dst, ptrdiff_t stride, int bw,
-                                       int bh, const uint16_t *above,
-                                       const uint16_t *left, int bd) {
-  int r, c;
-  int ytop_left = above[-1];
-  (void)bd;
-
-  for (r = 0; r < bh; r++) {
-    for (c = 0; c < bw; c++)
-      dst[c] = clip_pixel_highbd(left[r] + above[c] - ytop_left, bd);
-    dst += stride;
-  }
-}
-#endif  // CONFIG_ALT_INTRA
+#endif  // CONFIG_SMOOTH_HV
 
 static INLINE void highbd_dc_128_predictor(uint16_t *dst, ptrdiff_t stride,
                                            int bw, int bh,
@@ -1017,12 +951,16 @@ static INLINE void highbd_dc_predictor(uint16_t *dst, ptrdiff_t stride, int bw,
   intra_pred_sized(type, 16, 8) \
   intra_pred_sized(type, 16, 32) \
   intra_pred_sized(type, 32, 16) \
+  intra_pred_sized(type, 32, 64) \
+  intra_pred_sized(type, 64, 32) \
   intra_pred_highbd_sized(type, 4, 8) \
   intra_pred_highbd_sized(type, 8, 4) \
   intra_pred_highbd_sized(type, 8, 16) \
   intra_pred_highbd_sized(type, 16, 8) \
   intra_pred_highbd_sized(type, 16, 32) \
-  intra_pred_highbd_sized(type, 32, 16)
+  intra_pred_highbd_sized(type, 32, 16) \
+  intra_pred_highbd_sized(type, 32, 64) \
+  intra_pred_highbd_sized(type, 64, 32)
 #define intra_pred_above_4x4(type) \
   intra_pred_sized(type, 8, 8) \
   intra_pred_sized(type, 16, 16) \
@@ -1078,7 +1016,9 @@ static INLINE void highbd_dc_predictor(uint16_t *dst, ptrdiff_t stride, int bw,
   intra_pred_sized(type, 8, 16) \
   intra_pred_sized(type, 16, 8) \
   intra_pred_sized(type, 16, 32) \
-  intra_pred_sized(type, 32, 16)
+  intra_pred_sized(type, 32, 16) \
+  intra_pred_sized(type, 32, 64) \
+  intra_pred_sized(type, 64, 32)
 #define intra_pred_above_4x4(type) \
   intra_pred_sized(type, 8, 8) \
   intra_pred_sized(type, 16, 16) \
@@ -1118,16 +1058,12 @@ intra_pred_above_4x4(d135)
 intra_pred_above_4x4(d153)
 intra_pred_allsizes(v)
 intra_pred_allsizes(h)
-#if CONFIG_ALT_INTRA
 intra_pred_allsizes(smooth)
 #if CONFIG_SMOOTH_HV
 intra_pred_allsizes(smooth_v)
 intra_pred_allsizes(smooth_h)
 #endif  // CONFIG_SMOOTH_HV
 intra_pred_allsizes(paeth)
-#else
-intra_pred_allsizes(tm)
-#endif  // CONFIG_ALT_INTRA
 intra_pred_allsizes(dc_128)
 intra_pred_allsizes(dc_left)
 intra_pred_allsizes(dc_top)

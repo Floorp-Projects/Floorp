@@ -146,10 +146,6 @@ const AvxInterface *get_aom_decoder_by_index(int i);
 const AvxInterface *get_aom_decoder_by_name(const char *name);
 const AvxInterface *get_aom_decoder_by_fourcc(uint32_t fourcc);
 
-// TODO(dkovalev): move this function to aom_image.{c, h}, so it will be part
-// of aom_image_t support
-int aom_img_plane_width(const aom_image_t *img, int plane);
-int aom_img_plane_height(const aom_image_t *img, int plane);
 void aom_img_write(const aom_image_t *img, FILE *file);
 int aom_img_read(aom_image_t *img, FILE *file);
 

@@ -224,6 +224,18 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_BLOCKED_UNSAFE_CONTENT           = 0x00004000;
 
   /**
+   * Diagnostic flags
+   *
+   * May be set in addition to other security state flags to indicate that
+   * some state is countered that deserves a warning or error, but does not
+   * change the top level security state of the connection.
+   *
+   * STATE_CERT_DISTRUST_IMMINENT
+   *   The certificate in use will be distrusted in the near future.
+   */
+  const unsigned long STATE_CERT_DISTRUST_IMMINENT    = 0x00008000;
+
+  /**
    * Security Strength Flags
    *
    * These flags describe the security strength and accompany STATE_IS_SECURE
