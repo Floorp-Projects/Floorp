@@ -560,13 +560,13 @@ private:
     // If shutdown just started, the QuotaManager may have been deleted.
     QuotaManager* qm = QuotaManager::Get();
     if (!qm) {
-      FailOnNonOwningThread();
+      Fail();
       return;
     }
 
     nsresult rv = qm->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
-      FailOnNonOwningThread();
+      Fail();
       return;
     }
   }
