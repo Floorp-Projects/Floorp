@@ -17,7 +17,7 @@
 void av1_iht8x8_64_add_msa(const int16_t *input, uint8_t *dst,
                            int32_t dst_stride, TxfmParam *txfm_param) {
   v8i16 in0, in1, in2, in3, in4, in5, in6, in7;
-  int32_t tx_type = txfm_param->tx_type;
+  const TX_TYPE tx_type = txfm_param->tx_type;
 
   /* load vector elements of 8x8 block */
   LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);

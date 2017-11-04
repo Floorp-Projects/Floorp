@@ -19,6 +19,8 @@ flat varying vec2 vClipSign;
 flat varying vec4 vEdgeDistance;
 flat varying float vSDFSelect;
 
+flat varying float vIsBorderRadiusLessThanBorderWidth;
+
 // Border style
 flat varying float vAlphaSelect;
 
@@ -180,6 +182,8 @@ void main(void) {
             edge_distances = vec4(p0 + adjusted_widths.xy,
                                   p0 + inv_adjusted_widths.xy);
             color_delta = vec2(1.0);
+            vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[0].xy,
+                                                              border.widths.xy)) ? 1.0 : 0.0;
             break;
         }
         case 1: {
@@ -204,6 +208,8 @@ void main(void) {
                                   p1.x - border.widths.z + adjusted_widths.z,
                                   p0.y + inv_adjusted_widths.y);
             color_delta = vec2(1.0, -1.0);
+            vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[0].zw,
+                                                              border.widths.zy)) ? 1.0 : 0.0;
             break;
         }
         case 2: {
@@ -228,6 +234,8 @@ void main(void) {
                                   p1.x - border.widths.z + adjusted_widths.z,
                                   p1.y - border.widths.w + adjusted_widths.w);
             color_delta = vec2(-1.0);
+            vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[1].xy,
+                                                              border.widths.zw)) ? 1.0 : 0.0;
             break;
         }
         case 3: {
@@ -252,6 +260,8 @@ void main(void) {
                                   p0.x + inv_adjusted_widths.x,
                                   p1.y - border.widths.w + adjusted_widths.w);
             color_delta = vec2(-1.0, 1.0);
+            vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[1].zw,
+                                                              border.widths.xw)) ? 1.0 : 0.0;
             break;
         }
     }
@@ -332,7 +342,8 @@ void main(void) {
     // Only apply the clip AA if inside the clip region. This is
     // necessary for correctness when the border width is greater
     // than the border radius.
-    if (all(lessThan(local_pos * vClipSign, vClipCenter * vClipSign))) {
+    if (vIsBorderRadiusLessThanBorderWidth == 0.0 ||
+        all(lessThan(local_pos * vClipSign, vClipCenter * vClipSign))) {
         vec2 p = local_pos - vClipCenter;
 
         // The coordinate system is snapped to pixel boundaries. To sample the distance,

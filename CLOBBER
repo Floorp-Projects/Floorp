@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1163171, Android compiler change
+Bug 1413550 - Activity Stream removed a bunch of files that would break ./mach package

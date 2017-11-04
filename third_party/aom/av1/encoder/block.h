@@ -18,6 +18,10 @@
 #include "av1/encoder/encint.h"
 #endif
 #include "av1/common/mvref_common.h"
+#include "av1/encoder/hash.h"
+#if CONFIG_DIST_8X8
+#include "aom/aomcx.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,28 +64,52 @@ typedef struct macroblock_plane {
 #endif  // CONFIG_NEW_QUANT
 } MACROBLOCK_PLANE;
 
-/* The [2] dimension is for whether we skip the EOB node (i.e. if previous
- * coefficient in this block was zero) or not. */
-typedef unsigned int av1_coeff_cost[PLANE_TYPES][REF_TYPES][COEF_BANDS][2]
-                                   [COEFF_CONTEXTS][ENTROPY_TOKENS];
+typedef int av1_coeff_cost[PLANE_TYPES][REF_TYPES][COEF_BANDS][COEFF_CONTEXTS]
+                          [TAIL_TOKENS];
+
+#if CONFIG_LV_MAP
+typedef struct {
+  int txb_skip_cost[TXB_SKIP_CONTEXTS][2];
+  int nz_map_cost[SIG_COEF_CONTEXTS][2];
+  int eob_cost[EOB_COEF_CONTEXTS][2];
+  int dc_sign_cost[DC_SIGN_CONTEXTS][2];
+  int base_cost[NUM_BASE_LEVELS][COEFF_BASE_CONTEXTS][2];
+#if BR_NODE
+  int lps_cost[LEVEL_CONTEXTS][COEFF_BASE_RANGE + 1];
+  int br_cost[BASE_RANGE_SETS][LEVEL_CONTEXTS][2];
+#else   // BR_NODE
+  int lps_cost[LEVEL_CONTEXTS][2];
+#endif  // BR_NODE
+#if CONFIG_CTX1D
+  int eob_mode_cost[TX_CLASSES][2];
+  int empty_line_cost[TX_CLASSES][EMPTY_LINE_CONTEXTS][2];
+  int hv_eob_cost[TX_CLASSES][HV_EOB_CONTEXTS][2];
+#endif
+} LV_MAP_COEFF_COST;
 
 typedef struct {
-  int_mv ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES];
-  int16_t mode_context[MODE_CTX_REF_FRAMES];
-#if CONFIG_LV_MAP
-  // TODO(angiebird): Reduce the buffer size according to sb_type
   tran_low_t tcoeff[MAX_MB_PLANE][MAX_SB_SQUARE];
   uint16_t eobs[MAX_MB_PLANE][MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
   uint8_t txb_skip_ctx[MAX_MB_PLANE]
                       [MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
   int dc_sign_ctx[MAX_MB_PLANE]
                  [MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
+} CB_COEFF_BUFFER;
+#endif
+
+typedef struct {
+  int_mv ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES];
+  int16_t mode_context[MODE_CTX_REF_FRAMES];
+#if CONFIG_LV_MAP
+  // TODO(angiebird): Reduce the buffer size according to sb_type
+  tran_low_t *tcoeff[MAX_MB_PLANE];
+  uint16_t *eobs[MAX_MB_PLANE];
+  uint8_t *txb_skip_ctx[MAX_MB_PLANE];
+  int *dc_sign_ctx[MAX_MB_PLANE];
 #endif
   uint8_t ref_mv_count[MODE_CTX_REF_FRAMES];
   CANDIDATE_MV ref_mv_stack[MODE_CTX_REF_FRAMES][MAX_REF_MV_STACK_SIZE];
-#if CONFIG_EXT_INTER
   int16_t compound_mode_context[MODE_CTX_REF_FRAMES];
-#endif  // CONFIG_EXT_INTER
 } MB_MODE_INFO_EXT;
 
 typedef struct {
@@ -91,16 +119,40 @@ typedef struct {
   int row_max;
 } MvLimits;
 
-#if CONFIG_PALETTE
 typedef struct {
   uint8_t best_palette_color_map[MAX_SB_SQUARE];
   float kmeans_data_buf[2 * MAX_SB_SQUARE];
 } PALETTE_BUFFER;
-#endif  // CONFIG_PALETTE
+
+typedef struct {
+  TX_TYPE tx_type;
+  TX_SIZE tx_size;
+#if CONFIG_VAR_TX
+  TX_SIZE min_tx_size;
+  TX_SIZE inter_tx_size[MAX_MIB_SIZE][MAX_MIB_SIZE];
+  uint8_t blk_skip[MAX_MIB_SIZE * MAX_MIB_SIZE * 8];
+#endif  // CONFIG_VAR_TX
+#if CONFIG_TXK_SEL
+  TX_TYPE txk_type[MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
+#endif  // CONFIG_TXK_SEL
+  RD_STATS rd_stats;
+  uint32_t hash_value;
+} TX_RD_INFO;
+
+#define RD_RECORD_BUFFER_LEN 8
+typedef struct {
+  TX_RD_INFO tx_rd_info[RD_RECORD_BUFFER_LEN];  // Circular buffer.
+  int index_start;
+  int num;
+  CRC_CALCULATOR crc_calculator;  // Hash function.
+} TX_RD_RECORD;
 
 typedef struct macroblock MACROBLOCK;
 struct macroblock {
   struct macroblock_plane plane[MAX_MB_PLANE];
+
+  // Save the transform RD search info.
+  TX_RD_RECORD tx_rd_record;
 
   MACROBLOCKD e_mbd;
   MB_MODE_INFO_EXT *mbmi_ext;
@@ -150,9 +202,7 @@ struct macroblock {
   uint8_t *left_pred_buf;
 #endif  // CONFIG_MOTION_VAR
 
-#if CONFIG_PALETTE
   PALETTE_BUFFER *palette_buffer;
-#endif  // CONFIG_PALETTE
 
   // These define limits to motion vector components to prevent them
   // from extending outside the UMV borders
@@ -169,8 +219,92 @@ struct macroblock {
   int skip_chroma_rd;
 #endif
 
-  // note that token_costs is the cost when eob node is skipped
-  av1_coeff_cost token_costs[TX_SIZES];
+#if CONFIG_LV_MAP
+  LV_MAP_COEFF_COST coeff_costs[TX_SIZES][PLANE_TYPES];
+  uint16_t cb_offset;
+#endif
+
+  av1_coeff_cost token_head_costs[TX_SIZES];
+  av1_coeff_cost token_tail_costs[TX_SIZES];
+
+  // mode costs
+  int mbmode_cost[BLOCK_SIZE_GROUPS][INTRA_MODES];
+  int newmv_mode_cost[NEWMV_MODE_CONTEXTS][2];
+  int zeromv_mode_cost[ZEROMV_MODE_CONTEXTS][2];
+  int refmv_mode_cost[REFMV_MODE_CONTEXTS][2];
+  int drl_mode_cost0[DRL_MODE_CONTEXTS][2];
+
+  int inter_compound_mode_cost[INTER_MODE_CONTEXTS][INTER_COMPOUND_MODES];
+  int compound_type_cost[BLOCK_SIZES_ALL][COMPOUND_TYPES];
+#if CONFIG_COMPOUND_SINGLEREF
+  int inter_singleref_comp_mode_cost[INTER_MODE_CONTEXTS]
+                                    [INTER_SINGLEREF_COMP_MODES];
+#endif  // CONFIG_COMPOUND_SINGLEREF
+#if CONFIG_INTERINTRA
+  int interintra_mode_cost[BLOCK_SIZE_GROUPS][INTERINTRA_MODES];
+#endif  // CONFIG_INTERINTRA
+#if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
+  int motion_mode_cost[BLOCK_SIZES_ALL][MOTION_MODES];
+#if CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+  int motion_mode_cost1[BLOCK_SIZES_ALL][2];
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+  int motion_mode_cost2[BLOCK_SIZES_ALL][OBMC_FAMILY_MODES];
+#endif
+#endif  // CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+#if CONFIG_MOTION_VAR && CONFIG_NCOBMC_ADAPT_WEIGHT
+  int ncobmc_mode_cost[ADAPT_OVERLAP_BLOCKS][MAX_NCOBMC_MODES];
+#endif  // CONFIG_MOTION_VAR && CONFIG_NCOBMC_ADAPT_WEIGHT
+#endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
+  int intra_uv_mode_cost[INTRA_MODES][UV_INTRA_MODES];
+  int y_mode_costs[INTRA_MODES][INTRA_MODES][INTRA_MODES];
+  int switchable_interp_costs[SWITCHABLE_FILTER_CONTEXTS][SWITCHABLE_FILTERS];
+#if CONFIG_EXT_PARTITION_TYPES
+  int partition_cost[PARTITION_CONTEXTS + CONFIG_UNPOISON_PARTITION_CTX]
+                    [EXT_PARTITION_TYPES];
+#else
+  int partition_cost[PARTITION_CONTEXTS + CONFIG_UNPOISON_PARTITION_CTX]
+                    [PARTITION_TYPES];
+#endif  // CONFIG_EXT_PARTITION_TYPES
+#if CONFIG_MRC_TX
+  int mrc_mask_inter_cost[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS]
+                         [PALETTE_COLORS];
+  int mrc_mask_intra_cost[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS]
+                         [PALETTE_COLORS];
+#endif  // CONFIG_MRC_TX
+  int palette_y_size_cost[PALETTE_BLOCK_SIZES][PALETTE_SIZES];
+  int palette_uv_size_cost[PALETTE_BLOCK_SIZES][PALETTE_SIZES];
+  int palette_y_color_cost[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS]
+                          [PALETTE_COLORS];
+  int palette_uv_color_cost[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS]
+                           [PALETTE_COLORS];
+#if CONFIG_CFL
+  // The rate associated with each alpha codeword
+  int cfl_cost[CFL_JOINT_SIGNS][CFL_PRED_PLANES][CFL_ALPHABET_SIZE];
+#endif  // CONFIG_CFL
+  int tx_size_cost[TX_SIZES - 1][TX_SIZE_CONTEXTS][TX_SIZES];
+#if CONFIG_EXT_TX
+#if CONFIG_LGT_FROM_PRED
+  int intra_lgt_cost[LGT_SIZES][INTRA_MODES][2];
+  int inter_lgt_cost[LGT_SIZES][2];
+#endif
+  int inter_tx_type_costs[EXT_TX_SETS_INTER][EXT_TX_SIZES][TX_TYPES];
+  int intra_tx_type_costs[EXT_TX_SETS_INTRA][EXT_TX_SIZES][INTRA_MODES]
+                         [TX_TYPES];
+#else
+  int intra_tx_type_costs[EXT_TX_SIZES][TX_TYPES][TX_TYPES];
+  int inter_tx_type_costs[EXT_TX_SIZES][TX_TYPES];
+#endif  // CONFIG_EXT_TX
+#if CONFIG_EXT_INTRA
+#if CONFIG_INTRA_INTERP
+  int intra_filter_cost[INTRA_FILTERS + 1][INTRA_FILTERS];
+#endif  // CONFIG_INTRA_INTERP
+#endif  // CONFIG_EXT_INTRA
+#if CONFIG_LOOP_RESTORATION
+  int switchable_restore_cost[RESTORE_SWITCHABLE_TYPES];
+#endif  // CONFIG_LOOP_RESTORATION
+#if CONFIG_INTRABC
+  int intrabc_cost[2];
+#endif  // CONFIG_INTRABC
 
   int optimize;
 
@@ -206,6 +340,8 @@ struct macroblock {
   int pvq_coded;  // Indicates whether pvq_info needs be stored to tokenize
 #endif
 #if CONFIG_DIST_8X8
+  int using_dist_8x8;
+  aom_tune_metric tune_metric;
 #if CONFIG_CB4X4
 #if CONFIG_HIGHBITDEPTH
   DECLARE_ALIGNED(16, uint16_t, decoded_8x8[8 * 8]);
@@ -214,10 +350,6 @@ struct macroblock {
 #endif
 #endif  // CONFIG_CB4X4
 #endif  // CONFIG_DIST_8X8
-#if CONFIG_CFL
-  // Whether luma needs to be stored during RDO.
-  int cfl_store_y;
-#endif
 };
 
 #ifdef __cplusplus

@@ -18,53 +18,53 @@
 static INLINE void read_coeff(const tran_low_t *coeff, intptr_t offset,
                               __m128i *c0, __m128i *c1) {
   const tran_low_t *addr = coeff + offset;
-#if CONFIG_HIGHBITDEPTH
-  const __m128i x0 = _mm_load_si128((const __m128i *)addr);
-  const __m128i x1 = _mm_load_si128((const __m128i *)addr + 1);
-  const __m128i x2 = _mm_load_si128((const __m128i *)addr + 2);
-  const __m128i x3 = _mm_load_si128((const __m128i *)addr + 3);
-  *c0 = _mm_packs_epi32(x0, x1);
-  *c1 = _mm_packs_epi32(x2, x3);
-#else
-  *c0 = _mm_load_si128((const __m128i *)addr);
-  *c1 = _mm_load_si128((const __m128i *)addr + 1);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    const __m128i x0 = _mm_load_si128((const __m128i *)addr);
+    const __m128i x1 = _mm_load_si128((const __m128i *)addr + 1);
+    const __m128i x2 = _mm_load_si128((const __m128i *)addr + 2);
+    const __m128i x3 = _mm_load_si128((const __m128i *)addr + 3);
+    *c0 = _mm_packs_epi32(x0, x1);
+    *c1 = _mm_packs_epi32(x2, x3);
+  } else {
+    *c0 = _mm_load_si128((const __m128i *)addr);
+    *c1 = _mm_load_si128((const __m128i *)addr + 1);
+  }
 }
 
 static INLINE void write_qcoeff(const __m128i *qc0, const __m128i *qc1,
                                 tran_low_t *qcoeff, intptr_t offset) {
   tran_low_t *addr = qcoeff + offset;
-#if CONFIG_HIGHBITDEPTH
-  const __m128i zero = _mm_setzero_si128();
-  __m128i sign_bits = _mm_cmplt_epi16(*qc0, zero);
-  __m128i y0 = _mm_unpacklo_epi16(*qc0, sign_bits);
-  __m128i y1 = _mm_unpackhi_epi16(*qc0, sign_bits);
-  _mm_store_si128((__m128i *)addr, y0);
-  _mm_store_si128((__m128i *)addr + 1, y1);
+  if (sizeof(tran_low_t) == 4) {
+    const __m128i zero = _mm_setzero_si128();
+    __m128i sign_bits = _mm_cmplt_epi16(*qc0, zero);
+    __m128i y0 = _mm_unpacklo_epi16(*qc0, sign_bits);
+    __m128i y1 = _mm_unpackhi_epi16(*qc0, sign_bits);
+    _mm_store_si128((__m128i *)addr, y0);
+    _mm_store_si128((__m128i *)addr + 1, y1);
 
-  sign_bits = _mm_cmplt_epi16(*qc1, zero);
-  y0 = _mm_unpacklo_epi16(*qc1, sign_bits);
-  y1 = _mm_unpackhi_epi16(*qc1, sign_bits);
-  _mm_store_si128((__m128i *)addr + 2, y0);
-  _mm_store_si128((__m128i *)addr + 3, y1);
-#else
-  _mm_store_si128((__m128i *)addr, *qc0);
-  _mm_store_si128((__m128i *)addr + 1, *qc1);
-#endif
+    sign_bits = _mm_cmplt_epi16(*qc1, zero);
+    y0 = _mm_unpacklo_epi16(*qc1, sign_bits);
+    y1 = _mm_unpackhi_epi16(*qc1, sign_bits);
+    _mm_store_si128((__m128i *)addr + 2, y0);
+    _mm_store_si128((__m128i *)addr + 3, y1);
+  } else {
+    _mm_store_si128((__m128i *)addr, *qc0);
+    _mm_store_si128((__m128i *)addr + 1, *qc1);
+  }
 }
 
 static INLINE void write_zero(tran_low_t *qcoeff, intptr_t offset) {
   const __m128i zero = _mm_setzero_si128();
   tran_low_t *addr = qcoeff + offset;
-#if CONFIG_HIGHBITDEPTH
-  _mm_store_si128((__m128i *)addr, zero);
-  _mm_store_si128((__m128i *)addr + 1, zero);
-  _mm_store_si128((__m128i *)addr + 2, zero);
-  _mm_store_si128((__m128i *)addr + 3, zero);
-#else
-  _mm_store_si128((__m128i *)addr, zero);
-  _mm_store_si128((__m128i *)addr + 1, zero);
-#endif
+  if (sizeof(tran_low_t) == 4) {
+    _mm_store_si128((__m128i *)addr, zero);
+    _mm_store_si128((__m128i *)addr + 1, zero);
+    _mm_store_si128((__m128i *)addr + 2, zero);
+    _mm_store_si128((__m128i *)addr + 3, zero);
+  } else {
+    _mm_store_si128((__m128i *)addr, zero);
+    _mm_store_si128((__m128i *)addr + 1, zero);
+  }
 }
 
 void av1_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,

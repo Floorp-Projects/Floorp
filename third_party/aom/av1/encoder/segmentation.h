@@ -37,7 +37,7 @@ void av1_clear_segdata(struct segmentation *seg, int segment_id,
 //
 // abs_delta = SEGMENT_DELTADATA (deltas) abs_delta = SEGMENT_ABSDATA (use
 // the absolute values given).
-void av1_set_segment_data(struct segmentation *seg, signed char *feature_data,
+void av1_set_segment_data(struct segmentation *seg, int8_t *feature_data,
                           unsigned char abs_delta);
 
 void av1_choose_segmap_coding_method(AV1_COMMON *cm, MACROBLOCKD *xd);

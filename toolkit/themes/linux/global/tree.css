@@ -11,12 +11,7 @@
 /* ::::: tree ::::: */
 
 tree {
-  margin: 0px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  margin: 0 4px;
   background-color: -moz-Field;
   color: -moz-FieldText;
   -moz-appearance: listbox;
@@ -70,7 +65,7 @@ tree[seltype="text"] > treechildren::-moz-tree-row {
 /* ::::: tree cells ::::: */
 
 treechildren::-moz-tree-cell {
-  padding: 0px 2px 0px 2px;
+  padding: 0 2px;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text,
@@ -85,12 +80,12 @@ treechildren::-moz-tree-cell-text(selected) {
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell {
   border: 1px solid transparent;
-  padding: 0px 1px 0px 1px;
+  padding: 0 1px;
 }
 
 tree[seltype="text"] > treechildren::-moz-tree-cell-text {
   border: 1px solid transparent;
-  padding: 0px 1px 1px 1px;
+  padding: 0 1px 1px;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected) {
@@ -204,14 +199,7 @@ treecolpicker {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
-  padding: 0px 2px;
 }
 
 treecol:hover,
@@ -220,63 +208,21 @@ treecolpicker:hover {
 }
 
 .treecol-image {
-  padding: 0px 1px;
+  padding: 0 1px;
 }
 
 .treecol-text {
-  margin: 0px !important;
+  margin: 0 !important;
 }
 
 treecol[hideheader="true"] {
   -moz-appearance: none;
-  border: none;
-  padding: 0;
-}
-
-/* ..... internal box ..... */
-
-treecol:hover:active,
-treecolpicker:hover:active {
-  color: ButtonText;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow transparent;
-  -moz-border-bottom-colors: ThreeDShadow transparent;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  padding-inline-start: 3px;
-  padding-inline-end: 1px;
-}
-
-.treecol-image:hover:active {
-  padding: 0px;
-  padding-inline-start: 2px;
-}
-
-treecol:hover:active .treecol-text {
-  margin: 1px 0px -1px 0px !important;
 }
 
 /* ::::: column drag and drop styles ::::: */
 
 treecol[dragging="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
-  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
-  background-color: ThreeDShadow !important;
-  color: ThreeDHighlight !important;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(ltr),
-treecol[insertbefore="true"]:-moz-locale-dir(rtl) {
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(rtl),
-treecol[insertbefore="true"]:-moz-locale-dir(ltr) {
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+  color: Graytext;
 }
 
 treechildren::-moz-tree-column(insertbefore) {
@@ -355,10 +301,6 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
 .tree-input {
   -moz-appearance: none;
   border: 1px solid Highlight;
-  -moz-border-top-colors: Highlight;
-  -moz-border-bottom-colors: Highlight;
-  -moz-border-left-colors: Highlight;
-  -moz-border-right-colors: Highlight;
   margin: 0;
   margin-inline-start: -4px;
   padding: 1px;

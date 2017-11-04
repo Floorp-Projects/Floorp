@@ -3,7 +3,7 @@
 
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://services-sync/rest.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
@@ -169,21 +169,6 @@ add_test(function test_getResourceAuthenticator() {
   }
 );
 
-add_test(function test_getRESTRequestAuthenticator() {
-    _("BrowserIDManager supplies a REST Request Authenticator callback which sets a Hawk header on a request object.");
-    let request = new SyncStorageRequest(
-      "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = globalBrowseridManager.getRESTRequestAuthenticator();
-    do_check_true(!!authenticator);
-    let output = authenticator(request, "GET");
-    do_check_eq(request.uri, output.uri);
-    do_check_true(output._headers.authorization.startsWith("Hawk"));
-    do_check_true(output._headers.authorization.includes("nonce"));
-    do_check_true(globalBrowseridManager.hasValidToken());
-    run_next_test();
-  }
-);
-
 add_test(function test_resourceAuthenticatorSkew() {
   _("BrowserIDManager Resource Authenticator compensates for clock skew in Hawk header.");
 
@@ -242,7 +227,7 @@ add_test(function test_resourceAuthenticatorSkew() {
   do_check_eq(browseridManager._fxaService.localtimeOffsetMsec,
       localtimeOffsetMsec);
 
-  let request = new SyncStorageRequest("https://example.net/i/like/pie/");
+  let request = new Resource("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
   let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
@@ -289,7 +274,7 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 
   do_check_eq(browseridManager._fxaService.internal.now(), now);
 
-  let request = new SyncStorageRequest("https://example.net/i/like/pie/");
+  let request = new Resource("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
   let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));

@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
@@ -10,6 +11,31 @@ async function makeSteamEngine() {
   let engine = new SyncEngine("Steam", Service);
   await engine.initialize();
   return engine;
+}
+
+async function testSteamEngineStorage(test) {
+  try {
+    let setupEngine = await makeSteamEngine();
+
+    if (test.setup) {
+      await test.setup(setupEngine);
+    }
+
+    // Finalize the engine to flush the backlog and previous failed to disk.
+    await setupEngine.finalize();
+
+    if (test.beforeCheck) {
+      await test.beforeCheck();
+    }
+
+    let checkEngine = await makeSteamEngine();
+    await test.check(checkEngine);
+
+    await checkEngine.resetClient();
+    await checkEngine.finalize();
+  } finally {
+    Svc.Prefs.resetBranch("");
+  }
 }
 
 let server;
@@ -84,94 +110,107 @@ add_task(async function test_lastSync() {
 
 add_task(async function test_toFetch() {
   _("SyncEngine.toFetch corresponds to file on disk");
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   const filename = "weave/toFetch/steam.json";
-  let engine = await makeSteamEngine();
-  try {
-    // Ensure pristine environment
-    do_check_eq(engine.toFetch.length, 0);
 
-    // Write file to disk
-    let toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    let wrotePromise = promiseOneObserver("sync-testing:file-saved:toFetch");
-    engine.toFetch = toFetch;
-    do_check_eq(engine.toFetch, toFetch);
-    // toFetch is written asynchronously
-    await wrotePromise;
-    let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
-    do_check_eq(fakefile, JSON.stringify(toFetch));
+  await testSteamEngineStorage({
+    toFetch: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    setup(engine) {
+      // Ensure pristine environment
+      do_check_eq(engine.toFetch.length, 0);
 
-    // Make sure it work for consecutive writes before the callback is executed.
-    toFetch = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    let toFetch2 = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    wrotePromise = promiseOneObserver("sync-testing:file-saved:toFetch");
+      // Write file to disk
+      engine.toFetch = this.toFetch;
+      do_check_eq(engine.toFetch, this.toFetch);
+    },
+    check(engine) {
+      // toFetch is written asynchronously
+      do_check_matches(engine.toFetch, this.toFetch);
+    },
+  });
 
-    engine.toFetch = toFetch;
-    do_check_eq(engine.toFetch, toFetch);
+  await testSteamEngineStorage({
+    toFetch: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    toFetch2: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    setup(engine) {
+      // Make sure it work for consecutive writes before the callback is executed.
+      engine.toFetch = this.toFetch;
+      do_check_eq(engine.toFetch, this.toFetch);
 
-    engine.toFetch = toFetch2;
-    do_check_eq(engine.toFetch, toFetch2);
-    // Note that do to the way CommonUtils.namedTimer works, we won't get a 2nd callback.
-    await wrotePromise;
-    fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
-    do_check_eq(fakefile, JSON.stringify(toFetch2));
+      engine.toFetch = this.toFetch2;
+      do_check_eq(engine.toFetch, this.toFetch2);
+    },
+    check(engine) {
+      do_check_matches(engine.toFetch, this.toFetch2);
+    },
+  });
 
-    // Read file from disk
-    toFetch = [Utils.makeGUID(), Utils.makeGUID()];
-    syncTesting.fakeFilesystem.fakeContents[filename] = JSON.stringify(toFetch);
-    await engine.loadToFetch();
-    do_check_eq(engine.toFetch.length, 2);
-    do_check_eq(engine.toFetch[0], toFetch[0]);
-    do_check_eq(engine.toFetch[1], toFetch[1]);
-  } finally {
-    Svc.Prefs.resetBranch("");
-  }
+  await testSteamEngineStorage({
+    toFetch: [Utils.makeGUID(), Utils.makeGUID()],
+    async beforeCheck() {
+      let toFetchPath = OS.Path.join(OS.Constants.Path.profileDir, filename);
+      let bytes = new TextEncoder().encode(JSON.stringify(this.toFetch));
+      await OS.File.writeAtomic(toFetchPath, bytes,
+                                { tmpPath: toFetchPath + ".tmp" });
+    },
+    check(engine) {
+      // Read file from disk
+      do_check_matches(engine.toFetch, this.toFetch);
+    },
+  });
 });
 
 add_task(async function test_previousFailed() {
   _("SyncEngine.previousFailed corresponds to file on disk");
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   const filename = "weave/failed/steam.json";
-  let engine = await makeSteamEngine();
-  try {
-    // Ensure pristine environment
-    do_check_eq(engine.previousFailed.length, 0);
 
-    // Write file to disk
-    let previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    let wrotePromise = promiseOneObserver("sync-testing:file-saved:previousFailed");
-    engine.previousFailed = previousFailed;
-    do_check_eq(engine.previousFailed, previousFailed);
-    // previousFailed is written asynchronously
-    await wrotePromise;
-    let fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
-    do_check_eq(fakefile, JSON.stringify(previousFailed));
+  await testSteamEngineStorage({
+    previousFailed: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    setup(engine) {
+      // Ensure pristine environment
+      do_check_eq(engine.previousFailed.length, 0);
 
-    // Make sure it work for consecutive writes before the callback is executed.
-    previousFailed = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    let previousFailed2 = [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()];
-    wrotePromise = promiseOneObserver("sync-testing:file-saved:previousFailed");
+      // Write file to disk
+      engine.previousFailed = this.previousFailed;
+      do_check_eq(engine.previousFailed, this.previousFailed);
+    },
+    check(engine) {
+      // previousFailed is written asynchronously
+      do_check_matches(engine.previousFailed, this.previousFailed);
+    },
+  });
 
-    engine.previousFailed = previousFailed;
-    do_check_eq(engine.previousFailed, previousFailed);
+  await testSteamEngineStorage({
+    previousFailed: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    previousFailed2: [Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID(), Utils.makeGUID()],
+    setup(engine) {
+      // Make sure it work for consecutive writes before the callback is executed.
+      engine.previousFailed = this.previousFailed;
+      do_check_eq(engine.previousFailed, this.previousFailed);
 
-    engine.previousFailed = previousFailed2;
-    do_check_eq(engine.previousFailed, previousFailed2);
-    // Note that do to the way CommonUtils.namedTimer works, we're only notified once.
-    await wrotePromise;
-    fakefile = syncTesting.fakeFilesystem.fakeContents[filename];
-    do_check_eq(fakefile, JSON.stringify(previousFailed2));
+      engine.previousFailed = this.previousFailed2;
+      do_check_eq(engine.previousFailed, this.previousFailed2);
+    },
+    check(engine) {
+      do_check_matches(engine.previousFailed, this.previousFailed2);
+    },
+  });
 
-    // Read file from disk
-    previousFailed = [Utils.makeGUID(), Utils.makeGUID()];
-    syncTesting.fakeFilesystem.fakeContents[filename] = JSON.stringify(previousFailed);
-    await engine.loadPreviousFailed();
-    do_check_eq(engine.previousFailed.length, 2);
-    do_check_eq(engine.previousFailed[0], previousFailed[0]);
-    do_check_eq(engine.previousFailed[1], previousFailed[1]);
-  } finally {
-    Svc.Prefs.resetBranch("");
-  }
+  await testSteamEngineStorage({
+    previousFailed: [Utils.makeGUID(), Utils.makeGUID()],
+    async beforeCheck() {
+      let previousFailedPath = OS.Path.join(OS.Constants.Path.profileDir,
+                                            filename);
+      let bytes = new TextEncoder().encode(JSON.stringify(this.previousFailed));
+      await OS.File.writeAtomic(previousFailedPath, bytes,
+                                { tmpPath: previousFailedPath + ".tmp" });
+    },
+    check(engine) {
+      // Read file from disk
+      do_check_matches(engine.previousFailed, this.previousFailed);
+    },
+  });
 });
 
 add_task(async function test_resetClient() {

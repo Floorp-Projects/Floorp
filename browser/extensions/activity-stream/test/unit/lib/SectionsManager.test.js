@@ -17,7 +17,7 @@ describe("SectionsManager", () => {
   beforeEach(() => {
     globals = new GlobalOverrider();
     fakeServices = {prefs: {getBoolPref: sinon.spy(), addObserver: sinon.spy(), removeObserver: sinon.spy()}};
-    fakePlacesUtils = {history: {update: sinon.stub()}};
+    fakePlacesUtils = {history: {update: sinon.stub(), insert: sinon.stub()}};
     globals.set("Services", fakeServices);
     globals.set("PlacesUtils", fakePlacesUtils);
   });
@@ -210,23 +210,30 @@ describe("SectionsManager", () => {
     });
   });
   describe("#updateBookmarkMetadata", () => {
-    let rows;
     beforeEach(() => {
-      rows = [{
+      let rows = [{
         url: "bar",
         title: "title",
         description: "description",
         image: "image"
       }];
-      SectionsManager.addSection(FAKE_ID, {rows});
+      SectionsManager.addSection("topstories", {rows});
+      // Simulate 2 sections.
+      rows = [{
+        url: "foo",
+        title: "title",
+        description: "description",
+        image: "image"
+      }];
+      SectionsManager.addSection("highlights", {rows});
     });
-    it("shouldn't call PlacesUtils if no story", () => {
+
+    it("shouldn't call PlacesUtils if URL is not in topstories", () => {
       SectionsManager.updateBookmarkMetadata({url: "foo"});
 
       assert.notCalled(fakePlacesUtils.history.update);
     });
-
-    it("should call PlacesUtils", () => {
+    it("should call PlacesUtils.history.update", () => {
       SectionsManager.updateBookmarkMetadata({url: "bar"});
 
       assert.calledOnce(fakePlacesUtils.history.update);
@@ -235,6 +242,16 @@ describe("SectionsManager", () => {
         title: "title",
         description: "description",
         previewImageURL: "image"
+      });
+    });
+    it("should call PlacesUtils.history.insert", () => {
+      SectionsManager.updateBookmarkMetadata({url: "bar"});
+
+      assert.calledOnce(fakePlacesUtils.history.insert);
+      assert.calledWithExactly(fakePlacesUtils.history.insert, {
+        url: "bar",
+        title: "title",
+        visits: [{}]
       });
     });
   });
