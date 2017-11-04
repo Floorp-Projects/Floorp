@@ -103,8 +103,10 @@ public:
               AbsPosReflowFlags        aFlags,
               nsOverflowAreas*         aOverflowAreas);
 
+  using PostDestroyData = nsIFrame::PostDestroyData;
   void DestroyFrames(nsIFrame* aDelegatingFrame,
-                     nsIFrame* aDestructRoot);
+                     nsIFrame* aDestructRoot,
+                     PostDestroyData& aPostDestroyData);
 
   bool HasAbsoluteFrames() const { return mAbsoluteFrames.NotEmpty(); }
 

@@ -95,7 +95,7 @@ nsRangeFrame::Init(nsIContent*       aContent,
 }
 
 void
-nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),
                "nsRangeFrame should not have continuations; if it does we "
@@ -104,10 +104,10 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mContent->RemoveEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
 
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  DestroyAnonymousContent(mTrackDiv.forget());
-  DestroyAnonymousContent(mProgressDiv.forget());
-  DestroyAnonymousContent(mThumbDiv.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot);
+  aPostDestroyData.AddAnonymousContent(mTrackDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mProgressDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mThumbDiv.forget());
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult
