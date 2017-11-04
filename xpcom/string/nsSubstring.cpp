@@ -41,7 +41,7 @@
 #define CHECK_STRING_BUFFER_CANARY(c)                                     \
   do {                                                                    \
     if ((c) != CANARY_OK) {                                               \
-      NS_RUNTIMEABORT(nsPrintfCString("Bad canary value %d", c).get());   \
+      MOZ_CRASH_UNSAFE_PRINTF("Bad canary value %d", c);                  \
     }                                                                     \
   } while(0)
 #else

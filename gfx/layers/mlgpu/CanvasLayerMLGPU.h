@@ -13,7 +13,6 @@
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerMLGPU.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nscore.h"                     // for nsACString
 

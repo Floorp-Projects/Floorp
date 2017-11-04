@@ -316,8 +316,7 @@ LogicError(const char* aMsg)
 void
 ActorIdReadError(const char* aActorDescription)
 {
-  nsPrintfCString message("Error deserializing id for %s", aActorDescription);
-  NS_RUNTIMEABORT(message.get());
+  MOZ_CRASH_UNSAFE_PRINTF("Error deserializing id for %s", aActorDescription);
 }
 
 void
@@ -345,22 +344,19 @@ MismatchedActorTypeError(const char* aActorDescription)
 void
 UnionTypeReadError(const char* aUnionName)
 {
-  nsPrintfCString message("error deserializing type of union %s", aUnionName);
-  NS_RUNTIMEABORT(message.get());
+  MOZ_CRASH_UNSAFE_PRINTF("error deserializing type of union %s", aUnionName);
 }
 
 void
 ArrayLengthReadError(const char* aElementName)
 {
-  nsPrintfCString message("error deserializing length of %s[]", aElementName);
-  NS_RUNTIMEABORT(message.get());
+  MOZ_CRASH_UNSAFE_PRINTF("error deserializing length of %s[]", aElementName);
 }
 
 void
 SentinelReadError(const char* aClassName)
 {
-  nsPrintfCString message("incorrect sentinel when reading %s", aClassName);
-  NS_RUNTIMEABORT(message.get());
+  MOZ_CRASH_UNSAFE_PRINTF("incorrect sentinel when reading %s", aClassName);
 }
 
 void

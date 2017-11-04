@@ -52,8 +52,6 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
 
 #define NS_PRECONDITION(expr, msg) assert(!!(expr))
 
-#define NS_RUNTIMEABORT(msg) __coverity_panic__()
-
 // Kills Structurally dead code (UNREACHABLE)
 #define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(_class)                   \
   NS_IMETHODIMP_(bool)                                                         \
