@@ -22,7 +22,7 @@ interface Storage {
   getter DOMString? getItem(DOMString key);
 
   [Throws, NeedsSubjectPrincipal]
-  setter creator void setItem(DOMString key, DOMString value);
+  setter void setItem(DOMString key, DOMString value);
 
   [Throws, NeedsSubjectPrincipal]
   deleter void removeItem(DOMString key);

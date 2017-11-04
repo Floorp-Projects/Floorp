@@ -40,7 +40,7 @@ interface HTMLSelectElement : HTMLElement {
   [CEReactions]
   void remove(long index);
   [CEReactions, Throws]
-  setter creator void (unsigned long index, HTMLOptionElement? option);
+  setter void (unsigned long index, HTMLOptionElement? option);
 
   readonly attribute HTMLCollection selectedOptions;
   [SetterThrows, Pure]
