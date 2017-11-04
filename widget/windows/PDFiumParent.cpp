@@ -5,11 +5,13 @@
 
 #include "PDFiumParent.h"
 #include "nsDeviceContextSpecWin.h"
+#include "mozilla/gfx/PrintTargetEMF.h"
 
 namespace mozilla {
 namespace widget {
 
-PDFiumParent::PDFiumParent()
+PDFiumParent::PDFiumParent(PrintTargetEMF* aTarget)
+  : mTarget(aTarget)
 {
 }
 
@@ -34,7 +36,7 @@ PDFiumParent::RecvConvertToEMFDone(const nsresult& aResult,
                                    mozilla::ipc::Shmem&& aEMFContents)
 {
   MOZ_ASSERT(aEMFContents.IsReadable());
-  // TBD: playback aEMFContents onto printer DC.
+  mTarget->ConvertToEMFDone(aResult, Move(aEMFContents));
 
   return IPC_OK();
 }

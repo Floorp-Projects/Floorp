@@ -8,18 +8,27 @@
 
 #include "mozilla/widget/PPDFiumParent.h"
 
+namespace mozilla {
+namespace gfx {
+  class PrintTargetEMF;
+}
+}
 
 namespace mozilla {
 namespace widget {
 
-class PDFiumParent final : public PPDFiumParent {
-public:
+class PDFiumParent final : public PPDFiumParent,
+                           public mozilla::ipc::IShmemAllocator
+{
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDFiumParent)
 
-  explicit PDFiumParent();
+  typedef mozilla::gfx::PrintTargetEMF PrintTargetEMF;
+
+  explicit PDFiumParent(PrintTargetEMF* aTarget);
 
   bool Init(IPC::Channel* aChannel, base::ProcessId aPid);
 
+  FORWARD_SHMEM_ALLOCATOR_TO(PPDFiumParent)
 private:
   ~PDFiumParent() {}
 
@@ -30,6 +39,8 @@ private:
                                                mozilla::ipc::Shmem&& aEMFContents) override;
   void OnChannelConnected(int32_t pid) override;
   void DeallocPPDFiumParent() override;
+
+  PrintTargetEMF* mTarget;
 };
 
 } // namespace widget
