@@ -188,8 +188,10 @@ Structure:
 .. code-block:: js
 
     "js" : {
-      "setProto": <unsigned integer>, // Number of times __proto__ is set
+      // ...
     }
+
+As of Firefox 59 this section no longer contains any entries.
 
 maximalNumberOfConcurrentThreads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

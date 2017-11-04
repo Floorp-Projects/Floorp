@@ -716,6 +716,8 @@ bool
 JSXrayTraits::delete_(JSContext* cx, HandleObject wrapper, HandleId id, ObjectOpResult& result)
 {
     RootedObject holder(cx, ensureHolder(cx, wrapper));
+    if (!holder)
+        return false;
 
     // If we're using Object Xrays, we allow callers to attempt to delete any
     // property from the underlying object that they are able to resolve. Note
@@ -954,6 +956,9 @@ JSXrayTraits::construct(JSContext* cx, HandleObject wrapper,
 {
     JSXrayTraits& self = JSXrayTraits::singleton;
     JS::RootedObject holder(cx, self.ensureHolder(cx, wrapper));
+    if (!holder)
+        return false;
+
     if (self.getProtoKey(holder) == JSProto_Function) {
         JSProtoKey standardConstructor = constructorFor(holder);
         if (standardConstructor == JSProto_Null)

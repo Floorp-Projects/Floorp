@@ -3778,12 +3778,9 @@ CASE(JSOP_INITHIDDENPROP)
     /* Load the object being initialized into lval/obj. */
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
 
-    PropertyName* name = script->getName(REGS.pc);
+    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-    RootedId& id = rootId0;
-    id = NameToId(name);
-
-    if (!InitPropertyOperation(cx, JSOp(*REGS.pc), obj, id, rval))
+    if (!InitPropertyOperation(cx, JSOp(*REGS.pc), obj, name, rval))
         goto error;
 
     REGS.sp--;

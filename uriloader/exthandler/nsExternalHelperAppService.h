@@ -25,7 +25,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIChannel.h"
-#include "nsITimer.h"
 #include "nsIBackgroundFileSaver.h"
 
 #include "nsIHandlerService.h"
@@ -40,7 +39,7 @@
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsITransfer;
-class nsPIDOMWindowOuter;
+class MaybeCloseWindowHelper;
 
 /**
  * The helper app service. Responsible for handling content that Mozilla
@@ -211,7 +210,6 @@ private:
  */
 class nsExternalAppHandler final : public nsIStreamListener,
                                    public nsIHelperAppLauncher,
-                                   public nsITimerCallback,
                                    public nsIBackgroundFileSaverObserver,
                                    public nsINamed
 {
@@ -221,7 +219,6 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSICANCELABLE
-  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIBACKGROUNDFILESAVEROBSERVER
   NS_DECL_NSINAMED
 
@@ -297,8 +294,7 @@ protected:
    * Used to close the window on a timer, to avoid any exceptions that are
    * thrown if we try to close the window before it's fully loaded.
    */
-  nsCOMPtr<nsPIDOMWindowOuter> mWindowToClose;
-  nsCOMPtr<nsITimer> mTimer;
+  RefPtr<MaybeCloseWindowHelper> mMaybeCloseWindowHelper;
 
   /**
    * The following field is set if we were processing an http channel that had
@@ -319,13 +315,6 @@ protected:
    * application before we finished saving the data to a temp file.
    */
   bool mCanceled;
-
-  /**
-   * This is set based on whether the channel indicates that a new window
-   * was opened specifically for this download.  If so, then we
-   * close it.
-   */
-  bool mShouldCloseWindow;
 
   /**
    * True if a stop request has been issued.
@@ -468,13 +457,6 @@ protected:
    * Utility function to send proper error notification to web progress listener
    */
   void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsString& path);
-
-  /**
-   * Closes the window context if it does not have a refresh header
-   * and it never displayed content before the external helper app
-   * service was invoked.
-   */
-  nsresult MaybeCloseWindow();
 
   /**
    * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
